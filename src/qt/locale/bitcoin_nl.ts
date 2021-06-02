@@ -6,20 +6,16 @@
         <translation>Rechtermuisklik om het adres of label te wijzigen</translation>
     </message>
     <message>
-        <source>Create a new address</source>
-        <translation>Maak een nieuw adres aan</translation>
-    </message>
-    <message>
         <source>&amp;New</source>
         <translation>&amp;Nieuw</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Kopieer het geselecteerde adres naar het klembord</translation>
+        <translation>Kopiëer het momenteel geselecteerde adres naar het systeem klembord.</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Kopieer</translation>
+        <translation>&amp;Kopiëer</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -27,11 +23,11 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Verwijder het geselecteerde adres van de lijst</translation>
+        <translation>Verwijder het huidige geselecteerde adres uit de lijst</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>Vul adres of label in om te zoeken</translation>
+        <translation>Voer een adres of label in om te zoeken.</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -47,7 +43,7 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Kies het adres om munten naar te versturen</translation>
+        <translation>Kies het adres waar u munten naartoe wilt sturen</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
@@ -67,11 +63,11 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Dit zijn uw Bitcoinadressen om betalingen mee te verzenden. Controleer altijd het bedrag en het ontvangstadres voordat u uw bitcoins verzendt.</translation>
+        <translation>Dit zijn uw Bitcoin-adressen voor het verzenden van betalingen. Controleer altijd het bedrag en het ontvangende adres voordat u uw bitcoins verstuurt.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Dit zijn jouw Bitcoin adressen voor het ontvangen van betalingen. Gebruik de 'Nieuwe ontvangst adres maken' knop in de ontvangst tab om een nieuwe adres te maken.</translation>
+        <translation>Dit zijn uw Bitcoin-adressen voor het ontvangen van betalingen. Gebruik de knop 'Nieuw ontvangstadres aanmaken' op het tabblad ontvangen om nieuwe adressen aan te maken.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -97,11 +93,7 @@
         <source>Exporting Failed</source>
         <translation>Exporteren mislukt</translation>
     </message>
-    <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Een fout is opgetreden tijdens het opslaan van deze adreslijst naar %1. Probeer het nogmaals.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -137,7 +129,7 @@
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation>Laat wachtwoord zien</translation>
+        <translation>Laat wachtwoordzin zien</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -161,7 +153,7 @@
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Wijzig wachtwoord</translation>
+        <translation>Wijzig wachtwoordzin</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -169,7 +161,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Waarschuwing: Als u uw portemonnee versleutelt en uw wachtwoord vergeet, zult u &lt;b&gt;AL UW BITCOINS VERLIEZEN&lt;/b&gt;!</translation>
+        <translation>Waarschuwing: Als u uw portemonnee versleutelt en u uw wachtwoordzin verliest, zult u &lt;b&gt;AL UW BITCOINS VERLIEZEN&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -197,11 +189,11 @@
     </message>
     <message>
         <source>Your wallet is about to be encrypted. </source>
-        <translation>Je portemonnee gaat versleuteld worden.</translation>
+        <translation>Uw portemonnee gaat nu versleuteld worden.</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
-        <translation>Je portemonnee is nu versleuteld.</translation>
+        <translation>Uw portemonnee is nu versleuteld.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -403,7 +395,7 @@
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verifiëer handtekeningen om zeker te zijn dat de berichten zijn ondertekend met de gespecificeerde Bitcoinadressen</translation>
+        <translation>Verifiëer berichten om te garanderen dat de berichten zijn ondertekend met de gespecificeerde Bitcoinadressen</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -423,7 +415,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Vraag betaling aan (genereert QR-codes en bitcoin: URI's)</translation>
+        <translation>Vraag betalingen aan (genereert QR-codes en bitcoin: URI's)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -547,7 +539,7 @@
     </message>
     <message>
         <source>%1 client</source>
-        <translation>%1 client</translation>
+        <translation>%1 cliënt </translation>
     </message>
     <message>
         <source>Connecting to peers...</source>
@@ -592,7 +584,7 @@
     <message>
         <source>Label: %1
 </source>
-        <translation>Label: %1
+        <translation>etiket  %1
 </translation>
     </message>
     <message>
@@ -3751,19 +3743,19 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation>De portemonnee vermijdt minder te betalen dan de minimale doorgeef vergoeding.</translation>
+        <translation>De portemonnee zal vermijden om minder te betalen dan de minimale aflossingskosten.</translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation>Dit is de minimum transactievergoeding dat je betaalt op elke transactie.</translation>
+        <translation>Dit zijn de minimale transactiekosten die u voor elke transactie betaalt.</translation>
     </message>
     <message>
         <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Dit is de transactievergoeding dat je betaalt wanneer je een transactie verstuurt.</translation>
+        <translation>Dit zijn de transactiekosten die u betaalt als u een transactie verstuurt.</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>
-        <translation>Transactiebedragen moeten positief zijn</translation>
+        <translation>Transactiebedragen mogen niet negatief zijn</translation>
     </message>
     <message>
         <source>Transaction has too long of a mempool chain</source>
@@ -3787,7 +3779,7 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
-        <translation>Het inschatten van de vergoeding is gefaald. Fallbackfee is uitgeschakeld. Wacht een aantal blocks of schakel -fallbackfee in.</translation>
+        <translation>Schatting van de vergoeding is mislukt. Fallbackfee is uitgeschakeld. Wacht een paar blokken of schakel -fallbackfee in.</translation>
     </message>
     <message>
         <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>

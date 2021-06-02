@@ -99,7 +99,7 @@
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>%1으로 주소 리스트를 저장하는 동안 오류가 발생했습니다. 다시 시도해주세요.</translation>
+        <translation>%1 으로 주소 리스트를 저장하는 동안 오류가 발생했습니다. 다시 시도해 주십시오.</translation>
     </message>
 </context>
 <context>
@@ -1474,7 +1474,7 @@
     </message>
     <message>
         <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
-        <translation>만약 이 오류 메시지가 보인다면, 상점에 BIP21이 호환되는 URI를 제공해달라고 요청해주세요.</translation>
+        <translation>만약 이 오류 메시지가 보인다면, 판매자에게 BIP21이 호환되는 URI를 제공해달라고 요청해주세요.</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -3154,7 +3154,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>%1으로 거래 기록을 저장하는데 에러가 있었습니다.</translation>
+        <translation>거래 기록을 %1 에 저장하는 동안 오류가 발생하였습니다.</translation>
     </message>
     <message>
         <source>Exporting Successful</source>

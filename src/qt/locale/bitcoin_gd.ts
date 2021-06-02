@@ -1,44 +1,36 @@
-<TS language="uz@Latn" version="2.1">
+<TS language="gd" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Manzil yoki yorliqni tahrirlash uchun oʻng tugmani bosing</translation>
+        <translation>Dèan briogadh deas airson seòladh no bileag a dheasachadh</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Yangi manzil yaratish</translation>
+        <translation>Cruthaich seòladh ùr</translation>
     </message>
     <message>
-        <source>&amp;New</source>
-        <translation>&amp;Yangi</translation>
+        <source>Copy the currently selected address to the system clipboard</source>
+        <translation>Dèan lethbhreac den t-seòladh a chaidh a thaghadh an-dràsta gu cairt-bhòrd an t-siostaim</translation>
     </message>
     <message>
-        <source>&amp;Copy</source>
-        <translation>&amp;Nusxalash</translation>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Thoir às an seòladh a chaidh a thaghadh an-dràsta bhon liosta</translation>
     </message>
     <message>
-        <source>C&amp;lose</source>
-        <translation>Yo&amp;pish</translation>
+        <source>Choose the address to send coins to</source>
+        <translation>Tagh an seòladh airson buinn a chuir thuige</translation>
     </message>
     <message>
-        <source>&amp;Delete</source>
-        <translation>&amp;O'chirish</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Manzillarni nusxalash</translation>
+        <source>Sending addresses</source>
+        <translation>A ’cur sheòlaidhean</translation>
     </message>
     </context>
 <context>
     <name>AddressTableModel</name>
     <message>
-        <source>Label</source>
-        <translation>Yorliq</translation>
-    </message>
-    <message>
         <source>Address</source>
-        <translation>Manzil</translation>
+        <translation>Seòladh</translation>
     </message>
     </context>
 <context>
@@ -49,6 +41,18 @@
     </context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>Error</source>
+        <translation>Mearachd</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Rabhadh</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Fiosrachadh</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -58,21 +62,37 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Ainm Wallet</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
     </context>
 <context>
     <name>FreespaceChecker</name>
+    <message>
+        <source>name</source>
+        <translation>ainm</translation>
+    </message>
     </context>
 <context>
     <name>HelpMessageDialog</name>
     </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Error</source>
+        <translation>Mearachd</translation>
+    </message>
     </context>
 <context>
     <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Fhoirm</translation>
+    </message>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -82,9 +102,17 @@
     </context>
 <context>
     <name>OptionsDialog</name>
+    <message>
+        <source>Error</source>
+        <translation>Mearachd</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
+    <message>
+        <source>Form</source>
+        <translation>Fhoirm</translation>
+    </message>
     </context>
 <context>
     <name>PaymentServer</name>
@@ -108,19 +136,11 @@
     <name>ReceiveRequestDialog</name>
     <message>
         <source>Address</source>
-        <translation>Manzil</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Yorliq</translation>
+        <translation>Seòladh</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Yorliq</translation>
-    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -145,20 +165,12 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Yorliq</translation>
-    </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
-        <source>Label</source>
-        <translation>Yorliq</translation>
-    </message>
-    <message>
         <source>Address</source>
-        <translation>Manzil</translation>
+        <translation>Seòladh</translation>
     </message>
     </context>
 <context>

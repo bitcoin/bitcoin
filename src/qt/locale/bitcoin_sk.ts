@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Kliknutím pravým tlačidlom upraviť adresu alebo popis</translation>
+        <translation>Kliknutím pravým tlačidlom upravíte adresu alebo popis</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Vymaž vybranú adresu zo zoznamu</translation>
+        <translation>Vymazať vybranú adresu zo zoznamu</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>

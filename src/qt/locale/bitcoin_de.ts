@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Rechtsklick zum Bearbeiten der Adresse oder der Beschreibung</translation>
+        <translation>Rechtsklick zum Bearbeiten der Adresse oder des Etiketts</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -75,7 +75,7 @@
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Adresse kopieren</translation>
+        <translation>&amp;Copy Address</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -1407,7 +1407,7 @@
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Gesamtbetrag aus unbestätigten Transaktionen, der noch nicht im aktuell verfügbaren Kontostand enthalten ist</translation>
+        <translation>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</translation>
     </message>
     <message>
         <source>Immature:</source>

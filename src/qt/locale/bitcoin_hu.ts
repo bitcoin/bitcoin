@@ -2376,6 +2376,10 @@ Figyelem: Mivel bájtonként lesz a dj kiszámolva ezért a "100 satoshi per kB"
         <translation>Biztosan el akarja küldeni?</translation>
     </message>
     <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Figyelmesen nézd át a tranzakció adatait! Ez alapján fog létrejönni a részlegesen aláírt Bitcoin tranzakció (PSBT) kulcsa, amellyel hitelesíthető pl. egy offline %1 tárca, vagy egy PSBT kompatibilis hardware tárca.</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>vagy</translation>
     </message>
@@ -2410,6 +2414,10 @@ Figyelem: Mivel bájtonként lesz a dj kiszámolva ezért a "100 satoshi per kB"
     <message>
         <source>Confirm transaction proposal</source>
         <translation>Tranzakció javaslat megerősítése</translation>
+    </message>
+    <message>
+        <source>Copy PSBT to clipboard</source>
+        <translation>Másold át a részlegesen aláírt Bitcoin tranzakció (PSBT) kulcsait a vágólapra!</translation>
     </message>
     <message>
         <source>Send</source>
@@ -2454,6 +2462,10 @@ Figyelem: Mivel bájtonként lesz a dj kiszámolva ezért a "100 satoshi per kB"
     <message>
         <source>Payment request expired.</source>
         <translation>A fizetési kérelem lejárt.</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>A tranzakció megerősítése %n blokk múlva várható.</numerusform><numerusform>A tranzakció megerősítése %n blokk múlva várható.</numerusform></translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2730,6 +2742,10 @@ Figyelem: Mivel bájtonként lesz a dj kiszámolva ezért a "100 satoshi per kB"
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>még %n blokkig nyitva</numerusform><numerusform>még %n blokkig nyitva</numerusform></translation>
+    </message>
     <message>
         <source>Open until %1</source>
         <translation>%1 -ig megnyitva</translation>
@@ -2805,6 +2821,10 @@ Figyelem: Mivel bájtonként lesz a dj kiszámolva ezért a "100 satoshi per kB"
     <message>
         <source>Credit</source>
         <translation>Jóváírás</translation>
+    </message>
+    <message numerus="yes">
+        <source>matures in %n more block(s)</source>
+        <translation><numerusform>még %n blokkig nyitva</numerusform><numerusform>még %n blokkig nyitva</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2915,6 +2935,10 @@ Figyelem: Mivel bájtonként lesz a dj kiszámolva ezért a "100 satoshi per kB"
     <message>
         <source>Label</source>
         <translation>Címke</translation>
+    </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>még %n blokkig nyitva</numerusform><numerusform>még %n blokkig nyitva</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -3320,6 +3344,10 @@ Figyelem: Mivel bájtonként lesz a dj kiszámolva ezért a "100 satoshi per kB"
     <message>
         <source>The %s developers</source>
         <translation>A %s fejlesztők</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>Nem generálható új cím! Jelenleg nincsenek ehhez rendelkezésre álló kulcsok.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>

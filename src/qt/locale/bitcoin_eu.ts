@@ -358,8 +358,16 @@
         <translation>Blokeak diskoan berriro zerrendatzen...</translation>
     </message>
     <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Proxya &lt;b&gt;gaituta&lt;/b&gt; dago : %1</translation>
+    </message>
+    <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Bidali txanponak Bitcoin helbide batera</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation>Diru-zorroaren segurtasun-kopia beste leku batean.</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
@@ -386,6 +394,14 @@
         <translation>Lehio nagusia erakutsi edo izkutatu</translation>
     </message>
     <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Zure diru-zorroari dagozkion giltza pribatuak enkriptatu.</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <translation>Sinatu mezuak Bitcoinen helbideekin, jabetza frogatzeko.</translation>
+    </message>
+    <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation>Egiaztatu mesua Bitcoin helbide espezifikoarekin erregistratu direla ziurtatzeko</translation>
     </message>
@@ -406,12 +422,52 @@
         <translation>Fitxen tresna-barra</translation>
     </message>
     <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation> Bidalketa-helbideen eta etiketen zerrenda erakutsi</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>Harrera-helbideen eta etiketen zerrenda erakutsi</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;Komando-lerroaren aukerak</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation><numerusform>%n konexio aktibo Bitcoin sarera</numerusform><numerusform>%n konexio aktibo Bitcoin sarera</numerusform></translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>Blokeak diskoan indexatzen...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>Blokeak diskoan prozesatzen...</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>Transakzioen historiako %n bloke prozesatuta.</numerusform><numerusform>Transakzioen historiako %n bloke prozesatuta.</numerusform></translation>
+    </message>
+    <message>
         <source>%1 behind</source>
         <translation>%1 atzetik</translation>
     </message>
     <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>Jasotako azken blokea duela %1 sortu zen.</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Honen ondorengo transakzioak oraindik ez daude ikusgai.</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Akatsa</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Abisua</translation>
     </message>
     <message>
         <source>Information</source>
@@ -422,12 +478,20 @@
         <translation>Eguneratua</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>Adabegiaren leihoa</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>&amp;Helbideak bidaltzen</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
         <translation>&amp;Helbideak jasotzen</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI</source>
+        <translation>Ireki bitcoin bat: URI</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -450,6 +514,10 @@
         <translation>Diruzorro lehenetsia</translation>
     </message>
     <message>
+        <source>No wallets available</source>
+        <translation>Ez dago diru-zorrorik eskura</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Lehioa</translation>
     </message>
@@ -464,6 +532,14 @@
     <message>
         <source>Main Window</source>
         <translation>Lehio nagusia</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation>%1 bezeroa</translation>
+    </message>
+    <message>
+        <source>Connecting to peers...</source>
+        <translation>Pareekin konektatzen...</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -496,6 +572,12 @@
 </translation>
     </message>
     <message>
+        <source>Type: %1
+</source>
+        <translation>Mota: %1
+</translation>
+    </message>
+    <message>
         <source>Label: %1
 </source>
         <translation>Etiketa: %1
@@ -514,6 +596,18 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Sartutako transakzioa</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
+        <translation>HD gakoaren sorrera &lt;b&gt;gaituta&lt;/b&gt; dago</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>HD gakoaren sorrera &lt;b&gt;desgaituta&lt;/b&gt; dago</translation>
+    </message>
+    <message>
+        <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>Gako pribatua &lt;b&gt;desgaitua&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -543,16 +637,40 @@
         <translation>Kopurua:</translation>
     </message>
     <message>
+        <source>Fee:</source>
+        <translation>Ordainketa:</translation>
+    </message>
+    <message>
         <source>Dust:</source>
         <translation>Hautsa:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation>Ordaindu ondoren:</translation>
     </message>
     <message>
         <source>Change:</source>
         <translation>Bueltak:</translation>
     </message>
     <message>
+        <source>Tree mode</source>
+        <translation>Zuhaitz modua</translation>
+    </message>
+    <message>
+        <source>List mode</source>
+        <translation>Zerrenda modua</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation>Kopurua</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation>Etiketarekin jasoa</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>Helbidearekin jasoa</translation>
     </message>
     <message>
         <source>Date</source>
@@ -573,6 +691,42 @@
     <message>
         <source>Copy label</source>
         <translation>Etiketa kopiatu</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>zenbatekoaren kopia</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Kopiatu transakzioaren IDa</translation>
+    </message>
+    <message>
+        <source>Lock unspent</source>
+        <translation>Blokeatu erabili gabe</translation>
+    </message>
+    <message>
+        <source>Unlock unspent</source>
+        <translation>Desblokeatu gastatu gabe</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation>Kopia kopurua</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Kopiatu byte-ak</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Kopiatu hautsa</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Kopiatu aldaketa</translation>
+    </message>
+    <message>
+        <source>(%1 locked)</source>
+        <translation>(%1 blokeatuta)</translation>
     </message>
     <message>
         <source>yes</source>
@@ -601,7 +755,11 @@
         <source>Create wallet failed</source>
         <translation>Diruzorroa sortzen hutsegitea</translation>
     </message>
-    </context>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Diru-zorroa sortzearen buruzko oharra</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
@@ -615,6 +773,10 @@
     <message>
         <source>Encrypt Wallet</source>
         <translation>Diruzorroa enkriptatu</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Desgaitu gako pribatuak</translation>
     </message>
     <message>
         <source>Create</source>
@@ -669,7 +831,15 @@
         <source>version</source>
         <translation>bertsioa</translation>
     </message>
-    </context>
+    <message>
+        <source>About %1</source>
+        <translation>%1 inguru</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation>Komando lerroaren aukerak</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -696,12 +866,20 @@
         <translation>Inprimakia</translation>
     </message>
     <message>
+        <source>Number of blocks left</source>
+        <translation>Gainerako blokeen kopurua.</translation>
+    </message>
+    <message>
         <source>Unknown...</source>
         <translation>Ezezaguna...</translation>
     </message>
     <message>
         <source>Last block time</source>
         <translation>Azken blokearen unea</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation>Aurrerapena</translation>
     </message>
     <message>
         <source>calculating...</source>
@@ -711,9 +889,17 @@
         <source>Hide</source>
         <translation>Izkutatu</translation>
     </message>
+    <message>
+        <source>Esc</source>
+        <translation>Esc</translation>
+    </message>
     </context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>Open bitcoin URI</source>
+        <translation>Ireki bitcoin URIa</translation>
+    </message>
     <message>
         <source>URI:</source>
         <translation>URI: </translation>
@@ -733,7 +919,11 @@
         <source>default wallet</source>
         <translation>Diruzorro lehenetsia</translation>
     </message>
-    </context>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Diru-zorroa irekitzen &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -749,6 +939,78 @@
         <translation>Databasearen cache tamaina</translation>
     </message>
     <message>
+        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
+        <translation>Proxyaren IP helbidea  (IPv4: 127.0.0.1 / IPv6: ::1 adibidez )</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;Erretiluaren ikonoa ezkutatu</translation>
+    </message>
+    <message>
+        <source>Open Configuration File</source>
+        <translation>Ireki konfigurazio fitxategia</translation>
+    </message>
+    <message>
+        <source>Reset all client options to default.</source>
+        <translation>Bezeroaren aukera guztiak hasieratu.</translation>
+    </message>
+    <message>
+        <source>&amp;Reset Options</source>
+        <translation>&amp;Aukerak Hasieratu</translation>
+    </message>
+    <message>
+        <source>&amp;Network</source>
+        <translation>&amp;Sarea</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>GB</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation>MiB</translation>
+    </message>
+    <message>
+        <source>Expert</source>
+        <translation>Aditu</translation>
+    </message>
+    <message>
+        <source>Enable coin &amp;control features</source>
+        <translation>Diruaren &amp;kontrolaren ezaugarriak gaitu</translation>
+    </message>
+    <message>
+        <source>Map port using &amp;UPnP</source>
+        <translation>Portua mapeatu &amp;UPnP erabiliz</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside.</source>
+        <translation>Kanpoko konexioak onartu</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>Sarbide konexioak baimendu</translation>
+    </message>
+    <message>
+        <source>Proxy &amp;IP:</source>
+        <translation>Proxyaren &amp;IP helbidea:</translation>
+    </message>
+    <message>
+        <source>&amp;Port:</source>
+        <translation>&amp;Portua:</translation>
+    </message>
+    <message>
+        <source>Port of the proxy (e.g. 9050)</source>
+        <translation>Proxy portua (9050 adibidez)</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
         <source>Tor</source>
         <translation>Tor</translation>
     </message>
@@ -759,6 +1021,10 @@
     <message>
         <source>&amp;Display</source>
         <translation>&amp;Pantaila</translation>
+    </message>
+    <message>
+        <source>User Interface &amp;language:</source>
+        <translation>Erabiltzaile-interfazearen &amp;hizkuntza:</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -773,8 +1039,20 @@
         <translation>&amp;Ezeztatu</translation>
     </message>
     <message>
+        <source>default</source>
+        <translation>lehenetsi</translation>
+    </message>
+    <message>
         <source>none</source>
         <translation>Bat ere ez</translation>
+    </message>
+    <message>
+        <source>Confirm options reset</source>
+        <translation>Berretsi aukeren berrezarpena</translation>
+    </message>
+    <message>
+        <source>Client restart required to activate changes.</source>
+        <translation>Bezeroa berrabiarazi behar da aldaketak aktibatzeko.</translation>
     </message>
     <message>
         <source>Configuration options</source>
@@ -796,8 +1074,20 @@
         <translation>Inprimakia</translation>
     </message>
     <message>
+        <source>Watch-only:</source>
+        <translation>Ikusi-bakarrik:</translation>
+    </message>
+    <message>
+        <source>Available:</source>
+        <translation>Eskuragarri:</translation>
+    </message>
+    <message>
         <source>Pending:</source>
         <translation>Zai:</translation>
+    </message>
+    <message>
+        <source>Immature:</source>
+        <translation>Ez dago eskuragarri:</translation>
     </message>
     <message>
         <source>Total:</source>
@@ -806,9 +1096,25 @@
     </context>
 <context>
     <name>PaymentServer</name>
+    <message>
+        <source>Payment request error</source>
+        <translation>Ordainketa eskaera akatsa</translation>
+    </message>
+    <message>
+        <source>Invalid payment address %1</source>
+        <translation>Ordainketa helbide baliogabea %1</translation>
+    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
+    <message>
+        <source>User Agent</source>
+        <translation>Erabiltzaile agentea</translation>
+    </message>
+    <message>
+        <source>Node/Service</source>
+        <translation>Adabegi / Zerbitzua</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>
@@ -830,6 +1136,14 @@
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>User Agent</source>
+        <translation>Erabiltzaile agentea</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>Adabegiaren leihoa</translation>
+    </message>
     <message>
         <source>Last block time</source>
         <translation>Azken blokearen unea</translation>
@@ -853,7 +1167,11 @@
         <source>Copy label</source>
         <translation>Etiketa kopiatu</translation>
     </message>
-    </context>
+    <message>
+        <source>Copy amount</source>
+        <translation>zenbatekoaren kopia</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -876,7 +1194,11 @@
         <source>Message</source>
         <translation>Mezua</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet</source>
+        <translation>Diru-zorroa</translation>
+    </message>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -915,6 +1237,14 @@
         <translation>Kopurua:</translation>
     </message>
     <message>
+        <source>Fee:</source>
+        <translation>Ordainketa:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation>Ordaindu ondoren:</translation>
+    </message>
+    <message>
         <source>Change:</source>
         <translation>Bueltak:</translation>
     </message>
@@ -937,6 +1267,26 @@
     <message>
         <source>Confirm the send action</source>
         <translation>Bidalketa berretsi</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation>Kopia kopurua</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>zenbatekoaren kopia</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Kopiatu byte-ak</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Kopiatu hautsa</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Kopiatu aldaketa</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -1003,6 +1353,22 @@
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
+    <message>
+        <source>No error</source>
+        <translation>Ez dago errorerik</translation>
+    </message>
+    <message>
+        <source>Message signing failed.</source>
+        <translation>Errorea mezua sinatzean</translation>
+    </message>
+    <message>
+        <source>Message signed.</source>
+        <translation>Mezua sinatuta.</translation>
+    </message>
+    <message>
+        <source>Please check the signature and try again.</source>
+        <translation>Mesedez, begiratu sinadura eta saiatu berriro.</translation>
+    </message>
     </context>
 <context>
     <name>TrafficGraphWidget</name>
@@ -1014,6 +1380,10 @@
         <translation>Zabalik %1 arte</translation>
     </message>
     <message>
+        <source>abandoned</source>
+        <translation>abandonatuta</translation>
+    </message>
+    <message>
         <source>%1/unconfirmed</source>
         <translation>%1/konfirmatu gabe</translation>
     </message>
@@ -1022,12 +1392,64 @@
         <translation>%1 konfirmazio</translation>
     </message>
     <message>
+        <source>Status</source>
+        <translation>Egoera</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Data</translation>
     </message>
     <message>
+        <source>Source</source>
+        <translation>Iturria</translation>
+    </message>
+    <message>
+        <source>Generated</source>
+        <translation>Sortua</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Tik</translation>
+    </message>
+    <message>
         <source>unknown</source>
         <translation>ezezaguna</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Ra</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation>zure helbidea</translation>
+    </message>
+    <message>
+        <source>watch-only</source>
+        <translation>ikusi bakarrik</translation>
+    </message>
+    <message>
+        <source>label</source>
+        <translation>etiketa</translation>
+    </message>
+    <message>
+        <source>Credit</source>
+        <translation>Kreditua</translation>
+    </message>
+    <message>
+        <source>not accepted</source>
+        <translation>Onartu gabe</translation>
+    </message>
+    <message>
+        <source>Debit</source>
+        <translation>Zorrak</translation>
+    </message>
+    <message>
+        <source>Total debit</source>
+        <translation>Zor totala</translation>
+    </message>
+    <message>
+        <source>Total credit</source>
+        <translation>Kreditu totala</translation>
     </message>
     <message>
         <source>Message</source>
@@ -1090,6 +1512,10 @@
     <message>
         <source>Mined</source>
         <translation>Meatua</translation>
+    </message>
+    <message>
+        <source>watch-only</source>
+        <translation>ikusi bakarrik</translation>
     </message>
     <message>
         <source>(n/a)</source>
@@ -1177,6 +1603,14 @@
     <message>
         <source>Copy label</source>
         <translation>Etiketa kopiatu</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>zenbatekoaren kopia</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Kopiatu transakzioaren IDa</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>

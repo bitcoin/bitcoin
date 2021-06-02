@@ -2,12 +2,16 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>Right-click to edit address or label</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>Crea novam inscriptionem</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copia inscriptionem iam selectam in latibulum systematis</translation>
+        <translation>An abundance of inscription are on it are a covering to the system is already in the selected</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>

@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>చిరునామా లేదా లేబుల్ సవరించడానికి రైట్-క్లిక్ చేయండి</translation>
+        <translation>చిరునామా లేదా లేబుల్‌ను సవరించడానికి కుడి-క్లిక్ చేయండి</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -200,22 +200,182 @@
         <translation>మీ వాలెట్ గుప్తీకరించబోతోంది.</translation>
     </message>
     <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>mee yokka wallet encryption ayinadi</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>ముఖ్యమైనది: మీరు మీ వాలెట్ ఫైల్‌తో చేసిన మునుపటి బ్యాకప్‌లను కొత్తగా రూపొందించిన, గుప్తీకరించిన వాలెట్ ఫైల్‌తో భర్తీ చేయాలి. భద్రతా కారణాల దృష్ట్యా, మీరు క్రొత్త, గుప్తీకరించిన వాలెట్ ఉపయోగించడం ప్రారంభించిన వెంటనే గుప్తీకరించని వాలెట్ ఫైల్ యొక్క మునుపటి బ్యాకప్‌లు నిరుపయోగంగా మారతాయి.</translation>
+    </message>
+    <message>
         <source>Wallet encryption failed</source>
         <translation>జోలె సంకేతపరచడం విఫలమయ్యింది</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>lopali tappidam valla mee yokka wallet encryption samapthamu avaledu</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation>సరఫరా చేసిన పాస్‌ఫ్రేజ్‌లు సరిపోలడం లేదు.</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>వాలెట్ అన్‌లాక్ విఫలమైంది</translation>
+    </message>
+    <message>
+        <source>The passphrase entered for the wallet decryption was incorrect.</source>
+        <translation>వాలెట్ డిక్రిప్షన్ కోసం నమోదు చేసిన పాస్‌ఫ్రేజ్ తప్పు.</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>వాలెట్ డీక్రిప్షన్ విఫలమైంది</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>వాలెట్ పాస్‌ఫ్రేజ్ విజయవంతంగా మార్చబడింది.</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>హెచ్చరిక: క్యాప్స్ లాక్ కీ ఆన్‌లో ఉంది!</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>ఐపి/నెట్‌మాస్క్</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>వరకు నిషేధించబడింది</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>సంతకము మరియు సమాచారం</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>సమూహము తో సమకాలీకరణ చేయబడినది</translation>
+    </message>
+    <message>
+        <source>&amp;Overview</source>
+        <translation>&amp;అవలోకనం</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation>జోలె యొక్క సాధారణ అవలోకనాన్ని చూపించు</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;లావాదేవీలు</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>లావాదేవీ చరిత్రను బ్రౌజ్ చేయండి</translation>
+    </message>
     <message>
         <source>E&amp;xit</source>
         <translation>నిష్క్రమించు</translation>
     </message>
     <message>
+        <source>Quit application</source>
+        <translation>అప్లికేషన్ నిష్క్రమణ </translation>
+    </message>
+    <message>
+        <source>&amp;About %1</source>
+        <translation>&amp;గురించి %1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>%1 గురించి సమాచారాన్ని చూపించు</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>గురించి &amp; Qt</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>Qt గురించి సమాచారాన్ని చూపించు</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;ఎంపికలు...</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>%1 కోసం కాన్ఫిగరేషన్ ఎంపికలను సవరించండి</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;జోలెను గుప్తీకరించండి...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>పాస్‌ఫ్రేజ్‌ని మార్చండి</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>తెరువు &amp;URI ...</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>జోలెను సృష్టించండి...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>క్రొత్త వాలెట్ ని సృష్టించు</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>ధనమును తీసుకొనిపోవు సంచి</translation>
+    </message>
+    <message>
+        <source>Click to disable network activity.</source>
+        <translation>నెట్‌వర్క్ కార్యాచరణను నిలిపివేయడానికి క్లిక్ చేయండి.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>నెట్‌వర్క్ కార్యాచరణ నిలిపివేయబడింది.</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>నెట్‌వర్క్ కార్యాచరణను మళ్లీ ప్రారంభించడానికి క్లిక్ చేయండి.</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>శీర్షికలను సమకాలీకరిస్తోంది (%1%)...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>డిస్క్‌లో బ్లాక్‌లను రీఇన్డెక్సింగ్ చేస్తుంది...</translation>
+    </message>
+    <message>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>బిట్‌కాయిన్ చిరునామాకు నాణేలను పంపండి</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation>మరొక ప్రదేశానికి జోలెను బ్యాకప్ చెయండి</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>వాలెట్ గుప్తీకరణకు ఉపయోగించే పాస్‌ఫ్రేజ్‌ని మార్చండి</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>సందేశాన్ని ధృవీకరించండి</translation>
+    </message>
+    <message>
         <source>&amp;Send</source>
         <translation>పంపు</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation>స్వీకరించండి</translation>
     </message>
     <message>
         <source>Error</source>
@@ -247,6 +407,10 @@
     <message>
         <source>Quantity:</source>
         <translation>పరిమాణం</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>మొత్తం</translation>
     </message>
     <message>
         <source>Date</source>
@@ -311,6 +475,10 @@
 <context>
     <name>QObject</name>
     <message>
+        <source>Amount</source>
+        <translation>మొత్తం</translation>
+    </message>
+    <message>
         <source>unknown</source>
         <translation>తెలియదు</translation>
     </message>
@@ -329,6 +497,10 @@
     <message>
         <source>Address</source>
         <translation>చిరునామా</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>మొత్తం</translation>
     </message>
     <message>
         <source>Label</source>
@@ -414,6 +586,10 @@
     <message>
         <source>Merchant</source>
         <translation>వర్తకుడు</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>మొత్తం</translation>
     </message>
     </context>
 <context>

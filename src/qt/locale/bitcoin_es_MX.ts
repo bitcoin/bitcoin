@@ -31,7 +31,7 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>Ingrese dirección o capa a buscar </translation>
+        <translation>Ingrese dirección o etiqueta a buscar </translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -79,11 +79,11 @@
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>copiar y etiquetar</translation>
+        <translation>Copiar &amp; Etiquetar</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>Editar</translation>
+        <translation>&amp;Editar</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -205,7 +205,7 @@
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>IMPORTANTE: cualquier copia de seguridad anterior que haya hecho de su archivo de cartera debe ser reemplazada por el archivo de cartera encriptado y recién generado. Por razones de seguridad, las copias de seguridad anteriores del archivo de cartera sin cifrar serán inútiles tan pronto como empieces a usar la nueva billetera encriptada.</translation>
+        <translation>IMPORTANTE: Cualquier copia de seguridad anterior que haya hecho de su archivo de cartera debe ser reemplazada por el archivo de cartera recién generado y encriptado. Por razones de seguridad, las copias de seguridad anteriores del archivo de cartera sin cifrar serán inútiles tan pronto como empieces a usar la nueva billetera encriptada.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -286,6 +286,10 @@
         <translation>Salir de la aplicación</translation>
     </message>
     <message>
+        <source>&amp;About %1</source>
+        <translation>%Acerca de%1</translation>
+    </message>
+    <message>
         <source>Show information about %1</source>
         <translation>Mostrar información acerca de %1</translation>
     </message>
@@ -323,7 +327,7 @@
     </message>
     <message>
         <source>Create Wallet...</source>
-        <translation>Crear cartera</translation>
+        <translation>Crear Cartera</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
@@ -348,7 +352,7 @@ Haga clic para habilitar la actividad de red nuevamente.</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)...</source>
-        <translation>Sincronizar encabezados (%1%) ...</translation>
+        <translation>Sincronizar Encabezados (%1%) ...</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -447,6 +451,10 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
     <message>
         <source>Processing blocks on disk...</source>
         <translation>Procesando bloques en el disco...</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>Processed %n block of transaction history.</numerusform><numerusform>Processed %n blocks of transaction history.</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -569,31 +577,31 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
     <message>
         <source>Amount: %1
 </source>
-        <translation>Amount: %1
+        <translation>Cantidad: %1
 </translation>
     </message>
     <message>
         <source>Wallet: %1
 </source>
-        <translation>Wallet: %1
+        <translation>Billetera %1
 </translation>
     </message>
     <message>
         <source>Type: %1
 </source>
-        <translation>Type: %1
+        <translation>Escribe: %1
 </translation>
     </message>
     <message>
         <source>Label: %1
 </source>
-        <translation>Label: %1
+        <translation>Etiqueta: %1
 </translation>
     </message>
     <message>
         <source>Address: %1
 </source>
-        <translation>Address: %1
+        <translation>Dirección: %1
 </translation>
     </message>
     <message>
@@ -606,15 +614,15 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
-        <translation>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</translation>
+        <translation>La generación de llave HD está &lt;b&gt;habilitada&lt;/b&gt;</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</translation>
+        <translation>La generación de llave HD está &lt;b&gt;deshabilitada&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>Private key &lt;b&gt;disabled&lt;/b&gt;</translation>
+        <translation>Llave privada &lt;b&gt;deshabilitada&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -717,11 +725,11 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
     </message>
     <message>
         <source>Lock unspent</source>
-        <translation>Lock unspent</translation>
+        <translation>Bloqueo de No gastado</translation>
     </message>
     <message>
         <source>Unlock unspent</source>
-        <translation>Unlock unspent</translation>
+        <translation>Desbloqueo de No gastado</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -741,7 +749,7 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
     </message>
     <message>
         <source>Copy dust</source>
-        <translation>Copy dust</translation>
+        <translation>Copiar polvo</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -749,7 +757,7 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
     </message>
     <message>
         <source>(%1 locked)</source>
-        <translation>(%1 locked)</translation>
+        <translation>(%1 cerrado)</translation>
     </message>
     <message>
         <source>yes</source>
@@ -997,7 +1005,19 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
         <source>Error</source>
         <translation>Error</translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n GB of free space available</numerusform><numerusform>%n GB of free space available</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(of %n GB needed)</numerusform><numerusform>(of %n GB needed)</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(%n GB needed for full chain)</numerusform><numerusform>(%n GB needed for full chain)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -1120,6 +1140,10 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
         <translation>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</translation>
     </message>
     <message>
         <source>Hide the icon from the system tray.</source>
@@ -1541,9 +1565,33 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
         <source>%1 ms</source>
         <translation>%1 ms</translation>
     </message>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation><numerusform>%n second</numerusform><numerusform>%n seconds</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation><numerusform>%n minute</numerusform><numerusform>%n minutes</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n hour</numerusform><numerusform>%n hours</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n day</numerusform><numerusform>%n days</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n week</numerusform><numerusform>%n weeks</numerusform></translation>
+    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 and %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n year</numerusform><numerusform>%n years</numerusform></translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -1672,6 +1720,10 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
         <translation>Block chain</translation>
     </message>
     <message>
+        <source>Current number of blocks</source>
+        <translation>Current number of blocks</translation>
+    </message>
+    <message>
         <source>Memory Pool</source>
         <translation>Memory Pool</translation>
     </message>
@@ -1714,6 +1766,10 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Select a peer to view detailed information.</translation>
+    </message>
+    <message>
+        <source>Whitelisted</source>
+        <translation>Whitelisted</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1766,6 +1822,10 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
     <message>
         <source>Services</source>
         <translation>Servicios</translation>
+    </message>
+    <message>
+        <source>Ban Score</source>
+        <translation>Ban Score</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -2026,6 +2086,10 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>QR Code</source>
+        <translation>QR Code</translation>
+    </message>
+    <message>
         <source>Copy &amp;URI</source>
         <translation>Copy &amp;URI</translation>
     </message>
@@ -2044,6 +2108,10 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
     <message>
         <source>Payment information</source>
         <translation>Payment information</translation>
+    </message>
+    <message>
+        <source>URI</source>
+        <translation>URI</translation>
     </message>
     <message>
         <source>Address</source>
@@ -2348,6 +2416,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Confirmar la propuesta de transacción</translation>
     </message>
     <message>
+        <source>Copy PSBT to clipboard</source>
+        <translation>Copy PSBT to clipboard</translation>
+    </message>
+    <message>
         <source>Send</source>
         <translation>Enviar</translation>
     </message>
@@ -2390,6 +2462,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Payment request expired.</source>
         <translation>La solicitud de pago expiró.</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>Estimated to begin confirmation within %n block.</numerusform><numerusform>Estimated to begin confirmation within %n blocks.</numerusform></translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2666,6 +2742,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Open for %n more block</numerusform><numerusform>Open for %n more blocks</numerusform></translation>
+    </message>
     <message>
         <source>Open until %1</source>
         <translation>Abrir hasta %1</translation>
@@ -2741,6 +2821,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Credit</source>
         <translation>Credit</translation>
+    </message>
+    <message numerus="yes">
+        <source>matures in %n more block(s)</source>
+        <translation><numerusform>matures in %n more block</numerusform><numerusform>matures in %n more blocks</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2851,6 +2935,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Label</source>
         <translation>Etiqueta</translation>
+    </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Open for %n more block</numerusform><numerusform>Open for %n more blocks</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -3242,6 +3330,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Error: A fatal internal error occurred, see debug.log for details</translation>
+    </message>
+    <message>
         <source>Pruning blockstore...</source>
         <translation>Pruning blockstore...</translation>
     </message>
@@ -3252,6 +3344,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>The %s developers</source>
         <translation>The %s developers</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3300,6 +3396,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</translation>
+    </message>
+    <message>
+        <source>%d of last 100 blocks have unexpected version</source>
+        <translation>%d of last 100 blocks have unexpected version</translation>
+    </message>
+    <message>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s corrupt, salvage failed</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3424,6 +3528,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Loading P2P addresses...</source>
         <translation>Loading P2P addresses...</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is too low!</source>
+        <translation>Error: Disk space is too low!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3608,6 +3716,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Warning: unknown new rules activated (versionbit %i)</translation>
     </message>
     <message>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>Zapping all transactions from wallet...</translation>
+    </message>
+    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</translation>
     </message>
@@ -3618,6 +3730,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</translation>
+    </message>
+    <message>
+        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3633,7 +3749,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation>The wallet will avoid paying less than the minimum relay fee.</translation>
+        <translation>La billetera evitará pagar menos de la tarifa mínima de retransmisión. </translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
@@ -3656,12 +3772,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>La transacción debe tener al menos un destinatario</translation>
     </message>
     <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>Unknown network specified in -onlynet: '%s'</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Fondos insuficientes</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
+        <translation>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>

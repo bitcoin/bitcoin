@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>新しいアドレスを作成</translation>
+        <translation>新規アドレスを作成</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -19,7 +19,7 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>コピー(&amp;C)</translation>
+        <translation>コピー (&amp;C)</translation>
     </message>
     <message>
         <source>C&amp;lose</source>

@@ -1,45 +1,65 @@
-<TS language="uz@Latn" version="2.1">
+<TS language="sc" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Manzil yoki yorliqni tahrirlash uchun oʻng tugmani bosing</translation>
+        <translation>Tastu deretu po cambiai s'incarreramentu o su nòmini</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Yangi manzil yaratish</translation>
+        <translation>Crea un'incarreramentu nou</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Yangi</translation>
+        <translation>&amp;nou</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Nusxalash</translation>
+        <translation>&amp;còpia</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>Yo&amp;pish</translation>
+        <translation>S&amp;erra</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation>Poni s'incarreramentu o s'etiketa po circai</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Esporta</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;O'chirish</translation>
+        <translation>&amp;Cancella</translation>
     </message>
     <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Manzillarni nusxalash</translation>
+        <source>Choose the address to send coins to</source>
+        <translation>Sciobera a cali incarreramentu bolis mandai is monedas</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Sciobera s'incarreramentu po arrici is monedas cun</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>S&amp;ciobera</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Incarreramentu de inviu</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Incarreramentu destinatàriu</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Custus funt is incarreramentu Bitcoin tuus po mandai pagamentus. Càstia sempri sa cantidadi e s'incarreramentu destinatàriu antis de inviais is monedas</translation>
     </message>
     </context>
 <context>
     <name>AddressTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Yorliq</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Manzil</translation>
-    </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -106,21 +126,9 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
-    <message>
-        <source>Address</source>
-        <translation>Manzil</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Yorliq</translation>
-    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Yorliq</translation>
-    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -145,21 +153,9 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Yorliq</translation>
-    </message>
     </context>
 <context>
     <name>TransactionView</name>
-    <message>
-        <source>Label</source>
-        <translation>Yorliq</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Manzil</translation>
-    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -175,6 +171,10 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Esporta</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
