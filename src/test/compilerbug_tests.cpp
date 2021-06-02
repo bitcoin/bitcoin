@@ -3,9 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <boost/test/unit_test.hpp>
-#include <test/util/setup_common.h>
 
-BOOST_FIXTURE_TEST_SUITE(compilerbug_tests, BasicTestingSetup)
+BOOST_AUTO_TEST_SUITE(compilerbug_tests)
 
 #if defined(__GNUC__)
 // This block will also be built under clang, which is fine (as it supports noinline)
