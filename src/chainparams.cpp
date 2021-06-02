@@ -268,8 +268,8 @@ public:
 
 
         if (IS_TESTNET) {
-            vSeeds.emplace_back("3.132.163.214");
-            vSeeds.emplace_back("3.140.139.43");
+            vSeeds.emplace_back("10.1.0.114");
+            vSeeds.emplace_back("10.1.0.49");
         } else {
             vSeeds.emplace_back("prod1.dynamocoin.org");
             vSeeds.emplace_back("prod2.dynamocoin.org");
