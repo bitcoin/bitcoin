@@ -84,8 +84,8 @@ class FrameworkInfo(object):
         if line == "":
             return None
         
-        # Don't deploy system libraries (exception for libQtuitools and libQtlucene).
-        if line.startswith("/System/Library/") or line.startswith("@executable_path") or (line.startswith("/usr/lib/") and "libQt" not in line):
+        # Don't deploy system libraries
+        if line.startswith("/System/Library/") or line.startswith("@executable_path") or line.startswith("/usr/lib/"):
             return None
         
         m = cls.reOLine.match(line)
@@ -286,14 +286,6 @@ def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional
             if verbose:
                 print("Copied Contents:", fromContentsDir)
                 print(" to:", toContentsDir)
-    elif framework.frameworkName.startswith("libQtGui"): # Copy qt_menu.nib (applies to non-framework layout)
-        qtMenuNibSourcePath = os.path.join(framework.frameworkDirectory, "Resources", "qt_menu.nib")
-        qtMenuNibDestinationPath = os.path.join(path, "Contents", "Resources", "qt_menu.nib")
-        if os.path.exists(qtMenuNibSourcePath) and not os.path.exists(qtMenuNibDestinationPath):
-            shutil.copytree(qtMenuNibSourcePath, qtMenuNibDestinationPath, symlinks=True)
-            if verbose:
-                print("Copied for libQtGui:", qtMenuNibSourcePath)
-                print(" to:", qtMenuNibDestinationPath)
     
     return toPath
 
