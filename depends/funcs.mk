@@ -209,17 +209,17 @@ $($(1)_configured): | $($(1)_dependencies) $($(1)_preprocessed)
 	echo Configuring $(1)...
 	rm -rf $(host_prefix); mkdir -p $(host_prefix)/lib; cd $(host_prefix); $(foreach package,$($(1)_all_dependencies), tar --no-same-owner -xf $($(package)_cached); )
 	mkdir -p $$(@D)
-	+cd $$(@D); $($(1)_config_env) $(call $(1)_config_cmds, $(1))
+	+cd $$(@D); $$(mflags) $($(1)_config_env) $(call $(1)_config_cmds, $(1))
 	touch $$@
 $($(1)_built): | $($(1)_configured)
 	echo Building $(1)...
 	mkdir -p $$(@D)
-	+cd $$(@D); $($(1)_build_env) $(call $(1)_build_cmds, $(1))
+	+cd $$(@D); $$(mflags) $($(1)_build_env) $(call $(1)_build_cmds, $(1))
 	touch $$@
 $($(1)_staged): | $($(1)_built)
 	echo Staging $(1)...
 	mkdir -p $($(1)_staging_dir)/$(host_prefix)
-	cd $($(1)_build_dir); $($(1)_stage_env) $(call $(1)_stage_cmds, $(1))
+	cd $($(1)_build_dir); $$(mflags) $($(1)_stage_env) $(call $(1)_stage_cmds, $(1))
 	rm -rf $($(1)_extract_dir)
 	touch $$@
 $($(1)_postprocessed): | $($(1)_staged)
