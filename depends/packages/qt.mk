@@ -126,7 +126,7 @@ $(package)_config_opts_darwin += -device-option XCODE_VERSION=$(XCODE_VERSION)
 endif
 
 # for macOS on Apple Silicon (ARM) see https://bugreports.qt.io/browse/QTBUG-85279
-$(package)_config_opts_arm_darwin += -device-option QMAKE_APPLE_DEVICE_ARCHS=arm64
+$(package)_config_opts_aarch64_darwin += -device-option QMAKE_APPLE_DEVICE_ARCHS=arm64
 
 $(package)_config_opts_linux = -qt-xcb
 $(package)_config_opts_linux += -no-xcb-xlib
