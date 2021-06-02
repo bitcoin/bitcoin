@@ -136,8 +136,8 @@ public:
         std::string genesisMerkleRoot;
 
         if (IS_TESTNET) {
-            genesisHash = "0x000075d0b9c03b4800620538d2e512a742effe138768ed5a66f90f082e2c8690";
-            genesisMerkleRoot = "0x794ea2a523f66d5dbeb531c5af496263ef37cdb9574ac15b4438f5c16cdb6132";
+            genesisHash = "0x0000af1f88dd6d8a5d3039579903dd425a0dbf1bac67e6352fe2203704728a1a";
+            genesisMerkleRoot = "0xbb76c63e66f6d6f9a6f45d05a4ef802732241b08765d6cc58738faebec5c913b";
         } else {
             genesisHash = "0x0000bced5a01a0914d7ca7e3ea5a37063d690d90b18de3bc0629e76a894715a0";
             genesisMerkleRoot = "0xbb76c63e66f6d6f9a6f45d05a4ef802732241b08765d6cc58738faebec5c913b";
@@ -241,6 +241,7 @@ public:
         }
 
 
+        
         /*
         time_t t;
         time(&t);
@@ -250,7 +251,7 @@ public:
                   
 
         if (IS_TESTNET) {
-            genesis = CreateGenesisBlock(1621525586, 67081, 0x1f00ffff, 1, 1, devFeePerBlock, charityPerBlock);
+            genesis = CreateGenesisBlock(1622653676, 49382, 0x1f00ffff, 1, 1, devFeePerBlock, charityPerBlock);
         } else {
             genesis = CreateGenesisBlock(1621740839, 128271, 0x1f00ffff, 1, 1, devFeePerBlock, charityPerBlock);
         }
