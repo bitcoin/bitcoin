@@ -931,8 +931,15 @@ static RPCHelpMan addpeeraddress()
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
     }
 
+    // check the port number
+    int portIn = request.params[1].get_int();
+    if (portIn > std::numeric_limits<uint16_t>::max()
+            || portIn < std::numeric_limits<uint16_t>::min()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid port specified: %d", portIn));
+    }
+
     const std::string& addr_string{request.params[0].get_str()};
-    const uint16_t port{static_cast<uint16_t>(request.params[1].get_int())};
+    const uint16_t port{static_cast<uint16_t>(portIn)};
 
     UniValue obj(UniValue::VOBJ);
     CNetAddr net_addr;
