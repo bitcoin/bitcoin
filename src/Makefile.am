@@ -355,12 +355,6 @@ libbitcoin_server_a_SOURCES = \
   policy/settings.cpp \
   pow.cpp \
   rest.cpp \
-  rpc/blockchain.cpp \
-  rpc/mining.cpp \
-  rpc/misc.cpp \
-  rpc/net.cpp \
-  rpc/rawtransaction.cpp \
-  rpc/server.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
   signet.cpp \
@@ -374,6 +368,16 @@ libbitcoin_server_a_SOURCES = \
   validationinterface.cpp \
   versionbits.cpp \
   $(BITCOIN_CORE_H)
+
+if ENABLE_RPC
+libbitcoin_server_a_SOURCES += \
+	rpc/blockchain.cpp \
+	rpc/mining.cpp \
+	rpc/misc.cpp \
+	rpc/net.cpp \
+	rpc/rawtransaction.cpp \
+	rpc/server.cpp
+endif
 
 if ENABLE_WALLET
 libbitcoin_server_a_SOURCES += wallet/init.cpp
@@ -389,8 +393,10 @@ libbitcoin_zmq_a_SOURCES = \
   zmq/zmqabstractnotifier.cpp \
   zmq/zmqnotificationinterface.cpp \
   zmq/zmqpublishnotifier.cpp \
-  zmq/zmqrpc.cpp \
   zmq/zmqutil.cpp
+if ENABLE_RPC
+libbitcoin_zmq_a_SOURCES += zmq/zmqrpc.cpp
+endif
 endif
 
 
@@ -410,8 +416,6 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/interfaces.cpp \
   wallet/load.cpp \
   wallet/receive.cpp \
-  wallet/rpcdump.cpp \
-  wallet/rpcwallet.cpp \
   wallet/scriptpubkeyman.cpp \
   wallet/spend.cpp \
   wallet/transaction.cpp \
@@ -420,6 +424,12 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/walletutil.cpp \
   wallet/coinselection.cpp \
   $(BITCOIN_CORE_H)
+
+if ENABLE_RPC
+libbitcoin_wallet_a_SOURCES += \
+	wallet/rpcdump.cpp \
+	wallet/rpcwallet.cpp
+endif
 
 if USE_SQLITE
 libbitcoin_wallet_a_SOURCES += wallet/sqlite.cpp
