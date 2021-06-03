@@ -629,7 +629,6 @@ struct CNodeState {
     //! When the first entry in vBlocksInFlight started downloading. Don't care when vBlocksInFlight is empty.
     std::chrono::microseconds m_downloading_since{0us};
     int nBlocksInFlight{0};
-    int nBlocksInFlightValidHeaders{0};
     //! Whether we consider this a preferred download peer.
     bool fPreferredDownload{false};
     //! Whether this peer wants invs or headers (when possible) for block announcements.
@@ -766,17 +765,16 @@ bool PeerManagerImpl::MarkBlockAsReceived(const uint256& hash)
     if (itInFlight != mapBlocksInFlight.end()) {
         CNodeState *state = State(itInFlight->second.first);
         assert(state != nullptr);
-        state->nBlocksInFlightValidHeaders -= 1;
-        if (state->nBlocksInFlightValidHeaders == 0) {
-            // Last validated block on the queue was received.
-            nPeersWithValidatedDownloads--;
-        }
         if (state->vBlocksInFlight.begin() == itInFlight->second.second) {
             // First block on the queue was received, update the start download time for the next one
             state->m_downloading_since = std::max(state->m_downloading_since, GetTime<std::chrono::microseconds>());
         }
         state->vBlocksInFlight.erase(itInFlight->second.second);
         state->nBlocksInFlight--;
+        if (state->nBlocksInFlight == 0) {
+            // Last validated block on the queue was received.
+            nPeersWithValidatedDownloads--;
+        }
         state->m_stalling_since = 0us;
         mapBlocksInFlight.erase(itInFlight);
         return true;
@@ -807,12 +805,9 @@ bool PeerManagerImpl::MarkBlockAsInFlight(NodeId nodeid, const CBlockIndex* pind
     std::list<QueuedBlock>::iterator it = state->vBlocksInFlight.insert(state->vBlocksInFlight.end(),
             {hash, pindex, std::unique_ptr<PartiallyDownloadedBlock>(pit ? new PartiallyDownloadedBlock(&m_mempool) : nullptr)});
     state->nBlocksInFlight++;
-    state->nBlocksInFlightValidHeaders += 1;
     if (state->nBlocksInFlight == 1) {
         // We're starting a block download (batch) from this peer.
         state->m_downloading_since = GetTime<std::chrono::microseconds>();
-    }
-    if (state->nBlocksInFlightValidHeaders == 1) {
         nPeersWithValidatedDownloads++;
     }
     itInFlight = mapBlocksInFlight.insert(std::make_pair(hash, std::make_pair(nodeid, it))).first;
@@ -1139,7 +1134,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
     WITH_LOCK(g_cs_orphans, m_orphanage.EraseForPeer(nodeid));
     m_txrequest.DisconnectedPeer(nodeid);
     nPreferredDownload -= state->fPreferredDownload;
-    nPeersWithValidatedDownloads -= (state->nBlocksInFlightValidHeaders != 0);
+    nPeersWithValidatedDownloads -= (state->nBlocksInFlight != 0);
     assert(nPeersWithValidatedDownloads >= 0);
     m_outbound_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
     assert(m_outbound_peers_with_protect_from_disconnect >= 0);
@@ -4717,7 +4712,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         // to unreasonably increase our timeout.
         if (state.vBlocksInFlight.size() > 0) {
             QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
-            int nOtherPeersWithValidatedDownloads = nPeersWithValidatedDownloads - (state.nBlocksInFlightValidHeaders > 0);
+            int nOtherPeersWithValidatedDownloads = nPeersWithValidatedDownloads - 1;
             if (current_time > state.m_downloading_since + std::chrono::seconds{consensusParams.nPowTargetSpacing} * (BLOCK_DOWNLOAD_TIMEOUT_BASE + BLOCK_DOWNLOAD_TIMEOUT_PER_PEER * nOtherPeersWithValidatedDownloads)) {
                 LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", queuedBlock.hash.ToString(), pto->GetId());
                 pto->fDisconnect = true;
