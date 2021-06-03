@@ -194,6 +194,7 @@ BASE_SCRIPTS = [
     'p2p_addrv2_relay.py',
     'wallet_groups.py --legacy-wallet',
     'wallet_groups.py --descriptors',
+    'p2p_compactblocks_hb.py',
     'p2p_disconnect_ban.py',
     'feature_addressindex.py',
     'feature_timestampindex.py',
