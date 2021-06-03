@@ -45,14 +45,24 @@ struct CCoinsStats
     bool index_used{false};
 
     // Following values are only available from coinstats index
+
+    //! Total cumulative amount of block subsidies up to and including this block
     CAmount total_subsidy{0};
+    //! Total cumulative amount of unspendable coins up to and including this block
     CAmount total_unspendable_amount{0};
+    //! Total cumulative amount of prevouts spent up to and including this block
     CAmount total_prevout_spent_amount{0};
+    //! Total cumulative amount of outputs created up to and including this block
     CAmount total_new_outputs_ex_coinbase_amount{0};
+    //! Total cumulative amount of coinbase outputs up to and including this block
     CAmount total_coinbase_amount{0};
+    //! The unspendable coinbase amount from the genesis block
     CAmount total_unspendables_genesis_block{0};
+    //! The two unspendable coinbase outputs total amount caused by BIP30
     CAmount total_unspendables_bip30{0};
+    //! Total cumulative amount of outputs sent to unspendable scripts (OP_RETURN for example) up to and including this block
     CAmount total_unspendables_scripts{0};
+    //! Total cumulative amount of coins lost due to unclaimed miner rewards up to and including this block
     CAmount total_unspendables_unclaimed_rewards{0};
 
     CCoinsStats(CoinStatsHashType hash_type) : m_hash_type(hash_type) {}
