@@ -371,12 +371,12 @@ translate: $(srcdir)/qt/syscoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(SYSCO
 $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	@test -f $(RCC)
 	@cp -f $< $(@D)/temp_$(<F)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name syscoin_locale $(@D)/temp_$(<F) > $@
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name syscoin_locale --format-version 1 $(@D)/temp_$(<F) > $@
 	@rm $(@D)/temp_$(<F)
 
 $(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_FONTS) $(RES_ICONS) $(RES_ANIMATION)
 	@test -f $(RCC)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name syscoin $< > $@
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name syscoin --format-version 1 $< > $@
 
 CLEAN_QT = $(nodist_qt_libsyscoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno qt/temp_syscoin_locale.qrc
 

@@ -40,7 +40,6 @@ script: |
   HOST_CFLAGS="-O2 -g -fno-ident"
   HOST_CXXFLAGS="-O2 -g -fno-ident"
 
-  export QT_RCC_SOURCE_DATE_OVERRIDE=1
   export TZ="UTC"
   export BUILD_DIR="$PWD"
   mkdir -p ${WRAP_DIR}
