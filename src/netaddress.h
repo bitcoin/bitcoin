@@ -147,7 +147,7 @@ class CNetAddr
          * (e.g. IPv4) disguised as IPv6. This encoding is used in the legacy
          * `addr` encoding.
          */
-        void SetLegacyIPv6(Span<const uint8_t> ipv6);
+        void SetLegacyIPv6(const Span<const uint8_t>& ipv6);
 
         bool SetInternal(const std::string& name);
 

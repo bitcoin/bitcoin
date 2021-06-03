@@ -150,7 +150,7 @@ void CNetAddr::SetIP(const CNetAddr& ipIn)
     m_addr = ipIn.m_addr;
 }
 
-void CNetAddr::SetLegacyIPv6(Span<const uint8_t> ipv6)
+void CNetAddr::SetLegacyIPv6(const Span<const uint8_t>& ipv6)
 {
     assert(ipv6.size() == ADDR_IPV6_SIZE);
 
@@ -200,7 +200,7 @@ static constexpr size_t CHECKSUM_LEN = 2;
 static const unsigned char VERSION[] = {3};
 static constexpr size_t TOTAL_LEN = ADDR_TORV3_SIZE + CHECKSUM_LEN + sizeof(VERSION);
 
-static void Checksum(Span<const uint8_t> addr_pubkey, uint8_t (&checksum)[CHECKSUM_LEN])
+static void Checksum(const Span<const uint8_t>& addr_pubkey, uint8_t (&checksum)[CHECKSUM_LEN])
 {
     // TORv3 CHECKSUM = H(".onion checksum" | PUBKEY | VERSION)[:2]
     static const unsigned char prefix[] = ".onion checksum";
@@ -260,9 +260,9 @@ bool CNetAddr::SetTor(const std::string& addr)
         m_addr.assign(input.begin(), input.end());
         return true;
     case torv3::TOTAL_LEN: {
-        Span<const uint8_t> input_pubkey{input.data(), ADDR_TORV3_SIZE};
-        Span<const uint8_t> input_checksum{input.data() + ADDR_TORV3_SIZE, torv3::CHECKSUM_LEN};
-        Span<const uint8_t> input_version{input.data() + ADDR_TORV3_SIZE + torv3::CHECKSUM_LEN, sizeof(torv3::VERSION)};
+        const Span<const uint8_t> input_pubkey{input.data(), ADDR_TORV3_SIZE};
+        const Span<const uint8_t> input_checksum{input.data() + ADDR_TORV3_SIZE, torv3::CHECKSUM_LEN};
+        const Span<const uint8_t> input_version{input.data() + ADDR_TORV3_SIZE + torv3::CHECKSUM_LEN, sizeof(torv3::VERSION)};
 
         if (input_version != torv3::VERSION) {
             return false;
@@ -551,14 +551,14 @@ enum Network CNetAddr::GetNetwork() const
     return m_net;
 }
 
-static std::string IPv4ToString(Span<const uint8_t> a)
+static std::string IPv4ToString(const Span<const uint8_t>& a)
 {
     return strprintf("%u.%u.%u.%u", a[0], a[1], a[2], a[3]);
 }
 
 // Return an IPv6 address text representation with zero compression as described in RFC 5952
 // ("A Recommendation for IPv6 Address Text Representation").
-static std::string IPv6ToString(Span<const uint8_t> a, uint32_t scope_id)
+static std::string IPv6ToString(const Span<const uint8_t>& a, uint32_t scope_id)
 {
     assert(a.size() == ADDR_IPV6_SIZE);
     const std::array groups{
