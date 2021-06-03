@@ -395,16 +395,6 @@ class CNetAddr
         }
 
         /**
-         * Unserialize from a pre-ADDRv2/BIP155 format from an array.
-         */
-        void UnserializeV1Array(uint8_t (&arr)[V1_SERIALIZATION_SIZE])
-        {
-            // Use SetLegacyIPv6() so that m_net is set correctly. For example
-            // ::FFFF:0102:0304 should be set as m_net=NET_IPV4 (1.2.3.4).
-            SetLegacyIPv6(arr);
-        }
-
-        /**
          * Unserialize from a pre-ADDRv2/BIP155 format from a stream.
          */
         template <typename Stream>
@@ -414,7 +404,9 @@ class CNetAddr
 
             s >> serialized;
 
-            UnserializeV1Array(serialized);
+            // Use SetLegacyIPv6() so that m_net is set correctly. For example
+            // ::FFFF:0102:0304 should be set as m_net=NET_IPV4 (1.2.3.4).
+            SetLegacyIPv6(serialized);
         }
 
         /**
