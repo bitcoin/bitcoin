@@ -239,8 +239,9 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                 // SYSCOIN
                 CAssetsMap mapAssetIn;
                 CAssetsMap mapAssetOut;
-                (void)Consensus::CheckTxInputs(transaction, state, coins_view_cache, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max()), tx_fee_out, mapAssetIn, mapAssetOut);
-                assert(MoneyRange(tx_fee_out));
+                if (Consensus::CheckTxInputs(transaction, state, coins_view_cache, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max()), tx_fee_out, mapAssetIn, mapAssetOut)) {
+                    assert(MoneyRange(tx_fee_out));
+                }
             },
             [&] {
                 const CTransaction transaction{random_mutable_transaction};
