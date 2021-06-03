@@ -159,8 +159,6 @@ static constexpr size_t MAX_ADDR_TO_SEND{1000};
 namespace {
 /** Blocks that are in flight, and that are in the queue to be downloaded. */
 struct QueuedBlock {
-    /** Block hash */
-    uint256 hash;
     /** BlockIndex. We must have this since we only request blocks when we've already validated the header. */
     const CBlockIndex* pindex;
     /** Optional, used for CMPCTBLOCK downloads */
@@ -803,7 +801,7 @@ bool PeerManagerImpl::MarkBlockAsInFlight(NodeId nodeid, const CBlockIndex* pind
     MarkBlockAsReceived(hash);
 
     std::list<QueuedBlock>::iterator it = state->vBlocksInFlight.insert(state->vBlocksInFlight.end(),
-            {hash, pindex, std::unique_ptr<PartiallyDownloadedBlock>(pit ? new PartiallyDownloadedBlock(&m_mempool) : nullptr)});
+            {pindex, std::unique_ptr<PartiallyDownloadedBlock>(pit ? new PartiallyDownloadedBlock(&m_mempool) : nullptr)});
     state->nBlocksInFlight++;
     if (state->nBlocksInFlight == 1) {
         // We're starting a block download (batch) from this peer.
@@ -1129,7 +1127,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         nSyncStarted--;
 
     for (const QueuedBlock& entry : state->vBlocksInFlight) {
-        mapBlocksInFlight.erase(entry.hash);
+        mapBlocksInFlight.erase(entry.pindex->GetBlockHash());
     }
     WITH_LOCK(g_cs_orphans, m_orphanage.EraseForPeer(nodeid));
     m_txrequest.DisconnectedPeer(nodeid);
@@ -4714,7 +4712,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
             int nOtherPeersWithValidatedDownloads = m_peers_downloading_from - 1;
             if (current_time > state.m_downloading_since + std::chrono::seconds{consensusParams.nPowTargetSpacing} * (BLOCK_DOWNLOAD_TIMEOUT_BASE + BLOCK_DOWNLOAD_TIMEOUT_PER_PEER * nOtherPeersWithValidatedDownloads)) {
-                LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", queuedBlock.hash.ToString(), pto->GetId());
+                LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", queuedBlock.pindex->GetBlockHash().ToString(), pto->GetId());
                 pto->fDisconnect = true;
                 return true;
             }
