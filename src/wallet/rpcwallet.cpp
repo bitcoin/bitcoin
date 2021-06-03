@@ -532,6 +532,14 @@ static RPCHelpMan sendtoaddress()
         //TODO - error
     }
 
+    std::vector<unsigned char> vecNFT;
+    if (request.nftCommand.size() > 0) {
+        if (request.nftCommand.size() % 2 == 0) {
+            vecNFT = ParseHex(request.nftCommand.c_str());
+        }
+        //TODO - error
+    }
+
     return SendMoney(*pwallet, coin_control, recipients, mapValue, verbose, vecContract);
 },
     };

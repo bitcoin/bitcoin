@@ -161,11 +161,21 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     id = find_value(request, "id");
 
     //optional contract code
+    createContractCode.erase();
     UniValue valContractCode = find_value(request, "contract_code");
     if (!valContractCode.isNull()) {
         if (!valContractCode.isStr())
             throw JSONRPCError(RPC_INVALID_REQUEST, "Contract code must be a string");
         createContractCode = valContractCode.get_str();
+    }
+
+    //optional nft command
+    nftCommand.erase();
+    UniValue valNFTCommand = find_value(request, "nft_command");
+    if (!valNFTCommand.isNull()) {
+        if (!valNFTCommand.isStr())
+            throw JSONRPCError(RPC_INVALID_REQUEST, "NFT command must be a string");
+        nftCommand = valNFTCommand.get_str();
     }
 
     // Parse method

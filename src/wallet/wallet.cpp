@@ -2767,7 +2767,9 @@ bool CWallet::CreateTransactionInternal(
         const CCoinControl& coin_control,
         FeeCalculation& fee_calc_out,
         bool sign,
-        std::vector<unsigned char> vecContract)
+        std::vector<unsigned char> vecContract,
+        std::vector<unsigned char> vecNFT
+        )
 {
     CAmount nValue = 0;
     const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend);
@@ -2912,6 +2914,18 @@ bool CWallet::CreateTransactionInternal(
                             CScript newSig = GetScriptForDestination(DecodeDestination(strScriptDest));
                         }
                         */
+                    }
+
+                    //if we are loading an NFT, any amount sent is burned
+                    if (vecNFT.size() > 0) {
+                        std::vector<unsigned char> vecOldScript;
+                        for (int i = 0; i < txout.scriptPubKey.size(); i++)
+                            vecOldScript.push_back(txout.scriptPubKey.data()[i]);
+
+                        std::vector<unsigned char> data = {'N', 'F', 'T'};
+                        CScript burnScript;
+                        burnScript << OP_RETURN << data << vecOldScript;
+                        txout.scriptPubKey = burnScript;
                     }
                     
 
@@ -3130,6 +3144,44 @@ bool CWallet::CreateTransactionInternal(
             CTxOut txContract(0, CScript() << OP_RETURN << vecContractSubmit);
             txNew.vout.push_back(txContract);
         }
+
+        //if submitting an NFT, add the OP_RETURN command
+        if (vecNFT.size() > 0) {
+            //get the original recipient - this is the NFT owner -
+            //TODO - compare it to the sender
+            CRecipient recp = vecSend[0];
+
+            CTxDestination address;
+            const CScript& scriptPubKey = recp.scriptPubKey;
+            bool fValidAddress = ExtractDestination(scriptPubKey, address);
+
+            std::string ownerAddr;
+            if (fValidAddress)
+                ownerAddr = EncodeDestination(address);
+
+            //NFT signature is 7777
+            std::vector<unsigned char> signature = {0x37, 0x37, 0x37, 0x37};
+
+            std::vector<unsigned char> ownerAddrVec;
+            ownerAddrVec.push_back(ownerAddr.length());
+            for (int i = 0; i < ownerAddr.length(); i++)
+                ownerAddrVec.push_back(ownerAddr[i]);
+
+            std::string strOwnerAddrHex = HexStr(ownerAddrVec);
+
+            std::vector<unsigned char> ownerAddrHex;
+            for (int i = 0; i < strOwnerAddrHex.length(); i++)
+                ownerAddrHex.push_back(strOwnerAddrHex[i]);
+
+            std::vector<unsigned char> vecNFTSubmit = signature;
+            vecNFTSubmit.insert(vecNFTSubmit.end(), ownerAddrHex.begin(), ownerAddrHex.end());
+
+            vecNFTSubmit.insert(vecNFTSubmit.end(), vecNFT.begin(), vecNFT.end());
+            CTxOut txContract(0, CScript() << OP_RETURN << vecNFTSubmit);
+            txNew.vout.push_back(txContract);
+        }
+
+
 
         // Shuffle selected coins and fill in final vin
         txNew.vin.clear();
