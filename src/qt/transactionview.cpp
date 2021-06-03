@@ -19,6 +19,8 @@
 
 #include <node/ui_interface.h>
 
+#include <optional>
+
 #include <QApplication>
 #include <QComboBox>
 #include <QDateTimeEdit>
@@ -266,26 +268,26 @@ void TransactionView::chooseDate(int idx)
     {
     case All:
         transactionProxyModel->setDateRange(
-                TransactionFilterProxy::MIN_DATE,
-                TransactionFilterProxy::MAX_DATE);
+                std::nullopt,
+                std::nullopt);
         break;
     case Today:
         transactionProxyModel->setDateRange(
                 GUIUtil::StartOfDay(current),
-                TransactionFilterProxy::MAX_DATE);
+                std::nullopt);
         break;
     case ThisWeek: {
         // Find last Monday
         QDate startOfWeek = current.addDays(-(current.dayOfWeek()-1));
         transactionProxyModel->setDateRange(
                 GUIUtil::StartOfDay(startOfWeek),
-                TransactionFilterProxy::MAX_DATE);
+                std::nullopt);
 
         } break;
     case ThisMonth:
         transactionProxyModel->setDateRange(
                 GUIUtil::StartOfDay(QDate(current.year(), current.month(), 1)),
-                TransactionFilterProxy::MAX_DATE);
+                std::nullopt);
         break;
     case LastMonth:
         transactionProxyModel->setDateRange(
@@ -295,7 +297,7 @@ void TransactionView::chooseDate(int idx)
     case ThisYear:
         transactionProxyModel->setDateRange(
                 GUIUtil::StartOfDay(QDate(current.year(), 1, 1)),
-                TransactionFilterProxy::MAX_DATE);
+                std::nullopt);
         break;
     case Range:
         dateRangeWidget->setVisible(true);
