@@ -768,23 +768,29 @@ bool PeerManagerImpl::IsBlockRequested(const uint256& hash)
 
 void PeerManagerImpl::MarkBlockAsReceived(const uint256& hash)
 {
-    std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> >::iterator itInFlight = mapBlocksInFlight.find(hash);
-    if (itInFlight != mapBlocksInFlight.end()) {
-        CNodeState *state = State(itInFlight->second.first);
-        assert(state != nullptr);
-        if (state->vBlocksInFlight.begin() == itInFlight->second.second) {
-            // First block on the queue was received, update the start download time for the next one
-            state->m_downloading_since = std::max(state->m_downloading_since, GetTime<std::chrono::microseconds>());
-        }
-        state->vBlocksInFlight.erase(itInFlight->second.second);
-        state->nBlocksInFlight--;
-        if (state->nBlocksInFlight == 0) {
-            // Last validated block on the queue was received.
-            m_peers_downloading_from--;
-        }
-        state->m_stalling_since = 0us;
-        mapBlocksInFlight.erase(itInFlight);
+    auto it = mapBlocksInFlight.find(hash);
+    if (it == mapBlocksInFlight.end()) {
+        // Block was not requested
+        return;
     }
+
+    auto [node_id, list_it] = it->second;
+    CNodeState *state = State(node_id);
+    assert(state != nullptr);
+
+    if (state->vBlocksInFlight.begin() == list_it) {
+        // First block on the queue was received, update the start download time for the next one
+        state->m_downloading_since = std::max(state->m_downloading_since, GetTime<std::chrono::microseconds>());
+    }
+    state->vBlocksInFlight.erase(list_it);
+
+    state->nBlocksInFlight--;
+    if (state->nBlocksInFlight == 0) {
+        // Last validated block on the queue was received.
+        m_peers_downloading_from--;
+    }
+    state->m_stalling_since = 0us;
+    mapBlocksInFlight.erase(it);
 }
 
 bool PeerManagerImpl::MarkBlockAsInFlight(NodeId nodeid, const CBlockIndex* pindex, std::list<QueuedBlock>::iterator** pit)
