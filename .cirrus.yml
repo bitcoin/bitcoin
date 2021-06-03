@@ -164,12 +164,11 @@ task:
 task:
   name: 'macOS 11 native [gui] [no depends]'
   brew_install_script:
-    - brew update
     - brew install boost libevent berkeley-db4 qt@5 miniupnpc ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
   << : *GLOBAL_TASK_TEMPLATE
   macos_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
-    image: big-sur-xcode-12.4  # https://cirrus-ci.org/guide/macOS
+    image: big-sur-xcode-12.5  # https://cirrus-ci.org/guide/macOS
   env:
     DANGER_RUN_CI_ON_HOST: "true"
     CI_USE_APT_INSTALL: "no"
