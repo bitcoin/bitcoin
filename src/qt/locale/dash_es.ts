@@ -247,10 +247,6 @@
         <translation>Billetera cifrado</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>%1 se cerrará al finalizar el proceso de encriptación. Recuerda que el cifrado de tu billetera no protege totalmente tus fondos de ser robados por infección de malware en tu computador.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
         <translation>IMPORTANTE: Todas las copias de seguridad anteriores que haya realizado de su archivo de la billetera se deben reemplazar con el archivo de la billetera cifrado recién generado. Las copias de seguridad anteriores del archivo de la billetera sin cifrar contienen la misma semilla HD y aun contienen el acceso completo a todos tus fondos al igual que la nueva billetera cifrada.</translation>
     </message>
@@ -394,6 +390,10 @@
     <message>
         <source>&amp;About %1</source>
         <translation>&amp;Acerca de %1</translation>
+    </message>
+    <message>
+        <source>Send %1 funds to a Dash address</source>
+        <translation>Enviar %1 de los fondos a una dirección de Dash</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -807,6 +807,10 @@
         <translation>Recibido con la dirección</translation>
     </message>
     <message>
+        <source>Mixing Rounds</source>
+        <translation>Rondas de mezcla</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Fecha</translation>
     </message>
@@ -897,6 +901,22 @@
     <message>
         <source>Some coins were unselected because they do not have enough mixing rounds.</source>
         <translation>Algunas monedas no se seleccionaron porque no tienen suficientes rondas de mezcla.</translation>
+    </message>
+    <message>
+        <source>Show all coins</source>
+        <translation>Mostrar todas las monedas</translation>
+    </message>
+    <message>
+        <source>Hide %1 coins</source>
+        <translation>Esconder %1 de las monedas</translation>
+    </message>
+    <message>
+        <source>Show all %1 coins</source>
+        <translation>Mostrar todas las monedas de %1</translation>
+    </message>
+    <message>
+        <source>Show spendable coins only</source>
+        <translation>Mostrar solo monedas gastables</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1331,6 +1351,10 @@
         <translation>Si desactiva el gasto del cambio sin confirmar, el cambio de una transacción&lt;br/&gt;no se podrá usar hasta que dicha transacción tenga al menos una confirmación.&lt;br/&gt; Esto también afecta al cómputo de su saldo.</translation>
     </message>
     <message>
+        <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
+        <translation>Mostrar la interfaz de mezcla en la pantalla de descripción general y revelar una pantalla adicional que permita gastar solo monedas completamente mezcladas.&lt;br/&gt;También aparecerá una nueva pestaña con más configuraciones en este cuadro de diálogo, asegúrate de verificarlas antes de mezclar tus monedas.</translation>
+    </message>
+    <message>
         <source>Show additional information and buttons on overview screen.</source>
         <translation>Mostrar información y botones adicionales en la pantalla de resumen.</translation>
     </message>
@@ -1343,12 +1367,32 @@
         <translation>Mostrar ventanas emergentes del sistema para transacciones de mezcla&lt;br/&gt;así como para cualquier otro tipo de transacciones.</translation>
     </message>
     <message>
+        <source>Show popups for mixing transactions</source>
+        <translation>Mostrar ventanas emergentes para mezclar transacciones</translation>
+    </message>
+    <message>
+        <source>Show warning dialog when the wallet has very low number of keys left.</source>
+        <translation>Mostrar un cuadro de diálogo de advertencia cuando a la billetera le queden pocas llaves disponibles.</translation>
+    </message>
+    <message>
+        <source>Warn if the wallet is running out of keys</source>
+        <translation>Advertir si la billetera se está quedando sin llaves</translation>
+    </message>
+    <message>
         <source>Whether to use experimental mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
         <translation>Ya sea para usar el modo experimental con múltiples sesiones de mezclado por bloque.&lt;br/&gt;Nota: debe usar esta función con cuidado.&lt;br/&gt;¡Asegúrese de tener siempre una copia de seguridad (automática) de la billetera en un lugar seguro!</translation>
     </message>
     <message>
         <source>Enable &amp;multi-session</source>
         <translation>Habilitar &amp;multisesión</translation>
+    </message>
+    <message>
+        <source>Mixing rounds</source>
+        <translation>Rondas de mezcla</translation>
+    </message>
+    <message>
+        <source>This amount acts as a threshold to turn off mixing once it's reached.</source>
+        <translation>Esta cantidad actúa como un límite mínimo para apagar la mezcla una vez que se alcance.</translation>
     </message>
     <message>
         <source>Target balance</source>
@@ -1740,6 +1784,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>El monedero está bloqueado y el usuario rechazó desbloquearlo. Desactivando %1.</translation>
     </message>
     <message>
+        <source>Stop %1</source>
+        <translation>Parada de %1</translation>
+    </message>
+    <message>
         <source>Disabled</source>
         <translation>Desactivado</translation>
     </message>
@@ -1793,6 +1841,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>URI handling</source>
         <translation>Gestión de URI</translation>
+    </message>
+    <message>
+        <source>'dash://' is not a valid URI. Use 'dash:' instead.</source>
+        <translation>'dash://' no es un URI válido. Usa 'dash:'.</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -2288,6 +2340,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Reexplorar la cadena de bloques 2</translation>
     </message>
     <message>
+        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>-rescan=1: Vuelve a escanear la cadena de bloques en busca de transacciones de billetera faltantes a partir del momento de creación de la billetera.</translation>
+    </message>
+    <message>
+        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
+        <translation>-rescan=2: Vuelve a escanear la cadena de bloques en busca de transacciones de billetera faltantes a partir del bloque génesis.</translation>
+    </message>
+    <message>
         <source>Wallet Path</source>
         <translation>Ruta de la billetera</translation>
     </message>
@@ -2326,6 +2386,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Reset</source>
         <translation>&amp;Reiniciar</translation>
+    </message>
+    <message>
+        <source>Node Type</source>
+        <translation>Tipo de nodo</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -2524,8 +2588,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>No</translation>
     </message>
     <message>
+        <source>Regular</source>
+        <translation>Regular</translation>
+    </message>
+    <message>
         <source>Masternode</source>
         <translation>Masternode</translation>
+    </message>
+    <message>
+        <source>Verified Masternode</source>
+        <translation>Masternodo verificado</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -2914,6 +2986,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(%1 de %2 registros mostrados)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>S&amp;end mixed funds</source>
+        <translation>Enviar fondos mezclados</translation>
+    </message>
+    <message>
+        <source>Confirm the %1 send action</source>
+        <translation>Confirma la acción de envío %1</translation>
     </message>
     <message>
         <source>%1 funds only</source>
@@ -3333,6 +3413,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%1 confirmaciones</translation>
     </message>
     <message>
+        <source>locked via ChainLocks</source>
+        <translation>bloqueado por cerraduras de cadena</translation>
+    </message>
+    <message>
         <source>verified via InstantSend</source>
         <translation>verificado a través de InstantSend</translation>
     </message>
@@ -3527,12 +3611,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>verificado a través de InstantSend</translation>
     </message>
     <message>
+        <source>locked via ChainLocks</source>
+        <translation>bloqueado por cerraduras de cadena</translation>
+    </message>
+    <message>
         <source>Received with</source>
         <translation>Recibido con</translation>
     </message>
     <message>
         <source>Received from</source>
         <translation>Recibido desde</translation>
+    </message>
+    <message>
+        <source>Received via %1</source>
+        <translation>Recibido por %1</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -3545,6 +3637,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Mined</source>
         <translation>Minado</translation>
+    </message>
+    <message>
+        <source>%1 Mixing</source>
+        <translation>Mezclar %1</translation>
     </message>
     <message>
         <source>%1 Collateral Payment</source>
@@ -4109,6 +4205,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>No se pudo encontrar un masternode aleatorio.</translation>
     </message>
     <message>
+        <source>%s can't be lower than %s</source>
+        <translation>%s no puede ser menor que %s</translation>
+    </message>
+    <message>
         <source>%s is idle.</source>
         <translation>%s está parado.</translation>
     </message>
@@ -4541,6 +4641,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>No se puede resolver -%s direccion: '%s'</translation>
     </message>
     <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>No se puede escribir en el directorio de datos '%s'; comprobar los permisos.</translation>
+    </message>
+    <message>
         <source>Change index out of range</source>
         <translation>Cambio de indice fuera de rango</translation>
     </message>
@@ -4583,6 +4687,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Failed to start a new mixing queue</source>
         <translation>Error al iniciar una nueva cola de mezclado</translation>
+    </message>
+    <message>
+        <source>Incorrect -rescan mode, falling back to default value</source>
+        <translation>Modo de reescaneo incorrecto, retrocediendo al valor predeterminado</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
@@ -4637,6 +4745,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Falló la firma de la transacción</translation>
     </message>
     <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>El directorio de bloques especificado "%s" no existe.</translation>
+    </message>
+    <message>
+        <source>Last queue was created too recently.</source>
+        <translation>La última cola se creó muy recientemente.</translation>
+    </message>
+    <message>
         <source>Last successful action was too recent.</source>
         <translation>La última acción exitosa era demasiado reciente.</translation>
     </message>
@@ -4685,6 +4801,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>No es posible enlazar con %s en este computador (enlazado ha dado el error %s)</translation>
     </message>
     <message>
+        <source>Unable to locate enough mixed funds for this transaction.</source>
+        <translation>No se pueden encontrar suficientes fondos mezclados para esta transacción.</translation>
+    </message>
+    <message>
         <source>Unable to locate enough non-denominated funds for this transaction.</source>
         <translation>No se pueden localizar fondos no denominados suficientes para esta transacción.</translation>
     </message>
@@ -4719,6 +4839,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning</source>
         <translation>Advertencia</translation>
+    </message>
+    <message>
+        <source>Warning: %s is deprecated, please use %s instead</source>
+        <translation>Advertencia: %s está obsoleto, utiliza %s en su lugar</translation>
+    </message>
+    <message>
+        <source>Warning: can't use %s and %s together, will prefer %s</source>
+        <translation>Advertencia: no se pueden usar %s y %s juntos, se prefiere %s</translation>
+    </message>
+    <message>
+        <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
+        <translation>Advertencia: parámetro %s incorrecto, ¡la ruta debe existir! Usando ruta predeterminada.</translation>
     </message>
     <message>
         <source>You are starting with governance validation disabled.</source>

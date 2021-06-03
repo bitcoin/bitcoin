@@ -247,10 +247,6 @@
         <translation>Carteira criptografada</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>A %1 irá fechar agora para terminar o processo de encriptação. Lembre-se que encriptar sua carteira não fará com que seus Dash estejam totalmente a salvo de serem roubados por malwares que infectem seu computador.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
         <translation>IMPORTANTE: Todos os backups anteriores feitos do seu arquivo de carteira devem ser substituídos pelo arquivo de carteira criptografado recém-gerado. Os backups anteriores do arquivo de carteira não criptografada contêm a mesma semente HD e ainda têm acesso total a todos os seus fundos, assim como a nova carteira criptografada.</translation>
     </message>

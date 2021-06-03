@@ -247,10 +247,6 @@
         <translation>กระเป๋าสตางค์ถูกเข้ารหัสเรียบร้อยแล้ว</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>%1 จะปิดตอนนี้เพื่อสิ้นสุดขั้นตอนการเข้ารหัส โปรดทราบว่าการเข้ารหัสข้อมูลกระเป๋าสตางค์ของคุณไม่สามารถป้องกันเงินจากการถูกโจรกรรมจากคอมพิวเตอร์ของคุณได้อย่างเต็มที่</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
         <translation>ข้อมูลสำคัญ: การสำรองข้อมูลใดๆก่อนหน้านี้ในไฟล์กระเป๋าสตางค์ควรจะถูกแทนที่โดยใช้ไฟล์กระเป๋าสตางค์ที่เข้ารหัสลับใหม่ที่สร้างขึ้น การสำรองข้อมูลก่อนหน้าของไฟล์กระเป๋าสตางค์ที่ไม่ได้เข้ารหัสด้วย HD Seed เดียวกันจะยังคงสามารถเข้าถึงกองทุนของคุณได้อย่างเต็มที่เช่นเดียวกับกระเป๋าสตางค์ใหม่ที่มีการเข้ารหัสลับใหม่</translation>
     </message>
