@@ -10,7 +10,10 @@
 #include <qt/walletmodel.h>
 
 #include <clientversion.h>
+#include <interfaces/wallet.h>
+#include <key_io.h>
 #include <streams.h>
+#include <util/string.h>
 
 #include <utility>
 
@@ -21,10 +24,9 @@ RecentRequestsTableModel::RecentRequestsTableModel(WalletModel *parent) :
     QAbstractTableModel(parent), walletModel(parent)
 {
     // Load entries from wallet
-    std::vector<std::string> vReceiveRequests;
-    parent->loadReceiveRequests(vReceiveRequests);
-    for (const std::string& request : vReceiveRequests)
+    for (const std::string& request : parent->wallet().getAddressReceiveRequests()) {
         addNewRequest(request);
+    }
 
     /* These columns must match the indices in the ColumnIndex enumeration */
     columns << tr("Date") << tr("Label") << tr("Message") << getAmountTitle();
@@ -151,7 +153,7 @@ bool RecentRequestsTableModel::removeRows(int row, int count, const QModelIndex 
         for (int i = 0; i < count; ++i)
         {
             const RecentRequestEntry* rec = &list[row+i];
-            if (!walletModel->saveReceiveRequest(rec->recipient.address.toStdString(), rec->id, ""))
+            if (!walletModel->wallet().setAddressReceiveRequest(DecodeDestination(rec->recipient.address.toStdString()), ToString(rec->id), ""))
                 return false;
         }
 
@@ -180,7 +182,7 @@ void RecentRequestsTableModel::addNewRequest(const SendCoinsRecipient &recipient
     CDataStream ss(SER_DISK, CLIENT_VERSION);
     ss << newEntry;
 
-    if (!walletModel->saveReceiveRequest(recipient.address.toStdString(), newEntry.id, ss.str()))
+    if (!walletModel->wallet().setAddressReceiveRequest(DecodeDestination(recipient.address.toStdString()), ToString(newEntry.id), ss.str()))
         return;
 
     addNewRequest(newEntry);
