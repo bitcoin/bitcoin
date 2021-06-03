@@ -18,10 +18,6 @@
 #include <fcntl.h>
 #include <sys/time.h>
 #endif
-#ifdef HAVE_SYS_GETRANDOM
-#include <sys/syscall.h>
-#include <linux/random.h>
-#endif
 #include <stdio.h>
 #include <cstdlib>
 #include <cstring>
@@ -79,101 +75,6 @@ extern "C" float __wrap_log2f(float x)
 {
     return log2f_old(x);
 }
-// SYSCOIN wrapper for getrandom 2.25 glibc compatibility for up to 2.17 backwards
-#ifndef WIN32
-/** Fallback: get 32 bytes of system entropy from /dev/urandom. The most
- * compatible way to get cryptographic randomness on UNIX-ish platforms.
- */
-static ssize_t GetDevURandom(unsigned char *ent32, size_t length)
-{
-    int f = open("/dev/urandom", O_RDONLY);
-    if (f == -1) {
-        return -1;
-    }
-    size_t have = 0;
-    do {
-        ssize_t n = read(f, ent32 + have, length - have);
-        if (n <= 0 || n + have > length) {
-            close(f);
-            return n;
-        }
-        have += n;
-    } while (have < length);
-    close(f);
-    return (ssize_t)have;
-}
-#endif
-
-/* Write LENGTH bytes of randomness starting at BUFFER.  Return 0 on
-    success and -1 on failure.  */
-extern "C" ssize_t __wrap_getrandom (void *buffer, size_t length, unsigned int flags)
-{
-    ssize_t rv = -1;
-    #if defined(HAVE_SYS_GETRANDOM)
-    /* Linux. From the getrandom(2) man page:
-    * "If the urandom source has been initialized, reads of up to 256 bytes
-    * will always return as many bytes as requested and will not be
-    * interrupted by signals."
-    */
-    rv = syscall(SYS_getrandom, buffer, length, flags);
-    if ((size_t)rv != length) {
-        if (rv < 0 && errno == ENOSYS) {
-            /* Fallback for kernel <3.17: the return value will be -1 and errno
-            * ENOSYS if the syscall is not available, in that case fall back
-            * to /dev/urandom.
-            */
-            return GetDevURandom((unsigned char*)buffer, length);
-        }
-    }
-    #else 
-        return GetDevURandom((unsigned char*)buffer, length);
-    #endif
-    return rv;
-}
-
-/* Write LENGTH bytes of randomness starting at BUFFER.  Return 0 on
-   success and -1 on failure.  */
-extern "C" int __wrap_getentropy (void *buffer, size_t length)
-{
-  char* cbuff = (char*)buffer;
-  /* The interface is documented to return EIO for buffer lengths
-     longer than 256 bytes.  */
-  if (length > 256)
-    {
-      errno = EIO;
-      return -1;
-    }
-
-  /* Try to fill the buffer completely.  Even with the 256 byte limit
-     above, we might still receive an EINTR error (when blocking
-     during boot).  */
-  char *end = cbuff + length;
-  while (cbuff < end)
-    {
-      /* NB: No cancellation point.  */
-      
-      ssize_t bytes = __wrap_getrandom(cbuff, end - cbuff, 0);
-      if (bytes < 0)
-        {
-          if (errno == EINTR)
-            /* Try again if interrupted by a signal.  */
-            continue;
-          else
-            return -1;
-        }
-      if (bytes == 0)
-        {
-          /* No more bytes available.  This should not happen under
-             normal circumstances.  */
-          errno = EIO;
-          return -1;
-        }
-      /* Try again in case of a short read.  */
-      cbuff += bytes;
-    }
-  return 0;
-}
-
 
 // fmemopen
 
