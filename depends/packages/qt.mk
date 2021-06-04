@@ -126,7 +126,7 @@ $(package)_config_opts_darwin += -device-option XCODE_VERSION=$(XCODE_VERSION)
 endif
 
 # for macOS on Apple Silicon (ARM) see https://bugreports.qt.io/browse/QTBUG-85279
-$(package)_config_opts_arm_darwin += -device-option QMAKE_APPLE_DEVICE_ARCHS=arm64
+$(package)_config_opts_aarch64_darwin += -device-option QMAKE_APPLE_DEVICE_ARCHS=arm64
 
 $(package)_config_opts_linux = -qt-xcb
 $(package)_config_opts_linux += -no-xcb-xlib
@@ -175,8 +175,6 @@ $(package)_config_opts_aarch64_android += -android-arch arm64-v8a
 $(package)_config_opts_armv7a_android += -android-arch armeabi-v7a
 $(package)_config_opts_x86_64_android += -android-arch x86_64
 $(package)_config_opts_i686_android += -android-arch i686
-
-$(package)_build_env += QT_RCC_SOURCE_DATE_OVERRIDE=1
 endef
 
 define $(package)_fetch_cmds

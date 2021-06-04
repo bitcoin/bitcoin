@@ -178,7 +178,6 @@ case "$HOST" in
 esac
 
 # Environment variables for determinism
-export QT_RCC_SOURCE_DATE_OVERRIDE=1
 export TAR_OPTIONS="--owner=0 --group=0 --numeric-owner --mtime='@${SOURCE_DATE_EPOCH}' --sort=name"
 export TZ="UTC"
 case "$HOST" in
