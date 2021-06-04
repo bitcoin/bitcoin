@@ -796,7 +796,7 @@ size_t CConnman::SocketSendData(CNode& node) const
             nBytes = send(node.hSocket, reinterpret_cast<const char*>(data.data()) + node.nSendOffset, data.size() - node.nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
         }
         if (nBytes > 0) {
-            node.nLastSend = GetTimeSeconds();
+            node.nLastSend = GetSystemTimeInSeconds();
             node.nSendBytes += nBytes;
             node.nSendOffset += nBytes;
             nSentSize += nBytes;
@@ -1251,7 +1251,7 @@ void CConnman::NotifyNumConnectionsChanged()
 
 bool CConnman::ShouldRunInactivityChecks(const CNode& node, std::optional<int64_t> now_in) const
 {
-    const int64_t now = now_in ? now_in.value() : GetTimeSeconds();
+    const int64_t now = now_in ? now_in.value() : GetSystemTimeInSeconds();
     return node.nTimeConnected + m_peer_connect_timeout < now;
 }
 
@@ -1259,7 +1259,7 @@ bool CConnman::InactivityCheck(const CNode& node) const
 {
     // Use non-mockable system time (otherwise these timers will pop when we
     // use setmocktime in the tests).
-    int64_t now = GetTimeSeconds();
+    int64_t now = GetSystemTimeInSeconds();
 
     if (!ShouldRunInactivityChecks(node, now)) return false;
 
@@ -2912,7 +2912,7 @@ ServiceFlags CConnman::GetLocalServices() const
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 
 CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, ConnectionType conn_type_in, bool inbound_onion)
-    : nTimeConnected(GetTimeSeconds()),
+    : nTimeConnected(GetSystemTimeInSeconds()),
       addr(addrIn),
       addrBind(addrBindIn),
       m_inbound_onion(inbound_onion),

@@ -418,7 +418,7 @@ private:
         if (conn_type == "addr-fetch") return "addr";
         return "";
     }
-    const int64_t m_time_now{GetTimeSeconds()};
+    const int64_t m_time_now{GetSystemTimeInSeconds()};
 
 public:
     static constexpr int ID_PEERINFO = 0;
