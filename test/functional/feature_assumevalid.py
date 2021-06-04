@@ -197,8 +197,7 @@ class AssumeValidTest(SyscoinTestFramework):
         self.send_blocks_until_disconnected(p2p2)
         # SYSCOIN
         self.bump_mocktime(5)
-        self.wait_until(lambda: self.nodes[2].getblockcount() >= COINBASE_MATURITY + 1)
-        assert_equal(self.nodes[2].getblockcount(), COINBASE_MATURITY + 1)
+        self.assert_blockchain_height(self.nodes[2], COINBASE_MATURITY + 1)
 
 
 if __name__ == '__main__':
