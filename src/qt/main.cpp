@@ -12,10 +12,12 @@
 #include <functional>
 #include <string>
 #include <consensus/dynengine.h>
+#include <primitives/dynnft_manager.h>
 
 CDynHash* g_hashFunction;
 CDynEngine* g_dynEngine;
 CContractManager* g_contractMgr;
+CNFTManager* g_nftMgr;
 bool IS_TESTNET;
 
 /** Translate string to current locale using Qt. */
@@ -26,7 +28,7 @@ UrlDecodeFn* const URL_DECODE = urlDecode;
 
 int main(int argc, char* argv[]) {
 
-    IS_TESTNET = false;
+    IS_TESTNET = true;
 
     return GuiMain(argc, argv);
 }

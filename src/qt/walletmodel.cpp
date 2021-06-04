@@ -201,7 +201,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         bilingual_str error;
 
         auto& newTx = transaction.getWtx();
-        std::vector<unsigned char> vecContract;     //empty contract for QT interface - no ability to load contract from UI  TODO
+        std::vector<unsigned char> vecContract; //empty contract for QT interface - no ability to load contract from UI  TODO
+        std::vector<unsigned char> vecNFT; //empty NFT for QT interface - no ability to create asset from UI  TODO
         newTx = m_wallet->createTransaction(vecSend, coinControl, !wallet().privateKeysDisabled() /* sign */, nChangePosRet, nFeeRequired, error, vecContract);
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && newTx)
@@ -491,7 +492,8 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
     CAmount old_fee;
     CAmount new_fee;
     CMutableTransaction mtx;
-    std::vector<unsigned char> vecContract;     //empty contract - no ability to create contract in QT UI, TODO
+    std::vector<unsigned char> vecContract; //empty contract - no ability to create contract in QT UI, TODO
+    std::vector<unsigned char> vecNFT; //empty NFT - no ability to create assets in QT UI, TODO
     if (!m_wallet->createBumpTransaction(hash, coin_control, errors, old_fee, new_fee, mtx, vecContract)) {
         QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Increasing transaction fee failed") + "<br />(" +
             (errors.size() ? QString::fromStdString(errors[0].translated) : "") +")");

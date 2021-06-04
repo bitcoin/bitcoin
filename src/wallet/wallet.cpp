@@ -2618,7 +2618,7 @@ SigningResult CWallet::SignMessage(const std::string& message, const PKHash& pkh
     return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
 }
 
-bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl, std::vector<unsigned char> vecContract)
+bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl, std::vector<unsigned char> vecContract, std::vector<unsigned char> vecNFT)
 {
     std::vector<CRecipient> vecSend;
 
@@ -2641,7 +2641,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 
     CTransactionRef tx_new;
     FeeCalculation fee_calc_out;
-    if (!CreateTransaction(vecSend, tx_new, nFeeRet, nChangePosInOut, error, coinControl, fee_calc_out, vecContract, false)) {
+    if (!CreateTransaction(vecSend, tx_new, nFeeRet, nChangePosInOut, error, coinControl, fee_calc_out, vecContract, vecNFT, false)) {
         return false;
     }
 
@@ -3176,9 +3176,28 @@ bool CWallet::CreateTransactionInternal(
             std::vector<unsigned char> vecNFTSubmit = signature;
             vecNFTSubmit.insert(vecNFTSubmit.end(), ownerAddrHex.begin(), ownerAddrHex.end());
 
-            vecNFTSubmit.insert(vecNFTSubmit.end(), vecNFT.begin(), vecNFT.end());
-            CTxOut txContract(0, CScript() << OP_RETURN << vecNFTSubmit);
-            txNew.vout.push_back(txContract);
+            //first byte of subcommand is the opcode, we want owner address, metadata and binary data
+            CSHA256 hasher;
+            unsigned char* cNFTdata = (unsigned char*)malloc(vecNFT.size() - 1);
+            unsigned char nftHash[32];
+            for (int i = 0; i < vecNFT.size() - 1; i++)
+                cNFTdata[i] = vecNFT[i + 1];
+            hasher.Write((const unsigned char*)ownerAddr.c_str(), ownerAddr.length());
+            hasher.Write(cNFTdata, vecNFT.size() - 1);
+            hasher.Finalize(nftHash);
+            free(cNFTdata);
+
+            std::string nftHexHash = HexStr(nftHash);
+            for (int i = 0; i < nftHexHash.size(); i++)
+                vecNFTSubmit.insert(vecNFTSubmit.end(), nftHexHash[i]);
+
+            CTxOut txNFT(0, CScript() << OP_RETURN << vecNFTSubmit);
+            txNew.vout.push_back(txNFT);
+
+            //check if not already in database and submit
+
+
+
         }
 
 
@@ -3256,12 +3275,13 @@ bool CWallet::CreateTransaction(
         const CCoinControl& coin_control,
         FeeCalculation& fee_calc_out,
         std::vector<unsigned char> vecContract,
+        std::vector<unsigned char> vecNFT,
         bool sign
         )
 {
     int nChangePosIn = nChangePosInOut;
     Assert(!tx); // tx is an out-param. TODO change the return type from bool to tx (or nullptr)
-    bool res = CreateTransactionInternal(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign, vecContract);
+    bool res = CreateTransactionInternal(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign, vecContract, vecNFT);
     // try with avoidpartialspends unless it's enabled already
     if (res && nFeeRet > 0 /* 0 means non-functional fee rate estimation */ && m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
         CCoinControl tmp_cc = coin_control;
@@ -3270,7 +3290,7 @@ bool CWallet::CreateTransaction(
         CTransactionRef tx2;
         int nChangePosInOut2 = nChangePosIn;
         bilingual_str error2; // fired and forgotten; if an error occurs, we discard the results
-        if (CreateTransactionInternal(vecSend, tx2, nFeeRet2, nChangePosInOut2, error2, tmp_cc, fee_calc_out, sign, vecContract)) {
+        if (CreateTransactionInternal(vecSend, tx2, nFeeRet2, nChangePosInOut2, error2, tmp_cc, fee_calc_out, sign, vecContract, vecNFT)) {
             // if fee of this alternative one is within the range of the max fee, we use this one
             const bool use_aps = nFeeRet2 <= nFeeRet + m_max_aps_fee;
             WalletLogPrintf("Fee non-grouped = %lld, grouped = %lld, using %s\n", nFeeRet, nFeeRet2, use_aps ? "grouped" : "non-grouped");

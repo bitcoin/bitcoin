@@ -22,6 +22,8 @@ UrlDecodeFn* const URL_DECODE = nullptr;
 CDynHash* g_hashFunction;
 CDynEngine* g_dynEngine;
 CContractManager* g_contractMgr;
+CNFTManager* g_nftMgr;
+
 
 static void SetupWalletToolArgs(ArgsManager& argsman)
 {

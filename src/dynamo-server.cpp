@@ -28,6 +28,7 @@
 #include <functional>
 #include <optional>
 #include <consensus/dynengine.h>
+#include <primitives/dynnft_manager.h>
 
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
@@ -36,6 +37,8 @@ UrlDecodeFn* const URL_DECODE = urlDecode;
 CDynHash* g_hashFunction;
 CDynEngine* g_dynEngine;
 CContractManager* g_contractMgr;
+CNFTManager* g_nftMgr;
+
 bool IS_TESTNET;
 
 #if HAVE_DECL_FORK

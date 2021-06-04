@@ -213,6 +213,8 @@ public:
         g_contractMgr = new CContractManager();
 
         g_dynEngine = new CDynEngine();
+
+        g_nftMgr = new CNFTManager();
         
         /**
          * The message start string is designed to be unlikely to occur in normal data.

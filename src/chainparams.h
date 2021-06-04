@@ -13,6 +13,7 @@
 #include <primitives/contract_manager.h>
 #include "crypto/dynhash.h"
 #include "consensus/dynengine.h"
+#include <primitives/dynnft_manager.h>
 
 #include <memory>
 #include <vector>

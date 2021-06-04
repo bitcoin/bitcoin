@@ -1930,6 +1930,9 @@ bool AppInitMain(const std::any& context, NodeContext& node, interfaces::BlockAn
 
     g_contractMgr->CreateOrOpenDatabase(datadir.string());
 
+    // ********************************************************* Step 13: open nft database
+
+    g_nftMgr->CreateOrOpenDatabase(datadir.string());
 
 
 

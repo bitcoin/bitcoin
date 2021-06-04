@@ -37,7 +37,9 @@ Result CreateRateBumpTransaction(CWallet& wallet,
     CAmount& old_fee,
     CAmount& new_fee,
     CMutableTransaction& mtx,
-    std::vector<unsigned char> vecContract);
+    std::vector<unsigned char> vecContract,
+    std::vector<unsigned char> vecNFT
+    );
 
 //! Sign the new transaction,
 //! @return false if the tx couldn't be found or if it was

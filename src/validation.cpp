@@ -3878,7 +3878,8 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                     for (int y = 0; y < 4; y++)
                         if (vout.scriptPubKey[start + y] != 0x36)
                             found = false;
-                }
+                } else
+                    found = false;
 
                 if (found) {
 
