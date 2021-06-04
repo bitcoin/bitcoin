@@ -74,7 +74,6 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK(CFeeRate(CAmount(0), 0) == CFeeRate(0));
     BOOST_CHECK(CFeeRate(CAmount(1), 0) == CFeeRate(0));
     // default value
-    // SYSCOIN
     BOOST_CHECK(CFeeRate(CAmount(-1), 1000) == CFeeRate(-1));
     BOOST_CHECK(CFeeRate(CAmount(0), 1000) == CFeeRate(0));
     BOOST_CHECK(CFeeRate(CAmount(1), 1000) == CFeeRate(1));
