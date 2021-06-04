@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(potential_deadlock_detected)
     CCriticalSection rmutex1, rmutex2;
     TestPotentialDeadLockDetected(rmutex1, rmutex2);
 
-    CWaitableCriticalSection mutex1, mutex2;
+    Mutex mutex1, mutex2;
     TestPotentialDeadLockDetected(mutex1, mutex2);
 
     #ifdef DEBUG_LOCKORDER
