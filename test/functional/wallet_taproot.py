@@ -230,6 +230,12 @@ class WalletTaprootTest(BitcoinTestFramework):
             if treefn is not None:
                 addr_r = self.make_addr(treefn, keys, i)
                 assert_equal(addr_g, addr_r)
+            desc_a = self.addr_gen.getaddressinfo(addr_g)['desc']
+            if desc.startswith("tr("):
+                assert desc_a.startswith("tr(")
+            rederive = self.nodes[1].deriveaddresses(desc_a)
+            assert_equal(len(rederive), 1)
+            assert_equal(rederive[0], addr_g)
 
         # tr descriptors cannot be imported when Taproot is not active
         result = self.privs_tr_enabled.importdescriptors([{"desc": desc, "timestamp": "now"}])
@@ -375,11 +381,32 @@ class WalletTaprootTest(BitcoinTestFramework):
             2
         )
         self.do_test(
+            "tr(XPRV,{XPUB,XPUB})",
+            "tr($1/*,{pk($2/*),pk($2/*)})",
+            [True, False],
+            lambda k1, k2: (key(k1), [pk(k2), pk(k2)]),
+            2
+        )
+        self.do_test(
+            "tr(XPRV,{{XPUB,H},{H,XPUB}})",
+            "tr($1/*,{{pk($2/*),pk($H)},{pk($H),pk($2/*)}})",
+            [True, False],
+            lambda k1, k2: (key(k1), [[pk(k2), pk(H_POINT)], [pk(H_POINT), pk(k2)]]),
+            2
+        )
+        self.do_test(
             "tr(XPUB,{{H,{H,XPUB}},{H,{H,{H,XPRV}}}})",
             "tr($1/*,{{pk($H),{pk($H),pk($2/*)}},{pk($H),{pk($H),{pk($H),pk($3/*)}}}})",
             [False, False, True],
             lambda k1, k2, k3: (key(k1), [[pk(H_POINT), [pk(H_POINT), pk(k2)]], [pk(H_POINT), [pk(H_POINT), [pk(H_POINT), pk(k3)]]]]),
             3
+        )
+        self.do_test(
+            "tr(XPRV,{XPUB,{{XPUB,{H,H}},{{H,H},XPUB}}})",
+            "tr($1/*,{pk($2/*),{{pk($2/*),{pk($H),pk($H)}},{{pk($H),pk($H)},pk($2/*)}}})",
+            [True, False],
+            lambda k1, k2: (key(k1), [pk(k2), [[pk(k2), [pk(H_POINT), pk(H_POINT)]], [[pk(H_POINT), pk(H_POINT)], pk(k2)]]]),
+            2
         )
 
         self.log.info("Sending everything back...")
