@@ -390,7 +390,7 @@ static UniValue verifytxoutproof(const JSONRPCRequest& request)
     return res;
 }
 
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, const UniValue& rbf)
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime)
 {
     if (inputs_in.isNull() || outputs_in.isNull())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, arguments 1 and 2 must be non-null");
@@ -407,8 +407,6 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, locktime out of range");
         rawTx.nLockTime = nLockTime;
     }
-
-    bool rbfOptIn = rbf.isTrue();
 
     for (unsigned int idx = 0; idx < inputs.size(); idx++) {
         const UniValue& input = inputs[idx];
@@ -480,10 +478,6 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         }
     }
 
-    if (!rbf.isNull() && rbfOptIn != SignalsOptInRBF(rawTx)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter combination: Sequence number(s) contradict replaceable option");
-    }
-
     return rawTx;
 }
 
@@ -537,11 +531,10 @@ static UniValue createrawtransaction(const JSONRPCRequest& request)
         UniValue::VARR,
         UniValueType(), // ARR or OBJ, checked later
         UniValue::VNUM,
-        UniValue::VBOOL
         }, true
     );
 
-    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3]);
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2]);
 
     return EncodeHexTx(rawTx);
 }
@@ -1297,26 +1290,12 @@ UniValue decodepsbt(const JSONRPCRequest& request)
             "      \"non_witness_utxo\" : {   (json object, optional) Decoded network transaction for non-witness UTXOs\n"
             "        ...\n"
             "      },\n"
-            "      \"witness_utxo\" : {            (json object, optional) Transaction output for witness UTXOs\n"
-            "        \"amount\" : x.xxx,           (numeric) The value in " + CURRENCY_UNIT + "\n"
-            "        \"scriptPubKey\" : {          (json object)\n"
-            "          \"asm\" : \"asm\",            (string) The asm\n"
-            "          \"hex\" : \"hex\",            (string) The hex\n"
-            "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
-            "          \"address\" : \"address\"     (string) Bitcoin address if there is one\n"
-            "        }\n"
-            "      },\n"
             "      \"partial_signatures\" : {             (json object, optional)\n"
             "        \"pubkey\" : \"signature\",           (string) The public key and signature that corresponds to it.\n"
             "        ,...\n"
             "      }\n"
             "      \"sighash\" : \"type\",                  (string, optional) The sighash type to be used\n"
             "      \"redeem_script\" : {       (json object, optional)\n"
-            "          \"asm\" : \"asm\",            (string) The asm\n"
-            "          \"hex\" : \"hex\",            (string) The hex\n"
-            "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
-            "        }\n"
-            "      \"witness_script\" : {       (json object, optional)\n"
             "          \"asm\" : \"asm\",            (string) The asm\n"
             "          \"hex\" : \"hex\",            (string) The hex\n"
             "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
@@ -1332,7 +1311,6 @@ UniValue decodepsbt(const JSONRPCRequest& request)
             "          \"asm\" : \"asm\",            (string) The asm\n"
             "          \"hex\" : \"hex\",            (string) The hex\n"
             "        }\n"
-            "       \"final_scriptwitness\": [\"hex\", ...] (array of string) hex-encoded witness data (if any)\n"
             "      \"unknown\" : {                (json object) The unknown global fields\n"
             "        \"key\" : \"value\"            (key-value pair) An unknown key-value pair\n"
             "         ...\n"
@@ -1347,11 +1325,6 @@ UniValue decodepsbt(const JSONRPCRequest& request)
             "          \"hex\" : \"hex\",            (string) The hex\n"
             "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
             "        }\n"
-            "      \"witness_script\" : {       (json object, optional)\n"
-            "          \"asm\" : \"asm\",            (string) The asm\n"
-            "          \"hex\" : \"hex\",            (string) The hex\n"
-            "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
-            "      }\n"
             "      \"bip32_derivs\" : [          (array of json objects, optional)\n"
             "        {\n"
             "          \"pubkey\" : \"pubkey\",                     (string) The public key this path corresponds to\n"
@@ -1406,19 +1379,7 @@ UniValue decodepsbt(const JSONRPCRequest& request)
         const PSBTInput& input = psbtx.inputs[i];
         UniValue in(UniValue::VOBJ);
         // UTXOs
-        if (!input.witness_utxo.IsNull()) {
-            const CTxOut& txout = input.witness_utxo;
-
-            UniValue out(UniValue::VOBJ);
-
-            out.pushKV("amount", ValueFromAmount(txout.nValue));
-            total_in += txout.nValue;
-
-            UniValue o(UniValue::VOBJ);
-            ScriptToUniv(txout.scriptPubKey, o, true);
-            out.pushKV("scriptPubKey", o);
-            in.pushKV("witness_utxo", out);
-        } else if (input.non_witness_utxo) {
+        if (input.non_witness_utxo) {
             UniValue non_wit(UniValue::VOBJ);
             TxToUniv(*input.non_witness_utxo, uint256(), non_wit, false);
             in.pushKV("non_witness_utxo", non_wit);
@@ -1441,16 +1402,11 @@ UniValue decodepsbt(const JSONRPCRequest& request)
             in.pushKV("sighash", SighashToStr((unsigned char)input.sighash_type));
         }
 
-        // Redeem script and witness script
+        // Redeem script
         if (!input.redeem_script.empty()) {
             UniValue r(UniValue::VOBJ);
             ScriptToUniv(input.redeem_script, r, false);
             in.pushKV("redeem_script", r);
-        }
-        if (!input.witness_script.empty()) {
-            UniValue r(UniValue::VOBJ);
-            ScriptToUniv(input.witness_script, r, false);
-            in.pushKV("witness_script", r);
         }
 
         // keypaths
@@ -1467,19 +1423,12 @@ UniValue decodepsbt(const JSONRPCRequest& request)
             in.pushKV("bip32_derivs", keypaths);
         }
 
-        // Final scriptSig and scriptwitness
+        // Final scriptSig
         if (!input.final_script_sig.empty()) {
             UniValue scriptsig(UniValue::VOBJ);
             scriptsig.pushKV("asm", ScriptToAsmStr(input.final_script_sig, true));
             scriptsig.pushKV("hex", HexStr(input.final_script_sig));
             in.pushKV("final_scriptSig", scriptsig);
-        }
-        if (!input.final_script_witness.IsNull()) {
-            UniValue txinwitness(UniValue::VARR);
-            for (const auto& item : input.final_script_witness.stack) {
-                txinwitness.push_back(HexStr(item.begin(), item.end()));
-            }
-            in.pushKV("final_scriptwitness", txinwitness);
         }
 
         // Unknown data
@@ -1501,16 +1450,11 @@ UniValue decodepsbt(const JSONRPCRequest& request)
     for (unsigned int i = 0; i < psbtx.outputs.size(); ++i) {
         const PSBTOutput& output = psbtx.outputs[i];
         UniValue out(UniValue::VOBJ);
-        // Redeem script and witness script
+        // Redeem script
         if (!output.redeem_script.empty()) {
             UniValue r(UniValue::VOBJ);
             ScriptToUniv(output.redeem_script, r, false);
             out.pushKV("redeem_script", r);
-        }
-        if (!output.witness_script.empty()) {
-            UniValue r(UniValue::VOBJ);
-            ScriptToUniv(output.witness_script, r, false);
-            out.pushKV("witness_script", r);
         }
 
         // keypaths
@@ -1608,7 +1552,7 @@ UniValue finalizepsbt(const JSONRPCRequest& request)
             "finalizepsbt \"psbt\" ( extract )\n"
             "Finalize the inputs of a PSBT. If the transaction is fully signed, it will produce a\n"
             "network serialized transaction which can be broadcast with sendrawtransaction. Otherwise a PSBT will be\n"
-            "created which has the final_scriptSig and final_scriptWitness fields filled for inputs that are complete.\n"
+            "created which has the final_scriptSig fields filled for inputs that are complete.\n"
             "Implements the Finalizer and Extractor roles.\n"
             "\nArguments:\n"
             "1. \"psbt\"                 (string) A base64 string of a PSBT\n"
@@ -1651,7 +1595,6 @@ UniValue finalizepsbt(const JSONRPCRequest& request)
         CMutableTransaction mtx(*psbtx.tx);
         for (unsigned int i = 0; i < mtx.vin.size(); ++i) {
             mtx.vin[i].scriptSig = psbtx.inputs[i].final_script_sig;
-            mtx.vin[i].scriptWitness = psbtx.inputs[i].final_script_witness;
         }
         ssTx << mtx;
         result.pushKV("hex", HexStr(ssTx));
@@ -1668,7 +1611,7 @@ UniValue createpsbt(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
         throw std::runtime_error(
-                            "createpsbt [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( replaceable )\n"
+                            "createpsbt [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime )\n"
                             "\nCreates a transaction in the Partially Signed Transaction format.\n"
                             "Implements the Creator role.\n"
                             "\nArguments:\n"
@@ -1693,8 +1636,6 @@ UniValue createpsbt(const JSONRPCRequest& request)
                             "                             accepted as second parameter.\n"
                             "   ]\n"
                             "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
-                            "4. replaceable               (boolean, optional, default=false) Marks this transaction as BIP125 replaceable.\n"
-                            "                             Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.\n"
                             "\nResult:\n"
                             "  \"psbt\"        (string)  The resulting raw transaction (base64-encoded string)\n"
                             "\nExamples:\n"
@@ -1706,11 +1647,10 @@ UniValue createpsbt(const JSONRPCRequest& request)
         UniValue::VARR,
         UniValueType(), // ARR or OBJ, checked later
         UniValue::VNUM,
-        UniValue::VBOOL,
         }, true
     );
 
-    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3]);
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2]);
 
     // Make a blank psbt
     PartiallySignedTransaction psbtx;
@@ -1733,17 +1673,13 @@ UniValue converttopsbt(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-                            "converttopsbt \"hexstring\" ( permitsigdata iswitness )\n"
+                            "converttopsbt \"hexstring\" ( permitsigdata )\n"
                             "\nConverts a network serialized transaction to a PSBT. This should be used only with createrawtransaction and fundrawtransaction\n"
                             "createpsbt and walletcreatefundedpsbt should be used for new applications.\n"
                             "\nArguments:\n"
                             "1. \"hexstring\"              (string, required) The hex string of a raw transaction\n"
                             "2. permitsigdata           (boolean, optional, default=false) If true, any signatures in the input will be discarded and conversion.\n"
                             "                              will continue. If false, RPC will fail if any signatures are present.\n"
-                            "3. iswitness               (boolean, optional) Whether the transaction hex is a serialized witness transaction.\n"
-                            "                              If iswitness is not present, heuristic tests will be used in decoding. If true, only witness deserializaion\n"
-                            "                              will be tried. If false, only non-witness deserialization wil be tried. Only has an effect if\n"
-                            "                              permitsigdata is true.\n"
                             "\nResult:\n"
                             "  \"psbt\"        (string)  The resulting raw transaction (base64-encoded string)\n"
                             "\nExamples:\n"
@@ -1759,21 +1695,16 @@ UniValue converttopsbt(const JSONRPCRequest& request)
     // parse hex string from parameter
     CMutableTransaction tx;
     bool permitsigdata = request.params[1].isNull() ? false : request.params[1].get_bool();
-    bool witness_specified = !request.params[2].isNull();
-    bool iswitness = witness_specified ? request.params[2].get_bool() : false;
-    bool try_witness = permitsigdata ? (witness_specified ? iswitness : true) : false;
-    bool try_no_witness = permitsigdata ? (witness_specified ? !iswitness : true) : true;
-    if (!DecodeHexTx(tx, request.params[0].get_str(), try_no_witness, try_witness)) {
+    if (!DecodeHexTx(tx, request.params[0].get_str())) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     }
 
-    // Remove all scriptSigs and scriptWitnesses from inputs
+    // Remove all scriptSigs from inputs
     for (CTxIn& input : tx.vin) {
-        if ((!input.scriptSig.empty() || !input.scriptWitness.IsNull()) && (request.params[1].isNull() || (!request.params[1].isNull() && request.params[1].get_bool()))) {
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Inputs must not have scriptSigs and scriptWitnesses");
+        if ((!input.scriptSig.empty()) && (request.params[1].isNull() || (!request.params[1].isNull() && request.params[1].get_bool()))) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Inputs must not have scriptSigs");
         }
         input.scriptSig.clear();
-        input.scriptWitness.SetNull();
     }
 
     // Make a blank psbt
@@ -1808,8 +1739,8 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "decodepsbt",                   &decodepsbt,                {"psbt"} },
     { "rawtransactions",    "combinepsbt",                  &combinepsbt,               {"txs"} },
     { "rawtransactions",    "finalizepsbt",                 &finalizepsbt,              {"psbt", "extract"} },
-    { "rawtransactions",    "createpsbt",                   &createpsbt,                {"inputs","outputs","locktime","replaceable"} },
-    { "rawtransactions",    "converttopsbt",                &converttopsbt,             {"hexstring","permitsigdata","iswitness"} },
+    { "rawtransactions",    "createpsbt",                   &createpsbt,                {"inputs","outputs","locktime"} },
+    { "rawtransactions",    "converttopsbt",                &converttopsbt,             {"hexstring","permitsigdata"} },
 
     { "blockchain",         "gettxoutproof",                &gettxoutproof,             {"txids", "blockhash"} },
     { "blockchain",         "verifytxoutproof",             &verifytxoutproof,          {"proof"} },

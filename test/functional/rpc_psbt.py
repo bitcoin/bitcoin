@@ -30,20 +30,16 @@ class PSBTTest(BitcoinTestFramework):
         final_tx = self.nodes[0].finalizepsbt(signed_tx)['hex']
         self.nodes[0].sendrawtransaction(final_tx)
 
-        # Create p2sh, p2wpkh, and p2wsh addresses
+        # Create p2sh and p2pkh addresses
         pubkey0 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())['pubkey']
         pubkey1 = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())['pubkey']
         pubkey2 = self.nodes[2].getaddressinfo(self.nodes[2].getnewaddress())['pubkey']
-        p2sh = self.nodes[1].addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "legacy")['address']
-        p2wsh = self.nodes[1].addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "bech32")['address']
-        p2sh_p2wsh = self.nodes[1].addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "p2sh-segwit")['address']
-        p2wpkh = self.nodes[1].getnewaddress("", "bech32")
-        p2pkh = self.nodes[1].getnewaddress("", "legacy")
-        p2sh_p2wpkh = self.nodes[1].getnewaddress("", "p2sh-segwit")
+        p2sh = self.nodes[1].addmultisigaddress(2, [pubkey0, pubkey1, pubkey2])['address']
+        p2pkh = self.nodes[1].getnewaddress()
 
         # fund those addresses
-        rawtx = self.nodes[0].createrawtransaction([], {p2sh:10, p2wsh:10, p2wpkh:10, p2sh_p2wsh:10, p2sh_p2wpkh:10, p2pkh:10})
-        rawtx = self.nodes[0].fundrawtransaction(rawtx, {"changePosition":3})
+        rawtx = self.nodes[0].createrawtransaction([], {p2sh:10, p2pkh:10})
+        rawtx = self.nodes[0].fundrawtransaction(rawtx, {"changePosition":2})
         signed_tx = self.nodes[0].signrawtransactionwithwallet(rawtx['hex'])['hex']
         txid = self.nodes[0].sendrawtransaction(signed_tx)
         self.nodes[0].generate(6)
@@ -51,34 +47,22 @@ class PSBTTest(BitcoinTestFramework):
 
         # Find the output pos
         p2sh_pos = -1
-        p2wsh_pos = -1
-        p2wpkh_pos = -1
         p2pkh_pos = -1
-        p2sh_p2wsh_pos = -1
-        p2sh_p2wpkh_pos = -1
         decoded = self.nodes[0].decoderawtransaction(signed_tx)
         for out in decoded['vout']:
             if out['scriptPubKey']['addresses'][0] == p2sh:
                 p2sh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2wsh:
-                p2wsh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2wpkh:
-                p2wpkh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2sh_p2wsh:
-                p2sh_p2wsh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2sh_p2wpkh:
-                p2sh_p2wpkh_pos = out['n']
             elif out['scriptPubKey']['addresses'][0] == p2pkh:
                 p2pkh_pos = out['n']
 
         # spend single key from node 1
-        rawtx = self.nodes[1].walletcreatefundedpsbt([{"txid":txid,"vout":p2wpkh_pos},{"txid":txid,"vout":p2sh_p2wpkh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99})['psbt']
+        rawtx = self.nodes[1].walletcreatefundedpsbt([{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():9.99})['psbt']
         walletprocesspsbt_out = self.nodes[1].walletprocesspsbt(rawtx)
         assert_equal(walletprocesspsbt_out['complete'], True)
         self.nodes[1].sendrawtransaction(self.nodes[1].finalizepsbt(walletprocesspsbt_out['psbt'])['hex'])
 
         # partially sign multisig things with node 1
-        psbtx = self.nodes[1].walletcreatefundedpsbt([{"txid":txid,"vout":p2wsh_pos},{"txid":txid,"vout":p2sh_pos},{"txid":txid,"vout":p2sh_p2wsh_pos}], {self.nodes[1].getnewaddress():29.99})['psbt']
+        psbtx = self.nodes[1].walletcreatefundedpsbt([{"txid":txid,"vout":p2sh_pos}], {self.nodes[1].getnewaddress():9.99})['psbt']
         walletprocesspsbt_out = self.nodes[1].walletprocesspsbt(psbtx)
         psbtx = walletprocesspsbt_out['psbt']
         assert_equal(walletprocesspsbt_out['complete'], False)
@@ -89,7 +73,7 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[2].sendrawtransaction(self.nodes[2].finalizepsbt(walletprocesspsbt_out['psbt'])['hex'])
 
         # check that walletprocesspsbt fails to decode a non-psbt
-        rawtx = self.nodes[1].createrawtransaction([{"txid":txid,"vout":p2wpkh_pos}], {self.nodes[1].getnewaddress():9.99})
+        rawtx = self.nodes[1].createrawtransaction([{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():9.99})
         assert_raises_rpc_error(-22, "TX decode failed", self.nodes[1].walletprocesspsbt, rawtx)
 
         # Convert a non-psbt to psbt and make sure we can decode it
@@ -100,7 +84,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Make sure that a psbt with signatures cannot be converted
         signedtx = self.nodes[0].signrawtransactionwithwallet(rawtx['hex'])
-        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].converttopsbt, signedtx['hex'])
+        assert_raises_rpc_error(-22, "Inputs must not have scriptSigs", self.nodes[0].converttopsbt, signedtx['hex'])
 
         # Explicilty allow converting non-empty txs
         new_psbt = self.nodes[0].converttopsbt(rawtx['hex'])
