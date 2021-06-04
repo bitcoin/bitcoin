@@ -108,3 +108,19 @@ CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, 
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
+
+std::optional<OutputType> OutputTypeFromDestination(const CTxDestination& dest) {
+    if (std::holds_alternative<PKHash>(dest) ||
+        std::holds_alternative<ScriptHash>(dest)) {
+        return OutputType::LEGACY;
+    }
+    if (std::holds_alternative<WitnessV0KeyHash>(dest) ||
+        std::holds_alternative<WitnessV0ScriptHash>(dest)) {
+        return OutputType::BECH32;
+    }
+    if (std::holds_alternative<WitnessV1Taproot>(dest) ||
+        std::holds_alternative<WitnessUnknown>(dest)) {
+        return OutputType::BECH32M;
+    }
+    return std::nullopt;
+}
