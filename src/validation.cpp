@@ -1475,7 +1475,8 @@ void CChainState::ConflictingChainFound(CBlockIndex* pindexNew)
 
 // Same as InvalidChainFound, above, except not called directly from InvalidateBlock,
 // which does its own setBlockIndexCandidates manageent.
-void CChainState::InvalidBlockFound(CBlockIndex *pindex, const BlockValidationState &state) {
+void CChainState::InvalidBlockFound(CBlockIndex *pindex, const BlockValidationState &state)
+{
     statsClient.inc("warnings.InvalidBlockFound", 1.0f);
     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
         pindex->nStatus |= BLOCK_FAILED_VALID;
@@ -2087,8 +2088,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // may have let in a block that violates the rule prior to updating the
     // software, and we would NOT be enforcing the rule here. Fully solving
     // upgrade from one software version to the next after a consensus rule
-    // change is potentially tricky and issue-specific (see RewindBlockIndex()
-    // for one general approach that was used for BIP 141 deployment).
+    // change is potentially tricky and issue-specific (see NeedsRedownload()
+    // for one approach that was used for BIP 141 deployment).
     // Also, currently the rule against blocks more than 2 hours in the future
     // is enforced in ContextualCheckBlockHeader(); we wouldn't want to
     // re-enforce that rule here (at least until we make it impossible for
@@ -5998,20 +5999,16 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     LOCK(::cs_main);
 
     // Fake various pieces of CBlockIndex state:
-    //
-    //   - nChainTx: so that we accurately report IBD-to-tip progress
-    //   - nTx: so that LoadBlockIndex() loads assumed-valid CBlockIndex entries
-    //       (among other things)
-    //   - nStatus & BLOCK_OPT_WITNESS: so that RewindBlockIndex() doesn't zealously
-    //       unwind the assumed-valid chain.
-    //
     CBlockIndex* index = nullptr;
     for (int i = 0; i <= snapshot_chainstate.m_chain.Height(); ++i) {
         index = snapshot_chainstate.m_chain[i];
 
+        // Fake nTx so that LoadBlockIndex() loads assumed-valid CBlockIndex
+        // entries (among other things)
         if (!index->nTx) {
             index->nTx = 1;
         }
+        // Fake nChainTx so that GuessVerificationProgress reports accurately
         index->nChainTx = index->pprev ? index->pprev->nChainTx + index->nTx : 1;
     }
 
