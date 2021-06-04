@@ -1889,6 +1889,12 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
 
 bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_key, OutputType addr_type)
 {
+    if (addr_type == OutputType::BECH32M) {
+        // Don't allow setting up taproot descriptors yet
+        // TODO: Allow setting up taproot descriptors
+        return false;
+    }
+
     LOCK(cs_desc_man);
     assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
 
@@ -1918,6 +1924,7 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
         desc_prefix = "wpkh(" + xpub + "/84'";
         break;
     }
+    case OutputType::BECH32M: assert(false); // TODO: Setup taproot descriptor
     } // no default case, so the compiler can warn about missing cases
     assert(!desc_prefix.empty());
 
