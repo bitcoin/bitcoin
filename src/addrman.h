@@ -454,6 +454,8 @@ public:
             LogPrint(BCLog::ADDRMAN, "addrman lost %i new and %i tried addresses due to collisions\n", nLostUnk, nLost);
         }
 
+        RemoveInvalid();
+
         Check();
     }
 
@@ -766,6 +768,9 @@ private:
 
     //! Get address info for address
     CAddrInfo GetAddressInfo_(const CService& addr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    //! Remove invalid addresses.
+    void RemoveInvalid() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     friend class CAddrManTest;
 };
