@@ -11,6 +11,7 @@
 #include <bls/bls_batchverifier.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <index/txindex.h>
 #include <txmempool.h>
 #include <masternode/masternode-sync.h>
 #include <net_processing.h>
@@ -639,6 +640,10 @@ void CInstantSendManager::HandleNewRecoveredSig(const CRecoveredSig& recoveredSi
 
 void CInstantSendManager::HandleNewInputLockRecoveredSig(const CRecoveredSig& recoveredSig, const uint256& txid)
 {
+    if (g_txindex) {
+        g_txindex->BlockUntilSyncedToCurrentChain();
+    }
+
     CTransactionRef tx;
     uint256 hashBlock;
     if (!GetTransaction(txid, tx, Params().GetConsensus(), hashBlock, true)) {

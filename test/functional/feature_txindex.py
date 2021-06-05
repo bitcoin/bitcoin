@@ -8,7 +8,6 @@
 #
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.test_node import ErrorMatch
 from test_framework.util import *
 from test_framework.script import *
 from test_framework.mininode import *
@@ -36,18 +35,6 @@ class TxIndexTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
-        self.log.info("Test that settings can't be changed without -reindex...")
-        self.stop_node(1)
-        self.nodes[1].assert_start_raises_init_error(["-txindex=0"], "You need to rebuild the database using -reindex to change -txindex", match=ErrorMatch.PARTIAL_REGEX)
-        self.start_node(1, ["-txindex=0", "-reindex"])
-        connect_nodes(self.nodes[0], 1)
-        self.sync_all()
-        self.stop_node(1)
-        self.nodes[1].assert_start_raises_init_error(["-txindex"], "You need to rebuild the database using -reindex to change -txindex", match=ErrorMatch.PARTIAL_REGEX)
-        self.start_node(1, ["-txindex", "-reindex"])
-        connect_nodes(self.nodes[0], 1)
-        self.sync_all()
-
         self.log.info("Mining blocks...")
         self.nodes[0].generate(105)
         self.sync_all()
