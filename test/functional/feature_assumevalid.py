@@ -5,7 +5,7 @@
 """Test logic for skipping signature validation on old blocks.
 
 Test logic for skipping signature validation on blocks which we've assumed
-valid (https://github.com/bitcoin/bitcoin/pull/9484)
+valid (https://github.com/syscoin/syscoin/pull/9484)
 
 We build a chain that includes and invalid signature for one of the
 transactions:
@@ -29,6 +29,7 @@ Start three nodes:
       block 200. node2 will reject block 102 since it's assumed valid, but it
       isn't buried by at least two weeks' work.
 """
+import time
 
 from test_framework.blocktools import (
     COINBASE_MATURITY,
@@ -50,26 +51,26 @@ from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
 
-
 class BaseNode(P2PInterface):
     def send_header_for_blocks(self, new_blocks):
         headers_message = msg_headers()
         headers_message.headers = [CBlockHeader(b) for b in new_blocks]
         self.send_message(headers_message)
 
-
 class AssumeValidTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
         self.rpc_timeout = 120
+        # Must set '-dip3params=9000:9000' to create pre-dip3 blocks only
+        self.extra_args = ['-dip3params=9000:9000']
 
     def setup_network(self):
         self.add_nodes(3)
         # Start node0. We don't start the other nodes yet since
         # we need to pre-mine a block with an invalid transaction
         # signature so we can pass in the block hash as assumevalid.
-        self.start_node(0)
+        self.start_node(0, extra_args=self.extra_args)
 
     def send_blocks_until_disconnected(self, p2p_conn):
         """Keep sending blocks to the node until we're disconnected."""
@@ -80,6 +81,26 @@ class AssumeValidTest(SyscoinTestFramework):
                 p2p_conn.send_message(msg_block(self.blocks[i]))
             except IOError:
                 assert not p2p_conn.is_connected
+                break
+
+    def assert_blockchain_height(self, node, height):
+        """Wait until the blockchain is no longer advancing and verify it's reached the expected height."""
+        last_height = node.getblock(node.getbestblockhash())['height']
+        timeout = 30
+        while True:
+            time.sleep(1)
+            # SYSCOIN
+            self.bump_mocktime(1)
+            current_height = node.getblock(node.getbestblockhash())['height']
+            if current_height != last_height:
+                last_height = current_height
+                if timeout < 0:
+                    assert False, "blockchain too short after timeout: %d" % current_height
+                timeout - 1
+                continue
+            elif current_height > height:
+                assert False, "blockchain too long: %d" % current_height
+            elif current_height == height:
                 break
 
     def run_test(self):
@@ -145,9 +166,9 @@ class AssumeValidTest(SyscoinTestFramework):
 
         self.nodes[0].disconnect_p2ps()
 
-        # Start node1 and node2 with assumevalid so they accept a block with a bad signature.
-        self.start_node(1, extra_args=["-assumevalid=" + hex(block102.sha256)])
-        self.start_node(2, extra_args=["-assumevalid=" + hex(block102.sha256)])
+        # SYSCOIN Start node1 and node2 with assumevalid so they accept a block with a bad signature.
+        self.start_node(1, extra_args=self.extra_args + ["-assumevalid=" + hex(block102.sha256)])
+        self.start_node(2, extra_args=self.extra_args + ["-assumevalid=" + hex(block102.sha256)])
 
         p2p0 = self.nodes[0].add_p2p_connection(BaseNode())
         p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
@@ -174,6 +195,7 @@ class AssumeValidTest(SyscoinTestFramework):
 
         # Send blocks to node2. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p2)
+        # SYSCOIN
         self.wait_until(lambda: self.nodes[2].getblockcount() >= COINBASE_MATURITY + 1)
         assert_equal(self.nodes[2].getblockcount(), COINBASE_MATURITY + 1)
 
