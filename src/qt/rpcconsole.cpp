@@ -487,6 +487,9 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
         ui->splitter->restoreState(settings.value("RPCConsoleWidgetPeersTabSplitterSizes").toByteArray());
     }
 
+    m_peer_widget_header_state = settings.value("PeersTabPeerHeaderState").toByteArray();
+    m_banlist_widget_header_state = settings.value("PeersTabBanlistHeaderState").toByteArray();
+
     constexpr QChar nonbreaking_hyphen(8209);
     const std::vector<QString> CONNECTION_TYPE_DOC{
         tr("Inbound: initiated by peer"),
@@ -569,6 +572,9 @@ RPCConsole::~RPCConsole()
         // RPCConsole is a child widget.
         settings.setValue("RPCConsoleWidgetPeersTabSplitterSizes", ui->splitter->saveState());
     }
+
+    settings.setValue("PeersTabPeerHeaderState", m_peer_widget_header_state);
+    settings.setValue("PeersTabBanlistHeaderState", m_banlist_widget_header_state);
 
     m_node.rpcUnsetTimerInterface(rpcTimerInterface);
     delete rpcTimerInterface;
@@ -658,9 +664,12 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         ui->peerWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui->peerWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
         ui->peerWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-        ui->peerWidget->setColumnWidth(PeerTableModel::Address, ADDRESS_COLUMN_WIDTH);
-        ui->peerWidget->setColumnWidth(PeerTableModel::Subversion, SUBVERSION_COLUMN_WIDTH);
-        ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
+
+        if (!ui->peerWidget->horizontalHeader()->restoreState(m_peer_widget_header_state)) {
+            ui->peerWidget->setColumnWidth(PeerTableModel::Address, ADDRESS_COLUMN_WIDTH);
+            ui->peerWidget->setColumnWidth(PeerTableModel::Subversion, SUBVERSION_COLUMN_WIDTH);
+            ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
+        }
         ui->peerWidget->horizontalHeader()->setStretchLastSection(true);
         ui->peerWidget->setItemDelegateForColumn(PeerTableModel::NetNodeId, new PeerIdViewDelegate(this));
 
@@ -683,8 +692,11 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         ui->banlistWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui->banlistWidget->setSelectionMode(QAbstractItemView::SingleSelection);
         ui->banlistWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-        ui->banlistWidget->setColumnWidth(BanTableModel::Address, BANSUBNET_COLUMN_WIDTH);
-        ui->banlistWidget->setColumnWidth(BanTableModel::Bantime, BANTIME_COLUMN_WIDTH);
+
+        if (!ui->banlistWidget->horizontalHeader()->restoreState(m_banlist_widget_header_state)) {
+            ui->banlistWidget->setColumnWidth(BanTableModel::Address, BANSUBNET_COLUMN_WIDTH);
+            ui->banlistWidget->setColumnWidth(BanTableModel::Bantime, BANTIME_COLUMN_WIDTH);
+        }
         ui->banlistWidget->horizontalHeader()->setStretchLastSection(true);
 
         // create ban table context menu
@@ -1190,6 +1202,11 @@ void RPCConsole::showEvent(QShowEvent *event)
 
 void RPCConsole::hideEvent(QHideEvent *event)
 {
+    // It is too late to call QHeaderView::saveState() in ~RPCConsole(), as all of
+    // the columns of QTableView child widgets will have zero width at that moment.
+    m_peer_widget_header_state = ui->peerWidget->horizontalHeader()->saveState();
+    m_banlist_widget_header_state = ui->banlistWidget->horizontalHeader()->saveState();
+
     QWidget::hideEvent(event);
 
     if (!clientModel || !clientModel->getPeerTableModel())
