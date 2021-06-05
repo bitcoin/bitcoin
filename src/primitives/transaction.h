@@ -194,7 +194,7 @@ public:
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
     const int16_t nVersion;
-    const int16_t nType;
+    const uint16_t nType;
     const uint32_t nLockTime;
     const std::vector<uint8_t> vExtraPayload; // only available for special transaction types
 
@@ -272,7 +272,7 @@ struct CMutableTransaction
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
     int16_t nVersion;
-    int16_t nType;
+    uint16_t nType;
     uint32_t nLockTime;
     std::vector<uint8_t> vExtraPayload; // only available for special transaction types
 
@@ -285,7 +285,7 @@ struct CMutableTransaction
         SER_WRITE(obj, n32bitVersion = obj.nVersion | (obj.nType << 16));
         READWRITE(n32bitVersion);
         SER_READ(obj, obj.nVersion = (int16_t) (n32bitVersion & 0xffff));
-        SER_READ(obj, obj.nType = (int16_t) ((n32bitVersion >> 16) & 0xffff));
+        SER_READ(obj, obj.nType = (uint16_t) ((n32bitVersion >> 16) & 0xffff));
         READWRITE(obj.vin, obj.vout, obj.nLockTime);
         if (obj.nVersion == 3 && obj.nType != TRANSACTION_NORMAL) {
             READWRITE(obj.vExtraPayload);
