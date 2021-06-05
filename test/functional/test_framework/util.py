@@ -481,9 +481,13 @@ def create_confirmed_utxos(fee, node, count):
     return utxos
 
 
-# Build a transaction that spends parent_txid:vout
-# Return amount sent
 def chain_transaction(node, parent_txids, vouts, value, fee, num_outputs):
+    """Build and send a transaction that spends the given inputs (specified
+    by lists of parent_txid:vout each), with the desired total value and fee,
+    equally divided up to the desired number of outputs.
+
+    Returns a tuple with the txid and the amount sent per output.
+    """
     send_value = satoshi_round((value - fee)/num_outputs)
     inputs = []
     for (txid, vout) in zip(parent_txids, vouts):
