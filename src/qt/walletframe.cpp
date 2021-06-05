@@ -7,14 +7,11 @@
 #include <fs.h>
 #include <node/ui_interface.h>
 #include <psbt.h>
-#include <qt/bitcoingui.h>
-#include <qt/createwalletdialog.h>
 #include <qt/governancelist.h>
 #include <qt/guiutil.h>
 #include <qt/masternodelist.h>
 #include <qt/overviewpage.h>
 #include <qt/psbtoperationsdialog.h>
-#include <qt/walletcontroller.h>
 #include <qt/walletmodel.h>
 #include <qt/walletview.h>
 #include <util/system.h>
@@ -30,9 +27,8 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-WalletFrame::WalletFrame(BitcoinGUI* _gui)
-    : QFrame(_gui),
-      gui(_gui),
+WalletFrame::WalletFrame(QWidget* parent)
+    : QFrame(parent),
       m_size_hint(OverviewPage{nullptr}.sizeHint())
 {
     // Leave HBox hook for adding a list view later
@@ -53,11 +49,7 @@ WalletFrame::WalletFrame(BitcoinGUI* _gui)
 
     // A button for create wallet dialog
     QPushButton* create_wallet_button = new QPushButton(tr("Create a new wallet"), walletStack);
-    connect(create_wallet_button, &QPushButton::clicked, [this] {
-        auto activity = new CreateWalletActivity(gui->getWalletController(), this);
-        connect(activity, &CreateWalletActivity::finished, activity, &QObject::deleteLater);
-        activity->create();
-    });
+    connect(create_wallet_button, &QPushButton::clicked, this, &WalletFrame::createWalletButtonClicked);
     no_wallet_layout->addWidget(create_wallet_button, 0, Qt::AlignHCenter | Qt::AlignTop);
     no_wallet_group->setLayout(no_wallet_layout);
 
@@ -86,17 +78,15 @@ void WalletFrame::setClientModel(ClientModel *_clientModel)
     }
 }
 
-bool WalletFrame::addWallet(WalletModel *walletModel)
+bool WalletFrame::addWallet(WalletModel* walletModel, WalletView* walletView)
 {
-    if (!gui || !clientModel || !walletModel) return false;
+    if (!clientModel || !walletModel) return false;
 
     if (mapWalletViews.count(walletModel) > 0) return false;
 
-    WalletView* walletView = new WalletView(this);
     walletView->setClientModel(clientModel);
     walletView->setWalletModel(walletModel);
     walletView->showOutOfSyncWarning(bOutOfSync);
-    walletView->setPrivacy(gui->isPrivacyModeActivated());
 
     WalletView* current_wallet_view = currentWalletView();
     if (current_wallet_view) {
@@ -107,17 +97,6 @@ bool WalletFrame::addWallet(WalletModel *walletModel)
 
     walletStack->addWidget(walletView);
     mapWalletViews[walletModel] = walletView;
-
-    connect(walletView, &WalletView::outOfSyncWarningClicked, this, &WalletFrame::outOfSyncWarningClicked);
-    connect(walletView, &WalletView::transactionClicked, gui, &BitcoinGUI::gotoHistoryPage);
-    connect(walletView, &WalletView::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
-    connect(walletView, &WalletView::message, [this](const QString& title, const QString& message, unsigned int style) {
-        gui->message(title, message, style);
-    });
-    connect(walletView, &WalletView::encryptionStatusChanged, gui, &BitcoinGUI::updateWalletStatus);
-    connect(walletView, &WalletView::incomingTransaction, gui, &BitcoinGUI::incomingTransaction);
-    connect(walletView, &WalletView::hdEnabledStatusChanged, gui, &BitcoinGUI::updateWalletStatus);
-    connect(gui, &BitcoinGUI::setPrivacy, walletView, &WalletView::setPrivacy);
 
     return true;
 }
