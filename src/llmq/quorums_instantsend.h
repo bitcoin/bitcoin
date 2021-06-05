@@ -125,57 +125,62 @@ public:
     void Stop();
     void InterruptWorkerThread();
 
-public:
+private:
     void ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params);
     bool CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params) const;
-    bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, CAmount* retValue, const Consensus::Params& params) const;
-    bool IsLocked(const uint256& txHash) const;
+    bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, const Consensus::Params& params) const;
     bool IsConflicted(const CTransaction& tx) const;
-    CInstantSendLockPtr GetConflictingLock(const CTransaction& tx) const;
 
-    virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
     void HandleNewInputLockRecoveredSig(const CRecoveredSig& recoveredSig, const uint256& txid);
     void HandleNewInstantSendLockRecoveredSig(const CRecoveredSig& recoveredSig);
 
     bool TrySignInputLocks(const CTransaction& tx, bool allowResigning, Consensus::LLMQType llmqType);
     void TrySignInstantSendLock(const CTransaction& tx);
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
     void ProcessMessageInstantSendLock(CNode* pfrom, const CInstantSendLockPtr& islock);
     static bool PreVerifyInstantSendLock(const CInstantSendLock& islock);
     bool ProcessPendingInstantSendLocks();
     std::unordered_set<uint256> ProcessPendingInstantSendLocks(int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban);
     void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLockPtr& islock);
 
-    void TransactionAddedToMempool(const CTransactionRef& tx);
-    void TransactionRemovedFromMempool(const CTransactionRef& tx);
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted);
-    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected);
-
     void AddNonLockedTx(const CTransactionRef& tx, const CBlockIndex* pindexMined);
     void RemoveNonLockedTx(const uint256& txid, bool retryChildren);
     void RemoveConflictedTx(const CTransaction& tx);
     void TruncateRecoveredSigsForInputs(const CInstantSendLock& islock);
 
-    void NotifyChainLock(const CBlockIndex* pindexChainLock);
-    void UpdatedBlockTip(const CBlockIndex* pindexNew);
+    void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);
+    void ResolveBlockConflicts(const uint256& islockHash, const CInstantSendLock& islock);
+    static void AskNodesForLockedTx(const uint256& txid);
+    void ProcessPendingRetryLockTxs();
+
+    void WorkThreadMain();
 
     void HandleFullyConfirmedBlock(const CBlockIndex* pindex);
 
-    void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);
-    void ResolveBlockConflicts(const uint256& islockHash, const CInstantSendLock& islock);
-    void RemoveConflictingLock(const uint256& islockHash, const CInstantSendLock& islock);
-    static void AskNodesForLockedTx(const uint256& txid);
-    void ProcessPendingRetryLockTxs();
+public:
+    bool IsLocked(const uint256& txHash) const;
+    CInstantSendLockPtr GetConflictingLock(const CTransaction& tx) const;
+
+    virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
+
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
+
+    void TransactionAddedToMempool(const CTransactionRef& tx);
+    void TransactionRemovedFromMempool(const CTransactionRef& tx);
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted);
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected);
 
     bool AlreadyHave(const CInv& inv) const;
     bool GetInstantSendLockByHash(const uint256& hash, CInstantSendLock& ret) const;
     CInstantSendLockPtr GetInstantSendLockByTxid(const uint256& txid) const;
     bool GetInstantSendLockHashByTxid(const uint256& txid, uint256& ret) const;
 
-    size_t GetInstantSendLockCount() const;
+    void NotifyChainLock(const CBlockIndex* pindexChainLock);
+    void UpdatedBlockTip(const CBlockIndex* pindexNew);
 
-    void WorkThreadMain();
+    void RemoveConflictingLock(const uint256& islockHash, const CInstantSendLock& islock);
+
+    size_t GetInstantSendLockCount() const;
 };
 
 extern CInstantSendManager* quorumInstantSendManager;
