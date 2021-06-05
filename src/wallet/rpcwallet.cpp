@@ -3140,14 +3140,14 @@ UniValue upgradetohd(const JSONRPCRequest& request)
 
     if (request.fHelp)
         throw std::runtime_error(
-                "upgradetohd\n"
+                "upgradetohd ( \"mnemonic\" \"mnemonicpassphrase\" \"walletpassphrase\" )\n"
                 "\nUpgrades non-HD wallets to HD.\n"
                 "\nWarning: You will need to make a new backup of your wallet after setting the HD wallet mnemonic.\n"
                 "\nArguments:\n"
-                "1. \"mnemonic\"             (string, optional, default=\"\") Mnemonic as defined in BIP39 to use for the new HD wallet."
+                "1. \"mnemonic\"             (string, optional, default=\"\") Mnemonic as defined in BIP39 to use for the new HD wallet.\n"
                 "                          Use an empty string \"\" to generate a new random mnemonic.\n"
                 "2. \"mnemonicpassphrase\"   (string, optional, default=\"\") Optional mnemonic passphrase as defined in BIP39\n"
-                "3. \"walletpassphrase\"     (string, optional) If your wallet is encrypted you must have your wallet passphrase here\n"
+                "3. \"walletpassphrase\"     (string, optional) If your wallet is encrypted you must have your wallet passphrase here.\n"
                 "                          If your wallet is not encrypted specifying wallet passphrase will trigger wallet encryption.\n"
 
                 "\nExamples:\n"
