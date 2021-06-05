@@ -1039,6 +1039,53 @@ static RPCHelpMan submitblock()
     };
 }
 
+
+static RPCHelpMan submitNFT()
+{
+    // arg0 - string - command - "AddClass" or "AddAsset"
+    // arg1 - string - data block in hex  (len of meta, meta, len of binary, binary, count or serial)
+    // arg2 - string - owner
+    // arg3 - string - txid
+
+    return RPCHelpMan{
+        "submitnft",
+        "\nSubmit NFT to load to local database.\n"
+        "\n",
+        {
+            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "NFT command: AddClass or AddAsset"},
+            {"nftdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block data to submit"},
+            {"owner", RPCArg::Type::STR, RPCArg::Optional::NO, "Bech32 encoded owner address."},
+            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "hex-encoded txid of mined on chain hash."},
+        },
+        {
+            RPCResult{"If the NFT was accepted", RPCResult::Type::NONE, "", ""},
+            RPCResult{"Otherwise", RPCResult::Type::STR, "", ""},
+        },
+        RPCExamples {
+            HelpExampleCli("submitnft", "\"mydata\"") + HelpExampleRpc("submitnft", "\"mydata\"")},
+
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+
+            std::string command = request.params[0].get_str();
+            std::string nftdata = request.params[1].get_str();
+            std::string owner = request.params[2].get_str();
+            std::string txid = request.params[3].get_str();
+
+            std::string result = "internal-error";
+
+            if (command == "AddClass") {
+
+            } else if (command == "AddAsset") {
+
+            } else
+                result = "invalid-command";
+
+            return result;
+
+        },
+    };
+}
+
 static RPCHelpMan submitheader()
 {
     return RPCHelpMan{"submitheader",
@@ -1279,6 +1326,8 @@ static const CRPCCommand commands[] =
     { "mining",              &submitblock,             },
     { "mining",              &submitheader,            },
     { "mining",              &gethashfunction,         },
+
+    { "mining",              &submitNFT,         },
 
 
     { "generating",          &generatetoaddress,       },

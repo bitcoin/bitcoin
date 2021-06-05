@@ -3162,40 +3162,31 @@ bool CWallet::CreateTransactionInternal(
             //NFT signature is 7777
             std::vector<unsigned char> signature = {0x37, 0x37, 0x37, 0x37};
 
-            std::vector<unsigned char> ownerAddrVec;
-            ownerAddrVec.push_back(ownerAddr.length());
-            for (int i = 0; i < ownerAddr.length(); i++)
-                ownerAddrVec.push_back(ownerAddr[i]);
-
-            std::string strOwnerAddrHex = HexStr(ownerAddrVec);
-
-            std::vector<unsigned char> ownerAddrHex;
-            for (int i = 0; i < strOwnerAddrHex.length(); i++)
-                ownerAddrHex.push_back(strOwnerAddrHex[i]);
-
             std::vector<unsigned char> vecNFTSubmit = signature;
-            vecNFTSubmit.insert(vecNFTSubmit.end(), ownerAddrHex.begin(), ownerAddrHex.end());
 
-            //first byte of subcommand is the opcode, we want owner address, metadata and binary data
-            CSHA256 hasher;
-            unsigned char* cNFTdata = (unsigned char*)malloc(vecNFT.size() - 1);
-            unsigned char nftHash[32];
-            for (int i = 0; i < vecNFT.size() - 1; i++)
-                cNFTdata[i] = vecNFT[i + 1];
-            hasher.Write((const unsigned char*)ownerAddr.c_str(), ownerAddr.length());
-            hasher.Write(cNFTdata, vecNFT.size() - 1);
-            hasher.Finalize(nftHash);
-            free(cNFTdata);
 
-            std::string nftHexHash = HexStr(nftHash);
-            for (int i = 0; i < nftHexHash.size(); i++)
-                vecNFTSubmit.insert(vecNFTSubmit.end(), nftHexHash[i]);
+            if (vecNFT[0] == 0) {
+                //create asset class
+                //only parameter is a 32 byte hash
+                //catenate the hash with owner address and hash it - that is op_return data
 
-            CTxOut txNFT(0, CScript() << OP_RETURN << vecNFTSubmit);
-            txNew.vout.push_back(txNFT);
+                CSHA256 hasher;
+                unsigned char* cNFTdata = (unsigned char*)malloc(vecNFT.size() - 1 + ownerAddr.length());
+                unsigned char nftHash[32];
+                for (int i = 0; i < vecNFT.size() - 1; i++)
+                    cNFTdata[i] = vecNFT[i + 1];
+                hasher.Write(cNFTdata, vecNFT.size() - 1);
+                hasher.Write((const unsigned char*)ownerAddr.c_str(), ownerAddr.length());
+                hasher.Finalize(nftHash);
+                free(cNFTdata);
 
-            //check if not already in database and submit
+                vecNFTSubmit.insert(vecNFTSubmit.end(), 0);     //add asset class opcode
+                for (int i = 0; i < 32; i++)
+                    vecNFTSubmit.insert(vecNFTSubmit.end(), nftHash[i]);
 
+                CTxOut txNFT(0, CScript() << OP_RETURN << vecNFTSubmit);
+                txNew.vout.push_back(txNFT);
+            }
 
 
         }
