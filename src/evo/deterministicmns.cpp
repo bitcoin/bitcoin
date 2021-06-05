@@ -659,18 +659,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             newList.UpdateMN(dmn->proTxHash, newState);
         }
     });
-    // decrease PoSe ban score
-    if(!fRegTest) {
-        // 60/50 *  50/24 = 2.5
-        // in Dashpay the llmq50_60 service checks 50 nodes every 24 blocks (1 hour) and decrements 1 pose score every block
-        // in Syscoin the llmq50_60 service checks 50 nodes every 60 blocks (1 hour) so to make the ratio equivalent so that scores decrementing are at the same ratio as the PoSe check strategy
-        // we need to offset the ratio of 50/60 by 2.5 (rounded up to 3)
-        if((nHeight % 3) == 0) {
-            DecreasePoSePenalties(newList);
-        }
-    } else {
-        DecreasePoSePenalties(newList);
-    }
+    DecreasePoSePenalties(newList);
     // coinbase can be quorum commitments
     // qcIn passed in by createnewblock, but connectblock will pass in null, use gettxpayload there if version is for mn quorum
     const bool &IsQCIn = qcIn && !qcIn->IsNull();

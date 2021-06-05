@@ -181,7 +181,7 @@ class LLMQChainLocksTest(DashTestFramework):
         for i in range(len(self.nodes)):
             if i != 0:
                 self.connect_nodes(i, 0)
-        SIGN_HEIGHT_OFFSET = 20
+        SIGN_HEIGHT_OFFSET = 8
         p2p_node = self.nodes[0].add_p2p_connection(TestP2PConn())
         p2p_node.wait_for_verack()
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)

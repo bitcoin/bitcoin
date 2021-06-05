@@ -1064,7 +1064,7 @@ extern std::unique_ptr<CBlockTreeDB> pblocktree;
 
 // SYSCOIN
 /** Global variable that points to the height based on a transaction id  */
-static const uint32_t MAX_BLOCK_INDEX = 43800*12; // 1 year of blocks
+static const uint32_t MAX_BLOCK_INDEX = 43800*12; // 2.5 year of blocks
 // SYSCOIN
 class CBlockIndexDB : public CDBWrapper {
 public:

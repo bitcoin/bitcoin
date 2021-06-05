@@ -281,16 +281,16 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     return true;
 }
 
-bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
-    if(!fRegTest && nHeight < Params().GetConsensus().nUTXOAssetsBlock)
+bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
+    if(!fRegTest && nHeight < params.nUTXOAssetsBlock)
         return !IsSyscoinTx(tx.nVersion);
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)
         return false;
     AssetMap mapAssets;
-    return CheckSyscoinInputs(false, tx, txHash, state, true, nHeight, nTime, uint256(), bSanityCheck, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut);
+    return CheckSyscoinInputs(false, params, tx, txHash, state, true, nHeight, nTime, uint256(), bSanityCheck, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut);
 }
 
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
+bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
     bool good = true;
     try{
         if(IsSyscoinMintTx(tx.nVersion)) {
@@ -300,7 +300,7 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
             good = CheckAssetAllocationInputs(tx, txHash, state, fJustCheck, nHeight, blockHash, bSanityCheck, mapAssetIn, mapAssetOut);
         }
         else if (IsAssetTx(tx.nVersion)) {
-            good = CheckAssetInputs(tx, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck, mapAssetIn, mapAssetOut);
+            good = CheckAssetInputs(params, tx, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck, mapAssetIn, mapAssetOut);
         } 
     } catch (...) {
         return FormatSyscoinErrorMessage(state, "checksyscoininputs-exception", bSanityCheck);
@@ -589,7 +589,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
     return true;  
 }
 
-bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state,
+bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, const uint256& txHash, TxValidationState &state,
         const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap& mapAssets, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
     if (!passetdb)
         return false;
@@ -624,16 +624,18 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         return FormatSyscoinErrorMessage(state, "asset-output-zeroval", bSanityCheck);
     }
     std::vector<uint64_t> vecNFTKeys;
-    CAssetsSet mapAssetNFTSet;
-    for(auto &voutAsset: tx.voutAssets) {
-        const uint32_t& nBaseAssetInternal = GetBaseAssetID(voutAsset.key);
-        if(voutAsset.key != nBaseAsset && nBaseAssetInternal == nBaseAsset) {
-            vecNFTKeys.emplace_back(voutAsset.key);
-            auto result = mapAssetNFTSet.emplace(voutAsset.key);
-            const bool & mapAssetNFTNotFound = result.second;
-            // check that the NFTID doesn't already exist
-            if (!mapAssetNFTNotFound || ExistsNFTAsset(voutAsset.key)) {
-                return FormatSyscoinErrorMessage(state, "asset-nft-duplicate", bSanityCheck);
+    if(nHeight >= params.nNEVMStartBlock) {
+        CAssetsSet mapAssetNFTSet;
+        for(auto &voutAsset: tx.voutAssets) {
+            const uint32_t& nBaseAssetInternal = GetBaseAssetID(voutAsset.key);
+            if(voutAsset.key != nBaseAsset && nBaseAssetInternal == nBaseAsset) {
+                vecNFTKeys.emplace_back(voutAsset.key);
+                auto result = mapAssetNFTSet.emplace(voutAsset.key);
+                const bool & mapAssetNFTNotFound = result.second;
+                // check that the NFTID doesn't already exist
+                if (!mapAssetNFTNotFound || ExistsNFTAsset(voutAsset.key)) {
+                    return FormatSyscoinErrorMessage(state, "asset-nft-duplicate", bSanityCheck);
+                }
             }
         }
     }

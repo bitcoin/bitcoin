@@ -32,8 +32,7 @@ from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, assert_equal
 from collections import namedtuple
 MAX_LOCATOR_SZ = 101
-# SYSCOIN
-MAX_BLOCK_BASE_SIZE = 4000000
+MAX_BLOCK_BASE_SIZE = 1000000
 MAX_BLOOM_FILTER_SIZE = 36000
 MAX_BLOOM_HASH_FUNCS = 50
 

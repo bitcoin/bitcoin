@@ -90,6 +90,7 @@ VB_WITNESS_BIT = 1
 VB_TOP_BITS = 0x20000000
 
 MAX_SIGOP_COST = 80000
+
 SEGWIT_HEIGHT = 120
 
 class UTXO():
@@ -234,6 +235,7 @@ class SegWitTest(SyscoinTestFramework):
         height = self.nodes[0].getblockcount() + 1
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
+        # SYSCOIN
         block.set_base_version(version)
         block.rehash()
         return block
@@ -269,7 +271,7 @@ class SegWitTest(SyscoinTestFramework):
         self.test_getblocktemplate_before_lockin()
         self.test_unnecessary_witness_before_segwit_activation()
         # SYSCOIN
-        #self.test_witness_tx_relay_before_segwit_activation()
+        # self.test_witness_tx_relay_before_segwit_activation()
         self.test_standardness_v0()
 
         self.log.info("Advancing to segwit activation")
@@ -362,7 +364,7 @@ class SegWitTest(SyscoinTestFramework):
         assert tx.sha256 != tx.calc_sha256(with_witness=True)
 
         # Construct a segwit-signaling block that includes the transaction.
-        block = self.build_next_block()
+        block = self.build_next_block(version=(VB_TOP_BITS | (1 << VB_WITNESS_BIT)))
         self.update_witness_block_with_transactions(block, [tx])
         # Sending witness data before activation is not allowed (anti-spam
         # rule).
@@ -404,7 +406,7 @@ class SegWitTest(SyscoinTestFramework):
         assert self.test_node.last_message["getdata"].inv[0].type == blocktype
         test_witness_block(self.nodes[0], self.test_node, block2, True)
 
-        block3 = self.build_next_block()
+        block3 = self.build_next_block(version=(VB_TOP_BITS | (1 << 15)))
         block3.solve()
         self.test_node.announce_block_and_wait_for_getdata(block3, use_header=True)
         assert self.test_node.last_message["getdata"].inv[0].type == blocktype
@@ -902,8 +904,9 @@ class SegWitTest(SyscoinTestFramework):
         block = self.build_next_block()
         add_witness_commitment(block)
         block.solve()
+
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.append(b'a' * 5000000)
-        assert get_virtual_size(block) > MAX_BLOCK_BASE_SIZE/4
+        assert get_virtual_size(block) > MAX_BLOCK_BASE_SIZE
 
         # We can't send over the p2p network, because this is too big to relay
         # TODO: repeat this test with a block that can be relayed
@@ -912,7 +915,7 @@ class SegWitTest(SyscoinTestFramework):
         assert self.nodes[0].getbestblockhash() != block.hash
 
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.pop()
-        assert get_virtual_size(block) < MAX_BLOCK_BASE_SIZE/4
+        assert get_virtual_size(block) < MAX_BLOCK_BASE_SIZE
         assert_equal(None, self.nodes[0].submitblock(block.serialize().hex()))
 
         assert self.nodes[0].getbestblockhash() == block.hash
@@ -947,8 +950,7 @@ class SegWitTest(SyscoinTestFramework):
         # This should give us plenty of room to tweak the spending tx's
         # virtual size.
         NUM_DROPS = 200  # 201 max ops per script!
-        # SYSCOIN
-        NUM_OUTPUTS = 200
+        NUM_OUTPUTS = 50
 
         witness_program = CScript([OP_2DROP] * NUM_DROPS + [OP_TRUE])
         witness_hash = uint256_from_str(sha256(witness_program))
@@ -985,9 +987,7 @@ class SegWitTest(SyscoinTestFramework):
             block.vtx[-1].wit.vtxinwit[int(i / (2 * NUM_DROPS))].scriptWitness.stack[i % (2 * NUM_DROPS)] = b'a' * (195 + extra_bytes)
             additional_bytes -= extra_bytes
             i += 1
-        # SYSCOIN
-        cur_length = len(block.vtx[-1].wit.vtxinwit[int(i / (2 * NUM_DROPS))].scriptWitness.stack[i % (2 * NUM_DROPS)])
-        block.vtx[-1].wit.vtxinwit[int(i / (2 * NUM_DROPS))].scriptWitness.stack[i % (2 * NUM_DROPS)] = b'a' * (cur_length + 4)
+
         block.vtx[0].vout.pop()  # Remove old commitment
         add_witness_commitment(block)
         block.solve()
@@ -1001,8 +1001,7 @@ class SegWitTest(SyscoinTestFramework):
 
         # Now resize the second transaction to make the block fit.
         cur_length = len(block.vtx[-1].wit.vtxinwit[0].scriptWitness.stack[0])
-        # SYSCOIN
-        block.vtx[-1].wit.vtxinwit[0].scriptWitness.stack[0] = b'a' * (cur_length - 4)
+        block.vtx[-1].wit.vtxinwit[0].scriptWitness.stack[0] = b'a' * (cur_length - 1)
         block.vtx[0].vout.pop()
         add_witness_commitment(block)
         block.solve()
@@ -1973,6 +1972,7 @@ class SegWitTest(SyscoinTestFramework):
             extra_args=[f"-segwitheight={SEGWIT_HEIGHT}"],
             expected_msg=f": Witness data for blocks after height {SEGWIT_HEIGHT} requires validation. Please restart with -reindex..\nPlease restart with -reindex or -reindex-chainstate to recover.",
         )
+
         # As directed, the user restarts the node with -reindex
         self.start_node(2, extra_args=["-reindex", f"-segwitheight={SEGWIT_HEIGHT}"])
 
