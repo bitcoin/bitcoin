@@ -94,7 +94,7 @@ public:
                                   std::function<void(const CBLSPublicKey&)> doneCallback);
     std::future<CBLSPublicKey> AsyncAggregatePublicKeys(const BLSPublicKeyVector& pubKeys,
                                                         size_t start, size_t count, bool parallel);
-    CBLSPublicKey AggregatePublicKeys(const BLSPublicKeyVector& pubKeys, size_t start = 0, size_t count = 0, bool parallel = true);
+    __attribute__((unused)) CBLSPublicKey AggregatePublicKeys(const BLSPublicKeyVector& pubKeys, size_t start = 0, size_t count = 0, bool parallel = true);
 
     void AsyncAggregateSigs(const BLSSignatureVector& sigs,
                             size_t start, size_t count, bool parallel,

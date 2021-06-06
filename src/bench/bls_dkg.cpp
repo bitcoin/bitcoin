@@ -33,7 +33,7 @@ struct DKG
         for (int i = 0; i < quorumSize; i++) {
             uint256 id;
             WriteLE64(id.begin(), i + 1);
-            members.push_back({id, {}, {}});
+            members.push_back({CBLSId(id), {}, {}});
             ids.emplace_back(id);
         }
 
