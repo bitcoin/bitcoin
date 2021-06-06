@@ -1554,7 +1554,7 @@ AC_SUBST(UNIVALUE_LIBS)
 
 dnl chiabls check
 
-AC_CHECK_LIB([chiabls],[main],[need_bundled_chiabls=no;],[need_bundled_chiabls=yes;])
+AC_CHECK_LIB([bls-dash],[main],[need_bundled_chiabls=no;],[need_bundled_chiabls=yes;])
 AM_CONDITIONAL([EMBEDDED_CHIABLS],[test x$need_bundled_chiabls = xyes])
 LIBCHIABLS_CFLAGS='-I$(srcdir)/chiabls/build/_deps/relic-build/include -I$(srcdir)/chiabls/build/_deps/relic-src/include'
 if test x$need_bundled_chiabls = xyes; then
