@@ -198,10 +198,11 @@ static void ImportScript(CWallet * const pwallet, const CScript& script, const s
     }
 
     if (isRedeemScript) {
-        if (!pwallet->HaveCScript(script) && !pwallet->AddCScript(script)) {
+        const CScriptID id(script);
+        if (!pwallet->HaveCScript(id) && !pwallet->AddCScript(script)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding p2sh redeemScript to wallet");
         }
-        ImportAddress(pwallet, CScriptID(script), strLabel);
+        ImportAddress(pwallet, id, strLabel);
     } else {
         CTxDestination destination;
         if (ExtractDestination(script, destination)) {
@@ -578,7 +579,8 @@ UniValue importwallet(const JSONRPCRequest& request)
             } else if(IsHex(vstr[0])) {
                 std::vector<unsigned char> vData(ParseHex(vstr[0]));
                 CScript script = CScript(vData.begin(), vData.end());
-                if (pwallet->HaveCScript(script)) {
+                CScriptID id(script);
+                if (pwallet->HaveCScript(id)) {
                     LogPrintf("Skipping import of %s (script already present)\n", vstr[0]);
                     continue;
                 }
@@ -589,7 +591,7 @@ UniValue importwallet(const JSONRPCRequest& request)
                 }
                 int64_t birth_time = DecodeDumpTime(vstr[1]);
                 if (birth_time > 0) {
-                    pwallet->m_script_metadata[CScriptID(script)].nCreateTime = birth_time;
+                    pwallet->m_script_metadata[id].nCreateTime = birth_time;
                     nTimeBegin = std::min(nTimeBegin, birth_time);
                 }
             }
@@ -1093,12 +1095,12 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
             }
 
-            if (!pwallet->HaveCScript(redeemScript) && !pwallet->AddCScript(redeemScript)) {
+            CScriptID redeem_id(redeemScript);
+            if (!pwallet->HaveCScript(redeem_id) && !pwallet->AddCScript(redeemScript)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding p2sh redeemScript to wallet");
             }
 
-            CTxDestination redeem_dest = CScriptID(redeemScript);
-            CScript redeemDestination = GetScriptForDestination(redeem_dest);
+            CScript redeemDestination = GetScriptForDestination(redeem_id);
 
             if (::IsMine(*pwallet, redeemDestination) == ISMINE_SPENDABLE) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script");

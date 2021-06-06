@@ -86,6 +86,10 @@ const char* ScriptErrorString(const ScriptError serror)
             return "Public key is neither compressed or uncompressed";
         case SCRIPT_ERR_CLEANSTACK:
             return "Extra items left on stack after execution";
+        case SCRIPT_ERR_OP_CODESEPARATOR:
+            return "Using OP_CODESEPARATOR";
+        case SCRIPT_ERR_SIG_FINDANDDELETE:
+            return "Signature is found in scriptCode";
         case SCRIPT_ERR_UNKNOWN_ERROR:
         case SCRIPT_ERR_ERROR_COUNT:
         default: break;

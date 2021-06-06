@@ -192,7 +192,7 @@ void TxIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const C
     }
 }
 
-void TxIndex::SetBestChain(const CBlockLocator& locator)
+void TxIndex::ChainStateFlushed(const CBlockLocator& locator)
 {
     if (!m_synced) {
         return;
@@ -211,7 +211,7 @@ void TxIndex::SetBestChain(const CBlockLocator& locator)
         return;
     }
 
-    // This checks that SetBestChain callbacks are received after BlockConnected. The check may fail
+    // This checks that ChainStateFlushed callbacks are received after BlockConnected. The check may fail
     // immediately after the the sync thread catches up and sets m_synced. Consider the case where
     // there is a reorg and the blocks on the stale branch are in the ValidationInterface queue
     // backlog even after the sync thread has caught up to the new chain tip. In this unlikely
@@ -268,7 +268,9 @@ bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRe
     CBlockHeader header;
     try {
         file >> header;
-        fseek(file.Get(), postx.nTxOffset, SEEK_CUR);
+        if (fseek(file.Get(), postx.nTxOffset, SEEK_CUR)) {
+            return error("%s: fseek(...) failed", __func__);
+        }
         file >> tx;
     } catch (const std::exception& e) {
         return error("%s: Deserialize or I/O error - %s", __func__, e.what());

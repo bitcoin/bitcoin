@@ -153,6 +153,12 @@ private:
       */
     std::set<CBlockIndex*> m_failed_blocks;
 
+    /**
+     * the ChainState CriticalSection
+     * A lock that must be held when modifying this ChainState - held in ActivateBestChain()
+     */
+    CCriticalSection m_cs_chainstate;
+
 public:
     CChain chainActive;
     BlockMap mapBlockIndex;
@@ -657,6 +663,12 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
     std::string reason;
     if (fRequireStandard && !IsStandardTx(tx, reason))
         return state.DoS(0, false, REJECT_NONSTANDARD, reason);
+
+    // Do not work on transactions that are too small.
+    // A transaction with 1 empty scriptSig input and 1 P2PKH output has size of 85 bytes.
+    // Transactions smaller than this are not relayed to reduce unnecessary malloc overhead.
+    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) < MIN_STANDARD_TX_SIZE)
+        return state.DoS(0, false, REJECT_NONSTANDARD, "tx-size-small");
 
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
@@ -2450,13 +2462,12 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
     LOCK(cs_main);
     static int64_t nLastWrite = 0;
     static int64_t nLastFlush = 0;
-    static int64_t nLastSetChain = 0;
     std::set<int> setFilesToPrune;
-    bool fFlushForPrune = false;
-    bool fDoFullFlush = false;
-    int64_t nNow = 0;
+    bool full_flush_completed = false;
     try {
     {
+        bool fFlushForPrune = false;
+        bool fDoFullFlush = false;
         LOCK(cs_LastBlockFile);
         if (fPruneMode && (fCheckForPruning || nManualPruneHeight > 0) && !fReindex) {
             if (nManualPruneHeight > 0) {
@@ -2473,16 +2484,13 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
                 }
             }
         }
-        nNow = GetTimeMicros();
+        int64_t nNow = GetTimeMicros();
         // Avoid writing/flushing immediately after startup.
         if (nLastWrite == 0) {
             nLastWrite = nNow;
         }
         if (nLastFlush == 0) {
             nLastFlush = nNow;
-        }
-        if (nLastSetChain == 0) {
-            nLastSetChain = nNow;
         }
         int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
         int64_t cacheSize = pcoinsTip->DynamicMemoryUsage();
@@ -2544,12 +2552,12 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
                 return AbortNode(state, "Failed to commit EvoDB");
             }
             nLastFlush = nNow;
+            full_flush_completed = true;
         }
     }
-    if (fDoFullFlush || ((mode == FlushStateMode::ALWAYS || mode == FlushStateMode::PERIODIC) && nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000)) {
+    if (full_flush_completed) {
         // Update best block in wallet (so we can detect restored wallets).
-        GetMainSignals().SetBestChain(chainActive.GetLocator());
-        nLastSetChain = nNow;
+        GetMainSignals().ChainStateFlushed(chainActive.GetLocator());
     }
     } catch (const std::runtime_error& e) {
         return AbortNode(state, std::string("System error while flushing: ") + e.what());
@@ -2927,6 +2935,7 @@ void CChainState::PruneBlockIndexCandidates() {
 bool CChainState::ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace)
 {
     AssertLockHeld(cs_main);
+
     const CBlockIndex *pindexOldTip = chainActive.Tip();
     const CBlockIndex *pindexFork = chainActive.FindFork(pindexMostWork);
 
@@ -3044,10 +3053,11 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
     // sanely for performance or correctness!
     AssertLockNotHeld(cs_main);
 
-    // make sure that no matter what, only one thread is executing ActivateBestChain. This avoids a race condition when
-    // validation signals are invoked, which might result in out-of-order execution.
-    static CCriticalSection cs_activateBestChain;
-    LOCK(cs_activateBestChain);
+    // ABC maintains a fair degree of expensive-to-calculate internal state
+    // because this function periodically releases cs_main so that it does not lock up other threads for too long
+    // during large connects - and to allow for e.g. the callback queue to drain
+    // we use m_cs_chainstate to enforce mutual exclusion so that only one caller may execute this function at a time
+    LOCK(m_cs_chainstate);
 
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
 
@@ -3067,47 +3077,54 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
             SyncWithValidationInterfaceQueue();
         }
 
-
-        const CBlockIndex *pindexFork;
-        bool fInitialDownload;
         {
             LOCK(cs_main);
-            ConnectTrace connectTrace(mempool); // Destructed before cs_main is unlocked
+            CBlockIndex* starting_tip = chainActive.Tip();
+            bool blocks_connected = false;
+            do {
+                // We absolutely may not unlock cs_main until we've made forward progress
+                // (with the exception of shutdown due to hardware issues, low disk space, etc).
+                ConnectTrace connectTrace(mempool); // Destructed before cs_main is unlocked
 
-            CBlockIndex *pindexOldTip = chainActive.Tip();
-            if (pindexMostWork == nullptr) {
-                pindexMostWork = FindMostWorkChain();
-            }
+                if (pindexMostWork == nullptr) {
+                    pindexMostWork = FindMostWorkChain();
+                }
 
-            // Whether we have anything to do at all.
-            if (pindexMostWork == nullptr || pindexMostWork == chainActive.Tip())
-                return true;
+                // Whether we have anything to do at all.
+                if (pindexMostWork == nullptr || pindexMostWork == chainActive.Tip()) {
+                    break;
+                }
 
-            bool fInvalidFound = false;
-            std::shared_ptr<const CBlock> nullBlockPtr;
-            if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connectTrace))
-                return false;
+                bool fInvalidFound = false;
+                std::shared_ptr<const CBlock> nullBlockPtr;
+                if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connectTrace))
+                    return false;
+                blocks_connected = true;
 
-            if (fInvalidFound) {
-                // Wipe cache, we may need another branch now.
-                pindexMostWork = nullptr;
-            }
-            pindexNewTip = chainActive.Tip();
-            pindexFork = chainActive.FindFork(pindexOldTip);
-            fInitialDownload = IsInitialBlockDownload();
+                if (fInvalidFound) {
+                    // Wipe cache, we may need another branch now.
+                    pindexMostWork = nullptr;
+                }
+                pindexNewTip = chainActive.Tip();
 
-            for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
-                assert(trace.pblock && trace.pindex);
-                GetMainSignals().BlockConnected(trace.pblock, trace.pindex, trace.conflictedTxs);
-            }
+                for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
+                    assert(trace.pblock && trace.pindex);
+                    GetMainSignals().BlockConnected(trace.pblock, trace.pindex, trace.conflictedTxs);
+                }
+            } while (!chainActive.Tip() || (starting_tip && CBlockIndexWorkComparator()(chainActive.Tip(), starting_tip)));
+            if (!blocks_connected) return true;
+
+            const CBlockIndex* pindexFork = chainActive.FindFork(starting_tip);
+            bool fInitialDownload = IsInitialBlockDownload();
 
             // Notify external listeners about the new tip.
             // Enqueue while holding cs_main to ensure that UpdatedBlockTip is called in the order in which blocks are connected
-            GetMainSignals().SynchronousUpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
-            GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
-
-            // Always notify the UI if a new block tip was connected
             if (pindexFork != pindexNewTip) {
+                // Notify ValidationInterface subscribers
+                GetMainSignals().SynchronousUpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
+                GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
+
+                // Always notify the UI if a new block tip was connected
                 uiInterface.NotifyBlockTip(fInitialDownload, pindexNewTip);
             }
         }

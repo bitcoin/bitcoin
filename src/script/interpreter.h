@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -98,6 +98,10 @@ enum
 
     // Enable the opcodes listed in DIP0020 (OP_CAT, OP_AND, OP_OR, OP_XOR, OP_DIV, OP_MOD, OP_SPLIT, OP_BIN2NUM, OP_NUM2BIN, OP_CHECKDATASIG, OP_CHECKDATASIGVERIFY).
     SCRIPT_ENABLE_DIP0020_OPCODES = (1U << 15),
+
+    // Making OP_CODESEPARATOR and FindAndDelete fail
+    //
+    SCRIPT_VERIFY_CONST_SCRIPTCODE = (1U << 16),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);

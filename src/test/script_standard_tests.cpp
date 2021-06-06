@@ -12,12 +12,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-static isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& isInvalid)
-{
-    isInvalid = false;
-    return IsMine(keystore, scriptPubKey);
-}
-
 BOOST_FIXTURE_TEST_SUITE(script_standard_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
@@ -454,7 +448,14 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         keystore.AddKey(keys[1]);
 
         result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+        BOOST_CHECK(!isInvalid);
+
+        // Keystore has 2/2 keys and the script
+        keystore.AddCScript(scriptPubKey);
+
+        result = IsMine(keystore, scriptPubKey, isInvalid);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
         BOOST_CHECK(!isInvalid);
     }
 

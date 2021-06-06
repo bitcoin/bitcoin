@@ -9,7 +9,8 @@ from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.blocktools import create_block, create_coinbase
-from test_framework.script import CScript, OP_TRUE
+from test_framework.script import CScript, OP_TRUE, OP_DROP
+
 
 # TestP2PConn: A peer we use to send messages to dashd, and store responses.
 class TestP2PConn(P2PInterface):
@@ -375,7 +376,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         for i in range(num_transactions):
             tx = CTransaction()
             tx.vin.append(CTxIn(COutPoint(utxo[0], utxo[1]), b''))
-            tx.vout.append(CTxOut(utxo[2] - 1000, CScript([OP_TRUE])))
+            tx.vout.append(CTxOut(utxo[2] - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
             tx.rehash()
             utxo = [tx.sha256, 0, tx.vout[0].nValue]
             block.vtx.append(tx)

@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from test_framework.messages import COutPoint, CTransaction, CTxIn, CTxOut, ToHex
 from test_framework.mininode import COIN
-from test_framework.script import CScript, OP_CAT
+from test_framework.script import CScript, OP_CAT, OP_DROP, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, get_bip9_status, satoshi_round
 
@@ -47,7 +47,7 @@ class DIP0020ActivationTest(BitcoinTestFramework):
         value = int(value - self.relayfee * COIN)
         tx0 = CTransaction()
         tx0.vin.append(CTxIn(COutPoint(int(txid, 16), 0)))
-        tx0.vout.append(CTxOut(value, CScript([])))
+        tx0.vout.append(CTxOut(value, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
         tx0.rehash()
         tx0_hex = ToHex(tx0)
 
