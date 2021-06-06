@@ -23,6 +23,7 @@ packages:
 - "python3"
 # SYSCOIN
 - "python3-pip"
+- "python3-distutils"
 # Cross compilation HOSTS:
 #  - arm-linux-gnueabihf
 - "binutils-arm-linux-gnueabihf"
