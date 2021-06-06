@@ -1,4 +1,4 @@
-// Copyright 2018 Chia Network Inc
+// Copyright 2020 Chia Network Inc
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,24 +15,36 @@
 #ifndef SRC_BLSUTIL_HPP_
 #define SRC_BLSUTIL_HPP_
 
-#include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <string>
-#include <cstdlib>
-
-#include <relic_conf.h>
-
-#if defined GMP && ARITH == GMP
-#include <gmp.h>
-#endif
-
-#include <relic.h>
-#include <relic_test.h>
+#include <vector>
 
 namespace bls {
 
 class BLS;
+
+class Bytes {
+    const uint8_t* pData;
+    const size_t nSize;
+
+public:
+    explicit Bytes(const uint8_t* pDataIn, const size_t nSizeIn)
+        : pData(pDataIn), nSize(nSizeIn)
+    {
+    }
+    explicit Bytes(const std::vector<uint8_t>& vecBytes)
+        : pData(vecBytes.data()), nSize(vecBytes.size())
+    {
+    }
+
+    inline const uint8_t* begin() const { return pData; }
+    inline const uint8_t* end() const { return pData + nSize; }
+
+    inline size_t size() const { return nSize; }
+
+    const uint8_t& operator[](const int nIndex) const { return pData[nIndex]; }
+};
 
 class Util {
  public:
@@ -44,23 +56,18 @@ class Util {
         md_map_sh256(output, message, messageLen);
     }
 
-    template<size_t S>
-    struct BytesCompare {
-        bool operator() (const uint8_t* lhs, const uint8_t* rhs) const {
-            for (size_t i = 0; i < S; i++) {
-                if (lhs[i] < rhs[i]) return true;
-                if (lhs[i] > rhs[i]) return false;
-            }
-            return false;
-        }
-    };
-    typedef struct BytesCompare<32> BytesCompare32;
-    typedef struct BytesCompare<80> BytesCompare80;
-
     static std::string HexStr(const uint8_t* data, size_t len) {
         std::stringstream s;
         s << std::hex;
-        for (size_t i=0; i < len; ++i)
+        for (int i=0; i < len; ++i)
+            s << std::setw(2) << std::setfill('0') << static_cast<int>(data[i]);
+        return s.str();
+    }
+
+    static std::string HexStr(const std::vector<uint8_t> &data) {
+        std::stringstream s;
+        s << std::hex;
+        for (int i=0; i < data.size(); ++i)
             s << std::setw(2) << std::setfill('0') << static_cast<int>(data[i]);
         return s.str();
     }
@@ -79,6 +86,38 @@ class Util {
      */
     static void SecFree(void* ptr) {
         secureFreeCallback(ptr);
+    }
+
+    /*
+     * Converts one hex character to an int.
+     */
+    static uint8_t char2int(const char input) {
+        if(input >= '0' && input <= '9')
+            return input - '0';
+        if(input >= 'A' && input <= 'F')
+            return input - 'A' + 10;
+        if(input >= 'a' && input <= 'f')
+            return input - 'a' + 10;
+        throw std::invalid_argument("Invalid input string");
+    }
+
+    /*
+     * Converts a hex string into a vector of bytes.
+     */
+    static std::vector<uint8_t> HexToBytes(const std::string hex) {
+        if (hex.size() % 2 != 0) {
+            throw std::invalid_argument("Invalid input string, length must be multple of 2");
+        }
+        std::vector<uint8_t> ret = std::vector<uint8_t>();
+        size_t start_at = 0;
+        if (hex.rfind("0x", 0) == 0 || hex.rfind("0x", 0) == 0) {
+            start_at = 2;
+        }
+
+        for (size_t i = start_at; i < hex.size(); i += 2) {
+            ret.push_back(char2int(hex[i]) * 16 + char2int(hex[i+1]));
+        }
+        return ret;
     }
 
     /*

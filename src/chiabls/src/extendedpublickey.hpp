@@ -15,7 +15,7 @@
 #ifndef SRC_EXTENDEDPUBLICKEY_HPP_
 #define SRC_EXTENDEDPUBLICKEY_HPP_
 
-#include <relic_conf.h>
+#include "relic_conf.h"
 
 #include <vector>
 
@@ -23,12 +23,12 @@
 #include <gmp.h>
 #endif
 
-#include "publickey.hpp"
 #include "chaincode.hpp"
+#include "elements.hpp"
 
 
-#include <relic.h>
-#include <relic_test.h>
+#include "relic.h"
+#include "relic_test.h"
 
 namespace bls {
 
@@ -48,13 +48,13 @@ class ExtendedPublicKey {
     static const uint32_t VERSION = 1;
 
     // version(4) depth(1) parent fingerprint(4) child#(4) cc(32) pk(48)
-    static const uint32_t EXTENDED_PUBLIC_KEY_SIZE = 93;
+    static const uint32_t SIZE = 93;
 
     // Parse public key and chain code from bytes
-    static ExtendedPublicKey FromBytes(const uint8_t* serialized);
+    static ExtendedPublicKey FromBytes(const Bytes& bytes, bool fLegacy = true);
 
     // Derive a child extended public key, cannot be hardened
-    ExtendedPublicKey PublicChild(uint32_t i) const;
+    ExtendedPublicKey PublicChild(uint32_t i, bool fLegacy = true) const;
 
     uint32_t GetVersion() const;
     uint8_t GetDepth() const;
@@ -62,7 +62,7 @@ class ExtendedPublicKey {
     uint32_t GetChildNumber() const;
 
     ChainCode GetChainCode() const;
-    PublicKey GetPublicKey() const;
+    G1Element GetPublicKey() const;
 
     // Comparator implementation.
     friend bool operator==(ExtendedPublicKey const &a,
@@ -72,8 +72,8 @@ class ExtendedPublicKey {
     friend std::ostream &operator<<(std::ostream &os,
                                     ExtendedPublicKey const &s);
 
-    void Serialize(uint8_t *buffer) const;
-    std::vector<uint8_t> Serialize() const;
+    void Serialize(uint8_t *buffer, bool fLegacy = true) const;
+    std::vector<uint8_t> Serialize(bool fLegacy = true) const;
 
     // Blank public constructor
     ExtendedPublicKey()
@@ -82,13 +82,13 @@ class ExtendedPublicKey {
               parentFingerprint(0),
               childNumber(0),
               chainCode(ChainCode()),
-              pk(PublicKey()) {}
+              pk(G1Element()) {}
 
 private:
     // private constructor, force use of static methods
     explicit ExtendedPublicKey(const uint32_t v, const uint8_t d,
                                const uint32_t pfp, const uint32_t cn,
-                               const ChainCode code, const PublicKey key)
+                               const ChainCode code, const G1Element key)
          : version(v),
           depth(d),
           parentFingerprint(pfp),
@@ -102,7 +102,7 @@ private:
     uint32_t childNumber;
 
     ChainCode chainCode;
-    PublicKey pk;
+    G1Element pk;
 };
 } // end namespace bls
 

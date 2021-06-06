@@ -18,23 +18,24 @@
 #include <iostream>
 #include <vector>
 
-#include <relic_conf.h>
+#include "relic_conf.h"
 
 #if defined GMP && ARITH == GMP
 #include <gmp.h>
 #endif
 
 
-#include <relic.h>
-#include <relic_test.h>
+#include "relic.h"
+#include "relic_test.h"
 
 #include "util.hpp"
+
 namespace bls {
 class ChainCode {
  public:
-    static const size_t CHAIN_CODE_SIZE = 32;
+    static const size_t SIZE = 32;
 
-    static ChainCode FromBytes(const uint8_t* bytes);
+    static ChainCode FromBytes(const Bytes& bytes);
 
     ChainCode(const ChainCode &cc);
 

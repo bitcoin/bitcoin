@@ -25,32 +25,15 @@ def hmac256(m, k):
         k = hash256(k)
     while len(k) < HMAC_BLOCK_SIZE:
         k += bytes([0])
-    opad = bytes([0x5c] * HMAC_BLOCK_SIZE)
+    opad = bytes([0x5C] * HMAC_BLOCK_SIZE)
     ipad = bytes([0x36] * HMAC_BLOCK_SIZE)
     kopad = bytes([k[i] ^ opad[i] for i in range(HMAC_BLOCK_SIZE)])
     kipad = bytes([k[i] ^ ipad[i] for i in range(HMAC_BLOCK_SIZE)])
     return hash256(kopad + hash256(kipad + m))
 
 
-def hash_pks(num_outputs, public_keys):
-    """
-    Construction from https://eprint.iacr.org/2018/483.pdf
-    Two hashes are performed for speed.
-    """
-    input_bytes = b''.join([pk.serialize() for pk in public_keys])
-    pk_hash = hash256(input_bytes)
-    order = public_keys[0].value.ec.n
-
-    computed_Ts = []
-    for i in range(num_outputs):
-        t = int.from_bytes(hash256(i.to_bytes(4, "big") + pk_hash), "big")
-        computed_Ts.append(t % order)
-
-    return computed_Ts
-
-
 """
-Copyright 2018 Chia Network Inc
+Copyright 2020 Chia Network Inc
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

@@ -1558,9 +1558,9 @@ AC_CHECK_LIB([chiabls],[main],[need_bundled_chiabls=no;],[need_bundled_chiabls=y
 AM_CONDITIONAL([EMBEDDED_CHIABLS],[test x$need_bundled_chiabls = xyes])
 LIBCHIABLS_CFLAGS='-I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include'
 if test x$need_bundled_chiabls = xyes; then
-  LIBCHIABLS_LIBS=chiabls/build/libchiabls.a
+  LIBCHIABLS_LIBS=chiabls/build/libbls-dash.a
 elif test "x$need_bundled_chiabls" = xno; then
-  LIBCHIABLS_LIBS=-lchiabls
+  LIBCHIABLS_LIBS=-lbls-dash
 fi        
 AC_SUBST(LIBCHIABLS_CFLAGS)
 AC_SUBST(LIBCHIABLS_LIBS)  

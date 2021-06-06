@@ -33,7 +33,7 @@ SYSCOIN_INCLUDES += $(LIBCURL_CFLAGS)
 
 
 if EMBEDDED_CHIABLS
-LIBCHIA = chiabls/build/libchiabls.a
+LIBCHIA = chiabls/build/libbls-dash.a
 LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIA) -lgmp
 $(LIBCHIA):
 	cd $(srcdir)/chiabls/build && $(MAKE) $(AM_MAKEFLAGS)
@@ -414,12 +414,6 @@ obj/build.h: FORCE
   chiabls/src/bls.cpp \
   chiabls/src/privatekey.hpp \
   chiabls/src/privatekey.cpp \
-  chiabls/src/publickey.hpp \
-  chiabls/src/publickey.cpp \
-  chiabls/src/signature.hpp \
-  chiabls/src/signature.cpp \
-  chiabls/src/aggregationinfo.hpp \
-  chiabls/src/aggregationinfo.cpp \
   chiabls/src/chaincode.hpp \
   chiabls/src/chaincode.cpp \
   chiabls/src/extendedprivatekey.hpp \
@@ -427,6 +421,16 @@ obj/build.h: FORCE
   chiabls/src/extendedpublickey.hpp \
   chiabls/src/extendedpublickey.cpp \
   chiabls/src/util.hpp \
+  chiabls/src/elements.hpp \
+  chiabls/src/elements.cpp \
+  chiabls/src/hdkeys.hpp \
+  chiabls/src/hkdf.hpp \
+  chiabls/src/legacy.hpp \
+  chiabls/src/legacy.cpp \
+  chiabls/src/schemes.hpp \
+  chiabls/src/schemes.cpp \
+  chiabls/src/threshold.hpp \
+  chiabls/src/threshold.cpp \
   $(SYSCOIN_CORE_H)
 
 

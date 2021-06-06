@@ -64,13 +64,13 @@ if (UNIX)
 
         # if pkgconfig for libsodium doesn't provide
         # static lib info, then override PKG_STATIC here..
-        if (sodium_PKG_STATIC_LIBRARIES STREQUAL "")
+        if (NOT sodium_PKG_STATIC_FOUND)
             set(sodium_PKG_STATIC_LIBRARIES libsodium.a)
         endif()
 
         set(XPREFIX sodium_PKG_STATIC)
     else()
-        if (sodium_PKG_LIBRARIES STREQUAL "")
+        if (NOT sodium_PKG_FOUND)
             set(sodium_PKG_LIBRARIES sodium)
         endif()
 
@@ -101,7 +101,7 @@ elseif (WIN32)
 
     if (MSVC)
         # detect target architecture
-        file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/arch.c" [=[
+        file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/arch.cpp" [=[
             #if defined _M_IX86
             #error ARCH_VALUE x86_32
             #elif defined _M_X64
@@ -109,7 +109,7 @@ elseif (WIN32)
             #endif
             #error ARCH_VALUE unknown
         ]=])
-        try_compile(_UNUSED_VAR "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/arch.c"
+        try_compile(_UNUSED_VAR "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/arch.cpp"
             OUTPUT_VARIABLE _COMPILATION_LOG
         )
         string(REGEX REPLACE ".*ARCH_VALUE ([a-zA-Z0-9_]+).*" "\\1" _TARGET_ARCH "${_COMPILATION_LOG}")
@@ -224,7 +224,8 @@ endif()
 
 # communicate results
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(sodium
+find_package_handle_standard_args(
+    sodium # The name must be either uppercase or match the filename case.
     REQUIRED_VARS
         sodium_LIBRARY_RELEASE
         sodium_LIBRARY_DEBUG
@@ -232,6 +233,11 @@ find_package_handle_standard_args(sodium
     VERSION_VAR
         sodium_VERSION
 )
+
+if(Sodium_FOUND)
+    set(sodium_LIBRARIES
+        optimized ${sodium_LIBRARY_RELEASE} debug ${sodium_LIBRARY_DEBUG})
+endif()
 
 # mark file paths as advanced
 mark_as_advanced(sodium_INCLUDE_DIR)

@@ -12,27 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "chaincode.hpp"
 #include "bls.hpp"
+
 namespace bls {
 
-ChainCode ChainCode::FromBytes(const uint8_t* bytes) {
+ChainCode ChainCode::FromBytes(const Bytes& bytes) {
+    if (bytes.size() != ChainCode::SIZE) {
+        throw std::invalid_argument("ChainCode::FromBytes: Invalid size");
+    }
     ChainCode c = ChainCode();
     bn_new(c.chainCode);
-    bn_read_bin(c.chainCode, bytes, ChainCode::CHAIN_CODE_SIZE);
+    bn_read_bin(c.chainCode, bytes.begin(), ChainCode::SIZE);
     return c;
 }
 
 ChainCode::ChainCode(const ChainCode &cc) {
-    uint8_t bytes[ChainCode::CHAIN_CODE_SIZE];
+    uint8_t bytes[ChainCode::SIZE];
     cc.Serialize(bytes);
     bn_new(chainCode);
-    bn_read_bin(chainCode, bytes, ChainCode::CHAIN_CODE_SIZE);
+    bn_read_bin(chainCode, bytes, ChainCode::SIZE);
 }
 
 // Comparator implementation.
 bool operator==(ChainCode const &a,  ChainCode const &b) {
-    return bn_cmp(a.chainCode, b.chainCode) == CMP_EQ;
+    return bn_cmp(a.chainCode, b.chainCode) == RLC_EQ;
 }
 
 bool operator!=(ChainCode const &a,  ChainCode const &b) {
@@ -40,17 +43,17 @@ bool operator!=(ChainCode const &a,  ChainCode const &b) {
 }
 
 std::ostream &operator<<(std::ostream &os, ChainCode const &s) {
-    uint8_t buffer[ChainCode::CHAIN_CODE_SIZE];
+    uint8_t buffer[ChainCode::SIZE];
     s.Serialize(buffer);
-    return os << Util::HexStr(buffer, ChainCode::CHAIN_CODE_SIZE);
+    return os << Util::HexStr(buffer, ChainCode::SIZE);
 }
 
 void ChainCode::Serialize(uint8_t *buffer) const {
-    bn_write_bin(buffer, ChainCode::CHAIN_CODE_SIZE, chainCode);
+    bn_write_bin(buffer, ChainCode::SIZE, chainCode);
 }
 
 std::vector<uint8_t> ChainCode::Serialize() const {
-    std::vector<uint8_t> data(CHAIN_CODE_SIZE);
+    std::vector<uint8_t> data(SIZE);
     Serialize(data.data());
     return data;
 }

@@ -15,7 +15,7 @@
 #ifndef SRC_EXTENDEDPRIVATEKEY_HPP_
 #define SRC_EXTENDEDPRIVATEKEY_HPP_
 
-#include <relic_conf.h>
+#include "relic_conf.h"
 
 #include <vector>
 
@@ -23,14 +23,13 @@
 #include <gmp.h>
 #endif
 
-#include "privatekey.hpp"
-#include "publickey.hpp"
 #include "chaincode.hpp"
+#include "elements.hpp"
 #include "extendedpublickey.hpp"
+#include "privatekey.hpp"
 
-
-#include <relic.h>
-#include <relic_test.h>
+#include "relic.h"
+#include "relic_test.h"
 
 namespace bls {
 /*
@@ -47,17 +46,16 @@ chain code. This follows the spec from BIP-0032, with a few changes:
 class ExtendedPrivateKey {
  public:
     // version(4) depth(1) parent fingerprint(4) child#(4) cc(32) sk(32)
-    static const uint32_t EXTENDED_PRIVATE_KEY_SIZE = 77;
+    static const uint32_t SIZE = 77;
 
     // Generates a master private key and chain code from a seed
-    static ExtendedPrivateKey FromSeed(
-            const uint8_t* seed, size_t seedLen);
+    static ExtendedPrivateKey FromSeed(const Bytes& bytes);
 
     // Parse private key and chain code from bytes
-    static ExtendedPrivateKey FromBytes(const uint8_t* serialized);
+    static ExtendedPrivateKey FromBytes(const Bytes& bytes);
 
     // Derive a child extEnded private key, hardened if i >= 2^31
-    ExtendedPrivateKey PrivateChild(uint32_t i) const;
+    ExtendedPrivateKey PrivateChild(uint32_t i, bool fLegacy = true) const;
 
     // Derive a child extended public key, hardened if i >= 2^31
     ExtendedPublicKey PublicChild(uint32_t i) const;
@@ -70,8 +68,8 @@ class ExtendedPrivateKey {
     ChainCode GetChainCode() const;
     PrivateKey GetPrivateKey() const;
 
-    PublicKey GetPublicKey() const;
-    ExtendedPublicKey GetExtendedPublicKey() const;
+    G1Element GetPublicKey() const;
+    ExtendedPublicKey GetExtendedPublicKey(bool fLegacy = true) const;
 
     // Compare to different private key
     friend bool operator==(const ExtendedPrivateKey& a,

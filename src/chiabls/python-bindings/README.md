@@ -1,162 +1,149 @@
-## Python bindings
-Install
+# Python bindings
+
+Use the full power and efficiency of the C++ bls library, but in a few lines of python!
+
+## Install
+
 ```bash
 pip3 install blspy
-```
-Cmake, a c++ compiler, and a recent version of pip3 (v18) are required.
-GMP(speed) and libsodium(secure memory alloc) are optional dependencies.
 
-To install from source, run the following, in the project root directory:
+```
+
+Alternatively, to install from source, run the following, in the project root directory:
 
 ```bash
-git submodule init
-git submodule update
 pip3 install .
 ```
 
+Cmake, a c++ compiler, and a recent version of pip3 (v18) are required for source install.
+GMP(speed) and libsodium(secure memory alloc) are optional dependencies.
+Public keys are G1Elements, and signatures are G2Elements.
+
 Then, to use:
 
-#### Import the library
+## Import the library
+
 ```python
-import blspy
+from blspy import (PrivateKey, Util, AugSchemeMPL, PopSchemeMPL,
+                   G1Element, G2Element)
 ```
 
-#### Creating keys and signatures
+## Creating keys and signatures
+
 ```python
 # Example seed, used to generate private key. Always use
-# a secure RNG with sufficient entropy to generate a seed.
-seed = bytes([0, 50, 6, 244, 24, 199, 1, 25, 52, 88, 192,
-                19, 18, 12, 89, 6, 220, 18, 102, 58, 209,
-                82, 12, 62, 89, 110, 182, 9, 44, 20, 254, 22])
-sk = PrivateKey.from_seed(seed)
-pk = sk.get_public_key()
+# a secure RNG with sufficient entropy to generate a seed (at least 32 bytes).
+seed: bytes = bytes([0,  50, 6,  244, 24,  199, 1,  25,  52,  88,  192,
+                        19, 18, 12, 89,  6,   220, 18, 102, 58,  209, 82,
+                        12, 62, 89, 110, 182, 9,   44, 20,  254, 22])
+sk: PrivateKey = AugSchemeMPL.key_gen(seed)
+pk: G1Element = sk.get_g1()
 
-msg = bytes([100, 2, 254, 88, 90, 45, 23])
+message: bytes = bytes([1, 2, 3, 4, 5])
+signature: G2Element = AugSchemeMPL.sign(sk, message)
 
-sig = sk.sign(msg)
+# Verify the signature
+ok: bool = AugSchemeMPL.verify(pk, message, signature)
+assert ok
 ```
 
-#### Serializing keys and signatures to bytes
+## Serializing keys and signatures to bytes
+
 ```python
-sk_bytes = sk.serialize() # 32 bytes
-pk_bytes = pk.serialize() # 48 bytes
-sig_bytes = sig.serialize() # 96 bytes
+sk_bytes: bytes = bytes(sk)  # 32 bytes
+pk_bytes: bytes = bytes(pk)  # 48 bytes
+signature_bytes: bytes = bytes(signature)  # 96 bytes
+
+print(sk_bytes.hex(), pk_bytes.hex(), signature_bytes.hex())
 ```
 
-#### Loading keys and signatures from bytes
+## Loading keys and signatures from bytes
+
 ```python
-# Takes bytes object of size 32
 sk = PrivateKey.from_bytes(sk_bytes)
-# Takes bytes object of size 48
-pk = PublicKey.from_bytes(pk_bytes)
-# Takes bytes object of size 96
-sig = Signature.from_bytes(sig_bytes)
+pk = G1Element.from_bytes(pk_bytes)
+signature = G2Element.from_bytes(signature_bytes)
 ```
 
-#### Verifying signatures
-```python
-# Add information required for verification, to sig object
-sig.set_aggregation_info(AggregationInfo.from_msg(pk, msg))
-ok = BLS.verify(sig)
-```
+## Create aggregate signatures
 
-#### Aggregate signatures for a single message
 ```python
 # Generate some more private keys
 seed = bytes([1]) + seed[1:]
-sk1 = PrivateKey.from_seed(seed)
+sk1: PrivateKey = AugSchemeMPL.key_gen(seed)
 seed = bytes([2]) + seed[1:]
-sk2 = PrivateKey.from_seed(seed)
+sk2: PrivateKey = AugSchemeMPL.key_gen(seed)
+message2: bytes = bytes([1, 2, 3, 4, 5, 6, 7])
 
 # Generate first sig
-pk1 = sk1.get_public_key()
-sig1 = sk1.sign(msg)
+pk1: G1Element = sk1.get_g1()
+sig1: G2Element = AugSchemeMPL.sign(sk1, message)
 
 # Generate second sig
-pk2 = sk2.get_public_key()
-sig2 = sk2.sign(msg)
+pk2: G1Element = sk2.get_g1()
+sig2: G2Element = AugSchemeMPL.sign(sk2, message2)
 
-# Aggregate signatures together
-agg_sig = BLS.aggregate_sigs([sig1, sig2])
+# Signatures can be non-interactively combined by anyone
+agg_sig: G2Element = AugSchemeMPL.aggregate([sig1, sig2])
 
-
-# For same message, public keys can be aggregated into one.
-# The signature can be verified the same as a single signature,
-# using this public key.
-agg_pubkey = BLS.aggregate_pub_keys([pk1, pk2], True)
+ok = AugSchemeMPL.aggregate_verify([pk1, pk2], [message, message2], agg_sig)
 ```
 
-#### Aggregate signatures for different messages
+## Arbitrary trees of aggregates
+
 ```python
-# Generate one more key and message
 seed = bytes([3]) + seed[1:]
-sk3 = PrivateKey.from_seed(seed)
-pk3 = sk3.get_public_key()
-msg2 = bytes([100, 2, 254, 88, 90, 45, 23])
+sk3: PrivateKey = AugSchemeMPL.key_gen(seed)
+pk3: G1Element = sk3.get_g1()
+message3: bytes = bytes([100, 2, 254, 88, 90, 45, 23])
+sig3: G2Element = AugSchemeMPL.sign(sk3, message3)
 
-# Generate the signatures, assuming we have 3 private keys
-sig1 = sk1.sign(msg)
-sig2 = sk2.sign(msg)
-sig3 = sk3.sign(msg2)
-
-# They can be noninteractively combined by anyone
-# Aggregation below can also be done by the verifier, to
-# make batch verification more efficient
-agg_sig_l = BLS.aggregate_sigs([sig1, sig2])
-
-# Arbitrary trees of aggregates
-agg_sig_final = BLS.aggregate_sigs([agg_sig_l, sig3])
-
-# Serialize the final signature
-sig_bytes = agg_sig_final.serialize()
+agg_sig_final: G2Element = AugSchemeMPL.aggregate([agg_sig, sig3])
+ok = AugSchemeMPL.aggregate_verify([pk1, pk2, pk3], [message, message2, message3], agg_sig_final)
 ```
 
-#### Verify aggregate signature for different messages
+## Very fast verification with Proof of Possession scheme
+
 ```python
-# Deserialize aggregate signature
-agg_sig_final = Signature.from_bytes(sig_bytes)
+# If the same message is signed, you can use Proof of Posession (PopScheme) for efficiency
+# A proof of possession MUST be passed around with the PK to ensure security.
+pop_sig1: G2Element = PopSchemeMPL.sign(sk1, message)
+pop_sig2: G2Element = PopSchemeMPL.sign(sk2, message)
+pop_sig3: G2Element = PopSchemeMPL.sign(sk3, message)
+pop1: G2Element = PopSchemeMPL.pop_prove(sk1)
+pop2: G2Element = PopSchemeMPL.pop_prove(sk2)
+pop3: G2Element = PopSchemeMPL.pop_prove(sk3)
 
-# Create aggregation information (or deserialize it)
-a1 = AggregationInfo.from_msg(pk1, msg)
-a2 = AggregationInfo.from_msg(pk2, msg)
-a3 = AggregationInfo.from_msg(pk3, msg2)
-a1a2 = AggregationInfo.merge_infos([a1, a2])
-a_final = AggregationInfo.merge_infos([a1a2, a3])
+ok = PopSchemeMPL.pop_verify(pk1, pop1)
+ok = PopSchemeMPL.pop_verify(pk2, pop2)
+ok = PopSchemeMPL.pop_verify(pk3, pop3)
 
-# Verify final signature using the aggregation info
-agg_sig_final.set_aggregation_info(a_final)
-ok = BLS.verify(agg_sig_final)
+pop_sig_agg: G2Element = PopSchemeMPL.aggregate([pop_sig1, pop_sig2, pop_sig3])
 
-# If you previously verified a signature, you can also divide
-# the aggregate signature by the signature you already verified.
-ok = BLS.verify(agg_sig_l)
-agg_sig_final = agg_sig_final.divide_by([agg_sig_l])
+ok = PopSchemeMPL.fast_aggregate_verify([pk1, pk2, pk3], message, pop_sig_agg)
 
-ok = BLS.verify(agg_sig_final)
+# Aggregate public key, indistinguishable from a single public key
+pop_agg_pk: G1Element = pk1 + pk2 + pk3
+ok = PopSchemeMPL.verify(pop_agg_pk, message, pop_sig_agg)
+
+# Aggregate private keys
+pop_agg_sk: PrivateKey = PrivateKey.aggregate([sk1, sk2, sk3])
+ok = PopSchemeMPL.sign(pop_agg_sk, message) == pop_sig_agg
 ```
 
-#### Aggregate private keys
+## HD keys using [EIP-2333](https://github.com/ethereum/EIPs/pull/2333)
+
 ```python
-# Create an aggregate private key, that can generate
-# aggregate signatures
-agg_sk = BLS.aggregate_priv_keys([sk1, sk2], [pk1, pk2], True)
-agg_sk.sign(msg)
+master_sk: PrivateKey = AugSchemeMPL.key_gen(seed)
+child: PrivateKey = AugSchemeMPL.derive_child_sk(master_sk, 152)
+grandchild: PrivateKey = AugSchemeMPL.derive_child_sk(child, 952)
+
+master_pk: G1Element = master_sk.get_g1()
+child_u: PrivateKey = AugSchemeMPL.derive_child_sk_unhardened(master_sk, 22)
+grandchild_u: PrivateKey = AugSchemeMPL.derive_child_sk_unhardened(child_u, 0)
+
+child_u_pk: G1Element = AugSchemeMPL.derive_child_pk_unhardened(master_pk, 22)
+grandchild_u_pk: G1Element = AugSchemeMPL.derive_child_pk_unhardened(child_u_pk, 0)
+
+ok = (grandchild_u_pk == grandchild_u.get_g1())
 ```
-
-#### HD keys
-```python
-# Random seed, used to generate master extended private key
-seed = bytes([1, 50, 6, 244, 24, 199, 1, 25, 52, 88, 192,
-                19, 18, 12, 89, 6, 220, 18, 102, 58, 209,
-                82, 12, 62, 89, 110, 182, 9, 44, 20, 254, 22])
-
-esk = ExtendedPrivateKey.from_seed(seed)
-epk = esk.get_extended_public_key()
-
-sk_child = esk.private_child(0).private_child(5)
-pk_child = epk.public_child(0).public_child(5)
-
-buffer1 = pk_child.serialize() # 93 bytes
-buffer2 = sk_child.serialize() # 77 bytes
-```
-
