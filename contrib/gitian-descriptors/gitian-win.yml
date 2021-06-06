@@ -24,7 +24,6 @@ packages:
 - "python3"
 # SYSCOIN
 - "python3-pip"
-- "python3-distutils"
 remotes:
 - "url": "https://github.com/syscoin/syscoin.git"
   "dir": "syscoin"
