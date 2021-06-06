@@ -21,7 +21,7 @@ packages:
 - "nsis"
 - "zip"
 - "ca-certificates"
-- "python3.9"
+- "python3"
 # SYSCOIN
 - "python3-pip"
 remotes:

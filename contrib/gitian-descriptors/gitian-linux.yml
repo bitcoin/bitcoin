@@ -20,7 +20,7 @@ packages:
 - "libtool"
 - "patch"
 - "pkg-config"
-- "python3.9"
+- "python3"
 # SYSCOIN
 - "python3-pip"
 # Cross compilation HOSTS:
