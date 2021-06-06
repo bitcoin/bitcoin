@@ -419,7 +419,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Solicita pagamentos (xera un código QR e bitocin : URIs)</translation>
+        <translation>Solicita pagamentos (xera un código QR e bitcoin : URIs)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
