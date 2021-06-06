@@ -131,7 +131,7 @@ void CGovernanceVote::Relay(CConnman& connman) const
     // When this vote is from non-valid (PoSe banned) MN, we should only announce it to v0.14.0.1 nodes as older nodes
     // will ban us otherwise.
     int minVersion = MIN_GOVERNANCE_PEER_PROTO_VERSION;
-    if (!mnList.IsMNValid(dmn)) {
+    if (!CDeterministicMNList::IsMNValid(dmn)) {
         minVersion = GOVERNANCE_POSE_BANNED_VOTES_VERSION;
     }
 

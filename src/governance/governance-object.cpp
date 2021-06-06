@@ -546,8 +546,8 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
         return false;
     }
 
-    if (txCollateral->vout.size() < 1) {
-        strError = strprintf("tx vout size less than 1 | %d", txCollateral->vout.size());
+    if (txCollateral->vout.empty()) {
+        strError = "tx vout is empty";
         LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
