@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2018-2021 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,9 @@
 #include <uint256.h>
 #include <util/strencodings.h>
 
-#undef ERROR // chia BLS uses relic, which defines ERROR, which in turn causes win32/win64 builds to print many warnings
+// chiabls uses relic, which may define DEBUG and ERROR, which leads to many warnings in some build setups
+#undef ERROR
+#undef DEBUG
 #include <chiabls/src/bls.hpp>
 #include <chiabls/src/privatekey.hpp>
 #include <chiabls/src/elements.hpp>
@@ -22,7 +24,7 @@
 #include <sync.h>
 #include <unistd.h>
 
-static const bool fLegacyDefault{true};
+static const bool fLegacyDefault{false};
 
 // reversed BLS12-381
 #define BLS_CURVE_ID_SIZE 32
@@ -41,6 +43,7 @@ class CBLSWrapper
     friend class CBLSSignature;
 
     bool fLegacy;
+
 protected:
     ImplType impl;
     bool fValid{false};
@@ -213,6 +216,7 @@ public:
     using CBLSWrapper::operator=;
     using CBLSWrapper::operator==;
     using CBLSWrapper::operator!=;
+    using CBLSWrapper::CBLSWrapper;
 
     CBLSId() {}
     void SetInt(int x);
@@ -222,16 +226,18 @@ public:
     static CBLSId FromHash(const uint256& hash);
 };
 
-class CBLSPublicKey : public CBLSWrapper<bls::G1Element, BLS_CURVE_PUBKEY_SIZE, CBLSPublicKey>
+class CBLSSecretKey : public CBLSWrapper<bls::PrivateKey, BLS_CURVE_SECKEY_SIZE, CBLSSecretKey>
 {
 public:
     using CBLSWrapper::operator=;
     using CBLSWrapper::operator==;
     using CBLSWrapper::operator!=;
+    using CBLSWrapper::CBLSWrapper;
 
     CBLSSecretKey() {}
     CBLSSecretKey(const CBLSSecretKey&) = default;
     CBLSSecretKey& operator=(const CBLSSecretKey&) = default;
+
     void AggregateInsecure(const CBLSSecretKey& o);
     static CBLSSecretKey AggregateInsecure(const std::vector<CBLSSecretKey>& sks);
 
@@ -244,7 +250,7 @@ public:
     CBLSSignature Sign(const uint256& hash) const;
 };
 
-class CBLSPublicKey : public CBLSWrapper<bls::PublicKey, BLS_CURVE_PUBKEY_SIZE, CBLSPublicKey>
+class CBLSPublicKey : public CBLSWrapper<bls::G1Element, BLS_CURVE_PUBKEY_SIZE, CBLSPublicKey>
 {
     friend class CBLSSecretKey;
     friend class CBLSSignature;
@@ -253,8 +259,10 @@ public:
     using CBLSWrapper::operator=;
     using CBLSWrapper::operator==;
     using CBLSWrapper::operator!=;
+    using CBLSWrapper::CBLSWrapper;
 
     CBLSPublicKey() {}
+
     void AggregateInsecure(const CBLSPublicKey& o);
     static CBLSPublicKey AggregateInsecure(const std::vector<CBLSPublicKey>& pks, bool fLegacy = fLegacyDefault);
 
@@ -279,6 +287,7 @@ public:
     void AggregateInsecure(const CBLSSignature& o);
     static CBLSSignature AggregateInsecure(const std::vector<CBLSSignature>& sigs, bool fLegacy = fLegacyDefault);
     static CBLSSignature AggregateSecure(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSPublicKey>& pks, const uint256& hash, bool fLegacy = fLegacyDefault);
+
     void SubInsecure(const CBLSSignature& o);
 
     bool VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash) const;

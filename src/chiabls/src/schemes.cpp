@@ -547,7 +547,7 @@ bool AugSchemeMPL::AggregateVerify(const vector<G1Element>& pubkeys,
     }
 
     vector<vector<uint8_t>> augMessages(nPubKeys);
-    for (int i = 0; i < nPubKeys; ++i) {
+    for (size_t i = 0; i < nPubKeys; ++i) {
         vector<uint8_t>& aug = augMessages[i];
         vector<uint8_t>&& pubkey = pubkeys[i].Serialize();
         aug.reserve(pubkey.size() + messages[i].size());

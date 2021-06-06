@@ -159,6 +159,7 @@ void CBLSPublicKey::AggregateInsecure(const CBLSPublicKey& o)
 }
 
 CBLSPublicKey CBLSPublicKey::AggregateInsecure(const std::vector<CBLSPublicKey>& pks, const bool fLegacy)
+{
     if (pks.empty()) {
         return CBLSPublicKey();
     }

@@ -37,7 +37,7 @@ G1Element G1Element::FromBytes(const Bytes& bytes, bool fLegacy)
             throw std::invalid_argument(
                 "Given G1 infinity element must be canonical");
         }
-        for (int i = 1; i < G1Element::SIZE; ++i) {
+        for (size_t i = 1; i < G1Element::SIZE; ++i) {
             if (bytes[i] != 0x00) {
                 throw std::invalid_argument(
                     "Given G1 infinity element must be canonical");
@@ -240,7 +240,7 @@ G2Element G2Element::FromBytes(const Bytes& bytes, const bool fLegacy)
             throw std::invalid_argument(
                 "Given G2 infinity element must be canonical");
         }
-        for (int i = 1; i < G2Element::SIZE; ++i) {
+        for (size_t i = 1; i < G2Element::SIZE; ++i) {
             if (bytes[i] != 0x00) {
                 throw std::invalid_argument(
                     "Given G2 infinity element must be canonical");
