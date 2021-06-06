@@ -3153,6 +3153,14 @@ void CWallet::AddActiveScriptPubKeyMan(uint256 id, OutputType type, bool interna
 void CWallet::LoadActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal)
 {
     WalletLogPrintf("Setting spkMan to active: id = %s, type = %d, internal = %d\n", id.ToString(), static_cast<int>(type), static_cast<int>(internal));
+#ifdef ENABLE_EXTERNAL_SIGNER
+    assert(m_spk_managers.count(id));
+#else
+    if (m_spk_managers.count(id) == 0) {
+        assert(!internal);
+        throw std::runtime_error(std::string(__func__) + ": Compiled without external signing support (required for external signing)");
+    }
+#endif
     auto& spk_mans = internal ? m_internal_spk_managers : m_external_spk_managers;
     auto spk_man = m_spk_managers.at(id).get();
     spk_man->SetInternal(internal);
