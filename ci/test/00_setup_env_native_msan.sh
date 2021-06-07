@@ -22,5 +22,3 @@ export USE_MEMORY_SANITIZER="true"
 export RUN_FUNCTIONAL_TESTS="false"
 export RUN_UNIT_TESTS="false" # SYSCOIN todo fix the gnutls init issue
 export CCACHE_SIZE=250M
-# Relic documentation isn't right
-export NO_WERROR

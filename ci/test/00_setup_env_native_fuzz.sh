@@ -16,5 +16,3 @@ export RUN_FUZZ_TESTS=true
 export GOAL="install"
 export SYSCOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer,address,undefined,integer CC=clang CXX=clang++ --enable-external-signer"
 export CCACHE_SIZE=200M
-# Relic documentation isn't right
-export NO_WERROR=1

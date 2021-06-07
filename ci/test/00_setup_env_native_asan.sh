@@ -13,5 +13,3 @@ export NO_DEPENDS=1
 export GOAL="install"
 export TEST_RUNNER_EXTRA="--exclude feature_deterministicmns,feature_llmq_is_retroactive,feature_llmqdkgerrors,feature_llmqconnections,feature_llmqsigning,feature_llmqsimplepose"
 export SYSCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' --with-sanitizers=address,integer,undefined CC=clang CXX=clang++ --enable-external-signer"
-# Relic documentation isn't right
-export NO_WERROR=1

@@ -3,7 +3,7 @@ set (CMAKE_CXX_STANDARD 17)
 
 # CMake 3.14+
 include(FetchContent)
-
+add_compile_options(-Wno-error=documentation)
 if (DEFINED ENV{RELIC_MAIN})
   set(RELIC_GIT_TAG "origin/main")
 else ()
