@@ -848,8 +848,8 @@ void BitcoinGUI::aboutClicked()
     if(!clientModel)
         return;
 
-    HelpMessageDialog dlg(this, true);
-    dlg.exec();
+    auto dlg = new HelpMessageDialog(this, /* about */ true);
+    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
 }
 
 void BitcoinGUI::showDebugWindow()
