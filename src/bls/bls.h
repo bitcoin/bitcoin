@@ -70,14 +70,14 @@ public:
         std::swap(impl, ref.impl);
         std::swap(fValid, ref.fValid);
         std::swap(cachedHash, ref.cachedHash);
-        std::swap(fLegacy, ref.fLegacy);
+        fLegacy = ref.fLegacy;
     }
     CBLSWrapper& operator=(CBLSWrapper&& ref)
     {
         std::swap(impl, ref.impl);
         std::swap(fValid, ref.fValid);
         std::swap(cachedHash, ref.cachedHash);
-        std::swap(fLegacy, ref.fLegacy);
+        fLegacy = ref.fLegacy;
         return *this;
     }
 
