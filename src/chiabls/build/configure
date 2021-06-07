@@ -199,7 +199,18 @@ while [ $# != 0 ]; do
             esac
             ;;
         "--prefix="*)
-            PREFIX="${1#*=}";;
+            PREFIX="${1#*=}"
+            case $PREFIX in
+                *mingw*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
+                *darwin*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin";;
+                *android*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
+                *linux*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
+            esac
+            ;;
         "--prefix")
             PREFIX="${2}"; shift;;
         "--bindir="*)
