@@ -56,8 +56,6 @@ public:
 
     /// Request core initialization
     void requestInitialize();
-    /// Request core shutdown
-    void requestShutdown();
 
     /// Get process return value
     int getReturnValue() const { return returnValue; }
@@ -73,6 +71,8 @@ public:
 
 public Q_SLOTS:
     void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
+    /// Request core shutdown
+    void requestShutdown();
     void shutdownResult();
     /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
     void handleRunawayException(const QString &message);
