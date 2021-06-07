@@ -143,7 +143,7 @@ FUZZ_TARGET_DESERIALIZE(script_deserialize, {
         CScript script;
         DeserializeFromFuzzingInput(buffer, script);
 })
-FUZZ_TARGET_DESERIALIZE(subnet_deserialize, {
+FUZZ_TARGET_DESERIALIZE(sub_net_deserialize, {
         CSubNet sub_net_1;
         DeserializeFromFuzzingInput(buffer, sub_net_1, INIT_PROTO_VERSION);
         AssertEqualAfterSerializeDeserialize(sub_net_1, INIT_PROTO_VERSION);
@@ -223,7 +223,7 @@ FUZZ_TARGET_DESERIALIZE(coins_deserialize, {
         Coin coin;
         DeserializeFromFuzzingInput(buffer, coin);
 })
-FUZZ_TARGET_DESERIALIZE(net_address_deserialize, {
+FUZZ_TARGET_DESERIALIZE(netaddr_deserialize, {
         CNetAddr na;
         DeserializeFromFuzzingInput(buffer, na);
         if (na.IsAddrV1Compatible()) {
@@ -231,7 +231,7 @@ FUZZ_TARGET_DESERIALIZE(net_address_deserialize, {
         }
         AssertEqualAfterSerializeDeserialize(na, INIT_PROTO_VERSION | ADDRV2_FORMAT);
 })
-FUZZ_TARGET_DESERIALIZE(net_service_deserialize, {
+FUZZ_TARGET_DESERIALIZE(service_deserialize, {
         CService s;
         DeserializeFromFuzzingInput(buffer, s);
         if (s.IsAddrV1Compatible()) {

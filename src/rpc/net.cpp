@@ -939,7 +939,7 @@ static RPCHelpMan addpeeraddress()
     bool success{false};
 
     if (LookupHost(addr_string, net_addr, false)) {
-        CAddress address{CAddress({net_addr, port}, ServiceFlags(NODE_NETWORK | NODE_WITNESS))};
+        CAddress address{{net_addr, port}, ServiceFlags{NODE_NETWORK | NODE_WITNESS}};
         address.nTime = GetAdjustedTime();
         // The source address is set equal to the address. This is equivalent to the peer
         // announcing itself.

@@ -594,7 +594,7 @@ static std::string IPv6ToString(Span<const uint8_t> a, uint32_t scope_id)
     return r;
 }
 
-static std::string OnionToString(const Span<const uint8_t>& addr)
+static std::string OnionToString(Span<const uint8_t> addr)
 {
     uint8_t checksum[torv3::CHECKSUM_LEN];
     torv3::Checksum(addr, checksum);
