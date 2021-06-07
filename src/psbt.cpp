@@ -59,10 +59,13 @@ bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSBTOutput
 
 bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) const
 {
-    PSBTInput input = inputs[input_index];
+    const PSBTInput& input = inputs[input_index];
     uint32_t prevout_index = tx->vin[input_index].prevout.n;
     if (input.non_witness_utxo) {
         if (prevout_index >= input.non_witness_utxo->vout.size()) {
+            return false;
+        }
+        if (input.non_witness_utxo->GetHash() != tx->vin[input_index].prevout.hash) {
             return false;
         }
         utxo = input.non_witness_utxo->vout[prevout_index];
