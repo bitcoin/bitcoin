@@ -3171,7 +3171,7 @@ bool CWallet::CreateTransactionInternal(
                 //catenate the hash with owner address and hash it - that is op_return data
 
                 CSHA256 hasher;
-                unsigned char* cNFTdata = (unsigned char*)malloc(vecNFT.size() - 1 + ownerAddr.length());
+                unsigned char* cNFTdata = (unsigned char*)malloc(vecNFT.size() - 1);
                 unsigned char nftHash[32];
                 for (int i = 0; i < vecNFT.size() - 1; i++)
                     cNFTdata[i] = vecNFT[i + 1];

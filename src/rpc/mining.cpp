@@ -1074,6 +1074,53 @@ static RPCHelpMan submitNFT()
             std::string result = "internal-error";
 
             if (command == "AddClass") {
+                //calc nft asset id hash
+                //1 - hash of binary data submitted + owner bech32 in ascii = hash1
+                //2 - hash1 (binary) + txid (in binary) = NFTID
+
+                std::vector<unsigned char> nftBinary = ParseHex(nftdata.c_str() + 4);  //TODO - check length  (+4 to skip the length bytes for now)
+                CSHA256 hasher;
+                unsigned char* cNFTdata = (unsigned char*)malloc(nftBinary.size());
+                unsigned char nftHash[32];
+                for (int i = 0; i < nftBinary.size(); i++)
+                    cNFTdata[i] = nftBinary[i];
+                hasher.Write(cNFTdata, nftBinary.size());
+                hasher.Write((const unsigned char*)owner.c_str(), owner.length());
+                hasher.Finalize(nftHash);
+                free(cNFTdata);
+
+                hasher.Reset();
+                hasher.Write(nftHash, 32);
+
+                std::vector<unsigned char> txIDBinary = ParseHex(txid.c_str());
+                unsigned char* txidData = (unsigned char*)malloc(txIDBinary.size());
+                for (int i = 0; i < txIDBinary.size(); i++)
+                    txidData[i] = txIDBinary[i];
+                hasher.Write(txidData, txIDBinary.size());
+
+                unsigned char nftID[32];
+                hasher.Finalize(nftID);
+                free(txidData);
+
+
+
+                /*
+                    assert(key.size() == 32);
+                assert(in.size() == 16);
+                assert(correctout.size() == 16);
+                AES256Encrypt enc(key.data());
+                buf.resize(correctout.size());
+                enc.Encrypt(buf.data(), in.data());
+                BOOST_CHECK(buf == correctout);
+                AES256Decrypt dec(key.data());
+                dec.Decrypt(buf.data(), buf.data());
+                BOOST_CHECK(buf == in);
+                */
+
+
+
+
+                result = HexStr(nftID);
 
             } else if (command == "AddAsset") {
 

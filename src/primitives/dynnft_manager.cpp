@@ -41,7 +41,7 @@ void CNFTManager::CreateOrOpenDatabase(std::string dataDirectory) {
                     "asset_class_hash         TEXT                      NOT NULL,"
                     "asset_metadata           TEXT                      NOT NULL,"
                     "asset_owner              TEXT                      NOT NULL,"
-                    "asset_binary_data        TEXT                      NOT NULL,"
+                    "asset_binary_data        BLOB                      NOT NULL,"
                     "asset_serial             INTEGER                   NOT NULL)";
 
         sqlite3_exec(nftDB, sql, NULL, NULL, NULL);
