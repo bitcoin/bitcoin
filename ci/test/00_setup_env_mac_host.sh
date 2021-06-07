@@ -15,3 +15,5 @@ export NO_DEPENDS=1
 export OSX_SDK=""
 export CCACHE_SIZE=300M
 export RUN_SECURITY_TESTS="true"
+# Relic documentation isn't right
+export NO_WERROR=1

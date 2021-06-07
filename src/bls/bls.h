@@ -24,7 +24,7 @@
 #include <sync.h>
 #include <unistd.h>
 
-static const bool fLegacyDefault{false};
+static const bool fLegacyDefault{true};
 
 // reversed BLS12-381
 #define BLS_CURVE_ID_SIZE 32
