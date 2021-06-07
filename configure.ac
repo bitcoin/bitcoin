@@ -434,7 +434,7 @@ if test "x$enable_werror" = "xyes"; then
   AX_CHECK_COMPILE_FLAG([-Werror=unreachable-code-loop-increment],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=unreachable-code-loop-increment"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Werror=mismatched-tags], [ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=mismatched-tags"], [], [$CXXFLAG_WERROR])
 
-  if test x$suppress_external_warnings != xno ; then
+  if test x$suppress_external_warnings = xno ; then
     AX_CHECK_COMPILE_FLAG([-Werror=documentation],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=documentation"],,[[$CXXFLAG_WERROR]])
   fi
 fi
@@ -464,7 +464,7 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
                         [AC_LANG_SOURCE([[struct A { virtual void f(); }; struct B : A { void f() final; };]])])
   AX_CHECK_COMPILE_FLAG([-Wunreachable-code-loop-increment],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunreachable-code-loop-increment"],,[[$CXXFLAG_WERROR]])
 
-  if test x$suppress_external_warnings != xno ; then
+  if test x$suppress_external_warnings = xno ; then
     AX_CHECK_COMPILE_FLAG([-Wdocumentation],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wdocumentation"],,[[$CXXFLAG_WERROR]])
   fi
 
