@@ -3159,16 +3159,23 @@ bool CWallet::CreateTransactionInternal(
             if (fValidAddress)
                 ownerAddr = EncodeDestination(address);
 
-            //NFT signature is 7777
-            std::vector<unsigned char> signature = {0x37, 0x37, 0x37, 0x37};
-
-            std::vector<unsigned char> vecNFTSubmit = signature;
 
 
-            if (vecNFT[0] == 0) {
-                //create asset class
+            if ((vecNFT[0] == 0) || (vecNFT[0] == 1)) {
+                //create asset class or create asset
                 //only parameter is a 32 byte hash
                 //catenate the hash with owner address and hash it - that is op_return data
+
+                std::vector<unsigned char> signature;
+                if (vecNFT[0] == 0) {
+                    //NFT asset class create signature is 7770
+                    signature = {0x37, 0x37, 0x37, 0x30};
+                }
+                else {
+                    //NFT asset create signature is 7771
+                    signature = {0x37, 0x37, 0x37, 0x31};
+                }
+                std::vector<unsigned char> vecNFTSubmit = signature;
 
                 CSHA256 hasher;
                 unsigned char* cNFTdata = (unsigned char*)malloc(vecNFT.size() - 1);

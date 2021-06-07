@@ -4,7 +4,9 @@
 
 class CNFTAssetClass
 {
-private:
+
+public:
+    CNFTAssetClass();
 
     std::string hash;
     std::string metaData;
@@ -12,16 +14,15 @@ private:
     std::string txnID;
     uint64_t maxCount;
 
-public:
-    CNFTAssetClass();
-
-
 };
 
 
 class CNFTAsset
 {
-private:
+
+public:
+    CNFTAsset();
+
     std::string hash;
     std::string assetClassHash;
     std::string metaData;
@@ -29,8 +30,4 @@ private:
     std::string owner;
     std::string txnID;
     uint64_t serial;
-
-public:
-    CNFTAsset();
-
 };
