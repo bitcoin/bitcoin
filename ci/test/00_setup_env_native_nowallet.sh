@@ -13,3 +13,5 @@ export DEP_OPTS="NO_WALLET=1"
 export GOAL="install"
 export SYSCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports CC=clang CXX=clang++ --enable-external-signer"
 export CCACHE_SIZE=250M
+# Relic documentation isn't right
+export NO_WERROR=1
