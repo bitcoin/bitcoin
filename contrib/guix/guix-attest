@@ -99,23 +99,33 @@ fi
 # We should be able to find at least one output
 ################
 
-echo "Looking for build output directories in ${OUTDIR_BASE}"
+echo "Looking for build output SHA256SUMS fragments in ${OUTDIR_BASE}"
 
 shopt -s nullglob
-OUTDIRS=( "${OUTDIR_BASE}"/* ) # This expands to an array of directories...
+OUTDIRS=( "$OUTDIR_BASE"/*/SHA256SUMS.part ) # This expands to an array of directories...
 shopt -u nullglob
 
+noncodesigned_fragments=()
+codesigned_fragments=()
+
 if (( ${#OUTDIRS[@]} )); then
-    echo "Found build output directories:"
+    echo "Found build output SHA256SUMS fragments:"
     for outdir in "${OUTDIRS[@]}"; do
         echo "    '$outdir'"
+        case "$outdir" in
+            "$OUTDIR_BASE"/*-codesigned/SHA256SUMS.part)
+                codesigned_fragments+=("$outdir")
+                ;;
+            *)
+                noncodesigned_fragments+=("$outdir")
+                ;;
+        esac
     done
     echo
 else
-    echo "ERR: Could not find any build output directories in ${OUTDIR_BASE}"
+    echo "ERR: Could not find any build output SHA256SUMS fragments in ${OUTDIR_BASE}"
     exit 1
 fi
-
 
 ##############
 ##  Attest  ##
@@ -126,82 +136,65 @@ fi
 #   HOST: The output directory being attested
 #
 out_name() {
-    basename "$1"
+    basename "$(dirname "$1")"
 }
-
-# Usage: out_sig_dir $outdir
-#
-#   outdir: The output directory being attested
-#
-out_sig_dir() {
-    echo "$GUIX_SIGS_REPO/$VERSION/$(out_name "$1")/$signer_name"
-}
-
-# Accumulate a list of signature directories that already exist...
-outdirs_already_attested_to=()
 
 echo "Attesting to build outputs for version: '${VERSION}'"
 echo ""
 
-# MAIN LOGIC: Loop through each output for VERSION and attest to output in
-#             GUIX_SIGS_REPO as SIGNER, if attestation does not exist
-for outdir in "${OUTDIRS[@]}"; do
-    if [ -e "${outdir}/SKIPATTEST.TAG" ]; then
-        echo "${outname}: SKIPPING: Output directory marked with SKIPATTEST.TAG file"
-        continue
-    fi
-    outname="$(out_name "$outdir")"
-    outsigdir="$(out_sig_dir "$outdir")"
-    if [ -e "$outsigdir" ]; then
-        echo "${outname}: SKIPPING: Signature directory already exists in the specified guix.sigs repository"
-        outdirs_already_attested_to+=("$outdir")
+outsigdir="$GUIX_SIGS_REPO/$VERSION/$signer_name"
+mkdir -p "$outsigdir"
+(
+    cd "$outsigdir"
+
+    if [ -e "noncodesigned.SHA256SUMS" ]; then
+        echo "noncodesigned.SHA256SUMS already exists, using..."
+    elif (( ${#noncodesigned_fragments[@]} )); then
+        cat "${noncodesigned_fragments[@]}" \
+            | sort -u \
+            | sort -k2 \
+                   > noncodesigned.SHA256SUMS
     else
-        # Clean up incomplete sigdir if something fails (likely gpg)
-        trap 'rm -rf "$outsigdir"' ERR
-
-        mkdir -p "$outsigdir"
-
-        (
-            cd "$outdir"
-
-            if [ -e inputs.SHA256SUMS ]; then
-                echo "${outname}: Including existent input SHA256SUMS"
-                cat inputs.SHA256SUMS >> "$outsigdir"/SHA256SUMS
-            fi
-
-            echo "${outname}: Hashing build outputs to produce SHA256SUMS"
-            files="$(find -L . -type f ! -iname '*.SHA256SUMS')"
-            if [ -n "$files" ]; then
-                cut -c3- <<< "$files" | env LC_ALL=C sort | xargs sha256sum >> "$outsigdir"/SHA256SUMS
-            else
-                echo "ERR: ${outname}: No outputs found in '${outdir}'"
-                exit 1
-            fi
-        )
-        if [ -z "$NO_SIGN" ]; then
-            echo "${outname}: Signing SHA256SUMS to produce SHA256SUMS.asc"
-            gpg --detach-sign --local-user "$gpg_key_name" --armor --output "$outsigdir"/SHA256SUMS.asc "$outsigdir"/SHA256SUMS
-        else
-            echo "${outname}: Not signing SHA256SUMS as \$NO_SIGN is not empty"
-        fi
-        echo ""
-
-        trap - ERR  # Reset ERR trap
+        echo "no noncodesigned outputs found"
     fi
-done
 
-if (( ${#outdirs_already_attested_to[@]} )); then
-# ...so that we can print them out nicely in a warning message
-cat << EOF
+    if [ -e noncodesigned.SHA256SUMS ]; then
+        # noncodesigned.SHA256SUMS already exists, or was produced, let's sanity
+        # check it.
+        ( cd "$OUTDIR_BASE"; sha256sum -c "$outsigdir"/noncodesigned.SHA256SUMS )
 
-WARN: Signature directories from '$signer_name' already exist in the specified
-      guix.sigs repository for the following output directories and were
-      skipped:
+        # Now produce all.SHA256SUMS manifest
+        if [ -e "all.SHA256SUMS" ]; then
+            echo "all.SHA256SUMS already there!"
+        elif (( ${#codesigned_fragments[@]} )); then
+            cat "${OUTDIRS[@]}" \
+                | sort -u \
+                | sort -k2 \
+                       > all.SHA256SUMS
+        else
+            echo "no codesigned outputs found"
+        fi
 
-EOF
-for outdir in "${outdirs_already_attested_to[@]}"; do
-    echo "    '${outdir}'"
-    echo "    Corresponds to: '$(out_sig_dir "$outdir")'"
+        if [ -e all.SHA256SUMS ]; then
+            ( cd "$OUTDIR_BASE"; sha256sum -c "$outsigdir"/all.SHA256SUMS )
+        fi
+    fi
+
+
+    if [ -z "$NO_SIGN" ]; then
+        echo "Signing SHA256SUMS to produce SHA256SUMS.asc"
+        for i in *.SHA256SUMS; do
+            if [ ! -e "$i".asc ]; then
+                gpg --detach-sign \
+                    --local-user "$gpg_key_name" \
+                    --armor \
+                    --output "$i".asc "$i"
+            else
+                echo "Signature already there"
+            fi
+        done
+    else
+        echo "Not signing SHA256SUMS as \$NO_SIGN is not empty"
+    fi
     echo ""
-done
-fi
+)
