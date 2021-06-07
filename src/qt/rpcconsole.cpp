@@ -696,7 +696,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
 
         // peer table signal handling - update peer details when selecting new node
         connect(ui->peerWidget->selectionModel(), &QItemSelectionModel::selectionChanged, this, &RPCConsole::updateDetailWidget);
-        connect(model->getPeerTableModel(), &PeerTableModel::layoutChanged, this, &RPCConsole::updateDetailWidget);
+        connect(model->getPeerTableModel(), &PeerTableModel::changed, this, &RPCConsole::updateDetailWidget);
 
         // set up ban table
         ui->banlistWidget->setModel(model->getBanTableModel());
