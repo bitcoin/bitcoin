@@ -1,13 +1,12 @@
-/**********************************************************************
- * Copyright (c) 2014 Pieter Wuille                                   *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2014 Pieter Wuille                                    *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 #ifndef SECP256K1_SCALAR_H
 #define SECP256K1_SCALAR_H
 
-#include "num.h"
 #include "util.h"
 
 #if defined HAVE_CONFIG_H
@@ -63,9 +62,6 @@ static void secp256k1_scalar_mul(secp256k1_scalar *r, const secp256k1_scalar *a,
  *  the low bits that were shifted off */
 static int secp256k1_scalar_shr_int(secp256k1_scalar *r, int n);
 
-/** Compute the square of a scalar (modulo the group order). */
-static void secp256k1_scalar_sqr(secp256k1_scalar *r, const secp256k1_scalar *a);
-
 /** Compute the inverse of a scalar (modulo the group order). */
 static void secp256k1_scalar_inverse(secp256k1_scalar *r, const secp256k1_scalar *a);
 
@@ -90,14 +86,6 @@ static int secp256k1_scalar_is_high(const secp256k1_scalar *a);
 /** Conditionally negate a number, in constant time.
  * Returns -1 if the number was negated, 1 otherwise */
 static int secp256k1_scalar_cond_negate(secp256k1_scalar *a, int flag);
-
-#ifndef USE_NUM_NONE
-/** Convert a scalar to a number. */
-static void secp256k1_scalar_get_num(secp256k1_num *r, const secp256k1_scalar *a);
-
-/** Get the order of the group as a number. */
-static void secp256k1_scalar_order_get_num(secp256k1_num *r);
-#endif
 
 /** Compare two scalars. */
 static int secp256k1_scalar_eq(const secp256k1_scalar *a, const secp256k1_scalar *b);

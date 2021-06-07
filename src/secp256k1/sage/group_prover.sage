@@ -42,7 +42,7 @@
 #     as we assume that all constraints in it are complementary with each other.
 #
 # Based on the sage verification scripts used in the Explicit-Formulas Database
-# by Tanja Lange and others, see http://hyperelliptic.org/EFD
+# by Tanja Lange and others, see https://hyperelliptic.org/EFD
 
 class fastfrac:
   """Fractions over rings."""
@@ -65,7 +65,7 @@ class fastfrac:
     return self.top in I and self.bot not in I
 
   def reduce(self,assumeZero):
-    zero = self.R.ideal(map(numerator, assumeZero))
+    zero = self.R.ideal(list(map(numerator, assumeZero)))
     return fastfrac(self.R, zero.reduce(self.top)) / fastfrac(self.R, zero.reduce(self.bot))
 
   def __add__(self,other):
@@ -100,13 +100,18 @@ class fastfrac:
     """Multiply something else with a fraction."""
     return self.__mul__(other)
 
-  def __div__(self,other):
+  def __truediv__(self,other):
     """Divide two fractions."""
     if parent(other) == ZZ:
       return fastfrac(self.R,self.top,self.bot * other)
     if other.__class__ == fastfrac:
       return fastfrac(self.R,self.top * other.bot,self.bot * other.top)
     return NotImplemented
+
+  # Compatibility wrapper for Sage versions based on Python 2
+  def __div__(self,other):
+     """Divide two fractions."""
+     return self.__truediv__(other)
 
   def __pow__(self,other):
     """Compute a power of a fraction."""
@@ -175,7 +180,7 @@ class constraints:
 
 def conflicts(R, con):
   """Check whether any of the passed non-zero assumptions is implied by the zero assumptions"""
-  zero = R.ideal(map(numerator, con.zero))
+  zero = R.ideal(list(map(numerator, con.zero)))
   if 1 in zero:
     return True
   # First a cheap check whether any of the individual nonzero terms conflict on
@@ -195,7 +200,7 @@ def conflicts(R, con):
 
 def get_nonzero_set(R, assume):
   """Calculate a simple set of nonzero expressions"""
-  zero = R.ideal(map(numerator, assume.zero))
+  zero = R.ideal(list(map(numerator, assume.zero)))
   nonzero = set()
   for nz in map(numerator, assume.nonzero):
     for (f,n) in nz.factor():
@@ -208,7 +213,7 @@ def get_nonzero_set(R, assume):
 
 def prove_nonzero(R, exprs, assume):
   """Check whether an expression is provably nonzero, given assumptions"""
-  zero = R.ideal(map(numerator, assume.zero))
+  zero = R.ideal(list(map(numerator, assume.zero)))
   nonzero = get_nonzero_set(R, assume)
   expl = set()
   ok = True
@@ -250,7 +255,7 @@ def prove_zero(R, exprs, assume):
   r, e = prove_nonzero(R, dict(map(lambda x: (fastfrac(R, x.bot, 1), exprs[x]), exprs)), assume)
   if not r:
     return (False, map(lambda x: "Possibly zero denominator: %s" % x, e))
-  zero = R.ideal(map(numerator, assume.zero))
+  zero = R.ideal(list(map(numerator, assume.zero)))
   nonzero = prod(x for x in assume.nonzero)
   expl = []
   for expr in exprs:
@@ -265,8 +270,8 @@ def describe_extra(R, assume, assumeExtra):
   """Describe what assumptions are added, given existing assumptions"""
   zerox = assume.zero.copy()
   zerox.update(assumeExtra.zero)
-  zero = R.ideal(map(numerator, assume.zero))
-  zeroextra = R.ideal(map(numerator, zerox))
+  zero = R.ideal(list(map(numerator, assume.zero)))
+  zeroextra = R.ideal(list(map(numerator, zerox)))
   nonzero = get_nonzero_set(R, assume)
   ret = set()
   # Iterate over the extra zero expressions
