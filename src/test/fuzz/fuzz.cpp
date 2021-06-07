@@ -8,6 +8,7 @@
 #include <util/check.h>
 
 #include <cstdint>
+#include <string>
 #include <unistd.h>
 #include <vector>
 
@@ -29,6 +30,14 @@ static TypeTestOneInput* g_test_one_input{nullptr};
 
 void initialize()
 {
+    // Terminate immediately if a fuzzing harness ever tries to perform a DNS lookup.
+    g_dns_lookup = [](const std::string& name, bool allow_lookup) {
+        if (allow_lookup) {
+            std::terminate();
+        }
+        return WrappedGetAddrInfo(name, false);
+    };
+
     if (std::getenv("PRINT_ALL_FUZZ_TARGETS_AND_ABORT")) {
         for (const auto& t : FuzzTargets()) {
             if (std::get<2>(t.second)) continue;
