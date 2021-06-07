@@ -13,3 +13,5 @@ export DEP_OPTS="CC=clang CXX='clang++ -stdlib=libc++'"
 export GOAL="install"
 export TEST_RUNNER_EXTRA="--exclude feature_llmqconnections,feature_llmqsimplepose"
 export SYSCOIN_CONFIG="--enable-zmq --with-gui=no CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' CXXFLAGS='-g' --with-sanitizers=thread CC=clang CXX='clang++ -stdlib=libc++' --enable-external-signer"
+# Relic documentation isn't right
+export NO_WERROR=1
