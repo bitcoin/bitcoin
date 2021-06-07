@@ -8,7 +8,8 @@ export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_nowallet
 export DOCKER_NAME_TAG=ubuntu:20.04  # Use focal to have one config run the tests in python3.6, see doc/dependencies.md
-export PACKAGES="python3-zmq clang-9 llvm-9"
+export PACKAGES="python3-zmq clang llvm"
 export DEP_OPTS="NO_WALLET=1"
 export GOAL="install"
 export SYSCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports CC=clang CXX=clang++ --enable-external-signer"
+export CCACHE_SIZE=250M
