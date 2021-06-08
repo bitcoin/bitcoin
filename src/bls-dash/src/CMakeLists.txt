@@ -31,7 +31,7 @@ if (GMP_FOUND)
   include_directories(${GMP_INCLUDES})
 endif(GMP_FOUND)
 
-set(C_LIB ${CMAKE_BINARY_DIR}/LIBBLSDASH.a)
+set(C_LIB ${CMAKE_BINARY_DIR}/libbls-dash.a)
 
 add_library(bls-dash ${CMAKE_CURRENT_SOURCE_DIR}/privatekey.cpp)
 

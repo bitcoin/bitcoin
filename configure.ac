@@ -1558,7 +1558,7 @@ AC_CHECK_LIB([bls-dash],[main],[need_bundled_chiabls=no;],[need_bundled_chiabls=
 AM_CONDITIONAL([EMBEDDED_CHIABLS],[test x$need_bundled_chiabls = xyes])
 LIBCHIABLS_CFLAGS='-I$(srcdir)/bls-dash/build/_deps/relic-build/include -I$(srcdir)/bls-dash/build/_deps/relic-src/include'
 if test x$need_bundled_chiabls = xyes; then
-  LIBCHIABLS_LIBS=bls-dash/build/LIBBLSDASH.a
+  LIBCHIABLS_LIBS=bls-dash/build/libbls-dash.a
 elif test "x$need_bundled_chiabls" = xno; then
   LIBCHIABLS_LIBS=-lbls-dash
 fi        
