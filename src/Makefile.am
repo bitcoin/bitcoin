@@ -1016,7 +1016,7 @@ clean-local:
 	-rm -f config.h
 	-rm -rf test/__pycache__
 	-rm -f bls-dash/build/*.a bls-dash/src/*.o
-	-rm -rf bls-dash/build/object_bls-dashtmp bls-dash/build/object_relic_s bls-dash/build/object_sodium
+	-rm -rf bls-dash/build/_deps bls-dash/build/object_bls-dashtmp bls-dash/build/object_relic_s bls-dash/build/object_sodium
 
 .rc.o:
 	@test -f $(WINDRES)
