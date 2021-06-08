@@ -1,4 +1,4 @@
-packages:=boost libevent gmp zlib libcurl gnutls nettle
+packages:=boost libevent gmp zlib libcurl gnutls nettle cmake
 
 qrencode_packages = qrencode
 
