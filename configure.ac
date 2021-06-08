@@ -1556,13 +1556,11 @@ dnl chiabls check
 
 AC_CHECK_LIB([bls-dash],[main],[need_bundled_chiabls=no;],[need_bundled_chiabls=yes;])
 AM_CONDITIONAL([EMBEDDED_CHIABLS],[test x$need_bundled_chiabls = xyes])
-LIBCHIABLS_CFLAGS='-I$(prefix)/include/bls-dash -I$(srcdir)/bls-dash/build/_deps/relic-build/include -I$(srcdir)/bls-dash/build/_deps/relic-src/include'
 if test x$need_bundled_chiabls = xyes; then
   LIBCHIABLS_LIBS=bls-dash/build/libbls-dash.a
 elif test "x$need_bundled_chiabls" = xno; then
   LIBCHIABLS_LIBS=-lbls-dash
 fi        
-AC_SUBST(LIBCHIABLS_CFLAGS)
 AC_SUBST(LIBCHIABLS_LIBS)  
 
 dnl libmultiprocess library check
@@ -2003,5 +2001,4 @@ echo "  CXX             = $CXX"
 echo "  CXXFLAGS        = $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CXXFLAGS"
 echo "  LDFLAGS         = $PTHREAD_LIBS $HARDENED_LDFLAGS $GPROF_LDFLAGS $LDFLAGS"
 echo "  ARFLAGS         = $ARFLAGS"
-echo "  LIBCHIABLS_CFLAGS         = $LIBCHIABLS_CFLAGS"
 echo

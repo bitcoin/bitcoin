@@ -27,7 +27,6 @@ endif
 SYSCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/secp256k1/include $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
 SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
-SYSCOIN_INCLUDES += $(LIBCHIABLS_CFLAGS)
 SYSCOIN_INCLUDES += $(LIBCURL_CFLAGS)
 
 
@@ -410,27 +409,6 @@ obj/build.h: FORCE
   bls/bls.cpp \
   bls/bls_ies.cpp \
   bls/bls_worker.cpp \
-  bls-dash/src/bls.hpp \
-  bls-dash/src/bls.cpp \
-  bls-dash/src/privatekey.hpp \
-  bls-dash/src/privatekey.cpp \
-  bls-dash/src/chaincode.hpp \
-  bls-dash/src/chaincode.cpp \
-  bls-dash/src/extendedprivatekey.hpp \
-  bls-dash/src/extendedprivatekey.cpp \
-  bls-dash/src/extendedpublickey.hpp \
-  bls-dash/src/extendedpublickey.cpp \
-  bls-dash/src/util.hpp \
-  bls-dash/src/elements.hpp \
-  bls-dash/src/elements.cpp \
-  bls-dash/src/hdkeys.hpp \
-  bls-dash/src/hkdf.hpp \
-  bls-dash/src/legacy.hpp \
-  bls-dash/src/legacy.cpp \
-  bls-dash/src/schemes.hpp \
-  bls-dash/src/schemes.cpp \
-  bls-dash/src/threshold.hpp \
-  bls-dash/src/threshold.cpp \
   $(SYSCOIN_CORE_H)
 
 
