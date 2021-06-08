@@ -13,11 +13,11 @@
 // chiabls uses relic, which may define DEBUG and ERROR, which leads to many warnings in some build setups
 #undef ERROR
 #undef DEBUG
-#include <chiabls/src/bls.hpp>
-#include <chiabls/src/privatekey.hpp>
-#include <chiabls/src/elements.hpp>
-#include <chiabls/src/schemes.hpp>
-#include <chiabls/src/threshold.hpp>
+#include <bls-dash/src/bls.hpp>
+#include <bls-dash/src/privatekey.hpp>
+#include <bls-dash/src/elements.hpp>
+#include <bls-dash/src/schemes.hpp>
+#include <bls-dash/src/threshold.hpp>
 #undef DOUBLE
 
 #include <array>
