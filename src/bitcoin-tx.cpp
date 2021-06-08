@@ -191,6 +191,8 @@ static CAmount ExtractAndValidateValue(const std::string& strValue)
     CAmount value;
     if (!ParseMoney(strValue, value))
         throw std::runtime_error("invalid TX output value");
+    if (!MoneyRange(value))
+        throw std::runtime_error("TX output value out of range");
     return value;
 }
 
