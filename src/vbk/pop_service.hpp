@@ -45,7 +45,7 @@ std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks);
 bool hasPopData(CBlockTreeDB& db);
 altintegration::PopData getPopData(const CBlockIndex& prev);
 void saveTrees(CDBBatch* batch);
-bool loadTrees(CDBWrapper& db);
+bool loadTrees();
 
 void removePayloadsFromMempool(const altintegration::PopData& popData);
 

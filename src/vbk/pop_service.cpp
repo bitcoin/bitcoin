@@ -30,7 +30,8 @@ namespace VeriBlock {
 void InitPopContext(CDBWrapper& db)
 {
     auto payloads_provider = std::make_shared<PayloadsProvider>(db);
-    SetPop(payloads_provider);
+    auto block_provider = std::make_shared<BlockReader>(db);
+    SetPop(payloads_provider, block_provider);
 
     auto& app = GetPop();
     app.getMemPool().onAccepted<altintegration::ATV>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::ATV>);
@@ -270,12 +271,11 @@ void saveTrees(CDBBatch* batch)
     VeriBlock::BlockBatch b(*batch);
     GetPop().saveAllTrees(b);
 }
-bool loadTrees(CDBWrapper& db)
+bool loadTrees()
 {
     altintegration::ValidationState state;
 
-    BlockReader reader(db);
-    if (!GetPop().loadAllTrees(reader, state)) {
+    if (!GetPop().loadAllTrees(state)) {
         return error("%s: failed to load trees %s", __func__, state.toString());
     }
 
