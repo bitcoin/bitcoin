@@ -260,6 +260,21 @@ extern const char* CFCHECKPT;
  * @since protocol version 70016 as described by BIP 339.
  */
 extern const char* WTXIDRELAY;
+
+
+//Request an NFT asset class from the network
+extern const char* REQNFTASSETCLASS;
+
+//Send NFT asset class to the network
+extern const char* SNDNFTASSETCLASS;
+
+//Request an NFT asset from the network
+extern const char* REQNFTASSET;
+
+//Send NFT asset to the network
+extern const char* SNDNFTASSET;
+
+
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */

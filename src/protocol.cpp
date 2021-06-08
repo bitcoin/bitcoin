@@ -43,7 +43,11 @@ const char *GETCFHEADERS="getcfheaders";
 const char *CFHEADERS="cfheaders";
 const char *GETCFCHECKPT="getcfcheckpt";
 const char *CFCHECKPT="cfcheckpt";
-const char *WTXIDRELAY="wtxidrelay";
+const char* WTXIDRELAY = "wtxidrelay";
+const char* REQNFTASSETCLASS = "reqnftassetclass";
+const char* SNDNFTASSETCLASS = "sndnftassetclass";
+const char* REQNFTASSET = "reqnftasset";
+const char* SNDNFTASSET = "wtxidrelay";
 } // namespace NetMsgType
 
 /** All known message types. Keep this in the same order as the list of
@@ -84,6 +88,10 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::GETCFCHECKPT,
     NetMsgType::CFCHECKPT,
     NetMsgType::WTXIDRELAY,
+    NetMsgType::REQNFTASSETCLASS,
+    NetMsgType::SNDNFTASSETCLASS,
+    NetMsgType::REQNFTASSET,
+    NetMsgType::SNDNFTASSET,
 };
 const static std::vector<std::string> allNetMessageTypesVec(std::begin(allNetMessageTypes), std::end(allNetMessageTypes));
 
