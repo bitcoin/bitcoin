@@ -27,18 +27,18 @@ endif
 SYSCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/secp256k1/include $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
 SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
-SYSCOIN_INCLUDES += $(LIBbls-dash_CFLAGS)
+SYSCOIN_INCLUDES += $(LIBBLSDASH_CFLAGS)
 SYSCOIN_INCLUDES += $(LIBCURL_CFLAGS)
 
 
 
-if EMBEDDED_bls-dash
-LIBCHIA = bls-dash/build/libbls-dash.a
-LIBbls-dash =$(LIBCURL_LIBS) $(LIBCHIA) -lgmp
+if EMBEDDED_CHIABLS
+LIBCHIA = bls-dash/build/LIBBLSDASH.a
+LIBBLSDASH =$(LIBCURL_LIBS) $(LIBCHIA) -lgmp
 $(LIBCHIA):
 	cd $(srcdir)/bls-dash/build && $(MAKE) $(AM_MAKEFLAGS)
 else
-LIBbls-dash =$(LIBCURL_LIBS) $(LIBbls-dash_LIBS) -lgmp
+LIBBLSDASH =$(LIBCURL_LIBS) $(LIBBLSDASH_LIBS) -lgmp
 endif
 
 LIBSYSCOIN_SERVER=libsyscoin_server.a
@@ -839,7 +839,7 @@ syscoin_bin_ldadd = \
   $(LIBSYSCOIN_BLS) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_UTIL) \
-  $(LIBbls-dash) \
+  $(LIBBLSDASH) \
   $(LIBUNIVALUE) \
   $(LIBSYSCOIN_ZMQ) \
   $(LIBSYSCOIN_CONSENSUS) \
@@ -899,7 +899,7 @@ syscoin_tx_LDADD = \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_BLS) \
   $(LIBSYSCOIN_UTIL) \
-  $(LIBbls-dash) \
+  $(LIBBLSDASH) \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
@@ -991,15 +991,15 @@ CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
 
-bls-dash_DIST = bls-dash/CMakeLists.txt
-bls-dash_DIST += bls-dash/README.md
-bls-dash_DIST += bls-dash/build/.configure-custom.sh
-bls-dash_DIST += bls-dash/build/configure
-bls-dash_DIST += bls-dash/cmake_modules
-bls-dash_DIST += bls-dash/contrib
-bls-dash_DIST += bls-dash/src
+BLSDASH_DIST = bls-dash/CMakeLists.txt
+BLSDASH_DIST += bls-dash/README.md
+BLSDASH_DIST += bls-dash/build/.configure-custom.sh
+BLSDASH_DIST += bls-dash/build/configure
+BLSDASH_DIST += bls-dash/cmake_modules
+BLSDASH_DIST += bls-dash/contrib
+BLSDASH_DIST += bls-dash/src
 
-EXTRA_DIST = $(CTAES_DIST) $(bls-dash_DIST) immer
+EXTRA_DIST = $(CTAES_DIST) $(BLSDASH_DIST) immer
 
 
 config/syscoin-config.h: config/stamp-h1
