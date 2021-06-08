@@ -32,6 +32,7 @@ class OrphanedBlockRewardTest(BitcoinTestFramework):
         # Let the block reward mature and send coins including both
         # the existing balance and the block reward.
         self.nodes[0].generate(150)
+        self.sync_blocks()
         assert_equal(self.nodes[1].getbalance(), Decimal("474.28571429"))
         txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 30)
 
