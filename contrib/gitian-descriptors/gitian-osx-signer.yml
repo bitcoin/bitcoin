@@ -13,7 +13,7 @@ remotes:
   "dir": "signature"
 - "url": "https://github.com/achow101/signapple.git"
   "dir": "signapple"
-  "commit": "c7e73aa27a7615ac9506559173f787e2906b25eb"
+  "commit": "b084cbbf44d5330448ffce0c7d118f75781b64bd"
 files:
 - "bitcoin-osx-unsigned.tar.gz"
 script: |
