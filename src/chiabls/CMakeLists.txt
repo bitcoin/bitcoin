@@ -75,7 +75,6 @@ ELSE()
   set(FP_QNRES "on" CACHE STRING "")
 ENDIF()
 set(STBIN "OFF" CACHE STRING "")
-set(STLIB "ON" CACHE STRING "")
 
 set(FP_METHD "INTEG;INTEG;INTEG;MONTY;LOWER;SLIDE" CACHE STRING "")
 set(COMP "-O3 -funroll-loops -fomit-frame-pointer" CACHE STRING "")
