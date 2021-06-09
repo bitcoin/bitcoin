@@ -139,6 +139,28 @@ for host in $HOSTS; do
 done
 
 ################
+# VERSION_BASE should have enough space
+################
+
+avail_KiB="$(df -Pk "$VERSION_BASE" | sed 1d | tr -s ' ' | cut -d' ' -f4)"
+total_required_KiB=0
+for host in $HOSTS; do
+    case "$host" in
+        *darwin*) required_KiB=440000 ;;
+        *mingw*)  required_KiB=7600000 ;;
+        *)        required_KiB=6400000 ;;
+    esac
+    total_required_KiB=$((total_required_KiB+required_KiB))
+done
+
+if (( total_required_KiB > avail_KiB )); then
+    total_required_GiB=$((total_required_KiB / 1048576))
+    avail_GiB=$((avail_KiB / 1048576))
+    echo "Performing a Bitcoin Core Guix build for the selected HOSTS requires ${total_required_GiB} GiB, however, only ${avail_GiB} GiB is available. Please free up some disk space before performing the build."
+    exit 1
+fi
+
+################
 # Check that we can connect to the guix-daemon
 ################
 
