@@ -173,6 +173,7 @@ BASE_SCRIPTS = [
     'wallet_groups.py --legacy-wallet',
     'p2p_addrv2_relay.py',
     'wallet_groups.py --descriptors',
+    'p2p_compactblocks_hb.py',
     'p2p_disconnect_ban.py',
     'rpc_decodescript.py',
     'rpc_blockchain.py',
