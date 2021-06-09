@@ -5,6 +5,8 @@
 #ifndef BITCOIN_ZMQ_ZMQUTIL_H
 #define BITCOIN_ZMQ_ZMQUTIL_H
 
-void zmqError(const char* str);
+#include <string>
+
+void zmqError(const std::string& str);
 
 #endif // BITCOIN_ZMQ_ZMQUTIL_H
