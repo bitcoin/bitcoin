@@ -156,7 +156,8 @@ std::string LocksHeld()
     return result;
 }
 
-void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
+template <typename MutexType>
+void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs)
 {
     for (const std::pair<void*, CLockLocation>& i : g_lockstack)
         if (i.first == cs)
@@ -164,6 +165,8 @@ void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine,
     fprintf(stderr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
     abort();
 }
+template void AssertLockHeldInternal(const char*, const char*, int, Mutex*);
+template void AssertLockHeldInternal(const char*, const char*, int, CCriticalSection*);
 
 void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
 {
