@@ -44,7 +44,7 @@ void CallOneOf(FuzzedDataProvider& fuzzed_data_provider, Callables... callables)
     const size_t call_index{fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, call_size - 1)};
 
     size_t i{0};
-    return ((i++ == call_index ? callables() : void()), ...);
+    ((i++ == call_index ? callables() : void()), ...);
 }
 
 template <typename Collection>
