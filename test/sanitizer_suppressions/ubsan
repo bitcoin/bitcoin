@@ -34,6 +34,9 @@ unsigned-integer-overflow:crypto/
 unsigned-integer-overflow:FuzzedDataProvider.h
 unsigned-integer-overflow:hash.cpp
 unsigned-integer-overflow:leveldb/
+# temporary coinstats suppressions (will be removed and fixed in https://github.com/bitcoin/bitcoin/pull/22146)
+unsigned-integer-overflow:node/coinstats.cpp
+signed-integer-overflow:node/coinstats.cpp
 unsigned-integer-overflow:policy/fees.cpp
 unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:pubkey.h
