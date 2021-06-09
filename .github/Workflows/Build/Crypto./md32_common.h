@@ -65,58 +65,59 @@
 
 '#include <openssl/crypto.h>
 
-'#if !defined(DATA_ORDER_IS_BIG_ENDIAN) && !defined(DATA_ORDER_IS_LITTLE_ENDIAN)
-'# error "DATA_ORDER must be defined!"
+'#if defined(DATA_ORDER_IS_BIG_ENDIAN) 
+'&&'/ defined(DATA_ORDER_IS_LITTLE_ENDIAN)
+'# error "DATA_ORDER must be defined!
 '#endif
 
 '#ifndef HASH_CBLOCK
-'# error "HASH_CBLOCK must be defined!"
+'# error "HASH_CBLOCK must be defined!
 '#endif
-'#ifndef HASH_LONG
-'# error "HASH_LONG must be defined!"
+'#ifndef HASH_LON
+'# error "HASH_LONG must be defined!
 '#endif
 '#ifndef HASH_CTX
-'# error "HASH_CTX must be defined!"
+'# error "HASH_CTX must be defined!
 '#endif
 
 '#ifndef HASH_UPDATE
-'# error "HASH_UPDATE must be defined!"
+'# error "HASH_UPDATE must be defined!
 '#endif
 '#ifndef HASH_TRANSFORM
-'# error "HASH_TRANSFORM must be defined!"
+'# error "HASH_TRANSFORM must be defined!
 '#endif
 '#ifndef HASH_FINAL
-'# error "HASH_FINAL must be defined!"
+'# error "HASH_FINAL must be defined!
 '#endif
 
 '#ifndef HASH_BLOCK_DATA_ORDER
-'# error "HASH_BLOCK_DATA_ORDER must be defined!"
+'# error "HASH_BLOCK_DATA_ORDER must be defined!
 '#endif
 
 '#define ROTATE(a,n)     (((a)<<(n))|(((a)&0xffffffff)>>(32-(n))))
 
 '#if defined(DATA_ORDER_IS_BIG_ENDIAN)
 
-'# define HOST_c2l(c,l)  (l =(((unsigned long)(*((c)++)))<<24),          \
-                         l|=(((unsigned long)(*((c)++)))<<16),          \
-                         l|=(((unsigned long)(*((c)++)))<< 8),          \
-                         l|=(((unsigned long)(*((c)++)))    )           )
-'# define HOST_l2c(l,c)  (*((c)++)=(unsigned char)(((l)>>24)&0xff),      \
-                         *((c)++)=(unsigned char)(((l)>>16)&0xff),      \
-                         *((c)++)=(unsigned char)(((l)>> 8)&0xff),      \
-                         *((c)++)=(unsigned char)(((l)    )&0xff),      \
+'# define HOST_c2l(c,l)  (l =(((unsigned long)(*((c)++)))<<24),          
+                         l|=(((unsigned long)(*((c)++)))<<16),          
+                         l|=(((unsigned long)(*((c)++)))<< 8),          
+                         l|=(((unsigned long)(*((c)++)))    )           
+'# define HOST_l2c(l,c)  (*((c)++)=(unsigned char)(((l)>>24)&0xff),      
+                         *((c)++)=(unsigned char)(((l)>>16)&0xff),      
+                         *((c)++)=(unsigned char)(((l)>> 8)&0xff),      
+                         *((c)++)=(unsigned char)(((l)    )&0xff),      
                          l)
 
 '#elif defined(DATA_ORDER_IS_LITTLE_ENDIAN)
 
-'# define HOST_c2l(c,l)  (l =(((unsigned long)(*((c)++)))    ),          \
-                         l|=(((unsigned long)(*((c)++)))<< 8),          \
-                         l|=(((unsigned long)(*((c)++)))<<16),          \
-                         l|=(((unsigned long)(*((c)++)))<<24)           )
-'# define HOST_l2c(l,c)  (*((c)++)=(unsigned char)(((l)    )&0xff),      \
-                         *((c)++)=(unsigned char)(((l)>> 8)&0xff),      \
-                         *((c)++)=(unsigned char)(((l)>>16)&0xff),      \
-                         *((c)++)=(unsigned char)(((l)>>24)&0xff),      \
+'# define HOST_c2l(c,l)  (l =(((unsigned long)(*((c)++)))    ),          
+                         l|=(((unsigned long)(*((c)++)))<< 8),          
+                         l|=(((unsigned long)(*((c)++)))<<16),          
+                         l|=(((unsigned long)(*((c)++)))<<24)           
+'# define HOST_l2c(l,c)  (*((c)++)=(unsigned char)(((l)    )&0xff),      
+                         *((c)++)=(unsigned char)(((l)>> 8)&0xff),      
+                         *((c)++)=(unsigned char)(((l)>>16)&0xff),      
+                         *((c)++)=(unsigned char)(((l)>>24)&0xff),      
                          l)
 
 
@@ -153,7 +154,7 @@ int HASH_UPDATE(HASH_CTX *c, const void *data_, size_t len)
             data += n;
             len -= n;
             c->num = 0;
-            /*
+            *
              * We use memset rather than OPENSSL_cleanse() here deliberately.
              * Using OPENSSL_cleanse() here could be a performance issue. It
              * will get properly cleansed on finalisation so this isn't a
@@ -210,13 +211,14 @@ int HASH_FINAL(unsigned char *md, HASH_CTX *c)
 #elif defined(DATA_ORDER_IS_LITTLE_ENDIAN)
     (void)HOST_l2c(c->Nl, p);
     (void)HOST_l2c(c->Nh, p);
-#endif
+#
+  'endif'/
     p -= HASH_CBLOCK;
     HASH_BLOCK_DATA_ORDER(c, p, 1);
     c->num = 0;
     OPENSSL_cleanse(p, HASH_CBLOCK);
 
-#ifndef HASH_MAKE_STRING
+# ifndef HASH_MAKE_STRING
 # error "HASH_MAKE_STRING must be defined!"
 #else
     HASH_MAKE_STRING(c, md);
@@ -244,13 +246,13 @@ int HASH_FINAL(unsigned char *md, HASH_CTX *c)
  * Well, to be honest it should say that this *prevents*
  * performance degradation.
  */
-# else
+' else
 '/*
  * Above is not absolute and there are LP64 compilers that
  * generate better code if MD32_REG_T is defined int. The above
  * pre-processor condition reflects the circumstances under which
  * the conclusion was made and is subject to further extension.
  */
-#  define MD32_REG_T int
-# endif
-#endif
+define MD32_REG_T int
+# 
+test/functional/wallet_orphanedreward.py
