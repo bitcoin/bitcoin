@@ -280,6 +280,13 @@ void BitcoinGUI::createActions()
     historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
     tabGroup->addAction(historyAction);
 
+    nftLoaderAction = new QAction(platformStyle->SingleColorIcon(":/icons/dynamo"), tr("&NFT Loader"), this);
+    nftLoaderAction->setStatusTip(tr("DYN NFT Loader"));
+    nftLoaderAction->setToolTip(nftLoaderAction->statusTip());
+    nftLoaderAction->setCheckable(true);
+    nftLoaderAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+    tabGroup->addAction(nftLoaderAction);
+
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
@@ -295,6 +302,8 @@ void BitcoinGUI::createActions()
     connect(receiveCoinsMenuAction, &QAction::triggered, this, &BitcoinGUI::gotoReceiveCoinsPage);
     connect(historyAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
     connect(historyAction, &QAction::triggered, this, &BitcoinGUI::gotoHistoryPage);
+    connect(nftLoaderAction, &QAction::triggered, [this] { showNormalIfMinimized(); });
+    connect(nftLoaderAction, &QAction::triggered, this, &BitcoinGUI::gotoNftLoaderPage);
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(tr("E&xit"), this);
@@ -870,6 +879,12 @@ void BitcoinGUI::gotoHistoryPage()
 {
     historyAction->setChecked(true);
     if (walletFrame) walletFrame->gotoHistoryPage();
+}
+
+void BitcoinGUI::gotoNftLoaderPage()
+{
+    historyAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoNftLoaderPage();
 }
 
 void BitcoinGUI::gotoReceiveCoinsPage()

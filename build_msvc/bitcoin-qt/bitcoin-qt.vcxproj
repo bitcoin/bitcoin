@@ -8,6 +8,8 @@
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\primitives\dynnft.cpp" />
+    <ClCompile Include="..\..\src\primitives\dynnft_manager.cpp" />
     <ClCompile Include="..\..\src\qt\main.cpp" />
     <ResourceCompile Include="..\..\src\qt\res\bitcoin-qt-res.rc" />
   </ItemGroup>
@@ -49,7 +51,10 @@
       <Project>{5724ba7d-a09a-4ba8-800b-c4c1561b3d69}</Project>
     </ProjectReference>
   </ItemGroup>
-
+  <ItemGroup>
+    <ClInclude Include="..\..\src\primitives\dynnft.h" />
+    <ClInclude Include="..\..\src\primitives\dynnft_manager.h" />
+  </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(QtIncludes);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -63,7 +68,6 @@
       <PreprocessorDefinitions>HAVE_CONFIG_H;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
   </ItemDefinitionGroup>
-
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(QtIncludes);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -77,7 +81,6 @@
       <PreprocessorDefinitions>HAVE_CONFIG_H;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
   </ItemDefinitionGroup>
-
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
