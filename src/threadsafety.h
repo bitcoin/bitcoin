@@ -6,6 +6,8 @@
 #ifndef BITCOIN_THREADSAFETY_H
 #define BITCOIN_THREADSAFETY_H
 
+#include <mutex>
+
 #ifdef __clang__
 // TL;DR Add GUARDED_BY(mutex) to member variables. The others are
 // rarely necessary. Ex: int nFoo GUARDED_BY(cs_foo);
@@ -53,5 +55,14 @@
 #define NO_THREAD_SAFETY_ANALYSIS
 #define ASSERT_EXCLUSIVE_LOCK(...)
 #endif // __GNUC__
+
+// LockGuard provides an annotated version of lock_guard for us
+// should only be used when sync.h Mutex/LOCK/etc aren't usable
+class SCOPED_LOCKABLE LockGuard : public std::lock_guard<std::mutex>
+{
+public:
+    explicit LockGuard(std::mutex& cs) EXCLUSIVE_LOCK_FUNCTION(cs) : std::lock_guard<std::mutex>(cs) { }
+    ~LockGuard() UNLOCK_FUNCTION() {};
+};
 
 #endif // BITCOIN_THREADSAFETY_H

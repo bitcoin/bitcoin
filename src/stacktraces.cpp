@@ -170,7 +170,7 @@ static __attribute__((noinline)) std::vector<uint64_t> GetStackFrames(size_t ski
 
     // dbghelp is not thread safe
     static std::mutex m;
-    std::lock_guard<std::mutex> l(m);
+    LockGuard l(m);
 
     HANDLE process = GetCurrentProcess();
     HANDLE thread = GetCurrentThread();
@@ -594,7 +594,7 @@ extern "C" void* __attribute__((noinline)) WRAPPED_NAME(__cxa_allocate_exception
 
     void* p = __real___cxa_allocate_exception(thrown_size);
 
-    std::lock_guard<std::mutex> l(g_stacktraces_mutex);
+    LockGuard l(g_stacktraces_mutex);
     g_stacktraces.emplace(p, st);
     return p;
 }
@@ -603,7 +603,7 @@ extern "C" void __attribute__((noinline)) WRAPPED_NAME(__cxa_free_exception)(voi
 {
     __real___cxa_free_exception(thrown_exception);
 
-    std::lock_guard<std::mutex> l(g_stacktraces_mutex);
+    LockGuard l(g_stacktraces_mutex);
     g_stacktraces.erase(thrown_exception);
 }
 
@@ -667,7 +667,7 @@ static std::shared_ptr<std::vector<uint64_t>> GetExceptionStacktrace(const std::
 #ifdef ENABLE_CRASH_HOOKS
     void* p = *(void**)&e;
 
-    std::lock_guard<std::mutex> l(g_stacktraces_mutex);
+    LockGuard l(g_stacktraces_mutex);
     auto it = g_stacktraces.find(p);
     if (it == g_stacktraces.end()) {
         return nullptr;
