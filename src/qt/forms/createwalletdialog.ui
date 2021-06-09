@@ -109,6 +109,16 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QCheckBox" name="external_signer_checkbox">
+        <property name="toolTip">
+         <string>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</string>
+        </property>
+        <property name="text">
+         <string>External signer</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -143,6 +153,7 @@
   <tabstop>disable_privkeys_checkbox</tabstop>
   <tabstop>blank_wallet_checkbox</tabstop>
   <tabstop>descriptor_checkbox</tabstop>
+  <tabstop>external_signer_checkbox</tabstop>
  </tabstops>
  <resources/>
  <connections>
