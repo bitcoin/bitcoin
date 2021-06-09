@@ -22,7 +22,6 @@ packages:
 - "pkg-config"
 - "python3"
 # SYSCOIN
-- "cmake"
 - "python3-pip"
 # Cross compilation HOSTS:
 #  - arm-linux-gnueabihf

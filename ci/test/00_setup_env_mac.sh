@@ -16,3 +16,4 @@ export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export GOAL="deploy"
 export SYSCOIN_CONFIG="--with-gui --enable-reduce-exports --enable-external-signer"
+

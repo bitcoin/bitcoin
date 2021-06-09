@@ -15,6 +15,14 @@
 #include <cassert>
 #include <cstring>
 
+static std::unique_ptr<bls::CoreMPL> pSchemeLegacy(new bls::LegacySchemeMPL);
+static std::unique_ptr<bls::CoreMPL> pScheme(new bls::BasicSchemeMPL);
+
+static std::unique_ptr<bls::CoreMPL>& Scheme(const bool fLegacy)
+{
+    return fLegacy ? pSchemeLegacy : pScheme;
+}
+
 void CBLSId::SetInt(int x)
 {
     impl.SetHex(strprintf("%x", x));
@@ -46,7 +54,7 @@ CBLSId CBLSId::FromHash(const uint256& hash)
 void CBLSSecretKey::AggregateInsecure(const CBLSSecretKey& o)
 {
     assert(IsValid() && o.IsValid());
-    impl = bls::PrivateKey::AggregateInsecure({impl, o.impl});
+    impl = bls::PrivateKey::Aggregate({impl, o.impl});
     cachedHash.SetNull();
 }
 
@@ -63,7 +71,7 @@ CBLSSecretKey CBLSSecretKey::AggregateInsecure(const std::vector<CBLSSecretKey>&
     }
 
     CBLSSecretKey ret;
-    ret.impl = bls::PrivateKey::AggregateInsecure(v);
+    ret.impl = bls::PrivateKey::Aggregate(v);
     ret.fValid = true;
     ret.cachedHash.SetNull();
     return ret;
@@ -76,7 +84,7 @@ void CBLSSecretKey::MakeNewKey()
     while (true) {
         GetStrongRandBytes(buf, sizeof(buf));
         try {
-            impl = bls::PrivateKey::FromBytes((const uint8_t*)buf);
+            impl = bls::PrivateKey::FromBytes(bls::Bytes((const uint8_t*)buf, SerSize));
             break;
         } catch (...) {
         }
@@ -105,7 +113,7 @@ bool CBLSSecretKey::SecretKeyShare(const std::vector<CBLSSecretKey>& msk, const 
     }
 
     try {
-        impl = bls::BLS::PrivateKeyShare(mskVec, (const uint8_t*)_id.impl.begin());
+        impl = bls::Threshold::PrivateKeyShare(mskVec, bls::Bytes(_id.impl.begin(), _id.impl.size()));
     } catch (...) {
         return false;
     }
@@ -122,7 +130,7 @@ CBLSPublicKey CBLSSecretKey::GetPublicKey() const
     }
 
     CBLSPublicKey pubKey;
-    pubKey.impl = impl.GetPublicKey();
+    pubKey.impl = impl.GetG1Element();
     pubKey.fValid = true;
     pubKey.cachedHash.SetNull();
     return pubKey;
@@ -135,7 +143,7 @@ CBLSSignature CBLSSecretKey::Sign(const uint256& hash) const
     }
 
     CBLSSignature sigRet;
-    sigRet.impl = impl.SignInsecurePrehashed((const uint8_t*)hash.begin());
+    sigRet.impl = Scheme(fLegacy)->Sign(impl, bls::Bytes(hash.begin(), hash.size()));
 
     sigRet.fValid = true;
     sigRet.cachedHash.SetNull();
@@ -146,24 +154,24 @@ CBLSSignature CBLSSecretKey::Sign(const uint256& hash) const
 void CBLSPublicKey::AggregateInsecure(const CBLSPublicKey& o)
 {
     assert(IsValid() && o.IsValid());
-    impl = bls::PublicKey::AggregateInsecure({impl, o.impl});
+    impl = Scheme(fLegacy)->Aggregate({impl, o.impl});
     cachedHash.SetNull();
 }
 
-CBLSPublicKey CBLSPublicKey::AggregateInsecure(const std::vector<CBLSPublicKey>& pks)
+CBLSPublicKey CBLSPublicKey::AggregateInsecure(const std::vector<CBLSPublicKey>& pks, const bool fLegacy)
 {
     if (pks.empty()) {
         return CBLSPublicKey();
     }
 
-    std::vector<bls::PublicKey> v;
-    v.reserve(pks.size());
+    std::vector<bls::G1Element> vecPublicKeys;
+    vecPublicKeys.reserve(pks.size());
     for (auto& pk : pks) {
-        v.emplace_back(pk.impl);
+        vecPublicKeys.emplace_back(pk.impl);
     }
 
     CBLSPublicKey ret;
-    ret.impl = bls::PublicKey::AggregateInsecure(v);
+    ret.impl = Scheme(fLegacy)->Aggregate(vecPublicKeys);
     ret.fValid = true;
     ret.cachedHash.SetNull();
     return ret;
@@ -178,7 +186,7 @@ bool CBLSPublicKey::PublicKeyShare(const std::vector<CBLSPublicKey>& mpk, const 
         return false;
     }
 
-    std::vector<bls::PublicKey> mpkVec;
+    std::vector<bls::G1Element> mpkVec;
     mpkVec.reserve(mpk.size());
     for (const CBLSPublicKey& pk : mpk) {
         if (!pk.IsValid()) {
@@ -188,7 +196,7 @@ bool CBLSPublicKey::PublicKeyShare(const std::vector<CBLSPublicKey>& mpk, const 
     }
 
     try {
-        impl = bls::BLS::PublicKeyShare(mpkVec, (const uint8_t*)_id.impl.begin());
+        impl = bls::Threshold::PublicKeyShare(mpkVec, bls::Bytes(_id.impl.begin(), _id.impl.size()));
     } catch (...) {
         return false;
     }
@@ -206,7 +214,7 @@ bool CBLSPublicKey::DHKeyExchange(const CBLSSecretKey& sk, const CBLSPublicKey& 
     if (!sk.IsValid() || !pk.IsValid()) {
         return false;
     }
-    impl = bls::BLS::DHKeyExchange(sk.impl, pk.impl);
+    impl = sk.impl * pk.impl;
     fValid = true;
     cachedHash.SetNull();
     return true;
@@ -215,24 +223,24 @@ bool CBLSPublicKey::DHKeyExchange(const CBLSSecretKey& sk, const CBLSPublicKey& 
 void CBLSSignature::AggregateInsecure(const CBLSSignature& o)
 {
     assert(IsValid() && o.IsValid());
-    impl = bls::InsecureSignature::Aggregate({impl, o.impl});
+    impl = Scheme(fLegacy)->Aggregate({impl, o.impl});
     cachedHash.SetNull();
 }
 
-CBLSSignature CBLSSignature::AggregateInsecure(const std::vector<CBLSSignature>& sigs)
+CBLSSignature CBLSSignature::AggregateInsecure(const std::vector<CBLSSignature>& sigs, const bool fLegacy)
 {
     if (sigs.empty()) {
         return CBLSSignature();
     }
 
-    std::vector<bls::InsecureSignature> v;
+    std::vector<bls::G2Element> v;
     v.reserve(sigs.size());
     for (auto& pk : sigs) {
         v.emplace_back(pk.impl);
     }
 
     CBLSSignature ret;
-    ret.impl = bls::InsecureSignature::Aggregate(v);
+    ret.impl = Scheme(fLegacy)->Aggregate(v);
     ret.fValid = true;
     ret.cachedHash.SetNull();
     return ret;
@@ -240,22 +248,27 @@ CBLSSignature CBLSSignature::AggregateInsecure(const std::vector<CBLSSignature>&
 
 CBLSSignature CBLSSignature::AggregateSecure(const std::vector<CBLSSignature>& sigs,
                                              const std::vector<CBLSPublicKey>& pks,
-                                             const uint256& hash)
+                                             const uint256& hash,
+                                             const bool fLegacy)
 {
     if (sigs.size() != pks.size() || sigs.empty()) {
         return CBLSSignature();
     }
 
-    std::vector<bls::Signature> v;
-    v.reserve(sigs.size());
+    std::vector<bls::G1Element> vecPublicKeys;
+    vecPublicKeys.reserve(pks.size());
+    for (auto& pk : pks) {
+        vecPublicKeys.push_back(pk.impl);
+    }
 
-    for (size_t i = 0; i < sigs.size(); i++) {
-        bls::AggregationInfo aggInfo = bls::AggregationInfo::FromMsgHash(pks[i].impl, hash.begin());
-        v.emplace_back(bls::Signature::FromInsecureSig(sigs[i].impl, aggInfo));
+    std::vector<bls::G2Element> vecSignatures;
+    vecSignatures.reserve(pks.size());
+    for (auto& sig : sigs) {
+        vecSignatures.push_back(sig.impl);
     }
 
     CBLSSignature ret;
-    ret.impl = bls::Signature::AggregateSigs(v).GetInsecureSig();
+    ret.impl = Scheme(fLegacy)->AggregateSecure(vecPublicKeys, vecSignatures, bls::Bytes(hash.begin(), hash.size()));
     ret.fValid = true;
     ret.cachedHash.SetNull();
     return ret;
@@ -264,7 +277,7 @@ CBLSSignature CBLSSignature::AggregateSecure(const std::vector<CBLSSignature>& s
 void CBLSSignature::SubInsecure(const CBLSSignature& o)
 {
     assert(IsValid() && o.IsValid());
-    impl = impl.DivideBy({o.impl});
+    impl = impl + o.impl.Negate();
     cachedHash.SetNull();
 }
 
@@ -275,7 +288,7 @@ bool CBLSSignature::VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& h
     }
 
     try {
-        return impl.Verify({(const uint8_t*)hash.begin()}, {pubKey.impl});
+        return Scheme(fLegacy)->Verify(pubKey.impl, bls::Bytes(hash.begin(), hash.size()), impl);
     } catch (...) {
         return false;
     }
@@ -288,8 +301,8 @@ bool CBLSSignature::VerifyInsecureAggregated(const std::vector<CBLSPublicKey>& p
     }
     assert(!pubKeys.empty() && !hashes.empty() && pubKeys.size() == hashes.size());
 
-    std::vector<bls::PublicKey> pubKeyVec;
-    std::vector<const uint8_t*> hashes2;
+    std::vector<bls::G1Element> pubKeyVec;
+    std::vector<bls::Bytes> hashes2;
     hashes2.reserve(hashes.size());
     pubKeyVec.reserve(pubKeys.size());
     for (size_t i = 0; i < pubKeys.size(); i++) {
@@ -298,11 +311,11 @@ bool CBLSSignature::VerifyInsecureAggregated(const std::vector<CBLSPublicKey>& p
             return false;
         }
         pubKeyVec.push_back(p.impl);
-        hashes2.push_back((uint8_t*)hashes[i].begin());
+        hashes2.emplace_back(hashes[i].begin(), hashes[i].size());
     }
 
     try {
-        return impl.Verify(hashes2, pubKeyVec);
+        return Scheme(fLegacy)->AggregateVerify(pubKeyVec, hashes2, impl);
     } catch (...) {
         return false;
     }
@@ -314,16 +327,13 @@ bool CBLSSignature::VerifySecureAggregated(const std::vector<CBLSPublicKey>& pks
         return false;
     }
 
-    std::vector<bls::AggregationInfo> v;
-    v.reserve(pks.size());
-    for (auto& pk : pks) {
-        auto aggInfo = bls::AggregationInfo::FromMsgHash(pk.impl, hash.begin());
-        v.emplace_back(aggInfo);
+    std::vector<bls::G1Element> vecPublicKeys;
+    vecPublicKeys.reserve(pks.size());
+    for (const auto& pk : pks) {
+        vecPublicKeys.push_back(pk.impl);
     }
 
-    bls::AggregationInfo aggInfo = bls::AggregationInfo::MergeInfos(v);
-    bls::Signature aggSig = bls::Signature::FromInsecureSig(impl, aggInfo);
-    return aggSig.Verify();
+    return Scheme(fLegacy)->VerifySecure(vecPublicKeys, impl, bls::Bytes(hash.begin(), hash.size()));
 }
 
 bool CBLSSignature::Recover(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSId>& ids)
@@ -335,8 +345,8 @@ bool CBLSSignature::Recover(const std::vector<CBLSSignature>& sigs, const std::v
         return false;
     }
 
-    std::vector<bls::InsecureSignature> sigsVec;
-    std::vector<const uint8_t*> idsVec;
+    std::vector<bls::G2Element> sigsVec;
+    std::vector<bls::Bytes> idsVec;
     sigsVec.reserve(sigs.size());
     idsVec.reserve(sigs.size());
 
@@ -345,11 +355,11 @@ bool CBLSSignature::Recover(const std::vector<CBLSSignature>& sigs, const std::v
             return false;
         }
         sigsVec.emplace_back(sigs[i].impl);
-        idsVec.emplace_back(ids[i].impl.begin());
+        idsVec.emplace_back(ids[i].impl.begin(), ids[i].impl.size());
     }
 
     try {
-        impl = bls::BLS::RecoverSig(sigsVec, idsVec);
+        impl = bls::Threshold::SignatureRecover(sigsVec, idsVec);
     } catch (...) {
         return false;
     }
