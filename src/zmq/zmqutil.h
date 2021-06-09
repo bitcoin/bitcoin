@@ -5,6 +5,8 @@
 #ifndef SYSCOIN_ZMQ_ZMQUTIL_H
 #define SYSCOIN_ZMQ_ZMQUTIL_H
 
-void zmqError(const char* str);
+#include <string>
+
+void zmqError(const std::string& str);
 
 #endif // SYSCOIN_ZMQ_ZMQUTIL_H
