@@ -61,13 +61,13 @@ define $(package)_config_cmds
   export CFLAGS="$($(package)_cflags) $($(package)_cppflags)" && \
   export CXXFLAGS="$($(package)_cxxflags) $($(package)_cppflags)" && \
   export LDFLAGS="$($(package)_ldflags)" && \
-  $(host_prefix)/bin/cmake VERBOSE=1 ../ $($(package)_config_opts)
+  $(host_prefix)/bin/cmake ../ $($(package)_config_opts)
 endef
 
 define $(package)_build_cmds
-  $(MAKE) VERBOSE=1 $($(package)_build_opts)
+  $(MAKE) $($(package)_build_opts)
 endef
 
 define $(package)_stage_cmds
-  $(MAKE) VERBOSE=1 install
+  $(MAKE) install
 endef
