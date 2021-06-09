@@ -62,7 +62,7 @@ KNOWN_VIOLATIONS=(
     "src/rpc/blockchain.cpp:.*fprintf"
 )
 
-REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/|chiabls/)"
+REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/|bls-dash/)"
 
 LOCALE_DEPENDENT_FUNCTIONS=(
     alphasort    # LC_COLLATE (via strcoll)

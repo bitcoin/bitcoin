@@ -34,7 +34,7 @@ if ! python3 -m doctest test/lint/lint-format-strings.py; then
 fi
 for S in "${FUNCTION_NAMES_AND_NUMBER_OF_LEADING_ARGUMENTS[@]}"; do
     IFS="," read -r FUNCTION_NAME SKIP_ARGUMENTS <<< "${S}"
-    for MATCHING_FILE in $(git grep --full-name -l "${FUNCTION_NAME}" -- "*.c" "*.cpp" "*.h" | sort | grep -vE "^src/(leveldb|secp256k1|tinyformat|univalue|chiabls|test/fuzz/strprintf.cpp)"); do
+    for MATCHING_FILE in $(git grep --full-name -l "${FUNCTION_NAME}" -- "*.c" "*.cpp" "*.h" | sort | grep -vE "^src/(leveldb|secp256k1|tinyformat|univalue|bls-dash|test/fuzz/strprintf.cpp)"); do
         MATCHING_FILES+=("${MATCHING_FILE}")
     done
     if ! test/lint/lint-format-strings.py --skip-arguments "${SKIP_ARGUMENTS}" "${FUNCTION_NAME}" "${MATCHING_FILES[@]}"; then

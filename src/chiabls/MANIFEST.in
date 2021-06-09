@@ -1,6 +1,0 @@
-include README.md LICENSE
-global-include CMakeLists.txt *.cmake
-recursive-include cmake_modules *
-recursive-include src *
-recursive-include python *
-recursive-include contrib *

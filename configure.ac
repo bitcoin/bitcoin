@@ -434,7 +434,7 @@ if test "x$enable_werror" = "xyes"; then
   AX_CHECK_COMPILE_FLAG([-Werror=unreachable-code-loop-increment],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=unreachable-code-loop-increment"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Werror=mismatched-tags], [ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=mismatched-tags"], [], [$CXXFLAG_WERROR])
 
-  if test x$suppress_external_warnings != xno ; then
+  if test x$suppress_external_warnings = xno ; then
     AX_CHECK_COMPILE_FLAG([-Werror=documentation],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=documentation"],,[[$CXXFLAG_WERROR]])
   fi
 fi
@@ -1554,13 +1554,13 @@ AC_SUBST(UNIVALUE_LIBS)
 
 dnl chiabls check
 
-AC_CHECK_LIB([chiabls],[main],[need_bundled_chiabls=no;],[need_bundled_chiabls=yes;])
+AC_CHECK_LIB([bls-dash],[main],[need_bundled_chiabls=no;],[need_bundled_chiabls=yes;])
 AM_CONDITIONAL([EMBEDDED_CHIABLS],[test x$need_bundled_chiabls = xyes])
-LIBCHIABLS_CFLAGS='-I$(srcdir)/chiabls/build/contrib/relic/include -I$(srcdir)/chiabls/contrib/relic/include'
+LIBCHIABLS_CFLAGS='-I$(prefix)/include/bls-dash -I$(srcdir)/bls-dash/build/_deps/relic-build/include -I$(srcdir)/bls-dash/build/_deps/relic-src/include'
 if test x$need_bundled_chiabls = xyes; then
-  LIBCHIABLS_LIBS=chiabls/build/libchiabls.a
+  LIBCHIABLS_LIBS=bls-dash/build/libbls-dash.a
 elif test "x$need_bundled_chiabls" = xno; then
-  LIBCHIABLS_LIBS=-lchiabls
+  LIBCHIABLS_LIBS=-lbls-dash
 fi        
 AC_SUBST(LIBCHIABLS_CFLAGS)
 AC_SUBST(LIBCHIABLS_LIBS)  
@@ -1945,7 +1945,7 @@ if test x$need_bundled_univalue = xyes; then
 fi
 
 if test x$need_bundled_chiabls = xyes; then
-  AC_CONFIG_SUBDIRS([src/chiabls/build])
+  AC_CONFIG_SUBDIRS([src/bls-dash/build])
 fi
 
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --enable-module-schnorrsig --enable-experimental"
@@ -2002,4 +2002,5 @@ echo "  CXX             = $CXX"
 echo "  CXXFLAGS        = $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CXXFLAGS"
 echo "  LDFLAGS         = $PTHREAD_LIBS $HARDENED_LDFLAGS $GPROF_LDFLAGS $LDFLAGS"
 echo "  ARFLAGS         = $ARFLAGS"
+echo "  LIBCHIABLS_CFLAGS         = $LIBCHIABLS_CFLAGS"
 echo

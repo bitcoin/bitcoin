@@ -1,0 +1,19 @@
+extraction:
+  cpp:
+    after_prepare:
+    - "mkdir custom_cmake"
+    - "wget --quiet -O - \"https://cmake.org/files/v3.16/cmake-3.16.3-Linux-x86_64.tar.gz\"\
+      \ | tar --strip-components=1 -xz -C custom_cmake"
+    - "export PATH=$(pwd)/custom_cmake/bin:${PATH}"
+    - "cd $LGTM_SRC/"
+    - "mkdir custom_libsodium"
+    - "wget --quiet -O - \"https://download.libsodium.org/libsodium/releases/libsodium-1.0.18-stable.tar.gz\"\
+      \ | tar --strip-components=1 -xz -C custom_libsodium"
+    - "cd custom_libsodium"
+    - "./configure --with-pic=\"yes\" --prefix=$LGTM_SRC/"
+    - "make"
+    - "make install"
+    - "export CMAKE_INCLUDE_PATH=$LGTM_SRC/include:${CMAKE_INCLUDE_PATH}"
+    - "export CMAKE_LIBRARY_PATH=$LGTM_SRC/lib:${CMAKE_LIBRARY_PATH}"
+    - "mkdir $LGTM_SRC/_lgtm_build_dir"
+    - "cd $LGTM_SRC/_lgtm_build_dir"

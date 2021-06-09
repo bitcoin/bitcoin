@@ -33,10 +33,10 @@ SYSCOIN_INCLUDES += $(LIBCURL_CFLAGS)
 
 
 if EMBEDDED_CHIABLS
-LIBCHIA = chiabls/build/libchiabls.a
+LIBCHIA = bls-dash/build/libbls-dash.a
 LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIA) -lgmp
 $(LIBCHIA):
-	cd $(srcdir)/chiabls/build && $(MAKE) $(AM_MAKEFLAGS)
+	cd $(srcdir)/bls-dash/build && $(MAKE) $(AM_MAKEFLAGS)
 else
 LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIABLS_LIBS) -lgmp
 endif
@@ -410,23 +410,27 @@ obj/build.h: FORCE
   bls/bls.cpp \
   bls/bls_ies.cpp \
   bls/bls_worker.cpp \
-  chiabls/src/bls.hpp \
-  chiabls/src/bls.cpp \
-  chiabls/src/privatekey.hpp \
-  chiabls/src/privatekey.cpp \
-  chiabls/src/publickey.hpp \
-  chiabls/src/publickey.cpp \
-  chiabls/src/signature.hpp \
-  chiabls/src/signature.cpp \
-  chiabls/src/aggregationinfo.hpp \
-  chiabls/src/aggregationinfo.cpp \
-  chiabls/src/chaincode.hpp \
-  chiabls/src/chaincode.cpp \
-  chiabls/src/extendedprivatekey.hpp \
-  chiabls/src/extendedprivatekey.cpp \
-  chiabls/src/extendedpublickey.hpp \
-  chiabls/src/extendedpublickey.cpp \
-  chiabls/src/util.hpp \
+  bls-dash/src/bls.hpp \
+  bls-dash/src/bls.cpp \
+  bls-dash/src/privatekey.hpp \
+  bls-dash/src/privatekey.cpp \
+  bls-dash/src/chaincode.hpp \
+  bls-dash/src/chaincode.cpp \
+  bls-dash/src/extendedprivatekey.hpp \
+  bls-dash/src/extendedprivatekey.cpp \
+  bls-dash/src/extendedpublickey.hpp \
+  bls-dash/src/extendedpublickey.cpp \
+  bls-dash/src/util.hpp \
+  bls-dash/src/elements.hpp \
+  bls-dash/src/elements.cpp \
+  bls-dash/src/hdkeys.hpp \
+  bls-dash/src/hkdf.hpp \
+  bls-dash/src/legacy.hpp \
+  bls-dash/src/legacy.cpp \
+  bls-dash/src/schemes.hpp \
+  bls-dash/src/schemes.cpp \
+  bls-dash/src/threshold.hpp \
+  bls-dash/src/threshold.cpp \
   $(SYSCOIN_CORE_H)
 
 
@@ -987,15 +991,15 @@ CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
 
-CHIABLS_DIST = chiabls/CMakeLists.txt
-CHIABLS_DIST += chiabls/README.md
-CHIABLS_DIST += chiabls/build/.configure-custom.sh
-CHIABLS_DIST += chiabls/build/configure
-CHIABLS_DIST += chiabls/cmake_modules
-CHIABLS_DIST += chiabls/contrib
-CHIABLS_DIST += chiabls/src
+BLSDASH_DIST = bls-dash/CMakeLists.txt
+BLSDASH_DIST += bls-dash/README.md
+BLSDASH_DIST += bls-dash/build/.configure-custom.sh
+BLSDASH_DIST += bls-dash/build/configure
+BLSDASH_DIST += bls-dash/cmake_modules
+BLSDASH_DIST += bls-dash/contrib
+BLSDASH_DIST += bls-dash/src
 
-EXTRA_DIST = $(CTAES_DIST) $(CHIABLS_DIST) immer
+EXTRA_DIST = $(CTAES_DIST) $(BLSDASH_DIST) immer
 
 
 config/syscoin-config.h: config/stamp-h1
@@ -1011,8 +1015,8 @@ clean-local:
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
-	-rm -f chiabls/build/*.a chiabls/src/*.o
-	-rm -rf chiabls/build/object_chiablstmp chiabls/build/object_relic_s chiabls/build/object_sodium
+	-rm -f bls-dash/build/*.a bls-dash/src/*.o
+	-rm -rf bls-dash/build/_deps bls-dash/build/object_bls-dashtmp bls-dash/build/object_relic_s bls-dash/build/object_sodium
 
 .rc.o:
 	@test -f $(WINDRES)
