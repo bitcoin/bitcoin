@@ -22,7 +22,6 @@ packages:
 - "zip"
 - "ca-certificates"
 - "python3"
-# SYSCOIN
 - "python3-pip"
 remotes:
 - "url": "https://github.com/syscoin/syscoin.git"

@@ -23,8 +23,8 @@ packages:
 - "patch"
 - "pkg-config"
 - "python3"
-# SYSCOIN
 - "python3-pip"
+# SYSCOIN
 # Cross compilation HOSTS:
 #  - arm-linux-gnueabihf
 - "binutils-arm-linux-gnueabihf"
