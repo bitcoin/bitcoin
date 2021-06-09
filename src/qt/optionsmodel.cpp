@@ -223,6 +223,13 @@ void OptionsModel::Init(bool resetSettings)
     if (!gArgs.SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
         addOverriddenOption("-spendzeroconfchange");
 
+    if (!settings.contains("external_signer_path"))
+        settings.setValue("external_signer_path", "");
+
+    if (!gArgs.SoftSetArg("-signer", settings.value("external_signer_path").toString().toStdString())) {
+        addOverriddenOption("-signer");
+    }
+
     if (!settings.contains("SubFeeFromAmount")) {
         settings.setValue("SubFeeFromAmount", false);
     }
@@ -496,6 +503,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
+        case ExternalSignerPath:
+            return settings.value("external_signer_path");
         case SubFeeFromAmount:
             return m_sub_fee_from_amount;
         case ShowMasternodesTab:
@@ -668,6 +677,12 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case SpendZeroConfChange:
             if (settings.value("bSpendZeroConfChange") != value) {
                 settings.setValue("bSpendZeroConfChange", value);
+                setRestartRequired(true);
+            }
+            break;
+        case ExternalSignerPath:
+            if (settings.value("external_signer_path") != value.toString()) {
+                settings.setValue("external_signer_path", value.toString());
                 setRestartRequired(true);
             }
             break;

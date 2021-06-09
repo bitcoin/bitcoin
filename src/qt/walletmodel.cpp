@@ -35,6 +35,7 @@
 #include <functional>
 
 #include <QDebug>
+#include <QMessageBox>
 #include <QSet>
 #include <QTimer>
 
@@ -576,6 +577,18 @@ WalletModel::UnlockContext::~UnlockContext()
     {
         wallet->setWalletLocked(true, "", was_mixing);
     }
+}
+
+bool WalletModel::displayAddress(std::string sAddress)
+{
+    CTxDestination dest = DecodeDestination(sAddress);
+    bool res = false;
+    try {
+        res = m_wallet->displayAddress(dest);
+    } catch (const std::runtime_error& e) {
+        QMessageBox::critical(nullptr, tr("Can't display address"), e.what());
+    }
+    return res;
 }
 
 bool WalletModel::isWalletEnabled()
