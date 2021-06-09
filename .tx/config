@@ -2,6 +2,6 @@
 host = https://www.transifex.com
 
 [bitcoin.qt-translation-022x]
-file_filter = src/qt/locale/bitcoin_<lang>.xlf
-source_file = src/qt/locale/bitcoin_en.xlf
+file_filter = src/qt/locale/bitcoin_<lang>.xlf_<xml.f>
+source_file = src/qt/locale/bitcoin_en.xlf_xml.f
 source_lang = en
