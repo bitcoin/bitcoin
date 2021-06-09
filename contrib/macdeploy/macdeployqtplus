@@ -423,6 +423,9 @@ if os.path.exists(appname + ".dmg"):
     print("+ Removing existing DMG +")
     os.unlink(appname + ".dmg")
 
+if os.path.exists(appname + ".temp.dmg"):
+    os.unlink(appname + ".temp.dmg")
+
 # ------------------------------------------------
 
 target = os.path.join("dist", "Bitcoin-Qt.app")
