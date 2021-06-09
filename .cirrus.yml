@@ -1,221 +1,368 @@
 ### Global defaults
 
 env:
-  PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
-  MAKEJOBS: "-j4"
-  TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
-  CCACHE_SIZE: "200M"
-  CCACHE_DIR: "/tmp/ccache_dir"
-  CCACHE_NOHASHDIR: "1"  # Debug info might contain a stale path if the build dir changes, but this is fine
+  PACKAGE_MANAGER_INSTALL: 
+  "apt-get update && apt-get install -y"
+  MAKEJOBS: 
+  "-j4"
+  TEST_RUNNER_PORT_MIN: 
+  "14000"  
+  # Must be larger than 12321, which is used for the http cache. 
+  See https://cirrus-ci.org/guide/writing-tasks/#http-cache
+  CCACHE_SIZE:
+  "200M"
+  
+  CCACHE_DIR:
+  "/tmp/ccache_dir"
+  CCACHE_NOHASHDIR: 
+  "1" 
+  # Debug info might contain a stale path if the build dir changes,
+  but this is fine
 
-cirrus_ephemeral_worker_template_env: &CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-  DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
+cirrus_ephemeral_worker_template_env:
+&CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+  DANGER_RUN_CI_ON_HOST: 
+  "1"
+  # Containers will be discarded after the run,
+  so there is no risk that the ci scripts modify the system
 
-persistent_worker_template_env: &PERSISTENT_WORKER_TEMPLATE_ENV
-  RESTART_CI_DOCKER_BEFORE_RUN: "1"
+persistent_worker_template_env:
+&PERSISTENT_WORKER_TEMPLATE_ENV
+  RESTART_CI_DOCKER_BEFORE_RUN:
+  "1"
 
-persistent_worker_template: &PERSISTENT_WORKER_TEMPLATE
-  persistent_worker: {}  # https://cirrus-ci.org/guide/persistent-workers/
+persistent_worker_template:
+&PERSISTENT_WORKER_TEMPLATE
+  persistent_worker:
+  {} 
+  # https://cirrus-ci.org/guide/persistent-workers/
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
-base_template: &BASE_TEMPLATE
-  skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+base_template:
+&BASE_TEMPLATE
+  skip: 
+  $CIRRUS_REPO_FULL_NAME ==
+  "bitcoin-core/gui"
+  && $CIRRUS_PR ==
+  ""  
+  # No need to run on the read-only mirror,
+  unless it is a PR.
+  https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
   merge_base_script:
-    - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
-    - bash -c "$PACKAGE_MANAGER_INSTALL git"
+    - if [ 
+    "$CIRRUS_PR"
+    =
+    ""
+    ]; then exit 0; fi
+    - bash -c 
+    "$PACKAGE_MANAGER_INSTALL git"
     - git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_BRANCH
-    - git config --global user.email "ci@ci.ci"
-    - git config --global user.name "ci"
-    - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
-  stateful: false  # https://cirrus-ci.org/guide/writing-tasks/#stateful-tasks
+    - git config --global user.email
+    "ci@ci.ci"
+    - git config --global user.name
+    "ci"
+    - git merge FETCH_HEAD 
+    # Merge base to detect silent merge conflicts
+  stateful:
+  false
+  # https://cirrus-ci.org/guide/writing-tasks/#stateful-tasks
 
-global_task_template: &GLOBAL_TASK_TEMPLATE
-  << : *BASE_TEMPLATE
-  timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
+global_task_template: 
+&GLOBAL_TASK_TEMPLATE
+  << : 
+  *BASE_TEMPLATE
+  timeout_in: 
+  120m
+  # https://cirrus-ci.org/faq/#instance-timed-out
   container:
     # https://cirrus-ci.org/faq/#are-there-any-limits
     # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
-    cpu: 2
-    memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
+    cpu:
+    2
+    memory: 
+    8G 
+    # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
   ccache_cache:
-    folder: "/tmp/ccache_dir"
+    folder: 
+    "/tmp/ccache_dir"
   depends_built_cache:
-    folder: "depends/built"
+    folder:
+    "depends/built"
   ci_script:
     - ./ci/test_run_all.sh
 
-depends_sdk_cache_template: &DEPENDS_SDK_CACHE_TEMPLATE
+depends_sdk_cache_template: 
+&DEPENDS_SDK_CACHE_TEMPLATE
   depends_sdk_cache:
-    folder: "depends/sdk-sources"
+    folder:
+    "depends/sdk-sources"
 
-compute_credits_template: &CREDITS_TEMPLATE
+compute_credits_template: 
+&CREDITS_TEMPLATE
   # https://cirrus-ci.org/pricing/#compute-credits
   # Only use credits for pull requests to the main repo
-  use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin' && $CIRRUS_PR != ""
+  use_compute_credits:
+  $CIRRUS_REPO_FULL_NAME == 
+  'bitcoin/bitcoin'
+  && $CIRRUS_PR !=
+  ""
 
-#task:
-#  name: "Windows"
-#  windows_container:
-#    image: cirrusci/windowsservercore:2019
-#  env:
-#    CIRRUS_SHELL: powershell
-#    PATH: 'C:\Python37;C:\Python37\Scripts;%PATH%'
-#    PYTHONUTF8: 1
-#    QT_DOWNLOAD_URL: 'https://github.com/sipsorcery/qt_win_binary/releases/download/v1.6/Qt5.9.8_x64_static_vs2019.zip'
-#    QT_DOWNLOAD_HASH: '9a8c6eb20967873785057fdcd329a657c7f922b0af08c5fde105cc597dd37e21'
-#    QT_LOCAL_PATH: 'C:\Qt5.9.8_x64_static_vs2019'
-#    VCPKG_INSTALL_PATH: 'C:\tools\vcpkg\installed'
-#    VCPKG_COMMIT_ID: 'ed0df8ecc4ed7e755ea03e18aaf285fd9b4b4a74'
-#  install_script:
-#    - choco install python --version=3.7.7 -y
+[' # task:
+[#  name: "Windows"
+[#  windows_container:
+[#    image: cirrusci/windowsservercore:2019
+[#    env:
+[#    CIRRUS_SHELL: powershell
+[#    PATH: 'C:\Python37;C:\Python37\Scripts;%PATH%'
+[#    PYTHONUTF8: 1
+[#    QT_DOWNLOAD_URL: 'https://github.com/sipsorcery/qt_win_binary/releases/download/v1.6/Qt5.9.8_x64_static_vs2019.zip'
+[#    QT_DOWNLOAD_HASH: '9a8c6eb20967873785057fdcd329a657c7f922b0af08c5fde105cc597dd37e21'
+[#    QT_LOCAL_PATH: 'C:\Qt5.9.8_x64_static_vs2019'
+[#    VCPKG_INSTALL_PATH: 'C:\tools\vcpkg\installed'
+[#    VCPKG_COMMIT_ID: 'ed0df8ecc4ed7e755ea03e18aaf285fd9b4b4a74'
+[#  install_script:
+[#  choco install python 
+{# --version=3.7.7 -y
 
 task:
-  name: 'lint [bionic]'
-  << : *BASE_TEMPLATE
+  name: 
+  'lint [bionic]'
+  <<
+  : *BASE_TEMPLATE
   container:
-    image: ubuntu:bionic  # For python 3.6, oldest supported version according to doc/dependencies.md
-    cpu: 1
-    memory: 1G
+    image:
+    ubuntu:bionic  # For python 3.6, oldest supported version according to doc/dependencies.md
+    cpu:
+    1
+    memory:
+    1G
   # For faster CI feedback, immediately schedule the linters
-  << : *CREDITS_TEMPLATE
+  << 
+  : *CREDITS_TEMPLATE
   lint_script:
     - ./ci/lint_run_all.sh
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    << 
+    : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
-  name: 'ARM [unit tests, no functional tests] [buster]'
-  << : *GLOBAL_TASK_TEMPLATE
+  name:
+  'ARM [unit tests, no functional tests] [buster]'
+  <<
+  : *GLOBAL_TASK_TEMPLATE
   container:
-    image: debian:buster
+    image:
+    debian:buster
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_arm.sh"
+    <<
+    : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV:
+    "./ci/test/00_setup_env_arm.sh"
 
 task:
-  name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [focal]'
-  << : *GLOBAL_TASK_TEMPLATE
+  name:
+  'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [focal]'
+  << :
+  *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:focal
+    image: 
+    ubuntu:focal
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    << :
+    *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
 task:
-  name: '32-bit + dash [gui] [CentOS 8]'
-  << : *GLOBAL_TASK_TEMPLATE
+  name:
+  '32-bit + dash [gui] [CentOS 8]'
+  << 
+  : *GLOBAL_TASK_TEMPLATE
   container:
-    image: centos:8
+    image: 
+    centos:8
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    << : 
+    *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     PACKAGE_MANAGER_INSTALL: "yum install -y"
     FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
 
 task:
-  name: '[previous releases, uses qt5 dev package and some depends packages, DEBUG] [unsigned char] [bionic]'
+  name: 
+  '[previous releases, uses qt5 dev package and some depends packages, DEBUG] [unsigned char] [bionic]'
   previous_releases_cache:
-    folder: "releases"
-  << : *GLOBAL_TASK_TEMPLATE
-  << : *PERSISTENT_WORKER_TEMPLATE
+    folder: 
+    "releases"
+  << 
+  : *GLOBAL_TASK_TEMPLATE
+  <<
+  : *PERSISTENT_WORKER_TEMPLATE
   env:
-    << : *PERSISTENT_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
+    << 
+    : *PERSISTENT_WORKER_TEMPLATE_ENV
+    FILE_ENV: 
+    "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
-  name: '[depends, sanitizers: thread (TSan), no gui] [hirsute]'
-  << : *GLOBAL_TASK_TEMPLATE
+  name:
+  '[depends, sanitizers: thread (TSan), no gui] [hirsute]'
+  <<
+  : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:hirsute
-    cpu: 6  # Increase CPU and Memory to avoid timeout
-    memory: 24G
+    image:
+    ubuntu:hirsute
+    cpu:
+    6  
+    # Increase CPU and Memory to avoid timeout
+    memory:
+    24G
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    MAKEJOBS: "-j8"
-    FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
+    <<
+    : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    MAKEJOBS:
+    "-j8"
+    FILE_ENV:
+    "./ci/test/00_setup_env_native_tsan.sh"
 
 task:
-  name: '[depends, sanitizers: memory (MSan)] [focal]'
-  << : *GLOBAL_TASK_TEMPLATE
+  name:
+  '[depends, sanitizers:
+  memory (MSan)] [focal]'
+  << : 
+  *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:focal
+    image:
+    ubuntu:focal
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
+    << 
+    : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV:
+    "./ci/test/00_setup_env_native_msan.sh"
 
 task:
-  name: '[no depends, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [hirsute]'
-  << : *GLOBAL_TASK_TEMPLATE
+  name:
+  '[no depends, sanitizers:
+  address/leak (ASan + LSan) + undefined (UBSan) + integer] [hirsute]'
+  << 
+  : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:hirsute
+    image:
+    ubuntu:hirsute
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
+    << 
+    : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: 
+    "./ci/test/00_setup_env_native_asan.sh"
 
 task:
-  name: '[no depends, sanitizers: fuzzer,address,undefined,integer] [focal]'
-  << : *GLOBAL_TASK_TEMPLATE
+  name: 
+  '[no depends, sanitizers:
+  fuzzer,address,undefined,integer] [focal]'
+  << 
+  : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:focal
-    cpu: 4  # Increase CPU and memory to avoid timeout
+    image: 
+    ubuntu:focal
+    cpu: 
+    4  # Increase CPU and memory to avoid timeout
     memory: 16G
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    MAKEJOBS: "-j8"
-    FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
+    << 
+    : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    MAKEJOBS:
+    "-j8"
+    FILE_ENV:
+    "./ci/test/00_setup_env_native_fuzz.sh"
 
 task:
-  name: '[multiprocess, DEBUG] [focal]'
-  << : *GLOBAL_TASK_TEMPLATE
+  name:
+  '[multiprocess, DEBUG] [focal]'
+  << 
+  : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:focal
-    cpu: 4
-    memory: 16G  # The default memory is sometimes just a bit too small, so double everything
+    image:
+    ubuntu:focal
+    cpu: 
+    4
+    memory: 
+    16G 
+    # The default memory is sometimes just a bit too small, so double everything
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    MAKEJOBS: "-j8"
-    FILE_ENV: "./ci/test/00_setup_env_native_multiprocess.sh"
+    << : 
+    *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    MAKEJOBS:
+    "-j8"
+    FILE_ENV:
+    "./ci/test/00_setup_env_native_multiprocess.sh"
 
 task:
-  name: '[no wallet] [bionic]'
-  << : *GLOBAL_TASK_TEMPLATE
+  name: 
+  '[no wallet] [bionic]'
+  <<
+  : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:bionic
+    image:
+    ubuntu:bionic
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_native_nowallet.sh"
+    << 
+    : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV:
+    "./ci/test/00_setup_env_native_nowallet.sh"
 
 task:
-  name: 'macOS 10.14 [gui, no tests] [focal]'
-  << : *DEPENDS_SDK_CACHE_TEMPLATE
-  << : *GLOBAL_TASK_TEMPLATE
+  name:
+  'macOS 10.14 [gui, no tests] [focal]'
+  << 
+  : *DEPENDS_SDK_CACHE_TEMPLATE
+  << 
+  : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:focal
+    image:
+    ubuntu:focal
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_mac.sh"
+    <<
+    : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV:
+    "./ci/test/00_setup_env_mac.sh"
 
 task:
-  name: 'macOS 11 native [gui] [no depends]'
+  name: 
+  'macOS 11 native [gui] [no depends]'
   brew_install_script:
     - brew install boost libevent berkeley-db4 qt@5 miniupnpc libnatpmp ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
-  << : *GLOBAL_TASK_TEMPLATE
+  << 
+  : *GLOBAL_TASK_TEMPLATE
   osx_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
-    image: big-sur-xcode-12.5  # https://cirrus-ci.org/guide/macOS
+    image:
+    big-sur-xcode-12.5 
+    # https://cirrus-ci.org/guide/macOS
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    CI_USE_APT_INSTALL: "no"
-    PACKAGE_MANAGER_INSTALL: "echo"  # Nothing to do
-    FILE_ENV: "./ci/test/00_setup_env_mac_host.sh"
+    <<
+    : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    CI_USE_APT_INSTALL:
+    "no"
+    PACKAGE_MANAGER_INSTALL: 
+    "echo" 
+    # Nothing to do
+    FILE_ENV: 
+    "./ci/test/00_setup_env_mac_host.sh"
 
 task:
-  name: 'ARM64 Android APK [focal]'
-  << : *DEPENDS_SDK_CACHE_TEMPLATE
+  name:
+  'ARM64 Android APK [focal]'
+  <<
+  : *DEPENDS_SDK_CACHE_TEMPLATE
   depends_sources_cache:
-    folder: "depends/sources"
-  << : *GLOBAL_TASK_TEMPLATE
+    folder:
+    "depends/sources"
+  << 
+  : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:focal
+    image: 
+    ubuntu:focal
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_android.sh"
+    <<
+    :
+    *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV:
+    "./ci/test/00_setup_env_android.sh"
