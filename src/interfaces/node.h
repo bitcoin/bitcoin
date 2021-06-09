@@ -6,6 +6,7 @@
 #define SYSCOIN_INTERFACES_NODE_H
 
 #include <amount.h>     // For CAmount
+#include <external_signer.h>
 #include <net.h>        // For NodeId
 #include <net_types.h>  // For banmap_t
 #include <netaddress.h> // For Network
@@ -133,6 +134,11 @@ public:
 
     //! Disconnect node by id.
     virtual bool disconnectById(NodeId id) = 0;
+
+#ifdef ENABLE_EXTERNAL_SIGNER
+    //! List external signers
+    virtual std::vector<ExternalSigner> externalSigners() = 0;
+#endif
 
     //! Get total bytes recv.
     virtual int64_t getTotalBytesRecv() = 0;
