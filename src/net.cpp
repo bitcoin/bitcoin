@@ -894,7 +894,7 @@ static void EraseLastKElements(
     elements.erase(std::remove_if(elements.end() - eraseSize, elements.end(), predicate), elements.end());
 }
 
-void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvictionCandidates)
+void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& eviction_candidates)
 {
     // Protect the half of the remaining nodes which have been connected the longest.
     // This replicates the non-eviction implicit behavior, and precludes attacks that start later.
@@ -902,13 +902,13 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvict
     // these protected spots for onion and localhost peers, if any, even if they're not
     // longest uptime overall. This helps protect tor peers, which tend to be otherwise
     // disadvantaged under our eviction criteria.
-    const size_t initial_size = vEvictionCandidates.size();
+    const size_t initial_size = eviction_candidates.size();
     const size_t total_protect_size{initial_size / 2};
     const size_t onion_protect_size = total_protect_size / 2;
 
     if (onion_protect_size) {
         // Pick out up to 1/4 peers connected via our onion service, sorted by longest uptime.
-        EraseLastKElements(vEvictionCandidates, CompareOnionTimeConnected, onion_protect_size,
+        EraseLastKElements(eviction_candidates, CompareOnionTimeConnected, onion_protect_size,
                            [](const NodeEvictionCandidate& n) { return n.m_is_onion; });
     }
 
@@ -918,16 +918,16 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvict
         // to localhost peers, sorted by longest uptime, as manually configured
         // hidden services not using `-bind=addr[:port]=onion` will not be detected
         // as inbound onion connections.
-        const size_t remaining_tor_slots{onion_protect_size - (initial_size - vEvictionCandidates.size())};
+        const size_t remaining_tor_slots{onion_protect_size - (initial_size - eviction_candidates.size())};
         const size_t localhost_protect_size{std::max(remaining_tor_slots, localhost_min_protect_size)};
-        EraseLastKElements(vEvictionCandidates, CompareLocalHostTimeConnected, localhost_protect_size,
+        EraseLastKElements(eviction_candidates, CompareLocalHostTimeConnected, localhost_protect_size,
                            [](const NodeEvictionCandidate& n) { return n.m_is_local; });
     }
 
     // Calculate how many we removed, and update our total number of peers that
     // we want to protect based on uptime accordingly.
-    const size_t remaining_to_protect{total_protect_size - (initial_size - vEvictionCandidates.size())};
-    EraseLastKElements(vEvictionCandidates, ReverseCompareNodeTimeConnected, remaining_to_protect);
+    const size_t remaining_to_protect{total_protect_size - (initial_size - eviction_candidates.size())};
+    EraseLastKElements(eviction_candidates, ReverseCompareNodeTimeConnected, remaining_to_protect);
 }
 
 [[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates)
