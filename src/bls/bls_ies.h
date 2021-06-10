@@ -33,9 +33,7 @@ template <typename Object>
 class CBLSIESEncryptedObject : public CBLSIESEncryptedBlob
 {
 public:
-    CBLSIESEncryptedObject()
-    {
-    }
+    CBLSIESEncryptedObject() = default;
 
     CBLSIESEncryptedObject(const CBLSPublicKey& ephemeralPubKeyIn, const uint256& ivSeedIn, const std::vector<unsigned char>& dataIn)
     {
