@@ -3620,19 +3620,23 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     if (msg_type == NetMsgType::REQNFTASSETCLASS) {
         printf("********************REQNFTASSETCLASS**************************\n");
         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSETCLASS));
+        return;
     }
 
     if (msg_type == NetMsgType::SNDNFTASSETCLASS) {
         printf("********************SNDNFTASSETCLASS**************************\n");
+        return;
     }
 
     if (msg_type == NetMsgType::REQNFTASSET) {
         printf("********************REQNFTASSET**************************\n");
         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSET));
+        return;
     }
 
     if (msg_type == NetMsgType::SNDNFTASSET) {
         printf("********************SNDNFTASSET**************************\n");
+        return;
     }
 
 
@@ -4757,16 +4761,25 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         m_connman.ForEachNode([this, &msgMaker](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
             AssertLockHeld(::cs_main);
 
-            LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", "somenft", pnode->GetId());
-            m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, "somenft"));
+
+            time_t t;
+            time(&t);
+            if (t % 7 == 0) {
+                LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", "somenft", pnode->GetId());
+                m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, "somenft"));
+            }
         });
 
 
         m_connman.ForEachNode([this, &msgMaker](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
             AssertLockHeld(::cs_main);
 
-            LogPrint(BCLog::NET, "requesting NFT asset %s to peer=%d\n", "somenft", pnode->GetId());
-            m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSET, "somenft"));
+            time_t t;
+            time(&t);
+            if (t % 3 == 0) {
+                LogPrint(BCLog::NET, "requesting NFT asset %s to peer=%d\n", "somenft", pnode->GetId());
+                m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSET, "somenft"));
+            }
         });
 
 
