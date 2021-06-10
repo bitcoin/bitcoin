@@ -1210,6 +1210,7 @@ struct NodeEvictionCandidate
     bool prefer_evict;
     bool m_is_local;
     bool m_is_onion;
+    Network m_network;
 };
 
 /**

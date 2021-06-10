@@ -2,7 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <netaddress.h>
 #include <net.h>
+#include <test/util/net.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
@@ -32,6 +34,7 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(const int n_c
             /* prefer_evict */ random_context.randbool(),
             /* m_is_local */ random_context.randbool(),
             /* m_is_onion */ random_context.randbool(),
+            /* m_network */ ALL_NETWORKS[random_context.randrange(ALL_NETWORKS.size())],
         });
     }
     return candidates;
