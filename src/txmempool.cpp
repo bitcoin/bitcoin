@@ -515,9 +515,9 @@ void CTxMemPool::removeForReorg(CChainState& active_chainstate, int flags)
         LockPoints lp = it->GetLockPoints();
         assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
         bool validLP =  TestLockPointValidity(active_chainstate.m_chain, &lp);
-        CCoinsViewMemPool viewMempool(&active_chainstate.CoinsTip(), *this);
+        CCoinsViewMemPool view_mempool(&active_chainstate.CoinsTip(), *this);
         if (!CheckFinalTx(active_chainstate.m_chain.Tip(), tx, flags)
-            || !CheckSequenceLocks(active_chainstate.m_chain.Tip(), viewMempool, tx, flags, &lp, validLP)) {
+            || !CheckSequenceLocks(active_chainstate.m_chain.Tip(), view_mempool, tx, flags, &lp, validLP)) {
             // Note if CheckSequenceLocks fails the LockPoints may still be invalid
             // So it's critical that we remove the tx and not depend on the LockPoints.
             txToRemove.insert(it);
