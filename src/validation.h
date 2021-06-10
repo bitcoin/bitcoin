@@ -246,11 +246,13 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPoo
                                        bool bypass_limits, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
-* Atomically test acceptance of a package. If the package only contains one tx, package rules still apply.
+* Atomically test acceptance of a package. If the package only contains one tx, package rules still
+* apply. Package validation does not allow BIP125 replacements, so the transaction(s) cannot spend
+* the same inputs as any transaction in the mempool.
 * @param[in]    txns                Group of transactions which may be independent or contain
-*                                   parent-child dependencies. The transactions must not conflict, i.e.
-*                                   must not spend the same inputs, even if it would be a valid BIP125
-*                                   replace-by-fee. Parents must appear before children.
+*                                   parent-child dependencies. The transactions must not conflict
+*                                   with each other, i.e., must not spend the same inputs. If any
+*                                   dependencies exist, parents must appear before children.
 * @returns a PackageMempoolAcceptResult which includes a MempoolAcceptResult for each transaction.
 * If a transaction fails, validation will exit early and some results may be missing.
 */
@@ -281,9 +283,13 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp) EXCLUSIVE
  * Check if transaction will be BIP68 final in the next block to be created on top of tip.
  * @param[in]   tip             Chain tip to check tx sequence locks against. For example,
  *                              the tip of the current active chain.
- * @param[in]   coins_view      Any CCoinsView that provides access to the relevant coins
- *                              for checking sequence locks. Any CCoinsView can be passed in;
- *                              it is assumed to be consistent with the tip.
+ * @param[in]   coins_view      Any CCoinsView that provides access to the relevant coins for
+ *                              checking sequence locks. For example, it can be a CCoinsViewCache
+ *                              that isn't connected to anything but contains all the relevant
+ *                              coins, or a CCoinsViewMemPool that is connected to the
+ *                              mempool and chainstate UTXO set. In the latter case, the caller is
+ *                              responsible for holding the appropriate locks to ensure that
+ *                              calls to GetCoin() return correct coins.
  * Simulates calling SequenceLocks() with data from the tip passed in.
  * Optionally stores in LockPoints the resulting height and time calculated and the hash
  * of the block needed for calculation or skips the calculation and uses the LockPoints

@@ -354,7 +354,8 @@ class RPCPackagesTest(SyscoinTestFramework):
         # This transaction is a valid BIP125 replace-by-fee
         assert testres_rbf_single[0]["allowed"]
         testres_rbf_package = self.independent_txns_testres_blank + [{
-            "txid": replacement_tx.rehash(), "wtxid": replacement_tx.getwtxid(), "allowed": False, "reject-reason": "txn-mempool-conflict"
+            "txid": replacement_tx.rehash(), "wtxid": replacement_tx.getwtxid(), "allowed": False,
+            "reject-reason": "bip125-replacement-disallowed"
         }]
         self.assert_testres_equal(self.independent_txns_hex + [signed_replacement_tx["hex"]], testres_rbf_package)
 

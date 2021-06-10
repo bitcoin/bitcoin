@@ -896,7 +896,7 @@ static RPCHelpMan testmempoolaccept()
                 "\nReturns result of mempool acceptance tests indicating if raw transaction(s) (serialized, hex-encoded) would be accepted by mempool.\n"
                 "\nIf multiple transactions are passed in, parents must come before children and package policies apply: the transactions cannot conflict with any mempool transactions or each other.\n"
                 "\nIf one transaction fails, other transactions may not be fully validated (the 'allowed' key will be blank).\n"
-                "\nThe maximum number of transactions allowed is 25 (MAX_PACKAGE_COUNT)\n"
+                "\nThe maximum number of transactions allowed is " + ToString(MAX_PACKAGE_COUNT) + ".\n"
                 "\nThis checks if transactions violate the consensus or policy rules.\n"
                 "\nSee sendrawtransaction call.\n",
                 {
@@ -912,7 +912,7 @@ static RPCHelpMan testmempoolaccept()
                 RPCResult{
                     RPCResult::Type::ARR, "", "The result of the mempool acceptance test for each raw transaction in the input array.\n"
                         "Returns results for each transaction in the same order they were passed in.\n"
-                        "It is possible for transactions to not be fully validated ('allowed' unset) if an earlier transaction failed.\n",
+                        "It is possible for transactions to not be fully validated ('allowed' unset) if another transaction failed.\n",
                     {
                         {RPCResult::Type::OBJ, "", "",
                         {
@@ -946,7 +946,6 @@ static RPCHelpMan testmempoolaccept()
         UniValue::VARR,
         UniValueType(), // VNUM or VSTR, checked inside AmountFromValue()
     });
-
     const UniValue raw_transactions = request.params[0].get_array();
     if (raw_transactions.size() < 1 || raw_transactions.size() > MAX_PACKAGE_COUNT) {
         throw JSONRPCError(RPC_INVALID_PARAMETER,
@@ -958,6 +957,7 @@ static RPCHelpMan testmempoolaccept()
                                              CFeeRate(AmountFromValue(request.params[1]));
 
     std::vector<CTransactionRef> txns;
+    txns.reserve(raw_transactions.size());
     for (const auto& rawtx : raw_transactions.getValues()) {
         CMutableTransaction mtx;
         if (!DecodeHexTx(mtx, rawtx.get_str())) {
@@ -978,8 +978,8 @@ static RPCHelpMan testmempoolaccept()
     }();
 
     UniValue rpc_result(UniValue::VARR);
-    // We will check transaction fees we iterate through txns in order. If any transaction fee
-    // exceeds maxfeerate, we will keave the rest of the validation results blank, because it
+    // We will check transaction fees while we iterate through txns in order. If any transaction fee
+    // exceeds maxfeerate, we will leave the rest of the validation results blank, because it
     // doesn't make sense to return a validation result for a transaction if its ancestor(s) would
     // not be submitted.
     bool exit_early{false};
