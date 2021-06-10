@@ -17,7 +17,6 @@
 #include <streams.h>
 #include <undo.h>
 #include <util/system.h>
-#include <validation.h>
 
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
@@ -48,6 +47,7 @@ static FlatFileSeq UndoFileSeq();
 
 bool IsBlockPruned(const CBlockIndex* pblockindex)
 {
+    LOCK(cs_main);
     return (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
 }
 
