@@ -56,8 +56,6 @@
 /src/util/settings.*                        @ryanofsky
 
 # Fuzzing
-/src/test/fuzz/                             @practicalswift
-/doc/fuzzing.md                             @practicalswift
 
 # Test framework
 /test/functional/mempool_updatefromblock.py @hebasto
@@ -105,9 +103,7 @@
 /src/txdb.*                                 @jamesob
 /src/dbwrapper.*                            @jamesob
 
-# Scripts/Linter
-*.sh                                        @practicalswift
-/test/lint/                                 @practicalswift
+# Linter
 /test/lint/lint-shell.sh                    @hebasto
 
 # Bech32
