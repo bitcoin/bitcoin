@@ -35,5 +35,5 @@ For more information, read the original Bitcoin whitepaper.
 
 [**Bitcoin Core's Transifex Page**](https://www.transifex.com/bitcoin/bitcoin/) - Changes to translations as well as new translations can be submitted here
 
-[**Translation Process**](doc/translation_process.md) - Documentation on how translations are pulled from [Transifex](https://www.transifex.com/bitcoin/bitcoin/) and merged into git repository. (**Important**: We do not accept translation changes as pull requests because the next pull from Transifex would automatically overwrite them.)
+[**Translation Process**](doc/translation_process.md) - Documentation on how translations are pulled from Transifex and merged into git repository. (**Important**: We do not accept translation changes as pull requests because the next pull from Transifex would automatically overwrite them.)
 
