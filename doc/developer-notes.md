@@ -1160,13 +1160,6 @@ A few guidelines for introducing and reviewing new RPC interfaces:
 
   - *Rationale*: If not, the call can not be used with name-based arguments.
 
-- Set okSafeMode in the RPC command table to a sensible value: safe mode is when the
-  blockchain is regarded to be in a confused state, and the client deems it unsafe to
-  do anything irreversible such as send. Anything that just queries should be permitted.
-
-  - *Rationale*: Troubleshooting a node in safe mode is difficult if half the
-    RPCs don't work.
-
 - Add every non-string RPC argument `(method, idx, name)` to the table `vRPCConvertParams` in `rpc/client.cpp`.
 
   - *Rationale*: `bitcoin-cli` and the GUI debug console use this table to determine how to
