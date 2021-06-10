@@ -14,7 +14,7 @@ bool GetfLargeWorkForkFound();
 void SetfLargeWorkInvalidChainFound(bool flag);
 /** Format a string that describes several potential problems detected by the core.
  * @param[in] verbose bool
- * - if true, get all warnings, translated (where possible), separated by <hr />
+ * - if true, get all warnings, translated (where possible), separated by <hr>
  * - if false, get the most important warning
  * @returns the warning string
  */

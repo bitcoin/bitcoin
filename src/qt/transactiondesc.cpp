@@ -170,21 +170,21 @@ QString TransactionDesc::FormatBFIStatus(TransactionRecord *rec)
             }
         }
         else {
-            int spFinality = o.value("spFinality").toInt();
+            int bitcoinFinality = o.value("bitcoinFinality").toInt();
             bool isAttackInProgress = o.value("isAttackInProgress").toBool();
             
             if (isAttackInProgress) { 
                 vbkMessage = tr("Alternate Chain Detected, wait for Bitcoin Finality");
             }
             else {
-                if( spFinality >= 0 ) { 
+                if( bitcoinFinality >= 0 ) { 
                     vbkMessage = tr("%1 blocks of Bitcoin Finality");
-                    ++spFinality;
+                    ++bitcoinFinality;
                 } else { 
                     vbkMessage = tr("%1 blocks until Bitcoin Finality");
-                    spFinality = -spFinality;
+                    bitcoinFinality = -bitcoinFinality;
                 }
-                vbkMessage = vbkMessage.arg(QString::number(spFinality));
+                vbkMessage = vbkMessage.arg(QString::number(bitcoinFinality));
             }
         }
     } catch(...) { 

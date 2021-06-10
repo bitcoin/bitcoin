@@ -42,7 +42,7 @@ std::string GetWarnings(bool verbose)
 {
     std::string warnings_concise;
     std::string warnings_verbose;
-    const std::string warning_separator = "<hr />";
+    const std::string warning_separator = "<hr>";
 
     LOCK(cs_warnings);
 
