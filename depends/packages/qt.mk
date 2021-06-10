@@ -6,7 +6,8 @@ $(package)_file_name=qtbase-$($(package)_suffix)
 $(package)_sha256_hash=1c1b4e33137ca77881074c140d54c3c9747e845a31338cfe8680f171f0bc3a39
 $(package)_linux_dependencies=freetype fontconfig libxcb libxkbcommon
 $(package)_qt_libs=corelib network widgets gui plugins testlib
-$(package)_patches=fix_qt_pkgconfig.patch mac-qmake.conf fix_no_printer.patch no-xlib.patch
+$(package)_patches = qt.pro qttools_src.pro
+$(package)_patches += fix_qt_pkgconfig.patch mac-qmake.conf fix_no_printer.patch no-xlib.patch
 $(package)_patches+= fix_android_qmake_conf.patch fix_android_jni_static.patch dont_hardcode_pwd.patch
 $(package)_patches+= drop_lrelease_dependency.patch no_sdk_version_check.patch
 $(package)_patches+= fix_lib_paths.patch fix_android_pch.patch
@@ -220,6 +221,8 @@ endef
 # 8. Adjust a regex in toolchain.prf, to accommodate Guix's usage of
 # CROSS_LIBRARY_PATH. See #15277.
 define $(package)_preprocess_cmds
+  cp $($(package)_patch_dir)/qt.pro qt.pro && \
+  cp $($(package)_patch_dir)/qttools_src.pro qttools/src/src.pro && \
   patch -p1 -i $($(package)_patch_dir)/drop_lrelease_dependency.patch && \
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_qt_pkgconfig.patch && \
@@ -249,24 +252,13 @@ endef
 define $(package)_config_cmds
   export PKG_CONFIG_SYSROOT_DIR=/ && \
   export PKG_CONFIG_LIBDIR=$(host_prefix)/lib/pkgconfig && \
-  export PKG_CONFIG_PATH=$(host_prefix)/share/pkgconfig  && \
+  export PKG_CONFIG_PATH=$(host_prefix)/share/pkgconfig && \
   cd qtbase && \
-  ./configure $($(package)_config_opts) && \
-  cd .. && \
-  $(MAKE) -C qtbase sub-src-clean && \
-  qtbase/bin/qmake -o qttranslations/Makefile qttranslations/qttranslations.pro && \
-  qtbase/bin/qmake -o qttranslations/translations/Makefile qttranslations/translations/translations.pro && \
-  qtbase/bin/qmake -o qttools/src/linguist/lrelease/Makefile qttools/src/linguist/lrelease/lrelease.pro && \
-  qtbase/bin/qmake -o qttools/src/linguist/lupdate/Makefile qttools/src/linguist/lupdate/lupdate.pro && \
-  qtbase/bin/qmake -o qttools/src/linguist/lconvert/Makefile qttools/src/linguist/lconvert/lconvert.pro
+  ./configure -top-level $($(package)_config_opts)
 endef
 
 define $(package)_build_cmds
-  $(MAKE) -C qtbase/src $(addprefix sub-,$($(package)_qt_libs)) && \
-  $(MAKE) -C qttools/src/linguist/lrelease && \
-  $(MAKE) -C qttools/src/linguist/lupdate && \
-  $(MAKE) -C qttools/src/linguist/lconvert && \
-  $(MAKE) -C qttranslations
+  $(MAKE)
 endef
 
 define $(package)_stage_cmds
