@@ -240,7 +240,8 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPoo
 * @param[in]    txns                Group of transactions which may be independent or contain
 *                                   parent-child dependencies. The transactions must not conflict
 *                                   with each other, i.e., must not spend the same inputs. If any
-*                                   dependencies exist, parents must appear before children.
+*                                   dependencies exist, parents must appear anywhere in the list
+*                                   before their children.
 * @returns a PackageMempoolAcceptResult which includes a MempoolAcceptResult for each transaction.
 * If a transaction fails, validation will exit early and some results may be missing.
 */
