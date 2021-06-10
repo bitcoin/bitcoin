@@ -903,7 +903,7 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvict
     // longest uptime overall. This helps protect tor peers, which tend to be otherwise
     // disadvantaged under our eviction criteria.
     const size_t initial_size = vEvictionCandidates.size();
-    size_t total_protect_size = initial_size / 2;
+    const size_t total_protect_size{initial_size / 2};
     const size_t onion_protect_size = total_protect_size / 2;
 
     if (onion_protect_size) {
@@ -926,8 +926,8 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvict
 
     // Calculate how many we removed, and update our total number of peers that
     // we want to protect based on uptime accordingly.
-    total_protect_size -= initial_size - vEvictionCandidates.size();
-    EraseLastKElements(vEvictionCandidates, ReverseCompareNodeTimeConnected, total_protect_size);
+    const size_t remaining_to_protect{total_protect_size - (initial_size - vEvictionCandidates.size())};
+    EraseLastKElements(vEvictionCandidates, ReverseCompareNodeTimeConnected, remaining_to_protect);
 }
 
 [[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates)
