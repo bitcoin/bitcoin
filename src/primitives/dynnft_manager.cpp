@@ -194,3 +194,93 @@ void CNFTManager::queueAssetRequest(std::string hash) {
         requestAsset.emplace(hash, now);
     }
 }
+
+
+
+
+bool CNFTManager::assetClassInCache(std::string hash) {
+    bool result = false;
+    {
+        LOCK(cacheLock);
+        if (assetClassCache.count(hash))
+            result = true;
+    }
+
+    return result;
+}
+
+bool CNFTManager::assetInCache(std::string hash) {
+    bool result = false;
+    {
+        LOCK(cacheLock);
+        if (assetCache.count(hash))
+            result = true;
+    }
+
+    return result;
+}
+
+void CNFTManager::addAssetClassToCache(CNFTAssetClass* assetClass) {
+    LOCK(cacheLock);
+    //only store up to 100 asset classes, if exceeded, remove least recently used first
+    if (assetClassCache.size() >= 100) {
+        std::string lruHash;
+        time_t lruTime = MAXINT64;
+        std::map<std::string, time_t>::iterator i = lastCacheAccessAssetClass.begin();
+        while (i != lastCacheAccessAssetClass.end()) {
+            if (i->second < lruTime) {
+                lruTime = i->second;
+                lruHash = i->first;
+            }
+            i++;
+        }
+        CNFTAssetClass* tmp = assetClassCache.at(lruHash);
+        assetClassCache.erase(lruHash);
+        delete tmp;
+    }
+
+    assetClassCache.emplace(assetClass->hash, assetClass);
+    time_t now;
+    time(&now);
+    lastCacheAccessAssetClass.emplace(assetClass->hash, now);
+
+}
+
+
+void CNFTManager::addAssetToCache(CNFTAsset* asset) {
+
+    LOCK(cacheLock);
+    //only store up to 100 assets, if exceeded, remove least recently used first
+    if (assetCache.size() >= 100) {
+        std::string lruHash;
+        time_t lruTime = MAXINT64;
+        std::map<std::string, time_t>::iterator i = lastCacheAccessAsset.begin();
+        while (i != lastCacheAccessAsset.end()) {
+            if (i->second < lruTime) {
+                lruTime = i->second;
+                lruHash = i->first;
+            }
+            i++;
+        }
+        CNFTAsset* tmp = assetCache.at(lruHash);
+        assetCache.erase(lruHash);
+        delete tmp;
+    }
+
+    assetCache.emplace(asset->hash, assetClass);
+    time_t now;
+    time(&now);
+    lastCacheAccessAsset.emplace(asset->hash, now);
+
+}
+
+
+
+CNFTAssetClass* CNFTManager::retrieveAssetClassFromCache(std::string hash) {
+
+}
+
+
+CNFTAsset* CNFTManager::retrieveAssetFromCache(std::string hash) {
+
+}

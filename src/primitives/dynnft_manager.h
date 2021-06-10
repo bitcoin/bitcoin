@@ -30,9 +30,27 @@ public:
     void queueAssetClassRequest(std::string hash);
     void queueAssetRequest(std::string hash);
 
+    bool assetClassInCache(std::string hash);
+    bool assetInCache(std::string hash);
+
+    void addAssetClassToCache(CNFTAssetClass* assetClass);
+    void addAssetToCache(CNFTAssetClass* assetClass);
+
+    CNFTAssetClass* retrieveAssetClassFromCache(std::string hash);
+    CNFTAsset* retrieveAssetFromCache(std::string hash);
+
+
     // stores the last timestamp for each asset class hash or asset hash requested
     std::map<std::string, time_t> requestAssetClass;
     std::map<std::string, time_t> requestAsset;
     RecursiveMutex requestLock;
+
+    // if we are not storing the NFT database, keep a cache of NFT data so that we can relay to requesting peers
+    std::map<std::string, CNFTAssetClass*> assetClassCache;
+    std::map<std::string, CNFTAsset*> assetCache;
+    std::map<std::string, time_t> lastCacheAccessAssetClass;
+    std::map<std::string, time_t> lastCacheAccessAsset;
+    RecursiveMutex cacheLock;
+
 
 };

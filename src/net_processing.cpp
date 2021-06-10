@@ -3618,8 +3618,30 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
 
     if (msg_type == NetMsgType::REQNFTASSETCLASS) {
-        printf("********************REQNFTASSETCLASS**************************\n");
-        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSETCLASS));
+
+        std::string assetClassHash;
+        vRecv >> assetClassHash;
+
+        //someone is asking for an nftasset class - if we are storing the nft database, then check if we have it
+        //if we are not storing the database, or if we dont have it in cache, relay to our peers
+        bool haveThisOne = false;
+        if (gArgs.GetArg("-nftnode", "") == "true") {
+            if (g_nftMgr->assetClassInDatabase(assetClassHash)) {
+                haveThisOne = true;
+                //send it
+            }
+        }
+
+        else if (g_nftMgr->assetClassInCache(assetClassHash)) {
+            haveThisOne = true;
+            //send it
+            //m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSETCLASS));
+        }
+
+
+        if (!haveThisOne)
+            g_nftMgr->queueAssetClassRequest(assetClassHash);
+
         return;
     }
 
@@ -4215,7 +4237,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     {
         LOCK(cs_main);
 
-        CNodeState &state = *State(pto->GetId());
+        CNodeState& state = *State(pto->GetId());
 
         // Address refresh broadcast
         auto current_time = GetTime<std::chrono::microseconds>();
@@ -4258,15 +4280,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 make_flags = 0;
             }
 
-            for (const CAddress& addr : pto->vAddrToSend)
-            {
-                if (!pto->m_addr_known->contains(addr.GetKey()))
-                {
+            for (const CAddress& addr : pto->vAddrToSend) {
+                if (!pto->m_addr_known->contains(addr.GetKey())) {
                     pto->m_addr_known->insert(addr.GetKey());
                     vAddr.push_back(addr);
                     // receiver rejects addr messages larger than MAX_ADDR_TO_SEND
-                    if (vAddr.size() >= MAX_ADDR_TO_SEND)
-                    {
+                    if (vAddr.size() >= MAX_ADDR_TO_SEND) {
                         m_connman.PushMessage(pto, msgMaker.Make(make_flags, msg_type, vAddr));
                         vAddr.clear();
                     }
@@ -4289,14 +4308,13 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
                 state.fSyncStarted = true;
                 state.m_headers_sync_timeout = current_time + HEADERS_DOWNLOAD_TIMEOUT_BASE +
-                    (
-                        // Convert HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER to microseconds before scaling
-                        // to maintain precision
-                        std::chrono::microseconds{HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER} *
-                        (GetAdjustedTime() - pindexBestHeader->GetBlockTime()) / consensusParams.nPowTargetSpacing
-                    );
+                                               (
+                                                   // Convert HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER to microseconds before scaling
+                                                   // to maintain precision
+                                                   std::chrono::microseconds{HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER} *
+                                                   (GetAdjustedTime() - pindexBestHeader->GetBlockTime()) / consensusParams.nPowTargetSpacing);
                 nSyncStarted++;
-                const CBlockIndex *pindexStart = pindexBestHeader;
+                const CBlockIndex* pindexStart = pindexBestHeader;
                 /* If possible, start at the block preceding the currently
                    best known header.  This ensures that we always get a
                    non-empty list of headers back as long as the peer
@@ -4325,10 +4343,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             LOCK(peer->m_block_inv_mutex);
             std::vector<CBlock> vHeaders;
             bool fRevertToInv = ((!state.fPreferHeaders &&
-                                 (!state.fPreferHeaderAndIDs || peer->m_blocks_for_headers_relay.size() > 1)) ||
+                                  (!state.fPreferHeaderAndIDs || peer->m_blocks_for_headers_relay.size() > 1)) ||
                                  peer->m_blocks_for_headers_relay.size() > MAX_BLOCKS_TO_ANNOUNCE);
-            const CBlockIndex *pBestIndex = nullptr; // last header queued for delivery
-            ProcessBlockAvailability(pto->GetId()); // ensure pindexBestKnownBlock is up-to-date
+            const CBlockIndex* pBestIndex = nullptr; // last header queued for delivery
+            ProcessBlockAvailability(pto->GetId());  // ensure pindexBestKnownBlock is up-to-date
 
             if (!fRevertToInv) {
                 bool fFoundStartingHeader = false;
@@ -4382,7 +4400,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     // We only send up to 1 block as header-and-ids, as otherwise
                     // probably means we're doing an initial-ish-sync or they're slow
                     LogPrint(BCLog::NET, "%s sending header-and-ids %s to peer=%d\n", __func__,
-                            vHeaders.front().GetHash().ToString(), pto->GetId());
+                             vHeaders.front().GetHash().ToString(), pto->GetId());
 
                     int nSendFlags = state.fWantsCmpctWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS;
 
@@ -4410,12 +4428,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 } else if (state.fPreferHeaders) {
                     if (vHeaders.size() > 1) {
                         LogPrint(BCLog::NET, "%s: %u headers, range (%s, %s), to peer=%d\n", __func__,
-                                vHeaders.size(),
-                                vHeaders.front().GetHash().ToString(),
-                                vHeaders.back().GetHash().ToString(), pto->GetId());
+                                 vHeaders.size(),
+                                 vHeaders.front().GetHash().ToString(),
+                                 vHeaders.back().GetHash().ToString(), pto->GetId());
                     } else {
                         LogPrint(BCLog::NET, "%s: sending header %s to peer=%d\n", __func__,
-                                vHeaders.front().GetHash().ToString(), pto->GetId());
+                                 vHeaders.front().GetHash().ToString(), pto->GetId());
                     }
                     m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::HEADERS, vHeaders));
                     state.pindexBestHeaderSent = pBestIndex;
@@ -4436,14 +4454,14 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     // Just log for now.
                     if (m_chainman.ActiveChain()[pindex->nHeight] != pindex) {
                         LogPrint(BCLog::NET, "Announcing block %s not on main chain (tip=%s)\n",
-                            hashToAnnounce.ToString(), m_chainman.ActiveChain().Tip()->GetBlockHash().ToString());
+                                 hashToAnnounce.ToString(), m_chainman.ActiveChain().Tip()->GetBlockHash().ToString());
                     }
 
                     // If the peer's chain has this block, don't inv it back.
                     if (!PeerHasHeader(&state, pindex)) {
                         peer->m_blocks_for_inv_relay.push_back(hashToAnnounce);
                         LogPrint(BCLog::NET, "%s: sending inv peer=%d hash=%s\n", __func__,
-                            pto->GetId(), hashToAnnounce.ToString());
+                                 pto->GetId(), hashToAnnounce.ToString());
                     }
                 }
             }
@@ -4565,8 +4583,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         nRelayedTransactions++;
                         {
                             // Expire old relay messages
-                            while (!g_relay_expiration.empty() && g_relay_expiration.front().first < current_time)
-                            {
+                            while (!g_relay_expiration.empty() && g_relay_expiration.front().first < current_time) {
                                 mapRelay.erase(g_relay_expiration.front().second);
                                 g_relay_expiration.pop_front();
                             }
@@ -4617,7 +4634,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         // being saturated. We only count validated in-flight blocks so peers can't advertise non-existing block hashes
         // to unreasonably increase our timeout.
         if (state.vBlocksInFlight.size() > 0) {
-            QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
+            QueuedBlock& queuedBlock = state.vBlocksInFlight.front();
             int nOtherPeersWithValidatedDownloads = nPeersWithValidatedDownloads - (state.nBlocksInFlightValidHeaders > 0);
             if (current_time > state.m_downloading_since + std::chrono::seconds{consensusParams.nPowTargetSpacing} * (BLOCK_DOWNLOAD_TIMEOUT_BASE + BLOCK_DOWNLOAD_TIMEOUT_PER_PEER * nOtherPeersWithValidatedDownloads)) {
                 LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", queuedBlock.hash.ToString(), pto->GetId());
@@ -4670,12 +4687,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             std::vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
-            for (const CBlockIndex *pindex : vToDownload) {
+            for (const CBlockIndex* pindex : vToDownload) {
                 uint32_t nFetchFlags = GetFetchFlags(*pto);
                 vGetData.push_back(CInv(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash()));
                 MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), pindex);
                 LogPrint(BCLog::NET, "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                    pindex->nHeight, pto->GetId());
+                         pindex->nHeight, pto->GetId());
             }
             if (state.nBlocksInFlight == 0 && staller != -1) {
                 if (State(staller)->m_stalling_since == 0us) {
@@ -4692,12 +4709,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         auto requestable = m_txrequest.GetRequestable(pto->GetId(), current_time, &expired);
         for (const auto& entry : expired) {
             LogPrint(BCLog::NET, "timeout of inflight %s %s from peer=%d\n", entry.second.IsWtxid() ? "wtx" : "tx",
-                entry.second.GetHash().ToString(), entry.first);
+                     entry.second.GetHash().ToString(), entry.first);
         }
         for (const GenTxid& gtxid : requestable) {
             if (!AlreadyHaveTx(gtxid)) {
                 LogPrint(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
-                    gtxid.GetHash().ToString(), pto->GetId());
+                         gtxid.GetHash().ToString(), pto->GetId());
                 vGetData.emplace_back(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(*pto)), gtxid.GetHash());
                 if (vGetData.size() >= MAX_GETDATA_SZ) {
                     m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
@@ -4758,54 +4775,47 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
 
         //Request any NFT asset classes that we need
-        m_connman.ForEachNode([this, &msgMaker](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-            AssertLockHeld(::cs_main);
+        if (g_nftMgr->requestAssetClass.size() > 0) {
+            m_connman.ForEachNode([this, &msgMaker](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+                    AssertLockHeld(::cs_main);
+                    {
+                        LOCK(g_nftMgr->requestLock);
+                        time_t now;
+                        time(&now);
+                        std::map<std::string, time_t>::iterator i = g_nftMgr->requestAssetClass.begin();
+                        while (i != g_nftMgr->requestAssetClass.end()) {
+                            if (now - i->second > 10) {
+                                LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", i->first.c_str(), pnode->GetId());
+                                m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, i->first.c_str()));
+                                i->second = now;
+                            }
+                            i++;
+                        }
+                    }
 
+            });
+        }
 
-            time_t t;
-            time(&t);
-            if (t % 7 == 0) {
-                LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", "somenft", pnode->GetId());
-                m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, "somenft"));
-            }
-        });
-
-
-        m_connman.ForEachNode([this, &msgMaker](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-            AssertLockHeld(::cs_main);
-
-            time_t t;
-            time(&t);
-            if (t % 3 == 0) {
-                LogPrint(BCLog::NET, "requesting NFT asset %s to peer=%d\n", "somenft", pnode->GetId());
-                m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSET, "somenft"));
-            }
-        });
-
-
-        /*
-        m_connman.ForEachNode([this, &pcmpctblock, pindex, &msgMaker, fWitnessEnabled, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-            AssertLockHeld(::cs_main);
-
-            // TODO: Avoid the repeated-serialization here
-            if (pnode->GetCommonVersion() < INVALID_CB_NO_BAN_VERSION || pnode->fDisconnect)
-                return;
-            ProcessBlockAvailability(pnode->GetId());
-            CNodeState& state = *State(pnode->GetId());
-            // If the peer has, or we announced to them the previous block already,
-            // but we don't think they have this one, go ahead and announce it
-            if (state.fPreferHeaderAndIDs && (!fWitnessEnabled || state.fWantsCmpctWitness) &&
-                !PeerHasHeader(&state, pindex) && PeerHasHeader(&state, pindex->pprev)) {
-                LogPrint(BCLog::NET, "%s sending header-and-ids %s to peer=%d\n", "PeerManager::NewPoWValidBlock",
-                         hashBlock.ToString(), pnode->GetId());
-                m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::CMPCTBLOCK, *pcmpctblock));
-                state.pindexBestHeaderSent = pindex;
-            }
-        });
-        */
-
-        //Request any NFTs that we need
-
+        //request any NFT assets that we need
+        if (g_nftMgr->requestAsset.size() > 0) {
+            m_connman.ForEachNode([this, &msgMaker](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+                AssertLockHeld(::cs_main);
+                {
+                    LOCK(g_nftMgr->requestLock);
+                    time_t now;
+                    time(&now);
+                    std::map<std::string, time_t>::iterator i = g_nftMgr->requestAsset.begin();
+                    while (i != g_nftMgr->requestAsset.end()) {
+                        if (now - i->second > 10) {
+                            LogPrint(BCLog::NET, "requesting NFT asset  %s to peer=%d\n", i->first.c_str(), pnode->GetId());
+                            m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSET, i->first.c_str()));
+                            i->second = now;
+                        }
+                        i++;
+                    }
+                }
+            });
+        }
 
     } // release cs_main
     return true;
