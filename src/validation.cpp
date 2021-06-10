@@ -3944,17 +3944,26 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                     }
                 }
 
-
-
                 bool foundNFTAssetClassCreate = false;
                 if (size > 4)
                     foundNFTAssetClassCreate = ((vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start] == 0x37) &&
                                                 (vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start] == 0x30));
 
+                    
                 if (foundNFTAssetClassCreate) {
-                    //check if we already have this asset class in the database, if not then request it from the net
-                    if (!g_nftMgr->assetClassInDatabase()) {
-                        g_nftMgr->
+                    //if we are storing the NFT database, see if we need to get this asset class
+                    //if we are not storing the NFT database then nothing to do  (maybe add it to the cache?)
+                    if (gArgs.GetArg("-nftnode", "") == "true") {
+
+                        std::vector<unsigned char> binaryHash;
+                        for (int i = 0; i < 16; i++)
+                            binaryHash.push_back(vout.scriptPubKey[start + 4 + i]);
+                        std::string hexHash = HexStr(binaryHash);
+
+                        //check if we already have this asset class in the database, if not then request it from the net
+                        if (!g_nftMgr->assetClassInDatabase(hexHash)) {
+                            g_nftMgr->queueAssetClassRequest(hexHash);
+                        }
                     }
                 }
 

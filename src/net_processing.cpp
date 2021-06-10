@@ -3617,36 +3617,45 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
 
 
+    //someone is asking for an nftasset class - if we are storing the nft database, then check if we have it
+    //if we are not storing the database, or if we dont have it in cache, relay request to our peers
     if (msg_type == NetMsgType::REQNFTASSETCLASS) {
 
-        std::string assetClassHash;
-        vRecv >> assetClassHash;
+        char assetClassHashHex[65];
+        vRecv >> assetClassHashHex;
 
-        //someone is asking for an nftasset class - if we are storing the nft database, then check if we have it
-        //if we are not storing the database, or if we dont have it in cache, relay to our peers
         bool haveThisOne = false;
         if (gArgs.GetArg("-nftnode", "") == "true") {
-            if (g_nftMgr->assetClassInDatabase(assetClassHash)) {
+            if (g_nftMgr->assetClassInDatabase(assetClassHashHex)) {
                 haveThisOne = true;
                 //send it
             }
         }
 
-        else if (g_nftMgr->assetClassInCache(assetClassHash)) {
+        else if (g_nftMgr->assetClassInCache(assetClassHashHex)) {
             haveThisOne = true;
-            //send it
-            //m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSETCLASS));
+            CNFTAssetClass* assetClass = g_nftMgr->retrieveAssetClassFromCache(assetClassHashHex);
+            assetClass->createSerialData();
+            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSETCLASS, assetClass->strSerialData));
         }
 
 
         if (!haveThisOne)
-            g_nftMgr->queueAssetClassRequest(assetClassHash);
+            g_nftMgr->queueAssetClassRequest(assetClassHashHex);
 
         return;
     }
 
+
+    //someone has sent us an NFT class, store it in the cache
     if (msg_type == NetMsgType::SNDNFTASSETCLASS) {
-        printf("********************SNDNFTASSETCLASS**************************\n");
+        std::vector<unsigned char> assetData;
+
+        vRecv >> assetData;
+
+        CNFTAssetClass* assetClass = new CNFTAssetClass();
+        assetClass->loadFromSerialData(assetData);
+
         return;
     }
 
@@ -4785,8 +4794,11 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         std::map<std::string, time_t>::iterator i = g_nftMgr->requestAssetClass.begin();
                         while (i != g_nftMgr->requestAssetClass.end()) {
                             if (now - i->second > 10) {
-                                LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", i->first.c_str(), pnode->GetId());
-                                m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, i->first.c_str()));
+                                char hexHashData[65];
+                                std::string strHexHash = HexStr(i->first);
+                                memcpy(hexHashData, strHexHash.c_str(), 65);
+                                LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", hexHashData, pnode->GetId());
+                                m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, hexHashData));   
                                 i->second = now;
                             }
                             i++;
@@ -4807,8 +4819,11 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     std::map<std::string, time_t>::iterator i = g_nftMgr->requestAsset.begin();
                     while (i != g_nftMgr->requestAsset.end()) {
                         if (now - i->second > 10) {
-                            LogPrint(BCLog::NET, "requesting NFT asset  %s to peer=%d\n", i->first.c_str(), pnode->GetId());
-                            m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSET, i->first.c_str()));
+                            char hexHashData[65];
+                            std::string strHexHash = HexStr(i->first);
+                            memcpy(hexHashData, strHexHash.c_str(), 65);
+                            LogPrint(BCLog::NET, "requesting NFT asset  %s to peer=%d\n", hexHashData, pnode->GetId());
+                            m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSET, hexHashData));   
                             i->second = now;
                         }
                         i++;

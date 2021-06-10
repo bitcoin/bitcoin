@@ -267,7 +267,7 @@ void CNFTManager::addAssetToCache(CNFTAsset* asset) {
         delete tmp;
     }
 
-    assetCache.emplace(asset->hash, assetClass);
+    assetCache.emplace(asset->hash, asset);
     time_t now;
     time(&now);
     lastCacheAccessAsset.emplace(asset->hash, now);
@@ -277,10 +277,30 @@ void CNFTManager::addAssetToCache(CNFTAsset* asset) {
 
 
 CNFTAssetClass* CNFTManager::retrieveAssetClassFromCache(std::string hash) {
+    LOCK(cacheLock);
+    CNFTAssetClass* result = NULL;
 
+    if (assetClassCache.count(hash) > 0) {
+        result = assetClassCache.at(hash);
+        time_t now;
+        time(&now);
+        lastCacheAccessAssetClass.at(hash) = now;
+    }
+
+    return result;
 }
 
 
 CNFTAsset* CNFTManager::retrieveAssetFromCache(std::string hash) {
+    LOCK(cacheLock);
+    CNFTAsset* result = NULL;
 
+    if (assetCache.count(hash) > 0) {
+        result = assetCache.at(hash);
+        time_t now;
+        time(&now);
+        lastCacheAccessAsset.at(hash) = now;
+    }
+
+    return result;
 }

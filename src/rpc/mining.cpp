@@ -1148,7 +1148,6 @@ static RPCHelpMan submitNFT()
 
                 delete newAsset;
 
-
                 result = HexStr(nftID);
 
             } else if (command == "add-asset") {
