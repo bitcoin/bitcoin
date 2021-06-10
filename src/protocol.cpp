@@ -44,10 +44,10 @@ const char *CFHEADERS="cfheaders";
 const char *GETCFCHECKPT="getcfcheckpt";
 const char *CFCHECKPT="cfcheckpt";
 const char* WTXIDRELAY = "wtxidrelay";
-const char* REQNFTASSETCLASS = "reqnftassetclass";
-const char* SNDNFTASSETCLASS = "sndnftassetclass";
+const char* REQNFTASSETCLASS = "reqnftclass";
+const char* SNDNFTASSETCLASS = "sndnftclass";
 const char* REQNFTASSET = "reqnftasset";
-const char* SNDNFTASSET = "wtxidrelay";
+const char* SNDNFTASSET = "sndnftasset";
 } // namespace NetMsgType
 
 /** All known message types. Keep this in the same order as the list of

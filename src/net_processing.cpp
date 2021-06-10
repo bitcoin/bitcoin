@@ -3615,6 +3615,27 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
+
+
+    if (msg_type == NetMsgType::REQNFTASSETCLASS) {
+        printf("********************REQNFTASSETCLASS**************************\n");
+        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSETCLASS));
+    }
+
+    if (msg_type == NetMsgType::SNDNFTASSETCLASS) {
+        printf("********************SNDNFTASSETCLASS**************************\n");
+    }
+
+    if (msg_type == NetMsgType::REQNFTASSET) {
+        printf("********************REQNFTASSET**************************\n");
+        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSET));
+    }
+
+    if (msg_type == NetMsgType::SNDNFTASSET) {
+        printf("********************SNDNFTASSET**************************\n");
+    }
+
+
     if (msg_type == NetMsgType::PING) {
         if (pfrom.GetCommonVersion() > BIP0031_VERSION) {
             uint64_t nonce = 0;
@@ -4730,6 +4751,49 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 pto->m_tx_relay->m_next_send_feefilter = current_time + GetRandomDuration<std::chrono::microseconds>(MAX_FEEFILTER_CHANGE_DELAY);
             }
         }
+
+
+        //Request any NFT asset classes that we need
+        m_connman.ForEachNode([this, &msgMaker](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+            AssertLockHeld(::cs_main);
+
+            LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", "somenft", pnode->GetId());
+            m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, "somenft"));
+        });
+
+
+        m_connman.ForEachNode([this, &msgMaker](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+            AssertLockHeld(::cs_main);
+
+            LogPrint(BCLog::NET, "requesting NFT asset %s to peer=%d\n", "somenft", pnode->GetId());
+            m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSET, "somenft"));
+        });
+
+
+        /*
+        m_connman.ForEachNode([this, &pcmpctblock, pindex, &msgMaker, fWitnessEnabled, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+            AssertLockHeld(::cs_main);
+
+            // TODO: Avoid the repeated-serialization here
+            if (pnode->GetCommonVersion() < INVALID_CB_NO_BAN_VERSION || pnode->fDisconnect)
+                return;
+            ProcessBlockAvailability(pnode->GetId());
+            CNodeState& state = *State(pnode->GetId());
+            // If the peer has, or we announced to them the previous block already,
+            // but we don't think they have this one, go ahead and announce it
+            if (state.fPreferHeaderAndIDs && (!fWitnessEnabled || state.fWantsCmpctWitness) &&
+                !PeerHasHeader(&state, pindex) && PeerHasHeader(&state, pindex->pprev)) {
+                LogPrint(BCLog::NET, "%s sending header-and-ids %s to peer=%d\n", "PeerManager::NewPoWValidBlock",
+                         hashBlock.ToString(), pnode->GetId());
+                m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::CMPCTBLOCK, *pcmpctblock));
+                state.pindexBestHeaderSent = pindex;
+            }
+        });
+        */
+
+        //Request any NFTs that we need
+
+
     } // release cs_main
     return true;
 }

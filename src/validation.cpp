@@ -3873,15 +3873,15 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                     start = 5;
                 }
 
-                bool found = true;
+                bool foundContract = true;
                 if (size > 4) {
                     for (int y = 0; y < 4; y++)
                         if (vout.scriptPubKey[start + y] != 0x36)
-                            found = false;
+                            foundContract = false;
                 } else
-                    found = false;
+                    foundContract = false;
 
-                if (found) {
+                if (foundContract) {
 
                     //load contract code to string
                     std::string code;
@@ -3943,6 +3943,27 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                         //TODO - fail validation
                     }
                 }
+
+
+
+                bool foundNFTAssetClassCreate = false;
+                if (size > 4)
+                    foundNFTAssetClassCreate = ((vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start] == 0x37) &&
+                                                (vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start] == 0x30));
+
+                if (foundNFTAssetClassCreate) {
+
+                }
+
+                bool foundNFTAssetCreate = false;
+                if (size > 4)
+                    foundNFTAssetClassCreate = ((vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start] == 0x37) &&
+                                                (vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start] == 0x31));
+
+                if (foundNFTAssetCreate) {
+
+                }
+
             }
 
         }
