@@ -65,7 +65,7 @@ void CNFTAssetClass::createSerialData() {
 
     strSerialData.clear();
     writeString(strSerialData, hash);
-    writeVector(strSerialData, metaData);
+    writeString(strSerialData, metaData);
     writeString(strSerialData, owner);
     writeString(strSerialData, txnID);
     strSerialData.push_back(maxCount >> 56);
@@ -86,7 +86,7 @@ void CNFTAssetClass::loadFromSerialData(std::vector<unsigned char> data) {
 
     int ptr = 0;
     ptr = readString(data, hash, ptr);
-    ptr = readVector(data, metaData, ptr);
+    ptr = readString(data, metaData, ptr);
     ptr = readString(data, owner, ptr);
     ptr = readString(data, txnID, ptr);
 

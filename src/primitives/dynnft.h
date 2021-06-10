@@ -10,7 +10,7 @@ public:
     CNFTAssetClass();
 
     std::string hash;
-    std::vector<unsigned char> metaData;
+    std::string metaData;
     std::string owner;
     std::string txnID;
     uint64_t maxCount;
@@ -32,8 +32,8 @@ public:
 
     std::string hash;
     std::string assetClassHash;
-    std::vector<unsigned char> metaData;
-    std::vector<unsigned char> binaryData;
+    std::string metaData;
+    std::string binaryData;
     std::string owner;
     std::string txnID;
     uint64_t serial;

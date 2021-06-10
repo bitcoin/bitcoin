@@ -1130,7 +1130,7 @@ static RPCHelpMan submitNFT()
 
                 std::vector<unsigned char> vMetaData = ParseHex(nftdata.substr(4, nftdata.size() - 20).c_str()); //remove first 4 bytes of length and last 16 bytes of max count
                 for (int i = 0; i < vMetaData.size(); i++)
-                    newAsset->metaData += vMetaData[i];
+                    newAsset->metaData.push_back(vMetaData[i]);
 
                 std::vector<unsigned char> vMaxCount = ParseHex(nftdata.substr(nftdata.size() - 16, 16).c_str());
                 newAsset->maxCount = ((uint64_t)vMaxCount[0]) << 56;
@@ -1172,7 +1172,7 @@ static RPCHelpMan submitNFT()
 
                 std::vector<unsigned char> vMetaData = ParseHex(nftdata.substr(4, metaDataLen * 2).c_str()); 
                 for (int i = 0; i < vMetaData.size(); i++)
-                    newAsset->metaData += vMetaData[i];
+                    newAsset->metaData.push_back(vMetaData[i]);
 
                 std::vector<unsigned char> vBinaryDataLen = ParseHex(nftdata.substr(metaDataLen * 2 + 4, 6).c_str());
                 uint32_t binaryDataLen = (((uint32_t)vBinaryDataLen[0]) << 16) + (((uint32_t)vBinaryDataLen[1]) << 8) + vBinaryDataLen[2];
@@ -1184,7 +1184,7 @@ static RPCHelpMan submitNFT()
 
                 std::vector<unsigned char> vBinaryData = ParseHex(nftdata.substr(metaDataLen * 2 + 10, binaryDataLen * 2).c_str());
                 for (int i = 0; i < vBinaryData.size(); i++)
-                    newAsset->binaryData += vBinaryData[i];
+                    newAsset->binaryData.push_back(vBinaryData[i]);
 
                 std::vector<unsigned char> vSerial = ParseHex(nftdata.substr(nftdata.size() - 16, 16).c_str());
                 newAsset->serial = ((uint64_t)vSerial[0]) << 56;
