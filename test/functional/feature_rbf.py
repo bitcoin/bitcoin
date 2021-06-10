@@ -78,9 +78,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        # Leave IBD
-        self.nodes[0].generate(1)
-
         make_utxo(self.nodes[0], 1*COIN)
 
         # Ensure nodes are synced
