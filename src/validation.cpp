@@ -3952,7 +3952,10 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                                                 (vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start] == 0x30));
 
                 if (foundNFTAssetClassCreate) {
-
+                    //check if we already have this asset class in the database, if not then request it from the net
+                    if (!g_nftMgr->assetClassInDatabase()) {
+                        g_nftMgr->
+                    }
                 }
 
                 bool foundNFTAssetCreate = false;

@@ -5,7 +5,8 @@
 #include <sqlite/sqlite3.h>
 #include <stdint.h>
 #include <uint256.h>
-
+#include <map>
+#include <util/system.h>
 
 
 class CNFTManager
@@ -22,4 +23,16 @@ public:
 
     void addNFTAssetClass(CNFTAssetClass* assetClass);
     void addNFTAsset(CNFTAsset* asset);
+
+    bool assetClassInDatabase(std::string assetClassHash);
+    bool assetInDatabase(std::string assetHash);
+
+    void queueAssetClassRequest(std::string hash);
+    void queueAssetRequest(std::string hash);
+
+    // stores the last timestamp for each asset class hash or asset hash requested
+    std::map<std::string, time_t> requestAssetClass;
+    std::map<std::string, time_t> requestAsset;
+    RecursiveMutex requestLock;
+
 };

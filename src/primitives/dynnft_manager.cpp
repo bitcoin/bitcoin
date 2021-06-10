@@ -1,4 +1,5 @@
 #include <primitives/dynnft_manager.h>
+#include <crypto/aes.h>
 
 
 
@@ -96,6 +97,20 @@ void CNFTManager::addNFTAssetClass(CNFTAssetClass* assetClass) {
 
 void CNFTManager::addNFTAsset(CNFTAsset* asset) {
 
+
+    std::string key = gArgs.GetArg("-nftdbkey", "");
+
+    AES256Encrypt enc((const unsigned char*)key.data());
+    std::string encryptedData;
+    encryptedData.resize(asset->binaryData.size() + 32);
+    enc.Encrypt((unsigned char*)encryptedData.data(), (const unsigned char*)asset->binaryData.data());
+
+    /*
+    AES256Decrypt dec(key.data());
+    dec.Decrypt(buf.data(), buf.data());
+    */
+
+
     std::string sql = "insert into asset (asset_txn_id, asset_hash, asset_class_hash, asset_metadata, asset_owner, asset_binary_data, asset_serial) values (@txn, @hash, @meta, @owner, @count, @bin, @ser)";
 
     sqlite3_stmt* stmt = NULL;
@@ -106,7 +121,7 @@ void CNFTManager::addNFTAsset(CNFTAsset* asset) {
     sqlite3_bind_text(stmt, 3, asset->assetClassHash.c_str(), -1, NULL);
     sqlite3_bind_text(stmt, 4, asset->metaData.c_str(), -1, NULL);
     sqlite3_bind_text(stmt, 5, asset->owner.c_str(), -1, NULL);
-    sqlite3_bind_blob(stmt, 6, asset->binaryData.c_str(), asset->binaryData.size(), NULL);
+    sqlite3_bind_blob(stmt, 6, encryptedData.c_str(), encryptedData.size(), NULL);
     sqlite3_bind_int64(stmt, 7, asset->serial);
 
     sqlite3_step(stmt);
@@ -114,17 +129,68 @@ void CNFTManager::addNFTAsset(CNFTAsset* asset) {
     sqlite3_finalize(stmt);
 
 
-                /*
-                    assert(key.size() == 32);
-                assert(in.size() == 16);
-                assert(correctout.size() == 16);
-                AES256Encrypt enc(key.data());
-                buf.resize(correctout.size());
-                enc.Encrypt(buf.data(), in.data());
-                BOOST_CHECK(buf == correctout);
-                AES256Decrypt dec(key.data());
-                dec.Decrypt(buf.data(), buf.data());
-                BOOST_CHECK(buf == in);
-                */
 
+}
+
+
+bool CNFTManager::assetClassInDatabase(std::string assetClassHash) {
+
+    std::string sql = "select count(asset_class_hash) from asset_class where asset_class_hash = @1";
+
+    sqlite3_stmt* stmt = NULL;
+    sqlite3_prepare_v2(nftDB, sql.c_str(), -1, &stmt, NULL);
+
+    sqlite3_bind_text(stmt, 1, assetClassHash.c_str(), -1, NULL);
+
+    int rc = sqlite3_step(stmt);
+
+    int valInt = 0;
+    if ((rc != SQLITE_DONE) && (rc != SQLITE_OK)) {
+        valInt = sqlite3_column_int(stmt, 0);
+    }
+
+    sqlite3_finalize(stmt);
+
+    return (valInt > 0);
+}
+
+bool CNFTManager::assetInDatabase(std::string assetHash) {
+    std::string sql = "select count(asset_hash) from asset where asset_hash = @1";
+
+    sqlite3_stmt* stmt = NULL;
+    sqlite3_prepare_v2(nftDB, sql.c_str(), -1, &stmt, NULL);
+
+    sqlite3_bind_text(stmt, 1, assetHash.c_str(), -1, NULL);
+
+    int rc = sqlite3_step(stmt);
+
+    int valInt = 0;
+    if ((rc != SQLITE_DONE) && (rc != SQLITE_OK)) {
+        valInt = sqlite3_column_int(stmt, 0);
+    }
+
+    sqlite3_finalize(stmt);
+
+    return (valInt > 0);
+}
+
+
+void CNFTManager::queueAssetClassRequest(std::string hash) {
+
+    {
+        LOCK(requestLock);
+        time_t now;
+        time(&now);
+        requestAssetClass.emplace(hash, now);
+    }
+}
+
+void CNFTManager::queueAssetRequest(std::string hash) {
+
+    {
+        LOCK(requestLock);
+        time_t now;
+        time(&now);
+        requestAsset.emplace(hash, now);
+    }
 }
