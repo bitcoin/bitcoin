@@ -7,13 +7,15 @@
 from decimal import Decimal
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut
+from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, BIP125_SEQUENCE_NUMBER
 from test_framework.script import CScript, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_round
 from test_framework.script_util import DUMMY_P2WPKH_SCRIPT, DUMMY_2_P2WPKH_SCRIPT
+from test_framework.wallet import MiniWallet
 
 MAX_REPLACEMENT_LIMIT = 100
+
 
 def txToHex(tx):
     return tx.serialize().hex()
@@ -565,67 +567,60 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(json1["vin"][0]["sequence"], 4294967294)
 
     def test_no_inherited_signaling(self):
-        # Send tx from which to conflict outputs later
-        base_txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
-        self.nodes[0].generate(1)
-        self.sync_blocks()
+        wallet = MiniWallet(self.nodes[0])
+        wallet.scan_blocks(start=76, num=1)
+        confirmed_utxo = wallet.get_utxo()
 
         # Create an explicitly opt-in parent transaction
-        optin_parent_tx = self.nodes[0].createrawtransaction([{
-            'txid': base_txid,
-            'vout': 0,
-            "sequence": 0xfffffffd,
-        }], {self.nodes[0].getnewaddress(): Decimal("9.99998")})
+        optin_parent_tx = wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=confirmed_utxo,
+            sequence=BIP125_SEQUENCE_NUMBER,
+            fee_rate=Decimal('0.01'),
+        )
+        assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['bip125-replaceable'])
 
-        optin_parent_tx = self.nodes[0].signrawtransactionwithwallet(optin_parent_tx)
-
-        # Broadcast parent tx
-        optin_parent_txid = self.nodes[0].sendrawtransaction(hexstring=optin_parent_tx["hex"], maxfeerate=0)
-        assert optin_parent_txid in self.nodes[0].getrawmempool()
-
-        replacement_parent_tx = self.nodes[0].createrawtransaction([{
-            'txid': base_txid,
-            'vout': 0,
-            "sequence": 0xfffffffd,
-        }], {self.nodes[0].getnewaddress(): Decimal("9.90000")})
-
-        replacement_parent_tx = self.nodes[0].signrawtransactionwithwallet(replacement_parent_tx)
+        replacement_parent_tx = wallet.create_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=confirmed_utxo,
+            sequence=BIP125_SEQUENCE_NUMBER,
+            fee_rate=Decimal('0.02'),
+        )
 
         # Test if parent tx can be replaced.
-        res = self.nodes[0].testmempoolaccept(rawtxs=[replacement_parent_tx['hex']], maxfeerate=0)[0]
+        res = self.nodes[0].testmempoolaccept(rawtxs=[replacement_parent_tx['hex']])[0]
 
         # Parent can be replaced.
         assert_equal(res['allowed'], True)
 
         # Create an opt-out child tx spending the opt-in parent
-        optout_child_tx = self.nodes[0].createrawtransaction([{
-            'txid': optin_parent_txid,
-            'vout': 0,
-            "sequence": 0xffffffff,
-        }], {self.nodes[0].getnewaddress(): Decimal("9.99990")})
+        parent_utxo = wallet.get_utxo(txid=optin_parent_tx['txid'])
+        optout_child_tx = wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=parent_utxo,
+            sequence=0xffffffff,
+            fee_rate=Decimal('0.01'),
+        )
 
-        optout_child_tx = self.nodes[0].signrawtransactionwithwallet(optout_child_tx)
+        # Reports true due to inheritance
+        assert_equal(True, self.nodes[0].getmempoolentry(optout_child_tx['txid'])['bip125-replaceable'])
 
-        # Broadcast child tx
-        optout_child_txid = self.nodes[0].sendrawtransaction(hexstring=optout_child_tx["hex"], maxfeerate=0)
-        assert optout_child_txid in self.nodes[0].getrawmempool()
-
-        replacement_child_tx = self.nodes[0].createrawtransaction([{
-            'txid': optin_parent_txid,
-            'vout': 0,
-            "sequence": 0xffffffff,
-        }], {self.nodes[0].getnewaddress(): Decimal("9.00000")})
-
-        replacement_child_tx = self.nodes[0].signrawtransactionwithwallet(replacement_child_tx)
+        replacement_child_tx = wallet.create_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=parent_utxo,
+            sequence=0xffffffff,
+            fee_rate=Decimal('0.02'),
+            mempool_valid=False,
+        )
 
         # Broadcast replacement child tx
         # BIP 125 :
         # 1. The original transactions signal replaceability explicitly or through inheritance as described in the above
         # Summary section.
-        # The original transaction (`optout_child_tx`) doesn't signal RBF but its parent (`optin_parent_txid`) does.
+        # The original transaction (`optout_child_tx`) doesn't signal RBF but its parent (`optin_parent_tx`) does.
         # The replacement transaction (`replacement_child_tx`) should be able to replace the original transaction.
         # See CVE-2021-31876 for further explanations.
-        assert optin_parent_txid in self.nodes[0].getrawmempool()
+        assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['bip125-replaceable'])
         assert_raises_rpc_error(-26, 'txn-mempool-conflict', self.nodes[0].sendrawtransaction, replacement_child_tx["hex"], 0)
 
 if __name__ == '__main__':
