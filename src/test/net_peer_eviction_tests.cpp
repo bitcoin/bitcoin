@@ -33,7 +33,6 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(const int n_c
             /* nKeyedNetGroup */ random_context.randrange(100),
             /* prefer_evict */ random_context.randbool(),
             /* m_is_local */ random_context.randbool(),
-            /* m_is_onion */ random_context.randbool(),
             /* m_network */ ALL_NETWORKS[random_context.randrange(ALL_NETWORKS.size())],
         });
     }
@@ -92,7 +91,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
             c.nTimeConnected = c.id;
-            c.m_is_onion = c.m_is_local = false;
+            c.m_is_local = false;
             c.m_network = NET_IPV4;
         },
         /* protected_peer_ids */ {0, 1, 2, 3, 4, 5},
@@ -103,7 +102,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     BOOST_CHECK(IsProtected(
         num_peers, [num_peers](NodeEvictionCandidate& c) {
             c.nTimeConnected = num_peers - c.id;
-            c.m_is_onion = c.m_is_local = false;
+            c.m_is_local = false;
             c.m_network = NET_IPV6;
         },
         /* protected_peer_ids */ {6, 7, 8, 9, 10, 11},
@@ -139,7 +138,6 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // if no onion peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
-            c.m_is_onion = false;
             c.m_is_local = (c.id == 1 || c.id == 9 || c.id == 11);
             c.m_network = NET_IPV4;
         },
@@ -152,7 +150,6 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
             c.nTimeConnected = c.id;
-            c.m_is_onion = false;
             c.m_is_local = (c.id > 6);
             c.m_network = NET_IPV6;
         },

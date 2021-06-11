@@ -1063,7 +1063,7 @@ bool CConnman::AttemptToEvictConnection()
                                                HasAllDesirableServiceFlags(node->nServices),
                                                peer_relay_txes, peer_filter_not_null, node->nKeyedNetGroup,
                                                node->m_prefer_evict, node->addr.IsLocal(),
-                                               node->m_inbound_onion, node->ConnectedThroughNetwork()};
+                                               node->ConnectedThroughNetwork()};
             vEvictionCandidates.push_back(candidate);
         }
     }
