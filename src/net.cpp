@@ -848,12 +848,6 @@ static bool CompareLocalHostTimeConnected(const NodeEvictionCandidate &a, const 
     return a.nTimeConnected > b.nTimeConnected;
 }
 
-static bool CompareOnionTimeConnected(const NodeEvictionCandidate& a, const NodeEvictionCandidate& b)
-{
-    if (a.m_is_onion != b.m_is_onion) return b.m_is_onion;
-    return a.nTimeConnected > b.nTimeConnected;
-}
-
 static bool CompareNetGroupKeyed(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b) {
     return a.nKeyedNetGroup < b.nKeyedNetGroup;
 }
