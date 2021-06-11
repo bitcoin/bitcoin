@@ -25,7 +25,7 @@ packages:
 - "python3"
 - "python3-pip"
 # SYSCOIN
-- "make"
+- "cmake"
 # Cross compilation HOSTS:
 #  - arm-linux-gnueabihf
 - "binutils-arm-linux-gnueabihf"
