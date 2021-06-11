@@ -10,16 +10,16 @@
 #include <fstream>
 #include <rpc/request.h>
 #include <rpc/server.h>
+#include <string>
 #include <test/util/setup_common.h>
 #include <thread>
 #include <univalue.h>
 #include <validation.h>
-#include <wallet/wallet.h>
-#include <string>
 #include <vbk/merkle.hpp>
+#include <wallet/wallet.h>
 
-#include <vbk/test/util/e2e_fixture.hpp>
 #include <utility>
+#include <vbk/test/util/e2e_fixture.hpp>
 
 UniValue CallRPC(std::string args);
 
@@ -50,19 +50,19 @@ BOOST_AUTO_TEST_CASE(getpopdata_test)
 
 BOOST_FIXTURE_TEST_CASE(submitpop_test, E2eFixture)
 {
-    auto makeRequest = [](std::string req, const std::string& arg){
-      JSONRPCRequest request;
-      request.strMethod = std::move(req);
-      request.params = UniValue(UniValue::VARR);
-      request.params.push_back(arg);
-      request.fHelp = false;
+    auto makeRequest = [](std::string req, const std::string& arg) {
+        JSONRPCRequest request;
+        request.strMethod = std::move(req);
+        request.params = UniValue(UniValue::VARR);
+        request.params.push_back(arg);
+        request.fHelp = false;
 
-      if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
+        if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
 
-      UniValue result;
-      BOOST_CHECK_NO_THROW(result = tableRPC.execute(request));
+        UniValue result;
+        BOOST_CHECK_NO_THROW(result = tableRPC.execute(request));
 
-      return result;
+        return result;
     };
 
     JSONRPCRequest request;
@@ -95,6 +95,47 @@ BOOST_FIXTURE_TEST_CASE(submitpop_test, E2eFixture)
     for (const auto& vtb : vtbs) {
         auto res = makeRequest("submitpopvtb", altintegration::SerializeToHex(vtb));
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(extractblockinfo_test, E2eFixture)
+{
+    auto tip = ChainActive().Tip();
+    BOOST_CHECK(tip != nullptr);
+
+    // endorse tip
+    CBlock block = endorseAltBlockAndMine(tip->GetBlockHash(), 10);
+
+    // encode PublicationData
+    BOOST_CHECK_EQUAL(block.popData.atvs.size(), 1);
+    auto pubData = block.popData.atvs[0].transaction.publicationData;
+    altintegration::SerializeToHex(pubData);
+
+
+    JSONRPCRequest request;
+    request.strMethod = std::move("extractblockinfo");
+    request.params = UniValue(UniValue::VARR);
+    request.params.push_back(altintegration::SerializeToHex(pubData));
+    request.fHelp = false;
+
+    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
+
+    UniValue result;
+    BOOST_CHECK_NO_THROW(result = tableRPC.execute(request));
+
+
+    // decode AuthenticatedContextInfoContainer
+    altintegration::ContextInfoContainer container;
+    {
+        altintegration::ValidationState state;
+        altintegration::ReadStream stream(pubData.contextInfo);
+        BOOST_CHECK(altintegration::DeserializeFromVbkEncoding(stream, container, state));
+    }
+
+    BOOST_CHECK_EQUAL(result["hash"].get_str(), HexStr(tip->GetBlockHash()));
+    BOOST_CHECK_EQUAL(result["height"].get_int64(), tip->nHeight);
+    BOOST_CHECK_EQUAL(result["previousHash"].get_str(), HexStr(tip->GetBlockHeader().hashPrevBlock));
+    BOOST_CHECK_EQUAL(result["previousKeystone"].get_str(), HexStr(container.keystones.firstPreviousKeystone));
+    BOOST_CHECK_EQUAL(result["secondPreviousKeystone"].get_str(), HexStr(container.keystones.secondPreviousKeystone));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

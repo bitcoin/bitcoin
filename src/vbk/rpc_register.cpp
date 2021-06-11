@@ -753,6 +753,59 @@ UniValue getpopparams(const JSONRPCRequest& req)
     return ret;
 }
 
+UniValue extractblockinfo(const JSONRPCRequest& req)
+{
+    RPCHelpMan{
+        "extractblockinfo",
+        "Decode provided publication data bytes",
+        {
+            {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Serialized publication data"},
+        },
+        {},
+        RPCExamples{
+            HelpExampleCli("extractblockinfo", "\"<hex>\"") +
+            HelpExampleRpc("extractblockinfo", "\"<hex>\"")},
+    }
+        .Check(req);
+
+    auto encoded_bytes = ParseHexV(req.params[0].get_str(), "publication data sbytes");
+
+    // decode publication data
+    altintegration::PublicationData pubData;
+    {
+        altintegration::ValidationState state;
+        altintegration::ReadStream stream(encoded_bytes);
+        if (!altintegration::DeserializeFromVbkEncoding(stream, pubData, state)) {
+            return JSONRPCError(RPC_INVALID_PARAMETER, "can not deserialize PublicationData err: " + state.toString());
+        }
+    }
+
+    // decode block header
+    CBlockHeader header;
+    {
+        CDataStream stream(pubData.header, SER_NETWORK, PROTOCOL_VERSION);
+        stream >> header;
+    }
+
+    // decode AuthenticatedContextInfoContainer
+    altintegration::ContextInfoContainer container;
+    {
+        altintegration::ValidationState state;
+        altintegration::ReadStream stream(pubData.contextInfo);
+        if (!altintegration::DeserializeFromVbkEncoding(stream, container, state)) {
+            return JSONRPCError(RPC_INVALID_PARAMETER, "can not deserialize ContextInfoContainer err: " + state.toString());
+        }
+    }
+
+    UniValue res(UniValue::VOBJ);
+    res.pushKV("hash", HexStr(header.GetHash()));
+    res.pushKV("height", container.height);
+    res.pushKV("previousHash", HexStr(header.hashPrevBlock));
+    res.pushKV("previousKeystone", HexStr(container.keystones.firstPreviousKeystone));
+    res.pushKV("secondPreviousKeystone", HexStr(container.keystones.secondPreviousKeystone));
+    return res;
+}
+
 const CRPCCommand commands[] = {
     {"pop_mining", "getpopparams", &getpopparams, {}},
     {"pop_mining", "submitpopatv", &submitpopatv, {"atv"}},
@@ -770,7 +823,8 @@ const CRPCCommand commands[] = {
     {"pop_mining", "getrawatv", &getrawatv, {"id"}},
     {"pop_mining", "getrawvtb", &getrawvtb, {"id"}},
     {"pop_mining", "getrawvbkblock", &getrawvbkblock, {"id"}},
-    {"pop_mining", "getrawpopmempool", &getrawpopmempool, {}}};
+    {"pop_mining", "getrawpopmempool", &getrawpopmempool, {}},
+    {"pop_mining", "extractblockinfo", &extractblockinfo, {"publicationdata"}}};
 
 void RegisterPOPMiningRPCCommands(CRPCTable& t)
 {
