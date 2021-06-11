@@ -6,6 +6,8 @@
 #ifndef BITCOIN_THREADSAFETY_H
 #define BITCOIN_THREADSAFETY_H
 
+#include <mutex>
+
 #ifdef __clang__
 // TL;DR Add GUARDED_BY(mutex) to member variables. The others are
 // rarely necessary. Ex: int nFoo GUARDED_BY(cs_foo);
@@ -53,5 +55,27 @@
 #define NO_THREAD_SAFETY_ANALYSIS
 #define ASSERT_EXCLUSIVE_LOCK(...)
 #endif // __GNUC__
+
+// StdMutex provides an annotated version of std::mutex for us,
+// and should only be used when sync.h Mutex/LOCK/etc are not usable.
+class LOCKABLE StdMutex : public std::mutex
+{
+public:
+#ifdef __clang__
+    //! For negative capabilities in the Clang Thread Safety Analysis.
+    //! A negative requirement uses the EXCLUSIVE_LOCKS_REQUIRED attribute, in conjunction
+    //! with the ! operator, to indicate that a mutex should not be held.
+    const StdMutex& operator!() const { return *this; }
+#endif // __clang__
+};
+
+// StdLockGuard provides an annotated version of std::lock_guard for us,
+// and should only be used when sync.h Mutex/LOCK/etc are not usable.
+class SCOPED_LOCKABLE StdLockGuard : public std::lock_guard<StdMutex>
+{
+public:
+    explicit StdLockGuard(StdMutex& cs) EXCLUSIVE_LOCK_FUNCTION(cs) : std::lock_guard<StdMutex>(cs) {}
+    ~StdLockGuard() UNLOCK_FUNCTION() {}
+};
 
 #endif // BITCOIN_THREADSAFETY_H

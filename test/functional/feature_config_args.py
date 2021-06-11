@@ -14,8 +14,17 @@ class ConfArgsTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
+
+    def test_log_buffer(self):
+        with self.nodes[0].assert_debug_log(expected_msgs=['Warning: parsed potentially confusing double-negative -connect=0']):
+            self.start_node(0, extra_args=['-noconnect=0'])
+        self.stop_node(0)
+
     def run_test(self):
         self.stop_node(0)
+
+        self.test_log_buffer()
+
         # Remove the -datadir argument so it doesn't override the config file
         self.nodes[0].args = [arg for arg in self.nodes[0].args if not arg.startswith("-datadir")]
 

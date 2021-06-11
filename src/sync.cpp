@@ -104,7 +104,11 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
     printf("%s\n", strOutput.c_str());
     LogPrintf("%s\n", strOutput.c_str());
 
-    assert(false);
+    if (g_debug_lockorder_abort) {
+        fprintf(stderr, "Assertion failed: detected inconsistent lock order at %s:%i, details in debug log.\n", __FILE__, __LINE__);
+        abort();
+    }
+    throw std::logic_error("potential deadlock detected");
 }
 
 static void push_lock(void* c, const CLockLocation& locklocation)
@@ -152,7 +156,8 @@ std::string LocksHeld()
     return result;
 }
 
-void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
+template <typename MutexType>
+void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs)
 {
     for (const std::pair<void*, CLockLocation>& i : g_lockstack)
         if (i.first == cs)
@@ -160,6 +165,8 @@ void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine,
     fprintf(stderr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
     abort();
 }
+template void AssertLockHeldInternal(const char*, const char*, int, Mutex*);
+template void AssertLockHeldInternal(const char*, const char*, int, CCriticalSection*);
 
 void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
 {
@@ -192,5 +199,7 @@ void DeleteLock(void* cs)
         lockdata.invlockorders.erase(invit++);
     }
 }
+
+bool g_debug_lockorder_abort = true;
 
 #endif /* DEBUG_LOCKORDER */

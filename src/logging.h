@@ -8,6 +8,7 @@
 
 #include <fs.h>
 #include <tinyformat.h>
+#include <threadsafety.h>
 
 #include <atomic>
 #include <cstdint>
@@ -82,9 +83,11 @@ namespace BCLog {
     class Logger
     {
     private:
-        FILE* m_fileout = nullptr;
-        std::mutex m_file_mutex;
-        std::list<std::string> m_msgs_before_open;
+        mutable StdMutex m_cs; // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
+
+        FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
+        std::list<std::string> m_msgs_before_open GUARDED_BY(m_cs);
+        bool m_buffering GUARDED_BY(m_cs) = true; //!< Buffer messages before logging can be started.
 
         /**
          * m_started_new_line is a state variable that will suppress printing of
@@ -111,12 +114,18 @@ namespace BCLog {
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
-        void LogPrintStr(const std::string &str);
+        void LogPrintStr(const std::string& str);
 
         /** Returns whether logs will be written to any output */
-        bool Enabled() const { return m_print_to_console || m_print_to_file; }
+        bool Enabled() const
+        {
+            StdLockGuard scoped_lock(m_cs);
+            return m_buffering || m_print_to_console || m_print_to_file;
+        }
 
-        bool OpenDebugLog();
+        /** Start logging (and flush all buffered messages) */
+        bool StartLogging();
+
         void ShrinkDebugFile();
 
         uint64_t GetCategoryMask() const { return m_categories.load(); }
