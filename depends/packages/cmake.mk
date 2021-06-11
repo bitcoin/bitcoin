@@ -9,10 +9,8 @@ define $(package)_set_vars
   $(package)_config_opts+=CFLAGS="$($(package)_cflags) $($(package)_cppflags)" AR="$($(package)_ar)"
 endef
 
-# cmake has its own custom configure script that takes in options like CC,
-# CFLAGS from environment
 define $(package)_config_cmds
-  env $($(package)_config_opts) ./bootstrap --prefix=$(host_prefix)
+  ./bootstrap --prefix=$(host_prefix) ($(package)_config_opts)
 endef
 
 define $(package)_build_cmds
