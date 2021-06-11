@@ -29,6 +29,7 @@
 #include <tinyformat.h>
 #include <txmempool.h>
 #include <txorphanage.h>
+#include <txrebroadcast.h>
 #include <txrequest.h>
 #include <util/check.h> // For NDEBUG compile time check
 #include <util/strencodings.h>
@@ -254,12 +255,13 @@ class PeerManagerImpl final : public PeerManager
 public:
     PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
                     BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
-                    CTxMemPool& pool, bool ignore_incoming_txs);
+                    CTxMemPool& pool, bool ignore_incoming_txs, bool enable_rebroadcast);
 
     /** Overridden from CValidationInterface. */
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override;
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
     void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override;
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
+    void UpdatedBlockTip(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
     void BlockChecked(const CBlock& block, const BlockValidationState& state) override;
     void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) override;
 
@@ -375,6 +377,7 @@ private:
     ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
     TxRequestTracker m_txrequest GUARDED_BY(::cs_main);
+    const std::unique_ptr<TxRebroadcastHandler> m_txrebroadcast;
 
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
@@ -1344,20 +1347,21 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
 
 std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
                                                BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
-                                               CTxMemPool& pool, bool ignore_incoming_txs)
+                                               CTxMemPool& pool, bool ignore_incoming_txs, bool enable_rebroadcast)
 {
-    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, scheduler, chainman, pool, ignore_incoming_txs);
+    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, scheduler, chainman, pool, ignore_incoming_txs, enable_rebroadcast);
 }
 
 PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
                                  BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
-                                 CTxMemPool& pool, bool ignore_incoming_txs)
+                                 CTxMemPool& pool, bool ignore_incoming_txs, bool enable_rebroadcast)
     : m_chainparams(chainparams),
       m_connman(connman),
       m_addrman(addrman),
       m_banman(banman),
       m_chainman(chainman),
       m_mempool(pool),
+      m_txrebroadcast{enable_rebroadcast ? std::make_unique<TxRebroadcastHandler>(m_mempool, m_chainman, m_chainparams) : nullptr},
       m_stale_tip_check_time(0),
       m_ignore_incoming_txs(ignore_incoming_txs)
 {
@@ -1376,6 +1380,10 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
     // same probability that we have in the reject filter).
     m_recent_confirmed_transactions.reset(new CRollingBloomFilter(48000, 0.000001));
 
+    if (enable_rebroadcast) {
+        scheduler.scheduleEvery([this] { m_txrebroadcast->CacheMinRebroadcastFee(); }, REBROADCAST_CACHE_FREQUENCY);
+    }
+
     // Stale tip checking and peer eviction are on two different timers, but we
     // don't want them to get out of sync due to drift in the scheduler, so we
     // combine them in one function and schedule at the quicker (peer-eviction)
@@ -1383,15 +1391,48 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
     static_assert(EXTRA_PEER_CHECK_INTERVAL < STALE_CHECK_INTERVAL, "peer eviction timer should be less than stale tip check timer");
     scheduler.scheduleEvery([this] { this->CheckForStaleTipAndEvictPeers(); }, std::chrono::seconds{EXTRA_PEER_CHECK_INTERVAL});
 
-    // schedule next run for 10-15 minutes in the future
+    // Attempt initial broadcast of locally submitted transactions in 10-15 minutes
     const std::chrono::milliseconds delta = std::chrono::minutes{10} + GetRandMillis(std::chrono::minutes{5});
     scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
 }
 
 /**
- * Evict orphan txn pool entries based on a newly connected
- * block, remember the recently confirmed transactions, and delete tracked
- * announcements for them. Also save the time of the last tip update.
+ * If a transaction was removed from the mempool for a reason that entails it
+ * most likely will not re-enter, let the rebroadcast handler know.
+ */
+void PeerManagerImpl::TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence)
+{
+    if (!m_txrebroadcast) return;
+
+    switch(reason) {
+        case MemPoolRemovalReason::BLOCK:
+            // Although transactions removed for this reason will not be
+            // returned by this callback, include it here so the compiler
+            // can warn about missing cases in this switch statement.
+            // These transactions are handled by BlockConnected.
+        case MemPoolRemovalReason::EXPIRY:
+            // The rebroadcast attempt tracker should remember transactions
+            // even after they have expired from the mempool to avoid endlessly
+            // rebroadcasting certain transactions. For example, if two peers
+            // are unaware of new policy or consensus rules, we don't want them
+            // to ping-pong transactions that are considered invalid by the
+            // majority of the network.
+        case MemPoolRemovalReason::SIZELIMIT:
+            break;
+        case MemPoolRemovalReason::REORG:
+        case MemPoolRemovalReason::CONFLICT:
+        case MemPoolRemovalReason::REPLACED:
+            m_txrebroadcast->RemoveFromAttemptTracker(tx);
+    } // No default case, so the compiler can warn about missing cases
+}
+
+/**
+ * Update state based on a newly connected block:
+ * - Evict orphan txn pool entries
+ * - Save the time of the last tip update
+ * - Remember recently confirmed transactions
+ * - Delete tracked announcements for block transactions
+ * - Delete tracked rebroadcast attempts for block transactions
  */
 void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
@@ -1407,6 +1448,13 @@ void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock
             }
         }
     }
+
+    if (m_txrebroadcast) {
+        for (const auto& ptx : pblock->vtx) {
+            m_txrebroadcast->RemoveFromAttemptTracker(ptx);
+        }
+    }
+
     {
         LOCK(cs_main);
         for (const auto& ptx : pblock->vtx) {
@@ -1489,7 +1537,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
  * Update our best height and announce any block hashes which weren't previously
  * in m_chainman.ActiveChain() to our peers.
  */
-void PeerManagerImpl::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
+void PeerManagerImpl::UpdatedBlockTip(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
     SetBestHeight(pindexNew->nHeight);
     SetServiceFlagsIBDCache(!fInitialDownload);
@@ -1510,6 +1558,7 @@ void PeerManagerImpl::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlock
         }
     }
 
+    // Queue the new blocks for announcement to peers
     {
         LOCK(m_peer_mutex);
         for (auto& it : m_peer_map) {
@@ -1518,6 +1567,16 @@ void PeerManagerImpl::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlock
             for (const uint256& hash : reverse_iterate(vHashes)) {
                 peer.m_blocks_for_headers_relay.push_back(hash);
             }
+        }
+    }
+
+    // Rebroadcast selected mempool transactions
+    if (m_txrebroadcast) {
+        const std::vector<TxIds> rebroadcast_txs = m_txrebroadcast->GetRebroadcastTransactions(block, *pindexNew);
+
+        LOCK(cs_main);
+        for (auto ids : rebroadcast_txs) {
+            _RelayTransaction(ids.m_txid, ids.m_wtxid);
         }
     }
 

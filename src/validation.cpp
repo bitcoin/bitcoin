@@ -2696,6 +2696,7 @@ bool CChainState::ActivateBestChain(BlockValidationState &state, const CChainPar
 
     CBlockIndex *pindexMostWork = nullptr;
     CBlockIndex *pindexNewTip = nullptr;
+    const std::shared_ptr<const CBlock> nullBlockPtr;
     int nStopAtHeight = gArgs.GetArg("-stopatheight", DEFAULT_STOPATHEIGHT);
     do {
         // Block until the validation queue drains. This should largely
@@ -2726,7 +2727,6 @@ bool CChainState::ActivateBestChain(BlockValidationState &state, const CChainPar
                 }
 
                 bool fInvalidFound = false;
-                std::shared_ptr<const CBlock> nullBlockPtr;
                 if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connectTrace)) {
                     // A system error occurred
                     return false;
@@ -2753,7 +2753,8 @@ bool CChainState::ActivateBestChain(BlockValidationState &state, const CChainPar
             // Enqueue while holding cs_main to ensure that UpdatedBlockTip is called in the order in which blocks are connected
             if (pindexFork != pindexNewTip) {
                 // Notify ValidationInterface subscribers
-                GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
+                auto block_tip = pblock && pblock->GetHash() == pindexNewTip->GetBlockHash() ? pblock : nullBlockPtr;
+                GetMainSignals().UpdatedBlockTip(block_tip, pindexNewTip, pindexFork, fInitialDownload);
 
                 // Always notify the UI if a new block tip was connected
                 uiInterface.NotifyBlockTip(GetSynchronizationState(fInitialDownload), pindexNewTip);

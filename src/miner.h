@@ -133,6 +133,10 @@ private:
     bool fIncludeWitness;
     unsigned int nBlockMaxWeight;
     CFeeRate blockMinFeeRate;
+    const std::chrono::microseconds m_skip_inclusion_until;
+
+    // To permit disabling block validity check
+    const bool m_check_block_validity;
 
     // Information on the current status of the block
     uint64_t nBlockWeight;
@@ -153,6 +157,8 @@ public:
         Options();
         size_t nBlockMaxWeight;
         CFeeRate blockMinFeeRate;
+        std::chrono::microseconds m_skip_inclusion_until{std::chrono::microseconds::max()};
+        bool m_check_block_validity{true};
     };
 
     explicit BlockAssembler(CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params);
@@ -164,6 +170,12 @@ public:
     inline static std::optional<int64_t> m_last_block_num_txs{};
     inline static std::optional<int64_t> m_last_block_weight{};
 
+    /* This function wraps addPackageTxs to calculate and return the minimum fee
+     * rate required for a package to currently be included in the highest fee rate
+     * block possible based on mempool transactions.
+     */
+    CFeeRate MinTxFeeRate();
+
 private:
     // utility functions
     /** Clear the block's state and prepare for assembling a new block */
@@ -174,8 +186,10 @@ private:
     // Methods for how to add transactions to a block.
     /** Add transactions based on feerate including unconfirmed ancestors
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
-      * statistics from the package selection (for logging statistics). */
-    void addPackageTxs(int& nPackagesSelected, int& nDescendantsUpdated) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
+      * statistics from the package selection (for logging statistics).
+      * Populates min_package_fee_rate with the minimum fee rate of a package
+      * included in the block (used for rebroadcast cache). */
+    void addPackageTxs(int& nPackagesSelected, int& nDescendantsUpdated, CFeeRate* min_package_fee_rate = nullptr) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */
@@ -188,7 +202,10 @@ private:
       * only as an extra check in case of suboptimal node configuration */
     bool TestPackageTransactions(const CTxMemPool::setEntries& package) const;
     /** Return true if given transaction from mapTx has already been evaluated,
-      * or if the transaction's cached data in mapTx is incorrect. */
+      * or if the transaction's cached data in mapTx is incorrect.
+      * If m_skip_inclusion_until is set in the options, we will exclude any
+      * transactions that entered the mempool after the time specified. This is
+      * currently used for rebroadcast logic.*/
     bool SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set& mapModifiedTx, CTxMemPool::setEntries& failedTx) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
     /** Sort the package in an order that is valid to appear in a block */
     void SortForBlock(const CTxMemPool::setEntries& package, std::vector<CTxMemPool::txiter>& sortedEntries);

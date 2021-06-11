@@ -65,7 +65,9 @@ BlockAssembler::Options::Options() {
 }
 
 BlockAssembler::BlockAssembler(CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params, const Options& options)
-    : chainparams(params),
+    : m_skip_inclusion_until(options.m_skip_inclusion_until),
+      m_check_block_validity(options.m_check_block_validity),
+      chainparams(params),
       m_mempool(mempool),
       m_chainstate(chainstate)
 {
@@ -174,7 +176,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
 
-    LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
+    if (m_check_block_validity) {
+        LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
+    }
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
@@ -185,7 +189,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     BlockValidationState state;
     assert(std::addressof(::ChainstateActive()) == std::addressof(m_chainstate));
-    if (!TestBlockValidity(state, chainparams, m_chainstate, *pblock, pindexPrev, false, false)) {
+    if (m_check_block_validity && !TestBlockValidity(state, chainparams, m_chainstate, *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.ToString()));
     }
     int64_t nTime2 = GetTimeMicros();
@@ -288,9 +292,13 @@ int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& already
 // guaranteed to fail again, but as a belt-and-suspenders check we put it in
 // failedTx and avoid re-evaluation, since the re-evaluation would be using
 // cached size/sigops/fee values that are not actually correct.
+// Finally, we have a check for transaction recency. The default case will not
+// skip any transactions for being too recent. This filter is used for
+// identifying transactions to rebroadcast.
 bool BlockAssembler::SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx, CTxMemPool::setEntries &failedTx)
 {
     assert(it != m_mempool.mapTx.end());
+    if (it->GetTime() > m_skip_inclusion_until) return true; // transaction is too recent
     return mapModifiedTx.count(it) || inBlock.count(it) || failedTx.count(it);
 }
 
@@ -305,6 +313,25 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
     std::sort(sortedEntries.begin(), sortedEntries.end(), CompareTxIterByAncestorCount());
 }
 
+CFeeRate BlockAssembler::MinTxFeeRate()
+{
+    int packages_selected = 0;
+    int descendants_updated = 0;
+    CFeeRate min_fee_rate = CFeeRate(COIN, 1);
+
+    resetBlock();
+    pblocktemplate = std::make_unique<CBlockTemplate>();
+
+    CBlockIndex* prev_block_index = m_chainstate.m_chain.Tip();
+    assert(prev_block_index != nullptr);
+    nHeight = prev_block_index->nHeight + 1;
+    nLockTimeCutoff = prev_block_index->GetMedianTimePast();
+    fIncludeWitness = IsWitnessEnabled(prev_block_index, chainparams.GetConsensus());
+
+    WITH_LOCK(m_mempool.cs, addPackageTxs(packages_selected, descendants_updated, &min_fee_rate));
+    return min_fee_rate;
+}
+
 // This transaction selection algorithm orders the mempool based
 // on feerate of a transaction including all unconfirmed ancestors.
 // Since we don't remove transactions from the mempool as we select them
@@ -315,7 +342,7 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
 // Each time through the loop, we compare the best transaction in
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
-void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated)
+void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpdated, CFeeRate* min_package_fee_rate)
 {
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
@@ -397,6 +424,10 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
                 failedTx.insert(iter);
             }
 
+            // We ran out of space, so don't track fee rates of leftover
+            // transactions that can be squeezed in
+            min_package_fee_rate = nullptr;
+
             ++nConsecutiveFailed;
 
             if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockWeight >
@@ -426,6 +457,12 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
         // This transaction will make it in; reset the failed counter.
         nConsecutiveFailed = 0;
+
+        if (min_package_fee_rate) {
+            // Compare package fee rate and potentially update new minimum
+            const CFeeRate new_fee_rate(packageFees, packageSize);
+            if (new_fee_rate < *min_package_fee_rate) *min_package_fee_rate = new_fee_rate;
+        }
 
         // Package can be added. Sort the entries in a valid order.
         std::vector<CTxMemPool::txiter> sortedEntries;

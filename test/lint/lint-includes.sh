@@ -57,6 +57,7 @@ EXPECTED_BOOST_INCLUDES=(
     boost/filesystem.hpp
     boost/filesystem/fstream.hpp
     boost/multi_index/hashed_index.hpp
+    boost/multi_index/member.hpp
     boost/multi_index/ordered_index.hpp
     boost/multi_index/sequenced_index.hpp
     boost/multi_index_container.hpp

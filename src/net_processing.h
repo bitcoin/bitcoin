@@ -22,6 +22,8 @@ static const bool DEFAULT_PEERBLOOMFILTERS = false;
 static const bool DEFAULT_PEERBLOCKFILTERS = false;
 /** Threshold for marking a node to be discouraged, e.g. disconnected and added to the discouragement filter. */
 static const int DISCOURAGEMENT_THRESHOLD{100};
+/** Default for node rebroadcast logic */
+static constexpr bool DEFAULT_REBROADCAST_ENABLED = false;
 
 struct CNodeStateStats {
     int nSyncHeight = -1;
@@ -36,7 +38,7 @@ class PeerManager : public CValidationInterface, public NetEventsInterface
 public:
     static std::unique_ptr<PeerManager> make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
                                              BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
-                                             CTxMemPool& pool, bool ignore_incoming_txs);
+                                             CTxMemPool& pool, bool ignore_incoming_txs, bool enable_rebroadcast);
     virtual ~PeerManager() { }
 
     /** Get statistics from node state */
