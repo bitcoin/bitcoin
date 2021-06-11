@@ -25,14 +25,15 @@ packages:
 - "python3"
 - "python3-pip"
 # SYSCOIN
-- "cmake"
 # Cross compilation HOSTS:
 #  - arm-linux-gnueabihf
 - "binutils-arm-linux-gnueabihf"
 - "g++-8-arm-linux-gnueabihf"
+- "gcc-8-arm-linux-gnueabihf"
 #  - aarch64-linux-gnu
 - "binutils-aarch64-linux-gnu"
 - "g++-8-aarch64-linux-gnu"
+- "gcc-8-aarch64-linux-gnu"
 #  - powerpc64-linux-gnu
 # - "binutils-powerpc64-linux-gnu"
 # - "g++-8-powerpc64-linux-gnu"
