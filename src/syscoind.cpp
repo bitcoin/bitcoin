@@ -113,8 +113,8 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
     util::ThreadSetInternalName("init");
 
     // If Qt is used, parameters/syscoin.conf are parsed in qt/syscoin.cpp's main()
-    SetupServerArgs(node);
     ArgsManager& args = *Assert(node.args);
+    SetupServerArgs(args);
     std::string error;
     if (!args.ParseParameters(argc, argv, error)) {
         return InitError(Untranslated(strprintf("Error parsing command line arguments: %s\n", error)));
