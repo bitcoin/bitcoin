@@ -366,7 +366,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             assert_equal(load_res['warning'], '')
             wallet = node_master.get_wallet_rpc("u1_v16")
             info = wallet.getaddressinfo(v16_addr)
-            descriptor = "wpkh([" + info["hdmasterfingerprint"] + hdkeypath[1:] + "]" + v16_pubkey + ")"
+            descriptor = f"wpkh([{info['hdmasterfingerprint']}{hdkeypath[1:]}]{v16_pubkey})"
             assert_equal(info["desc"], descsum_create(descriptor))
 
             # Now copy that same wallet back to 0.16 to make sure no automatic upgrade breaks it
@@ -389,7 +389,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             node_master.loadwallet("u1_v17")
             wallet = node_master.get_wallet_rpc("u1_v17")
             info = wallet.getaddressinfo(address)
-            descriptor = "wpkh([" + info["hdmasterfingerprint"] + hdkeypath[1:] + "]" + pubkey + ")"
+            descriptor = f"wpkh([{info['hdmasterfingerprint']}{hdkeypath[1:]}]{pubkey})"
             assert_equal(info["desc"], descsum_create(descriptor))
 
             # Now copy that same wallet back to 0.17 to make sure no automatic upgrade breaks it
