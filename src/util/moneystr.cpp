@@ -5,9 +5,12 @@
 
 #include <util/moneystr.h>
 
+#include <amount.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+
+#include <optional>
 
 std::string FormatMoney(const CAmount n)
 {
@@ -35,14 +38,14 @@ std::string FormatMoney(const CAmount n)
 }
 
 
-bool ParseMoney(const std::string& money_string, CAmount& nRet)
+std::optional<CAmount> ParseMoney(const std::string& money_string)
 {
     if (!ValidAsCString(money_string)) {
-        return false;
+        return std::nullopt;
     }
     const std::string str = TrimString(money_string);
     if (str.empty()) {
-        return false;
+        return std::nullopt;
     }
 
     std::string strWhole;
@@ -62,21 +65,21 @@ bool ParseMoney(const std::string& money_string, CAmount& nRet)
             break;
         }
         if (IsSpace(*p))
-            return false;
+            return std::nullopt;
         if (!IsDigit(*p))
-            return false;
+            return std::nullopt;
         strWhole.insert(strWhole.end(), *p);
     }
     if (*p) {
-        return false;
+        return std::nullopt;
     }
     if (strWhole.size() > 10) // guard against 63 bit overflow
-        return false;
+        return std::nullopt;
     if (nUnits < 0 || nUnits > COIN)
-        return false;
+        return std::nullopt;
     int64_t nWhole = atoi64(strWhole);
-    CAmount nValue = nWhole*COIN + nUnits;
 
-    nRet = nValue;
-    return true;
+    CAmount value = nWhole * COIN + nUnits;
+
+    return value;
 }
