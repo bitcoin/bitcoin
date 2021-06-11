@@ -49,12 +49,16 @@ static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>&
     set.emplace_back(MakeTransactionRef(tx), nInput);
 }
 
-static void add_coin(const CAmount& nValue, int nInput, CoinSet& set)
+static void add_coin(const CAmount& nValue, int nInput, CoinSet& set, CAmount fee = 0, CAmount long_term_fee = 0)
 {
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    set.emplace(MakeTransactionRef(tx), nInput);
+    CInputCoin coin(MakeTransactionRef(tx), nInput);
+    coin.effective_value = nValue - fee;
+    coin.m_fee = fee;
+    coin.m_long_term_fee = long_term_fee;
+    set.insert(coin);
 }
 
 static void add_coin(CWallet& wallet, const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0, bool spendable = false)
@@ -656,6 +660,75 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
         BOOST_CHECK(testWallet.SelectCoins(vCoins, target, out_set, out_value, cc, cs_params));
         BOOST_CHECK_GE(out_value, target);
     }
+}
+
+BOOST_AUTO_TEST_CASE(waste_test)
+{
+    CoinSet selection;
+    const CAmount fee{100};
+    const CAmount change_cost{125};
+    const CAmount fee_diff{40};
+    const CAmount in_amt{3 * COIN};
+    const CAmount target{2 * COIN};
+    const CAmount excess{in_amt - fee * 2 - target};
+
+    // Waste with change is the change cost and difference between fee and long term fee
+    add_coin(1 * COIN, 1, selection, fee, fee - fee_diff);
+    add_coin(2 * COIN, 2, selection, fee, fee - fee_diff);
+    const CAmount waste1 = GetSelectionWaste(selection, change_cost, target);
+    BOOST_CHECK_EQUAL(fee_diff * 2 + change_cost, waste1);
+    selection.clear();
+
+    // Waste without change is the excess and difference between fee and long term fee
+    add_coin(1 * COIN, 1, selection, fee, fee - fee_diff);
+    add_coin(2 * COIN, 2, selection, fee, fee - fee_diff);
+    const CAmount waste_nochange1 = GetSelectionWaste(selection, 0, target);
+    BOOST_CHECK_EQUAL(fee_diff * 2 + excess, waste_nochange1);
+    selection.clear();
+
+    // Waste with change and fee == long term fee is just cost of change
+    add_coin(1 * COIN, 1, selection, fee, fee);
+    add_coin(2 * COIN, 2, selection, fee, fee);
+    BOOST_CHECK_EQUAL(change_cost, GetSelectionWaste(selection, change_cost, target));
+    selection.clear();
+
+    // Waste without change and fee == long term fee is just the excess
+    add_coin(1 * COIN, 1, selection, fee, fee);
+    add_coin(2 * COIN, 2, selection, fee, fee);
+    BOOST_CHECK_EQUAL(excess, GetSelectionWaste(selection, 0, target));
+    selection.clear();
+
+    // Waste will be greater when fee is greater, but long term fee is the same
+    add_coin(1 * COIN, 1, selection, fee * 2, fee - fee_diff);
+    add_coin(2 * COIN, 2, selection, fee * 2, fee - fee_diff);
+    const CAmount waste2 = GetSelectionWaste(selection, change_cost, target);
+    BOOST_CHECK_GT(waste2, waste1);
+    selection.clear();
+
+    // Waste with change is the change cost and difference between fee and long term fee
+    // With long term fee greater than fee, waste should be less than when long term fee is less than fee
+    add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
+    add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
+    const CAmount waste3 = GetSelectionWaste(selection, change_cost, target);
+    BOOST_CHECK_EQUAL(fee_diff * -2 + change_cost, waste3);
+    BOOST_CHECK_LT(waste3, waste1);
+    selection.clear();
+
+    // Waste without change is the excess and difference between fee and long term fee
+    // With long term fee greater than fee, waste should be less than when long term fee is less than fee
+    add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
+    add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
+    const CAmount waste_nochange2 = GetSelectionWaste(selection, 0, target);
+    BOOST_CHECK_EQUAL(fee_diff * -2 + excess, waste_nochange2);
+    BOOST_CHECK_LT(waste_nochange2, waste_nochange1);
+    selection.clear();
+
+    // 0 Waste only when fee == long term fee, no change, and no excess
+    add_coin(1 * COIN, 1, selection, fee, fee);
+    add_coin(2 * COIN, 2, selection, fee, fee);
+    const CAmount exact_target = in_amt - 2 * fee;
+    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, 0, exact_target));
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()
