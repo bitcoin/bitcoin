@@ -10,7 +10,7 @@ define $(package)_set_vars
 endef
 
 define $(package)_config_cmds
-  ./bootstrap --prefix=$(host_prefix) $($(package)_config_opts)
+  env $($(package)_config_opts) ./bootstrap --prefix=$(host_prefix)
 endef
 
 define $(package)_build_cmds
