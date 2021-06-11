@@ -4,6 +4,7 @@
 
 #include <interfaces/init.h>
 #include <node/context.h>
+#include <util/system.h>
 
 #include <memory>
 
@@ -14,6 +15,7 @@ class BitcoindInit : public interfaces::Init
 public:
     BitcoindInit(NodeContext& node) : m_node(node)
     {
+        m_node.args = &gArgs;
         m_node.init = this;
     }
     NodeContext& m_node;
