@@ -3946,8 +3946,8 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
                 bool foundNFTAssetClassCreate = false;
                 if (size > 4)
-                    foundNFTAssetClassCreate = ((vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start] == 0x37) &&
-                                                (vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start] == 0x30));
+                    foundNFTAssetClassCreate = ((vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start+1] == 0x37) &&
+                                                (vout.scriptPubKey[start+2] == 0x37) && (vout.scriptPubKey[start+3] == 0x30));
 
                     
                 if (foundNFTAssetClassCreate) {
@@ -3956,7 +3956,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                     if (gArgs.GetArg("-nftnode", "") == "true") {
 
                         std::vector<unsigned char> binaryHash;
-                        for (int i = 0; i < 16; i++)
+                        for (int i = 0; i < 32; i++)
                             binaryHash.push_back(vout.scriptPubKey[start + 4 + i]);
                         std::string hexHash = HexStr(binaryHash);
 

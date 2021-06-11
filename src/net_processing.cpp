@@ -4795,9 +4795,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         while (i != g_nftMgr->requestAssetClass.end()) {
                             if (now - i->second > 10) {
                                 char hexHashData[65];
-                                std::string strHexHash = HexStr(i->first);
-                                memcpy(hexHashData, strHexHash.c_str(), 65);
-                                LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", hexHashData, pnode->GetId());
+                                memcpy(hexHashData, i->first.c_str(), 65);
+                                LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", i->first.c_str(), pnode->GetId());
                                 m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, hexHashData));   
                                 i->second = now;
                             }
