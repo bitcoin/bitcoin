@@ -229,6 +229,9 @@ class CAddress:
         self.ip = "0.0.0.0"
         self.port = 0
 
+    def __eq__(self, other):
+        return self.net == other.net and self.ip == other.ip and self.nServices == other.nServices and self.port == other.port and self.time == other.time
+
     def deserialize(self, f, *, with_time=True):
         """Deserialize from addrv1 format (pre-BIP155)"""
         if with_time:
