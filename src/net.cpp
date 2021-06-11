@@ -842,12 +842,6 @@ static bool ReverseCompareNodeTimeConnected(const NodeEvictionCandidate &a, cons
     return a.nTimeConnected > b.nTimeConnected;
 }
 
-static bool CompareLocalHostTimeConnected(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
-{
-    if (a.m_is_local != b.m_is_local) return b.m_is_local;
-    return a.nTimeConnected > b.nTimeConnected;
-}
-
 static bool CompareNetGroupKeyed(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b) {
     return a.nKeyedNetGroup < b.nKeyedNetGroup;
 }
