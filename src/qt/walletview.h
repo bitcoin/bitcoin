@@ -116,9 +116,6 @@ public Q_SLOTS:
     /** Show progress dialog e.g. for rescan */
     void showProgress(const QString &title, int nProgress);
 
-    /** User has requested more information about the out of sync state */
-    void requestedSyncWarningInfo();
-
 Q_SIGNALS:
     void setPrivacy(bool privacy);
     void transactionClicked();
