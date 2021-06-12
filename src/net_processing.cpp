@@ -1361,7 +1361,6 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
       m_stale_tip_check_time(0),
       m_ignore_incoming_txs(ignore_incoming_txs)
 {
-    assert(std::addressof(g_chainman) == std::addressof(m_chainman));
     // Initialize global variables that cannot be constructed at startup.
     recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
 

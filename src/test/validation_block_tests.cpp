@@ -84,8 +84,8 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
 
 std::shared_ptr<CBlock> MinerTestingSetup::FinalizeBlock(std::shared_ptr<CBlock> pblock)
 {
-    LOCK(cs_main); // For g_chainman.m_blockman.LookupBlockIndex
-    GenerateCoinbaseCommitment(*pblock, g_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock), Params().GetConsensus());
+    LOCK(cs_main); // For m_node.chainman->m_blockman.LookupBlockIndex
+    GenerateCoinbaseCommitment(*pblock, m_node.chainman->m_blockman.LookupBlockIndex(pblock->hashPrevBlock), Params().GetConsensus());
 
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     const CBlockIndex* initial_tip = nullptr;
     {
         LOCK(cs_main);
-        initial_tip = ::ChainActive().Tip();
+        initial_tip = m_node.chainman->ActiveChain().Tip();
     }
     auto sub = std::make_shared<TestSubscriber>(initial_tip->GetBlockHash());
     RegisterSharedValidationInterface(sub);
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     UnregisterSharedValidationInterface(sub);
 
     LOCK(cs_main);
-    BOOST_CHECK_EQUAL(sub->m_expected_tip, ::ChainActive().Tip()->GetBlockHash());
+    BOOST_CHECK_EQUAL(sub->m_expected_tip, m_node.chainman->ActiveChain().Tip()->GetBlockHash());
 }
 
 /**
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
 
     // Run the test multiple times
     for (int test_runs = 3; test_runs > 0; --test_runs) {
-        BOOST_CHECK_EQUAL(last_mined->GetHash(), ::ChainActive().Tip()->GetBlockHash());
+        BOOST_CHECK_EQUAL(last_mined->GetHash(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
 
         // Later on split from here
         const uint256 split_hash{last_mined->hashPrevBlock};
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
         {
             LOCK(cs_main);
             for (const auto& tx : txs) {
-                const MempoolAcceptResult result = AcceptToMemoryPool(::ChainstateActive(), *m_node.mempool, tx, false /* bypass_limits */);
+                const MempoolAcceptResult result = AcceptToMemoryPool(m_node.chainman->ActiveChainstate(), *m_node.mempool, tx, false /* bypass_limits */);
                 BOOST_REQUIRE(result.m_result_type == MempoolAcceptResult::ResultType::VALID);
             }
         }
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
             }
             LOCK(cs_main);
             // We are done with the reorg, so the tip must have changed
-            assert(tip_init != ::ChainActive().Tip()->GetBlockHash());
+            assert(tip_init != m_node.chainman->ActiveChain().Tip()->GetBlockHash());
         }};
 
         // Submit the reorg in this thread to invalidate and remove the txs from the tx pool
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
             ProcessBlock(b);
         }
         // Check that the reorg was eventually successful
-        BOOST_CHECK_EQUAL(last_mined->GetHash(), ::ChainActive().Tip()->GetBlockHash());
+        BOOST_CHECK_EQUAL(last_mined->GetHash(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
 
         // We can join the other thread, which returns when the reorg was successful
         rpc_thread.join();
