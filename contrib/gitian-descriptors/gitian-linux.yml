@@ -29,11 +29,13 @@ packages:
 #  - arm-linux-gnueabihf
 - "binutils-arm-linux-gnueabihf"
 - "g++-8-arm-linux-gnueabihf"
-- "gcc-8-arm-linux-gnueabihf"
+- "libc6:armhf"
+- "libstdc++6:armhf"
+- "libfontconfig1:armhf"
+- "libxcb1:armhf"
 #  - aarch64-linux-gnu
 - "binutils-aarch64-linux-gnu"
 - "g++-8-aarch64-linux-gnu"
-- "gcc-8-aarch64-linux-gnu"
 #  - powerpc64-linux-gnu
 # - "binutils-powerpc64-linux-gnu"
 # - "g++-8-powerpc64-linux-gnu"
