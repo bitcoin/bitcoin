@@ -6,7 +6,7 @@ https://widecoincore.org
 What is Widecoin?
 ----------------
 
-Widecoin is an experimental digital currency that enables instant payments to
+Widecoin is a digital currency that enables instant payments to
 anyone, anywhere in the world. Widecoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
 out collectively by the network. Widecoin Core is the name of open source
