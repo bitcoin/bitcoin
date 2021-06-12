@@ -132,7 +132,7 @@ class ZMQTest (BitcoinTestFramework):
             socket = self.ctx.socket(zmq.SUB)
             subscribers.append(ZMQSubscriber(socket, topic.encode()))
 
-        self.restart_node(0, ["-zmqpub%s=%s" % (topic, address) for topic, address in services] +
+        self.restart_node(0, [f"-zmqpub{topic}={address}" for topic, address in services] +
                              self.extra_args[0])
 
         for i, sub in enumerate(subscribers):
@@ -184,7 +184,7 @@ class ZMQTest (BitcoinTestFramework):
         rawtx = subs[3]
 
         num_blocks = 5
-        self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
+        self.log.info(f"Generate {num_blocks} blocks (and {num_blocks} coinbase txes)")
         genhashes = self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
 
         self.sync_all()
@@ -504,7 +504,7 @@ class ZMQTest (BitcoinTestFramework):
             if mempool_sequence is not None:
                 zmq_mem_seq = mempool_sequence
                 if zmq_mem_seq > get_raw_seq:
-                    raise Exception("We somehow jumped mempool sequence numbers! zmq_mem_seq: {} > get_raw_seq: {}".format(zmq_mem_seq, get_raw_seq))
+                    raise Exception(f"We somehow jumped mempool sequence numbers! zmq_mem_seq: {zmq_mem_seq} > get_raw_seq: {get_raw_seq}")
 
         # 4) Moving forward, we apply the delta to our local view
         #    remaining txs(5) + 1 rbf(A+R) + 1 block connect + 1 final tx
@@ -520,7 +520,7 @@ class ZMQTest (BitcoinTestFramework):
                         assert mempool_sequence > expected_sequence
                         r_gap += mempool_sequence - expected_sequence
                     else:
-                        raise Exception("WARNING: txhash has unexpected mempool sequence value: {} vs expected {}".format(mempool_sequence, expected_sequence))
+                        raise Exception(f"WARNING: txhash has unexpected mempool sequence value: {mempool_sequence} vs expected {expected_sequence}")
             if label == "A":
                 assert hash_str not in mempool_view
                 mempool_view.add(hash_str)
