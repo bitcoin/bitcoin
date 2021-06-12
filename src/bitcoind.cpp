@@ -224,6 +224,9 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
             return false;
         }
         fRet = AppInitInterfaces(node) && AppInitMain(node);
+        if (fRet) {
+            AppInitStartClients(node);
+        }
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");

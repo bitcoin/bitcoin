@@ -43,6 +43,9 @@ void InitExecutor::initialize()
         qDebug() << __func__ << ": Running initialization in thread";
         interfaces::BlockAndHeaderTipInfo tip_info;
         bool rv = m_node.appInitMain(&tip_info);
+        if (rv) {
+            m_node.appInitStartClients();
+        }
         Q_EMIT initializeResult(rv, tip_info);
     } catch (const std::exception& e) {
         handleRunawayException(&e);

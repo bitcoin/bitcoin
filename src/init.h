@@ -64,6 +64,11 @@ bool AppInitInterfaces(NodeContext& node);
 bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
 
 /**
+ * Start execution of chain clients (e.g., wallets).
+ */
+void AppInitStartClients(NodeContext& node);
+
+/**
  * Register all arguments with the ArgsManager
  */
 void SetupServerArgs(ArgsManager& argsman);
