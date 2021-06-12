@@ -33,7 +33,7 @@ static const std::string DB_MINED_COMMITMENT = "q_mc";
 static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT = "q_mcih";
 
 
-CQuorumBlockProcessor::CQuorumBlockProcessor(CConnman &_connman) : connman(_connman)
+CQuorumBlockProcessor::CQuorumBlockProcessor(CConnman &_connman, ChainstateManager& _chainman) : connman(_connman), chainman(_chainman)
 {
     CLLMQUtils::InitQuorumsCache(mapHasMinedCommitmentCache);
 }
@@ -77,7 +77,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         const CBlockIndex* pquorumIndex;
         {
             LOCK(cs_main);
-            pquorumIndex = g_chainman.m_blockman.LookupBlockIndex(qc.quorumHash);
+            pquorumIndex = chainman.m_blockman.LookupBlockIndex(qc.quorumHash);
             if (!pquorumIndex) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- unknown block %s in commitment, peer=%d\n", __func__,
                         qc.quorumHash.ToString(), pfrom->GetId());
@@ -85,7 +85,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 // fully synced
                 return;
             }
-            if (::ChainActive().Tip()->GetAncestor(pquorumIndex->nHeight) != pquorumIndex) {
+            if (chainman.ActiveTip()->GetAncestor(pquorumIndex->nHeight) != pquorumIndex) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s not in active chain, peer=%d\n", __func__,
                           qc.quorumHash.ToString(), pfrom->GetId());
                 // same, can't punish
@@ -161,7 +161,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
     // allowed, including null commitments.
     for (const auto& p : Params().GetConsensus().llmqs) {
         // skip these checks when replaying blocks after the crash
-        if (!::ChainActive().Tip()) {
+        if (!chainman.ActiveTip()) {
             break;
         }
 
@@ -209,10 +209,10 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     AssertLockHeld(cs_main);
     auto& params = Params().GetConsensus().llmqs.at(qc.llmqType);
 
-    uint256 quorumHash = GetQuorumBlockHash(qc.llmqType, nHeight);
+    uint256 quorumHash = GetQuorumBlockHash(chainman, qc.llmqType, nHeight);
 
     // skip `bad-qc-block` checks below when replaying blocks after the crash
-    if (!::ChainActive().Tip()) {
+    if (!chainman.ActiveTip()) {
         quorumHash = qc.quorumHash;
     }
 
@@ -240,7 +240,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-height");
     }
 
-    auto quorumIndex = g_chainman.m_blockman.LookupBlockIndex(qc.quorumHash);
+    auto quorumIndex = chainman.m_blockman.LookupBlockIndex(qc.quorumHash);
     if(!quorumIndex) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-block-index");
     }
@@ -345,7 +345,7 @@ bool CQuorumBlockProcessor::IsMiningPhase(uint8_t llmqType, int nHeight)
 bool CQuorumBlockProcessor::IsCommitmentRequired(uint8_t llmqType, int nHeight)
 {
     AssertLockHeld(cs_main);
-    uint256 quorumHash = GetQuorumBlockHash(llmqType, nHeight);
+    uint256 quorumHash = GetQuorumBlockHash(chainman, llmqType, nHeight);
 
     // perform extra check for quorumHash.IsNull as the quorum hash is unknown for the first block of a session
     // this is because the currently processed block's hash will be the quorumHash of this session
@@ -358,14 +358,14 @@ bool CQuorumBlockProcessor::IsCommitmentRequired(uint8_t llmqType, int nHeight)
 }
 
 // WARNING: This method returns uint256() on the first block of the DKG interval (because the block hash is not known yet)
-uint256 CQuorumBlockProcessor::GetQuorumBlockHash(uint8_t llmqType, int nHeight)
+uint256 CQuorumBlockProcessor::GetQuorumBlockHash(ChainstateManager& chainman, uint8_t llmqType, int nHeight)
 {
     AssertLockHeld(cs_main);
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
     int quorumStartHeight = nHeight - (nHeight % params.dkgInterval);
     uint256 quorumBlockHash;
-    if (!GetBlockHash(quorumBlockHash, quorumStartHeight)) {
+    if (!GetBlockHash(chainman, quorumBlockHash, quorumStartHeight)) {
         return {};
     }
     return quorumBlockHash;
@@ -517,7 +517,7 @@ bool CQuorumBlockProcessor::GetMinableCommitment(uint8_t llmqType, int nHeight, 
         return false;
     }
 
-    uint256 quorumHash = GetQuorumBlockHash(llmqType, nHeight);
+    uint256 quorumHash = GetQuorumBlockHash(chainman, llmqType, nHeight);
     if (quorumHash.IsNull()) {
         return false;
     }

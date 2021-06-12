@@ -16,6 +16,7 @@ class CBlockIndex;
 class CConnman;
 class PeerManager;
 class CScheduler;
+class ChainstateManager;
 namespace llmq
 {
 
@@ -77,7 +78,8 @@ private:
 public:
     CConnman& connman;
     PeerManager& peerman;
-    explicit CChainLocksHandler(CConnman &connman, PeerManager& peerman);
+    ChainstateManager& chainman;
+    explicit CChainLocksHandler(CConnman &connman, PeerManager& peerman, ChainstateManager& chainman);
     ~CChainLocksHandler();
 
     void Start();

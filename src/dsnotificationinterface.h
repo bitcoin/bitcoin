@@ -6,7 +6,7 @@
 #define SYSCOIN_DSNOTIFICATIONINTERFACE_H
 
 #include <validationinterface.h>
-
+class ChainstateManager;
 class CDSNotificationInterface : public CValidationInterface
 {
 public:
@@ -14,7 +14,7 @@ public:
     virtual ~CDSNotificationInterface() = default;
 
     // a small helper to initialize current block height in sub-modules on startup
-    void InitializeCurrentBlockTip();
+    void InitializeCurrentBlockTip(ChainstateManager& chainman);
 
 protected:
     // CValidationInterface

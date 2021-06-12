@@ -266,14 +266,18 @@ void Shutdown(NodeContext& node)
     if (!RPCIsInWarmup(&status)) {
         // STORE DATA CACHES INTO SERIALIZED DAT FILES
         CFlatDB<CMasternodeMetaMan> flatdb1("mncache.dat", "magicMasternodeCache");
-        flatdb1.Dump(mmetaman);
+        CMasternodeMetaMan tmpMetaMan;
+        flatdb1.Dump(mmetaman, tmpMetaMan);
         CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
-        flatdb4.Dump(netfulfilledman);
+        CNetFulfilledRequestManager tmpFulfillman;
+        flatdb4.Dump(netfulfilledman, tmpFulfillman);
         CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
-        flatdb6.Dump(sporkManager);
+        CSporkManager tmpSporkMan;
+        flatdb6.Dump(sporkManager, tmpSporkMan);
         if (!fDisableGovernance) {
             CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
-            flatdb3.Dump(governance);
+            CGovernanceManager govMan(*node.chainman);
+            flatdb3.Dump(*governance, govMan);
         }
     }
     if (node.mempool && node.mempool->IsLoaded() && node.args->GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
@@ -317,10 +321,9 @@ void Shutdown(NodeContext& node)
     // SYSCOIN
     {
         LOCK(cs_main);
-        // SYSCOIN
-        PruneSyscoinDBs();
         if (node.chainman) {
-            
+            // SYSCOIN
+            PruneSyscoinDBs(*node.chainman);
             for (CChainState* chainstate : node.chainman->GetAll()) {
                 if (chainstate->CanFlushToDisk()) {
                     chainstate->ForceFlushStateToDisk();
@@ -365,12 +368,13 @@ void Shutdown(NodeContext& node)
     init::UnsetGlobals();
     node.mempool.reset();
     node.fee_estimator.reset();
-    node.chainman = nullptr;
+    node.chainman.reset();
     node.scheduler.reset();
     // make sure to clean up BLS keys before global destructors are called (they have allocated from the secure memory pool)
     activeMasternodeInfo.blsKeyOperator.reset();
     activeMasternodeInfo.blsPubKeyOperator.reset();
     activeMasternodeManager.reset();
+    governance.reset();
     // SYSCOIN
     try {
         if (node.args && !fs::remove(GetPidFile(*node.args))) {
@@ -1404,8 +1408,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get(), check_ratio);
 
     assert(!node.chainman);
-    node.chainman = &g_chainman;
-    ChainstateManager& chainman = *Assert(node.chainman);
+    node.chainman = std::make_unique<ChainstateManager>();
+    ChainstateManager& chainman = *node.chainman;
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
@@ -1621,7 +1625,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 evoDb.reset(new CEvoDB(nEvoDbCache, false, fReindexGeth));
                 deterministicMNManager.reset();
                 deterministicMNManager.reset(new CDeterministicMNManager());
-                llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, fReindexGeth);
+                llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, *node.chainman, fReindexGeth);
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReindexGeth));    
                 passetnftdb.reset(new CAssetNFTDB(nCoinDBCache*16, false, fReindexGeth));    
                 pnevmtxrootsdb.reset(new CNEVMTxRootsDB(nCoinDBCache, false, fReindexGeth));
@@ -1663,7 +1667,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
                 if (!chainman.BlockIndex().empty() &&
-                        !g_chainman.m_blockman.LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
+                        !chainman.m_blockman.LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
                 }
 
@@ -1678,7 +1682,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 // If we're not mid-reindex (based on disk + args), add a genesis block on disk
                 // (otherwise we use the one already on disk).
                 // This is called again in ThreadImport after the reindex completes.
-                if (!fReindex && !::ChainstateActive().LoadGenesisBlock(chainparams)) {
+                if (!fReindex && !chainman.ActiveChainstate().LoadGenesisBlock(chainparams)) {
                     strLoadError = _("Error initializing block database");
                     break;
                 }
@@ -1743,7 +1747,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     llmq::DestroyLLMQSystem();
                     evoDb.reset();
                     evoDb.reset(new CEvoDB(nEvoDbCache, false, coinsViewEmpty));
-                    llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, coinsViewEmpty);
+                    llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, *node.chainman, coinsViewEmpty);
                     passetdb.reset(new CAssetDB(nCoinDBCache*16, false, coinsViewEmpty));    
                     passetnftdb.reset(new CAssetNFTDB(nCoinDBCache*16, false, coinsViewEmpty));    
                     pnevmtxrootsdb.reset(new CNEVMTxRootsDB(nCoinDBCache, false, coinsViewEmpty));
@@ -1858,21 +1862,21 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         g_txindex = std::make_unique<TxIndex>(nTxIndexCache, false, fReindex);
-        if (!g_txindex->Start(::ChainstateActive())) {
+        if (!g_txindex->Start(chainman.ActiveChainstate())) {
             return false;
         }
     }
 
     for (const auto& filter_type : g_enabled_filter_types) {
         InitBlockFilterIndex(filter_type, filter_index_cache, false, fReindex);
-        if (!GetBlockFilterIndex(filter_type)->Start(::ChainstateActive())) {
+        if (!GetBlockFilterIndex(filter_type)->Start(chainman.ActiveChainstate())) {
             return false;
         }
     }
 
     if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX)) {
         g_coin_stats_index = std::make_unique<CoinStatsIndex>(/* cache size */ 0, false, fReindex);
-        if (!g_coin_stats_index->Start(::ChainstateActive())) {
+        if (!g_coin_stats_index->Start(chainman.ActiveChainstate())) {
             return false;
         }
     }
@@ -1919,7 +1923,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     // No locking, as this happens before any background thread is started.
     boost::signals2::connection block_notify_genesis_wait_connection;
-    if (::ChainActive().Tip() == nullptr) {
+    if (chainman.ActiveChain().Tip() == nullptr) {
         block_notify_genesis_wait_connection = uiInterface.NotifyBlockTip_connect(std::bind(BlockNotifyGenesisWait, std::placeholders::_2));
     } else {
         fHaveGenesis = true;
@@ -1984,12 +1988,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         RegisterValidationInterface(activeMasternodeManager.get());
         {
             LOCK(cs_main);
-            activeMasternodeManager->Init(::ChainActive().Tip());
+            activeMasternodeManager->Init(node.chainman->ActiveTip());
         }
     } else {
         activeMasternodeInfo.blsKeyOperator.reset(new CBLSSecretKey());
         activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey());
     }
+    governance.reset();
+    governance.reset(new CGovernanceManager(*node.chainman));
     LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
 
 
@@ -2008,8 +2014,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             return InitError(strprintf(_("Failed to load masternode cache from %s\n"), (pathDB / strDBName).string()));
         }
     } else {
-        CMasternodeMetaMan mmetamanTmp;
-        if(!flatdb1.Dump(mmetamanTmp)) {
+        CMasternodeMetaMan mmetamanTmp, mmetamanTmp1;
+        if(!flatdb1.Dump(mmetamanTmp, mmetamanTmp1)) {
             return InitError(strprintf(_("Failed to clear masternode cache at %s\n"), (pathDB / strDBName).string()));
         }
     }
@@ -2018,13 +2024,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     uiInterface.InitMessage(_("Loading governance cache...").translated);
     CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
     if (fLoadCacheFiles && !fDisableGovernance) {
-        if(!flatdb3.Load(governance)) {
+        if(!flatdb3.Load(*governance)) {
             return InitError(strprintf(_("Failed to load governance cache from %s\n"), (pathDB / strDBName).string()));
         }
-        governance.InitOnLoad();
+        governance->InitOnLoad();
     } else {
-        CGovernanceManager governanceTmp;
-        if(!flatdb3.Dump(governanceTmp)) {
+        CGovernanceManager governanceTmp(*node.chainman);
+        CGovernanceManager governanceTmp1(*node.chainman);
+        if(!flatdb3.Dump(governanceTmp, governanceTmp1)) {
             return InitError(strprintf(_("Failed to clear governance cache at %s\n"), (pathDB / strDBName).string()));
         }
     }
@@ -2037,8 +2044,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             return InitError(strprintf(_("Failed to load fulfilled requests cache from %s\n"), (pathDB / strDBName).string()));
         }
     } else {
-        CNetFulfilledRequestManager netfulfilledmanTmp;
-        if(!flatdb4.Dump(netfulfilledmanTmp)) {
+        CNetFulfilledRequestManager netfulfilledmanTmp, netfulfilledmanTmp1;
+        if(!flatdb4.Dump(netfulfilledmanTmp, netfulfilledmanTmp1)) {
             return InitError(strprintf(_("Failed to clear fulfilled requests cache at %s\n"), (pathDB / strDBName).string()));
         }
     } 
@@ -2050,7 +2057,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.scheduler->scheduleEvery([&] { masternodeSync.DoMaintenance(*node.connman, *node.peerman); }, std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
     node.scheduler->scheduleEvery(std::bind(CMasternodeUtils::DoMaintenance, std::ref(*node.connman)), std::chrono::minutes{1});
     if (!fDisableGovernance) {
-        node.scheduler->scheduleEvery([&] { governance.DoMaintenance(*node.connman); }, std::chrono::minutes{5});
+        node.scheduler->scheduleEvery([&] { governance->DoMaintenance(*node.connman); }, std::chrono::minutes{5});
     }
     llmq::StartLLMQSystem();
     // ********************************************************* Step 12: start node

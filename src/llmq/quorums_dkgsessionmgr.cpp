@@ -21,14 +21,14 @@ static const std::string DB_VVEC = "qdkg_V";
 static const std::string DB_SKCONTRIB = "qdkg_S";
 static const std::string DB_ENC_CONTRIB = "qdkg_E";
 
-CDKGSessionManager::CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWorker, CConnman &_connman, PeerManager& _peerman) :
+CDKGSessionManager::CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWorker, CConnman &_connman, PeerManager& _peerman, ChainstateManager& _chainman) :
     llmqDb(_llmqDb),
     blsWorker(_blsWorker),
     connman(_connman),
     peerman(_peerman)
 {
     for (const auto& qt : Params().GetConsensus().llmqs) {
-        dkgSessionHandlers.try_emplace(qt.first, qt.second, blsWorker, *this, peerman);
+        dkgSessionHandlers.try_emplace(qt.first, qt.second, blsWorker, *this, peerman, _chainman);
     }
 }
 

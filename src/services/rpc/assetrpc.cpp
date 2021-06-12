@@ -532,6 +532,7 @@ static RPCHelpMan syscoingetspvproof()
     RPCExamples{""},
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     CBlockIndex* pblockindex = nullptr;
     uint256 hashBlock;
     uint256 txhash = ParseHashV(request.params[0], "parameter 1");
@@ -540,14 +541,14 @@ static RPCHelpMan syscoingetspvproof()
         LOCK(cs_main);
         if (!request.params[1].isNull()) {
             hashBlock = ParseHashV(request.params[1], "blockhash");
-            pblockindex = g_chainman.m_blockman.LookupBlockIndex(hashBlock);
+            pblockindex = node.chainman->m_blockman.LookupBlockIndex(hashBlock);
             if (!pblockindex) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
             }
         } else {
-            const Coin& coin = AccessByTxid(::ChainstateActive().CoinsTip(), txhash);
+            const Coin& coin = AccessByTxid(node.chainman->ActiveChainstate().CoinsTip(), txhash);
             if (!coin.IsSpent()) {
-                pblockindex = ::ChainActive()[coin.nHeight];
+                pblockindex = node.chainman->ActiveChain()[coin.nHeight];
             }
         }
     }
@@ -563,7 +564,7 @@ static RPCHelpMan syscoingetspvproof()
         tx = GetTransaction(nullptr, nullptr, txhash, Params().GetConsensus(), hashBlock);
         if(!tx || hashBlock.IsNull())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
-        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hashBlock);
+        pblockindex = node.chainman->m_blockman.LookupBlockIndex(hashBlock);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");
         }

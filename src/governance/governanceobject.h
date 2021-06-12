@@ -23,7 +23,7 @@ class CGovernanceManager;
 class CGovernanceTriggerManager;
 class CGovernanceObject;
 class CGovernanceVote;
-
+class ChainstateManager;
 static const double GOVERNANCE_FILTER_FP_RATE = 0.001;
 
 static const int GOVERNANCE_OBJECT_UNKNOWN = 0;
@@ -247,14 +247,14 @@ public:
 
     // CORE OBJECT FUNCTIONS
 
-    bool IsValidLocally(std::string& strError, bool fCheckCollateral) const;
+    bool IsValidLocally(ChainstateManager &chainman, std::string& strError, bool fCheckCollateral) const;
 
-    bool IsValidLocally(std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const;
+    bool IsValidLocally(ChainstateManager &chainman, std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const;
 
     /// Check the collateral transaction for the budget proposal/finalized budget
-    bool IsCollateralValid(std::string& strError, bool& fMissingConfirmations) const;
+    bool IsCollateralValid(ChainstateManager &chainman, std::string& strError, bool& fMissingConfirmations) const;
 
-    void UpdateLocalValidity();
+    void UpdateLocalValidity(ChainstateManager &chainman);
 
     void UpdateSentinelVariables();
 

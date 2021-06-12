@@ -21,6 +21,7 @@ class CBlock;
 class CBlockIndex;
 class BlockValidationState;
 class CSimplifiedMNListDiff;
+class ChainstateManager;
 namespace llmq
 {
     class CFinalCommitment;
@@ -219,7 +220,7 @@ public:
     uint64_t GetInternalId() const;
 
     std::string ToString() const;
-    void ToJson(UniValue& obj) const;
+    void ToJson(ChainstateManager& chainman, UniValue& obj) const;
 };
 typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
 

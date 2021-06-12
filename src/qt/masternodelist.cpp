@@ -20,6 +20,7 @@
 #include <QTimer>
 #include <QtGui/QClipboard>
 #include <interfaces/node.h>
+#include <node/context.h>
 int GetOffsetFromUtc()
 {
 #if QT_VERSION < 0x050200
@@ -182,7 +183,7 @@ void MasternodeList::updateDIP3List()
         mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
             CTxDestination collateralDest;
             Coin coin;
-            if (GetUTXOCoin(dmn->collateralOutpoint, coin) && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
+            if (GetUTXOCoin(*clientModel->node().context()->chainman, dmn->collateralOutpoint, coin) && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
                 mapCollateralDests.try_emplace(dmn->proTxHash, collateralDest);
             }
         });
@@ -356,7 +357,7 @@ void MasternodeList::extraInfoDIP3_clicked()
     }
 
     UniValue json(UniValue::VOBJ);
-    dmn->ToJson(json);
+    dmn->ToJson(*clientModel->node().context()->chainman, json);
 
     // Title of popup window
     QString strWindowtitle = tr("Additional information for DIP3 Masternode %1").arg(QString::fromStdString(dmn->proTxHash.ToString()));
@@ -418,7 +419,7 @@ void MasternodeList::copyCollateral_clicked()
     QString collateralStr;
     CTxDestination collateralDest;
     Coin coin;
-    if (GetUTXOCoin(dmn->collateralOutpoint, coin) && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
+    if (GetUTXOCoin(*clientModel->node().context()->chainman, dmn->collateralOutpoint, coin) && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
         collateralStr = QString::fromStdString(EncodeDestination(collateralDest));
     }
     QApplication::clipboard()->setText(collateralStr);

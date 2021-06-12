@@ -34,7 +34,7 @@ void auxMiningCheck(const JSONRPCRequest& request)
     throw JSONRPCError (RPC_CLIENT_NOT_CONNECTED,
                         "Syscoin is not connected!");
 
-  if (::ChainstateActive ().IsInitialBlockDownload ()
+  if (node.chainman->ActiveChainstate().IsInitialBlockDownload ()
         && !Params ().MineBlocksOnDemand ())
     throw JSONRPCError (RPC_CLIENT_IN_INITIAL_DOWNLOAD,
                         "Syscoin is downloading blocks...");
@@ -44,7 +44,7 @@ void auxMiningCheck(const JSONRPCRequest& request)
   {
     LOCK (cs_main);
     const auto auxpowStart = Params ().GetConsensus ().nAuxpowStartHeight;
-    if (::ChainActive ().Height () + 1 < auxpowStart)
+    if (node.chainman->ActiveChain().Height () + 1 < auxpowStart)
       throw std::runtime_error ("mining auxblock method is not yet available");
   }
 }
@@ -52,7 +52,7 @@ void auxMiningCheck(const JSONRPCRequest& request)
 }  // anonymous namespace
 
 const CBlock*
-AuxpowMiner::getCurrentBlock (const CTxMemPool& mempool,
+AuxpowMiner::getCurrentBlock (ChainstateManager &chainman, const CTxMemPool& mempool,
                               const CScript& scriptPubKey, uint256& target)
 {
   AssertLockHeld(cs);
@@ -66,11 +66,11 @@ AuxpowMiner::getCurrentBlock (const CTxMemPool& mempool,
       pblockCur = iter->second;
 
     if (pblockCur == nullptr
-        || pindexPrev != ::ChainActive ().Tip ()
+        || pindexPrev != chainman.ActiveTip()
         || (mempool.GetTransactionsUpdated () != txUpdatedLast
             && GetTime () - startTime > 60))
       {
-        if (pindexPrev != ::ChainActive ().Tip ())
+        if (pindexPrev != chainman.ActiveTip())
           {
             /* Clear old blocks since they're obsolete now.  */
             blocks.clear ();
@@ -80,13 +80,13 @@ AuxpowMiner::getCurrentBlock (const CTxMemPool& mempool,
 
         /* Create new block with nonce = 0 and extraNonce = 1.  */
         std::unique_ptr<CBlockTemplate> newBlock
-            = BlockAssembler (::ChainstateActive(), mempool, Params ()).CreateNewBlock (scriptPubKey);
+            = BlockAssembler (chainman.ActiveChainstate(), mempool, Params ()).CreateNewBlock (scriptPubKey);
         if (newBlock == nullptr)
           throw JSONRPCError (RPC_OUT_OF_MEMORY, "out of memory");
 
         /* Update state only when CreateNewBlock succeeded.  */
         txUpdatedLast = mempool.GetTransactionsUpdated ();
-        pindexPrev = ::ChainActive ().Tip ();
+        pindexPrev = chainman.ActiveTip();
         startTime = GetTime ();
 
         /* Finalise it by setting the version and building the merkle root.  */
@@ -103,7 +103,7 @@ AuxpowMiner::getCurrentBlock (const CTxMemPool& mempool,
 
   /* At this point, pblockCur is always initialised:  If we make it here
      without creating a new block above, it means that, in particular,
-     pindexPrev == ::ChainActive ().Tip().  But for that to happen, we must
+     pindexPrev == chainman->ActiveTip().  But for that to happen, we must
      already have created a pblockCur in a previous call, as pindexPrev is
      initialised only when pblockCur is.  */
   CHECK_NONFATAL(pblockCur);
@@ -141,9 +141,9 @@ AuxpowMiner::createAuxBlock (const JSONRPCRequest& request,
   LOCK (cs);
 
   const auto& mempool = EnsureAnyMemPool (request.context);
-
+  const NodeContext& node = EnsureAnyNodeContext(request.context);
   uint256 target;
-  const CBlock* pblock = getCurrentBlock (mempool, scriptPubKey, target);
+  const CBlock* pblock = getCurrentBlock (*node.chainman, mempool, scriptPubKey, target);
 
   UniValue result(UniValue::VOBJ);
   result.pushKV ("hash", pblock->GetHash ().GetHex ());

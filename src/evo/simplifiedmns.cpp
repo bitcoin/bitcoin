@@ -176,27 +176,27 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
     obj.pushKV("merkleRootQuorums", merkleRootQuorums.ToString()); 
 }
 
-bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet)
+bool BuildSimplifiedMNListDiff(ChainstateManager& chainman, const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet)
 {
     if(!deterministicMNManager)
         return false;
     LOCK(cs_main);
     mnListDiffRet = CSimplifiedMNListDiff();
-    const CBlockIndex* baseBlockIndex = ::ChainActive().Genesis();
+    const CBlockIndex* baseBlockIndex = chainman.ActiveChain().Genesis();
     if (!baseBlockHash.IsNull()) {
-        baseBlockIndex = g_chainman.m_blockman.LookupBlockIndex(baseBlockHash);
+        baseBlockIndex = chainman.m_blockman.LookupBlockIndex(baseBlockHash);
         if (!baseBlockIndex) {
             errorRet = strprintf("block %s not found", baseBlockHash.ToString());
             return false;
         }
     }
     
-    const CBlockIndex* blockIndex = g_chainman.m_blockman.LookupBlockIndex(blockHash);
+    const CBlockIndex* blockIndex = chainman.m_blockman.LookupBlockIndex(blockHash);
     if (!blockIndex) {
         errorRet = strprintf("block %s not found", blockHash.ToString());
         return false;
     }
-    if (!::ChainActive().Contains(baseBlockIndex) || !::ChainActive().Contains(blockIndex)) {
+    if (!chainman.ActiveChain().Contains(baseBlockIndex) || !chainman.ActiveChain().Contains(blockIndex)) {
         errorRet = strprintf("block %s and %s are not in the same chain", baseBlockHash.ToString(), blockHash.ToString());
         return false;
     }

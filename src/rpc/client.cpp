@@ -224,7 +224,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "assetallocationmint", 2, "amount" },
     { "assetallocationmint", 3, "blocknumber" },
     { "assetallocationmint", 11, "auxfee_test" },
-    { "syscoingettxroots", 0, "height" }, 
+    { "syscoingettxroots", 0, "block" }, 
     { "assetnew", 0, "funding_amount" }, 
     { "assetnew", 4, "precision" },
     { "assetnew", 5, "max_supply" },

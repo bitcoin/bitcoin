@@ -22,18 +22,18 @@ CBLSWorker* blsWorker;
 
 CDBWrapper* llmqDb;
 
-void InitLLMQSystem(bool unitTests, CConnman& connman, BanMan& banman, PeerManager& peerman, bool fWipe)
+void InitLLMQSystem(bool unitTests, CConnman& connman, BanMan& banman, PeerManager& peerman, ChainstateManager& chainman, bool fWipe)
 {
     llmqDb = new CDBWrapper(unitTests ? "" : (gArgs.GetDataDirNet() / "llmq"), 8 << 20, unitTests, fWipe);
     blsWorker = new CBLSWorker();
 
     quorumDKGDebugManager = new CDKGDebugManager();
-    quorumBlockProcessor = new CQuorumBlockProcessor(connman);
-    quorumDKGSessionManager = new CDKGSessionManager(*llmqDb, *blsWorker, connman, peerman);
-    quorumManager = new CQuorumManager(*blsWorker, *quorumDKGSessionManager);
+    quorumBlockProcessor = new CQuorumBlockProcessor(connman, chainman);
+    quorumDKGSessionManager = new CDKGSessionManager(*llmqDb, *blsWorker, connman, peerman, chainman);
+    quorumManager = new CQuorumManager(*blsWorker, *quorumDKGSessionManager, chainman);
     quorumSigSharesManager = new CSigSharesManager(connman, banman, peerman);
-    quorumSigningManager = new CSigningManager(*llmqDb, unitTests, connman, peerman);
-    chainLocksHandler = new CChainLocksHandler(connman, peerman);
+    quorumSigningManager = new CSigningManager(*llmqDb, unitTests, connman, peerman, chainman);
+    chainLocksHandler = new CChainLocksHandler(connman, peerman, chainman);
 }
 
 void DestroyLLMQSystem()

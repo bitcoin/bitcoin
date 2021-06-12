@@ -137,7 +137,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
     if(IsSynced()) {
         std::vector<CNode*> vNodesCopy;
         connman.CopyNodeVector(vNodesCopy);
-        governance.RequestGovernanceObjectVotes(vNodesCopy, connman, peerman);
+        governance->RequestGovernanceObjectVotes(vNodesCopy, connman, peerman);
         connman.ReleaseNodeVector(vNodesCopy);
         return;
     }
@@ -251,7 +251,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
 
                 // only request obj sync once from each peer, then request votes on per-obj basis
                 if(netfulfilledman.HasFulfilledRequest(pnode->addr, "governance-sync")) {
-                    int nObjsLeftToAsk = governance.RequestGovernanceObjectVotes(pnode, connman, peerman);
+                    int nObjsLeftToAsk = governance->RequestGovernanceObjectVotes(pnode, connman, peerman);
                     static int64_t nTimeNoObjectsLeft = 0;
                     // check for data
                     if(nObjsLeftToAsk == 0) {
@@ -264,7 +264,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                         // make sure the condition below is checked only once per tick
                         if(nLastTick == nTick) continue;
                         if(GetTime() - nTimeNoObjectsLeft > MASTERNODE_SYNC_TIMEOUT_SECONDS &&
-                            governance.GetVoteCount() - nLastVotes < std::max(int(0.0001 * nLastVotes), MASTERNODE_SYNC_TICK_SECONDS)
+                            governance->GetVoteCount() - nLastVotes < std::max(int(0.0001 * nLastVotes), MASTERNODE_SYNC_TICK_SECONDS)
                         ) {
                             // We already asked for all objects, waited for MASTERNODE_SYNC_TIMEOUT_SECONDS
                             // after that and less then 0.01% or MASTERNODE_SYNC_TICK_SECONDS
@@ -278,7 +278,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                             return;
                         }
                         nLastTick = nTick;
-                        nLastVotes = governance.GetVoteCount();
+                        nLastVotes = governance->GetVoteCount();
                     }
                     continue;
                 }

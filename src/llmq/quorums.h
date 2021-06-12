@@ -18,6 +18,7 @@ class CNode;
 class CConnman;
 class CBlockIndex;
 class CDeterministicMN;
+class ChainstateManager;
 typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
 
 
@@ -88,7 +89,7 @@ class CQuorumManager
 private:
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
-
+    ChainstateManager& chainman;
     mutable RecursiveMutex quorumsCacheCs;
     mutable std::map<uint8_t, unordered_lru_cache<uint256, CQuorumCPtr, StaticSaltedHasher>> mapQuorumsCache GUARDED_BY(quorumsCacheCs);
     mutable std::map<uint8_t, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>> scanQuorumsCache GUARDED_BY(quorumsCacheCs);
@@ -97,7 +98,7 @@ private:
     mutable CThreadInterrupt quorumThreadInterrupt;
 
 public:
-    CQuorumManager(CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);
+    CQuorumManager(CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, ChainstateManager& _chainman);
     ~CQuorumManager();
 
     void Start();

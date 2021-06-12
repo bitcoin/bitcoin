@@ -192,12 +192,11 @@ public:
         return true;
     }
 
-    bool Dump(T& objToSave)
+    bool Dump(T& objToSave, T &tmpObjToLoad)
     {
         int64_t nStart = GetTimeMillis();
 
         LogPrintf("Verifying %s format...\n", strFilename);
-        T tmpObjToLoad;
         ReadResult readResult = Read(tmpObjToLoad, true);
 
         // there was an error and it was not an error on file opening => do not proceed

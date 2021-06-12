@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(findCommonAncestor)
     auto* orig_tip = active.Tip();
     for (int i = 0; i < 10; ++i) {
         BlockValidationState state;
-        ChainstateActive().InvalidateBlock(state, Params(), active.Tip());
+        m_node.chainman->ActiveChainstate().InvalidateBlock(state, Params(), active.Tip());
     }
     BOOST_CHECK_EQUAL(active.Height(), orig_tip->nHeight - 10);
     coinbaseKey.MakeNewKey(true);

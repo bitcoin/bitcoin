@@ -23,6 +23,7 @@ typedef int64_t NodeId;
 class CNode;
 class CConnman;
 class PeerManager;
+class ChainstateManager;
 namespace llmq
 {
 
@@ -135,6 +136,7 @@ private:
     CRecoveredSigsDb db;
     CConnman& connman;
     PeerManager& peerman;
+    ChainstateManager& chainman;
     // Incoming and not verified yet
     std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>> pendingRecoveredSigs GUARDED_BY(cs);
     std::unordered_map<uint256, std::shared_ptr<const CRecoveredSig>, StaticSaltedHasher> pendingReconstructedRecoveredSigs GUARDED_BY(cs);
@@ -150,7 +152,7 @@ public:
     // starting height for scanning. This is because otherwise the resulting signatures would not be verifiable by nodes
     // which are not 100% at the chain tip.
     static const int SIGN_HEIGHT_OFFSET = 8;
-    CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _connman, PeerManager& _peerman);
+    CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _connman, PeerManager& _peerman, ChainstateManager& _chainman);
 
     bool AlreadyHave(const uint256& hash);
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret);
@@ -195,9 +197,9 @@ public:
     bool GetVoteForId(uint8_t llmqType, const uint256& id, uint256& msgHashRet);
 
     static std::vector<CQuorumCPtr> GetActiveQuorumSet(uint8_t llmqType, int signHeight);
-    static CQuorumCPtr SelectQuorumForSigning(uint8_t llmqType, const uint256& selectionHash, int signHeight = -1 /*chain tip*/, int signOffset = SIGN_HEIGHT_OFFSET);
+    static CQuorumCPtr SelectQuorumForSigning(ChainstateManager& chainman, uint8_t llmqType, const uint256& selectionHash, int signHeight = -1 /*chain tip*/, int signOffset = SIGN_HEIGHT_OFFSET);
     // Verifies a recovered sig that was signed while the chain tip was at signedAtTip
-    static bool VerifyRecoveredSig(uint8_t llmqType, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, int signOffset = SIGN_HEIGHT_OFFSET);
+    static bool VerifyRecoveredSig(ChainstateManager& chainman, uint8_t llmqType, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, int signOffset = SIGN_HEIGHT_OFFSET);
 };
 
 extern CSigningManager* quorumSigningManager;

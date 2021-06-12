@@ -86,10 +86,11 @@ void CDKGPendingMessages::Clear()
 
 //////
 
-CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, PeerManager& _peerman) :
+CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, PeerManager& _peerman, ChainstateManager& _chainman) :
     params(_params),
     blsWorker(_blsWorker),
     dkgManager(_dkgManager),
+    chainman(_chainman),
     curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager)),
     pendingContributions((size_t)_params.size * 2, _peerman), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
     pendingComplaints((size_t)_params.size * 2, _peerman),
@@ -518,7 +519,7 @@ void CDKGSessionHandler::HandleDKGRound()
     const CBlockIndex* pindexQuorum;
     {
         LOCK(cs_main);
-        pindexQuorum = g_chainman.m_blockman.LookupBlockIndex(curQuorumHash);
+        pindexQuorum = chainman.m_blockman.LookupBlockIndex(curQuorumHash);
     }
 
     if (!InitNewQuorum(pindexQuorum)) {

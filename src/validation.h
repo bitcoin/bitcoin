@@ -212,9 +212,9 @@ private:
         m_replaced_transactions(std::move(replaced_txns)), m_base_fees(fees) {}
 };
 // SYSCOIN
-bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin);
-int GetUTXOHeight(const COutPoint& outpoint);
-int GetUTXOConfirmations(const COutPoint& outpoint);
+bool GetUTXOCoin(ChainstateManager& chainman, const COutPoint& outpoint, Coin& coin);
+int GetUTXOHeight(ChainstateManager& chainman, const COutPoint& outpoint);
+int GetUTXOConfirmations(ChainstateManager& chainman, const COutPoint& outpoint);
 /**
 * Validation result for package mempool acceptance.
 */
@@ -387,8 +387,6 @@ public:
         int nCheckLevel,
         int nCheckDepth) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
-// SYSCOIN
-std::pair<PrevBlockMap::iterator,PrevBlockMap::iterator> LookupBlockIndexPrev(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 enum DisconnectResult
 {
     DISCONNECT_OK,      // All good.
@@ -509,7 +507,8 @@ public:
         CBlockIndex** ppindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     CBlockIndex* LookupBlockIndex(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
+    // SYSCOIN
+    std::pair<PrevBlockMap::iterator,PrevBlockMap::iterator> LookupBlockIndexPrev(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Find the last common block between the parameter chain and a locator. */
     CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -923,10 +922,6 @@ private:
         CAutoFile& coins_file,
         const SnapshotMetadata& metadata);
 
-    // For access to m_active_chainstate.
-    friend CChainState& ChainstateActive();
-    friend CChain& ChainActive();
-
 public:
     std::thread m_load_block;
     //! A single BlockManager instance is shared across each constructed
@@ -1054,16 +1049,13 @@ public:
     //! Check to see if caches are out of balance and if so, call
     //! ResizeCoinsCaches() as needed.
     void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    ~ChainstateManager() {
+        LOCK(::cs_main);
+        UnloadBlockIndex(/* mempool */ nullptr, *this);
+        Reset();
+    }
 };
-
-/** DEPRECATED! Please use node.chainman instead. May only be used in validation.cpp internally */
-extern ChainstateManager g_chainman GUARDED_BY(::cs_main);
-
-/** Please prefer the identical ChainstateManager::ActiveChainstate */
-CChainState& ChainstateActive();
-
-/** Please prefer the identical ChainstateManager::ActiveChain */
-CChain& ChainActive();
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern std::unique_ptr<CBlockTreeDB> pblocktree;
@@ -1078,12 +1070,12 @@ public:
     bool ReadBlockHeight(const uint256& txid, uint32_t& nHeight) {
         return Read(txid, nHeight);
     }  
-    bool PruneIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool PruneIndex(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool FlushErase(const std::vector<uint256> &vecTXIDs);
     bool FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs);
 };
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
-bool PruneSyscoinDBs() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+bool PruneSyscoinDBs(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 void DoGethMaintenance();
 bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websocketport=8646, int ethrpcport=8645, const std::string & mode="light");
 bool StopGethNode(pid_t &pid);
@@ -1095,7 +1087,7 @@ extern VersionBitsCache versionbitscache;
  * Return true if hash can be found in chainActive at nBlockHeight height.
  * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.
  */
-bool GetBlockHash(uint256& hashRet, int nBlockHeight = -1);
+bool GetBlockHash(ChainstateManager& chainman, uint256& hashRet, int nBlockHeight = -1);
 /**
  * Determine what nVersion a new block should use.
  */

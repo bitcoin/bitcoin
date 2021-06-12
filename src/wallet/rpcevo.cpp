@@ -151,11 +151,12 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
 }
 static UniValue SignAndSendSpecialTx(const JSONRPCRequest& request, const CMutableTransaction& tx, bool fSubmit = true)
 {
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     {
         LOCK(cs_main);
 
         TxValidationState state;
-        if (!CheckSpecialTx(CTransaction(tx), ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), true)) {
+        if (!CheckSpecialTx(node.chainman->m_blockman, CTransaction(tx), node.chainman->ActiveTip(), state, node.chainman->ActiveChainstate().CoinsTip(), true)) {
             throw std::runtime_error(state.ToString());
         }
     } // cs_main
@@ -224,7 +225,7 @@ static RPCHelpMan protx_register()
     pwallet->BlockUntilSyncedToCurrentChain();
     EnsureWalletIsUnlocked(*pwallet);
     
-
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     size_t paramIdx = 0;
 
 
@@ -302,7 +303,7 @@ static RPCHelpMan protx_register()
     // referencing external collateral
 
     Coin coin;
-    if (!GetUTXOCoin(ptx.collateralOutpoint, coin)) {
+    if (!GetUTXOCoin(*node.chainman, ptx.collateralOutpoint, coin)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral not found: %s", ptx.collateralOutpoint.ToStringShort()));
     }
     CTxDestination txDest;
@@ -495,7 +496,7 @@ static RPCHelpMan protx_register_prepare()
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
-
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -572,7 +573,7 @@ static RPCHelpMan protx_register_prepare()
 
     // referencing external collateral
     Coin coin;
-    if (!GetUTXOCoin(ptx.collateralOutpoint, coin)) {
+    if (!GetUTXOCoin(*node.chainman, ptx.collateralOutpoint, coin)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral not found: %s", ptx.collateralOutpoint.ToStringShort()));
     }
     CTxDestination txDest;
@@ -973,8 +974,8 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
         }
         return o;
     } else if(detailed >= 2) {
-        dmn->ToJson(o);
-        int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
+        dmn->ToJson(*node.chainman, o);
+        int confirmations = GetUTXOConfirmations(*node.chainman,dmn->collateralOutpoint);
         o.pushKV("confirmations", confirmations);
         if (pwallet) {
             LOCK2(pwallet->cs_wallet, cs_main);
@@ -988,7 +989,7 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
             uint32_t nBlockHeight;
             CBlockIndex* blockindex = nullptr;
             if(pblockindexdb->ReadBlockHeight(dmn->collateralOutpoint.hash, nBlockHeight)){	    
-                blockindex = ::ChainActive()[nBlockHeight];
+                blockindex = node.chainman->ActiveChain()[nBlockHeight];
             } 
             collateralTx = GetTransaction(blockindex, node.mempool.get(), dmn->collateralOutpoint.hash, Params().GetConsensus(), tmpHashBlock);
             if(collateralTx)
@@ -1042,8 +1043,8 @@ static RPCHelpMan protx_list_wallet()
 
     int detailed = !request.params[0].isNull() ? request.params[0].get_int() : 0;
 
-    int height = !request.params[1].isNull() ? request.params[1].get_int() : ::ChainActive().Height();
-    if (height < 1 || height > ::ChainActive().Height()) {
+    int height = !request.params[1].isNull() ? request.params[1].get_int() : node.chainman->ActiveHeight();
+    if (height < 1 || height > node.chainman->ActiveHeight()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
     }
 
@@ -1055,7 +1056,7 @@ static RPCHelpMan protx_list_wallet()
     }
     CDeterministicMNList mnList;
     if(deterministicMNManager)
-        deterministicMNManager->GetListForBlock(::ChainActive()[height], mnList);
+        deterministicMNManager->GetListForBlock(node.chainman->ActiveChain()[height], mnList);
     mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
         if (setOutpts.count(dmn->collateralOutpoint) ||
             CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner) ||

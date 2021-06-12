@@ -136,7 +136,7 @@ bool CFinalCommitment::VerifySizes(const Consensus::LLMQParams& params) const
     return true;
 }
 
-bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
+bool CheckLLMQCommitment(BlockManager &blockman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     if (!tx.IsCoinBase()) {
@@ -151,7 +151,7 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
         return FormatSyscoinErrorMessage(state, "bad-qc-cbtx", fJustCheck);
     }
     for(const auto& commitment: qcTx.commitments) {
-        const CBlockIndex* pindexQuorum = g_chainman.m_blockman.LookupBlockIndex(commitment.quorumHash);
+        const CBlockIndex* pindexQuorum = blockman.LookupBlockIndex(commitment.quorumHash);
         if(!pindexQuorum) {
             return FormatSyscoinErrorMessage(state, "bad-qc-quorum-hash", fJustCheck);
         }

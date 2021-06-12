@@ -14,7 +14,6 @@
 // Keep track of the active Masternode
 CActiveMasternodeInfo activeMasternodeInfo;
 std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
-
 std::string CActiveMasternodeManager::GetStateString() const
 {
     switch (state) {

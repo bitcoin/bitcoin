@@ -13,6 +13,7 @@ class CBLSWorker;
 class CBlockIndex;
 class CConnman;
 class PeerManager;
+class ChainstateManager;
 namespace llmq
 {
 class CDKGSession;
@@ -108,6 +109,7 @@ private:
     const Consensus::LLMQParams& params;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
+    ChainstateManager& chainman;
 
     QuorumPhase phase GUARDED_BY(cs) {QuorumPhase_Idle};
     int currentHeight GUARDED_BY(cs) {-1};
@@ -123,7 +125,7 @@ private:
     std::string m_threadName;
     PeerManager& peerman;
 public:
-    CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager, PeerManager& peerman);
+    CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager, PeerManager& peerman, ChainstateManager& _chainman);
     ~CDKGSessionHandler();
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);

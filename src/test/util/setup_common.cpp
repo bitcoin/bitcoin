@@ -45,6 +45,7 @@
 #include <evo/cbtx.h>
 #include <llmq/quorums_init.h>
 #include <llmq/quorums_commitment.h>
+#include <governance/governance.h>
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;
 
@@ -101,6 +102,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     // SYSCOIN
     evoDb.reset(new CEvoDB(1 << 20, true, true));
     deterministicMNManager.reset(new CDeterministicMNManager());
+    governance.reset(new CGovernanceManager(*m_node.chainman));
     gArgs.ForceSetArg("-mncollateral", "100");
     gArgs.ForceSetArg("-dip3params", "550:550");
     gArgs.ClearPathCache();
@@ -138,6 +140,7 @@ BasicTestingSetup::~BasicTestingSetup()
 {
     // SYSCOIN
     deterministicMNManager.reset();
+    governance.reset();
     evoDb.reset();
     SetMockTime(0s); // Reset mocktime for following tests
     LogInstance().DisconnectTestLogger();
@@ -160,7 +163,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
     m_node.mempool = std::make_unique<CTxMemPool>(m_node.fee_estimator.get(), 1);
 
-    m_node.chainman = &::g_chainman;
+    m_node.chainman = std::make_unique<ChainstateManager>();
 
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;
@@ -187,7 +190,7 @@ ChainTestingSetup::~ChainTestingSetup()
     // SYSCOIN
     llmq::DestroyLLMQSystem();
     m_node.chainman->Reset();
-    m_node.chainman = nullptr;
+    m_node.chainman.reset();
     pblocktree.reset();
 }
 
@@ -200,17 +203,17 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     RegisterAllCoreRPCCommands(tableRPC);
 
     m_node.chainman->InitializeChainstate(*m_node.mempool);
-    ::ChainstateActive().InitCoinsDB(
+    m_node.chainman->ActiveChainstate().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
-    assert(!::ChainstateActive().CanFlushToDisk());
-    ::ChainstateActive().InitCoinsCache(1 << 23);
-    assert(::ChainstateActive().CanFlushToDisk());
-    if (!::ChainstateActive().LoadGenesisBlock(chainparams)) {
+    assert(!m_node.chainman->ActiveChainstate().CanFlushToDisk());
+    m_node.chainman->ActiveChainstate().InitCoinsCache(1 << 23);
+    assert(m_node.chainman->ActiveChainstate().CanFlushToDisk());
+    if (!m_node.chainman->ActiveChainstate().LoadGenesisBlock(chainparams)) {
         throw std::runtime_error("LoadGenesisBlock failed.");
     }
 
     BlockValidationState state;
-    if (!::ChainstateActive().ActivateBestChain(state, chainparams)) {
+    if (!m_node.chainman->ActiveChainstate().ActivateBestChain(state, chainparams)) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
     // SYSCOIN
@@ -226,7 +229,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         m_node.connman->Init(options);
     }
     // SYSCOIN
-    llmq::InitLLMQSystem(true, *m_node.connman, *m_node.banman, *m_node.peerman);
+    llmq::InitLLMQSystem(true, *m_node.connman, *m_node.banman, *m_node.peerman, *m_node.chainman);
     fRegTest = chainName == CBaseChainParams::REGTEST;
 }
 // SYSCOIN
@@ -257,7 +260,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
 {
     const CChainParams& chainparams = Params();
     CTxMemPool empty_pool;
-    CBlock block = BlockAssembler(::ChainstateActive(), empty_pool, chainparams).CreateNewBlock(scriptPubKey)->block;
+    CBlock block = BlockAssembler(m_node.chainman->ActiveChainstate(), empty_pool, chainparams).CreateNewBlock(scriptPubKey)->block;
 
     Assert(block.vtx.size() == 1);
     for (const CMutableTransaction& tx : txns) {
@@ -272,10 +275,10 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
             BOOST_ASSERT(false);
         }
         BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx.merkleRootMNList, state, ::ChainstateActive().CoinsTip())) {
+        if (!CalcCbTxMerkleRootMNList(block, m_node.chainman->ActiveChain().Tip(), cbTx.merkleRootMNList, state, m_node.chainman->ActiveChainstate().CoinsTip())) {
             BOOST_ASSERT(false);
         }
-        if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), cbTx.merkleRootQuorums, state)) {
+        if (!CalcCbTxMerkleRootQuorums(block, m_node.chainman->ActiveChain().Tip(), cbTx.merkleRootQuorums, state)) {
             BOOST_ASSERT(false);
         }
         ds << cbTx;
@@ -286,10 +289,10 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
             BOOST_ASSERT(false);
         }
         BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), qc.cbTx.merkleRootMNList, state, ::ChainstateActive().CoinsTip())) {
+        if (!CalcCbTxMerkleRootMNList(block, m_node.chainman->ActiveChain().Tip(), qc.cbTx.merkleRootMNList, state, m_node.chainman->ActiveChainstate().CoinsTip())) {
             BOOST_ASSERT(false);
         }
-        if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), qc.cbTx.merkleRootQuorums, state)) {
+        if (!CalcCbTxMerkleRootQuorums(block, m_node.chainman->ActiveChain().Tip(), qc.cbTx.merkleRootQuorums, state)) {
             BOOST_ASSERT(false);
         }
         ds << qc;
@@ -349,7 +352,7 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
     // If submit=true, add transaction to the mempool.
     if (submit) {
         LOCK(cs_main);
-        const MempoolAcceptResult result = AcceptToMemoryPool(::ChainstateActive(), *m_node.mempool.get(), MakeTransactionRef(mempool_txn), /* bypass_limits */ false);
+        const MempoolAcceptResult result = AcceptToMemoryPool(m_node.chainman->ActiveChainstate(), *m_node.mempool.get(), MakeTransactionRef(mempool_txn), /* bypass_limits */ false);
         assert(result.m_result_type == MempoolAcceptResult::ResultType::VALID);
     }
 

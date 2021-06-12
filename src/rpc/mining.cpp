@@ -118,7 +118,6 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
 
     {
         LOCK(cs_main);
-        CHECK_NONFATAL(std::addressof(::ChainActive()) == std::addressof(chainman.ActiveChain()));
         IncrementExtraNonce(&block, chainman.ActiveChain().Tip(), extra_nonce);
     }
 
@@ -151,7 +150,6 @@ static UniValue generateBlocks(ChainstateManager& chainman, const CTxMemPool& me
 
     {   // Don't keep cs_main locked
         LOCK(cs_main);
-        CHECK_NONFATAL(std::addressof(::ChainActive()) == std::addressof(chainman.ActiveChain()));
         nHeight = chainman.ActiveChain().Height();
         nHeightEnd = nHeight+nGenerate;
     }
@@ -701,12 +699,12 @@ static RPCHelpMan getblocktemplate()
     std::vector<CTxOut> voutMasternodePayments;
     CAmount mnRet;
     int nCollateralHeight;
-    mnpayments.GetBlockTxOuts(::ChainActive().Height() + 1, 0, voutMasternodePayments, 0, mnRet, nCollateralHeight);
+    mnpayments.GetBlockTxOuts(node.chainman->ActiveChain(), node.chainman->ActiveHeight() + 1, 0, voutMasternodePayments, 0, mnRet, nCollateralHeight);
 
     // next bock is a superblock and we need governance info to correctly construct it
     if (!fRegTest && !fSigNet && isSBSportActive
         && !masternodeSync.IsSynced()
-        && CSuperblock::IsValidBlockHeight(::ChainActive().Height() + 1))
+        && CSuperblock::IsValidBlockHeight(node.chainman->ActiveHeight() + 1))
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Syscoin Core is syncing with network...");
     
 

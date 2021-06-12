@@ -1450,7 +1450,6 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
       m_stale_tip_check_time(0),
       m_ignore_incoming_txs(ignore_incoming_txs)
 {
-    assert(std::addressof(g_chainman) == std::addressof(m_chainman));
     // Initialize global variables that cannot be constructed at startup.
     recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
 
@@ -1679,7 +1678,7 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid)
     }
     case MSG_GOVERNANCE_OBJECT:
     case MSG_GOVERNANCE_OBJECT_VOTE:
-        return !governance.ConfirmInventoryRequest(gtxid);
+        return !governance->ConfirmInventoryRequest(gtxid);
 
     case MSG_QUORUM_FINAL_COMMITMENT:
         return llmq::quorumBlockProcessor->HasMineableCommitment(hash);
@@ -2039,9 +2038,9 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                     CDataStream ss(SER_NETWORK, pfrom.GetCommonVersion());
                     bool topush = false;
                     {
-                        if(governance.HaveObjectForHash(inv.hash)) {
+                        if(governance->HaveObjectForHash(inv.hash)) {
                             ss.reserve(1000);
-                            if(governance.SerializeObjectForHash(inv.hash, ss)) {
+                            if(governance->SerializeObjectForHash(inv.hash, ss)) {
                                 topush = true;
                             }
                         }
@@ -2056,9 +2055,9 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                     CDataStream ss(SER_NETWORK, pfrom.GetCommonVersion());
                     bool topush = false;
                     {
-                        if(governance.HaveVoteForHash(inv.hash)) {
+                        if(governance->HaveVoteForHash(inv.hash)) {
                             ss.reserve(1000);
-                            if(governance.SerializeVoteForHash(inv.hash, ss)) {
+                            if(governance->SerializeVoteForHash(inv.hash, ss)) {
                                 topush = true;
                             }
                         }
@@ -4203,7 +4202,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         vRecv >> cmd;
         CSimplifiedMNListDiff mnListDiff;
         std::string strError;
-        if (BuildSimplifiedMNListDiff(cmd.baseBlockHash, cmd.blockHash, mnListDiff, strError)) {
+        if (BuildSimplifiedMNListDiff(m_chainman, cmd.baseBlockHash, cmd.blockHash, mnListDiff, strError)) {
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNLISTDIFF, mnListDiff));
         } else {
             strError = strprintf("getmnlistdiff failed for baseBlockHash=%s, blockHash=%s. error=%s", cmd.baseBlockHash.ToString(), cmd.blockHash.ToString(), strError);
@@ -4244,7 +4243,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     } else if(msg_type == NetMsgType::MNGOVERNANCESYNC || 
         msg_type == NetMsgType::MNGOVERNANCEOBJECT || 
         msg_type == NetMsgType::MNGOVERNANCEOBJECTVOTE) {
-        governance.ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
+        governance->ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
         return;
     } else if(msg_type == NetMsgType::MNAUTH) {
         CMNAuth::ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);

@@ -268,10 +268,11 @@ static RPCHelpMan masternode_winners()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     const CBlockIndex* pindexTip{nullptr};
     {
         LOCK(cs_main);
-        pindexTip = ::ChainActive().Tip();
+        pindexTip = node.chainman->ActiveTip();
         if (!pindexTip) return NullUniValue;
     }
 
@@ -334,11 +335,11 @@ RPCHelpMan masternode_payments()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (request.params[0].isNull()) {
         LOCK(cs_main);
-        pindex = ::ChainActive().Tip();
+        pindex = node.chainman->ActiveTip();
     } else {
         LOCK(cs_main);
         uint256 blockHash = ParseHashV(request.params[0], "blockhash");
-        pindex = g_chainman.m_blockman.LookupBlockIndex(blockHash);
+        pindex = node.chainman->m_blockman.LookupBlockIndex(blockHash);
         if (pindex == nullptr) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
@@ -377,7 +378,7 @@ RPCHelpMan masternode_payments()
         CMutableTransaction coinbaseTx;
         coinbaseTx.vout.resize(1);
         coinbaseTx.vout[0].nValue = blockReward + nBlockFees;
-        FillBlockPayments(coinbaseTx, pindex->nHeight, blockReward, nBlockFees, voutMasternodePayments, voutDummy);
+        FillBlockPayments(node.chainman->ActiveChain(), coinbaseTx, pindex->nHeight, blockReward, nBlockFees, voutMasternodePayments, voutDummy);
 
         UniValue blockObj(UniValue::VOBJ);
         CAmount payedPerBlock{0};
@@ -415,7 +416,7 @@ RPCHelpMan masternode_payments()
 
         if (nCount > 0) {
             LOCK(cs_main);
-            pindex = ::ChainActive().Next(pindex);
+            pindex = node.chainman->ActiveChain().Next(pindex);
         } else {
             pindex = pindex->pprev;
         }
@@ -451,6 +452,7 @@ RPCHelpMan masternodelist()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     std::string strMode = "json";
     std::string strFilter = "";
 
@@ -486,7 +488,7 @@ RPCHelpMan masternodelist()
         }
 
         LOCK(cs_main);
-        const CBlockIndex* pindex = ::ChainActive()[dmn->pdmnState->nLastPaidHeight];
+        const CBlockIndex* pindex = node.chainman->ActiveChain()[dmn->pdmnState->nLastPaidHeight];
         return (int)pindex->nTime;
     };
 
@@ -494,7 +496,7 @@ RPCHelpMan masternodelist()
         std::string strOutpoint = dmn->collateralOutpoint.ToStringShort();
         Coin coin;
         std::string collateralAddressStr = "UNKNOWN";
-        if (GetUTXOCoin(dmn->collateralOutpoint, coin)) {
+        if (GetUTXOCoin(*node.chainman, dmn->collateralOutpoint, coin)) {
             CTxDestination collateralDest;
             if (ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
                 collateralAddressStr = EncodeDestination(collateralDest);

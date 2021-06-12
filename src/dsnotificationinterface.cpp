@@ -15,11 +15,11 @@
 #include <llmq/quorums_dkgsessionmgr.h>
 #include <llmq/quorums_chainlocks.h>
 #include <shutdown.h>
-void CDSNotificationInterface::InitializeCurrentBlockTip()
+void CDSNotificationInterface::InitializeCurrentBlockTip(ChainstateManager& chainman)
 {
     LOCK(cs_main);
-    SynchronousUpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
-    UpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
+    SynchronousUpdatedBlockTip(chainman.ActiveChain().Tip(), nullptr, chainman.ActiveChainstate().IsInitialBlockDownload());
+    UpdatedBlockTip(chainman.ActiveChain().Tip(), nullptr, chainman.ActiveChainstate().IsInitialBlockDownload());
 }
 
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
@@ -56,7 +56,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
         llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
     if(llmq::chainLocksHandler)
         llmq::chainLocksHandler->UpdatedBlockTip(pindexNew, fInitialDownload);
-    if (!fDisableGovernance) governance.UpdatedBlockTip(pindexNew, connman);
+    if (!fDisableGovernance) governance->UpdatedBlockTip(pindexNew, connman);
 }
 
 void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
@@ -64,5 +64,5 @@ void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDet
     if(ShutdownRequested())
         return;
     CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff, connman);
-    governance.UpdateCachesAndClean();
+    governance->UpdateCachesAndClean();
 }

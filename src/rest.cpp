@@ -126,7 +126,7 @@ static ChainstateManager* GetChainman(const std::any& context, HTTPRequest* req)
                           __FILE__, __LINE__, __func__, PACKAGE_BUGREPORT));
         return nullptr;
     }
-    return node_context->chainman;
+    return node_context->chainman.get();
 }
 
 static RetFormat ParseDataFormat(std::string& param, const std::string& strReq)
@@ -424,6 +424,7 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
     CBlockIndex* blockindex = nullptr;
     uint256 hashBlock = uint256();
+    const NodeContext* const node = GetNodeContext(context, req);
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
@@ -432,10 +433,9 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
         uint32_t nBlockHeight;
         if(pblockindexdb->ReadBlockHeight(hash, nBlockHeight)) {
             LOCK(cs_main);
-            blockindex = ::ChainActive()[nBlockHeight];
+            blockindex = node->chainman->ActiveChain()[nBlockHeight];
         }
     }
-    const NodeContext* const node = GetNodeContext(context, req);
     if (!node) return false;
     // SYSCOIN
     const CTransactionRef tx = GetTransaction(blockindex, node->mempool.get(), hash, Params().GetConsensus(), hashBlock);

@@ -14,7 +14,7 @@ extern RecursiveMutex cs_main;
 class UniValue;
 class CDeterministicMNList;
 class CDeterministicMN;
-
+class ChainstateManager;
 namespace llmq
 {
     class CFinalCommitment;
@@ -119,6 +119,6 @@ public:
     void ToJson(UniValue& obj) const;
 };
 
-bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet);
+bool BuildSimplifiedMNListDiff(ChainstateManager& chainman, const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet);
 
 #endif //SYSCOIN_EVO_SIMPLIFIEDMNS_H

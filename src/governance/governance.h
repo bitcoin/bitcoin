@@ -18,7 +18,7 @@ class CGovernanceObject;
 class CGovernanceVote;
 class PeerManager;
 
-extern CGovernanceManager governance;
+extern std::unique_ptr<CGovernanceManager> governance;
 
 static const int RATE_BUFFER_SIZE = 5;
 class CDeterministicMNList;
@@ -124,7 +124,7 @@ public:
 class CGovernanceManager
 {
     friend class CGovernanceObject;
-
+    ChainstateManager& chainman;
 public: // Types
     struct last_object_rec {
         explicit last_object_rec(bool fStatusOKIn = true) :
@@ -217,7 +217,7 @@ public:
     // critical section to protect the inner data structures
     mutable RecursiveMutex cs;
 
-    CGovernanceManager();
+    CGovernanceManager(ChainstateManager& _chainman);
 
     virtual ~CGovernanceManager() = default;
 

@@ -428,10 +428,11 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 
 //////////////////
 
-CSigningManager::CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _connman, PeerManager& _peerman) :
+CSigningManager::CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _connman, PeerManager& _peerman, ChainstateManager& _chainman) :
     db(llmqDb),
     connman(_connman),
-    peerman(_peerman)
+    peerman(_peerman),
+    chainman(_chainman)
 {
 }
 
@@ -818,7 +819,7 @@ bool CSigningManager::AsyncSignIfMember(uint8_t llmqType, const uint256& id, con
         // This gives a slight risk of not getting enough shares to recover a signature
         // But at least it shouldn't be possible to get conflicting recovered signatures
         // TODO fix this by re-signing when the next block arrives, but only when that block results in a change of the quorum list and no recovered signature has been created in the mean time
-        quorum = SelectQuorumForSigning(llmqType, id);
+        quorum = SelectQuorumForSigning(chainman, llmqType, id);
     } else {
         quorum = quorumManager->GetQuorum(llmqType, quorumHash);
     }
@@ -919,7 +920,7 @@ bool CSigningManager::GetVoteForId(uint8_t llmqType, const uint256& id, uint256&
     return db.GetVoteForId(llmqType, id, msgHashRet);
 }
 
-CQuorumCPtr CSigningManager::SelectQuorumForSigning(uint8_t llmqType, const uint256& selectionHash, int signHeight, int signOffset)
+CQuorumCPtr CSigningManager::SelectQuorumForSigning(ChainstateManager& chainman, uint8_t llmqType, const uint256& selectionHash, int signHeight, int signOffset)
 {
     auto& llmqParams = Params().GetConsensus().llmqs.at(llmqType);
     size_t poolSize = (size_t)llmqParams.signingActiveQuorumCount;
@@ -928,13 +929,13 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(uint8_t llmqType, const uint
     {
         LOCK(cs_main);
         if (signHeight == -1) {
-            signHeight = ::ChainActive().Height();
+            signHeight = chainman.ActiveHeight();
         }
         int startBlockHeight = signHeight - signOffset;
-        if (startBlockHeight > ::ChainActive().Height() || startBlockHeight < 0) {
+        if (startBlockHeight > chainman.ActiveHeight() || startBlockHeight < 0) {
             return {};
         }
-        pindexStart = ::ChainActive()[startBlockHeight];
+        pindexStart = chainman.ActiveChain()[startBlockHeight];
     }
     quorumManager->ScanQuorums(llmqType, pindexStart, poolSize, quorums);
     if (quorums.empty()) {
@@ -953,9 +954,9 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(uint8_t llmqType, const uint
     return quorums[scores.front().second];
 }
 
-bool CSigningManager::VerifyRecoveredSig(uint8_t llmqType, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, const int signOffset)
+bool CSigningManager::VerifyRecoveredSig(ChainstateManager& chainman, uint8_t llmqType, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, const int signOffset)
 {
-    auto quorum = SelectQuorumForSigning(llmqType, id, signedAtHeight, signOffset);
+    auto quorum = SelectQuorumForSigning(chainman, llmqType, id, signedAtHeight, signOffset);
     if (!quorum) {
         return false;
     }

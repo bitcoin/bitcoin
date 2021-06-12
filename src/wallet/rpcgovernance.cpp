@@ -17,8 +17,8 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
                              vote_outcome_enum_t eVoteOutcome, CConnman& connman)
 {
     {
-        LOCK(governance.cs);
-        CGovernanceObject *pGovObj = governance.FindGovernanceObject(hash);
+        LOCK(governance->cs);
+        CGovernanceObject *pGovObj = governance->FindGovernanceObject(hash);
         if (!pGovObj) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");
         }
@@ -57,7 +57,7 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
         }
 
         CGovernanceException exception;
-        if (governance.ProcessVoteAndRelay(vote, exception, connman)) {
+        if (governance->ProcessVoteAndRelay(vote, exception, connman)) {
             nSuccessful++;
             statusObj.pushKV("result", "success");
         } else {
@@ -189,7 +189,7 @@ static RPCHelpMan gobject_prepare()
     LOCK(pwallet->cs_wallet);
 
     std::string strError = "";
-    if (!govobj.IsValidLocally(strError, false))
+    if (!govobj.IsValidLocally(*node.chainman, strError, false))
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
 
     // If specified, spend this outpoint as the proposal fee

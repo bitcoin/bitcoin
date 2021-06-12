@@ -252,7 +252,6 @@ bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight,
             // when the undo file is keeping up with the block file, we want to flush it explicitly
             // when it is lagging behind (more blocks arrive than are being connected), we let the
             // undo block write case handle it
-            assert(std::addressof(::ChainActive()) == std::addressof(active_chain));
             finalize_undo = (vinfoBlockFile[nFile].nHeightLast == (unsigned int)active_chain.Tip()->nHeight);
             nFile++;
             if (vinfoBlockFile.size() <= nFile) {
@@ -575,7 +574,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
         }
         // SYSCOIN
         if(pdsNotificationInterface)
-            pdsNotificationInterface->InitializeCurrentBlockTip();
+            pdsNotificationInterface->InitializeCurrentBlockTip(chainman);
         // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
         // and reduce further locking overhead for cs_main in other parts of code including GUI
         LogPrintf("Filling coin cache with masternode UTXOs...\n");
@@ -585,7 +584,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
             deterministicMNManager->GetListAtChainTip(mnList);
         mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
             Coin coin;
-            GetUTXOCoin(dmn->collateralOutpoint, coin);
+            GetUTXOCoin(chainman, dmn->collateralOutpoint, coin);
         });
         LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
 

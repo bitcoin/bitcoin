@@ -22,7 +22,7 @@ namespace auxpow_tests
 {
 class AuxpowMinerForTest;
 }
-
+class ChainstateManager;
 /**
  * This class holds "global" state used to construct blocks for the auxpow
  * mining RPCs and the map of already constructed blocks to look them up
@@ -59,7 +59,7 @@ private:
    * that should be returned to a miner for working on at the moment.  Also
    * fills in the difficulty target value.
    */
-  const CBlock* getCurrentBlock (const CTxMemPool& mempool,
+  const CBlock* getCurrentBlock (ChainstateManager &chainman, const CTxMemPool& mempool,
                                  const CScript& scriptPubKey, uint256& target) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
   /**

@@ -133,9 +133,10 @@ bool CQuorum::ReadContributions()
     return true;
 }
 
-CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
+CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, ChainstateManager& _chainman) :
     blsWorker(_blsWorker),
-    dkgManager(_dkgManager)
+    dkgManager(_dkgManager),
+    chainman(_chainman)
 {
     CLLMQUtils::InitQuorumsCache(mapQuorumsCache);
     CLLMQUtils::InitQuorumsCache(scanQuorumsCache);
@@ -280,7 +281,7 @@ void CQuorumManager::ScanQuorums(uint8_t llmqType, size_t nCountRequested, std::
     const CBlockIndex* pindex;
     {
         LOCK(cs_main);
-        pindex = ::ChainActive().Tip();
+        pindex = chainman.ActiveTip();
     }
     ScanQuorums(llmqType, pindex, nCountRequested, quorums);
 }
@@ -351,7 +352,7 @@ CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const uint256& quorumHas
     {
         LOCK(cs_main);
 
-        pindexQuorum = g_chainman.m_blockman.LookupBlockIndex(quorumHash);
+        pindexQuorum = chainman.m_blockman.LookupBlockIndex(quorumHash);
         if (!pindexQuorum) {
             LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- block %s not found\n", __func__, quorumHash.ToString());
             return nullptr;

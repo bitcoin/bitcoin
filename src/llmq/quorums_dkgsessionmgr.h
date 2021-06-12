@@ -13,6 +13,7 @@ class CConnman;
 class UniValue;
 class PeerManager;
 class CBlockIndex;
+class ChainstateManager;
 namespace llmq
 {
 
@@ -47,7 +48,7 @@ private:
 public:
     CConnman& connman;
     PeerManager& peerman;
-    CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWorker, CConnman &connman, PeerManager& peerman);
+    CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWorker, CConnman &connman, PeerManager& peerman, ChainstateManager& chainman);
     ~CDKGSessionManager();
 
     void StartThreads();
