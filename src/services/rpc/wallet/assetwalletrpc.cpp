@@ -379,6 +379,12 @@ static RPCHelpMan syscoinburntoassetallocation()
     coin_control.m_include_unsafe_inputs = true;
     coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
     coin_control.fAllowWatchOnly = fAllowWatchOnly;
+    if(!fChangeAddress.empty()) {
+        coin_control.destChange = DecodeDestination(fChangeAddress);
+        if (!IsValidDestination(coin_control.destChange)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid change address");
+        }
+    }
     int nChangePosRet = -1;
     bilingual_str error;
     CAmount nFeeRequired = 0;
@@ -1395,6 +1401,12 @@ static RPCHelpMan assetallocationsendmany()
         fAllowWatchOnly = request.params[6].get_bool();
     }
     coin_control.fAllowWatchOnly = fAllowWatchOnly;
+    if(!fChangeAddress.empty()) {
+        coin_control.destChange = DecodeDestination(fChangeAddress);
+        if (!IsValidDestination(coin_control.destChange)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid change address");
+        }
+    }
     CAssetAllocation theAssetAllocation;
     CMutableTransaction mtx;
 	UniValue receivers = valueTo.get_array();
@@ -1714,6 +1726,12 @@ static RPCHelpMan assetallocationburn()
     CCoinControl coin_control;
     coin_control.m_include_unsafe_inputs = true;
     coin_control.fAllowWatchOnly = fAllowWatchOnly;
+    if(!fChangeAddress.empty()) {
+        coin_control.destChange = DecodeDestination(fChangeAddress);
+        if (!IsValidDestination(coin_control.destChange)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid change address");
+        }
+    }
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
     coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
