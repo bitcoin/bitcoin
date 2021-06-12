@@ -119,7 +119,7 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     contextMenu->addAction(tr("&Edit"), this, &AddressBookPage::onEditAction);
 
     if (tab == SendingTab) {
-        contextMenu->addAction(tr("Delete"), this, &AddressBookPage::on_deleteAddress_clicked);
+        contextMenu->addAction(tr("&Delete"), this, &AddressBookPage::on_deleteAddress_clicked);
     }
 
     connect(ui->tableView, &QWidget::customContextMenuRequested, this, &AddressBookPage::contextualMenu);
