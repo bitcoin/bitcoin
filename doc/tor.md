@@ -8,6 +8,14 @@ may not. In particular, the Tor Browser Bundle defaults to listening on port 915
 See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort)
 for how to properly configure Tor.
 
+## Compatibility
+
+- Starting with version 20.0, Dash Core only supports Tor version 3 hidden
+  services (Tor v3). Tor v2 addresses are ignored by Dash Core and neither
+  relayed nor stored.
+
+- Tor removed v2 support beginning with version 0.4.6.
+
 ## How to see information about your Tor configuration via Dash Core
 
 There are several ways to see your local onion address in Dash Core:
