@@ -59,6 +59,13 @@ Notable changes
 P2P and network changes
 -----------------------
 
+- This release removes support for Tor version 2 hidden services in favor of Tor
+  v3 only, as the Tor network [dropped support for Tor
+  v2](https://blog.torproject.org/v2-deprecation-timeline) with the release of
+  Tor version 0.4.6.  Henceforth, Bitcoin Core ignores Tor v2 addresses; it
+  neither rumors them over the network to other peers, nor stores them in memory
+  or to `peers.dat`.  (#22050)
+
 - Added NAT-PMP port mapping support via
   [`libnatpmp`](https://miniupnp.tuxfamily.org/libnatpmp.html). (#18077)
 
@@ -142,8 +149,8 @@ Tools and Utilities
 - A new CLI `-addrinfo` command returns the number of addresses known to the
   node per network type (including Tor v2 versus v3) and total. This can be
   useful to see if the node knows enough addresses in a network to use options
-  like `-onlynet=<network>` or to upgrade to current and future Tor releases
-  that support Tor v3 addresses only.  (#21595)
+  like `-onlynet=<network>` or to upgrade to this release of Bitcoin Core 22.0
+  that supports Tor v3 only.  (#21595)
 
 Wallet
 ------
