@@ -122,10 +122,6 @@ public Q_SLOTS:
     /** Show progress dialog e.g. for rescan */
     void showProgress(const QString &title, int nProgress);
 
-    /** User has requested more information about the out of sync state */
-    void requestedSyncWarningInfo();
-
-
     /** Update selected DASH amount from transactionview */
     void trxAmount(QString amount);
 Q_SIGNALS:
