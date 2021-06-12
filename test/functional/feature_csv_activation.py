@@ -247,7 +247,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.send_blocks(test_blocks)
 
         assert_equal(self.tipheight, CSV_ACTIVATION_HEIGHT - 2)
-        self.log.info("Height = {}, CSV not yet active (will activate for block {}, not {})".format(self.tipheight, CSV_ACTIVATION_HEIGHT, CSV_ACTIVATION_HEIGHT - 1))
+        self.log.info(f"Height = {self.tipheight}, CSV not yet active (will activate for block {CSV_ACTIVATION_HEIGHT}, not {CSV_ACTIVATION_HEIGHT - 1})")
         assert not softfork_active(self.nodes[0], 'csv')
 
         # Test both version 1 and version 2 transactions for all tests

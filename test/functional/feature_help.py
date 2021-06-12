@@ -40,14 +40,14 @@ class HelpTest(BitcoinTestFramework):
         # Node should exit immediately and output help to stdout.
         output, _ = self.get_node_output(ret_code_expected=0)
         assert b'Options' in output
-        self.log.info("Help text received: {} (...)".format(output[0:60]))
+        self.log.info(f"Help text received: {output[0:60]} (...)")
 
         self.log.info("Start bitcoin with -version for version information")
         self.nodes[0].start(extra_args=['-version'])
         # Node should exit immediately and output version to stdout.
         output, _ = self.get_node_output(ret_code_expected=0)
         assert b'version' in output
-        self.log.info("Version text received: {} (...)".format(output[0:60]))
+        self.log.info(f"Version text received: {output[0:60]} (...)")
 
         # Test that arguments not in the help results in an error
         self.log.info("Start bitcoind with -fakearg to make sure it does not start")
@@ -55,7 +55,7 @@ class HelpTest(BitcoinTestFramework):
         # Node should exit immediately and output an error to stderr
         _, output = self.get_node_output(ret_code_expected=1)
         assert b'Error parsing command line arguments' in output
-        self.log.info("Error message received: {} (...)".format(output[0:60]))
+        self.log.info(f"Error message received: {output[0:60]} (...)")
 
 
 if __name__ == '__main__':
