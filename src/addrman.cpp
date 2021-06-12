@@ -13,6 +13,8 @@
 
 #include <cmath>
 #include <optional>
+#include <unordered_map>
+#include <unordered_set>
 
 int CAddrInfo::GetTriedBucket(const uint256& nKey, const std::vector<bool> &asmap) const
 {
@@ -115,12 +117,12 @@ CAddrInfo* CAddrMan::Find(const CService& addr, int* pnId)
         addr2.SetPort(0);
     }
 
-    std::map<CService, int>::iterator it = mapAddr.find(addr2);
+    const auto it = mapAddr.find(addr2);
     if (it == mapAddr.end())
         return nullptr;
     if (pnId)
         *pnId = (*it).second;
-    std::map<int, CAddrInfo>::iterator it2 = mapInfo.find((*it).second);
+    const auto it2 = mapInfo.find((*it).second);
     if (it2 != mapInfo.end())
         return &(*it2).second;
     return nullptr;
@@ -482,8 +484,8 @@ CAddrInfo CAddrMan::Select_(bool newOnly) const
 int CAddrMan::Check_()
 {
     AssertLockHeld(cs);
-    std::set<int> setTried;
-    std::map<int, int> mapNew;
+    std::unordered_set<int> setTried;
+    std::unordered_map<int, int> mapNew;
 
     if (vRandom.size() != (size_t)(nTried + nNew))
         return -7;
