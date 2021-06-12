@@ -679,6 +679,12 @@ public:
             notifications.transactionAddedToMempool(entry.GetSharedTx(), 0 /* mempool_sequence */);
         }
     }
+    bool isTaprootActive() const override
+    {
+        LOCK(::cs_main);
+        const CBlockIndex* tip = Assert(m_node.chainman)->ActiveChain().Tip();
+        return VersionBitsState(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_TAPROOT, versionbitscache) == ThresholdState::ACTIVE;
+    }
     NodeContext& m_node;
 };
 } // namespace
