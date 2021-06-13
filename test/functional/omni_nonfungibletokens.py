@@ -60,6 +60,12 @@ class OmniNonFungibleTokensTest(BitcoinTestFramework):
         assert("Sender does not own the range" in errorString)
         errorString = ""
 
+        # Get property and check fields
+        result = self.nodes[0].omni_getproperty(property_id)
+        assert_equal(result['fixedissuance'], False)
+        assert_equal(result['managedissuance'], True)
+        assert_equal(result['non-fungibletoken'], True)
+
         # Checking the transaction was valid...
         result = self.nodes[0].omni_gettransaction(txid)
         assert_equal(result['valid'], True)

@@ -123,7 +123,6 @@ public:
             READWRITE(update_block);
             READWRITE(fixed);
             READWRITE(manual);
-            READWRITE(unique);
             READWRITE(historicalData);
             READWRITE(historicalIssuers);
             READWRITE(historicalDelegates);

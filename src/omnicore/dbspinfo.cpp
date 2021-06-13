@@ -15,6 +15,8 @@
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 
+#include <boost/lexical_cast.hpp>
+
 #include <stdint.h>
 
 #include <string>
@@ -292,10 +294,24 @@ uint32_t CMPSPInfo::putSP(uint8_t ecosystem, const Entry& info)
         PrintToLog("%s() ERROR: %s\n", __func__, strError);
     }
 
+    // Create and check unique field
+    std::string uniqueKey = strprintf("UE-%d", propertyId);
+    if (info.unique) {
+        // sanity checking
+        if (!pdb->Get(readoptions, uniqueKey, &existingEntry).IsNotFound() && existingEntry != strprintf("%d", info.unique)) {
+            std::string strError = strprintf("writing SP %d unique field to DB, when a different SP already exists for that identifier", propertyId);
+            PrintToLog("%s() ERROR: %s\n", __func__, strError);
+        }
+    }
+
     // atomically write both the the SP and the index to the database
     leveldb::WriteBatch batch;
     batch.Put(slSpKey, slSpValue);
     batch.Put(slTxIndexKey, slTxValue);
+
+    if (info.unique) {
+        batch.Put(uniqueKey, strprintf("%d", info.unique));
+    }
 
     leveldb::Status status = pdb->Write(syncoptions, &batch);
 
@@ -338,6 +354,19 @@ bool CMPSPInfo::getSP(uint32_t propertyId, Entry& info) const
     } catch (const std::exception& e) {
         PrintToLog("%s(): ERROR for SP %d: %s\n", __func__, propertyId, e.what());
         return false;
+    }
+
+    // Check for unique entry
+    std::string uniqueKey = strprintf("UE-%d", propertyId);
+    std::string uniqueValue;
+    leveldb::Status statusUnique = pdb->Get(readoptions, uniqueKey, &uniqueValue);
+    if (statusUnique.ok() && !statusUnique.IsNotFound()) {
+        try {
+            info.unique = boost::lexical_cast<bool>(uniqueValue);
+        } catch (boost::bad_lexical_cast const &e) {
+            PrintToLog("%s(): ERROR for SP unique field %d: %s\n", __func__, propertyId, e.what());
+            return false;
+        }
     }
 
     return true;
