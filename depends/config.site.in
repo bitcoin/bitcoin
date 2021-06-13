@@ -9,7 +9,7 @@ true  # Dummy command because shellcheck treats all directives before first
 
 # shellcheck disable=SC2154
 depends_prefix="$(cd "$(dirname "$ac_site_file")/.." && pwd)"
-prefix="${depends_prefix}"
+
 cross_compiling=maybe
 host_alias="@HOST@"
 ac_tool_prefix="${host_alias}-"
