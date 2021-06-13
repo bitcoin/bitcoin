@@ -2544,7 +2544,7 @@ static void UpdateTip(CTxMemPool& mempool, const CBlockIndex* pindexNew, const C
             WarningBitsConditionChecker checker(bit);
             ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
             if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
-                const bilingual_str warning = strprintf(_("Warning: unknown new rules activated (versionbit %i)"), bit);
+                const bilingual_str warning = strprintf(_("Unknown new rules activated (versionbit %i)"), bit);
                 if (state == ThresholdState::ACTIVE) {
                     DoWarning(warning);
                 } else {
