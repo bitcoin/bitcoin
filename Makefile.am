@@ -377,3 +377,6 @@ if TARGET_LINUX
 	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/test-security-check.py TestSecurityChecks.test_ELF
 	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/test-symbol-check.py TestSymbolChecks.test_ELF
 endif
+
+install-exec-local:
+	$(top_srcdir)/contrib/generate-example-bitcoin-conf.sh
