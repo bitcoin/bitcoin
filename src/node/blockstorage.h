@@ -5,9 +5,9 @@
 #ifndef BITCOIN_NODE_BLOCKSTORAGE_H
 #define BITCOIN_NODE_BLOCKSTORAGE_H
 
-#include <dbwrapper.h>
 #include <fs.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
+#include <util/check.h>
 
 #include <atomic>
 #include <cstdint>
@@ -21,6 +21,7 @@ class CBlockIndex;
 class CBlockUndo;
 class CChain;
 class CChainParams;
+class CDBWrapper;
 class ChainstateManager;
 struct FlatFilePos;
 namespace Consensus {
@@ -47,9 +48,13 @@ extern bool fPruneMode;
 extern uint64_t nPruneTarget;
 
 /** Access to the block database (blocks/index/) */
-class CBlockTreeDB : public CDBWrapper
+class CBlockTreeDB
 {
+private:
+    std::unique_ptr<CDBWrapper> m_db;
+
 public:
+    CDBWrapper& Db() { return *Assert(m_db); }
     explicit CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
     bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*>>& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);

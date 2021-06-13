@@ -8,6 +8,7 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <consensus/validation.h>
+#include <dbwrapper.h>
 #include <flatfile.h>
 #include <fs.h>
 #include <hash.h>
@@ -60,37 +61,37 @@ static constexpr uint8_t DB_REINDEX_FLAG{'R'};
 static constexpr uint8_t DB_LAST_BLOCK{'l'};
 
 CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe)
-    : CDBWrapper(gArgs.GetDataDirNet() / "blocks" / "index", nCacheSize, fMemory, fWipe)
+    : m_db{std::make_unique<CDBWrapper>(gArgs.GetDataDirNet() / "blocks" / "index", nCacheSize, fMemory, fWipe)}
 {
 }
 
 bool CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo& info)
 {
-    return Read(std::make_pair(DB_BLOCK_FILES, nFile), info);
+    return Db().Read(std::make_pair(DB_BLOCK_FILES, nFile), info);
 }
 
 bool CBlockTreeDB::WriteReindexing(bool fReindexing)
 {
     if (fReindexing) {
-        return Write(DB_REINDEX_FLAG, uint8_t{'1'});
+        return Db().Write(DB_REINDEX_FLAG, uint8_t{'1'});
     } else {
-        return Erase(DB_REINDEX_FLAG);
+        return Db().Erase(DB_REINDEX_FLAG);
     }
 }
 
 void CBlockTreeDB::ReadReindexing(bool& fReindexing)
 {
-    fReindexing = Exists(DB_REINDEX_FLAG);
+    fReindexing = Db().Exists(DB_REINDEX_FLAG);
 }
 
 bool CBlockTreeDB::ReadLastBlockFile(int& nFile)
 {
-    return Read(DB_LAST_BLOCK, nFile);
+    return Db().Read(DB_LAST_BLOCK, nFile);
 }
 
 bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*>>& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo)
 {
-    CDBBatch batch(*this);
+    CDBBatch batch(Db());
     for (std::vector<std::pair<int, const CBlockFileInfo*>>::const_iterator it = fileInfo.begin(); it != fileInfo.end(); it++) {
         batch.Write(std::make_pair(DB_BLOCK_FILES, it->first), *it->second);
     }
@@ -98,18 +99,18 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
     for (std::vector<const CBlockIndex*>::const_iterator it = blockinfo.begin(); it != blockinfo.end(); it++) {
         batch.Write(std::make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), CDiskBlockIndex(*it));
     }
-    return WriteBatch(batch, true);
+    return Db().WriteBatch(batch, true);
 }
 
 bool CBlockTreeDB::WriteFlag(const std::string& name, bool fValue)
 {
-    return Write(std::make_pair(DB_FLAG, name), fValue ? uint8_t{'1'} : uint8_t{'0'});
+    return Db().Write(std::make_pair(DB_FLAG, name), fValue ? uint8_t{'1'} : uint8_t{'0'});
 }
 
 bool CBlockTreeDB::ReadFlag(const std::string& name, bool& fValue)
 {
     uint8_t ch;
-    if (!Read(std::make_pair(DB_FLAG, name), ch)) {
+    if (!Db().Read(std::make_pair(DB_FLAG, name), ch)) {
         return false;
     }
     fValue = ch == uint8_t{'1'};
@@ -118,7 +119,7 @@ bool CBlockTreeDB::ReadFlag(const std::string& name, bool& fValue)
 
 bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex)
 {
-    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    std::unique_ptr<CDBIterator> pcursor(Db().NewIterator());
 
     pcursor->Seek(std::make_pair(DB_BLOCK_INDEX, uint256()));
 
