@@ -13,6 +13,7 @@ from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    chain_transaction,
     satoshi_round,
 )
 
@@ -42,21 +43,6 @@ class MempoolPackagesTest(SyscoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    # Build a transaction that spends parent_txid:vout
-    # Return amount sent
-    def chain_transaction(self, node, parent_txid, vout, value, fee, num_outputs):
-        send_value = satoshi_round((value - fee)/num_outputs)
-        inputs = [ {'txid' : parent_txid, 'vout' : vout} ]
-        outputs = {}
-        for _ in range(num_outputs):
-            outputs[node.getnewaddress()] = send_value
-        rawtx = node.createrawtransaction(inputs, outputs)
-        signedtx = node.signrawtransactionwithwallet(rawtx)
-        txid = node.sendrawtransaction(signedtx['hex'])
-        fulltx = node.getrawtransaction(txid, 1)
-        assert len(fulltx['vout']) == num_outputs  # make sure we didn't generate a change output
-        return (txid, send_value)
-
     def run_test(self):
         # Mine some blocks and have them mature.
         peer_inv_store = self.nodes[0].add_p2p_connection(P2PTxInvStore()) # keep track of invs
@@ -71,7 +57,7 @@ class MempoolPackagesTest(SyscoinTestFramework):
         chain = []
         witness_chain = []
         for _ in range(MAX_ANCESTORS):
-            (txid, sent_value) = self.chain_transaction(self.nodes[0], txid, 0, value, fee, 1)
+            (txid, sent_value) = chain_transaction(self.nodes[0], [txid], [0], value, fee, 1)
             value = sent_value
             chain.append(txid)
             # We need the wtxids to check P2P announcements
@@ -189,7 +175,7 @@ class MempoolPackagesTest(SyscoinTestFramework):
             assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN + 1000)
 
         # Adding one more transaction on to the chain should fail.
-        assert_raises_rpc_error(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], txid, vout, value, fee, 1)
+        assert_raises_rpc_error(-26, "too-long-mempool-chain", chain_transaction, self.nodes[0], [txid], [vout], value, fee, 1)
 
         # Check that prioritising a tx before it's added to the mempool works
         # First clear the mempool by mining a block.
@@ -238,7 +224,7 @@ class MempoolPackagesTest(SyscoinTestFramework):
         transaction_package = []
         tx_children = []
         # First create one parent tx with 10 children
-        (txid, sent_value) = self.chain_transaction(self.nodes[0], txid, vout, value, fee, 10)
+        (txid, sent_value) = chain_transaction(self.nodes[0], [txid], [vout], value, fee, 10)
         parent_transaction = txid
         for i in range(10):
             transaction_package.append({'txid': txid, 'vout': i, 'amount': sent_value})
@@ -247,7 +233,7 @@ class MempoolPackagesTest(SyscoinTestFramework):
         chain = [] # save sent txs for the purpose of checking node1's mempool later (see below)
         for _ in range(MAX_DESCENDANTS - 1):
             utxo = transaction_package.pop(0)
-            (txid, sent_value) = self.chain_transaction(self.nodes[0], utxo['txid'], utxo['vout'], utxo['amount'], fee, 10)
+            (txid, sent_value) = chain_transaction(self.nodes[0], [utxo['txid']], [utxo['vout']], utxo['amount'], fee, 10)
             chain.append(txid)
             if utxo['txid'] is parent_transaction:
                 tx_children.append(txid)
@@ -263,7 +249,7 @@ class MempoolPackagesTest(SyscoinTestFramework):
 
         # Sending one more chained transaction will fail
         utxo = transaction_package.pop(0)
-        assert_raises_rpc_error(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], utxo['txid'], utxo['vout'], utxo['amount'], fee, 10)
+        assert_raises_rpc_error(-26, "too-long-mempool-chain", chain_transaction, self.nodes[0], [utxo['txid']], [utxo['vout']], utxo['amount'], fee, 10)
 
         # Check that node1's mempool is as expected, containing:
         # - txs from previous ancestor test (-> custom ancestor limit)
@@ -321,13 +307,13 @@ class MempoolPackagesTest(SyscoinTestFramework):
         value = send_value
 
         # Create tx1
-        tx1_id, _ = self.chain_transaction(self.nodes[0], tx0_id, 0, value, fee, 1)
+        tx1_id, _ = chain_transaction(self.nodes[0], [tx0_id], [0], value, fee, 1)
 
         # Create tx2-7
         vout = 1
         txid = tx0_id
         for _ in range(6):
-            (txid, sent_value) = self.chain_transaction(self.nodes[0], txid, vout, value, fee, 1)
+            (txid, sent_value) = chain_transaction(self.nodes[0], [txid], [vout], value, fee, 1)
             vout = 0
             value = sent_value
 
