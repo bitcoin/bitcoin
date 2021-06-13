@@ -16,6 +16,7 @@
 #include <miner.h>
 #include <net.h>
 #include <net_processing.h>
+#include <node/blockstorage.h>
 #include <noui.h>
 #include <policy/fees.h>
 #include <pow.h>
@@ -25,7 +26,6 @@
 #include <scheduler.h>
 #include <script/sigcache.h>
 #include <streams.h>
-#include <txdb.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/thread.h>

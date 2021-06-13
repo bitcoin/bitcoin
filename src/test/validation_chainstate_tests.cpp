@@ -3,13 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <chainparams.h>
-#include <random.h>
-#include <uint256.h>
 #include <consensus/validation.h>
-#include <sync.h>
+#include <node/blockstorage.h>
+#include <random.h>
 #include <rpc/blockchain.h>
+#include <sync.h>
 #include <test/util/chainstate.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
 #include <validation.h>
 
 #include <vector>

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
+#include <node/blockstorage.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
