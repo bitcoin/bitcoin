@@ -6179,7 +6179,6 @@ void DoGethMaintenance() {
         if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
             LogPrintf("%s: Failed to start Geth\n", __func__); 
     } else if(fReindexGeth){
-        const int64_t nTimeSeconds = (int64_t)GetTimeSeconds();
         fReindexGeth = false;
         LogPrintf("%s: Stopping Geth\n", __func__); 
         StopGethNode(gethPID);
