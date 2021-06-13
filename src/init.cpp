@@ -499,6 +499,8 @@ void SetupServerArgs(ArgsManager& argsman)
 #endif
     argsman.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     // SYSCOIN
+    argsman.AddArg("-gethwebsocketport=<port>", strprintf("Listen for GETH Web Socket connections on <port> (default: %u)", 8646), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    argsman.AddArg("-gethrpcport=<port>", strprintf("Listen for GETH RPC connections on <port> (default: %u)", 8645), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-gethtestnet", strprintf("Connect to NEVM Rinkeby testnet network (default: %d)", false), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-gethsyncmode", strprintf("Geth sync mode, light, fast, full or disabled (to run your own geth node) (default: light)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-gethDescriptorURL", strprintf("Geth descriptor URL where to do versioning checks and binary downloads for Geth (default: https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
