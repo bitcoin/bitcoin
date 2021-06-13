@@ -4587,7 +4587,7 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
     }
     // SYSCOIN
     const uint256& blockHash = pindex->GetBlockHash();
-    const bool ibd = ::ChainstateActive().IsInitialBlockDownload();
+    const bool ibd = IsInitialBlockDownload();
     // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
     BlockValidationState state;
     if (!ProcessSpecialTxsInBlock(block, pindex, state, inputs, false /*fJustCheck*/, false /*fScriptChecks*/)) {
@@ -6161,11 +6161,6 @@ bool StopGethNode(pid_t &pid)
 void DoGethMaintenance() {
     if(ShutdownRequested()) {
         return;
-    }
-    bool ibd = false;
-    {
-        LOCK(cs_main);
-        ibd = ::ChainstateActive().IsInitialBlockDownload();
     }
     // hasn't started yet so start
     if(!fReindexGeth && gethPID == 0) {
