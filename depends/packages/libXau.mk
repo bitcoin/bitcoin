@@ -32,3 +32,4 @@ endef
 define $(package)_postprocess_cmds
   rm lib/*.la
 endef
+packages/$(package).mk:: ;
