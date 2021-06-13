@@ -18,3 +18,4 @@ define $(package)_stage_cmds
   mkdir -p $($(package)_staging_prefix_dir)/include/llvm-c && \
   cp src/llvm/include/llvm-c/lto.h $($(package)_staging_prefix_dir)/include/llvm-c
 endef
+packages/$(package).mk:: ;

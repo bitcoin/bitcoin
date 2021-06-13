@@ -24,3 +24,4 @@ endef
 define $(package)_postprocess_cmds
   rmdir include
 endef
+packages/$(package).mk:: ;
