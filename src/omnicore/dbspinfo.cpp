@@ -236,6 +236,17 @@ bool CMPSPInfo::updateSP(uint32_t propertyId, const Entry& info)
         batch.Put(slSpPrevKey, strSpPrevValue);
     }
     batch.Put(slSpKey, slSpValue);
+
+    // Update delegate info if set
+    if (!info.historicalDelegates.empty()) {
+        std::string delegateKey = strprintf("DE-%d", propertyId);
+        CDataStream ssDelegateValue(SER_DISK, CLIENT_VERSION);
+        ssDelegateValue << info.delegate;
+        ssDelegateValue << info.historicalDelegates;
+        leveldb::Slice slDelegateValue(&ssDelegateValue[0], ssDelegateValue.size());
+        batch.Put(delegateKey, slDelegateValue);
+    }
+
     leveldb::Status status = pdb->Write(syncoptions, &batch);
 
     if (!status.ok()) {
@@ -365,6 +376,21 @@ bool CMPSPInfo::getSP(uint32_t propertyId, Entry& info) const
             info.unique = boost::lexical_cast<bool>(uniqueValue);
         } catch (boost::bad_lexical_cast const &e) {
             PrintToLog("%s(): ERROR for SP unique field %d: %s\n", __func__, propertyId, e.what());
+            return false;
+        }
+    }
+
+    // Check for delegate entry
+    std::string delegateKey = strprintf("DE-%d", propertyId);
+    std::string delegateValue;
+    leveldb::Status statusDelegate = pdb->Get(readoptions, delegateKey, &delegateValue);
+    if (statusDelegate.ok() && !statusDelegate.IsNotFound()) {
+        try {
+            CDataStream ssDelegateValue(delegateValue.data(), delegateValue.data() + delegateValue.size(), SER_DISK, CLIENT_VERSION);
+            ssDelegateValue >> info.delegate;
+            ssDelegateValue >> info.historicalDelegates;
+        } catch (const std::exception& e) {
+            PrintToLog("%s(): ERROR for SP delegates %d: %s\n", __func__, propertyId, e.what());
             return false;
         }
     }

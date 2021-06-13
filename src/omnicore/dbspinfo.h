@@ -100,7 +100,6 @@ public:
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action) {
             READWRITE(issuer);
-            READWRITE(delegate);
             READWRITE(prop_type);
             READWRITE(prev_prop_id);
             READWRITE(category);
@@ -125,7 +124,6 @@ public:
             READWRITE(manual);
             READWRITE(historicalData);
             READWRITE(historicalIssuers);
-            READWRITE(historicalDelegates);
         }
 
         bool isDivisible() const;
