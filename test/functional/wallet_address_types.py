@@ -374,10 +374,10 @@ class AddressTypeTest(BitcoinTestFramework):
         self.test_address(4, self.nodes[4].getrawchangeaddress('bech32'), multisig=False, typ='bech32')
 
         if self.options.descriptors:
-            self.log.info("Descriptor wallets do not have bech32m addreses by default yet")
+            self.log.info("Descriptor wallets do not have bech32m addresses by default yet")
             # TODO: Remove this when they do
             assert_raises_rpc_error(-12, "Error: No bech32m addresses available", self.nodes[0].getnewaddress, "", "bech32m")
-            assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", self.nodes[0].getrawchangeaddress, "bech32m")
+            assert_raises_rpc_error(-12, "Error: No bech32m addresses available", self.nodes[0].getrawchangeaddress, "bech32m")
         else:
             self.log.info("Legacy wallets cannot make bech32m addresses")
             assert_raises_rpc_error(-8, "Legacy wallets cannot provide bech32m addresses", self.nodes[0].getnewaddress, "", "bech32m")
