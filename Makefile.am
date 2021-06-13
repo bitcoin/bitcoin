@@ -3,7 +3,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Pattern rule to print variables, e.g. make print-top_srcdir
-print-%:
+print-%: FORCE
 	@echo '$*'='$($*)'
 
 ACLOCAL_AMFLAGS = -I build-aux/m4
