@@ -1,12 +1,12 @@
 #include <boost/test/unit_test.hpp>
-#include <test/data/ethspv_valid.json.h>
-#include <test/data/ethspv_invalid.json.h>
+#include <test/data/nevmspv_valid.json.h>
+#include <test/data/nevmspv_invalid.json.h>
 
 #include <uint256.h>
 #include <util/strencodings.h>
-#include <ethereum/ethereum.h>
-#include <ethereum/common.h>
-#include <ethereum/rlp.h>
+#include <nevm/nevm.h>
+#include <nevm/common.h>
+#include <nevm/rlp.h>
 #include <script/interpreter.h>
 #include <script/standard.h>
 #include <policy/policy.h>
@@ -17,33 +17,33 @@
 #include <test/util/setup_common.h>
 extern UniValue read_json(const std::string& jsondata);
 
-BOOST_FIXTURE_TEST_SUITE(ethereum_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(nevm_tests, BasicTestingSetup)
 
-BOOST_AUTO_TEST_CASE(ethereum_parseabidata)
+BOOST_AUTO_TEST_CASE(nevm_parseabidata)
 {
-    tfm::format(std::cout,"Running ethereum_parseabidata...\n");
+    tfm::format(std::cout,"Running nevm_parseabidata...\n");
     CAmount outputAmount;
     uint64_t nAsset = 0;
     const std::vector<unsigned char> &expectedMethodHash = ParseHex("54c988ff");
     const std::vector<unsigned char> &rlpBytes = ParseHex("54c988ff00000000000000000000000000000000000000000000000000000002540be400000000000000000000000000000000000000000000000000000000009be8894b0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000002c62637274317130667265323430737939326d716b386b6b377073616561366b74366d3537323570377964636a0000000000000000000000000000000000000000");
     std::string expectedAddress = "bcrt1q0fre240sy92mqk8kk7psaea6kt6m5725p7ydcj";
     std::string address;
-    BOOST_CHECK(parseEthMethodInputData(expectedMethodHash, 8, 8, rlpBytes, outputAmount, nAsset, address));
+    BOOST_CHECK(parseNEVMMethodInputData(expectedMethodHash, 8, 8, rlpBytes, outputAmount, nAsset, address));
     BOOST_CHECK_EQUAL(outputAmount, 100*COIN);
     BOOST_CHECK_EQUAL(nAsset, (uint64_t)2615707979);
     BOOST_CHECK(address == expectedAddress);
 
 }
 
-BOOST_AUTO_TEST_CASE(ethspv_valid)
+BOOST_AUTO_TEST_CASE(nevmspv_valid)
 {
-    tfm::format(std::cout,"Running ethspv_valid...\n");
-    // Read tests from test/data/ethspv_valid.json
+    tfm::format(std::cout,"Running nevmspv_valid...\n");
+    // Read tests from test/data/nevmspv_valid.json
     // Format is an array of arrays
     // Inner arrays are either [ "comment" ]
     // [[spv_root, spv_parent_node, spv_value, spv_path]]
 
-    UniValue tests = read_json(std::string(json_tests::ethspv_valid, json_tests::ethspv_valid + sizeof(json_tests::ethspv_valid)));
+    UniValue tests = read_json(std::string(json_tests::nevmspv_valid, json_tests::nevmspv_valid + sizeof(json_tests::nevmspv_valid)));
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];
@@ -74,15 +74,15 @@ BOOST_AUTO_TEST_CASE(ethspv_valid)
     }
 }
 
-BOOST_AUTO_TEST_CASE(ethspv_invalid)
+BOOST_AUTO_TEST_CASE(nevmspv_invalid)
 {
-    tfm::format(std::cout,"Running ethspv_invalid...\n");
-    // Read tests from test/data/ethspv_invalid.json
+    tfm::format(std::cout,"Running nevmspv_invalid...\n");
+    // Read tests from test/data/nevmspv_invalid.json
     // Format is an array of arrays
     // Inner arrays are either [ "comment" ]
     // [[spv_root, spv_parent_node, spv_value, spv_path]]
 
-    UniValue tests = read_json(std::string(json_tests::ethspv_invalid, json_tests::ethspv_invalid + sizeof(json_tests::ethspv_invalid)));
+    UniValue tests = read_json(std::string(json_tests::nevmspv_invalid, json_tests::nevmspv_invalid + sizeof(json_tests::nevmspv_invalid)));
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];

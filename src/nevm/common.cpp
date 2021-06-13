@@ -19,8 +19,8 @@
  * @date 2014
  */
 
-#include <ethereum/common.h>
-#include <ethereum/exceptions.h>
+#include <nevm/common.h>
+#include <nevm/exceptions.h>
 //#include <Log.h>
 //#include <BuildInfo.h>
 using namespace std;

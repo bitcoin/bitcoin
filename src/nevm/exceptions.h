@@ -19,8 +19,8 @@
  * @date 2014
  */
 
-#ifndef SYSCOIN_ETHEREUM_EXCEPTIONS_H
-#define SYSCOIN_ETHEREUM_EXCEPTIONS_H
+#ifndef SYSCOIN_NEVM_EXCEPTIONS_H
+#define SYSCOIN_NEVM_EXCEPTIONS_H
 
 #include <exception>
 #include <string>
@@ -30,7 +30,7 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <ethereum/fixedhash.h>
+#include <nevm/fixedhash.h>
 
 namespace dev
 {
@@ -144,4 +144,4 @@ DEV_SIMPLE_EXCEPTION(DAGCreationFailure);
 DEV_SIMPLE_EXCEPTION(DAGComputeFailure);
 
 }
-#endif // SYSCOIN_ETHEREUM_EXCEPTIONS_H
+#endif // SYSCOIN_NEVM_EXCEPTIONS_H

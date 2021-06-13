@@ -76,12 +76,8 @@ bool fDisableGovernance = false;
 bool fRegTest = false;
 bool fSigNet = false;
 bool fAssetIndex = false;
-uint32_t fGethSyncHeight = 0;
 uint32_t fGethCurrentHeight = 0;
 pid_t gethPID = 0;
-pid_t relayerPID = 0;
-int64_t nRandomResetSec = 0;
-int64_t nLastGethHeaderTime = 0;
 std::string fGethSyncStatus = "waiting to sync...";
 bool fGethSynced = true;
 bool fLoaded = false;
@@ -1051,25 +1047,6 @@ bool CheckSpecs(std::string &errMsg, bool bMiner){
     if(GetNumCores() < (bMiner? 4: 2))
         errMsg = _("Insufficient CPU cores, you need at least 2 cores to run a masternode. Please see documentation.").translated;
    return errMsg.empty();         
-}
-
-// SYSCOIN - RELAYER
-fs::path GetRelayerPidFile()
-{
-    return AbsPathForConfigVal(fs::path("relayer.pid"));
-}
-std::string GetRelayerFilename(){
-    // For Windows:
-    #ifdef WIN32
-       return "sysrelayer.exe";
-    #endif    
-    #ifdef MAC_OSX
-        // Mac
-        return "sysrelayer";
-    #else
-        // Linux
-        return "sysrelayer";
-    #endif
 }
 /* Parse the contents of /proc/meminfo (in buf), return value of "name"
  * (example: MemTotal) */

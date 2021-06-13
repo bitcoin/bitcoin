@@ -23,8 +23,8 @@ std::string stringFromSyscoinTx(const int &nVersion) {
 		return "assetsend";
 	case SYSCOIN_TX_VERSION_ALLOCATION_SEND:
 		return "assetallocationsend";
-	case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
-		return "assetallocationburntoethereum"; 
+	case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM:
+		return "assetallocationburntonevm"; 
 	case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
 		return "assetallocationburntosyscoin";
 	case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:

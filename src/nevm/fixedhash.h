@@ -21,15 +21,15 @@
  * The FixedHash fixed-size "hash" container type.
  */
 
-#ifndef SYSCOIN_ETHEREUM_FIXEDHASH_H
-#define SYSCOIN_ETHEREUM_FIXEDHASH_H
+#ifndef SYSCOIN_NEVM_FIXEDHASH_H
+#define SYSCOIN_NEVM_FIXEDHASH_H
 
 #include <array>
 #include <cstdint>
 #include <algorithm>
 #include <random>
 #include <boost/functional/hash.hpp>
-#include <ethereum/commondata.h>
+#include <nevm/commondata.h>
 
 namespace dev
 {
@@ -385,4 +385,4 @@ namespace std
 	template<> struct hash<dev::h256>: dev::h256::hash {};
 	template<> struct hash<dev::h512>: dev::h512::hash {};
 }
-  #endif // SYSCOIN_ETHEREUM_FIXEDHASH_H
+  #endif // SYSCOIN_NEVM_FIXEDHASH_H

@@ -56,8 +56,8 @@ KNOWN_VIOLATIONS=(
     "src/util/strencodings.cpp:.*strtoul"
     "src/util/strencodings.h:.*atoi"
     "src/util/system.cpp:.*atoi"
-    "src/ethereum/ethereum.cpp:.*strtol"
-    "src/ethereum/ethereum.cpp:.*stoul"
+    "src/nevm/nevm.cpp:.*strtol"
+    "src/nevm/nevm.cpp:.*stoul"
     "src/util/system.cpp:.*strtol"
     "src/rpc/blockchain.cpp:.*fprintf"
 )

@@ -1985,7 +1985,7 @@ bool UpdateNotarySignatureFromEndpoint(CMutableTransaction& mtx, std::string& st
     std::vector<unsigned char> data;
     bool bFilledNotarySig = false;
      // call API endpoint or notary signatures and fill them in for every asset
-    if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
+    if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM || mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
         CBurnSyscoin burnSyscoin(mtx);
         if(FillNotarySigFromEndpoint(mtx, burnSyscoin.voutAssets, strError)) {
             bFilledNotarySig = true;

@@ -1,5 +1,5 @@
 [
-  ["The following are ethereum spv proof invalid samples."],
+  ["The following are nevm spv proof invalid samples."],
   ["Objects with a single string are ignored in the test case and is used to indicate the txid of the data source"],
   ["spvproof_fail"],
   ["take spvproof15 and modify tx_root to that of spvproof14"],

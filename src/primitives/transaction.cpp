@@ -455,7 +455,7 @@ bool IsAssetTx(const int &nVersion) {
 }
 
 bool IsAssetAllocationTx(const int &nVersion) {
-    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION ||
+    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION ||
         nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND;
 }
 
@@ -629,7 +629,7 @@ bool CAssetAllocation::UnserializeFromTx(const CTransaction &tx) {
         return false;
     }
     const int &bytesLeft = UnserializeFromData(vchData);
-    const bool &allocationMemoThreshold = IsAssetAllocationTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM && tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
+    const bool &allocationMemoThreshold = IsAssetAllocationTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM && tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
     const bool &assetIssuanceMemoThreshold = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND;
 	if(bytesLeft == -1 || (bytesLeft > MAX_MEMO && (allocationMemoThreshold || assetIssuanceMemoThreshold)))
 	{	
@@ -648,7 +648,7 @@ bool CAssetAllocation::UnserializeFromTx(const CMutableTransaction &mtx) {
         return false;
     }
     const int &bytesLeft = UnserializeFromData(vchData);
-    const bool &allocationMemoThreshold =  IsAssetAllocationTx(mtx.nVersion) && mtx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM && mtx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
+    const bool &allocationMemoThreshold =  IsAssetAllocationTx(mtx.nVersion) && mtx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM && mtx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
     const bool &assetIssuanceMemoThreshold = mtx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND;
 	if(bytesLeft == -1 || (bytesLeft > MAX_MEMO && (allocationMemoThreshold || assetIssuanceMemoThreshold)))
 	{	

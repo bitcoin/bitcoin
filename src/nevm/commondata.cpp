@@ -19,10 +19,10 @@
  * @date 2014
  */
 
-#include <ethereum/commondata.h>
+#include <nevm/commondata.h>
 #include <random>
 
-#include <ethereum/exceptions.h>
+#include <nevm/exceptions.h>
 
 using namespace std;
 using namespace dev;

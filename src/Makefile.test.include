@@ -28,8 +28,8 @@ JSON_TEST_FILES = \
   test/data/proposals_invalid.json \
   test/data/utxo.json \
   test/data/assetbalances.json \
-  test/data/ethspv_valid.json \
-  test/data/ethspv_invalid.json \
+  test/data/nevmspv_valid.json \
+  test/data/nevmspv_invalid.json \
   test/data/tx_valid.json
 
 RAW_TEST_FILES = \
@@ -59,7 +59,7 @@ FUZZ_SUITE_LD_COMMON = \
  $(LIBSECP256K1) \
  $(EVENT_LIBS) \
  $(EVENT_PTHREADS_LIBS) \
- $(LIBETHEREUM)
+ $(LIBNEVM)
 
 if USE_UPNP
 FUZZ_SUITE_LD_COMMON += $(MINIUPNPC_LIBS)
@@ -99,7 +99,7 @@ SYSCOIN_TESTS =\
   test/cuckoocache_tests.cpp \
   test/denialofservice_tests.cpp \
   test/descriptor_tests.cpp \
-  test/ethereum_tests.cpp \
+  test/nevm_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
   test/flatfile_tests.cpp \
@@ -198,7 +198,7 @@ test_test_syscoin_LDADD += $(LIBSYSCOIN_WALLET)
 endif
 
 test_test_syscoin_LDADD += $(LIBSYSCOIN_SERVER) $(LIBSYSCOIN_BLS) $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_UTIL) $(LIBCHIABLS) $(LIBSYSCOIN_CONSENSUS) $(LIBSYSCOIN_CRYPTO) $(LIBUNIVALUE) \
-  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS) $(LIBETHEREUM)
+  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS) $(LIBNEVM)
 test_test_syscoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) 
 
 test_test_syscoin_LDADD += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(SQLITE_LIBS)

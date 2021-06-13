@@ -18,10 +18,10 @@
 /// This file defined Address alias for FixedHash of 160 bits and some
 /// special Address constants.
 
-#ifndef SYSCOIN_ETHEREUM_ADDRESS_H
-#define SYSCOIN_ETHEREUM_ADDRESS_H
+#ifndef SYSCOIN_NEVM_ADDRESS_H
+#define SYSCOIN_NEVM_ADDRESS_H
 
-#include <ethereum/fixedhash.h>
+#include <nevm/fixedhash.h>
 
 namespace dev
 {
@@ -46,4 +46,4 @@ extern Address const MaxAddress;
 extern Address const SystemAddress;
 
 }
-#endif // SYSCOIN_ETHEREUM_ADDRESS_H
+#endif // SYSCOIN_NEVM_ADDRESS_H

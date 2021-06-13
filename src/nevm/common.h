@@ -21,8 +21,8 @@
  * Very common stuff (i.e. that every other header needs except vector_ref.h).
  */
 
-#ifndef SYSCOIN_ETHEREUM_COMMON_H
-#define SYSCOIN_ETHEREUM_COMMON_H
+#ifndef SYSCOIN_NEVM_COMMON_H
+#define SYSCOIN_NEVM_COMMON_H
 
 // way too many unsigned to size_t warnings in 32 bit build
 #ifdef _M_IX86
@@ -50,7 +50,7 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <boost/multiprecision/cpp_int.hpp>	
 #pragma GCC diagnostic pop
-#include <ethereum/vector_ref.h>
+#include <nevm/vector_ref.h>
 // CryptoPP defines _byte in the global namespace, so must we.
 using _byte = uint8_t;
 
@@ -301,4 +301,4 @@ enum class WithExisting: int
 uint64_t utcTime();
 
 }
-#endif // SYSCOIN_ETHEREUM_COMMON_H
+#endif // SYSCOIN_NEVM_COMMON_H

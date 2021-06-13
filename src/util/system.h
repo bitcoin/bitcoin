@@ -44,15 +44,11 @@ extern bool bGethTestnet;
 extern bool fDisableGovernance;
 extern bool fRegTest;
 extern bool fSigNet;
-extern uint32_t fGethSyncHeight;
 extern uint32_t fGethCurrentHeight;
 extern std::string fGethSyncStatus;
 extern bool fGethSynced;
 extern bool fLoaded;
 extern pid_t gethPID;
-extern pid_t relayerPID;
-extern int64_t nLastGethHeaderTime;
-extern int64_t nRandomResetSec;
 extern bool fAssetIndex;
 extern int32_t DEFAULT_MN_COLLATERAL_REQUIRED;
 extern int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE;
@@ -131,8 +127,6 @@ fs::path GetDefaultDataDir();
 // SYSCOIN
 fs::path GetGethPidFile();
 bool CheckSpecs(std::string &errMsg, bool bMiner = false);
-fs::path GetRelayerPidFile();
-std::string GetRelayerFilename();
 std::string GetGethFilename();
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption();

@@ -26,10 +26,7 @@ class AssetMintTest(SyscoinTestFramework):
         spv_receipt_root = "a0a958499bf48fcce17672b58aa9037bd3dafeb6231880722d909c60bacfaaa8d4"
         spv_receipt_parent_nodes = "f90551f871a0cab13def05783d763febde31920bd234d0486c26955c2937e0486db909a28eeea09cf564a668a29a5f1cc5d6ef8e19988dfd2b30d290672f0ffc4200e608cb65ac808080808080a029b8ed2258c53562954c87bcd7f60671029680d2a19ef8bcd3ad470ea48d57d18080808080808080f901f180a07c21ca39872e6b8f611bc6b1b295c24f988b5cf944625eabf5236b37ea3b9f01a0edb9e63fdc31ba41f11a8b2fb8000ad1357b3c0b27a8483968d75e93e7b488a1a02231847aa3c5dde2f2a1851a66aabec65e5eaae8c28110756f122c72be1fba05a08fa87809e5b7f989e78ccbe1a6bc4924115d5747529af879f2fe196f959b64fca091f1bf748061eba21a413b72d70afccb8daebb5906d5cd9dda06d5f877065d5ba0d7e6c82dd1c25eb2f90b02f038beaff98c260d46992d0b3c1eac7d51552c7417a01d5c43deb2e3794292cdffb04f82ab25bc4e75f5e0cab928b66582e08026f5b1a0d7323a87dc8fbc66c7b34810d2cad92fc0da168d962b4556e825a3266a148b74a0af31f0b7cdcd6a855ac7678ef2b8fcb1afeda918b0c8e4696a4013f2b75ca402a0f9d63f2db8ab6d3c3e12073ac2910ee575832bde3e4586f18e59dd26a16adb7ca0f0c91e059c43780617d304fe8992511f096ccc35232da1f25127db53ba4fb05aa052030932d0a9026efd2a3ada67f33d401cd9a97ddb24c606af3a0a0c24e432aba0142af9b4686c6ca30b0ac39133fa76d8682b7bbbec488e62e652d3f25419777da0940f31617e91cfbabaa9d0d1638949f8125f80a43027122778522675194a4e65a0edc4c7d2cf30150fdf7e502d0ef06c80c85fc37260134a112493c6183f62f4b580f902e720b902e3f902e00183192ee2b9010000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000200000000000000008000000000000000000000100200000000000000000010000000000000200000000000000000000000000000000000010000000000000000000000000000004000000000000000000000000400004001000000000020000000000000000000000000080000000000000408000000040000000000000000002000000000000000000000000000000000000000000000000000000000010000000000000000010000000000000000000000000000000000000000000f901d5f89b94f2bb7bfa19e7c4b6bb333ee1afdf8e5e8f9b3561f863a0ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3efa0000000000000000000000000b0ea8c9ee8aa87efd28a12de8c034f947c144053a00000000000000000000000000765efb302d504751c652c5b1d65e8e9edf2e70fa000000000000000000000000000000000000000000000000000000002540be400f89b94f2bb7bfa19e7c4b6bb333ee1afdf8e5e8f9b3561f863a08c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925a0000000000000000000000000b0ea8c9ee8aa87efd28a12de8c034f947c144053a00000000000000000000000000765efb302d504751c652c5b1d65e8e9edf2e70fa00000000000000000000000000000000000000000000000000000000000000000f899940765efb302d504751c652c5b1d65e8e9edf2e70fe1a09c6dea23fe3b510bb5d170df49dc74e387692eaa3258c691918cd3aa94f5fb74b860000000000000000000000000b0ea8c9ee8aa87efd28a12de8c034f947c14405300000000000000000000000000000000000000000000000000000002540be4000000000000000000000000000000000000000000000000000000080800000002"
         spv_receipt_value = "f902e00183192ee2b9010000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000200000000000000008000000000000000000000100200000000000000000010000000000000200000000000000000000000000000000000010000000000000000000000000000004000000000000000000000000400004001000000000020000000000000000000000000080000000000000408000000040000000000000000002000000000000000000000000000000000000000000000000000000000010000000000000000010000000000000000000000000000000000000000000f901d5f89b94f2bb7bfa19e7c4b6bb333ee1afdf8e5e8f9b3561f863a0ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3efa0000000000000000000000000b0ea8c9ee8aa87efd28a12de8c034f947c144053a00000000000000000000000000765efb302d504751c652c5b1d65e8e9edf2e70fa000000000000000000000000000000000000000000000000000000002540be400f89b94f2bb7bfa19e7c4b6bb333ee1afdf8e5e8f9b3561f863a08c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925a0000000000000000000000000b0ea8c9ee8aa87efd28a12de8c034f947c144053a00000000000000000000000000765efb302d504751c652c5b1d65e8e9edf2e70fa00000000000000000000000000000000000000000000000000000000000000000f899940765efb302d504751c652c5b1d65e8e9edf2e70fe1a09c6dea23fe3b510bb5d170df49dc74e387692eaa3258c691918cd3aa94f5fb74b860000000000000000000000000b0ea8c9ee8aa87efd28a12de8c034f947c14405300000000000000000000000000000000000000000000000000000002540be4000000000000000000000000000000000000000000000000000000080800000002"
-        height = 6816449
         blockhash = '0xee524852fb7df5a6c27106f4bc47e740e6a6751e66bce1f98363ff2eecbf8c0d'
-        prevblockhash = '0x5f41930a021d1c48a8add5d35aac63f18e085c2ee862990660603058fd6216c0'
-        bridgetransferid = 2
 
         self.basic_asset()
         self.nodes[0].generate(1)
@@ -38,35 +35,23 @@ class AssetMintTest(SyscoinTestFramework):
         self.sync_blocks()
 
         # Add eth root to DB so it an validate this SPV proof, do it on both nodes so they can verify the tx
-        self.nodes[0].syscoinsetethheaders([[6816449, blockhash, prevblockhash, spv_tx_root, spv_receipt_root, 1594359054]])
-        self.nodes[0].syscoinsetethstatus('synced', 6816449)
-        self.nodes[1].syscoinsetethheaders([[6816449, blockhash, prevblockhash, spv_tx_root, spv_receipt_root, 1594359054]])
-        self.nodes[1].syscoinsetethstatus('synced', 6816449)
+        self.nodes[0].syscoinsetethheaders([[blockhash, spv_tx_root, spv_receipt_root]])
+        self.nodes[1].syscoinsetethheaders([[blockhash, spv_tx_root, spv_receipt_root]])
 
         newaddress = self.nodes[0].getnewaddress()
-        # must wait an hour first
-        assert_raises_rpc_error(-26, 'mint-insufficient-confirmations', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
-        set_node_times(self.nodes, self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + 3600)
-        self.nodes[0].generate(50)
         # try to enable aux fee which should throw an error of invalid value
-        assert_raises_rpc_error(-26, 'mint-mismatch-value', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes, True)
-        self.nodes[0].assetallocationmint(self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
+        assert_raises_rpc_error(-26, 'mint-mismatch-value', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, blockhash, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes, True)
+        txid = self.nodes[0].assetallocationmint(self.asset, newaddress, 100, blockhash, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)['txid']
         time.sleep(0.25)
         # cannot mint twice
-        assert_raises_rpc_error(-26, 'mint-duplicate-transfer', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
+        assert_raises_rpc_error(-26, 'mint-duplicate-transfer', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, blockhash, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
         self.nodes[0].generate(1)
         self.sync_blocks()
         # after a block it should show a different exists error
-        assert_raises_rpc_error(-26, 'mint-exists', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
-
-        # increase time by ~1 week and assetallocationmint should throw timeout error, must send to network by 0.5 week at least
-        numBlocks = int(604800 / (2*60*59))
-        # need to bump 2 hours at a time max
-        for block in range(numBlocks):
-            set_node_times(self.nodes, self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + (2*60*59))
-            self.nodes[0].generate(1)
-        assert_raises_rpc_error(-26, 'mint-too-old', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, height, bridgetransferid, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
-
+        assert_raises_rpc_error(-26, 'mint-exists', self.nodes[0].assetallocationmint, self.asset, newaddress, 100, blockhash, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
+        # ensure you can lookup the mint from the NEVM txid
+        mintres = self.nodes[0].syscoincheckmint('0x3c3bfe141fcbe313f2afd31be1b63dd3a0147235161e637407fbb8605d3d294f')
+        assert_equal(mintres['txid'], txid)
     def basic_asset(self):
         auxfees = {'auxfee_address': self.nodes[0].getnewaddress(), 'fee_struct': [[0,0.01],[10,0.004],[250,0.002],[2500,0.0007],[25000,0.00007],[250000,0]]}
         self.nodes[0].assetnewtest(self.asset, '1', 'TST', 'asset description', '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46', 8, 10000, 127, '', {}, auxfees)

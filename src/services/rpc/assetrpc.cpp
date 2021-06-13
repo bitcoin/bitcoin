@@ -103,7 +103,7 @@ bool UpdateNotarySignature(CMutableTransaction& mtx, const uint64_t& nBaseAsset,
     std::vector<unsigned char> data;
     bool bFilledNotarySig = false;
      // call API endpoint or notary signatures and fill them in for every asset
-    if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
+    if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM || mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
         CBurnSyscoin burnSyscoin(mtx);
         if(FillNotarySig(burnSyscoin.voutAssets, nBaseAsset, vchSig)) {
             bFilledNotarySig = true;
@@ -425,7 +425,7 @@ static RPCHelpMan assetinfo()
                 {RPCResult::Type::STR, "symbol", "The asset symbol"},
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id that created this asset"},
                 {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
-                {RPCResult::Type::STR_HEX, "contract", "The ethereum contract address"},
+                {RPCResult::Type::STR_HEX, "contract", "The nevm contract address"},
                 {RPCResult::Type::STR_AMOUNT, "total_supply", "The total supply of this asset"},
                 {RPCResult::Type::STR_AMOUNT, "max_supply", "The maximum supply of this asset"},
                 {RPCResult::Type::NUM, "updatecapability_flags", "The capability flag in decimal"},
@@ -479,7 +479,7 @@ static RPCHelpMan listassets()
                         {RPCResult::Type::STR, "asset_guid", "The guid of the asset"},
                         {RPCResult::Type::STR, "symbol", "The asset symbol"},
                         {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
-                        {RPCResult::Type::STR_HEX, "contract", "The ethereum contract address"},
+                        {RPCResult::Type::STR_HEX, "contract", "The nevm contract address"},
                         {RPCResult::Type::STR_AMOUNT, "total_supply", "The total supply of this asset"},
                         {RPCResult::Type::STR_AMOUNT, "max_supply", "The maximum supply of this asset"},
                         {RPCResult::Type::NUM, "updatecapability_flags", "The capability flag in decimal"},
@@ -608,7 +608,7 @@ static RPCHelpMan syscoingetspvproof()
 static RPCHelpMan syscoinstopgeth()
 {
     return RPCHelpMan{"syscoinstopgeth",
-    "\nStops Geth and the relayer from running.\n",
+    "\nStops Geth from running.\n",
     {},       
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -621,8 +621,6 @@ static RPCHelpMan syscoinstopgeth()
     },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if(!StopRelayerNode(relayerPID))
-        throw JSONRPCError(RPC_MISC_ERROR, "Could not stop relayer");
     if(!StopGethNode(gethPID))
         throw JSONRPCError(RPC_MISC_ERROR, "Could not stop Geth");
     UniValue ret(UniValue::VOBJ);
@@ -635,7 +633,7 @@ static RPCHelpMan syscoinstopgeth()
 static RPCHelpMan syscoinstartgeth()
 {
     return RPCHelpMan{"syscoinstartgeth",
-    "\nStarts Geth and the relayer.\n",
+    "\nStarts Geth.\n",
     {},
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -648,19 +646,13 @@ static RPCHelpMan syscoinstartgeth()
     },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    StopRelayerNode(relayerPID);
     StopGethNode(gethPID);
     int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
     int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
-    int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
     const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
     const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-    const std::string relayerDescriptorURL = gArgs.GetArg("-relayerDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/relayerdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/relayerdescriptor.json");
     if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
         throw JSONRPCError(RPC_MISC_ERROR, "Could not start Geth");
-    if(!StartRelayerNode(relayerDescriptorURL, relayerPID, rpcport, wsport, ethrpcport))
-        throw JSONRPCError(RPC_MISC_ERROR, "Could not stop relayer");
-    
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", "success");
     return ret;
@@ -668,175 +660,12 @@ static RPCHelpMan syscoinstartgeth()
     };
 }
 
-static RPCHelpMan syscoinsetethstatus()
-{
-    return RPCHelpMan{"syscoinsetethstatus",
-        "\nSets ethereum syncing and network status for indication status of network sync.\n",
-        {
-            {"syncing_status", RPCArg::Type::STR, RPCArg::Optional::NO, "Syncing status either 'syncing' or 'synced'"},
-            {"highest_block", RPCArg::Type::NUM, RPCArg::Optional::NO, "What the highest block height on Ethereum is found to be.  Usually coupled with syncing_status of 'syncing'.  Set to 0 if sync_status is 'synced'"}
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "status", "Result"},
-            }},
-        RPCExamples{
-            HelpExampleCli("syscoinsetethstatus", "\"syncing\" 7000000")
-            + HelpExampleCli("syscoinsetethstatus", "\"synced\" 0")
-            + HelpExampleRpc("syscoinsetethstatus", "\"syncing\", 7000000")
-            + HelpExampleRpc("syscoinsetethstatus", "\"synced\", 0")
-        },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    const UniValue &params = request.params;
-    UniValue ret(UniValue::VOBJ);
-    UniValue retArray(UniValue::VARR);
-    static uint64_t nLastExecTime = GetTimeSeconds();
-    if(!fRegTest && GetTimeSeconds() - nLastExecTime <= 60){
-        LogPrint(BCLog::SYS, "Please wait at least 1 minute between status calls\n");
-        ret.__pushKV("missing_blocks", retArray);
-        return ret;
-    }
-    std::string status = params[0].get_str();
-    uint32_t highestBlock = params[1].get_uint();
-    const uint32_t nGethOldHeight = fGethCurrentHeight;
-    
-    if(highestBlock > 0){
-        if(!pethereumtxrootsdb->PruneTxRoots(highestBlock))
-        {
-            LogPrintf("Failed to write to prune Ethereum TX Roots database!\n");
-            ret.__pushKV("missing_blocks", retArray);
-            return ret;
-        }
-    }
-    std::vector<std::pair<uint32_t, uint32_t> > vecMissingBlockRanges;
-    pethereumtxrootsdb->AuditTxRootDB(vecMissingBlockRanges);
-    fGethSyncStatus = status; 
-    if(!fGethSynced && fGethSyncStatus == "synced" && vecMissingBlockRanges.empty())  {     
-        fGethSynced = true;
-    }
-    if(fGethSyncStatus == "synced"){
-        for(const auto& range: vecMissingBlockRanges){
-            UniValue retRange(UniValue::VOBJ);
-            retRange.__pushKV("from", range.first);
-            retRange.__pushKV("to", range.second);
-            retArray.push_back(retRange);
-        }
-    }
-    LogPrint(BCLog::SYS, "syscoinsetethstatus old height %d new height %d\n", nGethOldHeight, fGethCurrentHeight);
-    ret.__pushKV("missing_blocks", retArray);
-    nLastExecTime = GetTimeSeconds();
-    return ret;
-},
-    };
-}
-
-static RPCHelpMan syscoinsetethheaders()
-{
-    return RPCHelpMan{"syscoinsetethheaders",
-        "\nSets Ethereum headers in Syscoin to validate transactions through the SYSX bridge.\n",
-        {
-            {"headers", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of arrays (block number, tx root) from Ethereum blockchain", 
-                {
-                    {"", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of [block number, tx root] ",
-                        {
-                            {"block_number", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The block height number"},
-                            {"block_hash", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Hash of the block"},
-                            {"previous_hash", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Hash of the previous block"},
-                            {"tx_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The Ethereum TX root of the block height"},
-                            {"receipt_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The Ethereum TX Receipt root of the block height"},
-                            {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The Ethereum block timestamp"},
-                        }
-                    }
-                },
-                "[blocknumber, blockhash, previoushash, txroot, txreceiptroot, timestamp] ..."
-            }
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "status", "Result"},
-            }},
-        RPCExamples{
-            HelpExampleCli("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
-            + HelpExampleRpc("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
-        },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    const UniValue &params = request.params;
-    LOCK(cs_setethstatus);
-    EthereumTxRootMap txRootMap;       
-    const UniValue &headerArray = params[0].get_array();
-    if(headerArray.size() > 0) {
-        nLastGethHeaderTime = GetTimeSeconds();
-    }
-    for(size_t i =0;i<headerArray.size();i++){
-        EthereumTxRoot txRoot;
-        const UniValue &tupleArray = headerArray[i].get_array();
-        if(tupleArray.size() != 6)
-            throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid size in a Ethereum header input, should be size of 6");
-        const uint32_t &nHeight = tupleArray[0].get_uint();
-        std::string blockHash = tupleArray[1].get_str();
-        boost::erase_all(blockHash, "0x");  // strip 0x
-        txRoot.vchBlockHash = ParseHex(blockHash);
-        std::string prevHash = tupleArray[2].get_str();
-        boost::erase_all(prevHash, "0x");  // strip 0x
-        txRoot.vchPrevHash = ParseHex(prevHash);
-        std::string txRootStr = tupleArray[3].get_str();
-        boost::erase_all(txRootStr, "0x");  // strip 0x
-        // add RLP header in case it doesn't already have it
-        if(txRootStr.find("a0") != 0)
-            txRootStr = "a0" + txRootStr;
-        txRoot.vchTxRoot = ParseHex(txRootStr);
-        std::string txReceiptRoot = tupleArray[4].get_str();
-        boost::erase_all(txReceiptRoot, "0x");  // strip 0x
-        if(txReceiptRoot.find("a0") != 0)
-            txReceiptRoot = "a0" + txReceiptRoot;
-        txRoot.vchReceiptRoot = ParseHex(txReceiptRoot);
-        const int64_t &nTimestamp = tupleArray[5].get_int64();
-        txRoot.nTimestamp = nTimestamp;
-        txRootMap.try_emplace(nHeight, txRoot);
-    } 
-    bool res = pethereumtxrootsdb->FlushWrite(txRootMap);
-    UniValue ret(UniValue::VOBJ);
-    ret.__pushKV("status", res? "success": "fail");
-    return ret;
-},
-    };
-}
-
-static RPCHelpMan syscoinclearethheaders()
-{
-    return RPCHelpMan{"syscoinclearethheaders",
-        "\nClears Ethereum headers in Syscoin.\n",
-        {},
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "status", "Result"},
-            }}, 
-        RPCExamples{
-            HelpExampleCli("syscoinclearethheaders", "")
-            + HelpExampleRpc("syscoinclearethheaders", "")
-        },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    bool res = pethereumtxrootsdb->Clear();
-    UniValue ret(UniValue::VOBJ);
-    ret.__pushKV("status", res? "success": "fail");
-    return ret;
-},
-    };
-}
-
-
 static RPCHelpMan syscoingettxroots()
 {
     return RPCHelpMan{"syscoingettxroots",
-    "\nGet Ethereum transaction and receipt roots based on block height.\n",
+    "\nGet NEVM transaction and receipt roots based on block hash.\n",
     {
-        {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block height to lookup."}
+        {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash to lookup."}
     },
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -845,25 +674,28 @@ static RPCHelpMan syscoingettxroots()
             {RPCResult::Type::STR_HEX, "receiptroot", "The receipt merkle root"},
         }},
     RPCExamples{
-        HelpExampleCli("syscoingettxroots", "23232322")
-        + HelpExampleRpc("syscoingettxroots", "23232322")
+        HelpExampleCli("syscoingettxroots", "0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10")
+        + HelpExampleRpc("syscoingettxroots", "0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10")
     },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     LOCK(cs_setethstatus);
-    uint32_t nHeight = request.params[0].get_uint();
+    std::string blockHashStr = request.params[0].get_str();
+    boost::erase_all(blockHashStr, "0x");  // strip 0x
+    uint256 nBlockHash;
+    if(!ParseHashStr(blockHashStr, nBlockHash)) {
+         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read block hash");
+    }
     std::pair<std::vector<unsigned char>,std::vector<unsigned char>> vchTxRoots;
-    EthereumTxRoot txRootDB;
-    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(nHeight, txRootDB)){
+    NEVMTxRoot txRootDB;
+    if(!pnevmtxrootsdb || !pnevmtxrootsdb->ReadTxRoots(nBlockHash, txRootDB)){
        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read transaction roots");
     }
       
     UniValue ret(UniValue::VOBJ);  
-    ret.pushKV("blockhash", HexStr(txRootDB.vchBlockHash));
-    ret.pushKV("prevhash", HexStr(txRootDB.vchPrevHash)); 
+    ret.pushKV("blockhash", nBlockHash.GetHex());
     ret.pushKV("txroot", HexStr(txRootDB.vchTxRoot));
     ret.pushKV("receiptroot", HexStr(txRootDB.vchReceiptRoot));
-    ret.pushKV("timestamp", txRootDB.nTimestamp);
     
     return ret;
 },
@@ -873,9 +705,9 @@ static RPCHelpMan syscoingettxroots()
 static RPCHelpMan syscoincheckmint()
 {
     return RPCHelpMan{"syscoincheckmint",
-    "\nGet the Syscoin mint transaction by looking up using Bridge Transfer ID.\n",
+    "\nGet the Syscoin mint transaction by looking up using NEVM TXID.\n",
     {
-        {"bridge_transfer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ethereum Bridge Transfer ID used to burn funds to move to Syscoin."}
+        {"nevm_txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "NEVM TXID used to burn funds to move to Syscoin."}
     },
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -883,19 +715,88 @@ static RPCHelpMan syscoincheckmint()
             {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
         }}, 
     RPCExamples{
-        HelpExampleCli("syscoincheckmint", "1221")
-        + HelpExampleRpc("syscoincheckmint", "1221")
+        HelpExampleCli("syscoincheckmint", "0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10")
+        + HelpExampleRpc("syscoincheckmint", "0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10")
     },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const uint32_t nBridgeTransferID = request.params[0].get_uint();
+    std::string strTxHash = request.params[0].get_str();
+    boost::erase_all(strTxHash, "0x");  // strip 0x
     uint256 sysTxid;
-    if(!pethereumtxmintdb || !pethereumtxmintdb->Read(nBridgeTransferID, sysTxid)){
-       throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read Syscoin transaction using Bridge Transfer ID");
+    if(!pnevmtxmintdb || !pnevmtxmintdb->Read(strTxHash, sysTxid)){
+       throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read Syscoin transaction using block hash");
     }
     UniValue output(UniValue::VOBJ);
     output.pushKV("txid", sysTxid.GetHex());
     return output;
+},
+    };
+}
+
+static RPCHelpMan syscoinsetethheaders()
+{
+    return RPCHelpMan{"syscoinsetethheaders",
+        "\nSets NEVM headers in Syscoin to validate transactions through the SYSX bridge. Only useful for testing in regtest mode.\n",
+        {
+            {"headers", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of arrays (block hashes, tx root) from NEVM blockchain", 
+                {
+                    {"", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of [block hashes, tx root] ",
+                        {
+                            {"block_hash", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Hash of the block"},
+                            {"tx_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The NEVM TX root of the block height"},
+                            {"receipt_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The NEVM TX Receipt root of the block height"},
+                        }
+                    }
+                },
+                "[blockhash, txroot, txreceiptroot] ..."
+            }
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "status", "Result"},
+            }},
+        RPCExamples{
+            HelpExampleCli("syscoinsetethheaders", "\"[[\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
+            + HelpExampleRpc("syscoinsetethheaders", "\"[[\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    if(!fRegTest) {
+        throw JSONRPCError(RPC_INVALID_PARAMS, "This function is only available in regtest mode for testing");
+    }
+    const UniValue &params = request.params;
+    LOCK(cs_setethstatus);
+    NEVMTxRootMap txRootMap;       
+    const UniValue &headerArray = params[0].get_array();
+    for(size_t i =0;i<headerArray.size();i++){
+        NEVMTxRoot txRoot;
+        const UniValue &tupleArray = headerArray[i].get_array();
+        if(tupleArray.size() != 3)
+            throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid size in a NEVM header input, should be size of 3");
+        std::string blockHashStr = tupleArray[0].get_str();
+        uint256 nBlockHash;
+        boost::erase_all(blockHashStr, "0x");  // strip 0x
+        if(!ParseHashStr(blockHashStr, nBlockHash)) {
+             throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse block hash");
+        }
+        std::string txRootStr = tupleArray[1].get_str();
+        boost::erase_all(txRootStr, "0x");  // strip 0x
+        // add RLP header in case it doesn't already have it
+        if(txRootStr.find("a0") != 0)
+            txRootStr = "a0" + txRootStr;
+        txRoot.vchTxRoot = ParseHex(txRootStr);
+        std::string txReceiptRoot = tupleArray[2].get_str();
+        boost::erase_all(txReceiptRoot, "0x");  // strip 0x
+        if(txReceiptRoot.find("a0") != 0)
+            txReceiptRoot = "a0" + txReceiptRoot;
+        txRoot.vchReceiptRoot = ParseHex(txReceiptRoot);
+        txRootMap.try_emplace(nBlockHash, txRoot);
+    } 
+    bool res = pnevmtxrootsdb->FlushWrite(txRootMap);
+    UniValue ret(UniValue::VOBJ);
+    ret.__pushKV("status", res? "success": "fail");
+    return ret;
 },
     };
 }
@@ -914,9 +815,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            &assetinfo,                     },
     { "syscoin",            &listassets,                    },
     { "syscoin",            &assetallocationverifyzdag,     },
-    { "syscoin",            &syscoinsetethstatus,           },
     { "syscoin",            &syscoinsetethheaders,          },
-    { "syscoin",            &syscoinclearethheaders,        },
     { "syscoin",            &syscoinstopgeth,               },
     { "syscoin",            &syscoinstartgeth,              },
     { "syscoin",            &syscoincheckmint,              },

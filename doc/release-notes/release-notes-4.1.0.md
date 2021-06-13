@@ -278,7 +278,7 @@ Miscellaneous CLI Changes
 Low-level changes
 =================
 
-SYSETHEREUM BRIDGE
+SYSNEVM BRIDGE
 ------------------
 A first-of-its-kind trust-less permission-less decentralized bridge from Syscoin <-> Ethereum. Two way
 bridges allow for fractional value ownership across multiple chains. You can transfer your native ERC20 to Syscoin SPTs or transfer your Syscoin SPT to a new ERC20 established on Ethereum. Over 2 years of research and development went into this feature so many thanks for the count-less hours nights and days spent by security researchers, developers, testers and community volunteers who helped push us create quality code that is well-tested and analyzed for secure usage.  We have spent alot of time finalizing design, re-working under security reviews and making similar assumptions of attack vectors that exist on Bitcoin today in a decentralized environment. We are confident the technology will enable value transfer across chains in a reliable, secure way and is the basis for future research on general trust-less bridge designs. The goal is to enable users benefit from utility of Syscoin but in the future we will allow not only Ethereum users from benefiting from Syscoins PoW security and ZDAG/Assets Payment channel functionality but more chains to come once we have generalized the solution. Read more about the bridge: https://github.com/syscoin/sysethereum-docs

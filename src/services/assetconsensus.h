@@ -10,39 +10,22 @@
 class TxValidationState;
 class CCoinsViewCache;
 class CTxUndo;
-class EthereumTxRoot {
-    public:
-    std::vector<unsigned char> vchBlockHash;
-    std::vector<unsigned char> vchPrevHash;
-    std::vector<unsigned char> vchTxRoot;
-    std::vector<unsigned char> vchReceiptRoot;
-    int64_t nTimestamp;
-    
-    SERIALIZE_METHODS(EthereumTxRoot, obj)
-    {
-        READWRITE(obj.vchBlockHash, obj.vchPrevHash, obj.vchTxRoot, obj.vchReceiptRoot, obj.nTimestamp);
-    }
-};
-typedef std::unordered_map<uint32_t, EthereumTxRoot> EthereumTxRootMap;
-class CEthereumTxRootsDB : public CDBWrapper {
+class CNEVMTxRootsDB : public CDBWrapper {
 public:
-    explicit CEthereumTxRootsDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-    bool ReadTxRoots(const uint32_t& nHeight, EthereumTxRoot& txRoot) {
-        return Read(nHeight, txRoot);
+    explicit CNEVMTxRootsDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    bool ReadTxRoots(const uint256& nBlockHash, NEVMTxRoot& txRoot) {
+        return Read(nBlockHash, txRoot);
     } 
-    void AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t> > &vecMissingBlockRanges);
-    bool Init();
     bool Clear();
-    bool PruneTxRoots(const uint32_t &fNewGethSyncHeight);
-    bool FlushErase(const std::vector<uint32_t> &vecHeightKeys);
-    bool FlushWrite(const EthereumTxRootMap &mapTxRoots);
+    bool FlushErase(const std::vector<uint256> &vchBlockHashes);
+    bool FlushWrite(const NEVMTxRootMap &mapNEVMTxRoots);
 };
 
-class CEthereumMintedTxDB : public CDBWrapper {
+class CNEVMMintedTxDB : public CDBWrapper {
 public:
-    explicit CEthereumMintedTxDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-    bool FlushErase(const EthereumMintTxMap &mapMintKeys);
-    bool FlushWrite(const EthereumMintTxMap &mapMintKeys);
+    explicit CNEVMMintedTxDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    bool FlushErase(const NEVMMintTxMap &mapMintKeys);
+    bool FlushWrite(const NEVMMintTxMap &mapMintKeys);
 };
 
 class CAssetDB : public CDBWrapper {
@@ -77,17 +60,17 @@ public:
 };
 extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CAssetNFTDB> passetnftdb;
-extern std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
-extern std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
+extern std::unique_ptr<CNEVMTxRootsDB> pnevmtxrootsdb;
+extern std::unique_ptr<CNEVMMintedTxDB> pnevmtxmintdb;
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
 bool DisconnectAssetSend(const CTransaction &tx, const uint256& txHash, const CTxUndo& txundo, AssetMap &mapAssets);
 bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
-bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, EthereumMintTxMap &mapMintKeys);
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CTxUndo& txundo, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys);
-bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, EthereumMintTxMap &mapMintKeys);
+bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, NEVMMintTxMap &mapMintKeys);
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CTxUndo& txundo, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys);
+bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, NEVMMintTxMap &mapMintKeys);
 bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap &mapAssets, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut);
-bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState &tstate, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut);
-bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx,  const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut);
+bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState &tstate, const int &nHeight, const int64_t& nTime, NEVMMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut);
+bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx,  const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut);
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut);
 uint256 GetNotarySigHash(const CTransaction &tx, const CAssetOut &vecOut);
 #endif // SYSCOIN_SERVICES_ASSETCONSENSUS_H

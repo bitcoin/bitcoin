@@ -49,7 +49,7 @@ LIBSYSCOIN_UTIL=libsyscoin_util.a
 LIBSYSCOIN_CRYPTO_BASE=crypto/libsyscoin_crypto_base.a
 LIBSYSCOINQT=qt/libsyscoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
-LIBETHEREUM=ethereum/libethereum.a
+LIBNEVM=nevm/libnevm.a
 LIBSYSCOIN_BLS=libsyscoin_bls.a
 if ENABLE_ZMQ
 LIBSYSCOIN_ZMQ=libsyscoin_zmq.a
@@ -92,7 +92,7 @@ EXTRA_LIBRARIES += \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_WALLET_TOOL) \
   $(LIBSYSCOIN_ZMQ) \
-  $(LIBETHEREUM) \
+  $(LIBNEVM) \
   $(LIBSYSCOIN_BLS)
 
 lib_LTLIBRARIES = $(LIBSYSCOINCONSENSUS)
@@ -377,26 +377,26 @@ obj/build.h: FORCE
 	@$(top_srcdir)/share/genbuild.sh "$(abs_top_builddir)/src/obj/build.h" \
 	  "$(abs_top_srcdir)"
 
- # ethereum
- ethereum_libethereum_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
- ethereum_libethereum_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
- ethereum_libethereum_a_SOURCES = \
-  ethereum/address.cpp \
-  ethereum/address.h \
-  ethereum/common.cpp \
-  ethereum/common.h \
-  ethereum/commondata.cpp \
-  ethereum/commondata.h \
-  ethereum/exceptions.h \
-  ethereum/fixedhash.cpp \
-  ethereum/fixedhash.h \
-  ethereum/rlp.cpp \
-  ethereum/rlp.h \
-  ethereum/sha3.cpp \
-  ethereum/sha3.h \
-  ethereum/ethereum.cpp \
-  ethereum/ethereum.h \
-  ethereum/vector_ref.h
+ # nevm
+ nevm_libnevm_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+ nevm_libnevm_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+ nevm_libnevm_a_SOURCES = \
+  nevm/address.cpp \
+  nevm/address.h \
+  nevm/common.cpp \
+  nevm/common.h \
+  nevm/commondata.cpp \
+  nevm/commondata.h \
+  nevm/exceptions.h \
+  nevm/fixedhash.cpp \
+  nevm/fixedhash.h \
+  nevm/rlp.cpp \
+  nevm/rlp.h \
+  nevm/sha3.cpp \
+  nevm/sha3.h \
+  nevm/nevm.cpp \
+  nevm/nevm.h \
+  nevm/vector_ref.h
 
 
  # BLS
@@ -849,7 +849,7 @@ syscoin_bin_ldadd = \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
-  $(LIBETHEREUM)
+  $(LIBNEVM)
 
 syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
@@ -907,7 +907,7 @@ syscoin_tx_LDADD = \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
-  $(LIBETHEREUM)
+  $(LIBNEVM)
 
 syscoin_tx_LDADD += $(BOOST_LIBS)
   

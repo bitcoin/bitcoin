@@ -332,8 +332,8 @@ void Shutdown(NodeContext& node)
        
         passetdb.reset();
         passetnftdb.reset();
-        pethereumtxrootsdb.reset();
-        pethereumtxmintdb.reset();
+        pnevmtxrootsdb.reset();
+        pnevmtxmintdb.reset();
         pblockindexdb.reset();
         llmq::DestroyLLMQSystem();
         deterministicMNManager.reset();
@@ -499,12 +499,9 @@ void SetupServerArgs(ArgsManager& argsman)
 #endif
     argsman.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     // SYSCOIN
-    argsman.AddArg("-gethwebsocketport=<port>", strprintf("Listen for GETH Web Socket connections on <port> for the relayer (default: %u)", 8646), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    argsman.AddArg("-gethrpcport=<port>", strprintf("Listen for GETH RPC connections on <port> for the relayer (default: %u)", 8645), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    argsman.AddArg("-gethtestnet", strprintf("Connect to Ethereum Rinkeby testnet network (default: %d)", false), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    argsman.AddArg("-gethtestnet", strprintf("Connect to NEVM Rinkeby testnet network (default: %d)", false), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-gethsyncmode", strprintf("Geth sync mode, light, fast, full or disabled (to run your own geth node) (default: light)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-gethDescriptorURL", strprintf("Geth descriptor URL where to do versioning checks and binary downloads for Geth (default: https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    argsman.AddArg("-relayerDescriptorURL", strprintf("Relayer descriptor URL where to do versioning checks and binary downloads for the Geth relayer (default: https://raw.githubusercontent.com/syscoin/descriptors/master/relayerdescriptor.json)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-disablegovernance=<n>", strprintf("Disable governance validation (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS); 
     argsman.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1614,8 +1611,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 fReindexGeth = fReindex || fReindexChainState; 
                 passetdb.reset();
                 passetnftdb.reset();
-                pethereumtxrootsdb.reset();
-                pethereumtxmintdb.reset();
+                pnevmtxrootsdb.reset();
+                pnevmtxmintdb.reset();
                 pblockindexdb.reset();
                 llmq::DestroyLLMQSystem();
                 evoDb.reset();
@@ -1625,8 +1622,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, fReindexGeth);
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReindexGeth));    
                 passetnftdb.reset(new CAssetNFTDB(nCoinDBCache*16, false, fReindexGeth));    
-                pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache, false, fReindexGeth));
-                pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReindexGeth));
+                pnevmtxrootsdb.reset(new CNEVMTxRootsDB(nCoinDBCache, false, fReindexGeth));
+                pnevmtxmintdb.reset(new CNEVMMintedTxDB(nCoinDBCache, false, fReindexGeth));
                 pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReindexGeth));
                 if (!evoDb->CommitRootTransaction()) {
                     strLoadError = _("Failed to commit EvoDB");
@@ -1738,8 +1735,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     LogPrintf("coinsViewEmpty recreating LLMQ and asset databases\n");
                     passetdb.reset();
                     passetnftdb.reset();
-                    pethereumtxrootsdb.reset();
-                    pethereumtxmintdb.reset();
+                    pnevmtxrootsdb.reset();
+                    pnevmtxmintdb.reset();
                     pblockindexdb.reset();
                     llmq::DestroyLLMQSystem();
                     evoDb.reset();
@@ -1747,8 +1744,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, coinsViewEmpty);
                     passetdb.reset(new CAssetDB(nCoinDBCache*16, false, coinsViewEmpty));    
                     passetnftdb.reset(new CAssetNFTDB(nCoinDBCache*16, false, coinsViewEmpty));    
-                    pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache, false, coinsViewEmpty));
-                    pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, coinsViewEmpty));
+                    pnevmtxrootsdb.reset(new CNEVMTxRootsDB(nCoinDBCache, false, coinsViewEmpty));
+                    pnevmtxmintdb.reset(new CNEVMMintedTxDB(nCoinDBCache, false, coinsViewEmpty));
                     pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, coinsViewEmpty));
                     if (!evoDb->CommitRootTransaction()) {
                         strLoadError = _("Failed to commit EvoDB");
@@ -1959,12 +1956,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
         block_notify_genesis_wait_connection.disconnect();
     }
-    // SYSCOIN
-    const std::vector<std::string> auth = args.GetArgs("-rpcauth");
-    if(!fRegTest && !auth.empty()) {
-        return InitError(Untranslated("You can not use rpcauth in any network other than regtest. It is not compliant with the Syscoin Relayer."));
-    }
-
     // if regtest then make sure geth is shown as synced as well
     fGethSynced = fRegTest;
     if(fDisableGovernance) {
@@ -2195,7 +2186,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }, DUMP_BANS_INTERVAL);
     // SYSCOIN
     if(!fRegTest && !fSigNet && (fMasternodeMode || gArgs.IsArgSet("-gethsyncmode"))) {
-        //node.scheduler->scheduleEvery([&] { DoGethMaintenance(); }, std::chrono::seconds{15});
+        node.scheduler->scheduleEvery([&] { DoGethMaintenance(); }, std::chrono::seconds{15});
     } 
 #if HAVE_SYSTEM
     StartupNotify(args);

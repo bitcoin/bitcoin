@@ -22,7 +22,7 @@
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
-extern EthereumMintTxMap mapMintKeysMempool;
+extern NEVMMintTxMap mapMintKeysMempool;
 extern std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
 
 #include <cmath>
@@ -545,11 +545,11 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
             eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
         }
     }
-    // remove bridge transfer id from mempool structure
+    // remove nevm tx from mempool structure
     if(IsSyscoinMintTx(it->GetTx().nVersion)) {
         CMintSyscoin mintSyscoin(it->GetTx());
         if(!mintSyscoin.IsNull())
-            mapMintKeysMempool.erase(mintSyscoin.nBridgeTransferID);
+            mapMintKeysMempool.erase(mintSyscoin.strTxHash);
     }
     cachedInnerUsage -= memusage::DynamicUsage(it->GetMemPoolParentsConst()) + memusage::DynamicUsage(it->GetMemPoolChildrenConst());
     mapTx.erase(it);

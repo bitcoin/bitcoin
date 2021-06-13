@@ -116,5 +116,5 @@ shift-base:leveldb/
 shift-base:net_processing.cpp
 shift-base:streams.h
 shift-base:util/bip32.cpp
-shift-base:ethereum/
+shift-base:nevm/
 signed-integer-overflow:txmempool.cpp

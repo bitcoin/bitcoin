@@ -5,8 +5,9 @@
 #include <validation.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
-#include <ethereum/ethereum.h>
-#include <ethereum/address.h>
+#include <nevm/nevm.h>
+#include <nevm/address.h>
+#include <nevm/sha3.h>
 #include <services/asset.h>
 #include <script/standard.h>
 #include <util/system.h>
@@ -15,11 +16,11 @@
 #include <undo.h>
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CAssetNFTDB> passetnftdb;
-std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
-std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
+std::unique_ptr<CNEVMTxRootsDB> pnevmtxrootsdb;
+std::unique_ptr<CNEVMMintedTxDB> pnevmtxmintdb;
 RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
-bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, EthereumMintTxMap &mapMintKeys, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
+bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, NEVMMintTxMap &mapMintKeys, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
     if (!bSanityCheck)
         LogPrint(BCLog::SYS,"*** ASSET MINT %d %s %s bSanityCheck=%d\n", nHeight,
             txHash.ToString().c_str(),
@@ -35,53 +36,18 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(itOut == mapAssetOut.end()) {
         return FormatSyscoinErrorMessage(state, "mint-asset-output-notfound", bSanityCheck);             
     } 
-    // do this check only when not in IBD (initial block download)
-    // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
-    EthereumTxRoot txRootDB;
-   
-    const bool &ethTxRootShouldExist = true/*!ibd && fLoaded && fGethSynced*/;
+
+    NEVMTxRoot txRootDB;
     bool readTxRootFail;
     {
         LOCK(cs_setethstatus);
-        readTxRootFail = !pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB);
+        readTxRootFail = !pnevmtxrootsdb || !pnevmtxrootsdb->ReadTxRoots(mintSyscoin.nBlockHash, txRootDB);
     }
-    // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
-    // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
     if(readTxRootFail) {
-        if(ethTxRootShouldExist) {
-            if(!fJustCheck && !bSanityCheck) {
-                // sleep here to avoid flooding log, hope that geth/relayer watch dog catches the tx root upon restart
-                UninterruptibleSleep(std::chrono::milliseconds{1000});
-            }
-            // we always want to pass state.Invalid() for txroot missing errors here meaning we flag the block as invalid and dos ban the sender maybe
-            // the check in contextualcheckblock that does this prevents us from getting a block that's invalid flagged as error so it won't propagate the block, but if block does arrive we should dos ban peer and invalidate the block itself from connect block
-            return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
-        }
+        return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
     }
      
-    // if we checking this on block we would have already verified this in checkblock
-    if(ethTxRootShouldExist){
-        // time must be between 2.5 week and 1 hour old to be accepted
-        if(nTime < txRootDB.nTimestamp) {
-            return FormatSyscoinErrorMessage(state, "mint-invalid-timestamp", bSanityCheck);
-        }
-        else if((nTime - txRootDB.nTimestamp) > MAINNET_MAX_VALIDATE_AGE) {
-            return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old", bSanityCheck);
-        } 
-        
-        // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
-        // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
-        else if((nTime - txRootDB.nTimestamp) < MAINNET_MIN_MINT_AGE) {
-            return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations", bSanityCheck);
-        }
-        // must propagate by 0.5 weeks or less, otherwise shouldn't be allowed to propagate
-        else if(fJustCheck && blockhash.IsNull() && (nTime - txRootDB.nTimestamp) > MAINNET_MAX_MINT_AGE) {
-            return FormatSyscoinErrorMessage(state, "mint-too-old", bSanityCheck);
-        }
-    }
-    
      // check transaction receipt validity
-
     dev::RLP rlpReceiptParentNodes(&mintSyscoin.vchReceiptParentNodes);
     std::vector<unsigned char> vchReceiptValue(mintSyscoin.vchReceiptParentNodes.begin()+mintSyscoin.posReceipt, mintSyscoin.vchReceiptParentNodes.end());
     dev::RLP rlpReceiptValue(&vchReceiptValue);
@@ -105,8 +71,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if (itemCount < 1 || itemCount > 10) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-logs-count", bSanityCheck);
     }
-    // look for TokenFreeze event and get the last parameter which should be the BridgeTransferID
-    uint32_t nBridgeTransferID = 0;
+    // look for TokenFreeze event and get the last parameter which should be the precisions
     uint8_t nERC20Precision = 0;
     uint8_t nSPTPrecision = 0;
     for(uint32_t i = 0;i<itemCount;i++) {
@@ -138,26 +103,16 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
                 if(dataValue.size() < 96) {
                      return FormatSyscoinErrorMessage(state, "mint-receipt-log-data-invalid-size", bSanityCheck);
                 }
-                // get last data field which should be our BridgeTransferID + precisions
+                // get last data field which should be our precisions
                 const std::vector<unsigned char> bridgeIdValue(dataValue.begin()+64, dataValue.end());
-                nBridgeTransferID = static_cast<uint32_t>(bridgeIdValue[31]);
-                nBridgeTransferID |= static_cast<uint32_t>(bridgeIdValue[30]) << 8;
-                nBridgeTransferID |= static_cast<uint32_t>(bridgeIdValue[29]) << 16;
-                nBridgeTransferID |= static_cast<uint32_t>(bridgeIdValue[28]) << 24;
                 // get precision
-                nERC20Precision = static_cast<uint8_t>(bridgeIdValue[27]);
-                nSPTPrecision = static_cast<uint8_t>(bridgeIdValue[26]);
+                nERC20Precision = static_cast<uint8_t>(bridgeIdValue[31]);
+                nSPTPrecision = static_cast<uint8_t>(bridgeIdValue[30]);
             }
         }
     }
     if(nERC20Precision == 0 || nSPTPrecision == 0) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-precision", bSanityCheck);
-    }
-    if(nBridgeTransferID == 0) {
-        return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-bridge-id", bSanityCheck);
-    }
-    if(nBridgeTransferID != mintSyscoin.nBridgeTransferID) {
-        return FormatSyscoinErrorMessage(state, "mint-mismatch-bridge-id", bSanityCheck);
     }
     // check transaction spv proofs
     dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
@@ -173,28 +128,31 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     
     dev::RLP rlpTxParentNodes(&mintSyscoin.vchTxParentNodes);
     std::vector<unsigned char> vchTxValue(mintSyscoin.vchTxParentNodes.begin()+mintSyscoin.posTx, mintSyscoin.vchTxParentNodes.end());
+    // validate mintSyscoin.strTxHash is the hash of vchTxValue
+    if(dev::sha3(vchTxValue).hex() != mintSyscoin.strTxHash) {
+        return FormatSyscoinErrorMessage(state, "mint-verify-tx-hash", bSanityCheck);
+    }
     dev::RLP rlpTxValue(&vchTxValue);
     const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
     dev::RLP rlpTxPath(&vchTxPath);
     // ensure eth tx not already spent in a previous block
-    if(pethereumtxmintdb->Exists(nBridgeTransferID)) {
+    if(pnevmtxmintdb->Exists(mintSyscoin.strTxHash)) {
         return FormatSyscoinErrorMessage(state, "mint-exists", bSanityCheck);
     } 
     // sanity check is set in mempool during m_test_accept and when miner validates block
     // we care to ensure unique bridge id's in the mempool, not to emplace on test_accept
     if(bSanityCheck) {
-        if(mapMintKeys.find(nBridgeTransferID) != mapMintKeys.end()) {
+        if(mapMintKeys.find(mintSyscoin.strTxHash) != mapMintKeys.end()) {
             return FormatSyscoinErrorMessage(state, "mint-duplicate-transfer", bSanityCheck);
         }
     }
     else {
         // ensure eth tx not already spent in current processing block or mempool(mapMintKeysMempool passed in)
-        auto itMap = mapMintKeys.try_emplace(nBridgeTransferID, txHash);
+        auto itMap = mapMintKeys.try_emplace(mintSyscoin.strTxHash, txHash);
         if(!itMap.second) {
             return FormatSyscoinErrorMessage(state, "mint-duplicate-transfer", bSanityCheck);
         }
     }
-     
     // verify receipt proof
     if(!VerifyProof(&vchTxPath, rlpReceiptValue, rlpReceiptParentNodes, rlpReceiptRoot)) {
         return FormatSyscoinErrorMessage(state, "mint-verify-receipt-proof", bSanityCheck);
@@ -223,23 +181,31 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }
     
     CAmount outputAmount;
-    uint64_t nAssetEth = 0;
+    uint64_t nAssetNEVM = 0;
     const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
     std::vector<unsigned char> vchERC20ContractAddress;
     CTxDestination dest;
     std::string witnessAddress;
-    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, nERC20Precision, nSPTPrecision, rlpBytes, outputAmount, nAssetEth, witnessAddress)) {
+    if(!parseNEVMMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, nERC20Precision, nSPTPrecision, rlpBytes, outputAmount, nAssetNEVM, witnessAddress)) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-tx-data", bSanityCheck);
     }
-    if(!ExtractDestination(tx.vout[0].scriptPubKey, dest)) {
-        return FormatSyscoinErrorMessage(state, "mint-extract-destination", bSanityCheck);  
-    }
     if(!fRegTest) {
-        if(EncodeDestination(dest) != witnessAddress) {
-            return FormatSyscoinErrorMessage(state, "mint-mismatch-destination", bSanityCheck);  
+        bool bFoundDest = false;
+        // look through outputs to find one that matches the destination with the right asset and asset amount
+        for(const auto &vout: tx.vout) {
+            if(!ExtractDestination(vout.scriptPubKey, dest)) {
+                return FormatSyscoinErrorMessage(state, "mint-extract-destination", bSanityCheck);  
+            }
+            if(EncodeDestination(dest) == witnessAddress && vout.assetInfo.nAsset == nAsset && vout.assetInfo.nValue == outputAmount) {
+                bFoundDest = true;
+                break;
+            }
+        }
+        if(!bFoundDest) {
+            return FormatSyscoinErrorMessage(state, "mint-mismatch-destination", bSanityCheck);
         }
     }
-    if(nAssetEth != nAsset) {
+    if(nAssetNEVM != nAsset) {
         return FormatSyscoinErrorMessage(state, "mint-mismatch-asset", bSanityCheck);
     }
     if(outputAmount <= 0) {
@@ -281,7 +247,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     return true;
 }
 
-bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
+bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, NEVMMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
     if(!fRegTest && nHeight < params.nUTXOAssetsBlock)
         return !IsSyscoinTx(tx.nVersion);
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)
@@ -290,7 +256,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params,
     return CheckSyscoinInputs(false, params, tx, txHash, state, true, nHeight, nTime, uint256(), bSanityCheck, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut);
 }
 
-bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
+bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
     bool good = true;
     try{
         if(IsSyscoinMintTx(tx.nVersion)) {
@@ -308,17 +274,17 @@ bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const 
     return good;
 }
 
-bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, EthereumMintTxMap &mapMintKeys){
+bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, NEVMMintTxMap &mapMintKeys){
     CMintSyscoin mintSyscoin(tx);
     if(mintSyscoin.IsNull()) {
         LogPrint(BCLog::SYS,"DisconnectMintAsset: Cannot unserialize data inside of this transaction relating to an assetallocationmint\n");
         return false;
     }
-    mapMintKeys.try_emplace(mintSyscoin.nBridgeTransferID, txHash);
+    mapMintKeys.try_emplace(mintSyscoin.strTxHash, txHash);
     return true;
 }
 
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CTxUndo& txundo, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys) {
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CTxUndo& txundo, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys) {
  
     if(IsSyscoinMintTx(tx.nVersion)) {
         if(!DisconnectMintAsset(tx, txHash, mapMintKeys))
@@ -435,7 +401,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             }
         }
         break;
-        case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
+        case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM:
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
         {
             const CAmount &nBurnAmount = tx.vout[nOut].assetInfo.nValue;
@@ -675,8 +641,10 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
             if(itOut->second.nAmount != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-zeroval", bSanityCheck);
             }
-            if (tx.vout[nOut].nValue < COST_ASSET) {
-                return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
+            if (nHeight < Params().GetConsensus().nNEVMStartBlock) {
+                if (tx.vout[nOut].nValue < COST_ASSET) {
+                    return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
+                }
             }
             if (nBaseAsset <= SYSCOIN_TX_MIN_ASSET_GUID) {
                 return FormatSyscoinErrorMessage(state, "asset-guid-too-low", bSanityCheck);
@@ -1010,32 +978,16 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
     return true;
 }
 
-bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
+bool CNEVMTxRootsDB::Clear() {
     LOCK(cs_setethstatus);
-    uint32_t fNewGethCurrentHeight = fGethCurrentHeight;
+    std::vector<uint256> vecBlockHashes;
+    uint256 nEthBlock;
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
-    std::vector<uint32_t> vecHeightKeys;
-    uint32_t nKey = 0;
-    uint32_t cutoffHeight = 0;
-    if(fNewGethSyncHeight > 0) {
-        // cutoff to keep blocks
-        cutoffHeight = fNewGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
-        if(fNewGethSyncHeight < MAX_ETHEREUM_TX_ROOTS) {
-            LogPrint(BCLog::SYS, "Nothing to prune fGethSyncHeight = %d\n", fNewGethSyncHeight);
-            return true;
-        }
-    }
-    std::vector<unsigned char> txPos;
     while (pcursor->Valid()) {
         try {
-            if(pcursor->GetKey(nKey)) {
-                // if height is before cutoff height or after tip height passed in (re-org), remove the txroot from db
-                if (fNewGethSyncHeight > 0 && (nKey < cutoffHeight || nKey > fNewGethSyncHeight)) {
-                    vecHeightKeys.emplace_back(nKey);
-                }
-                else if(nKey > fNewGethCurrentHeight)
-                    fNewGethCurrentHeight = nKey;
+            if(pcursor->GetKey(nEthBlock)) {
+                vecBlockHashes.emplace_back(nEthBlock);
             }
             pcursor->Next();
         }
@@ -1043,157 +995,52 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
             return error("%s() : deserialize error", __PRETTY_FUNCTION__);
         }
     }
-
-    fGethSyncHeight = fNewGethSyncHeight;
-    fGethCurrentHeight = fNewGethCurrentHeight;   
-    return FlushErase(vecHeightKeys);
-}
-
-bool CEthereumTxRootsDB::Init() {
-    return PruneTxRoots(0);
-}
-
-bool CEthereumTxRootsDB::Clear() {
-    LOCK(cs_setethstatus);
-    std::vector<uint32_t> vecHeightKeys;
-    uint32_t nKey = 0;
-    std::unique_ptr<CDBIterator> pcursor(NewIterator());
-    pcursor->SeekToFirst();
-    while (pcursor->Valid()) {
-        try {
-            if(pcursor->GetKey(nKey)) {
-                vecHeightKeys.push_back(nKey);
-            }
-            pcursor->Next();
-        }
-        catch (std::exception &e) {
-            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
-        }
-    }
-    fGethSyncHeight = 0;
     fGethCurrentHeight = 0;   
-    return FlushErase(vecHeightKeys);
+    return FlushErase(vecBlockHashes);
 }
-
-void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t> > &vecMissingBlockRanges){
-    LOCK(cs_setethstatus);
-    std::unique_ptr<CDBIterator> pcursor(NewIterator());
-    pcursor->SeekToFirst();
-    std::vector<uint32_t> vecHeightKeys;
-    uint32_t nKey = 0;
-    uint32_t nKeyIndex = 0;
-    uint32_t nCurrentSyncHeight = 0;
-    nCurrentSyncHeight = fGethSyncHeight;
-
-    uint32_t nKeyCutoff = nCurrentSyncHeight - DOWNLOAD_ETHEREUM_TX_ROOTS;
-    if(nCurrentSyncHeight < DOWNLOAD_ETHEREUM_TX_ROOTS)
-        nKeyCutoff = 0;
-    std::vector<unsigned char> txPos;
-    std::map<uint32_t, EthereumTxRoot> mapTxRoots;
-    // sort keys numerically
-    while (pcursor->Valid()) {
-        try {
-            if(!pcursor->GetKey(nKey)) {
-                pcursor->Next();
-                continue;
-            }
-            EthereumTxRoot txRoot;
-            pcursor->GetValue(txRoot);
-            mapTxRoots.try_emplace(std::move(nKey), std::move(txRoot));        
-            pcursor->Next();
-        }
-        catch (std::exception &e) {
-            LogPrintf("AuditTxRootDB exception: %s\n", e.what()); 
-            return;
-        }
-    }
-    if(mapTxRoots.size() < 2) {
-        vecMissingBlockRanges.emplace_back(std::make_pair(nKeyCutoff, nCurrentSyncHeight));
-        return;
-    }
-    auto setIt = mapTxRoots.begin();
-    nKeyIndex = setIt->first;
-    setIt++;
-    // we should have at least DOWNLOAD_ETHEREUM_TX_ROOTS roots available from the tip for consensus checks
-    if(nCurrentSyncHeight >= DOWNLOAD_ETHEREUM_TX_ROOTS && nKeyIndex > nKeyCutoff) {
-        vecMissingBlockRanges.emplace_back(std::make_pair(nKeyCutoff, nKeyIndex-1));
-    }
-    std::vector<unsigned char> vchPrevHash;
-    std::vector<uint32_t> vecRemoveKeys;
-    // find sequence gaps in sorted key set 
-    for (; setIt != mapTxRoots.end(); ++setIt) {
-            const uint32_t &key = setIt->first;
-            const uint32_t &nNextKeyIndex = nKeyIndex+1;
-            if (key != nNextKeyIndex && (key-1) >= nNextKeyIndex)
-                vecMissingBlockRanges.emplace_back(std::make_pair(nNextKeyIndex, key-1));
-            // if continuous index we want to ensure hash chain is also continuous
-            else {
-                // if prevhash of prev txroot != hash of this tx root then request inconsistent roots again
-                const EthereumTxRoot &txRoot = setIt->second;
-                auto prevRootPair = std::prev(setIt);
-                const EthereumTxRoot &txRootPrev = prevRootPair->second;
-                if(txRoot.vchPrevHash != txRootPrev.vchBlockHash){
-                    // get a range of -50 to +50 around effected tx root to minimize chance that you will be requesting 1 root at a time in a long range fork
-                    // this is fine because relayer fetches hundreds headers at a time anyway
-                    vecMissingBlockRanges.emplace_back(std::make_pair(std::max(0,(int32_t)key-50), std::min((int32_t)key+50, (int32_t)nCurrentSyncHeight)));
-                    vecRemoveKeys.push_back(key);
-                }
-            }
-            nKeyIndex = key;   
-    } 
-    if(!vecRemoveKeys.empty()) {
-        LogPrint(BCLog::SYS, "Detected an %d inconsistent hash chains in Ethereum headers, removing...\n", vecRemoveKeys.size());
-        pethereumtxrootsdb->FlushErase(vecRemoveKeys);
-    }
-}
-bool CEthereumTxRootsDB::FlushErase(const std::vector<uint32_t> &vecHeightKeys) {
-    if(vecHeightKeys.empty())
+bool CNEVMTxRootsDB::FlushErase(const std::vector<uint256> &vecBlockHashes) {
+    if(vecBlockHashes.empty())
         return true;
-    const uint32_t &nFirst = vecHeightKeys.front();
-    const uint32_t &nLast = vecHeightKeys.back();
     CDBBatch batch(*this);
-    for (const auto &key : vecHeightKeys) {
+    for (const auto &key : vecBlockHashes) {
         batch.Erase(key);
     }
-    LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx roots, block range (%d-%d)\n", vecHeightKeys.size(), nFirst, nLast);
+    LogPrint(BCLog::SYS, "Flushing, erasing %d nevm tx roots\n", vecBlockHashes.size());
     return WriteBatch(batch);
 }
 
-bool CEthereumTxRootsDB::FlushWrite(const EthereumTxRootMap &mapTxRoots) {
-    if(mapTxRoots.empty())
+bool CNEVMTxRootsDB::FlushWrite(const NEVMTxRootMap &mapNEVMTxRoots) {
+    if(mapNEVMTxRoots.empty())
         return true;
-    const uint32_t &nFirst = mapTxRoots.begin()->first;
-    uint32_t nLast = nFirst;
     CDBBatch batch(*this);
-    for (const auto &key : mapTxRoots) {
+    for (const auto &key : mapNEVMTxRoots) {
         batch.Write(key.first, key.second);
-        nLast = key.first;
     }
-    LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx roots, block range (%d-%d)\n", mapTxRoots.size(), nFirst, nLast);
+    LogPrint(BCLog::SYS, "Flushing, writing %d nevm tx roots\n", mapNEVMTxRoots.size());
     return WriteBatch(batch);
 }
 
 // called on connect
-bool CEthereumMintedTxDB::FlushWrite(const EthereumMintTxMap &mapMintKeys) {
+bool CNEVMMintedTxDB::FlushWrite(const NEVMMintTxMap &mapMintKeys) {
     if(mapMintKeys.empty())
         return true;
     CDBBatch batch(*this);
     for (const auto &key : mapMintKeys) {
         batch.Write(key.first, key.second);
     }
-    LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx mints\n", mapMintKeys.size());
+    LogPrint(BCLog::SYS, "Flushing, writing %d nevm tx mints\n", mapMintKeys.size());
     return WriteBatch(batch);
 }
 
 // called on disconnect
-bool CEthereumMintedTxDB::FlushErase(const EthereumMintTxMap &mapMintKeys) {
+bool CNEVMMintedTxDB::FlushErase(const NEVMMintTxMap &mapMintKeys) {
     if(mapMintKeys.empty())
         return true;
     CDBBatch batch(*this);
     for (const auto &key : mapMintKeys) {
         batch.Erase(key.first);
     }
-    LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx mints\n", mapMintKeys.size());
+    LogPrint(BCLog::SYS, "Flushing, erasing %d nevm tx mints\n", mapMintKeys.size());
     return WriteBatch(batch);
 }
 
@@ -1263,11 +1110,10 @@ bool CAssetDB::Flush(const AssetMap &mapAssets) {
     return WriteBatch(batch);
 }
 
-CEthereumTxRootsDB::CEthereumTxRootsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "ethereumtxroots", nCacheSize, fMemory, fWipe) {
-    Init();
+CNEVMTxRootsDB::CNEVMTxRootsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "nevmtxroots", nCacheSize, fMemory, fWipe) {
 }
 
-CEthereumMintedTxDB::CEthereumMintedTxDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "ethereumminttx", nCacheSize, fMemory, fWipe) {
+CNEVMMintedTxDB::CNEVMMintedTxDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "nevmminttx", nCacheSize, fMemory, fWipe) {
 }
 
 CAssetDB::CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "asset", nCacheSize, fMemory, fWipe) {

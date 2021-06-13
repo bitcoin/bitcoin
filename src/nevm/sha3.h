@@ -21,12 +21,12 @@
  * The FixedHash fixed-size "hash" container type.
  */
 
-#ifndef SYSCOIN_ETHEREUM_SHA3_H
-#define SYSCOIN_ETHEREUM_SHA3_H
+#ifndef SYSCOIN_NEVM_SHA3_H
+#define SYSCOIN_NEVM_SHA3_H
 
 #include <string>
-#include <ethereum/fixedhash.h>
-#include <ethereum/vector_ref.h>
+#include <nevm/fixedhash.h>
+#include <nevm/vector_ref.h>
 
 namespace dev
 {
@@ -70,4 +70,4 @@ extern h256 EmptySHA3;
 extern h256 EmptyListSHA3;
 
 }
-#endif // SYSCOIN_ETHEREUM_SHA3_H
+#endif // SYSCOIN_NEVM_SHA3_H

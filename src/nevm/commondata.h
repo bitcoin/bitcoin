@@ -20,8 +20,8 @@
  *
  * Shared algorithms and data types.
  */
-#ifndef SYSCOIN_ETHEREUM_COMMONDATA_H
-#define SYSCOIN_ETHEREUM_COMMONDATA_H
+#ifndef SYSCOIN_NEVM_COMMONDATA_H
+#define SYSCOIN_NEVM_COMMONDATA_H
 
 #include <vector>
 #include <algorithm>
@@ -29,7 +29,7 @@
 #include <type_traits>
 #include <cstring>
 #include <string>
-#include <ethereum/common.h>
+#include <nevm/common.h>
 
 namespace dev
 {
@@ -362,4 +362,4 @@ bool contains(T const& _t, V const& _v)
 }
 
 }
-#endif // SYSCOIN_ETHEREUM_COMMONDATA_H
+#endif // SYSCOIN_NEVM_COMMONDATA_H

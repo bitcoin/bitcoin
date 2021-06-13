@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <uint256.h>
 #include <arith_uint256.h>
-#include <ethereum/ethereum.h>
-#include <ethereum/sha3.h>
+#include <nevm/nevm.h>
+#include <nevm/sha3.h>
 #include <logging.h>
 #include <util/strencodings.h>
 #include <key_io.h>
@@ -116,19 +116,19 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
 }
 
 /**
- * Parse eth input string expected to contain smart contract method call data. If the method call is not what we
+ * Parse nevm input string expected to contain smart contract method call data. If the method call is not what we
  * expected, or the length of the expected string is not what we expect then return false.
  *
  * @param vchInputExpectedMethodHash The expected method hash
- * @param nERC20Precision The erc20 precision to know how to convert ethereum's uint256 to a uint64 with truncation of insignifficant bits
- * @param nLocalPrecision The local precision to know how to convert ethereum's uint256 to a uint64 with truncation of insignifficant bits
+ * @param nERC20Precision The erc20 precision to know how to convert NEVM's uint256 to a uint64 with truncation of insignifficant bits
+ * @param nLocalPrecision The local precision to know how to convert NEVM's uint256 to a uint64 with truncation of insignifficant bits
  * @param vchInputData The input to parse
  * @param outputAmount The amount burned
  * @param nAsset The asset burned
  * @param witnessAddress The witness address for the minting
  * @return true if everything is valid
  */
-bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const uint8_t &nERC20Precision, const uint8_t& nLocalPrecision, const std::vector<unsigned char>& vchInputData, CAmount& outputAmount, uint64_t& nAsset, std::string& witnessAddress) {
+bool parseNEVMMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const uint8_t &nERC20Precision, const uint8_t& nLocalPrecision, const std::vector<unsigned char>& vchInputData, CAmount& outputAmount, uint64_t& nAsset, std::string& witnessAddress) {
     // total 5 to 7 fields are expected @ 32 bytes each field, > 5 fields if address is bigger, bech32 can be up to 91 characters so it will span up to 3 fields and as little as 1 field
     if(vchInputData.size() < 164 || vchInputData.size() > 228) {
       return false;  

@@ -746,7 +746,7 @@ bool AddAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &assetInf
             it->values.push_back(CAssetOutValue(nChangePosIn, assetInfo.nValue));
         }
         mintSyscoin.SerializeData(data);
-    } else if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
+    } else if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM) {
         CBurnSyscoin burnSyscoin(mtx);
         for(auto& vout: burnSyscoin.voutAssets) {
             for(auto& out: vout.values) {

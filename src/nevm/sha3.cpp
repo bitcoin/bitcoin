@@ -19,12 +19,12 @@
  * @date 2014
  */
 
-#include <ethereum/sha3.h>
+#include <nevm/sha3.h>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <ethereum/rlp.h>
+#include <nevm/rlp.h>
 using namespace std;
 using namespace dev;
 

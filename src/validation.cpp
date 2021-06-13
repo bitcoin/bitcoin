@@ -69,7 +69,6 @@
 #include <rpc/request.h>
 #include <signal.h>
 // SYSCOIN
-RecursiveMutex cs_relayer;
 RecursiveMutex cs_geth;
 struct DescriptorDetails {
     std::string version;
@@ -78,7 +77,7 @@ struct DescriptorDetails {
     std::string signature;
 };
 extern RecursiveMutex cs_setethstatus;
-EthereumMintTxMap mapMintKeysMempool;
+NEVMMintTxMap mapMintKeysMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
 std::vector<CInv> vInvToSend;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
@@ -1277,11 +1276,11 @@ static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainp
             // SYSCOIN
             mapAssetAllocationConflicts.erase(hashTx);
         }
-        // remove bridge transfer id from mempool structure
+        // remove nevm tx from mempool structure
         if(IsSyscoinMintTx(tx->nVersion)) {
             CMintSyscoin mintSyscoin(*tx);
             if(!mintSyscoin.IsNull())
-                mapMintKeysMempool.erase(mintSyscoin.nBridgeTransferID);
+                mapMintKeysMempool.erase(mintSyscoin.strTxHash);
         }
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
@@ -1802,7 +1801,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 }
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
-DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, std::vector<uint256> &vecTXIDs)
+DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::vector<uint256> &vecNEVMBlocks, std::vector<uint256> &vecTXIDs)
 {
     // SYSCOIN
     bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
@@ -1869,6 +1868,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             // At this point, all of txundo.vprevout should have been moved out.
         }
     } 
+    // DisconnectNEVMCommitment(vecNEVMBlocks, block.vtx[0]);
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
     // SYSCOIN
@@ -2019,16 +2019,17 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                   CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck) {
 
     AssetMap mapAssets;
-    EthereumMintTxMap mapMintKeys;
+    NEVMMintTxMap mapMintKeys;
+    NEVMTxRootMap mapNEVMTxRoots;
     std::vector<std::pair<uint256, uint32_t> > vecTXIDPairs;
-    return ConnectBlock(block, state, pindex, view, chainparams, fJustCheck, mapAssets, mapMintKeys, vecTXIDPairs);       
+    return ConnectBlock(block, state, pindex, view, chainparams, fJustCheck, mapAssets, mapMintKeys, mapNEVMTxRoots, vecTXIDPairs);       
 }
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
 bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                   CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck, 
-                  AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs)
+                  AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMTxRootMap &mapNEVMTxRoots, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -2221,6 +2222,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal");
             }
         }
+        // ConnectNEVMCommitment(mapNEVMTxRoots, block.vtx[0]);
 
         // GetTransactionSigOpCost counts 3 types of sigops:
         // * legacy (always)
@@ -2585,7 +2587,8 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
     // Apply the block atomically to the chain state.
     // SYSCOIN
     AssetMap mapAssets;
-    EthereumMintTxMap mapMintKeys;
+    NEVMMintTxMap mapMintKeys;
+    std::vector<uint256> vecNEVMBlocks;
     std::vector<uint256> vecTXIDs;
     int64_t nStart = GetTimeMicros();
     {
@@ -2593,7 +2596,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
         auto dbTx = evoDb->BeginTransaction();
         CCoinsViewCache view(&CoinsTip());
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
-        if (DisconnectBlock(block, pindexDelete, view, mapAssets, mapMintKeys, vecTXIDs) != DISCONNECT_OK)
+        if (DisconnectBlock(block, pindexDelete, view, mapAssets, mapMintKeys, vecNEVMBlocks, vecTXIDs) != DISCONNECT_OK)
             return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
         bool flushed = view.Flush();
         assert(flushed);
@@ -2602,7 +2605,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
     }
     // SYSCOIN 
     if(passetdb != nullptr){
-        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pethereumtxmintdb->FlushErase(mapMintKeys) || !pblockindexdb->FlushErase(vecTXIDs)){
+        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushErase(mapMintKeys) || !pnevmtxrootsdb->FlushErase(vecNEVMBlocks) || !pblockindexdb->FlushErase(vecTXIDs)){
             return error("DisconnectTip(): Error flushing to asset dbs on disconnect %s", pindexDelete->GetBlockHash().ToString());
         }
     }
@@ -2709,14 +2712,15 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     LogPrint(BCLog::BENCHMARK, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDisk * MICRO);
     // SYSCOIN
     AssetMap mapAssets;
-    EthereumMintTxMap mapMintKeys;
+    NEVMMintTxMap mapMintKeys;
+    NEVMTxRootMap mapNEVMTxRoots;
     std::vector<std::pair<uint256, uint32_t> > vecTXIDPairs;
     {
         // SYSCOIN
         auto dbTx = evoDb->BeginTransaction();
 
         CCoinsViewCache view(&CoinsTip());
-        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, false, mapAssets, mapMintKeys, vecTXIDPairs);
+        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, false, mapAssets, mapMintKeys, mapNEVMTxRoots, vecTXIDPairs);
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
@@ -2733,7 +2737,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     }
     // SYSCOIN
     if(passetdb){
-        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pethereumtxmintdb->FlushWrite(mapMintKeys) || !pblockindexdb->FlushWrite(vecTXIDPairs)){
+        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushWrite(mapMintKeys) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs)){
             return error("Error flushing to Asset DBs: %s", pindexNew->GetBlockHash().ToString());
         }
     } 
@@ -3829,53 +3833,6 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
         if (!txRef->IsCoinBase() && (txRef->nVersion == SYSCOIN_TX_VERSION_MN_COINBASE || txRef->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-mn-version", "Bad version for non-coinbase masternode transaction");
         }
-        if(IsSyscoinMintTx(txRef->nVersion)) {
-            // do this check only when not in IBD (initial block download)
-            // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
-            EthereumTxRoot txRootDB;
-            CMintSyscoin mintSyscoin(*txRef);
-            bool readTxRootFail;
-            if(!mintSyscoin.IsNull()) {
-                const bool &ethTxRootShouldExist = true/*!::ChainstateActive().IsInitialBlockDownload() && fLoaded && fGethSynced*/;
-                {
-                    LOCK(cs_setethstatus);
-                    readTxRootFail = !pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB);
-                }
-                // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
-                // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
-                if(readTxRootFail){
-                    if(ethTxRootShouldExist) {
-                        // sleep here to avoid flooding log, hope that geth/relayer watch dog catches the tx root upon restart
-                        UninterruptibleSleep(std::chrono::milliseconds{1000});
-                        // we always want to pass state.Error() for txroot missing errors here meaning we don't want to flag the block as invalid, we want to retry as this is based on eventual consistency
-                        return state.Error(strprintf("%s: %s - %d", __func__, "mint-txroot-missing", mintSyscoin.nBlockNumber));
-                    }
-                }
-                
-                if(ethTxRootShouldExist) {
-                    const int64_t &nTime = pindexPrev->GetMedianTimePast();
-                    // time must be between 2.5 week and 1 hour old to be accepted
-                    if(nTime < txRootDB.nTimestamp) {
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "invalid-timestamp", "Time must be in the present or future, not passed");
-                    }
-                    else if((nTime - txRootDB.nTimestamp) > MAINNET_MAX_VALIDATE_AGE) {
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-blockheight-too-old", "Time must be between 2.5 week and 1 hour old");
-                    }
-                    // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
-                    // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
-                    else if((nTime - txRootDB.nTimestamp) < MAINNET_MIN_MINT_AGE) {
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-insufficient-confirmations", "You must wait at least 1 hour to mint");
-                    }
-                    // ensure block height provided points to the right block
-                    if(mintSyscoin.vchTxRoot != txRootDB.vchTxRoot) {
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-mismatching-txroot");
-                    }
-                    if(mintSyscoin.vchReceiptRoot != txRootDB.vchReceiptRoot) {
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-mismatching-receiptroot");
-                    }
-                } 
-            }
-        }
     }
     return true;
 }
@@ -4531,7 +4488,8 @@ bool CVerifyDB::VerifyDB(
     const bool is_snapshot_cs{!chainstate.m_from_snapshot_blockhash};
     // SYSCOIN
     AssetMap mapAssets;
-    EthereumMintTxMap mapMintKeys;
+    NEVMMintTxMap mapMintKeys;
+    std::vector<uint256> vecNEVMBlocks;
     std::vector<uint256> vecTXIDs;
     for (pindex = chainstate.m_chain.Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
         const int percentageDone = std::max(1, std::min(99, (int)(((double)(chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * (nCheckLevel >= 4 ? 50 : 100))));
@@ -4572,7 +4530,7 @@ bool CVerifyDB::VerifyDB(
         if (nCheckLevel >= 3 && curr_coins_usage <= chainstate.m_coinstip_cache_size_bytes) {
             assert(coins.GetBestBlock() == pindex->GetBlockHash());
             // SYSCOIN
-            DisconnectResult res = chainstate.DisconnectBlock(block, pindex, coins, mapAssets, mapMintKeys, vecTXIDs);
+            DisconnectResult res = chainstate.DisconnectBlock(block, pindex, coins, mapAssets, mapMintKeys, vecNEVMBlocks, vecTXIDs);
             if (res == DISCONNECT_FAILED) {
                 return error("VerifyDB(): *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
             }
@@ -4618,7 +4576,7 @@ bool CVerifyDB::VerifyDB(
 }
 
 /** Apply the effects of a block on the utxo cache, ignoring that it may already have been applied. */
-bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs)
+bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs)
 {
     // TODO: merge with ConnectBlock
     CBlock block;
@@ -4673,7 +4631,8 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     std::vector<uint256> hashHeads = db.GetHeadBlocks();
     // SYSCOIN
     AssetMap mapAssets;
-    EthereumMintTxMap mapMintKeys;
+    NEVMMintTxMap mapMintKeys;
+    std::vector<uint256> vecNEVMBlocks;
     std::vector<uint256> vecTXIDs;
     if (hashHeads.empty()) return true; // We're already in a consistent state.
     if (hashHeads.size() != 2) return error("ReplayBlocks(): unknown inconsistent state");
@@ -4709,7 +4668,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
             }
             LogPrintf("Rolling back %s (%i)\n", pindexOld->GetBlockHash().ToString(), pindexOld->nHeight);
             // SYSCOIN
-            DisconnectResult res = DisconnectBlock(block, pindexOld, cache, mapAssets, mapMintKeys, vecTXIDs);
+            DisconnectResult res = DisconnectBlock(block, pindexOld, cache, mapAssets, mapMintKeys, vecNEVMBlocks, vecTXIDs);
             if (res == DISCONNECT_FAILED) {
                 return error("RollbackBlock(): DisconnectBlock failed at %d, hash=%s", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
             }
@@ -4722,7 +4681,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     }
     // SYSCOIN must flush for now because disconnect may remove asset data and rolling forward expects it to be clean from db
     if(passetdb != nullptr){
-        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) ||!pethereumtxmintdb->FlushErase(mapMintKeys) || !pblockindexdb->FlushErase(vecTXIDs)){
+        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushErase(mapMintKeys) || !pnevmtxrootsdb->FlushErase(vecNEVMBlocks) || !pblockindexdb->FlushErase(vecTXIDs)){
             return error("RollbackBlock(): Error flushing to asset dbs on disconnect %s", pindexOld->GetBlockHash().ToString());
         }
     }
@@ -4744,7 +4703,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     evoDb->WriteBestBlock(pindexNew->GetBlockHash());
     cache.Flush();
     if(passetdb != nullptr){
-        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pethereumtxmintdb->FlushWrite(mapMintKeys) || !pblockindexdb->FlushWrite(vecTXIDPairs)){
+        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushWrite(mapMintKeys) || !pblockindexdb->FlushWrite(vecTXIDPairs)){
             return error("RollbackBlock(): Error flushing to asset dbs on roll forward %s", pindexOld->GetBlockHash().ToString());
         }
     }
@@ -5793,14 +5752,6 @@ bool CBlockIndexDB::PruneIndex() {
 }
 bool PruneSyscoinDBs() {
     bool ret = true;
-     if (pethereumtxrootsdb != nullptr)
-     {
-        if(!pethereumtxrootsdb->PruneTxRoots(fGethCurrentHeight))
-        {
-            LogPrintf("Failed to write to prune Ethereum TX Roots database!\n");
-            ret = false;
-        }
-     }
     if (pblockindexdb != nullptr)
      {
         if(!pblockindexdb->PruneIndex())
@@ -6175,38 +6126,6 @@ void KillProcess(const pid_t& pid){
         LogPrintf("%s: Done trying to kill with SIGINT-SIGTERM-SIGKILL\n", __func__);            
     #endif 
 }
-bool StopRelayerNode(pid_t &pid)
-{
-    if(pid < 0)
-        return false;
-    if(pid){
-        try{
-            KillProcess(pid);
-            LogPrintf("%s: Relayer successfully exited from pid %d\n", __func__, pid);
-        }
-        catch(...){
-            LogPrintf("%s: Relayer failed to exit from pid %d\n", __func__, pid);
-        }
-    }
-    {
-        boost::filesystem::ifstream ifs(GetRelayerPidFile(), std::ios::in);
-        pid_t pidFile = 0;
-        while(ifs >> pidFile){
-            if(pidFile && pidFile != pid){
-                try{
-                    KillProcess(pidFile);
-                    LogPrintf("%s: Relayer successfully exited from pid %d(from relayer.pid)\n", __func__, pidFile);
-                }
-                catch(...){
-                    LogPrintf("%s: Relayer failed to exit from pid %d(from relayer.pid)\n", __func__, pidFile);
-                }
-            } 
-        }  
-    }
-    boost::filesystem::remove(GetRelayerPidFile());
-    pid = -1;
-    return true;
-}
 bool StopGethNode(pid_t &pid)
 {
     if(pid < 0)
@@ -6239,99 +6158,6 @@ bool StopGethNode(pid_t &pid)
     pid = -1;
     return true;
 }
-bool StartRelayerNode(const std::string &relayerDescriptorURL, pid_t &pid, int rpcport, int websocketport, int ethrpcport)
-{   
-    LOCK(cs_relayer);
-    // stop any relayer process  before starting
-    StopRelayerNode(pid);
-
-    // Get RPC credentials
-    std::string strRPCUserColonPass;
-    if (gArgs.GetArg("-rpcpassword", "") != "" || !GetAuthCookie(&strRPCUserColonPass)) {
-        strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
-    }
-
-    LogPrintf("%s: Downloading Relayer descriptor from %s\n", __func__, relayerDescriptorURL);
-    fs::path descriptorPath = gArgs.GetDataDirBase() / "relayerdescriptor.json";
-    fs::path binaryURL = gArgs.GetDataDirBase() / GetRelayerFilename();
-    if (!fs::exists(binaryURL.string()) || !fs::exists(descriptorPath.string())) {
-        if(fs::exists(binaryURL.string()))
-            fs::remove(binaryURL.string());
-        if(fs::exists(descriptorPath.string()))
-            fs::remove(descriptorPath.string());          
-    }
-    if(!DownloadBinaryFromDescriptor(descriptorPath.string(), binaryURL.string(), relayerDescriptorURL)) {
-        if (fs::exists(descriptorPath.string())) {
-            fs::remove(descriptorPath.string());
-        }
-        if (fs::exists(binaryURL.string())) {
-            fs::remove(binaryURL.string());
-        }
-        return false;
-    }
-    LogPrintf("%s: Starting relayer on port %d, RPC credentials %s, wsport %d ethrpcport %d...\n", __func__, rpcport, strRPCUserColonPass, websocketport, ethrpcport);
-    
-    // stop any geth nodes before starting
-    StopGethNode(pid);
-
-    fs::path attempt1 = binaryURL.string();
-    attempt1 = attempt1.make_preferred();
-    fs::path dataDir = gArgs.GetDataDirNet() / "geth";
-
-    #ifndef WIN32
-        // Prevent killed child-processes remaining as "defunct"
-        struct sigaction sa;
-        sa.sa_handler = SIG_DFL;
-        sa.sa_flags = SA_NOCLDWAIT;
-      
-        sigaction( SIGCHLD, &sa, NULL ) ;
-		// Duplicate ("fork") the process. Will return zero in the child
-        // process, and the child's PID in the parent (or negative on error).
-        pid = fork() ;
-        if( pid < 0 ) {
-            LogPrintf("Could not start Relayer, pid < 0 %d\n", pid);
-            return false;
-        }
-
-        if( pid == 0 ) {
-            std::string portStr = itostr(websocketport);
-            std::string rpcEthPortStr = itostr(ethrpcport);
-            std::string rpcSysPortStr = itostr(rpcport);
-            char * argvAttempt1[] = {(char*)attempt1.string().c_str(), 
-					(char*)"--ethwsport", (char*)portStr.c_str(),
-                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
-                    (char*)"--datadir", (char*)dataDir.string().c_str(),
-					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(),  NULL };
-            execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
-	        if (errno != 0) {
-		        LogPrintf("Relayer not found at %s\n", argvAttempt1[0]);
-	        }
-        } else {
-            boost::filesystem::ofstream ofs(GetRelayerPidFile(), std::ios::out | std::ios::trunc);
-            ofs << pid;
-        }
-    #else
-		std::string portStr = itostr(websocketport);
-        std::string rpcEthPortStr = itostr(ethrpcport);
-        std::string rpcSysPortStr = itostr(rpcport);
-        std::string args =
-				std::string("--ethwsport ") + portStr +
-                std::string(" --ethrpcport ") + rpcEthPortStr +
-                std::string(" --datadir ") + dataDir.string() +
-				std::string(" --sysrpcusercolonpass ") + strRPCUserColonPass +
-				std::string(" --sysrpcport ") + rpcSysPortStr; 
-        pid = fork(attempt1.string(), args);
-        if( pid <= 0 ) {
-            LogPrintf("Relayer not found at %s\n", attempt1.string());
-        }                         
-        boost::filesystem::ofstream ofs(GetRelayerPidFile(), std::ios::out | std::ios::trunc);
-        ofs << pid;
-	#endif
-    if(pid > 0)
-        LogPrintf("%s: Relayer started with pid %d\n", __func__, pid);
-    return true;
-}
 void DoGethMaintenance() {
     if(ShutdownRequested()) {
         return;
@@ -6342,84 +6168,62 @@ void DoGethMaintenance() {
         ibd = ::ChainstateActive().IsInitialBlockDownload();
     }
     // hasn't started yet so start
-    if(!fReindexGeth && (gethPID == 0 || relayerPID == 0)) {
-        gethPID = relayerPID = -1;
-        LogPrintf("%s: Starting Geth and Relayer because PID's were uninitialized\n", __func__);
+    if(!fReindexGeth && gethPID == 0) {
+        gethPID = -1;
+        LogPrintf("%s: Starting Geth because PID's were uninitialized\n", __func__);
         int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
         int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
         const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-        const std::string relayerDescriptorURL = gArgs.GetArg("-relayerDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/relayerdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/relayerdescriptor.json");
         bGethTestnet = gArgs.GetBoolArg("-gethtestnet", gArgs.GetChainName() != CBaseChainParams::MAIN);
         const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
         if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
             LogPrintf("%s: Failed to start Geth\n", __func__); 
-        int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-        if(!StartRelayerNode(relayerDescriptorURL, relayerPID, rpcport, wsport, ethrpcport))
-            LogPrintf("%s: Failed to start Relayer\n", __func__); 
-        nRandomResetSec = GetRandInt(600);
-        nLastGethHeaderTime = GetTimeSeconds();
-    // if not syncing chain restart geth/relayer if its been long enough since last blocks from relayer
-    } else if(!ibd || fReindexGeth){
+    } else if(fReindexGeth){
         const int64_t nTimeSeconds = (int64_t)GetTimeSeconds();
-        // it's been >= 10 minutes (+ some minutes for randomization up to another 10 min) since an Ethereum block so clean data dir and resync
-        if(fReindexGeth || (nTimeSeconds - nLastGethHeaderTime) > (600 + nRandomResetSec)) {
-            fReindexGeth = false;
-            LogPrintf("%s: Last header time not received in sufficient time, trying to resync...\n", __func__);
-            // reset timer so it will only do this check at least once every interval (around 10 mins average) if geth seems stuck
-            nLastGethHeaderTime = nTimeSeconds;
-            // stop geth and relayer
-            LogPrintf("%s: Stopping Geth and Relayer\n", __func__); 
-            StopGethNode(gethPID);
-            StopRelayerNode(relayerPID);
-            // copy wallet dir if exists
-            fs::path dataDir = gArgs.GetDataDirNet();
-            fs::path gethDir = dataDir / "geth";
-            fs::path gethKeyStoreDir = gethDir / "keystore";
-            fs::path keyStoreTmpDir = dataDir / "keystoretmp";
-            bool existedKeystore = fs::exists(gethKeyStoreDir);
-            if(existedKeystore){
-                LogPrintf("%s: Copying keystore for Geth to a temp directory\n", __func__); 
-                try{
-                    recursive_copy(gethKeyStoreDir, keyStoreTmpDir);
-                } catch(const  std::runtime_error& e) {
-                    LogPrintf("Failed copying keystore geth directory to keystoretmp %s\n", e.what());
-                    return;
-                }
+        fReindexGeth = false;
+        LogPrintf("%s: Stopping Geth\n", __func__); 
+        StopGethNode(gethPID);
+        // copy wallet dir if exists
+        fs::path dataDir = gArgs.GetDataDirNet();
+        fs::path gethDir = dataDir / "geth";
+        fs::path gethKeyStoreDir = gethDir / "keystore";
+        fs::path keyStoreTmpDir = dataDir / "keystoretmp";
+        bool existedKeystore = fs::exists(gethKeyStoreDir);
+        if(existedKeystore){
+            LogPrintf("%s: Copying keystore for Geth to a temp directory\n", __func__); 
+            try{
+                recursive_copy(gethKeyStoreDir, keyStoreTmpDir);
+            } catch(const  std::runtime_error& e) {
+                LogPrintf("Failed copying keystore geth directory to keystoretmp %s\n", e.what());
+                return;
             }
-            LogPrintf("%s: Removing Geth data directory\n", __func__);
-            // clean geth data dir
-            fs::remove_all(gethDir);
-            // replace keystore dir
-            if(existedKeystore){
-                LogPrintf("%s: Replacing keystore with temp keystore directory\n", __func__);
-                try{
-                    fs::create_directory(gethDir);
-                    recursive_copy(keyStoreTmpDir, gethKeyStoreDir);
-                } catch(const  std::runtime_error& e) {
-                    LogPrintf("Failed copying keystore geth keystoretmp directory to keystore %s\n", e.what());
-                    return;
-                }
-                fs::remove_all(keyStoreTmpDir);
-            }
-            LogPrintf("%s: Restarting Geth and Relayer\n", __func__);
-            // start node and relayer again
-            int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
-            int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
-            bGethTestnet = gArgs.GetBoolArg("-gethtestnet", gArgs.GetChainName() != CBaseChainParams::MAIN);
-            const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-            const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-            const std::string relayerDescriptorURL = gArgs.GetArg("-relayerDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/relayerdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/relayerdescriptor.json");
-            if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
-                LogPrintf("%s: Failed to start Geth\n", __func__); 
-            int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-            if(!StartRelayerNode(relayerDescriptorURL, relayerPID, rpcport, wsport, ethrpcport))
-                LogPrintf("%s: Failed to start Relayer\n", __func__); 
-            // reset randomized reset number
-            nRandomResetSec = GetRandInt(600);
-            // set flag that geth is resyncing
-            fGethSynced = false;
-            LogPrintf("%s: Done, waiting for resync...\n", __func__);
         }
+        LogPrintf("%s: Removing Geth data directory\n", __func__);
+        // clean geth data dir
+        fs::remove_all(gethDir);
+        // replace keystore dir
+        if(existedKeystore){
+            LogPrintf("%s: Replacing keystore with temp keystore directory\n", __func__);
+            try{
+                fs::create_directory(gethDir);
+                recursive_copy(keyStoreTmpDir, gethKeyStoreDir);
+            } catch(const  std::runtime_error& e) {
+                LogPrintf("Failed copying keystore geth keystoretmp directory to keystore %s\n", e.what());
+                return;
+            }
+            fs::remove_all(keyStoreTmpDir);
+        }
+        LogPrintf("%s: Restarting Geth \n", __func__);
+        int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
+        int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
+        bGethTestnet = gArgs.GetBoolArg("-gethtestnet", gArgs.GetChainName() != CBaseChainParams::MAIN);
+        const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
+        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+        if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
+            LogPrintf("%s: Failed to start Geth\n", __func__); 
+        // set flag that geth is resyncing
+        fGethSynced = false;
+        LogPrintf("%s: Done, waiting for resync...\n", __func__);
     }
 }
 

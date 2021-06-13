@@ -21,17 +21,17 @@
  * RLP (de-)serialisation.
  */
 
-#ifndef SYSCOIN_ETHEREUM_RLP_H
-#define SYSCOIN_ETHEREUM_RLP_H
+#ifndef SYSCOIN_NEVM_RLP_H
+#define SYSCOIN_NEVM_RLP_H
 
 #include <vector>
 #include <array>
 #include <exception>
 #include <iosfwd>
 #include <iomanip>
-#include <ethereum/vector_ref.h>
-#include <ethereum/exceptions.h>
-#include <ethereum/fixedhash.h>
+#include <nevm/vector_ref.h>
+#include <nevm/exceptions.h>
+#include <nevm/fixedhash.h>
 
 namespace dev
 {
@@ -485,4 +485,4 @@ extern bytes RLPEmptyList;
 std::ostream& operator<<(std::ostream& _out, dev::RLP const& _d);
 
 }
-#endif // SYSCOIN_ETHEREUM_RLP_H
+#endif // SYSCOIN_NEVM_RLP_H

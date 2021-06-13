@@ -1,5 +1,5 @@
-#ifndef SYSCOIN_ETHEREUM_VECTOR_REF_H
-#define SYSCOIN_ETHEREUM_VECTOR_REF_H
+#ifndef SYSCOIN_NEVM_VECTOR_REF_H
+#define SYSCOIN_NEVM_VECTOR_REF_H
 
 #include <cstring>
 #include <cassert>
@@ -120,4 +120,4 @@ template<class _T> vector_ref<_T const> ref(std::vector<_T> const& _t) { return 
 template<class _T> vector_ref<_T> ref(std::vector<_T>& _t) { return vector_ref<_T>(&_t); }
 
 }
-#endif // SYSCOIN_ETHEREUM_VECTOR_REF_H
+#endif // SYSCOIN_NEVM_VECTOR_REF_H
