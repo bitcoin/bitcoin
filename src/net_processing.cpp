@@ -501,7 +501,7 @@ private:
     bool IsBlockRequested(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Remove this block from our tracked requested blocks. Called if:
-     *  - the block has been recieved from a peer
+     *  - the block has been received from a peer
      *  - the request for the block has timed out
      */
     void RemoveBlockRequest(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

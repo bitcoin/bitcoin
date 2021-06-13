@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, set_node_times
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 class AssetMintTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -16,6 +16,9 @@ class AssetMintTest(SyscoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
+        pass
+
+    def run_test1(self):
         self.nodes[0].generate(200)
         self.sync_blocks()
         self.asset = '2615707979'
