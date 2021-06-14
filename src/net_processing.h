@@ -23,12 +23,14 @@ static const bool DEFAULT_PEERBLOCKFILTERS = false;
 /** Threshold for marking a node to be discouraged, e.g. disconnected and added to the discouragement filter. */
 static const int DISCOURAGEMENT_THRESHOLD{100};
 
-struct CNodeStateStats {
+struct PeerStats {
     int nSyncHeight = -1;
     int nCommonHeight = -1;
     int m_starting_height = -1;
     std::chrono::microseconds m_ping_wait;
     std::vector<int> vHeightInFlight;
+    bool m_relay_txs;
+    CAmount m_fee_filter_theirs;
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
@@ -40,7 +42,7 @@ public:
     virtual ~PeerManager() { }
 
     /** Get statistics from node state */
-    virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
+    virtual bool GetPeerStats(NodeId nodeid, PeerStats& stats) const = 0;
 
     /** Whether this node ignores txs received over p2p. */
     virtual bool IgnoresIncomingTxs() = 0;

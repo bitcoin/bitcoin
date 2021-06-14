@@ -115,16 +115,16 @@ public:
 
             stats.reserve(stats_temp.size());
             for (auto& node_stats_temp : stats_temp) {
-                stats.emplace_back(std::move(node_stats_temp), false, CNodeStateStats());
+                stats.emplace_back(std::move(node_stats_temp), false, PeerStats());
             }
 
-            // Try to retrieve the CNodeStateStats for each node.
+            // Try to retrieve the PeerStats for each node.
             if (m_context->peerman) {
                 TRY_LOCK(::cs_main, lockMain);
                 if (lockMain) {
                     for (auto& node_stats : stats) {
                         std::get<1>(node_stats) =
-                            m_context->peerman->GetNodeStateStats(std::get<0>(node_stats).nodeid, std::get<2>(node_stats));
+                            m_context->peerman->GetPeerStats(std::get<0>(node_stats).nodeid, std::get<2>(node_stats));
                     }
                 }
             }

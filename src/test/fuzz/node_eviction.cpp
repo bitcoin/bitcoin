@@ -26,7 +26,7 @@ FUZZ_TARGET(node_eviction)
             /* nLastBlockTime */ fuzzed_data_provider.ConsumeIntegral<int64_t>(),
             /* nLastTXTime */ fuzzed_data_provider.ConsumeIntegral<int64_t>(),
             /* fRelevantServices */ fuzzed_data_provider.ConsumeBool(),
-            /* fRelayTxes */ fuzzed_data_provider.ConsumeBool(),
+            /* m_relay_txs */ fuzzed_data_provider.ConsumeBool(),
             /* fBloomFilter */ fuzzed_data_provider.ConsumeBool(),
             /* nKeyedNetGroup */ fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
             /* prefer_evict */ fuzzed_data_provider.ConsumeBool(),
