@@ -14,7 +14,7 @@ from test_framework.messages import (
     NODE_NETWORK,
     NODE_WITNESS,
 )
-from test_framework.p2p import P2PInterface
+from test_framework.p2p import P2PInterface, p2p_lock
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
@@ -73,6 +73,16 @@ class AddrTest(BitcoinTestFramework):
             addr_receiver.wait_for_addrv2()
 
         assert addr_receiver.addrv2_received_and_checked
+
+        self.log.info("Check that the node sends a SENDADDRV2 message to outbound full relay peers")
+        conn = self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=0)
+        with p2p_lock:
+            assert_equal(conn.message_count['sendaddrv2'], 1)
+
+        self.log.info("Check that the node does not send a SENDADDRV2 message to outbound block-relay-only peers")
+        conn = self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=1, connection_type="block-relay-only")
+        with p2p_lock:
+            assert_equal(conn.message_count['sendaddrv2'], 0)
 
 
 if __name__ == '__main__':
