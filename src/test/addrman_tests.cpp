@@ -22,6 +22,7 @@ private:
 public:
     explicit CAddrManTest(bool makeDeterministic = true,
         std::vector<bool> asmap = std::vector<bool>())
+        : CAddrMan(true)
     {
         if (makeDeterministic) {
             //  Set addrman addr placement to be deterministic.
