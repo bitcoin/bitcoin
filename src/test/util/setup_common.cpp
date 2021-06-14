@@ -102,7 +102,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     // SYSCOIN
     evoDb.reset(new CEvoDB(1 << 20, true, true));
     deterministicMNManager.reset(new CDeterministicMNManager());
-    governance.reset(new CGovernanceManager(*m_node.chainman));
     gArgs.ForceSetArg("-mncollateral", "100");
     gArgs.ForceSetArg("-dip3params", "550:550");
     gArgs.ClearPathCache();
@@ -134,6 +133,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
         noui_connect();
         noui_connected = true;
     }
+    governance.reset(new CGovernanceManager(*m_node.chainman));
 }
 
 BasicTestingSetup::~BasicTestingSetup()
