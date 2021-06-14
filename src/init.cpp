@@ -1625,6 +1625,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 evoDb.reset(new CEvoDB(nEvoDbCache, false, fReindexGeth));
                 deterministicMNManager.reset();
                 deterministicMNManager.reset(new CDeterministicMNManager());
+                governance.reset();
+                governance.reset(new CGovernanceManager(*node.chainman));
                 llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, *node.chainman, fReindexGeth);
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReindexGeth));    
                 passetnftdb.reset(new CAssetNFTDB(nCoinDBCache*16, false, fReindexGeth));    
@@ -1994,8 +1996,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         activeMasternodeInfo.blsKeyOperator.reset(new CBLSSecretKey());
         activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey());
     }
-    governance.reset();
-    governance.reset(new CGovernanceManager(*node.chainman));
     LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
 
 
