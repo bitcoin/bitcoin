@@ -42,7 +42,8 @@ import pixie
 MAX_VERSIONS = {
 'GCC':       (4,8,0),
 'GLIBC':     (2,17),
-'LIBATOMIC': (1,0)
+'LIBATOMIC': (1,0),
+'V':         (0,5,0),  # xkb (bitcoin-qt only)
 }
 # See here for a description of _IO_stdin_used:
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=634261#109
