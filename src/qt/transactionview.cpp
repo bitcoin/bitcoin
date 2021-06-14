@@ -147,18 +147,18 @@ TransactionView::TransactionView(QWidget* parent) :
 
     contextMenu = new QMenu(this);
     contextMenu->setObjectName("contextMenu");
-    copyAddressAction = contextMenu->addAction(tr("Copy address"), this, &TransactionView::copyAddress);
-    copyLabelAction = contextMenu->addAction(tr("Copy label"), this, &TransactionView::copyLabel);
-    contextMenu->addAction(tr("Copy amount"), this, &TransactionView::copyAmount);
-    contextMenu->addAction(tr("Copy transaction ID"), this, &TransactionView::copyTxID);
-    contextMenu->addAction(tr("Copy raw transaction"), this, &TransactionView::copyTxHex);
-    contextMenu->addAction(tr("Copy full transaction details"), this, &TransactionView::copyTxPlainText);
-    contextMenu->addAction(tr("Show transaction details"), this, &TransactionView::showDetails);
+    copyAddressAction = contextMenu->addAction(tr("&Copy address"), this, &TransactionView::copyAddress);
+    copyLabelAction = contextMenu->addAction(tr("Copy &label"), this, &TransactionView::copyLabel);
+    contextMenu->addAction(tr("Copy &amount"), this, &TransactionView::copyAmount);
+    contextMenu->addAction(tr("Copy transaction &ID"), this, &TransactionView::copyTxID);
+    contextMenu->addAction(tr("Copy &raw transaction"), this, &TransactionView::copyTxHex);
+    contextMenu->addAction(tr("Copy full transaction &details"), this, &TransactionView::copyTxPlainText);
+    contextMenu->addAction(tr("&Show transaction details"), this, &TransactionView::showDetails);
     contextMenu->addSeparator();
-    abandonAction = contextMenu->addAction(tr("Abandon transaction"), this, &TransactionView::abandonTx);
-    resendAction = contextMenu->addAction(tr("Resend transaction"), this, &TransactionView::resendTx);
-    contextMenu->addAction(tr("Edit address label"), this, &TransactionView::editLabel);
-    [[maybe_unused]] QAction* showAddressQRCodeAction = contextMenu->addAction(tr("Show address QR code"), this, &TransactionView::showAddressQRCode);
+    abandonAction = contextMenu->addAction(tr("A&bandon transaction"), this, &TransactionView::abandonTx);
+    resendAction = contextMenu->addAction(tr("Rese&nd transaction"), this, &TransactionView::resendTx);
+    contextMenu->addAction(tr("&Edit address label"), this, &TransactionView::editLabel);
+    [[maybe_unused]] QAction* showAddressQRCodeAction = contextMenu->addAction(tr("Show address &QR code"), this, &TransactionView::showAddressQRCode);
 #ifndef USE_QRCODE
     showAddressQRCodeAction->setEnabled(false);
 #endif

@@ -27,8 +27,8 @@ QRImageWidget::QRImageWidget(QWidget *parent):
     QLabel(parent), contextMenu(nullptr)
 {
     contextMenu = new QMenu(this);
-    contextMenu->addAction(tr("Save Image…"), this, &QRImageWidget::saveImage);
-    contextMenu->addAction(tr("Copy Image"), this, &QRImageWidget::copyImage);
+    contextMenu->addAction(tr("&Save Image…"), this, &QRImageWidget::saveImage);
+    contextMenu->addAction(tr("&Copy Image"), this, &QRImageWidget::copyImage);
 }
 
 bool QRImageWidget::setQR(const QString& data, const QString& text)
