@@ -6,9 +6,11 @@
 #define SYSCOIN_TEST_UTIL_NET_H
 
 #include <compat.h>
+#include <netaddress.h>
 #include <net.h>
 #include <util/sock.h>
 
+#include <array>
 #include <cassert>
 #include <cstring>
 #include <string>
@@ -65,6 +67,16 @@ constexpr ConnectionType ALL_CONNECTION_TYPES[]{
     ConnectionType::FEELER,
     ConnectionType::BLOCK_RELAY,
     ConnectionType::ADDR_FETCH,
+};
+
+constexpr auto ALL_NETWORKS = std::array{
+    Network::NET_UNROUTABLE,
+    Network::NET_IPV4,
+    Network::NET_IPV6,
+    Network::NET_ONION,
+    Network::NET_I2P,
+    Network::NET_CJDNS,
+    Network::NET_INTERNAL,
 };
 
 /**
