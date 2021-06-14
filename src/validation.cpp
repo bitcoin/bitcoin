@@ -1098,11 +1098,30 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
 
     std::vector<Workspace> workspaces{};
     workspaces.reserve(txns.size());
-    std::transform(txns.cbegin(), txns.cend(), std::back_inserter(workspaces),
-                   [](const auto& tx) { return Workspace(tx); });
     std::map<const uint256, const MempoolAcceptResult> results;
 
     LOCK(m_pool.cs);
+    // Detect transactions that are already in the mempool (by txid) and "trim" them from the
+    // package. Don't check by wtxid because we don't want to reject this package simply because a
+    // transaction's witness data is different from the one in the mempool.
+    for(const auto& tx: txns) {
+        if (m_pool.exists(GenTxid(true, tx->GetWitnessHash())) || m_pool.exists(GenTxid(false, tx->GetHash()))) {
+            // Grab information from the mempool entry.
+            const auto mempool_info = m_pool.info(GenTxid(false, tx->GetHash()));
+            const auto& mempool_wtxid = mempool_info.tx->GetWitnessHash();
+            results.emplace(mempool_wtxid, MempoolAcceptResult::MempoolEntry(mempool_info.fee, mempool_info.vsize));
+
+            // If we have a same-txid-different-wtxid situation, add a result for the original
+            // transaction so that the caller knows where to look for the mempool result.
+            if (mempool_wtxid != tx->GetWitnessHash()) {
+                TxValidationState state_conflict;
+                state_conflict.Invalid(TxValidationResult::TX_CONFLICT, "txn-same-nonwitness-data-in-mempool");
+                results.emplace(tx->GetWitnessHash(), MempoolAcceptResult::Failure(state_conflict, mempool_wtxid));
+            }
+        } else {
+            workspaces.emplace_back(Workspace(tx));
+        }
+    }
 
     // Do all PreChecks first and fail fast to avoid running expensive script checks when unnecessary.
     for (Workspace& ws : workspaces) {
@@ -1123,8 +1142,9 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
     // Apply package mempool ancestor/descendant limits. Limit the scope of package_entries and
     // package_ancestors; we shouldn't use them for anything other than calculating limits. When we
     // submit the transactions to mempool, We should calculate ancestors for each transaction
-    // individually before calling Finalize().
-    {
+    // individually before calling Finalize(). Exclude transactions trimmed for having the same txid
+    // as transaction(s) in the mempool, otherwise we would double-count them.
+    if (workspaces.size() > 1) {
         std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> package_entries;
         std::transform(workspaces.cbegin(), workspaces.cend(), std::back_inserter(package_entries),
                        [](const auto& ws) { return std::cref(*ws.m_entry); });
