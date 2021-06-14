@@ -1357,13 +1357,15 @@ if test x$enable_wallet != xno; then
 fi
 
 if test x$use_ebpf != xno; then
-  AC_CHECK_HEADER([sys/sdt.h], [have_sdt=yes], [have_sdt=no])
-else
-  have_sdt=no
-fi
-
-if test x$have_sdt = xyes; then
-  AC_DEFINE([ENABLE_TRACING], [1], [Define to 1 to enable eBPF user static defined tracepoints])
+  AC_MSG_CHECKING([whether eBPF tracepoints are supported])
+  AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM(
+      [#include <sys/sdt.h>],
+      [DTRACE_PROBE("context", "event");]
+    )],
+    [AC_MSG_RESULT(yes); have_sdt=yes; AC_DEFINE([ENABLE_TRACING], [1], [Define to 1 to enable eBPF user static defined tracepoints])],
+    [AC_MSG_RESULT(no); have_sdt=no;]
+  )
 fi
 
 dnl Check for libminiupnpc (optional)
