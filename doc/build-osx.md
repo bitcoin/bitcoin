@@ -1,6 +1,6 @@
 # macOS Build Guide
 
-**Updated for MacOS [11.2](https://www.apple.com/macos/big-sur/)**
+**Updated for MacOS [12.0 beta](https://www.apple.com/macos/monterey-preview/)**
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on macOS
 
