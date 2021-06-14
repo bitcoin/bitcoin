@@ -50,7 +50,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         // So if the output does exist, then this transaction exists in the chain.
         if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_CHAIN;
     }
-    if (!node.mempool->exists(hashTx)) {
+    if (!node.mempool->exists(GenTxid(false, tx->GetHash()))) {
         // Transaction is not already in the mempool.
         if (max_tx_fee > 0) {
             // First, call ATMP with test_accept and check the fee. If ATMP

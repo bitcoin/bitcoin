@@ -611,9 +611,13 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (!CheckFinalTx(m_active_chainstate.m_chain.Tip(), tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-final");
 
-    // is it already in the memory pool?
-    if (m_pool.exists(hash)) {
+    if (m_pool.exists(GenTxid(true, tx.GetWitnessHash()))) {
+        // Exact transaction already exists in the mempool.
         return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-already-in-mempool");
+    } else if (m_pool.exists(GenTxid(false, tx.GetHash()))) {
+        // Transaction with the same nonwitness data but different witnes (same txid, different
+        // wtxid) already exists in the mempool. TODO: allow replacements
+        return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-same-nonwitness-data-in-mempool");
     }
 
     // Check for conflicts with in-memory transactions
