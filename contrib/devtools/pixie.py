@@ -217,7 +217,7 @@ def _parse_verneed(section: Section, strings: bytes, eh: ELFHeader) -> Dict[int,
     result = {}
     while True:
         verneed = Verneed(data, ofs, eh)
-        aofs = verneed.vn_aux
+        aofs = ofs + verneed.vn_aux
         while True:
             vernaux = Vernaux(data, aofs, eh, strings)
             result[vernaux.vna_other] = vernaux.name
