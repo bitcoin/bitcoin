@@ -74,9 +74,9 @@ public:
     // Simulates connection failure so that we can test eviction of offline nodes
     void SimConnFail(const CService& addr)
     {
-         LOCK(cs);
          int64_t nLastSuccess = 1;
-         Good_(addr, true, nLastSuccess); // Set last good connection in the deep past.
+         // Set last good connection in the deep past.
+         Good(addr, true, nLastSuccess);
 
          bool count_failure = false;
          int64_t nLastTry = GetAdjustedTime()-61;
