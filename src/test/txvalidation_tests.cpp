@@ -105,6 +105,19 @@ BOOST_FIXTURE_TEST_CASE(package_tests, TestChain100Setup)
     BOOST_CHECK_MESSAGE(it_child->second.m_state.IsValid(),
                         "Package validation unexpectedly failed: " << it_child->second.m_state.GetRejectReason());
 
+    // Submit the parent first. MemPoolAccept should detect that the transaction is already in the
+    // mempool and trim it from the package.
+    const auto result_parent = AcceptToMemoryPool(m_node.chainman->ActiveChainstate(), *m_node.mempool,
+                                                  tx_parent, /* bypass_limits */ false);
+    initialPoolSize += 1;
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), initialPoolSize);
+    BOOST_CHECK(result_parent.m_result_type == MempoolAcceptResult::ResultType::VALID);
+    const auto result_trimmed = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
+                                                  {tx_parent, tx_child}, /* test_accept */ true);
+    BOOST_CHECK(result_trimmed.m_state.IsValid());
+    auto it_trimmed_parent = result_trimmed.m_tx_results.find(tx_parent->GetWitnessHash());
+    BOOST_CHECK(it_trimmed_parent->second.m_result_type == MempoolAcceptResult::ResultType::MEMPOOL_INFO);
+
     // Packages can't have more than 25 transactions.
     Package package_too_many;
     package_too_many.reserve(MAX_PACKAGE_COUNT + 1);
