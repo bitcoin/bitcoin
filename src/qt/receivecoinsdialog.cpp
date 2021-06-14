@@ -44,11 +44,11 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWid
 
     // context menu
     contextMenu = new QMenu(this);
-    contextMenu->addAction(tr("Copy URI"), this, &ReceiveCoinsDialog::copyURI);
-    contextMenu->addAction(tr("Copy address"), this, &ReceiveCoinsDialog::copyAddress);
-    copyLabelAction = contextMenu->addAction(tr("Copy label"), this, &ReceiveCoinsDialog::copyLabel);
-    copyMessageAction = contextMenu->addAction(tr("Copy message"), this, &ReceiveCoinsDialog::copyMessage);
-    copyAmountAction = contextMenu->addAction(tr("Copy amount"), this, &ReceiveCoinsDialog::copyAmount);
+    contextMenu->addAction(tr("Copy &URI"), this, &ReceiveCoinsDialog::copyURI);
+    contextMenu->addAction(tr("&Copy address"), this, &ReceiveCoinsDialog::copyAddress);
+    copyLabelAction = contextMenu->addAction(tr("Copy &label"), this, &ReceiveCoinsDialog::copyLabel);
+    copyMessageAction = contextMenu->addAction(tr("Copy &message"), this, &ReceiveCoinsDialog::copyMessage);
+    copyAmountAction = contextMenu->addAction(tr("Copy &amount"), this, &ReceiveCoinsDialog::copyAmount);
     connect(ui->recentRequestsView, &QWidget::customContextMenuRequested, this, &ReceiveCoinsDialog::showMenu);
 
     connect(ui->clearButton, &QPushButton::clicked, this, &ReceiveCoinsDialog::clear);

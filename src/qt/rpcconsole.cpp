@@ -687,11 +687,11 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
 
         // create peer table context menu
         peersTableContextMenu = new QMenu(this);
-        peersTableContextMenu->addAction(tr("Disconnect"), this, &RPCConsole::disconnectSelectedNode);
-        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 hour"), [this] { banSelectedNode(60 * 60); });
-        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 day"), [this] { banSelectedNode(60 * 60 * 24); });
-        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 week"), [this] { banSelectedNode(60 * 60 * 24 * 7); });
-        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 year"), [this] { banSelectedNode(60 * 60 * 24 * 365); });
+        peersTableContextMenu->addAction(tr("&Disconnect"), this, &RPCConsole::disconnectSelectedNode);
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 &hour"), [this] { banSelectedNode(60 * 60); });
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 d&ay"), [this] { banSelectedNode(60 * 60 * 24); });
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 &week"), [this] { banSelectedNode(60 * 60 * 24 * 7); });
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 &year"), [this] { banSelectedNode(60 * 60 * 24 * 365); });
         connect(ui->peerWidget, &QTableView::customContextMenuRequested, this, &RPCConsole::showPeersTableContextMenu);
 
         // peer table signal handling - update peer details when selecting new node
@@ -713,7 +713,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
 
         // create ban table context menu
         banTableContextMenu = new QMenu(this);
-        banTableContextMenu->addAction(tr("Unban"), this, &RPCConsole::unbanSelectedNode);
+        banTableContextMenu->addAction(tr("&Unban"), this, &RPCConsole::unbanSelectedNode);
         connect(ui->banlistWidget, &QTableView::customContextMenuRequested, this, &RPCConsole::showBanTableContextMenu);
 
         // ban table signal handling - clear peer details when clicking a peer in the ban table
