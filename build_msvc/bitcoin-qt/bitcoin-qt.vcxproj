@@ -55,6 +55,7 @@
       <AdditionalIncludeDirectories>$(QtIncludes);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
+      <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>$(QtReleaseLibraries);%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4206 /LTCG:OFF</AdditionalOptions>
     </Link>
