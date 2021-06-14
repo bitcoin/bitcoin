@@ -561,6 +561,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
+        toolbar->addAction(nftLoaderAction);
         overviewAction->setChecked(true);
 
 #ifdef ENABLE_WALLET
@@ -748,6 +749,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     receiveCoinsAction->setEnabled(enabled);
     receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
+    nftLoaderAction->setEnabled(enabled);
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
     changePassphraseAction->setEnabled(enabled);
@@ -883,7 +885,7 @@ void BitcoinGUI::gotoHistoryPage()
 
 void BitcoinGUI::gotoNftLoaderPage()
 {
-    historyAction->setChecked(true);
+    nftLoaderAction->setChecked(true);
     if (walletFrame) walletFrame->gotoNftLoaderPage();
 }
 
