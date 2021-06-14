@@ -133,14 +133,12 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
         noui_connect();
         noui_connected = true;
     }
-    governance.reset(new CGovernanceManager(*m_node.chainman));
 }
 
 BasicTestingSetup::~BasicTestingSetup()
 {
     // SYSCOIN
     deterministicMNManager.reset();
-    governance.reset();
     evoDb.reset();
     SetMockTime(0s); // Reset mocktime for following tests
     LogInstance().DisconnectTestLogger();
@@ -169,6 +167,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     constexpr int script_check_threads = 2;
     StartScriptCheckWorkerThreads(script_check_threads);
     g_parallel_script_checks = true;
+    governance.reset(new CGovernanceManager(*m_node.chainman));
 }
 
 ChainTestingSetup::~ChainTestingSetup()
@@ -192,6 +191,7 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.chainman->Reset();
     m_node.chainman.reset();
     pblocktree.reset();
+    governance.reset();
 }
 
 TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
