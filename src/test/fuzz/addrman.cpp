@@ -120,9 +120,6 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
                 if (opt_service) {
                     addr_man.SetServices(*opt_service, ServiceFlags{fuzzed_data_provider.ConsumeIntegral<uint64_t>()});
                 }
-            },
-            [&] {
-                (void)addr_man.Check();
             });
     }
     (void)addr_man.size();
