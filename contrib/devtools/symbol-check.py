@@ -50,7 +50,7 @@ MAX_VERSIONS = {
     pixie.EM_RISCV:  (2,27),
 },
 'LIBATOMIC': (1,0),
-'V':         (0,5,0),  # xkb (bitcoin-qt only)
+'V':         (0,5,0),  # xkb (syscoin-qt only)
 }
 # See here for a description of _IO_stdin_used:
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=634261#109
