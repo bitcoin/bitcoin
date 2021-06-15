@@ -24,7 +24,7 @@ public:
     explicit CreateWalletDialog(QWidget* parent);
     virtual ~CreateWalletDialog();
 
-    void setSigners(std::vector<ExternalSigner>& signers);
+    void setSigners(const std::vector<ExternalSigner>& signers);
 
     QString walletName() const;
     bool isEncryptWalletChecked() const;

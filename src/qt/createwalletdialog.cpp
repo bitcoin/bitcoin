@@ -31,8 +31,9 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
         // Disable the disable_privkeys_checkbox and external_signer_checkbox when isEncryptWalletChecked is
         // set to true, enable it when isEncryptWalletChecked is false.
         ui->disable_privkeys_checkbox->setEnabled(!checked);
+#ifdef ENABLE_EXTERNAL_SIGNER
         ui->external_signer_checkbox->setEnabled(!checked);
-
+#endif
         // When the disable_privkeys_checkbox is disabled, uncheck it.
         if (!ui->disable_privkeys_checkbox->isEnabled()) {
             ui->disable_privkeys_checkbox->setChecked(false);
@@ -112,7 +113,7 @@ CreateWalletDialog::~CreateWalletDialog()
     delete ui;
 }
 
-void CreateWalletDialog::setSigners(std::vector<ExternalSigner>& signers)
+void CreateWalletDialog::setSigners(const std::vector<ExternalSigner>& signers)
 {
     if (!signers.empty()) {
         ui->external_signer_checkbox->setEnabled(true);
