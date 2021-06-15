@@ -23,14 +23,22 @@ import time
 
 class AddrReceiver(P2PInterface):
     num_ipv4_received = 0
+    test_addr_contents = False
+
+    def __init__(self, test_addr_contents=False):
+        super().__init__()
+        self.test_addr_contents = test_addr_contents
 
     def on_addr(self, message):
         for addr in message.addrs:
-            assert_equal(addr.nServices, 9)
-            if not 8333 <= addr.port < 8343:
-                raise AssertionError("Invalid addr.port of {} (8333-8342 expected)".format(addr.port))
-            assert addr.ip.startswith('123.123.123.')
             self.num_ipv4_received += 1
+            if(self.test_addr_contents):
+                # relay_tests checks the content of the addr messages match
+                # expectations based on the message creation in setup_addr_msg
+                assert_equal(addr.nServices, 9)
+                if not 8333 <= addr.port < 8343:
+                    raise AssertionError("Invalid addr.port of {} (8333-8342 expected)".format(addr.port))
+                assert addr.ip.startswith('123.123.123.')
 
 
 class GetAddrStore(P2PInterface):
@@ -101,7 +109,7 @@ class AddrTest(BitcoinTestFramework):
         num_receivers = 7
         receivers = []
         for _ in range(num_receivers):
-            receivers.append(self.nodes[0].add_p2p_connection(AddrReceiver()))
+            receivers.append(self.nodes[0].add_p2p_connection(AddrReceiver(test_addr_contents=True)))
 
         # Keep this with length <= 10. Addresses from larger messages are not
         # relayed.
@@ -125,7 +133,7 @@ class AddrTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
 
         self.log.info('Check relay of addresses received from outbound peers')
-        inbound_peer = self.nodes[0].add_p2p_connection(AddrReceiver())
+        inbound_peer = self.nodes[0].add_p2p_connection(AddrReceiver(test_addr_contents=True))
         full_outbound_peer = self.nodes[0].add_outbound_p2p_connection(GetAddrStore(), p2p_idx=0, connection_type="outbound-full-relay")
         msg = self.setup_addr_msg(2)
         self.send_addr_msg(full_outbound_peer, msg, [inbound_peer])
