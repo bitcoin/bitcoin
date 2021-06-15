@@ -1007,6 +1007,25 @@ static RPCHelpMan testmempoolaccept()
                 fees.pushKV("base", ValueFromAmount(fee));
                 result_inner.pushKV("fees", fees);
             }
+        } else if (tx_result.m_result_type == MempoolAcceptResult::ResultType::WTXID_CONFLICT) {
+            result_inner.pushKV("allowed", false);
+            // This is the result that would be returned in a single test accept.
+            result_inner.pushKV("reject-reason", "txn-same-nonwitness-data-in-mempool");
+            // MemPoolAccept found a mempool match and replaced this transaction with a mempool
+            // transaction that has the same txid. We just need to look it up in the results map.
+            const auto mempool_entry_wtxid = tx_result.m_wtxid_in_mempool.value();
+            UniValue result_additional(UniValue::VOBJ);
+            result_additional.pushKV("txid", tx->GetHash().GetHex());
+            result_additional.pushKV("wtxid", mempool_entry_wtxid.GetHex());
+            result_additional.pushKV("allowed", true);
+            auto it_additional = package_result.m_tx_results.find(mempool_entry_wtxid);
+            CHECK_NONFATAL(it_additional != package_result.m_tx_results.end());
+            CHECK_NONFATAL(it_additional->second.m_result_type == MempoolAcceptResult::ResultType::MEMPOOL_INFO);
+            result_additional.pushKV("vsize", it_additional->second.m_vsize.value());
+            UniValue fees(UniValue::VOBJ);
+            fees.pushKV("base", ValueFromAmount(it_additional->second.m_base_fees.value()));
+            result_additional.pushKV("fees", fees);
+            rpc_result.push_back(result_additional);
         } else {
             result_inner.pushKV("allowed", false);
             const TxValidationState state = tx_result.m_state;
