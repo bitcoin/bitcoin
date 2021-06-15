@@ -203,23 +203,20 @@ endef
 #
 # 1. Apply our patches to the extracted source. See each patch for more info.
 #
-# 2. Point to lrelease in qttools/bin/lrelease; otherwise Qt will look for it in
-# $(host)/native/bin/lrelease and not find it.
+# 2. Create a macOS-Clang-Linux mkspec using our mac-qmake.conf.
 #
-# 3. Create a macOS-Clang-Linux mkspec using our mac-qmake.conf.
-#
-# 4. After making a copy of the mkspec for the linux-arm-gnueabi host, named
+# 3. After making a copy of the mkspec for the linux-arm-gnueabi host, named
 # bitcoin-linux-g++, replace instances of linux-arm-gnueabi with $(host). This
 # way we can generically support hosts like riscv64-linux-gnu, which Qt doesn't
 # ship a mkspec for. See it's usage in config_opts_* above.
 #
-# 5. Put our C, CXX and LD FLAGS into gcc-base.conf. Only used for non-host builds.
+# 4. Put our C, CXX and LD FLAGS into gcc-base.conf. Only used for non-host builds.
 #
-# 6. Do similar for the win32-g++ mkspec.
+# 5. Do similar for the win32-g++ mkspec.
 #
-# 7. In clang.conf, swap out clang & clang++, for our compiler + flags. See #17466.
+# 6. In clang.conf, swap out clang & clang++, for our compiler + flags. See #17466.
 #
-# 8. Adjust a regex in toolchain.prf, to accommodate Guix's usage of
+# 7. Adjust a regex in toolchain.prf, to accommodate Guix's usage of
 # CROSS_LIBRARY_PATH. See #15277.
 define $(package)_preprocess_cmds
   cp $($(package)_patch_dir)/qt.pro qt.pro && \
@@ -235,7 +232,6 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fix_lib_paths.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase-moc-ignore-gcc-macro.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_limits_header.patch && \
-  sed -i.old "s|updateqm.commands = \$$$$\$$$$LRELEASE|updateqm.commands = $($(package)_extract_dir)/qttools/bin/lrelease|" qttranslations/translations/translations.pro && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f $($(package)_patch_dir)/mac-qmake.conf qtbase/mkspecs/macx-clang-linux/qmake.conf && \
