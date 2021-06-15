@@ -33,7 +33,7 @@ public:
     void showTab_VM(bool fShow);
 
 protected:
-    bool eventFilter(QObject *object, QEvent *event);
+    bool eventFilter(QObject *object, QEvent *event) override;
 
 private:
     Ui::SignVerifyMessageDialog *ui;

@@ -68,8 +68,8 @@ public:
     };
 
 protected:
-    virtual bool eventFilter(QObject* obj, QEvent *event);
-    void keyPressEvent(QKeyEvent *);
+    virtual bool eventFilter(QObject* obj, QEvent *event) override;
+    void keyPressEvent(QKeyEvent *) override;
 
 private Q_SLOTS:
     /** custom tab buttons clicked */
@@ -80,10 +80,10 @@ private Q_SLOTS:
     void on_openDebugLogfileButton_clicked();
     /** change the time range of the network traffic graph */
     void on_sldGraphRange_valueChanged(int value);
-    void resizeEvent(QResizeEvent *event);
-    void showEvent(QShowEvent *event);
-    void hideEvent(QHideEvent *event);
-    void changeEvent(QEvent* e);
+    void resizeEvent(QResizeEvent *event) override;
+    void showEvent(QShowEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
+    void changeEvent(QEvent* e) override;
     /** Show custom context menu on Peers tab */
     void showPeersTableContextMenu(const QPoint& point);
     /** Show custom context menu on Bans tab */

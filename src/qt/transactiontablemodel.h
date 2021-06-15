@@ -77,11 +77,11 @@ public:
         RawDecorationRole,
     };
 
-    int rowCount(const QModelIndex &parent) const;
-    int columnCount(const QModelIndex &parent) const;
-    QVariant data(const QModelIndex &index, int role) const;
-    QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-    QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
+    int rowCount(const QModelIndex &parent) const override;
+    int columnCount(const QModelIndex &parent) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const override;
     bool processingQueuedTransactions() const { return fProcessingQueuedTransactions; }
     void updateChainLockHeight(int chainLockHeight);
     int getChainLockHeight() const;

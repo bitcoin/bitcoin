@@ -21,8 +21,8 @@ public:
     bool isValid();
 
 protected:
-    void focusInEvent(QFocusEvent *evt);
-    void focusOutEvent(QFocusEvent *evt);
+    void focusInEvent(QFocusEvent *evt) override;
+    void focusOutEvent(QFocusEvent *evt) override;
 
 private:
     bool valid;

@@ -44,7 +44,7 @@ public:
     const QString &getReturnValue() const { return returnValue; }
 
 public Q_SLOTS:
-    void done(int retval);
+    void done(int retval) override;
 
 private:
     Ui::AddressBookPage *ui;

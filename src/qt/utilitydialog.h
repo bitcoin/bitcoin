@@ -55,7 +55,7 @@ public:
     static QWidget *showShutdownWindow(interfaces::Node& node, BitcoinGUI *window);
 
 protected:
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
 };
 
 #endif // BITCOIN_QT_UTILITYDIALOG_H
