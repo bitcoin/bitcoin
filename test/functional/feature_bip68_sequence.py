@@ -6,8 +6,20 @@
 
 import time
 
-from test_framework.blocktools import create_block, NORMAL_GBT_REQUEST_PARAMS, add_witness_commitment
-from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, FromHex, ToHex
+from test_framework.blocktools import (
+    NORMAL_GBT_REQUEST_PARAMS,
+    add_witness_commitment,
+    create_block,
+)
+from test_framework.messages import (
+    COIN,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+    ToHex,
+    tx_from_hex,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -215,7 +227,7 @@ class BIP68Test(BitcoinTestFramework):
 
         # Create a mempool tx.
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 2)
-        tx1 = FromHex(CTransaction(), self.nodes[0].getrawtransaction(txid))
+        tx1 = tx_from_hex(self.nodes[0].getrawtransaction(txid))
         tx1.rehash()
 
         # Anyone-can-spend mempool tx.
@@ -225,7 +237,7 @@ class BIP68Test(BitcoinTestFramework):
         tx2.vin = [CTxIn(COutPoint(tx1.sha256, 0), nSequence=0)]
         tx2.vout = [CTxOut(int(tx1.vout[0].nValue - self.relayfee*COIN), DUMMY_P2WPKH_SCRIPT)]
         tx2_raw = self.nodes[0].signrawtransactionwithwallet(ToHex(tx2))["hex"]
-        tx2 = FromHex(tx2, tx2_raw)
+        tx2 = tx_from_hex(tx2_raw)
         tx2.rehash()
 
         self.nodes[0].sendrawtransaction(tx2_raw)
@@ -348,7 +360,7 @@ class BIP68Test(BitcoinTestFramework):
         assert not softfork_active(self.nodes[0], 'csv')
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 2)
 
-        tx1 = FromHex(CTransaction(), self.nodes[0].getrawtransaction(txid))
+        tx1 = tx_from_hex(self.nodes[0].getrawtransaction(txid))
         tx1.rehash()
 
         # Make an anyone-can-spend transaction
@@ -359,7 +371,7 @@ class BIP68Test(BitcoinTestFramework):
 
         # sign tx2
         tx2_raw = self.nodes[0].signrawtransactionwithwallet(ToHex(tx2))["hex"]
-        tx2 = FromHex(tx2, tx2_raw)
+        tx2 = tx_from_hex(tx2_raw)
         tx2.rehash()
 
         self.nodes[0].sendrawtransaction(ToHex(tx2))
@@ -404,7 +416,7 @@ class BIP68Test(BitcoinTestFramework):
         outputs = { self.nodes[1].getnewaddress() : 1.0 }
         rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
         rawtxfund = self.nodes[1].fundrawtransaction(rawtx)['hex']
-        tx = FromHex(CTransaction(), rawtxfund)
+        tx = tx_from_hex(rawtxfund)
         tx.nVersion = 2
         tx_signed = self.nodes[1].signrawtransactionwithwallet(ToHex(tx))["hex"]
         self.nodes[1].sendrawtransaction(tx_signed)

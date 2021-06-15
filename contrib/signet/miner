@@ -23,7 +23,7 @@ PATH_BASE_TEST_FUNCTIONAL = os.path.abspath(os.path.join(PATH_BASE_CONTRIB_SIGNE
 sys.path.insert(0, PATH_BASE_TEST_FUNCTIONAL)
 
 from test_framework.blocktools import WITNESS_COMMITMENT_HEADER, script_BIP34_coinbase_height # noqa: E402
-from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, FromHex, ToHex, deser_string, hash256, ser_compact_size, ser_string, ser_uint256, uint256_from_str # noqa: E402
+from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, FromHex, ToHex, deser_string, hash256, ser_compact_size, ser_string, ser_uint256, tx_from_hex, uint256_from_str # noqa: E402
 from test_framework.script import CScriptOp # noqa: E402
 
 logging.basicConfig(
@@ -216,7 +216,7 @@ def generate_psbt(tmpl, reward_spk, *, blocktime=None):
         block.nTime = tmpl["mintime"]
     block.nBits = int(tmpl["bits"], 16)
     block.nNonce = 0
-    block.vtx = [cbtx] + [FromHex(CTransaction(), t["data"]) for t in tmpl["transactions"]]
+    block.vtx = [cbtx] + [tx_from_hex(t["data"]) for t in tmpl["transactions"]]
 
     witnonce = 0
     witroot = block.calc_witness_merkle_root()

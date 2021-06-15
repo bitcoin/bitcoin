@@ -6,7 +6,10 @@
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import CTransaction, FromHex, ToHex
+from test_framework.messages import (
+    ToHex,
+    tx_from_hex,
+)
 from test_framework.util import (
     assert_approx,
     assert_equal,
@@ -154,7 +157,7 @@ class WalletGroupTest(BitcoinTestFramework):
         self.log.info("Fill a wallet with 10,000 outputs corresponding to the same scriptPubKey")
         for _ in range(5):
             raw_tx = self.nodes[0].createrawtransaction([{"txid":"0"*64, "vout":0}], [{addr2[0]: 0.05}])
-            tx = FromHex(CTransaction(), raw_tx)
+            tx = tx_from_hex(raw_tx)
             tx.vin = []
             tx.vout = [tx.vout[0]] * 2000
             funded_tx = self.nodes[0].fundrawtransaction(ToHex(tx))
