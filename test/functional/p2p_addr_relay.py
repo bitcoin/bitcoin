@@ -40,6 +40,12 @@ class AddrReceiver(P2PInterface):
                     raise AssertionError("Invalid addr.port of {} (8333-8342 expected)".format(addr.port))
                 assert addr.ip.startswith('123.123.123.')
 
+    def addr_received(self):
+        return self.num_ipv4_received != 0
+
+    def getaddr_received(self):
+        return self.message_count['getaddr'] > 0
+
 
 class GetAddrStore(P2PInterface):
     getaddr_received = False
