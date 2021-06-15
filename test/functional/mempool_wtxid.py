@@ -6,6 +6,7 @@
 Test mempool acceptance in case of an already known transaction
 with identical non-witness data different witness.
 """
+from decimal import Decimal
 
 from test_framework.script import (
     CScript,
@@ -99,6 +100,7 @@ class MempoolWtxidTest(BitcoinTestFramework):
         assert child_one_wtxid != child_two_wtxid
 
         self.log.info("Submit one child to the mempool")
+        testres_child_one = node.testmempoolaccept([ToHex(child_one)])[0]
         txid_submitted = node.sendrawtransaction(ToHex(child_one))
         assert_equal(node.getrawmempool(True)[txid_submitted]['wtxid'], child_one_wtxid)
 
@@ -117,6 +119,32 @@ class MempoolWtxidTest(BitcoinTestFramework):
         node.sendrawtransaction(ToHex(child_one))
         # sendrawtransaction will not throw but quits early when a transaction with the same nonwitness data is already in mempool
         node.sendrawtransaction(ToHex(child_two))
+
+        self.log.info("Simulate an attack attempting to prevent package from being accepted")
+        # This grandchild is valid with either child_one or child_two; it shouldn't matter which one.
+        grandchild = CTransaction()
+        grandchild.vin.append(CTxIn(COutPoint(int(child_two_txid, 16), 0), b""))
+        # Deduct 0.00001 BTC as fee, and use the same scriptPubKey (OP_TRUE script)
+        grandchild.vout.append(CTxOut(int(9.99995 * COIN), child_script_pubkey))
+        grandchild.wit.vtxinwit.append(CTxInWitness())
+        grandchild.wit.vtxinwit[0].scriptWitness.stack = [child_witness_script]
+        grandchild_txid = grandchild.rehash()
+        grandchild_wtxid = grandchild.getwtxid()
+
+        # Submit the package { child_two, grandchild }. MemPoolAccept should detect that child_two
+        # "matches" (by txid) child_one which is already in the mempool, and trim child_two from the
+        # package. The RPC result should include this information: the full result for child_one
+        # from its mempool entry, along with a "txn-same-nonwitness-data-in-mempool" for child_two.
+        testres_full = node.testmempoolaccept([ToHex(child_two), ToHex(grandchild)])
+        assert_equal(testres_full[0], testres_child_one)
+        assert_equal(testres_full[1], testres_child_two)
+        assert_equal(testres_full[2], {
+                "txid": grandchild_txid,
+                "wtxid": grandchild_wtxid,
+                "allowed": True,
+                "vsize": grandchild.get_vsize(),
+                "fees": { "base": Decimal("0.00001")}
+        })
 
 
 if __name__ == '__main__':
