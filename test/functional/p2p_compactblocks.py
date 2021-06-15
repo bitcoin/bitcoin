@@ -34,7 +34,6 @@ from test_framework.messages import (
     NODE_NETWORK,
     P2PHeaderAndShortIDs,
     PrefilledTransaction,
-    ToHex,
     calculate_shortid,
     msg_block,
     msg_blocktxn,
@@ -62,7 +61,10 @@ from test_framework.script import (
     OP_TRUE,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, softfork_active
+from test_framework.util import (
+    assert_equal,
+    softfork_active,
+)
 
 # TestP2PConn: A peer we use to send messages to bitcoind, and store responses.
 class TestP2PConn(P2PInterface):
@@ -715,9 +717,9 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         [l.clear_block_announcement() for l in listeners]
 
-        # ToHex() won't serialize with witness, but this block has no witnesses
-        # anyway. TODO: repeat this test with witness tx's to a segwit node.
-        node.submitblock(ToHex(block))
+        # serialize without witness (this block has no witnesses anyway).
+        # TODO: repeat this test with witness tx's to a segwit node.
+        node.submitblock(block.serialize().hex())
 
         for l in listeners:
             l.wait_until(lambda: "cmpctblock" in l.last_message, timeout=30)

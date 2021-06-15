@@ -18,7 +18,6 @@ from decimal import Decimal
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import (
     CTransaction,
-    ToHex,
     tx_from_hex,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -451,14 +450,14 @@ class RawTransactionsTest(BitcoinTestFramework):
         # As transaction version is unsigned, this should convert to its unsigned equivalent.
         tx = CTransaction()
         tx.nVersion = -0x80000000
-        rawtx = ToHex(tx)
+        rawtx = tx.serialize().hex()
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['version'], 0x80000000)
 
         # Test the maximum transaction version number that fits in a signed 32-bit integer.
         tx = CTransaction()
         tx.nVersion = 0x7fffffff
-        rawtx = ToHex(tx)
+        rawtx = tx.serialize().hex()
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['version'], 0x7fffffff)
 

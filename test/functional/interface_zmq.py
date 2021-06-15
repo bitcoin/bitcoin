@@ -5,8 +5,15 @@
 """Test the ZMQ notification interface."""
 import struct
 
-from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE, ADDRESS_BCRT1_P2WSH_OP_TRUE
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
+from test_framework.address import (
+    ADDRESS_BCRT1_P2WSH_OP_TRUE,
+    ADDRESS_BCRT1_UNSPENDABLE,
+)
+from test_framework.blocktools import (
+    add_witness_commitment,
+    create_block,
+    create_coinbase,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
     CTransaction,

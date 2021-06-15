@@ -23,7 +23,6 @@ from .messages import (
     CTxIn,
     CTxInWitness,
     CTxOut,
-    ToHex,
     hash256,
     hex_str_to_bytes,
     ser_uint256,
@@ -250,7 +249,7 @@ def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=Tru
         if (insert_redeem_script):
             tx = tx_from_hex(tx_to_witness)
             tx.vin[0].scriptSig += CScript([hex_str_to_bytes(insert_redeem_script)])
-            tx_to_witness = ToHex(tx)
+            tx_to_witness = tx.serialize().hex()
 
     return node.sendrawtransaction(tx_to_witness)
 

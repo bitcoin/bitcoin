@@ -7,7 +7,6 @@
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
-    ToHex,
     tx_from_hex,
 )
 from test_framework.util import (
@@ -160,7 +159,7 @@ class WalletGroupTest(BitcoinTestFramework):
             tx = tx_from_hex(raw_tx)
             tx.vin = []
             tx.vout = [tx.vout[0]] * 2000
-            funded_tx = self.nodes[0].fundrawtransaction(ToHex(tx))
+            funded_tx = self.nodes[0].fundrawtransaction(tx.serialize().hex())
             signed_tx = self.nodes[0].signrawtransactionwithwallet(funded_tx['hex'])
             self.nodes[0].sendrawtransaction(signed_tx['hex'])
             self.nodes[0].generate(1)
