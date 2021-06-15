@@ -12,10 +12,17 @@ cirrus_ephemeral_worker_template_env: &CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
   DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
 
 persistent_worker_template_env: &PERSISTENT_WORKER_TEMPLATE_ENV
-  RESTART_CI_DOCKER_BEFORE_RUN: "1"
+  DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
 
 persistent_worker_template: &PERSISTENT_WORKER_TEMPLATE
-  persistent_worker: {}  # https://cirrus-ci.org/guide/persistent-workers/
+  persistent_worker:
+#   labels:
+#    vm_size: drahtbot_small
+   isolation:
+    container:
+      image: ubuntu:bionic
+      cpu: 999
+      memory: 999G
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
 base_template: &BASE_TEMPLATE

@@ -33,11 +33,6 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   echo "Creating $DOCKER_NAME_TAG container to run in"
   ${CI_RETRY_EXE} docker pull "$DOCKER_NAME_TAG"
 
-  if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
-    echo "Restart docker before run to stop and clear all containers started with --rm"
-    systemctl restart docker
-  fi
-
   DOCKER_ID=$(docker run $DOCKER_ADMIN --rm --interactive --detach --tty \
                   --mount type=bind,src=$BASE_ROOT_DIR,dst=/ro_base,readonly \
                   --mount type=bind,src=$CCACHE_DIR,dst=$CCACHE_DIR \
