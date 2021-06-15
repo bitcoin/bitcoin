@@ -333,7 +333,7 @@ jobs:
         run: echo Using veriblock-pop-cpp version ${VERIBLOCK_POP_CPP_VERSION}
       - name: install dependencies
         run: |
-          brew install automake berkeley-db4 boost boost-python3 miniupnpc pkg-config protobuf librsvg ccache qrencode zeromq qt
+          brew install automake berkeley-db boost boost-python3 miniupnpc pkg-config protobuf librsvg ccache qrencode zeromq qt
       - name: install veriblock-pop-cpp
         env:
           BUILD_TYPE: Release
@@ -360,6 +360,7 @@ jobs:
         run: ./configure
           --enable-werror
           --disable-bench
+          --with-incompatible-bdb
       - name: make
         run: make -j2
       - name: make check
