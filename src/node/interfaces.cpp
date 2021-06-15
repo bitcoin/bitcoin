@@ -632,7 +632,7 @@ public:
     CFeeRate relayDustFee() override { return ::dustRelayFee; }
     bool havePruned() override
     {
-        LOCK(cs_main);
+        LOCK(cs_HavePruned);
         return ::fHavePruned;
     }
     bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !isInitialBlockDownload(); }

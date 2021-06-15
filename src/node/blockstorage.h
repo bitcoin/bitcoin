@@ -11,7 +11,6 @@
 #include <fs.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
 #include <sync.h>
-#include <validation.h> // For cs_main
 
 class ArgsManager;
 class BlockValidationState;
@@ -36,11 +35,12 @@ static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
 /** The maximum size of a blk?????.dat file (since 0.8) */
 static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 
+extern Mutex cs_HavePruned;
 extern std::atomic_bool fImporting;
 extern std::atomic_bool fReindex;
 /** Pruning-related variables and constants */
 /** True if any block files have ever been pruned. */
-extern bool fHavePruned GUARDED_BY(cs_main);
+extern bool fHavePruned GUARDED_BY(cs_HavePruned);
 /** True if we're running in -prune mode. */
 extern bool fPruneMode;
 /** Number of MiB of block files that we're trying to stay below. */

@@ -17,6 +17,7 @@
 #include <streams.h>
 #include <undo.h>
 #include <util/system.h>
+#include <validation.h>
 
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
@@ -25,6 +26,7 @@ bool fPruneMode = false;
 uint64_t nPruneTarget = 0;
 
 // TODO make namespace {
+Mutex cs_HavePruned;
 RecursiveMutex cs_LastBlockFile;
 std::vector<CBlockFileInfo> vinfoBlockFile;
 int nLastBlockFile = 0;
@@ -47,7 +49,7 @@ static FlatFileSeq UndoFileSeq();
 
 bool IsBlockPruned(const CBlockIndex* pblockindex)
 {
-    LOCK(cs_main);
+    LOCK(cs_HavePruned);
     return (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
 }
 
