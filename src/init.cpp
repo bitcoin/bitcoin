@@ -1352,7 +1352,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             const int64_t load_block_index_start_time = GetTimeMillis();
             try {
                 LOCK(cs_main);
-                LOCK(cs_HavePruned);
                 chainman.InitializeChainstate(*Assert(node.mempool));
                 chainman.m_total_coinstip_cache = nCoinCacheUsage;
                 chainman.m_total_coinsdb_cache = nCoinDBCache;
@@ -1390,11 +1389,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
                 }
 
-                // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
-                // in the past, but is now trying to run unpruned.
-                if (fHavePruned && !fPruneMode) {
-                    strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
-                    break;
+                {
+                    LOCK(cs_HavePruned);
+                    // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
+                    // in the past, but is now trying to run unpruned.
+                    if (fHavePruned && !fPruneMode) {
+                        strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
+                        break;
+                    }
                 }
 
                 // At this point blocktree args are consistent with what's on disk.
