@@ -32,9 +32,9 @@ static const char *MSG_HASHTX    = "hashtx";
 static const char *MSG_RAWBLOCK  = "rawblock";
 static const char *MSG_RAWTX     = "rawtx";
 // SYSCOIN
-static const char *MSG_EVMBLOCKCONNECT  = "evmblockconnect";
-static const char *MSG_EVMBLOCKDISCONNECT  = "evmblockdisconnect";
-static const char *MSG_EVMBLOCK  = "evmblock";
+static const char *MSG_NEVMBLOCKCONNECT  = "nevmblockconnect";
+static const char *MSG_NEVMBLOCKDISCONNECT  = "nevmblockdisconnect";
+static const char *MSG_NEVMBLOCK  = "nevmblock";
 static const char *MSG_RAWMEMPOOLTX  = "rawmempooltx";
 static const char *MSG_HASHGVOTE     = "hashgovernancevote";
 static const char *MSG_HASHGOBJ      = "hashgovernanceobject";
@@ -262,7 +262,7 @@ bool CZMQPublishEVMNotifier::NotifyEVMBlockConnect(const CNEVMBlock &evmBlock)
     LogPrint(BCLog::ZMQ, "zmq: Publish evm block connect %s to %s\n", hash.GetHex(), this->address);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
     ss << evmBlock;
-    if(!SendZmqMessage(MSG_EVMBLOCKCONNECT, &(*ss.begin()), ss.size()))
+    if(!SendZmqMessage(MSG_NEVMBLOCKCONNECT, &(*ss.begin()), ss.size()))
         return false;
     if(evmBlock.bWaitForResponse) {
         if(ReceiveZmqMessage(parts)) {
@@ -270,7 +270,7 @@ bool CZMQPublishEVMNotifier::NotifyEVMBlockConnect(const CNEVMBlock &evmBlock)
                 LogPrint(BCLog::ZMQ, "zmq: Publish evm block connect wrong number of parts in multipart message %d: \n", parts.size());
                 return false;    
             }
-            if(parts[0] != MSG_EVMBLOCKCONNECT) {
+            if(parts[0] != MSG_NEVMBLOCKCONNECT) {
                 LogPrint(BCLog::ZMQ, "zmq: Publish evm block connect wrong command: %s\n", parts[0]);
                 return false;
             }
@@ -297,7 +297,7 @@ bool CZMQPublishEVMNotifier::NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock
     LogPrint(BCLog::ZMQ, "zmq: Publish evm block disconnect %s to %s\n", hash.GetHex(), this->address);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
     ss << evmBlock;
-    if(!SendZmqMessage(MSG_EVMBLOCKDISCONNECT, &(*ss.begin()), ss.size()))
+    if(!SendZmqMessage(MSG_NEVMBLOCKDISCONNECT, &(*ss.begin()), ss.size()))
         return false;
     if(evmBlock.bWaitForResponse) {
         if(ReceiveZmqMessage(parts)) {
@@ -305,7 +305,7 @@ bool CZMQPublishEVMNotifier::NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock
                 LogPrint(BCLog::ZMQ, "zmq: Publish evm block disconnect wrong number of parts in multipart message %d: \n", parts.size());
                 return false;    
             }
-            if(parts[0] != MSG_EVMBLOCKDISCONNECT) {
+            if(parts[0] != MSG_NEVMBLOCKDISCONNECT) {
                 LogPrint(BCLog::ZMQ, "zmq: Publish evm block disconnect wrong command: %s\n", parts[0]);
                 return false;
             }
@@ -324,7 +324,7 @@ bool CZMQPublishEVMNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock)
 {
     LogPrint(BCLog::ZMQ, "zmq: Publish evmblock\n");
     char data[1];
-    if(!SendZmqMessage(MSG_EVMBLOCK, data, 1))
+    if(!SendZmqMessage(MSG_NEVMBLOCK, data, 1))
         return false;
     
     std::vector<std::string> parts;

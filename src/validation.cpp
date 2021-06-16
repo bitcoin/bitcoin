@@ -1759,6 +1759,57 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
+bool GetNEVMData(const CBlock& block, CNEVMBlock &evmBlock) {
+    std::vector<unsigned char> vchData;
+	int nOut;
+	if (!GetSyscoinData(*block.vtx[0], vchData, nOut))
+		return false;
+    std::string strVchData(vchData.begin(), vchData.end());
+    auto pos = strVchData.find("NEVM");
+    if(pos == std::string::npos )
+        return false;
+    strVchData = strVchData.substr(pos+4);
+    std::vector<unsigned char> newVchData(strVchData.begin(), strVchData.end());
+    CDataStream ds(newVchData, SER_NETWORK, PROTOCOL_VERSION);
+    try {
+        ds >> evmBlock;
+    } catch (std::exception& e) {
+        return false;
+    }
+    return true;
+}
+bool ConnectNEVMCommitment(NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const bool fInitialDownload) {
+    CNEVMBlock evmBlock;
+    if(!GetNEVMData(block, evmBlock)) {
+        LogPrint(BCLog::SYS,"ConnectNEVMCommitment: Cannot unserialize NEVM data\n");
+        return false;
+    }
+    evmBlock.vchNEVMBlockData = block.vchNEVMBlockData;
+    // wait for nevm response if IBD or if block doesn't exist in our txroot db
+    evmBlock.bWaitForResponse = !fImporting && !fReindex && !fInitialDownload && !pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash);
+    bool res = GetMainSignals().NotifyEVMBlockConnect(evmBlock);
+    if(res) {
+        NEVMTxRoot txRootDB;
+        txRootDB.vchTxRoot = evmBlock.vchTxRoot;
+        txRootDB.vchReceiptRoot = evmBlock.vchReceiptRoot;
+        mapNEVMTxRoots.try_emplace(evmBlock.nBlockHash, txRootDB);
+    }
+    return res;
+}
+bool DisconnectNEVMCommitment(std::vector<uint256> &vecNEVMBlocks, const CBlock& block) {
+    CNEVMBlock evmBlock;
+    if(!GetNEVMData(block, evmBlock)) {
+        LogPrint(BCLog::SYS,"DisconnectNEVMCommitment: Cannot unserialize NEVM data\n");
+        return false;
+    }
+    // wait for nevm response if block does exist in our txroot db
+    evmBlock.bWaitForResponse = pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash);
+    bool res = GetMainSignals().NotifyEVMBlockDisconnect(evmBlock);
+    if(res) {
+        vecNEVMBlocks.emplace_back(evmBlock.nBlockHash);
+    }
+    return res;
+}
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
 DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::vector<uint256> &vecNEVMBlocks, std::vector<uint256> &vecTXIDs)
