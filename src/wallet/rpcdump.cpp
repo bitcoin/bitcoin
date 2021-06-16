@@ -1555,6 +1555,10 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
                 // Taproot is not active, raise an error
                 throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import tr() descriptor when Taproot is not active");
             }
+            // When importing an active taproot descriptor, change the default address type to bech32m
+            if (active && wallet.m_default_address_type == OutputType::BECH32) {
+                wallet.m_default_address_type = OutputType::BECH32M;
+            }
         }
 
         // If private keys are enabled, check some things.

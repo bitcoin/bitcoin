@@ -2628,6 +2628,12 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
             return nullptr;
         }
         walletInstance->m_default_address_type = parsed.value();
+    } else {
+        // Set default type to bech32 for legacy wallets and descriptor wallets without taproot
+        auto spk_man = walletInstance->GetScriptPubKeyMan(OutputType::BECH32M, false);
+        if (walletInstance->IsLegacy() || spk_man == nullptr) {
+            walletInstance->m_default_address_type = OutputType::BECH32;
+        }
     }
 
     if (!args.GetArg("-changetype", "").empty()) {

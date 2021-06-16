@@ -275,6 +275,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         WalletContext context;
         context.args = &gArgs;
         std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), "", CreateDummyWalletDatabase());
+        wallet->m_default_address_type = OutputType::BECH32;
         {
             auto spk_man = wallet->GetOrCreateLegacyScriptPubKeyMan();
             LOCK2(wallet->cs_wallet, spk_man->cs_KeyStore);

@@ -18,6 +18,7 @@
 std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key)
 {
     auto wallet = std::make_unique<CWallet>(&chain, "", CreateMockWalletDatabase());
+    wallet->m_default_address_type = OutputType::BECH32;
     {
         LOCK2(wallet->cs_wallet, ::cs_main);
         wallet->SetLastBlockProcessed(cchain.Height(), cchain.Tip()->GetBlockHash());
