@@ -215,7 +215,20 @@ bool DecodeHexBlockHeader(CBlockHeader& header, const std::string& hex_header)
     try {
         ser_header >> header;
     } catch (const std::exception&) {
-        return false;
+        ser_header = CDataStream(header_data, SER_NETWORK, PROTOCOL_VERSION);
+        try {
+            ser_header >> header;
+        } catch (const std::exception&) {
+            return false;
+        }
+    }
+    if(header.IsNull()) {
+        ser_header = CDataStream(header_data, SER_NETWORK, PROTOCOL_VERSION);
+        try {
+            ser_header >> header;
+        } catch (const std::exception&) {
+            return false;
+        }      
     }
     return true;
 }
@@ -232,9 +245,23 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
         ssBlock >> block;
     }
     catch (const std::exception&) {
-        return false;
+        ssBlock = CDataStream(blockData, SER_NETWORK, PROTOCOL_VERSION);
+        try {
+            ssBlock >> block;
+        }
+        catch (const std::exception&) {
+            return false;
+        }
     }
-
+    if (block.vtx.empty() || !block.vtx[0]->IsCoinBase()) {
+        ssBlock = CDataStream(blockData, SER_NETWORK, PROTOCOL_VERSION);
+        try {
+            ssBlock >> block;
+        }
+        catch (const std::exception&) {
+            return false;
+        }
+    }
     return true;
 }
 
