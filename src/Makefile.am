@@ -268,6 +268,7 @@ BITCOIN_CORE_H = \
   util/macros.h \
   util/memory.h \
   util/moneystr.h \
+  util/serfloat.h \
   util/string.h \
   util/time.h \
   util/threadnames.h \
@@ -605,6 +606,7 @@ libdash_util_a_SOURCES = \
   util/moneystr.cpp \
   util/strencodings.cpp \
   util/time.cpp \
+  util/serfloat.cpp \
   util/string.cpp \
   util/threadnames.cpp \
   util/url.cpp \
