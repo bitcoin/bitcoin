@@ -775,7 +775,7 @@ class CBlockHeader:
             r += self.auxpow.serialize()
         else:
             # SYSCOIN nevm data, note auxpow reads one extra byte from parent block header so no need to read it if auxpow here
-            r += struct.pack("<b", 0)    
+            r += struct.pack("<b", 0)
         return r
 
     def calc_sha256(self):
