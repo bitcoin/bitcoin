@@ -19,7 +19,7 @@
  * JSON but use AmountFromValue and ValueFromAmount for that.
  */
 std::string FormatMoney(const CAmount& n);
-NODISCARD bool ParseMoney(const std::string& str, CAmount& nRet);
-NODISCARD bool ParseMoney(const char* pszIn, CAmount& nRet);
+[[nodiscard]] bool ParseMoney(const std::string& str, CAmount& nRet);
+[[nodiscard]] bool ParseMoney(const char* pszIn, CAmount& nRet);
 
 #endif // BITCOIN_UTIL_MONEYSTR_H

@@ -23,8 +23,8 @@ struct CSpentIndexTxInfo;
 // core_read.cpp
 CScript ParseScript(const std::string& s);
 std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode = false);
-NODISCARD bool DecodeHexTx(CMutableTransaction& tx, const std::string& strHexTx);
-NODISCARD bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
+[[nodiscard]] bool DecodeHexTx(CMutableTransaction& tx, const std::string& strHexTx);
+[[nodiscard]] bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
 uint256 ParseHashStr(const std::string&, const std::string& strName);
 std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName);
 
