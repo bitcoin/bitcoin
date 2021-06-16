@@ -252,19 +252,19 @@ bool CZMQAbstractPublishNotifier::ReceiveZmqMessage(std::vector<std::string>& pa
         return false;
     return true;
 }
-bool CZMQPublishEVMNotifier::NotifyEVMBlockConnect(const CNEVMBlock &evmBlock)
+bool CZMQPublishEVMNotifier::NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, const uint256& nSYSBlockHash, const bool bWaitForResponse)
 {
-    if(evmBlock.bWaitForResponse && evmBlock.vchNEVMBlockData.empty()) {
+    if(bWaitForResponse && evmBlock.vchNEVMBlockData.empty()) {
         return false;
     }
     std::vector<std::string> parts;
     uint256 hash = evmBlock.nBlockHash;
     LogPrint(BCLog::ZMQ, "zmq: Publish evm block connect %s to %s\n", hash.GetHex(), this->address);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-    ss << evmBlock;
+    ss << evmBlock << nSYSBlockHash;
     if(!SendZmqMessage(MSG_NEVMBLOCKCONNECT, &(*ss.begin()), ss.size()))
         return false;
-    if(evmBlock.bWaitForResponse) {
+    if(bWaitForResponse) {
         if(ReceiveZmqMessage(parts)) {
             if(parts.size() != 2) {
                 LogPrint(BCLog::ZMQ, "zmq: Publish evm block connect wrong number of parts in multipart message %d: \n", parts.size());
@@ -286,7 +286,7 @@ bool CZMQPublishEVMNotifier::NotifyEVMBlockConnect(const CNEVMBlock &evmBlock)
     LogPrint(BCLog::ZMQ, "zmq: Publish evm block connect could not receive message\n");
     return false;
 }
-bool CZMQPublishEVMNotifier::NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock)
+bool CZMQPublishEVMNotifier::NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, const uint256& nSYSBlockHash, const bool bWaitForResponse)
 {
     // disconnect shouldn't include the block data
     if(!evmBlock.vchNEVMBlockData.empty()) {
@@ -295,11 +295,11 @@ bool CZMQPublishEVMNotifier::NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock
     std::vector<std::string> parts;
     uint256 hash = evmBlock.nBlockHash;
     LogPrint(BCLog::ZMQ, "zmq: Publish evm block disconnect %s to %s\n", hash.GetHex(), this->address);
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-    ss << evmBlock;
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << evmBlock << nSYSBlockHash;
     if(!SendZmqMessage(MSG_NEVMBLOCKDISCONNECT, &(*ss.begin()), ss.size()))
         return false;
-    if(evmBlock.bWaitForResponse) {
+    if(bWaitForResponse) {
         if(ReceiveZmqMessage(parts)) {
             if(parts.size() != 2) {
                 LogPrint(BCLog::ZMQ, "zmq: Publish evm block disconnect wrong number of parts in multipart message %d: \n", parts.size());
@@ -329,25 +329,40 @@ bool CZMQPublishEVMNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock)
     
     std::vector<std::string> parts;
     if(ReceiveZmqMessage(parts)) {
-        if(parts.size() != 4) {
-            LogPrint(BCLog::ZMQ, "zmq: Publish evmblock wrong number of parts in multipart message %d: \n", parts.size());
+        if(parts.size() != 2) {
+            LogPrint(BCLog::ZMQ, "zmq: Publish evm block wrong number of parts in multipart message %d: \n", parts.size());
             return false;    
         }
-        if(!ParseHashStr(parts[0], evmBlock.nBlockHash)) {
+        if(parts[0] != MSG_NEVMBLOCK) {
+            LogPrint(BCLog::ZMQ, "zmq: Publish evm block wrong command: %s\n", parts[0]);
+            return false;
+        }
+        const std::vector<unsigned char> evmData{parts[1].begin(), parts[1].end()};
+        // SYSCOIN
+        CDataStream ss(evmData, SER_NETWORK, PROTOCOL_VERSION);
+        try {
+            ss >> evmBlock;
+        } catch (const std::exception&) {
+            return false;
+        }
+        if(evmBlock.nBlockHash.IsNull()) {
             LogPrint(BCLog::ZMQ, "zmq: Publish evm block could not parse block hash in response\n");
             return false;
         }
-        evmBlock.vchTxRoot = std::vector<unsigned char>(parts[1].begin(), parts[1].end());
+
         if(evmBlock.vchTxRoot.size() != 32) {
             LogPrint(BCLog::ZMQ, "zmq: Publish evm block wrong tx root size %d\n", evmBlock.vchTxRoot.size());
             return false;
         }
-        evmBlock.vchReceiptRoot = std::vector<unsigned char>(parts[2].begin(), parts[2].end());
+
         if(evmBlock.vchReceiptRoot.size() != 32) {
             LogPrint(BCLog::ZMQ, "zmq: Publish evm block wrong receipt root size %d\n", evmBlock.vchTxRoot.size());
             return false;
         }
-        evmBlock.vchNEVMBlockData = std::vector<unsigned char>(parts[3].begin(), parts[3].end());
+        if(evmBlock.vchNEVMBlockData.empty()) {
+            LogPrint(BCLog::ZMQ, "zmq: Publish evm block empty block datae\n");
+            return false;
+        }
         return true;
     }
     return false;

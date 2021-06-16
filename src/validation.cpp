@@ -1778,7 +1778,7 @@ bool GetNEVMData(const CBlock& block, CNEVMBlock &evmBlock) {
     }
     return true;
 }
-bool ConnectNEVMCommitment(NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const bool fInitialDownload) {
+bool ConnectNEVMCommitment(NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const bool fInitialDownload) {
     CNEVMBlock evmBlock;
     if(!GetNEVMData(block, evmBlock)) {
         LogPrint(BCLog::SYS,"ConnectNEVMCommitment: Cannot unserialize NEVM data\n");
@@ -1786,8 +1786,8 @@ bool ConnectNEVMCommitment(NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, c
     }
     evmBlock.vchNEVMBlockData = block.vchNEVMBlockData;
     // wait for nevm response if IBD or if block doesn't exist in our txroot db
-    evmBlock.bWaitForResponse = !fImporting && !fReindex && !fInitialDownload && !pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash);
-    bool res = GetMainSignals().NotifyEVMBlockConnect(evmBlock);
+    const bool bWaitForResponse = !fImporting && !fReindex && !fInitialDownload && !pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash);
+    bool res = GetMainSignals().NotifyEVMBlockConnect(evmBlock, nBlockHash, bWaitForResponse);
     if(res) {
         NEVMTxRoot txRootDB;
         txRootDB.vchTxRoot = evmBlock.vchTxRoot;
@@ -1796,15 +1796,15 @@ bool ConnectNEVMCommitment(NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, c
     }
     return res;
 }
-bool DisconnectNEVMCommitment(std::vector<uint256> &vecNEVMBlocks, const CBlock& block) {
+bool DisconnectNEVMCommitment(std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint256& nBlockHash) {
     CNEVMBlock evmBlock;
     if(!GetNEVMData(block, evmBlock)) {
         LogPrint(BCLog::SYS,"DisconnectNEVMCommitment: Cannot unserialize NEVM data\n");
         return false;
     }
     // wait for nevm response if block does exist in our txroot db
-    evmBlock.bWaitForResponse = pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash);
-    bool res = GetMainSignals().NotifyEVMBlockDisconnect(evmBlock);
+    const bool bWaitForResponse = pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash);
+    bool res = GetMainSignals().NotifyEVMBlockDisconnect(evmBlock, nBlockHash, bWaitForResponse);
     if(res) {
         vecNEVMBlocks.emplace_back(evmBlock.nBlockHash);
     }
@@ -1880,7 +1880,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             // At this point, all of txundo.vprevout should have been moved out.
         }
     } 
-    if(pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(vecNEVMBlocks, block)) {
+    if(pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(vecNEVMBlocks, block, block.GetHash())) {
         error("DisconnectBlock(): NEVM block failed to disconnect");
         return DISCONNECT_FAILED; 
     }
@@ -2177,7 +2177,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // SYSCOIN
     const bool ibd = IsInitialBlockDownload();
     const auto& params = chainparams.GetConsensus();
-    const uint256& blockHash = block.GetHash();
     // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
     if (!ProcessSpecialTxsInBlock(m_blockman, block, pindex, state, view, fJustCheck, fScriptChecks)) {
         LogPrintf("ERROR: ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s\n",
@@ -2211,7 +2210,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             if(hasAssets){
                 TxValidationState tx_statesys;
                 // just temp var not used in !fJustCheck mode
-                if (!CheckSyscoinInputs(ibd, params, tx, txHash, tx_statesys, false, pindex->nHeight, m_chain.Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut)){
+                if (!CheckSyscoinInputs(ibd, params, tx, txHash, tx_statesys, false, pindex->nHeight, m_chain.Tip()->GetMedianTimePast(), pindex->GetBlockHash(), fJustCheck, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut)){
                     // Any transaction validation failure in ConnectBlock is a block consensus failure
                     state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                                 tx_statesys.GetRejectReason(), tx_statesys.GetDebugMessage());
@@ -2237,7 +2236,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal");
             }
         }
-        if (pindex->nHeight >= params.nNEVMStartBlock && !ConnectNEVMCommitment(mapNEVMTxRoots, block, ibd)) {
+        if (pindex->nHeight >= params.nNEVMStartBlock && !ConnectNEVMCommitment(mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-evm-blk");
         }
 

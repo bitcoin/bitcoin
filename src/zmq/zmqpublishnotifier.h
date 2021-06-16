@@ -10,6 +10,7 @@
 class CBlockIndex;
 // SYSCOIN
 class CNEVMBlock;
+class uint256;
 class CZMQAbstractPublishNotifier : public CZMQAbstractNotifier
 {
 private:
@@ -38,8 +39,8 @@ public:
 class CZMQPublishEVMNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock) override;
-    bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock) override;
+    bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse) override;
+    bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse) override;
     bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock) override;
 };
 class CZMQPublishHashBlockNotifier : public CZMQAbstractPublishNotifier

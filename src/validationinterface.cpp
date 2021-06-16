@@ -273,14 +273,14 @@ void CMainSignals::NotifyGovernanceObject(const std::shared_ptr<const CGovernanc
 void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyMasternodeListChanged(undo, oldMNList, diff); });
 }
-bool CMainSignals::NotifyEVMBlockConnect(const CNEVMBlock &evmBlock) {
+bool CMainSignals::NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse) {
     bool res = true;
-    m_internals->Iterate([&](CValidationInterface& callbacks) { res = res && callbacks.NotifyEVMBlockConnect(evmBlock); });
+    m_internals->Iterate([&](CValidationInterface& callbacks) { res = res && callbacks.NotifyEVMBlockConnect(evmBlock, nBlockHash, bWaitForResponse); });
     return res;
 }
-bool CMainSignals::NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock) {
+bool CMainSignals::NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse) {
     bool res = true;
-    m_internals->Iterate([&](CValidationInterface& callbacks) { res = res && callbacks.NotifyEVMBlockDisconnect(evmBlock); });
+    m_internals->Iterate([&](CValidationInterface& callbacks) { res = res && callbacks.NotifyEVMBlockDisconnect(evmBlock, nBlockHash, bWaitForResponse); });
     return res;
 }
 bool CMainSignals::NotifyGetNEVMBlock(CNEVMBlock &evmBlock) {

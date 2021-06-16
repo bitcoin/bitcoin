@@ -188,8 +188,8 @@ protected:
     virtual void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) {}
     virtual void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject> &object) {}
     virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
-    virtual bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock) {return true;}
-    virtual bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock) {return true;}
+    virtual bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse) {return true;}
+    virtual bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse) {return true;}
     virtual bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock) {return true;}
 };
 
@@ -229,8 +229,8 @@ public:
     void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
     void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
     void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff);
-    bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock);
-    bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock);
+    bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse);
+    bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse);
     bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock);
 };
 

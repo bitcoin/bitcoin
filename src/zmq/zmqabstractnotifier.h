@@ -16,6 +16,7 @@ class CZMQAbstractNotifier;
 class CGovernanceObject;
 class CGovernanceVote;
 class CNEVMBlock;
+class uint256;
 using CZMQNotifierFactory = std::unique_ptr<CZMQAbstractNotifier> (*)();
 
 class CZMQAbstractNotifier
@@ -62,8 +63,8 @@ public:
     virtual bool NotifyTransactionMempool(const CTransaction &transaction);
     virtual bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
     virtual bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
-    virtual bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock);
-    virtual bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock);
+    virtual bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse);
+    virtual bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse);
     virtual bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock);
 
 protected:

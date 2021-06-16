@@ -147,20 +147,21 @@ void TryForEachAndRemoveFailed(std::list<std::unique_ptr<CZMQAbstractNotifier>>&
 }
 } // anonymous namespace
 // SYSCOIN
-bool CZMQNotificationInterface::NotifyEVMBlockConnect(const CNEVMBlock &evmBlock)
+bool CZMQNotificationInterface::NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse)
 {
     bool res = true;
-    TryForEachAndRemoveFailed(notifiers, [evmBlock, &res](CZMQAbstractNotifier* notifier) {
-        res = res && notifier->NotifyEVMBlockConnect(evmBlock);
+    TryForEachAndRemoveFailed(notifiers, [&evmBlock, &nBlockHash, &res, bWaitForResponse](CZMQAbstractNotifier* notifier) {
+        res = res && notifier->NotifyEVMBlockConnect(evmBlock, nBlockHash, bWaitForResponse);
         return res;
     });
     return res;
 }
-bool CZMQNotificationInterface::NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock)
+bool CZMQNotificationInterface::NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse)
 {
     bool res = true;
-    TryForEachAndRemoveFailed(notifiers, [&evmBlock](CZMQAbstractNotifier* notifier) {
-        return notifier->NotifyEVMBlockDisconnect(evmBlock);
+    TryForEachAndRemoveFailed(notifiers, [&evmBlock, &nBlockHash, &res, bWaitForResponse](CZMQAbstractNotifier* notifier) {
+        res = res && notifier->NotifyEVMBlockDisconnect(evmBlock, nBlockHash, bWaitForResponse);
+        return res;
     });
     return res;
 }
