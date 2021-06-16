@@ -410,8 +410,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
             # must have a timestamp not too old (see IsInitialBlockDownload()).
             self.log.debug('Generate a block with current time')
             block_hash = self.nodes[0].generate(1)[0]
-            # SYSCOIN
-            block = self.nodes[0].getblock(blockhash=block_hash, verbosity=3)
+            block = self.nodes[0].getblock(blockhash=block_hash, verbosity=0)
             for n in self.nodes:
                 n.submitblock(block)
                 chain_info = n.getblockchaininfo()
