@@ -24,7 +24,7 @@
 // SYSCOIN
 #include <governance/governancevote.h>
 #include <governance/governanceobject.h>
-
+#include <core_io.h>
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
 static const char *MSG_HASHBLOCK = "hashblock";
@@ -32,6 +32,9 @@ static const char *MSG_HASHTX    = "hashtx";
 static const char *MSG_RAWBLOCK  = "rawblock";
 static const char *MSG_RAWTX     = "rawtx";
 // SYSCOIN
+static const char *MSG_EVMBLOCKCONNECT  = "evmblockconnect";
+static const char *MSG_EVMBLOCKDISCONNECT  = "evmblockdisconnect";
+static const char *MSG_EVMBLOCK  = "evmblock";
 static const char *MSG_RAWMEMPOOLTX  = "rawmempooltx";
 static const char *MSG_HASHGVOTE     = "hashgovernancevote";
 static const char *MSG_HASHGOBJ      = "hashgovernanceobject";
@@ -82,9 +85,32 @@ static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
     return 0;
 }
 
-bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
+// Internal function to receive multipart message
+static int zmq_receive_multipart(void *socket, std::vector<std::string>& parts)
 {
-    assert(!psocket);
+    int64_t more;
+    size_t more_size = sizeof (more);
+    do {
+    /* Create an empty ØMQ message to hold the message part */
+    zmq_msg_t part;
+    int rc = zmq_msg_init (&part);
+    assert (rc == 0);
+    /* Block until a message is available to be received from socket */
+    rc = zmq_msg_recv (&part, socket, 0);
+    assert (rc != -1);
+    int size = zmq_msg_size (&part);
+    char* buf = static_cast<char*>(zmq_msg_data(&part));
+    parts.emplace_back(std::string(buf, size));
+    /* Determine if more message parts are to follow */
+    rc = zmq_getsockopt (socket, ZMQ_RCVMORE, &more, &more_size);
+    assert (rc == 0);
+    zmq_msg_close (&part); } while (more);
+    return 0;
+}
+// SYSCOIN
+bool CZMQAbstractPublishNotifier::Initialize(void *pcontext, void *pcontextsub)
+{
+    assert(!psocket && psocketsub);
 
     // check if address is being used by other publish notifier
     std::multimap<std::string, CZMQAbstractPublishNotifier*>::iterator i = mapPublishNotifiers.find(address);
@@ -123,6 +149,28 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
             zmq_close(psocket);
             return false;
         }
+        // SYSCOIN
+        psocketsub = zmq_socket(pcontextsub, ZMQ_SUB);
+        if (!psocketsub)
+        {
+            zmqError("Failed to create socket");
+            return false;
+        }
+
+        rc = zmq_setsockopt(psocketsub, ZMQ_TCP_KEEPALIVE, &so_keepalive_option, sizeof(so_keepalive_option));
+        if (rc != 0) {
+            zmqError("Failed to set SO_KEEPALIVE");
+            zmq_close(psocketsub);
+            return false;
+        }
+
+        rc = zmq_bind(psocketsub, address.c_str());
+        if (rc != 0)
+        {
+            zmqError("Failed to bind address");
+            zmq_close(psocketsub);
+            return false;
+        }
 
         // register this notifier for the address, so it can be reused for other publish notifier
         mapPublishNotifiers.insert(std::make_pair(address, this));
@@ -134,6 +182,7 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
         LogPrint(BCLog::ZMQ, "zmq: Outbound message high water mark for %s at %s is %d\n", type, address, outbound_message_high_water_mark);
 
         psocket = i->second->psocket;
+        psocketsub = i->second->psocketsub;
         mapPublishNotifiers.insert(std::make_pair(address, this));
 
         return true;
@@ -143,7 +192,7 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
 void CZMQAbstractPublishNotifier::Shutdown()
 {
     // Early return if Initialize was not called
-    if (!psocket) return;
+    if (!psocket && !psocketsub) return;
 
     int count = mapPublishNotifiers.count(address);
 
@@ -166,9 +215,15 @@ void CZMQAbstractPublishNotifier::Shutdown()
         int linger = 0;
         zmq_setsockopt(psocket, ZMQ_LINGER, &linger, sizeof(linger));
         zmq_close(psocket);
+        // SYSCOIN
+        linger = 0;
+        zmq_setsockopt(psocketsub, ZMQ_LINGER, &linger, sizeof(linger));
+        zmq_close(psocketsub);
     }
 
     psocket = nullptr;
+    // SYSCOIN
+    psocketsub = nullptr;
 }
 
 bool CZMQAbstractPublishNotifier::SendZmqMessage(const char *command, const void* data, size_t size)
@@ -188,6 +243,115 @@ bool CZMQAbstractPublishNotifier::SendZmqMessage(const char *command, const void
     return true;
 }
 
+// SYSCOIN
+bool CZMQAbstractPublishNotifier::ReceiveZmqMessage(std::vector<std::string>& parts)
+{
+    assert(psocketsub);
+    int rc = zmq_receive_multipart(psocketsub, parts);
+    if (rc == -1)
+        return false;
+    return true;
+}
+bool CZMQPublishEVMNotifier::NotifyEVMBlockConnect(const CNEVMBlock &evmBlock)
+{
+    if(evmBlock.bWaitForResponse && evmBlock.vchNEVMBlockData.empty()) {
+        return false;
+    }
+    std::vector<std::string> parts;
+    uint256 hash = evmBlock.nBlockHash;
+    LogPrint(BCLog::ZMQ, "zmq: Publish evm block connect %s to %s\n", hash.GetHex(), this->address);
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+    ss << evmBlock;
+    if(!SendZmqMessage(MSG_EVMBLOCKCONNECT, &(*ss.begin()), ss.size()))
+        return false;
+    if(evmBlock.bWaitForResponse) {
+        if(ReceiveZmqMessage(parts)) {
+            if(parts.size() != 2) {
+                LogPrint(BCLog::ZMQ, "zmq: Publish evm block connect wrong number of parts in multipart message %d: \n", parts.size());
+                return false;    
+            }
+            if(parts[0] != MSG_EVMBLOCKCONNECT) {
+                LogPrint(BCLog::ZMQ, "zmq: Publish evm block connect wrong command: %s\n", parts[0]);
+                return false;
+            }
+            if(parts[1] != "connected") {
+                LogPrint(BCLog::ZMQ, "zmq: Publish evm block connect send invalid data: %s\n", parts[1]);
+                return false;
+            }
+            return true;
+        }
+    } else {
+        return true;
+    }
+    LogPrint(BCLog::ZMQ, "zmq: Publish evm block connect could not receive message\n");
+    return false;
+}
+bool CZMQPublishEVMNotifier::NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock)
+{
+    // disconnect shouldn't include the block data
+    if(!evmBlock.vchNEVMBlockData.empty()) {
+        return false;
+    }
+    std::vector<std::string> parts;
+    uint256 hash = evmBlock.nBlockHash;
+    LogPrint(BCLog::ZMQ, "zmq: Publish evm block disconnect %s to %s\n", hash.GetHex(), this->address);
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+    ss << evmBlock;
+    if(!SendZmqMessage(MSG_EVMBLOCKDISCONNECT, &(*ss.begin()), ss.size()))
+        return false;
+    if(evmBlock.bWaitForResponse) {
+        if(ReceiveZmqMessage(parts)) {
+            if(parts.size() != 2) {
+                LogPrint(BCLog::ZMQ, "zmq: Publish evm block disconnect wrong number of parts in multipart message %d: \n", parts.size());
+                return false;    
+            }
+            if(parts[0] != MSG_EVMBLOCKDISCONNECT) {
+                LogPrint(BCLog::ZMQ, "zmq: Publish evm block disconnect wrong command: %s\n", parts[0]);
+                return false;
+            }
+            if(parts[1] != "disconnected") {
+                LogPrint(BCLog::ZMQ, "zmq: Publish evm block disconnect send invalid data: %s\n", parts[1]);
+                return false;
+            }
+            return true;
+        }
+    } else {
+        return true;
+    }
+    return true;
+}
+bool CZMQPublishEVMNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock)
+{
+    LogPrint(BCLog::ZMQ, "zmq: Publish evmblock\n");
+    char data[1];
+    if(!SendZmqMessage(MSG_EVMBLOCK, data, 1))
+        return false;
+    
+    std::vector<std::string> parts;
+    if(ReceiveZmqMessage(parts)) {
+        if(parts.size() != 4) {
+            LogPrint(BCLog::ZMQ, "zmq: Publish evmblock wrong number of parts in multipart message %d: \n", parts.size());
+            return false;    
+        }
+        if(!ParseHashStr(parts[0], evmBlock.nBlockHash)) {
+            LogPrint(BCLog::ZMQ, "zmq: Publish evm block could not parse block hash in response\n");
+            return false;
+        }
+        evmBlock.vchTxRoot = std::vector<unsigned char>(parts[1].begin(), parts[1].end());
+        if(evmBlock.vchTxRoot.size() != 32) {
+            LogPrint(BCLog::ZMQ, "zmq: Publish evm block wrong tx root size %d\n", evmBlock.vchTxRoot.size());
+            return false;
+        }
+        evmBlock.vchReceiptRoot = std::vector<unsigned char>(parts[2].begin(), parts[2].end());
+        if(evmBlock.vchReceiptRoot.size() != 32) {
+            LogPrint(BCLog::ZMQ, "zmq: Publish evm block wrong receipt root size %d\n", evmBlock.vchTxRoot.size());
+            return false;
+        }
+        evmBlock.vchNEVMBlockData = std::vector<unsigned char>(parts[3].begin(), parts[3].end());
+        return true;
+    }
+    return false;
+}
 bool CZMQPublishHashBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 {
     uint256 hash = pindex->GetBlockHash();

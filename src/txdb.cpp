@@ -273,6 +273,8 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nNonce         = diskindex.nNonce;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
+                // SYSCOIN
+                pindexNew->vchNEVMBlockData = diskindex.vchNEVMBlockData;
 
                /* Syscoin checks the PoW here.  We don't do this because
                    the CDiskBlockIndex does not contain the auxpow.

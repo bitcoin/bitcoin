@@ -21,7 +21,8 @@ def unidirectional_node_sync_via_rpc(node_src, node_dest):
             blockhash = node_src.getblockheader(blockhash, True)['previousblockhash']
     blocks_to_copy.reverse()
     for blockhash in blocks_to_copy:
-        blockdata = node_src.getblock(blockhash, False)
+        # SYSCOIN
+        blockdata = node_src.getblock(blockhash, 3)
         assert node_dest.submitblock(blockdata) in (None, 'inconclusive')
 
 def node_sync_via_rpc(nodes):

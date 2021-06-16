@@ -15,6 +15,7 @@
 #include <txmempool.h>
 #include <validation.h>
 #include <scheduler.h>
+extern std::set<CBlockIndex*> setDirtyBlockIndex;
 namespace llmq
 {
 
@@ -310,7 +311,18 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
         ProcessNewChainLock(pfrom->GetId(), clsig, hash);
     }
 }
-
+// walk through ancestors and remove NEVM block data since chainlocked block ancestors wouldn't need to reverify evm data
+void CChainLocksHandler::PruneNEVMData(CBlockIndex* pindex) {
+    while (pindex != nullptr) {
+        if (!pindex->vchNEVMBlockData.empty()) {
+            setDirtyBlockIndex.insert(pindex);
+            pindex->vchNEVMBlockData.clear();
+        } else {
+            break;
+        }
+        pindex = pindex->pprev;
+    }
+}
 void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLockSig& clsig, const uint256&hash, const uint256& idIn )
 {
     assert((from == -1) ^ idIn.IsNull());
@@ -448,6 +460,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             bestChainLockCandidates[clsig.nHeight] = std::make_shared<const CChainLockSig>(clsig);
             mostRecentChainLockShare = clsig;
             TryUpdateBestChainLock(pindexSig);
+            PruneNEVMData(pindexSig);
         }
         // Note: do not hold cs while calling RelayInv
         AssertLockNotHeld(cs);

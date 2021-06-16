@@ -25,7 +25,8 @@ class CBlockHeader : public CPureBlockHeader
 public:
     // auxpow (if this is a merge-minded block)
     std::shared_ptr<CAuxPow> auxpow;
-
+    // SYSCOIN
+    std::vector<unsigned char> vchNEVMBlockData;
     CBlockHeader()
     {
         SetNull();
@@ -40,6 +41,9 @@ public:
             assert(auxpow != nullptr);
             s << *auxpow;
         }
+        // SYSCOIN
+        if (s.GetType() & SER_TRANSPORT)
+            s << vchNEVMBlockData;
     }
     template<typename Stream>
     void Unserialize(Stream& s)
@@ -53,6 +57,9 @@ public:
         } else {
             auxpow.reset();
         }
+        // SYSCOIN
+        if (s.GetType() & SER_TRANSPORT)
+            s >> vchNEVMBlockData;
     }
 
     
@@ -60,6 +67,8 @@ public:
     {
         CPureBlockHeader::SetNull();
         auxpow.reset();
+        // SYSCOIN
+        vchNEVMBlockData.clear();
     }
 
     /**
@@ -75,7 +84,6 @@ class CBlock : public CBlockHeader
 public:
     // network and disk
     std::vector<CTransactionRef> vtx;
-
     // memory only
     mutable bool fChecked;
 
@@ -113,6 +121,8 @@ public:
         block.nBits          = nBits;
         block.nNonce         = nNonce;
         block.auxpow         = auxpow;
+        // SYSCOIN
+        block.vchNEVMBlockData         = vchNEVMBlockData;
         return block;
     }
 

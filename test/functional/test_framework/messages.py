@@ -757,6 +757,9 @@ class CBlockHeader:
         if self.is_auxpow():
             self.auxpow = CAuxPow()
             self.auxpow.deserialize(f)
+        else:
+            # SYSCOIN read 1 byte for evm data, note auxpow has parent header which puts the extra byte at the end of auxpow
+            f.read(1)
         self.sha256 = None
         self.hash = None
 
@@ -770,6 +773,9 @@ class CBlockHeader:
         r += struct.pack("<I", self.nNonce)
         if self.is_auxpow():
             r += self.auxpow.serialize()
+        else:
+            # SYSCOIN nevm data, note auxpow reads one extra byte from parent block header so no need to read it if auxpow here
+            r += struct.pack("<b", 0)    
         return r
 
     def calc_sha256(self):
@@ -795,7 +801,8 @@ class CBlockHeader:
                time.ctime(self.nTime), self.nBits, self.nNonce)
 
 BLOCK_HEADER_SIZE = len(CBlockHeader().serialize())
-assert_equal(BLOCK_HEADER_SIZE, 80)
+# SYSCOIN
+assert_equal(BLOCK_HEADER_SIZE, 81)
 
 class CBlock(CBlockHeader):
     __slots__ = ("vtx",)

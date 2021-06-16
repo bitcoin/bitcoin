@@ -13,8 +13,8 @@
 // SYSCOIN
 #include <governance/governancevote.h>
 #include <governance/governanceobject.h>
-
-CZMQNotificationInterface::CZMQNotificationInterface() : pcontext(nullptr)
+// SYSCOIN
+CZMQNotificationInterface::CZMQNotificationInterface() : pcontext(nullptr), pcontextsub(nullptr)
 {
 }
 
@@ -40,6 +40,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     factories["pubrawblock"] = CZMQAbstractNotifier::Create<CZMQPublishRawBlockNotifier>;
     factories["pubrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
     // SYSCOIN
+    factories["pubevmblock"] = CZMQAbstractNotifier::Create<CZMQPublishEVMNotifier>;
     factories["pubrawmempooltx"] = CZMQAbstractNotifier::Create<CZMQPublishRawMempoolTransactionNotifier>;
     factories["pubhashgovernancevote"] = CZMQAbstractNotifier::Create<CZMQPublishHashGovernanceVoteNotifier>;
     factories["pubhashgovernanceobject"] = CZMQAbstractNotifier::Create<CZMQPublishHashGovernanceObjectNotifier>;
@@ -82,18 +83,20 @@ bool CZMQNotificationInterface::Initialize()
     LogPrint(BCLog::ZMQ, "zmq: version %d.%d.%d\n", major, minor, patch);
 
     LogPrint(BCLog::ZMQ, "zmq: Initialize notification interface\n");
-    assert(!pcontext);
+    // SYSCOIN
+    assert(!pcontext && !pcontextsub);
 
     pcontext = zmq_ctx_new();
+    pcontextsub = zmq_ctx_new();
 
-    if (!pcontext)
+    if (!pcontext || !pcontextsub)
     {
         zmqError("Unable to initialize context");
         return false;
     }
 
     for (auto& notifier : notifiers) {
-        if (notifier->Initialize(pcontext)) {
+        if (notifier->Initialize(pcontext, pcontextsub)) {
             LogPrint(BCLog::ZMQ, "zmq: Notifier %s ready (address = %s)\n", notifier->GetType(), notifier->GetAddress());
         } else {
             LogPrint(BCLog::ZMQ, "zmq: Notifier %s failed (address = %s)\n", notifier->GetType(), notifier->GetAddress());
@@ -118,6 +121,13 @@ void CZMQNotificationInterface::Shutdown()
 
         pcontext = nullptr;
     }
+    // SYSCOIN
+    LogPrint(BCLog::ZMQ, "zmq: Shutdown subscription interface\n");
+    if (pcontextsub)
+    {
+        zmq_ctx_term(pcontextsub);
+        pcontextsub = nullptr;
+    }
 }
 
 namespace {
@@ -137,6 +147,32 @@ void TryForEachAndRemoveFailed(std::list<std::unique_ptr<CZMQAbstractNotifier>>&
 }
 } // anonymous namespace
 // SYSCOIN
+bool CZMQNotificationInterface::NotifyEVMBlockConnect(const CNEVMBlock &evmBlock)
+{
+    bool res = true;
+    TryForEachAndRemoveFailed(notifiers, [evmBlock, &res](CZMQAbstractNotifier* notifier) {
+        res = res && notifier->NotifyEVMBlockConnect(evmBlock);
+        return res;
+    });
+    return res;
+}
+bool CZMQNotificationInterface::NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock)
+{
+    bool res = true;
+    TryForEachAndRemoveFailed(notifiers, [&evmBlock](CZMQAbstractNotifier* notifier) {
+        return notifier->NotifyEVMBlockDisconnect(evmBlock);
+    });
+    return res;
+}
+bool CZMQNotificationInterface::NotifyGetNEVMBlock(CNEVMBlock &evmBlock)
+{
+    bool res = true;
+    TryForEachAndRemoveFailed(notifiers, [&evmBlock, &res](CZMQAbstractNotifier* notifier) {
+        res = res && notifier->NotifyGetNEVMBlock(evmBlock);
+        return res;
+    });
+    return res;
+}
 void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
     if (fInitialDownload || pindexNew == pindexFork) // In IBD or blocks were disconnected without any new ones

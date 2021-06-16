@@ -28,6 +28,7 @@ CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParam
     block.nTime          = nTime;
     block.nBits          = nBits;
     block.nNonce         = nNonce;
+    block.vchNEVMBlockData = vchNEVMBlockData;
     return block;
 }
 

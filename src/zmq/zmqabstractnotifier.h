@@ -15,14 +15,15 @@ class CZMQAbstractNotifier;
 // SYSCOIN
 class CGovernanceObject;
 class CGovernanceVote;
+class CNEVMBlock;
 using CZMQNotifierFactory = std::unique_ptr<CZMQAbstractNotifier> (*)();
 
 class CZMQAbstractNotifier
 {
 public:
     static const int DEFAULT_ZMQ_SNDHWM {1000};
-
-    CZMQAbstractNotifier() : psocket(nullptr), outbound_message_high_water_mark(DEFAULT_ZMQ_SNDHWM) { }
+    // SYSCOIN
+    CZMQAbstractNotifier() : psocket(nullptr), psocketsub(nullptr), outbound_message_high_water_mark(DEFAULT_ZMQ_SNDHWM) { }
     virtual ~CZMQAbstractNotifier();
 
     template <typename T>
@@ -41,8 +42,8 @@ public:
             outbound_message_high_water_mark = sndhwm;
         }
     }
-
-    virtual bool Initialize(void *pcontext) = 0;
+    // SYSCOIN
+    virtual bool Initialize(void *pcontext, void *pcontextsub) = 0;
     virtual void Shutdown() = 0;
 
     // Notifies of ConnectTip result, i.e., new active tip only
@@ -61,9 +62,14 @@ public:
     virtual bool NotifyTransactionMempool(const CTransaction &transaction);
     virtual bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
     virtual bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
+    virtual bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock);
+    virtual bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock);
+    virtual bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock);
 
 protected:
     void *psocket;
+    // SYSCOIN
+    void *psocketsub;
     std::string type;
     std::string address;
     int outbound_message_high_water_mark; // aka SNDHWM

@@ -28,6 +28,8 @@ packages:
 - "fonts-tuffy"
 - "xorriso"
 - "libtinfo5"
+# SYSCOIN
+- "zeromq"
 remotes:
 - "url": "https://github.com/syscoin/syscoin.git"
   "dir": "syscoin"

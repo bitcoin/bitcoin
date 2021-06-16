@@ -169,11 +169,13 @@ static constexpr auto AVG_FEEFILTER_BROADCAST_INTERVAL = 10min;
 /** Maximum feefilter broadcast delay after significant change. */
 // SYSCOIN
 static const unsigned int MAX_HEADERS_SIZE = (6 << 20); // 6 MiB
+static const unsigned int MAX_HEADERS_SIZE_NEVM = (2 << 20); // 2 MiB
 /** Size of a headers message that is the threshold for assuming that the
  *  peer has more headers (even if we have less than MAX_HEADERS_RESULTS).
  *  This is used starting with SIZE_HEADERS_LIMIT_VERSION peers.
  */
 static const unsigned int THRESHOLD_HEADERS_SIZE = (4 << 20); // 4 MiB
+static const unsigned int THRESHOLD_HEADERS_SIZE_NEVM = (1 << 20); // 1 MiB
 static constexpr auto MAX_FEEFILTER_CHANGE_DELAY = 5min;
 /** Maximum number of compact filters that may be requested with one getcfilters. See BIP 157. */
 static constexpr uint32_t MAX_GETCFILTERS_SIZE = 1000;
@@ -1853,16 +1855,18 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     std::shared_ptr<const CBlock> pblock;
     if (a_recent_block && a_recent_block->GetHash() == pindex->GetBlockHash()) {
         pblock = a_recent_block;
-    } else if (inv.IsMsgWitnessBlk()) {
+    // SYSCOIN
+    /*} else if (inv.IsMsgWitnessBlk()) {
         // Fast-path: in this case it is possible to serve the block directly from disk,
         // as the network format matches the format on disk
         std::vector<uint8_t> block_data;
         if (!ReadRawBlockFromDisk(block_data, pindex, m_chainparams.MessageStart())) {
             assert(!"cannot load block from disk");
         }
+
         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, MakeSpan(block_data)));
         // Don't set pblock as we've sent the block
-    } else {
+    */} else {
         // Send block from disk
         std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
         if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus()), false) {
@@ -2202,10 +2206,13 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
         return;
     }
     size_t nSize = 0;
+    size_t nSizeNEVM = 0;
     for (const auto& header : headers) {
         nSize += GetSerializeSize(header, PROTOCOL_VERSION);
+        // SYSCOIN
+        nSizeNEVM += header.vchNEVMBlockData.size();
         if (pfrom.nVersion >= SIZE_HEADERS_LIMIT_VERSION
-              && nSize > MAX_HEADERS_SIZE) {
+              && (nSize > MAX_HEADERS_SIZE || nSizeNEVM > MAX_HEADERS_SIZE_NEVM)) {
             Misbehaving(pfrom.GetId(), 20, "nSize > MAX_HEADERS_SIZE");
             return;
         }
@@ -2287,8 +2294,9 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
         }
 
         bool maxSize = (nCount == MAX_HEADERS_RESULTS);
+        // SYSCOIN
         if (pfrom.nVersion >= SIZE_HEADERS_LIMIT_VERSION
-              && nSize >= THRESHOLD_HEADERS_SIZE)
+              && (nSize >= THRESHOLD_HEADERS_SIZE || nSizeNEVM >= THRESHOLD_HEADERS_SIZE_NEVM))
             maxSize = true;
         // FIXME: This change (with hasNewHeaders) is rolled back in Syscoin,
         // but I think it should stay here for merge-mined coins.  Try to get
@@ -3366,18 +3374,21 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         std::vector<CBlock> vHeaders;
         unsigned nCount = 0;
         unsigned nSize = 0;
+        unsigned nSizeNEVM = 0;
         LogPrint(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
         for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex))
         {
             const CBlockHeader header = pindex->GetBlockHeader(m_chainparams.GetConsensus(), false);
             ++nCount;
+            // SYSCOIN
             nSize += GetSerializeSize(header, PROTOCOL_VERSION);
+            nSizeNEVM += header.vchNEVMBlockData.size();
             vHeaders.push_back(header);
             if (nCount >= MAX_HEADERS_RESULTS
                     || pindex->GetBlockHash() == hashStop)
                 break;
             if (pfrom.nVersion >= SIZE_HEADERS_LIMIT_VERSION
-                    && nSize >= THRESHOLD_HEADERS_SIZE)
+                    && (nSize >= THRESHOLD_HEADERS_SIZE || nSizeNEVM >= THRESHOLD_HEADERS_SIZE_NEVM))
                 break;
         }
        /* Check maximum headers size before pushing the message
@@ -3386,7 +3397,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
            should be small enough in comparison to the hard max size.
            Do it nevertheless to be sure.  */
         if (pfrom.nVersion >= SIZE_HEADERS_LIMIT_VERSION
-              && nSize > MAX_HEADERS_SIZE)
+              && (nSize > MAX_HEADERS_SIZE || nSizeNEVM > MAX_HEADERS_SIZE_NEVM))
             LogPrintf("ERROR: not pushing 'headers', too large\n");
         else
         {

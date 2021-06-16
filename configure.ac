@@ -1515,6 +1515,13 @@ else
   AC_DEFINE_UNQUOTED([ENABLE_ZMQ], [0], [Define to 1 to enable ZMQ functions])
 fi
 
+if test "x$use_zmq" != xyes; then
+  if test "x$enable_fuzz_binary" != xyes; then
+    AC_MSG_ERROR([libzmq version 4.x or greater not found])
+  fi
+fi
+
+
 if test "x$use_zmq" = xyes; then
   dnl Assume libzmq was built for static linking
   case $host in

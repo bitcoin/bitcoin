@@ -201,7 +201,8 @@ public:
 
     //! (memory only) Maximum nTime in the chain up to and including this block.
     unsigned int nTimeMax{0};
-
+    // SYSCOIN
+    std::vector<unsigned char> vchNEVMBlockData;
     CBlockIndex()
     {
     }
@@ -365,6 +366,7 @@ public:
         READWRITE(obj.nTime);
         READWRITE(obj.nBits);
         READWRITE(obj.nNonce);
+        if (!(s.GetType() & SER_GETHASH)) READWRITE(obj.vchNEVMBlockData);
     }
 
     uint256 GetBlockHash() const

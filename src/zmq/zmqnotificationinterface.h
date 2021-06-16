@@ -11,7 +11,8 @@
 
 class CBlockIndex;
 class CZMQAbstractNotifier;
-
+// SYSCOIN
+class CNEVMBlock;
 class CZMQNotificationInterface final : public CValidationInterface
 {
 public:
@@ -34,10 +35,15 @@ protected:
     // SYSCOIN
     void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) override;
     void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) override;
+    bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock) override;
+    bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock) override;
+    bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock) override;
 private:
     CZMQNotificationInterface();
 
     void *pcontext;
+    // SYSCOIN
+    void *pcontextsub;
     std::list<std::unique_ptr<CZMQAbstractNotifier>> notifiers;
 };
 

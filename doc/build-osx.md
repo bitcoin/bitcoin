@@ -82,7 +82,7 @@ These dependencies represent the packages required to get a barebones installati
 To install, run the following from your terminal:
 
 ``` bash
-brew install automake libtool boost pkg-config libevent curl-openssl gmp cmake
+brew install automake libtool boost pkg-config libevent curl-openssl gmp cmake zeromq
 ```
 
 ### 4. Clone Syscoin repository
@@ -187,7 +187,7 @@ Check out the [further configuration](#further-configuration) section for more i
 #### ZMQ Dependencies
 
 Support for ZMQ notifications requires the following dependency.
-Skip if you do not need ZMQ functionality.
+You must install ZMQ so Syscoin may talk to the NEVM layer.
 
 ``` bash
 brew install zeromq

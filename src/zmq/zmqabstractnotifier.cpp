@@ -21,6 +21,18 @@ bool CZMQAbstractNotifier::NotifyGovernanceVote(const std::shared_ptr<const CGov
 {
     return true;
 }
+bool CZMQAbstractNotifier::NotifyEVMBlockConnect(const CNEVMBlock &evmBlock)
+{
+    return true;
+}
+bool CZMQAbstractNotifier::NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock)
+{
+    return true;
+}
+bool CZMQAbstractNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock)
+{
+    return true;
+}
 bool CZMQAbstractNotifier::NotifyTransactionMempool(const CTransaction &/*transaction*/)
 {
     return true;

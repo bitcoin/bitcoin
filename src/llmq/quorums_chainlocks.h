@@ -101,7 +101,7 @@ public:
 
     bool HasChainLock(int nHeight, const uint256& blockHash);
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash);
-
+    void PruneNEVMData(CBlockIndex* pindex);
 
 private:
     // these require locks to be held already

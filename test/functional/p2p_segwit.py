@@ -115,8 +115,9 @@ def get_virtual_size(witness_block):
     """Calculate the virtual size of a witness block.
 
     Virtual size is base + witness/4."""
-    base_size = len(witness_block.serialize(with_witness=False))
-    total_size = len(witness_block.serialize())
+    # SYSCOIN
+    base_size = len(witness_block.serialize(with_witness=False)) - 1
+    total_size = len(witness_block.serialize()) - 1
     # the "+3" is so we round up
     vsize = int((3 * base_size + total_size + 3) / 4)
     return vsize
@@ -425,7 +426,8 @@ class SegWitTest(SyscoinTestFramework):
             all_heights = all_heights[0:10]
             for height in all_heights:
                 block_hash = self.nodes[0].getblockhash(height)
-                rpc_block = self.nodes[0].getblock(block_hash, False)
+                # SYSCOIN
+                rpc_block = self.nodes[0].getblock(block_hash, 3)
                 block_hash = int(block_hash, 16)
                 block = self.test_node.request_block(block_hash, 2)
                 wit_block = self.test_node.request_block(block_hash, 2 | MSG_WITNESS_FLAG)
@@ -441,8 +443,8 @@ class SegWitTest(SyscoinTestFramework):
             assert len(block.vtx[0].wit.vtxinwit) == 1
             assert len(block.vtx[0].wit.vtxinwit[0].scriptWitness.stack) == 1
             test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
-            # Now try to retrieve it...
-            rpc_block = self.nodes[0].getblock(block.hash, False)
+            # SYSCOIN Now try to retrieve it...
+            rpc_block = self.nodes[0].getblock(block.hash, 3)
             non_wit_block = self.test_node.request_block(block.sha256, 2)
             wit_block = self.test_node.request_block(block.sha256, 2 | MSG_WITNESS_FLAG)
             assert_equal(wit_block.serialize(), hex_str_to_bytes(rpc_block))
@@ -451,9 +453,12 @@ class SegWitTest(SyscoinTestFramework):
 
             # Test size, vsize, weight
             rpc_details = self.nodes[0].getblock(block.hash, True)
-            assert_equal(rpc_details["size"], len(block.serialize()))
-            assert_equal(rpc_details["strippedsize"], len(block.serialize(False)))
-            weight = 3 * len(block.serialize(False)) + len(block.serialize())
+            # SYSCOIN
+            lenBlock = len(block.serialize()) - 1
+            lenBlockNoWitness = len(block.serialize(False)) - 1
+            assert_equal(rpc_details["size"], lenBlock)
+            assert_equal(rpc_details["strippedsize"], lenBlockNoWitness)
+            weight = 3 * lenBlockNoWitness + lenBlock
             assert_equal(rpc_details["weight"], weight)
 
             # Upgraded node should not ask for blocks from unupgraded

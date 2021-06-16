@@ -1764,7 +1764,8 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::vector<uint256> &vecNEVMBlocks, std::vector<uint256> &vecTXIDs)
 {
     // SYSCOIN
-    bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
+    const auto& params = Params().GetConsensus();
+    bool fDIP0003Active = pindex->nHeight >= params.DIP0003Height;
     if (fDIP0003Active && !evoDb->VerifyBestBlock(pindex->GetBlockHash())) {
         // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
         AbortNode("Found EvoDB inconsistency, you must reindex to continue");
@@ -1828,7 +1829,10 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             // At this point, all of txundo.vprevout should have been moved out.
         }
     } 
-    // DisconnectNEVMCommitment(vecNEVMBlocks, block.vtx[0]);
+    if(pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(vecNEVMBlocks, block)) {
+        error("DisconnectBlock(): NEVM block failed to disconnect");
+        return DISCONNECT_FAILED; 
+    }
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
     // SYSCOIN
@@ -2182,7 +2186,9 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal");
             }
         }
-        // ConnectNEVMCommitment(mapNEVMTxRoots, block.vtx[0]);
+        if (pindex->nHeight >= params.nNEVMStartBlock && !ConnectNEVMCommitment(mapNEVMTxRoots, block, ibd)) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-evm-blk");
+        }
 
         // GetTransactionSigOpCost counts 3 types of sigops:
         // * legacy (always)
@@ -2764,7 +2770,7 @@ CBlockIndex* CChainState::FindMostWorkChain() {
                         pindexFailed->nStatus |= BLOCK_FAILED_CHILD;
                     // SYSCOIN
                     }   else if (fConflictingChain) {
-                        // We don't need data for conflciting blocks
+                        // We don't need data for conflicting blocks
                         pindexFailed->nStatus |= BLOCK_CONFLICT_CHAINLOCK;
                     } else if (fMissingData) {
                         // If we're missing data, then add back to m_blocks_unlinked,
@@ -3432,6 +3438,8 @@ void CChainState::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pi
     pindexNew->nDataPos = pos.nPos;
     pindexNew->nUndoPos = 0;
     pindexNew->nStatus |= BLOCK_HAVE_DATA;
+    // SYSCOIN
+    pindexNew->vchNEVMBlockData = block.vchNEVMBlockData;
     if (IsWitnessEnabled(pindexNew->pprev, consensusParams)) {
         pindexNew->nStatus |= BLOCK_OPT_WITNESS;
     }

@@ -794,7 +794,8 @@ void V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vec
 
     // serialize header
     header.reserve(CMessageHeader::HEADER_SIZE);
-    CVectorWriter{SER_NETWORK, INIT_PROTO_VERSION, header, 0, hdr};
+    // SYSCOIN
+    CVectorWriter{SER_TRANSPORT, INIT_PROTO_VERSION, header, 0, hdr};
 }
 
 size_t CConnman::SocketSendData(CNode& node) const
@@ -3438,8 +3439,8 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
     } else {
         LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
     }
-
-    m_deserializer = std::make_unique<V1TransportDeserializer>(V1TransportDeserializer(Params(), GetId(), SER_NETWORK, INIT_PROTO_VERSION));
+    // SYSCOIN
+    m_deserializer = std::make_unique<V1TransportDeserializer>(V1TransportDeserializer(Params(), GetId(), SER_TRANSPORT, INIT_PROTO_VERSION));
     m_serializer = std::make_unique<V1TransportSerializer>(V1TransportSerializer());
     // SYSCOIN
     m_masternode_connection = false;

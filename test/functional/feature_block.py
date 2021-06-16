@@ -330,11 +330,12 @@ class FullBlockTest(SyscoinTestFramework):
         self.log.info("Reject a block of size MAX_BLOCK_BASE_SIZE + 1")
         self.move_tip(15)
         b24 = self.next_block(24, spend=out[6])
-        script_length = MAX_BLOCK_BASE_SIZE - len(b24.serialize()) - 69
+        # SYSCOIN
+        script_length = MAX_BLOCK_BASE_SIZE - len(b24.serialize()) - 68
         script_output = CScript([b'\x00' * (script_length + 1)])
         tx.vout = [CTxOut(0, script_output)]
         b24 = self.update_block(24, [tx])
-        assert_equal(len(b24.serialize()), MAX_BLOCK_BASE_SIZE + 1)
+        assert_equal(len(b24.serialize()), MAX_BLOCK_BASE_SIZE + 2)
         self.send_blocks([b24], success=False, reject_reason='bad-blk-length', reconnect=True)
 
         b25 = self.next_block(25, spend=out[7])

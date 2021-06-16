@@ -388,6 +388,8 @@ static bool ReadBlockOrHeader(T& block, const CBlockIndex* pindex, const Consens
     if (block.GetHash() != pindex->GetBlockHash())
         return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
                 pindex->ToString(), pindex->GetBlockPos().ToString());
+    // SYSCOIN
+    block.vchNEVMBlockData = pindex->vchNEVMBlockData;
     return true;
 }
 bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams, bool fCheckPOW)

@@ -599,7 +599,8 @@ public:
         
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 6 * 60 * 60; // Syscoin: 6 hour
-        consensus.nPowTargetSpacing = 1 * 60; // Syscoin: 1 minute
+        consensus.nPowTargetSpacing1 = 1 * 60; // Syscoin: 1 minute
+        consensus.nPowTargetSpacing = 2.5 * 60; // Syscoin: 2.5 minute
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
@@ -629,7 +630,7 @@ public:
         consensus.vchSYSXERC20Manager = ParseHex("0765EFB302D504751C652C5B1d65E8E9EDf2E70F");
         consensus.vchTokenFreezeMethod = ParseHex("9c6dea23fe3b510bb5d170df49dc74e387692eaa3258c691918cd3aa94f5fb74");
         consensus.nBridgeStartBlock = 0;
-        consensus.nNEVMStartBlock = 0;
+        consensus.nNEVMStartBlock = 10000;
         consensus.nUTXOAssetsBlock = 0;
         consensus.nUTXOAssetsBlockProvisioning = 1000;
         consensus.DIP0003Height = 432;

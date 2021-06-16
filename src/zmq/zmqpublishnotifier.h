@@ -8,7 +8,8 @@
 #include <zmq/zmqabstractnotifier.h>
 
 class CBlockIndex;
-
+// SYSCOIN
+class CNEVMBlock;
 class CZMQAbstractPublishNotifier : public CZMQAbstractNotifier
 {
 private:
@@ -23,11 +24,24 @@ public:
           * message sequence number
     */
     bool SendZmqMessage(const char *command, const void* data, size_t size);
-
-    bool Initialize(void *pcontext) override;
+    // SYSCOIN
+    /* receive zmq message
+       parts:
+          * command
+          * data
+    */
+    bool ReceiveZmqMessage(std::vector<std::string>& parts);
+    bool Initialize(void *pcontext, void *pcontextsub) override;
     void Shutdown() override;
 };
-
+// SYSCOIN
+class CZMQPublishEVMNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock) override;
+    bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock) override;
+    bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock) override;
+};
 class CZMQPublishHashBlockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
