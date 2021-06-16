@@ -2965,6 +2965,7 @@ void CConnman::ThreadMessageHandler()
 {
     int64_t nLastSendMessagesTimeMasternodes = 0;
 
+    FastRandomContext rng;
     while (!flagInterruptMsgProc)
     {
         std::vector<CNode*> vNodesCopy = CopyNodeVector();
@@ -2976,6 +2977,10 @@ void CConnman::ThreadMessageHandler()
             fSkipSendMessagesForMasternodes = false;
             nLastSendMessagesTimeMasternodes = GetTimeMillis();
         }
+        // Randomize the order in which we process messages from/to our peers.
+        // This prevents attacks in which an attacker exploits having multiple
+        // consecutive connections in the vNodes list.
+        Shuffle(vNodesCopy.begin(), vNodesCopy.end(), rng);
 
         for (CNode* pnode : vNodesCopy)
         {
