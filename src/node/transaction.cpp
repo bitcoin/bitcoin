@@ -71,6 +71,12 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
 
         // Transaction was accepted to the mempool.
 
+        if (relay) {
+            // the mempool tracks locally submitted transactions to make a
+            // best-effort of initial broadcast
+            node.mempool->AddUnbroadcastTx(hashTx);
+        }
+
         if (wait_callback) {
             // For transactions broadcast from outside the wallet, make sure
             // that the wallet has been notified of the transaction before
@@ -96,9 +102,6 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     }
 
     if (relay) {
-        // the mempool tracks locally submitted transactions to make a
-        // best-effort of initial broadcast
-        node.mempool->AddUnbroadcastTx(hashTx);
         node.peerman->RelayTransaction(hashTx, tx->GetWitnessHash());
     }
 
