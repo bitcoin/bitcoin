@@ -12,7 +12,6 @@ Two nodes. Node1 is under test. Node0 is providing transactions and generating b
 - connect node1 to node0. Verify that they sync and node1 receives its funds."""
 import os
 import shutil
-import sys
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -26,7 +25,6 @@ class KeypoolRestoreTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.extra_args = [['-usehd=0'], ['-usehd=1', '-keypool=100', '-keypoolmin=20']]
-        self.stderr = sys.stdout
 
     def run_test(self):
         wallet_path = os.path.join(self.nodes[1].datadir, self.chain, "wallets", "wallet.dat")

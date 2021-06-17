@@ -12,7 +12,6 @@ This test takes 30 mins or more (up to 2 hours)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 import os
-import sys
 
 MIN_BLOCKS_TO_KEEP = 288
 
@@ -55,7 +54,7 @@ class PruneTest(BitcoinTestFramework):
         self.sync_blocks(self.nodes[0:5])
 
     def setup_nodes(self):
-        self.add_nodes(self.num_nodes, self.extra_args, timewait=900, stderr=sys.stdout)
+        self.add_nodes(self.num_nodes, self.extra_args, timewait=900)
         self.start_nodes()
 
     def create_big_chain(self):

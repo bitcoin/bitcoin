@@ -21,7 +21,6 @@ Tests correspond to code in rpc/blockchain.cpp.
 from decimal import Decimal
 import http.client
 import subprocess
-import sys
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -50,7 +49,6 @@ class BlockchainTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.stderr = sys.stdout
         self.extra_args = [['-stopatheight=207', '-prune=1', '-txindex=0']]
 
     def run_test(self):

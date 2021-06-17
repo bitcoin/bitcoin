@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet."""
 from decimal import Decimal
-import sys
 import time
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -25,7 +24,7 @@ class WalletTest(BitcoinTestFramework):
         self.extra_args = [['-usehd={:d}'.format(i%2==0)] for i in range(4)]
 
     def setup_network(self):
-        self.add_nodes(4, self.extra_args, stderr=sys.stdout)
+        self.add_nodes(4, self.extra_args)
         self.start_node(0)
         self.start_node(1)
         self.start_node(2)

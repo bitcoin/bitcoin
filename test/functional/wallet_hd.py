@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Hierarchical Deterministic wallet function."""
 
-import sys
 import shutil
 import os
 
@@ -21,7 +20,7 @@ class WalletHDTest(BitcoinTestFramework):
         self.extra_args = [['-usehd=0'], ['-usehd=1', '-keypool=0']]
 
     def setup_network(self):
-        self.add_nodes(self.num_nodes, self.extra_args, stderr=sys.stdout)
+        self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
 
     def run_test(self):
