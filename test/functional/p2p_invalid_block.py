@@ -9,14 +9,20 @@ In this test we connect to one node over p2p, and test block requests:
 2) Invalid block with duplicated transaction should be re-requested.
 3) Invalid block with bad coinbase value should be rejected and not
 re-requested.
+4) Invalid block due to future timestamp is later accepted when that timestamp
+becomes valid.
 """
 import copy
+import time
 
 from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script
 from test_framework.messages import COIN
 from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
+
+MAX_FUTURE_BLOCK_TIME = 2 * 60 * 60
+
 
 class InvalidBlockRequestTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -132,6 +138,19 @@ class InvalidBlockRequestTest(SyscoinTestFramework):
         block4.solve()
         self.log.info("Test inflation by duplicating input")
         peer.send_blocks_and_test([block4], node, success=False,  reject_reason='bad-txns-inputs-duplicate')
+
+        self.log.info("Test accepting identical block after rejecting it due to a future timestamp.")
+        t = int(time.time())
+        node.setmocktime(t)
+        # Set block time +1 second past max future validity
+        block = create_block(tip, create_coinbase(height), t + MAX_FUTURE_BLOCK_TIME + 1)
+        block.hashMerkleRoot = block.calc_merkle_root()
+        block.solve()
+        # Need force_send because the block will get rejected without a getdata otherwise
+        peer.send_blocks_and_test([block], node, force_send=True, success=False, reject_reason='time-too-new')
+        node.setmocktime(t + 1)
+        peer.send_blocks_and_test([block], node, success=True)
+
 
 if __name__ == '__main__':
     InvalidBlockRequestTest().main()
