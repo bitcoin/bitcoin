@@ -58,7 +58,19 @@ void initialize_process_message()
 
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
     g_setup = testing_setup.get();
+
+    // Temporary debug for https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=35027
+    {
+        LOCK(::cs_main);
+        assert(CheckDiskSpace(gArgs.GetDataDirNet()));
+        assert(CheckDiskSpace(gArgs.GetDataDirNet(), 48 * 2 * 2 * g_setup->m_node.chainman->ActiveChainstate().CoinsTip().GetCacheSize()));
+    }
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
+        {
+            LOCK(::cs_main);
+            assert(CheckDiskSpace(gArgs.GetDataDirNet()));
+            assert(CheckDiskSpace(gArgs.GetDataDirNet(), 48 * 2 * 2 * g_setup->m_node.chainman->ActiveChainstate().CoinsTip().GetCacheSize()));
+        }
         MineBlock(g_setup->m_node, CScript() << OP_TRUE);
     }
     SyncWithValidationInterfaceQueue();
