@@ -230,20 +230,7 @@ if [ ! -e "$GIT_ARCHIVE" ]; then
     git archive --prefix="${DISTNAME}/" --output="$GIT_ARCHIVE" HEAD
 fi
 
-# tmpdir="$(mktemp -d)"
-# (
-#     cd "$tmpdir"
-#     mkdir -p inputs
-#     ln -sf --target-directory=inputs "$GIT_ARCHIVE"
-
-#     mkdir -p "$OUTDIR"
-#     find -L inputs -type f -print0 | xargs -0 sha256sum > "${OUTDIR}/inputs.SHA256SUMS"
-# )
-
 mkdir -p "$OUTDIR"
-cat << EOF > "$OUTDIR"/inputs.SHA256SUMS
-$(sha256sum "$GIT_ARCHIVE" | cut -d' ' -f1)  inputs/$(basename "$GIT_ARCHIVE")
-EOF
 
 ###########################
 # Binary Tarball Building #
@@ -450,3 +437,13 @@ mkdir -p "$DISTSRC"
 rm -rf "$ACTUAL_OUTDIR"
 mv --no-target-directory "$OUTDIR" "$ACTUAL_OUTDIR" \
     || ( rm -rf "$ACTUAL_OUTDIR" && exit 1 )
+
+(
+    cd /outdir-base
+    {
+        echo "$GIT_ARCHIVE"
+        find "$ACTUAL_OUTDIR" -type f
+    } | xargs realpath --relative-base="$PWD" \
+      | xargs sha256sum \
+      | sponge "$ACTUAL_OUTDIR"/SHA256SUMS.part
+)
