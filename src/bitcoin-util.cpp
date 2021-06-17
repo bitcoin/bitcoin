@@ -105,7 +105,7 @@ static void grind_task(uint32_t nBits, CBlockHeader& header_orig, uint32_t offse
     }
 }
 
-static int Grind(std::vector<std::string> args, std::string& strPrint)
+static int Grind(const std::vector<std::string>& args, std::string& strPrint)
 {
     if (args.size() != 1) {
         strPrint = "Must specify block header to grind";
