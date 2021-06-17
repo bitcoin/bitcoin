@@ -91,7 +91,7 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
     (void)GetLegacySigOpCount(tx);
     (void)GetTransactionWeight(tx);
     (void)GetVirtualTransactionSize(tx);
-    (void)IsFinalTx(tx, /* nBlockHeight= */ 1024, /* nBlockTime= */ 1024);
+    (void)IsFinalTx(tx, /* nBlockHeight= */ 8388608, /* nBlockTime= */ 8388608);
     (void)IsStandardTx(tx, reason);
     (void)RecursiveDynamicUsage(tx);
     (void)SignalsOptInRBF(tx);
