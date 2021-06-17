@@ -13,7 +13,7 @@ export DEP_OPTS="MULTIPROCESS=1 CC=clang-19 CXX=clang++-19"
 export RUN_TIDY=true
 export GOAL="install"
 export TEST_RUNNER_EXTRA="--v2transport"
-export BITCOIN_CONFIG="--enable-external-signer ---enable-debug CC=clang-19 CXX=clang++-19" # Use clang to avoid OOM
+export BITCOIN_CONFIG="--enable-debug CC=clang-19 CXX=clang++-19" # Use clang to avoid OOM
 # Additional flags for RUN_TIDY
 export BITCOIN_CONFIG="${BITCOIN_CONFIG} --disable-hardening CFLAGS='-O0 -g0' CXXFLAGS='-O0 -g0 -Wno-error=documentation'"
 export BITCOIND=dash-node  # Used in functional tests

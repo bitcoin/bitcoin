@@ -139,6 +139,11 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     showPage(0);
 
+#ifndef ENABLE_EXTERNAL_SIGNER
+    //: "External signing" means using devices such as hardware wallets.
+    ui->externalSignerPath->setToolTip(tr("Compiled without external signing support (required for external signing)"));
+    ui->externalSignerPath->setEnabled(false);
+#endif
     /* Display elements init */
 
     /* Number of displayed decimal digits selector */

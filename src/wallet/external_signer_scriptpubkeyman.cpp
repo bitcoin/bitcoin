@@ -13,8 +13,6 @@
 #include <utility>
 #include <vector>
 
-#ifdef ENABLE_EXTERNAL_SIGNER
-
 namespace wallet {
 bool ExternalSignerScriptPubKeyMan::SetupDescriptor(std::unique_ptr<Descriptor> desc)
 {
@@ -86,5 +84,3 @@ TransactionError ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransact
     return TransactionError::OK;
 }
 } // namespace wallet
-
-#endif

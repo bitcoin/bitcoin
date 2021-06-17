@@ -14,7 +14,6 @@
 #include <util/system.h>
 #include <util/translation.h>
 #include <wallet/bip39.h>
-#include <external_signer.h>
 #include <wallet/scriptpubkeyman.h>
 
 namespace wallet {
