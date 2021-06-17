@@ -40,7 +40,7 @@ if [ "$BUILD_TARGET" = "arm-linux" ]; then
   export CHECK_DOC=1
   # -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"
   # This could be removed once the ABI change warning does not show up by default
-  export BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports CXXFLAGS=-Wno-psabi"
+  export BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports --enable-werror CXXFLAGS=-Wno-psabi"
   export RUN_UNITTESTS=false
   export RUN_INTEGRATIONTESTS=false
 elif [ "$BUILD_TARGET" = "win32" ]; then
@@ -67,7 +67,7 @@ elif [ "$BUILD_TARGET" = "linux64" ]; then
 elif [ "$BUILD_TARGET" = "linux64_cxx17" ]; then
   export HOST=x86_64-unknown-linux-gnu
   export DEP_OPTS="NO_UPNP=1 DEBUG=1"
-  export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks --enable-c++17 --with-sanitizers=undefined"
+  export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks --enable-c++17 --enable-werror --with-sanitizers=undefined"
   export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
   export PYZMQ=true
   export RUN_INTEGRATIONTESTS=false
