@@ -13,8 +13,6 @@
 #include <utility>
 #include <vector>
 
-#ifdef ENABLE_EXTERNAL_SIGNER
-
 bool ExternalSignerScriptPubKeyMan::SetupDescriptor(std::unique_ptr<Descriptor> desc)
 {
     LOCK(cs_desc_man);
@@ -84,5 +82,3 @@ TransactionError ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransact
     FinalizePSBT(psbt); // This won't work in a multisig setup
     return TransactionError::OK;
 }
-
-#endif

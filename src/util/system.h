@@ -140,7 +140,6 @@ std::string ShellEscape(const std::string& arg);
 #if HAVE_SYSTEM
 void runCommand(const std::string& strCommand);
 #endif
-#ifdef ENABLE_EXTERNAL_SIGNER
 /**
  * Execute a command which returns JSON, and parse the result.
  *
@@ -149,7 +148,6 @@ void runCommand(const std::string& strCommand);
  * @return parsed JSON
  */
 UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in="");
-#endif // ENABLE_EXTERNAL_SIGNER
 
 /**
  * Most paths passed as configuration arguments are treated as relative to
