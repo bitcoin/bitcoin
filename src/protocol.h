@@ -13,6 +13,7 @@
 #include <netaddress.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
+#include <streams.h>
 #include <uint256.h>
 #include <version.h>
 
@@ -358,6 +359,31 @@ class CAddress : public CService
 {
     static constexpr uint32_t TIME_INIT{100000000};
 
+    /** Historically, CAddress disk serialization stored the CLIENT_VERSION, optionally OR'ed with
+     *  the ADDRV2_FORMAT flag to indicate V2 serialization. The first field has since been
+     *  disentangled from client versioning, and now instead:
+     *  - The low bits (masked by DISK_VERSION_IGNORE_MASK) store the fixed value DISK_VERSION_INIT,
+     *    (in case any code exists that treats it as a client version) but are ignored on
+     *    deserialization.
+     *  - The high bits (masked by ~DISK_VERSION_IGNORE_MASK) store actual serialization information.
+     *    Only 0 or DISK_VERSION_ADDRV2 (equal to the historical ADDRV2_FORMAT) are valid now, and
+     *    any other value triggers a deserialization failure. Other values can be added later if
+     *    needed.
+     *
+     *  For disk deserialization, ADDRV2_FORMAT in the stream version signals that ADDRV2
+     *  deserialization is permitted, but the actual format is determined by the high bits in the
+     *  stored version field. For network serialization, the stream version having ADDRV2_FORMAT or
+     *  not determines the actual format used (as it has no embedded version number).
+     */
+    static constexpr uint32_t DISK_VERSION_INIT{220000};
+    static constexpr uint32_t DISK_VERSION_IGNORE_MASK{0b00000000'00000111'11111111'11111111};
+    /** The version number written in disk serialized addresses to indicate V2 serializations.
+     * It must be exactly 1<<29, as that is the value that historical versions used for this
+     * (they used their internal ADDRV2_FORMAT flag here). */
+    static constexpr uint32_t DISK_VERSION_ADDRV2{1 << 29};
+    static_assert((DISK_VERSION_INIT & ~DISK_VERSION_IGNORE_MASK) == 0, "DISK_VERSION_INIT must be covered by DISK_VERSION_IGNORE_MASK");
+    static_assert((DISK_VERSION_ADDRV2 & DISK_VERSION_IGNORE_MASK) == 0, "DISK_VERSION_ADDRV2 must not be covered by DISK_VERSION_IGNORE_MASK");
+
 public:
     CAddress() : CService{} {};
     CAddress(CService ipIn, ServiceFlags nServicesIn) : CService{ipIn}, nServices{nServicesIn} {};
@@ -365,22 +391,48 @@ public:
 
     SERIALIZE_METHODS(CAddress, obj)
     {
-        SER_READ(obj, obj.nTime = TIME_INIT);
-        int nVersion = s.GetVersion();
+        // CAddress has a distinct network serialization and a disk serialization, but it should never
+        // be hashed (except through CHashWriter in addrdb.cpp, which sets SER_DISK), and it's
+        // ambiguous what that would mean. Make sure no code relying on that is introduced:
+        assert(!(s.GetType() & SER_GETHASH));
+        bool use_v2;
+        bool store_time;
         if (s.GetType() & SER_DISK) {
-            READWRITE(nVersion);
-        }
-        if ((s.GetType() & SER_DISK) ||
-            (nVersion != INIT_PROTO_VERSION && !(s.GetType() & SER_GETHASH))) {
+            // In the disk serialization format, the encoding (v1 or v2) is determined by a flag version
+            // that's part of the serialization itself. ADDRV2_FORMAT in the stream version only determines
+            // whether V2 is chosen/permitted at all.
+            uint32_t stored_format_version = DISK_VERSION_INIT;
+            if (s.GetVersion() & ADDRV2_FORMAT) stored_format_version |= DISK_VERSION_ADDRV2;
+            READWRITE(stored_format_version);
+            stored_format_version &= ~DISK_VERSION_IGNORE_MASK; // ignore low bits
+            if (stored_format_version == 0) {
+                use_v2 = false;
+            } else if (stored_format_version == DISK_VERSION_ADDRV2 && (s.GetVersion() & ADDRV2_FORMAT)) {
+                // Only support v2 deserialization if ADDRV2_FORMAT is set.
+                use_v2 = true;
+            } else {
+                throw std::ios_base::failure("Unsupported CAddress disk format version");
+            }
+            store_time = true;
+        } else {
+            // In the network serialization format, the encoding (v1 or v2) is determined directly by
+            // the value of ADDRV2_FORMAT in the stream version, as no explicitly encoded version
+            // exists in the stream.
+            assert(s.GetType() & SER_NETWORK);
+            use_v2 = s.GetVersion() & ADDRV2_FORMAT;
             // The only time we serialize a CAddress object without nTime is in
             // the initial VERSION messages which contain two CAddress records.
             // At that point, the serialization version is INIT_PROTO_VERSION.
             // After the version handshake, serialization version is >=
             // MIN_PEER_PROTO_VERSION and all ADDR messages are serialized with
             // nTime.
-            READWRITE(obj.nTime);
+            store_time = s.GetVersion() != INIT_PROTO_VERSION;
         }
-        if (nVersion & ADDRV2_FORMAT) {
+
+        SER_READ(obj, obj.nTime = TIME_INIT);
+        if (store_time) READWRITE(obj.nTime);
+        // nServices is serialized as CompactSize in V2; as uint64_t in V1.
+        if (use_v2) {
             uint64_t services_tmp;
             SER_WRITE(obj, services_tmp = obj.nServices);
             READWRITE(Using<CompactSizeFormatter<false>>(services_tmp));
@@ -388,13 +440,22 @@ public:
         } else {
             READWRITE(Using<CustomUintFormatter<8>>(obj.nServices));
         }
-        READWRITEAS(CService, obj);
+        // Invoke V1/V2 serializer for CService parent object.
+        OverrideStream<Stream> os(&s, s.GetType(), use_v2 ? ADDRV2_FORMAT : 0);
+        SerReadWriteMany(os, ser_action, ReadWriteAsHelper<CService>(obj));
     }
 
-    // disk and network only
+    //! Always included in serialization, except in the network format on INIT_PROTO_VERSION.
     uint32_t nTime{TIME_INIT};
-
+    //! Serialized as uint64_t in V1, and as CompactSize in V2.
     ServiceFlags nServices{NODE_NONE};
+
+    friend bool operator==(const CAddress& a, const CAddress& b)
+    {
+        return a.nTime == b.nTime &&
+               a.nServices == b.nServices &&
+               static_cast<const CService&>(a) == static_cast<const CService&>(b);
+    }
 };
 
 /** getdata message type flags */
