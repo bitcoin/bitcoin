@@ -493,6 +493,11 @@ public:
                 200,
                 {AssumeutxoHash{uint256S("0x51c8d11d8b5c1de51543c579736e786aa2736206d1e11e627568029ce092cf62")}, 200},
             },
+            {
+                // For use by test/functional/feature_assumeutxo.py
+                299,
+                {AssumeutxoHash{uint256S("0xef45ccdca5898b6c2145e4581d2b88c56564dd389e4bd75a1aaf6961d3edd3c0")}, 300},
+            },
         };
 
         chainTxData = ChainTxData{
