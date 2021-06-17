@@ -136,8 +136,7 @@ FUZZ_TARGET_DESERIALIZE(partial_merkle_tree_deserialize, {
 FUZZ_TARGET_DESERIALIZE(pub_key_deserialize, {
         CPubKey pub_key;
         DeserializeFromFuzzingInput(buffer, pub_key);
-        // TODO: The following equivalence should hold for CPubKey? Fix.
-        // AssertEqualAfterSerializeDeserialize(pub_key);
+        AssertEqualAfterSerializeDeserialize(pub_key);
 })
 FUZZ_TARGET_DESERIALIZE(script_deserialize, {
         CScript script;
