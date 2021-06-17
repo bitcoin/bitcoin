@@ -55,10 +55,6 @@ if [ ! -e "$CODESIGNATURE_GIT_ARCHIVE" ]; then
 fi
 
 mkdir -p "$OUTDIR"
-cat << EOF > "$OUTDIR"/inputs.SHA256SUMS
-$(sha256sum "$UNSIGNED_TARBALL" | cut -d' ' -f1)  inputs/$(basename "$UNSIGNED_TARBALL")
-$(sha256sum "$CODESIGNATURE_GIT_ARCHIVE" | cut -d' ' -f1)  inputs/$(basename "$CODESIGNATURE_GIT_ARCHIVE")
-EOF
 
 mkdir -p "$DISTSRC"
 (
@@ -103,3 +99,14 @@ mkdir -p "$DISTSRC"
 rm -rf "$ACTUAL_OUTDIR"
 mv --no-target-directory "$OUTDIR" "$ACTUAL_OUTDIR" \
     || ( rm -rf "$ACTUAL_OUTDIR" && exit 1 )
+
+(
+    cd /outdir-base
+    {
+        echo "$UNSIGNED_TARBALL"
+        echo "$CODESIGNATURE_GIT_ARCHIVE"
+        find "$ACTUAL_OUTDIR" -type f
+    } | xargs realpath --relative-base="$PWD" \
+        | xargs sha256sum \
+        | sponge "$ACTUAL_OUTDIR"/SHA256SUMS.part
+)
