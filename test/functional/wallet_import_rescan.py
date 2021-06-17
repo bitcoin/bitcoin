@@ -188,6 +188,10 @@ class ImportRescanTest(BitcoinTestFramework):
                 variant.check(variant.sent_txid, variant.sent_amount, 1)
             else:
                 variant.check()
+        for i, import_node in enumerate(IMPORT_NODES, 2):
+            if import_node.prune:
+                self.stop_node(i, expected_stderr='Warning: You are starting with governance validation disabled. This is expected because you are running a pruned node.')
+
 
 if __name__ == "__main__":
     ImportRescanTest().main()

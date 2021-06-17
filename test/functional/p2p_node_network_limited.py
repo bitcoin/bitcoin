@@ -114,6 +114,8 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
 
         # sync must be possible, node 1 is no longer in IBD and should therefore connect to node 0 (NODE_NETWORK_LIMITED)
         sync_blocks([self.nodes[0], self.nodes[1]])
+        self.stop_node(0, expected_stderr='Warning: You are starting with governance validation disabled. This is expected because you are running a pruned node.')
+
 
 if __name__ == '__main__':
     NodeNetworkLimitedTest().main()
