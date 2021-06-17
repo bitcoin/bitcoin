@@ -190,8 +190,12 @@ def ser_string_vector(l):
     return r
 
 
-# Deserialize from a hex string representation (eg from RPC)
 def from_hex(obj, hex_string):
+    """Deserialize from a hex string representation (e.g. from RPC)
+
+    Note that there is no complementary helper like e.g. `to_hex` for the
+    inverse operation. To serialize a message object to a hex string, simply
+    use obj.serialize().hex()"""
     obj.deserialize(BytesIO(hex_str_to_bytes(hex_string)))
     return obj
 
