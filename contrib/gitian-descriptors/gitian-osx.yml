@@ -29,7 +29,7 @@ packages:
 - "xorriso"
 - "libtinfo5"
 # SYSCOIN
-- "zeromq"
+- "libzmq3-dev"
 remotes:
 - "url": "https://github.com/syscoin/syscoin.git"
   "dir": "syscoin"
