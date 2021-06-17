@@ -504,11 +504,12 @@ static void MutateTxDelOutput(CMutableTransaction& tx, const std::string& strOut
     tx.vout.erase(tx.vout.begin() + outIdx);
 }
 
-static const unsigned int N_SIGHASH_OPTS = 6;
+static const unsigned int N_SIGHASH_OPTS = 7;
 static const struct {
     const char *flagStr;
     int flags;
 } sighashOptions[N_SIGHASH_OPTS] = {
+    {"DEFAULT", SIGHASH_DEFAULT},
     {"ALL", SIGHASH_ALL},
     {"NONE", SIGHASH_NONE},
     {"SINGLE", SIGHASH_SINGLE},

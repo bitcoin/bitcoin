@@ -234,6 +234,10 @@ public:
      *  fail. */
     bool IsFullyValid() const;
 
+    /** Test whether this is the 0 key (the result of default construction). This implies
+     *  !IsFullyValid(). */
+    bool IsNull() const { return m_keydata.IsNull(); }
+
     /** Construct an x-only pubkey from exactly 32 bytes. */
     explicit XOnlyPubKey(Span<const unsigned char> bytes);
 
@@ -311,5 +315,11 @@ public:
     ECCVerifyHandle();
     ~ECCVerifyHandle();
 };
+
+typedef struct secp256k1_context_struct secp256k1_context;
+
+/** Access to the internal secp256k1 context used for verification. Only intended to be used
+ *  by key.cpp. */
+const secp256k1_context* GetVerifyContext();
 
 #endif // SYSCOIN_PUBKEY_H
