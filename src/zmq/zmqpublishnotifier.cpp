@@ -110,7 +110,7 @@ static int zmq_receive_multipart(void *socket, std::vector<std::string>& parts)
 // SYSCOIN
 bool CZMQAbstractPublishNotifier::Initialize(void *pcontext, void *pcontextsub)
 {
-    assert(!psocket && psocketsub);
+    assert(!psocket && !psocketsub);
 
     // check if address is being used by other publish notifier
     std::multimap<std::string, CZMQAbstractPublishNotifier*>::iterator i = mapPublishNotifiers.find(address);
@@ -145,7 +145,7 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext, void *pcontextsub)
         rc = zmq_bind(psocket, address.c_str());
         if (rc != 0)
         {
-            zmqError("Failed to bind address");
+            zmqError("Failed to bind address for publisher");
             zmq_close(psocket);
             return false;
         }
@@ -164,10 +164,10 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext, void *pcontextsub)
             return false;
         }
 
-        rc = zmq_bind(psocketsub, address.c_str());
+        rc = zmq_connect(psocketsub, address.c_str());
         if (rc != 0)
         {
-            zmqError("Failed to bind address");
+            zmqError("Failed to bind address for subscriber");
             zmq_close(psocketsub);
             return false;
         }
