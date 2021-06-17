@@ -61,7 +61,7 @@ bool MutableTransactionSignatureCreator::CreateSchnorrSig(const SigningProvider&
 
     CKey key;
     {
-        // For now, use the old full pubkey-based key derivation logic. As it indexed by
+        // For now, use the old full pubkey-based key derivation logic. As it is indexed by
         // Hash160(full pubkey), we need to try both a version prefixed with 0x02, and one
         // with 0x03.
         unsigned char b[33] = {0x02};
