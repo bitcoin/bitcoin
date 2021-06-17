@@ -753,7 +753,8 @@ static RPCHelpMan signrawtransactionwithkey()
                                 },
                         },
                         },
-                    {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"ALL"}, "The signature hash type. Must be one of:\n"
+                    {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT"}, "The signature hash type. Must be one of:\n"
+            "       \"DEFAULT\"\n"
             "       \"ALL\"\n"
             "       \"NONE\"\n"
             "       \"SINGLE\"\n"
@@ -1655,6 +1656,7 @@ static RPCHelpMan utxoupdatepsbt()
     }
 
     // Fill the inputs
+    const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
         PSBTInput& input = psbtx.inputs.at(i);
 
@@ -1671,7 +1673,7 @@ static RPCHelpMan utxoupdatepsbt()
         // Update script/keypath information using descriptor data.
         // Note that SignPSBTInput does a lot more than just constructing ECDSA signatures
         // we don't actually care about those here, in fact.
-        SignPSBTInput(public_provider, psbtx, i, /* sighash_type */ 1);
+        SignPSBTInput(public_provider, psbtx, i, &txdata, /* sighash_type */ 1);
     }
 
     // Update script/keypath information using descriptor data.
