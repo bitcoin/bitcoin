@@ -7,28 +7,19 @@
 #endif
 
 #include <arith_uint256.h>
+#include <chain.h>
+#include <chainparams.h>
+#include <chainparamsbase.h>
 #include <clientversion.h>
-#include <coins.h>
-#include <consensus/consensus.h>
 #include <core_io.h>
-#include <key_io.h>
-#include <policy/rbf.h>
-#include <primitives/transaction.h>
-#include <script/script.h>
-#include <script/sign.h>
-#include <script/signingprovider.h>
-#include <univalue.h>
-#include <util/moneystr.h>
-#include <util/rbf.h>
-#include <util/strencodings.h>
-#include <util/string.h>
+#include <streams.h>
 #include <util/system.h>
 #include <util/translation.h>
 
 #include <atomic>
+#include <cstdio>
 #include <functional>
 #include <memory>
-#include <stdio.h>
 #include <thread>
 
 #include <boost/algorithm/string.hpp>
