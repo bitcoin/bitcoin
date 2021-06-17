@@ -262,6 +262,9 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
             return false;
         }
     }
+    if (block.vtx.empty() || !block.vtx[0]->IsCoinBase()) {
+        return false;
+    }
     return true;
 }
 

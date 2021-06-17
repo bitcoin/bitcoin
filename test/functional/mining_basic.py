@@ -129,10 +129,12 @@ class MiningTest(SyscoinTestFramework):
         bad_block = copy.deepcopy(block)
         bad_block.vtx[0].vin[0].prevout.hash += 1
         bad_block.vtx[0].rehash()
-        assert_template(node, bad_block, 'bad-cb-missing')
+        # SYSCOIN
+        assert_raises_rpc_error(-22, "Block decode failed", assert_template, node, bad_block, None)
 
         self.log.info("submitblock: Test invalid coinbase transaction")
-        assert_raises_rpc_error(-22, "Block does not start with a coinbase", node.submitblock, bad_block.serialize().hex())
+        # SYSCOIN
+        assert_raises_rpc_error(-22, "Block decode failed", node.submitblock, bad_block.serialize().hex())
 
         self.log.info("getblocktemplate: Test truncated final transaction")
         assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {
