@@ -98,7 +98,7 @@ class TestSymbolChecks(unittest.TestCase):
 
         self.assertEqual(call_symbol_check(cc, source, executable, ['-lexpat']),
             (1, 'libexpat.1.dylib is not in ALLOWED_LIBRARIES!\n' +
-                executable + ': failed DYNAMIC_LIBRARIES'))
+                f'{executable}: failed DYNAMIC_LIBRARIES MIN_OS SDK'))
 
         source = 'test2.c'
         executable = 'test2'
@@ -114,7 +114,20 @@ class TestSymbolChecks(unittest.TestCase):
         ''')
 
         self.assertEqual(call_symbol_check(cc, source, executable, ['-framework', 'CoreGraphics']),
-                (0, ''))
+                (1, f'{executable}: failed MIN_OS SDK'))
+
+        source = 'test3.c'
+        executable = 'test3'
+        with open(source, 'w', encoding="utf8") as f:
+            f.write('''
+                int main()
+                {
+                    return 0;
+                }
+        ''')
+
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-mmacosx-version-min=10.14']),
+                (1, f'{executable}: failed SDK'))
 
     def test_PE(self):
         source = 'test1.c'
@@ -132,12 +145,26 @@ class TestSymbolChecks(unittest.TestCase):
                 }
         ''')
 
-        self.assertEqual(call_symbol_check(cc, source, executable, ['-lpdh']),
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-lpdh', '-Wl,--major-subsystem-version', '-Wl,6', '-Wl,--minor-subsystem-version', '-Wl,1']),
             (1, 'pdh.dll is not in ALLOWED_LIBRARIES!\n' +
                  executable + ': failed DYNAMIC_LIBRARIES'))
 
         source = 'test2.c'
         executable = 'test2.exe'
+
+        with open(source, 'w', encoding="utf8") as f:
+            f.write('''
+                int main()
+                {
+                    return 0;
+                }
+        ''')
+
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-Wl,--major-subsystem-version', '-Wl,9', '-Wl,--minor-subsystem-version', '-Wl,9']),
+            (1, executable + ': failed SUBSYSTEM_VERSION'))
+
+        source = 'test3.c'
+        executable = 'test3.exe'
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
                 #include <windows.h>
@@ -149,7 +176,7 @@ class TestSymbolChecks(unittest.TestCase):
                 }
         ''')
 
-        self.assertEqual(call_symbol_check(cc, source, executable, ['-lole32']),
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-lole32', '-Wl,--major-subsystem-version', '-Wl,6', '-Wl,--minor-subsystem-version', '-Wl,1']),
                 (0, ''))
 
 

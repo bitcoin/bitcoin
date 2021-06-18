@@ -214,6 +214,18 @@ def check_MACHO_libraries(filename) -> bool:
             ok = False
     return ok
 
+def check_MACHO_min_os(filename) -> bool:
+    binary = lief.parse(filename)
+    if binary.build_version.minos == [10,14,0]:
+        return True
+    return False
+
+def check_MACHO_sdk(filename) -> bool:
+    binary = lief.parse(filename)
+    if binary.build_version.sdk == [10, 15, 6]:
+        return True
+    return False
+
 def check_PE_libraries(filename) -> bool:
     ok: bool = True
     binary = lief.parse(filename)
@@ -223,6 +235,14 @@ def check_PE_libraries(filename) -> bool:
             ok = False
     return ok
 
+def check_PE_subsystem_version(filename) -> bool:
+    binary = lief.parse(filename)
+    major: int = binary.optional_header.major_subsystem_version
+    minor: int = binary.optional_header.minor_subsystem_version
+    if major == 6 and minor == 1:
+        return True
+    return False
+
 CHECKS = {
 'ELF': [
     ('IMPORTED_SYMBOLS', check_imported_symbols),
@@ -230,10 +250,13 @@ CHECKS = {
     ('LIBRARY_DEPENDENCIES', check_ELF_libraries)
 ],
 'MACHO': [
-    ('DYNAMIC_LIBRARIES', check_MACHO_libraries)
+    ('DYNAMIC_LIBRARIES', check_MACHO_libraries),
+    ('MIN_OS', check_MACHO_min_os),
+    ('SDK', check_MACHO_sdk),
 ],
 'PE' : [
-    ('DYNAMIC_LIBRARIES', check_PE_libraries)
+    ('DYNAMIC_LIBRARIES', check_PE_libraries),
+    ('SUBSYSTEM_VERSION', check_PE_subsystem_version),
 ]
 }
 
