@@ -130,7 +130,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
     bool fDIP0003Active_context = nHeight >= chainparams.GetConsensus().DIP0003Height;
-    bool NEVMActive_context = nHeight >= chainparams.GetConsensus().nNEVMStartBlock;
+    bool NEVMActive_context = nHeight >= chainparams.GetConsensus().nNEVMStartBlock && chainparams.GetConsensus().nNEVMEnforce;
     if(nHeight >= chainparams.GetConsensus().nUTXOAssetsBlock) {
         const int32_t nChainId = chainparams.GetConsensus ().nAuxpowChainId;
         const int32_t nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());

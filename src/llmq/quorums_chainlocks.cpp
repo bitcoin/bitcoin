@@ -311,18 +311,7 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
         ProcessNewChainLock(pfrom->GetId(), clsig, hash);
     }
 }
-// walk through ancestors and remove NEVM block data since chainlocked block ancestors wouldn't need to reverify evm data
-void CChainLocksHandler::PruneNEVMData(CBlockIndex* pindex) {
-    while (pindex != nullptr) {
-        if (!pindex->vchNEVMBlockData.empty()) {
-            setDirtyBlockIndex.insert(pindex);
-            pindex->vchNEVMBlockData.clear();
-        } else {
-            break;
-        }
-        pindex = pindex->pprev;
-    }
-}
+
 void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLockSig& clsig, const uint256&hash, const uint256& idIn )
 {
     assert((from == -1) ^ idIn.IsNull());

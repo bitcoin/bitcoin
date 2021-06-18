@@ -590,7 +590,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
         return FormatSyscoinErrorMessage(state, "asset-output-zeroval", bSanityCheck);
     }
     std::vector<uint64_t> vecNFTKeys;
-    if(nHeight >= params.nNEVMStartBlock || fRegTest) {
+    if(nHeight >= params.nNEVMStartBlock) {
         CAssetsSet mapAssetNFTSet;
         for(auto &voutAsset: tx.voutAssets) {
             const uint32_t& nBaseAssetInternal = GetBaseAssetID(voutAsset.key);

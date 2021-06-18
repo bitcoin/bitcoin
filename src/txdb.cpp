@@ -26,7 +26,9 @@ static constexpr uint8_t DB_HEAD_BLOCKS{'H'};
 static constexpr uint8_t DB_FLAG{'F'};
 static constexpr uint8_t DB_REINDEX_FLAG{'R'};
 static constexpr uint8_t DB_LAST_BLOCK{'l'};
-
+// SYSCOIN
+extern int64_t nMaxTipAge;
+extern std::set<CBlockIndex*> setDirtyBlockIndex;
 namespace {
 
 struct CoinEntry {
@@ -222,13 +224,20 @@ void CCoinsViewDBCursor::Next()
     }
 }
 
-bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo) {
+// SYSCOIN
+bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<CBlockIndex*>& blockinfo) {
     CDBBatch batch(*this);
     for (std::vector<std::pair<int, const CBlockFileInfo*> >::const_iterator it=fileInfo.begin(); it != fileInfo.end(); it++) {
         batch.Write(std::make_pair(DB_BLOCK_FILES, it->first), *it->second);
     }
+    // SYSCOIN
+    int64_t nAgeThreshold = nMaxTipAge*2;
+    int64_t nTime = GetTime();
     batch.Write(DB_LAST_BLOCK, nLastFile);
-    for (std::vector<const CBlockIndex*>::const_iterator it=blockinfo.begin(); it != blockinfo.end(); it++) {
+    for (std::vector<CBlockIndex*>::const_iterator it=blockinfo.begin(); it != blockinfo.end(); it++) {
+        if((*it)->nTime < (nTime - nAgeThreshold)) {
+            (*it)->vchNEVMBlockData.clear();
+        }
         batch.Write(std::make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), CDiskBlockIndex(*it));
     }
     return WriteBatch(batch, true);
@@ -251,7 +260,9 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
 
     pcursor->Seek(std::make_pair(DB_BLOCK_INDEX, uint256()));
-
+    // SYSCOIN
+    int64_t nAgeThreshold = nMaxTipAge*2;
+    int64_t nTime = GetTime();
     // Load m_block_index
     while (pcursor->Valid()) {
         if (ShutdownRequested()) return false;
@@ -274,7 +285,15 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
                 // SYSCOIN
-                pindexNew->vchNEVMBlockData = diskindex.vchNEVMBlockData;
+                if(pindexNew->nTime < (nTime - nAgeThreshold)) {
+                    // if block older than tip * 2 has evm block data, don't set the block data on index and mark it as dirty so it will
+                    // get saved without the evm data to disk
+                    if(!diskindex.vchNEVMBlockData.empty()) {
+                        setDirtyBlockIndex.insert(pindexNew);
+                    }
+                } else {
+                    pindexNew->vchNEVMBlockData = diskindex.vchNEVMBlockData;
+                }
 
                /* Syscoin checks the PoW here.  We don't do this because
                    the CDiskBlockIndex does not contain the auxpow.

@@ -169,13 +169,13 @@ static constexpr auto AVG_FEEFILTER_BROADCAST_INTERVAL = 10min;
 /** Maximum feefilter broadcast delay after significant change. */
 // SYSCOIN
 static const unsigned int MAX_HEADERS_SIZE = (6 << 20); // 6 MiB
-static const unsigned int MAX_HEADERS_SIZE_NEVM = (2 << 20); // 2 MiB
+static const unsigned int MAX_HEADERS_SIZE_NEVM = (40 << 20); // 40 MiB
 /** Size of a headers message that is the threshold for assuming that the
  *  peer has more headers (even if we have less than MAX_HEADERS_RESULTS).
  *  This is used starting with SIZE_HEADERS_LIMIT_VERSION peers.
  */
 static const unsigned int THRESHOLD_HEADERS_SIZE = (4 << 20); // 4 MiB
-static const unsigned int THRESHOLD_HEADERS_SIZE_NEVM = (1 << 20); // 1 MiB
+static const unsigned int THRESHOLD_HEADERS_SIZE_NEVM = (32 << 20); //  32 MiB
 static constexpr auto MAX_FEEFILTER_CHANGE_DELAY = 5min;
 /** Maximum number of compact filters that may be requested with one getcfilters. See BIP 157. */
 static constexpr uint32_t MAX_GETCFILTERS_SIZE = 1000;
@@ -1872,6 +1872,13 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus()), false) {
             assert(!"cannot load block from disk");
         }
+        // SYSCOIN if block is older than max tip age we shouldn't need to send evm block data
+        int64_t nAgeThreshold = nMaxTipAge;
+        int64_t nTime = GetTime();
+        if (!pblockRead->vchNEVMBlockData.empty() && pindex->GetBlockTime() < (nTime - nAgeThreshold)) {
+            LogPrint(BCLog::NET, "blockrequest clear evm data since blocktime %lld is before threshold %lld\n", pindex->GetBlockTime(),(nTime - nAgeThreshold)); 
+            pblockRead->vchNEVMBlockData.clear();
+        }
         pblock = pblockRead;
     }
     if (pblock) {
@@ -3374,13 +3381,21 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         std::vector<CBlock> vHeaders;
         unsigned nCount = 0;
         unsigned nSize = 0;
+        // SYSCOIN
         unsigned nSizeNEVM = 0;
+        int64_t nAgeThreshold = nMaxTipAge;
+        int64_t nTime = GetTime();
         LogPrint(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
         for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex))
         {
-            const CBlockHeader header = pindex->GetBlockHeader(m_chainparams.GetConsensus(), false);
-            ++nCount;
             // SYSCOIN
+            CBlockHeader header = pindex->GetBlockHeader(m_chainparams.GetConsensus(), false);
+            ++nCount;
+            // SYSCOIN skip nevm data if block is older than age threshold
+            if (!header.vchNEVMBlockData.empty() && pindex->GetBlockTime() < (nTime - nAgeThreshold)) {
+                 LogPrint(BCLog::NET, "getheaders clear evm data since blocktime %lld is before threshold %lld\n", pindex->GetBlockTime(),(nTime - nAgeThreshold)); 
+                 header.vchNEVMBlockData.clear();
+            }
             nSize += GetSerializeSize(header, PROTOCOL_VERSION);
             nSizeNEVM += header.vchNEVMBlockData.size();
             vHeaders.push_back(header);
@@ -4835,6 +4850,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             // add all to the inv queue.
             LOCK(peer->m_block_inv_mutex);
             std::vector<CBlock> vHeaders;
+            // SYSCOIN
+            int64_t nAgeThreshold = nMaxTipAge;
+            int64_t nTime = GetTime();
             bool fRevertToInv = ((!state.fPreferHeaders &&
                                  (!state.fPreferHeaderAndIDs || peer->m_blocks_for_headers_relay.size() > 1)) ||
                                  peer->m_blocks_for_headers_relay.size() > MAX_BLOCKS_TO_ANNOUNCE);
@@ -4849,6 +4867,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 for (const uint256& hash : peer->m_blocks_for_headers_relay) {
                     const CBlockIndex* pindex = m_chainman.m_blockman.LookupBlockIndex(hash);
                     assert(pindex);
+                    // SYSCOIN skip nevm data if block is older than age threshold
+                    CBlockHeader header = pindex->GetBlockHeader(consensusParams, false);
+                    if (!header.vchNEVMBlockData.empty() && pindex->GetBlockTime() < (nTime - nAgeThreshold)) {
+                        LogPrint(BCLog::NET, "initial getheaders clear evm data since blocktime %lld is before threshold %lld\n", pindex->GetBlockTime(),(nTime - nAgeThreshold)); 
+                        header.vchNEVMBlockData.clear();
+                    }
                     if (m_chainman.ActiveChain()[pindex->nHeight] != pindex) {
                         // Bail out if we reorged away from this block
                         fRevertToInv = true;
@@ -4871,15 +4895,15 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     }
                     pBestIndex = pindex;
                     if (fFoundStartingHeader) {
-                        // add this to the headers message
-                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams, false));
+                        // SYSCOIN add this to the headers message
+                        vHeaders.push_back(header);
                     } else if (PeerHasHeader(&state, pindex)) {
                         continue; // keep looking for the first new block
                     } else if (pindex->pprev == nullptr || PeerHasHeader(&state, pindex->pprev)) {
-                        // Peer doesn't have this header but they do have the prior one.
+                        // SYSCOIN Peer doesn't have this header but they do have the prior one.
                         // Start sending headers.
                         fFoundStartingHeader = true;
-                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams, false));
+                        vHeaders.push_back(header);
                     } else {
                         // Peer doesn't have this header or the prior one -- nothing will
                         // connect, so bail out.

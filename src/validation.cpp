@@ -1759,6 +1759,32 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
+// walk through ancestors and remove NEVM block data since chainlocked block ancestors wouldn't need to reverify evm data
+void PruneNEVMData(CBlockIndex* pindex) {
+    // go back MAX_TIP_AGE*2 blocks back and add to dirty index to clear vchNEVMBlockData
+    int64_t nAgeThreshold = nMaxTipAge*2;
+    int64_t nCount = 0;
+    int64_t nTime = GetTime();
+    while (pindex != nullptr) {
+        if (pindex->GetBlockTime() >= (nTime - nAgeThreshold)) {
+             pindex = pindex->pprev;
+        }
+        else {
+            break;
+        }
+    }
+    // go back further MAX_TIP_AGE*2 blocks and mark all indexes that have evm blocks as dirty, should get cleaned up when storing to disk
+    while (pindex != nullptr) {
+        nCount++;
+        if (!pindex->vchNEVMBlockData.empty()) {
+            setDirtyBlockIndex.insert(pindex);
+        }
+        if(nCount >= nAgeThreshold) {
+            break;
+        }
+        pindex = pindex->pprev;
+    }
+}
 bool GetNEVMData(const CBlock& block, CNEVMBlock &evmBlock) {
     std::vector<unsigned char> vchData;
 	int nOut;
@@ -1784,9 +1810,12 @@ bool ConnectNEVMCommitment(NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, c
         LogPrint(BCLog::SYS,"ConnectNEVMCommitment: Cannot unserialize NEVM data\n");
         return false;
     }
-    evmBlock.vchNEVMBlockData = block.vchNEVMBlockData;
     // wait for nevm response if IBD or if block doesn't exist in our txroot db
-    const bool bWaitForResponse = !fImporting && !fReindex && !fInitialDownload && !pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash);
+    const bool bWaitForResponse = !fInitialDownload && !pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash);
+    // if we should be waiting for response and this block comes in from RPC/P2P, we should send nevm block data to Geth
+    if(bWaitForResponse) {
+        evmBlock.vchNEVMBlockData = block.vchNEVMBlockData;
+    }
     bool res = GetMainSignals().NotifyEVMBlockConnect(evmBlock, nBlockHash, bWaitForResponse);
     if(res) {
         NEVMTxRoot txRootDB;
@@ -1880,7 +1909,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             // At this point, all of txundo.vprevout should have been moved out.
         }
     } 
-    if(pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(vecNEVMBlocks, block, block.GetHash())) {
+    if(pindex->nHeight >= params.nNEVMStartBlock && params.nNEVMEnforce && !DisconnectNEVMCommitment(vecNEVMBlocks, block, block.GetHash())) {
         error("DisconnectBlock(): NEVM block failed to disconnect");
         return DISCONNECT_FAILED; 
     }
@@ -2031,20 +2060,20 @@ static int64_t nTimeTotal = 0;
 static int64_t nBlocksTotal = 0;
 // SYSCOIN
 bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                  CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck) {
+                  CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck, bool processNewBlock) {
 
     AssetMap mapAssets;
     NEVMMintTxMap mapMintKeys;
     NEVMTxRootMap mapNEVMTxRoots;
     std::vector<std::pair<uint256, uint32_t> > vecTXIDPairs;
-    return ConnectBlock(block, state, pindex, view, chainparams, fJustCheck, mapAssets, mapMintKeys, mapNEVMTxRoots, vecTXIDPairs);       
+    return ConnectBlock(block, state, pindex, view, chainparams, fJustCheck, mapAssets, mapMintKeys, mapNEVMTxRoots, vecTXIDPairs, processNewBlock);       
 }
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
 bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                   CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck, 
-                  AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMTxRootMap &mapNEVMTxRoots, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs)
+                  AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMTxRootMap &mapNEVMTxRoots, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs, bool processNewBlock)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -2236,7 +2265,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal");
             }
         }
-        if (pindex->nHeight >= params.nNEVMStartBlock && !ConnectNEVMCommitment(mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd)) {
+        if (pindex->nHeight >= params.nNEVMStartBlock && params.nNEVMEnforce && !ConnectNEVMCommitment(mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd && processNewBlock)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-evm-blk");
         }
 
@@ -2452,7 +2481,8 @@ bool CChainState::FlushStateToDisk(
                     vFiles.push_back(std::make_pair(*it, &vinfoBlockFile[*it]));
                     setDirtyFileInfo.erase(it++);
                 }
-                std::vector<const CBlockIndex*> vBlocks;
+                // SYSCOIN
+                std::vector<CBlockIndex*> vBlocks;
                 vBlocks.reserve(setDirtyBlockIndex.size());
                 for (std::set<CBlockIndex*>::iterator it = setDirtyBlockIndex.begin(); it != setDirtyBlockIndex.end(); ) {
                     vBlocks.push_back(*it);
@@ -2702,7 +2732,8 @@ public:
  *
  * The block is added to connectTrace if connection succeeds.
  */
-bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions &disconnectpool)
+// SYSCOIN
+bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions &disconnectpool, bool processNewBlock)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(m_mempool.cs);
@@ -2734,7 +2765,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
         auto dbTx = evoDb->BeginTransaction();
 
         CCoinsViewCache view(&CoinsTip());
-        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, false, mapAssets, mapMintKeys, mapNEVMTxRoots, vecTXIDPairs);
+        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, false, mapAssets, mapMintKeys, mapNEVMTxRoots, vecTXIDPairs, processNewBlock);
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
@@ -2861,7 +2892,7 @@ void CChainState::PruneBlockIndexCandidates() {
  *
  * @returns true unless a system error occurred
  */
-bool CChainState::ActivateBestChainStep(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace)
+bool CChainState::ActivateBestChainStep(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace, bool processNewBlock)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(m_mempool.cs);
@@ -2906,7 +2937,8 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, const CChai
 
         // Connect new blocks.
         for (CBlockIndex* pindexConnect : reverse_iterate(vpindexToConnect)) {
-            if (!ConnectTip(state, chainparams, pindexConnect, pindexConnect == pindexMostWork ? pblock : std::shared_ptr<const CBlock>(), connectTrace, disconnectpool)) {
+            // SYSCOIN
+            if (!ConnectTip(state, chainparams, pindexConnect, pindexConnect == pindexMostWork ? pblock : std::shared_ptr<const CBlock>(), connectTrace, disconnectpool, processNewBlock)) {
                 if (state.IsInvalid()) {
                     // The block violates a consensus rule.
                     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
@@ -3031,7 +3063,8 @@ bool CChainState::ActivateBestChain(BlockValidationState &state, const CChainPar
 
                 bool fInvalidFound = false;
                 std::shared_ptr<const CBlock> nullBlockPtr;
-                if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connectTrace)) {
+                // SYSCOIN
+                if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connectTrace, pblock? true: false)) {
                     // A system error occurred
                     return false;
                 }
@@ -3848,7 +3881,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     return true;
 }
 
-bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex)
+bool BlockManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& block, BlockValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex)
 {
     AssertLockHeld(cs_main);
     // Check for duplicate
@@ -3941,6 +3974,10 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
             AddToBlockIndex(block, BLOCK_CONFLICT_CHAINLOCK);
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-chainlock");
         }
+        // if not initial download, blocks should have nevm data present in header
+        if((pindexPrev->nHeight+1) >= chainparams.GetConsensus().nNEVMStartBlock && chainparams.GetConsensus().nNEVMEnforce && !ibd && block.vchNEVMBlockData.empty()) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "nevm-data-not-found");
+        }
     }
     CBlockIndex* pindex = AddToBlockIndex(block);
 
@@ -3957,11 +3994,13 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
 bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, BlockValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex)
 {
     AssertLockNotHeld(cs_main);
+    const bool ibd = ActiveChainstate().IsInitialBlockDownload();
     {
         LOCK(cs_main);
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
-            bool accepted = m_blockman.AcceptBlockHeader(
+            // SYSCOIN
+            bool accepted = m_blockman.AcceptBlockHeader(ibd,
                 header, state, chainparams, &pindex);
             ActiveChainstate().CheckBlockIndex(chainparams.GetConsensus());
 
@@ -3974,7 +4013,7 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
         }
     }
     if (NotifyHeaderTip(ActiveChainstate())) {
-        if (ActiveChainstate().IsInitialBlockDownload() && ppindex && *ppindex) {
+        if (ibd && ppindex && *ppindex) {
             LogPrintf("Synchronizing blockheaders, height: %d (~%.2f%%)\n", (*ppindex)->nHeight, 100.0/((*ppindex)->nHeight+(GetAdjustedTime() - (*ppindex)->GetBlockTime()) / Params().GetConsensus().nPowTargetSpacing) * (*ppindex)->nHeight);
         }
     }
@@ -3991,8 +4030,9 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
-
-    bool accepted_header = m_blockman.AcceptBlockHeader(block, state, chainparams, &pindex);
+    // SYSCOIN
+    bool ibd = IsInitialBlockDownload();
+    bool accepted_header = m_blockman.AcceptBlockHeader(ibd && fNewBlock, block, state, chainparams, &pindex);
     CheckBlockIndex(chainparams.GetConsensus());
 
     if (!accepted_header)
@@ -4041,7 +4081,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)
-    if (!IsInitialBlockDownload() && m_chain.Tip() == pindex->pprev)
+    if (!ibd && m_chain.Tip() == pindex->pprev)
         GetMainSignals().NewPoWValidBlock(pindex, pblock);
 
     // Write block to history file
@@ -4132,7 +4172,7 @@ bool TestBlockValidity(BlockValidationState& state,
         return error("%s: Consensus::CheckBlock: %s", __func__, state.ToString());
     if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.ToString());
-    if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
+    if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true, true))
         return false;
     assert(state.IsValid());
 

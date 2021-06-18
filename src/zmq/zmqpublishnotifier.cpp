@@ -254,13 +254,10 @@ bool CZMQAbstractPublishNotifier::ReceiveZmqMessage(std::vector<std::string>& pa
 }
 bool CZMQPublishEVMNotifier::NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, const uint256& nSYSBlockHash, const bool bWaitForResponse)
 {
-    if(bWaitForResponse && evmBlock.vchNEVMBlockData.empty()) {
-        return false;
-    }
     std::vector<std::string> parts;
     uint256 hash = evmBlock.nBlockHash;
     LogPrint(BCLog::ZMQ, "zmq: Publish evm block connect %s to %s\n", hash.GetHex(), this->address);
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << evmBlock << nSYSBlockHash;
     if(!SendZmqMessage(MSG_NEVMBLOCKCONNECT, &(*ss.begin()), ss.size()))
         return false;
