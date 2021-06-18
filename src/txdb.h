@@ -70,28 +70,6 @@ public:
     void ResizeCache(size_t new_cache_size) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
-/** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */
-class CCoinsViewDBCursor: public CCoinsViewCursor
-{
-public:
-    CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256 &hashBlockIn):
-        CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) {}
-    ~CCoinsViewDBCursor() {}
-
-    bool GetKey(COutPoint &key) const override;
-    bool GetValue(Coin &coin) const override;
-    unsigned int GetValueSize() const override;
-
-    bool Valid() const override;
-    void Next() override;
-
-private:
-    std::unique_ptr<CDBIterator> pcursor;
-    std::pair<char, COutPoint> keyTmp;
-
-    friend class CCoinsViewDB;
-};
-
 /** Access to the block database (blocks/index/) */
 class CBlockTreeDB : public CDBWrapper
 {
