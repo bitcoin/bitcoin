@@ -114,7 +114,9 @@ BOOST_FIXTURE_TEST_CASE(extractblockinfo_test, E2eFixture)
     JSONRPCRequest request;
     request.strMethod = std::move("extractblockinfo");
     request.params = UniValue(UniValue::VARR);
-    request.params.push_back(altintegration::SerializeToHex(pubData));
+    UniValue data(UniValue::VARR);
+    data.push_back(altintegration::SerializeToHex(pubData));
+    request.params.push_back(data);
     request.fHelp = false;
 
     if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
@@ -131,11 +133,11 @@ BOOST_FIXTURE_TEST_CASE(extractblockinfo_test, E2eFixture)
         BOOST_CHECK(altintegration::DeserializeFromVbkEncoding(stream, container, state));
     }
 
-    BOOST_CHECK_EQUAL(result["hash"].get_str(), HexStr(tip->GetBlockHash()));
-    BOOST_CHECK_EQUAL(result["height"].get_int64(), tip->nHeight);
-    BOOST_CHECK_EQUAL(result["previousHash"].get_str(), HexStr(tip->GetBlockHeader().hashPrevBlock));
-    BOOST_CHECK_EQUAL(result["previousKeystone"].get_str(), HexStr(container.keystones.firstPreviousKeystone));
-    BOOST_CHECK_EQUAL(result["secondPreviousKeystone"].get_str(), HexStr(container.keystones.secondPreviousKeystone));
+    BOOST_CHECK_EQUAL(result[0]["hash"].get_str(), tip->GetBlockHash().GetHex());
+    BOOST_CHECK_EQUAL(result[0]["height"].get_int64(), tip->nHeight);
+    BOOST_CHECK_EQUAL(result[0]["previousHash"].get_str(), tip->GetBlockHeader().hashPrevBlock.GetHex());
+    BOOST_CHECK_EQUAL(result[0]["previousKeystone"].get_str(), uint256(container.keystones.firstPreviousKeystone).GetHex());
+    BOOST_CHECK_EQUAL(result[0]["secondPreviousKeystone"].get_str(), uint256(container.keystones.secondPreviousKeystone).GetHex());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -20,10 +20,13 @@ using altintegration::StoredBlockIndex;
 using altintegration::VbkBlock;
 
 constexpr const char DB_BTC_BLOCK = 'Q';
+constexpr const char DB_BTC_PREV_BLOCK = 'R';
 constexpr const char DB_BTC_TIP = 'q';
 constexpr const char DB_VBK_BLOCK = 'W';
+constexpr const char DB_VBK_PREV_BLOCK = 'T';
 constexpr const char DB_VBK_TIP = 'w';
 constexpr const char DB_ALT_BLOCK = 'E';
+constexpr const char DB_ALT_PREV_BLOCK = 'Y';
 constexpr const char DB_ALT_TIP = 'e';
 
 template <typename BlockT>
@@ -46,31 +49,53 @@ inline std::pair<char, std::string> tip_key<AltBlock>()
 }
 
 template <typename BlockT>
-std::pair<char, typename BlockT::prev_hash_t> block_key(const typename BlockT::prev_hash_t& hash);
+std::pair<char, typename BlockT::hash_t> block_key(const typename BlockT::hash_t& hash);
 
 
 template <>
-inline std::pair<char, typename BtcBlock::prev_hash_t> block_key<BtcBlock>(const typename BtcBlock::prev_hash_t& hash)
+inline std::pair<char, typename BtcBlock::hash_t> block_key<BtcBlock>(const typename BtcBlock::hash_t& hash)
 {
     return std::make_pair(DB_BTC_BLOCK, hash);
 }
 
 template <>
-inline std::pair<char, typename VbkBlock::prev_hash_t> block_key<VbkBlock>(const typename VbkBlock::prev_hash_t& hash)
+inline std::pair<char, typename VbkBlock::hash_t> block_key<VbkBlock>(const typename VbkBlock::hash_t& hash)
 {
     return std::make_pair(DB_VBK_BLOCK, hash);
 }
 
 template <>
-inline std::pair<char, typename AltBlock::prev_hash_t> block_key<AltBlock>(const typename AltBlock::prev_hash_t& hash)
+inline std::pair<char, typename AltBlock::hash_t> block_key<AltBlock>(const typename AltBlock::hash_t& hash)
 {
     return std::make_pair(DB_ALT_BLOCK, hash);
+}
+
+template <typename BlockT>
+std::pair<char, typename BlockT::prev_hash_t> block_prev_key(const typename BlockT::prev_hash_t& hash);
+
+
+template <>
+inline std::pair<char, typename BtcBlock::prev_hash_t> block_prev_key<BtcBlock>(const typename BtcBlock::prev_hash_t& hash)
+{
+    return std::make_pair(DB_BTC_PREV_BLOCK, hash);
+}
+
+template <>
+inline std::pair<char, typename VbkBlock::prev_hash_t> block_prev_key<VbkBlock>(const typename VbkBlock::prev_hash_t& hash)
+{
+    return std::make_pair(DB_VBK_PREV_BLOCK, hash);
+}
+
+template <>
+inline std::pair<char, typename AltBlock::prev_hash_t> block_prev_key<AltBlock>(const typename AltBlock::prev_hash_t& hash)
+{
+    return std::make_pair(DB_ALT_PREV_BLOCK, hash);
 }
 
 
 template <typename BlockT>
 struct BlockIterator : public altintegration::BlockIterator<BlockT> {
-    using hash_t = typename BlockT::prev_hash_t;
+    using hash_t = typename BlockT::hash_t;
 
     ~BlockIterator() override = default;
 
@@ -133,22 +158,25 @@ struct BlockReader : public altintegration::BlockReader {
         return db->Read(tip_key<BtcBlock>(), out);
     }
 
-    bool getBlock(const AltBlock::prev_hash_t& hash,
+    bool getBlock(const AltBlock::prev_hash_t& prev_hash,
         StoredBlockIndex<AltBlock>& out) const override
     {
-        return db->Read(block_key<AltBlock>(hash), out);
+        AltBlock::hash_t hash;
+        return db->Read(block_prev_key<AltBlock>(prev_hash), hash) && db->Read(block_key<AltBlock>(hash), out);
     }
 
-    bool getBlock(const VbkBlock::prev_hash_t& hash,
+    bool getBlock(const VbkBlock::prev_hash_t& prev_hash,
         StoredBlockIndex<VbkBlock>& out) const override
     {
-        return db->Read(block_key<VbkBlock>(hash), out);
+        VbkBlock::hash_t hash;
+        return db->Read(block_prev_key<VbkBlock>(prev_hash), hash) && db->Read(block_key<VbkBlock>(hash), out);
     }
 
-    bool getBlock(const BtcBlock::prev_hash_t& hash,
+    bool getBlock(const BtcBlock::prev_hash_t& prev_hash,
         StoredBlockIndex<BtcBlock>& out) const override
     {
-        return db->Read(block_key<BtcBlock>(hash), out);
+        BtcBlock::hash_t hash;
+        return db->Read(block_prev_key<BtcBlock>(prev_hash), hash) && db->Read(block_key<BtcBlock>(hash), out);
     }
 
     std::shared_ptr<altintegration::BlockIterator<AltBlock>> getAltBlockIterator() const override
@@ -177,22 +205,22 @@ struct BlockBatch : public altintegration::BlockBatch {
 
     BlockBatch(CDBBatch& batch) : batch_(&batch) {}
 
-    void writeBlock(const AltBlock::prev_hash_t& hash, const StoredBlockIndex<AltBlock>& value) override
+    void writeBlock(const AltBlock::hash_t& hash, const AltBlock::prev_hash_t& prev_hash, const StoredBlockIndex<AltBlock>& value) override
     {
-        auto key = block_key<AltBlock>(hash);
-        batch_->Write(key, value);
+        batch_->Write(block_prev_key<AltBlock>(prev_hash), hash);
+        batch_->Write(block_key<AltBlock>(hash), value);
     }
 
-    void writeBlock(const VbkBlock::prev_hash_t& hash, const StoredBlockIndex<VbkBlock>& value) override
+    void writeBlock(const VbkBlock::hash_t& hash, const VbkBlock::prev_hash_t& prev_hash, const StoredBlockIndex<VbkBlock>& value) override
     {
-        auto key = block_key<VbkBlock>(hash);
-        batch_->Write(key, value);
+        batch_->Write(block_prev_key<VbkBlock>(prev_hash), hash);
+        batch_->Write(block_key<VbkBlock>(hash), value);
     }
 
-    void writeBlock(const BtcBlock::prev_hash_t& hash, const StoredBlockIndex<BtcBlock>& value) override
+    void writeBlock(const BtcBlock::hash_t& hash, const BtcBlock::prev_hash_t& prev_hash, const StoredBlockIndex<BtcBlock>& value) override
     {
-        auto key = block_key<BtcBlock>(hash);
-        batch_->Write(key, value);
+        batch_->Write(block_prev_key<BtcBlock>(prev_hash), hash);
+        batch_->Write(block_key<BtcBlock>(hash), value);
     }
 
     void writeTip(const AltBlock::hash_t& hash) override

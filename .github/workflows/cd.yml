@@ -6,6 +6,7 @@ on:
       - master
       - develop
       - release/*
+      - test_deploy
 
   pull_request:
     branches:
