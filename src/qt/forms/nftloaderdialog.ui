@@ -6,148 +6,50 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>641</width>
-    <height>262</height>
+    <width>562</width>
+    <height>441</height>
    </rect>
   </property>
-  <widget class="QLabel" name="aboutLogo">
+  <widget class="QPushButton" name="createAssetClassButton">
    <property name="geometry">
     <rect>
-     <x>270</x>
-     <y>10</y>
-     <width>100</width>
-     <height>100</height>
+     <x>150</x>
+     <y>130</y>
+     <width>121</width>
+     <height>61</height>
     </rect>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="minimumSize">
-    <size>
-     <width>0</width>
-     <height>0</height>
-    </size>
-   </property>
-   <property name="maximumSize">
-    <size>
-     <width>100</width>
-     <height>100</height>
-    </size>
-   </property>
-   <property name="pixmap">
-    <pixmap resource="../bitcoin.qrc">:/icons/dynamo_white</pixmap>
-   </property>
-   <property name="scaledContents">
-    <bool>true</bool>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>160</y>
-     <width>61</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <weight>75</weight>
-     <bold>true</bold>
-    </font>
    </property>
    <property name="text">
-    <string>NFT Hash</string>
+    <string>Create Asset Class</string>
    </property>
   </widget>
-  <widget class="QValidatedLineEdit" name="nftHash">
+  <widget class="QPushButton" name="createAssetButton">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>160</y>
-     <width>521</width>
-     <height>20</height>
+     <x>150</x>
+     <y>210</y>
+     <width>121</width>
+     <height>61</height>
     </rect>
-   </property>
-   <property name="toolTip">
-    <string>The Bitcoin address to send the payment to</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="clearButton">
-   <property name="geometry">
-    <rect>
-     <x>350</x>
-     <y>200</y>
-     <width>75</width>
-     <height>24</height>
-    </rect>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="toolTip">
-    <string>Clear all fields of the form.</string>
    </property>
    <property name="text">
-    <string>Clear &amp;All</string>
-   </property>
-   <property name="icon">
-    <iconset resource="../bitcoin.qrc">
-     <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
-   </property>
-   <property name="autoDefault">
-    <bool>false</bool>
+    <string>Create Asset</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="submitButton">
+  <widget class="QPushButton" name="sendAssetButton">
    <property name="geometry">
     <rect>
-     <x>190</x>
-     <y>200</y>
-     <width>150</width>
-     <height>24</height>
+     <x>300</x>
+     <y>130</y>
+     <width>121</width>
+     <height>61</height>
     </rect>
    </property>
-   <property name="minimumSize">
-    <size>
-     <width>150</width>
-     <height>0</height>
-    </size>
-   </property>
-   <property name="toolTip">
-    <string>Confirm the send action</string>
-   </property>
    <property name="text">
-    <string>S&amp;ubmit</string>
-   </property>
-   <property name="icon">
-    <iconset resource="../bitcoin.qrc">
-     <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
-   </property>
-   <property name="autoDefault">
-    <bool>false</bool>
-   </property>
-   <property name="default">
-    <bool>false</bool>
+    <string>Send Asset</string>
    </property>
   </widget>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QValidatedLineEdit</class>
-   <extends>QLineEdit</extends>
-   <header>qt/qvalidatedlineedit.h</header>
-  </customwidget>
- </customwidgets>
  <resources>
   <include location="../bitcoin.qrc"/>
  </resources>

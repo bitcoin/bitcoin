@@ -15,6 +15,8 @@
 #include <QPoint>
 #include <QVariant>
 
+#include <qt/nftloaderdialogoptions.h>
+
 class PlatformStyle;
 class WalletModel;
 
@@ -39,9 +41,10 @@ public:
     void setModel(WalletModel *model);
 
 public Q_SLOTS:
-    void clear();
-    void reject() override;
-    void accept() override;
+    void on_createAssetClassButton_clicked();
+    void on_createAssetButton_clicked();
+    void on_sendAssetButton_clicked();
+    void CurrentTabSelected(NftLoaderDialogOptions::Tab tab);
 
 private:
     Ui::NftLoaderDialog *ui;
@@ -49,8 +52,6 @@ private:
     QMenu *contextMenu;
     const PlatformStyle *platformStyle;
 
-private Q_SLOTS:
-    void showMenu(const QPoint &point);
 };
 
 #endif // BITCOIN_QT_NftLoaderDialog_H

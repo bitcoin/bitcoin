@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>NftLoaderDialogOptions</class>
+ <widget class="QDialog" name="NftLoaderDialogOptions">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>562</width>
+    <height>442</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>NFT Options</string>
+  </property>
+  <widget class="QTabWidget" name="tabWidget">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>20</y>
+     <width>531</width>
+     <height>401</height>
+    </rect>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="tabCreateAssetClass">
+    <attribute name="title">
+     <string>Create Asset Class</string>
+    </attribute>
+    <widget class="QLineEdit" name="nftCreateAssetClassMetadata">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>50</y>
+       <width>491</width>
+       <height>171</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>The metadata is optional</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>20</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>MetaData</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="nftCreateAssetClassFee">
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>240</y>
+       <width>113</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>The fee is numeric and must be 0 or positive whole number</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>240</y>
+       <width>41</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Fee</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="createAssetClassButton">
+     <property name="geometry">
+      <rect>
+       <x>380</x>
+       <y>240</y>
+       <width>121</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>Open the %1 configuration file from the working directory.</string>
+     </property>
+     <property name="text">
+      <string>Create Asset Class</string>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tabCreateAsset">
+    <attribute name="title">
+     <string>Create Asset</string>
+    </attribute>
+    <widget class="QLabel" name="label_3">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>280</y>
+       <width>41</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Fee</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="nftCreateAssetMetadata">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>50</y>
+       <width>491</width>
+       <height>171</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>The metadata is optional</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="nftCreateAssetFee">
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>280</y>
+       <width>113</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>The fee is numeric and must be 0 or positive whole number</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_4">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>20</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>MetaData</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="createAssetButton">
+     <property name="geometry">
+      <rect>
+       <x>380</x>
+       <y>280</y>
+       <width>121</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>Open the %1 configuration file from the working directory.</string>
+     </property>
+     <property name="text">
+      <string>Create Asset</string>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="nftCreateAssetBinary">
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>240</y>
+       <width>171</width>
+       <height>22</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_5">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>240</y>
+       <width>41</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Binary</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tabSendAsset">
+    <attribute name="title">
+     <string>Send Asset</string>
+    </attribute>
+    <widget class="QComboBox" name="nftSendAssetClassBinary">
+     <property name="geometry">
+      <rect>
+       <x>140</x>
+       <y>40</y>
+       <width>171</width>
+       <height>22</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_6">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>40</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Asset Class</string>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="nftSendAssetBinary">
+     <property name="geometry">
+      <rect>
+       <x>140</x>
+       <y>80</y>
+       <width>171</width>
+       <height>22</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_7">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>80</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Asset</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="nftSendAssetClassAddress">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>130</y>
+       <width>481</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="placeholderText">
+      <string>Enter address </string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="sendAssetButton">
+     <property name="geometry">
+      <rect>
+       <x>190</x>
+       <y>170</y>
+       <width>150</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>150</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="toolTip">
+      <string>Confirm the send action</string>
+     </property>
+     <property name="text">
+      <string>S&amp;end</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../bitcoin.qrc">
+       <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
+     </property>
+     <property name="default">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+ </widget>
+ <resources>
+  <include location="../bitcoin.qrc"/>
+ </resources>
+ <connections/>
+</ui>

@@ -28,6 +28,7 @@
     <ClCompile Include="..\..\src\qt\modaloverlay.cpp" />
     <ClCompile Include="..\..\src\qt\networkstyle.cpp" />
     <ClCompile Include="..\..\src\qt\nftloaderdialog.cpp" />
+    <ClCompile Include="..\..\src\qt\nftloaderdialogoptions.cpp" />
     <ClCompile Include="..\..\src\qt\notificator.cpp" />
     <ClCompile Include="..\..\src\qt\openuridialog.cpp" />
     <ClCompile Include="..\..\src\qt\optionsdialog.cpp" />
@@ -119,6 +120,7 @@
     <ClCompile Include="$(GeneratedFilesOutDir)\rcc\qrc_bitcoin.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\rcc\qrc_bitcoin_locale.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_nftloaderdialog.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_nftloaderdialogoptions.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
@@ -158,6 +160,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\qt\nftloaderdialog.h" />
+    <ClInclude Include="..\..\src\qt\nftloaderdialogoptions.h" />
   </ItemGroup>
   <Target Name="moccode" Inputs="@(QT_MOC)" Outputs="@(QT_MOC->'$(GeneratedFilesOutDir)\%(Filename).moc')">
     <PropertyGroup>

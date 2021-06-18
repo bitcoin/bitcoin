@@ -6,8 +6,8 @@
 
 #include <qt/nftloaderdialog.h>
 #include <qt/forms/ui_nftloaderdialog.h>
+#include <qt/nftloaderdialogoptions.h>
 
-#include <qt/addresstablemodel.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
@@ -29,6 +29,7 @@ NftLoaderDialog::NftLoaderDialog(const PlatformStyle *_platformStyle, QWidget *p
     ui->setupUi(this);
 }
 
+
 void NftLoaderDialog::setModel(WalletModel *_model)
 {
     this->model = _model;
@@ -37,25 +38,30 @@ void NftLoaderDialog::setModel(WalletModel *_model)
 
 NftLoaderDialog::~NftLoaderDialog()
 {
-    return;
+    delete ui;
 }
 
-void NftLoaderDialog::clear()
+void NftLoaderDialog::on_createAssetClassButton_clicked()
 {
-    return;
+    CurrentTabSelected(NftLoaderDialogOptions::TAB_CREATE_ASSET_CLASS);
 }
 
-void NftLoaderDialog::reject()
+void NftLoaderDialog::on_createAssetButton_clicked()
 {
-    return;
+    CurrentTabSelected(NftLoaderDialogOptions::TAB_CREATE_ASSET);
 }
 
-void NftLoaderDialog::accept()
+void NftLoaderDialog::on_sendAssetButton_clicked()
 {
-    return;
+    CurrentTabSelected(NftLoaderDialogOptions::TAB_SEND_ASSET);
 }
 
-void NftLoaderDialog::showMenu(const QPoint &point)
+void NftLoaderDialog::CurrentTabSelected(NftLoaderDialogOptions::Tab tab)
 {
-	return;
+    NftLoaderDialogOptions* dialog = new NftLoaderDialogOptions(this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setModel(model);
+    dialog->setCurrentTab(tab);
+    dialog->show();
 }
+
