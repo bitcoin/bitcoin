@@ -353,12 +353,12 @@ public:
 
 const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR = DummySignatureCreator();
 
-bool IsSolvable(const CKeyStore& store, const CScript& script)
+bool IsSolvable(const SigningProvider& provider, const CScript& script)
 {
     // This check is to make sure that the script we created can actually be solved for and signed by us
     // if we were to have the private keys. This is just to make sure that the script is valid and that,
     // if found in a transaction, we would still accept and relay that transaction.
-    DummySignatureCreator creator(&store);
+    DummySignatureCreator creator(&provider);
     SignatureData sigs;
     if (ProduceSignature(creator, script, sigs)) {
         // VerifyScript check is just defensive, and should never fail.
