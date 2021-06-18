@@ -213,6 +213,7 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    x86_64_linux_STRIP=x86_64-pc-linux-gnu-strip \
                                    qt_config_opts_i686_linux='-platform linux-g++ -xplatform bitcoin-linux-g++' \
                                    qt_config_opts_aarch64_linux='-platform linux-g++ -xplatform bitcoin-linux-g++' \
+                                   AUTOCONFFLAGS="cross_compiling=yes" \
                                    FORCE_USE_SYSTEM_CLANG=1
 
 
