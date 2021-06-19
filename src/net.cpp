@@ -935,7 +935,10 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     const size_t max_protect_by_network{total_protect_size / 2};
     size_t num_protected{0};
 
-    while (num_protected < max_protect_by_network) {
+    // Count the number of disadvantaged networks from which we have peers to protect.
+    auto num_networks = std::count_if(networks.begin(), networks.end(), [](const Net& n) { return n.count; });
+
+    while (num_networks != 0 && num_protected < max_protect_by_network) {
         const size_t disadvantaged_to_protect{max_protect_by_network - num_protected};
         const size_t protect_per_network{
             std::max(disadvantaged_to_protect / networks.size(), static_cast<size_t>(1))};
