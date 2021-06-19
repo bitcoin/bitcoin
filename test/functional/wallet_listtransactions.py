@@ -26,8 +26,6 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.nodes[0].generate(1)  # Get out of IBD
-        self.sync_all()
         # Simple send, 0 to 1:
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
         self.sync_all()
@@ -135,7 +133,6 @@ class ListTransactionsTest(BitcoinTestFramework):
         # Tx2 will build off txid_1, still not opting in to RBF.
         utxo_to_use = get_unconfirmed_utxo_entry(self.nodes[0], txid_1)
         assert_equal(utxo_to_use["safe"], True)
-        utxo_to_use = get_unconfirmed_utxo_entry(self.nodes[1], txid_1)
         utxo_to_use = get_unconfirmed_utxo_entry(self.nodes[1], txid_1)
         assert_equal(utxo_to_use["safe"], False)
 
