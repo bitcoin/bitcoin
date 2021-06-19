@@ -17,14 +17,20 @@ BITCOIND_GROUP=${BITCOIND_GROUP:-bitcoin}
 BITCOIND_BIN=${BITCOIND_BIN:-/usr/bin/bitcoind}
 BITCOIND_NICE=${BITCOIND_NICE:-${NICELEVEL:-0}}
 BITCOIND_OPTS="${BITCOIND_OPTS:-${BITCOIN_OPTS}}"
+: ${BITCOIND_STARTUPFILE:=${BITCOIND_PIDFILE%.pid}.startup}
 
 name="Bitcoin Core Daemon"
 description="Bitcoin cryptocurrency P2P network daemon"
 
-command="/usr/bin/bitcoind"
-command_args="-pid=\"${BITCOIND_PIDFILE}\" \
-		-conf=\"${BITCOIND_CONFIGFILE}\" \
-		-datadir=\"${BITCOIND_DATADIR}\" \
+command="/usr/bin/flock"
+command_args="--no-fork
+		$(/usr/bin/printf '%q' "${BITCOIND_STARTUPFILE}") \
+		/usr/bin/bitcoind
+		$(/usr/bin/printf '%s=%q ' \
+			-pid "${BITCOIND_PIDFILE}" \
+			-conf "${BITCOIND_CONFIGFILE}" \
+			-datadir "${BITCOIND_DATADIR}" \
+			-startupnotify "flock -u 3") \
 		-daemon \
 		${BITCOIND_OPTS}"
 
@@ -32,6 +38,7 @@ required_files="${BITCOIND_CONFIGFILE}"
 start_stop_daemon_args="-u ${BITCOIND_USER} \
 			-N ${BITCOIND_NICE} -w 2000"
 pidfile="${BITCOIND_PIDFILE}"
+in_background_fake="start"
 
 # The retry schedule to use when stopping the daemon. Could be either
 # a timeout in seconds or multiple signal/timeout pairs (like
@@ -47,6 +54,8 @@ depend() {
 # 2) that a directory for the pid exists and is writable
 # 3) ownership and permissions on the config file
 start_pre() {
+	yesno "${IN_BACKGROUND}" && return 0
+
 	checkpath \
 	-d \
 	--mode 0750 \
@@ -65,6 +74,24 @@ start_pre() {
 	${BITCOIND_CONFIGFILE}
 
 	checkconfig || return 1
+}
+
+start_post() {
+	yesno "${IN_BACKGROUND}" && return 0
+
+	# mark service inactive if daemon startup is pending
+	if ! flock -n "${BITCOIND_STARTUPFILE}" true ; then
+		mark_service_inactive
+		# fork into background to await -startupnotify or failure
+		(
+			flock "${BITCOIND_STARTUPFILE}" true
+			if [ -e "${BITCOIND_PIDFILE}" ] ; then
+				IN_BACKGROUND=yes rc-service "${SVCNAME}" --quiet start
+			else
+				rc-service "${SVCNAME}" --quiet zap
+			fi
+		) &
+	fi
 }
 
 checkconfig()
