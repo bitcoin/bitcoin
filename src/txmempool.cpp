@@ -515,7 +515,7 @@ void CTxMemPool::removeForReorg(CChainState& active_chainstate, int flags)
         LockPoints lp = it->GetLockPoints();
         bool validLP =  TestLockPointValidity(active_chainstate.m_chain, &lp);
         CCoinsViewMemPool view_mempool(&active_chainstate.CoinsTip(), *this);
-        if (!CheckFinalTx(active_chainstate.m_chain.Tip(), tx, flags)
+        if (!CheckFinalTx(*active_chainstate.m_chain.Tip(), tx, flags)
             || !CheckSequenceLocks(active_chainstate.m_chain.Tip(), view_mempool, tx, flags, &lp, validLP)) {
             // Note if CheckSequenceLocks fails the LockPoints may still be invalid
             // So it's critical that we remove the tx and not depend on the LockPoints.
