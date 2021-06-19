@@ -102,10 +102,6 @@ host_prefix=$($(host_arch)_$(host_os)_prefix)
 build_prefix=$(host_prefix)/native
 build_host=$(build)
 
-AT_$(V):=
-AT_:=@
-AT:=$(AT_$(V))
-
 all: install
 
 include hosts/$(host_os).mk
@@ -178,12 +174,12 @@ include funcs.mk
 final_build_id_long+=$(shell $(build_SHA256SUM) config.site.in)
 final_build_id+=$(shell echo -n "$(final_build_id_long)" | $(build_SHA256SUM) | cut -c-$(HASH_LENGTH))
 $(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
-	$(AT)rm -rf $(@D)
-	$(AT)mkdir -p $(@D)
-	$(AT)echo copying packages: $^
-	$(AT)echo to: $(@D)
-	$(AT)cd $(@D); $(foreach package,$^, tar xf $($(package)_cached); )
-	$(AT)touch $@
+	rm -rf $(@D)
+	mkdir -p $(@D)
+	echo copying packages: $^
+	echo to: $(@D)
+	cd $(@D); $(foreach package,$^, tar xf $($(package)_cached); )
+	touch $@
 
 # $PATH is not preserved between ./configure and make by convention. Its
 # modification and overriding at ./configure time is (as I understand it)
@@ -210,8 +206,8 @@ $(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
 # we expect them to be available in $PATH at all times, more specificity does
 # not hurt.
 $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_build_id)
-	$(AT)@mkdir -p $(@D)
-	$(AT)sed -e 's|@HOST@|$(host)|' \
+	@mkdir -p $(@D)
+	sed -e 's|@HOST@|$(host)|' \
             -e 's|@CC@|$(host_CC)|' \
             -e 's|@CXX@|$(host_CXX)|' \
             -e 's|@AR@|$(host_AR)|' \
@@ -236,7 +232,7 @@ $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_
             -e 's|@multiprocess@|$(MULTIPROCESS)|' \
             -e 's|@debug@|$(DEBUG)|' \
             $< > $@
-	$(AT)touch $@
+	touch $@
 
 
 define check_or_remove_cached
@@ -285,3 +281,4 @@ $(foreach package,$(all_packages),$(eval $(call ext_add_stages,$(package))))
 
 .PHONY: install cached clean clean-all download-one download-osx download-linux download-win download check-packages check-sources
 .PHONY: FORCE
+$(V).SILENT:
