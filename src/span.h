@@ -117,6 +117,8 @@ public:
      *
      * This implements a subset of the iterator-based std::span constructor in C++20,
      * which is hard to implement without std::address_of.
+     *
+     * The behavior is undefined if [begin, end) is not a valid range
      */
     template <typename T, typename std::enable_if<std::is_convertible<T (*)[], C (*)[]>::value, int>::type = 0>
     CONSTEXPR_IF_NOT_DEBUG Span(T* begin, T* end) noexcept : m_data(begin), m_size(end - begin)
