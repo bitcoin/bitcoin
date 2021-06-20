@@ -1646,13 +1646,8 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
         pindex->phashBlock == nullptr || // this is a new candidate block, eg from TestBlockValidity()
         *pindex->phashBlock != consensusparams.BIP16Exception) // this block isn't the historical exception
     {
-        flags |= SCRIPT_VERIFY_P2SH;
-    }
-
-    // Enforce WITNESS rules whenever P2SH is in effect (and the segwit
-    // deployment is defined).
-    if (flags & SCRIPT_VERIFY_P2SH && DeploymentEnabled(consensusparams, Consensus::DEPLOYMENT_SEGWIT)) {
-        flags |= SCRIPT_VERIFY_WITNESS;
+        // Enforce WITNESS rules whenever P2SH is in effect
+        flags |= SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS;
     }
 
     // Enforce the DERSIG (BIP66) rule
