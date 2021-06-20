@@ -599,7 +599,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-zmqpubrawtxhwm=<n>", strprintf("Set publish raw transaction outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     // SYSCOIN
     argsman.AddArg("-zmqpubnevmblock=<address>", "Enable NEVM block publishing for Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
-    argsman.AddArg("-zmqsubpubnevmblock=<address>", "Enable NEVM block subcribing from Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
+    argsman.AddArg("-zmqsubpubnevmblock=<address>", "Enable NEVM block subscribing from Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubnevmconnect=<address>", "Enable NEVM block connect messages for Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqsubpubnevmconnect=<address>", "Enable NEVM block connect messages from Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubnevmdisconnect=<address>", "Enable NEVM block disconnect messages for Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
