@@ -23,7 +23,7 @@ PATH_BASE_TEST_FUNCTIONAL = os.path.abspath(os.path.join(PATH_BASE_CONTRIB_SIGNE
 sys.path.insert(0, PATH_BASE_TEST_FUNCTIONAL)
 
 from test_framework.blocktools import WITNESS_COMMITMENT_HEADER, script_BIP34_coinbase_height # noqa: E402
-from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, FromHex, deser_string, hash256, ser_compact_size, ser_string, ser_uint256, tx_from_hex, uint256_from_str # noqa: E402
+from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, from_hex, deser_string, hash256, ser_compact_size, ser_string, ser_uint256, tx_from_hex, uint256_from_str # noqa: E402
 from test_framework.script import CScriptOp # noqa: E402
 
 logging.basicConfig(
@@ -37,7 +37,7 @@ RE_MULTIMINER = re.compile("^(\d+)(-(\d+))?/(\d+)$")
 
 # #### some helpers that could go into test_framework
 
-# like FromHex, but without the hex part
+# like from_hex, but without the hex part
 def FromBinary(cls, stream):
     """deserialize a binary stream (or bytes object) into an object"""
     # handle bytes object by turning it into a stream
@@ -195,7 +195,7 @@ def finish_block(block, signet_solution, grind_cmd):
         headhex = CBlockHeader.serialize(block).hex()
         cmd = grind_cmd.split(" ") + [headhex]
         newheadhex = subprocess.run(cmd, stdout=subprocess.PIPE, input=b"", check=True).stdout.strip()
-        newhead = FromHex(CBlockHeader(), newheadhex.decode('utf8'))
+        newhead = from_hex(CBlockHeader(), newheadhex.decode('utf8'))
         block.nNonce = newhead.nNonce
         block.rehash()
     return block

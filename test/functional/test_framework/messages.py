@@ -191,14 +191,14 @@ def ser_string_vector(l):
 
 
 # Deserialize from a hex string representation (eg from RPC)
-def FromHex(obj, hex_string):
+def from_hex(obj, hex_string):
     obj.deserialize(BytesIO(hex_str_to_bytes(hex_string)))
     return obj
 
 
 def tx_from_hex(hex_string):
     """Deserialize from hex string to a transaction object"""
-    return FromHex(CTransaction(), hex_string)
+    return from_hex(CTransaction(), hex_string)
 
 
 # Objects that map to bitcoind objects, which can be serialized/deserialized

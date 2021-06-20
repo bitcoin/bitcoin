@@ -7,7 +7,7 @@
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import (
     CMerkleBlock,
-    FromHex,
+    from_hex,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -94,7 +94,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         assert txid1 in self.nodes[0].verifytxoutproof(proof)
         assert txid2 in self.nodes[1].verifytxoutproof(proof)
 
-        tweaked_proof = FromHex(CMerkleBlock(), proof)
+        tweaked_proof = from_hex(CMerkleBlock(), proof)
 
         # Make sure that our serialization/deserialization is working
         assert txid1 in self.nodes[0].verifytxoutproof(tweaked_proof.serialize().hex())
