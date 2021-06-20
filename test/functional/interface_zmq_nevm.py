@@ -17,9 +17,8 @@ from test_framework.util import (
 from io import BytesIO
 from time import sleep
 from threading import Thread
-done = False
+# these would be handlers for the 3 types of calls from Syscoin on Geth
 def receive_thread_nevmblock(self, subscriber, publisher):
-    global done
     while True:
         try:
             self.log.info('receive_thread_nevmblock waiting to receive...')
@@ -74,7 +73,7 @@ try:
     import zmq
 except ImportError:
     pass
-
+# this simulates the Geth node subscriber, subscribing to Syscoin publisher
 class ZMQSubscriber:
     def __init__(self, socket, topic):
         self.socket = socket
@@ -95,6 +94,7 @@ class ZMQSubscriber:
     def close(self):
         self.socket.close()
 
+# this simulates the Geth node publisher, publishing back to Syscoin subscriber
 class ZMQPublisher:
     def __init__(self, socket):
         self.socket = socket
@@ -123,15 +123,7 @@ class ZMQTest (SyscoinTestFramework):
         self.skip_if_no_syscoind_zmq()
 
     def run_test(self):
-        self.ctx = zmq.Context()
-        self.ctxpub = zmq.Context()
-        try:
-            self.test_basic()
-        finally:
-            # Destroy the ZMQ context.
-            self.log.debug("Destroying ZMQ context")
-            self.ctx.destroy(linger=None)
-            self.ctxpub.destroy(linger=None)
+        self.test_basic()
 
     # Restart node with the specified zmq notifications enabled, subscribe to
     # all of them and return the corresponding ZMQSubscriber objects.
@@ -141,6 +133,7 @@ class ZMQTest (SyscoinTestFramework):
             socket = self.ctx.socket(zmq.SUB)
             subscribers.append(ZMQSubscriber(socket, topic.encode()))
         self.extra_args[0] += ["-zmqpub%s=%s" % (topic, address) for topic, address in services]
+        # publisher on Syscoin can have option to also be a subscriber on another address, related each publisher to a subscriber (in our case we have 3 publisher events that also would subscribe to events on the same topic)
         self.extra_args[0] += ["-zmqsubpub%s=%s" % (topic, address) for topic, address in servicessub]
         self.restart_node(0)
 
@@ -153,6 +146,7 @@ class ZMQTest (SyscoinTestFramework):
 
         return subscribers
 
+    # setup the publisher socket to publish events back to Syscoin from Geth simulated publisher
     def setup_zmq_test_pub(self, address):
         socket = self.ctxpub.socket(zmq.PUB)
         publisher = ZMQPublisher(socket)
@@ -160,6 +154,8 @@ class ZMQTest (SyscoinTestFramework):
         return publisher
 
     def test_basic(self):
+        self.ctx = zmq.Context()
+        self.ctxpub = zmq.Context()
         self.log.info("restarting all nodes except node 0 in nevm mode...")
         for i in range(len(self.nodes)):
             if i > 0:
@@ -171,6 +167,7 @@ class ZMQTest (SyscoinTestFramework):
         self.log.info("setup subscribers...")
         subs = self.setup_zmq_test([(topic, address) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], [(topic, addresspub) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]])
         self.log.info("start node 0 in nevm mode...")
+        # nevm enforcement starts at block 205 (we should be at 200 here), and also it needs this flag passed in on regtest mode to trigger enforcement of nevm
         self.extra_args[0] += ["-enforcenevm"]
         self.restart_node(0)
         self.connect_nodes(0, 1)
@@ -182,6 +179,7 @@ class ZMQTest (SyscoinTestFramework):
 
         num_blocks = 5
         self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
+        # start the threads to handle pub/sub of SYS/GETH communications
         Thread(target=receive_thread_nevmblock, args=(self, nevmblock,publisher,)).start()
         Thread(target=receive_thread_nevmblockconnect, args=(self, nevmblockconnect,publisher,)).start()
         Thread(target=receive_thread_nevmblockdisconnect, args=(self, nevmblockdisconnect,publisher,)).start()
@@ -190,8 +188,6 @@ class ZMQTest (SyscoinTestFramework):
         self.sync_all()
         # Destroy the ZMQ context.
         self.log.info("Destroying ZMQ context")
-        global done
-        done = True
         for i, sub in enumerate(subs):
             sub.socket.close()
         publisher.socket.close()
