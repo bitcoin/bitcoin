@@ -7,6 +7,7 @@ $(package)_sha256_hash=486748abfb16abd8af664e3a5f03b228e5f124682b0c942e157644bf6
 define $(package)_set_vars
 $(package)_config_opts=--disable-shared --disable-readline --disable-dynamic-extensions --enable-option-checking
 $(package)_config_opts_linux=--with-pic
+$(package)_cppflags_linux = -DSQLITE_DISABLE_LFS
 endef
 
 define $(package)_config_cmds
