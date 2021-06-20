@@ -4,7 +4,6 @@
 
 #include <httpserver.h>
 
-#include <init.h>
 #include <chainparamsbase.h>
 #include <compat.h>
 #include <util/system.h>
@@ -12,6 +11,7 @@
 #include <util/threadnames.h>
 #include <netbase.h>
 #include <rpc/protocol.h> // For HTTP status codes
+#include <shutdown.h>
 #include <sync.h>
 #include <ui_interface.h>
 

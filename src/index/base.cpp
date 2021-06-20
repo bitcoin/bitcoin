@@ -4,7 +4,7 @@
 
 #include <chainparams.h>
 #include <index/base.h>
-#include <init.h>
+#include <shutdown.h>
 #include <tinyformat.h>
 #include <ui_interface.h>
 #include <validation.h>

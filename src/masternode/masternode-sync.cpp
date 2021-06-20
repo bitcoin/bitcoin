@@ -3,11 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <governance/governance.h>
-#include <init.h>
 #include <validation.h>
 #include <masternode/masternode-sync.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
+#include <shutdown.h>
 #include <ui_interface.h>
 #include <evo/deterministicmns.h>
 

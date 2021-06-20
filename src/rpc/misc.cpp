@@ -9,7 +9,6 @@
 #include <consensus/consensus.h>
 #include <core_io.h>
 #include <evo/mnauth.h>
-#include <init.h>
 #include <httpserver.h>
 #include <key_io.h>
 #include <net.h>

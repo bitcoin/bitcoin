@@ -9,13 +9,13 @@
 #include <consensus/validation.h>
 #include <governance/governance-classes.h>
 #include <governance/governance-validators.h>
-#include <init.h>
 #include <masternode/masternode-meta.h>
 #include <masternode/masternode-sync.h>
 #include <net_processing.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <protocol.h>
+#include <shutdown.h>
 #include <spork.h>
 
 #include <evo/deterministicmns.h>
