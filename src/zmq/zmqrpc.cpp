@@ -25,7 +25,7 @@ static RPCHelpMan getzmqnotifications()
                         {
                             {RPCResult::Type::STR, "type", "Type of notification"},
                             {RPCResult::Type::STR, "address", "Address of the publisher"},
-                            {RPCResult::Type::STR, "addresssub", "Address of the subsciber"},
+                            {RPCResult::Type::STR, "addresssub", "Address of the subsciber, omitted if there is no subscriber assigned to this notification"},
                             {RPCResult::Type::NUM, "hwm", "Outbound message high water mark"},
                         }},
                     }
@@ -43,7 +43,9 @@ static RPCHelpMan getzmqnotifications()
             obj.pushKV("type", n->GetType());
             obj.pushKV("address", n->GetAddress());
             // SYSCOIN
-            obj.pushKV("addresssub", n->GetAddressSub());
+            const std::string &addresssub = n->GetAddressSub();
+            if(!addresssub.empty())
+                obj.pushKV("addresssub", addresssub);
             obj.pushKV("hwm", n->GetOutboundMessageHighWaterMark());
             result.push_back(obj);
         }
