@@ -200,11 +200,16 @@ bool TorControlConnection::Connect(const std::string& tor_control_center, const 
 {
     if (b_conn)
         Disconnect();
-    // Parse tor_control_center address:port
+
+    CService control_service;
+    if (!Lookup(tor_control_center, control_service, 9051, fNameLookup)) {
+        LogPrintf("tor: Failed to look up control center %s\n", tor_control_center);
+        return false;
+    }
+
     struct sockaddr_storage connect_to_addr;
-    int connect_to_addrlen = sizeof(connect_to_addr);
-    if (evutil_parse_sockaddr_port(tor_control_center.c_str(),
-        (struct sockaddr*)&connect_to_addr, &connect_to_addrlen)<0) {
+    socklen_t connect_to_addrlen = sizeof(connect_to_addr);
+    if (!control_service.GetSockAddr(reinterpret_cast<struct sockaddr*>(&connect_to_addr), &connect_to_addrlen)) {
         LogPrintf("tor: Error parsing socket address %s\n", tor_control_center);
         return false;
     }
