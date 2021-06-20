@@ -36,9 +36,9 @@ protected:
     // SYSCOIN
     void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) override;
     void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) override;
-    bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse) override;
-    bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse) override;
-    bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock) override;
+    void NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash, const bool bWaitForResponse) override;
+    void NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash, const bool bWaitForResponse) override;
+    void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState& state) override;
 private:
     CZMQNotificationInterface();
 

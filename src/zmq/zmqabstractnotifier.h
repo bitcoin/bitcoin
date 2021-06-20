@@ -16,6 +16,7 @@ class CZMQAbstractNotifier;
 class CGovernanceObject;
 class CGovernanceVote;
 class CNEVMBlock;
+class BlockValidationState;
 class uint256;
 using CZMQNotifierFactory = std::unique_ptr<CZMQAbstractNotifier> (*)();
 
@@ -36,7 +37,9 @@ public:
     std::string GetType() const { return type; }
     void SetType(const std::string &t) { type = t; }
     std::string GetAddress() const { return address; }
+    std::string GetAddressSub() const { return addresssub; }
     void SetAddress(const std::string &a) { address = a; }
+    void SetAddressSub(const std::string &a) { addresssub = a; }
     int GetOutboundMessageHighWaterMark() const { return outbound_message_high_water_mark; }
     void SetOutboundMessageHighWaterMark(const int sndhwm) {
         if (sndhwm >= 0) {
@@ -63,9 +66,9 @@ public:
     virtual bool NotifyTransactionMempool(const CTransaction &transaction);
     virtual bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
     virtual bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
-    virtual bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse);
-    virtual bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse);
-    virtual bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock);
+    virtual bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash, const bool bWaitForResponse);
+    virtual bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash, const bool bWaitForResponse);
+    virtual bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state);
 
 protected:
     void *psocket;
@@ -73,6 +76,7 @@ protected:
     void *psocketsub;
     std::string type;
     std::string address;
+    std::string addresssub;
     int outbound_message_high_water_mark; // aka SNDHWM
 };
 

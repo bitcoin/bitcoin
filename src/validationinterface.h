@@ -188,9 +188,9 @@ protected:
     virtual void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) {}
     virtual void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject> &object) {}
     virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
-    virtual bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse) {return true;}
-    virtual bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse) {return true;}
-    virtual bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock) {return true;}
+    virtual void NotifyEVMBlockConnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash, const bool bWaitForResponse) {}
+    virtual void NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash, const bool bWaitForResponse) {}
+    virtual void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state) {}
 };
 
 struct MainSignalsInstance;
@@ -229,9 +229,9 @@ public:
     void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
     void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
     void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff);
-    bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse);
-    bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse);
-    bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock);
+    void NotifyEVMBlockConnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash, const bool bWaitForResponse);
+    void NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash, const bool bWaitForResponse);
+    void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state);
 };
 
 CMainSignals& GetMainSignals();

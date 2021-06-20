@@ -1785,63 +1785,74 @@ void PruneNEVMData(CBlockIndex* pindex) {
         pindex = pindex->pprev;
     }
 }
-bool GetNEVMData(const CBlock& block, CNEVMBlock &evmBlock) {
+bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMBlock &evmBlock) {
     std::vector<unsigned char> vchData;
 	int nOut;
 	if (!GetSyscoinData(*block.vtx[0], vchData, nOut))
-		return false;
+		return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-data-output");
     std::string strVchData(vchData.begin(), vchData.end());
     auto pos = strVchData.find("NEVM");
     if(pos == std::string::npos )
-        return false;
-    strVchData = strVchData.substr(pos+4);
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-tag");
+    strVchData = strVchData.substr(pos+5);
     std::vector<unsigned char> newVchData(strVchData.begin(), strVchData.end());
     CDataStream ds(newVchData, SER_NETWORK, PROTOCOL_VERSION);
     try {
         ds >> evmBlock;
     } catch (std::exception& e) {
-        return false;
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-unserialize");
     }
     return true;
 }
-bool ConnectNEVMCommitment(NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const bool fInitialDownload) {
+bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const bool fInitialDownload) {
     CNEVMBlock evmBlock;
-    if(!GetNEVMData(block, evmBlock)) {
-        LogPrint(BCLog::SYS,"ConnectNEVMCommitment: Cannot unserialize NEVM data\n");
-        return false;
+    if(!GetNEVMData(state, block, evmBlock)) {
+        return false; //state filled by GetNEVMData 
     }
-    // wait for nevm response if IBD or if block doesn't exist in our txroot db
-    const bool bWaitForResponse = !fInitialDownload && !pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash);
+    // return if block was already processed
+    auto it = mapNEVMTxRoots.find(evmBlock.nBlockHash);
+    if(it != mapNEVMTxRoots.end() || pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash)) {
+        return true;
+    }
+    // wait for nevm response if not IBD
+    const bool bWaitForResponse = !fInitialDownload;
     // if we should be waiting for response and this block comes in from RPC/P2P, we should send nevm block data to Geth
     if(bWaitForResponse) {
         evmBlock.vchNEVMBlockData = block.vchNEVMBlockData;
     }
-    bool res = GetMainSignals().NotifyEVMBlockConnect(evmBlock, nBlockHash, bWaitForResponse);
+    LogPrintf("ConnectNEVMCommitment NotifyEVMBlockConnect for evm hash %s\n", evmBlock.nBlockHash.GetHex());
+    GetMainSignals().NotifyEVMBlockConnect(evmBlock, state, nBlockHash, bWaitForResponse);
+    bool res = state.IsValid();
     if(res) {
         NEVMTxRoot txRootDB;
         txRootDB.vchTxRoot = evmBlock.vchTxRoot;
         txRootDB.vchReceiptRoot = evmBlock.vchReceiptRoot;
+        LogPrintf("ConnectNEVMCommitment adding txroot after success for evm hash %s\n", evmBlock.nBlockHash.GetHex());
         mapNEVMTxRoots.try_emplace(evmBlock.nBlockHash, txRootDB);
     }
     return res;
 }
-bool DisconnectNEVMCommitment(std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint256& nBlockHash) {
+bool DisconnectNEVMCommitment(BlockValidationState& state, std::set<uint256> &vecNEVMBlocks, const CBlock& block, const uint256& nBlockHash) {
     CNEVMBlock evmBlock;
-    if(!GetNEVMData(block, evmBlock)) {
-        LogPrint(BCLog::SYS,"DisconnectNEVMCommitment: Cannot unserialize NEVM data\n");
-        return false;
+    if(!GetNEVMData(state, block, evmBlock)) {
+        return false; // state filled by GetNEVMData
+    }
+    // if we processed this block already just skip
+    if(vecNEVMBlocks.find(evmBlock.nBlockHash) != vecNEVMBlocks.end()) {
+        return true;
     }
     // wait for nevm response if block does exist in our txroot db
     const bool bWaitForResponse = pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash);
-    bool res = GetMainSignals().NotifyEVMBlockDisconnect(evmBlock, nBlockHash, bWaitForResponse);
+    GetMainSignals().NotifyEVMBlockDisconnect(evmBlock, state, nBlockHash, bWaitForResponse);
+    bool res = state.IsValid();
     if(res) {
-        vecNEVMBlocks.emplace_back(evmBlock.nBlockHash);
+        vecNEVMBlocks.emplace(evmBlock.nBlockHash);
     }
     return res;
 }
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
-DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::vector<uint256> &vecNEVMBlocks, std::vector<uint256> &vecTXIDs)
+DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::set<uint256> &vecNEVMBlocks, std::vector<uint256> &vecTXIDs)
 {
     // SYSCOIN
     const auto& params = Params().GetConsensus();
@@ -1909,8 +1920,10 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             // At this point, all of txundo.vprevout should have been moved out.
         }
     } 
-    if(pindex->nHeight >= params.nNEVMStartBlock && params.nNEVMEnforce && !DisconnectNEVMCommitment(vecNEVMBlocks, block, block.GetHash())) {
-        error("DisconnectBlock(): NEVM block failed to disconnect");
+    BlockValidationState state;
+    if(pindex->nHeight >= params.nNEVMStartBlock && params.nNEVMEnforce && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, block.GetHash())) {
+        const std::string &errStr = strprintf("DisconnectBlock(): NEVM block failed to disconnect: %s\n", state.ToString().c_str());
+        error(errStr.c_str());
         return DISCONNECT_FAILED; 
     }
     // move best block pointer to prevout block
@@ -2265,8 +2278,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal");
             }
         }
-        if (pindex->nHeight >= params.nNEVMStartBlock && params.nNEVMEnforce && !ConnectNEVMCommitment(mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd && processNewBlock)) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-evm-blk");
+        if (pindex->nHeight >= params.nNEVMStartBlock && params.nNEVMEnforce && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd && processNewBlock)) {
+            return false; // state filled by ConnectNEVMCommitment
         }
 
         // GetTransactionSigOpCost counts 3 types of sigops:
@@ -2632,7 +2645,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
     // SYSCOIN
     AssetMap mapAssets;
     NEVMMintTxMap mapMintKeys;
-    std::vector<uint256> vecNEVMBlocks;
+    std::set<uint256> vecNEVMBlocks;
     std::vector<uint256> vecTXIDs;
     int64_t nStart = GetTimeMicros();
     {
@@ -3923,6 +3936,10 @@ bool BlockManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& block, 
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
         }
         // SYSCOIN
+        // if not initial download, blocks should have nevm data present in header
+        if((pindexPrev->nHeight+1) >= chainparams.GetConsensus().nNEVMStartBlock && chainparams.GetConsensus().nNEVMEnforce && !ibd && block.vchNEVMBlockData.empty()) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "nevm-data-not-found");
+        }
         if (pindexPrev->nStatus & BLOCK_CONFLICT_CHAINLOCK) {
             // it's ok-ish, the other node is probably missing the latest chainlock
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-prevblk-chainlock");
@@ -3973,10 +3990,6 @@ bool BlockManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& block, 
         if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
             AddToBlockIndex(block, BLOCK_CONFLICT_CHAINLOCK);
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-chainlock");
-        }
-        // if not initial download, blocks should have nevm data present in header
-        if((pindexPrev->nHeight+1) >= chainparams.GetConsensus().nNEVMStartBlock && chainparams.GetConsensus().nNEVMEnforce && !ibd && block.vchNEVMBlockData.empty()) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "nevm-data-not-found");
         }
     }
     CBlockIndex* pindex = AddToBlockIndex(block);
@@ -4531,7 +4544,7 @@ bool CVerifyDB::VerifyDB(
     // SYSCOIN
     AssetMap mapAssets;
     NEVMMintTxMap mapMintKeys;
-    std::vector<uint256> vecNEVMBlocks;
+    std::set<uint256> vecNEVMBlocks;
     std::vector<uint256> vecTXIDs;
     for (pindex = chainstate.m_chain.Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
         const int percentageDone = std::max(1, std::min(99, (int)(((double)(chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * (nCheckLevel >= 4 ? 50 : 100))));
@@ -4674,7 +4687,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     // SYSCOIN
     AssetMap mapAssets;
     NEVMMintTxMap mapMintKeys;
-    std::vector<uint256> vecNEVMBlocks;
+    std::set<uint256> vecNEVMBlocks;
     std::vector<uint256> vecTXIDs;
     if (hashHeads.empty()) return true; // We're already in a consistent state.
     if (hashHeads.size() != 2) return error("ReplayBlocks(): unknown inconsistent state");

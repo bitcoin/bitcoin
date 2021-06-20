@@ -633,7 +633,7 @@ public:
         consensus.vchSYSXERC20Manager = ParseHex("0765EFB302D504751C652C5B1d65E8E9EDf2E70F");
         consensus.vchTokenFreezeMethod = ParseHex("9c6dea23fe3b510bb5d170df49dc74e387692eaa3258c691918cd3aa94f5fb74");
         consensus.nBridgeStartBlock = 0;
-        consensus.nNEVMStartBlock = 0;
+        consensus.nNEVMStartBlock = 205;
         consensus.nNEVMEnforce = false;
         consensus.nUTXOAssetsBlock = 0;
         consensus.nUTXOAssetsBlockProvisioning = 1000;

@@ -36,12 +36,20 @@ public:
     void Shutdown() override;
 };
 // SYSCOIN
-class CZMQPublishEVMNotifier : public CZMQAbstractPublishNotifier
+class CZMQPublishNEVMBlockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse) override;
-    bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, const uint256& nBlockHash, const bool bWaitForResponse) override;
-    bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock) override;
+    bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state) override;
+};
+class CZMQPublishNEVMBlockConnectNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash, const bool bWaitForResponse) override;
+};
+class CZMQPublishNEVMBlockDisconnectNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash, const bool bWaitForResponse) override;
 };
 class CZMQPublishHashBlockNotifier : public CZMQAbstractPublishNotifier
 {

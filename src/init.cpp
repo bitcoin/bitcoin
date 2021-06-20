@@ -598,6 +598,12 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-zmqpubrawblockhwm=<n>", strprintf("Set publish raw block outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubrawtxhwm=<n>", strprintf("Set publish raw transaction outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     // SYSCOIN
+    argsman.AddArg("-zmqpubnevmblock=<address>", "Enable NEVM block publishing for Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
+    argsman.AddArg("-zmqsubpubnevmblock=<address>", "Enable NEVM block subcribing from Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
+    argsman.AddArg("-zmqpubnevmconnect=<address>", "Enable NEVM block connect messages for Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
+    argsman.AddArg("-zmqsubpubnevmconnect=<address>", "Enable NEVM block connect messages from Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
+    argsman.AddArg("-zmqpubnevmdisconnect=<address>", "Enable NEVM block disconnect messages for Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
+    argsman.AddArg("-zmqsubpubnevmdisconnect=<address>", "Enable NEVM block disconnect messages from Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubhashgovernancevote=<address>", "Enable publish hash of governance votes transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubhashgovernanceobject=<address>", "Enable publish hash of governance objects transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubrawgovernancevote=<address>", "Enable publish raw governance votes transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
@@ -623,6 +629,12 @@ void SetupServerArgs(ArgsManager& argsman)
     hidden_args.emplace_back("-zmqpubrawblockhwm=<n>");
     hidden_args.emplace_back("-zmqpubrawtxhwm=<n>");
     hidden_args.emplace_back("-zmqpubsequencehwm=<n>");
+    hidden_args.emplace_back("-zmqpubnevmblock=<address>");
+    hidden_args.emplace_back("-zmqsubpubnevmblock=<address>");
+    hidden_args.emplace_back("-zmqpubnevmconnect=<address>");
+    hidden_args.emplace_back("-zmqsubpubnevmconnect=<address>");
+    hidden_args.emplace_back("-zmqpubnevmdisconnect=<address>");
+    hidden_args.emplace_back("-zmqsubpubnevmdisconnect=<address>");
 #endif
 
     argsman.AddArg("-checkblocks=<n>", strprintf("How many blocks to check at startup (default: %u, 0 = all)", DEFAULT_CHECKBLOCKS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);

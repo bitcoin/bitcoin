@@ -245,6 +245,50 @@ def ToHex(obj):
 
 # Objects that map to syscoind objects, which can be serialized/deserialized
 # SYSCOIN
+class CNEVMBlock:
+    __slots__ = ("blockhash", "txroot", "receiptroot", "blockdata")
+    def __init__(self, blockhash=0, txroot=b"", receiptroot=b"", blockdata=b""):
+        self.blockhash = blockhash
+        self.txroot = txroot
+        self.receiptroot = receiptroot
+        self.blockdata = blockdata
+
+    def deserialize(self, f):
+        self.blockhash = deser_uint256(f)
+        self.txroot = deser_string(f)
+        self.receiptroot = deser_string(f)
+        self.blockdata = deser_string(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_uint256(self.blockhash)
+        r += ser_string(self.txroot)
+        r += ser_string(self.receiptroot)
+        r += ser_string(self.blockdata)
+        return r
+
+    def __repr__(self):
+        return "CEVMBlock(blockhash=%064x txroot=%s receiptroot=%s blockdata=%s)" % (self.blockhash, self.txroot, self.receiptroot, self.blockdata)
+
+class CNEVMBlockConnect(CNEVMBlock):
+    __slots__ = ("sysblockhash")
+    def __init__(self):
+        super(CNEVMBlockConnect, self).__init__()
+        self.sysblockhash = 0
+
+    def deserialize(self, f):
+        super(CNEVMBlockConnect, self).deserialize(f)
+        self.sysblockhash = deser_uint256(f)
+
+    def serialize(self):
+        r = b""
+        r += super(CNEVMBlockConnect, self).serialize()
+        r += ser_uint256(self.sysblockhash)
+        return r
+
+    def __repr__(self):
+        return "CEVMBlock(blockhash=%064x sysblockhash=%064x txroot=%s receiptroot=%s blockdata=%s)" % (self.blockhash, self.sysblockhash, self.txroot, self.receiptroot, self.blockdata)
+
 class CService:
     __slots__ = ("ip", "port")
     def __init__(self):

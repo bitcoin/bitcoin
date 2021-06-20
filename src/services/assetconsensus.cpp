@@ -980,14 +980,14 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
 
 bool CNEVMTxRootsDB::Clear() {
     LOCK(cs_setethstatus);
-    std::vector<uint256> vecBlockHashes;
+    std::set<uint256> vecBlockHashes;
     uint256 nEthBlock;
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
     while (pcursor->Valid()) {
         try {
             if(pcursor->GetKey(nEthBlock)) {
-                vecBlockHashes.emplace_back(nEthBlock);
+                vecBlockHashes.emplace(nEthBlock);
             }
             pcursor->Next();
         }
@@ -998,7 +998,7 @@ bool CNEVMTxRootsDB::Clear() {
     fGethCurrentHeight = 0;   
     return FlushErase(vecBlockHashes);
 }
-bool CNEVMTxRootsDB::FlushErase(const std::vector<uint256> &vecBlockHashes) {
+bool CNEVMTxRootsDB::FlushErase(const std::set<uint256> &vecBlockHashes) {
     if(vecBlockHashes.empty())
         return true;
     CDBBatch batch(*this);
@@ -1009,7 +1009,7 @@ bool CNEVMTxRootsDB::FlushErase(const std::vector<uint256> &vecBlockHashes) {
     return WriteBatch(batch);
 }
 
-bool CNEVMTxRootsDB::FlushWrite(const NEVMTxRootMap &mapNEVMTxRoots) {
+bool CNEVMTxRootsDB::FlushWrite(NEVMTxRootMap &mapNEVMTxRoots) {
     if(mapNEVMTxRoots.empty())
         return true;
     CDBBatch batch(*this);
@@ -1017,7 +1017,9 @@ bool CNEVMTxRootsDB::FlushWrite(const NEVMTxRootMap &mapNEVMTxRoots) {
         batch.Write(key.first, key.second);
     }
     LogPrint(BCLog::SYS, "Flushing, writing %d nevm tx roots\n", mapNEVMTxRoots.size());
-    return WriteBatch(batch);
+    const bool res = WriteBatch(batch);
+    mapNEVMTxRoots.clear();
+    return res;
 }
 
 // called on connect

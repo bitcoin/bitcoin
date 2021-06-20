@@ -11,6 +11,7 @@ class TxValidationState;
 class CCoinsViewCache;
 class CTxUndo;
 class CBlock;
+class BlockValidationState;
 class CNEVMTxRootsDB : public CDBWrapper {
 public:
     explicit CNEVMTxRootsDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
@@ -21,8 +22,8 @@ public:
         return Exists(nBlockHash);
     } 
     bool Clear();
-    bool FlushErase(const std::vector<uint256> &vchBlockHashes);
-    bool FlushWrite(const NEVMTxRootMap &mapNEVMTxRoots);
+    bool FlushErase(const std::set<uint256> &vecBlockHashes);
+    bool FlushWrite(NEVMTxRootMap &mapNEVMTxRoots);
 };
 
 class CNEVMMintedTxDB : public CDBWrapper {
@@ -77,6 +78,6 @@ bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params,
 bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx,  const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut);
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut);
 uint256 GetNotarySigHash(const CTransaction &tx, const CAssetOut &vecOut);
-bool ConnectNEVMCommitment(NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const bool fInitialDownload);
-bool DisconnectNEVMCommitment(std::vector<uint256> &vecNEVMBlocks, const CBlock& block) ;
+bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const bool fInitialDownload);
+bool DisconnectNEVMCommitment(BlockValidationState& state, std::set<uint256> &vecNEVMBlocks, const CBlock& block) ;
 #endif // SYSCOIN_SERVICES_ASSETCONSENSUS_H

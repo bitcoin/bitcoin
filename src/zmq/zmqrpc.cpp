@@ -25,6 +25,7 @@ static RPCHelpMan getzmqnotifications()
                         {
                             {RPCResult::Type::STR, "type", "Type of notification"},
                             {RPCResult::Type::STR, "address", "Address of the publisher"},
+                            {RPCResult::Type::STR, "addresssub", "Address of the subsciber"},
                             {RPCResult::Type::NUM, "hwm", "Outbound message high water mark"},
                         }},
                     }
@@ -41,6 +42,8 @@ static RPCHelpMan getzmqnotifications()
             UniValue obj(UniValue::VOBJ);
             obj.pushKV("type", n->GetType());
             obj.pushKV("address", n->GetAddress());
+            // SYSCOIN
+            obj.pushKV("addresssub", n->GetAddressSub());
             obj.pushKV("hwm", n->GetOutboundMessageHighWaterMark());
             result.push_back(obj);
         }
