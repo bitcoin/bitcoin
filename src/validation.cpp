@@ -1820,14 +1820,12 @@ bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTx
     if(bWaitForResponse) {
         evmBlock.vchNEVMBlockData = block.vchNEVMBlockData;
     }
-    LogPrintf("ConnectNEVMCommitment NotifyEVMBlockConnect for evm hash %s\n", evmBlock.nBlockHash.GetHex());
     GetMainSignals().NotifyEVMBlockConnect(evmBlock, state, nBlockHash, bWaitForResponse);
     bool res = state.IsValid();
     if(res) {
         NEVMTxRoot txRootDB;
         txRootDB.vchTxRoot = evmBlock.vchTxRoot;
         txRootDB.vchReceiptRoot = evmBlock.vchReceiptRoot;
-        LogPrintf("ConnectNEVMCommitment adding txroot after success for evm hash %s\n", evmBlock.nBlockHash.GetHex());
         mapNEVMTxRoots.try_emplace(evmBlock.nBlockHash, txRootDB);
     }
     return res;
