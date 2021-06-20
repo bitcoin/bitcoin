@@ -132,28 +132,35 @@ void TorControlConnection::eventcb(struct bufferevent *bev, short what, void *ct
 
 bool TorControlConnection::Connect(const std::string& tor_control_center, const ConnectionCB& _connected, const ConnectionCB& _disconnected)
 {
-    if (b_conn)
+    if (b_conn) {
         Disconnect();
-    // Parse tor_control_center address:port
-    struct sockaddr_storage connect_to_addr;
-    int connect_to_addrlen = sizeof(connect_to_addr);
-    if (evutil_parse_sockaddr_port(tor_control_center.c_str(),
-        (struct sockaddr*)&connect_to_addr, &connect_to_addrlen)<0) {
+    }
+
+    CService control_service;
+    if (!Lookup(tor_control_center, control_service, 9051, fNameLookup)) {
+        LogPrintf("tor: Failed to look up control center %s\n", tor_control_center);
+        return false;
+    }
+
+    struct sockaddr_storage control_address;
+    socklen_t control_address_len = sizeof(control_address);
+    if (!control_service.GetSockAddr(reinterpret_cast<struct sockaddr*>(&control_address), &control_address_len)) {
         LogPrintf("tor: Error parsing socket address %s\n", tor_control_center);
         return false;
     }
 
     // Create a new socket, set up callbacks and enable notification bits
     b_conn = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
-    if (!b_conn)
+    if (!b_conn) {
         return false;
+    }
     bufferevent_setcb(b_conn, TorControlConnection::readcb, nullptr, TorControlConnection::eventcb, this);
     bufferevent_enable(b_conn, EV_READ|EV_WRITE);
     this->connected = _connected;
     this->disconnected = _disconnected;
 
     // Finally, connect to tor_control_center
-    if (bufferevent_socket_connect(b_conn, (struct sockaddr*)&connect_to_addr, connect_to_addrlen) < 0) {
+    if (bufferevent_socket_connect(b_conn, reinterpret_cast<struct sockaddr*>(&control_address), control_address_len) < 0) {
         LogPrintf("tor: Error connecting to address %s\n", tor_control_center);
         return false;
     }
