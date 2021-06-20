@@ -449,6 +449,9 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             bestChainLockCandidates[clsig.nHeight] = std::make_shared<const CChainLockSig>(clsig);
             mostRecentChainLockShare = clsig;
             TryUpdateBestChainLock(pindexSig);
+        }
+        {
+            LOCK(cs_main);
             PruneNEVMData(pindexSig);
         }
         // Note: do not hold cs while calling RelayInv
