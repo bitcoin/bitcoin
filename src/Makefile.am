@@ -199,6 +199,7 @@ BITCOIN_CORE_H = \
   llmq/quorums_signing_shares.h \
   llmq/quorums_utils.h \
   logging.h \
+  logging/timer.h \
   masternode/activemasternode.h \
   masternode/masternode-meta.h \
   masternode/masternode-payments.h \
