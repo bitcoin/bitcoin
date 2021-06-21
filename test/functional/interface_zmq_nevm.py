@@ -124,7 +124,15 @@ class ZMQTest (SyscoinTestFramework):
         self.skip_if_no_syscoind_zmq()
 
     def run_test(self):
-        self.test_basic()
+        self.ctx = zmq.Context()
+        self.ctxpub = zmq.Context()
+        try:
+            self.test_basic()
+        finally:
+            # Destroy the ZMQ context.
+            self.log.debug("Destroying ZMQ context")
+            self.ctx.destroy(linger=None)
+            self.ctxpub.destroy(linger=None)
 
     # Restart node with the specified zmq notifications enabled, subscribe to
     # all of them and return the corresponding ZMQSubscriber objects.
@@ -155,14 +163,12 @@ class ZMQTest (SyscoinTestFramework):
         return publisher
 
     def test_basic(self):
-        self.ctx = zmq.Context()
-        self.ctxpub = zmq.Context()
         self.log.info("restarting all nodes except node 0 in nevm mode...")
         for i in range(len(self.nodes)):
             if i > 0:
                 self.restart_node(i, ["-enforcenevm", "-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
-        addresspub = 'tcp://127.0.0.1:28433'
-        address = 'tcp://127.0.0.1:28432'
+        addresspub = 'tcp://127.0.0.1:29434'
+        address = 'tcp://127.0.0.1:29433'
         self.log.info("setup publisher...")
         publisher = self.setup_zmq_test_pub(addresspub)
         self.log.info("setup subscribers...")
@@ -187,13 +193,6 @@ class ZMQTest (SyscoinTestFramework):
         genhashes = self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
 
         self.sync_all()
-        # Destroy the ZMQ context.
-        self.log.info("Destroying ZMQ context")
-        for i, sub in enumerate(subs):
-            sub.socket.close()
-        publisher.socket.close()
-        self.ctx.destroy(linger=None)
-        self.ctxpub.destroy(linger=None)
 
 if __name__ == '__main__':
     ZMQTest().main()
