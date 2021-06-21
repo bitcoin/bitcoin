@@ -40,6 +40,7 @@ UrlDecodeFn* const URL_DECODE = urlDecode;
 
 static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
+static constexpr int DEFAULT_WAIT_CLIENT_TIMEOUT = 0;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
 static constexpr int8_t UNKNOWN_NETWORK{-1};
@@ -73,6 +74,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-rpcport=<port>", strprintf("Connect to JSON-RPC on <port> (default: %u, testnet: %u, signet: %u, regtest: %u)", defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort(), signetBaseParams->RPCPort(), regtestBaseParams->RPCPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcuser=<user>", "Username for JSON-RPC connections", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcwait", "Wait for RPC server to start", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-rpcwaittimeout=<n>", strprintf("Timeout in seconds to wait for the RPC server to start, or 0 for no timeout. (default: %d)", DEFAULT_WAIT_CLIENT_TIMEOUT), ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcwallet=<walletname>", "Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to bitcoind). This changes the RPC endpoint used, e.g. http://127.0.0.1:8332/wallet/<walletname>", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-stdin", "Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases). When combined with -stdinrpcpass, the first line from standard input is used for the RPC password.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-stdinrpcpass", "Read RPC password from standard input as a single line. When combined with -stdin, the first line from standard input is used for the RPC password. When combined with -stdinwalletpassphrase, -stdinrpcpass consumes the first line, and -stdinwalletpassphrase consumes the second.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -794,6 +796,9 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
     UniValue response(UniValue::VOBJ);
     // Execute and handle connection failures with -rpcwait.
     const bool fWait = gArgs.GetBoolArg("-rpcwait", false);
+    const int timeout = gArgs.GetArg("-rpcwaittimeout", DEFAULT_WAIT_CLIENT_TIMEOUT);
+    const int64_t deadline = GetTime<std::chrono::seconds>().count() + timeout;
+
     do {
         try {
             response = CallRPC(rh, strMethod, args, rpcwallet);
@@ -804,11 +809,12 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
                 }
             }
             break; // Connection succeeded, no need to retry.
-        } catch (const CConnectionFailed&) {
-            if (fWait) {
-                UninterruptibleSleep(std::chrono::milliseconds{1000});
+        } catch (const CConnectionFailed& e) {
+            const int64_t now = GetTime<std::chrono::seconds>().count();
+            if (fWait && (timeout <= 0 || now < deadline)) {
+                UninterruptibleSleep(std::chrono::seconds{1});
             } else {
-                throw;
+                throw CConnectionFailed(strprintf("timeout on transient error: %s", e.what()));
             }
         }
     } while (fWait);
