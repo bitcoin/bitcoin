@@ -980,14 +980,14 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
 
 bool CNEVMTxRootsDB::Clear() {
     LOCK(cs_setethstatus);
-    std::set<uint256> vecBlockHashes;
+    std::vector<uint256> vecBlockHashes;
     uint256 nEthBlock;
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
     while (pcursor->Valid()) {
         try {
             if(pcursor->GetKey(nEthBlock)) {
-                vecBlockHashes.emplace(nEthBlock);
+                vecBlockHashes.emplace_back(nEthBlock);
             }
             pcursor->Next();
         }
@@ -998,7 +998,7 @@ bool CNEVMTxRootsDB::Clear() {
     fGethCurrentHeight = 0;   
     return FlushErase(vecBlockHashes);
 }
-bool CNEVMTxRootsDB::FlushErase(const std::set<uint256> &vecBlockHashes) {
+bool CNEVMTxRootsDB::FlushErase(const std::vector<uint256> &vecBlockHashes) {
     if(vecBlockHashes.empty())
         return true;
     CDBBatch batch(*this);

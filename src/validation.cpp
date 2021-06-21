@@ -1812,7 +1812,7 @@ bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTx
     // return if block was already processed
     auto it = mapNEVMTxRoots.find(evmBlock.nBlockHash);
     if(it != mapNEVMTxRoots.end() || pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash)) {
-        return true;
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-duplicate");
     }
     // wait for nevm response if not IBD
     const bool bWaitForResponse = !fInitialDownload;
@@ -1830,27 +1830,26 @@ bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTx
     }
     return res;
 }
-bool DisconnectNEVMCommitment(BlockValidationState& state, std::set<uint256> &vecNEVMBlocks, const CBlock& block, const uint256& nBlockHash) {
+bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint256& nBlockHash) {
     CNEVMBlock evmBlock;
     if(!GetNEVMData(state, block, evmBlock)) {
         return false; // state filled by GetNEVMData
     }
-    // if we processed this block already just skip
-    if(vecNEVMBlocks.find(evmBlock.nBlockHash) != vecNEVMBlocks.end()) {
-        return true;
+    if(!pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash)) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-missing");
     }
     // wait for nevm response if block does exist in our txroot db
-    const bool bWaitForResponse = pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash);
+    const bool bWaitForResponse = true;
     GetMainSignals().NotifyEVMBlockDisconnect(evmBlock, state, nBlockHash, bWaitForResponse);
     bool res = state.IsValid();
     if(res) {
-        vecNEVMBlocks.emplace(evmBlock.nBlockHash);
+        vecNEVMBlocks.emplace_back(evmBlock.nBlockHash);
     }
     return res;
 }
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
-DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::set<uint256> &vecNEVMBlocks, std::vector<uint256> &vecTXIDs)
+DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::vector<uint256> &vecNEVMBlocks, std::vector<uint256> &vecTXIDs)
 {
     // SYSCOIN
     const auto& params = Params().GetConsensus();
@@ -2643,7 +2642,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
     // SYSCOIN
     AssetMap mapAssets;
     NEVMMintTxMap mapMintKeys;
-    std::set<uint256> vecNEVMBlocks;
+    std::vector<uint256> vecNEVMBlocks;
     std::vector<uint256> vecTXIDs;
     int64_t nStart = GetTimeMicros();
     {
@@ -4542,7 +4541,7 @@ bool CVerifyDB::VerifyDB(
     // SYSCOIN
     AssetMap mapAssets;
     NEVMMintTxMap mapMintKeys;
-    std::set<uint256> vecNEVMBlocks;
+    std::vector<uint256> vecNEVMBlocks;
     std::vector<uint256> vecTXIDs;
     for (pindex = chainstate.m_chain.Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
         const int percentageDone = std::max(1, std::min(99, (int)(((double)(chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * (nCheckLevel >= 4 ? 50 : 100))));
@@ -4685,7 +4684,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     // SYSCOIN
     AssetMap mapAssets;
     NEVMMintTxMap mapMintKeys;
-    std::set<uint256> vecNEVMBlocks;
+    std::vector<uint256> vecNEVMBlocks;
     std::vector<uint256> vecTXIDs;
     if (hashHeads.empty()) return true; // We're already in a consistent state.
     if (hashHeads.size() != 2) return error("ReplayBlocks(): unknown inconsistent state");

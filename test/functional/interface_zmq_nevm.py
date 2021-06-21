@@ -17,6 +17,7 @@ from test_framework.util import (
 from io import BytesIO
 from time import sleep
 from threading import Thread
+import random
 # these would be handlers for the 3 types of calls from Syscoin on Geth
 def receive_thread_nevmblock(self, subscriber, publisher):
     while True:
@@ -24,7 +25,7 @@ def receive_thread_nevmblock(self, subscriber, publisher):
             self.log.info('receive_thread_nevmblock waiting to receive...')
             data = subscriber.receive()
             self.log.info('receive_thread_nevmblock received data')
-            hashStr = hash256(subscriber.topic)
+            hashStr = hash256(str(random.randint(-0x80000000, 0x7fffffff)).encode())
             hashTopic = uint256_from_str(hashStr)
             nevmBlock = CNEVMBlock(hashTopic, hashStr, hashStr, subscriber.topic)
             publisher.send([subscriber.topic, nevmBlock.serialize()])
@@ -160,8 +161,8 @@ class ZMQTest (SyscoinTestFramework):
         for i in range(len(self.nodes)):
             if i > 0:
                 self.restart_node(i, ["-enforcenevm", "-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
-        addresspub = 'tcp://127.0.0.1:28333'
-        address = 'tcp://127.0.0.1:28332'
+        addresspub = 'tcp://127.0.0.1:28433'
+        address = 'tcp://127.0.0.1:28432'
         self.log.info("setup publisher...")
         publisher = self.setup_zmq_test_pub(addresspub)
         self.log.info("setup subscribers...")
@@ -177,7 +178,7 @@ class ZMQTest (SyscoinTestFramework):
         nevmblockdisconnect = subs[1]
         nevmblock = subs[2]
 
-        num_blocks = 5
+        num_blocks = 200
         self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
         # start the threads to handle pub/sub of SYS/GETH communications
         Thread(target=receive_thread_nevmblock, args=(self, nevmblock,publisher,)).start()

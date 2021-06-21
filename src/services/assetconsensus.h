@@ -22,7 +22,7 @@ public:
         return Exists(nBlockHash);
     } 
     bool Clear();
-    bool FlushErase(const std::set<uint256> &vecBlockHashes);
+    bool FlushErase(const std::vector<uint256> &vecBlockHashes);
     bool FlushWrite(NEVMTxRootMap &mapNEVMTxRoots);
 };
 
@@ -79,5 +79,5 @@ bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const 
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut);
 uint256 GetNotarySigHash(const CTransaction &tx, const CAssetOut &vecOut);
 bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const bool fInitialDownload);
-bool DisconnectNEVMCommitment(BlockValidationState& state, std::set<uint256> &vecNEVMBlocks, const CBlock& block) ;
+bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block) ;
 #endif // SYSCOIN_SERVICES_ASSETCONSENSUS_H
