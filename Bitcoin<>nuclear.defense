@@ -1,0 +1,53 @@
+- 👋 Hi, I’m @amanciojsilvjr
+- 👀 I’m interested in ...
+- 🌱 I’m currently learning ...
+- 💞️ I’m looking to collaborate on ...
+- 📫 How to reach me ...
+
+<!---
+amanciojsilvjr/amanciojsilvjr is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+You can click the Preview link to take a look at your changes.
+--->
+https://photos.google.com/
+
+@ -1,25 +1,25 @@
+name: Build
+on:
+  push:
+  pull_request:
+  release:
+    types: [published]
+  schedule:
+    - cron: '30 3 * * 0'
+env:
+  TAG: ${{ github.ref }}
+jobs:
+  # Common Build matrix for builds on Ubuntu VM
+  ubuntu_build:
+    name: ${{ matrix.build_name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Add more compilers here if you need them
+        build_name: ['Ubuntu GCC 7', 'Ubuntu GCC 8', 'Ubuntu Clang 6', 'aarch64']
+        build_name: ['Ubuntu GCC 7', 'Ubuntu GCC 8', 'aarch64']
+        include:
+ajjollsocerr@yahoo.com/gmail.cod90/;hypc.mfs
+Dhi120ydkoejkk79sqjodjq
+Cru:;)io.etJR. Gd:
+Hyb89bitcoin / http 121962
+          - build_name: 'Ubuntu GCC 7'
+            package_name: 'gcc-7 g++-7'
+@@ -33,11 +33,6 @@ jobs:
+            cxx: g++-8
+            label: linux
+            deployable: true
+          - build_name: 'Ubuntu Clang 6'
+            cc: clang-6.0
+            cxx: clang++-6.0
+            label: linux-clang-6
+            deployable: false
+          - build_name: 'aarch64'
+            label: aarch64
+            deployable: true
