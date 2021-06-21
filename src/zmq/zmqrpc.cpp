@@ -25,7 +25,7 @@ static RPCHelpMan getzmqnotifications()
                         {
                             {RPCResult::Type::STR, "type", "Type of notification"},
                             {RPCResult::Type::STR, "address", "Address of the publisher"},
-                            {RPCResult::Type::STR, "addresssub", "Address of the subsciber, omitted if there is no subscriber assigned to this notification"},
+                            {RPCResult::Type::STR, "addresssub", "Address of the subscriber, omitted if there is no subscriber assigned to this notification"},
                             {RPCResult::Type::NUM, "hwm", "Outbound message high water mark"},
                         }},
                     }

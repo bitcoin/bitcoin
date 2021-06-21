@@ -3,16 +3,12 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the ZMQ notification interface."""
-import struct
 
-from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE, ADDRESS_BCRT1_P2WSH_OP_TRUE
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
+from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.messages import CTransaction, hash256, FromHex, CNEVMBlock, CNEVMBlockConnect, uint256_from_str
+from test_framework.messages import hash256, CNEVMBlock, CNEVMBlockConnect, uint256_from_str
 from test_framework.util import (
     assert_equal,
-    assert_raises_rpc_error,
-    hex_str_to_bytes,
 )
 from io import BytesIO
 from time import sleep
@@ -23,7 +19,7 @@ def receive_thread_nevmblock(self, subscriber, publisher):
     while True:
         try:
             self.log.info('receive_thread_nevmblock waiting to receive...')
-            data = subscriber.receive()
+            subscriber.receive()
             self.log.info('receive_thread_nevmblock received data')
             hashStr = hash256(str(random.randint(-0x80000000, 0x7fffffff)).encode())
             hashTopic = uint256_from_str(hashStr)
@@ -35,7 +31,7 @@ def receive_thread_nevmblock(self, subscriber, publisher):
             break
         except zmq.ZMQError as e:
             self.log.warning('zmq error, socket closed unexpectedly.')
-            raise e 
+            raise e
 
 def receive_thread_nevmblockconnect(self, subscriber, publisher):
     while True:
@@ -52,13 +48,13 @@ def receive_thread_nevmblockconnect(self, subscriber, publisher):
             break
         except zmq.ZMQError as e:
             self.log.warning('zmq error, socket closed unexpectedly.')
-            raise e 
+            raise e
 
 def receive_thread_nevmblockdisconnect(self, subscriber, publisher):
     while True:
         try:
             self.log.info('receive_thread_nevmblockdisconnect waiting to receive...')
-            data = subscriber.receive()
+            subscriber.receive()
             self.log.info('receive_thread_nevmblockdisconnect received data')
             publisher.send([subscriber.topic, b"disconnected"])
         except zmq.ContextTerminated:
@@ -67,7 +63,7 @@ def receive_thread_nevmblockdisconnect(self, subscriber, publisher):
             break
         except zmq.ZMQError as e:
             self.log.warning('zmq error, socket closed unexpectedly.')
-            raise e 
+            raise e
 
 # Test may be skipped and not have zmq installed
 try:
@@ -133,7 +129,7 @@ class ZMQTest (SyscoinTestFramework):
             self.log.debug("Destroying ZMQ context")
             self.ctx.destroy(linger=None)
             self.ctxpub.destroy(linger=None)
-
+        sleep(2)
     # Restart node with the specified zmq notifications enabled, subscribe to
     # all of them and return the corresponding ZMQSubscriber objects.
     def setup_zmq_test(self, services, servicessub, *, recv_timeout=60, sync_blocks=True):
@@ -167,8 +163,8 @@ class ZMQTest (SyscoinTestFramework):
         for i in range(len(self.nodes)):
             if i > 0:
                 self.restart_node(i, ["-enforcenevm", "-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
-        addresspub = 'tcp://127.0.0.1:29434'
-        address = 'tcp://127.0.0.1:29433'
+        addresspub = 'tcp://127.0.0.1:29435'
+        address = 'tcp://127.0.0.1:29434'
         self.log.info("setup publisher...")
         publisher = self.setup_zmq_test_pub(addresspub)
         self.log.info("setup subscribers...")
@@ -184,15 +180,14 @@ class ZMQTest (SyscoinTestFramework):
         nevmblockdisconnect = subs[1]
         nevmblock = subs[2]
 
-        num_blocks = 200
+        num_blocks = 5
         self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
         # start the threads to handle pub/sub of SYS/GETH communications
         Thread(target=receive_thread_nevmblock, args=(self, nevmblock,publisher,)).start()
         Thread(target=receive_thread_nevmblockconnect, args=(self, nevmblockconnect,publisher,)).start()
         Thread(target=receive_thread_nevmblockdisconnect, args=(self, nevmblockdisconnect,publisher,)).start()
-        genhashes = self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
+        self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
 
-        self.sync_all()
 
 if __name__ == '__main__':
     ZMQTest().main()
