@@ -1,3 +1,115 @@
+ 
+/ * Copiado do repositório principal da TurtleCoin em https://github.com/TurtleCoin/TurtleCoin * /
+
+const  { promisify }  =  require ( 'util' ) ;
+const  childProcess  =  require ( 'child_process' ) ;
+const  fs  =  require ( 'fs' ) ;
+
+const  access  =  promisify ( fs . access ) ;
+const  readdir  =  promisify ( fs . readdir ) ;
+const  stat  =  promisify ( fs . stat ) ;
+const  exec  =  promisify ( childProcess . exec ) ;
+
+/ * Os diretórios para executar nossa formatação, recursivamente * /
+const  directoryToFormat  =  [ 'src' ] ;
+
+/ * Tipos de arquivos para executar o formatador * /
+const  fileTypes  =  [ '.h' ,  '.cpp' ,  '.c' ] ;
+
+/ * O nome do binário de formato clang. Em algumas distros, isso tem a versão
+   anexado. * /
+const  binaryName  =  'formato-clang' ;
+
+( assíncrono  ( )  =>  {
+     sucesso  const =  espera  main ( ) ;
+
+    if  ( sucesso )  {
+        console . log ( '\ nFormatação completa.' ) ;
+    }  else  {
+        console . log ( '\ nFormatação abortada.' ) ;
+    }
+} ) ( ) ;
+<? xml version = " 1.0 " encoding = " utf-8 " ?>
+< Project  xmlns = " http://schemas.microsoft.com/developer/msbuild/2003 " >
+
+  < PropertyGroup  Label = " QtGlobals " >
+    < QtBaseDir > C: \ Qt5.12.10_x64_static_vs2019_1694 </ QtBaseDir >
+    < QtPluginsLibraryDir > $ (QtBaseDir) \ plugins </ QtPluginsLibraryDir >
+    < QtLibraryDir > $ (QtBaseDir) \ lib </ QtLibraryDir >
+    < QtIncludeDir > $ (QtBaseDir) \ include </ QtIncludeDir >
+    < QtIncludes > $ (QtIncludeDir); $ (QtIncludeDir) \ QtNetwork; $ (QtIncludeDir) \ QtCore; $ (QtIncludeDir) \ QtWidgets; $ (QtIncludeDir) \ QtGui; </ QtIncludes >
+    < GeneratedFilesOutDir >. \ QtGeneratedFiles \ qt </ GeneratedFilesOutDir >
+    < QtToolsDir > $ (QtBaseDir) \ bin </ QtToolsDir >
+    < QtReleaseLibraries > $ (QtPluginsLibraryDir) \ plataformas \ qminimal.lib; $ (QtPluginsLibraryDir) \ plataformas \ qwindows.lib; $ (QtLibraryDir) \ Qt5WindowsUIAutomationSupport.lib; $ (QtLibraryDir) \ qtibreetype) lib; $ (QtLibraryDir) \ qtlibpng.lib; $ (QtLibraryDir) \ qtpcre2.lib; $ (QtLibraryDir) \ Qt5AccessibilitySupport.lib; $ (QtLibraryDir) \ Qt5Core.libDir; $ (QtLibraryDir) \ Qt5Conurrent ) \ Qt5EventDispatcherSupport.lib; $ (QtLibraryDir) \ Qt5FontDatabaseSupport.lib; $ (QtLibraryDir) \ Qt5Gui.lib; $ (QtLibraryDir) \ Qt5Network.lib; $ (Qt5FontDatabaseSupport.lib) $ (QtLibraryDir) \ Qt5Gui.lib; $ (QtLibraryDir) \ Qt5Network.lib; $ (QtLibraryDir) \ Qt5PlatformSupport. ; $ (QtLibraryDir) \ Qt5Widgets.lib; $ (QtLibraryDir) \ Qt5WinExtras.lib; $ (QtLibraryDir) \ qtmain.lib; Wtsapi32.lib; userenv.lib; netapi32.lib; imm32.lib; Dwmapi.lib; version. lib; winmm.lib; UxTheme.lib </Bibliotecas QtRelease >
+    < QtDebugLibraries > $ (QtPluginsLibraryDir) \ plataformas \ qwindowsd.lib; $ (QtPluginsLibraryDir) \ plataformas \ qminimald.lib; $ (QtLibraryDir) \ * d.lib; Wtsapi32.lib; crypt32.lib; userenv.lib; netapi32.lib; ; imm32.lib; Dwmapi.lib; version.lib; winmm.lib; UxTheme.lib </ QtDebugLibraries >
+  </ PropertyGroup >
+
+ função  assíncrona main  ( )  {
+    / * Verifique se estamos na pasta certa e se os diretórios existem * /
+    for  ( const  diretório  de  diretóriosToFormat )  {
+        tente  {
+            aguardar  acesso ( diretório ) ;
+        }  catch  ( errar )  {
+            console . log ( `Falha ao encontrar o diretório $ { diretório } , provavelmente na pasta errada` ) ;
+            console . log ( 'Certifique-se de executar a partir da pasta raiz, como: node scripts / format.js' ) ;
+            return  false ;
+        }
+    }
+
+    deixe  filePaths  =  [ ] ;
+
+    / * Reúna os arquivos * /
+    for  ( const  diretório  de  diretóriosToFormat )  {
+         arquivos  const =  espera  getFiles ( diretório ) ;
+        filePaths  =  filePaths . concat ( arquivos ) ;
+    }
+
+    / * Filtrar arquivos não codificados * /
+    filePaths  =  filePaths . filtro ( ( arquivo )  =>  {
+        return  fileTypes . algum ( ( extensão )  =>  arquivo . termina com ( extensão ) ) ;
+    } ) ;
+
+    console . log ( arquivos `encontrados $ { filePaths . length } para formatar!` ) ;
+
+    / * Formate cada arquivo * /
+    for  ( arquivo const  de filePaths ) {   
+        aguardar  formatFile ( arquivo ) ;
+    }
+
+    return  true ;
+}
+
+ getFiles função  assíncrona ( diretório ) {  
+    const  directoryContents  =  Await  readdir ( directório ) ;
+
+    deixe  allFiles  =  [ ] ;
+
+    for  ( arquivo const  de directoryContents ) {   
+        const  fullPath  =  diretório  +  '/'  +  arquivo ;
+
+        const  fileStats  =  Await  estatística ( fullPath ) ;
+
+        / * Este é um diretório, vamos recursar * /
+        if  ( fileStats . isDirectory ( ) )  {
+            const  moreFiles  =  Await  getfiles ( fullPath ) ;
+            allFiles  =  allFiles . concat ( moreFiles ) ;
+        }  else  {
+            allFiles . push ( fullPath ) ;
+        }
+    }
+
+    return  allFiles ;
+}
+
+ função  assíncrona formatFile  ( filePath )  {
+    tente  {
+        console . log ( `Formatando $ { filePath } ` ) ;
+
+        esperar  exec ( ` $ { binaryName } -i $ { filePath } ` ) ;
+    }  catch  ( errar )  {
+        console . log ( `Erro de formatação $ { filePath } : $ { err } ` ) ;
+    }
+}
 
 trigger:
   branches:
