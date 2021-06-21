@@ -631,6 +631,9 @@ struct CNodeState {
     //! When the first entry in vBlocksInFlight started downloading. Don't care when vBlocksInFlight is empty.
     std::chrono::microseconds m_downloading_since{0us};
     int nBlocksInFlight{0};
+    int nTxInFlight{0};
+    //! How many TXs were in flight when we sent GETBLOCKTXN
+    int nBlockAfterTXs{0};
     //! Whether we consider this a preferred download peer.
     bool fPreferredDownload{false};
     //! Whether this peer wants invs or headers (when possible) for block announcements.
@@ -3116,6 +3119,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         LOCK2(cs_main, g_cs_orphans);
 
         CNodeState* nodestate = State(pfrom.GetId());
+        nodestate->nTxInFlight--;
+        if (nodestate->nBlockAfterTXs > 1) nodestate->nBlockAfterTXs--;
 
         const uint256& hash = nodestate->m_wtxid_relay ? wtxid : txid;
         pfrom.AddKnownTx(hash);
@@ -3447,6 +3452,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 } else {
                     req.blockhash = pindex->GetBlockHash();
                     m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::GETBLOCKTXN, req));
+                    // If we get more TXs than currently in flight then we know the request has been ignored.
+                    nodestate->nBlockAfterTXs = nodestate->nTxInFlight + 2; // Add 2 so that one more TX is requested.
                 }
             } else {
                 // This block is either already in flight from a different
@@ -3527,9 +3534,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     {
         // Ignore blocktxn received while importing
         if (fImporting || fReindex) {
-            LogPrint(BCLog::NET, "Unexpected blocktxn message received from peer %d\n", pfrom.GetId());
+            LogPrint(BCLog::NET, "Unexpected blocktxn message received from peer=%d\n", pfrom.GetId());
             return;
         }
+        CNodeState *nodestate = State(pfrom.GetId());
+        nodestate->nBlockAfterTXs = 0;
 
         BlockTransactions resp;
         vRecv >> resp;
@@ -3891,6 +3900,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 if (inv.IsGenTxMsg()) {
                     // If we receive a NOTFOUND message for a tx we requested, mark the announcement for it as
                     // completed in TxRequestTracker.
+                    CNodeState *nodestate = State(pfrom.GetId());
+                    nodestate->nTxInFlight--;
+                    if (nodestate->nBlockAfterTXs > 1) nodestate->nBlockAfterTXs--;
                     m_txrequest.ReceivedResponse(pfrom.GetId(), inv.hash);
                 }
             }
@@ -4727,7 +4739,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             // Stalling only triggers when the block download window cannot move. During normal steady state,
             // the download window should be much larger than the to-be-downloaded set of blocks, so disconnection
             // should only happen during initial block download.
-            LogPrintf("Peer=%d is stalling block download, disconnecting\n", pto->GetId());
+            LogPrintf("block download stalled. disconnecting peer=%d\n", pto->GetId());
+            pto->fDisconnect = true;
+            return true;
+        }
+        if (state.nBlockAfterTXs == 1) {
+            LogPrintf("getblocktxn ignored. disconnecting peer=%d\n", pto->GetId());
             pto->fDisconnect = true;
             return true;
         }
@@ -4820,6 +4837,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     gtxid.GetHash().ToString(), pto->GetId());
                 vGetData.emplace_back(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(*pto)), gtxid.GetHash());
                 if (vGetData.size() >= MAX_GETDATA_SZ) {
+                    state.nTxInFlight += vGetData.size();
                     m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
                     vGetData.clear();
                 }
@@ -4832,8 +4850,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         }
 
 
-        if (!vGetData.empty())
+        if (!vGetData.empty()) {
+            state.nTxInFlight += vGetData.size();
             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
+        }
 
         MaybeSendFeefilter(*pto, current_time);
     } // release cs_main
