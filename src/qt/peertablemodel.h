@@ -77,6 +77,7 @@ public:
 
 public Q_SLOTS:
     void refresh();
+    void updatePalette();
 
 private:
     //! Internal peer data structure.
