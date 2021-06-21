@@ -47,21 +47,6 @@ class AddrReceiver(P2PInterface):
         return self.message_count['getaddr'] > 0
 
 
-class GetAddrStore(P2PInterface):
-    getaddr_received = False
-    num_ipv4_received = 0
-
-    def on_getaddr(self, message):
-        self.getaddr_received = True
-
-    def on_addr(self, message):
-        for addr in message.addrs:
-            self.num_ipv4_received += 1
-
-    def addr_received(self):
-        return self.num_ipv4_received != 0
-
-
 class AddrTest(BitcoinTestFramework):
     counter = 0
     mocktime = int(time.time())
