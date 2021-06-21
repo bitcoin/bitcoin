@@ -1,3 +1,32 @@
+
+
+
+
+trigger:
+  branches:
+    include:
+    - master
+variables:
+- name: buildConfiguration
+  value: 'Release'
+- name: outputDirectory
+  value: '$(build.binariesDirectory)/$(buildConfiguration)'
+stages:
+- stage: __default
+  jobs:
+  - job: Job
+    pool:
+      vmImage: 'macos-latest'
+    steps:
+    - task: NuGetToolInstaller@1
+    - task: NuGetCommand@2
+      inputs:
+        restoreSolution: '**/*.sln'
+    - task: XamarinAndroid@1
+      inputs:
+        projectFile: '**/*droid*.csproj'
+        outputDirectory: '$(outputDirectory)'
+        configuration: '$(buildConfiguration
 2021-01-29 16:24:06 UTC Roll 000-499 to win 2 times your stake of 1 token (50% win chance) 
 You rolled 26 so you won 2 tokens Client
 seed 1b08b782 Server seed 1480c1003409b86810c64e8fc565a970 Server seed hash f0eaa47b858dbf8e543102edea22a554003c8203995c99e79bdfdcfab9704d9c 2021-01-29 16:24:05 UTC Roll 000-499 to win 2 times your stake of 
