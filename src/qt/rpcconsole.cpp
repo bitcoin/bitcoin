@@ -659,6 +659,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         connect(model, &ClientModel::mempoolSizeChanged, this, &RPCConsole::setMempoolSize);
 
         // set up peer table
+        clientModel->getPeerTableModel()->updatePalette();
         ui->peerWidget->setModel(model->peerTableSortProxy());
         ui->peerWidget->verticalHeader()->hide();
         ui->peerWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -895,6 +896,10 @@ void RPCConsole::changeEvent(QEvent* e)
                 QTextDocument::ImageResource,
                 QUrl(ICON_MAPPING[i].url),
                 platformStyle->SingleColorImage(ICON_MAPPING[i].source).scaled(QSize(consoleFontSize * 2, consoleFontSize * 2), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+        }
+
+        if (clientModel && clientModel->getPeerTableModel()) {
+            clientModel->getPeerTableModel()->updatePalette();
         }
     }
 #endif

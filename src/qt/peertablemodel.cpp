@@ -136,6 +136,18 @@ void PeerTableModel::DrawIcons()
     m_icon_conn_out = m_platform_style.TextColorIcon(QIcon(QPixmap::fromImage(icon_out)));
 }
 
+void PeerTableModel::updatePalette()
+{
+    m_icon_conn_in  = m_platform_style.TextColorIcon(m_icon_conn_in);
+    m_icon_conn_out = m_platform_style.TextColorIcon(m_icon_conn_out);
+    if (m_peers_data.empty()) return;
+    Q_EMIT dataChanged(
+        createIndex(0, Direction),
+        createIndex(m_peers_data.size() - 1, Direction),
+        QVector<int>{Qt::DecorationRole}
+    );
+}
+
 void PeerTableModel::startAutoRefresh()
 {
     timer->start();

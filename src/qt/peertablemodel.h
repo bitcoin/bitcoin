@@ -76,6 +76,7 @@ public:
 
 public Q_SLOTS:
     void refresh();
+    void updatePalette();
 
 Q_SIGNALS:
     void changed();
