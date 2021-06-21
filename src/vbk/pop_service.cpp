@@ -122,12 +122,11 @@ bool setState(const uint256& block, altintegration::ValidationState& state) EXCL
     return GetPop().getAltBlockTree().setState(block.asVector(), state);
 }
 
-altintegration::PopData getPopData(const CBlockIndex& pindexPrev) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+altintegration::PopData generatePopData() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
 
-    auto prevHash = pindexPrev.GetBlockHash().asVector();
-    return GetPop().generatePopData(prevHash);
+    return GetPop().generatePopData();
 }
 
 // PoP rewards are calculated for the current tip but are paid in the next block

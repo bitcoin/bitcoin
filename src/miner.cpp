@@ -145,7 +145,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // VeriBlock: add PopData into the block
     if (VeriBlock::isPopEnabled() && chainparams.isPopActive(nHeight))
     {
-        pblock->popData = VeriBlock::getPopData(*pindexPrev);
+        pblock->popData = VeriBlock::generatePopData();
     }
 
     if (!pblock->popData.empty()) {
