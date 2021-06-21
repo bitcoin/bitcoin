@@ -20,10 +20,10 @@ def receive_thread_nevmblock(self, subscriber, publisher):
         try:
             self.log.info('receive_thread_nevmblock waiting to receive...')
             subscriber.receive()
-            self.log.info('receive_thread_nevmblock received data')
             hashStr = hash256(str(random.randint(-0x80000000, 0x7fffffff)).encode())
             hashTopic = uint256_from_str(hashStr)
             nevmBlock = CNEVMBlock(hashTopic, hashStr, hashStr, subscriber.topic)
+            self.log.info('new nevm block {}'.format(hashStr.hex()))
             publisher.send([subscriber.topic, nevmBlock.serialize()])
         except zmq.ContextTerminated:
             sleep(1)
@@ -42,7 +42,13 @@ def receive_thread_nevmblockconnect(self, subscriber, publisher):
             self.log.info('receive_thread_nevmblockconnect received data')
             evmBlockConnect = CNEVMBlockConnect()
             evmBlockConnect.deserialize(BytesIO(data))
-            publisher.send([subscriber.topic, b"connected"])
+            resBlock = publisher.addBlock(evmBlockConnect)
+            res = b""
+            if resBlock:
+                res = b"connected"
+            else:
+                res = b"not connected"
+            publisher.send([subscriber.topic, res])
         except zmq.ContextTerminated:
             sleep(1)
             subscriber.close()
@@ -56,9 +62,17 @@ def receive_thread_nevmblockdisconnect(self, subscriber, publisher):
     while True:
         try:
             self.log.info('receive_thread_nevmblockdisconnect waiting to receive...')
-            subscriber.receive()
+            data = subscriber.receive()
             self.log.info('receive_thread_nevmblockdisconnect received data')
-            publisher.send([subscriber.topic, b"disconnected"])
+            evmBlockConnect = CNEVMBlockConnect()
+            evmBlockConnect.deserialize(BytesIO(data))
+            resBlock = publisher.deleteBlock(evmBlockConnect)
+            res = b""
+            if resBlock:
+                res = b"disconnected"
+            else:
+                res = b"not disconnected"
+            publisher.send([subscriber.topic, res])
         except zmq.ContextTerminated:
             sleep(1)
             subscriber.close()
@@ -98,6 +112,8 @@ class ZMQSubscriber:
 class ZMQPublisher:
     def __init__(self, socket):
         self.socket = socket
+        self.sysToNEVMBlockMapping = {}
+        self.NEVMToSysBlockMapping = {}
 
     # Send message to subscriber
     def _send_to_publisher_and_check(self, msg_parts):
@@ -108,6 +124,31 @@ class ZMQPublisher:
 
     def close(self):
         self.socket.close()
+    
+    def addBlock(self, evmBlockConnect):
+        # special case if miner is just testing validity of block, sys block hash is 0, we just want to provide message if evm block is valid without updating mappings
+        if evmBlockConnect.sysblockhash == 0:
+            return True
+        # mappings should not already exist, if they do flag the block as invalid    
+        if self.sysToNEVMBlockMapping.get(evmBlockConnect.sysblockhash) or self.NEVMToSysBlockMapping.get(evmBlockConnect.blockhash):
+            return False
+        self.sysToNEVMBlockMapping[evmBlockConnect.sysblockhash] = evmBlockConnect
+        self.NEVMToSysBlockMapping[evmBlockConnect.blockhash] = evmBlockConnect.sysblockhash
+        return True
+
+    def deleteBlock(self, evmBlockConnect):
+        # mappings should already exist on disconnect, if they do not flag the disconnect as invalid
+        if self.sysToNEVMBlockMapping.get(evmBlockConnect.sysblockhash) == False or self.NEVMToSysBlockMapping.get(evmBlockConnect.blockhash) == False:
+            return False
+        self.sysToNEVMBlockMapping.pop(evmBlockConnect.sysblockhash, None)
+        self.NEVMToSysBlockMapping.pop(evmBlockConnect.blockhash, None)
+        return True
+
+    def getLastSYSBlock(self):
+        return list(self.NEVMToSysBlockMapping.values())[-1]
+
+    def getLastNEVMBlock(self):
+        return self.sysToNEVMBlockMapping[self.getLastSYSBlock()]
 
 class ZMQTest (SyscoinTestFramework):
     def set_test_params(self):
@@ -166,8 +207,8 @@ class ZMQTest (SyscoinTestFramework):
         for i in range(len(self.nodes)):
             if i > 0:
                 self.restart_node(i, ["-enforcenevm", "-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
-        addresspub = 'tcp://127.0.0.1:29435'
-        address = 'tcp://127.0.0.1:29434'
+        addresspub = 'tcp://127.0.0.1:29436'
+        address = 'tcp://127.0.0.1:29435'
         self.log.info("setup publisher...")
         publisher = self.setup_zmq_test_pub(addresspub)
         self.log.info("setup subscribers...")
@@ -183,14 +224,14 @@ class ZMQTest (SyscoinTestFramework):
         nevmblockdisconnect = subs[1]
         nevmblock = subs[2]
 
-        num_blocks = 5
+        num_blocks = 6
         self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
         # start the threads to handle pub/sub of SYS/GETH communications
         Thread(target=receive_thread_nevmblock, args=(self, nevmblock,publisher,)).start()
         Thread(target=receive_thread_nevmblockconnect, args=(self, nevmblockconnect,publisher,)).start()
         Thread(target=receive_thread_nevmblockdisconnect, args=(self, nevmblockdisconnect,publisher,)).start()
         self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
-
+        assert_equal(int(self.nodes[0].getbestblockhash(), 16), publisher.getLastSYSBlock())
 
 if __name__ == '__main__':
     ZMQTest().main()

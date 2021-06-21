@@ -1804,7 +1804,7 @@ bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMBlock &e
     }
     return true;
 }
-bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const bool fInitialDownload) {
+bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const bool fInitialDownload, const bool fJustCheck) {
     CNEVMBlock evmBlock;
     if(!GetNEVMData(state, block, evmBlock)) {
         return false; //state filled by GetNEVMData 
@@ -1820,7 +1820,7 @@ bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTx
     if(bWaitForResponse) {
         evmBlock.vchNEVMBlockData = block.vchNEVMBlockData;
     }
-    GetMainSignals().NotifyEVMBlockConnect(evmBlock, state, nBlockHash, bWaitForResponse);
+    GetMainSignals().NotifyEVMBlockConnect(evmBlock, state, fJustCheck? uint256(): nBlockHash, bWaitForResponse);
     bool res = state.IsValid();
     if(res) {
         NEVMTxRoot txRootDB;
@@ -2070,20 +2070,20 @@ static int64_t nTimeTotal = 0;
 static int64_t nBlocksTotal = 0;
 // SYSCOIN
 bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                  CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck, bool processNewBlock) {
+                  CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck) {
 
     AssetMap mapAssets;
     NEVMMintTxMap mapMintKeys;
     NEVMTxRootMap mapNEVMTxRoots;
     std::vector<std::pair<uint256, uint32_t> > vecTXIDPairs;
-    return ConnectBlock(block, state, pindex, view, chainparams, fJustCheck, mapAssets, mapMintKeys, mapNEVMTxRoots, vecTXIDPairs, processNewBlock);       
+    return ConnectBlock(block, state, pindex, view, chainparams, fJustCheck, mapAssets, mapMintKeys, mapNEVMTxRoots, vecTXIDPairs);       
 }
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
 bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                   CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck, 
-                  AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMTxRootMap &mapNEVMTxRoots, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs, bool processNewBlock)
+                  AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMTxRootMap &mapNEVMTxRoots, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -2275,7 +2275,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal");
             }
         }
-        if (pindex->nHeight >= params.nNEVMStartBlock && params.nNEVMEnforce && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd && processNewBlock)) {
+        if (pindex->nHeight >= params.nNEVMStartBlock && params.nNEVMEnforce && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd, fJustCheck)) {
             return false; // state filled by ConnectNEVMCommitment
         }
 
@@ -2743,7 +2743,7 @@ public:
  * The block is added to connectTrace if connection succeeds.
  */
 // SYSCOIN
-bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions &disconnectpool, bool processNewBlock)
+bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions &disconnectpool)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(m_mempool.cs);
@@ -2775,7 +2775,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
         auto dbTx = evoDb->BeginTransaction();
 
         CCoinsViewCache view(&CoinsTip());
-        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, false, mapAssets, mapMintKeys, mapNEVMTxRoots, vecTXIDPairs, processNewBlock);
+        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, false, mapAssets, mapMintKeys, mapNEVMTxRoots, vecTXIDPairs);
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
@@ -2902,7 +2902,7 @@ void CChainState::PruneBlockIndexCandidates() {
  *
  * @returns true unless a system error occurred
  */
-bool CChainState::ActivateBestChainStep(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace, bool processNewBlock)
+bool CChainState::ActivateBestChainStep(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(m_mempool.cs);
@@ -2947,8 +2947,7 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, const CChai
 
         // Connect new blocks.
         for (CBlockIndex* pindexConnect : reverse_iterate(vpindexToConnect)) {
-            // SYSCOIN
-            if (!ConnectTip(state, chainparams, pindexConnect, pindexConnect == pindexMostWork ? pblock : std::shared_ptr<const CBlock>(), connectTrace, disconnectpool, processNewBlock)) {
+            if (!ConnectTip(state, chainparams, pindexConnect, pindexConnect == pindexMostWork ? pblock : std::shared_ptr<const CBlock>(), connectTrace, disconnectpool)) {
                 if (state.IsInvalid()) {
                     // The block violates a consensus rule.
                     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
@@ -3074,7 +3073,7 @@ bool CChainState::ActivateBestChain(BlockValidationState &state, const CChainPar
                 bool fInvalidFound = false;
                 std::shared_ptr<const CBlock> nullBlockPtr;
                 // SYSCOIN
-                if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connectTrace, pblock? true: false)) {
+                if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connectTrace)) {
                     // A system error occurred
                     return false;
                 }
@@ -4182,7 +4181,7 @@ bool TestBlockValidity(BlockValidationState& state,
         return error("%s: Consensus::CheckBlock: %s", __func__, state.ToString());
     if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.ToString());
-    if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true, true))
+    if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
         return false;
     assert(state.IsValid());
 

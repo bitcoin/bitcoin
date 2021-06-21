@@ -287,7 +287,7 @@ class CNEVMBlockConnect(CNEVMBlock):
         return r
 
     def __repr__(self):
-        return "CEVMBlock(blockhash=%064x sysblockhash=%064x txroot=%s receiptroot=%s blockdata=%s)" % (self.blockhash, self.sysblockhash, self.txroot, self.receiptroot, self.blockdata)
+        return "CNEVMBlockConnect(blockhash=%064x sysblockhash=%064x txroot=%s receiptroot=%s blockdata=%s)" % (self.blockhash, self.sysblockhash, self.txroot, self.receiptroot, self.blockdata)
 
 class CService:
     __slots__ = ("ip", "port")
