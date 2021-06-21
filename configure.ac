@@ -1425,6 +1425,8 @@ if test x$use_boost = xyes; then
   dnl Opt-in to Boost Process if external signer support is requested
   if test "x$use_external_signer" != xno; then
     AC_MSG_CHECKING(for Boost Process)
+    TEMP_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <boost/process.hpp>]],
      [[ boost::process::child* child = new boost::process::child; delete child; ]])],
      [ AC_MSG_RESULT(yes)
@@ -1432,6 +1434,7 @@ if test x$use_boost = xyes; then
      ],
      [ AC_MSG_ERROR([Boost::Process is required for external signer support, but not available!])]
     )
+    CPPFLAGS="$TEMP_CPPFLAGS"
   fi
 
   if test x$suppress_external_warnings != xno; then
