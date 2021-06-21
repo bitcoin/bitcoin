@@ -26,6 +26,7 @@ def receive_thread_nevmblock(self, subscriber, publisher):
             nevmBlock = CNEVMBlock(hashTopic, hashStr, hashStr, subscriber.topic)
             publisher.send([subscriber.topic, nevmBlock.serialize()])
         except zmq.ContextTerminated:
+            sleep(1)
             subscriber.close()
             publisher.close()
             break
@@ -43,6 +44,7 @@ def receive_thread_nevmblockconnect(self, subscriber, publisher):
             evmBlockConnect.deserialize(BytesIO(data))
             publisher.send([subscriber.topic, b"connected"])
         except zmq.ContextTerminated:
+            sleep(1)
             subscriber.close()
             publisher.close()
             break
@@ -58,6 +60,7 @@ def receive_thread_nevmblockdisconnect(self, subscriber, publisher):
             self.log.info('receive_thread_nevmblockdisconnect received data')
             publisher.send([subscriber.topic, b"disconnected"])
         except zmq.ContextTerminated:
+            sleep(1)
             subscriber.close()
             publisher.close()
             break
