@@ -39,7 +39,7 @@ bool VerifyWallets(interfaces::Chain& chain)
 
     LogPrintf("Using wallet directory %s\n", GetWalletDir().string());
 
-    chain.initMessage(_("Verifying wallet(s)...").translated);
+    chain.initMessage(_("Verifying wallet(s)…").translated);
 
     // For backwards compatibility if an unnamed top level wallet exists in the
     // wallets directory, include it in the default list of wallets to load.
@@ -76,7 +76,7 @@ bool VerifyWallets(interfaces::Chain& chain)
         bilingual_str error_string;
         if (!MakeWalletDatabase(wallet_file, options, status, error_string)) {
             if (status == DatabaseStatus::FAILED_NOT_FOUND) {
-                chain.initWarning(Untranslated(strprintf("Skipping -wallet path that doesn't exist. %s\n", error_string.original)));
+                chain.initWarning(Untranslated(strprintf("Skipping -wallet path that doesn't exist. %s", error_string.original)));
             } else {
                 chain.initError(error_string);
                 return false;
@@ -105,7 +105,8 @@ bool LoadWallets(interfaces::Chain& chain)
             if (!database && status == DatabaseStatus::FAILED_NOT_FOUND) {
                 continue;
             }
-            std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(chain, name, std::move(database), options.create_flags, error, warnings) : nullptr;
+            chain.initMessage(_("Loading wallet…").translated);
+            std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(&chain, name, std::move(database), options.create_flags, error, warnings) : nullptr;
             if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
             if (!pwallet) {
                 chain.initError(error);
@@ -154,7 +155,7 @@ void UnloadWallets()
         auto wallet = wallets.back();
         wallets.pop_back();
         std::vector<bilingual_str> warnings;
-        RemoveWallet(wallet, nullopt, warnings);
+        RemoveWallet(wallet, std::nullopt, warnings);
         UnloadWallet(std::move(wallet));
     }
 }

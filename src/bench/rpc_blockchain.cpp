@@ -12,25 +12,49 @@
 
 #include <univalue.h>
 
+namespace {
+
+struct TestBlockAndIndex {
+    const std::unique_ptr<const TestingSetup> testing_setup{MakeNoLogFileContext<const TestingSetup>(CBaseChainParams::MAIN)};
+    CBlock block{};
+    uint256 blockHash{};
+    CBlockIndex blockindex{};
+
+    TestBlockAndIndex()
+    {
+        CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
+        char a = '\0';
+        stream.write(&a, 1); // Prevent compaction
+
+        stream >> block;
+
+        blockHash = block.GetHash();
+        blockindex.phashBlock = &blockHash;
+        blockindex.nBits = 403014710;
+    }
+};
+
+} // namespace
+
 static void BlockToJsonVerbose(benchmark::Bench& bench)
 {
-    TestingSetup test_setup{};
-
-    CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
-    char a = '\0';
-    stream.write(&a, 1); // Prevent compaction
-
-    CBlock block;
-    stream >> block;
-
-    CBlockIndex blockindex;
-    const uint256 blockHash = block.GetHash();
-    blockindex.phashBlock = &blockHash;
-    blockindex.nBits = 403014710;
-
+    TestBlockAndIndex data;
     bench.run([&] {
-        (void)blockToJSON(block, &blockindex, &blockindex, /*verbose*/ true);
+        auto univalue = blockToJSON(data.block, &data.blockindex, &data.blockindex, /*verbose*/ true);
+        ankerl::nanobench::doNotOptimizeAway(univalue);
     });
 }
 
 BENCHMARK(BlockToJsonVerbose);
+
+static void BlockToJsonVerboseWrite(benchmark::Bench& bench)
+{
+    TestBlockAndIndex data;
+    auto univalue = blockToJSON(data.block, &data.blockindex, &data.blockindex, /*verbose*/ true);
+    bench.run([&] {
+        auto str = univalue.write();
+        ankerl::nanobench::doNotOptimizeAway(str);
+    });
+}
+
+BENCHMARK(BlockToJsonVerboseWrite);

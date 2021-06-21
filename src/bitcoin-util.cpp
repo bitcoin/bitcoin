@@ -43,6 +43,8 @@ static void SetupBitcoinUtilArgs(ArgsManager &argsman)
 
     argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
+    argsman.AddCommand("grind", "Perform proof of work on hex header string", OptionsCategory::COMMANDS);
+
     SetupChainParamsBaseOptions(argsman);
 }
 
@@ -57,15 +59,7 @@ static int AppInitUtil(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    // Check for chain settings (Params() calls are only valid after this clause)
-    try {
-        SelectParams(gArgs.GetChainName());
-    } catch (const std::exception& e) {
-        tfm::format(std::cerr, "Error: %s\n", e.what());
-        return EXIT_FAILURE;
-    }
-
-    if (argc < 2 || HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
+    if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
         // First part of help message is specific to this utility
         std::string strUsage = PACKAGE_NAME " bitcoin-util utility version " + FormatFullVersion() + "\n";
         if (!gArgs.IsArgSet("-version")) {
@@ -82,6 +76,15 @@ static int AppInitUtil(int argc, char* argv[])
         }
         return EXIT_SUCCESS;
     }
+
+    // Check for chain settings (Params() calls are only valid after this clause)
+    try {
+        SelectParams(gArgs.GetChainName());
+    } catch (const std::exception& e) {
+        tfm::format(std::cerr, "Error: %s\n", e.what());
+        return EXIT_FAILURE;
+    }
+
     return CONTINUE_EXECUTION;
 }
 
@@ -111,17 +114,17 @@ static void grind_task(uint32_t nBits, CBlockHeader& header_orig, uint32_t offse
     }
 }
 
-static int Grind(int argc, char* argv[], std::string& strPrint)
+static int Grind(std::vector<std::string> args, std::string& strPrint)
 {
-    if (argc != 1) {
+    if (args.size() != 1) {
         strPrint = "Must specify block header to grind";
-        return 1;
+        return EXIT_FAILURE;
     }
 
     CBlockHeader header;
-    if (!DecodeHexBlockHeader(header, argv[0])) {
+    if (!DecodeHexBlockHeader(header, args[0])) {
         strPrint = "Could not decode block header";
-        return 1;
+        return EXIT_FAILURE;
     }
 
     uint32_t nBits = header.nBits;
@@ -137,49 +140,13 @@ static int Grind(int argc, char* argv[], std::string& strPrint)
     }
     if (!found) {
         strPrint = "Could not satisfy difficulty target";
-        return 1;
+        return EXIT_FAILURE;
     }
 
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << header;
     strPrint = HexStr(ss);
-    return 0;
-}
-
-static int CommandLineUtil(int argc, char* argv[])
-{
-    if (argc <= 1) return 1;
-
-    std::string strPrint;
-    int nRet = 0;
-
-    try {
-        while (argc > 1 && IsSwitchChar(argv[1][0]) && (argv[1][1] != 0)) {
-            --argc;
-            ++argv;
-        }
-
-        char* command = argv[1];
-        if (strcmp(command, "grind") == 0) {
-            nRet = Grind(argc-2, argv+2, strPrint);
-        } else {
-            strPrint = strprintf("Unknown command %s", command);
-            nRet = 1;
-        }
-    }
-    catch (const std::exception& e) {
-        strPrint = std::string("error: ") + e.what();
-        nRet = EXIT_FAILURE;
-    }
-    catch (...) {
-        PrintExceptionContinue(nullptr, "CommandLineUtil()");
-        throw;
-    }
-
-    if (strPrint != "") {
-        tfm::format(nRet == 0 ? std::cout : std::cerr, "%s\n", strPrint);
-    }
-    return nRet;
+    return EXIT_SUCCESS;
 }
 
 #ifdef WIN32
@@ -199,8 +166,7 @@ int main(int argc, char* argv[])
         int ret = AppInitUtil(argc, argv);
         if (ret != CONTINUE_EXECUTION)
             return ret;
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInitUtil()");
         return EXIT_FAILURE;
     } catch (...) {
@@ -208,14 +174,29 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
+    const auto cmd = gArgs.GetCommand();
+    if (!cmd) {
+        tfm::format(std::cerr, "Error: must specify a command\n");
+        return EXIT_FAILURE;
+    }
+
     int ret = EXIT_FAILURE;
+    std::string strPrint;
     try {
-        ret = CommandLineUtil(argc, argv);
-    }
-    catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "CommandLineUtil()");
+        if (cmd->command == "grind") {
+            ret = Grind(cmd->args, strPrint);
+        } else {
+            assert(false); // unknown command should be caught earlier
+        }
+    } catch (const std::exception& e) {
+        strPrint = std::string("error: ") + e.what();
     } catch (...) {
-        PrintExceptionContinue(nullptr, "CommandLineUtil()");
+        strPrint = "unknown error";
     }
+
+    if (strPrint != "") {
+        tfm::format(ret == 0 ? std::cout : std::cerr, "%s\n", strPrint);
+    }
+
     return ret;
 }

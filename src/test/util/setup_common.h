@@ -8,6 +8,7 @@
 #include <chainparamsbase.h>
 #include <fs.h>
 #include <key.h>
+#include <util/system.h>
 #include <node/context.h>
 #include <pubkey.h>
 #include <random.h>
@@ -15,6 +16,7 @@
 #include <txmempool.h>
 #include <util/check.h>
 #include <util/string.h>
+#include <util/vector.h>
 
 #include <type_traits>
 #include <vector>
@@ -78,8 +80,8 @@ struct BasicTestingSetup {
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
     ~BasicTestingSetup();
 
-private:
     const fs::path m_path_root;
+    ArgsManager m_args;
 };
 
 /** Testing setup that performs all steps up until right before
@@ -121,11 +123,50 @@ struct TestChain100Setup : public RegTestingSetup {
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
                                  const CScript& scriptPubKey);
 
+    //! Mine a series of new blocks on the active chain.
+    void mineBlocks(int num_blocks);
+
+    /**
+     * Create a transaction and submit to the mempool.
+     *
+     * @param input_transaction  The transaction to spend
+     * @param input_vout         The vout to spend from the input_transaction
+     * @param input_height       The height of the block that included the input_transaction
+     * @param input_signing_key  The key to spend the input_transaction
+     * @param output_destination Where to send the output
+     * @param output_amount      How much to send
+     * @param submit             Whether or not to submit to mempool
+     */
+    CMutableTransaction CreateValidMempoolTransaction(CTransactionRef input_transaction,
+                                                      int input_vout,
+                                                      int input_height,
+                                                      CKey input_signing_key,
+                                                      CScript output_destination,
+                                                      CAmount output_amount = CAmount(1 * COIN),
+                                                      bool submit = true);
+
     ~TestChain100Setup();
 
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };
+
+/**
+ * Make a test setup that has disk access to the debug.log file disabled. Can
+ * be used in "hot loops", for example fuzzing or benchmarking.
+ */
+template <class T = const BasicTestingSetup>
+std::unique_ptr<T> MakeNoLogFileContext(const std::string& chain_name = CBaseChainParams::REGTEST, const std::vector<const char*>& extra_args = {})
+{
+    const std::vector<const char*> arguments = Cat(
+        {
+            "-nodebuglogfile",
+            "-nodebug",
+        },
+        extra_args);
+
+    return std::make_unique<T>(chain_name, arguments);
+}
 
 class CTxMemPoolEntry;
 

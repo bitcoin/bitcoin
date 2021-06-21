@@ -3,7 +3,7 @@ Building Bitcoin Core with Visual Studio
 
 Introduction
 ---------------------
-Solution and project files to build the Bitcoin Core applications `msbuild` or Visual Studio can be found in the `build_msvc` directory. The build has been tested with Visual Studio 2017 and 2019.
+Solution and project files to build the Bitcoin Core applications `msbuild` or Visual Studio can be found in the `build_msvc` directory. The build has been tested with Visual Studio 2019 (building with earlier versions of Visual Studio should not be expected to work).
 
 Building with Visual Studio is an alternative to the Linux based [cross-compiler build](https://github.com/bitcoin/bitcoin/blob/master/doc/build-windows.md).
 
@@ -27,11 +27,15 @@ Options for installing the dependencies in a Visual Studio compatible manner are
 - Download the source code, build each dependency, add the required include paths, link libraries and binary tools to the Visual Studio project files.
 - Use [nuget](https://www.nuget.org/) packages with the understanding that any binary files have been compiled by an untrusted third party.
 
-The [external dependencies](https://github.com/bitcoin/bitcoin/blob/master/doc/dependencies.md) required for building are listed in the `build_msvc/vcpkg.json` file. The `msbuild` project files are configured to automatically install the `vcpkg` dependencies.
+The [external dependencies](https://github.com/bitcoin/bitcoin/blob/master/doc/dependencies.md) required for building are listed in the `build_msvc/vcpkg.json` file. To ensure `msbuild` project files automatically install the `vcpkg` dependencies use:
+
+```
+vcpkg integrate install
+```
 
 Qt
 ---------------------
-In order to build the Bitcoin Core a static build of Qt is required. The runtime library version (e.g. v141, v142) and platform type (x86 or x64) must also match.
+In order to build Bitcoin Core a static build of Qt is required. The runtime library version (e.g. v142) and platform type (x86 or x64) must also match.
 
 Some prebuilt x64 versions of Qt can be downloaded from [here](https://github.com/sipsorcery/qt_win_binary/releases). Please be aware these downloads are NOT officially sanctioned by Bitcoin Core and are provided for developer convenience only. They should NOT be used for builds that will be used in a production environment or with real funds.
 
@@ -53,19 +57,13 @@ PS >py -3 msvc-autogen.py
 
 - An optional step is to adjust the settings in the `build_msvc` directory and the `common.init.vcxproj` file. This project file contains settings that are common to all projects such as the runtime library version and target Windows SDK version. The Qt directories can also be set.
 
-- To build from the command line with the Visual Studio 2017 toolchain use:
-
-```
-msbuild /m bitcoin.sln /p:Platform=x64 /p:Configuration=Release /p:PlatformToolset=v141 /t:build
-```
-
 - To build from the command line with the Visual Studio 2019 toolchain use:
 
 ```
 msbuild /m bitcoin.sln /p:Platform=x64 /p:Configuration=Release /t:build
 ```
 
-- Alternatively open the `build_msvc/bitcoin.sln` file in Visual Studio.
+- Alternatively, open the `build_msvc/bitcoin.sln` file in Visual Studio 2019.
 
 AppVeyor
 ---------------------
@@ -77,3 +75,25 @@ For safety reasons the Bitcoin Core .appveyor.yml file has the artifact options 
     #- 7z a bitcoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
     #- path: bitcoin-%APPVEYOR_BUILD_VERSION%.zip
 ```
+
+Security
+---------------------
+[Base address randomization](https://docs.microsoft.com/en-us/cpp/build/reference/dynamicbase-use-address-space-layout-randomization?view=msvc-160) is used to make Bitcoin Core more secure. When building Bitcoin using the `build_msvc` process base address randomization can be disabled by editing `common.init.vcproj` to change `RandomizedBaseAddress` from `true` to `false` and then rebuilding the project.
+
+To check if `bitcoind` has `RandomizedBaseAddress` enabled or disabled run
+
+```
+.\dumpbin.exe /headers src/bitcoind.exe
+```
+
+If is it enabled then in the output `Dynamic base` will be listed in the `DLL characteristics` under `OPTIONAL HEADER VALUES` as shown below
+
+```
+            8160 DLL characteristics
+                   High Entropy Virtual Addresses
+                   Dynamic base
+                   NX compatible
+                   Terminal Server Aware
+```
+
+This may not disable all stack randomization as versions of windows employ additional stack randomization protections. These protections must be turned off in the OS configuration.

@@ -9,7 +9,6 @@
 
 #include <chainparamsbase.h>
 #include <clientversion.h>
-#include <optional.h>
 #include <rpc/client.h>
 #include <rpc/mining.h>
 #include <rpc/protocol.h>
@@ -24,6 +23,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <stdio.h>
 #include <string>
 #include <tuple>
@@ -40,8 +40,10 @@ UrlDecodeFn* const URL_DECODE = urlDecode;
 
 static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
+static constexpr int DEFAULT_WAIT_CLIENT_TIMEOUT = 0;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
+static constexpr int8_t UNKNOWN_NETWORK{-1};
 
 /** Default number of blocks to generate for RPC generatetoaddress. */
 static const std::string DEFAULT_NBLOCKS = "1";
@@ -59,6 +61,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-conf=<file>", strprintf("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-generate", strprintf("Generate blocks immediately, equivalent to RPC getnewaddress followed by RPC generatetoaddress. Optional positional integer arguments are number of blocks to generate (default: %s) and maximum iterations to try (default: %s), equivalent to RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000", DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-addrinfo", "Get the number of addresses known to the node, per network and total.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional integer argument from 0 to 4 can be passed for different peers listings (default: 0). Pass \"help\" for detailed help documentation.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
@@ -71,6 +74,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-rpcport=<port>", strprintf("Connect to JSON-RPC on <port> (default: %u, testnet: %u, signet: %u, regtest: %u)", defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort(), signetBaseParams->RPCPort(), regtestBaseParams->RPCPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcuser=<user>", "Username for JSON-RPC connections", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcwait", "Wait for RPC server to start", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-rpcwaittimeout=<n>", strprintf("Timeout in seconds to wait for the RPC server to start, or 0 for no timeout. (default: %d)", DEFAULT_WAIT_CLIENT_TIMEOUT), ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcwallet=<walletname>", "Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to bitcoind). This changes the RPC endpoint used, e.g. http://127.0.0.1:8332/wallet/<walletname>", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-stdin", "Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases). When combined with -stdinrpcpass, the first line from standard input is used for the RPC password.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-stdinrpcpass", "Read RPC password from standard input as a single line. When combined with -stdin, the first line from standard input is used for the RPC password. When combined with -stdinwalletpassphrase, -stdinrpcpass consumes the first line, and -stdinwalletpassphrase consumes the second.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -228,6 +232,60 @@ public:
     virtual UniValue ProcessReply(const UniValue &batch_in) = 0;
 };
 
+/** Process addrinfo requests */
+class AddrinfoRequestHandler : public BaseRequestHandler
+{
+private:
+    static constexpr std::array m_networks{"ipv4", "ipv6", "torv2", "torv3", "i2p"};
+    int8_t NetworkStringToId(const std::string& str) const
+    {
+        for (size_t i = 0; i < m_networks.size(); ++i) {
+            if (str == m_networks.at(i)) return i;
+        }
+        return UNKNOWN_NETWORK;
+    }
+
+public:
+    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    {
+        if (!args.empty()) {
+            throw std::runtime_error("-addrinfo takes no arguments");
+        }
+        UniValue params{RPCConvertValues("getnodeaddresses", std::vector<std::string>{{"0"}})};
+        return JSONRPCRequestObj("getnodeaddresses", params, 1);
+    }
+
+    UniValue ProcessReply(const UniValue& reply) override
+    {
+        if (!reply["error"].isNull()) return reply;
+        const std::vector<UniValue>& nodes{reply["result"].getValues()};
+        if (!nodes.empty() && nodes.at(0)["network"].isNull()) {
+            throw std::runtime_error("-addrinfo requires bitcoind server to be running v22.0 and up");
+        }
+        // Count the number of peers we know by network, including torv2 versus torv3.
+        std::array<uint64_t, m_networks.size()> counts{{}};
+        for (const UniValue& node : nodes) {
+            std::string network_name{node["network"].get_str()};
+            if (network_name == "onion") {
+                network_name = node["address"].get_str().size() > 22 ? "torv3" : "torv2";
+            }
+            const int8_t network_id{NetworkStringToId(network_name)};
+            if (network_id == UNKNOWN_NETWORK) continue;
+            ++counts.at(network_id);
+        }
+        // Prepare result to return to user.
+        UniValue result{UniValue::VOBJ}, addresses{UniValue::VOBJ};
+        uint64_t total{0}; // Total address count
+        for (size_t i = 0; i < m_networks.size(); ++i) {
+            addresses.pushKV(m_networks.at(i), counts.at(i));
+            total += counts.at(i);
+        }
+        addresses.pushKV("total", total);
+        result.pushKV("addresses_known", addresses);
+        return JSONRPCReplyObj(result, NullUniValue, 1);
+    }
+};
+
 /** Process getinfo requests */
 class GetinfoRequestHandler: public BaseRequestHandler
 {
@@ -299,27 +357,23 @@ public:
 class NetinfoRequestHandler : public BaseRequestHandler
 {
 private:
-    static constexpr int8_t UNKNOWN_NETWORK{-1};
-    static constexpr int8_t NET_I2P{3}; // pos of "i2p" in m_networks
-    static constexpr uint8_t m_networks_size{4};
-    const std::array<std::string, m_networks_size> m_networks{{"ipv4", "ipv6", "onion", "i2p"}};
-    std::array<std::array<uint16_t, m_networks_size + 1>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total)
+    static constexpr uint8_t MAX_DETAIL_LEVEL{4};
+    static constexpr std::array m_networks{"ipv4", "ipv6", "onion", "i2p"};
+    std::array<std::array<uint16_t, m_networks.size() + 1>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total)
     uint8_t m_block_relay_peers_count{0};
     uint8_t m_manual_peers_count{0};
     int8_t NetworkStringToId(const std::string& str) const
     {
-        for (uint8_t i = 0; i < m_networks_size; ++i) {
+        for (size_t i = 0; i < m_networks.size(); ++i) {
             if (str == m_networks.at(i)) return i;
         }
         return UNKNOWN_NETWORK;
     }
-    uint8_t m_details_level{0};      //!< Optional user-supplied arg to set dashboard details level
-    bool m_is_help_requested{false}; //!< Optional user-supplied arg to print help documentation
+    uint8_t m_details_level{0}; //!< Optional user-supplied arg to set dashboard details level
     bool DetailsRequested() const { return m_details_level > 0 && m_details_level < 5; }
     bool IsAddressSelected() const { return m_details_level == 2 || m_details_level == 4; }
     bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
     bool m_is_asmap_on{false};
-    bool m_is_i2p_on{false};
     size_t m_max_addr_length{0};
     size_t m_max_age_length{3};
     size_t m_max_id_length{2};
@@ -366,69 +420,7 @@ private:
         if (conn_type == "addr-fetch") return "addr";
         return "";
     }
-    const UniValue NetinfoHelp()
-    {
-        return std::string{
-            "-netinfo level|\"help\" \n\n"
-            "Returns a network peer connections dashboard with information from the remote server.\n"
-            "Under the hood, -netinfo fetches the data by calling getpeerinfo and getnetworkinfo.\n"
-            "An optional integer argument from 0 to 4 can be passed for different peers listings.\n"
-            "Pass \"help\" to see this detailed help documentation.\n"
-            "If more than one argument is passed, only the first one is read and parsed.\n"
-            "Suggestion: use with the Linux watch(1) command for a live dashboard; see example below.\n\n"
-            "Arguments:\n"
-            "1. level (integer 0-4, optional)  Specify the info level of the peers dashboard (default 0):\n"
-            "                                  0 - Connection counts and local addresses\n"
-            "                                  1 - Like 0 but with a peers listing (without address or version columns)\n"
-            "                                  2 - Like 1 but with an address column\n"
-            "                                  3 - Like 1 but with a version column\n"
-            "                                  4 - Like 1 but with both address and version columns\n"
-            "2. help (string \"help\", optional) Print this help documentation instead of the dashboard.\n\n"
-            "Result:\n\n"
-            "* The peers listing in levels 1-4 displays all of the peers sorted by direction and minimum ping time:\n\n"
-            "  Column   Description\n"
-            "  ------   -----------\n"
-            "  <->      Direction\n"
-            "           \"in\"  - inbound connections are those initiated by the peer\n"
-            "           \"out\" - outbound connections are those initiated by us\n"
-            "  type     Type of peer connection\n"
-            "           \"full\"   - full relay, the default\n"
-            "           \"block\"  - block relay; like full relay but does not relay transactions or addresses\n"
-            "           \"manual\" - peer we manually added using RPC addnode or the -addnode/-connect config options\n"
-            "           \"feeler\" - short-lived connection for testing addresses\n"
-            "           \"addr\"   - address fetch; short-lived connection for requesting addresses\n"
-            "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", or \"cjdns\")\n"
-            "  mping    Minimum observed ping time, in milliseconds (ms)\n"
-            "  ping     Last observed ping time, in milliseconds (ms)\n"
-            "  send     Time since last message sent to the peer, in seconds\n"
-            "  recv     Time since last message received from the peer, in seconds\n"
-            "  txn      Time since last novel transaction received from the peer and accepted into our mempool, in minutes\n"
-            "  blk      Time since last novel block passing initial validity checks received from the peer, in minutes\n"
-            "  hb       High-bandwidth BIP152 compact block relay\n"
-            "           \".\" (to)   - we selected the peer as a high-bandwidth peer\n"
-            "           \"*\" (from) - the peer selected us as a high-bandwidth peer\n"
-            "  age      Duration of connection to the peer, in minutes\n"
-            "  asmap    Mapped AS (Autonomous System) number in the BGP route to the peer, used for diversifying\n"
-            "           peer selection (only displayed if the -asmap config option is set)\n"
-            "  id       Peer index, in increasing order of peer connections since node startup\n"
-            "  address  IP address and port of the peer\n"
-            "  version  Peer version and subversion concatenated, e.g. \"70016/Satoshi:21.0.0/\"\n\n"
-            "* The connection counts table displays the number of peers by direction, network, and the totals\n"
-            "  for each, as well as two special outbound columns for block relay peers and manual peers.\n\n"
-            "* The local addresses table lists each local address broadcast by the node, the port, and the score.\n\n"
-            "Examples:\n\n"
-            "Connection counts and local addresses only\n"
-            "> bitcoin-cli -netinfo\n\n"
-            "Compact peers listing\n"
-            "> bitcoin-cli -netinfo 1\n\n"
-            "Full dashboard\n"
-            "> bitcoin-cli -netinfo 4\n\n"
-            "Full live dashboard, adjust --interval or --no-title as needed (Linux)\n"
-            "> watch --interval 1 --no-title bitcoin-cli -netinfo 4\n\n"
-            "See this help\n"
-            "> bitcoin-cli -netinfo help\n"};
-    }
-    const int64_t m_time_now{GetSystemTimeInSeconds()};
+    const int64_t m_time_now{GetTimeSeconds()};
 
 public:
     static constexpr int ID_PEERINFO = 0;
@@ -439,11 +431,9 @@ public:
         if (!args.empty()) {
             uint8_t n{0};
             if (ParseUInt8(args.at(0), &n)) {
-                m_details_level = n;
-            } else if (args.at(0) == "help") {
-                m_is_help_requested = true;
+                m_details_level = std::min(n, MAX_DETAIL_LEVEL);
             } else {
-                throw std::runtime_error(strprintf("invalid -netinfo argument: %s", args.at(0)));
+                throw std::runtime_error(strprintf("invalid -netinfo argument: %s\nFor more information, run: bitcoin-cli -netinfo help", args.at(0)));
             }
         }
         UniValue result(UniValue::VARR);
@@ -454,9 +444,6 @@ public:
 
     UniValue ProcessReply(const UniValue& batch_in) override
     {
-        if (m_is_help_requested) {
-            return JSONRPCReplyObj(NetinfoHelp(), NullUniValue, 1);
-        }
         const std::vector<UniValue> batch{JSONRPCProcessBatchReply(batch_in)};
         if (!batch[ID_PEERINFO]["error"].isNull()) return batch[ID_PEERINFO];
         if (!batch[ID_NETWORKINFO]["error"].isNull()) return batch[ID_NETWORKINFO];
@@ -471,14 +458,13 @@ public:
             const std::string network{peer["network"].get_str()};
             const int8_t network_id{NetworkStringToId(network)};
             if (network_id == UNKNOWN_NETWORK) continue;
-            m_is_i2p_on |= (network_id == NET_I2P);
             const bool is_outbound{!peer["inbound"].get_bool()};
             const bool is_block_relay{!peer["relaytxes"].get_bool()};
             const std::string conn_type{peer["connection_type"].get_str()};
-            ++m_counts.at(is_outbound).at(network_id);      // in/out by network
-            ++m_counts.at(is_outbound).at(m_networks_size); // in/out overall
-            ++m_counts.at(2).at(network_id);                // total by network
-            ++m_counts.at(2).at(m_networks_size);           // total overall
+            ++m_counts.at(is_outbound).at(network_id);        // in/out by network
+            ++m_counts.at(is_outbound).at(m_networks.size()); // in/out overall
+            ++m_counts.at(2).at(network_id);                  // total by network
+            ++m_counts.at(2).at(m_networks.size());           // total overall
             if (conn_type == "block-relay-only") ++m_block_relay_peers_count;
             if (conn_type == "manual") ++m_manual_peers_count;
             if (DetailsRequested()) {
@@ -544,14 +530,15 @@ public:
 
         // Report peer connection totals by type.
         result += "        ipv4    ipv6   onion";
-        if (m_is_i2p_on) result += "     i2p";
+        const bool any_i2p_peers = m_counts.at(2).at(3); // false if total i2p peers count is 0, otherwise true
+        if (any_i2p_peers) result += "     i2p";
         result += "   total   block";
         if (m_manual_peers_count) result += "  manual";
-        const std::array<std::string, 3> rows{{"in", "out", "total"}};
+        const std::array rows{"in", "out", "total"};
         for (uint8_t i = 0; i < 3; ++i) {
             result += strprintf("\n%-5s  %5i   %5i   %5i", rows.at(i), m_counts.at(i).at(0), m_counts.at(i).at(1), m_counts.at(i).at(2)); // ipv4/ipv6/onion peers counts
-            if (m_is_i2p_on) result += strprintf("   %5i", m_counts.at(i).at(3)); // i2p peers count
-            result += strprintf("   %5i", m_counts.at(i).at(m_networks_size)); // total peers count
+            if (any_i2p_peers) result += strprintf("   %5i", m_counts.at(i).at(3)); // i2p peers count
+            result += strprintf("   %5i", m_counts.at(i).at(m_networks.size())); // total peers count
             if (i == 1) { // the outbound row has two extra columns for block relay and manual peer counts
                 result += strprintf("   %5i", m_block_relay_peers_count);
                 if (m_manual_peers_count) result += strprintf("   %5i", m_manual_peers_count);
@@ -575,6 +562,67 @@ public:
 
         return JSONRPCReplyObj(UniValue{result}, NullUniValue, 1);
     }
+
+    const std::string m_help_doc{
+        "-netinfo level|\"help\" \n\n"
+        "Returns a network peer connections dashboard with information from the remote server.\n"
+        "This human-readable interface will change regularly and is not intended to be a stable API.\n"
+        "Under the hood, -netinfo fetches the data by calling getpeerinfo and getnetworkinfo.\n"
+        + strprintf("An optional integer argument from 0 to %d can be passed for different peers listings; %d to 255 are parsed as %d.\n", MAX_DETAIL_LEVEL, MAX_DETAIL_LEVEL, MAX_DETAIL_LEVEL) +
+        "Pass \"help\" to see this detailed help documentation.\n"
+        "If more than one argument is passed, only the first one is read and parsed.\n"
+        "Suggestion: use with the Linux watch(1) command for a live dashboard; see example below.\n\n"
+        "Arguments:\n"
+        + strprintf("1. level (integer 0-%d, optional)  Specify the info level of the peers dashboard (default 0):\n", MAX_DETAIL_LEVEL) +
+        "                                  0 - Connection counts and local addresses\n"
+        "                                  1 - Like 0 but with a peers listing (without address or version columns)\n"
+        "                                  2 - Like 1 but with an address column\n"
+        "                                  3 - Like 1 but with a version column\n"
+        "                                  4 - Like 1 but with both address and version columns\n"
+        "2. help (string \"help\", optional) Print this help documentation instead of the dashboard.\n\n"
+        "Result:\n\n"
+        + strprintf("* The peers listing in levels 1-%d displays all of the peers sorted by direction and minimum ping time:\n\n", MAX_DETAIL_LEVEL) +
+        "  Column   Description\n"
+        "  ------   -----------\n"
+        "  <->      Direction\n"
+        "           \"in\"  - inbound connections are those initiated by the peer\n"
+        "           \"out\" - outbound connections are those initiated by us\n"
+        "  type     Type of peer connection\n"
+        "           \"full\"   - full relay, the default\n"
+        "           \"block\"  - block relay; like full relay but does not relay transactions or addresses\n"
+        "           \"manual\" - peer we manually added using RPC addnode or the -addnode/-connect config options\n"
+        "           \"feeler\" - short-lived connection for testing addresses\n"
+        "           \"addr\"   - address fetch; short-lived connection for requesting addresses\n"
+        "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", or \"cjdns\")\n"
+        "  mping    Minimum observed ping time, in milliseconds (ms)\n"
+        "  ping     Last observed ping time, in milliseconds (ms)\n"
+        "  send     Time since last message sent to the peer, in seconds\n"
+        "  recv     Time since last message received from the peer, in seconds\n"
+        "  txn      Time since last novel transaction received from the peer and accepted into our mempool, in minutes\n"
+        "  blk      Time since last novel block passing initial validity checks received from the peer, in minutes\n"
+        "  hb       High-bandwidth BIP152 compact block relay\n"
+        "           \".\" (to)   - we selected the peer as a high-bandwidth peer\n"
+        "           \"*\" (from) - the peer selected us as a high-bandwidth peer\n"
+        "  age      Duration of connection to the peer, in minutes\n"
+        "  asmap    Mapped AS (Autonomous System) number in the BGP route to the peer, used for diversifying\n"
+        "           peer selection (only displayed if the -asmap config option is set)\n"
+        "  id       Peer index, in increasing order of peer connections since node startup\n"
+        "  address  IP address and port of the peer\n"
+        "  version  Peer version and subversion concatenated, e.g. \"70016/Satoshi:21.0.0/\"\n\n"
+        "* The connection counts table displays the number of peers by direction, network, and the totals\n"
+        "  for each, as well as two special outbound columns for block relay peers and manual peers.\n\n"
+        "* The local addresses table lists each local address broadcast by the node, the port, and the score.\n\n"
+        "Examples:\n\n"
+        "Connection counts and local addresses only\n"
+        "> bitcoin-cli -netinfo\n\n"
+        "Compact peers listing\n"
+        "> bitcoin-cli -netinfo 1\n\n"
+        "Full dashboard\n"
+        + strprintf("> bitcoin-cli -netinfo %d\n\n", MAX_DETAIL_LEVEL) +
+        "Full live dashboard, adjust --interval or --no-title as needed (Linux)\n"
+        + strprintf("> watch --interval 1 --no-title bitcoin-cli -netinfo %d\n\n", MAX_DETAIL_LEVEL) +
+        "See this help\n"
+        "> bitcoin-cli -netinfo help\n"};
 };
 
 /** Process RPC generatetoaddress request. */
@@ -619,16 +667,16 @@ public:
     }
 };
 
-static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const Optional<std::string>& rpcwallet = {})
+static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const std::optional<std::string>& rpcwallet = {})
 {
     std::string host;
     // In preference order, we choose the following for the port:
     //     1. -rpcport
     //     2. port in -rpcconnect (ie following : in ipv4 or ]: in ipv6)
     //     3. default port for chain
-    int port = BaseParams().RPCPort();
+    uint16_t port{BaseParams().RPCPort()};
     SplitHostPort(gArgs.GetArg("-rpcconnect", DEFAULT_RPCCONNECT), port, host);
-    port = gArgs.GetArg("-rpcport", port);
+    port = static_cast<uint16_t>(gArgs.GetArg("-rpcport", port));
 
     // Obtain event base
     raii_event_base base = obtain_event_base();
@@ -716,6 +764,8 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
         } else {
             throw std::runtime_error("Authorization failed: Incorrect rpcuser or rpcpassword");
         }
+    } else if (response.status == HTTP_SERVICE_UNAVAILABLE) {
+        throw std::runtime_error(strprintf("Server response: %s", response.body));
     } else if (response.status >= 400 && response.status != HTTP_BAD_REQUEST && response.status != HTTP_NOT_FOUND && response.status != HTTP_INTERNAL_SERVER_ERROR)
         throw std::runtime_error(strprintf("server returned HTTP error %d", response.status));
     else if (response.body.empty())
@@ -741,11 +791,14 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
  * @returns the RPC response as a UniValue object.
  * @throws a CConnectionFailed std::runtime_error if connection failed or RPC server still in warmup.
  */
-static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const Optional<std::string>& rpcwallet = {})
+static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const std::optional<std::string>& rpcwallet = {})
 {
     UniValue response(UniValue::VOBJ);
     // Execute and handle connection failures with -rpcwait.
     const bool fWait = gArgs.GetBoolArg("-rpcwait", false);
+    const int timeout = gArgs.GetArg("-rpcwaittimeout", DEFAULT_WAIT_CLIENT_TIMEOUT);
+    const int64_t deadline = GetTime<std::chrono::seconds>().count() + timeout;
+
     do {
         try {
             response = CallRPC(rh, strMethod, args, rpcwallet);
@@ -756,11 +809,12 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
                 }
             }
             break; // Connection succeeded, no need to retry.
-        } catch (const CConnectionFailed&) {
-            if (fWait) {
-                UninterruptibleSleep(std::chrono::milliseconds{1000});
+        } catch (const CConnectionFailed& e) {
+            const int64_t now = GetTime<std::chrono::seconds>().count();
+            if (fWait && (timeout <= 0 || now < deadline)) {
+                UninterruptibleSleep(std::chrono::seconds{1});
             } else {
-                throw;
+                throw CConnectionFailed(strprintf("timeout on transient error: %s", e.what()));
             }
         }
     } while (fWait);
@@ -825,7 +879,7 @@ static void GetWalletBalances(UniValue& result)
  */
 static UniValue GetNewAddress()
 {
-    Optional<std::string> wallet_name{};
+    std::optional<std::string> wallet_name{};
     if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
     DefaultRequestHandler rh;
     return ConnectAndCallRPC(&rh, "getnewaddress", /* args=*/{}, wallet_name);
@@ -906,6 +960,10 @@ static int CommandLineRPC(int argc, char *argv[])
         if (gArgs.IsArgSet("-getinfo")) {
             rh.reset(new GetinfoRequestHandler());
         } else if (gArgs.GetBoolArg("-netinfo", false)) {
+            if (!args.empty() && args.at(0) == "help") {
+                tfm::format(std::cout, "%s\n", NetinfoRequestHandler().m_help_doc);
+                return 0;
+            }
             rh.reset(new NetinfoRequestHandler());
         } else if (gArgs.GetBoolArg("-generate", false)) {
             const UniValue getnewaddress{GetNewAddress()};
@@ -916,6 +974,8 @@ static int CommandLineRPC(int argc, char *argv[])
             } else {
                 ParseError(error, strPrint, nRet);
             }
+        } else if (gArgs.GetBoolArg("-addrinfo", false)) {
+            rh.reset(new AddrinfoRequestHandler());
         } else {
             rh.reset(new DefaultRequestHandler());
             if (args.size() < 1) {
@@ -926,7 +986,7 @@ static int CommandLineRPC(int argc, char *argv[])
         }
         if (nRet == 0) {
             // Perform RPC call
-            Optional<std::string> wallet_name{};
+            std::optional<std::string> wallet_name{};
             if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
             const UniValue reply = ConnectAndCallRPC(rh.get(), method, args, wallet_name);
 

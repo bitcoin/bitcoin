@@ -3,7 +3,7 @@ name: "bitcoin-core-osx-22"
 enable_cache: true
 distro: "ubuntu"
 suites:
-- "bionic"
+- "focal"
 architectures:
 - "amd64"
 packages:
@@ -21,30 +21,27 @@ packages:
 - "bsdmainutils"
 - "cmake"
 - "imagemagick"
-- "libcap-dev"
 - "libz-dev"
-- "libbz2-dev"
 - "python3"
-- "python3-dev"
+- "python3-pip"
 - "python3-setuptools"
 - "fonts-tuffy"
 - "xorriso"
+- "libtinfo5"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-- "Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz"
+- "Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz"
 script: |
   set -e -o pipefail
 
   WRAP_DIR=$HOME/wrapped
   HOSTS="x86_64-apple-darwin18"
-  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests XORRISOFS=${WRAP_DIR}/xorrisofs DMG=${WRAP_DIR}/dmg"
+  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary XORRISOFS=${WRAP_DIR}/xorrisofs DMG=${WRAP_DIR}/dmg"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="ar ranlib date dmg xorrisofs"
 
-  export QT_RCC_TEST=1
-  export QT_RCC_SOURCE_DATE_OVERRIDE=1
   export TZ="UTC"
   export BUILD_DIR="$PWD"
   mkdir -p ${WRAP_DIR}
@@ -81,6 +78,8 @@ script: |
   done
   }
 
+  pip3 install lief==0.11.5
+
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
   create_global_faketime_wrappers "2000-01-01 12:00:00"
@@ -91,7 +90,7 @@ script: |
   BASEPREFIX="${PWD}/depends"
 
   mkdir -p ${BASEPREFIX}/SDKs
-  tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz
+  tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz
 
   # Build dependencies for each host
   for i in $HOSTS; do

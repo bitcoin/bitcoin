@@ -11,6 +11,7 @@
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 
+#include <external_signer.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <util/string.h>
@@ -207,6 +208,9 @@ void WalletControllerActivity::showProgressDialog(const QString& label_text)
     m_progress_dialog->setCancelButton(nullptr);
     m_progress_dialog->setWindowModality(Qt::ApplicationModal);
     GUIUtil::PolishProgressDialog(m_progress_dialog);
+    // The setValue call forces QProgressDialog to start the internal duration estimation.
+    // See details in https://bugreports.qt.io/browse/QTBUG-47042.
+    m_progress_dialog->setValue(0);
 }
 
 void WalletControllerActivity::destroyProgressDialog()
@@ -247,7 +251,7 @@ void CreateWalletActivity::askPassphrase()
 
 void CreateWalletActivity::createWallet()
 {
-    showProgressDialog(tr("Creating Wallet <b>%1</b>...").arg(m_create_wallet_dialog->walletName().toHtmlEscaped()));
+    showProgressDialog(tr("Creating Wallet <b>%1</b>…").arg(m_create_wallet_dialog->walletName().toHtmlEscaped()));
 
     std::string name = m_create_wallet_dialog->walletName().toStdString();
     uint64_t flags = 0;
@@ -259,6 +263,9 @@ void CreateWalletActivity::createWallet()
     }
     if (m_create_wallet_dialog->isDescriptorWalletChecked()) {
         flags |= WALLET_FLAG_DESCRIPTORS;
+    }
+    if (m_create_wallet_dialog->isExternalSignerChecked()) {
+        flags |= WALLET_FLAG_EXTERNAL_SIGNER;
     }
 
     QTimer::singleShot(500, worker(), [this, name, flags] {
@@ -288,6 +295,15 @@ void CreateWalletActivity::finish()
 void CreateWalletActivity::create()
 {
     m_create_wallet_dialog = new CreateWalletDialog(m_parent_widget);
+
+    std::vector<ExternalSigner> signers;
+    try {
+        signers = node().externalSigners();
+    } catch (const std::runtime_error& e) {
+        QMessageBox::critical(nullptr, tr("Can't list signers"), e.what());
+    }
+    m_create_wallet_dialog->setSigners(signers);
+
     m_create_wallet_dialog->setWindowModality(Qt::ApplicationModal);
     m_create_wallet_dialog->show();
 
@@ -330,7 +346,7 @@ void OpenWalletActivity::open(const std::string& path)
 {
     QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
 
-    showProgressDialog(tr("Opening Wallet <b>%1</b>...").arg(name.toHtmlEscaped()));
+    showProgressDialog(tr("Opening Wallet <b>%1</b>…").arg(name.toHtmlEscaped()));
 
     QTimer::singleShot(0, worker(), [this, path] {
         std::unique_ptr<interfaces::Wallet> wallet = node().walletClient().loadWallet(path, m_error_message, m_warning_message);

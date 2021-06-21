@@ -95,11 +95,8 @@ $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
          "scriptPubKey" : {
             "asm" : "OP_DUP OP_HASH160 1c7cebb529b86a04c683dfa87be49de35bcf589e OP_EQUALVERIFY OP_CHECKSIG",
             "hex" : "76a9141c7cebb529b86a04c683dfa87be49de35bcf589e88ac",
-            "reqSigs" : 1,
             "type" : "pubkeyhash",
-            "addresses" : [
-               "mi7as51dvLJsizWnTMurtRmrP8hG2m1XvD"
-            ]
+            "address" : "mi7as51dvLJsizWnTMurtRmrP8hG2m1XvD"
          }
       }
    ]
@@ -111,12 +108,7 @@ $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
 
 Returns various information about the TX mempool.
 Only supports JSON as output format.
-* loaded : (boolean) if the mempool is fully loaded
-* size : (numeric) the number of transactions in the TX mempool
-* bytes : (numeric) size of the TX mempool in bytes
-* usage : (numeric) total TX mempool memory usage
-* maxmempool : (numeric) maximum memory usage for the mempool in bytes
-* mempoolminfee : (numeric) minimum feerate (BTC per KB) for tx to be accepted
+Refer to the `getmempoolinfo` RPC for documentation of the fields.
 
 `GET /rest/mempool/contents.json`
 

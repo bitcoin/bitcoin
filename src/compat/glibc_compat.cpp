@@ -9,13 +9,6 @@
 #include <cstddef>
 #include <cstdint>
 
-// Prior to GLIBC_2.14, memcpy was aliased to memmove.
-extern "C" void* memmove(void* a, const void* b, size_t c);
-extern "C" void* memcpy(void* a, const void* b, size_t c)
-{
-    return memmove(a, b, c);
-}
-
 #if defined(__i386__) || defined(__arm__)
 
 extern "C" int64_t __udivmoddi4(uint64_t u, uint64_t v, uint64_t* rp);

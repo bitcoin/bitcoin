@@ -49,9 +49,9 @@ static QString ipcServerName()
     QString name("BitcoinQt");
 
     // Append a simple hash of the datadir
-    // Note that GetDataDir(true) returns a different path
+    // Note that gArgs.GetDataDirNet() returns a different path
     // for -testnet versus main net
-    QString ddir(GUIUtil::boostPathToQString(GetDataDir(true)));
+    QString ddir(GUIUtil::boostPathToQString(gArgs.GetDataDirNet()));
     name.append(QString::number(qHash(ddir)));
 
     return name;
@@ -232,15 +232,18 @@ void PaymentServer::handleURIOrFile(const QString& s)
             SendCoinsRecipient recipient;
             if (GUIUtil::parseBitcoinURI(s, &recipient))
             {
-                if (!IsValidDestinationString(recipient.address.toStdString())) {
+                std::string error_msg;
+                const CTxDestination dest = DecodeDestination(recipient.address.toStdString(), error_msg);
+
+                if (!IsValidDestination(dest)) {
                     if (uri.hasQueryItem("r")) {  // payment request
                         Q_EMIT message(tr("URI handling"),
-                            tr("Cannot process payment request because BIP70 is not supported.")+
-                            tr("Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.")+
-                            tr("If you are receiving this error you should request the merchant provide a BIP21 compatible URI."),
+                            tr("Cannot process payment request because BIP70 is not supported.\n"
+                               "Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.\n"
+                               "If you are receiving this error you should request the merchant provide a BIP21 compatible URI."),
                             CClientUIInterface::ICON_WARNING);
                     }
-                    Q_EMIT message(tr("URI handling"), tr("Invalid payment address %1").arg(recipient.address),
+                    Q_EMIT message(tr("URI handling"), QString::fromStdString(error_msg),
                         CClientUIInterface::MSG_ERROR);
                 }
                 else
@@ -258,9 +261,9 @@ void PaymentServer::handleURIOrFile(const QString& s)
     if (QFile::exists(s)) // payment request file
     {
         Q_EMIT message(tr("Payment request file handling"),
-            tr("Cannot process payment request because BIP70 is not supported.")+
-            tr("Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.")+
-            tr("If you are receiving this error you should request the merchant provide a BIP21 compatible URI."),
+            tr("Cannot process payment request because BIP70 is not supported.\n"
+               "Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.\n"
+               "If you are receiving this error you should request the merchant provide a BIP21 compatible URI."),
             CClientUIInterface::ICON_WARNING);
     }
 }

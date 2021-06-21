@@ -19,6 +19,7 @@ import tempfile
 import time
 
 from typing import List
+from .address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from .authproxy import JSONRPCException
 from . import coverage
 from .p2p import NetworkThread
@@ -732,16 +733,18 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Set a time in the past, so that blocks don't end up in the future
             cache_node.setmocktime(cache_node.getblockheader(cache_node.getbestblockhash())['time'])
 
-            # Create a 199-block-long chain; each of the 4 first nodes
+            # Create a 199-block-long chain; each of the 3 first nodes
             # gets 25 mature blocks and 25 immature.
-            # The 4th node gets only 24 immature blocks so that the very last
+            # The 4th address gets 25 mature and only 24 immature blocks so that the very last
             # block in the cache does not age too much (have an old tip age).
             # This is needed so that we are out of IBD when the test starts,
             # see the tip age check in IsInitialBlockDownload().
+            gen_addresses = [k.address for k in TestNode.PRIV_KEYS][:3] + [ADDRESS_BCRT1_P2WSH_OP_TRUE]
+            assert_equal(len(gen_addresses), 4)
             for i in range(8):
                 cache_node.generatetoaddress(
                     nblocks=25 if i != 7 else 24,
-                    address=TestNode.PRIV_KEYS[i % 4].address,
+                    address=gen_addresses[i % len(gen_addresses)],
                 )
 
             assert_equal(cache_node.getblockchaininfo()["blocks"], 199)
@@ -755,7 +758,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
             os.rmdir(cache_path('wallets'))  # Remove empty wallets dir
             for entry in os.listdir(cache_path()):
-                if entry not in ['chainstate', 'blocks']:  # Only keep chainstate and blocks folder
+                if entry not in ['chainstate', 'blocks', 'indexes']:  # Only indexes, chainstate and blocks folders
                     os.remove(cache_path(entry))
 
         for i in range(self.num_nodes):
@@ -827,9 +830,18 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     self.options.previous_releases_path))
         return self.options.prev_releases
 
+    def skip_if_no_external_signer(self):
+        """Skip the running test if external signer support has not been compiled."""
+        if not self.is_external_signer_compiled():
+            raise SkipTest("external signer support has not been compiled.")
+
     def is_cli_compiled(self):
         """Checks whether bitcoin-cli was compiled."""
         return self.config["components"].getboolean("ENABLE_CLI")
+
+    def is_external_signer_compiled(self):
+        """Checks whether external signer support was compiled."""
+        return self.config["components"].getboolean("ENABLE_EXTERNAL_SIGNER")
 
     def is_wallet_compiled(self):
         """Checks whether the wallet module was compiled."""

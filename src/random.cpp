@@ -38,7 +38,6 @@
 #include <sys/random.h>
 #endif
 #ifdef HAVE_SYSCTL_ARND
-#include <util/strencodings.h> // for ARRAYLEN
 #include <sys/sysctl.h>
 #endif
 
@@ -333,7 +332,7 @@ void GetOSRand(unsigned char *ent32)
     int have = 0;
     do {
         size_t len = NUM_OS_RANDOM_BYTES - have;
-        if (sysctl(name, ARRAYLEN(name), ent32 + have, &len, nullptr, 0) != 0) {
+        if (sysctl(name, std::size(name), ent32 + have, &len, nullptr, 0) != 0) {
             RandFailure();
         }
         have += len;
@@ -629,7 +628,7 @@ std::vector<unsigned char> FastRandomContext::randbytes(size_t len)
     if (requires_seed) RandomSeed();
     std::vector<unsigned char> ret(len);
     if (len > 0) {
-        rng.Keystream(&ret[0], len);
+        rng.Keystream(ret.data(), len);
     }
     return ret;
 }

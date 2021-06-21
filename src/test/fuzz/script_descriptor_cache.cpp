@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <optional.h>
 #include <pubkey.h>
 #include <script/descriptor.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -10,6 +9,7 @@
 #include <test/fuzz/util.h>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 

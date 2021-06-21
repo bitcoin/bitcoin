@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -41,6 +41,11 @@ FUZZ_TARGET(muhash)
     muhash.Finalize(out2);
 
     assert(out == out2);
+    MuHash3072 muhash3;
+    muhash3 *= muhash;
+    uint256 out3;
+    muhash3.Finalize(out3);
+    assert(out == out3);
 
     // Test that removing all added elements brings the object back to it's initial state
     muhash /= muhash;
@@ -50,4 +55,9 @@ FUZZ_TARGET(muhash)
     muhash2.Finalize(out2);
 
     assert(out == out2);
+
+    muhash3.Remove(data);
+    muhash3.Remove(data2);
+    muhash3.Finalize(out3);
+    assert(out == out3);
 }

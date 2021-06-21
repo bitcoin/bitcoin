@@ -11,7 +11,9 @@
 
 #include <attributes.h>
 #include <compat.h>
+#include <crypto/siphash.h>
 #include <prevector.h>
+#include <random.h>
 #include <serialize.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
@@ -36,7 +38,7 @@ static constexpr int ADDRV2_FORMAT = 0x20000000;
  * @note An address may belong to more than one network, for example `10.0.0.1`
  * belongs to both `NET_UNROUTABLE` and `NET_IPV4`.
  * Keep these sequential starting from 0 and `NET_MAX` as the last entry.
- * We have loops like `for (int i = 0; i < NET_MAX; i++)` that expect to iterate
+ * We have loops like `for (int i = 0; i < NET_MAX; ++i)` that expect to iterate
  * over all enum values and also `GetExtNetwork()` "extends" this enum by
  * introducing standalone constants starting from `NET_MAX`.
  */
@@ -97,9 +99,6 @@ static constexpr size_t ADDR_IPV4_SIZE = 4;
 /// Size of IPv6 address (in bytes).
 static constexpr size_t ADDR_IPV6_SIZE = 16;
 
-/// Size of TORv2 address (in bytes).
-static constexpr size_t ADDR_TORV2_SIZE = 10;
-
 /// Size of TORv3 address (in bytes). This is the length of just the address
 /// as used in BIP155, without the checksum and the version byte.
 static constexpr size_t ADDR_TORV3_SIZE = 32;
@@ -151,7 +150,16 @@ class CNetAddr
 
         bool SetInternal(const std::string& name);
 
-        bool SetSpecial(const std::string &strName); // for Tor addresses
+        /**
+         * Parse a Tor or I2P address and set this object to it.
+         * @param[in] addr Address to parse, for example
+         * pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion or
+         * ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p.
+         * @returns Whether the operation was successful.
+         * @see CNetAddr::IsTor(), CNetAddr::IsI2P()
+         */
+        bool SetSpecial(const std::string& addr);
+
         bool IsBindAny() const; // INADDR_ANY equivalent
         bool IsIPv4() const;    // IPv4 mapped address (::FFFF:0:0/96, 0.0.0.0/0)
         bool IsIPv6() const;    // IPv6 address (not mapped IPv4, not Tor)
@@ -245,9 +253,28 @@ class CNetAddr
             }
         }
 
+        friend class CNetAddrHash;
         friend class CSubNet;
 
     private:
+        /**
+         * Parse a Tor address and set this object to it.
+         * @param[in] addr Address to parse, must be a valid C string, for example
+         * pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion.
+         * @returns Whether the operation was successful.
+         * @see CNetAddr::IsTor()
+         */
+        bool SetTor(const std::string& addr);
+
+        /**
+         * Parse an I2P address and set this object to it.
+         * @param[in] addr Address to parse, must be a valid C string, for example
+         * ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p.
+         * @returns Whether the operation was successful.
+         * @see CNetAddr::IsI2P()
+         */
+        bool SetI2P(const std::string& addr);
+
         /**
          * BIP155 network ids recognized by this software.
          */
@@ -275,7 +302,7 @@ class CNetAddr
         /**
          * Get the BIP155 network id of this address.
          * Must not be called for IsInternal() objects.
-         * @returns BIP155 network id
+         * @returns BIP155 network id, except TORV2 which is no longer supported.
          */
         BIP155Network GetBIP155Network() const;
 
@@ -306,23 +333,14 @@ class CNetAddr
                 memcpy(arr, IPV4_IN_IPV6_PREFIX.data(), prefix_size);
                 memcpy(arr + prefix_size, m_addr.data(), m_addr.size());
                 return;
-            case NET_ONION:
-                if (m_addr.size() == ADDR_TORV3_SIZE) {
-                    break;
-                }
-                prefix_size = sizeof(TORV2_IN_IPV6_PREFIX);
-                assert(prefix_size + m_addr.size() == sizeof(arr));
-                memcpy(arr, TORV2_IN_IPV6_PREFIX.data(), prefix_size);
-                memcpy(arr + prefix_size, m_addr.data(), m_addr.size());
-                return;
             case NET_INTERNAL:
                 prefix_size = sizeof(INTERNAL_IN_IPV6_PREFIX);
                 assert(prefix_size + m_addr.size() == sizeof(arr));
                 memcpy(arr, INTERNAL_IN_IPV6_PREFIX.data(), prefix_size);
                 memcpy(arr + prefix_size, m_addr.data(), m_addr.size());
                 return;
+            case NET_ONION:
             case NET_I2P:
-                break;
             case NET_CJDNS:
                 break;
             case NET_UNROUTABLE:
@@ -330,7 +348,7 @@ class CNetAddr
                 assert(false);
             } // no default case, so the compiler can warn about missing cases
 
-            // Serialize TORv3, I2P and CJDNS as all-zeros.
+            // Serialize ONION, I2P and CJDNS as all-zeros.
             memset(arr, 0x0, V1_SERIALIZATION_SIZE);
         }
 
@@ -447,6 +465,22 @@ class CNetAddr
             m_net = NET_IPV6;
             m_addr.assign(ADDR_IPV6_SIZE, 0x0);
         }
+};
+
+class CNetAddrHash
+{
+public:
+    size_t operator()(const CNetAddr& a) const noexcept
+    {
+        CSipHasher hasher(m_salt_k0, m_salt_k1);
+        hasher.Write(a.m_net);
+        hasher.Write(a.m_addr.data(), a.m_addr.size());
+        return static_cast<size_t>(hasher.Finalize());
+    }
+
+private:
+    const uint64_t m_salt_k0 = GetRand(std::numeric_limits<uint64_t>::max());
+    const uint64_t m_salt_k1 = GetRand(std::numeric_limits<uint64_t>::max());
 };
 
 class CSubNet

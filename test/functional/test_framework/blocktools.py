@@ -52,6 +52,9 @@ MAX_BLOCK_SIGOPS_WEIGHT = MAX_BLOCK_SIGOPS * WITNESS_SCALE_FACTOR
 # Genesis block time (regtest)
 TIME_GENESIS_BLOCK = 1296688602
 
+# Coinbase transaction outputs can only be spent after this number of new blocks (network rule)
+COINBASE_MATURITY = 100
+
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
@@ -115,7 +118,7 @@ def script_BIP34_coinbase_height(height):
     return CScript([CScriptNum(height)])
 
 
-def create_coinbase(height, pubkey=None, extra_output_script=None, fees=0):
+def create_coinbase(height, pubkey=None, extra_output_script=None, fees=0, nValue=50):
     """Create a coinbase transaction.
 
     If pubkey is passed in, the coinbase output will be a P2PK output;
@@ -126,10 +129,11 @@ def create_coinbase(height, pubkey=None, extra_output_script=None, fees=0):
     coinbase = CTransaction()
     coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(height), 0xffffffff))
     coinbaseoutput = CTxOut()
-    coinbaseoutput.nValue = 50 * COIN
-    halvings = int(height / 150)  # regtest
-    coinbaseoutput.nValue >>= halvings
-    coinbaseoutput.nValue += fees
+    coinbaseoutput.nValue = nValue * COIN
+    if nValue == 50:
+        halvings = int(height / 150)  # regtest
+        coinbaseoutput.nValue >>= halvings
+        coinbaseoutput.nValue += fees
     if pubkey is not None:
         coinbaseoutput.scriptPubKey = CScript([pubkey, OP_CHECKSIG])
     else:
@@ -177,6 +181,11 @@ def create_raw_transaction(node, txid, to_address, *, amount):
             signed_psbt = wrpc.walletprocesspsbt(psbt)
             psbt = signed_psbt['psbt']
     final_psbt = node.finalizepsbt(psbt)
+    if not final_psbt["complete"]:
+        node.log.info(f'final_psbt={final_psbt}')
+        for w in node.listwallets():
+            wrpc = node.get_wallet_rpc(w)
+            node.log.info(f'listunspent={wrpc.listunspent()}')
     assert_equal(final_psbt["complete"], True)
     return final_psbt['hex']
 

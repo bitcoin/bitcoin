@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +10,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/setup_common.h>
 #include <util/translation.h>
 
 #include <cstdint>
@@ -17,45 +18,30 @@
 
 void initialize_connman()
 {
-    static const auto testing_setup = MakeFuzzingContext<>();
+    static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
 FUZZ_TARGET_INIT(connman, initialize_connman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeBool()};
-    CAddress random_address;
+    CAddrMan addrman;
+    CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman, fuzzed_data_provider.ConsumeBool()};
     CNetAddr random_netaddr;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
-    CService random_service;
     CSubNet random_subnet;
     std::string random_string;
     while (fuzzed_data_provider.ConsumeBool()) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                random_address = ConsumeAddress(fuzzed_data_provider);
-            },
-            [&] {
                 random_netaddr = ConsumeNetAddr(fuzzed_data_provider);
-            },
-            [&] {
-                random_service = ConsumeService(fuzzed_data_provider);
             },
             [&] {
                 random_subnet = ConsumeSubNet(fuzzed_data_provider);
             },
             [&] {
                 random_string = fuzzed_data_provider.ConsumeRandomLengthString(64);
-            },
-            [&] {
-                std::vector<CAddress> addresses;
-                while (fuzzed_data_provider.ConsumeBool()) {
-                    addresses.push_back(ConsumeAddress(fuzzed_data_provider));
-                }
-                // Limit nTimePenalty to int32_t to avoid signed integer overflow
-                (void)connman.AddNewAddresses(addresses, ConsumeAddress(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int32_t>());
             },
             [&] {
                 connman.AddNode(random_string);
@@ -79,32 +65,34 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
                 connman.ForEachNode([](auto) {});
             },
             [&] {
-                connman.ForEachNodeThen([](auto) {}, []() {});
-            },
-            [&] {
                 (void)connman.ForNode(fuzzed_data_provider.ConsumeIntegral<NodeId>(), [&](auto) { return fuzzed_data_provider.ConsumeBool(); });
             },
             [&] {
-                (void)connman.GetAddresses(fuzzed_data_provider.ConsumeIntegral<size_t>(), fuzzed_data_provider.ConsumeIntegral<size_t>());
+                (void)connman.GetAddresses(
+                    /* max_addresses */ fuzzed_data_provider.ConsumeIntegral<size_t>(),
+                    /* max_pct */ fuzzed_data_provider.ConsumeIntegral<size_t>(),
+                    /* network */ std::nullopt);
             },
             [&] {
-                (void)connman.GetAddresses(random_node, fuzzed_data_provider.ConsumeIntegral<size_t>(), fuzzed_data_provider.ConsumeIntegral<size_t>());
+                (void)connman.GetAddresses(
+                    /* requestor */ random_node,
+                    /* max_addresses */ fuzzed_data_provider.ConsumeIntegral<size_t>(),
+                    /* max_pct */ fuzzed_data_provider.ConsumeIntegral<size_t>());
             },
             [&] {
                 (void)connman.GetDeterministicRandomizer(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
             },
             [&] {
-                (void)connman.GetNodeCount(fuzzed_data_provider.PickValueInArray({CConnman::CONNECTIONS_NONE, CConnman::CONNECTIONS_IN, CConnman::CONNECTIONS_OUT, CConnman::CONNECTIONS_ALL}));
-            },
-            [&] {
-                connman.MarkAddressGood(random_address);
+                (void)connman.GetNodeCount(fuzzed_data_provider.PickValueInArray({ConnectionDirection::None, ConnectionDirection::In, ConnectionDirection::Out, ConnectionDirection::Both}));
             },
             [&] {
                 (void)connman.OutboundTargetReached(fuzzed_data_provider.ConsumeBool());
             },
             [&] {
                 // Limit now to int32_t to avoid signed integer overflow
-                (void)connman.PoissonNextSendInbound(fuzzed_data_provider.ConsumeIntegral<int32_t>(), fuzzed_data_provider.ConsumeIntegral<int>());
+                (void)connman.PoissonNextSendInbound(
+                        std::chrono::microseconds{fuzzed_data_provider.ConsumeIntegral<int32_t>()},
+                        std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int>()});
             },
             [&] {
                 CSerializedNetMsg serialized_net_msg;
@@ -123,9 +111,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
             },
             [&] {
                 connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());
-            },
-            [&] {
-                connman.SetServices(random_service, ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS));
             },
             [&] {
                 connman.SetTryNewOutboundPeer(fuzzed_data_provider.ConsumeBool());

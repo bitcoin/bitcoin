@@ -1,7 +1,7 @@
 libsecp256k1
 ============
 
-[![Build Status](https://travis-ci.org/bitcoin-core/secp256k1.svg?branch=master)](https://travis-ci.org/bitcoin-core/secp256k1)
+[![Build Status](https://api.cirrus-ci.com/github/bitcoin-core/secp256k1.svg?branch=master)](https://cirrus-ci.com/github/bitcoin-core/secp256k1)
 
 Optimized C library for ECDSA signatures and secret/public key operations on curve secp256k1.
 
@@ -34,11 +34,11 @@ Implementation details
   * Optimized implementation of arithmetic modulo the curve's field size (2^256 - 0x1000003D1).
     * Using 5 52-bit limbs (including hand-optimized assembly for x86_64, by Diederik Huys).
     * Using 10 26-bit limbs (including hand-optimized assembly for 32-bit ARM, by Wladimir J. van der Laan).
-  * Field inverses and square roots using a sliding window over blocks of 1s (by Peter Dettman).
 * Scalar operations
   * Optimized implementation without data-dependent branches of arithmetic modulo the curve's order.
     * Using 4 64-bit limbs (relying on __int128 support in the compiler).
     * Using 8 32-bit limbs.
+* Modular inverses (both field elements and scalars) based on [safegcd](https://gcd.cr.yp.to/index.html) with some modifications, and a variable-time variant (by Peter Dettman).
 * Group operations
   * Point addition formula specifically simplified for the curve equation (y^2 = x^3 + 7).
   * Use addition between points in Jacobian and affine coordinates where possible.

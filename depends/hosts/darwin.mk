@@ -1,8 +1,8 @@
 OSX_MIN_VERSION=10.14
-OSX_SDK_VERSION=10.15.1
-XCODE_VERSION=11.3.1
-XCODE_BUILD_ID=11C505
-LD64_VERSION=530
+OSX_SDK_VERSION=10.15.6
+XCODE_VERSION=12.1
+XCODE_BUILD_ID=12A7403
+LD64_VERSION=609
 
 OSX_SDK=$(SDK_PATH)/Xcode-$(XCODE_VERSION)-$(XCODE_BUILD_ID)-extracted-SDK-with-libcxx-headers
 
@@ -12,14 +12,13 @@ ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
 # FORCE_USE_SYSTEM_CLANG is empty, so we use our depends-managed, pinned clang
 # from llvm.org
 
-# The native_cctools package is what provides clang when FORCE_USE_SYSTEM_CLANG
-# is empty
+# Clang is a dependency of native_cctools when FORCE_USE_SYSTEM_CLANG is empty
 darwin_native_toolchain=native_cctools
 
 clang_prog=$(build_prefix)/bin/clang
 clangxx_prog=$(clang_prog)++
 
-clang_resource_dir=$(build_prefix)/lib/clang/$(native_cctools_clang_version)
+clang_resource_dir=$(build_prefix)/lib/clang/$(native_clang_version)
 else
 # FORCE_USE_SYSTEM_CLANG is non-empty, so we use the clang from the user's
 # system
@@ -61,15 +60,10 @@ $(foreach TOOL,$(cctools_TOOLS),$(eval darwin_$(TOOL) = $$(build_prefix)/bin/$$(
 #         Explicitly point to our binaries (e.g. cctools) so that they are
 #         ensured to be found and preferred over other possibilities.
 #
-#     -stdlib=libc++ -nostdinc++ -Xclang -cxx-isystem$(OSX_SDK)/usr/include/c++/v1
+#     -stdlib=libc++ -stdlib++-isystem$(OSX_SDK)/usr/include/c++/v1
 #
 #         Forces clang to use the libc++ headers from our SDK and completely
 #         forget about the libc++ headers from the standard directories
-#
-#         TODO: Once we start requiring a clang version that has the
-#         -stdlib++-isystem<directory> flag first introduced here:
-#         https://reviews.llvm.org/D64089, we should use that instead. Read the
-#         differential summary there for more details.
 #
 #     -Xclang -*system<path_a> \
 #     -Xclang -*system<path_b> \
@@ -101,7 +95,7 @@ darwin_CC=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
               -u LIBRARY_PATH \
             $(clang_prog) --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
               -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
-              --sysroot=$(OSX_SDK) \
+              -isysroot$(OSX_SDK) \
               -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
               -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
 darwin_CXX=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
@@ -109,9 +103,9 @@ darwin_CXX=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
                -u LIBRARY_PATH \
              $(clangxx_prog) --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
                -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
-               --sysroot=$(OSX_SDK) \
-               -stdlib=libc++ -nostdinc++ \
-               -Xclang -cxx-isystem$(OSX_SDK)/usr/include/c++/v1 \
+               -isysroot$(OSX_SDK) \
+               -stdlib=libc++ \
+               -stdlib++-isystem$(OSX_SDK)/usr/include/c++/v1 \
                -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
                -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
 

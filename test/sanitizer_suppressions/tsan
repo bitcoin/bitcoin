@@ -3,31 +3,12 @@
 #
 # https://github.com/google/sanitizers/wiki/ThreadSanitizerSuppressions
 
-# double locks (TODO fix)
-mutex:g_genesis_wait_mutex
-mutex:Interrupt
-mutex:CThreadInterrupt
-mutex:CConnman::Interrupt
-mutex:CConnman::WakeMessageHandler
-mutex:CConnman::ThreadOpenConnections
-mutex:CConnman::ThreadOpenAddedConnections
-mutex:CConnman::SocketHandler
-mutex:UpdateTip
-mutex:PeerManagerImpl::UpdatedBlockTip
-mutex:g_best_block_mutex
-
 # race (TODO fix)
-race:CConnman::WakeMessageHandler
-race:CConnman::ThreadMessageHandler
-race:fHaveGenesis
-race:ProcessNewBlock
-race:ThreadImport
 race:LoadWallet
 race:WalletBatch::WriteHDChain
 race:BerkeleyBatch
 race:BerkeleyDatabase
 race:DatabaseBatch
-race:leveldb::DBImpl::DeleteObsoleteFiles
 race:zmq::*
 race:bitcoin-qt
 
@@ -35,11 +16,15 @@ race:bitcoin-qt
 deadlock:CChainState::ConnectTip
 
 # Intentional deadlock in tests
-deadlock:TestPotentialDeadLockDetected
+deadlock:sync_tests::potential_deadlock_detected
 
 # Wildcard for all gui tests, should be replaced with non-wildcard suppressions
 race:src/qt/test/*
 deadlock:src/qt/test/*
+
+# Race in src/test/main.cpp
+# Can be removed once upgraded to boost test 1.74 in depends
+race:validation_chainstatemanager_tests
 
 # External libraries
 deadlock:libdb

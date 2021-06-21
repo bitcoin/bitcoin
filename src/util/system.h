@@ -19,16 +19,15 @@
 #include <compat/assumptions.h>
 #include <fs.h>
 #include <logging.h>
-#include <optional.h>
 #include <sync.h>
 #include <tinyformat.h>
-#include <util/memory.h>
 #include <util/settings.h>
-#include <util/threadnames.h>
 #include <util/time.h>
 
+#include <any>
 #include <exception>
 #include <map>
+#include <optional>
 #include <set>
 #include <stdint.h>
 #include <string>
@@ -91,13 +90,8 @@ void ReleaseDirectoryLocks();
 
 bool TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
-// The blocks directory is always net specific.
-const fs::path &GetBlocksDir();
-const fs::path &GetDataDir(bool fNetSpecific = true);
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption();
-/** Tests only */
-void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
@@ -108,7 +102,6 @@ std::string ShellEscape(const std::string& arg);
 #if HAVE_SYSTEM
 void runCommand(const std::string& strCommand);
 #endif
-#ifdef HAVE_BOOST_PROCESS
 /**
  * Execute a command which returns JSON, and parse the result.
  *
@@ -117,14 +110,13 @@ void runCommand(const std::string& strCommand);
  * @return parsed JSON
  */
 UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in="");
-#endif // HAVE_BOOST_PROCESS
 
 /**
  * Most paths passed as configuration arguments are treated as relative to
  * the datadir if they are not absolute.
  *
  * @param path The path to be conditionally prefixed with datadir.
- * @param net_specific Forwarded to GetDataDir().
+ * @param net_specific Use network specific datadir variant
  * @return The normalized path.
  */
 fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific = true);
@@ -200,6 +192,9 @@ protected:
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
     bool m_accept_any_command GUARDED_BY(cs_args){true};
     std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
+    mutable fs::path m_cached_blocks_path GUARDED_BY(cs_args);
+    mutable fs::path m_cached_datadir_path GUARDED_BY(cs_args);
+    mutable fs::path m_cached_network_datadir_path GUARDED_BY(cs_args);
 
     [[nodiscard]] bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false);
 
@@ -262,6 +257,34 @@ public:
      * Get the command and command args (returns std::nullopt if no command provided)
      */
     std::optional<const Command> GetCommand() const;
+
+    /**
+     * Get blocks directory path
+     *
+     * @return Blocks path which is network specific
+     */
+    const fs::path& GetBlocksDirPath() const;
+
+    /**
+     * Get data directory path
+     *
+     * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
+     * @post Returned directory path is created unless it is empty
+     */
+    const fs::path& GetDataDirBase() const { return GetDataDir(false); }
+
+    /**
+     * Get data directory path with appended network identifier
+     *
+     * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
+     * @post Returned directory path is created unless it is empty
+     */
+    const fs::path& GetDataDirNet() const { return GetDataDir(true); }
+
+    /**
+     * Clear cached directory paths
+     */
+    void ClearPathCache();
 
     /**
      * Return a vector of strings of the given argument
@@ -376,7 +399,7 @@ public:
      * Return Flags for known arg.
      * Return nullopt for unknown arg.
      */
-    Optional<unsigned int> GetArgFlags(const std::string& name) const;
+    std::optional<unsigned int> GetArgFlags(const std::string& name) const;
 
     /**
      * Read and update settings file with saved settings. This needs to be
@@ -418,6 +441,15 @@ public:
     void LogArgs() const;
 
 private:
+    /**
+     * Get data directory path
+     *
+     * @param net_specific Append network identifier to the returned path
+     * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
+     * @post Returned directory path is created unless it is empty
+     */
+    const fs::path& GetDataDir(bool net_specific) const;
+
     // Helper function for LogArgs().
     void logArgsPrefix(
         const std::string& prefix,
@@ -458,28 +490,6 @@ std::string HelpMessageOpt(const std::string& option, const std::string& message
  */
 int GetNumCores();
 
-/**
- * .. and a wrapper that just calls func once
- */
-template <typename Callable> void TraceThread(const char* name,  Callable func)
-{
-    util::ThreadRename(name);
-    try
-    {
-        LogPrintf("%s thread start\n", name);
-        func();
-        LogPrintf("%s thread exit\n", name);
-    }
-    catch (const std::exception& e) {
-        PrintExceptionContinue(&e, name);
-        throw;
-    }
-    catch (...) {
-        PrintExceptionContinue(nullptr, name);
-        throw;
-    }
-}
-
 std::string CopyrightHolders(const std::string& strPrefix);
 
 /**
@@ -499,6 +509,18 @@ inline void insert(Tdst& dst, const Tsrc& src) {
 template <typename TsetT, typename Tsrc>
 inline void insert(std::set<TsetT>& dst, const Tsrc& src) {
     dst.insert(src.begin(), src.end());
+}
+
+/**
+ * Helper function to access the contained object of a std::any instance.
+ * Returns a pointer to the object if passed instance has a value and the type
+ * matches, nullptr otherwise.
+ */
+template<typename T>
+T* AnyPtr(const std::any& any) noexcept
+{
+    T* const* ptr = std::any_cast<T*>(&any);
+    return ptr ? *ptr : nullptr;
 }
 
 #ifdef WIN32

@@ -3,7 +3,7 @@ name: "bitcoin-core-win-22"
 enable_cache: true
 distro: "ubuntu"
 suites:
-- "bionic"
+- "focal"
 architectures:
 - "amd64"
 packages:
@@ -22,6 +22,7 @@ packages:
 - "zip"
 - "ca-certificates"
 - "python3"
+- "python3-pip"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
@@ -31,14 +32,12 @@ script: |
 
   WRAP_DIR=$HOME/wrapped
   HOSTS="x86_64-w64-mingw32"
-  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests"
+  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
   FAKETIME_HOST_PROGS="ar ranlib nm windres strip objcopy"
   FAKETIME_PROGS="date makensis zip"
   HOST_CFLAGS="-O2 -g -fno-ident"
   HOST_CXXFLAGS="-O2 -g -fno-ident"
 
-  export QT_RCC_TEST=1
-  export QT_RCC_SOURCE_DATE_OVERRIDE=1
   export TZ="UTC"
   export BUILD_DIR="$PWD"
   mkdir -p ${WRAP_DIR}
@@ -86,6 +85,8 @@ script: |
     done
   done
   }
+
+  pip3 install lief==0.11.5
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}

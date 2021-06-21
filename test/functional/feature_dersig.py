@@ -7,13 +7,20 @@
 Test that the DERSIG soft-fork activates at (regtest) height 1251.
 """
 
-from test_framework.blocktools import create_coinbase, create_block, create_transaction
+from test_framework.blocktools import (
+    create_block,
+    create_coinbase,
+)
 from test_framework.messages import msg_block
 from test_framework.p2p import P2PInterface
 from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+)
+from test_framework.wallet import (
+    MiniWallet,
+    MiniWalletMode,
 )
 
 DERSIG_HEIGHT = 1251
@@ -46,8 +53,9 @@ class BIP66Test(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.rpc_timeout = 240
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
+    def create_tx(self, input_txid):
+        utxo_to_spend = self.miniwallet.get_utxo(txid=input_txid, mark_as_spent=False)
+        return self.miniwallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_to_spend)['tx']
 
     def test_dersig_info(self, *, is_active):
         assert_equal(self.nodes[0].getblockchaininfo()['softforks']['bip66'],
@@ -60,17 +68,16 @@ class BIP66Test(BitcoinTestFramework):
 
     def run_test(self):
         peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        self.miniwallet = MiniWallet(self.nodes[0], mode=MiniWalletMode.RAW_P2PK)
 
         self.test_dersig_info(is_active=False)
 
         self.log.info("Mining %d blocks", DERSIG_HEIGHT - 2)
-        self.coinbase_txids = [self.nodes[0].getblock(b)['tx'][0] for b in self.nodes[0].generate(DERSIG_HEIGHT - 2)]
-        self.nodeaddress = self.nodes[0].getnewaddress()
+        self.coinbase_txids = [self.nodes[0].getblock(b)['tx'][0] for b in self.miniwallet.generate(DERSIG_HEIGHT - 2)]
 
         self.log.info("Test that a transaction with non-DER signature can still appear in a block")
 
-        spendtx = create_transaction(self.nodes[0], self.coinbase_txids[0],
-                self.nodeaddress, amount=1.0)
+        spendtx = self.create_tx(self.coinbase_txids[0])
         unDERify(spendtx)
         spendtx.rehash()
 
@@ -104,8 +111,7 @@ class BIP66Test(BitcoinTestFramework):
         self.log.info("Test that transactions with non-DER signatures cannot appear in a block")
         block.nVersion = 3
 
-        spendtx = create_transaction(self.nodes[0], self.coinbase_txids[1],
-                self.nodeaddress, amount=1.0)
+        spendtx = self.create_tx(self.coinbase_txids[1])
         unDERify(spendtx)
         spendtx.rehash()
 
@@ -133,7 +139,7 @@ class BIP66Test(BitcoinTestFramework):
             peer.sync_with_ping()
 
         self.log.info("Test that a version 3 block with a DERSIG-compliant transaction is accepted")
-        block.vtx[1] = create_transaction(self.nodes[0], self.coinbase_txids[1], self.nodeaddress, amount=1.0)
+        block.vtx[1] = self.create_tx(self.coinbase_txids[1])
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         block.solve()

@@ -39,21 +39,17 @@ public:
         // We've previously had bugs creep in from silent double->int conversion...
         static_assert(std::is_integral<I>::value, "CFeeRate should be used without floats");
     }
-    /** Constructor for a fee rate in satoshis per kvB (sat/kvB). The size in bytes must not exceed (2^63 - 1).
+    /** Constructor for a fee rate in satoshis per kvB (sat/kvB).
      *
-     *  Passing an nBytes value of COIN (1e8) returns a fee rate in satoshis per vB (sat/vB),
+     *  Passing a num_bytes value of COIN (1e8) returns a fee rate in satoshis per vB (sat/vB),
      *  e.g. (nFeePaid * 1e8 / 1e3) == (nFeePaid / 1e5),
      *  where 1e5 is the ratio to convert from BTC/kvB to sat/vB.
-     *
-     *  @param[in] nFeePaid  CAmount fee rate to construct with
-     *  @param[in] nBytes    size_t bytes (units) to construct with
-     *  @returns   fee rate
      */
-    CFeeRate(const CAmount& nFeePaid, size_t nBytes);
+    CFeeRate(const CAmount& nFeePaid, uint32_t num_bytes);
     /**
      * Return the fee in satoshis for the given size in bytes.
      */
-    CAmount GetFee(size_t nBytes) const;
+    CAmount GetFee(uint32_t num_bytes) const;
     /**
      * Return the fee in satoshis for a size of 1000 bytes
      */

@@ -16,6 +16,7 @@ variants.
   and test the values returned."""
 
 from test_framework.address import key_to_p2pkh
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.util import (
@@ -73,7 +74,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 0)
 
         self.log.info('Mining coins')
-        w0.generatetoaddress(101, w0.getnewaddress())
+        w0.generatetoaddress(COINBASE_MATURITY + 1, w0.getnewaddress())
 
         # RPC importdescriptors -----------------------------------------------
 
@@ -458,6 +459,77 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         tx_signed_2 = wmulti_priv2.signrawtransactionwithwallet(tx_signed_1['hex'])
         assert_equal(tx_signed_2['complete'], True)
         self.nodes[1].sendrawtransaction(tx_signed_2['hex'])
+
+        self.log.info("We can create and use a huge multisig under P2WSH")
+        self.nodes[1].createwallet(wallet_name='wmulti_priv_big', blank=True, descriptors=True)
+        wmulti_priv_big = self.nodes[1].get_wallet_rpc('wmulti_priv_big')
+        xkey = "tprv8ZgxMBicQKsPeZSeYx7VXDDTs3XrTcmZQpRLbAeSQFCQGgKwR4gKpcxHaKdoTNHniv4EPDJNdzA3KxRrrBHcAgth8fU5X4oCndkkxk39iAt/*"
+        xkey_int = "tprv8ZgxMBicQKsPeZSeYx7VXDDTs3XrTcmZQpRLbAeSQFCQGgKwR4gKpcxHaKdoTNHniv4EPDJNdzA3KxRrrBHcAgth8fU5X4oCndkkxk39iAt/1/*"
+        res = wmulti_priv_big.importdescriptors([
+        {
+            "desc": descsum_create(f"wsh(sortedmulti(20,{(xkey + ',') * 19}{xkey}))"),
+            "active": True,
+            "range": 1000,
+            "next_index": 0,
+            "timestamp": "now"
+        },
+        {
+            "desc": descsum_create(f"wsh(sortedmulti(20,{(xkey_int + ',') * 19}{xkey_int}))"),
+            "active": True,
+            "internal": True,
+            "range": 1000,
+            "next_index": 0,
+            "timestamp": "now"
+        }])
+        assert_equal(res[0]['success'], True)
+        assert_equal(res[1]['success'], True)
+
+        addr = wmulti_priv_big.getnewaddress()
+        w0.sendtoaddress(addr, 10)
+        self.nodes[0].generate(1)
+        self.sync_all()
+        # It is standard and would relay.
+        txid = wmulti_priv_big.sendtoaddress(w0.getnewaddress(), 9.999)
+        decoded = wmulti_priv_big.decoderawtransaction(wmulti_priv_big.gettransaction(txid)['hex'])
+        # 20 sigs + dummy + witness script
+        assert_equal(len(decoded['vin'][0]['txinwitness']), 22)
+
+
+        self.log.info("Under P2SH, multisig are standard with up to 15 "
+                      "compressed keys")
+        self.nodes[1].createwallet(wallet_name='multi_priv_big_legacy',
+                                   blank=True, descriptors=True)
+        multi_priv_big = self.nodes[1].get_wallet_rpc('multi_priv_big_legacy')
+        res = multi_priv_big.importdescriptors([
+        {
+            "desc": descsum_create(f"sh(multi(15,{(xkey + ',') * 14}{xkey}))"),
+            "active": True,
+            "range": 1000,
+            "next_index": 0,
+            "timestamp": "now"
+        },
+        {
+            "desc": descsum_create(f"sh(multi(15,{(xkey_int + ',') * 14}{xkey_int}))"),
+            "active": True,
+            "internal": True,
+            "range": 1000,
+            "next_index": 0,
+            "timestamp": "now"
+        }])
+        assert_equal(res[0]['success'], True)
+        assert_equal(res[1]['success'], True)
+
+        addr = multi_priv_big.getnewaddress("", "legacy")
+        w0.sendtoaddress(addr, 10)
+        self.nodes[0].generate(6)
+        self.sync_all()
+        # It is standard and would relay.
+        txid = multi_priv_big.sendtoaddress(w0.getnewaddress(), 10, "", "",
+                                            True)
+        decoded = multi_priv_big.decoderawtransaction(
+            multi_priv_big.gettransaction(txid)['hex']
+        )
+
 
         self.log.info("Combo descriptors cannot be active")
         self.test_importdesc({"desc": descsum_create("combo(tpubDCJtdt5dgJpdhW4MtaVYDhG4T4tF6jcLR1PxL43q9pq1mxvXgMS9Mzw1HnXG15vxUGQJMMSqCQHMTy3F1eW5VkgVroWzchsPD5BUojrcWs8/*)"),

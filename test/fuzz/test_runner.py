@@ -27,7 +27,7 @@ def get_fuzz_env(*, target, source_dir):
 def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description='''Run the fuzz targets with all inputs from the seed_dir once.''',
+        description='''Run the fuzz targets with all inputs from the corpus_dir once.''',
     )
     parser.add_argument(
         "-l",
@@ -54,8 +54,8 @@ def main():
         help='How many targets to merge or execute in parallel.',
     )
     parser.add_argument(
-        'seed_dir',
-        help='The seed corpus to run on (must contain subfolders for each fuzz target).',
+        'corpus_dir',
+        help='The corpus to run on (must contain subfolders for each fuzz target).',
     )
     parser.add_argument(
         'target',
@@ -64,15 +64,15 @@ def main():
     )
     parser.add_argument(
         '--m_dir',
-        help='Merge inputs from this directory into the seed_dir.',
+        help='Merge inputs from this directory into the corpus_dir.',
     )
     parser.add_argument(
         '-g',
         '--generate',
         action='store_true',
-        help='Create new corpus seeds (or extend the existing ones) by running'
+        help='Create new corpus (or extend the existing ones) by running'
              ' the given targets for a finite number of times. Outputs them to'
-             ' the passed seed_dir.'
+             ' the passed corpus_dir.'
     )
 
     args = parser.parse_args()
@@ -119,19 +119,19 @@ def main():
     logging.info("{} of {} detected fuzz target(s) selected: {}".format(len(test_list_selection), len(test_list_all), " ".join(test_list_selection)))
 
     if not args.generate:
-        test_list_seedless = []
+        test_list_missing_corpus = []
         for t in test_list_selection:
-            corpus_path = os.path.join(args.seed_dir, t)
+            corpus_path = os.path.join(args.corpus_dir, t)
             if not os.path.exists(corpus_path) or len(os.listdir(corpus_path)) == 0:
-                test_list_seedless.append(t)
-        test_list_seedless.sort()
-        if test_list_seedless:
+                test_list_missing_corpus.append(t)
+        test_list_missing_corpus.sort()
+        if test_list_missing_corpus:
             logging.info(
-                "Fuzzing harnesses lacking a seed corpus: {}".format(
-                    " ".join(test_list_seedless)
+                "Fuzzing harnesses lacking a corpus: {}".format(
+                    " ".join(test_list_missing_corpus)
                 )
             )
-            logging.info("Please consider adding a fuzz seed corpus at https://github.com/bitcoin-core/qa-assets")
+            logging.info("Please consider adding a fuzz corpus at https://github.com/bitcoin-core/qa-assets")
 
     try:
         help_output = subprocess.run(
@@ -154,18 +154,18 @@ def main():
 
     with ThreadPoolExecutor(max_workers=args.par) as fuzz_pool:
         if args.generate:
-            return generate_corpus_seeds(
+            return generate_corpus(
                 fuzz_pool=fuzz_pool,
                 src_dir=config['environment']['SRCDIR'],
                 build_dir=config["environment"]["BUILDDIR"],
-                seed_dir=args.seed_dir,
+                corpus_dir=args.corpus_dir,
                 targets=test_list_selection,
             )
 
         if args.m_dir:
             merge_inputs(
                 fuzz_pool=fuzz_pool,
-                corpus=args.seed_dir,
+                corpus=args.corpus_dir,
                 test_list=test_list_selection,
                 src_dir=config['environment']['SRCDIR'],
                 build_dir=config["environment"]["BUILDDIR"],
@@ -175,7 +175,7 @@ def main():
 
         run_once(
             fuzz_pool=fuzz_pool,
-            corpus=args.seed_dir,
+            corpus=args.corpus_dir,
             test_list=test_list_selection,
             src_dir=config['environment']['SRCDIR'],
             build_dir=config["environment"]["BUILDDIR"],
@@ -183,13 +183,13 @@ def main():
         )
 
 
-def generate_corpus_seeds(*, fuzz_pool, src_dir, build_dir, seed_dir, targets):
-    """Generates new corpus seeds.
+def generate_corpus(*, fuzz_pool, src_dir, build_dir, corpus_dir, targets):
+    """Generates new corpus.
 
-    Run {targets} without input, and outputs the generated corpus seeds to
-    {seed_dir}.
+    Run {targets} without input, and outputs the generated corpus to
+    {corpus_dir}.
     """
-    logging.info("Generating corpus seeds to {}".format(seed_dir))
+    logging.info("Generating corpus to {}".format(corpus_dir))
 
     def job(command, t):
         logging.debug("Running '{}'\n".format(" ".join(command)))
@@ -205,12 +205,12 @@ def generate_corpus_seeds(*, fuzz_pool, src_dir, build_dir, seed_dir, targets):
 
     futures = []
     for target in targets:
-        target_seed_dir = os.path.join(seed_dir, target)
-        os.makedirs(target_seed_dir, exist_ok=True)
+        target_corpus_dir = os.path.join(corpus_dir, target)
+        os.makedirs(target_corpus_dir, exist_ok=True)
         command = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
             "-runs=100000",
-            target_seed_dir,
+            target_corpus_dir,
         ]
         futures.append(fuzz_pool.submit(job, command, target))
 
@@ -219,12 +219,14 @@ def generate_corpus_seeds(*, fuzz_pool, src_dir, build_dir, seed_dir, targets):
 
 
 def merge_inputs(*, fuzz_pool, corpus, test_list, src_dir, build_dir, merge_dir):
-    logging.info("Merge the inputs from the passed dir into the seed_dir. Passed dir {}".format(merge_dir))
+    logging.info("Merge the inputs from the passed dir into the corpus_dir. Passed dir {}".format(merge_dir))
     jobs = []
     for t in test_list:
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
             '-merge=1',
+            '-shuffle=0',
+            '-prefer_small=1',
             '-use_value_profile=1',  # Also done by oss-fuzz https://github.com/google/oss-fuzz/issues/1406#issuecomment-387790487
             os.path.join(corpus, t),
             os.path.join(merge_dir, t),

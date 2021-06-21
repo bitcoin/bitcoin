@@ -18,12 +18,11 @@ static const struct {
     /** Extra padding/spacing in transactionview */
     const bool useExtraSpacing;
 } platform_styles[] = {
-    {"macosx", false, false, true},
+    {"macosx", false, true, true},
     {"windows", true, false, false},
     /* Other: linux, unix, ... */
     {"other", true, true, false}
 };
-static const unsigned platform_styles_count = sizeof(platform_styles)/sizeof(*platform_styles);
 
 namespace {
 /* Local functions for colorizing single-color images */
@@ -72,25 +71,28 @@ PlatformStyle::PlatformStyle(const QString &_name, bool _imagesOnButtons, bool _
     name(_name),
     imagesOnButtons(_imagesOnButtons),
     colorizeIcons(_colorizeIcons),
-    useExtraSpacing(_useExtraSpacing),
-    singleColor(0,0,0),
-    textColor(0,0,0)
+    useExtraSpacing(_useExtraSpacing)
 {
-    // Determine icon highlighting color
+}
+
+QColor PlatformStyle::TextColor() const
+{
+    return QApplication::palette().color(QPalette::WindowText);
+}
+
+QColor PlatformStyle::SingleColor() const
+{
     if (colorizeIcons) {
         const QColor colorHighlightBg(QApplication::palette().color(QPalette::Highlight));
         const QColor colorHighlightFg(QApplication::palette().color(QPalette::HighlightedText));
         const QColor colorText(QApplication::palette().color(QPalette::WindowText));
         const int colorTextLightness = colorText.lightness();
-        QColor colorbase;
-        if (abs(colorHighlightBg.lightness() - colorTextLightness) < abs(colorHighlightFg.lightness() - colorTextLightness))
-            colorbase = colorHighlightBg;
-        else
-            colorbase = colorHighlightFg;
-        singleColor = colorbase;
+        if (abs(colorHighlightBg.lightness() - colorTextLightness) < abs(colorHighlightFg.lightness() - colorTextLightness)) {
+            return colorHighlightBg;
+        }
+        return colorHighlightFg;
     }
-    // Determine text color
-    textColor = QColor(QApplication::palette().color(QPalette::WindowText));
+    return {0, 0, 0};
 }
 
 QImage PlatformStyle::SingleColorImage(const QString& filename) const
@@ -121,15 +123,13 @@ QIcon PlatformStyle::TextColorIcon(const QIcon& icon) const
 
 const PlatformStyle *PlatformStyle::instantiate(const QString &platformId)
 {
-    for (unsigned x=0; x<platform_styles_count; ++x)
-    {
-        if (platformId == platform_styles[x].platformId)
-        {
+    for (const auto& platform_style : platform_styles) {
+        if (platformId == platform_style.platformId) {
             return new PlatformStyle(
-                    platform_styles[x].platformId,
-                    platform_styles[x].imagesOnButtons,
-                    platform_styles[x].colorizeIcons,
-                    platform_styles[x].useExtraSpacing);
+                    platform_style.platformId,
+                    platform_style.imagesOnButtons,
+                    platform_style.colorizeIcons,
+                    platform_style.useExtraSpacing);
         }
     }
     return nullptr;

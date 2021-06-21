@@ -6,13 +6,10 @@
 #ifndef BITCOIN_RPC_REQUEST_H
 #define BITCOIN_RPC_REQUEST_H
 
+#include <any>
 #include <string>
 
 #include <univalue.h>
-
-namespace util {
-class Ref;
-} // namespace util
 
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id);
 UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id);
@@ -34,22 +31,11 @@ public:
     UniValue id;
     std::string strMethod;
     UniValue params;
-    bool fHelp;
+    enum Mode { EXECUTE, GET_HELP, GET_ARGS } mode = EXECUTE;
     std::string URI;
     std::string authUser;
     std::string peerAddr;
-    const util::Ref& context;
-
-    explicit JSONRPCRequest(const util::Ref& context) : id(NullUniValue), params(NullUniValue), fHelp(false), context(context) {}
-
-    //! Initializes request information from another request object and the
-    //! given context. The implementation should be updated if any members are
-    //! added or removed above.
-    JSONRPCRequest(const JSONRPCRequest& other, const util::Ref& context)
-        : id(other.id), strMethod(other.strMethod), params(other.params), fHelp(other.fHelp), URI(other.URI),
-          authUser(other.authUser), peerAddr(other.peerAddr), context(context)
-    {
-    }
+    std::any context;
 
     void parse(const UniValue& valRequest);
 };

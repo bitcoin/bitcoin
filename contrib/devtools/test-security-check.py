@@ -5,6 +5,7 @@
 '''
 Test script for security-check.py
 '''
+import os
 import subprocess
 import unittest
 
@@ -18,6 +19,10 @@ def write_testcode(filename):
         return 0;
     }
     ''')
+
+def clean_files(source, executable):
+    os.remove(source)
+    os.remove(executable)
 
 def call_security_check(cc, source, executable, options):
     subprocess.run([cc,source,'-o',executable] + options, check=True)
@@ -44,6 +49,8 @@ class TestSecurityChecks(unittest.TestCase):
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,separate-code']),
                 (0, ''))
 
+        clean_files(source, executable)
+
     def test_PE(self):
         source = 'test1.c'
         executable = 'test1.exe'
@@ -61,6 +68,8 @@ class TestSecurityChecks(unittest.TestCase):
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--high-entropy-va','-pie','-fPIE']),
             (0, ''))
 
+        clean_files(source, executable)
+
     def test_MACHO(self):
         source = 'test1.c'
         executable = 'test1'
@@ -68,17 +77,21 @@ class TestSecurityChecks(unittest.TestCase):
         write_testcode(source)
 
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-Wl,-allow_stack_execute','-fno-stack-protector']),
-            (1, executable+': failed PIE NOUNDEFS NX LAZY_BINDINGS Canary'))
+            (1, executable+': failed PIE NOUNDEFS NX LAZY_BINDINGS Canary CONTROL_FLOW'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-Wl,-allow_stack_execute','-fstack-protector-all']),
-            (1, executable+': failed PIE NOUNDEFS NX LAZY_BINDINGS'))
+            (1, executable+': failed PIE NOUNDEFS NX LAZY_BINDINGS CONTROL_FLOW'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-fstack-protector-all']),
-            (1, executable+': failed PIE NOUNDEFS LAZY_BINDINGS'))
+            (1, executable+': failed PIE NOUNDEFS LAZY_BINDINGS CONTROL_FLOW'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-fstack-protector-all']),
-            (1, executable+': failed PIE LAZY_BINDINGS'))
+            (1, executable+': failed PIE LAZY_BINDINGS CONTROL_FLOW'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-bind_at_load','-fstack-protector-all']),
+            (1, executable+': failed PIE CONTROL_FLOW'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-bind_at_load','-fstack-protector-all', '-fcf-protection=full']),
             (1, executable+': failed PIE'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-pie','-Wl,-bind_at_load','-fstack-protector-all']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-pie','-Wl,-bind_at_load','-fstack-protector-all', '-fcf-protection=full']),
             (0, ''))
+
+        clean_files(source, executable)
 
 if __name__ == '__main__':
     unittest.main()

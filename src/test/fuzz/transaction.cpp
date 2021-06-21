@@ -61,8 +61,11 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
         return;
     }
 
-    TxValidationState state_with_dupe_check;
-    (void)CheckTransaction(tx, state_with_dupe_check);
+    {
+        TxValidationState state_with_dupe_check;
+        const bool res{CheckTransaction(tx, state_with_dupe_check)};
+        Assert(res == state_with_dupe_check.IsValid());
+    }
 
     const CFeeRate dust_relay_fee{DUST_RELAY_TX_FEE};
     std::string reason;
@@ -100,16 +103,6 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
     (void)IsWitnessStandard(tx, coins_view_cache);
 
     UniValue u(UniValue::VOBJ);
-    // ValueFromAmount(i) not defined when i == std::numeric_limits<int64_t>::min()
-    bool skip_tx_to_univ = false;
-    for (const CTxOut& txout : tx.vout) {
-        if (txout.nValue == std::numeric_limits<int64_t>::min()) {
-            skip_tx_to_univ = true;
-        }
-    }
-    if (!skip_tx_to_univ) {
-        TxToUniv(tx, /* hashBlock */ {}, u);
-        static const uint256 u256_max(uint256S("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
-        TxToUniv(tx, u256_max, u);
-    }
+    TxToUniv(tx, /* hashBlock */ uint256::ZERO, /* include_addresses */ true, u);
+    TxToUniv(tx, /* hashBlock */ uint256::ONE, /* include_addresses */ false, u);
 }

@@ -15,13 +15,7 @@
             "scriptPubKey": {
                 "asm": "2 02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397 021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d 02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485 3 OP_CHECKMULTISIG",
                 "hex": "522102a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff39721021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d2102df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb48553ae",
-                "reqSigs": 2,
-                "type": "multisig",
-                "addresses": [
-                    "1FoG2386FG2tAJS9acMuiDsKy67aGg9MKz",
-                    "1FXtz9KU8JNmQDyHdiEm5HDiALuP3zdHvV",
-                    "14LuavcBbXZYJ6Tsz3cAUQj9SuQoL2xCQX"
-                ]
+                "type": "multisig"
             }
         }
     ],

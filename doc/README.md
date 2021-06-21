@@ -30,6 +30,7 @@ Drag Bitcoin Core to your applications folder, and then run Bitcoin Core.
 
 * See the documentation at the [Bitcoin Wiki](https://en.bitcoin.it/wiki/Main_Page)
 for help and more information.
+* Ask for help on the [Bitcoin StackExchange](https://bitcoin.stackexchange.com)
 * Ask for help on [#bitcoin](https://webchat.freenode.net/#bitcoin) on Freenode. If you don't have an IRC client, use [webchat here](https://webchat.freenode.net/#bitcoin).
 * Ask for help on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Technical Support board](https://bitcointalk.org/index.php?board=4.0).
 
@@ -44,6 +45,7 @@ The following are developer notes on how to build Bitcoin Core on your native pl
 - [FreeBSD Build Notes](build-freebsd.md)
 - [OpenBSD Build Notes](build-openbsd.md)
 - [NetBSD Build Notes](build-netbsd.md)
+- [Android Build Notes](build-android.md)
 - [Gitian Building Guide (External Link)](https://github.com/bitcoin-core/docs/blob/master/gitian-building.md)
 
 Development
@@ -66,7 +68,7 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 
 ### Resources
 * Discuss on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Development & Technical Discussion board](https://bitcointalk.org/index.php?board=6.0).
-* Discuss project-specific development on #bitcoin-core-dev on Freenode. If you don't have an IRC client, use [webchat here](https://webchat.freenode.net/#bitcoin-core-dev).
+* Discuss project-specific development on #bitcoin-core-dev on Libera Chat. If you don't have an IRC client, use [webchat here](https://web.libera.chat/#bitcoin-core-dev).
 * Discuss general Bitcoin development on #bitcoin-dev on Freenode. If you don't have an IRC client, use [webchat here](https://webchat.freenode.net/#bitcoin-dev).
 
 ### Miscellaneous

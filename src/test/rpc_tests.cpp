@@ -10,8 +10,9 @@
 #include <interfaces/chain.h>
 #include <node/context.h>
 #include <test/util/setup_common.h>
-#include <util/ref.h>
 #include <util/time.h>
+
+#include <any>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
@@ -32,11 +33,10 @@ UniValue RPCTestingSetup::CallRPC(std::string args)
     boost::split(vArgs, args, boost::is_any_of(" \t"));
     std::string strMethod = vArgs[0];
     vArgs.erase(vArgs.begin());
-    util::Ref context{m_node};
-    JSONRPCRequest request(context);
+    JSONRPCRequest request;
+    request.context = &m_node;
     request.strMethod = strMethod;
     request.params = RPCConvertValues(strMethod, vArgs);
-    request.fHelp = false;
     if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
     try {
         UniValue result = tableRPC.execute(request);
@@ -174,6 +174,16 @@ BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)
     BOOST_CHECK_EQUAL(ValueFromAmount(COIN/1000000).write(), "0.00000100");
     BOOST_CHECK_EQUAL(ValueFromAmount(COIN/10000000).write(), "0.00000010");
     BOOST_CHECK_EQUAL(ValueFromAmount(COIN/100000000).write(), "0.00000001");
+
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::max()).write(), "92233720368.54775807");
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::max() - 1).write(), "92233720368.54775806");
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::max() - 2).write(), "92233720368.54775805");
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::max() - 3).write(), "92233720368.54775804");
+    // ...
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::min() + 3).write(), "-92233720368.54775805");
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::min() + 2).write(), "-92233720368.54775806");
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::min() + 1).write(), "-92233720368.54775807");
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::min()).write(), "-92233720368.54775808");
 }
 
 static UniValue ValueFromString(const std::string &str)
@@ -259,22 +269,29 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     ar = r.get_array();
     o1 = ar[0].get_obj();
     adr = find_value(o1, "address");
-    UniValue banned_until = find_value(o1, "banned_until");
+    int64_t banned_until{find_value(o1, "banned_until").get_int64()};
     BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/24");
-    BOOST_CHECK_EQUAL(banned_until.get_int64(), 9907731200); // absolute time check
+    BOOST_CHECK_EQUAL(banned_until, 9907731200); // absolute time check
 
     BOOST_CHECK_NO_THROW(CallRPC(std::string("clearbanned")));
 
+    auto now = 10'000s;
+    SetMockTime(now);
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 127.0.0.0/24 add 200")));
+    SetMockTime(now += 2s);
+    const int64_t time_remaining_expected{198};
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
     ar = r.get_array();
     o1 = ar[0].get_obj();
     adr = find_value(o1, "address");
-    banned_until = find_value(o1, "banned_until");
+    banned_until = find_value(o1, "banned_until").get_int64();
+    const int64_t ban_created{find_value(o1, "ban_created").get_int64()};
+    const int64_t ban_duration{find_value(o1, "ban_duration").get_int64()};
+    const int64_t time_remaining{find_value(o1, "time_remaining").get_int64()};
     BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/24");
-    int64_t now = GetTime();
-    BOOST_CHECK(banned_until.get_int64() > now);
-    BOOST_CHECK(banned_until.get_int64()-now <= 200);
+    BOOST_CHECK_EQUAL(banned_until, time_remaining_expected + now.count());
+    BOOST_CHECK_EQUAL(ban_duration, banned_until - ban_created);
+    BOOST_CHECK_EQUAL(time_remaining, time_remaining_expected);
 
     // must throw an exception because 127.0.0.1 is in already banned subnet range
     BOOST_CHECK_THROW(r = CallRPC(std::string("setban 127.0.0.1 add")), std::runtime_error);
@@ -419,6 +436,41 @@ BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
     for (int64_t i = 0; i < NUM_GETBLOCKSTATS_PERCENTILES; i++) {
         BOOST_CHECK_EQUAL(result4[i], 1);
     }
+}
+
+BOOST_AUTO_TEST_CASE(help_example)
+{
+    // test different argument types
+    const RPCArgList& args = {{"foo", "bar"}, {"b", true}, {"n", 1}};
+    BOOST_CHECK_EQUAL(HelpExampleCliNamed("test", args), "> bitcoin-cli -named test foo=bar b=true n=1\n");
+    BOOST_CHECK_EQUAL(HelpExampleRpcNamed("test", args), "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\": \"curltest\", \"method\": \"test\", \"params\": {\"foo\":\"bar\",\"b\":true,\"n\":1}}' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n");
+
+    // test shell escape
+    BOOST_CHECK_EQUAL(HelpExampleCliNamed("test", {{"foo", "b'ar"}}), "> bitcoin-cli -named test foo='b'''ar'\n");
+    BOOST_CHECK_EQUAL(HelpExampleCliNamed("test", {{"foo", "b\"ar"}}), "> bitcoin-cli -named test foo='b\"ar'\n");
+    BOOST_CHECK_EQUAL(HelpExampleCliNamed("test", {{"foo", "b ar"}}), "> bitcoin-cli -named test foo='b ar'\n");
+
+    // test object params
+    UniValue obj_value(UniValue::VOBJ);
+    obj_value.pushKV("foo", "bar");
+    obj_value.pushKV("b", false);
+    obj_value.pushKV("n", 1);
+    BOOST_CHECK_EQUAL(HelpExampleCliNamed("test", {{"name", obj_value}}), "> bitcoin-cli -named test name='{\"foo\":\"bar\",\"b\":false,\"n\":1}'\n");
+    BOOST_CHECK_EQUAL(HelpExampleRpcNamed("test", {{"name", obj_value}}), "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\": \"curltest\", \"method\": \"test\", \"params\": {\"name\":{\"foo\":\"bar\",\"b\":false,\"n\":1}}}' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n");
+
+    // test array params
+    UniValue arr_value(UniValue::VARR);
+    arr_value.push_back("bar");
+    arr_value.push_back(false);
+    arr_value.push_back(1);
+    BOOST_CHECK_EQUAL(HelpExampleCliNamed("test", {{"name", arr_value}}), "> bitcoin-cli -named test name='[\"bar\",false,1]'\n");
+    BOOST_CHECK_EQUAL(HelpExampleRpcNamed("test", {{"name", arr_value}}), "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\": \"curltest\", \"method\": \"test\", \"params\": {\"name\":[\"bar\",false,1]}}' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n");
+
+    // test types don't matter for shell
+    BOOST_CHECK_EQUAL(HelpExampleCliNamed("foo", {{"arg", true}}), HelpExampleCliNamed("foo", {{"arg", "true"}}));
+
+    // test types matter for Rpc
+    BOOST_CHECK_NE(HelpExampleRpcNamed("foo", {{"arg", true}}), HelpExampleRpcNamed("foo", {{"arg", "true"}}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

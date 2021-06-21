@@ -15,7 +15,6 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/check.h>
-#include <util/ref.h>
 #include <util/system.h>
 #include <util/ui_change_type.h>
 #include <wallet/context.h>
@@ -198,22 +197,19 @@ public:
         }
         return result;
     }
-    bool addDestData(const CTxDestination& dest, const std::string& key, const std::string& value) override
-    {
+    std::vector<std::string> getAddressReceiveRequests() override {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->GetAddressReceiveRequests();
+    }
+    bool setAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& value) override {
         LOCK(m_wallet->cs_wallet);
         WalletBatch batch{m_wallet->GetDatabase()};
-        return m_wallet->AddDestData(batch, dest, key, value);
+        return m_wallet->SetAddressReceiveRequest(batch, dest, id, value);
     }
-    bool eraseDestData(const CTxDestination& dest, const std::string& key) override
+    bool displayAddress(const CTxDestination& dest) override
     {
         LOCK(m_wallet->cs_wallet);
-        WalletBatch batch{m_wallet->GetDatabase()};
-        return m_wallet->EraseDestData(batch, dest, key);
-    }
-    std::vector<std::string> getDestValues(const std::string& prefix) override
-    {
-        LOCK(m_wallet->cs_wallet);
-        return m_wallet->GetDestValues(prefix);
+        return m_wallet->DisplayAddress(dest);
     }
     void lockCoin(const COutPoint& output) override
     {
@@ -353,9 +349,9 @@ public:
     TransactionError fillPSBT(int sighash_type,
         bool sign,
         bool bip32derivs,
+        size_t* n_signed,
         PartiallySignedTransaction& psbtx,
-        bool& complete,
-        size_t* n_signed) override
+        bool& complete) override
     {
         return m_wallet->FillPSBT(psbtx, complete, sighash_type, sign, bip32derivs, n_signed);
     }
@@ -455,6 +451,7 @@ public:
     unsigned int getConfirmTarget() override { return m_wallet->m_confirm_target; }
     bool hdEnabled() override { return m_wallet->IsHDEnabled(); }
     bool canGetAddresses() override { return m_wallet->CanGetAddresses(); }
+    bool hasExternalSigner() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER); }
     bool privateKeysDisabled() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS); }
     OutputType getDefaultAddressType() override { return m_wallet->m_default_address_type; }
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
@@ -514,7 +511,9 @@ public:
     {
         for (const CRPCCommand& command : GetWalletRPCCommands()) {
             m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
-                return command.actor({request, m_context}, result, last_handler);
+                JSONRPCRequest wallet_request = request;
+                wallet_request.context = &m_context;
+                return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
@@ -578,10 +577,10 @@ public:
 } // namespace wallet
 
 namespace interfaces {
-std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? MakeUnique<wallet::WalletImpl>(wallet) : nullptr; }
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(wallet) : nullptr; }
 
 std::unique_ptr<WalletClient> MakeWalletClient(Chain& chain, ArgsManager& args)
 {
-    return MakeUnique<wallet::WalletClientImpl>(chain, args);
+    return std::make_unique<wallet::WalletClientImpl>(chain, args);
 }
 } // namespace interfaces

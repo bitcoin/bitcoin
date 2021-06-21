@@ -523,7 +523,7 @@ class SegWitTest(BitcoinTestFramework):
         v1_addr = program_to_witness(1, [3, 5])
         v1_tx = self.nodes[0].createrawtransaction([getutxo(spendable_txid[0])], {v1_addr: 1})
         v1_decoded = self.nodes[1].decoderawtransaction(v1_tx)
-        assert_equal(v1_decoded['vout'][0]['scriptPubKey']['addresses'][0], v1_addr)
+        assert_equal(v1_decoded['vout'][0]['scriptPubKey']['address'], v1_addr)
         assert_equal(v1_decoded['vout'][0]['scriptPubKey']['hex'], "51020305")
 
         # Check that spendable outputs are really spendable

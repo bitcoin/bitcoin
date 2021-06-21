@@ -29,19 +29,20 @@ static TransactionError HandleATMPError(const TxValidationState& state, std::str
 TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback)
 {
     // BroadcastTransaction can be called by either sendrawtransaction RPC or wallet RPCs.
-    // node.connman is assigned both before chain clients and before RPC server is accepting calls,
-    // and reset after chain clients and RPC sever are stopped. node.connman should never be null here.
-    assert(node.connman);
+    // node.peerman is assigned both before chain clients and before RPC server is accepting calls,
+    // and reset after chain clients and RPC sever are stopped. node.peerman should never be null here.
+    assert(node.peerman);
     assert(node.mempool);
     std::promise<void> promise;
     uint256 hashTx = tx->GetHash();
     bool callback_set = false;
 
     { // cs_main scope
+    assert(node.chainman);
     LOCK(cs_main);
     // If the transaction is already confirmed in the chain, don't do anything
     // and return early.
-    CCoinsViewCache &view = ::ChainstateActive().CoinsTip();
+    CCoinsViewCache &view = node.chainman->ActiveChainstate().CoinsTip();
     for (size_t o = 0; o < tx->vout.size(); o++) {
         const Coin& existingCoin = view.AccessCoin(COutPoint(hashTx, o));
         // IsSpent doesn't mean the coin is spent, it means the output doesn't exist.
@@ -50,22 +51,22 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     }
     if (!node.mempool->exists(hashTx)) {
         // Transaction is not already in the mempool.
-        TxValidationState state;
         if (max_tx_fee > 0) {
             // First, call ATMP with test_accept and check the fee. If ATMP
             // fails here, return error immediately.
-            CAmount fee{0};
-            if (!AcceptToMemoryPool(*node.mempool, state, tx,
-                nullptr /* plTxnReplaced */, false /* bypass_limits */, /* test_accept */ true, &fee)) {
-                return HandleATMPError(state, err_string);
-            } else if (fee > max_tx_fee) {
+            const MempoolAcceptResult result = AcceptToMemoryPool(node.chainman->ActiveChainstate(), *node.mempool, tx, false /* bypass_limits */,
+                                                                  true /* test_accept */);
+            if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
+                return HandleATMPError(result.m_state, err_string);
+            } else if (result.m_base_fees.value() > max_tx_fee) {
                 return TransactionError::MAX_FEE_EXCEEDED;
             }
         }
         // Try to submit the transaction to the mempool.
-        if (!AcceptToMemoryPool(*node.mempool, state, tx,
-                nullptr /* plTxnReplaced */, false /* bypass_limits */)) {
-            return HandleATMPError(state, err_string);
+        const MempoolAcceptResult result = AcceptToMemoryPool(node.chainman->ActiveChainstate(), *node.mempool, tx, false /* bypass_limits */,
+                                                              false /* test_accept */);
+        if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
+            return HandleATMPError(result.m_state, err_string);
         }
 
         // Transaction was accepted to the mempool.
@@ -98,9 +99,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         // the mempool tracks locally submitted transactions to make a
         // best-effort of initial broadcast
         node.mempool->AddUnbroadcastTx(hashTx);
-
-        LOCK(cs_main);
-        RelayTransaction(hashTx, tx->GetWitnessHash(), *node.connman);
+        node.peerman->RelayTransaction(hashTx, tx->GetWitnessHash());
     }
 
     return TransactionError::OK;

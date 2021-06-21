@@ -29,8 +29,6 @@ MAX_SCRIPT_ELEMENT_SIZE = 520
 LOCKTIME_THRESHOLD = 500000000
 ANNEX_TAG = 0x50
 
-OPCODE_NAMES = {}  # type: Dict[CScriptOp, str]
-
 LEAF_VERSION_TAPSCRIPT = 0xc0
 
 def hash160(s):
@@ -47,7 +45,6 @@ def bn2vch(v):
     # Serialize to bytes
     return encoded_v.to_bytes(n_bytes, 'little')
 
-_opcode_instances = []  # type: List[CScriptOp]
 class CScriptOp(int):
     """A single script opcode"""
     __slots__ = ()
@@ -110,6 +107,9 @@ class CScriptOp(int):
             assert len(_opcode_instances) == n
             _opcode_instances.append(super().__new__(cls, n))
             return _opcode_instances[n]
+
+OPCODE_NAMES: Dict[CScriptOp, str] = {}
+_opcode_instances: List[CScriptOp] = []
 
 # Populate opcode instance table
 for n in range(0xff + 1):
@@ -826,11 +826,11 @@ def taproot_tree_helper(scripts):
 
 # A TaprootInfo object has the following fields:
 # - scriptPubKey: the scriptPubKey (witness v1 CScript)
-# - inner_pubkey: the inner pubkey (32 bytes)
-# - negflag: whether the pubkey in the scriptPubKey was negated from inner_pubkey+tweak*G (bool).
+# - internal_pubkey: the internal pubkey (32 bytes)
+# - negflag: whether the pubkey in the scriptPubKey was negated from internal_pubkey+tweak*G (bool).
 # - tweak: the tweak (32 bytes)
 # - leaves: a dict of name -> TaprootLeafInfo objects for all known leaves
-TaprootInfo = namedtuple("TaprootInfo", "scriptPubKey,inner_pubkey,negflag,tweak,leaves")
+TaprootInfo = namedtuple("TaprootInfo", "scriptPubKey,internal_pubkey,negflag,tweak,leaves")
 
 # A TaprootLeafInfo object has the following fields:
 # - script: the leaf script (CScript or bytes)

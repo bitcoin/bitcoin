@@ -22,15 +22,15 @@ index 7c62c2e2b3..c05c6c0a07 100644
  #include <xcb/xfixes.h>
  #include <xcb/xcb_image.h>
  
-@@ -384,6 +386,7 @@ void QXcbCursor::changeCursor(QCursor *cursor, QWindow *widget)
-     w->setCursor(c, isBitmapCursor);
+@@ -391,6 +393,7 @@ void QXcbCursor::changeCursor(QCursor *cursor, QWindow *window)
+     xcb_flush(xcb_connection());
  }
  
 +#if QT_CONFIG(xcb_xlib) && QT_CONFIG(library)
  static int cursorIdForShape(int cshape)
  {
      int cursorId = 0;
-@@ -437,6 +440,7 @@ static int cursorIdForShape(int cshape)
+@@ -444,6 +447,7 @@ static int cursorIdForShape(int cshape)
      }
      return cursorId;
  }
@@ -38,7 +38,7 @@ index 7c62c2e2b3..c05c6c0a07 100644
  
  xcb_cursor_t QXcbCursor::createNonStandardCursor(int cshape)
  {
-@@ -558,7 +562,9 @@ static xcb_cursor_t loadCursor(void *dpy, int cshape)
+@@ -556,7 +560,9 @@ static xcb_cursor_t loadCursor(void *dpy, int cshape)
  xcb_cursor_t QXcbCursor::createFontCursor(int cshape)
  {
      xcb_connection_t *conn = xcb_connection();
@@ -48,22 +48,23 @@ index 7c62c2e2b3..c05c6c0a07 100644
      xcb_cursor_t cursor = XCB_NONE;
  
      // Try Xcursor first
-@@ -589,6 +595,7 @@ xcb_cursor_t QXcbCursor::createFontCursor(int cshape)
+@@ -585,7 +591,7 @@ xcb_cursor_t QXcbCursor::createFontCursor(int cshape)
+ 
      // Non-standard X11 cursors are created from bitmaps
      cursor = createNonStandardCursor(cshape);
- 
+-
 +#if QT_CONFIG(xcb_xlib) && QT_CONFIG(library)
      // Create a glpyh cursor if everything else failed
      if (!cursor && cursorId) {
          cursor = xcb_generate_id(conn);
-@@ -596,6 +603,7 @@ xcb_cursor_t QXcbCursor::createFontCursor(int cshape)
+@@ -593,6 +599,7 @@ xcb_cursor_t QXcbCursor::createFontCursor(int cshape)
                                  cursorId, cursorId + 1,
                                  0xFFFF, 0xFFFF, 0xFFFF, 0, 0, 0);
      }
 +#endif
  
      if (cursor && cshape >= 0 && cshape < Qt::LastCursor && connection()->hasXFixes()) {
-         const char *name = cursorNames[cshape];
+         const char *name = cursorNames[cshape].front();
 -- 
 2.22.0
 

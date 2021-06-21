@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,7 +13,7 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
-#include <util/memory.h>
+#include <txorphanage.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -23,7 +23,7 @@ const TestingSetup* g_setup;
 
 void initialize_process_messages()
 {
-    static const auto testing_setup = MakeFuzzingContext<const TestingSetup>();
+    static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
     g_setup = testing_setup.get();
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
         MineBlock(g_setup->m_node, CScript() << OP_TRUE);
@@ -35,8 +35,8 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
-    ConnmanTestMsg& connman = *(ConnmanTestMsg*)g_setup->m_node.connman.get();
-    TestChainState& chainstate = *(TestChainState*)&g_setup->m_node.chainman->ActiveChainstate();
+    ConnmanTestMsg& connman = *static_cast<ConnmanTestMsg*>(g_setup->m_node.connman.get());
+    TestChainState& chainstate = *static_cast<TestChainState*>(&g_setup->m_node.chainman->ActiveChainstate());
     SetMockTime(1610000000); // any time to successfully reset ibd
     chainstate.ResetIbd();
 
@@ -46,7 +46,7 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, i).release());
         CNode& p2p_node = *peers.back();
 
-        const bool successfully_connected{true};
+        const bool successfully_connected{fuzzed_data_provider.ConsumeBool()};
         p2p_node.fSuccessfullyConnected = successfully_connected;
         p2p_node.fPauseSend = false;
         g_setup->m_node.peerman->InitializeNode(&p2p_node);
@@ -65,7 +65,7 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         net_msg.m_type = random_message_type;
         net_msg.data = ConsumeRandomLengthByteVector(fuzzed_data_provider);
 
-        CNode& random_node = *peers.at(fuzzed_data_provider.ConsumeIntegralInRange<int>(0, peers.size() - 1));
+        CNode& random_node = *PickValue(fuzzed_data_provider, peers);
 
         (void)connman.ReceiveMsgFrom(random_node, net_msg);
         random_node.fPauseSend = false;
@@ -80,6 +80,5 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         }
     }
     SyncWithValidationInterfaceQueue();
-    LOCK2(::cs_main, g_cs_orphans); // See init.cpp for rationale for implicit locking order requirement
     g_setup->m_node.connman->StopNodes();
 }

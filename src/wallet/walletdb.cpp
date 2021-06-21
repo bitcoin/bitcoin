@@ -23,6 +23,7 @@
 #include <wallet/wallet.h>
 
 #include <atomic>
+#include <optional>
 #include <string>
 
 namespace DBKeys {
@@ -154,7 +155,7 @@ bool WalletBatch::WriteWatchOnly(const CScript &dest, const CKeyMetadata& keyMet
     if (!WriteIC(std::make_pair(DBKeys::WATCHMETA, dest), keyMeta)) {
         return false;
     }
-    return WriteIC(std::make_pair(DBKeys::WATCHS, dest), '1');
+    return WriteIC(std::make_pair(DBKeys::WATCHS, dest), uint8_t{'1'});
 }
 
 bool WalletBatch::EraseWatchOnly(const CScript &dest)
@@ -307,8 +308,8 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 {
                     if (!ssValue.empty())
                     {
-                        char fTmp;
-                        char fUnused;
+                        uint8_t fTmp;
+                        uint8_t fUnused;
                         std::string unused_string;
                         ssValue >> fTmp >> fUnused >> unused_string;
                         strErr = strprintf("LoadWallet() upgrading tx ver=%d %d %s",
@@ -335,7 +336,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             wss.nWatchKeys++;
             CScript script;
             ssKey >> script;
-            char fYes;
+            uint8_t fYes;
             ssValue >> fYes;
             if (fYes == '1') {
                 pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadWatchOnly(script);
@@ -551,13 +552,6 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             CHDChain chain;
             ssValue >> chain;
             pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadHDChain(chain);
-        } else if (strType == DBKeys::FLAGS) {
-            uint64_t flags;
-            ssValue >> flags;
-            if (!pwallet->LoadWalletFlags(flags)) {
-                strErr = "Error reading wallet database: Unknown non-tolerable wallet flags found";
-                return false;
-            }
         } else if (strType == DBKeys::OLD_KEY) {
             strErr = "Found unsupported 'wkey' record, try loading with version 0.18";
             return false;
@@ -662,7 +656,8 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             wss.fIsEncrypted = true;
         } else if (strType != DBKeys::BESTBLOCK && strType != DBKeys::BESTBLOCK_NOMERKLE &&
                    strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
-                   strType != DBKeys::VERSION && strType != DBKeys::SETTINGS) {
+                   strType != DBKeys::VERSION && strType != DBKeys::SETTINGS &&
+                   strType != DBKeys::FLAGS) {
             wss.m_unknown_records++;
         }
     } catch (const std::exception& e) {
@@ -706,6 +701,23 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
                 return DBErrors::TOO_NEW;
             pwallet->LoadMinVersion(nMinVersion);
         }
+
+        // Load wallet flags, so they are known when processing other records.
+        // The FLAGS key is absent during wallet creation.
+        uint64_t flags;
+        if (m_batch->Read(DBKeys::FLAGS, flags)) {
+            if (!pwallet->LoadWalletFlags(flags)) {
+                pwallet->WalletLogPrintf("Error reading wallet database: Unknown non-tolerable wallet flags found\n");
+                return DBErrors::CORRUPT;
+            }
+        }
+
+#ifndef ENABLE_EXTERNAL_SIGNER
+        if (pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
+            pwallet->WalletLogPrintf("Error: External signer wallet being loaded without external signer support compiled\n");
+            return DBErrors::TOO_NEW;
+        }
+#endif
 
         // Get cursor
         if (!m_batch->StartCursor())
@@ -1011,7 +1023,7 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
         return nullptr;
     }
 
-    Optional<DatabaseFormat> format;
+    std::optional<DatabaseFormat> format;
     if (exists) {
         if (IsBDBFile(BDBDataFile(path))) {
             format = DatabaseFormat::BERKELEY;
@@ -1082,15 +1094,15 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
 /** Return object for accessing dummy database with no read/write capabilities. */
 std::unique_ptr<WalletDatabase> CreateDummyWalletDatabase()
 {
-    return MakeUnique<DummyDatabase>();
+    return std::make_unique<DummyDatabase>();
 }
 
 /** Return object for accessing temporary in-memory database. */
 std::unique_ptr<WalletDatabase> CreateMockWalletDatabase()
 {
 #ifdef USE_BDB
-    return MakeUnique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "");
+    return std::make_unique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "");
 #elif USE_SQLITE
-    return MakeUnique<SQLiteDatabase>("", "", true);
+    return std::make_unique<SQLiteDatabase>("", "", true);
 #endif
 }

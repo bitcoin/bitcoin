@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -34,7 +34,7 @@ FUZZ_TARGET_INIT(pow, initialize_pow)
         }
         CBlockIndex current_block{*block_header};
         {
-            CBlockIndex* previous_block = !blocks.empty() ? &blocks[fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, blocks.size() - 1)] : nullptr;
+            CBlockIndex* previous_block = blocks.empty() ? nullptr : &PickValue(fuzzed_data_provider, blocks);
             const int current_height = (previous_block != nullptr && previous_block->nHeight != std::numeric_limits<int>::max()) ? previous_block->nHeight + 1 : 0;
             if (fuzzed_data_provider.ConsumeBool()) {
                 current_block.pprev = previous_block;
@@ -66,9 +66,9 @@ FUZZ_TARGET_INIT(pow, initialize_pow)
             }
         }
         {
-            const CBlockIndex* to = &blocks[fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, blocks.size() - 1)];
-            const CBlockIndex* from = &blocks[fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, blocks.size() - 1)];
-            const CBlockIndex* tip = &blocks[fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, blocks.size() - 1)];
+            const CBlockIndex* to = &PickValue(fuzzed_data_provider, blocks);
+            const CBlockIndex* from = &PickValue(fuzzed_data_provider, blocks);
+            const CBlockIndex* tip = &PickValue(fuzzed_data_provider, blocks);
             try {
                 (void)GetBlockProofEquivalentTime(*to, *from, *tip, consensus_params);
             } catch (const uint_error&) {

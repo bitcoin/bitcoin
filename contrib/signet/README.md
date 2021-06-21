@@ -21,27 +21,28 @@ accept one claim per day. See `--password` above.
 miner
 =====
 
-To mine the first block in your custom chain, you can run:
+You will first need to pick a difficulty target. Since signet chains are primarily protected by a signature rather than proof of work, there is no need to spend as much energy as possible mining, however you may wish to choose to spend more time than the absolute minimum. The calibrate subcommand can be used to pick a target appropriate for your hardware, eg:
 
     cd src/
-    CLI="./bitcoin-cli -conf=mysignet.conf"
-    MINER="..contrib/signet/miner"
+    MINER="../contrib/signet/miner"
     GRIND="./bitcoin-util grind"
-    ADDR=$($CLI -signet getnewaddress)
-    $MINER --cli="$CLI" generate --grind-cmd="$GRIND" --address="$ADDR" --set-block-time=-1
-
-This will mine a block with the current timestamp. If you want to backdate the chain, you can give a different timestamp to --set-block-time.
-
-You will then need to pick a difficulty target. Since signet chains are primarily protected by a signature rather than proof of work, there is no need to spend as much energy as possible mining, however you may wish to choose to spend more time than the absolute minimum. The calibrate subcommand can be used to pick a target, eg:
-
     $MINER calibrate --grind-cmd="$GRIND"
     nbits=1e00f403 for 25s average mining time
 
 It defaults to estimating an nbits value resulting in 25s average time to find a block, but the --seconds parameter can be used to pick a different target, or the --nbits parameter can be used to estimate how long it will take for a given difficulty.
 
-Using the --ongoing parameter will then cause the signet miner to create blocks indefinitely. It will pick the time between blocks so that difficulty is adjusted to match the provided --nbits value.
+To mine the first block in your custom chain, you can run:
 
-    $MINER --cli="$CLI" generate --grind-cmd="$GRIND" --address="$ADDR" --nbits=1e00f403 --ongoing
+    CLI="./bitcoin-cli -conf=mysignet.conf"
+    ADDR=$($CLI -signet getnewaddress)
+    NBITS=1e00f403
+    $MINER --cli="$CLI" generate --grind-cmd="$GRIND" --address="$ADDR" --nbits=$NBITS
+
+This will mine a single block with a backdated timestamp designed to allow 100 blocks to be mined as quickly as possible, so that it is possible to do transactions.
+
+Adding the --ongoing parameter will then cause the signet miner to create blocks indefinitely. It will pick the time between blocks so that difficulty is adjusted to match the provided --nbits value.
+
+    $MINER --cli="$CLI" generate --grind-cmd="$GRIND" --address="$ADDR" --nbits=$NBITS --ongoing
 
 Other options
 -------------
@@ -50,9 +51,11 @@ The --debug and --quiet options are available to control how noisy the signet mi
 
 Instead of specifying --ongoing, you can specify --max-blocks=N to mine N blocks and stop.
 
-Instead of using a single address, a ranged descriptor may be provided instead (via the --descriptor parameter), with the reward for the block at height H being sent to the H'th address generated from the descriptor.
+The --set-block-time option is available to manually move timestamps forward or backward (subject to the rules that blocktime must be greater than mediantime, and dates can't be more than two hours in the future). It can only be used when mining a single block (ie, not when using --ongoing or --max-blocks greater than 1).
 
-Instead of calculating a specific nbits value, --min-nbits can be specified instead, in which case the mininmum signet difficulty will be targeted.
+Instead of using a single address, a ranged descriptor may be provided via the --descriptor parameter, with the reward for the block at height H being sent to the H'th address generated from the descriptor.
+
+Instead of calculating a specific nbits value, --min-nbits can be specified instead, in which case the minimum signet difficulty will be targeted. Signet's minimum difficulty corresponds to --nbits=1e0377ae.
 
 By default, the signet miner mines blocks at fixed intervals with minimal variation. If you want blocks to appear more randomly, as they do in mainnet, specify the --poisson option.
 
@@ -76,5 +79,5 @@ These steps can instead be done explicitly:
       $MINER --cli="$CLI" solvepsbt --grind-cmd="$GRIND" |
       $CLI -signet -stdin submitblock
 
-This is intended to allow you to replace part of the pipeline for further experimentation, if desired.
+This is intended to allow you to replace part of the pipeline for further experimentation (eg, to sign the block with a hardware wallet).
 

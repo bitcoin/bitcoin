@@ -75,6 +75,11 @@ tool to clean up patches automatically before submission.
     on the same line as the `if`, without braces. In every other case,
     braces are required, and the `then` and `else` clauses must appear
     correctly indented on a new line.
+  - There's no hard limit on line width, but prefer to keep lines to <100
+    characters if doing so does not decrease readability. Break up long
+    function declarations over multiple lines using the Clang Format
+    [AlignAfterOpenBracket](https://clang.llvm.org/docs/ClangFormatStyleOptions.html)
+    style option.
 
 - **Symbol naming conventions**. These are preferred in new code, but are not
 required when doing so would need changes to significant pieces of existing
@@ -590,11 +595,6 @@ Common misconceptions are clarified in those sections:
 
   - *Rationale*: This avoids memory and resource leaks, and ensures exception safety.
 
-- Use `MakeUnique()` to construct objects owned by `unique_ptr`s.
-
-  - *Rationale*: `MakeUnique` is concise and ensures exception safety in complex expressions.
-    `MakeUnique` is a temporary project local implementation of `std::make_unique` (C++14).
-
 C++ data structures
 --------------------
 
@@ -780,6 +780,11 @@ Threads and synchronization
   get compile-time warnings about potential race conditions in code. Combine annotations in function declarations with
   run-time asserts in function definitions:
 
+  - In functions that are declared separately from where they are defined, the
+    thread safety annotations should be added exclusively to the function
+    declaration. Annotations on the definition could lead to false positives
+    (lack of compile failure) at call sites between the two.
+
 ```C++
 // txmempool.h
 class CTxMemPool
@@ -807,7 +812,7 @@ class ChainstateManager
 {
 public:
     ...
-    bool ProcessNewBlock(...) EXCLUSIVE_LOCKS_REQUIRED(!::cs_main);
+    bool ProcessNewBlock(...) LOCKS_EXCLUDED(::cs_main);
     ...
 }
 
@@ -1154,13 +1159,6 @@ A few guidelines for introducing and reviewing new RPC interfaces:
 - Don't forget to fill in the argument names correctly in the RPC command table.
 
   - *Rationale*: If not, the call can not be used with name-based arguments.
-
-- Set okSafeMode in the RPC command table to a sensible value: safe mode is when the
-  blockchain is regarded to be in a confused state, and the client deems it unsafe to
-  do anything irreversible such as send. Anything that just queries should be permitted.
-
-  - *Rationale*: Troubleshooting a node in safe mode is difficult if half the
-    RPCs don't work.
 
 - Add every non-string RPC argument `(method, idx, name)` to the table `vRPCConvertParams` in `rpc/client.cpp`.
 

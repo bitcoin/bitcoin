@@ -12,8 +12,11 @@
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <util/readwritefile.h>
 #include <util/strencodings.h>
 #include <util/system.h>
+#include <util/thread.h>
+#include <util/time.h>
 
 #include <deque>
 #include <functional>
@@ -53,77 +56,6 @@ static const float RECONNECT_TIMEOUT_EXP = 1.5;
 static const int MAX_LINE_LENGTH = 100000;
 
 /****** Low-level TorControlConnection ********/
-
-/** Reply from Tor, can be single or multi-line */
-class TorControlReply
-{
-public:
-    TorControlReply() { Clear(); }
-
-    int code;
-    std::vector<std::string> lines;
-
-    void Clear()
-    {
-        code = 0;
-        lines.clear();
-    }
-};
-
-/** Low-level handling for Tor control connection.
- * Speaks the SMTP-like protocol as defined in torspec/control-spec.txt
- */
-class TorControlConnection
-{
-public:
-    typedef std::function<void(TorControlConnection&)> ConnectionCB;
-    typedef std::function<void(TorControlConnection &,const TorControlReply &)> ReplyHandlerCB;
-
-    /** Create a new TorControlConnection.
-     */
-    explicit TorControlConnection(struct event_base *base);
-    ~TorControlConnection();
-
-    /**
-     * Connect to a Tor control port.
-     * tor_control_center is address of the form host:port.
-     * connected is the handler that is called when connection is successfully established.
-     * disconnected is a handler that is called when the connection is broken.
-     * Return true on success.
-     */
-    bool Connect(const std::string& tor_control_center, const ConnectionCB& connected, const ConnectionCB& disconnected);
-
-    /**
-     * Disconnect from Tor control port.
-     */
-    void Disconnect();
-
-    /** Send a command, register a handler for the reply.
-     * A trailing CRLF is automatically added.
-     * Return true on success.
-     */
-    bool Command(const std::string &cmd, const ReplyHandlerCB& reply_handler);
-
-    /** Response handlers for async replies */
-    boost::signals2::signal<void(TorControlConnection &,const TorControlReply &)> async_handler;
-private:
-    /** Callback when ready for use */
-    std::function<void(TorControlConnection&)> connected;
-    /** Callback when connection lost */
-    std::function<void(TorControlConnection&)> disconnected;
-    /** Libevent event base */
-    struct event_base *base;
-    /** Connection to control socket */
-    struct bufferevent *b_conn;
-    /** Message being received */
-    TorControlReply message;
-    /** Response handlers */
-    std::deque<ReplyHandlerCB> reply_handlers;
-
-    /** Libevent handlers: internal */
-    static void readcb(struct bufferevent *bev, void *ctx);
-    static void eventcb(struct bufferevent *bev, short what, void *ctx);
-};
 
 TorControlConnection::TorControlConnection(struct event_base *_base):
     base(_base), b_conn(nullptr)
@@ -360,101 +292,6 @@ std::map<std::string,std::string> ParseTorReplyMapping(const std::string &s)
     }
     return mapping;
 }
-
-/** Read full contents of a file and return them in a std::string.
- * Returns a pair <status, string>.
- * If an error occurred, status will be false, otherwise status will be true and the data will be returned in string.
- *
- * @param maxsize Puts a maximum size limit on the file that is read. If the file is larger than this, truncated data
- *         (with len > maxsize) will be returned.
- */
-static std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxsize=std::numeric_limits<size_t>::max())
-{
-    FILE *f = fsbridge::fopen(filename, "rb");
-    if (f == nullptr)
-        return std::make_pair(false,"");
-    std::string retval;
-    char buffer[128];
-    size_t n;
-    while ((n=fread(buffer, 1, sizeof(buffer), f)) > 0) {
-        // Check for reading errors so we don't return any data if we couldn't
-        // read the entire file (or up to maxsize)
-        if (ferror(f)) {
-            fclose(f);
-            return std::make_pair(false,"");
-        }
-        retval.append(buffer, buffer+n);
-        if (retval.size() > maxsize)
-            break;
-    }
-    fclose(f);
-    return std::make_pair(true,retval);
-}
-
-/** Write contents of std::string to a file.
- * @return true on success.
- */
-static bool WriteBinaryFile(const fs::path &filename, const std::string &data)
-{
-    FILE *f = fsbridge::fopen(filename, "wb");
-    if (f == nullptr)
-        return false;
-    if (fwrite(data.data(), 1, data.size(), f) != data.size()) {
-        fclose(f);
-        return false;
-    }
-    fclose(f);
-    return true;
-}
-
-/****** Bitcoin specific TorController implementation ********/
-
-/** Controller that connects to Tor control socket, authenticate, then create
- * and maintain an ephemeral onion service.
- */
-class TorController
-{
-public:
-    TorController(struct event_base* base, const std::string& tor_control_center, const CService& target);
-    ~TorController();
-
-    /** Get name of file to store private key in */
-    fs::path GetPrivateKeyFile();
-
-    /** Reconnect, after getting disconnected */
-    void Reconnect();
-private:
-    struct event_base* base;
-    const std::string m_tor_control_center;
-    TorControlConnection conn;
-    std::string private_key;
-    std::string service_id;
-    bool reconnect;
-    struct event *reconnect_ev;
-    float reconnect_timeout;
-    CService service;
-    const CService m_target;
-    /** Cookie for SAFECOOKIE auth */
-    std::vector<uint8_t> cookie;
-    /** ClientNonce for SAFECOOKIE auth */
-    std::vector<uint8_t> clientNonce;
-
-    /** Callback for ADD_ONION result */
-    void add_onion_cb(TorControlConnection& conn, const TorControlReply& reply);
-    /** Callback for AUTHENTICATE result */
-    void auth_cb(TorControlConnection& conn, const TorControlReply& reply);
-    /** Callback for AUTHCHALLENGE result */
-    void authchallenge_cb(TorControlConnection& conn, const TorControlReply& reply);
-    /** Callback for PROTOCOLINFO result */
-    void protocolinfo_cb(TorControlConnection& conn, const TorControlReply& reply);
-    /** Callback after successful connection */
-    void connected_cb(TorControlConnection& conn);
-    /** Callback after connection lost or failed connection attempt */
-    void disconnected_cb(TorControlConnection& conn);
-
-    /** Callback for reconnect timer */
-    static void reconnect_cb(evutil_socket_t fd, short what, void *arg);
-};
 
 TorController::TorController(struct event_base* _base, const std::string& tor_control_center, const CService& target):
     base(_base),
@@ -726,7 +563,7 @@ void TorController::Reconnect()
 
 fs::path TorController::GetPrivateKeyFile()
 {
-    return GetDataDir() / "onion_v3_private_key";
+    return gArgs.GetDataDirNet() / "onion_v3_private_key";
 }
 
 void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
@@ -760,7 +597,7 @@ void StartTorControl(CService onion_service_target)
         return;
     }
 
-    torControlThread = std::thread(&TraceThread<std::function<void()>>, "torcontrol", [onion_service_target] {
+    torControlThread = std::thread(&util::TraceThread, "torcontrol", [onion_service_target] {
         TorControlThread(onion_service_target);
     });
 }

@@ -43,7 +43,7 @@ public:
         std::vector<unsigned char> data = {0};
         data.reserve(33);
         ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, id.begin(), id.end());
-        return bech32::Encode(m_params.Bech32HRP(), data);
+        return bech32::Encode(bech32::Encoding::BECH32, m_params.Bech32HRP(), data);
     }
 
     std::string operator()(const WitnessV0ScriptHash& id) const
@@ -51,7 +51,15 @@ public:
         std::vector<unsigned char> data = {0};
         data.reserve(53);
         ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, id.begin(), id.end());
-        return bech32::Encode(m_params.Bech32HRP(), data);
+        return bech32::Encode(bech32::Encoding::BECH32, m_params.Bech32HRP(), data);
+    }
+
+    std::string operator()(const WitnessV1Taproot& tap) const
+    {
+        std::vector<unsigned char> data = {1};
+        data.reserve(53);
+        ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, tap.begin(), tap.end());
+        return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
     }
 
     std::string operator()(const WitnessUnknown& id) const
@@ -62,7 +70,7 @@ public:
         std::vector<unsigned char> data = {(unsigned char)id.version};
         data.reserve(1 + (id.length * 8 + 4) / 5);
         ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, id.program, id.program + id.length);
-        return bech32::Encode(m_params.Bech32HRP(), data);
+        return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
     }
 
     std::string operator()(const CNoDestination& no) const { return {}; }
@@ -95,20 +103,26 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         error_str = "Invalid prefix for Base58-encoded address";
     }
     data.clear();
-    auto bech = bech32::Decode(str);
-    if (bech.second.size() > 0) {
+    const auto dec = bech32::Decode(str);
+    if ((dec.encoding == bech32::Encoding::BECH32 || dec.encoding == bech32::Encoding::BECH32M) && dec.data.size() > 0) {
+        // Bech32 decoding
         error_str = "";
-
-        if (bech.first != params.Bech32HRP()) {
+        if (dec.hrp != params.Bech32HRP()) {
             error_str = "Invalid prefix for Bech32 address";
             return CNoDestination();
         }
-
-        // Bech32 decoding
-        int version = bech.second[0]; // The first 5 bit symbol is the witness version (0-16)
+        int version = dec.data[0]; // The first 5 bit symbol is the witness version (0-16)
+        if (version == 0 && dec.encoding != bech32::Encoding::BECH32) {
+            error_str = "Version 0 witness address must use Bech32 checksum";
+            return CNoDestination();
+        }
+        if (version != 0 && dec.encoding != bech32::Encoding::BECH32M) {
+            error_str = "Version 1+ witness address must use Bech32m checksum";
+            return CNoDestination();
+        }
         // The rest of the symbols are converted witness program bytes.
-        data.reserve(((bech.second.size() - 1) * 5) / 8);
-        if (ConvertBits<5, 8, false>([&](unsigned char c) { data.push_back(c); }, bech.second.begin() + 1, bech.second.end())) {
+        data.reserve(((dec.data.size() - 1) * 5) / 8);
+        if (ConvertBits<5, 8, false>([&](unsigned char c) { data.push_back(c); }, dec.data.begin() + 1, dec.data.end())) {
             if (version == 0) {
                 {
                     WitnessV0KeyHash keyid;
@@ -127,6 +141,13 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
 
                 error_str = "Invalid Bech32 v0 address data size";
                 return CNoDestination();
+            }
+
+            if (version == 1 && data.size() == WITNESS_V1_TAPROOT_SIZE) {
+                static_assert(WITNESS_V1_TAPROOT_SIZE == WitnessV1Taproot::size());
+                WitnessV1Taproot tap;
+                std::copy(data.begin(), data.end(), tap.begin());
+                return tap;
             }
 
             if (version > 16) {

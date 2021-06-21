@@ -12,8 +12,10 @@
 
 #include <cuckoocache.h>
 
-#include <boost/thread/lock_types.hpp>
-#include <boost/thread/shared_mutex.hpp>
+#include <algorithm>
+#include <mutex>
+#include <shared_mutex>
+#include <vector>
 
 namespace {
 /**
@@ -29,7 +31,7 @@ private:
     CSHA256 m_salted_hasher_schnorr;
     typedef CuckooCache::cache<uint256, SignatureCacheHasher> map_type;
     map_type setValid;
-    boost::shared_mutex cs_sigcache;
+    std::shared_mutex cs_sigcache;
 
 public:
     CSignatureCache()
@@ -51,26 +53,26 @@ public:
     ComputeEntryECDSA(uint256& entry, const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const
     {
         CSHA256 hasher = m_salted_hasher_ecdsa;
-        hasher.Write(hash.begin(), 32).Write(&pubkey[0], pubkey.size()).Write(&vchSig[0], vchSig.size()).Finalize(entry.begin());
+        hasher.Write(hash.begin(), 32).Write(pubkey.data(), pubkey.size()).Write(vchSig.data(), vchSig.size()).Finalize(entry.begin());
     }
 
     void
     ComputeEntrySchnorr(uint256& entry, const uint256 &hash, Span<const unsigned char> sig, const XOnlyPubKey& pubkey) const
     {
         CSHA256 hasher = m_salted_hasher_schnorr;
-        hasher.Write(hash.begin(), 32).Write(&pubkey[0], pubkey.size()).Write(sig.data(), sig.size()).Finalize(entry.begin());
+        hasher.Write(hash.begin(), 32).Write(pubkey.data(), pubkey.size()).Write(sig.data(), sig.size()).Finalize(entry.begin());
     }
 
     bool
     Get(const uint256& entry, const bool erase)
     {
-        boost::shared_lock<boost::shared_mutex> lock(cs_sigcache);
+        std::shared_lock<std::shared_mutex> lock(cs_sigcache);
         return setValid.contains(entry, erase);
     }
 
     void Set(const uint256& entry)
     {
-        boost::unique_lock<boost::shared_mutex> lock(cs_sigcache);
+        std::unique_lock<std::shared_mutex> lock(cs_sigcache);
         setValid.insert(entry);
     }
     uint32_t setup_bytes(size_t n)

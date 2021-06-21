@@ -5,7 +5,6 @@
 #include <checkqueue.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
-#include <util/memory.h>
 #include <util/system.h>
 #include <util/time.h>
 
@@ -146,7 +145,7 @@ typedef CCheckQueue<FrozenCleanupCheck> FrozenCleanup_Queue;
  */
 static void Correct_Queue_range(std::vector<size_t> range)
 {
-    auto small_queue = MakeUnique<Correct_Queue>(QUEUE_BATCH_SIZE);
+    auto small_queue = std::make_unique<Correct_Queue>(QUEUE_BATCH_SIZE);
     small_queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
     // Make vChecks here to save on malloc (this test can be slow...)
     std::vector<FakeCheckCheckCompletion> vChecks;
@@ -206,7 +205,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct_Random)
 /** Test that failing checks are caught */
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
 {
-    auto fail_queue = MakeUnique<Failing_Queue>(QUEUE_BATCH_SIZE);
+    auto fail_queue = std::make_unique<Failing_Queue>(QUEUE_BATCH_SIZE);
     fail_queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
 
     for (size_t i = 0; i < 1001; ++i) {
@@ -234,7 +233,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
 // future blocks, ie, the bad state is cleared.
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
 {
-    auto fail_queue = MakeUnique<Failing_Queue>(QUEUE_BATCH_SIZE);
+    auto fail_queue = std::make_unique<Failing_Queue>(QUEUE_BATCH_SIZE);
     fail_queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
 
     for (auto times = 0; times < 10; ++times) {
@@ -258,7 +257,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
 // more than once as well
 BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueCheck)
 {
-    auto queue = MakeUnique<Unique_Queue>(QUEUE_BATCH_SIZE);
+    auto queue = std::make_unique<Unique_Queue>(QUEUE_BATCH_SIZE);
     queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
 
     size_t COUNT = 100000;
@@ -293,7 +292,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueCheck)
 // time could leave the data hanging across a sequence of blocks.
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Memory)
 {
-    auto queue = MakeUnique<Memory_Queue>(QUEUE_BATCH_SIZE);
+    auto queue = std::make_unique<Memory_Queue>(QUEUE_BATCH_SIZE);
     queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
     for (size_t i = 0; i < 1000; ++i) {
         size_t total = i;
@@ -320,7 +319,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Memory)
 // have been destructed
 BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
 {
-    auto queue = MakeUnique<FrozenCleanup_Queue>(QUEUE_BATCH_SIZE);
+    auto queue = std::make_unique<FrozenCleanup_Queue>(QUEUE_BATCH_SIZE);
     bool fails = false;
     queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
     std::thread t0([&]() {
@@ -360,7 +359,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
 /** Test that CCheckQueueControl is threadsafe */
 BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
 {
-    auto queue = MakeUnique<Standard_Queue>(QUEUE_BATCH_SIZE);
+    auto queue = std::make_unique<Standard_Queue>(QUEUE_BATCH_SIZE);
     {
         std::vector<std::thread> tg;
         std::atomic<int> nThreads {0};

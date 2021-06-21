@@ -5,17 +5,16 @@
 '''
 Test script for symbol-check.py
 '''
+import os
 import subprocess
 import unittest
 
 def call_symbol_check(cc, source, executable, options):
     subprocess.run([cc,source,'-o',executable] + options, check=True)
     p = subprocess.run(['./contrib/devtools/symbol-check.py',executable], stdout=subprocess.PIPE, universal_newlines=True)
+    os.remove(source)
+    os.remove(executable)
     return (p.returncode, p.stdout.rstrip())
-
-def get_machine(cc):
-    p = subprocess.run([cc,'-dumpmachine'], stdout=subprocess.PIPE, universal_newlines=True)
-    return p.stdout.rstrip()
 
 class TestSymbolChecks(unittest.TestCase):
     def test_ELF(self):
@@ -23,29 +22,26 @@ class TestSymbolChecks(unittest.TestCase):
         executable = 'test1'
         cc = 'gcc'
 
-        # there's no way to do this test for RISC-V at the moment; bionic's libc is 2.27
-        # and we allow all symbols from 2.27.
-        if 'riscv' in get_machine(cc):
-            self.skipTest("test not available for RISC-V")
-
-        # memfd_create was introduced in GLIBC 2.27, so is newer than the upper limit of
-        # all but RISC-V but still available on bionic
+        # renameat2 was introduced in GLIBC 2.28, so is newer than the upper limit
+        # of glibc for all platforms
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
                 #define _GNU_SOURCE
-                #include <sys/mman.h>
+                #include <stdio.h>
+                #include <linux/fs.h>
 
-                int memfd_create(const char *name, unsigned int flags);
+                int renameat2(int olddirfd, const char *oldpath,
+                    int newdirfd, const char *newpath, unsigned int flags);
 
                 int main()
                 {
-                    memfd_create("test", 0);
+                    renameat2(0, "test", 0, "test_", RENAME_EXCHANGE);
                     return 0;
                 }
         ''')
 
         self.assertEqual(call_symbol_check(cc, source, executable, []),
-                (1, executable + ': symbol memfd_create from unsupported version GLIBC_2.27\n' +
+                (1, executable + ': symbol renameat2 from unsupported version GLIBC_2.28\n' +
                     executable + ': failed IMPORTED_SYMBOLS'))
 
         # -lutil is part of the libc6 package so a safe bet that it's installed
@@ -102,7 +98,7 @@ class TestSymbolChecks(unittest.TestCase):
 
         self.assertEqual(call_symbol_check(cc, source, executable, ['-lexpat']),
             (1, 'libexpat.1.dylib is not in ALLOWED_LIBRARIES!\n' +
-                executable + ': failed DYNAMIC_LIBRARIES'))
+                f'{executable}: failed DYNAMIC_LIBRARIES MIN_OS SDK'))
 
         source = 'test2.c'
         executable = 'test2'
@@ -118,7 +114,20 @@ class TestSymbolChecks(unittest.TestCase):
         ''')
 
         self.assertEqual(call_symbol_check(cc, source, executable, ['-framework', 'CoreGraphics']),
-                (0, ''))
+                (1, f'{executable}: failed MIN_OS SDK'))
+
+        source = 'test3.c'
+        executable = 'test3'
+        with open(source, 'w', encoding="utf8") as f:
+            f.write('''
+                int main()
+                {
+                    return 0;
+                }
+        ''')
+
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-mmacosx-version-min=10.14']),
+                (1, f'{executable}: failed SDK'))
 
     def test_PE(self):
         source = 'test1.c'
@@ -136,12 +145,26 @@ class TestSymbolChecks(unittest.TestCase):
                 }
         ''')
 
-        self.assertEqual(call_symbol_check(cc, source, executable, ['-lpdh']),
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-lpdh', '-Wl,--major-subsystem-version', '-Wl,6', '-Wl,--minor-subsystem-version', '-Wl,1']),
             (1, 'pdh.dll is not in ALLOWED_LIBRARIES!\n' +
                  executable + ': failed DYNAMIC_LIBRARIES'))
 
         source = 'test2.c'
         executable = 'test2.exe'
+
+        with open(source, 'w', encoding="utf8") as f:
+            f.write('''
+                int main()
+                {
+                    return 0;
+                }
+        ''')
+
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-Wl,--major-subsystem-version', '-Wl,9', '-Wl,--minor-subsystem-version', '-Wl,9']),
+            (1, executable + ': failed SUBSYSTEM_VERSION'))
+
+        source = 'test3.c'
+        executable = 'test3.exe'
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
                 #include <windows.h>
@@ -153,7 +176,7 @@ class TestSymbolChecks(unittest.TestCase):
                 }
         ''')
 
-        self.assertEqual(call_symbol_check(cc, source, executable, ['-lole32']),
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-lole32', '-Wl,--major-subsystem-version', '-Wl,6', '-Wl,--minor-subsystem-version', '-Wl,1']),
                 (0, ''))
 
 

@@ -10,14 +10,10 @@
 #include <consensus/params.h>
 #include <primitives/block.h>
 #include <protocol.h>
+#include <util/hash_type.h>
 
 #include <memory>
 #include <vector>
-
-struct SeedSpec6 {
-    uint8_t addr[16];
-    uint16_t port;
-};
 
 typedef std::map<int, uint256> MapCheckpoints;
 
@@ -29,6 +25,28 @@ struct CCheckpointData {
         return final_checkpoint->first /* height */;
     }
 };
+
+struct AssumeutxoHash : public BaseHash<uint256> {
+    explicit AssumeutxoHash(const uint256& hash) : BaseHash(hash) {}
+};
+
+/**
+ * Holds configuration for use during UTXO snapshot load and validation. The contents
+ * here are security critical, since they dictate which UTXO snapshots are recognized
+ * as valid.
+ */
+struct AssumeutxoData {
+    //! The expected hash of the deserialized UTXO set.
+    const AssumeutxoHash hash_serialized;
+
+    //! Used to populate the nChainTx value, which is used during BlockManager::LoadBlockIndex().
+    //!
+    //! We need to hardcode the value here because this is computed cumulatively using block data,
+    //! which we do not necessarily have at the time of snapshot load.
+    const unsigned int nChainTx;
+};
+
+using MapAssumeutxo = std::map<int, const AssumeutxoData>;
 
 /**
  * Holds various statistics on transactions within a chain. Used to estimate
@@ -44,10 +62,7 @@ struct ChainTxData {
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
- * Bitcoin system. There are three: the main network on which people trade goods
- * and services, the public test network which gets reset from time to time and
- * a regression test mode which is intended for private networks only. It has
- * minimal difficulty to ensure that blocks can be found instantly.
+ * Bitcoin system.
  */
 class CChainParams
 {
@@ -64,7 +79,7 @@ public:
 
     const Consensus::Params& GetConsensus() const { return consensus; }
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
-    int GetDefaultPort() const { return nDefaultPort; }
+    uint16_t GetDefaultPort() const { return nDefaultPort; }
 
     const CBlock& GenesisBlock() const { return genesis; }
     /** Default value for -checkmempool and -checkblockindex argument */
@@ -88,15 +103,20 @@ public:
     const std::vector<std::string>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::string& Bech32HRP() const { return bech32_hrp; }
-    const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
+    const std::vector<uint8_t>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
+
+    //! Get allowed assumeutxo configuration.
+    //! @see ChainstateManager
+    const MapAssumeutxo& Assumeutxo() const { return m_assumeutxo_data; }
+
     const ChainTxData& TxData() const { return chainTxData; }
 protected:
     CChainParams() {}
 
     Consensus::Params consensus;
     CMessageHeader::MessageStartChars pchMessageStart;
-    int nDefaultPort;
+    uint16_t nDefaultPort;
     uint64_t nPruneAfterHeight;
     uint64_t m_assumed_blockchain_size;
     uint64_t m_assumed_chain_state_size;
@@ -105,12 +125,13 @@ protected:
     std::string bech32_hrp;
     std::string strNetworkID;
     CBlock genesis;
-    std::vector<SeedSpec6> vFixedSeeds;
+    std::vector<uint8_t> vFixedSeeds;
     bool fDefaultConsistencyChecks;
     bool fRequireStandard;
     bool m_is_test_chain;
     bool m_is_mockable_chain;
     CCheckpointData checkpointData;
+    MapAssumeutxo m_assumeutxo_data;
     ChainTxData chainTxData;
 };
 

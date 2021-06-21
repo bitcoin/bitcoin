@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test descriptor wallet function."""
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -83,7 +84,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         send_wrpc = self.nodes[0].get_wallet_rpc("desc1")
 
         # Generate some coins
-        send_wrpc.generatetoaddress(101, send_wrpc.getnewaddress())
+        send_wrpc.generatetoaddress(COINBASE_MATURITY + 1, send_wrpc.getnewaddress())
 
         # Make transactions
         self.log.info("Test sending and receiving")
@@ -150,6 +151,63 @@ class WalletDescriptorTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name='desc_no_priv', disable_private_keys=True, descriptors=True)
         nopriv_rpc = self.nodes[0].get_wallet_rpc('desc_no_priv')
         assert_raises_rpc_error(-4, 'This wallet has no available keys', nopriv_rpc.getnewaddress)
+
+        self.log.info("Test descriptor exports")
+        self.nodes[0].createwallet(wallet_name='desc_export', descriptors=True)
+        exp_rpc = self.nodes[0].get_wallet_rpc('desc_export')
+        self.nodes[0].createwallet(wallet_name='desc_import', disable_private_keys=True, descriptors=True)
+        imp_rpc = self.nodes[0].get_wallet_rpc('desc_import')
+
+        addr_types = [('legacy', False, 'pkh(', '44\'/1\'/0\'', -13),
+                      ('p2sh-segwit', False, 'sh(wpkh(', '49\'/1\'/0\'', -14),
+                      ('bech32', False, 'wpkh(', '84\'/1\'/0\'', -13),
+                      ('legacy', True, 'pkh(', '44\'/1\'/0\'', -13),
+                      ('p2sh-segwit', True, 'sh(wpkh(', '49\'/1\'/0\'', -14),
+                      ('bech32', True, 'wpkh(', '84\'/1\'/0\'', -13)]
+
+        for addr_type, internal, desc_prefix, deriv_path, int_idx in addr_types:
+            int_str = 'internal' if internal else 'external'
+
+            self.log.info("Testing descriptor address type for {} {}".format(addr_type, int_str))
+            if internal:
+                addr = exp_rpc.getrawchangeaddress(address_type=addr_type)
+            else:
+                addr = exp_rpc.getnewaddress(address_type=addr_type)
+            desc = exp_rpc.getaddressinfo(addr)['parent_desc']
+            assert_equal(desc_prefix, desc[0:len(desc_prefix)])
+            idx = desc.index('/') + 1
+            assert_equal(deriv_path, desc[idx:idx + 9])
+            if internal:
+                assert_equal('1', desc[int_idx])
+            else:
+                assert_equal('0', desc[int_idx])
+
+            self.log.info("Testing the same descriptor is returned for address type {} {}".format(addr_type, int_str))
+            for i in range(0, 10):
+                if internal:
+                    addr = exp_rpc.getrawchangeaddress(address_type=addr_type)
+                else:
+                    addr = exp_rpc.getnewaddress(address_type=addr_type)
+                test_desc = exp_rpc.getaddressinfo(addr)['parent_desc']
+                assert_equal(desc, test_desc)
+
+            self.log.info("Testing import of exported {} descriptor".format(addr_type))
+            imp_rpc.importdescriptors([{
+                'desc': desc,
+                'active': True,
+                'next_index': 11,
+                'timestamp': 'now',
+                'internal': internal
+            }])
+
+            for i in range(0, 10):
+                if internal:
+                    exp_addr = exp_rpc.getrawchangeaddress(address_type=addr_type)
+                    imp_addr = imp_rpc.getrawchangeaddress(address_type=addr_type)
+                else:
+                    exp_addr = exp_rpc.getnewaddress(address_type=addr_type)
+                    imp_addr = imp_rpc.getnewaddress(address_type=addr_type)
+                assert_equal(exp_addr, imp_addr)
 
 if __name__ == '__main__':
     WalletDescriptorTest().main ()

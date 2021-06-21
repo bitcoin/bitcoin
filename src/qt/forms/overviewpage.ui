@@ -68,7 +68,7 @@
               </property>
               <property name="maximumSize">
                <size>
-                <width>30</width>
+                <width>45</width>
                 <height>16777215</height>
                </size>
               </property>
@@ -88,9 +88,6 @@
                 <width>24</width>
                 <height>24</height>
                </size>
-              </property>
-              <property name="flat">
-               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -116,13 +113,6 @@
             </property>
             <item row="2" column="2">
              <widget class="QLabel" name="labelWatchPending">
-              <property name="font">
-               <font>
-                <family>Monospace</family>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
               <property name="cursor">
                <cursorShape>IBeamCursor</cursorShape>
               </property>
@@ -142,13 +132,6 @@
             </item>
             <item row="2" column="1">
              <widget class="QLabel" name="labelUnconfirmed">
-              <property name="font">
-               <font>
-                <family>Monospace</family>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
               <property name="cursor">
                <cursorShape>IBeamCursor</cursorShape>
               </property>
@@ -168,13 +151,6 @@
             </item>
             <item row="3" column="2">
              <widget class="QLabel" name="labelWatchImmature">
-              <property name="font">
-               <font>
-                <family>Monospace</family>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
               <property name="cursor">
                <cursorShape>IBeamCursor</cursorShape>
               </property>
@@ -227,13 +203,6 @@
             </item>
             <item row="3" column="1">
              <widget class="QLabel" name="labelImmature">
-              <property name="font">
-               <font>
-                <family>Monospace</family>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
               <property name="cursor">
                <cursorShape>IBeamCursor</cursorShape>
               </property>
@@ -273,13 +242,6 @@
             </item>
             <item row="5" column="1">
              <widget class="QLabel" name="labelTotal">
-              <property name="font">
-               <font>
-                <family>Monospace</family>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
               <property name="cursor">
                <cursorShape>IBeamCursor</cursorShape>
               </property>
@@ -299,13 +261,6 @@
             </item>
             <item row="5" column="2">
              <widget class="QLabel" name="labelWatchTotal">
-              <property name="font">
-               <font>
-                <family>Monospace</family>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
               <property name="cursor">
                <cursorShape>IBeamCursor</cursorShape>
               </property>
@@ -342,13 +297,6 @@
             </item>
             <item row="1" column="1">
              <widget class="QLabel" name="labelBalance">
-              <property name="font">
-               <font>
-                <family>Monospace</family>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
               <property name="cursor">
                <cursorShape>IBeamCursor</cursorShape>
               </property>
@@ -368,13 +316,6 @@
             </item>
             <item row="1" column="2">
              <widget class="QLabel" name="labelWatchAvailable">
-              <property name="font">
-               <font>
-                <family>Monospace</family>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
               <property name="cursor">
                <cursorShape>IBeamCursor</cursorShape>
               </property>
@@ -462,7 +403,7 @@
               </property>
               <property name="maximumSize">
                <size>
-                <width>30</width>
+                <width>45</width>
                 <height>16777215</height>
                </size>
               </property>
@@ -482,9 +423,6 @@
                 <width>24</width>
                 <height>24</height>
                </size>
-              </property>
-              <property name="flat">
-               <bool>true</bool>
               </property>
              </widget>
             </item>

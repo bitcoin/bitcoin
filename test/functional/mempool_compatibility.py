@@ -15,6 +15,7 @@ Only v0.15.2 is required by this test. The rest is used in other backwards compa
 
 import os
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
 
@@ -41,7 +42,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         old_node, new_node = self.nodes
         new_wallet = MiniWallet(new_node)
         new_wallet.generate(1)
-        new_node.generate(100)
+        new_node.generate(COINBASE_MATURITY)
         # Sync the nodes to ensure old_node has the block that contains the coinbase that new_wallet will spend.
         # Otherwise, because coinbases are only valid in a block and not as loose txns, if the nodes aren't synced
         # unbroadcasted_tx won't pass old_node's `MemPoolAccept::PreChecks`.

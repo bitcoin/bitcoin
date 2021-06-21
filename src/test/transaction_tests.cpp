@@ -20,8 +20,10 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <streams.h>
+#include <test/util/script.h>
 #include <test/util/transaction_utils.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <validation.h>
 
 #include <functional>
@@ -37,10 +39,9 @@
 typedef std::vector<unsigned char> valtype;
 
 // In script_tests.cpp
-extern UniValue read_json(const std::string& jsondata);
+UniValue read_json(const std::string& jsondata);
 
 static std::map<std::string, unsigned int> mapFlagNames = {
-    {std::string("NONE"), (unsigned int)SCRIPT_VERIFY_NONE},
     {std::string("P2SH"), (unsigned int)SCRIPT_VERIFY_P2SH},
     {std::string("STRICTENC"), (unsigned int)SCRIPT_VERIFY_STRICTENC},
     {std::string("DERSIG"), (unsigned int)SCRIPT_VERIFY_DERSIG},
@@ -59,13 +60,14 @@ static std::map<std::string, unsigned int> mapFlagNames = {
     {std::string("WITNESS_PUBKEYTYPE"), (unsigned int)SCRIPT_VERIFY_WITNESS_PUBKEYTYPE},
     {std::string("CONST_SCRIPTCODE"), (unsigned int)SCRIPT_VERIFY_CONST_SCRIPTCODE},
     {std::string("TAPROOT"), (unsigned int)SCRIPT_VERIFY_TAPROOT},
+    {std::string("DISCOURAGE_UPGRADABLE_PUBKEYTYPE"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE},
+    {std::string("DISCOURAGE_OP_SUCCESS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS},
+    {std::string("DISCOURAGE_UPGRADABLE_TAPROOT_VERSION"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION},
 };
 
 unsigned int ParseScriptFlags(std::string strFlags)
 {
-    if (strFlags.empty()) {
-        return 0;
-    }
+    if (strFlags.empty() || strFlags == "NONE") return 0;
     unsigned int flags = 0;
     std::vector<std::string> words;
     boost::algorithm::split(words, strFlags, boost::algorithm::is_any_of(","));
@@ -78,6 +80,16 @@ unsigned int ParseScriptFlags(std::string strFlags)
     }
 
     return flags;
+}
+
+// Check that all flags in STANDARD_SCRIPT_VERIFY_FLAGS are present in mapFlagNames.
+bool CheckMapFlagNames()
+{
+    unsigned int standard_flags_missing{STANDARD_SCRIPT_VERIFY_FLAGS};
+    for (const auto& pair : mapFlagNames) {
+        standard_flags_missing &= ~(pair.second);
+    }
+    return standard_flags_missing == 0;
 }
 
 std::string FormatScriptFlags(unsigned int flags)
@@ -96,20 +108,90 @@ std::string FormatScriptFlags(unsigned int flags)
     return ret.substr(0, ret.size() - 1);
 }
 
+/*
+* Check that the input scripts of a transaction are valid/invalid as expected.
+*/
+bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& map_prevout_scriptPubKeys,
+    const std::map<COutPoint, int64_t>& map_prevout_values, unsigned int flags,
+    const PrecomputedTransactionData& txdata, const std::string& strTest, bool expect_valid)
+{
+    bool tx_valid = true;
+    ScriptError err = expect_valid ? SCRIPT_ERR_UNKNOWN_ERROR : SCRIPT_ERR_OK;
+    for (unsigned int i = 0; i < tx.vin.size() && tx_valid; ++i) {
+        const CTxIn input = tx.vin[i];
+        const CAmount amount = map_prevout_values.count(input.prevout) ? map_prevout_values.at(input.prevout) : 0;
+        try {
+            tx_valid = VerifyScript(input.scriptSig, map_prevout_scriptPubKeys.at(input.prevout),
+                &input.scriptWitness, flags, TransactionSignatureChecker(&tx, i, amount, txdata, MissingDataBehavior::ASSERT_FAIL), &err);
+        } catch (...) {
+            BOOST_ERROR("Bad test: " << strTest);
+            return true; // The test format is bad and an error is thrown. Return true to silence further error.
+        }
+        if (expect_valid) {
+            BOOST_CHECK_MESSAGE(tx_valid, strTest);
+            BOOST_CHECK_MESSAGE((err == SCRIPT_ERR_OK), ScriptErrorString(err));
+            err = SCRIPT_ERR_UNKNOWN_ERROR;
+        }
+    }
+    if (!expect_valid) {
+        BOOST_CHECK_MESSAGE(!tx_valid, strTest);
+        BOOST_CHECK_MESSAGE((err != SCRIPT_ERR_OK), ScriptErrorString(err));
+    }
+    return (tx_valid == expect_valid);
+}
+
+/*
+ * Trim or fill flags to make the combination valid:
+ * WITNESS must be used with P2SH
+ * CLEANSTACK must be used WITNESS and P2SH
+ */
+
+unsigned int TrimFlags(unsigned int flags)
+{
+    // WITNESS requires P2SH
+    if (!(flags & SCRIPT_VERIFY_P2SH)) flags &= ~(unsigned int)SCRIPT_VERIFY_WITNESS;
+
+    // CLEANSTACK requires WITNESS (and transitively CLEANSTACK requires P2SH)
+    if (!(flags & SCRIPT_VERIFY_WITNESS)) flags &= ~(unsigned int)SCRIPT_VERIFY_CLEANSTACK;
+    Assert(IsValidFlagCombination(flags));
+    return flags;
+}
+
+unsigned int FillFlags(unsigned int flags)
+{
+    // CLEANSTACK implies WITNESS
+    if (flags & SCRIPT_VERIFY_CLEANSTACK) flags |= SCRIPT_VERIFY_WITNESS;
+
+    // WITNESS implies P2SH (and transitively CLEANSTACK implies P2SH)
+    if (flags & SCRIPT_VERIFY_WITNESS) flags |= SCRIPT_VERIFY_P2SH;
+    Assert(IsValidFlagCombination(flags));
+    return flags;
+}
+
+// Exclude each possible script verify flag from flags. Returns a set of these flag combinations
+// that are valid and without duplicates. For example: if flags=1111 and the 4 possible flags are
+// 0001, 0010, 0100, and 1000, this should return the set {0111, 1011, 1101, 1110}.
+// Assumes that mapFlagNames contains all script verify flags.
+std::set<unsigned int> ExcludeIndividualFlags(unsigned int flags)
+{
+    std::set<unsigned int> flags_combos;
+    for (const auto& pair : mapFlagNames) {
+        const unsigned int flags_excluding_one = TrimFlags(flags & ~(pair.second));
+        if (flags != flags_excluding_one) {
+            flags_combos.insert(flags_excluding_one);
+        }
+    }
+    return flags_combos;
+}
+
 BOOST_FIXTURE_TEST_SUITE(transaction_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(tx_valid)
 {
+    BOOST_CHECK_MESSAGE(CheckMapFlagNames(), "mapFlagNames is missing a script verification flag");
     // Read tests from test/data/tx_valid.json
-    // Format is an array of arrays
-    // Inner arrays are either [ "comment" ]
-    // or [[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"], serializedTransaction, verifyFlags
-    // ... where all scripts are stringified scripts.
-    //
-    // verifyFlags is a comma separated list of script verification flags to apply, or "NONE"
     UniValue tests = read_json(std::string(json_tests::tx_valid, json_tests::tx_valid + sizeof(json_tests::tx_valid)));
 
-    ScriptError err;
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];
         std::string strTest = test.write();
@@ -159,24 +241,35 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             BOOST_CHECK(state.IsValid());
 
             PrecomputedTransactionData txdata(tx);
-            for (unsigned int i = 0; i < tx.vin.size(); i++)
-            {
-                if (!mapprevOutScriptPubKeys.count(tx.vin[i].prevout))
-                {
-                    BOOST_ERROR("Bad test: " << strTest);
-                    break;
-                }
+            unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
 
-                CAmount amount = 0;
-                if (mapprevOutValues.count(tx.vin[i].prevout)) {
-                    amount = mapprevOutValues[tx.vin[i].prevout];
+            // Check that the test gives a valid combination of flags (otherwise VerifyScript will throw). Don't edit the flags.
+            if (~verify_flags != FillFlags(~verify_flags)) {
+                BOOST_ERROR("Bad test flags: " << strTest);
+            }
+
+            BOOST_CHECK_MESSAGE(CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, ~verify_flags, txdata, strTest, /* expect_valid */ true),
+                                "Tx unexpectedly failed: " << strTest);
+
+            // Backwards compatibility of script verification flags: Removing any flag(s) should not invalidate a valid transaction
+            for (const auto& [name, flag] : mapFlagNames) {
+                // Removing individual flags
+                unsigned int flags = TrimFlags(~(verify_flags | flag));
+                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /* expect_valid */ true)) {
+                    BOOST_ERROR("Tx unexpectedly failed with flag " << name << " unset: " << strTest);
                 }
-                unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
-                const CScriptWitness *witness = &tx.vin[i].scriptWitness;
-                BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                                 witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err),
-                                    strTest);
-                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+                // Removing random combinations of flags
+                flags = TrimFlags(~(verify_flags | (unsigned int)InsecureRandBits(mapFlagNames.size())));
+                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /* expect_valid */ true)) {
+                    BOOST_ERROR("Tx unexpectedly failed with random flags " << ToString(flags) << ": " << strTest);
+                }
+            }
+
+            // Check that flags are maximal: transaction should fail if any unset flags are set.
+            for (auto flags_excluding_one : ExcludeIndividualFlags(verify_flags)) {
+                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, ~flags_excluding_one, txdata, strTest, /* expect_valid */ false)) {
+                    BOOST_ERROR("Too many flags unset: " << strTest);
+                }
             }
         }
     }
@@ -185,17 +278,8 @@ BOOST_AUTO_TEST_CASE(tx_valid)
 BOOST_AUTO_TEST_CASE(tx_invalid)
 {
     // Read tests from test/data/tx_invalid.json
-    // Format is an array of arrays
-    // Inner arrays are either [ "comment" ]
-    // or [[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"], serializedTransaction, verifyFlags
-    // ... where all scripts are stringified scripts.
-    //
-    // verifyFlags is a comma separated list of script verification flags to apply, or "NONE"
     UniValue tests = read_json(std::string(json_tests::tx_invalid, json_tests::tx_invalid + sizeof(json_tests::tx_invalid)));
 
-    // Initialize to SCRIPT_ERR_OK. The tests expect err to be changed to a
-    // value other than SCRIPT_ERR_OK.
-    ScriptError err = SCRIPT_ERR_OK;
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];
         std::string strTest = test.write();
@@ -241,28 +325,43 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             CTransaction tx(deserialize, stream);
 
             TxValidationState state;
-            fValid = CheckTransaction(tx, state) && state.IsValid();
+            if (!CheckTransaction(tx, state) || state.IsInvalid()) {
+                BOOST_CHECK_MESSAGE(test[2].get_str() == "BADTX", strTest);
+                continue;
+            }
 
             PrecomputedTransactionData txdata(tx);
-            for (unsigned int i = 0; i < tx.vin.size() && fValid; i++)
-            {
-                if (!mapprevOutScriptPubKeys.count(tx.vin[i].prevout))
-                {
-                    BOOST_ERROR("Bad test: " << strTest);
-                    break;
-                }
+            unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
 
-                unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
-                CAmount amount = 0;
-                if (mapprevOutValues.count(tx.vin[i].prevout)) {
-                    amount = mapprevOutValues[tx.vin[i].prevout];
-                }
-                const CScriptWitness *witness = &tx.vin[i].scriptWitness;
-                fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                      witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err);
+            // Check that the test gives a valid combination of flags (otherwise VerifyScript will throw). Don't edit the flags.
+            if (verify_flags != FillFlags(verify_flags)) {
+                BOOST_ERROR("Bad test flags: " << strTest);
             }
-            BOOST_CHECK_MESSAGE(!fValid, strTest);
-            BOOST_CHECK_MESSAGE(err != SCRIPT_ERR_OK, ScriptErrorString(err));
+
+            // Not using FillFlags() in the main test, in order to detect invalid verifyFlags combination
+            BOOST_CHECK_MESSAGE(CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, verify_flags, txdata, strTest, /* expect_valid */ false),
+                                "Tx unexpectedly passed: " << strTest);
+
+            // Backwards compatibility of script verification flags: Adding any flag(s) should not validate an invalid transaction
+            for (const auto& [name, flag] : mapFlagNames) {
+                unsigned int flags = FillFlags(verify_flags | flag);
+                // Adding individual flags
+                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /* expect_valid */ false)) {
+                    BOOST_ERROR("Tx unexpectedly passed with flag " << name << " set: " << strTest);
+                }
+                // Adding random combinations of flags
+                flags = FillFlags(verify_flags | (unsigned int)InsecureRandBits(mapFlagNames.size()));
+                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /* expect_valid */ false)) {
+                    BOOST_ERROR("Tx unexpectedly passed with random flags " << name << ": " << strTest);
+                }
+            }
+
+            // Check that flags are minimal: transaction should succeed if any set flags are unset.
+            for (auto flags_excluding_one : ExcludeIndividualFlags(verify_flags)) {
+                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags_excluding_one, txdata, strTest, /* expect_valid */ true)) {
+                    BOOST_ERROR("Too many flags set: " << strTest);
+                }
+            }
         }
     }
 }
@@ -351,7 +450,7 @@ static void CheckWithFlag(const CTransactionRef& output, const CMutableTransacti
 {
     ScriptError error;
     CTransaction inputi(input);
-    bool ret = VerifyScript(inputi.vin[0].scriptSig, output->vout[0].scriptPubKey, &inputi.vin[0].scriptWitness, flags, TransactionSignatureChecker(&inputi, 0, output->vout[0].nValue), &error);
+    bool ret = VerifyScript(inputi.vin[0].scriptSig, output->vout[0].scriptPubKey, &inputi.vin[0].scriptWitness, flags, TransactionSignatureChecker(&inputi, 0, output->vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &error);
     assert(ret == success);
 }
 

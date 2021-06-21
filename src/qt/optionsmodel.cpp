@@ -21,6 +21,7 @@
 #include <validation.h> // For DEFAULT_SCRIPTCHECK_THREADS
 
 #include <QDebug>
+#include <QLatin1Char>
 #include <QSettings>
 #include <QStringList>
 
@@ -116,6 +117,13 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("bSpendZeroConfChange", true);
     if (!gArgs.SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
         addOverriddenOption("-spendzeroconfchange");
+
+    if (!settings.contains("external_signer_path"))
+        settings.setValue("external_signer_path", "");
+
+    if (!gArgs.SoftSetArg("-signer", settings.value("external_signer_path").toString().toStdString())) {
+        addOverriddenOption("-signer");
+    }
 #endif
 
     // Network
@@ -163,6 +171,12 @@ void OptionsModel::Init(bool resetSettings)
         addOverriddenOption("-lang");
 
     language = settings.value("language").toString();
+
+    if (!settings.contains("UseEmbeddedMonospacedFont")) {
+        settings.setValue("UseEmbeddedMonospacedFont", "true");
+    }
+    m_use_embedded_monospaced_font = settings.value("UseEmbeddedMonospacedFont").toBool();
+    Q_EMIT useEmbeddedMonospacedFontChanged(m_use_embedded_monospaced_font);
 }
 
 /** Helper function to copy contents from one QSettings to another.
@@ -189,7 +203,7 @@ void OptionsModel::Reset()
     QSettings settings;
 
     // Backup old settings to chain-specific datadir for troubleshooting
-    BackupSettings(GetDataDir(true) / "guisettings.ini.bak", settings);
+    BackupSettings(gArgs.GetDataDirNet() / "guisettings.ini.bak", settings);
 
     // Save the strDataDir setting
     QString dataDir = GUIUtil::getDefaultDataDirectory();
@@ -238,7 +252,7 @@ static ProxySetting GetProxySetting(QSettings &settings, const QString &name)
 
 static void SetProxySetting(QSettings &settings, const QString &name, const ProxySetting &ip_port)
 {
-    settings.setValue(name, ip_port.ip + ":" + ip_port.port);
+    settings.setValue(name, QString{ip_port.ip + QLatin1Char(':') + ip_port.port});
 }
 
 static const QString GetDefaultProxyAddress()
@@ -319,6 +333,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
+        case ExternalSignerPath:
+            return settings.value("external_signer_path");
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -326,6 +342,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return strThirdPartyTxUrls;
         case Language:
             return settings.value("language");
+        case UseEmbeddedMonospacedFont:
+            return m_use_embedded_monospaced_font;
         case CoinControlFeatures:
             return fCoinControlFeatures;
         case Prune:
@@ -436,6 +454,12 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+        case ExternalSignerPath:
+            if (settings.value("external_signer_path") != value.toString()) {
+                settings.setValue("external_signer_path", value.toString());
+                setRestartRequired(true);
+            }
+            break;
 #endif
         case DisplayUnit:
             setDisplayUnit(value);
@@ -452,6 +476,11 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 settings.setValue("language", value);
                 setRestartRequired(true);
             }
+            break;
+        case UseEmbeddedMonospacedFont:
+            m_use_embedded_monospaced_font = value.toBool();
+            settings.setValue("UseEmbeddedMonospacedFont", m_use_embedded_monospaced_font);
+            Q_EMIT useEmbeddedMonospacedFontChanged(m_use_embedded_monospaced_font);
             break;
         case CoinControlFeatures:
             fCoinControlFeatures = value.toBool();

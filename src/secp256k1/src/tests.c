@@ -1,8 +1,8 @@
-/**********************************************************************
- * Copyright (c) 2013, 2014, 2015 Pieter Wuille, Gregory Maxwell      *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2013, 2014, 2015 Pieter Wuille, Gregory Maxwell       *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 #if defined HAVE_CONFIG_H
 #include "libsecp256k1-config.h"
@@ -18,12 +18,13 @@
 #include "include/secp256k1.h"
 #include "include/secp256k1_preallocated.h"
 #include "testrand_impl.h"
+#include "util.h"
 
 #ifdef ENABLE_OPENSSL_TESTS
-#include "openssl/bn.h"
-#include "openssl/ec.h"
-#include "openssl/ecdsa.h"
-#include "openssl/obj_mac.h"
+#include <openssl/bn.h>
+#include <openssl/ec.h>
+#include <openssl/ecdsa.h>
+#include <openssl/obj_mac.h>
 # if OPENSSL_VERSION_NUMBER < 0x10100000L
 void ECDSA_SIG_get0(const ECDSA_SIG *sig, const BIGNUM **pr, const BIGNUM **ps) {*pr = sig->r; *ps = sig->s;}
 # endif
@@ -31,6 +32,11 @@ void ECDSA_SIG_get0(const ECDSA_SIG *sig, const BIGNUM **pr, const BIGNUM **ps) 
 
 #include "contrib/lax_der_parsing.c"
 #include "contrib/lax_der_privatekey_parsing.c"
+
+#include "modinv32_impl.h"
+#ifdef SECP256K1_WIDEMUL_INT128
+#include "modinv64_impl.h"
+#endif
 
 static int count = 64;
 static secp256k1_context *ctx = NULL;
@@ -416,6 +422,25 @@ void run_scratch_tests(void) {
     secp256k1_context_destroy(none);
 }
 
+void run_ctz_tests(void) {
+    static const uint32_t b32[] = {1, 0xffffffff, 0x5e56968f, 0xe0d63129};
+    static const uint64_t b64[] = {1, 0xffffffffffffffff, 0xbcd02462139b3fc3, 0x98b5f80c769693ef};
+    int shift;
+    unsigned i;
+    for (i = 0; i < sizeof(b32) / sizeof(b32[0]); ++i) {
+        for (shift = 0; shift < 32; ++shift) {
+            CHECK(secp256k1_ctz32_var_debruijn(b32[i] << shift) == shift);
+            CHECK(secp256k1_ctz32_var(b32[i] << shift) == shift);
+        }
+    }
+    for (i = 0; i < sizeof(b64) / sizeof(b64[0]); ++i) {
+        for (shift = 0; shift < 64; ++shift) {
+            CHECK(secp256k1_ctz64_var_debruijn(b64[i] << shift) == shift);
+            CHECK(secp256k1_ctz64_var(b64[i] << shift) == shift);
+        }
+    }
+}
+
 /***** HASH TESTS *****/
 
 void run_sha256_tests(void) {
@@ -611,202 +636,924 @@ void run_rand_int(void) {
     }
 }
 
-/***** NUM TESTS *****/
+/***** MODINV TESTS *****/
 
-#ifndef USE_NUM_NONE
-void random_num_negate(secp256k1_num *num) {
-    if (secp256k1_testrand_bits(1)) {
-        secp256k1_num_negate(num);
+/* Compute the modular inverse of (odd) x mod 2^64. */
+uint64_t modinv2p64(uint64_t x) {
+    /* If w = 1/x mod 2^(2^L), then w*(2 - w*x) = 1/x mod 2^(2^(L+1)). See
+     * Hacker's Delight second edition, Henry S. Warren, Jr., pages 245-247 for
+     * why. Start with L=0, for which it is true for every odd x that
+     * 1/x=1 mod 2. Iterating 6 times gives us 1/x mod 2^64. */
+    int l;
+    uint64_t w = 1;
+    CHECK(x & 1);
+    for (l = 0; l < 6; ++l) w *= (2 - w*x);
+    return w;
+}
+
+/* compute out = (a*b) mod m; if b=NULL, treat b=1.
+ *
+ * Out is a 512-bit number (represented as 32 uint16_t's in LE order). The other
+ * arguments are 256-bit numbers (represented as 16 uint16_t's in LE order). */
+void mulmod256(uint16_t* out, const uint16_t* a, const uint16_t* b, const uint16_t* m) {
+    uint16_t mul[32];
+    uint64_t c = 0;
+    int i, j;
+    int m_bitlen = 0;
+    int mul_bitlen = 0;
+
+    if (b != NULL) {
+        /* Compute the product of a and b, and put it in mul. */
+        for (i = 0; i < 32; ++i) {
+            for (j = i <= 15 ? 0 : i - 15; j <= i && j <= 15; j++) {
+                c += (uint64_t)a[j] * b[i - j];
+            }
+            mul[i] = c & 0xFFFF;
+            c >>= 16;
+        }
+        CHECK(c == 0);
+
+        /* compute the highest set bit in mul */
+        for (i = 511; i >= 0; --i) {
+            if ((mul[i >> 4] >> (i & 15)) & 1) {
+                mul_bitlen = i;
+                break;
+            }
+        }
+    } else {
+        /* if b==NULL, set mul=a. */
+        memcpy(mul, a, 32);
+        memset(mul + 16, 0, 32);
+        /* compute the highest set bit in mul */
+        for (i = 255; i >= 0; --i) {
+            if ((mul[i >> 4] >> (i & 15)) & 1) {
+                mul_bitlen = i;
+                break;
+            }
+        }
     }
+
+    /* Compute the highest set bit in m. */
+    for (i = 255; i >= 0; --i) {
+        if ((m[i >> 4] >> (i & 15)) & 1) {
+            m_bitlen = i;
+            break;
+        }
+    }
+
+    /* Try do mul -= m<<i, for i going down to 0, whenever the result is not negative */
+    for (i = mul_bitlen - m_bitlen; i >= 0; --i) {
+        uint16_t mul2[32];
+        int64_t cs;
+
+        /* Compute mul2 = mul - m<<i. */
+        cs = 0; /* accumulator */
+        for (j = 0; j < 32; ++j) { /* j loops over the output limbs in mul2. */
+            /* Compute sub: the 16 bits in m that will be subtracted from mul2[j]. */
+            uint16_t sub = 0;
+            int p;
+            for (p = 0; p < 16; ++p) { /* p loops over the bit positions in mul2[j]. */
+                int bitpos = j * 16 - i + p; /* bitpos is the correspond bit position in m. */
+                if (bitpos >= 0 && bitpos < 256) {
+                    sub |= ((m[bitpos >> 4] >> (bitpos & 15)) & 1) << p;
+                }
+            }
+            /* Add mul[j]-sub to accumulator, and shift bottom 16 bits out to mul2[j]. */
+            cs += mul[j];
+            cs -= sub;
+            mul2[j] = (cs & 0xFFFF);
+            cs >>= 16;
+        }
+        /* If remainder of subtraction is 0, set mul = mul2. */
+        if (cs == 0) {
+            memcpy(mul, mul2, sizeof(mul));
+        }
+    }
+    /* Sanity check: test that all limbs higher than m's highest are zero */
+    for (i = (m_bitlen >> 4) + 1; i < 32; ++i) {
+        CHECK(mul[i] == 0);
+    }
+    memcpy(out, mul, 32);
 }
 
-void random_num_order_test(secp256k1_num *num) {
-    secp256k1_scalar sc;
-    random_scalar_order_test(&sc);
-    secp256k1_scalar_get_num(num, &sc);
-}
-
-void random_num_order(secp256k1_num *num) {
-    secp256k1_scalar sc;
-    random_scalar_order(&sc);
-    secp256k1_scalar_get_num(num, &sc);
-}
-
-void test_num_negate(void) {
-    secp256k1_num n1;
-    secp256k1_num n2;
-    random_num_order_test(&n1); /* n1 = R */
-    random_num_negate(&n1);
-    secp256k1_num_copy(&n2, &n1); /* n2 = R */
-    secp256k1_num_sub(&n1, &n2, &n1); /* n1 = n2-n1 = 0 */
-    CHECK(secp256k1_num_is_zero(&n1));
-    secp256k1_num_copy(&n1, &n2); /* n1 = R */
-    secp256k1_num_negate(&n1); /* n1 = -R */
-    CHECK(!secp256k1_num_is_zero(&n1));
-    secp256k1_num_add(&n1, &n2, &n1); /* n1 = n2+n1 = 0 */
-    CHECK(secp256k1_num_is_zero(&n1));
-    secp256k1_num_copy(&n1, &n2); /* n1 = R */
-    secp256k1_num_negate(&n1); /* n1 = -R */
-    CHECK(secp256k1_num_is_neg(&n1) != secp256k1_num_is_neg(&n2));
-    secp256k1_num_negate(&n1); /* n1 = R */
-    CHECK(secp256k1_num_eq(&n1, &n2));
-}
-
-void test_num_add_sub(void) {
+/* Convert a 256-bit number represented as 16 uint16_t's to signed30 notation. */
+void uint16_to_signed30(secp256k1_modinv32_signed30* out, const uint16_t* in) {
     int i;
-    secp256k1_scalar s;
-    secp256k1_num n1;
-    secp256k1_num n2;
-    secp256k1_num n1p2, n2p1, n1m2, n2m1;
-    random_num_order_test(&n1); /* n1 = R1 */
-    if (secp256k1_testrand_bits(1)) {
-        random_num_negate(&n1);
-    }
-    random_num_order_test(&n2); /* n2 = R2 */
-    if (secp256k1_testrand_bits(1)) {
-        random_num_negate(&n2);
-    }
-    secp256k1_num_add(&n1p2, &n1, &n2); /* n1p2 = R1 + R2 */
-    secp256k1_num_add(&n2p1, &n2, &n1); /* n2p1 = R2 + R1 */
-    secp256k1_num_sub(&n1m2, &n1, &n2); /* n1m2 = R1 - R2 */
-    secp256k1_num_sub(&n2m1, &n2, &n1); /* n2m1 = R2 - R1 */
-    CHECK(secp256k1_num_eq(&n1p2, &n2p1));
-    CHECK(!secp256k1_num_eq(&n1p2, &n1m2));
-    secp256k1_num_negate(&n2m1); /* n2m1 = -R2 + R1 */
-    CHECK(secp256k1_num_eq(&n2m1, &n1m2));
-    CHECK(!secp256k1_num_eq(&n2m1, &n1));
-    secp256k1_num_add(&n2m1, &n2m1, &n2); /* n2m1 = -R2 + R1 + R2 = R1 */
-    CHECK(secp256k1_num_eq(&n2m1, &n1));
-    CHECK(!secp256k1_num_eq(&n2p1, &n1));
-    secp256k1_num_sub(&n2p1, &n2p1, &n2); /* n2p1 = R2 + R1 - R2 = R1 */
-    CHECK(secp256k1_num_eq(&n2p1, &n1));
-
-    /* check is_one */
-    secp256k1_scalar_set_int(&s, 1);
-    secp256k1_scalar_get_num(&n1, &s);
-    CHECK(secp256k1_num_is_one(&n1));
-    /* check that 2^n + 1 is never 1 */
-    secp256k1_scalar_get_num(&n2, &s);
-    for (i = 0; i < 250; ++i) {
-        secp256k1_num_add(&n1, &n1, &n1);    /* n1 *= 2 */
-        secp256k1_num_add(&n1p2, &n1, &n2);  /* n1p2 = n1 + 1 */
-        CHECK(!secp256k1_num_is_one(&n1p2));
+    memset(out->v, 0, sizeof(out->v));
+    for (i = 0; i < 256; ++i) {
+        out->v[i / 30] |= (int32_t)(((in[i >> 4]) >> (i & 15)) & 1) << (i % 30);
     }
 }
 
-void test_num_mod(void) {
+/* Convert a 256-bit number in signed30 notation to a representation as 16 uint16_t's. */
+void signed30_to_uint16(uint16_t* out, const secp256k1_modinv32_signed30* in) {
     int i;
-    secp256k1_scalar s;
-    secp256k1_num order, n;
+    memset(out, 0, 32);
+    for (i = 0; i < 256; ++i) {
+        out[i >> 4] |= (((in->v[i / 30]) >> (i % 30)) & 1) << (i & 15);
+    }
+}
 
-    /* check that 0 mod anything is 0 */
-    random_scalar_order_test(&s);
-    secp256k1_scalar_get_num(&order, &s);
-    secp256k1_scalar_set_int(&s, 0);
-    secp256k1_scalar_get_num(&n, &s);
-    secp256k1_num_mod(&n, &order);
-    CHECK(secp256k1_num_is_zero(&n));
+/* Randomly mutate the sign of limbs in signed30 representation, without changing the value. */
+void mutate_sign_signed30(secp256k1_modinv32_signed30* x) {
+    int i;
+    for (i = 0; i < 16; ++i) {
+        int pos = secp256k1_testrand_int(8);
+        if (x->v[pos] > 0 && x->v[pos + 1] <= 0x3fffffff) {
+            x->v[pos] -= 0x40000000;
+            x->v[pos + 1] += 1;
+        } else if (x->v[pos] < 0 && x->v[pos + 1] >= 0x3fffffff) {
+            x->v[pos] += 0x40000000;
+            x->v[pos + 1] -= 1;
+        }
+    }
+}
 
-    /* check that anything mod 1 is 0 */
-    secp256k1_scalar_set_int(&s, 1);
-    secp256k1_scalar_get_num(&order, &s);
-    secp256k1_scalar_get_num(&n, &s);
-    secp256k1_num_mod(&n, &order);
-    CHECK(secp256k1_num_is_zero(&n));
+/* Test secp256k1_modinv32{_var}, using inputs in 16-bit limb format, and returning inverse. */
+void test_modinv32_uint16(uint16_t* out, const uint16_t* in, const uint16_t* mod) {
+    uint16_t tmp[16];
+    secp256k1_modinv32_signed30 x;
+    secp256k1_modinv32_modinfo m;
+    int i, vartime, nonzero;
 
-    /* check that increasing the number past 2^256 does not break this */
-    random_scalar_order_test(&s);
-    secp256k1_scalar_get_num(&n, &s);
-    /* multiply by 2^8, which'll test this case with high probability */
+    uint16_to_signed30(&x, in);
+    nonzero = (x.v[0] | x.v[1] | x.v[2] | x.v[3] | x.v[4] | x.v[5] | x.v[6] | x.v[7] | x.v[8]) != 0;
+    uint16_to_signed30(&m.modulus, mod);
+    mutate_sign_signed30(&m.modulus);
+
+    /* compute 1/modulus mod 2^30 */
+    m.modulus_inv30 = modinv2p64(m.modulus.v[0]) & 0x3fffffff;
+    CHECK(((m.modulus_inv30 * m.modulus.v[0]) & 0x3fffffff) == 1);
+
+    for (vartime = 0; vartime < 2; ++vartime) {
+        /* compute inverse */
+        (vartime ? secp256k1_modinv32_var : secp256k1_modinv32)(&x, &m);
+
+        /* produce output */
+        signed30_to_uint16(out, &x);
+
+        /* check if the inverse times the input is 1 (mod m), unless x is 0. */
+        mulmod256(tmp, out, in, mod);
+        CHECK(tmp[0] == nonzero);
+        for (i = 1; i < 16; ++i) CHECK(tmp[i] == 0);
+
+        /* invert again */
+        (vartime ? secp256k1_modinv32_var : secp256k1_modinv32)(&x, &m);
+
+        /* check if the result is equal to the input */
+        signed30_to_uint16(tmp, &x);
+        for (i = 0; i < 16; ++i) CHECK(tmp[i] == in[i]);
+    }
+}
+
+#ifdef SECP256K1_WIDEMUL_INT128
+/* Convert a 256-bit number represented as 16 uint16_t's to signed62 notation. */
+void uint16_to_signed62(secp256k1_modinv64_signed62* out, const uint16_t* in) {
+    int i;
+    memset(out->v, 0, sizeof(out->v));
+    for (i = 0; i < 256; ++i) {
+        out->v[i / 62] |= (int64_t)(((in[i >> 4]) >> (i & 15)) & 1) << (i % 62);
+    }
+}
+
+/* Convert a 256-bit number in signed62 notation to a representation as 16 uint16_t's. */
+void signed62_to_uint16(uint16_t* out, const secp256k1_modinv64_signed62* in) {
+    int i;
+    memset(out, 0, 32);
+    for (i = 0; i < 256; ++i) {
+        out[i >> 4] |= (((in->v[i / 62]) >> (i % 62)) & 1) << (i & 15);
+    }
+}
+
+/* Randomly mutate the sign of limbs in signed62 representation, without changing the value. */
+void mutate_sign_signed62(secp256k1_modinv64_signed62* x) {
+    static const int64_t M62 = (int64_t)(UINT64_MAX >> 2);
+    int i;
     for (i = 0; i < 8; ++i) {
-        secp256k1_num_add(&n, &n, &n);
+        int pos = secp256k1_testrand_int(4);
+        if (x->v[pos] > 0 && x->v[pos + 1] <= M62) {
+            x->v[pos] -= (M62 + 1);
+            x->v[pos + 1] += 1;
+        } else if (x->v[pos] < 0 && x->v[pos + 1] >= -M62) {
+            x->v[pos] += (M62 + 1);
+            x->v[pos + 1] -= 1;
+        }
     }
-    secp256k1_num_mod(&n, &order);
-    CHECK(secp256k1_num_is_zero(&n));
 }
 
-void test_num_jacobi(void) {
-    secp256k1_scalar sqr;
-    secp256k1_scalar small;
-    secp256k1_scalar five;  /* five is not a quadratic residue */
-    secp256k1_num order, n;
-    int i;
-    /* squares mod 5 are 1, 4 */
-    const int jacobi5[10] = { 0, 1, -1, -1, 1, 0, 1, -1, -1, 1 };
+/* Test secp256k1_modinv64{_var}, using inputs in 16-bit limb format, and returning inverse. */
+void test_modinv64_uint16(uint16_t* out, const uint16_t* in, const uint16_t* mod) {
+    static const int64_t M62 = (int64_t)(UINT64_MAX >> 2);
+    uint16_t tmp[16];
+    secp256k1_modinv64_signed62 x;
+    secp256k1_modinv64_modinfo m;
+    int i, vartime, nonzero;
 
-    /* check some small values with 5 as the order */
-    secp256k1_scalar_set_int(&five, 5);
-    secp256k1_scalar_get_num(&order, &five);
-    for (i = 0; i < 10; ++i) {
-        secp256k1_scalar_set_int(&small, i);
-        secp256k1_scalar_get_num(&n, &small);
-        CHECK(secp256k1_num_jacobi(&n, &order) == jacobi5[i]);
-    }
+    uint16_to_signed62(&x, in);
+    nonzero = (x.v[0] | x.v[1] | x.v[2] | x.v[3] | x.v[4]) != 0;
+    uint16_to_signed62(&m.modulus, mod);
+    mutate_sign_signed62(&m.modulus);
 
-    /** test large values with 5 as group order */
-    secp256k1_scalar_get_num(&order, &five);
-    /* we first need a scalar which is not a multiple of 5 */
-    do {
-        secp256k1_num fiven;
-        random_scalar_order_test(&sqr);
-        secp256k1_scalar_get_num(&fiven, &five);
-        secp256k1_scalar_get_num(&n, &sqr);
-        secp256k1_num_mod(&n, &fiven);
-    } while (secp256k1_num_is_zero(&n));
-    /* next force it to be a residue. 2 is a nonresidue mod 5 so we can
-     * just multiply by two, i.e. add the number to itself */
-    if (secp256k1_num_jacobi(&n, &order) == -1) {
-        secp256k1_num_add(&n, &n, &n);
-    }
+    /* compute 1/modulus mod 2^62 */
+    m.modulus_inv62 = modinv2p64(m.modulus.v[0]) & M62;
+    CHECK(((m.modulus_inv62 * m.modulus.v[0]) & M62) == 1);
 
-    /* test residue */
-    CHECK(secp256k1_num_jacobi(&n, &order) == 1);
-    /* test nonresidue */
-    secp256k1_num_add(&n, &n, &n);
-    CHECK(secp256k1_num_jacobi(&n, &order) == -1);
+    for (vartime = 0; vartime < 2; ++vartime) {
+        /* compute inverse */
+        (vartime ? secp256k1_modinv64_var : secp256k1_modinv64)(&x, &m);
 
-    /** test with secp group order as order */
-    secp256k1_scalar_order_get_num(&order);
-    random_scalar_order_test(&sqr);
-    secp256k1_scalar_sqr(&sqr, &sqr);
-    /* test residue */
-    secp256k1_scalar_get_num(&n, &sqr);
-    CHECK(secp256k1_num_jacobi(&n, &order) == 1);
-    /* test nonresidue */
-    secp256k1_scalar_mul(&sqr, &sqr, &five);
-    secp256k1_scalar_get_num(&n, &sqr);
-    CHECK(secp256k1_num_jacobi(&n, &order) == -1);
-    /* test multiple of the order*/
-    CHECK(secp256k1_num_jacobi(&order, &order) == 0);
+        /* produce output */
+        signed62_to_uint16(out, &x);
 
-    /* check one less than the order */
-    secp256k1_scalar_set_int(&small, 1);
-    secp256k1_scalar_get_num(&n, &small);
-    secp256k1_num_sub(&n, &order, &n);
-    CHECK(secp256k1_num_jacobi(&n, &order) == 1);  /* sage confirms this is 1 */
-}
+        /* check if the inverse times the input is 1 (mod m), unless x is 0. */
+        mulmod256(tmp, out, in, mod);
+        CHECK(tmp[0] == nonzero);
+        for (i = 1; i < 16; ++i) CHECK(tmp[i] == 0);
 
-void run_num_smalltests(void) {
-    int i;
-    for (i = 0; i < 100*count; i++) {
-        test_num_negate();
-        test_num_add_sub();
-        test_num_mod();
-        test_num_jacobi();
+        /* invert again */
+        (vartime ? secp256k1_modinv64_var : secp256k1_modinv64)(&x, &m);
+
+        /* check if the result is equal to the input */
+        signed62_to_uint16(tmp, &x);
+        for (i = 0; i < 16; ++i) CHECK(tmp[i] == in[i]);
     }
 }
 #endif
 
+/* test if a and b are coprime */
+int coprime(const uint16_t* a, const uint16_t* b) {
+    uint16_t x[16], y[16], t[16];
+    int i;
+    int iszero;
+    memcpy(x, a, 32);
+    memcpy(y, b, 32);
+
+    /* simple gcd loop: while x!=0, (x,y)=(y%x,x) */
+    while (1) {
+        iszero = 1;
+        for (i = 0; i < 16; ++i) {
+            if (x[i] != 0) {
+                iszero = 0;
+                break;
+            }
+        }
+        if (iszero) break;
+        mulmod256(t, y, NULL, x);
+        memcpy(y, x, 32);
+        memcpy(x, t, 32);
+    }
+
+    /* return whether y=1 */
+    if (y[0] != 1) return 0;
+    for (i = 1; i < 16; ++i) {
+        if (y[i] != 0) return 0;
+    }
+    return 1;
+}
+
+void run_modinv_tests(void) {
+    /* Fixed test cases. Each tuple is (input, modulus, output), each as 16x16 bits in LE order. */
+    static const uint16_t CASES[][3][16] = {
+        /* Test cases triggering edge cases in divsteps */
+
+        /* Test case known to need 713 divsteps */
+        {{0x1513, 0x5389, 0x54e9, 0x2798, 0x1957, 0x66a0, 0x8057, 0x3477,
+          0x7784, 0x1052, 0x326a, 0x9331, 0x6506, 0xa95c, 0x91f3, 0xfb5e},
+         {0x2bdd, 0x8df4, 0xcc61, 0x481f, 0xdae5, 0x5ca7, 0xf43b, 0x7d54,
+          0x13d6, 0x469b, 0x2294, 0x20f4, 0xb2a4, 0xa2d1, 0x3ff1, 0xfd4b},
+         {0xffd8, 0xd9a0, 0x456e, 0x81bb, 0xbabd, 0x6cea, 0x6dbd, 0x73ab,
+          0xbb94, 0x3d3c, 0xdf08, 0x31c4, 0x3e32, 0xc179, 0x2486, 0xb86b}},
+        /* Test case known to need 589 divsteps, reaching delta=-140 and
+           delta=141. */
+        {{0x3fb1, 0x903b, 0x4eb7, 0x4813, 0xd863, 0x26bf, 0xd89f, 0xa8a9,
+          0x02fe, 0x57c6, 0x554a, 0x4eab, 0x165e, 0x3d61, 0xee1e, 0x456c},
+         {0x9295, 0x823b, 0x5c1f, 0x5386, 0x48e0, 0x02ff, 0x4c2a, 0xa2da,
+          0xe58f, 0x967c, 0xc97e, 0x3f5a, 0x69fb, 0x52d9, 0x0a86, 0xb4a3},
+         {0x3d30, 0xb893, 0xa809, 0xa7a8, 0x26f5, 0x5b42, 0x55be, 0xf4d0,
+          0x12c2, 0x7e6a, 0xe41a, 0x90c7, 0xebfa, 0xf920, 0x304e, 0x1419}},
+        /* Test case known to need 650 divsteps, and doing 65 consecutive (f,g/2) steps. */
+        {{0x8583, 0x5058, 0xbeae, 0xeb69, 0x48bc, 0x52bb, 0x6a9d, 0xcc94,
+          0x2a21, 0x87d5, 0x5b0d, 0x42f6, 0x5b8a, 0x2214, 0xe9d6, 0xa040},
+         {0x7531, 0x27cb, 0x7e53, 0xb739, 0x6a5f, 0x83f5, 0xa45c, 0xcb1d,
+          0x8a87, 0x1c9c, 0x51d7, 0x851c, 0xb9d8, 0x1fbe, 0xc241, 0xd4a3},
+         {0xcdb4, 0x275c, 0x7d22, 0xa906, 0x0173, 0xc054, 0x7fdf, 0x5005,
+          0x7fb8, 0x9059, 0xdf51, 0x99df, 0x2654, 0x8f6e, 0x070f, 0xb347}},
+        /* example needing 713 divsteps; delta=-2..3 */
+        {{0xe2e9, 0xee91, 0x4345, 0xe5ad, 0xf3ec, 0x8f42, 0x0364, 0xd5c9,
+          0xff49, 0xbef5, 0x4544, 0x4c7c, 0xae4b, 0xfd9d, 0xb35b, 0xda9d},
+         {0x36e7, 0x8cca, 0x2ed0, 0x47b3, 0xaca4, 0xb374, 0x7d2a, 0x0772,
+          0x6bdb, 0xe0a7, 0x900b, 0xfe10, 0x788c, 0x6f22, 0xd909, 0xf298},
+         {0xd8c6, 0xba39, 0x13ed, 0x198c, 0x16c8, 0xb837, 0xa5f2, 0x9797,
+          0x0113, 0x882a, 0x15b5, 0x324c, 0xabee, 0xe465, 0x8170, 0x85ac}},
+        /* example needing 713 divsteps; delta=-2..3 */
+        {{0xd5b7, 0x2966, 0x040e, 0xf59a, 0x0387, 0xd96d, 0xbfbc, 0xd850,
+          0x2d96, 0x872a, 0xad81, 0xc03c, 0xbb39, 0xb7fa, 0xd904, 0xef78},
+         {0x6279, 0x4314, 0xfdd3, 0x1568, 0x0982, 0x4d13, 0x625f, 0x010c,
+          0x22b1, 0x0cc3, 0xf22d, 0x5710, 0x1109, 0x5751, 0x7714, 0xfcf2},
+         {0xdb13, 0x5817, 0x232e, 0xe456, 0xbbbc, 0x6fbe, 0x4572, 0xa358,
+          0xc76d, 0x928e, 0x0162, 0x5314, 0x8325, 0x5683, 0xe21b, 0xda88}},
+        /* example needing 713 divsteps; delta=-2..3 */
+        {{0xa06f, 0x71ee, 0x3bac, 0x9ebb, 0xdeaa, 0x09ed, 0x1cf7, 0x9ec9,
+          0x7158, 0x8b72, 0x5d53, 0x5479, 0x5c75, 0xbb66, 0x9125, 0xeccc},
+         {0x2941, 0xd46c, 0x3cd4, 0x4a9d, 0x5c4a, 0x256b, 0xbd6c, 0x9b8e,
+          0x8fe0, 0x8a14, 0xffe8, 0x2496, 0x618d, 0xa9d7, 0x5018, 0xfb29},
+         {0x437c, 0xbd60, 0x7590, 0x94bb, 0x0095, 0xd35e, 0xd4fe, 0xd6da,
+          0x0d4e, 0x5342, 0x4cd2, 0x169b, 0x661c, 0x1380, 0xed2d, 0x85c1}},
+        /* example reaching delta=-64..65; 661 divsteps */
+        {{0xfde4, 0x68d6, 0x6c48, 0x7f77, 0x1c78, 0x96de, 0x2fd9, 0xa6c2,
+          0xbbb5, 0xd319, 0x69cf, 0xd4b3, 0xa321, 0xcda0, 0x172e, 0xe530},
+         {0xd9e3, 0x0f60, 0x3d86, 0xeeab, 0x25ee, 0x9582, 0x2d50, 0xfe16,
+          0xd4e2, 0xe3ba, 0x94e2, 0x9833, 0x6c5e, 0x8982, 0x13b6, 0xe598},
+         {0xe675, 0xf55a, 0x10f6, 0xabde, 0x5113, 0xecaa, 0x61ae, 0xad9f,
+          0x0c27, 0xef33, 0x62e5, 0x211d, 0x08fa, 0xa78d, 0xc675, 0x8bae}},
+        /* example reaching delta=-64..65; 661 divsteps */
+        {{0x21bf, 0x52d5, 0x8fd4, 0xaa18, 0x156a, 0x7247, 0xebb8, 0x5717,
+          0x4eb5, 0x1421, 0xb58f, 0x3b0b, 0x5dff, 0xe533, 0xb369, 0xd28a},
+         {0x9f6b, 0xe463, 0x2563, 0xc74d, 0x6d81, 0x636a, 0x8fc8, 0x7a94,
+          0x9429, 0x1585, 0xf35e, 0x7ff5, 0xb64f, 0x9720, 0xba74, 0xe108},
+         {0xa5ab, 0xea7b, 0xfe5e, 0x8a85, 0x13be, 0x7934, 0xe8a0, 0xa187,
+          0x86b5, 0xe477, 0xb9a4, 0x75d7, 0x538f, 0xdd70, 0xc781, 0xb67d}},
+        /* example reaching delta=-64..65; 661 divsteps */
+        {{0xa41a, 0x3e8d, 0xf1f5, 0x9493, 0x868c, 0x5103, 0x2725, 0x3ceb,
+          0x6032, 0x3624, 0xdc6b, 0x9120, 0xbf4c, 0x8821, 0x91ad, 0xb31a},
+         {0x5c0b, 0xdda5, 0x20f8, 0x32a1, 0xaf73, 0x6ec5, 0x4779, 0x43d6,
+          0xd454, 0x9573, 0xbf84, 0x5a58, 0xe04e, 0x307e, 0xd1d5, 0xe230},
+         {0xda15, 0xbcd6, 0x7180, 0xabd3, 0x04e6, 0x6986, 0xc0d7, 0x90bb,
+          0x3a4d, 0x7c95, 0xaaab, 0x9ab3, 0xda34, 0xa7f6, 0x9636, 0x6273}},
+        /* example doing 123 consecutive (f,g/2) steps; 615 divsteps */
+        {{0xb4d6, 0xb38f, 0x00aa, 0xebda, 0xd4c2, 0x70b8, 0x9dad, 0x58ee,
+          0x68f8, 0x48d3, 0xb5ff, 0xf422, 0x9e46, 0x2437, 0x18d0, 0xd9cc},
+         {0x5c83, 0xfed7, 0x97f5, 0x3f07, 0xcaad, 0x95b1, 0xb4a4, 0xb005,
+          0x23af, 0xdd27, 0x6c0d, 0x932c, 0xe2b2, 0xe3ae, 0xfb96, 0xdf67},
+         {0x3105, 0x0127, 0xfd48, 0x039b, 0x35f1, 0xbc6f, 0x6c0a, 0xb572,
+          0xe4df, 0xebad, 0x8edc, 0xb89d, 0x9555, 0x4c26, 0x1fef, 0x997c}},
+        /* example doing 123 consecutive (f,g/2) steps; 614 divsteps */
+        {{0x5138, 0xd474, 0x385f, 0xc964, 0x00f2, 0x6df7, 0x862d, 0xb185,
+          0xb264, 0xe9e1, 0x466c, 0xf39e, 0xafaf, 0x5f41, 0x47e2, 0xc89d},
+         {0x8607, 0x9c81, 0x46a2, 0x7dcc, 0xcb0c, 0x9325, 0xe149, 0x2bde,
+          0x6632, 0x2869, 0xa261, 0xb163, 0xccee, 0x22ae, 0x91e0, 0xcfd5},
+         {0x831c, 0xda22, 0xb080, 0xba7a, 0x26e2, 0x54b0, 0x073b, 0x5ea0,
+          0xed4b, 0xcb3d, 0xbba1, 0xbec8, 0xf2ad, 0xae0d, 0x349b, 0x17d1}},
+        /* example doing 123 consecutive (f,g/2) steps; 614 divsteps */
+        {{0xe9a5, 0xb4ad, 0xd995, 0x9953, 0xcdff, 0x50d7, 0xf715, 0x9dc7,
+          0x3e28, 0x15a9, 0x95a3, 0x8554, 0x5b5e, 0xad1d, 0x6d57, 0x3d50},
+         {0x3ad9, 0xbd60, 0x5cc7, 0x6b91, 0xadeb, 0x71f6, 0x7cc4, 0xa58a,
+          0x2cce, 0xf17c, 0x38c9, 0x97ed, 0x65fb, 0x3fa6, 0xa6bc, 0xeb24},
+         {0xf96c, 0x1963, 0x8151, 0xa0cc, 0x299b, 0xf277, 0x001a, 0x16bb,
+          0xfd2e, 0x532d, 0x0410, 0xe117, 0x6b00, 0x44ec, 0xca6a, 0x1745}},
+        /* example doing 446 (f,g/2) steps; 523 divsteps */
+        {{0x3758, 0xa56c, 0xe41e, 0x4e47, 0x0975, 0xa82b, 0x107c, 0x89cf,
+          0x2093, 0x5a0c, 0xda37, 0xe007, 0x6074, 0x4f68, 0x2f5a, 0xbb8a},
+         {0x4beb, 0xa40f, 0x2c42, 0xd9d6, 0x97e8, 0xca7c, 0xd395, 0x894f,
+          0x1f50, 0x8067, 0xa233, 0xb850, 0x1746, 0x1706, 0xbcda, 0xdf32},
+         {0x762a, 0xceda, 0x4c45, 0x1ca0, 0x8c37, 0xd8c5, 0xef57, 0x7a2c,
+          0x6e98, 0xe38a, 0xc50e, 0x2ca9, 0xcb85, 0x24d5, 0xc29c, 0x61f6}},
+        /* example doing 446 (f,g/2) steps; 523 divsteps */
+        {{0x6f38, 0x74ad, 0x7332, 0x4073, 0x6521, 0xb876, 0xa370, 0xa6bd,
+          0xcea5, 0xbd06, 0x969f, 0x77c6, 0x1e69, 0x7c49, 0x7d51, 0xb6e7},
+         {0x3f27, 0x4be4, 0xd81e, 0x1396, 0xb21f, 0x92aa, 0x6dc3, 0x6283,
+          0x6ada, 0x3ca2, 0xc1e5, 0x8b9b, 0xd705, 0x5598, 0x8ba1, 0xe087},
+         {0x6a22, 0xe834, 0xbc8d, 0xcee9, 0x42fc, 0xfc77, 0x9c45, 0x1ca8,
+          0xeb66, 0xed74, 0xaaf9, 0xe75f, 0xfe77, 0x46d2, 0x179b, 0xbf3e}},
+        /* example doing 336 (f,(f+g)/2) steps; 693 divsteps */
+        {{0x7ea7, 0x444e, 0x84ea, 0xc447, 0x7c1f, 0xab97, 0x3de6, 0x5878,
+          0x4e8b, 0xc017, 0x03e0, 0xdc40, 0xbbd0, 0x74ce, 0x0169, 0x7ab5},
+         {0x4023, 0x154f, 0xfbe4, 0x8195, 0xfda0, 0xef54, 0x9e9a, 0xc703,
+          0x2803, 0xf760, 0x6302, 0xed5b, 0x7157, 0x6456, 0xdd7d, 0xf14b},
+         {0xb6fb, 0xe3b3, 0x0733, 0xa77e, 0x44c5, 0x3003, 0xc937, 0xdd4d,
+          0x5355, 0x14e9, 0x184e, 0xcefe, 0xe6b5, 0xf2e0, 0x0a28, 0x5b74}},
+        /* example doing 336 (f,(f+g)/2) steps; 687 divsteps */
+        {{0xa893, 0xb5f4, 0x1ede, 0xa316, 0x242c, 0xbdcc, 0xb017, 0x0836,
+          0x3a37, 0x27fb, 0xfb85, 0x251e, 0xa189, 0xb15d, 0xa4b8, 0xc24c},
+         {0xb0b7, 0x57ba, 0xbb6d, 0x9177, 0xc896, 0xc7f2, 0x43b4, 0x85a6,
+          0xe6c4, 0xe50e, 0x3109, 0x7ca5, 0xd73d, 0x13ff, 0x0c3d, 0xcd62},
+         {0x48ca, 0xdb34, 0xe347, 0x2cef, 0x4466, 0x10fb, 0x7ee1, 0x6344,
+          0x4308, 0x966d, 0xd4d1, 0xb099, 0x994f, 0xd025, 0x2187, 0x5866}},
+        /* example doing 267 (g,(g-f)/2) steps; 678 divsteps */
+        {{0x0775, 0x1754, 0x01f6, 0xdf37, 0xc0be, 0x8197, 0x072f, 0x6cf5,
+          0x8b36, 0x8069, 0x5590, 0xb92d, 0x6084, 0x47a4, 0x23fe, 0xddd5},
+         {0x8e1b, 0xda37, 0x27d9, 0x312e, 0x3a2f, 0xef6d, 0xd9eb, 0x8153,
+          0xdcba, 0x9fa3, 0x9f80, 0xead5, 0x134d, 0x2ebb, 0x5ec0, 0xe032},
+         {0x1cb6, 0x5a61, 0x1bed, 0x77d6, 0xd5d1, 0x7498, 0xef33, 0x2dd2,
+          0x1089, 0xedbd, 0x6958, 0x16ae, 0x336c, 0x45e6, 0x4361, 0xbadc}},
+        /* example doing 267 (g,(g-f)/2) steps; 676 divsteps */
+        {{0x0207, 0xf948, 0xc430, 0xf36b, 0xf0a7, 0x5d36, 0x751f, 0x132c,
+          0x6f25, 0xa630, 0xca1f, 0xc967, 0xaf9c, 0x34e7, 0xa38f, 0xbe9f},
+         {0x5fb9, 0x7321, 0x6561, 0x5fed, 0x54ec, 0x9c3a, 0xee0e, 0x6717,
+          0x49af, 0xb896, 0xf4f5, 0x451c, 0x722a, 0xf116, 0x64a9, 0xcf0b},
+         {0xf4d7, 0xdb47, 0xfef2, 0x4806, 0x4cb8, 0x18c7, 0xd9a7, 0x4951,
+          0x14d8, 0x5c3a, 0xd22d, 0xd7b2, 0x750c, 0x3de7, 0x8b4a, 0x19aa}},
+
+        /* Test cases triggering edge cases in divsteps variant starting with delta=1/2 */
+
+        /* example needing 590 divsteps; delta=-5/2..7/2 */
+        {{0x9118, 0xb640, 0x53d7, 0x30ab, 0x2a23, 0xd907, 0x9323, 0x5b3a,
+          0xb6d4, 0x538a, 0x7637, 0xfe97, 0xfd05, 0x3cc0, 0x453a, 0xfb7e},
+         {0x6983, 0x4f75, 0x4ad1, 0x48ad, 0xb2d9, 0x521d, 0x3dbc, 0x9cc0,
+          0x4b60, 0x0ac6, 0xd3be, 0x0fb6, 0xd305, 0x3895, 0x2da5, 0xfdf8},
+         {0xcec1, 0x33ac, 0xa801, 0x8194, 0xe36c, 0x65ef, 0x103b, 0xca54,
+          0xfa9b, 0xb41d, 0x9b52, 0xb6f7, 0xa611, 0x84aa, 0x3493, 0xbf54}},
+        /* example needing 590 divsteps; delta=-3/2..5/2 */
+        {{0xb5f2, 0x42d0, 0x35e8, 0x8ca0, 0x4b62, 0x6e1d, 0xbdf3, 0x890e,
+          0x8c82, 0x23d8, 0xc79a, 0xc8e8, 0x789e, 0x353d, 0x9766, 0xea9d},
+         {0x6fa1, 0xacba, 0x4b7a, 0x5de1, 0x95d0, 0xc845, 0xebbf, 0x6f5a,
+          0x30cf, 0x52db, 0x69b7, 0xe278, 0x4b15, 0x8411, 0x2ab2, 0xf3e7},
+         {0xf12c, 0x9d6d, 0x95fa, 0x1878, 0x9f13, 0x4fb5, 0x3c8b, 0xa451,
+          0x7182, 0xc4b6, 0x7e2a, 0x7bb7, 0x6e0e, 0x5b68, 0xde55, 0x9927}},
+        /* example needing 590 divsteps; delta=-3/2..5/2 */
+        {{0x229c, 0x4ef8, 0x1e93, 0xe5dc, 0xcde5, 0x6d62, 0x263b, 0xad11,
+          0xced0, 0x88ff, 0xae8e, 0x3183, 0x11d2, 0xa50b, 0x350d, 0xeb40},
+         {0x3157, 0xe2ea, 0x8a02, 0x0aa3, 0x5ae1, 0xb26c, 0xea27, 0x6805,
+          0x87e2, 0x9461, 0x37c1, 0x2f8d, 0x85d2, 0x77a8, 0xf805, 0xeec9},
+         {0x6f4e, 0x2748, 0xf7e5, 0xd8d3, 0xabe2, 0x7270, 0xc4e0, 0xedc7,
+          0xf196, 0x78ca, 0x9139, 0xd8af, 0x72c6, 0xaf2f, 0x85d2, 0x6cd3}},
+        /* example needing 590 divsteps; delta=-5/2..7/2 */
+        {{0xdce8, 0xf1fe, 0x6708, 0x021e, 0xf1ca, 0xd609, 0x5443, 0x85ce,
+          0x7a05, 0x8f9c, 0x90c3, 0x52e7, 0x8e1d, 0x97b8, 0xc0bf, 0xf2a1},
+         {0xbd3d, 0xed11, 0x1625, 0xb4c5, 0x844c, 0xa413, 0x2569, 0xb9ba,
+          0xcd35, 0xff84, 0xcd6e, 0x7f0b, 0x7d5d, 0x10df, 0x3efe, 0xfbe5},
+         {0xa9dd, 0xafef, 0xb1b7, 0x4c8d, 0x50e4, 0xafbf, 0x2d5a, 0xb27c,
+          0x0653, 0x66b6, 0x5d36, 0x4694, 0x7e35, 0xc47c, 0x857f, 0x32c5}},
+        /* example needing 590 divsteps; delta=-3/2..5/2 */
+        {{0x7902, 0xc9f8, 0x926b, 0xaaeb, 0x90f8, 0x1c89, 0xcce3, 0x96b7,
+          0x28b2, 0x87a2, 0x136d, 0x695a, 0xa8df, 0x9061, 0x9e31, 0xee82},
+         {0xd3a9, 0x3c02, 0x818c, 0x6b81, 0x34b3, 0xebbb, 0xe2c8, 0x7712,
+          0xbfd6, 0x8248, 0xa6f4, 0xba6f, 0x03bb, 0xfb54, 0x7575, 0xfe89},
+         {0x8246, 0x0d63, 0x478e, 0xf946, 0xf393, 0x0451, 0x08c2, 0x5919,
+          0x5fd6, 0x4c61, 0xbeb7, 0x9a15, 0x30e1, 0x55fc, 0x6a01, 0x3724}},
+        /* example reaching delta=-127/2..129/2; 571 divsteps */
+        {{0x3eff, 0x926a, 0x77f5, 0x1fff, 0x1a5b, 0xf3ef, 0xf64b, 0x8681,
+          0xf800, 0xf9bc, 0x761d, 0xe268, 0x62b0, 0xa032, 0xba9c, 0xbe56},
+         {0xb8f9, 0x00e7, 0x47b7, 0xdffc, 0xfd9d, 0x5abb, 0xa19b, 0x1868,
+          0x31fd, 0x3b29, 0x3674, 0x5449, 0xf54d, 0x1d19, 0x6ac7, 0xff6f},
+         {0xf1d7, 0x3551, 0x5682, 0x9adf, 0xe8aa, 0x19a5, 0x8340, 0x71db,
+          0xb7ab, 0x4cfd, 0xf661, 0x632c, 0xc27e, 0xd3c6, 0xdf42, 0xd306}},
+        /* example reaching delta=-127/2..129/2; 571 divsteps */
+        {{0x0000, 0x0000, 0x0000, 0x0000, 0x3aff, 0x2ed7, 0xf2e0, 0xabc7,
+          0x8aee, 0x166e, 0x7ed0, 0x9ac7, 0x714a, 0xb9c5, 0x4d58, 0xad6c},
+         {0x9cf9, 0x47e2, 0xa421, 0xb277, 0xffc2, 0x2747, 0x6486, 0x94c1,
+          0x1d99, 0xd49b, 0x1096, 0x991a, 0xe986, 0xae02, 0xe89b, 0xea36},
+         {0x1fb4, 0x98d8, 0x19b7, 0x80e9, 0xcdac, 0xaa5a, 0xf1e6, 0x0074,
+          0xe393, 0xed8b, 0x8d5c, 0xe17d, 0x81b3, 0xc16d, 0x54d3, 0x9be3}},
+        /* example reaching delta=-127/2..129/2; 571 divsteps */
+        {{0xd047, 0x7e36, 0x3157, 0x7ab6, 0xb4d9, 0x8dae, 0x7534, 0x4f5d,
+          0x489e, 0xa8ab, 0x8a3d, 0xd52c, 0x62af, 0xa032, 0xba9c, 0xbe56},
+         {0xb1f1, 0x737f, 0x5964, 0x5afb, 0x3712, 0x8ef9, 0x19f7, 0x9669,
+          0x664d, 0x03ad, 0xc352, 0xf7a5, 0xf545, 0x1d19, 0x6ac7, 0xff6f},
+         {0xa834, 0x5256, 0x27bc, 0x33bd, 0xba11, 0x5a7b, 0x791e, 0xe6c0,
+          0x9ac4, 0x9370, 0x1130, 0x28b4, 0x2b2e, 0x231b, 0x082a, 0x796e}},
+        /* example doing 123 consecutive (f,g/2) steps; 554 divsteps */
+        {{0x6ab1, 0x6ea0, 0x1a99, 0xe0c2, 0xdd45, 0x645d, 0x8dbc, 0x466a,
+          0xfa64, 0x4289, 0xd3f7, 0xfc8f, 0x2894, 0xe3c5, 0xa008, 0xcc14},
+         {0xc75f, 0xc083, 0x4cc2, 0x64f2, 0x2aff, 0x4c12, 0x8461, 0xc4ae,
+          0xbbfa, 0xb336, 0xe4b2, 0x3ac5, 0x2c22, 0xf56c, 0x5381, 0xe943},
+         {0xcd80, 0x760d, 0x4395, 0xb3a6, 0xd497, 0xf583, 0x82bd, 0x1daa,
+          0xbe92, 0x2613, 0xfdfb, 0x869b, 0x0425, 0xa333, 0x7056, 0xc9c5}},
+        /* example doing 123 consecutive (f,g/2) steps; 554 divsteps */
+        {{0x71d4, 0x64df, 0xec4f, 0x74d8, 0x7e0c, 0x40d3, 0x7073, 0x4cc8,
+          0x2a2a, 0xb1ff, 0x8518, 0x6513, 0xb0ea, 0x640a, 0x62d9, 0xd5f4},
+         {0xdc75, 0xd937, 0x3b13, 0x1d36, 0xdf83, 0xd034, 0x1c1c, 0x4332,
+          0x4cc3, 0xeeec, 0x7d94, 0x6771, 0x3384, 0x74b0, 0x947d, 0xf2c4},
+         {0x0a82, 0x37a4, 0x12d5, 0xec97, 0x972c, 0xe6bf, 0xc348, 0xa0a9,
+          0xc50c, 0xdc7c, 0xae30, 0x19d1, 0x0fca, 0x35e1, 0xd6f6, 0x81ee}},
+        /* example doing 123 consecutive (f,g/2) steps; 554 divsteps */
+        {{0xa6b1, 0xabc5, 0x5bbc, 0x7f65, 0xdd32, 0xaa73, 0xf5a3, 0x1982,
+          0xced4, 0xe949, 0x0fd6, 0x2bc4, 0x2bd7, 0xe3c5, 0xa008, 0xcc14},
+         {0x4b5f, 0x8f96, 0xa375, 0xfbcf, 0x1c7d, 0xf1ec, 0x03f5, 0xb35d,
+          0xb999, 0xdb1f, 0xc9a1, 0xb4c7, 0x1dd5, 0xf56c, 0x5381, 0xe943},
+         {0xaa3d, 0x38b9, 0xf17d, 0xeed9, 0x9988, 0x69ee, 0xeb88, 0x1495,
+          0x203f, 0x18c8, 0x82b7, 0xdcb2, 0x34a7, 0x6b00, 0x6998, 0x589a}},
+        /* example doing 453 (f,g/2) steps; 514 divsteps */
+        {{0xa478, 0xe60d, 0x3244, 0x60e6, 0xada3, 0xfe50, 0xb6b1, 0x2eae,
+          0xd0ef, 0xa7b1, 0xef63, 0x05c0, 0xe213, 0x443e, 0x4427, 0x2448},
+         {0x258f, 0xf9ef, 0xe02b, 0x92dd, 0xd7f3, 0x252b, 0xa503, 0x9089,
+          0xedff, 0x96c1, 0xfe3a, 0x3a39, 0x198a, 0x981d, 0x0627, 0xedb7},
+         {0x595a, 0x45be, 0x8fb0, 0x2265, 0xc210, 0x02b8, 0xdce9, 0xe241,
+          0xcab6, 0xbf0d, 0x0049, 0x8d9a, 0x2f51, 0xae54, 0x5785, 0xb411}},
+        /* example doing 453 (f,g/2) steps; 514 divsteps */
+        {{0x48f0, 0x7db3, 0xdafe, 0x1c92, 0x5912, 0xe11a, 0xab52, 0xede1,
+          0x3182, 0x8980, 0x5d2b, 0x9b5b, 0x8718, 0xda27, 0x1683, 0x1de2},
+         {0x168f, 0x6f36, 0xce7a, 0xf435, 0x19d4, 0xda5e, 0x2351, 0x9af5,
+          0xb003, 0x0ef5, 0x3b4c, 0xecec, 0xa9f0, 0x78e1, 0xdfef, 0xe823},
+         {0x5f55, 0xfdcc, 0xb233, 0x2914, 0x84f0, 0x97d1, 0x9cf4, 0x2159,
+          0xbf56, 0xb79c, 0x17a3, 0x7cef, 0xd5de, 0x34f0, 0x5311, 0x4c54}},
+        /* example doing 510 (f,(f+g)/2) steps; 512 divsteps */
+        {{0x2789, 0x2e04, 0x6e0e, 0xb6cd, 0xe4de, 0x4dbf, 0x228d, 0x7877,
+          0xc335, 0x806b, 0x38cd, 0x8049, 0xa73b, 0xcfa2, 0x82f7, 0x9e19},
+         {0xc08d, 0xb99d, 0xb8f3, 0x663d, 0xbbb3, 0x1284, 0x1485, 0x1d49,
+          0xc98f, 0x9e78, 0x1588, 0x11e3, 0xd91a, 0xa2c7, 0xfff1, 0xc7b9},
+         {0x1e1f, 0x411d, 0x7c49, 0x0d03, 0xe789, 0x2f8e, 0x5d55, 0xa95e,
+          0x826e, 0x8de5, 0x52a0, 0x1abc, 0x4cd7, 0xd13a, 0x4395, 0x63e1}},
+        /* example doing 510 (f,(f+g)/2) steps; 512 divsteps */
+        {{0xd5a1, 0xf786, 0x555c, 0xb14b, 0x44ae, 0x535f, 0x4a49, 0xffc3,
+          0xf497, 0x70d1, 0x57c8, 0xa933, 0xc85a, 0x1910, 0x75bf, 0x960b},
+         {0xfe53, 0x5058, 0x496d, 0xfdff, 0x6fb8, 0x4100, 0x92bd, 0xe0c4,
+          0xda89, 0xe0a4, 0x841b, 0x43d4, 0xa388, 0x957f, 0x99ca, 0x9abf},
+         {0xe530, 0x05bc, 0xfeec, 0xfc7e, 0xbcd3, 0x1239, 0x54cb, 0x7042,
+          0xbccb, 0x139e, 0x9076, 0x0203, 0x6068, 0x90c7, 0x1ddf, 0x488d}},
+        /* example doing 228 (g,(g-f)/2) steps; 538 divsteps */
+        {{0x9488, 0xe54b, 0x0e43, 0x81d2, 0x06e7, 0x4b66, 0x36d0, 0x53d6,
+          0x2b68, 0x22ec, 0x3fa9, 0xc1a7, 0x9ad2, 0xa596, 0xb3ac, 0xdf42},
+         {0xe31f, 0x0b28, 0x5f3b, 0xc1ff, 0x344c, 0xbf5f, 0xd2ec, 0x2936,
+          0x9995, 0xdeb2, 0xae6c, 0x2852, 0xa2c6, 0xb306, 0x8120, 0xe305},
+         {0xa56e, 0xfb98, 0x1537, 0x4d85, 0x619e, 0x866c, 0x3cd4, 0x779a,
+          0xdd66, 0xa80d, 0xdc2f, 0xcae4, 0xc74c, 0x5175, 0xa65d, 0x605e}},
+        /* example doing 228 (g,(g-f)/2) steps; 537 divsteps */
+        {{0x8cd5, 0x376d, 0xd01b, 0x7176, 0x19ef, 0xcf09, 0x8403, 0x5e52,
+          0x83c1, 0x44de, 0xb91e, 0xb33d, 0xe15c, 0x51e7, 0xbad8, 0x6359},
+         {0x3b75, 0xf812, 0x5f9e, 0xa04e, 0x92d3, 0x226e, 0x540e, 0x7c9a,
+          0x31c6, 0x46d2, 0x0b7b, 0xdb4a, 0xe662, 0x4950, 0x0265, 0xf76f},
+         {0x09ed, 0x692f, 0xe8f1, 0x3482, 0xab54, 0x36b4, 0x8442, 0x6ae9,
+          0x4329, 0x6505, 0x183b, 0x1c1d, 0x482d, 0x7d63, 0xb44f, 0xcc09}},
+
+        /* Test cases with the group order as modulus. */
+
+        /* Test case with the group order as modulus, needing 635 divsteps. */
+        {{0x95ed, 0x6c01, 0xd113, 0x5ff1, 0xd7d0, 0x29cc, 0x5817, 0x6120,
+          0xca8e, 0xaad1, 0x25ae, 0x8e84, 0x9af6, 0x30bf, 0xf0ed, 0x1686},
+         {0x4141, 0xd036, 0x5e8c, 0xbfd2, 0xa03b, 0xaf48, 0xdce6, 0xbaae,
+          0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0x1631, 0xbf4a, 0x286a, 0x2716, 0x469f, 0x2ac8, 0x1312, 0xe9bc,
+          0x04f4, 0x304b, 0x9931, 0x113b, 0xd932, 0xc8f4, 0x0d0d, 0x01a1}},
+        /* example with group size as modulus needing 631 divsteps */
+        {{0x85ed, 0xc284, 0x9608, 0x3c56, 0x19b6, 0xbb5b, 0x2850, 0xdab7,
+          0xa7f5, 0xe9ab, 0x06a4, 0x5bbb, 0x1135, 0xa186, 0xc424, 0xc68b},
+         {0x4141, 0xd036, 0x5e8c, 0xbfd2, 0xa03b, 0xaf48, 0xdce6, 0xbaae,
+          0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0x8479, 0x450a, 0x8fa3, 0xde05, 0xb2f5, 0x7793, 0x7269, 0xbabb,
+          0xc3b3, 0xd49b, 0x3377, 0x03c6, 0xe694, 0xc760, 0xd3cb, 0x2811}},
+        /* example with group size as modulus needing 565 divsteps starting at delta=1/2 */
+        {{0x8432, 0x5ceb, 0xa847, 0x6f1e, 0x51dd, 0x535a, 0x6ddc, 0x70ce,
+          0x6e70, 0xc1f6, 0x18f2, 0x2a7e, 0xc8e7, 0x39f8, 0x7e96, 0xebbf},
+         {0x4141, 0xd036, 0x5e8c, 0xbfd2, 0xa03b, 0xaf48, 0xdce6, 0xbaae,
+          0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0x257e, 0x449f, 0x689f, 0x89aa, 0x3989, 0xb661, 0x376c, 0x1e32,
+          0x654c, 0xee2e, 0xf4e2, 0x33c8, 0x3f2f, 0x9716, 0x6046, 0xcaa3}},
+        /* Test case with the group size as modulus, needing 981 divsteps with
+           broken eta handling. */
+        {{0xfeb9, 0xb877, 0xee41, 0x7fa3, 0x87da, 0x94c4, 0x9d04, 0xc5ae,
+          0x5708, 0x0994, 0xfc79, 0x0916, 0xbf32, 0x3ad8, 0xe11c, 0x5ca2},
+         {0x4141, 0xd036, 0x5e8c, 0xbfd2, 0xa03b, 0xaf48, 0xdce6, 0xbaae,
+          0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0x0f12, 0x075e, 0xce1c, 0x6f92, 0xc80f, 0xca92, 0x9a04, 0x6126,
+          0x4b6c, 0x57d6, 0xca31, 0x97f3, 0x1f99, 0xf4fd, 0xda4d, 0x42ce}},
+        /* Test case with the group size as modulus, input = 0. */
+        {{0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+          0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000},
+         {0x4141, 0xd036, 0x5e8c, 0xbfd2, 0xa03b, 0xaf48, 0xdce6, 0xbaae,
+          0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+          0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}},
+        /* Test case with the group size as modulus, input = 1. */
+        {{0x0001, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+          0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000},
+         {0x4141, 0xd036, 0x5e8c, 0xbfd2, 0xa03b, 0xaf48, 0xdce6, 0xbaae,
+          0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0x0001, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+          0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}},
+        /* Test case with the group size as modulus, input = 2. */
+        {{0x0002, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+          0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000},
+         {0x4141, 0xd036, 0x5e8c, 0xbfd2, 0xa03b, 0xaf48, 0xdce6, 0xbaae,
+          0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0x20a1, 0x681b, 0x2f46, 0xdfe9, 0x501d, 0x57a4, 0x6e73, 0x5d57,
+          0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0x7fff}},
+        /* Test case with the group size as modulus, input = group - 1. */
+        {{0x4140, 0xd036, 0x5e8c, 0xbfd2, 0xa03b, 0xaf48, 0xdce6, 0xbaae,
+          0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0x4141, 0xd036, 0x5e8c, 0xbfd2, 0xa03b, 0xaf48, 0xdce6, 0xbaae,
+          0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0x4140, 0xd036, 0x5e8c, 0xbfd2, 0xa03b, 0xaf48, 0xdce6, 0xbaae,
+          0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff}},
+
+        /* Test cases with the field size as modulus. */
+
+        /* Test case with the field size as modulus, needing 637 divsteps. */
+        {{0x9ec3, 0x1919, 0xca84, 0x7c11, 0xf996, 0x06f3, 0x5408, 0x6688,
+          0x1320, 0xdb8a, 0x632a, 0x0dcb, 0x8a84, 0x6bee, 0x9c95, 0xe34e},
+         {0xfc2f, 0xffff, 0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+          0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0x18e5, 0x19b6, 0xdf92, 0x1aaa, 0x09fb, 0x8a3f, 0x52b0, 0x8701,
+          0xac0c, 0x2582, 0xda44, 0x9bcc, 0x6828, 0x1c53, 0xbd8f, 0xbd2c}},
+        /* example with field size as modulus needing 637 divsteps */
+        {{0xaec3, 0xa7cf, 0x2f2d, 0x0693, 0x5ad5, 0xa8ff, 0x7ec7, 0x30ff,
+          0x0c8b, 0xc242, 0xcab2, 0x063a, 0xf86e, 0x6057, 0x9cbd, 0xf6d8},
+         {0xfc2f, 0xffff, 0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+          0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0x0310, 0x579d, 0xcb38, 0x9030, 0x3ded, 0x9bb9, 0x1234, 0x63ce,
+          0x0c63, 0x8e3d, 0xacfe, 0x3c20, 0xdc85, 0xf859, 0x919e, 0x1d45}},
+        /* example with field size as modulus needing 564 divsteps starting at delta=1/2 */
+        {{0x63ae, 0x8d10, 0x0071, 0xdb5c, 0xb454, 0x78d1, 0x744a, 0x5f8e,
+          0xe4d8, 0x87b1, 0x8e62, 0x9590, 0xcede, 0xa070, 0x36b4, 0x7f6f},
+         {0xfc2f, 0xffff, 0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+          0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0xfdc8, 0xe8d5, 0xbe15, 0x9f86, 0xa5fe, 0xf18e, 0xa7ff, 0xd291,
+          0xf4c2, 0x9c87, 0xf150, 0x073e, 0x69b8, 0xf7c4, 0xee4b, 0xc7e6}},
+        /* Test case with the field size as modulus, needing 935 divsteps with
+           broken eta handling. */
+        {{0x1b37, 0xbdc3, 0x8bcd, 0x25e3, 0x1eae, 0x567d, 0x30b6, 0xf0d8,
+          0x9277, 0x0cf8, 0x9c2e, 0xecd7, 0x631d, 0xe38f, 0xd4f8, 0x5c93},
+         {0xfc2f, 0xffff, 0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+          0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0x1622, 0xe05b, 0xe880, 0x7de9, 0x3e45, 0xb682, 0xee6c, 0x67ed,
+          0xa179, 0x15db, 0x6b0d, 0xa656, 0x7ccb, 0x8ef7, 0xa2ff, 0xe279}},
+        /* Test case with the field size as modulus, input = 0. */
+        {{0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+          0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000},
+         {0xfc2f, 0xffff, 0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+          0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+          0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}},
+        /* Test case with the field size as modulus, input = 1. */
+        {{0x0001, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+          0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000},
+         {0xfc2f, 0xffff, 0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+          0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0x0001, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+          0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}},
+        /* Test case with the field size as modulus, input = 2. */
+        {{0x0002, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+          0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000},
+         {0xfc2f, 0xffff, 0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+          0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0xfe18, 0x7fff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+          0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0x7fff}},
+        /* Test case with the field size as modulus, input = field - 1. */
+        {{0xfc2e, 0xffff, 0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+          0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0xfc2f, 0xffff, 0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+          0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff},
+         {0xfc2e, 0xffff, 0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+          0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff}},
+
+         /* Selected from a large number of random inputs to reach small/large
+          * d/e values in various configurations. */
+        {{0x3a08, 0x23e1, 0x4d8c, 0xe606, 0x3263, 0x67af, 0x9bf1, 0x9d70,
+          0xf5fd, 0x12e4, 0x03c8, 0xb9ca, 0xe847, 0x8c5d, 0x6322, 0xbd30},
+         {0x8359, 0x59dd, 0x1831, 0x7c1a, 0x1e83, 0xaee1, 0x770d, 0xcea8,
+          0xfbb1, 0xeed6, 0x10b5, 0xe2c6, 0x36ea, 0xee17, 0xe32c, 0xffff},
+         {0x1727, 0x0f36, 0x6f85, 0x5d0c, 0xca6c, 0x3072, 0x9628, 0x5842,
+          0xcb44, 0x7c2b, 0xca4f, 0x62e5, 0x29b1, 0x6ffd, 0x9055, 0xc196}},
+        {{0x905d, 0x41c8, 0xa2ff, 0x295b, 0x72bb, 0x4679, 0x6d01, 0x2c98,
+          0xb3e0, 0xc537, 0xa310, 0xe07e, 0xe72f, 0x4999, 0x1148, 0xf65e},
+         {0x5b41, 0x4239, 0x3c37, 0x5130, 0x30e3, 0xff35, 0xc51f, 0x1a43,
+          0xdb23, 0x13cf, 0x9f49, 0xf70c, 0x5e70, 0xd411, 0x3005, 0xf8c6},
+         {0xc30e, 0x68f0, 0x201a, 0xe10c, 0x864a, 0x6243, 0xe946, 0x43ae,
+          0xf3f1, 0x52dc, 0x1f7f, 0x50d4, 0x2797, 0x064c, 0x5ca4, 0x90e3}},
+        {{0xf1b5, 0xc6e5, 0xd2c4, 0xff95, 0x27c5, 0x0c92, 0x5d19, 0x7ae5,
+          0x4fbe, 0x5438, 0x99e1, 0x880d, 0xd892, 0xa05c, 0x6ffd, 0x7eac},
+         {0x2153, 0xcc9d, 0xfc6c, 0x8358, 0x49a1, 0x01e2, 0xcef0, 0x4969,
+          0xd69a, 0x8cef, 0xf5b2, 0xfd95, 0xdcc2, 0x71f4, 0x6ae2, 0xceeb},
+         {0x9b2e, 0xcdc6, 0x0a5c, 0x7317, 0x9084, 0xe228, 0x56cf, 0xd512,
+          0x628a, 0xce21, 0x3473, 0x4e13, 0x8823, 0x1ed0, 0x34d0, 0xbfa3}},
+        {{0x5bae, 0x53e5, 0x5f4d, 0x21ca, 0xb875, 0x8ecf, 0x9aa6, 0xbe3c,
+          0x9f96, 0x7b82, 0x375d, 0x4d3e, 0x491c, 0xb1eb, 0x04c9, 0xb6c8},
+         {0xfcfd, 0x10b7, 0x73b2, 0xd23b, 0xa357, 0x67da, 0x0d9f, 0x8702,
+          0xa037, 0xff8e, 0x0e8b, 0x1801, 0x2c5c, 0x4e6e, 0x4558, 0xfff2},
+         {0xc50f, 0x5654, 0x6713, 0x5ef5, 0xa7ce, 0xa647, 0xc832, 0x69ce,
+          0x1d5c, 0x4310, 0x0746, 0x5a01, 0x96ea, 0xde4b, 0xa88b, 0x5543}},
+        {{0xdc7f, 0x5e8c, 0x89d1, 0xb077, 0xd521, 0xcf90, 0x32fa, 0x5737,
+          0x839e, 0x1464, 0x007c, 0x09c6, 0x9371, 0xe8ea, 0xc1cb, 0x75c4},
+         {0xe3a3, 0x107f, 0xa82a, 0xa375, 0x4578, 0x60f4, 0x75c9, 0x5ee4,
+          0x3fd7, 0x2736, 0x2871, 0xd3d2, 0x5f1d, 0x1abb, 0xa764, 0xffff},
+         {0x45c6, 0x1f2e, 0xb14c, 0x84d7, 0x7bb7, 0x5a04, 0x0504, 0x3f33,
+          0x5cc1, 0xb07a, 0x6a6c, 0x786f, 0x647f, 0xe1d7, 0x78a2, 0x4cf4}},
+        {{0xc006, 0x356f, 0x8cd2, 0x967b, 0xb49e, 0x2d4e, 0x14bf, 0x4bcb,
+          0xddab, 0xd3f9, 0xa068, 0x2c1c, 0xd242, 0xa56d, 0xf2c7, 0x5f97},
+         {0x465b, 0xb745, 0x0e0d, 0x69a9, 0x987d, 0xcb37, 0xf637, 0xb311,
+          0xc4d6, 0x2ddb, 0xf68f, 0x2af9, 0x959d, 0x3f53, 0x98f2, 0xf640},
+         {0xc0f2, 0x6bfb, 0xf5c3, 0x91c1, 0x6b05, 0x0825, 0x5ca0, 0x7df7,
+          0x9d55, 0x6d9e, 0xfe94, 0x2ad9, 0xd9f0, 0xe68b, 0xa72b, 0xd1b2}},
+        {{0x2279, 0x61ba, 0x5bc6, 0x136b, 0xf544, 0x717c, 0xafda, 0x02bd,
+          0x79af, 0x1fad, 0xea09, 0x81bb, 0x932b, 0x32c9, 0xdf1d, 0xe576},
+         {0x8215, 0x7817, 0xca82, 0x43b0, 0x9b06, 0xea65, 0x1291, 0x0621,
+          0x0089, 0x46fe, 0xc5a6, 0xddd7, 0x8065, 0xc6a0, 0x214b, 0xfc64},
+         {0x04bf, 0x6f2a, 0x86b2, 0x841a, 0x4a95, 0xc632, 0x97b7, 0x5821,
+          0x2b18, 0x1bb0, 0x3e97, 0x935e, 0xcc7d, 0x066b, 0xd513, 0xc251}},
+        {{0x76e8, 0x5bc2, 0x3eaa, 0x04fc, 0x9974, 0x92c1, 0x7c15, 0xfa89,
+          0x1151, 0x36ee, 0x48b2, 0x049c, 0x5f16, 0xcee4, 0x925b, 0xe98e},
+         {0x913f, 0x0a2d, 0xa185, 0x9fea, 0xda5a, 0x4025, 0x40d7, 0x7cfa,
+          0x88ca, 0xbbe8, 0xb265, 0xb7e4, 0x6cb1, 0xed64, 0xc6f9, 0xffb5},
+         {0x6ab1, 0x1a86, 0x5009, 0x152b, 0x1cc4, 0xe2c8, 0x960b, 0x19d0,
+          0x3554, 0xc562, 0xd013, 0xcf91, 0x10e1, 0x7933, 0xe195, 0xcf49}},
+        {{0x9cb5, 0xd2d7, 0xc6ed, 0xa818, 0xb495, 0x06ee, 0x0f4a, 0x06e3,
+          0x4c5a, 0x80ce, 0xd49a, 0x4cd7, 0x7487, 0x92af, 0xe516, 0x676c},
+         {0xd6e9, 0x6b85, 0x619a, 0xb52c, 0x20a0, 0x2f79, 0x3545, 0x1edd,
+          0x5a6f, 0x8082, 0x9b80, 0xf8f8, 0xc78a, 0xd0a3, 0xadf4, 0xffff},
+         {0x01c2, 0x2118, 0xef5e, 0xa877, 0x046a, 0xd2c2, 0x2ad5, 0x951c,
+          0x8900, 0xa5c9, 0x8d0f, 0x6b61, 0x55d3, 0xd572, 0x48de, 0x9219}},
+        {{0x5114, 0x0644, 0x23dd, 0x01d3, 0xc101, 0xa659, 0xea17, 0x640f,
+          0xf767, 0x2644, 0x9cec, 0xd8ba, 0xd6da, 0x9156, 0x8aeb, 0x875a},
+         {0xc1bf, 0xdae9, 0xe96b, 0xce77, 0xf7a1, 0x3e99, 0x5c2e, 0x973b,
+          0xd048, 0x5bd0, 0x4e8a, 0xcb85, 0xce39, 0x37f5, 0x815d, 0xffff},
+         {0x48cc, 0x35b6, 0x26d4, 0x2ea6, 0x50d6, 0xa2f9, 0x64b6, 0x03bf,
+          0xd00c, 0xe057, 0x3343, 0xfb79, 0x3ce5, 0xf717, 0xc5af, 0xe185}},
+        {{0x13ff, 0x6c76, 0x2077, 0x16e0, 0xd5ca, 0xf2ad, 0x8dba, 0x8f49,
+          0x7887, 0x16f9, 0xb646, 0xfc87, 0xfa31, 0x5096, 0xf08c, 0x3fbe},
+         {0x8139, 0x6fd7, 0xf6df, 0xa7bf, 0x6699, 0x5361, 0x6f65, 0x13c8,
+          0xf4d1, 0xe28f, 0xc545, 0x0a8c, 0x5274, 0xb0a6, 0xffff, 0xffff},
+         {0x22ca, 0x0cd6, 0xc1b5, 0xb064, 0x44a7, 0x297b, 0x495f, 0x34ac,
+          0xfa95, 0xec62, 0xf08d, 0x621c, 0x66a6, 0xba94, 0x84c6, 0x8ee0}},
+        {{0xaa30, 0x312e, 0x439c, 0x4e88, 0x2e2f, 0x32dc, 0xb880, 0xa28e,
+          0xf795, 0xc910, 0xb406, 0x8dd7, 0xb187, 0xa5a5, 0x38f1, 0xe49e},
+         {0xfb19, 0xf64a, 0xba6a, 0x8ec2, 0x7255, 0xce89, 0x2cf9, 0x9cba,
+          0xe1fe, 0x50da, 0x1705, 0xac52, 0xe3d4, 0x4269, 0x0648, 0xfd77},
+         {0xb4c8, 0x6e8a, 0x2b5f, 0x4c2d, 0x5a67, 0xa7bb, 0x7d6d, 0x5569,
+          0xa0ea, 0x244a, 0xc0f2, 0xf73d, 0x58cf, 0xac7f, 0xd32b, 0x3018}},
+        {{0xc953, 0x1ae1, 0xae46, 0x8709, 0x19c2, 0xa986, 0x9abe, 0x1611,
+          0x0395, 0xd5ab, 0xf0f6, 0xb5b0, 0x5b2b, 0x0317, 0x80ba, 0x376d},
+         {0xfe77, 0xbc03, 0xac2f, 0x9d00, 0xa175, 0x293d, 0x3b56, 0x0e3a,
+          0x0a9c, 0xf40c, 0x690e, 0x1508, 0x95d4, 0xddc4, 0xe805, 0xffff},
+         {0xb1ce, 0x0929, 0xa5fe, 0x4b50, 0x9d5d, 0x8187, 0x2557, 0x4376,
+          0x11ba, 0xdcef, 0xc1f3, 0xd531, 0x1824, 0x93f6, 0xd81f, 0x8f83}},
+        {{0xb8d2, 0xb900, 0x4a0c, 0x7188, 0xa5bf, 0x1b0b, 0x2ae5, 0xa35b,
+          0x98e0, 0x610c, 0x86db, 0x2487, 0xa267, 0x002c, 0xebb6, 0xc5f4},
+         {0x9cdd, 0x1c1b, 0x2f06, 0x43d1, 0xce47, 0xc334, 0x6e60, 0xc016,
+          0x989e, 0x0ab2, 0x0cac, 0x1196, 0xe2d9, 0x2e04, 0xc62b, 0xffff},
+         {0xdc36, 0x1f05, 0x6aa9, 0x7a20, 0x944f, 0x2fd3, 0xa553, 0xdb4f,
+          0xbd5c, 0x3a75, 0x25d4, 0xe20e, 0xa387, 0x1410, 0xdbb1, 0x1b60}},
+        {{0x76b3, 0x2207, 0x4930, 0x5dd7, 0x65a0, 0xd55c, 0xb443, 0x53b7,
+          0x5c22, 0x818a, 0xb2e7, 0x9de8, 0x9985, 0xed45, 0x33b1, 0x53e8},
+         {0x7913, 0x44e1, 0xf15b, 0x5edd, 0x34f3, 0x4eba, 0x0758, 0x7104,
+          0x32d9, 0x28f3, 0x4401, 0x85c5, 0xb695, 0xb899, 0xc0f2, 0xffff},
+         {0x7f43, 0xd202, 0x24c9, 0x69f3, 0x74dc, 0x1a69, 0xeaee, 0x5405,
+          0x1755, 0x4bb8, 0x04e3, 0x2fd2, 0xada8, 0x39eb, 0x5b4d, 0x96ca}},
+        {{0x807b, 0x7112, 0xc088, 0xdafd, 0x02fa, 0x9d95, 0x5e42, 0xc033,
+          0xde0a, 0xeecf, 0x8e90, 0x8da1, 0xb17e, 0x9a5b, 0x4c6d, 0x1914},
+         {0x4871, 0xd1cb, 0x47d7, 0x327f, 0x09ec, 0x97bb, 0x2fae, 0xd346,
+          0x6b78, 0x3707, 0xfeb2, 0xa6ab, 0x13df, 0x76b0, 0x8fb9, 0xffb3},
+         {0x179e, 0xb63b, 0x4784, 0x231e, 0x9f42, 0x7f1a, 0xa3fb, 0xdd8c,
+          0xd1eb, 0xb4c9, 0x8ca7, 0x018c, 0xf691, 0x576c, 0xa7d6, 0xce27}},
+        {{0x5f45, 0x7c64, 0x083d, 0xedd5, 0x08a0, 0x0c64, 0x6c6f, 0xec3c,
+          0xe2fb, 0x352c, 0x9303, 0x75e4, 0xb4e0, 0x8b09, 0xaca4, 0x7025},
+         {0x1025, 0xb482, 0xfed5, 0xa678, 0x8966, 0x9359, 0x5329, 0x98bb,
+          0x85b2, 0x73ba, 0x9982, 0x6fdc, 0xf190, 0xbe8c, 0xdc5c, 0xfd93},
+         {0x83a2, 0x87a4, 0xa680, 0x52a1, 0x1ba1, 0x8848, 0x5db7, 0x9744,
+          0x409c, 0x0745, 0x0e1e, 0x1cfc, 0x00cd, 0xf573, 0x2071, 0xccaa}},
+        {{0xf61f, 0x63d4, 0x536c, 0x9eb9, 0x5ddd, 0xbb11, 0x9014, 0xe904,
+          0xfe01, 0x6b45, 0x1858, 0xcb5b, 0x4c38, 0x43e1, 0x381d, 0x7f94},
+         {0xf61f, 0x63d4, 0xd810, 0x7ca3, 0x8a04, 0x4b83, 0x11fc, 0xdf94,
+          0x4169, 0xbd05, 0x608e, 0x7151, 0x4fbf, 0xb31a, 0x38a7, 0xa29b},
+         {0xe621, 0xdfa5, 0x3d06, 0x1d03, 0x81e6, 0x00da, 0x53a6, 0x965e,
+          0x93e5, 0x2164, 0x5b61, 0x59b8, 0xa629, 0x8d73, 0x699a, 0x6111}},
+        {{0x4cc3, 0xd29e, 0xf4a3, 0x3428, 0x2048, 0xeec9, 0x5f50, 0x99a4,
+          0x6de9, 0x05f2, 0x5aa9, 0x5fd2, 0x98b4, 0x1adc, 0x225f, 0x777f},
+         {0xe649, 0x37da, 0x5ba6, 0x5765, 0x3f4a, 0x8a1c, 0x2e79, 0xf550,
+          0x1a54, 0xcd1e, 0x7218, 0x3c3c, 0x6311, 0xfe28, 0x95fb, 0xed97},
+         {0xe9b6, 0x0c47, 0x3f0e, 0x849b, 0x11f8, 0xe599, 0x5e4d, 0xd618,
+          0xa06d, 0x33a0, 0x9a3e, 0x44db, 0xded8, 0x10f0, 0x94d2, 0x81fb}},
+        {{0x2e59, 0x7025, 0xd413, 0x455a, 0x1ce3, 0xbd45, 0x7263, 0x27f7,
+          0x23e3, 0x518e, 0xbe06, 0xc8c4, 0xe332, 0x4276, 0x68b4, 0xb166},
+         {0x596f, 0x0cf6, 0xc8ec, 0x787b, 0x04c1, 0x473c, 0xd2b8, 0x8d54,
+          0x9cdf, 0x77f2, 0xd3f3, 0x6735, 0x0638, 0xf80e, 0x9467, 0xc6aa},
+         {0xc7e7, 0x1822, 0xb62a, 0xec0d, 0x89cd, 0x7846, 0xbfa2, 0x35d5,
+          0xfa38, 0x870f, 0x494b, 0x1697, 0x8b17, 0xf904, 0x10b6, 0x9822}},
+        {{0x6d5b, 0x1d4f, 0x0aaf, 0x807b, 0x35fb, 0x7ee8, 0x00c6, 0x059a,
+          0xddf0, 0x1fb1, 0xc38a, 0xd78e, 0x2aa4, 0x79e7, 0xad28, 0xc3f1},
+         {0xe3bb, 0x174e, 0xe0a8, 0x74b6, 0xbd5b, 0x35f6, 0x6d23, 0x6328,
+          0xc11f, 0x83e1, 0xf928, 0xa918, 0x838e, 0xbf43, 0xe243, 0xfffb},
+         {0x9cf2, 0x6b8b, 0x3476, 0x9d06, 0xdcf2, 0xdb8a, 0x89cd, 0x4857,
+          0x75c2, 0xabb8, 0x490b, 0xc9bd, 0x890e, 0xe36e, 0xd552, 0xfffa}},
+        {{0x2f09, 0x9d62, 0xa9fc, 0xf090, 0xd6d1, 0x9d1d, 0x1828, 0xe413,
+          0xc92b, 0x3d5a, 0x1373, 0x368c, 0xbaf2, 0x2158, 0x71eb, 0x08a3},
+         {0x2f09, 0x1d62, 0x4630, 0x0de1, 0x06dc, 0xf7f1, 0xc161, 0x1e92,
+          0x7495, 0x97e4, 0x94b6, 0xa39e, 0x4f1b, 0x18f8, 0x7bd4, 0x0c4c},
+         {0xeb3d, 0x723d, 0x0907, 0x525b, 0x463a, 0x49a8, 0xc6b8, 0xce7f,
+          0x740c, 0x0d7d, 0xa83b, 0x457f, 0xae8e, 0xc6af, 0xd331, 0x0475}},
+        {{0x6abd, 0xc7af, 0x3e4e, 0x95fd, 0x8fc4, 0xee25, 0x1f9c, 0x0afe,
+          0x291d, 0xcde0, 0x48f4, 0xb2e8, 0xf7af, 0x8f8d, 0x0bd6, 0x078d},
+         {0x4037, 0xbf0e, 0x2081, 0xf363, 0x13b2, 0x381e, 0xfb6e, 0x818e,
+          0x27e4, 0x5662, 0x18b0, 0x0cd2, 0x81f5, 0x9415, 0x0d6c, 0xf9fb},
+         {0xd205, 0x0981, 0x0498, 0x1f08, 0xdb93, 0x1732, 0x0579, 0x1424,
+          0xad95, 0x642f, 0x050c, 0x1d6d, 0xfc95, 0xfc4a, 0xd41b, 0x3521}},
+        {{0xf23a, 0x4633, 0xaef4, 0x1a92, 0x3c8b, 0x1f09, 0x30f3, 0x4c56,
+          0x2a2f, 0x4f62, 0xf5e4, 0x8329, 0x63cc, 0xb593, 0xec6a, 0xc428},
+         {0x93a7, 0xfcf6, 0x606d, 0xd4b2, 0x2aad, 0x28b4, 0xc65b, 0x8998,
+          0x4e08, 0xd178, 0x0900, 0xc82b, 0x7470, 0xa342, 0x7c0f, 0xffff},
+         {0x315f, 0xf304, 0xeb7b, 0xe5c3, 0x1451, 0x6311, 0x8f37, 0x93a8,
+          0x4a38, 0xa6c6, 0xe393, 0x1087, 0x6301, 0xd673, 0x4ec4, 0xffff}},
+        {{0x892e, 0xeed0, 0x1165, 0xcbc1, 0x5545, 0xa280, 0x7243, 0x10c9,
+          0x9536, 0x36af, 0xb3fc, 0x2d7c, 0xe8a5, 0x09d6, 0xe1d4, 0xe85d},
+         {0xae09, 0xc28a, 0xd777, 0xbd80, 0x23d6, 0xf980, 0xeb7c, 0x4e0e,
+          0xf7dc, 0x6475, 0xf10a, 0x2d33, 0x5dfd, 0x797a, 0x7f1c, 0xf71a},
+         {0x4064, 0x8717, 0xd091, 0x80b0, 0x4527, 0x8442, 0xac8b, 0x9614,
+          0xc633, 0x35f5, 0x7714, 0x2e83, 0x4aaa, 0xd2e4, 0x1acd, 0x0562}},
+        {{0xdb64, 0x0937, 0x308b, 0x53b0, 0x00e8, 0xc77f, 0x2f30, 0x37f7,
+          0x79ce, 0xeb7f, 0xde81, 0x9286, 0xafda, 0x0e62, 0xae00, 0x0067},
+         {0x2cc7, 0xd362, 0xb161, 0x0557, 0x4ff2, 0xb9c8, 0x06fe, 0x5f2b,
+          0xde33, 0x0190, 0x28c6, 0xb886, 0xee2b, 0x5a4e, 0x3289, 0x0185},
+         {0x4215, 0x923e, 0xf34f, 0xb362, 0x88f8, 0xceec, 0xafdd, 0x7f42,
+          0x0c57, 0x56b2, 0xa366, 0x6a08, 0x0826, 0xfb8f, 0x1b03, 0x0163}},
+        {{0xa4ba, 0x8408, 0x810a, 0xdeba, 0x47a3, 0x853a, 0xeb64, 0x2f74,
+          0x3039, 0x038c, 0x7fbb, 0x498e, 0xd1e9, 0x46fb, 0x5691, 0x32a4},
+         {0xd749, 0xb49d, 0x20b7, 0x2af6, 0xd34a, 0xd2da, 0x0a10, 0xf781,
+          0x58c9, 0x171f, 0x3cb6, 0x6337, 0x88cd, 0xcf1e, 0xb246, 0x7351},
+         {0xf729, 0xcf0a, 0x96ea, 0x032c, 0x4a8f, 0x42fe, 0xbac8, 0xec65,
+          0x1510, 0x0d75, 0x4c17, 0x8d29, 0xa03f, 0x8b7e, 0x2c49, 0x0000}},
+        {{0x0fa4, 0x8e1c, 0x3788, 0xba3c, 0x8d52, 0xd89d, 0x12c8, 0xeced,
+          0x9fe6, 0x9b88, 0xecf3, 0xe3c8, 0xac48, 0x76ed, 0xf23e, 0xda79},
+         {0x1103, 0x227c, 0x5b00, 0x3fcf, 0xc5d0, 0x2d28, 0x8020, 0x4d1c,
+          0xc6b9, 0x67f9, 0x6f39, 0x989a, 0xda53, 0x3847, 0xd416, 0xe0d0},
+         {0xdd8e, 0xcf31, 0x3710, 0x7e44, 0xa511, 0x933c, 0x0cc3, 0x5145,
+          0xf632, 0x5e1d, 0x038f, 0x5ce7, 0x7265, 0xda9d, 0xded6, 0x08f8}},
+        {{0xe2c8, 0x91d5, 0xa5f5, 0x735f, 0x6b58, 0x56dc, 0xb39d, 0x5c4a,
+          0x57d0, 0xa1c2, 0xd92f, 0x9ad4, 0xf7c4, 0x51dd, 0xaf5c, 0x0096},
+         {0x1739, 0x7207, 0x7505, 0xbf35, 0x42de, 0x0a29, 0xa962, 0xdedf,
+          0x53e8, 0x12bf, 0xcde7, 0xd8e2, 0x8d4d, 0x2c4b, 0xb1b1, 0x0628},
+         {0x992d, 0xe3a7, 0xb422, 0xc198, 0x23ab, 0xa6ef, 0xb45d, 0x50da,
+          0xa738, 0x014a, 0x2310, 0x85fb, 0x5fe8, 0x1b18, 0x1774, 0x03a7}},
+        {{0x1f16, 0x2b09, 0x0236, 0xee90, 0xccf9, 0x9775, 0x8130, 0x4c91,
+          0x9091, 0x310b, 0x6dc4, 0x86f6, 0xc2e8, 0xef60, 0xfc0e, 0xf3a4},
+         {0x9f49, 0xac15, 0x02af, 0x110f, 0xc59d, 0x5677, 0xa1a9, 0x38d5,
+          0x914f, 0xa909, 0x3a3a, 0x4a39, 0x3703, 0xea30, 0x73da, 0xffad},
+         {0x15ed, 0xdd16, 0x83c7, 0x270a, 0x862f, 0xd8ad, 0xcaa1, 0x5f41,
+          0x99a9, 0x3fc8, 0x7bb2, 0x360a, 0xb06d, 0xfadc, 0x1b36, 0xffa8}},
+        {{0xc4e0, 0xb8fd, 0x5106, 0xe169, 0x754c, 0xa58c, 0xc413, 0x8224,
+          0x5483, 0x63ec, 0xd477, 0x8473, 0x4778, 0x9281, 0x0000, 0x0000},
+         {0x85e1, 0xff54, 0xb200, 0xe413, 0xf4f4, 0x4c0f, 0xfcec, 0xc183,
+          0x60d3, 0x1b0c, 0x3834, 0x601c, 0x943c, 0xbe6e, 0x0002, 0x0000},
+         {0xf4f8, 0xfd5e, 0x61ef, 0xece8, 0x9199, 0xe5c4, 0x05a6, 0xe6c3,
+          0xc4ae, 0x8b28, 0x66b1, 0x8a95, 0x9ece, 0x8f4a, 0x0001, 0x0000}},
+        {{0xeae9, 0xa1b4, 0xc6d8, 0x2411, 0x2b5a, 0x1dd0, 0x2dc9, 0xb57b,
+          0x5ccd, 0x4957, 0xaf59, 0xa04b, 0x5f42, 0xab7c, 0x2826, 0x526f},
+         {0xf407, 0x165a, 0xb724, 0x2f12, 0x2ea1, 0x470b, 0x4464, 0xbd35,
+          0x606f, 0xd73e, 0x50d3, 0x8a7f, 0x8029, 0x7ffc, 0xbe31, 0x6cfb},
+         {0x8171, 0x1f4c, 0xced2, 0x9c99, 0x6d7e, 0x5a0f, 0xfefb, 0x59e3,
+          0xa0c8, 0xabd9, 0xc4c5, 0x57d3, 0xbfa3, 0x4f11, 0x96a2, 0x5a7d}},
+        {{0xe068, 0x4cc0, 0x8bcd, 0xc903, 0x9e52, 0xb3e1, 0xd745, 0x0995,
+          0xdd8f, 0xf14b, 0xd2ac, 0xd65a, 0xda1d, 0xa742, 0xbac5, 0x474c},
+         {0x7481, 0xf2ad, 0x9757, 0x2d82, 0xb683, 0xb16b, 0x0002, 0x7b60,
+          0x8f0c, 0x2594, 0x8f64, 0x3b7a, 0x3552, 0x8d9d, 0xb9d7, 0x67eb},
+         {0xcaab, 0xb9a1, 0xf966, 0xe311, 0x5b34, 0x0fa0, 0x6abc, 0x8134,
+          0xab3d, 0x90f6, 0x1984, 0x9232, 0xec17, 0x74e5, 0x2ceb, 0x434e}},
+        {{0x0fb1, 0x7a55, 0x1a5c, 0x53eb, 0xd7b3, 0x7a01, 0xca32, 0x31f6,
+          0x3b74, 0x679e, 0x1501, 0x6c57, 0xdb20, 0x8b7c, 0xd7d0, 0x8097},
+         {0xb127, 0xb20c, 0xe3a2, 0x96f3, 0xe0d8, 0xd50c, 0x14b4, 0x0b40,
+          0x6eeb, 0xa258, 0x99db, 0x3c8c, 0x0f51, 0x4198, 0x3887, 0xffd0},
+         {0x0273, 0x9f8c, 0x9669, 0xbbba, 0x1c49, 0x767c, 0xc2af, 0x59f0,
+          0x1366, 0xd397, 0x63ac, 0x6fe8, 0x1a9a, 0x1259, 0x01d0, 0x0016}},
+        {{0x7876, 0x2a35, 0xa24a, 0x433e, 0x5501, 0x573c, 0xd76d, 0xcb82,
+          0x1334, 0xb4a6, 0xf290, 0xc797, 0xeae9, 0x2b83, 0x1e2b, 0x8b14},
+         {0x3885, 0x8aef, 0x9dea, 0x2b8c, 0xdd7c, 0xd7cd, 0xb0cc, 0x05ee,
+          0x361b, 0x3800, 0xb0d4, 0x4c23, 0xbd3f, 0x5180, 0x9783, 0xff80},
+         {0xab36, 0x3104, 0xdae8, 0x0704, 0x4a28, 0x6714, 0x824b, 0x0051,
+          0x8134, 0x1f6a, 0x712d, 0x1f03, 0x03b2, 0xecac, 0x377d, 0xfef9}}
+    };
+
+    int i, j, ok;
+
+    /* Test known inputs/outputs */
+    for (i = 0; (size_t)i < sizeof(CASES) / sizeof(CASES[0]); ++i) {
+        uint16_t out[16];
+        test_modinv32_uint16(out, CASES[i][0], CASES[i][1]);
+        for (j = 0; j < 16; ++j) CHECK(out[j] == CASES[i][2][j]);
+#ifdef SECP256K1_WIDEMUL_INT128
+        test_modinv64_uint16(out, CASES[i][0], CASES[i][1]);
+        for (j = 0; j < 16; ++j) CHECK(out[j] == CASES[i][2][j]);
+#endif
+    }
+
+    for (i = 0; i < 100 * count; ++i) {
+        /* 256-bit numbers in 16-uint16_t's notation */
+        static const uint16_t ZERO[16] = {0};
+        uint16_t xd[16];  /* the number (in range [0,2^256)) to be inverted */
+        uint16_t md[16];  /* the modulus (odd, in range [3,2^256)) */
+        uint16_t id[16];  /* the inverse of xd mod md */
+
+        /* generate random xd and md, so that md is odd, md>1, xd<md, and gcd(xd,md)=1 */
+        do {
+            /* generate random xd and md (with many subsequent 0s and 1s) */
+            secp256k1_testrand256_test((unsigned char*)xd);
+            secp256k1_testrand256_test((unsigned char*)md);
+            md[0] |= 1; /* modulus must be odd */
+            /* If modulus is 1, find another one. */
+            ok = md[0] != 1;
+            for (j = 1; j < 16; ++j) ok |= md[j] != 0;
+            mulmod256(xd, xd, NULL, md); /* Make xd = xd mod md */
+        } while (!(ok && coprime(xd, md)));
+
+        test_modinv32_uint16(id, xd, md);
+#ifdef SECP256K1_WIDEMUL_INT128
+        test_modinv64_uint16(id, xd, md);
+#endif
+
+        /* In a few cases, also test with input=0 */
+        if (i < count) {
+            test_modinv32_uint16(id, ZERO, md);
+#ifdef SECP256K1_WIDEMUL_INT128
+            test_modinv64_uint16(id, ZERO, md);
+#endif
+        }
+    }
+}
+
 /***** SCALAR TESTS *****/
+
 
 void scalar_test(void) {
     secp256k1_scalar s;
     secp256k1_scalar s1;
     secp256k1_scalar s2;
-#ifndef USE_NUM_NONE
-    secp256k1_num snum, s1num, s2num;
-    secp256k1_num order, half_order;
-#endif
     unsigned char c[32];
 
     /* Set 's' to a random scalar, with value 'snum'. */
@@ -818,16 +1565,6 @@ void scalar_test(void) {
     /* Set 's2' to a random scalar, with value 'snum2', and byte array representation 'c'. */
     random_scalar_order_test(&s2);
     secp256k1_scalar_get_b32(c, &s2);
-
-#ifndef USE_NUM_NONE
-    secp256k1_scalar_get_num(&snum, &s);
-    secp256k1_scalar_get_num(&s1num, &s1);
-    secp256k1_scalar_get_num(&s2num, &s2);
-
-    secp256k1_scalar_order_get_num(&order);
-    half_order = order;
-    secp256k1_num_shift(&half_order, 1);
-#endif
 
     {
         int i;
@@ -868,80 +1605,6 @@ void scalar_test(void) {
         CHECK(secp256k1_scalar_eq(&n, &s));
     }
 
-#ifndef USE_NUM_NONE
-    {
-        /* Test that adding the scalars together is equal to adding their numbers together modulo the order. */
-        secp256k1_num rnum;
-        secp256k1_num r2num;
-        secp256k1_scalar r;
-        secp256k1_num_add(&rnum, &snum, &s2num);
-        secp256k1_num_mod(&rnum, &order);
-        secp256k1_scalar_add(&r, &s, &s2);
-        secp256k1_scalar_get_num(&r2num, &r);
-        CHECK(secp256k1_num_eq(&rnum, &r2num));
-    }
-
-    {
-        /* Test that multiplying the scalars is equal to multiplying their numbers modulo the order. */
-        secp256k1_scalar r;
-        secp256k1_num r2num;
-        secp256k1_num rnum;
-        secp256k1_num_mul(&rnum, &snum, &s2num);
-        secp256k1_num_mod(&rnum, &order);
-        secp256k1_scalar_mul(&r, &s, &s2);
-        secp256k1_scalar_get_num(&r2num, &r);
-        CHECK(secp256k1_num_eq(&rnum, &r2num));
-        /* The result can only be zero if at least one of the factors was zero. */
-        CHECK(secp256k1_scalar_is_zero(&r) == (secp256k1_scalar_is_zero(&s) || secp256k1_scalar_is_zero(&s2)));
-        /* The results can only be equal to one of the factors if that factor was zero, or the other factor was one. */
-        CHECK(secp256k1_num_eq(&rnum, &snum) == (secp256k1_scalar_is_zero(&s) || secp256k1_scalar_is_one(&s2)));
-        CHECK(secp256k1_num_eq(&rnum, &s2num) == (secp256k1_scalar_is_zero(&s2) || secp256k1_scalar_is_one(&s)));
-    }
-
-    {
-        secp256k1_scalar neg;
-        secp256k1_num negnum;
-        secp256k1_num negnum2;
-        /* Check that comparison with zero matches comparison with zero on the number. */
-        CHECK(secp256k1_num_is_zero(&snum) == secp256k1_scalar_is_zero(&s));
-        /* Check that comparison with the half order is equal to testing for high scalar. */
-        CHECK(secp256k1_scalar_is_high(&s) == (secp256k1_num_cmp(&snum, &half_order) > 0));
-        secp256k1_scalar_negate(&neg, &s);
-        secp256k1_num_sub(&negnum, &order, &snum);
-        secp256k1_num_mod(&negnum, &order);
-        /* Check that comparison with the half order is equal to testing for high scalar after negation. */
-        CHECK(secp256k1_scalar_is_high(&neg) == (secp256k1_num_cmp(&negnum, &half_order) > 0));
-        /* Negating should change the high property, unless the value was already zero. */
-        CHECK((secp256k1_scalar_is_high(&s) == secp256k1_scalar_is_high(&neg)) == secp256k1_scalar_is_zero(&s));
-        secp256k1_scalar_get_num(&negnum2, &neg);
-        /* Negating a scalar should be equal to (order - n) mod order on the number. */
-        CHECK(secp256k1_num_eq(&negnum, &negnum2));
-        secp256k1_scalar_add(&neg, &neg, &s);
-        /* Adding a number to its negation should result in zero. */
-        CHECK(secp256k1_scalar_is_zero(&neg));
-        secp256k1_scalar_negate(&neg, &neg);
-        /* Negating zero should still result in zero. */
-        CHECK(secp256k1_scalar_is_zero(&neg));
-    }
-
-    {
-        /* Test secp256k1_scalar_mul_shift_var. */
-        secp256k1_scalar r;
-        secp256k1_num one;
-        secp256k1_num rnum;
-        secp256k1_num rnum2;
-        unsigned char cone[1] = {0x01};
-        unsigned int shift = 256 + secp256k1_testrand_int(257);
-        secp256k1_scalar_mul_shift_var(&r, &s1, &s2, shift);
-        secp256k1_num_mul(&rnum, &s1num, &s2num);
-        secp256k1_num_shift(&rnum, shift - 1);
-        secp256k1_num_set_bin(&one, cone, 1);
-        secp256k1_num_add(&rnum, &rnum, &one);
-        secp256k1_num_shift(&rnum, 1);
-        secp256k1_scalar_get_num(&rnum2, &r);
-        CHECK(secp256k1_num_eq(&rnum, &rnum2));
-    }
-
     {
         /* test secp256k1_scalar_shr_int */
         secp256k1_scalar r;
@@ -953,34 +1616,6 @@ void scalar_test(void) {
             int expected = r.d[0] % (1 << shift);
             low = secp256k1_scalar_shr_int(&r, shift);
             CHECK(expected == low);
-        }
-    }
-#endif
-
-    {
-        /* Test that scalar inverses are equal to the inverse of their number modulo the order. */
-        if (!secp256k1_scalar_is_zero(&s)) {
-            secp256k1_scalar inv;
-#ifndef USE_NUM_NONE
-            secp256k1_num invnum;
-            secp256k1_num invnum2;
-#endif
-            secp256k1_scalar_inverse(&inv, &s);
-#ifndef USE_NUM_NONE
-            secp256k1_num_mod_inverse(&invnum, &snum, &order);
-            secp256k1_scalar_get_num(&invnum2, &inv);
-            CHECK(secp256k1_num_eq(&invnum, &invnum2));
-#endif
-            secp256k1_scalar_mul(&inv, &inv, &s);
-            /* Multiplying a scalar with its inverse must result in one. */
-            CHECK(secp256k1_scalar_is_one(&inv));
-            secp256k1_scalar_inverse(&inv, &inv);
-            /* Inverting one must result in one. */
-            CHECK(secp256k1_scalar_is_one(&inv));
-#ifndef USE_NUM_NONE
-            secp256k1_scalar_get_num(&invnum, &inv);
-            CHECK(secp256k1_num_is_one(&invnum));
-#endif
         }
     }
 
@@ -1055,14 +1690,6 @@ void scalar_test(void) {
     }
 
     {
-        /* Test square. */
-        secp256k1_scalar r1, r2;
-        secp256k1_scalar_sqr(&r1, &s1);
-        secp256k1_scalar_mul(&r2, &s1, &s1);
-        CHECK(secp256k1_scalar_eq(&r1, &r2));
-    }
-
-    {
         /* Test multiplicative identity. */
         secp256k1_scalar r1, v1;
         secp256k1_scalar_set_int(&v1,1);
@@ -1126,48 +1753,6 @@ void run_scalar_tests(void) {
         CHECK(secp256k1_scalar_is_zero(&o));
     }
 
-#ifndef USE_NUM_NONE
-    {
-        /* Test secp256k1_scalar_set_b32 boundary conditions */
-        secp256k1_num order;
-        secp256k1_scalar scalar;
-        unsigned char bin[32];
-        unsigned char bin_tmp[32];
-        int overflow = 0;
-        /* 2^256-1 - order */
-        static const secp256k1_scalar all_ones_minus_order = SECP256K1_SCALAR_CONST(
-            0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000001UL,
-            0x45512319UL, 0x50B75FC4UL, 0x402DA173UL, 0x2FC9BEBEUL
-        );
-
-        /* A scalar set to 0s should be 0. */
-        memset(bin, 0, 32);
-        secp256k1_scalar_set_b32(&scalar, bin, &overflow);
-        CHECK(overflow == 0);
-        CHECK(secp256k1_scalar_is_zero(&scalar));
-
-        /* A scalar with value of the curve order should be 0. */
-        secp256k1_scalar_order_get_num(&order);
-        secp256k1_num_get_bin(bin, 32, &order);
-        secp256k1_scalar_set_b32(&scalar, bin, &overflow);
-        CHECK(overflow == 1);
-        CHECK(secp256k1_scalar_is_zero(&scalar));
-
-        /* A scalar with value of the curve order minus one should not overflow. */
-        bin[31] -= 1;
-        secp256k1_scalar_set_b32(&scalar, bin, &overflow);
-        CHECK(overflow == 0);
-        secp256k1_scalar_get_b32(bin_tmp, &scalar);
-        CHECK(secp256k1_memcmp_var(bin, bin_tmp, 32) == 0);
-
-        /* A scalar set to all 1s should overflow. */
-        memset(bin, 0xFF, 32);
-        secp256k1_scalar_set_b32(&scalar, bin, &overflow);
-        CHECK(overflow == 1);
-        CHECK(secp256k1_scalar_eq(&scalar, &all_ones_minus_order));
-    }
-#endif
-
     {
         /* Does check_overflow check catch all ones? */
         static const secp256k1_scalar overflowed = SECP256K1_SCALAR_CONST(
@@ -1190,9 +1775,7 @@ void run_scalar_tests(void) {
         secp256k1_scalar one;
         secp256k1_scalar r1;
         secp256k1_scalar r2;
-#if defined(USE_SCALAR_INV_NUM)
         secp256k1_scalar zzv;
-#endif
         int overflow;
         unsigned char chal[33][2][32] = {
             {{0xff, 0xff, 0x03, 0x07, 0x00, 0x00, 0x00, 0x00,
@@ -1742,10 +2325,8 @@ void run_scalar_tests(void) {
             if (!secp256k1_scalar_is_zero(&y)) {
                 secp256k1_scalar_inverse(&zz, &y);
                 CHECK(!secp256k1_scalar_check_overflow(&zz));
-#if defined(USE_SCALAR_INV_NUM)
                 secp256k1_scalar_inverse_var(&zzv, &y);
                 CHECK(secp256k1_scalar_eq(&zzv, &zz));
-#endif
                 secp256k1_scalar_mul(&z, &z, &zz);
                 CHECK(!secp256k1_scalar_check_overflow(&z));
                 CHECK(secp256k1_scalar_eq(&x, &z));
@@ -1753,12 +2334,6 @@ void run_scalar_tests(void) {
                 CHECK(!secp256k1_scalar_check_overflow(&zz));
                 CHECK(secp256k1_scalar_eq(&one, &zz));
             }
-            secp256k1_scalar_mul(&z, &x, &x);
-            CHECK(!secp256k1_scalar_check_overflow(&z));
-            secp256k1_scalar_sqr(&zz, &x);
-            CHECK(!secp256k1_scalar_check_overflow(&zz));
-            CHECK(secp256k1_scalar_eq(&zz, &z));
-            CHECK(secp256k1_scalar_eq(&r2, &zz));
         }
     }
 }
@@ -1812,13 +2387,6 @@ int check_fe_equal(const secp256k1_fe *a, const secp256k1_fe *b) {
     secp256k1_fe_normalize_weak(&an);
     secp256k1_fe_normalize_var(&bn);
     return secp256k1_fe_equal_var(&an, &bn);
-}
-
-int check_fe_inverse(const secp256k1_fe *a, const secp256k1_fe *ai) {
-    secp256k1_fe x;
-    secp256k1_fe one = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
-    secp256k1_fe_mul(&x, a, ai);
-    return check_fe_equal(&x, &one);
 }
 
 void run_field_convert(void) {
@@ -1940,52 +2508,6 @@ void run_field_misc(void) {
     }
 }
 
-void run_field_inv(void) {
-    secp256k1_fe x, xi, xii;
-    int i;
-    for (i = 0; i < 10*count; i++) {
-        random_fe_non_zero(&x);
-        secp256k1_fe_inv(&xi, &x);
-        CHECK(check_fe_inverse(&x, &xi));
-        secp256k1_fe_inv(&xii, &xi);
-        CHECK(check_fe_equal(&x, &xii));
-    }
-}
-
-void run_field_inv_var(void) {
-    secp256k1_fe x, xi, xii;
-    int i;
-    for (i = 0; i < 10*count; i++) {
-        random_fe_non_zero(&x);
-        secp256k1_fe_inv_var(&xi, &x);
-        CHECK(check_fe_inverse(&x, &xi));
-        secp256k1_fe_inv_var(&xii, &xi);
-        CHECK(check_fe_equal(&x, &xii));
-    }
-}
-
-void run_field_inv_all_var(void) {
-    secp256k1_fe x[16], xi[16], xii[16];
-    int i;
-    /* Check it's safe to call for 0 elements */
-    secp256k1_fe_inv_all_var(xi, x, 0);
-    for (i = 0; i < count; i++) {
-        size_t j;
-        size_t len = secp256k1_testrand_int(15) + 1;
-        for (j = 0; j < len; j++) {
-            random_fe_non_zero(&x[j]);
-        }
-        secp256k1_fe_inv_all_var(xi, x, len);
-        for (j = 0; j < len; j++) {
-            CHECK(check_fe_inverse(&x[j], &xi[j]));
-        }
-        secp256k1_fe_inv_all_var(xii, xi, len);
-        for (j = 0; j < len; j++) {
-            CHECK(check_fe_equal(&x[j], &xii[j]));
-        }
-    }
-}
-
 void run_sqr(void) {
     secp256k1_fe x, s;
 
@@ -2046,6 +2568,318 @@ void run_sqrt(void) {
             test_sqrt(&t, NULL);
             secp256k1_fe_mul(&t, &s, &ns);
             test_sqrt(&t, NULL);
+        }
+    }
+}
+
+/***** FIELD/SCALAR INVERSE TESTS *****/
+
+static const secp256k1_scalar scalar_minus_one = SECP256K1_SCALAR_CONST(
+    0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE,
+    0xBAAEDCE6, 0xAF48A03B, 0xBFD25E8C, 0xD0364140
+);
+
+static const secp256k1_fe fe_minus_one = SECP256K1_FE_CONST(
+    0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+    0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFC2E
+);
+
+/* These tests test the following identities:
+ *
+ * for x==0: 1/x == 0
+ * for x!=0: x*(1/x) == 1
+ * for x!=0 and x!=1: 1/(1/x - 1) + 1 == -1/(x-1)
+ */
+
+void test_inverse_scalar(secp256k1_scalar* out, const secp256k1_scalar* x, int var)
+{
+    secp256k1_scalar l, r, t;
+
+    (var ? secp256k1_scalar_inverse_var : secp256k1_scalar_inverse_var)(&l, x);  /* l = 1/x */
+    if (out) *out = l;
+    if (secp256k1_scalar_is_zero(x)) {
+        CHECK(secp256k1_scalar_is_zero(&l));
+        return;
+    }
+    secp256k1_scalar_mul(&t, x, &l);                                             /* t = x*(1/x) */
+    CHECK(secp256k1_scalar_is_one(&t));                                          /* x*(1/x) == 1 */
+    secp256k1_scalar_add(&r, x, &scalar_minus_one);                              /* r = x-1 */
+    if (secp256k1_scalar_is_zero(&r)) return;
+    (var ? secp256k1_scalar_inverse_var : secp256k1_scalar_inverse_var)(&r, &r); /* r = 1/(x-1) */
+    secp256k1_scalar_add(&l, &scalar_minus_one, &l);                             /* l = 1/x-1 */
+    (var ? secp256k1_scalar_inverse_var : secp256k1_scalar_inverse_var)(&l, &l); /* l = 1/(1/x-1) */
+    secp256k1_scalar_add(&l, &l, &secp256k1_scalar_one);                         /* l = 1/(1/x-1)+1 */
+    secp256k1_scalar_add(&l, &r, &l);                                            /* l = 1/(1/x-1)+1 + 1/(x-1) */
+    CHECK(secp256k1_scalar_is_zero(&l));                                         /* l == 0 */
+}
+
+void test_inverse_field(secp256k1_fe* out, const secp256k1_fe* x, int var)
+{
+    secp256k1_fe l, r, t;
+
+    (var ? secp256k1_fe_inv_var : secp256k1_fe_inv)(&l, x) ;   /* l = 1/x */
+    if (out) *out = l;
+    t = *x;                                                    /* t = x */
+    if (secp256k1_fe_normalizes_to_zero_var(&t)) {
+        CHECK(secp256k1_fe_normalizes_to_zero(&l));
+        return;
+    }
+    secp256k1_fe_mul(&t, x, &l);                               /* t = x*(1/x) */
+    secp256k1_fe_add(&t, &fe_minus_one);                       /* t = x*(1/x)-1 */
+    CHECK(secp256k1_fe_normalizes_to_zero(&t));                /* x*(1/x)-1 == 0 */
+    r = *x;                                                    /* r = x */
+    secp256k1_fe_add(&r, &fe_minus_one);                       /* r = x-1 */
+    if (secp256k1_fe_normalizes_to_zero_var(&r)) return;
+    (var ? secp256k1_fe_inv_var : secp256k1_fe_inv)(&r, &r);   /* r = 1/(x-1) */
+    secp256k1_fe_add(&l, &fe_minus_one);                       /* l = 1/x-1 */
+    (var ? secp256k1_fe_inv_var : secp256k1_fe_inv)(&l, &l);   /* l = 1/(1/x-1) */
+    secp256k1_fe_add(&l, &secp256k1_fe_one);                   /* l = 1/(1/x-1)+1 */
+    secp256k1_fe_add(&l, &r);                                  /* l = 1/(1/x-1)+1 + 1/(x-1) */
+    CHECK(secp256k1_fe_normalizes_to_zero_var(&l));            /* l == 0 */
+}
+
+void run_inverse_tests(void)
+{
+    /* Fixed test cases for field inverses: pairs of (x, 1/x) mod p. */
+    static const secp256k1_fe fe_cases[][2] = {
+        /* 0 */
+        {SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0),
+         SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0)},
+        /* 1 */
+        {SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1),
+         SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1)},
+        /* -1 */
+        {SECP256K1_FE_CONST(0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xfffffffe, 0xfffffc2e),
+         SECP256K1_FE_CONST(0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xfffffffe, 0xfffffc2e)},
+        /* 2 */
+        {SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 2),
+         SECP256K1_FE_CONST(0x7fffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0x7ffffe18)},
+        /* 2**128 */
+        {SECP256K1_FE_CONST(0, 0, 0, 1, 0, 0, 0, 0),
+         SECP256K1_FE_CONST(0xbcb223fe, 0xdc24a059, 0xd838091d, 0xd2253530, 0xffffffff, 0xffffffff, 0xffffffff, 0x434dd931)},
+        /* Input known to need 637 divsteps */
+        {SECP256K1_FE_CONST(0xe34e9c95, 0x6bee8a84, 0x0dcb632a, 0xdb8a1320, 0x66885408, 0x06f3f996, 0x7c11ca84, 0x19199ec3),
+         SECP256K1_FE_CONST(0xbd2cbd8f, 0x1c536828, 0x9bccda44, 0x2582ac0c, 0x870152b0, 0x8a3f09fb, 0x1aaadf92, 0x19b618e5)},
+        /* Input known to need 567 divsteps starting with delta=1/2. */
+        {SECP256K1_FE_CONST(0xf6bc3ba3, 0x636451c4, 0x3e46357d, 0x2c21d619, 0x0988e234, 0x15985661, 0x6672982b, 0xa7549bfc),
+         SECP256K1_FE_CONST(0xb024fdc7, 0x5547451e, 0x426c585f, 0xbd481425, 0x73df6b75, 0xeef6d9d0, 0x389d87d4, 0xfbb440ba)},
+        /* Input known to need 566 divsteps starting with delta=1/2. */
+        {SECP256K1_FE_CONST(0xb595d81b, 0x2e3c1e2f, 0x482dbc65, 0xe4865af7, 0x9a0a50aa, 0x29f9e618, 0x6f87d7a5, 0x8d1063ae),
+         SECP256K1_FE_CONST(0xc983337c, 0x5d5c74e1, 0x49918330, 0x0b53afb5, 0xa0428a0b, 0xce6eef86, 0x059bd8ef, 0xe5b908de)},
+        /* Set of 10 inputs accessing all 128 entries in the modinv32 divsteps_var table */
+        {SECP256K1_FE_CONST(0x00000000, 0x00000000, 0xe0ff1f80, 0x1f000000, 0x00000000, 0x00000000, 0xfeff0100, 0x00000000),
+         SECP256K1_FE_CONST(0x9faf9316, 0x77e5049d, 0x0b5e7a1b, 0xef70b893, 0x18c9e30c, 0x045e7fd7, 0x29eddf8c, 0xd62e9e3d)},
+        {SECP256K1_FE_CONST(0x621a538d, 0x511b2780, 0x35688252, 0x53f889a4, 0x6317c3ac, 0x32ba0a46, 0x6277c0d1, 0xccd31192),
+         SECP256K1_FE_CONST(0x38513b0c, 0x5eba856f, 0xe29e882e, 0x9b394d8c, 0x34bda011, 0xeaa66943, 0x6a841a4c, 0x6ae8bcff)},
+        {SECP256K1_FE_CONST(0x00000200, 0xf0ffff1f, 0x00000000, 0x0000e0ff, 0xffffffff, 0xfffcffff, 0xffffffff, 0xffff0100),
+         SECP256K1_FE_CONST(0x5da42a52, 0x3640de9e, 0x13e64343, 0x0c7591b7, 0x6c1e3519, 0xf048c5b6, 0x0484217c, 0xedbf8b2f)},
+        {SECP256K1_FE_CONST(0xd1343ef9, 0x4b952621, 0x7c52a2ee, 0x4ea1281b, 0x4ab46410, 0x9f26998d, 0xa686a8ff, 0x9f2103e8),
+         SECP256K1_FE_CONST(0x84044385, 0x9a4619bf, 0x74e35b6d, 0xa47e0c46, 0x6b7fb47d, 0x9ffab128, 0xb0775aa3, 0xcb318bd1)},
+        {SECP256K1_FE_CONST(0xb27235d2, 0xc56a52be, 0x210db37a, 0xd50d23a4, 0xbe621bdd, 0x5df22c6a, 0xe926ba62, 0xd2e4e440),
+         SECP256K1_FE_CONST(0x67a26e54, 0x483a9d3c, 0xa568469e, 0xd258ab3d, 0xb9ec9981, 0xdca9b1bd, 0x8d2775fe, 0x53ae429b)},
+        {SECP256K1_FE_CONST(0x00000000, 0x00000000, 0x00e0ffff, 0xffffff83, 0xffffffff, 0x3f00f00f, 0x000000e0, 0xffffffff),
+         SECP256K1_FE_CONST(0x310e10f8, 0x23bbfab0, 0xac94907d, 0x076c9a45, 0x8d357d7f, 0xc763bcee, 0x00d0e615, 0x5a6acef6)},
+        {SECP256K1_FE_CONST(0xfeff0300, 0x001c0000, 0xf80700c0, 0x0ff0ffff, 0xffffffff, 0x0fffffff, 0xffff0100, 0x7f0000fe),
+         SECP256K1_FE_CONST(0x28e2fdb4, 0x0709168b, 0x86f598b0, 0x3453a370, 0x530cf21f, 0x32f978d5, 0x1d527a71, 0x59269b0c)},
+        {SECP256K1_FE_CONST(0xc2591afa, 0x7bb98ef7, 0x090bb273, 0x85c14f87, 0xbb0b28e0, 0x54d3c453, 0x85c66753, 0xd5574d2f),
+         SECP256K1_FE_CONST(0xfdca70a2, 0x70ce627c, 0x95e66fae, 0x848a6dbb, 0x07ffb15c, 0x5f63a058, 0xba4140ed, 0x6113b503)},
+        {SECP256K1_FE_CONST(0xf5475db3, 0xedc7b5a3, 0x411c047e, 0xeaeb452f, 0xc625828e, 0x1cf5ad27, 0x8eec1060, 0xc7d3e690),
+         SECP256K1_FE_CONST(0x5eb756c0, 0xf963f4b9, 0xdc6a215e, 0xec8cc2d8, 0x2e9dec01, 0xde5eb88d, 0x6aba7164, 0xaecb2c5a)},
+        {SECP256K1_FE_CONST(0x00000000, 0x00f8ffff, 0xffffffff, 0x01000000, 0xe0ff1f00, 0x00000000, 0xffffff7f, 0x00000000),
+         SECP256K1_FE_CONST(0xe0d2e3d8, 0x49b6157d, 0xe54e88c2, 0x1a7f02ca, 0x7dd28167, 0xf1125d81, 0x7bfa444e, 0xbe110037)},
+        /* Selection of randomly generated inputs that reach high/low d/e values in various configurations. */
+        {SECP256K1_FE_CONST(0x13cc08a4, 0xd8c41f0f, 0x179c3e67, 0x54c46c67, 0xc4109221, 0x09ab3b13, 0xe24d9be1, 0xffffe950),
+         SECP256K1_FE_CONST(0xb80c8006, 0xd16abaa7, 0xcabd71e5, 0xcf6714f4, 0x966dd3d0, 0x64767a2d, 0xe92c4441, 0x51008cd1)},
+        {SECP256K1_FE_CONST(0xaa6db990, 0x95efbca1, 0x3cc6ff71, 0x0602e24a, 0xf49ff938, 0x99fffc16, 0x46f40993, 0xc6e72057),
+         SECP256K1_FE_CONST(0xd5d3dd69, 0xb0c195e5, 0x285f1d49, 0xe639e48c, 0x9223f8a9, 0xca1d731d, 0x9ca482f9, 0xa5b93e06)},
+        {SECP256K1_FE_CONST(0x1c680eac, 0xaeabffd8, 0x9bdc4aee, 0x1781e3de, 0xa3b08108, 0x0015f2e0, 0x94449e1b, 0x2f67a058),
+         SECP256K1_FE_CONST(0x7f083f8d, 0x31254f29, 0x6510f475, 0x245c373d, 0xc5622590, 0x4b323393, 0x32ed1719, 0xc127444b)},
+        {SECP256K1_FE_CONST(0x147d44b3, 0x012d83f8, 0xc160d386, 0x1a44a870, 0x9ba6be96, 0x8b962707, 0x267cbc1a, 0xb65b2f0a),
+         SECP256K1_FE_CONST(0x555554ff, 0x170aef1e, 0x50a43002, 0xe51fbd36, 0xafadb458, 0x7a8aded1, 0x0ca6cd33, 0x6ed9087c)},
+        {SECP256K1_FE_CONST(0x12423796, 0x22f0fe61, 0xf9ca017c, 0x5384d107, 0xa1fbf3b2, 0x3b018013, 0x916a3c37, 0x4000b98c),
+         SECP256K1_FE_CONST(0x20257700, 0x08668f94, 0x1177e306, 0x136c01f5, 0x8ed1fbd2, 0x95ec4589, 0xae38edb9, 0xfd19b6d7)},
+        {SECP256K1_FE_CONST(0xdcf2d030, 0x9ab42cb4, 0x93ffa181, 0xdcd23619, 0x39699b52, 0x08909a20, 0xb5a17695, 0x3a9dcf21),
+         SECP256K1_FE_CONST(0x1f701dea, 0xe211fb1f, 0x4f37180d, 0x63a0f51c, 0x29fe1e40, 0xa40b6142, 0x2e7b12eb, 0x982b06b6)},
+        {SECP256K1_FE_CONST(0x79a851f6, 0xa6314ed3, 0xb35a55e6, 0xca1c7d7f, 0xe32369ea, 0xf902432e, 0x375308c5, 0xdfd5b600),
+         SECP256K1_FE_CONST(0xcaae00c5, 0xe6b43851, 0x9dabb737, 0x38cba42c, 0xa02c8549, 0x7895dcbf, 0xbd183d71, 0xafe4476a)},
+        {SECP256K1_FE_CONST(0xede78fdd, 0xcfc92bf1, 0x4fec6c6c, 0xdb8d37e2, 0xfb66bc7b, 0x28701870, 0x7fa27c9a, 0x307196ec),
+         SECP256K1_FE_CONST(0x68193a6c, 0x9a8b87a7, 0x2a760c64, 0x13e473f6, 0x23ae7bed, 0x1de05422, 0x88865427, 0xa3418265)},
+        {SECP256K1_FE_CONST(0xa40b2079, 0xb8f88e89, 0xa7617997, 0x89baf5ae, 0x174df343, 0x75138eae, 0x2711595d, 0x3fc3e66c),
+         SECP256K1_FE_CONST(0x9f99c6a5, 0x6d685267, 0xd4b87c37, 0x9d9c4576, 0x358c692b, 0x6bbae0ed, 0x3389c93d, 0x7fdd2655)},
+        {SECP256K1_FE_CONST(0x7c74c6b6, 0xe98d9151, 0x72645cf1, 0x7f06e321, 0xcefee074, 0x15b2113a, 0x10a9be07, 0x08a45696),
+         SECP256K1_FE_CONST(0x8c919a88, 0x898bc1e0, 0x77f26f97, 0x12e655b7, 0x9ba0ac40, 0xe15bb19e, 0x8364cc3b, 0xe227a8ee)},
+        {SECP256K1_FE_CONST(0x109ba1ce, 0xdafa6d4a, 0xa1cec2b2, 0xeb1069f4, 0xb7a79e5b, 0xec6eb99b, 0xaec5f643, 0xee0e723e),
+         SECP256K1_FE_CONST(0x93d13eb8, 0x4bb0bcf9, 0xe64f5a71, 0xdbe9f359, 0x7191401c, 0x6f057a4a, 0xa407fe1b, 0x7ecb65cc)},
+        {SECP256K1_FE_CONST(0x3db076cd, 0xec74a5c9, 0xf61dd138, 0x90e23e06, 0xeeedd2d0, 0x74cbc4e0, 0x3dbe1e91, 0xded36a78),
+         SECP256K1_FE_CONST(0x3f07f966, 0x8e2a1e09, 0x706c71df, 0x02b5e9d5, 0xcb92ddbf, 0xcdd53010, 0x16545564, 0xe660b107)},
+        {SECP256K1_FE_CONST(0xe31c73ed, 0xb4c4b82c, 0x02ae35f7, 0x4cdec153, 0x98b522fd, 0xf7d2460c, 0x6bf7c0f8, 0x4cf67b0d),
+         SECP256K1_FE_CONST(0x4b8f1faf, 0x94e8b070, 0x19af0ff6, 0xa319cd31, 0xdf0a7ffb, 0xefaba629, 0x59c50666, 0x1fe5b843)},
+        {SECP256K1_FE_CONST(0x4c8b0e6e, 0x83392ab6, 0xc0e3e9f1, 0xbbd85497, 0x16698897, 0xf552d50d, 0x79652ddb, 0x12f99870),
+         SECP256K1_FE_CONST(0x56d5101f, 0xd23b7949, 0x17dc38d6, 0xf24022ef, 0xcf18e70a, 0x5cc34424, 0x438544c3, 0x62da4bca)},
+        {SECP256K1_FE_CONST(0xb0e040e2, 0x40cc35da, 0x7dd5c611, 0x7fccb178, 0x28888137, 0xbc930358, 0xea2cbc90, 0x775417dc),
+         SECP256K1_FE_CONST(0xca37f0d4, 0x016dd7c8, 0xab3ae576, 0x96e08d69, 0x68ed9155, 0xa9b44270, 0x900ae35d, 0x7c7800cd)},
+        {SECP256K1_FE_CONST(0x8a32ea49, 0x7fbb0bae, 0x69724a9d, 0x8e2105b2, 0xbdf69178, 0x862577ef, 0x35055590, 0x667ddaef),
+         SECP256K1_FE_CONST(0xd02d7ead, 0xc5e190f0, 0x559c9d72, 0xdaef1ffc, 0x64f9f425, 0xf43645ea, 0x7341e08d, 0x11768e96)},
+        {SECP256K1_FE_CONST(0xa3592d98, 0x9abe289d, 0x579ebea6, 0xbb0857a8, 0xe242ab73, 0x85f9a2ce, 0xb6998f0f, 0xbfffbfc6),
+         SECP256K1_FE_CONST(0x093c1533, 0x32032efa, 0x6aa46070, 0x0039599e, 0x589c35f4, 0xff525430, 0x7fe3777a, 0x44b43ddc)},
+        {SECP256K1_FE_CONST(0x647178a3, 0x229e607b, 0xcc98521a, 0xcce3fdd9, 0x1e1bc9c9, 0x97fb7c6a, 0x61b961e0, 0x99b10709),
+         SECP256K1_FE_CONST(0x98217c13, 0xd51ddf78, 0x96310e77, 0xdaebd908, 0x602ca683, 0xcb46d07a, 0xa1fcf17e, 0xc8e2feb3)},
+        {SECP256K1_FE_CONST(0x7334627c, 0x73f98968, 0x99464b4b, 0xf5964958, 0x1b95870d, 0xc658227e, 0x5e3235d8, 0xdcab5787),
+         SECP256K1_FE_CONST(0x000006fd, 0xc7e9dd94, 0x40ae367a, 0xe51d495c, 0x07603b9b, 0x2d088418, 0x6cc5c74c, 0x98514307)},
+        {SECP256K1_FE_CONST(0x82e83876, 0x96c28938, 0xa50dd1c5, 0x605c3ad1, 0xc048637d, 0x7a50825f, 0x335ed01a, 0x00005760),
+         SECP256K1_FE_CONST(0xb0393f9f, 0x9f2aa55e, 0xf5607e2e, 0x5287d961, 0x60b3e704, 0xf3e16e80, 0xb4f9a3ea, 0xfec7f02d)},
+        {SECP256K1_FE_CONST(0xc97b6cec, 0x3ee6b8dc, 0x98d24b58, 0x3c1970a1, 0xfe06297a, 0xae813529, 0xe76bb6bd, 0x771ae51d),
+         SECP256K1_FE_CONST(0x0507c702, 0xd407d097, 0x47ddeb06, 0xf6625419, 0x79f48f79, 0x7bf80d0b, 0xfc34b364, 0x253a5db1)},
+        {SECP256K1_FE_CONST(0xd559af63, 0x77ea9bc4, 0x3cf1ad14, 0x5c7a4bbb, 0x10e7d18b, 0x7ce0dfac, 0x380bb19d, 0x0bb99bd3),
+         SECP256K1_FE_CONST(0x00196119, 0xb9b00d92, 0x34edfdb5, 0xbbdc42fc, 0xd2daa33a, 0x163356ca, 0xaa8754c8, 0xb0ec8b0b)},
+        {SECP256K1_FE_CONST(0x8ddfa3dc, 0x52918da0, 0x640519dc, 0x0af8512a, 0xca2d33b2, 0xbde52514, 0xda9c0afc, 0xcb29fce4),
+         SECP256K1_FE_CONST(0xb3e4878d, 0x5cb69148, 0xcd54388b, 0xc23acce0, 0x62518ba8, 0xf09def92, 0x7b31e6aa, 0x6ba35b02)},
+        {SECP256K1_FE_CONST(0xf8207492, 0xe3049f0a, 0x65285f2b, 0x0bfff996, 0x00ca112e, 0xc05da837, 0x546d41f9, 0x5194fb91),
+         SECP256K1_FE_CONST(0x7b7ee50b, 0xa8ed4bbd, 0xf6469930, 0x81419a5c, 0x071441c7, 0x290d046e, 0x3b82ea41, 0x611c5f95)},
+        {SECP256K1_FE_CONST(0x050f7c80, 0x5bcd3c6b, 0x823cb724, 0x5ce74db7, 0xa4e39f5c, 0xbd8828d7, 0xfd4d3e07, 0x3ec2926a),
+         SECP256K1_FE_CONST(0x000d6730, 0xb0171314, 0x4764053d, 0xee157117, 0x48fd61da, 0xdea0b9db, 0x1d5e91c6, 0xbdc3f59e)},
+        {SECP256K1_FE_CONST(0x3e3ea8eb, 0x05d760cf, 0x23009263, 0xb3cb3ac9, 0x088f6f0d, 0x3fc182a3, 0xbd57087c, 0xe67c62f9),
+         SECP256K1_FE_CONST(0xbe988716, 0xa29c1bf6, 0x4456aed6, 0xab1e4720, 0x49929305, 0x51043bf4, 0xebd833dd, 0xdd511e8b)},
+        {SECP256K1_FE_CONST(0x6964d2a9, 0xa7fa6501, 0xa5959249, 0x142f4029, 0xea0c1b5f, 0x2f487ef6, 0x301ac80a, 0x768be5cd),
+         SECP256K1_FE_CONST(0x3918ffe4, 0x07492543, 0xed24d0b7, 0x3df95f8f, 0xaffd7cb4, 0x0de2191c, 0x9ec2f2ad, 0x2c0cb3c6)},
+        {SECP256K1_FE_CONST(0x37c93520, 0xf6ddca57, 0x2b42fd5e, 0xb5c7e4de, 0x11b5b81c, 0xb95e91f3, 0x95c4d156, 0x39877ccb),
+         SECP256K1_FE_CONST(0x9a94b9b5, 0x57eb71ee, 0x4c975b8b, 0xac5262a8, 0x077b0595, 0xe12a6b1f, 0xd728edef, 0x1a6bf956)}
+    };
+    /* Fixed test cases for scalar inverses: pairs of (x, 1/x) mod n. */
+    static const secp256k1_scalar scalar_cases[][2] = {
+        /* 0 */
+        {SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0),
+         SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0)},
+        /* 1 */
+        {SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 1),
+         SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 1)},
+        /* -1 */
+        {SECP256K1_SCALAR_CONST(0xffffffff, 0xffffffff, 0xffffffff, 0xfffffffe, 0xbaaedce6, 0xaf48a03b, 0xbfd25e8c, 0xd0364140),
+         SECP256K1_SCALAR_CONST(0xffffffff, 0xffffffff, 0xffffffff, 0xfffffffe, 0xbaaedce6, 0xaf48a03b, 0xbfd25e8c, 0xd0364140)},
+        /* 2 */
+        {SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 2),
+         SECP256K1_SCALAR_CONST(0x7fffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0x5d576e73, 0x57a4501d, 0xdfe92f46, 0x681b20a1)},
+        /* 2**128 */
+        {SECP256K1_SCALAR_CONST(0, 0, 0, 1, 0, 0, 0, 0),
+         SECP256K1_SCALAR_CONST(0x50a51ac8, 0x34b9ec24, 0x4b0dff66, 0x5588b13e, 0x9984d5b3, 0xcf80ef0f, 0xd6a23766, 0xa3ee9f22)},
+        /* Input known to need 635 divsteps */
+        {SECP256K1_SCALAR_CONST(0xcb9f1d35, 0xdd4416c2, 0xcd71bf3f, 0x6365da66, 0x3c9b3376, 0x8feb7ae9, 0x32a5ef60, 0x19199ec3),
+         SECP256K1_SCALAR_CONST(0x1d7c7bba, 0xf1893d53, 0xb834bd09, 0x36b411dc, 0x42c2e42f, 0xec72c428, 0x5e189791, 0x8e9bc708)},
+        /* Input known to need 566 divsteps starting with delta=1/2. */
+        {SECP256K1_SCALAR_CONST(0x7e3c993d, 0xa4272488, 0xbc015b49, 0x2db54174, 0xd382083a, 0xebe6db35, 0x80f82eff, 0xcd132c72),
+         SECP256K1_SCALAR_CONST(0x086f34a0, 0x3e631f76, 0x77418f28, 0xcc84ac95, 0x6304439d, 0x365db268, 0x312c6ded, 0xd0b934f8)},
+        /* Input known to need 565 divsteps starting with delta=1/2. */
+        {SECP256K1_SCALAR_CONST(0xbad7e587, 0x3f307859, 0x60d93147, 0x8a18491e, 0xb38a9fd5, 0x254350d3, 0x4b1f0e4b, 0x7dd6edc4),
+         SECP256K1_SCALAR_CONST(0x89f2df26, 0x39e2b041, 0xf19bd876, 0xd039c8ac, 0xc2223add, 0x29c4943e, 0x6632d908, 0x515f467b)},
+        /* Selection of randomly generated inputs that reach low/high d/e values in various configurations. */
+        {SECP256K1_SCALAR_CONST(0x1950d757, 0xb37a5809, 0x435059bb, 0x0bb8997e, 0x07e1e3c8, 0x5e5d7d2c, 0x6a0ed8e3, 0xdbde180e),
+         SECP256K1_SCALAR_CONST(0xbf72af9b, 0x750309e2, 0x8dda230b, 0xfe432b93, 0x7e25e475, 0x4388251e, 0x633d894b, 0x3bcb6f8c)},
+        {SECP256K1_SCALAR_CONST(0x9bccf4e7, 0xc5a515e3, 0x50637aa9, 0xbb65a13f, 0x391749a1, 0x62de7d4e, 0xf6d7eabb, 0x3cd10ce0),
+         SECP256K1_SCALAR_CONST(0xaf2d5623, 0xb6385a33, 0xcd0365be, 0x5e92a70d, 0x7f09179c, 0x3baaf30f, 0x8f9cc83b, 0x20092f67)},
+        {SECP256K1_SCALAR_CONST(0x73a57111, 0xb242952a, 0x5c5dee59, 0xf3be2ace, 0xa30a7659, 0xa46e5f47, 0xd21267b1, 0x39e642c9),
+         SECP256K1_SCALAR_CONST(0xa711df07, 0xcbcf13ef, 0xd61cc6be, 0xbcd058ce, 0xb02cf157, 0x272d4a18, 0x86d0feb3, 0xcd5fa004)},
+        {SECP256K1_SCALAR_CONST(0x04884963, 0xce0580b1, 0xba547030, 0x3c691db3, 0x9cd2c84f, 0x24c7cebd, 0x97ebfdba, 0x3e785ec2),
+         SECP256K1_SCALAR_CONST(0xaaaaaf14, 0xd7c99ba7, 0x517ce2c1, 0x78a28b4c, 0x3769a851, 0xe5c5a03d, 0x4cc28f33, 0x0ec4dc5d)},
+        {SECP256K1_SCALAR_CONST(0x1679ed49, 0x21f537b1, 0x815cb8ae, 0x9efc511c, 0x5b9fa037, 0x0b0f275e, 0x6c985281, 0x6c4a9905),
+         SECP256K1_SCALAR_CONST(0xb14ac3d5, 0x62b52999, 0xef34ead1, 0xffca4998, 0x0294341a, 0x1f8172aa, 0xea1624f9, 0x302eea62)},
+        {SECP256K1_SCALAR_CONST(0x626b37c0, 0xf0057c35, 0xee982f83, 0x452a1fd3, 0xea826506, 0x48b08a9d, 0x1d2c4799, 0x4ad5f6ec),
+         SECP256K1_SCALAR_CONST(0xe38643b7, 0x567bfc2f, 0x5d2f1c15, 0xe327239c, 0x07112443, 0x69509283, 0xfd98e77a, 0xdb71c1e8)},
+        {SECP256K1_SCALAR_CONST(0x1850a3a7, 0x759efc56, 0x54f287b2, 0x14d1234b, 0xe263bbc9, 0xcf4d8927, 0xd5f85f27, 0x965bd816),
+         SECP256K1_SCALAR_CONST(0x3b071831, 0xcac9619a, 0xcceb0596, 0xf614d63b, 0x95d0db2f, 0xc6a00901, 0x8eaa2621, 0xabfa0009)},
+        {SECP256K1_SCALAR_CONST(0x94ae5d06, 0xa27dc400, 0x487d72be, 0xaa51ebed, 0xe475b5c0, 0xea675ffc, 0xf4df627a, 0xdca4222f),
+         SECP256K1_SCALAR_CONST(0x01b412ed, 0xd7830956, 0x1532537e, 0xe5e3dc99, 0x8fd3930a, 0x54f8d067, 0x32ef5760, 0x594438a5)},
+        {SECP256K1_SCALAR_CONST(0x1f24278a, 0xb5bfe374, 0xa328dbbc, 0xebe35f48, 0x6620e009, 0xd58bb1b4, 0xb5a6bf84, 0x8815f63a),
+         SECP256K1_SCALAR_CONST(0xfe928416, 0xca5ba2d3, 0xfde513da, 0x903a60c7, 0x9e58ad8a, 0x8783bee4, 0x083a3843, 0xa608c914)},
+        {SECP256K1_SCALAR_CONST(0xdc107d58, 0x274f6330, 0x67dba8bc, 0x26093111, 0x5201dfb8, 0x968ce3f5, 0xf34d1bd4, 0xf2146504),
+         SECP256K1_SCALAR_CONST(0x660cfa90, 0x13c3d93e, 0x7023b1e5, 0xedd09e71, 0x6d9c9d10, 0x7a3d2cdb, 0xdd08edc3, 0xaa78fcfb)},
+        {SECP256K1_SCALAR_CONST(0x7cd1e905, 0xc6f02776, 0x2f551cc7, 0x5da61cff, 0x7da05389, 0x1119d5a4, 0x631c7442, 0x894fd4f7),
+         SECP256K1_SCALAR_CONST(0xff20862a, 0x9d3b1a37, 0x1628803b, 0x3004ccae, 0xaa23282a, 0xa89a1109, 0xd94ece5e, 0x181bdc46)},
+        {SECP256K1_SCALAR_CONST(0x5b9dade8, 0x23d26c58, 0xcd12d818, 0x25b8ae97, 0x3dea04af, 0xf482c96b, 0xa062f254, 0x9e453640),
+         SECP256K1_SCALAR_CONST(0x50c38800, 0x15fa53f4, 0xbe1e5392, 0x5c9b120a, 0x262c22c7, 0x18fa0816, 0x5f2baab4, 0x8cb5db46)},
+        {SECP256K1_SCALAR_CONST(0x11cdaeda, 0x969c464b, 0xef1f4ab0, 0x5b01d22e, 0x656fd098, 0x882bea84, 0x65cdbe7a, 0x0c19ff03),
+         SECP256K1_SCALAR_CONST(0x1968d0fa, 0xac46f103, 0xb55f1f72, 0xb3820bed, 0xec6b359a, 0x4b1ae0ad, 0x7e38e1fb, 0x295ccdfb)},
+        {SECP256K1_SCALAR_CONST(0x2c351aa1, 0x26e91589, 0x194f8a1e, 0x06561f66, 0x0cb97b7f, 0x10914454, 0x134d1c03, 0x157266b4),
+         SECP256K1_SCALAR_CONST(0xbe49ada6, 0x92bd8711, 0x41b176c4, 0xa478ba95, 0x14883434, 0x9d1cd6f3, 0xcc4b847d, 0x22af80f5)},
+        {SECP256K1_SCALAR_CONST(0x6ba07c6e, 0x13a60edb, 0x6247f5c3, 0x84b5fa56, 0x76fe3ec5, 0x80426395, 0xf65ec2ae, 0x623ba730),
+         SECP256K1_SCALAR_CONST(0x25ac23f7, 0x418cd747, 0x98376f9d, 0x4a11c7bf, 0x24c8ebfe, 0x4c8a8655, 0x345f4f52, 0x1c515595)},
+        {SECP256K1_SCALAR_CONST(0x9397a712, 0x8abb6951, 0x2d4a3d54, 0x703b1c2a, 0x0661dca8, 0xd75c9b31, 0xaed4d24b, 0xd2ab2948),
+         SECP256K1_SCALAR_CONST(0xc52e8bef, 0xd55ce3eb, 0x1c897739, 0xeb9fb606, 0x36b9cd57, 0x18c51cc2, 0x6a87489e, 0xffd0dcf3)},
+        {SECP256K1_SCALAR_CONST(0xe6a808cc, 0xeb437888, 0xe97798df, 0x4e224e44, 0x7e3b380a, 0x207c1653, 0x889f3212, 0xc6738b6f),
+         SECP256K1_SCALAR_CONST(0x31f9ae13, 0xd1e08b20, 0x757a2e5e, 0x5243a0eb, 0x8ae35f73, 0x19bb6122, 0xb910f26b, 0xda70aa55)},
+        {SECP256K1_SCALAR_CONST(0xd0320548, 0xab0effe7, 0xa70779e0, 0x61a347a6, 0xb8c1e010, 0x9d5281f8, 0x2ee588a6, 0x80000000),
+         SECP256K1_SCALAR_CONST(0x1541897e, 0x78195c90, 0x7583dd9e, 0x728b6100, 0xbce8bc6d, 0x7a53b471, 0x5dcd9e45, 0x4425fcaf)},
+        {SECP256K1_SCALAR_CONST(0x93d623f1, 0xd45b50b0, 0x796e9186, 0x9eac9407, 0xd30edc20, 0xef6304cf, 0x250494e7, 0xba503de9),
+         SECP256K1_SCALAR_CONST(0x7026d638, 0x1178b548, 0x92043952, 0x3c7fb47c, 0xcd3ea236, 0x31d82b01, 0x612fc387, 0x80b9b957)},
+        {SECP256K1_SCALAR_CONST(0xf860ab39, 0x55f5d412, 0xa4d73bcc, 0x3b48bd90, 0xc248ffd3, 0x13ca10be, 0x8fba84cc, 0xdd28d6a3),
+         SECP256K1_SCALAR_CONST(0x5c32fc70, 0xe0b15d67, 0x76694700, 0xfe62be4d, 0xeacdb229, 0x7a4433d9, 0x52155cd0, 0x7649ab59)},
+        {SECP256K1_SCALAR_CONST(0x4e41311c, 0x0800af58, 0x7a690a8e, 0xe175c9ba, 0x6981ab73, 0xac532ea8, 0x5c1f5e63, 0x6ac1f189),
+         SECP256K1_SCALAR_CONST(0xfffffff9, 0xd075982c, 0x7fbd3825, 0xc05038a2, 0x4533b91f, 0x94ec5f45, 0xb280b28f, 0x842324dc)},
+        {SECP256K1_SCALAR_CONST(0x48e473bf, 0x3555eade, 0xad5d7089, 0x2424c4e4, 0x0a99397c, 0x2dc796d8, 0xb7a43a69, 0xd0364141),
+         SECP256K1_SCALAR_CONST(0x634976b2, 0xa0e47895, 0x1ec38593, 0x266d6fd0, 0x6f602644, 0x9bb762f1, 0x7180c704, 0xe23a4daa)},
+        {SECP256K1_SCALAR_CONST(0xbe83878d, 0x3292fc54, 0x26e71c62, 0x556ccedc, 0x7cbb8810, 0x4032a720, 0x34ead589, 0xe4d6bd13),
+         SECP256K1_SCALAR_CONST(0x6cd150ad, 0x25e59d0f, 0x74cbae3d, 0x6377534a, 0x1e6562e8, 0xb71b9d18, 0xe1e5d712, 0x8480abb3)},
+        {SECP256K1_SCALAR_CONST(0xcdddf2e5, 0xefc15f88, 0xc9ee06de, 0x8a846ca9, 0x28561581, 0x68daa5fb, 0xd1cf3451, 0xeb1782d0),
+         SECP256K1_SCALAR_CONST(0xffffffd9, 0xed8d2af4, 0x993c865a, 0x23e9681a, 0x3ca3a3dc, 0xe6d5a46e, 0xbd86bd87, 0x61b55c70)},
+        {SECP256K1_SCALAR_CONST(0xb6a18f1f, 0x04872df9, 0x08165ec4, 0x319ca19c, 0x6c0359ab, 0x1f7118fb, 0xc2ef8082, 0xca8b7785),
+         SECP256K1_SCALAR_CONST(0xff55b19b, 0x0f1ac78c, 0x0f0c88c2, 0x2358d5ad, 0x5f455e4e, 0x3330b72f, 0x274dc153, 0xffbf272b)},
+        {SECP256K1_SCALAR_CONST(0xea4898e5, 0x30eba3e8, 0xcf0e5c3d, 0x06ec6844, 0x01e26fb6, 0x75636225, 0xc5d08f4c, 0x1decafa0),
+         SECP256K1_SCALAR_CONST(0xe5a014a8, 0xe3c4ec1e, 0xea4f9b32, 0xcfc7b386, 0x00630806, 0x12c08d02, 0x6407ccc2, 0xb067d90e)},
+        {SECP256K1_SCALAR_CONST(0x70e9aea9, 0x7e933af0, 0x8a23bfab, 0x23e4b772, 0xff951863, 0x5ffcf47d, 0x6bebc918, 0x2ca58265),
+         SECP256K1_SCALAR_CONST(0xf4e00006, 0x81bc6441, 0x4eb6ec02, 0xc194a859, 0x80ad7c48, 0xba4e9afb, 0x8b6bdbe0, 0x989d8f77)},
+        {SECP256K1_SCALAR_CONST(0x3c56c774, 0x46efe6f0, 0xe93618b8, 0xf9b5a846, 0xd247df61, 0x83b1e215, 0x06dc8bcc, 0xeefc1bf5),
+         SECP256K1_SCALAR_CONST(0xfff8937a, 0x2cd9586b, 0x43c25e57, 0xd1cefa7a, 0x9fb91ed3, 0x95b6533d, 0x8ad0de5b, 0xafb93f00)},
+        {SECP256K1_SCALAR_CONST(0xfb5c2772, 0x5cb30e83, 0xe38264df, 0xe4e3ebf3, 0x392aa92e, 0xa68756a1, 0x51279ac5, 0xb50711a8),
+         SECP256K1_SCALAR_CONST(0x000013af, 0x1105bfe7, 0xa6bbd7fb, 0x3d638f99, 0x3b266b02, 0x072fb8bc, 0x39251130, 0x2e0fd0ea)}
+    };
+    int i, var, testrand;
+    unsigned char b32[32];
+    secp256k1_fe x_fe;
+    secp256k1_scalar x_scalar;
+    memset(b32, 0, sizeof(b32));
+    /* Test fixed test cases through test_inverse_{scalar,field}, both ways. */
+    for (i = 0; (size_t)i < sizeof(fe_cases)/sizeof(fe_cases[0]); ++i) {
+        for (var = 0; var <= 1; ++var) {
+            test_inverse_field(&x_fe, &fe_cases[i][0], var);
+            check_fe_equal(&x_fe, &fe_cases[i][1]);
+            test_inverse_field(&x_fe, &fe_cases[i][1], var);
+            check_fe_equal(&x_fe, &fe_cases[i][0]);
+        }
+    }
+    for (i = 0; (size_t)i < sizeof(scalar_cases)/sizeof(scalar_cases[0]); ++i) {
+        for (var = 0; var <= 1; ++var) {
+            test_inverse_scalar(&x_scalar, &scalar_cases[i][0], var);
+            CHECK(secp256k1_scalar_eq(&x_scalar, &scalar_cases[i][1]));
+            test_inverse_scalar(&x_scalar, &scalar_cases[i][1], var);
+            CHECK(secp256k1_scalar_eq(&x_scalar, &scalar_cases[i][0]));
+        }
+    }
+    /* Test inputs 0..999 and their respective negations. */
+    for (i = 0; i < 1000; ++i) {
+        b32[31] = i & 0xff;
+        b32[30] = (i >> 8) & 0xff;
+        secp256k1_scalar_set_b32(&x_scalar, b32, NULL);
+        secp256k1_fe_set_b32(&x_fe, b32);
+        for (var = 0; var <= 1; ++var) {
+            test_inverse_scalar(NULL, &x_scalar, var);
+            test_inverse_field(NULL, &x_fe, var);
+        }
+        secp256k1_scalar_negate(&x_scalar, &x_scalar);
+        secp256k1_fe_negate(&x_fe, &x_fe, 1);
+        for (var = 0; var <= 1; ++var) {
+            test_inverse_scalar(NULL, &x_scalar, var);
+            test_inverse_field(NULL, &x_fe, var);
+        }
+    }
+    /* test 128*count random inputs; half with testrand256_test, half with testrand256 */
+    for (testrand = 0; testrand <= 1; ++testrand) {
+        for (i = 0; i < 64 * count; ++i) {
+            (testrand ? secp256k1_testrand256_test : secp256k1_testrand256)(b32);
+            secp256k1_scalar_set_b32(&x_scalar, b32, NULL);
+            secp256k1_fe_set_b32(&x_fe, b32);
+            for (var = 0; var <= 1; ++var) {
+                test_inverse_scalar(NULL, &x_scalar, var);
+                test_inverse_field(NULL, &x_fe, var);
+            }
         }
     }
 }
@@ -2111,7 +2945,6 @@ void test_ge(void) {
      */
     secp256k1_ge *ge = (secp256k1_ge *)checked_malloc(&ctx->error_callback, sizeof(secp256k1_ge) * (1 + 4 * runs));
     secp256k1_gej *gej = (secp256k1_gej *)checked_malloc(&ctx->error_callback, sizeof(secp256k1_gej) * (1 + 4 * runs));
-    secp256k1_fe *zinv = (secp256k1_fe *)checked_malloc(&ctx->error_callback, sizeof(secp256k1_fe) * (1 + 4 * runs));
     secp256k1_fe zf;
     secp256k1_fe zfi2, zfi3;
 
@@ -2143,23 +2976,6 @@ void test_ge(void) {
             random_field_element_magnitude(&gej[1 + j + 4 * i].y);
             random_field_element_magnitude(&gej[1 + j + 4 * i].z);
         }
-    }
-
-    /* Compute z inverses. */
-    {
-        secp256k1_fe *zs = checked_malloc(&ctx->error_callback, sizeof(secp256k1_fe) * (1 + 4 * runs));
-        for (i = 0; i < 4 * runs + 1; i++) {
-            if (i == 0) {
-                /* The point at infinity does not have a meaningful z inverse. Any should do. */
-                do {
-                    random_field_element_test(&zs[i]);
-                } while(secp256k1_fe_is_zero(&zs[i]));
-            } else {
-                zs[i] = gej[i].z;
-            }
-        }
-        secp256k1_fe_inv_all_var(zinv, zs, 4 * runs + 1);
-        free(zs);
     }
 
     /* Generate random zf, and zfi2 = 1/zf^2, zfi3 = 1/zf^3 */
@@ -2270,16 +3086,9 @@ void test_ge(void) {
         free(gej_shuffled);
     }
 
-    /* Test batch gej -> ge conversion with and without known z ratios. */
+    /* Test batch gej -> ge conversion without known z ratios. */
     {
-        secp256k1_fe *zr = (secp256k1_fe *)checked_malloc(&ctx->error_callback, (4 * runs + 1) * sizeof(secp256k1_fe));
         secp256k1_ge *ge_set_all = (secp256k1_ge *)checked_malloc(&ctx->error_callback, (4 * runs + 1) * sizeof(secp256k1_ge));
-        for (i = 0; i < 4 * runs + 1; i++) {
-            /* Compute gej[i + 1].z / gez[i].z (with gej[n].z taken to be 1). */
-            if (i < 4 * runs) {
-                secp256k1_fe_mul(&zr[i + 1], &zinv[i], &gej[i + 1].z);
-            }
-        }
         secp256k1_ge_set_all_gej_var(ge_set_all, gej, 4 * runs + 1);
         for (i = 0; i < 4 * runs + 1; i++) {
             secp256k1_fe s;
@@ -2288,7 +3097,6 @@ void test_ge(void) {
             ge_equals_gej(&ge_set_all[i], &gej[i]);
         }
         free(ge_set_all);
-        free(zr);
     }
 
     /* Test batch gej -> ge conversion with many infinities. */
@@ -2309,7 +3117,6 @@ void test_ge(void) {
 
     free(ge);
     free(gej);
-    free(zinv);
 }
 
 
@@ -2456,64 +3263,35 @@ void run_ec_combine(void) {
 void test_group_decompress(const secp256k1_fe* x) {
     /* The input itself, normalized. */
     secp256k1_fe fex = *x;
-    secp256k1_fe fez;
-    /* Results of set_xquad_var, set_xo_var(..., 0), set_xo_var(..., 1). */
-    secp256k1_ge ge_quad, ge_even, ge_odd;
-    secp256k1_gej gej_quad;
+    /* Results of set_xo_var(..., 0), set_xo_var(..., 1). */
+    secp256k1_ge ge_even, ge_odd;
     /* Return values of the above calls. */
-    int res_quad, res_even, res_odd;
+    int res_even, res_odd;
 
     secp256k1_fe_normalize_var(&fex);
 
-    res_quad = secp256k1_ge_set_xquad(&ge_quad, &fex);
     res_even = secp256k1_ge_set_xo_var(&ge_even, &fex, 0);
     res_odd = secp256k1_ge_set_xo_var(&ge_odd, &fex, 1);
 
-    CHECK(res_quad == res_even);
-    CHECK(res_quad == res_odd);
+    CHECK(res_even == res_odd);
 
-    if (res_quad) {
-        secp256k1_fe_normalize_var(&ge_quad.x);
+    if (res_even) {
         secp256k1_fe_normalize_var(&ge_odd.x);
         secp256k1_fe_normalize_var(&ge_even.x);
-        secp256k1_fe_normalize_var(&ge_quad.y);
         secp256k1_fe_normalize_var(&ge_odd.y);
         secp256k1_fe_normalize_var(&ge_even.y);
 
         /* No infinity allowed. */
-        CHECK(!ge_quad.infinity);
         CHECK(!ge_even.infinity);
         CHECK(!ge_odd.infinity);
 
         /* Check that the x coordinates check out. */
-        CHECK(secp256k1_fe_equal_var(&ge_quad.x, x));
         CHECK(secp256k1_fe_equal_var(&ge_even.x, x));
         CHECK(secp256k1_fe_equal_var(&ge_odd.x, x));
-
-        /* Check that the Y coordinate result in ge_quad is a square. */
-        CHECK(secp256k1_fe_is_quad_var(&ge_quad.y));
 
         /* Check odd/even Y in ge_odd, ge_even. */
         CHECK(secp256k1_fe_is_odd(&ge_odd.y));
         CHECK(!secp256k1_fe_is_odd(&ge_even.y));
-
-        /* Check secp256k1_gej_has_quad_y_var. */
-        secp256k1_gej_set_ge(&gej_quad, &ge_quad);
-        CHECK(secp256k1_gej_has_quad_y_var(&gej_quad));
-        do {
-            random_fe_test(&fez);
-        } while (secp256k1_fe_is_zero(&fez));
-        secp256k1_gej_rescale(&gej_quad, &fez);
-        CHECK(secp256k1_gej_has_quad_y_var(&gej_quad));
-        secp256k1_gej_neg(&gej_quad, &gej_quad);
-        CHECK(!secp256k1_gej_has_quad_y_var(&gej_quad));
-        do {
-            random_fe_test(&fez);
-        } while (secp256k1_fe_is_zero(&fez));
-        secp256k1_gej_rescale(&gej_quad, &fez);
-        CHECK(!secp256k1_gej_has_quad_y_var(&gej_quad));
-        secp256k1_gej_neg(&gej_quad, &gej_quad);
-        CHECK(secp256k1_gej_has_quad_y_var(&gej_quad));
     }
 }
 
@@ -4373,8 +5151,10 @@ void test_ecdsa_sign_verify(void) {
     secp256k1_scalar one;
     secp256k1_scalar msg, key;
     secp256k1_scalar sigr, sigs;
-    int recid;
     int getrec;
+    /* Initialize recid to suppress a false positive -Wconditional-uninitialized in clang.
+       VG_UNDEF ensures that valgrind will still treat the variable as uninitialized. */
+    int recid = -1; VG_UNDEF(&recid, sizeof(recid));
     random_scalar_order_test(&msg);
     random_scalar_order_test(&key);
     secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &pubj, &key);
@@ -5444,18 +6224,18 @@ void run_ecdsa_openssl(void) {
 # include "modules/schnorrsig/tests_impl.h"
 #endif
 
-void run_memczero_test(void) {
+void run_secp256k1_memczero_test(void) {
     unsigned char buf1[6] = {1, 2, 3, 4, 5, 6};
     unsigned char buf2[sizeof(buf1)];
 
-    /* memczero(..., ..., 0) is a noop. */
+    /* secp256k1_memczero(..., ..., 0) is a noop. */
     memcpy(buf2, buf1, sizeof(buf1));
-    memczero(buf1, sizeof(buf1), 0);
+    secp256k1_memczero(buf1, sizeof(buf1), 0);
     CHECK(secp256k1_memcmp_var(buf1, buf2, sizeof(buf1)) == 0);
 
-    /* memczero(..., ..., 1) zeros the buffer. */
+    /* secp256k1_memczero(..., ..., 1) zeros the buffer. */
     memset(buf2, 0, sizeof(buf2));
-    memczero(buf1, sizeof(buf1) , 1);
+    secp256k1_memczero(buf1, sizeof(buf1) , 1);
     CHECK(secp256k1_memcmp_var(buf1, buf2, sizeof(buf1)) == 0);
 }
 
@@ -5626,6 +6406,15 @@ int main(int argc, char **argv) {
     /* find iteration count */
     if (argc > 1) {
         count = strtol(argv[1], NULL, 0);
+    } else {
+        const char* env = getenv("SECP256K1_TEST_ITERS");
+        if (env) {
+            count = strtol(env, NULL, 0);
+        }
+    }
+    if (count <= 0) {
+        fputs("An iteration count of 0 or less is not allowed.\n", stderr);
+        return EXIT_FAILURE;
     }
     printf("test count = %i\n", count);
 
@@ -5646,22 +6435,18 @@ int main(int argc, char **argv) {
     run_rand_bits();
     run_rand_int();
 
+    run_ctz_tests();
+    run_modinv_tests();
+    run_inverse_tests();
+
     run_sha256_tests();
     run_hmac_sha256_tests();
     run_rfc6979_hmac_sha256_tests();
-
-#ifndef USE_NUM_NONE
-    /* num tests */
-    run_num_smalltests();
-#endif
 
     /* scalar tests */
     run_scalar_tests();
 
     /* field tests */
-    run_field_inv();
-    run_field_inv_var();
-    run_field_inv_all_var();
     run_field_misc();
     run_field_convert();
     run_sqr();
@@ -5723,7 +6508,7 @@ int main(int argc, char **argv) {
 #endif
 
     /* util tests */
-    run_memczero_test();
+    run_secp256k1_memczero_test();
 
     run_cmov_tests();
 

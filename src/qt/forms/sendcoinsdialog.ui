@@ -107,7 +107,7 @@
              <string notr="true"/>
             </property>
             <property name="text">
-             <string>Inputs...</string>
+             <string>Inputs…</string>
             </property>
             <property name="autoDefault">
              <bool>false</bool>
@@ -738,7 +738,7 @@
               <item>
                <widget class="QPushButton" name="buttonChooseFee">
                 <property name="text">
-                 <string>Choose...</string>
+                 <string>Choose…</string>
                 </property>
                </widget>
               </item>
@@ -850,7 +850,7 @@
                    <property name="toolTip">
                     <string>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
 
-Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis per kB" for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 satoshis.</string>
+Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satoshis per kvB" for a transaction size of 500 virtual bytes (half of 1 kvB) would ultimately yield a fee of only 50 satoshis.</string>
                    </property>
                    <property name="text">
                     <string>per kilobyte</string>
@@ -991,7 +991,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
                  <item>
                   <widget class="QLabel" name="labelSmartFee2">
                    <property name="text">
-                    <string>(Smart fee not initialized yet. This usually takes a few blocks...)</string>
+                    <string>(Smart fee not initialized yet. This usually takes a few blocks…)</string>
                    </property>
                   </widget>
                  </item>

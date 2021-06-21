@@ -73,6 +73,9 @@ public:
         ::Unserialize(s, Using<TxOutCompression>(out));
     }
 
+    /** Either this coin never existed (see e.g. coinEmpty in coins.cpp), or it
+      * did exist and has been spent.
+      */
     bool IsSpent() const {
         return out.IsNull();
     }
@@ -125,6 +128,7 @@ struct CCoinsCacheEntry
 
     CCoinsCacheEntry() : flags(0) {}
     explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) {}
+    CCoinsCacheEntry(Coin&& coin_, unsigned char flag) : coin(std::move(coin_)), flags(flag) {}
 };
 
 typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
@@ -261,6 +265,15 @@ public:
      * already exist in the cache.
      */
     void AddCoin(const COutPoint& outpoint, Coin&& coin, bool possible_overwrite);
+
+    /**
+     * Emplace a coin into cacheCoins without performing any checks, marking
+     * the emplaced coin as dirty.
+     *
+     * NOT FOR GENERAL USE. Used only when loading coins from a UTXO snapshot.
+     * @sa ChainstateManager::PopulateAndValidateSnapshot()
+     */
+    void EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coin);
 
     /**
      * Spend a coin. Pass moveto in order to get the deleted data.

@@ -11,8 +11,10 @@
 #include <univalue.h>
 #include <util/system.h>
 
-#include <QDir>
-#include <QtGlobal>
+#include <QTest>
+
+#include <string>
+#include <stdexcept>
 
 static RPCHelpMan rpcNestedTest_rpc()
 {
@@ -24,23 +26,25 @@ static RPCHelpMan rpcNestedTest_rpc()
             {"arg2", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""},
             {"arg3", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""},
         },
-        {},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{""},
-        [](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
             return request.params.write(0, 0);
         },
     };
 }
 
 static const CRPCCommand vRPCCommands[] = {
-    {"test", &rpcNestedTest_rpc},
+    {"rpcNestedTest", &rpcNestedTest_rpc},
 };
 
 void RPCNestedTests::rpcNestedTests()
 {
     // do some test setup
     // could be moved to a more generic place when we add more tests on QT level
-    tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
+    for (const auto& c : vRPCCommands) {
+        tableRPC.appendCommand(c.name, &c);
+    }
 
     TestingSetup test;
     m_node.setContext(&test.m_node);
@@ -68,13 +72,13 @@ void RPCNestedTests::rpcNestedTests()
     RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo "); //whitespace at the end will be tolerated
     QVERIFY(result.substr(0,1) == "{");
 
-    (RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo()[\"chain\"]")); //Quote path identifier are allowed, but look after a child containing the quotes in the key
+    RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo()[\"chain\"]"); //Quote path identifier are allowed, but look after a child containing the quotes in the key
     QVERIFY(result == "null");
 
-    (RPCConsole::RPCExecuteCommandLine(m_node, result, "createrawtransaction [] {} 0")); //parameter not in brackets are allowed
-    (RPCConsole::RPCExecuteCommandLine(m_node, result2, "createrawtransaction([],{},0)")); //parameter in brackets are allowed
+    RPCConsole::RPCExecuteCommandLine(m_node, result, "createrawtransaction [] {} 0"); //parameter not in brackets are allowed
+    RPCConsole::RPCExecuteCommandLine(m_node, result2, "createrawtransaction([],{},0)"); //parameter in brackets are allowed
     QVERIFY(result == result2);
-    (RPCConsole::RPCExecuteCommandLine(m_node, result2, "createrawtransaction( [],  {} , 0   )")); //whitespace between parameters is allowed
+    RPCConsole::RPCExecuteCommandLine(m_node, result2, "createrawtransaction( [],  {} , 0   )"); //whitespace between parameters is allowed
     QVERIFY(result == result2);
 
     RPCConsole::RPCExecuteCommandLine(m_node, result, "getblock(getbestblockhash())[tx][0]", &filtered);
@@ -123,11 +127,10 @@ void RPCNestedTests::rpcNestedTests()
     RPCConsole::RPCExecuteCommandLine(m_node, result, "rpcNestedTest(   abc   ,   cba )");
     QVERIFY(result == "[\"abc\",\"cba\"]");
 
-    // do the QVERIFY_EXCEPTION_THROWN checks only with Qt5.3 and higher (QVERIFY_EXCEPTION_THROWN was introduced in Qt5.3)
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo() .\n"), std::runtime_error); //invalid syntax
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo() getblockchaininfo()"), std::runtime_error); //invalid syntax
-    (RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo(")); //tolerate non closing brackets if we have no arguments
-    (RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo()()()")); //tolerate non command brackets
+    RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo("); //tolerate non closing brackets if we have no arguments
+    RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo()()()"); //tolerate non command brackets
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo(True)"), UniValue); //invalid argument
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(m_node, result, "a(getblockchaininfo(True))"), UniValue); //method not found
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(m_node, result, "rpcNestedTest abc,,abc"), std::runtime_error); //don't tolerate empty arguments when using ,

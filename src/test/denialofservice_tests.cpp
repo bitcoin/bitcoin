@@ -14,46 +14,18 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <serialize.h>
-#include <util/memory.h>
+#include <test/util/net.h>
+#include <test/util/setup_common.h>
+#include <txorphanage.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
 
-#include <test/util/setup_common.h>
-
+#include <array>
 #include <stdint.h>
 
 #include <boost/test/unit_test.hpp>
-
-struct CConnmanTest : public CConnman {
-    using CConnman::CConnman;
-    void AddNode(CNode& node)
-    {
-        LOCK(cs_vNodes);
-        vNodes.push_back(&node);
-    }
-    void ClearNodes()
-    {
-        LOCK(cs_vNodes);
-        for (CNode* node : vNodes) {
-            delete node;
-        }
-        vNodes.clear();
-    }
-};
-
-// Tests these internal-to-net_processing.cpp methods:
-extern bool AddOrphanTx(const CTransactionRef& tx, NodeId peer);
-extern void EraseOrphansFor(NodeId peer);
-extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
-
-struct COrphanTx {
-    CTransactionRef tx;
-    NodeId fromPeer;
-    int64_t nTimeExpire;
-};
-extern std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
 
 static CService ip(uint32_t i)
 {
@@ -79,13 +51,13 @@ BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, TestingSetup)
 BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 {
     const CChainParams& chainparams = Params();
-    auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = PeerManager::make(chainparams, *connman, nullptr, *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, false);
+    auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
+    auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr,
+                                       *m_node.scheduler, *m_node.chainman, *m_node.mempool, false);
 
     // Mock an outbound peer
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
-    CNode dummyNode1(id++, ServiceFlags(NODE_NETWORK | NODE_WITNESS), INVALID_SOCKET, addr1, 0, 0, CAddress(), "", ConnectionType::OUTBOUND_FULL_RELAY);
+    CNode dummyNode1(id++, ServiceFlags(NODE_NETWORK | NODE_WITNESS), INVALID_SOCKET, addr1, /* nKeyedNetGroupIn */ 0, /* nLocalHostNonceIn */ 0, CAddress(), /* pszDest */ "", ConnectionType::OUTBOUND_FULL_RELAY, /* inbound_onion */ false);
     dummyNode1.SetCommonVersion(PROTOCOL_VERSION);
 
     peerLogic->InitializeNode(&dummyNode1);
@@ -94,8 +66,8 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     // This test requires that we have a chain with non-zero work.
     {
         LOCK(cs_main);
-        BOOST_CHECK(::ChainActive().Tip() != nullptr);
-        BOOST_CHECK(::ChainActive().Tip()->nChainWork > 0);
+        BOOST_CHECK(m_node.chainman->ActiveChain().Tip() != nullptr);
+        BOOST_CHECK(m_node.chainman->ActiveChain().Tip()->nChainWork > 0);
     }
 
     // Test starts here
@@ -127,31 +99,29 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1)); // should result in disconnect
     }
     BOOST_CHECK(dummyNode1.fDisconnect == true);
-    SetMockTime(0);
 
-    bool dummy;
-    peerLogic->FinalizeNode(dummyNode1, dummy);
+    peerLogic->FinalizeNode(dummyNode1);
 }
 
-static void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerManager &peerLogic, CConnmanTest* connman)
+static void AddRandomOutboundPeer(std::vector<CNode*>& vNodes, PeerManager& peerLogic, ConnmanTestMsg& connman)
 {
     CAddress addr(ip(g_insecure_rand_ctx.randbits(32)), NODE_NONE);
-    vNodes.emplace_back(new CNode(id++, ServiceFlags(NODE_NETWORK | NODE_WITNESS), INVALID_SOCKET, addr, 0, 0, CAddress(), "", ConnectionType::OUTBOUND_FULL_RELAY));
+    vNodes.emplace_back(new CNode(id++, ServiceFlags(NODE_NETWORK | NODE_WITNESS), INVALID_SOCKET, addr, /* nKeyedNetGroupIn */ 0, /* nLocalHostNonceIn */ 0, CAddress(), /* pszDest */ "", ConnectionType::OUTBOUND_FULL_RELAY, /* inbound_onion */ false));
     CNode &node = *vNodes.back();
     node.SetCommonVersion(PROTOCOL_VERSION);
 
     peerLogic.InitializeNode(&node);
     node.fSuccessfullyConnected = true;
 
-    connman->AddNode(node);
+    connman.AddTestNode(node);
 }
 
 BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 {
     const CChainParams& chainparams = Params();
-    auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
-    auto peerLogic = PeerManager::make(chainparams, *connman, nullptr, *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, false);
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman);
+    auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr,
+                                       *m_node.scheduler, *m_node.chainman, *m_node.mempool, false);
 
     constexpr int max_outbound_full_relay = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS;
     CConnman::Options options;
@@ -163,8 +133,8 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     std::vector<CNode *> vNodes;
 
     // Mock some outbound peers
-    for (int i=0; i<max_outbound_full_relay; ++i) {
-        AddRandomOutboundPeer(vNodes, *peerLogic, connman.get());
+    for (int i = 0; i < max_outbound_full_relay; ++i) {
+        AddRandomOutboundPeer(vNodes, *peerLogic, *connman);
     }
 
     peerLogic->CheckForStaleTipAndEvictPeers();
@@ -189,7 +159,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     // If we add one more peer, something should get marked for eviction
     // on the next check (since we're mocking the time to be in the future, the
     // required time connected check should be satisfied).
-    AddRandomOutboundPeer(vNodes, *peerLogic, connman.get());
+    AddRandomOutboundPeer(vNodes, *peerLogic, *connman);
 
     peerLogic->CheckForStaleTipAndEvictPeers();
     for (int i = 0; i < max_outbound_full_relay; ++i) {
@@ -211,75 +181,121 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     BOOST_CHECK(vNodes[max_outbound_full_relay-1]->fDisconnect == true);
     BOOST_CHECK(vNodes.back()->fDisconnect == false);
 
-    bool dummy;
     for (const CNode *node : vNodes) {
-        peerLogic->FinalizeNode(*node, dummy);
+        peerLogic->FinalizeNode(*node);
     }
 
-    connman->ClearNodes();
+    connman->ClearTestNodes();
 }
 
 BOOST_AUTO_TEST_CASE(peer_discouragement)
 {
     const CChainParams& chainparams = Params();
-    auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = PeerManager::make(chainparams, *connman, banman.get(), *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, false);
+    auto banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman);
+    auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, banman.get(),
+                                       *m_node.scheduler, *m_node.chainman, *m_node.mempool, false);
+
+    CNetAddr tor_netaddr;
+    BOOST_REQUIRE(
+        tor_netaddr.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"));
+    const CService tor_service{tor_netaddr, Params().GetDefaultPort()};
+
+    const std::array<CAddress, 3> addr{CAddress{ip(0xa0b0c001), NODE_NONE},
+                                       CAddress{ip(0xa0b0c002), NODE_NONE},
+                                       CAddress{tor_service, NODE_NONE}};
+
+    const CNetAddr other_addr{ip(0xa0b0ff01)}; // Not any of addr[].
+
+    std::array<CNode*, 3> nodes;
 
     banman->ClearBanned();
-    CAddress addr1(ip(0xa0b0c001), NODE_NONE);
-    CNode dummyNode1(id++, NODE_NETWORK, INVALID_SOCKET, addr1, 0, 0, CAddress(), "", ConnectionType::INBOUND);
-    dummyNode1.SetCommonVersion(PROTOCOL_VERSION);
-    peerLogic->InitializeNode(&dummyNode1);
-    dummyNode1.fSuccessfullyConnected = true;
-    peerLogic->Misbehaving(dummyNode1.GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ ""); // Should be discouraged
+    nodes[0] = new CNode{id++, NODE_NETWORK, INVALID_SOCKET, addr[0], /* nKeyedNetGroupIn */ 0,
+                         /* nLocalHostNonceIn */ 0, CAddress(), /* pszDest */ "",
+                         ConnectionType::INBOUND, /* inbound_onion */ false};
+    nodes[0]->SetCommonVersion(PROTOCOL_VERSION);
+    peerLogic->InitializeNode(nodes[0]);
+    nodes[0]->fSuccessfullyConnected = true;
+    connman->AddTestNode(*nodes[0]);
+    peerLogic->Misbehaving(nodes[0]->GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ ""); // Should be discouraged
     {
-        LOCK(dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
+        LOCK(nodes[0]->cs_sendProcessing);
+        BOOST_CHECK(peerLogic->SendMessages(nodes[0]));
     }
-    BOOST_CHECK(banman->IsDiscouraged(addr1));
-    BOOST_CHECK(!banman->IsDiscouraged(ip(0xa0b0c001|0x0000ff00))); // Different IP, not discouraged
+    BOOST_CHECK(banman->IsDiscouraged(addr[0]));
+    BOOST_CHECK(nodes[0]->fDisconnect);
+    BOOST_CHECK(!banman->IsDiscouraged(other_addr)); // Different address, not discouraged
 
-    CAddress addr2(ip(0xa0b0c002), NODE_NONE);
-    CNode dummyNode2(id++, NODE_NETWORK, INVALID_SOCKET, addr2, 1, 1, CAddress(), "", ConnectionType::INBOUND);
-    dummyNode2.SetCommonVersion(PROTOCOL_VERSION);
-    peerLogic->InitializeNode(&dummyNode2);
-    dummyNode2.fSuccessfullyConnected = true;
-    peerLogic->Misbehaving(dummyNode2.GetId(), DISCOURAGEMENT_THRESHOLD - 1, /* message */ "");
+    nodes[1] = new CNode{id++, NODE_NETWORK, INVALID_SOCKET, addr[1], /* nKeyedNetGroupIn */ 1,
+                         /* nLocalHostNonceIn */ 1, CAddress(), /* pszDest */ "",
+                         ConnectionType::INBOUND, /* inbound_onion */ false};
+    nodes[1]->SetCommonVersion(PROTOCOL_VERSION);
+    peerLogic->InitializeNode(nodes[1]);
+    nodes[1]->fSuccessfullyConnected = true;
+    connman->AddTestNode(*nodes[1]);
+    peerLogic->Misbehaving(nodes[1]->GetId(), DISCOURAGEMENT_THRESHOLD - 1, /* message */ "");
     {
-        LOCK(dummyNode2.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
+        LOCK(nodes[1]->cs_sendProcessing);
+        BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
     }
-    BOOST_CHECK(!banman->IsDiscouraged(addr2)); // 2 not discouraged yet...
-    BOOST_CHECK(banman->IsDiscouraged(addr1));  // ... but 1 still should be
-    peerLogic->Misbehaving(dummyNode2.GetId(), 1, /* message */ "");         // 2 reaches discouragement threshold
+    // [0] is still discouraged/disconnected.
+    BOOST_CHECK(banman->IsDiscouraged(addr[0]));
+    BOOST_CHECK(nodes[0]->fDisconnect);
+    // [1] is not discouraged/disconnected yet.
+    BOOST_CHECK(!banman->IsDiscouraged(addr[1]));
+    BOOST_CHECK(!nodes[1]->fDisconnect);
+    peerLogic->Misbehaving(nodes[1]->GetId(), 1, /* message */ ""); // [1] reaches discouragement threshold
     {
-        LOCK(dummyNode2.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
+        LOCK(nodes[1]->cs_sendProcessing);
+        BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
     }
-    BOOST_CHECK(banman->IsDiscouraged(addr1));  // Expect both 1 and 2
-    BOOST_CHECK(banman->IsDiscouraged(addr2));  // to be discouraged now
+    // Expect both [0] and [1] to be discouraged/disconnected now.
+    BOOST_CHECK(banman->IsDiscouraged(addr[0]));
+    BOOST_CHECK(nodes[0]->fDisconnect);
+    BOOST_CHECK(banman->IsDiscouraged(addr[1]));
+    BOOST_CHECK(nodes[1]->fDisconnect);
 
-    bool dummy;
-    peerLogic->FinalizeNode(dummyNode1, dummy);
-    peerLogic->FinalizeNode(dummyNode2, dummy);
+    // Make sure non-IP peers are discouraged and disconnected properly.
+
+    nodes[2] = new CNode{id++, NODE_NETWORK, INVALID_SOCKET, addr[2], /* nKeyedNetGroupIn */ 1,
+                         /* nLocalHostNonceIn */ 1, CAddress(), /* pszDest */ "",
+                         ConnectionType::OUTBOUND_FULL_RELAY, /* inbound_onion */ false};
+    nodes[2]->SetCommonVersion(PROTOCOL_VERSION);
+    peerLogic->InitializeNode(nodes[2]);
+    nodes[2]->fSuccessfullyConnected = true;
+    connman->AddTestNode(*nodes[2]);
+    peerLogic->Misbehaving(nodes[2]->GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ "");
+    {
+        LOCK(nodes[2]->cs_sendProcessing);
+        BOOST_CHECK(peerLogic->SendMessages(nodes[2]));
+    }
+    BOOST_CHECK(banman->IsDiscouraged(addr[0]));
+    BOOST_CHECK(banman->IsDiscouraged(addr[1]));
+    BOOST_CHECK(banman->IsDiscouraged(addr[2]));
+    BOOST_CHECK(nodes[0]->fDisconnect);
+    BOOST_CHECK(nodes[1]->fDisconnect);
+    BOOST_CHECK(nodes[2]->fDisconnect);
+
+    for (CNode* node : nodes) {
+        peerLogic->FinalizeNode(*node);
+    }
+    connman->ClearTestNodes();
 }
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
 {
     const CChainParams& chainparams = Params();
-    auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = PeerManager::make(chainparams, *connman, banman.get(), *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, false);
+    auto banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
+    auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, banman.get(),
+                                       *m_node.scheduler, *m_node.chainman, *m_node.mempool, false);
 
     banman->ClearBanned();
     int64_t nStartTime = GetTime();
     SetMockTime(nStartTime); // Overrides future calls to GetTime()
 
     CAddress addr(ip(0xa0b0c001), NODE_NONE);
-    CNode dummyNode(id++, NODE_NETWORK, INVALID_SOCKET, addr, 4, 4, CAddress(), "", ConnectionType::INBOUND);
+    CNode dummyNode(id++, NODE_NETWORK, INVALID_SOCKET, addr, /* nKeyedNetGroupIn */ 4, /* nLocalHostNonceIn */ 4, CAddress(), /* pszDest */ "", ConnectionType::INBOUND, /* inbound_onion */ false);
     dummyNode.SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(&dummyNode);
     dummyNode.fSuccessfullyConnected = true;
@@ -291,19 +307,26 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     }
     BOOST_CHECK(banman->IsDiscouraged(addr));
 
-    bool dummy;
-    peerLogic->FinalizeNode(dummyNode, dummy);
+    peerLogic->FinalizeNode(dummyNode);
 }
 
-static CTransactionRef RandomOrphan()
+class TxOrphanageTest : public TxOrphanage
 {
-    std::map<uint256, COrphanTx>::iterator it;
-    LOCK2(cs_main, g_cs_orphans);
-    it = mapOrphanTransactions.lower_bound(InsecureRand256());
-    if (it == mapOrphanTransactions.end())
-        it = mapOrphanTransactions.begin();
-    return it->second.tx;
-}
+public:
+    inline size_t CountOrphans() const EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+    {
+        return m_orphans.size();
+    }
+
+    CTransactionRef RandomOrphan() EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+    {
+        std::map<uint256, OrphanTx>::iterator it;
+        it = m_orphans.lower_bound(InsecureRand256());
+        if (it == m_orphans.end())
+            it = m_orphans.begin();
+        return it->second.tx;
+    }
+};
 
 static void MakeNewKeyWithFastRandomContext(CKey& key)
 {
@@ -323,10 +346,13 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     // signature's R and S values have leading zeros.
     g_insecure_rand_ctx = FastRandomContext(ArithToUint256(arith_uint256(33)));
 
+    TxOrphanageTest orphanage;
     CKey key;
     MakeNewKeyWithFastRandomContext(key);
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(key));
+
+    LOCK(g_cs_orphans);
 
     // 50 orphan transactions:
     for (int i = 0; i < 50; i++)
@@ -340,13 +366,13 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
 
-        AddOrphanTx(MakeTransactionRef(tx), i);
+        orphanage.AddTx(MakeTransactionRef(tx), i);
     }
 
     // ... and 50 that depend on other orphans:
     for (int i = 0; i < 50; i++)
     {
-        CTransactionRef txPrev = RandomOrphan();
+        CTransactionRef txPrev = orphanage.RandomOrphan();
 
         CMutableTransaction tx;
         tx.vin.resize(1);
@@ -357,13 +383,13 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
         BOOST_CHECK(SignSignature(keystore, *txPrev, tx, 0, SIGHASH_ALL));
 
-        AddOrphanTx(MakeTransactionRef(tx), i);
+        orphanage.AddTx(MakeTransactionRef(tx), i);
     }
 
     // This really-big orphan should be ignored:
     for (int i = 0; i < 10; i++)
     {
-        CTransactionRef txPrev = RandomOrphan();
+        CTransactionRef txPrev = orphanage.RandomOrphan();
 
         CMutableTransaction tx;
         tx.vout.resize(1);
@@ -381,25 +407,24 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         for (unsigned int j = 1; j < tx.vin.size(); j++)
             tx.vin[j].scriptSig = tx.vin[0].scriptSig;
 
-        BOOST_CHECK(!AddOrphanTx(MakeTransactionRef(tx), i));
+        BOOST_CHECK(!orphanage.AddTx(MakeTransactionRef(tx), i));
     }
 
-    LOCK2(cs_main, g_cs_orphans);
     // Test EraseOrphansFor:
     for (NodeId i = 0; i < 3; i++)
     {
-        size_t sizeBefore = mapOrphanTransactions.size();
-        EraseOrphansFor(i);
-        BOOST_CHECK(mapOrphanTransactions.size() < sizeBefore);
+        size_t sizeBefore = orphanage.CountOrphans();
+        orphanage.EraseForPeer(i);
+        BOOST_CHECK(orphanage.CountOrphans() < sizeBefore);
     }
 
     // Test LimitOrphanTxSize() function:
-    LimitOrphanTxSize(40);
-    BOOST_CHECK(mapOrphanTransactions.size() <= 40);
-    LimitOrphanTxSize(10);
-    BOOST_CHECK(mapOrphanTransactions.size() <= 10);
-    LimitOrphanTxSize(0);
-    BOOST_CHECK(mapOrphanTransactions.empty());
+    orphanage.LimitOrphans(40);
+    BOOST_CHECK(orphanage.CountOrphans() <= 40);
+    orphanage.LimitOrphans(10);
+    BOOST_CHECK(orphanage.CountOrphans() <= 10);
+    orphanage.LimitOrphans(0);
+    BOOST_CHECK(orphanage.CountOrphans() == 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -51,7 +51,7 @@ def download_with_wget(remote_file, local_file=None):
     if local_file:
         wget_args = ['wget', '-O', local_file, remote_file]
     else:
-        # use timestamping mechanism if local filename is not explicitely set
+        # use timestamping mechanism if local filename is not explicitly set
         wget_args = ['wget', '-N', remote_file]
 
     result = subprocess.run(wget_args,
@@ -85,7 +85,7 @@ def main(args):
         print("Error: need to specify a version on the command line")
         return 3
 
-    # determine remote dir dependend on provided version string
+    # determine remote dir dependent on provided version string
     version_base, version_rc, os_filter = parse_version_string(args[0])
     remote_dir = f"/bin/{VERSIONPREFIX}{version_base}/"
     if version_rc:
