@@ -78,7 +78,7 @@ class AddrTest(BitcoinTestFramework):
     def send_addr_msg(self, source, msg, receivers):
         source.send_and_ping(msg)
         # pop m_next_addr_send timer
-        self.mocktime += 5 * 60
+        self.mocktime += 10 * 60
         self.nodes[0].setmocktime(self.mocktime)
         for peer in receivers:
             peer.sync_send_with_ping()
