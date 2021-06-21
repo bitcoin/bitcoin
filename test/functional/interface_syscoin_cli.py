@@ -10,10 +10,12 @@ from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than_or_equal,
     assert_raises_process_error,
     assert_raises_rpc_error,
     get_auth_cookie,
 )
+import time
 
 # The block reward of coinbaseoutput.nValue (50) SYS/block matures after
 # COINBASE_MATURITY (100) blocks. Therefore, after mining 101 blocks we expect
@@ -254,6 +256,12 @@ class TestSyscoinCli(SyscoinTestFramework):
         blocks = self.nodes[0].cli('-rpcwait').send_cli('getblockcount')
         self.nodes[0].wait_for_rpc_connection()
         assert_equal(blocks, BLOCKS + 25)
+
+        self.log.info("Test -rpcwait option waits at most -rpcwaittimeout seconds for startup")
+        self.stop_node(0)  # stop the node so we time out
+        start_time = time.time()
+        assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('-rpcwait', '-rpcwaittimeout=5').echo)
+        assert_greater_than_or_equal(time.time(), start_time + 5)
 
 
 if __name__ == '__main__':
