@@ -253,6 +253,8 @@ void TransactionView::changeEvent(QEvent* e)
             TransactionFilterProxy::WatchOnlyFilter_No,
             m_platform_style->SingleColorIcon(QStringLiteral(":/icons/eye_minus")));
     }
+
+    QWidget::changeEvent(e);
 }
 
 void TransactionView::chooseDate(int idx)

@@ -1515,6 +1515,8 @@ void UnitDisplayStatusBarControl::changeEvent(QEvent* e)
             setStyleSheet(style);
         }
     }
+
+    QLabel::changeEvent(e);
 }
 
 /** Creates context menu, its actions, and wires up all the relevant signals for mouse events. */

@@ -302,6 +302,8 @@ void OverviewPage::changeEvent(QEvent* e)
         ui->labelTransactionsStatus->setIcon(icon);
         ui->labelWalletStatus->setIcon(icon);
     }
+
+    QWidget::changeEvent(e);
 }
 
 void OverviewPage::updateDisplayUnit()

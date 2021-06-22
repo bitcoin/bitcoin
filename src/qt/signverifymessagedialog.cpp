@@ -296,4 +296,6 @@ void SignVerifyMessageDialog::changeEvent(QEvent* e)
         ui->verifyMessageButton_VM->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/transaction_0")));
         ui->clearButton_VM->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/remove")));
     }
+
+    QDialog::changeEvent(e);
 }

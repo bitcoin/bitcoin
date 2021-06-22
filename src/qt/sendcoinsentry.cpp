@@ -245,6 +245,8 @@ void SendCoinsEntry::changeEvent(QEvent* e)
         ui->deleteButton_is->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/remove")));
         ui->deleteButton_s->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/remove")));
     }
+
+    QStackedWidget::changeEvent(e);
 }
 
 bool SendCoinsEntry::updateLabel(const QString &address)

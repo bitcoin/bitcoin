@@ -567,6 +567,8 @@ void CoinControlDialog::changeEvent(QEvent* e)
     if (e->type() == QEvent::PaletteChange) {
         updateView();
     }
+
+    QDialog::changeEvent(e);
 }
 
 void CoinControlDialog::updateView()
