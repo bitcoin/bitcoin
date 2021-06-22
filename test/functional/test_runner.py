@@ -149,7 +149,7 @@ BASE_SCRIPTS = [
     'wallet_keypool_topup.py --descriptors',
     'feature_fee_estimation.py',
     'interface_zmq.py',
-    # 'interface_zmq_nevm.py',
+    'interface_zmq_nevm.py',
     'rpc_invalid_address_message.py',
     'interface_syscoin_cli.py',
     'mempool_resurrect.py',
