@@ -40,7 +40,6 @@ def receive_thread_nevmblockconnect(self, idx, subscriber, publisher):
             self.log.info('receive_thread_nevmblockconnect received data idx {}'.format(idx))
             evmBlockConnect = CNEVMBlockConnect()
             evmBlockConnect.deserialize(BytesIO(data))
-            self.log.info('connect nevm block {}'.format(evmBlockConnect))
             resBlock = publisher.addBlock(evmBlockConnect)
             res = b""
             if resBlock:
@@ -65,7 +64,6 @@ def receive_thread_nevmblockdisconnect(self, idx, subscriber, publisher):
             evmBlockConnect = CNEVMBlockConnect()
             evmBlockConnect.deserialize(BytesIO(data))
             resBlock = publisher.deleteBlock(evmBlockConnect)
-            self.log.info('latest EVM block {}'.format(publisher.getLastNEVMBlock()))
             res = b""
             if resBlock:
                 res = b"disconnected"

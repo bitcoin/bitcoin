@@ -230,7 +230,7 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
     for (std::vector<std::pair<int, const CBlockFileInfo*> >::const_iterator it=fileInfo.begin(); it != fileInfo.end(); it++) {
         batch.Write(std::make_pair(DB_BLOCK_FILES, it->first), *it->second);
     }
-    // SYSCOIN
+    // SYSCOIN prune after 2 days, consensus requires data if its less than 1 day (IBD) and requires anything over 3 days to not have data, so 1 day buffer is more than enough for time drift
     int64_t nAgeThreshold = nMaxTipAge*2;
     int64_t nTime = GetTime();
     batch.Write(DB_LAST_BLOCK, nLastFile);

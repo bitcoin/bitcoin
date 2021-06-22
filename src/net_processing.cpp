@@ -1872,8 +1872,10 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus()), false) {
             assert(!"cannot load block from disk");
         }
-        // SYSCOIN if block is older than max tip age we shouldn't need to send evm block data
-        int64_t nAgeThreshold = nMaxTipAge;
+        // SYSCOIN if block is older than max tip age*2 we shouldn't need to send evm block data
+        // we do twice max tip as header validation will enforce no data if more than 3 days and data required for anything under 1 day (IBD)
+        // so we keep 1 day buffer for time drift
+        int64_t nAgeThreshold = nMaxTipAge*2;
         int64_t nTime = GetTime();
         if (!pblockRead->vchNEVMBlockData.empty() && pindex->GetBlockTime() < (nTime - nAgeThreshold)) {
             LogPrint(BCLog::NET, "blockrequest clear evm data since blocktime %lld is before threshold %lld\n", pindex->GetBlockTime(),(nTime - nAgeThreshold)); 
@@ -3383,7 +3385,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         unsigned nSize = 0;
         // SYSCOIN
         unsigned nSizeNEVM = 0;
-        int64_t nAgeThreshold = nMaxTipAge;
+        int64_t nAgeThreshold = nMaxTipAge*2;
         int64_t nTime = GetTime();
         LogPrint(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
         for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex))
@@ -4851,7 +4853,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             LOCK(peer->m_block_inv_mutex);
             std::vector<CBlock> vHeaders;
             // SYSCOIN
-            int64_t nAgeThreshold = nMaxTipAge;
+            int64_t nAgeThreshold = nMaxTipAge*2;
             int64_t nTime = GetTime();
             bool fRevertToInv = ((!state.fPreferHeaders &&
                                  (!state.fPreferHeaderAndIDs || peer->m_blocks_for_headers_relay.size() > 1)) ||

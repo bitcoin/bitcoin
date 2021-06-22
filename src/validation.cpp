@@ -3731,7 +3731,8 @@ CBlockIndex* BlockManager::GetLastCheckpoint(const CCheckpointData& data)
  *  in ConnectBlock().
  *  Note that -reindex-chainstate skips the validation that happens here!
  */
-static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, BlockManager& blockman, const CChainParams& params, const CBlockIndex* pindexPrev, int64_t nAdjustedTime) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+// SYSCOI
+static bool ContextualCheckBlockHeader(const bool ibd, const CBlockHeader& block, BlockValidationState& state, BlockManager& blockman, const CChainParams& params, const CBlockIndex* pindexPrev, int64_t nAdjustedTime) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     assert(pindexPrev != nullptr);
     const int nHeight = pindexPrev->nHeight + 1;
@@ -3766,7 +3767,17 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     // Check timestamp
     if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
-
+    // SYSCOIN
+    // if not initial download, blocks should have nevm data present in header
+    if((pindexPrev->nHeight+1) >= consensusParams.nNEVMStartBlock) {
+        if(!fRegTest && !ibd && block.vchNEVMBlockData.empty()) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "nevm-data-not-found");
+        }
+        const int64_t &nAgeThreshold = nMaxTipAge*3;
+        if (!block.vchNEVMBlockData.empty() && block.GetBlockTime() < (nAdjustedTime - nAgeThreshold)) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "nevm-data-not-expected");
+        }
+    }
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2, 3 and 4 upgrades
     // SYSCOIN
@@ -3931,17 +3942,13 @@ bool BlockManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& block, 
             LogPrintf("ERROR: %s: prev block invalid\n", __func__);
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
         }
-        // SYSCOIN
-        // if not initial download, blocks should have nevm data present in header
-        if(!fRegTest && (pindexPrev->nHeight+1) >= chainparams.GetConsensus().nNEVMStartBlock && !ibd && block.vchNEVMBlockData.empty()) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "nevm-data-not-found");
-        }
+
         if (pindexPrev->nStatus & BLOCK_CONFLICT_CHAINLOCK) {
             // it's ok-ish, the other node is probably missing the latest chainlock
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-prevblk-chainlock");
         }
 
-        if (!ContextualCheckBlockHeader(block, state, *this, chainparams, pindexPrev, GetAdjustedTime()))
+        if (!ContextualCheckBlockHeader(ibd, block, state, *this, chainparams, pindexPrev, GetAdjustedTime()))
             return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), state.ToString());
 
         /* Determine if this block descends from any block which has been found
@@ -4175,7 +4182,8 @@ bool TestBlockValidity(BlockValidationState& state,
     auto dbTx = evoDb->BeginTransaction();
 
     // NOTE: CheckBlockHeader is called by CheckBlock
-    if (!ContextualCheckBlockHeader(block, state, chainstate.m_blockman, chainparams, pindexPrev, GetAdjustedTime()))
+    // SYSCOIN
+    if (!ContextualCheckBlockHeader(false, block, state, chainstate.m_blockman, chainparams, pindexPrev, GetAdjustedTime()))
         return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, state.ToString());
     if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot))
         return error("%s: Consensus::CheckBlock: %s", __func__, state.ToString());
