@@ -213,11 +213,6 @@ def create_raw_transaction(node, txid, to_address, *, amount):
             signed_psbt = wrpc.walletprocesspsbt(psbt)
             psbt = signed_psbt['psbt']
     final_psbt = node.finalizepsbt(psbt)
-    if not final_psbt["complete"]:
-        node.log.info(f'final_psbt={final_psbt}')
-        for w in node.listwallets():
-            wrpc = node.get_wallet_rpc(w)
-            node.log.info(f'listunspent={wrpc.listunspent()}')
     assert_equal(final_psbt["complete"], True)
     return final_psbt['hex']
 
