@@ -564,11 +564,9 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
 
 void CoinControlDialog::changeEvent(QEvent* e)
 {
-#ifdef Q_OS_MACOS
     if (e->type() == QEvent::PaletteChange) {
         updateView();
     }
-#endif
 }
 
 void CoinControlDialog::updateView()
