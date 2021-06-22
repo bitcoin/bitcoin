@@ -39,6 +39,7 @@ class FiltersClient(P2PInterface):
         """Store cfilters received in a list."""
         self.cfilters.append(message)
 
+
 class CompactFiltersTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -79,7 +80,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         self.log.info("get cfcheckpt on chain to be re-orged out.")
         request = msg_getcfcheckpt(
             filter_type=FILTER_TYPE_BASIC,
-            stop_hash=int(stale_block_hash, 16)
+            stop_hash=int(stale_block_hash, 16),
         )
         peer_0.send_and_ping(message=request)
         response = peer_0.last_message['cfcheckpt']
@@ -98,7 +99,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         tip_hash = self.nodes[0].getbestblockhash()
         request = msg_getcfcheckpt(
             filter_type=FILTER_TYPE_BASIC,
-            stop_hash=int(tip_hash, 16)
+            stop_hash=int(tip_hash, 16),
         )
         peer_0.send_and_ping(request)
         response = peer_0.last_message['cfcheckpt']
@@ -109,13 +110,13 @@ class CompactFiltersTest(BitcoinTestFramework):
         tip_cfcheckpt = self.nodes[0].getblockfilter(tip_hash, 'basic')['header']
         assert_equal(
             response.headers,
-            [int(header, 16) for header in (main_cfcheckpt, tip_cfcheckpt)]
+            [int(header, 16) for header in (main_cfcheckpt, tip_cfcheckpt)],
         )
 
         self.log.info("Check that peers can fetch cfcheckpt on stale chain.")
         request = msg_getcfcheckpt(
             filter_type=FILTER_TYPE_BASIC,
-            stop_hash=int(stale_block_hash, 16)
+            stop_hash=int(stale_block_hash, 16),
         )
         peer_0.send_and_ping(request)
         response = peer_0.last_message['cfcheckpt']
@@ -123,14 +124,14 @@ class CompactFiltersTest(BitcoinTestFramework):
         stale_cfcheckpt = self.nodes[0].getblockfilter(stale_block_hash, 'basic')['header']
         assert_equal(
             response.headers,
-            [int(header, 16) for header in (stale_cfcheckpt,)]
+            [int(header, 16) for header in (stale_cfcheckpt, )],
         )
 
         self.log.info("Check that peers can fetch cfheaders on active chain.")
         request = msg_getcfheaders(
             filter_type=FILTER_TYPE_BASIC,
             start_height=1,
-            stop_hash=int(main_block_hash, 16)
+            stop_hash=int(main_block_hash, 16),
         )
         peer_0.send_and_ping(request)
         response = peer_0.last_message['cfheaders']
@@ -138,14 +139,14 @@ class CompactFiltersTest(BitcoinTestFramework):
         assert_equal(len(main_cfhashes), 1000)
         assert_equal(
             compute_last_header(response.prev_header, response.hashes),
-            int(main_cfcheckpt, 16)
+            int(main_cfcheckpt, 16),
         )
 
         self.log.info("Check that peers can fetch cfheaders on stale chain.")
         request = msg_getcfheaders(
             filter_type=FILTER_TYPE_BASIC,
             start_height=1,
-            stop_hash=int(stale_block_hash, 16)
+            stop_hash=int(stale_block_hash, 16),
         )
         peer_0.send_and_ping(request)
         response = peer_0.last_message['cfheaders']
@@ -153,7 +154,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         assert_equal(len(stale_cfhashes), 1000)
         assert_equal(
             compute_last_header(response.prev_header, response.hashes),
-            int(stale_cfcheckpt, 16)
+            int(stale_cfcheckpt, 16),
         )
 
         self.log.info("Check that peers can fetch cfilters.")
@@ -161,7 +162,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         request = msg_getcfilters(
             filter_type=FILTER_TYPE_BASIC,
             start_height=1,
-            stop_hash=int(stop_hash, 16)
+            stop_hash=int(stop_hash, 16),
         )
         peer_0.send_message(request)
         peer_0.sync_with_ping()
@@ -180,7 +181,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         request = msg_getcfilters(
             filter_type=FILTER_TYPE_BASIC,
             start_height=1000,
-            stop_hash=int(stale_block_hash, 16)
+            stop_hash=int(stale_block_hash, 16),
         )
         peer_0.send_message(request)
         peer_0.sync_with_ping()
@@ -197,17 +198,17 @@ class CompactFiltersTest(BitcoinTestFramework):
         requests = [
             msg_getcfcheckpt(
                 filter_type=FILTER_TYPE_BASIC,
-                stop_hash=int(main_block_hash, 16)
+                stop_hash=int(main_block_hash, 16),
             ),
             msg_getcfheaders(
                 filter_type=FILTER_TYPE_BASIC,
                 start_height=1000,
-                stop_hash=int(main_block_hash, 16)
+                stop_hash=int(main_block_hash, 16),
             ),
             msg_getcfilters(
                 filter_type=FILTER_TYPE_BASIC,
                 start_height=1000,
-                stop_hash=int(main_block_hash, 16)
+                stop_hash=int(main_block_hash, 16),
             ),
         ]
         for request in requests:
@@ -221,18 +222,18 @@ class CompactFiltersTest(BitcoinTestFramework):
             msg_getcfilters(
                 filter_type=FILTER_TYPE_BASIC,
                 start_height=0,
-                stop_hash=int(main_block_hash, 16)
+                stop_hash=int(main_block_hash, 16),
             ),
             # Requesting too many filter headers results in disconnection.
             msg_getcfheaders(
                 filter_type=FILTER_TYPE_BASIC,
                 start_height=0,
-                stop_hash=int(tip_hash, 16)
+                stop_hash=int(tip_hash, 16),
             ),
             # Requesting unknown filter type results in disconnection.
             msg_getcfcheckpt(
                 filter_type=255,
-                stop_hash=int(main_block_hash, 16)
+                stop_hash=int(main_block_hash, 16),
             ),
             # Requesting unknown hash results in disconnection.
             msg_getcfcheckpt(
@@ -245,12 +246,14 @@ class CompactFiltersTest(BitcoinTestFramework):
             peer_0.send_message(request)
             peer_0.wait_for_disconnect()
 
+
 def compute_last_header(prev_header, hashes):
     """Compute the last filter header from a starting header and a sequence of filter hashes."""
     header = ser_uint256(prev_header)
     for filter_hash in hashes:
         header = hash256(ser_uint256(filter_hash) + header)
     return uint256_from_str(header)
+
 
 if __name__ == '__main__':
     CompactFiltersTest().main()
