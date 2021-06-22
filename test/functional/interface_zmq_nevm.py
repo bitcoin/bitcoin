@@ -27,19 +27,18 @@ def receive_thread_nevmblock(self, subscriber, publisher):
             publisher.send([subscriber.topic, nevmBlock.serialize()])
         except zmq.ContextTerminated:
             sleep(1)
-            subscriber.close()
-            publisher.close()
             break
-        except zmq.ZMQError as e:
+        except zmq.ZMQError:
             self.log.warning('zmq error, socket closed unexpectedly.')
-            raise e
+            sleep(1)
+            break
 
-def receive_thread_nevmblockconnect(self, subscriber, publisher):
+def receive_thread_nevmblockconnect(self, idx, subscriber, publisher):
     while True:
         try:
-            self.log.info('receive_thread_nevmblockconnect waiting to receive...')
+            self.log.info('receive_thread_nevmblockconnect waiting to receive... idx {}'.format(idx))
             data = subscriber.receive()
-            self.log.info('receive_thread_nevmblockconnect received data')
+            self.log.info('receive_thread_nevmblockconnect received data idx {}'.format(idx))
             evmBlockConnect = CNEVMBlockConnect()
             evmBlockConnect.deserialize(BytesIO(data))
             resBlock = publisher.addBlock(evmBlockConnect)
@@ -51,19 +50,18 @@ def receive_thread_nevmblockconnect(self, subscriber, publisher):
             publisher.send([subscriber.topic, res])
         except zmq.ContextTerminated:
             sleep(1)
-            subscriber.close()
-            publisher.close()
             break
-        except zmq.ZMQError as e:
+        except zmq.ZMQError:
             self.log.warning('zmq error, socket closed unexpectedly.')
-            raise e
+            sleep(1)
+            break
 
-def receive_thread_nevmblockdisconnect(self, subscriber, publisher):
+def receive_thread_nevmblockdisconnect(self, idx, subscriber, publisher):
     while True:
         try:
-            self.log.info('receive_thread_nevmblockdisconnect waiting to receive...')
+            self.log.info('receive_thread_nevmblockdisconnect waiting to receive... idx {}'.format(idx))
             data = subscriber.receive()
-            self.log.info('receive_thread_nevmblockdisconnect received data')
+            self.log.info('receive_thread_nevmblockdisconnect received data idx {}'.format(idx))
             evmBlockConnect = CNEVMBlockConnect()
             evmBlockConnect.deserialize(BytesIO(data))
             resBlock = publisher.deleteBlock(evmBlockConnect)
@@ -75,12 +73,11 @@ def receive_thread_nevmblockdisconnect(self, subscriber, publisher):
             publisher.send([subscriber.topic, res])
         except zmq.ContextTerminated:
             sleep(1)
-            subscriber.close()
-            publisher.close()
             break
-        except zmq.ZMQError as e:
+        except zmq.ZMQError:
             self.log.warning('zmq error, socket closed unexpectedly.')
-            raise e
+            sleep(1)
+            break
 
 # Test may be skipped and not have zmq installed
 try:
@@ -175,16 +172,15 @@ class ZMQTest (SyscoinTestFramework):
             self.ctxpub.destroy(linger=None)
     # Restart node with the specified zmq notifications enabled, subscribe to
     # all of them and return the corresponding ZMQSubscriber objects.
-    def setup_zmq_test(self, services, servicessub, *, recv_timeout=60, sync_blocks=True):
+    def setup_zmq_test(self, services, servicessub, idx, *, recv_timeout=60, sync_blocks=True):
         subscribers = []
         for topic, address in services:
             socket = self.ctx.socket(zmq.SUB)
             subscribers.append(ZMQSubscriber(socket, topic.encode()))
-        self.extra_args[0] += ["-zmqpub%s=%s" % (topic, address) for topic, address in services]
+        args = ["-zmqpub%s=%s" % (topic, address) for topic, address in services]
         # publisher on Syscoin can have option to also be a subscriber on another address, related each publisher to a subscriber (in our case we have 3 publisher events that also would subscribe to events on the same topic)
-        self.extra_args[0] += ["-zmqsubpub%s=%s" % (topic, address) for topic, address in servicessub]
-        self.restart_node(0)
-
+        args += ["-zmqsubpub%s=%s" % (topic, address) for topic, address in servicessub]
+        self.restart_node(idx, args + self.extra_args[idx])
         for i, sub in enumerate(subscribers):
             sub.socket.connect(services[i][1])
 
@@ -202,16 +198,14 @@ class ZMQTest (SyscoinTestFramework):
         return publisher
 
     def test_basic(self):
-        self.log.info("restarting all nodes except node 0 in nevm mode...")
-        for i in range(len(self.nodes)):
-            if i > 0:
-                self.restart_node(i, ["-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
-        addresspub = 'tcp://127.0.0.1:29436'
-        address = 'tcp://127.0.0.1:29435'
-        self.log.info("setup publisher...")
+        addresspub = 'tcp://127.0.0.1:29446'
+        address = 'tcp://127.0.0.1:29445'
+        address1 = 'tcp://127.0.0.1:29443'
+        self.log.info("setup publishers...")
         publisher = self.setup_zmq_test_pub(addresspub)
         self.log.info("setup subscribers...")
-        subs = self.setup_zmq_test([(topic, address) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], [(topic, addresspub) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]])
+        subs = self.setup_zmq_test([(topic, address) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], [(topic, addresspub) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], 0)
+        subs1 = self.setup_zmq_test([(topic, address1) for topic in ["nevmconnect", "nevmdisconnect"]], [(topic, addresspub) for topic in ["nevmconnect", "nevmdisconnect"]], 1)
         self.connect_nodes(0, 1)
         self.sync_blocks()
 
@@ -219,14 +213,21 @@ class ZMQTest (SyscoinTestFramework):
         nevmblockdisconnect = subs[1]
         nevmblock = subs[2]
 
+        nevmblockconnect1 = subs1[0]
+        nevmblockdisconnect1 = subs1[1]
+
         num_blocks = 6
         self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
         # start the threads to handle pub/sub of SYS/GETH communications
         Thread(target=receive_thread_nevmblock, args=(self, nevmblock,publisher,)).start()
-        Thread(target=receive_thread_nevmblockconnect, args=(self, nevmblockconnect,publisher,)).start()
-        Thread(target=receive_thread_nevmblockdisconnect, args=(self, nevmblockdisconnect,publisher,)).start()
+        Thread(target=receive_thread_nevmblockconnect, args=(self, 0, nevmblockconnect,publisher,)).start()
+        Thread(target=receive_thread_nevmblockdisconnect, args=(self, 0, nevmblockdisconnect,publisher,)).start()
+
+        Thread(target=receive_thread_nevmblockconnect, args=(self, 1, nevmblockconnect1,publisher,)).start()
+        Thread(target=receive_thread_nevmblockdisconnect, args=(self, 1, nevmblockdisconnect1,publisher,)).start()
         self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
-        assert_equal(int(self.nodes[0].getbestblockhash(), 16), publisher.getLastSYSBlock())
         self.sync_blocks()
+        assert_equal(int(self.nodes[0].getbestblockhash(), 16), publisher.getLastSYSBlock())
+        assert_equal(int(self.nodes[1].getbestblockhash(), 16), publisher.getLastSYSBlock())
 if __name__ == '__main__':
     ZMQTest().main()
