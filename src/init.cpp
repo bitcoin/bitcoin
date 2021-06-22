@@ -2014,7 +2014,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     const auto &NEVMConnectVec = gArgs.GetArgs("-zmqsubpubnevmconnect");
     const auto &NEVMDisconnectVec = gArgs.GetArgs("-zmqsubpubnevmdisconnect");
     fNEVMConnection = !NEVMConnectVec.empty() && !NEVMDisconnectVec.empty();
-    if(!fNEVMConnection && fMasternodeMode) {
+    if(!fRegTest && !fNEVMConnection && fMasternodeMode) {
         return InitError(Untranslated("You must define -zmqsubpubnevmconnect and -zmqsubpubnevmdisconnect on a masternode."));
     }
     if(!g_zmq_notification_interface && fNEVMConnection) {
