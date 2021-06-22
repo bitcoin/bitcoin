@@ -62,12 +62,11 @@ class CompactFiltersTest(BitcoinTestFramework):
         # Stale blocks by disconnecting nodes 0 & 1, mining, then reconnecting
         self.disconnect_nodes(0, 1)
 
-        self.nodes[0].generate(1)
-        self.wait_until(lambda: self.nodes[0].getblockcount() == 1000)
-        stale_block_hash = self.nodes[0].getblockhash(1000)
+        stale_block_hash = self.nodes[0].generate(1)[0]
+        assert_equal(self.nodes[0].getblockcount(), 1000)
 
         self.nodes[1].generate(1001)
-        self.wait_until(lambda: self.nodes[1].getblockcount() == 2000)
+        assert_equal(self.nodes[1].getblockcount(), 2000)
 
         # Check that nodes have signalled NODE_COMPACT_FILTERS correctly.
         assert peer_0.nServices & NODE_COMPACT_FILTERS != 0
@@ -164,8 +163,7 @@ class CompactFiltersTest(BitcoinTestFramework):
             start_height=1,
             stop_hash=int(stop_hash, 16),
         )
-        peer_0.send_message(request)
-        peer_0.sync_with_ping()
+        peer_0.send_and_ping(request)
         response = peer_0.pop_cfilters()
         assert_equal(len(response), 10)
 
@@ -183,8 +181,7 @@ class CompactFiltersTest(BitcoinTestFramework):
             start_height=1000,
             stop_hash=int(stale_block_hash, 16),
         )
-        peer_0.send_message(request)
-        peer_0.sync_with_ping()
+        peer_0.send_and_ping(request)
         response = peer_0.pop_cfilters()
         assert_equal(len(response), 1)
 
