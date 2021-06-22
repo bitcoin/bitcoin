@@ -11,6 +11,7 @@ export PIP_PACKAGES="zmq lief"
 export GOAL="install"
 export SYSCOIN_CONFIG="--with-gui --enable-reduce-exports --enable-external-signer"
 export CI_OS_NAME="macos"
+export TEST_RUNNER_EXTRA="--exclude interface_zmq_nevm"
 export NO_DEPENDS=1
 export OSX_SDK=""
 export CCACHE_SIZE=300M
