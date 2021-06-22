@@ -44,7 +44,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         LOCK(cs_setethstatus);
         readTxRootFail = !pnevmtxrootsdb || !pnevmtxrootsdb->ReadTxRoots(mintSyscoin.nBlockHash, txRootDB);
     }
-    if(readTxRootFail) {
+    if(readTxRootFail && fNEVMConnection) {
         return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
     }
      
@@ -118,13 +118,14 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     // check transaction spv proofs
     dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
     dev::RLP rlpReceiptRoot(&mintSyscoin.vchReceiptRoot);
+    if(fNEVMConnection) {
+        if(!txRootDB.vchTxRoot.empty() && mintSyscoin.vchTxRoot != txRootDB.vchTxRoot){
+            return FormatSyscoinErrorMessage(state, "mint-mismatching-txroot", bSanityCheck);
+        }
 
-    if(!txRootDB.vchTxRoot.empty() && mintSyscoin.vchTxRoot != txRootDB.vchTxRoot){
-        return FormatSyscoinErrorMessage(state, "mint-mismatching-txroot", bSanityCheck);
-    }
-
-    if(!txRootDB.vchReceiptRoot.empty() && mintSyscoin.vchReceiptRoot != txRootDB.vchReceiptRoot){
-        return FormatSyscoinErrorMessage(state, "mint-mismatching-receiptroot", bSanityCheck);
+        if(!txRootDB.vchReceiptRoot.empty() && mintSyscoin.vchReceiptRoot != txRootDB.vchReceiptRoot){
+            return FormatSyscoinErrorMessage(state, "mint-mismatching-receiptroot", bSanityCheck);
+        }
     }
     
     dev::RLP rlpTxParentNodes(&mintSyscoin.vchTxParentNodes);

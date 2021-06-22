@@ -77,6 +77,7 @@ bool fRegTest = false;
 bool fSigNet = false;
 bool fAssetIndex = false;
 uint32_t fGethCurrentHeight = 0;
+bool fNEVMConnection = false;
 pid_t gethPID = 0;
 std::string fGethSyncStatus = "waiting to sync...";
 bool fGethSynced = true;

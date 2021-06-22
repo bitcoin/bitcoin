@@ -1918,7 +1918,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
         }
     } 
     BlockValidationState state;
-    if(pindex->nHeight >= params.nNEVMStartBlock && params.nNEVMEnforce && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, block.GetHash())) {
+    if(fNEVMConnection && pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, block.GetHash())) {
         const std::string &errStr = strprintf("DisconnectBlock(): NEVM block failed to disconnect: %s\n", state.ToString().c_str());
         error(errStr.c_str());
         return DISCONNECT_FAILED; 
@@ -2275,7 +2275,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal");
             }
         }
-        if (pindex->nHeight >= params.nNEVMStartBlock && params.nNEVMEnforce && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd, fJustCheck)) {
+        if (fNEVMConnection && pindex->nHeight >= params.nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd, fJustCheck)) {
             return false; // state filled by ConnectNEVMCommitment
         }
 
@@ -3933,7 +3933,7 @@ bool BlockManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& block, 
         }
         // SYSCOIN
         // if not initial download, blocks should have nevm data present in header
-        if((pindexPrev->nHeight+1) >= chainparams.GetConsensus().nNEVMStartBlock && chainparams.GetConsensus().nNEVMEnforce && !ibd && block.vchNEVMBlockData.empty()) {
+        if(!fRegTest && (pindexPrev->nHeight+1) >= chainparams.GetConsensus().nNEVMStartBlock && !ibd && block.vchNEVMBlockData.empty()) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "nevm-data-not-found");
         }
         if (pindexPrev->nStatus & BLOCK_CONFLICT_CHAINLOCK) {

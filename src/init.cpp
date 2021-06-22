@@ -519,7 +519,6 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-dip3params=<n:m>", "DIP3 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);	
     argsman.AddArg("-llmqtestparams=<n:m>", "LLMQ params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mncollateral=<n>", strprintf("Masternode Collateral required, used for testing only (default: %u)", DEFAULT_MN_COLLATERAL_REQUIRED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-enforcenevm", strprintf("Enforce NEVM checks in consensus (for testing only) (default: %u)", false), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-watchquorums=<n>", strprintf("Watch and validate quorum communication (default: %u)", llmq::DEFAULT_WATCH_QUORUMS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-syncmempool=<n>", strprintf("Sync mempool from other nodes on start (default: %d)", DEFAULT_SYNC_MEMPOOL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -2012,9 +2011,15 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey());
     }
     LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
-
-
- 
+    const auto &NEVMConnectVec = gArgs.GetArgs("-zmqsubpubnevmconnect");
+    const auto &NEVMDisconnectVec = gArgs.GetArgs("-zmqsubpubnevmdisconnect");
+    fNEVMConnection = !NEVMConnectVec.empty() && !NEVMDisconnectVec.empty();
+    if(!fNEVMConnection && fMasternodeMode) {
+        return InitError(Untranslated("You must define -zmqsubpubnevmconnect and -zmqsubpubnevmdisconnect on a masternode."));
+    }
+    if(!g_zmq_notification_interface && fNEVMConnection) {
+        return InitError(_("Unable to start ZMQ interface. See debug log for details."));
+    }
     // SYSCOIN ********************************************************* Step 11b: Load cache data
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE

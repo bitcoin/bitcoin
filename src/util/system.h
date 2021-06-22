@@ -46,6 +46,7 @@ extern bool fRegTest;
 extern bool fSigNet;
 extern uint32_t fGethCurrentHeight;
 extern std::string fGethSyncStatus;
+extern bool fNEVMConnection;
 extern bool fGethSynced;
 extern bool fLoaded;
 extern pid_t gethPID;

@@ -124,12 +124,12 @@ class ZMQPublisher:
 
     def close(self):
         self.socket.close()
-    
+
     def addBlock(self, evmBlockConnect):
         # special case if miner is just testing validity of block, sys block hash is 0, we just want to provide message if evm block is valid without updating mappings
         if evmBlockConnect.sysblockhash == 0:
             return True
-        # mappings should not already exist, if they do flag the block as invalid    
+        # mappings should not already exist, if they do flag the block as invalid
         if self.sysToNEVMBlockMapping.get(evmBlockConnect.sysblockhash) or self.NEVMToSysBlockMapping.get(evmBlockConnect.blockhash):
             return False
         self.sysToNEVMBlockMapping[evmBlockConnect.sysblockhash] = evmBlockConnect
@@ -173,7 +173,6 @@ class ZMQTest (SyscoinTestFramework):
             self.log.debug("Destroying ZMQ context")
             self.ctx.destroy(linger=None)
             self.ctxpub.destroy(linger=None)
-        sleep(2)
     # Restart node with the specified zmq notifications enabled, subscribe to
     # all of them and return the corresponding ZMQSubscriber objects.
     def setup_zmq_test(self, services, servicessub, *, recv_timeout=60, sync_blocks=True):
@@ -206,17 +205,13 @@ class ZMQTest (SyscoinTestFramework):
         self.log.info("restarting all nodes except node 0 in nevm mode...")
         for i in range(len(self.nodes)):
             if i > 0:
-                self.restart_node(i, ["-enforcenevm", "-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
+                self.restart_node(i, ["-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
         addresspub = 'tcp://127.0.0.1:29436'
         address = 'tcp://127.0.0.1:29435'
         self.log.info("setup publisher...")
         publisher = self.setup_zmq_test_pub(addresspub)
         self.log.info("setup subscribers...")
         subs = self.setup_zmq_test([(topic, address) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], [(topic, addresspub) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]])
-        self.log.info("start node 0 in nevm mode...")
-        # nevm enforcement starts at block 205 (we should be at 200 here), and also it needs this flag passed in on regtest mode to trigger enforcement of nevm
-        self.extra_args[0] += ["-enforcenevm"]
-        self.restart_node(0)
         self.connect_nodes(0, 1)
         self.sync_blocks()
 
@@ -232,6 +227,6 @@ class ZMQTest (SyscoinTestFramework):
         Thread(target=receive_thread_nevmblockdisconnect, args=(self, nevmblockdisconnect,publisher,)).start()
         self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), publisher.getLastSYSBlock())
-
+        self.sync_blocks()
 if __name__ == '__main__':
     ZMQTest().main()
