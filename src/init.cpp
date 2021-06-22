@@ -2017,9 +2017,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if(!fRegTest && !fNEVMConnection && fMasternodeMode) {
         return InitError(Untranslated("You must define -zmqsubpubnevmconnect and -zmqsubpubnevmdisconnect on a masternode."));
     }
-    if(!g_zmq_notification_interface && fNEVMConnection) {
-        return InitError(_("Unable to start ZMQ interface. See debug log for details."));
-    }
+    #if ENABLE_ZMQ
+        if(!g_zmq_notification_interface && fNEVMConnection) {
+            return InitError(_("Unable to start ZMQ interface. See debug log for details."));
+        }
+    #endif
     // SYSCOIN ********************************************************* Step 11b: Load cache data
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE

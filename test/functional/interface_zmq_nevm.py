@@ -23,7 +23,6 @@ def receive_thread_nevmblock(self, subscriber, publisher):
             hashStr = hash256(str(random.randint(-0x80000000, 0x7fffffff)).encode())
             hashTopic = uint256_from_str(hashStr)
             nevmBlock = CNEVMBlock(hashTopic, hashStr, hashStr, subscriber.topic)
-            self.log.info('new nevm block {}'.format(hashStr.hex()))
             publisher.send([subscriber.topic, nevmBlock.serialize()])
         except zmq.ContextTerminated:
             sleep(1)
@@ -41,6 +40,7 @@ def receive_thread_nevmblockconnect(self, idx, subscriber, publisher):
             self.log.info('receive_thread_nevmblockconnect received data idx {}'.format(idx))
             evmBlockConnect = CNEVMBlockConnect()
             evmBlockConnect.deserialize(BytesIO(data))
+            self.log.info('connect nevm block {}'.format(evmBlockConnect))
             resBlock = publisher.addBlock(evmBlockConnect)
             res = b""
             if resBlock:
@@ -65,6 +65,7 @@ def receive_thread_nevmblockdisconnect(self, idx, subscriber, publisher):
             evmBlockConnect = CNEVMBlockConnect()
             evmBlockConnect.deserialize(BytesIO(data))
             resBlock = publisher.deleteBlock(evmBlockConnect)
+            self.log.info('latest EVM block {}'.format(publisher.getLastNEVMBlock()))
             res = b""
             if resBlock:
                 res = b"disconnected"
@@ -161,7 +162,7 @@ class ZMQTest (SyscoinTestFramework):
         self.skip_if_no_syscoind_zmq()
 
     def run_test(self):
-        return
+    
         self.ctx = zmq.Context()
         self.ctxpub = zmq.Context()
         try:
@@ -199,14 +200,16 @@ class ZMQTest (SyscoinTestFramework):
         return publisher
 
     def test_basic(self):
-        addresspub = 'tcp://127.0.0.1:29446'
+        addresspub = 'tcp://127.0.0.1:29476'
+        addresspub1 = 'tcp://127.0.0.1:29446'
         address = 'tcp://127.0.0.1:29445'
         address1 = 'tcp://127.0.0.1:29443'
         self.log.info("setup publishers...")
         publisher = self.setup_zmq_test_pub(addresspub)
+        publisher1 = self.setup_zmq_test_pub(addresspub1)
         self.log.info("setup subscribers...")
         subs = self.setup_zmq_test([(topic, address) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], [(topic, addresspub) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], 0)
-        subs1 = self.setup_zmq_test([(topic, address1) for topic in ["nevmconnect", "nevmdisconnect"]], [(topic, addresspub) for topic in ["nevmconnect", "nevmdisconnect"]], 1)
+        subs1 = self.setup_zmq_test([(topic, address1) for topic in ["nevmconnect", "nevmdisconnect"]], [(topic, addresspub1) for topic in ["nevmconnect", "nevmdisconnect"]], 1)
         self.connect_nodes(0, 1)
         self.sync_blocks()
 
@@ -217,18 +220,39 @@ class ZMQTest (SyscoinTestFramework):
         nevmblockconnect1 = subs1[0]
         nevmblockdisconnect1 = subs1[1]
 
-        num_blocks = 6
+        num_blocks = 10
         self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
         # start the threads to handle pub/sub of SYS/GETH communications
         Thread(target=receive_thread_nevmblock, args=(self, nevmblock,publisher,)).start()
         Thread(target=receive_thread_nevmblockconnect, args=(self, 0, nevmblockconnect,publisher,)).start()
         Thread(target=receive_thread_nevmblockdisconnect, args=(self, 0, nevmblockdisconnect,publisher,)).start()
 
-        Thread(target=receive_thread_nevmblockconnect, args=(self, 1, nevmblockconnect1,publisher,)).start()
-        Thread(target=receive_thread_nevmblockdisconnect, args=(self, 1, nevmblockdisconnect1,publisher,)).start()
+        Thread(target=receive_thread_nevmblockconnect, args=(self, 1, nevmblockconnect1,publisher1,)).start()
+        Thread(target=receive_thread_nevmblockdisconnect, args=(self, 1, nevmblockdisconnect1,publisher1,)).start()
         self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
         self.sync_blocks()
-        assert_equal(int(self.nodes[0].getbestblockhash(), 16), publisher.getLastSYSBlock())
-        assert_equal(int(self.nodes[1].getbestblockhash(), 16), publisher.getLastSYSBlock())
+        # test simple disconnect, save best block go back to 205 (first NEVM block) and then reconsider back to tip
+        bestblockhash = self.nodes[0].getbestblockhash()
+        assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
+        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
+        # save 205 since when invalidating 206, the best block should be 205
+        prevblockhash = self.nodes[0].getblockhash(205)
+        blockhash = self.nodes[0].getblockhash(206)
+        self.nodes[0].invalidateblock(blockhash)
+        self.nodes[1].invalidateblock(blockhash)
+        self.sync_blocks()
+        # ensure block 205 is the latest on publisher
+        assert_equal(int(prevblockhash, 16), publisher.getLastSYSBlock())
+        assert_equal(int(prevblockhash, 16), publisher.getLastSYSBlock())
+        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        # go back to 210 (tip)
+        self.nodes[0].reconsiderblock(blockhash)
+        self.nodes[1].reconsiderblock(blockhash)
+        self.sync_blocks()
+        # check that publisher is on the tip (210) again
+        assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
+        assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
+        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
 if __name__ == '__main__':
     ZMQTest().main()
