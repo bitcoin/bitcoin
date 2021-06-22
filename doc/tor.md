@@ -223,3 +223,40 @@ for normal IPv4/IPv6 communication, use:
   Otherwise it is trivial to link them, which may reduce privacy. Onion
   services created automatically (as in section 2) always have only one port
   open.
+
+- In some regions of the world the Tor network is monitored or blocked.
+  If you are in an environment that does not permit direct Tor connections or the use
+  of Tor bridges, then considering the trade-offs, it may not be safe to use Tor.
+
+- For maximum privacy, it is preferable to disable accepting incoming connections.
+
+- Users can download packages with [torsocks](https://gitlab.torproject.org/legacy/trac/-/wikis/doc/torsocks)
+  for better security and privacy.
+
+- Trade-offs involved in using `onlynet=onion`:
+
+  The `onlynet=onion` configuration option can potentially ensure the node attempts to only
+  connect over Tor. It is more private when you combine it with no reachable IPv4/IPv6 address,
+  in particular if you want to broadcast transactions without them being correlatable with your IP.
+
+  **Sybil Attacks**
+
+  On the other hand, if you only make random Tor connections, you're much more vulnerable to Sybil attacks.
+  As Tor addresses may be created at no cost, an attacker can potentially flood the network with many Tor
+  nodes and receive all of the outbound Tor connections an `onlynet=onion` node makes.
+
+  This is significantly less a concern if you make `-addnode` connections to trusted peers
+  (even if they're onion addresses). It's also alleviated with IPv4/IPv6 (especially when using the -asmap
+  configuration option) due to the cost of obtaining IPs in many networks.
+
+  If all of your connections are controlled by a Sybil attacker, they can easily prevent you from seeing confirmed
+  transactions and, with more difficulty, even trick your node into falsely reporting a transaction as confirmed
+  on the blockchain with most cumulative “chainwork”.
+
+  **Network Partitioning**
+
+  If too many nodes use `onlynet=onion`, it could become difficult for onion nodes to communicate with clearnet nodes,
+  preventing the Tor network from seeing recent transactions and blocks. It is essential that some nodes access both
+  clearnet and Tor, or use [`onlynet=i2p`](i2p.md) with `onlynet=onion`.
+
+- Deleting _onion_v3_private_key_ too frequently is not a best practice and should be avoided.
