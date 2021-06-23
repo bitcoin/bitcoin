@@ -152,7 +152,7 @@ public:
             // Data from RPC: getchaintxstats 49188 0000000000005c467e7982512b65b794c399e9081f9ceecd7435bb0de6379405
             /* nTime    */ 1624421572,
             /* nTxCount */ 228464,
-            /* dTxRate  */ 0.032580,
+            /* dTxRate  */ 0.03258051487256104,
         };
     }
 };
