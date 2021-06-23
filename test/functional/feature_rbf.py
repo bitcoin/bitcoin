@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the RBF code."""
 
+from copy import deepcopy
 from decimal import Decimal
 
 from test_framework.blocktools import COINBASE_MATURITY
@@ -85,7 +86,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
-        self.wallet.scan_blocks(start=76, num=2)
+        self.wallet.scan_blocks(start=76, num=3)
 
         self.log.info("Running test simple doublespend...")
         self.test_simple_doublespend()
@@ -127,15 +128,12 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
     def test_simple_doublespend(self):
         """Simple doublespend"""
-        tx0_outpoint = make_utxo(self.nodes[0], int(1.1 * COIN))
+        # we use MiniWallet to create a transaction template with inputs correctly set,
+        # and modify the output (amount, scriptPubKey) according to our needs
+        utxo = self.wallet.get_utxo()
+        tx_template = self.wallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo)['tx']
 
-        # make_utxo may have generated a bunch of blocks, so we need to sync
-        # before we can spend the coins generated, or else the resulting
-        # transactions might not be accepted by our peers.
-        self.sync_all()
-
-        tx1a = CTransaction()
-        tx1a.vin = [CTxIn(tx0_outpoint, nSequence=0)]
+        tx1a = deepcopy(tx_template)
         tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
         tx1a_hex = tx1a.serialize().hex()
         tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, 0)
@@ -143,8 +141,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.sync_all()
 
         # Should fail because we haven't changed the fee
-        tx1b = CTransaction()
-        tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
+        tx1b = deepcopy(tx_template)
         tx1b.vout = [CTxOut(1 * COIN, DUMMY_2_P2WPKH_SCRIPT)]
         tx1b_hex = tx1b.serialize().hex()
 
@@ -152,8 +149,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
 
         # Extra 0.1 BTC fee
-        tx1b = CTransaction()
-        tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
         tx1b.vout = [CTxOut(int(0.9 * COIN), DUMMY_P2WPKH_SCRIPT)]
         tx1b_hex = tx1b.serialize().hex()
         # Works when enabled
