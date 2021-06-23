@@ -31,7 +31,7 @@ const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 void CConnmanTest::AddNode(CNode& node)
 {
-    LOCK(g_connman->cs_vNodes);
+    LOCK2(g_connman->cs_vNodes, node.cs_hSocket);
     g_connman->vNodes.push_back(&node);
     g_connman->mapSocketToNode.emplace(node.hSocket, &node);
 }
