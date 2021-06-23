@@ -58,7 +58,7 @@ void NftLoaderDialog::on_sendAssetButton_clicked()
 
 void NftLoaderDialog::CurrentTabSelected(NftLoaderDialogOptions::Tab tab)
 {
-    NftLoaderDialogOptions* dialog = new NftLoaderDialogOptions(this);
+    NftLoaderDialogOptions* dialog = new NftLoaderDialogOptions(platformStyle, this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setModel(model);
     dialog->setCurrentTab(tab);

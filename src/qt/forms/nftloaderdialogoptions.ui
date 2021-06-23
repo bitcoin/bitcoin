@@ -23,7 +23,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tabCreateAssetClass">
     <attribute name="title">
@@ -65,19 +65,6 @@
       <string>MetaData</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="nftCreateAssetClassFee">
-     <property name="geometry">
-      <rect>
-       <x>90</x>
-       <y>240</y>
-       <width>113</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="toolTip">
-      <string>The fee is numeric and must be 0 or positive whole number</string>
-     </property>
-    </widget>
     <widget class="QLabel" name="label_2">
      <property name="geometry">
       <rect>
@@ -115,6 +102,19 @@
      </property>
      <property name="autoDefault">
       <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="BitcoinAmountField" name="nftCreateAssetClassFee">
+     <property name="geometry">
+      <rect>
+       <x>80</x>
+       <y>240</y>
+       <width>133</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>The amount to send in the selected unit</string>
      </property>
     </widget>
    </widget>
@@ -353,6 +353,14 @@
    </widget>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>BitcoinAmountField</class>
+   <extends>QLineEdit</extends>
+   <header>qt/bitcoinamountfield.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="../bitcoin.qrc"/>
  </resources>

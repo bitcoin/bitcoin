@@ -18,13 +18,22 @@
 #include <config/bitcoin-config.h> /* for USE_QRCODE */
 #endif
 
-NftLoaderDialogOptions::NftLoaderDialogOptions(QWidget* parent) :
+NftLoaderDialogOptions::NftLoaderDialogOptions(const PlatformStyle* _platformStyle, QWidget* parent) :
     QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::NftLoaderDialogOptions),
-    model(nullptr)
+    model(nullptr),
+    platformStyle(_platformStyle)
 {
     ui->setupUi(this);
     GUIUtil::handleCloseWindowShortcut(this);
+
+    //ui->nftCreateAssetClassFee->setText("0");
+
+    //setCurrentWidget(ui->SendCoins);
+
+    // Connect signals
+    //connect(ui->deleteButton, &QPushButton::clicked, this, &createAssetClassButto::deleteClicked);
+    //connect(ui->nftCreateAssetClassFee, &BitcoinAmountField::valueChanged, this, &NftLoaderDialogOptions::payAmountChanged);
 }
 
 void NftLoaderDialogOptions::setModel(WalletModel* _model)
@@ -42,7 +51,16 @@ void NftLoaderDialogOptions::on_createAssetClassButton_clicked()
 {
     //Create asset class will prompt the user for asset class metadata and a fee amount
     //The metadata is optional
+
     //The fee is numeric and must be 0 or positive whole number (in Atoms)
+    bool valid = validateFee();
+    if (valid == false) {
+        QMessageBox msgBox;
+        msgBox.setText("Fee should be greater than zero atom.");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
+    }
+
     // ****************************************** //
     //When they press send a status should read:
     // ****************************************** //
@@ -50,6 +68,8 @@ void NftLoaderDialogOptions::on_createAssetClassButton_clicked()
     //Loading asset class to NFT database
     //Transaction mined, NFT ID is XXXXXXXXXXXX
 
+    
+    
     return;
 }
 
@@ -81,4 +101,32 @@ void NftLoaderDialogOptions::setCurrentTab(NftLoaderDialogOptions::Tab tab)
     if (tab_widget && ui->tabWidget->currentWidget() != tab_widget) {
         ui->tabWidget->setCurrentWidget(tab_widget);
     }
+}
+
+bool NftLoaderDialogOptions::validate(interfaces::Node& node)
+{
+    if (!model)
+        return false;
+
+    // Check input validity
+    bool retval = validateFee();
+    
+    return validateFee();
+}
+
+bool NftLoaderDialogOptions::validateFee()
+{
+    bool retval = true;
+
+    if (!ui->nftCreateAssetClassFee->validate()) {
+        retval = false;
+    }
+
+    // Sending a zero amount is invalid
+    if (ui->nftCreateAssetClassFee->value(nullptr) <= 0) {
+        ui->nftCreateAssetClassFee->setValid(false);
+        retval = false;
+    }
+
+    return retval;
 }

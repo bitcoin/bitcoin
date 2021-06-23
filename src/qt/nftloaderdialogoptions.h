@@ -5,9 +5,13 @@
 #ifndef BITCOIN_QT_NftLoaderDialogOptions_H
 #define BITCOIN_QT_NftLoaderDialogOptions_H
 
+#include <qt/walletmodel.h>
+
+#include <QStackedWidget>
 #include <QDialog>
 
 class WalletModel;
+class PlatformStyle;
 
 namespace Ui
 {
@@ -19,7 +23,7 @@ class NftLoaderDialogOptions : public QDialog
     Q_OBJECT
 
 public:
-    explicit NftLoaderDialogOptions(QWidget* parent = nullptr);
+    explicit NftLoaderDialogOptions(const PlatformStyle* platformStyle, QWidget* parent = nullptr);
     ~NftLoaderDialogOptions();
 
     enum Tab {
@@ -30,10 +34,13 @@ public:
 
     void setModel(WalletModel* model);
     void setCurrentTab(NftLoaderDialogOptions::Tab tab);
+    bool validate(interfaces::Node& node);
+    bool validateFee();
 
 private:
     Ui::NftLoaderDialogOptions* ui;
     WalletModel* model;
+    const PlatformStyle* platformStyle;
 
 private Q_SLOTS:
     void on_createAssetClassButton_clicked();
