@@ -1438,11 +1438,6 @@ if test x$use_boost = xyes; then
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
   fi
 
-  dnl Boost 1.56 through 1.62 allow using std::atomic instead of its own atomic
-  dnl counter implementations. In 1.63 and later the std::atomic approach is default.
-  m4_pattern_allow(DBOOST_AC_USE_STD_ATOMIC) dnl otherwise it's treated like a macro
-  BOOST_CPPFLAGS="-DBOOST_SP_USE_STD_ATOMIC -DBOOST_AC_USE_STD_ATOMIC $BOOST_CPPFLAGS"
-
   BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB"
 fi
 
