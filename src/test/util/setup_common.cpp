@@ -294,7 +294,7 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
     input_coins.insert({outpoint_to_spend, utxo_to_spend});
     // - Default signature hashing type
     int nHashType = SIGHASH_ALL;
-    std::map<int, std::string> input_errors;
+    std::map<int, bilingual_str> input_errors;
     assert(SignTransaction(mempool_txn, &keystore, input_coins, nHashType, input_errors));
 
     // If submit=true, add transaction to the mempool.
