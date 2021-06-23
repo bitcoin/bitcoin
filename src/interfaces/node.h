@@ -6,7 +6,6 @@
 #define BITCOIN_INTERFACES_NODE_H
 
 #include <amount.h>     // For CAmount
-#include <external_signer.h>
 #include <net.h>        // For NodeId
 #include <net_types.h>  // For banmap_t
 #include <netaddress.h> // For Network
@@ -43,11 +42,11 @@ struct BlockTip;
 //! Block and header tip information
 struct BlockAndHeaderTipInfo
 {
-    int block_height;
-    int64_t block_time;
-    int header_height;
-    int64_t header_time;
-    double verification_progress;
+    int block_height = -1;
+    int64_t block_time = -1;
+    int header_height = -1;
+    int64_t header_time = -1;
+    double verification_progress = -1;
 };
 
 //! Top-level interface for a bitcoin node (bitcoind process).
@@ -110,9 +109,6 @@ public:
 
     //! Disconnect node by id.
     virtual bool disconnectById(NodeId id) = 0;
-
-    //! List external signers
-    virtual std::vector<ExternalSigner> externalSigners() = 0;
 
     //! Get total bytes recv.
     virtual int64_t getTotalBytesRecv() = 0;
@@ -230,7 +226,7 @@ public:
 };
 
 //! Return implementation of Node interface.
-std::unique_ptr<Node> MakeNode(NodeContext* context = nullptr);
+std::unique_ptr<Node> MakeNode(NodeContext& context);
 
 //! Block tip (could be a header or not, depends on the subscribed signal).
 struct BlockTip {

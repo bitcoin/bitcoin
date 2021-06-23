@@ -28,9 +28,11 @@
 #endif // ENABLE_WALLET
 
 #include <init.h>
+#include <init/common.h>
 #include <interfaces/handler.h>
+#include <interfaces/init.h>
+#include <interfaces/ipc.h>
 #include <interfaces/node.h>
-#include <node/context.h>
 #include <node/ui_interface.h>
 #include <noui.h>
 #include <uint256.h>
@@ -182,12 +184,12 @@ void BitcoinCore::initialize()
     }
 }
 
-void BitcoinCore::shutdown()
+void BitcoinCore::shutdown(bool node_shutdown)
 {
     try
     {
         qDebug() << __func__ << ": Running Shutdown in thread";
-        m_node.appShutdown();
+        if (node_shutdown) m_node.appShutdown();
         qDebug() << __func__ << ": Shutdown finished";
         Q_EMIT shutdownResult();
     } catch (const std::exception& e) {
@@ -276,10 +278,28 @@ void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
     connect(this, &BitcoinApplication::requestedShutdown, m_splash, &QWidget::close);
 }
 
-void BitcoinApplication::setNode(interfaces::Node& node)
+void BitcoinApplication::createNode(interfaces::Init& init)
 {
     assert(!m_node);
-    m_node = &node;
+    m_node = init.makeNode();
+    if (!m_node) {
+        // If node is not part of current process, need to initialize logging.
+        if (!init::StartLogging(gArgs)) {
+            throw std::runtime_error("StartLogging failed");
+        }
+
+        // If node is not part of current process, spawn new bitcoin-node
+        // process or connect to an existing one.
+        std::string address = gArgs.GetArg("-ipcconnect", "auto");
+        auto node_init = init.ipc()->connectAddress(address);
+        if (node_init) {
+            m_node_external = true;
+        } else {
+            node_init = init.ipc()->spawnProcess("bitcoin-node");
+        }
+        m_node = node_init->makeNode();
+        init.ipc()->addCleanup(*m_node, [node_init = node_init.release()] { delete node_init; });
+    }
     if (optionsModel) optionsModel->setNode(*m_node);
     if (m_splash) m_splash->setNode(*m_node);
 }
@@ -328,7 +348,13 @@ void BitcoinApplication::requestInitialize()
 {
     qDebug() << __func__ << ": Requesting initialize";
     startThread();
-    Q_EMIT requestedInitialize();
+    if (m_node_external) {
+        interfaces::BlockAndHeaderTipInfo tip_info;
+        initializeResult(true, tip_info);
+    } else {
+        Q_EMIT requestedInitialize();
+    }
+
 }
 
 void BitcoinApplication::requestShutdown()
@@ -346,17 +372,28 @@ void BitcoinApplication::requestShutdown()
     window->unsubscribeFromCoreSignals();
     // Request node shutdown, which can interrupt long operations, like
     // rescanning a wallet.
-    node().startShutdown();
+    if (!m_node_external) node().startShutdown();
     // Unsetting the client model can cause the current thread to wait for node
     // to complete an operation, like wait for a RPC execution to complete.
     window->setClientModel(nullptr);
     pollShutdownTimer->stop();
 
+#ifdef ENABLE_WALLET
+    // Delete wallet controller here manually, instead of relying on Qt object
+    // tracking (https://doc.qt.io/qt-5/objecttrees.html). This makes sure
+    // walletmodel m_handle_* notification handlers are deleted before wallets
+    // are unloaded, which can simplify wallet implementations. It also avoids
+    // these notifications having to be handled while GUI objects are being
+    // destroyed, making GUI code less fragile as well.
+    delete m_wallet_controller;
+    m_wallet_controller = nullptr;
+#endif // ENABLE_WALLET
+
     delete clientModel;
     clientModel = nullptr;
 
     // Request shutdown from core thread
-    Q_EMIT requestedShutdown();
+    Q_EMIT requestedShutdown(!m_node_external);
 }
 
 void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info)
@@ -458,11 +495,11 @@ int GuiMain(int argc, char* argv[])
     util::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
 #endif
+
+    std::unique_ptr<interfaces::Init> init = interfaces::MakeGuiInit(argc, argv);
+
     SetupEnvironment();
     util::ThreadSetInternalName("main");
-
-    NodeContext node_context;
-    std::unique_ptr<interfaces::Node> node = interfaces::MakeNode(&node_context);
 
     // Subscribe to global signals from core
     boost::signals2::scoped_connection handler_message_box = ::uiInterface.ThreadSafeMessageBox_connect(noui_ThreadSafeMessageBox);
@@ -490,8 +527,7 @@ int GuiMain(int argc, char* argv[])
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
-    node_context.args = &gArgs;
-    SetupServerArgs(gArgs);
+    SetupServerArgs(gArgs, init->canConnectIpc(), init->canListenIpc());
     SetupUIArgs(gArgs);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
@@ -622,7 +658,7 @@ int GuiMain(int argc, char* argv[])
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());
 
-    app.setNode(*node);
+    app.createNode(*init);
 
     int rv = EXIT_SUCCESS;
     try
@@ -631,7 +667,7 @@ int GuiMain(int argc, char* argv[])
         // Perform base initialization before spinning up initialization/shutdown thread
         // This is acceptable because this function only contains steps that are quick to execute,
         // so the GUI thread won't be held up.
-        if (app.baseInitialize()) {
+        if (app.nodeExternal() || app.baseInitialize()) {
             app.requestInitialize();
 #if defined(Q_OS_WIN)
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely…").arg(PACKAGE_NAME), (HWND)app.getMainWinId());

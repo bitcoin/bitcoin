@@ -6,7 +6,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <external_signer.h>
+#include <interfaces/wallet.h>
 #include <qt/createwalletdialog.h>
 #include <qt/forms/ui_createwalletdialog.h>
 
@@ -113,7 +113,7 @@ CreateWalletDialog::~CreateWalletDialog()
     delete ui;
 }
 
-void CreateWalletDialog::setSigners(const std::vector<ExternalSigner>& signers)
+void CreateWalletDialog::setSigners(const std::vector<std::unique_ptr<interfaces::ExternalSigner>>& signers)
 {
     if (!signers.empty()) {
         ui->external_signer_checkbox->setEnabled(true);
@@ -125,7 +125,7 @@ void CreateWalletDialog::setSigners(const std::vector<ExternalSigner>& signers)
         ui->blank_wallet_checkbox->setChecked(false);
         ui->disable_privkeys_checkbox->setEnabled(false);
         ui->disable_privkeys_checkbox->setChecked(true);
-        const std::string label = signers[0].m_name;
+        const std::string label = signers[0]->getName();
         ui->wallet_name_line_edit->setText(QString::fromStdString(label));
         ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
     } else {

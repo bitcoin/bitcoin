@@ -82,7 +82,7 @@ These dependencies represent the packages required to get a barebones installati
 To install, run the following from your terminal:
 
 ``` bash
-brew install automake libtool boost pkg-config libevent
+brew install automake libtool boost pkg-config libevent capnp
 ```
 
 ### 4. Clone Bitcoin repository

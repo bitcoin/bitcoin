@@ -114,6 +114,7 @@ class ConfArgsTest(BitcoinTestFramework):
                     'secret-torpassword',
                 ]):
             self.start_node(0, extra_args=[
+                '-debugexclude=ipc',
                 '-addnode=some.node',
                 '-rpcauth=alice:f7efda5c189b999524f151318c0c86$d5b51b3beffbc0',
                 '-rpcbind=127.1.1.1',

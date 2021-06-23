@@ -32,6 +32,8 @@ public:
     virtual std::unique_ptr<WalletClient> makeWalletClient(Chain& chain);
     virtual std::unique_ptr<Echo> makeEcho();
     virtual Ipc* ipc();
+    virtual bool canConnectIpc();
+    virtual bool canListenIpc();
 };
 
 //! Return implementation of Init interface for the node process. If the argv

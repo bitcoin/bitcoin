@@ -53,6 +53,9 @@ public:
     int m_min_depth = DEFAULT_MIN_DEPTH;
     //! Maximum chain depth value for coin availability
     int m_max_depth = DEFAULT_MAX_DEPTH;
+    // Note: If you add fields to this struct, you should also update the IPC
+    // serialization code (in ipc/capnp/wallet-types.cpp and
+    // ipc/capnp/wallet.capnp).
 
     CCoinControl();
 
