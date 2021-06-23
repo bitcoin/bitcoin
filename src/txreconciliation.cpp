@@ -12,6 +12,9 @@ namespace {
 constexpr uint32_t RECON_VERSION = 1;
 /** Static component of the salt used to compute short txids for inclusion in sketches. */
 const std::string RECON_STATIC_SALT = "Tx Relay Salting";
+/** Announce transactions via full wtxid to a limited number of inbound and outbound peers. */
+constexpr uint8_t INBOUND_FANOUT_DESTINATIONS = 2;
+constexpr uint8_t OUTBOUND_FANOUT_DESTINATIONS = 2;
 
 /**
  * Salt is specified by BIP-330 is constructed from contributions from both peers. It is later used
@@ -249,6 +252,40 @@ class TxReconciliationTracker::Impl {
         return recon_state->second.m_local_set.GetSize();
     }
 
+    bool ShouldFloodTo(uint256 wtxid, NodeId peer_id, bool inbound) const
+    {
+        LOCK(m_mutex);
+        const std::vector<NodeId>* working_list;
+        size_t depth;
+        if (inbound) {
+            working_list = &m_inbound_fanout_destinations;
+            depth = INBOUND_FANOUT_DESTINATIONS;
+        } else {
+            working_list = &m_outbound_fanout_destinations;
+            depth = OUTBOUND_FANOUT_DESTINATIONS;
+        }
+
+        if (working_list->size() == 0) {
+            return false;
+        }
+
+        // If the peer has a position of [starting from the index chosen based on the wtxid; depth),
+        // flood to it.
+        int index_flood_to = wtxid.GetUint64(3) % working_list->size();
+        auto cur_candidate_id = working_list->begin() + index_flood_to;
+        while (depth > 0) {
+            if (*cur_candidate_id == peer_id) {
+                return true;
+            }
+            ++cur_candidate_id;
+            if (cur_candidate_id == working_list->end()) {
+                cur_candidate_id = working_list->begin();
+            }
+            --depth;
+        }
+        return false;
+    }
+
 };
 
 TxReconciliationTracker::TxReconciliationTracker() :
@@ -291,4 +328,9 @@ std::optional<bool> TxReconciliationTracker::IsPeerInitiator(NodeId peer_id) con
 std::optional<size_t> TxReconciliationTracker::GetPeerSetSize(NodeId peer_id) const
 {
     return m_impl->GetPeerSetSize(peer_id);
+}
+
+bool TxReconciliationTracker::ShouldFloodTo(uint256 wtxid, NodeId peer_id, bool inbound) const
+{
+    return m_impl->ShouldFloodTo(wtxid, peer_id, inbound);
 }
