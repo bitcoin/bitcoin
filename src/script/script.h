@@ -9,6 +9,7 @@
 #include <crypto/common.h>
 #include <prevector.h>
 #include <serialize.h>
+#include <span.h>
 
 #include <assert.h>
 #include <climits>
@@ -398,6 +399,7 @@ private:
  */
 typedef prevector<28, unsigned char> CScriptBase;
 
+bool GetScriptOp(Span<const unsigned char>& script, opcodetype& opcodeRet, Span<const unsigned char>* data_out);
 bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet);
 
 /** Serialized script, used inside transaction inputs and outputs */
@@ -454,7 +456,7 @@ public:
         return *this;
     }
 
-    CScript& operator<<(const std::vector<unsigned char>& b)
+    CScript& operator<<(const Span<const unsigned char>& b)
     {
         if (b.size() < OP_PUSHDATA1)
         {
@@ -528,7 +530,7 @@ public:
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
-    /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
+    /** Called by IsStandardTx. */
     bool IsPushOnly(const_iterator pc) const;
     bool IsPushOnly() const;
 
