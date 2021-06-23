@@ -174,6 +174,8 @@ static constexpr double MAX_ADDR_RATE_PER_SECOND{0.1};
 static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET{MAX_ADDR_TO_SEND};
 /** The compactblocks version we support. See BIP 152. */
 static constexpr uint64_t CMPCTBLOCKS_VERSION{2};
+/** Used to determine whether to use low-fanout flooding (or reconciliation) for a tx relay event. */
+static const uint64_t RANDOMIZER_ID_FANOUTTARGET = 0xbac89af818407b6aULL; // SHA256("fanouttarget")[0:8]
 
 // Internal stuff
 namespace {
@@ -3811,6 +3813,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 if (!fAlreadyHave && !m_chainman.IsInitialBlockDownload()) {
                     AddTxAnnouncement(pfrom, gtxid, current_time);
                 }
+                if (m_txreconciliation && gtxid.IsWtxid()) {
+                    m_txreconciliation->TryRemovingFromSet(pfrom.GetId(), gtxid.GetHash());
+                }
             } else {
                 LogPrint(BCLog::NET, "Unknown inv type \"%s\" received from peer=%d\n", inv.ToString(), pfrom.GetId());
             }
@@ -4123,6 +4128,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             }
             return;
         }
+
+        if (m_txreconciliation) m_txreconciliation->TryRemovingFromSet(pfrom.GetId(), wtxid);
 
         const MempoolAcceptResult result = m_chainman.ProcessTransaction(ptx);
         const TxValidationState& state = result.m_state;
@@ -5650,9 +5657,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         }
 
         if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
+                // Lock way before it's used to maintain lock ordering.
+                LOCK2(m_mempool.cs, m_peer_mutex);
                 LOCK(tx_relay->m_tx_inventory_mutex);
                 // Check whether periodic sends should happen
                 bool fSendTrickle = pto->HasPermission(NetPermissionFlags::NoBan);
+                const bool reconciles_txs = m_txreconciliation && m_txreconciliation->IsPeerRegistered(pto->GetId());
                 if (tx_relay->m_next_inv_send_time < current_time) {
                     fSendTrickle = true;
                     if (pto->IsInboundConn()) {
@@ -5712,6 +5722,28 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     // No reason to drain out at many times the network's capacity,
                     // especially since we have many peers and some will draw much shorter delays.
                     unsigned int nRelayedTransactions = 0;
+
+                    size_t inbounds_nonrcncl_tx_relay = 0, outbounds_nonrcncl_tx_relay = 0;
+                    if (m_txreconciliation) {
+                        for (auto [cur_peer_id, cur_peer] : m_peer_map) {
+                            // Skip the source of the transaction.
+                            if (cur_peer_id == pto->GetId()) continue;
+                            const auto cur_state{State(cur_peer_id)};
+                            if (!cur_state) continue;
+                            if (auto peer_tx_relay = cur_peer->GetTxRelay()) {
+                                LOCK(peer_tx_relay->m_bloom_filter_mutex);
+                                // When we consider to which (and how many) Erlay peers
+                                // we should fanout a tx, we must know to how
+                                // many peers we would certainly announce this tx
+                                // (non-Erlay peers).
+                                if (peer_tx_relay->m_relay_txs && !m_txreconciliation->IsPeerRegistered(cur_peer_id)) {
+                                    inbounds_nonrcncl_tx_relay += cur_state->m_is_inbound;
+                                    outbounds_nonrcncl_tx_relay += !cur_state->m_is_inbound;
+                                }
+                            }
+                        }
+                    }
+
                     LOCK(tx_relay->m_bloom_filter_mutex);
                     size_t broadcast_max{INVENTORY_BROADCAST_TARGET + (tx_relay->m_tx_inventory_to_send.size()/1000)*5};
                     broadcast_max = std::min<size_t>(INVENTORY_BROADCAST_MAX, broadcast_max);
@@ -5739,7 +5771,35 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         }
                         if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                         // Send
-                        vInv.push_back(inv);
+                        bool fanout = true;
+                        const auto wtxid = txinfo.tx->GetWitnessHash();
+                        if (reconciles_txs) {
+                            auto txiter = m_mempool.GetIter(txinfo.tx->GetHash());
+                            if (txiter) {
+                                if ((*txiter)->GetCountWithDescendants() > 1) {
+                                    // If a transaction has in-mempool children, always fanout it.
+                                    // Until package relay is implemented, this is needed to avoid
+                                    // breaking parent+child relay expectations in some cases.
+                                    //
+                                    // Potentially reconciling parent+child would mean that for every
+                                    // child we need to to check if any of the parents is currently
+                                    // reconciled so that the child isn't fanouted ahead. But then
+                                    // it gets tricky when reconciliation sets are full: a) the child
+                                    // can't just be added; b) removing parents from reconciliation
+                                    // sets for this one child is not good either.
+                                    fanout = true;
+                                } else {
+                                    auto fanout_randomizer = m_connman.GetDeterministicRandomizer(RANDOMIZER_ID_FANOUTTARGET);
+                                    fanout = m_txreconciliation->ShouldFanoutTo(wtxid, fanout_randomizer, pto->GetId(),
+                                                                                inbounds_nonrcncl_tx_relay, outbounds_nonrcncl_tx_relay);
+                                }
+                            }
+                        }
+
+                        if (fanout || !m_txreconciliation->AddToSet(pto->GetId(), wtxid)) {
+                            vInv.push_back(inv);
+                        }
+
                         nRelayedTransactions++;
                         if (vInv.size() == MAX_INV_SZ) {
                             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
@@ -5749,7 +5809,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     }
 
                     // Ensure we'll respond to GETDATA requests for anything we've just announced
-                    LOCK(m_mempool.cs);
                     tx_relay->m_last_inv_sequence = m_mempool.GetSequence();
                 }
         }
