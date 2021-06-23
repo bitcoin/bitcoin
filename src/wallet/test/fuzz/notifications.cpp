@@ -68,9 +68,6 @@ struct FuzzedWallet {
     CScript GetScriptPubKey(FuzzedDataProvider& fuzzed_data_provider)
     {
         auto type{fuzzed_data_provider.PickValueInArray(OUTPUT_TYPES)};
-        if (type == OutputType::BECH32M) {
-            type = OutputType::BECH32; // TODO: Setup taproot descriptor and remove this line
-        }
         CTxDestination dest;
         bilingual_str error;
         if (fuzzed_data_provider.ConsumeBool()) {
