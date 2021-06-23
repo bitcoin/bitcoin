@@ -281,6 +281,7 @@ class CoinStatsIndexTest(SyscoinTestFramework):
         # Add another block, so we don't depend on reconsiderblock remembering which
         # blocks were touched by invalidateblock
         index_node.generate(1)
+        self.sync_all()
 
         # Ensure that removing and re-adding blocks yields consistent results
         block = index_node.getblockhash(99)
