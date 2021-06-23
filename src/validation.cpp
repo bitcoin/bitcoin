@@ -693,8 +693,6 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         auto itConflicting = pool.mapNextTx.find(txin.prevout);
         if (itConflicting != pool.mapNextTx.end())
         {
-            const CTransaction *ptxConflicting = itConflicting->second;
-
             // Transaction conflicts with mempool and RBF doesn't exist in Dash
             return state.Invalid(false, REJECT_DUPLICATE, "txn-mempool-conflict");
         }
@@ -824,7 +822,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
         PrecomputedTransactionData txdata(tx);
-        if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, false, txdata))
+        if (!CheckInputs(tx, state, view, true, scriptVerifyFlags, true, false, txdata))
             return false; // state filled in by CheckInputs
 
         // Check again against the current block tip's script verification
@@ -1235,7 +1233,6 @@ bool IsInitialBlockDownload()
         return false;
     if (fImporting || fReindex)
         return true;
-    const CChainParams& chainParams = Params();
     if (chainActive.Tip() == nullptr)
         return true;
     if (chainActive.Tip()->nChainWork < nMinimumChainWork)

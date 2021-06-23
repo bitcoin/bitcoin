@@ -517,7 +517,6 @@ BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_reorg, TestChainDIP3Setup)
 
 BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_dual_proregtx, TestChainDIP3Setup)
 {
-    int nHeight = chainActive.Height();
     auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
 
     // Create a MN
