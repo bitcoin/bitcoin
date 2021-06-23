@@ -100,6 +100,12 @@ public:
      * Check if a peer is registered to reconcile transactions with us.
      */
     bool IsPeerRegistered(NodeId peer_id) const;
+
+    /**
+     * Returns whether the peer is chosen as a low-fanout destination for a given tx.
+     */
+    bool ShouldFanoutTo(const uint256& wtxid, CSipHasher deterministic_randomizer, NodeId peer_id,
+                        size_t inbounds_nonrcncl_tx_relay, size_t outbounds_nonrcncl_tx_relay) const;
 };
 
 #endif // BITCOIN_NODE_TXRECONCILIATION_H

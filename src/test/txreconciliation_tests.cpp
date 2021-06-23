@@ -81,4 +81,76 @@ BOOST_AUTO_TEST_CASE(IsPeerRegisteredTest)
     BOOST_CHECK(!tracker.IsPeerRegistered(peer_id0));
 }
 
+BOOST_AUTO_TEST_CASE(ShouldFanoutToTest)
+{
+    TxReconciliationTracker tracker(1);
+    NodeId peer_id0 = 0;
+    CSipHasher hasher(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL);
+
+    // If peer is not registered for reconciliation, it should be always chosen for flooding.
+    BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
+    for (int i = 0; i < 100; ++i) {
+        BOOST_CHECK(tracker.ShouldFanoutTo(GetRandHash(), hasher, peer_id0,
+                                           /*inbounds_nonrcncl_tx_relay=*/0, /*outbounds_nonrcncl_tx_relay=*/0));
+    }
+
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
+    // Same after pre-registering.
+    for (int i = 0; i < 100; ++i) {
+        BOOST_CHECK(tracker.ShouldFanoutTo(GetRandHash(), hasher, peer_id0,
+                                           /*inbounds_nonrcncl_tx_relay=*/0, /*outbounds_nonrcncl_tx_relay=*/0));
+    }
+
+    // Once the peer is registered, it should be selected for flooding of some transactions.
+    // Since there is only one reconciling peer, it will be selected for all transactions.
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, /*is_peer_inbound=*/false, 1, 1), ReconciliationRegisterResult::SUCCESS);
+    for (int i = 0; i < 100; ++i) {
+        BOOST_CHECK(tracker.ShouldFanoutTo(GetRandHash(), hasher, peer_id0,
+                                           /*inbounds_nonrcncl_tx_relay=*/0, /*outbounds_nonrcncl_tx_relay=*/0));
+    }
+
+    // Don't select a fanout target if it was already fanouted sufficiently.
+    for (int i = 0; i < 100; ++i) {
+        BOOST_CHECK(!tracker.ShouldFanoutTo(GetRandHash(), hasher, peer_id0,
+                                            /*inbounds_nonrcncl_tx_relay=*/0, /*outbounds_nonrcncl_tx_relay=*/1));
+    }
+
+    tracker.ForgetPeer(peer_id0);
+    // A forgotten (reconciliation-wise) peer should be always selected for fanout again.
+    for (int i = 0; i < 100; ++i) {
+        BOOST_CHECK(tracker.ShouldFanoutTo(GetRandHash(), hasher, peer_id0,
+                                           /*inbounds_nonrcncl_tx_relay=*/0, /*outbounds_nonrcncl_tx_relay=*/0));
+    }
+
+    // Now for inbound connections.
+    for (int i = 1; i < 31; ++i) {
+        tracker.PreRegisterPeer(i);
+        BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(i, /*is_peer_inbound=*/true, 1, 1), ReconciliationRegisterResult::SUCCESS);
+
+    }
+
+    // Relay to a fraction of registered inbound peers.
+    for (int j = 0; j < 100; ++j) {
+        size_t total_fanouted = 0;
+        auto wtxid = GetRandHash();
+        for (int i = 1; i < 31; ++i) {
+            total_fanouted += tracker.ShouldFanoutTo(wtxid, hasher, i,
+                                               /*inbounds_nonrcncl_tx_relay=*/0, /*outbounds_nonrcncl_tx_relay=*/0);
+        }
+        BOOST_CHECK_EQUAL(total_fanouted, 3);
+    }
+
+    // // Don't relay if there is sufficient non-reconciling peers
+    for (int j = 0; j < 100; ++j) {
+        size_t total_fanouted = 0;
+        for (int i = 1; i < 31; ++i) {
+            total_fanouted += tracker.ShouldFanoutTo(GetRandHash(), hasher, i,
+                                               /*inbounds_nonrcncl_tx_relay=*/4, /*outbounds_nonrcncl_tx_relay=*/0);
+        }
+        BOOST_CHECK_EQUAL(total_fanouted, 0);
+    }
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()
