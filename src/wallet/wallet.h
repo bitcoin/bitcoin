@@ -183,7 +183,7 @@ public:
     }
 
     //! Reserve an address
-    bool GetReservedDestination(CTxDestination& pubkey, bool internal, std::string& error);
+    bool GetReservedDestination(CTxDestination& pubkey, bool internal, bilingual_str& error);
     //! Return reserved address
     void ReturnDestination();
     //! Keep the address. Do not return it's key to the keypool when this object goes out of scope
@@ -665,8 +665,8 @@ public:
      */
     void MarkDestinationsDirty(const std::set<CTxDestination>& destinations) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    bool GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, std::string& error);
-    bool GetNewChangeDestination(const OutputType type, CTxDestination& dest, std::string& error);
+    bool GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, bilingual_str& error);
+    bool GetNewChangeDestination(const OutputType type, CTxDestination& dest, bilingual_str& error);
 
     isminetype IsMine(const CTxDestination& dest) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     isminetype IsMine(const CScript& script) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
