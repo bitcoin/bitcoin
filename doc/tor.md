@@ -41,9 +41,11 @@ outgoing connections, but more is possible.
     -onion=ip:port  Set the proxy server to use for Tor onion services. You do not
                     need to set this if it's the same as -proxy. You can use -onion=0
                     to explicitly disable access to onion services.
+                    ------------------------------------------------------------------
                     Note: Only the -proxy option sets the proxy for DNS requests;
                     with -onion they will not route over Tor, so use -proxy if you
                     have privacy concerns.
+                    ------------------------------------------------------------------
 
     -listen         When using -proxy, listening is disabled by default. If you want
                     to manually configure an onion service (see section 3), you'll
