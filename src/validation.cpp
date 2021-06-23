@@ -2350,7 +2350,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             } else {
                 // The node which relayed this should switch to correct chain.
                 // TODO: relay instantsend data/proof.
-                LOCK(cs_main);
                 return state.DoS(10, error("ConnectBlock(DASH): transaction %s conflicts with transaction lock %s", tx->GetHash().ToString(), conflictLock->txid.ToString()),
                                  REJECT_INVALID, "conflict-tx-lock");
             }

@@ -981,8 +981,6 @@ static UniValue protx_list(const JSONRPCRequest& request)
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    LOCK(cs_main);
-
     if (type == "wallet") {
         if (!pwallet) {
             throw std::runtime_error("\"protx list wallet\" not supported when wallet is disabled");
