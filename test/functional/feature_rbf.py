@@ -84,6 +84,12 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
+        self.wallet = MiniWallet(self.nodes[0])
+        # the pre-mined test framework chain contains coinbase outputs to the
+        # MiniWallet's default address ADDRESS_BCRT1_P2WSH_OP_TRUE in blocks
+        # 76-100 (see method BitcoinTestFramework._initialize_chain())
+        self.wallet.scan_blocks(start=76, num=1)
+
         self.log.info("Running test simple doublespend...")
         self.test_simple_doublespend()
 
@@ -569,12 +575,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(json1["vin"][0]["sequence"], 4294967294)
 
     def test_no_inherited_signaling(self):
-        wallet = MiniWallet(self.nodes[0])
-        wallet.scan_blocks(start=76, num=1)
-        confirmed_utxo = wallet.get_utxo()
+        confirmed_utxo = self.wallet.get_utxo()
 
         # Create an explicitly opt-in parent transaction
-        optin_parent_tx = wallet.send_self_transfer(
+        optin_parent_tx = self.wallet.send_self_transfer(
             from_node=self.nodes[0],
             utxo_to_spend=confirmed_utxo,
             sequence=BIP125_SEQUENCE_NUMBER,
@@ -582,7 +586,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         )
         assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['bip125-replaceable'])
 
-        replacement_parent_tx = wallet.create_self_transfer(
+        replacement_parent_tx = self.wallet.create_self_transfer(
             from_node=self.nodes[0],
             utxo_to_spend=confirmed_utxo,
             sequence=BIP125_SEQUENCE_NUMBER,
@@ -596,8 +600,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(res['allowed'], True)
 
         # Create an opt-out child tx spending the opt-in parent
-        parent_utxo = wallet.get_utxo(txid=optin_parent_tx['txid'])
-        optout_child_tx = wallet.send_self_transfer(
+        parent_utxo = self.wallet.get_utxo(txid=optin_parent_tx['txid'])
+        optout_child_tx = self.wallet.send_self_transfer(
             from_node=self.nodes[0],
             utxo_to_spend=parent_utxo,
             sequence=0xffffffff,
@@ -607,7 +611,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # Reports true due to inheritance
         assert_equal(True, self.nodes[0].getmempoolentry(optout_child_tx['txid'])['bip125-replaceable'])
 
-        replacement_child_tx = wallet.create_self_transfer(
+        replacement_child_tx = self.wallet.create_self_transfer(
             from_node=self.nodes[0],
             utxo_to_spend=parent_utxo,
             sequence=0xffffffff,
@@ -626,9 +630,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_raises_rpc_error(-26, 'txn-mempool-conflict', self.nodes[0].sendrawtransaction, replacement_child_tx["hex"], 0)
 
     def test_replacement_relay_fee(self):
-        wallet = MiniWallet(self.nodes[0])
-        wallet.scan_blocks(start=77, num=1)
-        tx = wallet.send_self_transfer(from_node=self.nodes[0])['tx']
+        tx = self.wallet.send_self_transfer(from_node=self.nodes[0])['tx']
 
         # Higher fee, higher feerate, different txid, but the replacement does not provide a relay
         # fee conforming to node's `incrementalrelayfee` policy of 1000 sat per KB.
