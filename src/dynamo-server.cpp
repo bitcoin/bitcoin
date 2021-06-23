@@ -261,7 +261,7 @@ static bool AppInit(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
 
-    IS_TESTNET = true;
+    IS_TESTNET = false;
 
 #ifdef WIN32
     util::WinCmdLineArgs winArgs;
