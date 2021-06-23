@@ -263,7 +263,7 @@ UniValue submitpopIt(const JSONRPCRequest& request)
     LOCK(cs_main);
     auto& mp = VeriBlock::GetPop().getMemPool();
     auto idhex = data.getId().toHex();
-    auto result = mp.submit<Pop>(data, state);
+    auto result = mp.submit<Pop>(data, state, false);
     logSubmitResult<Pop>(idhex, result, state);
 
     bool accepted = result.isAccepted();
@@ -814,6 +814,34 @@ UniValue extractblockinfo(const JSONRPCRequest& req)
     return res;
 }
 
+UniValue setmempooldostalledcheck(const JSONRPCRequest& req)
+{
+    RPCHelpMan{
+        "setmempooldostalledcheck",
+        "set the mempool dostalledcheck flag",
+        {
+            {"flag", RPCArg::Type::BOOL, RPCArg::Optional::NO, "flag"},
+        },
+        {},
+        RPCExamples{
+            HelpExampleCli("setmempooldostalledcheck", "\"flag\"") +
+            HelpExampleRpc("setmempooldostalledcheck", "\"flag\"")},
+    }
+        .Check(req);
+
+    EnsurePopEnabled();
+
+    {
+        LOCK(cs_main);
+
+        bool flag = req.params[0].get_bool();
+        VeriBlock::GetPop().getMemPool().setDoStalledCheck(flag);
+    }
+
+
+    return UniValue{};
+}
+
 const CRPCCommand commands[] = {
     {"pop_mining", "getpopparams", &getpopparams, {}},
     {"pop_mining", "submitpopatv", &submitpopatv, {"atv"}},
@@ -832,6 +860,7 @@ const CRPCCommand commands[] = {
     {"pop_mining", "getrawvtb", &getrawvtb, {"id"}},
     {"pop_mining", "getrawvbkblock", &getrawvbkblock, {"id"}},
     {"pop_mining", "getrawpopmempool", &getrawpopmempool, {}},
+    {"pop_mining", "setmempooldostalledcheck", &setmempooldostalledcheck, {"flag"}},
     {"pop_mining", "extractblockinfo", &extractblockinfo, {"data_array"}}};
 
 void RegisterPOPMiningRPCCommands(CRPCTable& t)
