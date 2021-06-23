@@ -183,8 +183,8 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
     }
 
     {
-        const CCoinsViewCursor* coins_view_cursor = backend_coins_view.Cursor();
-        assert(coins_view_cursor == nullptr);
+        std::unique_ptr<CCoinsViewCursor> coins_view_cursor = backend_coins_view.Cursor();
+        assert(!coins_view_cursor);
         (void)backend_coins_view.EstimateSize();
         (void)backend_coins_view.GetBestBlock();
         (void)backend_coins_view.GetHeadBlocks();
