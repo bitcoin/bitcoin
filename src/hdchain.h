@@ -74,6 +74,7 @@ public:
 
         // by swapping the members of two classes,
         // the two classes are effectively swapped
+        LOCK2(first.cs, second.cs);
         swap(first.nVersion, second.nVersion);
         swap(first.id, second.id);
         swap(first.fCrypted, second.fCrypted);
