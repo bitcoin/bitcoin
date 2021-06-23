@@ -327,4 +327,12 @@ public:
     TaprootSpendData GetSpendData() const;
 };
 
+/** Given a TaprootSpendData and the output key, reconstruct its script tree.
+ *
+ * If the output doesn't match the spenddata, or if the data in spenddata is incomplete,
+ * std::nullopt is returned. Otherwise, a vector of (depth, script, leaf_ver) tuples is
+ * returned, corresponding to a depth-first traversal of the script tree.
+ */
+std::optional<std::vector<std::tuple<int, CScript, int>>> InferTaprootTree(const TaprootSpendData& spenddata, const XOnlyPubKey& output);
+
 #endif // SYSCOIN_SCRIPT_STANDARD_H
