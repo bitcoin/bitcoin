@@ -84,11 +84,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        make_utxo(self.nodes[0], 1 * COIN)
-
-        # Ensure nodes are synced
-        self.sync_all()
-
         self.log.info("Running test simple doublespend...")
         self.test_simple_doublespend()
 
