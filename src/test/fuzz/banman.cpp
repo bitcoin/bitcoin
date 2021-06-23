@@ -9,8 +9,10 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <util/readwritefile.h>
 #include <util/system.h>
 
+#include <cassert>
 #include <cstdint>
 #include <limits>
 #include <string>
@@ -38,8 +40,20 @@ FUZZ_TARGET_INIT(banman, initialize_banman)
     int limit_max_ops{300};
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    const fs::path banlist_file = gArgs.GetDataDirNet() / "fuzzed_banlist.dat";
-    fs::remove(banlist_file);
+    fs::path banlist_file = gArgs.GetDataDirNet() / "fuzzed_banlist";
+
+    const bool start_with_corrupted_banlist{fuzzed_data_provider.ConsumeBool()};
+    if (start_with_corrupted_banlist) {
+        const std::string sfx{fuzzed_data_provider.ConsumeBool() ? ".dat" : ".json"};
+        assert(WriteBinaryFile(banlist_file.string() + sfx,
+                               fuzzed_data_provider.ConsumeRandomLengthString()));
+    } else {
+        const bool force_read_and_write_to_err{fuzzed_data_provider.ConsumeBool()};
+        if (force_read_and_write_to_err) {
+            banlist_file = fs::path{"path"} / "to" / "inaccessible" / "fuzzed_banlist";
+        }
+    }
+
     {
         BanMan ban_man{banlist_file, nullptr, ConsumeBanTimeOffset(fuzzed_data_provider)};
         while (--limit_max_ops >= 0 && fuzzed_data_provider.ConsumeBool()) {
@@ -80,5 +94,6 @@ FUZZ_TARGET_INIT(banman, initialize_banman)
                 });
         }
     }
-    fs::remove(banlist_file);
+    fs::remove(banlist_file.string() + ".dat");
+    fs::remove(banlist_file.string() + ".json");
 }
