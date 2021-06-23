@@ -30,7 +30,7 @@ class ProxyAddressValidator : public QValidator
 public:
     explicit ProxyAddressValidator(QObject *parent);
 
-    State validate(QString &input, int &pos) const;
+    State validate(QString &input, int &pos) const override;
 };
 
 /** Preferences dialog. */

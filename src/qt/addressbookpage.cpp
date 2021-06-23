@@ -38,7 +38,7 @@ public:
     }
 
 protected:
-    bool filterAcceptsRow(int row, const QModelIndex& parent) const
+    bool filterAcceptsRow(int row, const QModelIndex& parent) const override
     {
         auto model = sourceModel();
         auto label = model->index(row, AddressTableModel::Label, parent);

@@ -43,7 +43,7 @@ public:
         QValidator(parent),
         currentUnit(BitcoinUnits::DASH) {}
 
-    State validate(QString &input, int &pos) const
+    State validate(QString &input, int &pos) const override
     {
         if(input.isEmpty())
             return QValidator::Intermediate;
@@ -112,7 +112,7 @@ public:
             clear();
     }
 
-    QSize minimumSizeHint() const
+    QSize minimumSizeHint() const override
     {
         ensurePolished();
         const QFontMetrics fm(fontMetrics());
@@ -127,7 +127,7 @@ private:
     int currentUnit;
 
 protected:
-    bool event(QEvent *event)
+    bool event(QEvent *event) override
     {
         if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease)
         {

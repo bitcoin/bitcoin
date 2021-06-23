@@ -100,7 +100,10 @@ static bool GetHWRand(unsigned char* ent32) {
         // Not all assemblers support the rdrand instruction, write it in hex.
 #ifdef __i386__
         for (int iter = 0; iter < 4; ++iter) {
-            uint32_t r1, r2;
+            // Initialize to 0 to silence a compiler warning that r1 or r2 may be used
+            // uninitialized. Even if rdrand fails (!ok) it will set the output to 0,
+            // but there is no way that the compiler could know that.
+            uint32_t r1 = 0, r2 = 0;
             __asm__ volatile (".byte 0x0f, 0xc7, 0xf0;" // rdrand %eax
                               ".byte 0x0f, 0xc7, 0xf2;" // rdrand %edx
                               "setc %2" :
@@ -110,7 +113,7 @@ static bool GetHWRand(unsigned char* ent32) {
             WriteLE32(ent32 + 8 * iter + 4, r2);
         }
 #else
-        uint64_t r1, r2, r3, r4;
+        uint64_t r1 = 0, r2 = 0, r3 = 0, r4 = 0; // See above why we initialize to 0.
         __asm__ volatile (".byte 0x48, 0x0f, 0xc7, 0xf0, " // rdrand %rax
                                 "0x48, 0x0f, 0xc7, 0xf3, " // rdrand %rbx
                                 "0x48, 0x0f, 0xc7, 0xf1, " // rdrand %rcx

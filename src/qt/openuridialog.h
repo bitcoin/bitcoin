@@ -22,7 +22,7 @@ public:
     QString getURI();
 
 protected Q_SLOTS:
-    void accept();
+    void accept() override;
 
 private Q_SLOTS:
     void on_selectFileButton_clicked();

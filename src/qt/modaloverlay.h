@@ -36,8 +36,8 @@ public Q_SLOTS:
     bool isLayerVisible() const { return layerIsVisible; }
 
 protected:
-    bool eventFilter(QObject * obj, QEvent * ev);
-    bool event(QEvent* ev);
+    bool eventFilter(QObject * obj, QEvent * ev) override;
+    bool event(QEvent* ev) override;
 
 private:
     Ui::ModalOverlay *ui;

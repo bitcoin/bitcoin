@@ -17,7 +17,7 @@ class BitcoinAddressEntryValidator : public QValidator
 public:
     explicit BitcoinAddressEntryValidator(QObject *parent, bool fAllowURI = false);
 
-    State validate(QString &input, int &pos) const;
+    State validate(QString &input, int &pos) const override;
 
 private:
     bool fAllowURI;
@@ -32,7 +32,7 @@ class BitcoinAddressCheckValidator : public QValidator
 public:
     explicit BitcoinAddressCheckValidator(QObject *parent);
 
-    State validate(QString &input, int &pos) const;
+    State validate(QString &input, int &pos) const override;
 };
 
 #endif // BITCOIN_QT_BITCOINADDRESSVALIDATOR_H
