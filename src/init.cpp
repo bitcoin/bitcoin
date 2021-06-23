@@ -331,6 +331,8 @@ void Shutdown(NodeContext& node)
                 }
             }
             pblocktree.reset();
+            // SYSCOIN
+            pnevmblocktree.reset();
         }
        
         passetdb.reset();
@@ -1660,6 +1662,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();
                 pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
+                // SYSCOIN
+                pnevmblocktree.reset();
+                pnevmblocktree.reset(new CNEVMBlockTreeDB(nBlockTreeDBCache, false, fReset));
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);

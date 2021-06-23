@@ -165,6 +165,8 @@ extern std::vector<CBlockFileInfo> vinfoBlockFile;
 extern int nLastBlockFile;
 extern bool fCheckForPruning;
 extern std::set<CBlockIndex*> setDirtyBlockIndex;
+// SYSCOIN
+extern std::set<CNEVMBlockIndex*> setDirtyNEVMBlockIndex;
 extern std::set<int> setDirtyFileInfo;
 void FlushBlockFile(bool fFinalize = false, bool finalize_undo = false);
 // ... TODO move fully to blockstorage
@@ -174,6 +176,13 @@ CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash) const
     AssertLockHeld(cs_main);
     BlockMap::const_iterator it = m_block_index.find(hash);
     return it == m_block_index.end() ? nullptr : it->second;
+}
+// SYSCOIN
+CNEVMBlockIndex* BlockManager::LookupNEVMBlockIndex(const uint256& hash) const
+{
+    AssertLockHeld(cs_main);
+    NEVMBlockMap::const_iterator it = m_block_nevm_index.find(hash);
+    return it == m_block_nevm_index.end() ? nullptr : it->second;
 }
 std::pair<PrevBlockMap::iterator,PrevBlockMap::iterator> BlockManager::LookupBlockIndexPrev(const uint256& hash)
 {
@@ -201,6 +210,7 @@ CBlockIndex* BlockManager::FindForkInGlobalIndex(const CChain& chain, const CBlo
 
 std::unique_ptr<CBlockTreeDB> pblocktree;
 // SYSCOIN
+std::unique_ptr<CNEVMBlockTreeDB> pnevmblocktree;
 std::unique_ptr<CBlockIndexDB> pblockindexdb;
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        const CCoinsViewCache& inputs, unsigned int flags, bool cacheSigStore,
@@ -1760,11 +1770,10 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
 // walk through ancestors and remove NEVM block data since chainlocked block ancestors wouldn't need to reverify evm data
-void PruneNEVMData(CBlockIndex* pindex) {
+void PruneNEVMData(CNEVMBlockIndex* pindex) {
     // go back MAX_TIP_AGE*2 blocks back and add to dirty index to clear vchNEVMBlockData
     int64_t nAgeThreshold = nMaxTipAge*2;
-    int64_t nCount = 0;
-    int64_t nTime = GetTime();
+    int64_t nTime = GetAdjustedTime();
     while (pindex != nullptr) {
         if (pindex->GetBlockTime() >= (nTime - nAgeThreshold)) {
              pindex = pindex->pprev;
@@ -1773,15 +1782,9 @@ void PruneNEVMData(CBlockIndex* pindex) {
             break;
         }
     }
-    // go back further MAX_TIP_AGE*2 blocks and mark all indexes that have evm blocks as dirty, should get cleaned up when storing to disk
+    // go back further MAX_TIP_AGE blocks and delete all mapped blocks older than tip age *2
     while (pindex != nullptr) {
-        nCount++;
-        if (!pindex->vchNEVMBlockData.empty()) {
-            setDirtyBlockIndex.insert(pindex);
-        }
-        if(nCount >= nAgeThreshold) {
-            break;
-        }
+        setDirtyNEVMBlockIndex.insert(pindex);
         pindex = pindex->pprev;
     }
 }
@@ -1818,7 +1821,7 @@ bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTx
     const bool bWaitForResponse = !fInitialDownload;
     // if we should be waiting for response and this block comes in from RPC/P2P, we should send nevm block data to Geth
     if(bWaitForResponse) {
-        evmBlock.vchNEVMBlockData = block.vchNEVMBlockData;
+        evmBlock.vchNEVMBlockData = std::move(block.vchNEVMBlockData);
     }
     GetMainSignals().NotifyEVMBlockConnect(evmBlock, state, fJustCheck? uint256(): nBlockHash, bWaitForResponse);
     bool res = state.IsValid();
@@ -2491,8 +2494,7 @@ bool CChainState::FlushStateToDisk(
                     vFiles.push_back(std::make_pair(*it, &vinfoBlockFile[*it]));
                     setDirtyFileInfo.erase(it++);
                 }
-                // SYSCOIN
-                std::vector<CBlockIndex*> vBlocks;
+                std::vector<const CBlockIndex*> vBlocks;
                 vBlocks.reserve(setDirtyBlockIndex.size());
                 for (std::set<CBlockIndex*>::iterator it = setDirtyBlockIndex.begin(); it != setDirtyBlockIndex.end(); ) {
                     vBlocks.push_back(*it);
@@ -2500,6 +2502,16 @@ bool CChainState::FlushStateToDisk(
                 }
                 if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks)) {
                     return AbortNode(state, "Failed to write to block index database");
+                }     
+                // SYSCOIN
+                std::vector<const CNEVMBlockIndex*> vBlocksNEVM;
+                vBlocksNEVM.reserve(setDirtyNEVMBlockIndex.size());
+                for (std::set<CNEVMBlockIndex*>::iterator it = setDirtyNEVMBlockIndex.begin(); it != setDirtyNEVMBlockIndex.end(); ) {
+                    vBlocksNEVM.push_back(*it);
+                    setDirtyNEVMBlockIndex.erase(it++);
+                }
+                if (!pnevmblocktree->WriteBatchSync(vBlocksNEVM)) {
+                    return AbortNode(state, "Failed to write to nevm block index database");
                 }
             }
             // Finally remove any pruned files
@@ -3485,7 +3497,18 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, enum Block
     BlockMap::iterator it = m_block_index.find(hash);
     if (it != m_block_index.end())
         return it->second;
-
+    // SYSCOIN
+    if(!block.vchNEVMBlockData.empty()) {
+        CNEVMBlockIndex* pindexNewNEVM = new CNEVMBlockIndex(block.vchNEVMBlockData);
+        NEVMBlockMap::iterator mi = m_block_nevm_index.insert(std::make_pair(hash, pindexNewNEVM)).first;
+        pindexNewNEVM->phashBlock = &((*mi).first);
+        NEVMBlockMap::iterator miPrev = m_block_nevm_index.find(block.hashPrevBlock);
+        if (miPrev != m_block_nevm_index.end())
+        {
+            pindexNewNEVM->pprev = (*miPrev).second;
+        }
+        setDirtyNEVMBlockIndex.insert(pindexNewNEVM);
+    }
     // Construct new block index object
     CBlockIndex* pindexNew = new CBlockIndex(block);
     // We assign the sequence id to blocks only when the full data is available,
@@ -3530,8 +3553,6 @@ void CChainState::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pi
     pindexNew->nDataPos = pos.nPos;
     pindexNew->nUndoPos = 0;
     pindexNew->nStatus |= BLOCK_HAVE_DATA;
-    // SYSCOIN
-    pindexNew->vchNEVMBlockData = block.vchNEVMBlockData;
     if (IsWitnessEnabled(pindexNew->pprev, consensusParams)) {
         pindexNew->nStatus |= BLOCK_OPT_WITNESS;
     }
@@ -3771,11 +3792,14 @@ static bool ContextualCheckBlockHeader(const bool ibd, const CBlockHeader& block
     // if not initial download, blocks should have nevm data present in header
     if((pindexPrev->nHeight+1) >= consensusParams.nNEVMStartBlock) {
         if(!fRegTest && !ibd && block.vchNEVMBlockData.empty()) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "nevm-data-not-found");
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-data-not-found");
         }
         const int64_t &nAgeThreshold = nMaxTipAge*3;
         if (!block.vchNEVMBlockData.empty() && block.GetBlockTime() < (nAdjustedTime - nAgeThreshold)) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "nevm-data-not-expected");
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-data-not-expected");
+        }
+        if (block.vchNEVMBlockData.size() > MAX_HEADER_SIZE_NEVM) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-data-too-large");
         }
     }
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
@@ -4048,7 +4072,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
     // SYSCOIN
     bool ibd = IsInitialBlockDownload();
-    bool accepted_header = m_blockman.AcceptBlockHeader(ibd && fNewBlock, block, state, chainparams, &pindex);
+    bool accepted_header = m_blockman.AcceptBlockHeader(ibd || !fNewBlock, block, state, chainparams, &pindex);
     CheckBlockIndex(chainparams.GetConsensus());
 
     if (!accepted_header)
@@ -4346,15 +4370,38 @@ CBlockIndex * BlockManager::InsertBlockIndex(const uint256& hash)
 
     return pindexNew;
 }
+// SYSCOIN
+CNEVMBlockIndex * BlockManager::InsertNEVMBlockIndex(const uint256& hash)
+{
+    AssertLockHeld(cs_main);
+
+    if (hash.IsNull())
+        return nullptr;
+
+    // Return existing
+    NEVMBlockMap::iterator mi = m_block_nevm_index.find(hash);
+    if (mi != m_block_nevm_index.end())
+        return (*mi).second;
+
+    // Create new
+    CNEVMBlockIndex* pindexNew = new CNEVMBlockIndex();
+    mi = m_block_nevm_index.insert(std::make_pair(hash, pindexNew)).first;
+    pindexNew->phashBlock = &((*mi).first);
+
+    return pindexNew;
+}
 
 bool BlockManager::LoadBlockIndex(
     const Consensus::Params& consensus_params,
     CBlockTreeDB& blocktree,
+    CNEVMBlockTreeDB& nevmblocktree,
     std::set<CBlockIndex*, CBlockIndexWorkComparator>& block_index_candidates)
 {
     if (!blocktree.LoadBlockIndexGuts(consensus_params, [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); }))
         return false;
-
+    // SYSCOIN
+    if (!nevmblocktree.LoadBlockIndexGuts(consensus_params, [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertNEVMBlockIndex(hash); }))
+        return false;
     // Calculate nChainWork
     std::vector<std::pair<int, CBlockIndex*> > vSortedByHeight;
     vSortedByHeight.reserve(m_block_index.size());
@@ -4420,8 +4467,9 @@ void BlockManager::Unload() {
 
 bool CChainState::LoadBlockIndexDB(const CChainParams& chainparams)
 {
+    // SYSCOIN
     if (!m_blockman.LoadBlockIndex(
-            chainparams.GetConsensus(), *pblocktree,
+            chainparams.GetConsensus(), *pblocktree, *pnevmblocktree,
             setBlockIndexCandidates)) {
         return false;
     }
@@ -4808,6 +4856,8 @@ void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman)
     vinfoBlockFile.clear();
     nLastBlockFile = 0;
     setDirtyBlockIndex.clear();
+    // SYSCOIN
+    setDirtyNEVMBlockIndex.clear();
     setDirtyFileInfo.clear();
     versionbitscache.Clear();
     for (int b = 0; b < VERSIONBITS_NUM_BITS; b++) {

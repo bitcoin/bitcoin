@@ -157,6 +157,8 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     GetMainSignals().RegisterBackgroundSignalScheduler(*m_node.scheduler);
 
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
+    // SYSCOIN
+    pnevmblocktree.reset(new CNEVMBlockTreeDB(1 << 20, true));
 
     m_node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
     m_node.mempool = std::make_unique<CTxMemPool>(m_node.fee_estimator.get(), 1);
@@ -191,6 +193,7 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.chainman->Reset();
     m_node.chainman.reset();
     pblocktree.reset();
+    pnevmblocktree.reset();
     governance.reset();
 }
 

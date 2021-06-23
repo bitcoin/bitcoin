@@ -42,6 +42,10 @@ bool fCheckForPruning = false;
 /** Dirty block index entries. */
 std::set<CBlockIndex*> setDirtyBlockIndex;
 
+// SYSCOIN
+/** Dirty NEVM block index entries. */
+std::set<CNEVMBlockIndex*> setDirtyNEVMBlockIndex;
+
 /** Dirty block file entries. */
 std::set<int> setDirtyFileInfo;
 // } // namespace
@@ -371,7 +375,6 @@ static bool ReadBlockOrHeader(T& block, const FlatFilePos& pos, const Consensus:
     if (consensusParams.signet_blocks && !CheckSignetBlockSolution(block, consensusParams)) {
         return error("ReadBlockFromDisk: Errors in block solution at %s", pos.ToString());
     }
-
     return true;
 }
 template<typename T>
@@ -387,9 +390,7 @@ static bool ReadBlockOrHeader(T& block, const CBlockIndex* pindex, const Consens
         return false;
     if (block.GetHash() != pindex->GetBlockHash())
         return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
-                pindex->ToString(), pindex->GetBlockPos().ToString());
-    // SYSCOIN
-    block.vchNEVMBlockData = pindex->vchNEVMBlockData;
+                pindex->ToString(), pindex->GetBlockPos().ToString());    
     return true;
 }
 bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams, bool fCheckPOW)

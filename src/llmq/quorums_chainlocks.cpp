@@ -15,7 +15,6 @@
 #include <txmempool.h>
 #include <validation.h>
 #include <scheduler.h>
-extern std::set<CBlockIndex*> setDirtyBlockIndex;
 namespace llmq
 {
 
@@ -452,7 +451,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         }
         {
             LOCK(cs_main);
-            PruneNEVMData(pindexSig);
+            PruneNEVMData(chainman.m_blockman.LookupNEVMBlockIndex(clsig.blockHash));
         }
         // Note: do not hold cs while calling RelayInv
         AssertLockNotHeld(cs);

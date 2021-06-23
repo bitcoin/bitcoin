@@ -1876,10 +1876,12 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         // we do twice max tip as header validation will enforce no data if more than 3 days and data required for anything under 1 day (IBD)
         // so we keep 1 day buffer for time drift
         int64_t nAgeThreshold = nMaxTipAge*2;
-        int64_t nTime = GetTime();
-        if (!pblockRead->vchNEVMBlockData.empty() && pindex->GetBlockTime() < (nTime - nAgeThreshold)) {
-            LogPrint(BCLog::NET, "blockrequest clear evm data since blocktime %lld is before threshold %lld\n", pindex->GetBlockTime(),(nTime - nAgeThreshold)); 
-            pblockRead->vchNEVMBlockData.clear();
+        int64_t nTime = GetAdjustedTime();
+        if(pindex->GetBlockTime() >= (nTime - nAgeThreshold)) {
+            auto *NEVMBlockIndex = m_chainman.m_blockman.LookupNEVMBlockIndex(pindex->GetBlockHash());
+            if(NEVMBlockIndex != nullptr) {
+                pblockRead->vchNEVMBlockData = NEVMBlockIndex->vchNEVMBlockData;
+            }
         }
         pblock = pblockRead;
     }
@@ -3386,17 +3388,18 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // SYSCOIN
         unsigned nSizeNEVM = 0;
         int64_t nAgeThreshold = nMaxTipAge*2;
-        int64_t nTime = GetTime();
+        int64_t nTime = GetAdjustedTime();
         LogPrint(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
         for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex))
         {
             // SYSCOIN
             CBlockHeader header = pindex->GetBlockHeader(m_chainparams.GetConsensus(), false);
             ++nCount;
-            // SYSCOIN skip nevm data if block is older than age threshold
-            if (!header.vchNEVMBlockData.empty() && pindex->GetBlockTime() < (nTime - nAgeThreshold)) {
-                 LogPrint(BCLog::NET, "getheaders clear evm data since blocktime %lld is before threshold %lld\n", pindex->GetBlockTime(),(nTime - nAgeThreshold)); 
-                 header.vchNEVMBlockData.clear();
+            if(pindex->GetBlockTime() >= (nTime - nAgeThreshold)) {
+                auto *NEVMBlockIndex = m_chainman.m_blockman.LookupNEVMBlockIndex(pindex->GetBlockHash());
+                if(NEVMBlockIndex != nullptr) {
+                    header.vchNEVMBlockData = NEVMBlockIndex->vchNEVMBlockData;
+                }
             }
             nSize += GetSerializeSize(header, PROTOCOL_VERSION);
             nSizeNEVM += header.vchNEVMBlockData.size();
@@ -4852,9 +4855,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             // add all to the inv queue.
             LOCK(peer->m_block_inv_mutex);
             std::vector<CBlock> vHeaders;
-            // SYSCOIN
-            int64_t nAgeThreshold = nMaxTipAge*2;
-            int64_t nTime = GetTime();
             bool fRevertToInv = ((!state.fPreferHeaders &&
                                  (!state.fPreferHeaderAndIDs || peer->m_blocks_for_headers_relay.size() > 1)) ||
                                  peer->m_blocks_for_headers_relay.size() > MAX_BLOCKS_TO_ANNOUNCE);
@@ -4866,14 +4866,19 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 // Try to find first header that our peer doesn't have, and
                 // then send all headers past that one.  If we come across any
                 // headers that aren't on m_chainman.ActiveChain(), give up.
+                // SYSCOIN
+                int64_t nAgeThreshold = nMaxTipAge*2;
+                int64_t nTime = GetAdjustedTime();
                 for (const uint256& hash : peer->m_blocks_for_headers_relay) {
                     const CBlockIndex* pindex = m_chainman.m_blockman.LookupBlockIndex(hash);
                     assert(pindex);
-                    // SYSCOIN skip nevm data if block is older than age threshold
+                    // SYSCOIN
                     CBlockHeader header = pindex->GetBlockHeader(consensusParams, false);
-                    if (!header.vchNEVMBlockData.empty() && pindex->GetBlockTime() < (nTime - nAgeThreshold)) {
-                        LogPrint(BCLog::NET, "initial getheaders clear evm data since blocktime %lld is before threshold %lld\n", pindex->GetBlockTime(),(nTime - nAgeThreshold)); 
-                        header.vchNEVMBlockData.clear();
+                    if (pindex->GetBlockTime() >= (nTime - nAgeThreshold)) {
+                        auto *NEVMBlockIndex = m_chainman.m_blockman.LookupNEVMBlockIndex(pindex->GetBlockHash());
+                        if(NEVMBlockIndex != nullptr) {
+                            header.vchNEVMBlockData = NEVMBlockIndex->vchNEVMBlockData;
+                        }
                     }
                     if (m_chainman.ActiveChain()[pindex->nHeight] != pindex) {
                         // Bail out if we reorged away from this block

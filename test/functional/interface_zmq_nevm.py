@@ -160,7 +160,6 @@ class ZMQTest (SyscoinTestFramework):
         self.skip_if_no_syscoind_zmq()
 
     def run_test(self):
-    
         self.ctx = zmq.Context()
         self.ctxpub = zmq.Context()
         try:
@@ -241,7 +240,6 @@ class ZMQTest (SyscoinTestFramework):
         self.nodes[1].invalidateblock(blockhash)
         self.sync_blocks()
         # ensure block 205 is the latest on publisher
-        assert_equal(int(prevblockhash, 16), publisher.getLastSYSBlock())
         assert_equal(int(prevblockhash, 16), publisher.getLastSYSBlock())
         assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
         # go back to 210 (tip)
