@@ -1869,19 +1869,8 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     */} else {
         // Send block from disk
         std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
-        if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus()), false) {
+        if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus(), false, &m_chainman.m_blockman)) {
             assert(!"cannot load block from disk");
-        }
-        // SYSCOIN if block is older than max tip age*2 we shouldn't need to send evm block data
-        // we do twice max tip as header validation will enforce no data if more than 3 days and data required for anything under 1 day (IBD)
-        // so we keep 1 day buffer for time drift
-        int64_t nAgeThreshold = nMaxTipAge*2;
-        int64_t nTime = GetAdjustedTime();
-        if(pindex->GetBlockTime() >= (nTime - nAgeThreshold)) {
-            auto *NEVMBlockIndex = m_chainman.m_blockman.LookupNEVMBlockIndex(pindex->GetBlockHash());
-            if(NEVMBlockIndex != nullptr) {
-                pblockRead->vchNEVMBlockData = NEVMBlockIndex->vchNEVMBlockData;
-            }
         }
         pblock = pblockRead;
     }
@@ -3387,20 +3376,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         unsigned nSize = 0;
         // SYSCOIN
         unsigned nSizeNEVM = 0;
-        int64_t nAgeThreshold = nMaxTipAge*2;
-        int64_t nTime = GetAdjustedTime();
         LogPrint(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
         for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex))
         {
             // SYSCOIN
-            CBlockHeader header = pindex->GetBlockHeader(m_chainparams.GetConsensus(), false);
+            const CBlockHeader &header = pindex->GetBlockHeader(m_chainparams.GetConsensus(), false, &m_chainman.m_blockman);
             ++nCount;
-            if(pindex->GetBlockTime() >= (nTime - nAgeThreshold)) {
-                auto *NEVMBlockIndex = m_chainman.m_blockman.LookupNEVMBlockIndex(pindex->GetBlockHash());
-                if(NEVMBlockIndex != nullptr) {
-                    header.vchNEVMBlockData = NEVMBlockIndex->vchNEVMBlockData;
-                }
-            }
             nSize += GetSerializeSize(header, PROTOCOL_VERSION);
             nSizeNEVM += header.vchNEVMBlockData.size();
             vHeaders.push_back(header);
@@ -3891,7 +3872,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 LogPrint(BCLog::NET, "Peer %d sent us block transactions for block we weren't expecting\n", pfrom.GetId());
                 return;
             }
-
             PartiallyDownloadedBlock& partialBlock = *it->second.second->partialBlock;
             ReadStatus status = partialBlock.FillBlock(*pblock, resp.txn);
             if (status == READ_STATUS_INVALID) {
@@ -4866,20 +4846,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 // Try to find first header that our peer doesn't have, and
                 // then send all headers past that one.  If we come across any
                 // headers that aren't on m_chainman.ActiveChain(), give up.
-                // SYSCOIN
-                int64_t nAgeThreshold = nMaxTipAge*2;
-                int64_t nTime = GetAdjustedTime();
                 for (const uint256& hash : peer->m_blocks_for_headers_relay) {
                     const CBlockIndex* pindex = m_chainman.m_blockman.LookupBlockIndex(hash);
                     assert(pindex);
-                    // SYSCOIN
-                    CBlockHeader header = pindex->GetBlockHeader(consensusParams, false);
-                    if (pindex->GetBlockTime() >= (nTime - nAgeThreshold)) {
-                        auto *NEVMBlockIndex = m_chainman.m_blockman.LookupNEVMBlockIndex(pindex->GetBlockHash());
-                        if(NEVMBlockIndex != nullptr) {
-                            header.vchNEVMBlockData = NEVMBlockIndex->vchNEVMBlockData;
-                        }
-                    }
                     if (m_chainman.ActiveChain()[pindex->nHeight] != pindex) {
                         // Bail out if we reorged away from this block
                         fRevertToInv = true;
@@ -4903,14 +4872,14 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     pBestIndex = pindex;
                     if (fFoundStartingHeader) {
                         // SYSCOIN add this to the headers message
-                        vHeaders.push_back(header);
+                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams, false, &m_chainman.m_blockman));
                     } else if (PeerHasHeader(&state, pindex)) {
                         continue; // keep looking for the first new block
                     } else if (pindex->pprev == nullptr || PeerHasHeader(&state, pindex->pprev)) {
                         // SYSCOIN Peer doesn't have this header but they do have the prior one.
                         // Start sending headers.
                         fFoundStartingHeader = true;
-                        vHeaders.push_back(header);
+                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams, false, &m_chainman.m_blockman));
                     } else {
                         // Peer doesn't have this header or the prior one -- nothing will
                         // connect, so bail out.
@@ -4932,8 +4901,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     {
                         LOCK(cs_most_recent_block);
                         if (most_recent_block_hash == pBestIndex->GetBlockHash()) {
-                            if (state.fWantsCmpctWitness || !fWitnessesPresentInMostRecentCompactBlock)
+                            if (state.fWantsCmpctWitness || !fWitnessesPresentInMostRecentCompactBlock) {
                                 m_connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, *most_recent_compact_block));
+                            }
                             else {
                                 CBlockHeaderAndShortTxIDs cmpctblock(*most_recent_block, state.fWantsCmpctWitness);
                                 m_connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, cmpctblock));
@@ -4943,7 +4913,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     }
                     if (!fGotBlockFromCache) {
                         CBlock block;
-                        bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams, false);
+                        // SYSCOIN
+                        bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams, false, &m_chainman.m_blockman);
                         assert(ret);
                         CBlockHeaderAndShortTxIDs cmpctblock(block, state.fWantsCmpctWitness);
                         m_connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, cmpctblock));

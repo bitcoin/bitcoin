@@ -5,9 +5,12 @@
 
 #include <chain.h>
 #include <node/blockstorage.h>
+// SYSCOIN
+#include <timedata.h>
+#include <validation.h>
 /* Moved here from the header, because we need auxpow and the logic
    becomes more involved.  */
-CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParams, bool fCheckPOW) const
+CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParams, bool fCheckPOW, BlockManager* blockman) const
 {
     CBlockHeader block;
 
@@ -18,7 +21,7 @@ CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParam
        have to read the actual *header*, not the full block.  */
     if (block.IsAuxpow())
     {
-        ReadBlockHeaderFromDisk(block, this, consensusParams, fCheckPOW);
+        ReadBlockHeaderFromDisk(block, this, consensusParams, fCheckPOW, blockman);
         return block;
     }
 
@@ -28,6 +31,15 @@ CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParam
     block.nTime          = nTime;
     block.nBits          = nBits;
     block.nNonce         = nNonce;
+    if(blockman) {
+        int64_t nAgeThreshold = nMaxTipAge*2;
+        if(nTime >= (GetAdjustedTime() - nAgeThreshold)) {
+            const auto *NEVMBlockIndex = blockman->LookupNEVMBlockIndex(block.GetHash());
+            if(NEVMBlockIndex != nullptr) {
+                block.vchNEVMBlockData = NEVMBlockIndex->vchNEVMBlockData;
+            }
+        }
+    }
     return block;
 }
 

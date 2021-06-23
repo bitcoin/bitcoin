@@ -46,6 +46,7 @@ def receive_thread_nevmblockconnect(self, idx, subscriber, publisher):
                 res = b"connected"
             else:
                 res = b"not connected"
+            self.log.info('data size {}'.format(len(evmBlockConnect.blockdata)))
             publisher.send([subscriber.topic, res])
         except zmq.ContextTerminated:
             sleep(1)
@@ -176,10 +177,10 @@ class ZMQTest (SyscoinTestFramework):
         for topic, address in services:
             socket = self.ctx.socket(zmq.SUB)
             subscribers.append(ZMQSubscriber(socket, topic.encode()))
-        args = ["-zmqpub%s=%s" % (topic, address) for topic, address in services]
+        self.extra_args[idx] = ["-zmqpub%s=%s" % (topic, address) for topic, address in services]
         # publisher on Syscoin can have option to also be a subscriber on another address, related each publisher to a subscriber (in our case we have 3 publisher events that also would subscribe to events on the same topic)
-        args += ["-zmqsubpub%s=%s" % (topic, address) for topic, address in servicessub]
-        self.restart_node(idx, args + self.extra_args[idx])
+        self.extra_args[idx] += ["-zmqsubpub%s=%s" % (topic, address) for topic, address in servicessub]
+        self.restart_node(idx, self.extra_args[idx])
         for i, sub in enumerate(subscribers):
             sub.socket.connect(services[i][1])
 
@@ -250,5 +251,35 @@ class ZMQTest (SyscoinTestFramework):
         assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
         assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        # restart nodes and check for consistency
+        self.log.info('restarting node 0')
+        self.restart_node(0, self.extra_args[0])
+        self.sync_blocks()
+        assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
+        assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
+        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        self.log.info('restarting node 1')
+        self.restart_node(1, self.extra_args[1])
+        self.sync_blocks()
+        assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
+        assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
+        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        # reindex nodes and there should be 6 connect messages from blocks 205-210
+        # but SYS node does not wait and validate a response, because publisher would have returned "not connected" yet its still OK because its set and forget on sync/reindex
+        self.log.info('reindexing node 0')
+        self.extra_args[0] += ["-reindex"]
+        self.restart_node(0, self.extra_args[0])
+        self.sync_blocks()
+        assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
+        assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
+        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        self.log.info('reindexing node 1')
+        self.extra_args[1] += ["-reindex"]
+        self.restart_node(1, self.extra_args[1])
+        self.sync_blocks()
+        assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
+        assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
+        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        self.log.info('done')
 if __name__ == '__main__':
     ZMQTest().main()

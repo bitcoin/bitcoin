@@ -23,6 +23,7 @@
 #include <dsnotificationinterface.h>
 #include <walletinitinterface.h>
 #include <primitives/block.h>
+#include <timedata.h>
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
 bool fHavePruned = false;
@@ -350,7 +351,7 @@ bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& st
    both a block and its header.  */
 
 template<typename T>
-static bool ReadBlockOrHeader(T& block, const FlatFilePos& pos, const Consensus::Params& consensusParams, bool fCheckPOW)
+static bool ReadBlockOrHeader(T& block, const FlatFilePos& pos, const Consensus::Params& consensusParams, bool fCheckPOW, const BlockManager* blockman)
 {
     block.SetNull();
 
@@ -374,11 +375,23 @@ static bool ReadBlockOrHeader(T& block, const FlatFilePos& pos, const Consensus:
     // Signet only: check block solution
     if (consensusParams.signet_blocks && !CheckSignetBlockSolution(block, consensusParams)) {
         return error("ReadBlockFromDisk: Errors in block solution at %s", pos.ToString());
-    }
+    } 
+  
+    // SYSCOIN
+     if(blockman) {
+        int64_t nAgeThreshold = nMaxTipAge*2;
+        if(block.nTime >= (GetAdjustedTime() - nAgeThreshold)) {
+            LOCK(cs_main);
+            const auto *NEVMBlockIndex = blockman->LookupNEVMBlockIndex(block.GetHash());
+            if(NEVMBlockIndex != nullptr) {
+                block.vchNEVMBlockData = NEVMBlockIndex->vchNEVMBlockData;
+            }
+        }
+    } 
     return true;
 }
 template<typename T>
-static bool ReadBlockOrHeader(T& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams, bool fCheckPOW)
+static bool ReadBlockOrHeader(T& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams, bool fCheckPOW, const BlockManager* blockman)
 {
     FlatFilePos blockPos;
     {
@@ -386,26 +399,26 @@ static bool ReadBlockOrHeader(T& block, const CBlockIndex* pindex, const Consens
         blockPos = pindex->GetBlockPos();
     }
 
-    if (!ReadBlockOrHeader(block, blockPos, consensusParams, fCheckPOW))
+    if (!ReadBlockOrHeader(block, blockPos, consensusParams, fCheckPOW, blockman))
         return false;
     if (block.GetHash() != pindex->GetBlockHash())
         return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
-                pindex->ToString(), pindex->GetBlockPos().ToString());    
+                pindex->ToString(), pindex->GetBlockPos().ToString());  
     return true;
 }
-bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams, bool fCheckPOW)
+bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams, bool fCheckPOW, const BlockManager* blockman)
 {
-    return ReadBlockOrHeader(block, pos, consensusParams, fCheckPOW);
+    return ReadBlockOrHeader(block, pos, consensusParams, fCheckPOW, blockman);
 }
 
- bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams, bool fCheckPOW)
+ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams, bool fCheckPOW, const BlockManager* blockman)
 {
-    return ReadBlockOrHeader(block, pindex, consensusParams, fCheckPOW);
+    return ReadBlockOrHeader(block, pindex, consensusParams, fCheckPOW, blockman);
 }
 
- bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams, bool fCheckPOW)
+ bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams, bool fCheckPOW, const BlockManager* blockman)
 {
-    return ReadBlockOrHeader(block, pindex, consensusParams, fCheckPOW);
+    return ReadBlockOrHeader(block, pindex, consensusParams, fCheckPOW, blockman);
 }
 
 static bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessageHeader::MessageStartChars& messageStart)

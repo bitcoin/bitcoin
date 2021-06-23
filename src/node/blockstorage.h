@@ -21,6 +21,7 @@ class CChain;
 class CChainParams;
 class ChainstateManager;
 // SYSCOIN
+class BlockManager;
 class CDSNotificationInterface;
 class CDeterministicMNManager;
 class CBlockHeader;
@@ -71,12 +72,12 @@ uint64_t CalculateCurrentUsage();
 void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune);
 
 /** Functions for disk access for blocks */
-bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams, bool fCheckPOW = true);
-bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams, bool fCheckPOW = true);
+bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams, bool fCheckPOW = true, const BlockManager* blockman = nullptr);
+bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams, bool fCheckPOW = true, const BlockManager* blockman = nullptr);
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, const CMessageHeader::MessageStartChars& message_start);
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex, const CMessageHeader::MessageStartChars& message_start);
 // SYSCOIN
-bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams, bool fCheckPOW = true);
+bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams, bool fCheckPOW = true, const BlockManager* blockman = nullptr);
 bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
 bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex* pindex, const CChainParams& chainparams);
 

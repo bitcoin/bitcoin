@@ -1818,9 +1818,12 @@ bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTx
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-duplicate");
     }
     // wait for nevm response if not IBD
-    const bool bWaitForResponse = !fInitialDownload;
+    const bool bWaitForResponse = !fInitialDownload && fLoaded;
     // if we should be waiting for response and this block comes in from RPC/P2P, we should send nevm block data to Geth
     if(bWaitForResponse) {
+        if(block.vchNEVMBlockData.empty()) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-empty");
+        }
         evmBlock.vchNEVMBlockData = std::move(block.vchNEVMBlockData);
     }
     GetMainSignals().NotifyEVMBlockConnect(evmBlock, state, fJustCheck? uint256(): nBlockHash, bWaitForResponse);
@@ -2764,9 +2767,11 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     // Read block from disk.
     int64_t nTime1 = GetTimeMicros();
     std::shared_ptr<const CBlock> pthisBlock;
+    
     if (!pblock) {
         std::shared_ptr<CBlock> pblockNew = std::make_shared<CBlock>();
-        if (!ReadBlockFromDisk(*pblockNew, pindexNew, chainparams.GetConsensus()))
+        // SYSCOIN
+        if (!ReadBlockFromDisk(*pblockNew, pindexNew, chainparams.GetConsensus(), true, &m_blockman))
             return AbortNode(state, "Failed to read block");
         pthisBlock = pblockNew;
     } else {
@@ -4463,6 +4468,12 @@ void BlockManager::Unload() {
     }
 
     m_block_index.clear();
+    // SYSCOIN
+    for (const NEVMBlockMap::value_type& entry : m_block_nevm_index) {
+        delete entry.second;
+    }
+
+    m_block_nevm_index.clear();
 }
 
 bool CChainState::LoadBlockIndexDB(const CChainParams& chainparams)

@@ -78,6 +78,4 @@ bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params,
 bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx,  const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut);
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut);
 uint256 GetNotarySigHash(const CTransaction &tx, const CAssetOut &vecOut);
-bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const bool fInitialDownload, const bool fJustCheck);
-bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block) ;
 #endif // SYSCOIN_SERVICES_ASSETCONSENSUS_H

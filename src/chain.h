@@ -15,7 +15,8 @@
 #include <uint256.h>
 
 #include <vector>
-
+// SYSCOIN
+class BlockManager;
 /**
  * Maximum amount of time that a block timestamp is allowed to exceed the
  * current network-adjusted time before the block will be accepted.
@@ -235,7 +236,7 @@ public:
         return ret;
     }
 
-    CBlockHeader GetBlockHeader(const Consensus::Params& consensusParams, bool fCheckPOW = true) const;
+    CBlockHeader GetBlockHeader(const Consensus::Params& consensusParams, bool fCheckPOW = true, BlockManager* blockman = nullptr) const;
 
     uint256 GetBlockHash() const
     {
@@ -340,9 +341,8 @@ public:
     CNEVMBlockIndex()
     {
     }
-    explicit CNEVMBlockIndex(const std::vector<unsigned char> &vchNEVMBlockDataIn)
+    explicit CNEVMBlockIndex(const std::vector<unsigned char> &vchNEVMBlockDataIn): vchNEVMBlockData(vchNEVMBlockDataIn)
     {
-        vchNEVMBlockData = std::move(vchNEVMBlockDataIn);
     }
     uint256 GetBlockHash() const
     {
