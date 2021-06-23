@@ -1418,7 +1418,7 @@ void CInstantSendManager::AskNodesForLockedTx(const uint256& txid)
 {
     std::vector<CNode*> nodesToAskFor;
     g_connman->ForEachNode([&](CNode* pnode) {
-        LOCK(pnode->cs_filter);
+        LOCK(pnode->cs_inventory);
         if (pnode->filterInventoryKnown.contains(txid)) {
             pnode->AddRef();
             nodesToAskFor.emplace_back(pnode);
