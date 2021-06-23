@@ -90,7 +90,7 @@ PS : Do not forget to replace the **"username"** below by yours.
 
 This command below may take **5-10 minutes**  
 
-        make -s -j5
+        make -s  # use "-j N" for N parallel jobs
 
 ### 7. Check everything is ok by trying to access below directory and the binaries
 
