@@ -1422,18 +1422,6 @@ if test x$use_boost = xyes; then
   AX_BOOST_SYSTEM
   AX_BOOST_FILESYSTEM
 
-  dnl Opt-in to Boost Process if external signer support is requested
-  if test "x$use_external_signer" != xno; then
-    AC_MSG_CHECKING(for Boost Process)
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <boost/process.hpp>]],
-     [[ boost::process::child* child = new boost::process::child; delete child; ]])],
-     [ AC_MSG_RESULT(yes)
-     AC_DEFINE([ENABLE_EXTERNAL_SIGNER],,[define if external signer support is enabled])
-     ],
-     [ AC_MSG_ERROR([Boost::Process is required for external signer support, but not available!])]
-    )
-  fi
-
   if test x$suppress_external_warnings != xno; then
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
   fi
@@ -1441,6 +1429,9 @@ if test x$use_boost = xyes; then
   BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB"
 fi
 
+if test "x$use_external_signer" != xno; then
+  AC_DEFINE([ENABLE_EXTERNAL_SIGNER],,[define if external signer support is enabled])
+fi
 AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "x$use_external_signer" = "xyes"])
 
 dnl Check for reduced exports
