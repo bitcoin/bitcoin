@@ -386,7 +386,7 @@ std::set<NodeId> BatchVerifyMessageSigs(CDKGSession& session, const std::vector<
         }
 
         // are all messages from the same node?
-        NodeId firstNodeId;
+        NodeId firstNodeId{-1};
         first = true;
         bool nodeIdsAllSame = true;
         for (auto it = messages.begin(); it != messages.end(); ++it) {
