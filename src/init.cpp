@@ -1394,7 +1394,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // SYSCOIN
     node.addrman = std::make_unique<CAddrMan>(Params().AllowMultiplePorts());
     assert(!node.banman);
-    node.banman = std::make_unique<BanMan>(gArgs.GetDataDirNet() / "banlist.dat", &uiInterface, args.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
+    node.banman = std::make_unique<BanMan>(gArgs.GetDataDirNet() / "banlist", &uiInterface, args.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);
     node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max()), *node.addrman, args.GetBoolArg("-networkactive", true));
 
