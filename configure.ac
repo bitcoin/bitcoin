@@ -865,8 +865,23 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
   }
   ])],
   [
-    AC_DEFINE(HAVE_THREAD_LOCAL,1,[Define if thread_local is supported.])
-    AC_MSG_RESULT(yes)
+   case $host in
+     *mingw*)
+        # mingw32's implementation of thread_local has also been shown to behave
+        # erroneously under concurrent usage; see:
+        # https://gist.github.com/jamesob/fe9a872051a88b2025b1aa37bfa98605
+        AC_MSG_RESULT(no)
+        ;;
+      *darwin*)
+        # TODO enable thread_local on later versions of Darwin where it is
+        # supported (per https://stackoverflow.com/a/29929949)
+        AC_MSG_RESULT(no)
+        ;;
+      *)
+        AC_DEFINE(HAVE_THREAD_LOCAL,1,[Define if thread_local is supported.])
+        AC_MSG_RESULT(yes)
+        ;;
+    esac
   ],
   [
     AC_MSG_RESULT(no)

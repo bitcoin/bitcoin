@@ -5,7 +5,10 @@
 
 #include <logging.h>
 #include <util.h>
+#include <utilthreadnames.h>
 #include <utiltime.h>
+
+#include <mutex>
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 
@@ -219,7 +222,7 @@ std::string ListActiveLogCategoriesString()
     return ret;
 }
 
-std::string BCLog::Logger::LogTimestampStr(const std::string &str)
+std::string BCLog::Logger::LogTimestampStr(const std::string& str)
 {
     std::string strStamped;
 
@@ -244,43 +247,29 @@ std::string BCLog::Logger::LogTimestampStr(const std::string &str)
     return strStamped;
 }
 
-std::string BCLog::Logger::LogThreadNameStr(const std::string &str)
-{
-    std::string strThreadLogged;
-
-    if (!m_log_thread_names)
-        return str;
-
-    std::string strThreadName = GetThreadName();
-
-    if (m_started_new_line)
-        strThreadLogged = strprintf("%16s | %s", strThreadName.c_str(), str.c_str());
-    else
-        strThreadLogged = str;
-
-    return strThreadLogged;
-}
-
 void BCLog::Logger::LogPrintStr(const std::string& str)
 {
     StdLockGuard scoped_lock(m_cs);
-    std::string strThreadLogged = LogThreadNameStr(str);
-    std::string strTimestamped = LogTimestampStr(strThreadLogged);
+    std::string str_prefixed = str;
 
-    if (!str.empty() && str[str.size()-1] == '\n')
-        m_started_new_line = true;
-    else
-        m_started_new_line = false;
+    if (m_log_threadnames && m_started_new_line) {
+        // 16 chars total, "dash-" is 5 of them and another 1 is a NUL terminator
+        str_prefixed.insert(0, "[" + strprintf("%10s", util::ThreadGetInternalName()) + "] ");
+    }
+
+    str_prefixed = LogTimestampStr(str_prefixed);
+
+    m_started_new_line = !str.empty() && str[str.size()-1] == '\n';
 
     if (m_buffering) {
         // buffer if we haven't started logging yet
-        m_msgs_before_open.push_back(strTimestamped);
+        m_msgs_before_open.push_back(str_prefixed);
         return;
     }
 
     if (m_print_to_console) {
         // print to console
-        fwrite(strTimestamped.data(), 1, strTimestamped.size(), stdout);
+        fwrite(str_prefixed.data(), 1, str_prefixed.size(), stdout);
         fflush(stdout);
     }
     if (m_print_to_file) {
@@ -296,7 +285,7 @@ void BCLog::Logger::LogPrintStr(const std::string& str)
                 m_fileout = new_fileout;
             }
         }
-        FileWriteStr(strTimestamped, m_fileout);
+        FileWriteStr(str_prefixed, m_fileout);
     }
 }
 
