@@ -5,10 +5,21 @@
 """Test the ZMQ notification interface."""
 import struct
 
-from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE, ADDRESS_BCRT1_P2WSH_OP_TRUE
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
+from test_framework.address import (
+    ADDRESS_BCRT1_P2WSH_OP_TRUE,
+    ADDRESS_BCRT1_UNSPENDABLE,
+)
+from test_framework.blocktools import (
+    add_witness_commitment,
+    create_block,
+    create_coinbase,
+)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import CTransaction, hash256, FromHex
+from test_framework.messages import (
+    CTransaction,
+    hash256,
+    tx_from_hex,
+)
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -393,10 +404,10 @@ class ZMQTest (BitcoinTestFramework):
             bump_info = self.nodes[0].bumpfee(orig_txid)
             # Mine the pre-bump tx
             block = create_block(int(self.nodes[0].getbestblockhash(), 16), create_coinbase(self.nodes[0].getblockcount()+1))
-            tx = FromHex(CTransaction(), raw_tx)
+            tx = tx_from_hex(raw_tx)
             block.vtx.append(tx)
             for txid in more_tx:
-                tx = FromHex(CTransaction(), self.nodes[0].getrawtransaction(txid))
+                tx = tx_from_hex(self.nodes[0].getrawtransaction(txid))
                 block.vtx.append(tx)
             add_witness_commitment(block)
             block.solve()

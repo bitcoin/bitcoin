@@ -190,14 +190,20 @@ def ser_string_vector(l):
     return r
 
 
-# Deserialize from a hex string representation (eg from RPC)
-def FromHex(obj, hex_string):
+def from_hex(obj, hex_string):
+    """Deserialize from a hex string representation (e.g. from RPC)
+
+    Note that there is no complementary helper like e.g. `to_hex` for the
+    inverse operation. To serialize a message object to a hex string, simply
+    use obj.serialize().hex()"""
     obj.deserialize(BytesIO(hex_str_to_bytes(hex_string)))
     return obj
 
-# Convert a binary-serializable object to hex (eg for submission via RPC)
-def ToHex(obj):
-    return obj.serialize().hex()
+
+def tx_from_hex(hex_string):
+    """Deserialize from hex string to a transaction object"""
+    return from_hex(CTransaction(), hex_string)
+
 
 # Objects that map to bitcoind objects, which can be serialized/deserialized
 

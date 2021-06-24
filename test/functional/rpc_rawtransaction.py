@@ -14,16 +14,17 @@ Test the following RPCs:
 
 from collections import OrderedDict
 from decimal import Decimal
-from io import BytesIO
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.messages import CTransaction, ToHex
+from test_framework.messages import (
+    CTransaction,
+    tx_from_hex,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     find_vout_for_address,
-    hex_str_to_bytes,
 )
 
 
@@ -127,23 +128,22 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-3, "Expected type bool", self.nodes[0].createrawtransaction, [], {}, 0, 'foo')
 
         self.log.info('Check that createrawtransaction accepts an array and object as outputs')
-        tx = CTransaction()
         # One output
-        tx.deserialize(BytesIO(hex_str_to_bytes(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs={address: 99}))))
+        tx = tx_from_hex(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs={address: 99}))
         assert_equal(len(tx.vout), 1)
         assert_equal(
             tx.serialize().hex(),
             self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=[{address: 99}]),
         )
         # Two outputs
-        tx.deserialize(BytesIO(hex_str_to_bytes(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=OrderedDict([(address, 99), (address2, 99)])))))
+        tx = tx_from_hex(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=OrderedDict([(address, 99), (address2, 99)])))
         assert_equal(len(tx.vout), 2)
         assert_equal(
             tx.serialize().hex(),
             self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=[{address: 99}, {address2: 99}]),
         )
         # Multiple mixed outputs
-        tx.deserialize(BytesIO(hex_str_to_bytes(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=multidict([(address, 99), (address2, 99), ('data', '99')])))))
+        tx = tx_from_hex(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=multidict([(address, 99), (address2, 99), ('data', '99')])))
         assert_equal(len(tx.vout), 3)
         assert_equal(
             tx.serialize().hex(),
@@ -450,14 +450,14 @@ class RawTransactionsTest(BitcoinTestFramework):
         # As transaction version is unsigned, this should convert to its unsigned equivalent.
         tx = CTransaction()
         tx.nVersion = -0x80000000
-        rawtx = ToHex(tx)
+        rawtx = tx.serialize().hex()
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['version'], 0x80000000)
 
         # Test the maximum transaction version number that fits in a signed 32-bit integer.
         tx = CTransaction()
         tx.nVersion = 0x7fffffff
-        rawtx = ToHex(tx)
+        rawtx = tx.serialize().hex()
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['version'], 0x7fffffff)
 
