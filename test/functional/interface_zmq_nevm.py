@@ -46,6 +46,9 @@ def receive_thread_nevmblockconnect(self, idx, subscriber, publisher):
                 res = b"connected"
             else:
                 res = b"not connected"
+            # stay paused during delay test
+            while publisher.artificialDelay == True:
+                sleep(0.1)
             # only send response if Syscoin node is waiting for it
             if evmBlockConnect.waitforresponse == True:
                 publisher.send([subscriber.topic, res])
@@ -82,6 +85,11 @@ def receive_thread_nevmblockdisconnect(self, idx, subscriber, publisher):
             sleep(1)
             break
 
+def thread_generate(self, node):
+    self.log.info('thread_generate start')
+    node.generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)
+    self.log.info('thread_generate done')
+
 # Test may be skipped and not have zmq installed
 try:
     import zmq
@@ -114,6 +122,7 @@ class ZMQPublisher:
         self.socket = socket
         self.sysToNEVMBlockMapping = {}
         self.NEVMToSysBlockMapping = {}
+        self.artificialDelay = False
 
     # Send message to subscriber
     def _send_to_publisher_and_check(self, msg_parts):
@@ -311,7 +320,22 @@ class ZMQTest (SyscoinTestFramework):
         self.nodes[0].invalidateblock(badhash)
         assert_equal(self.nodes[0].getblockcount(), 214)
         assert_equal(self.nodes[0].getbestblockhash(), besthash_n0)
-
+        self.nodes[0].reconsiderblock(badhash)
+        self.sync_blocks()
+        # test artificially delaying node0 then fork, and remove artificial delay and see node0 gets onto longest chain of node1 
+        self.log.info("Artificially delaying node0")
+        publisher.artificialDelay = True
+        self.log.info("Generating on node0 in seperate thread")
+        Thread(target=thread_generate, args=(self, self.nodes[0],)).start()
+        self.log.info("Creating re-org and letting node1 become longest chain, node0 should re-org to node0")
+        self.nodes[1].generatetoaddress(10, ADDRESS_BCRT1_UNSPENDABLE)
+        besthash = self.nodes[1].getbestblockhash()
+        publisher.artificialDelay = False
+        sleep(1)
+        self.sync_blocks()
+        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        assert_equal(int(besthash, 16), publisher.getLastSYSBlock())
+        assert_equal(self.nodes[0].getbestblockhash(), self.nodes[1].getbestblockhash())
         self.log.info('done')
 if __name__ == '__main__':
     ZMQTest().main()
