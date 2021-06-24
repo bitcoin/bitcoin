@@ -286,6 +286,9 @@ RPCHelpMan importaddress()
             if (fP2SH) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot use the p2sh flag with an address - use a script instead");
             }
+            if (OutputTypeFromDestination(dest) == OutputType::BECH32M) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Bech32m addresses cannot be imported into legacy wallets");
+            }
 
             pwallet->MarkDirty();
 
@@ -961,6 +964,9 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
         if (!IsValidDestination(dest)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address \"" + output + "\"");
         }
+        if (OutputTypeFromDestination(dest) == OutputType::BECH32M) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Bech32m addresses cannot be imported into legacy wallets");
+        }
         script = GetScriptForDestination(dest);
     } else {
         if (!IsHex(output)) {
@@ -1084,6 +1090,9 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
     auto parsed_desc = Parse(descriptor, keys, error, /* require_checksum = */ true);
     if (!parsed_desc) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
+    }
+    if (parsed_desc->GetOutputType() == OutputType::BECH32M) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Bech32m descriptors cannot be imported into legacy wallets");
     }
 
     have_solving_data = parsed_desc->IsSolvable();

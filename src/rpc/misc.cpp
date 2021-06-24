@@ -249,6 +249,9 @@ static RPCHelpMan createmultisig()
         if (!ParseOutputType(request.params[2].get_str(), output_type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[2].get_str()));
         }
+        if (output_type == OutputType::BECH32M) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "createmultisig cannot create bech32m multisig addresses");
+        }
     }
 
     // Construct using pay-to-script-hash:

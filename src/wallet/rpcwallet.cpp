@@ -273,6 +273,9 @@ static RPCHelpMan getnewaddress()
         if (!ParseOutputType(request.params[1].get_str(), output_type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[1].get_str()));
         }
+        if (output_type == OutputType::BECH32M && pwallet->GetLegacyScriptPubKeyMan()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Legacy wallets cannot provide bech32m addresses");
+        }
     }
 
     CTxDestination dest;
@@ -316,6 +319,9 @@ static RPCHelpMan getrawchangeaddress()
     if (!request.params[0].isNull()) {
         if (!ParseOutputType(request.params[0].get_str(), output_type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[0].get_str()));
+        }
+        if (output_type == OutputType::BECH32M && pwallet->GetLegacyScriptPubKeyMan()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Legacy wallets cannot provide bech32m addresses");
         }
     }
 
@@ -1006,6 +1012,9 @@ static RPCHelpMan addmultisigaddress()
     if (!request.params[3].isNull()) {
         if (!ParseOutputType(request.params[3].get_str(), output_type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[3].get_str()));
+        }
+        if (output_type == OutputType::BECH32M) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Bech32m multisig addresses cannot be created with legacy wallets");
         }
     }
 

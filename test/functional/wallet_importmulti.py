@@ -746,6 +746,27 @@ class ImportMultiTest(SyscoinTestFramework):
         assert 'hdmasterfingerprint' not in pub_import_info
         assert 'hdkeypath' not in pub_import_info
 
+        # Bech32m addresses and descriptors cannot be imported
+        self.log.info("Bech32m addresses and descriptors cannot be imported")
+        self.test_importmulti(
+            {
+                "scriptPubKey": {"address": "bcrt1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqc8gma6"},
+                "timestamp": "now",
+            },
+            success=False,
+            error_code=-5,
+            error_message="Bech32m addresses cannot be imported into legacy wallets",
+        )
+        self.test_importmulti(
+            {
+                "desc": descsum_create("tr({})".format(pub)),
+                "timestamp": "now",
+            },
+            success=False,
+            error_code=-5,
+            error_message="Bech32m descriptors cannot be imported into legacy wallets",
+        )
+
         # Import some public keys to the keypool of a no privkey wallet
         self.log.info("Adding pubkey to keypool of disableprivkey wallet")
         self.nodes[1].createwallet(wallet_name="noprivkeys", disable_private_keys=True)
