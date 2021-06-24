@@ -2515,7 +2515,8 @@ public:
 
     ReserveDestination rdest(pwallet, pwallet->m_default_address_type);
     CTxDestination dest;
-    if (!rdest.GetReservedDestination (dest, false))
+    std::string dest_err;
+    if (!rdest.GetReservedDestination (dest, false, dest_err))
       throw JSONRPCError (RPC_WALLET_KEYPOOL_RAN_OUT,
                           "Error: Keypool ran out,"
                           " please call keypoolrefill first");
