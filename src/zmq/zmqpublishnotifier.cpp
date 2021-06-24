@@ -272,7 +272,7 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyEVMBlockConnect(const CNEVMBlock
     uint256 hash = evmBlock.nBlockHash;
     LogPrint(BCLog::ZMQ, "zmq: Publish evm block connect %s to %s, subscriber %s\n", hash.GetHex(), this->address, this->addresssub);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss << evmBlock << nSYSBlockHash;
+    ss << evmBlock << nSYSBlockHash << bWaitForResponse;
     if(!SendZmqMessage(MSG_NEVMBLOCKCONNECT, &(*ss.begin()), ss.size()))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-connect-not-sent");
     if(bWaitForResponse) {
@@ -284,7 +284,7 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyEVMBlockConnect(const CNEVMBlock
                 return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-wrong-command");
             }
             if(parts[1] != "connected") {
-                return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-data");
+                return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-connect-response-invalid-data");
             }
             return true;
         }
@@ -303,7 +303,7 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyEVMBlockDisconnect(const CNEV
     uint256 hash = evmBlock.nBlockHash;
     LogPrint(BCLog::ZMQ, "zmq: Publish evm block disconnect %s to %s, subscriber %s\n", hash.GetHex(), this->address, this->addresssub);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss << evmBlock << nSYSBlockHash;
+    ss << evmBlock << nSYSBlockHash << bWaitForResponse;
     if(!SendZmqMessage(MSG_NEVMBLOCKDISCONNECT, &(*ss.begin()), ss.size()))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-disconnect-not-sent");
     if(bWaitForResponse) {
@@ -315,7 +315,7 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyEVMBlockDisconnect(const CNEV
                 return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-wrong-command");
             }
             if(parts[1] != "disconnected") {
-                return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-data");
+                return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-disconnect-response-invalid-data");
             }
             return true;
         }

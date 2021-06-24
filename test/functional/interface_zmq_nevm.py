@@ -46,8 +46,9 @@ def receive_thread_nevmblockconnect(self, idx, subscriber, publisher):
                 res = b"connected"
             else:
                 res = b"not connected"
-            self.log.info('data size {}'.format(len(evmBlockConnect.blockdata)))
-            publisher.send([subscriber.topic, res])
+            # only send response if Syscoin node is waiting for it
+            if evmBlockConnect.waitforresponse == True:
+                publisher.send([subscriber.topic, res])
         except zmq.ContextTerminated:
             sleep(1)
             break
@@ -70,7 +71,9 @@ def receive_thread_nevmblockdisconnect(self, idx, subscriber, publisher):
                 res = b"disconnected"
             else:
                 res = b"not disconnected"
-            publisher.send([subscriber.topic, res])
+            # only send response if Syscoin node is waiting for it (should always be true for disconnects)
+            if evmBlockConnect.waitforresponse == True:
+                publisher.send([subscriber.topic, res])
         except zmq.ContextTerminated:
             sleep(1)
             break
@@ -207,7 +210,7 @@ class ZMQTest (SyscoinTestFramework):
         publisher1 = self.setup_zmq_test_pub(addresspub1)
         self.log.info("setup subscribers...")
         subs = self.setup_zmq_test([(topic, address) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], [(topic, addresspub) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], 0)
-        subs1 = self.setup_zmq_test([(topic, address1) for topic in ["nevmconnect", "nevmdisconnect"]], [(topic, addresspub1) for topic in ["nevmconnect", "nevmdisconnect"]], 1)
+        subs1 = self.setup_zmq_test([(topic, address1) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], [(topic, addresspub1) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], 1)
         self.connect_nodes(0, 1)
         self.sync_blocks()
 
@@ -217,6 +220,7 @@ class ZMQTest (SyscoinTestFramework):
 
         nevmblockconnect1 = subs1[0]
         nevmblockdisconnect1 = subs1[1]
+        nevmblock1 = subs1[2]
 
         num_blocks = 10
         self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
@@ -225,6 +229,7 @@ class ZMQTest (SyscoinTestFramework):
         Thread(target=receive_thread_nevmblockconnect, args=(self, 0, nevmblockconnect,publisher,)).start()
         Thread(target=receive_thread_nevmblockdisconnect, args=(self, 0, nevmblockdisconnect,publisher,)).start()
 
+        Thread(target=receive_thread_nevmblock, args=(self, nevmblock1,publisher1,)).start()
         Thread(target=receive_thread_nevmblockconnect, args=(self, 1, nevmblockconnect1,publisher1,)).start()
         Thread(target=receive_thread_nevmblockdisconnect, args=(self, 1, nevmblockdisconnect1,publisher1,)).start()
         self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
@@ -260,6 +265,7 @@ class ZMQTest (SyscoinTestFramework):
         assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
         self.log.info('restarting node 1')
         self.restart_node(1, self.extra_args[1])
+        self.connect_nodes(0, 1)
         self.sync_blocks()
         assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
@@ -269,6 +275,7 @@ class ZMQTest (SyscoinTestFramework):
         self.log.info('reindexing node 0')
         self.extra_args[0] += ["-reindex"]
         self.restart_node(0, self.extra_args[0])
+        self.connect_nodes(0, 1)
         self.sync_blocks()
         assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
@@ -276,10 +283,35 @@ class ZMQTest (SyscoinTestFramework):
         self.log.info('reindexing node 1')
         self.extra_args[1] += ["-reindex"]
         self.restart_node(1, self.extra_args[1])
+        self.connect_nodes(0, 1)
         self.sync_blocks()
         assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
         assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        # reorg test
+        self.disconnect_nodes(0, 1)
+        self.log.info("Mine 4 blocks on Node 0")
+        self.nodes[0].generatetoaddress(4, ADDRESS_BCRT1_UNSPENDABLE)
+        # node1 should have 210 because its disconnected and node0 should have 4 more (214)
+        assert_equal(self.nodes[1].getblockcount(), 210)
+        assert_equal(self.nodes[0].getblockcount(), 214)
+        besthash_n0 = self.nodes[0].getbestblockhash()
+
+        self.log.info("Mine competing 6 blocks on Node 1")
+        self.nodes[1].generatetoaddress(6, ADDRESS_BCRT1_UNSPENDABLE)
+        assert_equal(self.nodes[1].getblockcount(), 216)
+
+        self.log.info("Connect nodes to force a reorg")
+        self.connect_nodes(0, 1)
+        self.sync_blocks()
+        assert_equal(self.nodes[0].getblockcount(), 216)
+        badhash = self.nodes[1].getblockhash(212)
+
+        self.log.info("Invalidate block 2 on node 0 and verify we reorg to node 0's original chain")
+        self.nodes[0].invalidateblock(badhash)
+        assert_equal(self.nodes[0].getblockcount(), 214)
+        assert_equal(self.nodes[0].getbestblockhash(), besthash_n0)
+
         self.log.info('done')
 if __name__ == '__main__':
     ZMQTest().main()
