@@ -5,7 +5,6 @@
 """Test the SegWit changeover logic."""
 
 from decimal import Decimal
-from io import BytesIO
 
 from test_framework.address import (
     key_to_p2pkh,
@@ -14,9 +13,34 @@ from test_framework.address import (
     script_to_p2sh_p2wsh,
     script_to_p2wsh,
 )
-from test_framework.blocktools import witness_script, send_to_witness
-from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, FromHex, sha256, ToHex
-from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, OP_TRUE, OP_DROP
+from test_framework.blocktools import (
+    send_to_witness,
+    witness_script,
+)
+from test_framework.messages import (
+    COIN,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+    sha256,
+    tx_from_hex,
+)
+from test_framework.script import (
+    CScript,
+    OP_0,
+    OP_1,
+    OP_2,
+    OP_CHECKMULTISIG,
+    OP_CHECKSIG,
+    OP_DROP,
+    OP_DUP,
+    OP_EQUAL,
+    OP_EQUALVERIFY,
+    OP_HASH160,
+    OP_TRUE,
+    hash160,
+)
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -179,7 +203,7 @@ class SegWitTest(SyscoinTestFramework):
         assert self.nodes[1].getblock(blockhash, False) == self.nodes[2].getblock(blockhash, False)
 
         for tx_id in segwit_tx_list:
-            tx = FromHex(CTransaction(), self.nodes[2].gettransaction(tx_id)["hex"])
+            tx = tx_from_hex(self.nodes[2].gettransaction(tx_id)["hex"])
             assert self.nodes[2].getrawtransaction(tx_id, False, blockhash) != self.nodes[0].getrawtransaction(tx_id, False, blockhash)
             assert self.nodes[1].getrawtransaction(tx_id, False, blockhash) == self.nodes[2].getrawtransaction(tx_id, False, blockhash)
             assert self.nodes[0].getrawtransaction(tx_id, False, blockhash) != self.nodes[2].gettransaction(tx_id)["hex"]
@@ -225,12 +249,12 @@ class SegWitTest(SyscoinTestFramework):
         # tx1 is allowed to appear in the block, but no others.
         txid1 = send_to_witness(1, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.996"))
         hex_tx = self.nodes[0].gettransaction(txid)['hex']
-        tx = FromHex(CTransaction(), hex_tx)
+        tx = tx_from_hex(hex_tx)
         assert tx.wit.is_null()  # This should not be a segwit input
         assert txid1 in self.nodes[0].getrawmempool()
 
         tx1_hex = self.nodes[0].gettransaction(txid1)['hex']
-        tx1 = FromHex(CTransaction(), tx1_hex)
+        tx1 = tx_from_hex(tx1_hex)
 
         # Check that wtxid is properly reported in mempool entry (txid1)
         assert_equal(int(self.nodes[0].getmempoolentry(txid1)["wtxid"], 16), tx1.calc_sha256(True))
@@ -243,9 +267,9 @@ class SegWitTest(SyscoinTestFramework):
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(int(txid1, 16), 0), b''))
         tx.vout.append(CTxOut(int(49.99 * COIN), CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
-        tx2_hex = self.nodes[0].signrawtransactionwithwallet(ToHex(tx))['hex']
+        tx2_hex = self.nodes[0].signrawtransactionwithwallet(tx.serialize().hex())['hex']
         txid2 = self.nodes[0].sendrawtransaction(tx2_hex)
-        tx = FromHex(CTransaction(), tx2_hex)
+        tx = tx_from_hex(tx2_hex)
         assert not tx.wit.is_null()
 
         # Check that wtxid is properly reported in mempool entry (txid2)
@@ -260,7 +284,7 @@ class SegWitTest(SyscoinTestFramework):
         tx.vin.append(CTxIn(COutPoint(int(txid2, 16), 0), b""))
         tx.vout.append(CTxOut(int(49.95 * COIN), CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))  # Huge fee
         tx.calc_sha256()
-        txid3 = self.nodes[0].sendrawtransaction(hexstring=ToHex(tx), maxfeerate=0)
+        txid3 = self.nodes[0].sendrawtransaction(hexstring=tx.serialize().hex(), maxfeerate=0)
         assert tx.wit.is_null()
         assert txid3 in self.nodes[0].getrawmempool()
 
@@ -611,10 +635,8 @@ class SegWitTest(SyscoinTestFramework):
     def create_and_mine_tx_from_txids(self, txids, success=True):
         tx = CTransaction()
         for i in txids:
-            txtmp = CTransaction()
             txraw = self.nodes[0].getrawtransaction(i, 0, txs_mined[i])
-            f = BytesIO(hex_str_to_bytes(txraw))
-            txtmp.deserialize(f)
+            txtmp = tx_from_hex(txraw)
             for j in range(len(txtmp.vout)):
                 tx.vin.append(CTxIn(COutPoint(int('0x' + i, 0), j)))
         tx.vout.append(CTxOut(0, CScript()))

@@ -31,7 +31,7 @@ from test_framework.blocktools import (
 )
 from test_framework.messages import (
     CBlockHeader,
-    FromHex,
+    from_hex,
     msg_block,
 )
 from test_framework.p2p import P2PInterface
@@ -312,7 +312,7 @@ class BlockchainTest(SyscoinTestFramework):
         header_hex = node.getblockheader(blockhash=besthash, verbose=False)
         assert_is_hex_string(header_hex)
 
-        header = FromHex(CBlockHeader(), header_hex)
+        header = from_hex(CBlockHeader(), header_hex)
         header.calc_sha256()
         assert_equal(header.hash, besthash)
 

@@ -4,9 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test deprecation of reqSigs and addresses RPC fields."""
 
-from io import BytesIO
-
-from test_framework.messages import CTransaction
+from test_framework.messages import (
+    tx_from_hex,
+)
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -35,8 +35,7 @@ class AddressesDeprecationTest(SyscoinTestFramework):
         signed = node.signrawtransactionwithwallet(raw)['hex']
 
         # This transaction is derived from test/util/data/txcreatemultisig1.json
-        tx = CTransaction()
-        tx.deserialize(BytesIO(hex_str_to_bytes(signed)))
+        tx = tx_from_hex(signed)
         tx.vout[0].scriptPubKey = hex_str_to_bytes("522102a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff39721021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d2102df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb48553ae")
         tx_signed = node.signrawtransactionwithwallet(tx.serialize().hex())['hex']
         txid = node.sendrawtransaction(hexstring=tx_signed, maxfeerate=0)

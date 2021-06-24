@@ -22,7 +22,6 @@ from test_framework.messages import (
     CTransaction,
     CTxIn,
     CTxOut,
-    ToHex,
 )
 from test_framework.script import (
     CScript,
@@ -170,7 +169,7 @@ class CoinStatsIndexTest(SyscoinTestFramework):
         tx2 = CTransaction()
         tx2.vin.append(CTxIn(COutPoint(int(tx1_txid, 16), n), b''))
         tx2.vout.append(CTxOut(int(20.99 * COIN), CScript([OP_RETURN] + [OP_FALSE]*30)))
-        tx2_hex = self.nodes[0].signrawtransactionwithwallet(ToHex(tx2))['hex']
+        tx2_hex = self.nodes[0].signrawtransactionwithwallet(tx2.serialize().hex())['hex']
         self.nodes[0].sendrawtransaction(tx2_hex)
 
         # Include both txs in a block
@@ -207,7 +206,7 @@ class CoinStatsIndexTest(SyscoinTestFramework):
         block_time = self.nodes[0].getblock(tip)['time'] + 1
         block = create_block(int(tip, 16), cb, block_time)
         block.solve()
-        self.nodes[0].submitblock(ToHex(block))
+        self.nodes[0].submitblock(block.serialize().hex())
         self.sync_all()
 
         self.wait_until(lambda: not try_rpc(-32603, "Unable to read UTXO set", index_node.gettxoutsetinfo, 'muhash'))

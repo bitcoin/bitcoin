@@ -40,8 +40,8 @@ from test_framework.messages import (
     ser_uint256,
     ser_vector,
     sha256,
+    tx_from_hex,
     uint256_from_str,
-    FromHex,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -2124,14 +2124,14 @@ class SegWitTest(SyscoinTestFramework):
         unspent = next(u for u in self.nodes[0].listunspent() if u['spendable'] and u['address'].startswith('bcrt'))
 
         raw = self.nodes[0].createrawtransaction([{"txid": unspent['txid'], "vout": unspent['vout']}], {self.nodes[0].getnewaddress(): 1})
-        tx = FromHex(CTransaction(), raw)
+        tx = tx_from_hex(raw)
         assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decoderawtransaction, hexstring=serialize_with_bogus_witness(tx).hex(), iswitness=True)
         with self.nodes[0].assert_debug_log(['Superfluous witness record']):
             self.test_node.send_and_ping(msg_bogus_tx(tx))
         raw = self.nodes[0].signrawtransactionwithwallet(raw)
         assert raw['complete']
         raw = raw['hex']
-        tx = FromHex(CTransaction(), raw)
+        tx = tx_from_hex(raw)
         assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decoderawtransaction, hexstring=serialize_with_bogus_witness(tx).hex(), iswitness=True)
         with self.nodes[0].assert_debug_log(['Unknown transaction optional data']):
             self.test_node.send_and_ping(msg_bogus_tx(tx))

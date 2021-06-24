@@ -19,7 +19,6 @@ from test_framework.messages import (
     CTxIn,
     CTxInWitness,
     CTxOut,
-    ToHex,
 )
 from test_framework.script import (
     ANNEX_TAG,
@@ -1308,7 +1307,7 @@ class TaprootTest(SyscoinTestFramework):
             # Add change
             fund_tx.vout.append(CTxOut(balance - 10000, random.choice(host_spks)))
             # Ask the wallet to sign
-            ss = BytesIO(bytes.fromhex(node.signrawtransactionwithwallet(ToHex(fund_tx))["hex"]))
+            ss = BytesIO(bytes.fromhex(node.signrawtransactionwithwallet(fund_tx.serialize().hex())["hex"]))
             fund_tx.deserialize(ss)
             # Construct UTXOData entries
             fund_tx.rehash()

@@ -4,12 +4,14 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet accounts properly when there are cloned transactions with malleated scriptsigs."""
 
-import io
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
-from test_framework.messages import CTransaction, COIN
+from test_framework.messages import (
+    COIN,
+    tx_from_hex,
+)
 
 
 class TxnMallTest(SyscoinTestFramework):
@@ -71,8 +73,7 @@ class TxnMallTest(SyscoinTestFramework):
         clone_raw = self.nodes[0].createrawtransaction(clone_inputs, clone_outputs, clone_locktime)
 
         # createrawtransaction randomizes the order of its outputs, so swap them if necessary.
-        clone_tx = CTransaction()
-        clone_tx.deserialize(io.BytesIO(bytes.fromhex(clone_raw)))
+        clone_tx = tx_from_hex(clone_raw)
         if (rawtx1["vout"][0]["value"] == 40 and clone_tx.vout[0].nValue != 40*COIN or rawtx1["vout"][0]["value"] != 40 and clone_tx.vout[0].nValue == 40*COIN):
             (clone_tx.vout[0], clone_tx.vout[1]) = (clone_tx.vout[1], clone_tx.vout[0])
 

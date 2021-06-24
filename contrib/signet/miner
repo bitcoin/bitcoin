@@ -23,7 +23,7 @@ PATH_BASE_TEST_FUNCTIONAL = os.path.abspath(os.path.join(PATH_BASE_CONTRIB_SIGNE
 sys.path.insert(0, PATH_BASE_TEST_FUNCTIONAL)
 
 from test_framework.blocktools import WITNESS_COMMITMENT_HEADER, script_BIP34_coinbase_height # noqa: E402
-from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, FromHex, ToHex, deser_string, hash256, ser_compact_size, ser_string, ser_uint256, uint256_from_str # noqa: E402
+from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, from_hex, deser_string, hash256, ser_compact_size, ser_string, ser_uint256, tx_from_hex, uint256_from_str # noqa: E402
 from test_framework.script import CScriptOp # noqa: E402
 
 logging.basicConfig(
@@ -37,7 +37,7 @@ RE_MULTIMINER = re.compile("^(\d+)(-(\d+))?/(\d+)$")
 
 # #### some helpers that could go into test_framework
 
-# like FromHex, but without the hex part
+# like from_hex, but without the hex part
 def FromBinary(cls, stream):
     """deserialize a binary stream (or bytes object) into an object"""
     # handle bytes object by turning it into a stream
@@ -195,7 +195,7 @@ def finish_block(block, signet_solution, grind_cmd):
         headhex = CBlockHeader.serialize(block).hex()
         cmd = grind_cmd.split(" ") + [headhex]
         newheadhex = subprocess.run(cmd, stdout=subprocess.PIPE, input=b"", check=True).stdout.strip()
-        newhead = FromHex(CBlockHeader(), newheadhex.decode('utf8'))
+        newhead = from_hex(CBlockHeader(), newheadhex.decode('utf8'))
         block.nNonce = newhead.nNonce
         block.rehash()
     return block
@@ -216,7 +216,7 @@ def generate_psbt(tmpl, reward_spk, *, blocktime=None):
         block.nTime = tmpl["mintime"]
     block.nBits = int(tmpl["bits"], 16)
     block.nNonce = 0
-    block.vtx = [cbtx] + [FromHex(CTransaction(), t["data"]) for t in tmpl["transactions"]]
+    block.vtx = [cbtx] + [tx_from_hex(t["data"]) for t in tmpl["transactions"]]
 
     witnonce = 0
     witroot = block.calc_witness_merkle_root()
@@ -274,7 +274,7 @@ def do_genpsbt(args):
 def do_solvepsbt(args):
     block, signet_solution = do_decode_psbt(sys.stdin.read())
     block = finish_block(block, signet_solution, args.grind_cmd)
-    print(ToHex(block))
+    print(block.serialize().hex())
 
 def nbits_to_target(nbits):
     shift = (nbits >> 24) & 0xff
@@ -503,7 +503,7 @@ def do_generate(args):
         block = finish_block(block, signet_solution, args.grind_cmd)
 
         # submit block
-        r = args.bcli("-stdin", "submitblock", input=ToHex(block).encode('utf8'))
+        r = args.bcli("-stdin", "submitblock", input=block.serialize().hex().encode('utf8'))
 
         # report
         bstr = "block" if is_mine else "backup block"

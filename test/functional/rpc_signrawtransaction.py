@@ -5,17 +5,44 @@
 """Test transaction signing using the signrawtransaction* RPCs."""
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.address import check_script, script_to_p2sh, script_to_p2wsh
+from test_framework.address import (
+    check_script,
+    script_to_p2sh,
+    script_to_p2wsh,
+)
 from test_framework.key import ECKey
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, find_vout_for_address, hex_str_to_bytes
-from test_framework.messages import sha256, CTransaction, CTxInWitness
-from test_framework.script import CScript, OP_0, OP_CHECKSIG, OP_CHECKSEQUENCEVERIFY, OP_CHECKLOCKTIMEVERIFY, OP_DROP, OP_TRUE
-from test_framework.script_util import key_to_p2pkh_script, script_to_p2sh_p2wsh_script, script_to_p2wsh_script
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+    find_vout_for_address,
+    hex_str_to_bytes,
+)
+from test_framework.messages import (
+    CTxInWitness,
+    sha256,
+    tx_from_hex,
+)
+from test_framework.script import (
+    CScript,
+    OP_0,
+    OP_CHECKLOCKTIMEVERIFY,
+    OP_CHECKSIG,
+    OP_CHECKSEQUENCEVERIFY,
+    OP_DROP,
+    OP_TRUE,
+)
+from test_framework.script_util import (
+    key_to_p2pkh_script,
+    script_to_p2sh_p2wsh_script,
+    script_to_p2wsh_script,
+)
 from test_framework.wallet_util import bytes_to_wif
 
-from decimal import Decimal, getcontext
-from io import BytesIO
+from decimal import (
+    Decimal,
+    getcontext,
+)
 
 class SignRawTransactionsTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -265,8 +292,7 @@ class SignRawTransactionsTest(SyscoinTestFramework):
         )
 
         # Set the witness script
-        ctx = CTransaction()
-        ctx.deserialize(BytesIO(hex_str_to_bytes(tx)))
+        ctx = tx_from_hex(tx)
         ctx.wit.vtxinwit.append(CTxInWitness())
         ctx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), script]
         tx = ctx.serialize_with_witness().hex()
@@ -301,8 +327,7 @@ class SignRawTransactionsTest(SyscoinTestFramework):
         )
 
         # Set the witness script
-        ctx = CTransaction()
-        ctx.deserialize(BytesIO(hex_str_to_bytes(tx)))
+        ctx = tx_from_hex(tx)
         ctx.wit.vtxinwit.append(CTxInWitness())
         ctx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), script]
         tx = ctx.serialize_with_witness().hex()
