@@ -5,6 +5,8 @@
 #include <interfaces/wallet.h>
 
 #include <amount.h>
+#include <chainparams.h>
+#include <external_signer.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <policy/fees.h>
@@ -496,6 +498,16 @@ public:
     std::shared_ptr<CWallet> m_wallet;
 };
 
+class ExternalSignerImpl : public interfaces::ExternalSigner
+{
+public:
+#ifdef ENABLE_EXTERNAL_SIGNER
+    ExternalSignerImpl(::ExternalSigner signer) : m_signer(std::move(signer)) {}
+    std::string getName() override { return m_signer.m_name; }
+    ::ExternalSigner m_signer;
+#endif
+};
+
 class WalletClientImpl : public WalletClient
 {
 public:
@@ -554,6 +566,28 @@ public:
             paths.push_back(path.string());
         }
         return paths;
+    }
+    std::vector<std::unique_ptr<interfaces::ExternalSigner>> listExternalSigners() override
+    {
+#ifdef ENABLE_EXTERNAL_SIGNER
+        const std::string command = gArgs.GetArg("-signer", "");
+        if (command == "") return {};
+        std::vector<::ExternalSigner> signers;
+        ExternalSigner::Enumerate(command, signers, Params().NetworkIDString());
+        std::vector<std::unique_ptr<interfaces::ExternalSigner>> result;
+        for (auto& signer : signers) {
+            result.emplace_back(std::make_unique<ExternalSignerImpl>(std::move(signer)));
+        }
+        return result;
+#else
+        // This result is indistinguishable from a successful call that returns
+        // no signers. For the current GUI this doesn't matter, because the wallet
+        // creation dialog disables the external signer checkbox in both
+        // cases. The return type could be changed to std::optional<std::vector>
+        // (or something that also includes error messages) if this distinction
+        // becomes important.
+        return {};
+#endif // ENABLE_EXTERNAL_SIGNER
     }
     std::vector<std::unique_ptr<Wallet>> getWallets() override
     {

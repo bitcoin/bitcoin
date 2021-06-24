@@ -7,10 +7,14 @@
 
 #include <wallet/wallet.h>
 
+namespace interfaces {
+class Chain;
+} // namespace interfaces
+
 namespace WalletTool {
 
 void WalletShowInfo(CWallet* wallet_instance);
-bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command);
+bool ExecuteWalletToolFunc(const ArgsManager& args, interfaces::Chain* chain, const std::string& command);
 
 } // namespace WalletTool
 

@@ -206,7 +206,7 @@ class WalletDumpTest(BitcoinTestFramework):
         assert result['ismine']
 
         self.log.info('Check that wallet is flushed')
-        with self.nodes[0].assert_debug_log(['Flushing wallet.dat'], timeout=20):
+        with self.nodes[0].assert_debug_log(['Flushing wallet.dat'], timeout=20, wallet=True):
             self.nodes[0].getnewaddress()
 
 

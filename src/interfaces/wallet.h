@@ -306,6 +306,16 @@ public:
     virtual CWallet* wallet() { return nullptr; }
 };
 
+//! External signer interface used by the GUI.
+class ExternalSigner
+{
+public:
+    virtual ~ExternalSigner() {};
+
+    //! Get signer display name
+    virtual std::string getName() = 0;
+};
+
 //! Wallet chain client that in addition to having chain client methods for
 //! starting up, shutting down, and registering RPCs, also has additional
 //! methods (called by the GUI) to load and create wallets.
@@ -327,6 +337,9 @@ public:
    //! Return interfaces for accessing wallets (if any).
    virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
 
+   //! Return list of external signers (attached devices which can sign transactions).
+   virtual std::vector<std::unique_ptr<ExternalSigner>> listExternalSigners() = 0;
+
    //! Register handler for load wallet messages. This callback is triggered by
    //! createWallet and loadWallet above, and also triggered when wallets are
    //! loaded at startup or by RPC.
@@ -341,6 +354,8 @@ struct WalletAddress
     isminetype is_mine;
     std::string name;
     std::string purpose;
+
+    WalletAddress() = default;
 
     WalletAddress(CTxDestination dest, isminetype is_mine, std::string name, std::string purpose)
         : dest(std::move(dest)), is_mine(is_mine), name(std::move(name)), purpose(std::move(purpose))

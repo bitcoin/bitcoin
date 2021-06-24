@@ -14,4 +14,6 @@ std::unique_ptr<Chain> Init::makeChain() { return {}; }
 std::unique_ptr<WalletClient> Init::makeWalletClient(Chain& chain) { return {}; }
 std::unique_ptr<Echo> Init::makeEcho() { return {}; }
 Ipc* Init::ipc() { return nullptr; }
+bool Init::canConnectIpc() { return false; }
+bool Init::canListenIpc() { return false; }
 } // namespace interfaces
