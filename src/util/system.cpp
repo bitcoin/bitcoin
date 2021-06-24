@@ -236,19 +236,6 @@ static bool CheckValid(const std::string& key, const util::SettingsValue& val, u
     return true;
 }
 
-namespace {
-fs::path StripRedundantLastElementsOfPath(const fs::path& path)
-{
-    auto result = path;
-    while (result.filename().string() == ".") {
-        result = result.parent_path();
-    }
-
-    assert(fs::equivalent(result, path));
-    return result;
-}
-} // namespace
-
 // Define default constructor and destructor that are not inline, so code instantiating this class doesn't need to
 // #include class definitions for all members.
 // For example, m_settings has an internal dependency on univalue.
@@ -412,7 +399,7 @@ const fs::path& ArgsManager::GetBlocksDirPath() const
     path /= BaseParams().DataDir();
     path /= "blocks";
     fs::create_directories(path);
-    path = StripRedundantLastElementsOfPath(path);
+    path = fs::canonical(path);
     return path;
 }
 
@@ -443,7 +430,7 @@ const fs::path& ArgsManager::GetDataDir(bool net_specific) const
         fs::create_directories(path / "wallets");
     }
 
-    path = StripRedundantLastElementsOfPath(path);
+    path = fs::canonical(path);
     return path;
 }
 
