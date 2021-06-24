@@ -136,6 +136,8 @@ TestingSetup::~TestingSetup()
 {
         llmq::InterruptLLMQSystem();
         llmq::StopLLMQSystem();
+        g_txindex->Interrupt();
+        g_txindex->Stop();
         g_txindex.reset();
         threadGroup.interrupt_all();
         threadGroup.join_all();
