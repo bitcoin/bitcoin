@@ -23,29 +23,28 @@ import time
 
 class AddrReceiver(P2PInterface):
     num_ipv4_received = 0
+    test_addr_contents = False
 
-    def on_addr(self, message):
-        for addr in message.addrs:
-            assert_equal(addr.nServices, 9)
-            if not 8333 <= addr.port < 8343:
-                raise AssertionError("Invalid addr.port of {} (8333-8342 expected)".format(addr.port))
-            assert addr.ip.startswith('123.123.123.')
-            self.num_ipv4_received += 1
-
-
-class GetAddrStore(P2PInterface):
-    getaddr_received = False
-    num_ipv4_received = 0
-
-    def on_getaddr(self, message):
-        self.getaddr_received = True
+    def __init__(self, test_addr_contents=False):
+        super().__init__()
+        self.test_addr_contents = test_addr_contents
 
     def on_addr(self, message):
         for addr in message.addrs:
             self.num_ipv4_received += 1
+            if(self.test_addr_contents):
+                # relay_tests checks the content of the addr messages match
+                # expectations based on the message creation in setup_addr_msg
+                assert_equal(addr.nServices, 9)
+                if not 8333 <= addr.port < 8343:
+                    raise AssertionError("Invalid addr.port of {} (8333-8342 expected)".format(addr.port))
+                assert addr.ip.startswith('123.123.123.')
 
     def addr_received(self):
         return self.num_ipv4_received != 0
+
+    def getaddr_received(self):
+        return self.message_count['getaddr'] > 0
 
 
 class AddrTest(SyscoinTestFramework):
@@ -79,8 +78,8 @@ class AddrTest(SyscoinTestFramework):
     def send_addr_msg(self, source, msg, receivers):
         source.send_and_ping(msg)
         # pop m_next_addr_send timer
-        self.mock_time += 5 * 60
-        self.nodes[0].setmocktime(self.mock_time)
+        self.mocktime += 10 * 60
+        self.nodes[0].setmocktime(self.mocktime)
         for peer in receivers:
             peer.sync_send_with_ping()
 
@@ -101,7 +100,7 @@ class AddrTest(SyscoinTestFramework):
         num_receivers = 7
         receivers = []
         for _ in range(num_receivers):
-            receivers.append(self.nodes[0].add_p2p_connection(AddrReceiver()))
+            receivers.append(self.nodes[0].add_p2p_connection(AddrReceiver(test_addr_contents=True)))
 
         # Keep this with length <= 10. Addresses from larger messages are not
         # relayed.
@@ -125,8 +124,8 @@ class AddrTest(SyscoinTestFramework):
         self.nodes[0].disconnect_p2ps()
 
         self.log.info('Check relay of addresses received from outbound peers')
-        inbound_peer = self.nodes[0].add_p2p_connection(AddrReceiver())
-        full_outbound_peer = self.nodes[0].add_outbound_p2p_connection(GetAddrStore(), p2p_idx=0, connection_type="outbound-full-relay")
+        inbound_peer = self.nodes[0].add_p2p_connection(AddrReceiver(test_addr_contents=True))
+        full_outbound_peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=0, connection_type="outbound-full-relay")
         msg = self.setup_addr_msg(2)
         self.send_addr_msg(full_outbound_peer, msg, [inbound_peer])
         self.log.info('Check that the first addr message received from an outbound peer is not relayed')
@@ -142,7 +141,7 @@ class AddrTest(SyscoinTestFramework):
         assert_equal(inbound_peer.num_ipv4_received, 2)
 
         self.log.info('Check address relay to outbound peers')
-        block_relay_peer = self.nodes[0].add_outbound_p2p_connection(GetAddrStore(), p2p_idx=1, connection_type="block-relay-only")
+        block_relay_peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=1, connection_type="block-relay-only")
         msg3 = self.setup_addr_msg(2)
         self.send_addr_msg(inbound_peer, msg3, [full_outbound_peer, block_relay_peer])
 
@@ -156,17 +155,17 @@ class AddrTest(SyscoinTestFramework):
     def getaddr_tests(self):
         self.log.info('Test getaddr behavior')
         self.log.info('Check that we send a getaddr message upon connecting to an outbound-full-relay peer')
-        full_outbound_peer = self.nodes[0].add_outbound_p2p_connection(GetAddrStore(), p2p_idx=0, connection_type="outbound-full-relay")
+        full_outbound_peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=0, connection_type="outbound-full-relay")
         full_outbound_peer.sync_with_ping()
-        assert full_outbound_peer.getaddr_received
+        assert full_outbound_peer.getaddr_received()
 
         self.log.info('Check that we do not send a getaddr message upon connecting to a block-relay-only peer')
-        block_relay_peer = self.nodes[0].add_outbound_p2p_connection(GetAddrStore(), p2p_idx=1, connection_type="block-relay-only")
+        block_relay_peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=1, connection_type="block-relay-only")
         block_relay_peer.sync_with_ping()
-        assert_equal(block_relay_peer.getaddr_received, False)
+        assert_equal(block_relay_peer.getaddr_received(), False)
 
         self.log.info('Check that we answer getaddr messages only from inbound peers')
-        inbound_peer = self.nodes[0].add_p2p_connection(GetAddrStore())
+        inbound_peer = self.nodes[0].add_p2p_connection(AddrReceiver())
         inbound_peer.sync_with_ping()
 
         # Add some addresses to addrman
@@ -180,9 +179,9 @@ class AddrTest(SyscoinTestFramework):
         block_relay_peer.send_and_ping(msg_getaddr())
         inbound_peer.send_and_ping(msg_getaddr())
 
-        self.mock_time += 5 * 60
-        self.nodes[0].setmocktime(self.mock_time)
-        inbound_peer.wait_until(inbound_peer.addr_received)
+        self.mocktime += 5 * 60
+        self.nodes[0].setmocktime(self.mocktime)
+        inbound_peer.wait_until(lambda: inbound_peer.addr_received() is True)
 
         assert_equal(full_outbound_peer.num_ipv4_received, 0)
         assert_equal(block_relay_peer.num_ipv4_received, 0)
@@ -196,9 +195,9 @@ class AddrTest(SyscoinTestFramework):
         self.mock_time = int(time.time())
 
         self.log.info('Check that we send getaddr messages')
-        full_outbound_peer = self.nodes[0].add_outbound_p2p_connection(GetAddrStore(), p2p_idx=0, connection_type="outbound-full-relay")
+        full_outbound_peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=0, connection_type="outbound-full-relay")
         full_outbound_peer.sync_with_ping()
-        assert full_outbound_peer.getaddr_received
+        assert full_outbound_peer.getaddr_received()
 
         self.log.info('Check that we relay address messages')
         addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
