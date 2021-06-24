@@ -73,6 +73,13 @@ class TxReconciliationTracker::Impl {
      */
     std::unordered_map<NodeId, ReconciliationState> m_states GUARDED_BY(m_mutex);
 
+    /**
+     * A certain small number of peers from these sets will be chosen as fanout destinations
+     * for certain transactions based on wtxid.
+     */
+    std::vector<NodeId> m_inbound_fanout_destinations GUARDED_BY(m_mutex);
+    std::vector<NodeId> m_outbound_fanout_destinations GUARDED_BY(m_mutex);
+
     public:
 
     std::tuple<bool, bool, uint32_t, uint64_t> SuggestReconciling(NodeId peer_id, bool inbound)
@@ -140,6 +147,14 @@ class TxReconciliationTracker::Impl {
 
         assert(m_states.emplace(peer_id, ReconciliationState(full_salt.GetUint64(0),
             full_salt.GetUint64(1), we_initiate)).second);
+
+
+        if (inbound) {
+            m_inbound_fanout_destinations.push_back(peer_id);
+        } else {
+            m_outbound_fanout_destinations.push_back(peer_id);
+        }
+
         return true;
     }
 
@@ -149,6 +164,14 @@ class TxReconciliationTracker::Impl {
         auto salt_erased = m_local_salts.erase(peer_id);
         auto state_erased = m_states.erase(peer_id);
         if (salt_erased || state_erased) {
+
+            m_inbound_fanout_destinations.erase(std::remove(
+                m_inbound_fanout_destinations.begin(), m_inbound_fanout_destinations.end(), peer_id),
+                m_inbound_fanout_destinations.end());
+            m_outbound_fanout_destinations.erase(std::remove(
+                m_outbound_fanout_destinations.begin(), m_outbound_fanout_destinations.end(), peer_id),
+                m_outbound_fanout_destinations.end());
+
             LogPrint(BCLog::NET, "Stop tracking reconciliation state for peer=%d.\n", peer_id);
         }
     }
