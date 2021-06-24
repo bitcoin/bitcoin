@@ -23,7 +23,7 @@ from test_framework.messages import (
     COutPoint,
     CRecoveredSig,
     CTransaction,
-    FromHex,
+    from_hex,
     hash256,
     msg_clsig,
     msg_inv,
@@ -341,7 +341,7 @@ class DashZMQTest (DashTestFramework):
             # this is expected
             pass
         # Now send the tx itself
-        self.test_node.send_tx(FromHex(msg_tx(), rpc_raw_tx_3['hex']))
+        self.test_node.send_tx(from_hex(msg_tx(),rpc_raw_tx_3['hex']))
         self.wait_for_instantlock(rpc_raw_tx_3['txid'], self.nodes[0])
         # Validate hashtxlock
         zmq_tx_lock_hash = self.subscribers[ZMQPublisher.hash_tx_lock].receive().read(32).hex()

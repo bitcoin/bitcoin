@@ -42,7 +42,7 @@ from itertools import product
 from io import BytesIO
 
 from test_framework.blocktools import create_coinbase, create_block, create_transaction, TIME_GENESIS_BLOCK
-from test_framework.messages import ToHex, CTransaction
+from test_framework.messages import CTransaction
 from test_framework.p2p import P2PDataStore
 from test_framework.script import (
     CScript,
@@ -83,7 +83,7 @@ def all_rlt_txs(txs):
     return [tx['tx'] for tx in txs]
 
 def sign_transaction(node, unsignedtx):
-    rawtx = ToHex(unsignedtx)
+    rawtx = unsignedtx.serialize().hex()
     signresult = node.signrawtransactionwithwallet(rawtx)
     tx = CTransaction()
     f = BytesIO(hex_str_to_bytes(signresult['hex']))
@@ -105,7 +105,7 @@ def create_bip112emptystack(node, input, txversion, address):
     return signtx
 
 def send_generic_input_tx(node, coinbases, address):
-    return node.sendrawtransaction(ToHex(sign_transaction(node, create_transaction(node, node.getblock(coinbases.pop())['tx'][0], address, amount=Decimal("499.99")))))
+    return node.sendrawtransaction(sign_transaction(node, create_transaction(node, node.getblock(coinbases.pop())['tx'][0], address, amount=Decimal("499.99"))).serialize().hex())
 
 def create_bip68txs(node, bip68inputs, txversion, address, locktime_delta=0):
     """Returns a list of bip68 transactions with different bits set."""

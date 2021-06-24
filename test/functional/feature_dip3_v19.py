@@ -12,7 +12,7 @@ Checks DIP3 for v19
 from io import BytesIO
 
 from test_framework.p2p import P2PInterface
-from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, FromHex, hash256, msg_getmnlistd, \
+from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, from_hex, hash256, msg_getmnlistd, \
     QuorumId, ser_uint256
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
@@ -176,7 +176,7 @@ class DIP3V19Test(DashTestFramework):
 
     def test_getmnlistdiff_base(self, base_block_hash, block_hash):
         hexstr = self.nodes[0].getblockheader(block_hash, False)
-        header = FromHex(CBlockHeader(), hexstr)
+        header = from_hex(CBlockHeader(), hexstr)
 
         d = self.test_node.getmnlistdiff(int(base_block_hash, 16), int(block_hash, 16))
         assert_equal(d.baseBlockHash, int(base_block_hash, 16))

@@ -9,7 +9,7 @@ Test that the CHECKLOCKTIMEVERIFY soft-fork activates at (regtest) block height
 """
 
 from test_framework.blocktools import create_coinbase, create_block, create_transaction
-from test_framework.messages import CTransaction, msg_block, ToHex
+from test_framework.messages import CTransaction, msg_block
 from test_framework.p2p import P2PInterface
 from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP, CScriptNum
 from test_framework.test_framework import BitcoinTestFramework
@@ -43,7 +43,7 @@ def cltv_validate(node, tx, height):
     tx.nLockTime = height
 
     # Need to re-sign, since nSequence and nLockTime changed
-    signed_result = node.signrawtransactionwithwallet(ToHex(tx))
+    signed_result = node.signrawtransactionwithwallet(tx.serialize().hex())
     new_tx = CTransaction()
     new_tx.deserialize(BytesIO(hex_str_to_bytes(signed_result['hex'])))
 

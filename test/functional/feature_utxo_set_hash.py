@@ -10,7 +10,7 @@ from test_framework.blocktools import create_transaction
 from test_framework.messages import (
     CBlock,
     COutPoint,
-    FromHex,
+    from_hex,
 )
 from test_framework.crypto.muhash import MuHash3072
 from test_framework.test_framework import BitcoinTestFramework
@@ -39,7 +39,7 @@ class UTXOSetHashTest(BitcoinTestFramework):
         # Generate 100 blocks and remove the first since we plan to spend its
         # coinbase
         block_hashes = node.generate(100)
-        blocks = list(map(lambda block: FromHex(CBlock(), node.getblock(block, False)), block_hashes))
+        blocks = list(map(lambda block: from_hex(CBlock(), node.getblock(block, False)), block_hashes))
         spending = blocks.pop(0)
 
         # Create a spending transaction and mine a block which includes it
@@ -47,7 +47,7 @@ class UTXOSetHashTest(BitcoinTestFramework):
         txid = node.sendrawtransaction(hexstring=tx.serialize().hex(), maxfeerate=0)
 
         tx_block = node.generateblock(node.getnewaddress(), [txid])['hash']
-        blocks.append(FromHex(CBlock(), node.getblock(tx_block, False)))
+        blocks.append(from_hex(CBlock(), node.getblock(tx_block, False)))
 
         # Serialize the outputs that should be in the UTXO set and add them to
         # a MuHash object

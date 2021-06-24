@@ -10,7 +10,7 @@
 from decimal import Decimal
 
 from test_framework.blocktools import create_block_with_mnpayments
-from test_framework.messages import CTransaction, FromHex, ToHex
+from test_framework.messages import tx_from_hex
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, force_finish_mnsync, p2p_port
 
@@ -367,7 +367,7 @@ class DIP3Test(BitcoinTestFramework):
 
     def mine_block(self, mns, node, vtx=None, mn_payee=None, mn_amount=None, expected_error=None):
         block = create_block_with_mnpayments(mns, node, vtx, mn_payee, mn_amount)
-        result = node.submitblock(ToHex(block))
+        result = node.submitblock(block.serialize().hex())
         if expected_error is not None and result != expected_error:
             raise AssertionError('mining the block should have failed with error %s, but submitblock returned %s' % (expected_error, result))
         elif expected_error is None and result is not None:
@@ -382,7 +382,7 @@ class DIP3Test(BitcoinTestFramework):
 
         rawtx = node.createrawtransaction(txins, {target_address: amount})
         rawtx = node.signrawtransactionwithwallet(rawtx)['hex']
-        tx = FromHex(CTransaction(), rawtx)
+        tx = tx_from_hex(rawtx)
 
         self.mine_block(mns, node, [tx])
 

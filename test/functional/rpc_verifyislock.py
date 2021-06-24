@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.messages import CTransaction, FromHex, hash256, ser_compact_size, ser_string
+from test_framework.messages import CTransaction, from_hex, hash256, ser_compact_size, ser_string
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_raises_rpc_error, satoshi_round
 
@@ -20,7 +20,7 @@ class RPCVerifyISLockTest(DashTestFramework):
         self.set_dash_test_params(6, 5, [["-whitelist=127.0.0.1"], [], [], [], [], []], fast_dip3_enforcement=True)
 
     def get_request_id(self, tx_hex):
-        tx = FromHex(CTransaction(), tx_hex)
+        tx = from_hex(CTransaction(), tx_hex)
 
         request_id_buf = ser_string(b"islock") + ser_compact_size(len(tx.vin))
         for txin in tx.vin:
