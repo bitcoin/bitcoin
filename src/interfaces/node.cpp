@@ -184,6 +184,12 @@ class NodeImpl : public Node
         Interrupt();
         Shutdown();
     }
+    void appPrepareShutdown() override
+    {
+        Interrupt();
+        StartRestart();
+        PrepareShutdown();
+    }
     void startShutdown() override { StartShutdown(); }
     bool shutdownRequested() override { return ShutdownRequested(); }
     void mapPort(bool use_upnp) override
