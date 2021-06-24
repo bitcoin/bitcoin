@@ -33,6 +33,8 @@
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
+#else
+class CWallet;
 #endif//ENABLE_WALLET
 
 static std::string GetHelpString(int nParamNum, std::string strParamName)
@@ -889,21 +891,15 @@ static void protx_list_help()
     );
 }
 
+#ifdef ENABLE_WALLET
 static bool CheckWalletOwnsKey(CWallet* pwallet, const CKeyID& keyID) {
-#ifndef ENABLE_WALLET
-    return false;
-#else
     if (!pwallet) {
         return false;
     }
     return pwallet->HaveKey(keyID);
-#endif
 }
 
 static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
-#ifndef ENABLE_WALLET
-    return false;
-#else
     if (!pwallet) {
         return false;
     }
@@ -915,8 +911,8 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
         }
     }
     return false;
-#endif
 }
+#endif
 
 static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bool detailed)
 {
@@ -931,6 +927,7 @@ static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& 
     int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
     o.pushKV("confirmations", confirmations);
 
+#ifdef ENABLE_WALLET
     bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner);
     bool hasOperatorKey = false; //CheckWalletOwnsKey(dmn->pdmnState->keyIDOperator);
     bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting);
@@ -942,7 +939,6 @@ static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& 
         ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
     }
 
-#ifdef ENABLE_WALLET
     if (pwallet) {
         UniValue walletObj(UniValue::VOBJ);
         walletObj.pushKV("hasOwnerKey", hasOwnerKey);
