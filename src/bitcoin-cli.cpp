@@ -797,7 +797,7 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
     // Execute and handle connection failures with -rpcwait.
     const bool fWait = gArgs.GetBoolArg("-rpcwait", false);
     const int timeout = gArgs.GetArg("-rpcwaittimeout", DEFAULT_WAIT_CLIENT_TIMEOUT);
-    const int64_t deadline = GetTime<std::chrono::seconds>().count() + timeout;
+    const auto deadline{GetTime<std::chrono::microseconds>() + 1s * timeout};
 
     do {
         try {
@@ -810,9 +810,9 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
             }
             break; // Connection succeeded, no need to retry.
         } catch (const CConnectionFailed& e) {
-            const int64_t now = GetTime<std::chrono::seconds>().count();
+            const auto now{GetTime<std::chrono::microseconds>()};
             if (fWait && (timeout <= 0 || now < deadline)) {
-                UninterruptibleSleep(std::chrono::seconds{1});
+                UninterruptibleSleep(1s);
             } else {
                 throw CConnectionFailed(strprintf("timeout on transient error: %s", e.what()));
             }
