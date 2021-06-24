@@ -7,28 +7,19 @@
 #endif
 
 #include <arith_uint256.h>
+#include <chain.h>
+#include <chainparams.h>
+#include <chainparamsbase.h>
 #include <clientversion.h>
-#include <coins.h>
-#include <consensus/consensus.h>
 #include <core_io.h>
-#include <key_io.h>
-#include <policy/rbf.h>
-#include <primitives/transaction.h>
-#include <script/script.h>
-#include <script/sign.h>
-#include <script/signingprovider.h>
-#include <univalue.h>
-#include <util/moneystr.h>
-#include <util/rbf.h>
-#include <util/strencodings.h>
-#include <util/string.h>
+#include <streams.h>
 #include <util/system.h>
 #include <util/translation.h>
 
 #include <atomic>
+#include <cstdio>
 #include <functional>
 #include <memory>
-#include <stdio.h>
 #include <thread>
 
 #include <boost/algorithm/string.hpp>
@@ -43,23 +34,23 @@ static void SetupSyscoinUtilArgs(ArgsManager &argsman)
 
     argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
-    argsman.AddCommand("grind", "Perform proof of work on hex header string", OptionsCategory::COMMANDS);
+    argsman.AddCommand("grind", "Perform proof of work on hex header string");
 
     SetupChainParamsBaseOptions(argsman);
 }
 
 // This function returns either one of EXIT_ codes when it's expected to stop the process or
 // CONTINUE_EXECUTION when it's expected to continue further.
-static int AppInitUtil(int argc, char* argv[])
+static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
 {
     SetupSyscoinUtilArgs(gArgs);
     std::string error;
-    if (!gArgs.ParseParameters(argc, argv, error)) {
+    if (!args.ParseParameters(argc, argv, error)) {
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
         return EXIT_FAILURE;
     }
 
-    if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
+    if (HelpRequested(args) || args.IsArgSet("-version")) {
         // First part of help message is specific to this utility
         std::string strUsage = PACKAGE_NAME " syscoin-util utility version " + FormatFullVersion() + "\n";
         if (!gArgs.IsArgSet("-version")) {
@@ -79,7 +70,7 @@ static int AppInitUtil(int argc, char* argv[])
 
     // Check for chain settings (Params() calls are only valid after this clause)
     try {
-        SelectParams(gArgs.GetChainName());
+        SelectParams(args.GetChainName());
     } catch (const std::exception& e) {
         tfm::format(std::cerr, "Error: %s\n", e.what());
         return EXIT_FAILURE;
@@ -114,7 +105,7 @@ static void grind_task(uint32_t nBits, CBlockHeader& header_orig, uint32_t offse
     }
 }
 
-static int Grind(std::vector<std::string> args, std::string& strPrint)
+static int Grind(const std::vector<std::string>& args, std::string& strPrint)
 {
     if (args.size() != 1) {
         strPrint = "Must specify block header to grind";
@@ -160,12 +151,14 @@ __declspec(dllexport) int main(int argc, char* argv[])
 int main(int argc, char* argv[])
 #endif
 {
+    ArgsManager& args = gArgs;
     SetupEnvironment();
 
     try {
-        int ret = AppInitUtil(argc, argv);
-        if (ret != CONTINUE_EXECUTION)
+        int ret = AppInitUtil(args, argc, argv);
+        if (ret != CONTINUE_EXECUTION) {
             return ret;
+        }
     } catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInitUtil()");
         return EXIT_FAILURE;
@@ -174,7 +167,7 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    const auto cmd = gArgs.GetCommand();
+    const auto cmd = args.GetCommand();
     if (!cmd) {
         tfm::format(std::cerr, "Error: must specify a command\n");
         return EXIT_FAILURE;
