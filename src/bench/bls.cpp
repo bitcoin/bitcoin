@@ -98,7 +98,7 @@ static void BLS_Sign_Normal(benchmark::Bench& bench)
     secKey.MakeNewKey();
 
     // Benchmark.
-    bench.minEpochIterations(1000).run([&] {
+    bench.minEpochIterations(100).run([&] {
         uint256 hash = GetRandHash();
         secKey.Sign(hash);
     });
@@ -115,7 +115,7 @@ static void BLS_Verify_Normal(benchmark::Bench& bench)
 
     // Benchmark.
     size_t i = 0;
-    bench.batch(pubKeys.size()).unit("byte").minEpochIterations(20).run([&] {
+    bench.minEpochIterations(20).run([&] {
         bool valid = sigs[i].VerifyInsecure(pubKeys[i], msgHashes[i]);
         if (valid && invalid[i]) {
             std::cout << "expected invalid but it is valid" << std::endl;
@@ -129,7 +129,7 @@ static void BLS_Verify_Normal(benchmark::Bench& bench)
 }
 
 
-static void BLS_Verify_LargeBlock(size_t txCount, benchmark::Bench& bench)
+static void BLS_Verify_LargeBlock(size_t txCount, benchmark::Bench& bench, uint32_t epoch_iters)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -139,7 +139,7 @@ static void BLS_Verify_LargeBlock(size_t txCount, benchmark::Bench& bench)
     BuildTestVectors(txCount, 0, pubKeys, secKeys, sigs, msgHashes, invalid);
 
     // Benchmark.
-    bench.run([&] {
+    bench.minEpochIterations(epoch_iters).run([&] {
         for (size_t i = 0; i < pubKeys.size(); i++) {
             sigs[i].VerifyInsecure(pubKeys[i], msgHashes[i]);
         }
@@ -148,15 +148,15 @@ static void BLS_Verify_LargeBlock(size_t txCount, benchmark::Bench& bench)
 
 static void BLS_Verify_LargeBlock100(benchmark::Bench& bench)
 {
-    BLS_Verify_LargeBlock(100, bench);
+    BLS_Verify_LargeBlock(100, bench, 10);
 }
 
 static void BLS_Verify_LargeBlock1000(benchmark::Bench& bench)
 {
-    BLS_Verify_LargeBlock(1000, bench);
+    BLS_Verify_LargeBlock(1000, bench, 1);
 }
 
-static void BLS_Verify_LargeBlockSelfAggregated(size_t txCount, benchmark::Bench& bench)
+static void BLS_Verify_LargeBlockSelfAggregated(size_t txCount, benchmark::Bench& bench, uint32_t epoch_iters)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -166,7 +166,7 @@ static void BLS_Verify_LargeBlockSelfAggregated(size_t txCount, benchmark::Bench
     BuildTestVectors(txCount, 0, pubKeys, secKeys, sigs, msgHashes, invalid);
 
     // Benchmark.
-    bench.run([&] {
+    bench.minEpochIterations(epoch_iters).run([&] {
         CBLSSignature aggSig = CBLSSignature::AggregateInsecure(sigs);
         aggSig.VerifyInsecureAggregated(pubKeys, msgHashes);
     });
@@ -174,15 +174,15 @@ static void BLS_Verify_LargeBlockSelfAggregated(size_t txCount, benchmark::Bench
 
 static void BLS_Verify_LargeBlockSelfAggregated100(benchmark::Bench& bench)
 {
-    BLS_Verify_LargeBlockSelfAggregated(100, bench);
+    BLS_Verify_LargeBlockSelfAggregated(100, bench, 10);
 }
 
 static void BLS_Verify_LargeBlockSelfAggregated1000(benchmark::Bench& bench)
 {
-    BLS_Verify_LargeBlockSelfAggregated(1000, bench);
+    BLS_Verify_LargeBlockSelfAggregated(1000, bench, 2);
 }
 
-static void BLS_Verify_LargeAggregatedBlock(size_t txCount, benchmark::Bench& bench)
+static void BLS_Verify_LargeAggregatedBlock(size_t txCount, benchmark::Bench& bench, uint32_t epoch_iters)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -194,19 +194,19 @@ static void BLS_Verify_LargeAggregatedBlock(size_t txCount, benchmark::Bench& be
     CBLSSignature aggSig = CBLSSignature::AggregateInsecure(sigs);
 
     // Benchmark.
-    bench.minEpochIterations(10).run([&] {
+    bench.minEpochIterations(epoch_iters).run([&] {
         aggSig.VerifyInsecureAggregated(pubKeys, msgHashes);
     });
 }
 
 static void BLS_Verify_LargeAggregatedBlock100(benchmark::Bench& bench)
 {
-    BLS_Verify_LargeAggregatedBlock(100, bench);
+    BLS_Verify_LargeAggregatedBlock(100, bench, 10);
 }
 
 static void BLS_Verify_LargeAggregatedBlock1000(benchmark::Bench& bench)
 {
-    BLS_Verify_LargeAggregatedBlock(1000, bench);
+    BLS_Verify_LargeAggregatedBlock(1000, bench, 1);
 }
 
 static void BLS_Verify_LargeAggregatedBlock1000PreVerified(benchmark::Bench& bench)

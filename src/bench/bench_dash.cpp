@@ -25,7 +25,6 @@ static const char* DEFAULT_BENCH_FILTER = ".*";
 
 void InitBLSTests();
 void CleanupBLSTests();
-void CleanupBLSDkgTests();
 
 static fs::path SetDataDir()
 {
@@ -103,7 +102,6 @@ int main(int argc, char** argv)
     fs::remove_all(bench_datadir);
 
     // need to be called before global destructors kick in (PoolAllocator is needed due to many BLSSecretKeys)
-    CleanupBLSDkgTests();
     CleanupBLSTests();
 
     ECC_Stop();
