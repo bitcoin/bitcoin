@@ -127,6 +127,9 @@ public:
         return m_wallet->ChangeWalletPassphrase(old_wallet_passphrase, new_wallet_passphrase);
     }
     void abortRescan() override { m_wallet->AbortRescan(); }
+    bool canBackupToDbDump() override {
+        return (m_wallet->GetDatabase().Format() != "bdb");
+    }
     bool backupWallet(const std::string& filename, const WalletBackupFormat format, bilingual_str& error) override {
         switch (format) {
             case WalletBackupFormat::DbDump:
