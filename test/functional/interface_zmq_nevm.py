@@ -322,10 +322,10 @@ class ZMQTest (SyscoinTestFramework):
         assert_equal(self.nodes[0].getbestblockhash(), besthash_n0)
         self.nodes[0].reconsiderblock(badhash)
         self.sync_blocks()
-        # test artificially delaying node0 then fork, and remove artificial delay and see node0 gets onto longest chain of node1 
+        # test artificially delaying node0 then fork, and remove artificial delay and see node0 gets onto longest chain of node1
         self.log.info("Artificially delaying node0")
         publisher.artificialDelay = True
-        self.log.info("Generating on node0 in seperate thread")
+        self.log.info("Generating on node0 in separate thread")
         Thread(target=thread_generate, args=(self, self.nodes[0],)).start()
         self.log.info("Creating re-org and letting node1 become longest chain, node0 should re-org to node0")
         self.nodes[1].generatetoaddress(10, ADDRESS_BCRT1_UNSPENDABLE)
