@@ -97,6 +97,9 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             sorted_key_desc = descsum_create('sh(multi(2,{}))'.format(sorted_key_str))
             assert_equal(self.nodes[0].deriveaddresses(sorted_key_desc)[0], t['address'])
 
+        # Check that bech32m is currently not allowed
+        assert_raises_rpc_error(-5, "createmultisig cannot create bech32m multisig addresses", self.nodes[0].createmultisig, 2, self.pub, "bech32m")
+
     def check_addmultisigaddress_errors(self):
         if self.options.descriptors:
             return
@@ -107,6 +110,10 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             # Importing all addresses should not change the result
             self.nodes[0].importaddress(a)
         assert_raises_rpc_error(-5, 'no full public key for address', lambda: self.nodes[0].addmultisigaddress(nrequired=1, keys=addresses))
+
+        # Bech32m address type is disallowed for legacy wallets
+        pubs = [self.nodes[1].getaddressinfo(addr)["pubkey"] for addr in addresses]
+        assert_raises_rpc_error(-5, "Bech32m multisig addresses cannot be created with legacy wallets", self.nodes[0].addmultisigaddress, 2, pubs, "", "bech32m")
 
     def checkbalances(self):
         node0, node1, node2 = self.nodes
