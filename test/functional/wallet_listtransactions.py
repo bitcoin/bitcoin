@@ -14,11 +14,13 @@ from test_framework.util import (
     hex_str_to_bytes,
 )
 
+
 def tx_from_hex(hexstring):
     tx = CTransaction()
     f = BytesIO(hex_str_to_bytes(hexstring))
     tx.deserialize(f)
     return tx
+
 
 class ListTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -209,6 +211,33 @@ class ListTransactionsTest(BitcoinTestFramework):
         assert txid_3b not in self.nodes[0].getrawmempool()
         assert_equal(self.nodes[0].gettransaction(txid_3b)["bip125-replaceable"], "no")
         assert_equal(self.nodes[0].gettransaction(txid_4)["bip125-replaceable"], "unknown")
+
+        self.log.info('Check "coin-join" transaction')
+        input_0 = next(i for i in self.nodes[0].listunspent(query_options={'minimumAmount': 0.2}, include_unsafe=False))
+        input_1 = next(i for i in self.nodes[1].listunspent(query_options={'minimumAmount': 0.2}, include_unsafe=False))
+        raw_hex = self.nodes[0].createrawtransaction(
+            inputs=[
+                {
+                    'txid': input_0['txid'],
+                    'vout': input_0['vout'],
+                },
+                {
+                    'txid': input_1['txid'],
+                    'vout': input_1['vout'],
+                },
+            ],
+            outputs={
+                self.nodes[0].getnewaddress(): 0.123,
+                self.nodes[1].getnewaddress(): 0.123,
+            },
+        )
+        raw_hex = self.nodes[0].signrawtransactionwithwallet(raw_hex)['hex']
+        raw_hex = self.nodes[1].signrawtransactionwithwallet(raw_hex)['hex']
+        txid_join = self.nodes[0].sendrawtransaction(hexstring=raw_hex, maxfeerate=0)
+        fee_join = self.nodes[0].getmempoolentry(txid_join)['fees']['base']
+        #assert_equal(fee_join, self.nodes[0].gettransaction(txid_join)['fee'])
+        assert fee_join != self.nodes[0].gettransaction(txid_join)['fee']
+
 
 if __name__ == '__main__':
     ListTransactionsTest().main()
