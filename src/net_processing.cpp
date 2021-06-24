@@ -735,6 +735,12 @@ private:
         if (!Assume(feature_data.size() <= MAX_FEATUREDATA_LENGTH)) return;
         MakeAndPushMessage(node, NetMsgType::FEATURE, feature_id, std::move(feature_data));
     }
+    /** Immediately announce transactions to a given peer via INV message(s). Used to send transaction after reconciliation */
+    bool AnnounceTxs(std::vector<Wtxid> remote_missing_wtxids, CNode& node)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    /** Check whether a transaction should be sent to a given peer over several filters */
+    bool ShouldSendTransaction(const TxMempoolInfo& txinfo, uint256 txhash, Peer::TxRelay* tx_relay, CFeeRate filterrate) const
+        EXCLUSIVE_LOCKS_REQUIRED(tx_relay->m_tx_inventory_mutex, tx_relay->m_bloom_filter_mutex);
 
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, const Peer& peer);
@@ -3613,6 +3619,90 @@ void PeerManagerImpl::PushPrivateBroadcastTx(CNode& node)
     MakeAndPushMessage(node, NetMsgType::INV, std::vector<CInv>{{CInv{MSG_TX, tx->GetHash().ToUint256()}}});
 }
 
+namespace {
+class CompareInvMempoolOrder
+{
+    const CTxMemPool* m_mempool;
+public:
+    explicit CompareInvMempoolOrder(CTxMemPool* mempool) : m_mempool{mempool} {}
+
+    bool operator()(const Wtxid& a, const Wtxid& b) const
+    {
+        /* As std::make_heap produces a max-heap, we want the entries with the
+         * fewest ancestors/highest fee to sort later. */
+        return m_mempool->CompareMiningScoreWithTopology(b, a);
+    }
+};
+} // namespace
+
+bool PeerManagerImpl::AnnounceTxs(std::vector<Wtxid> remote_missing_wtxids, CNode& node)
+{
+    if (remote_missing_wtxids.empty()) return false;
+    PeerRef maybe_peer{GetPeerRef(node.GetId())};
+    if (maybe_peer == nullptr) return false;
+    Peer& peer{*maybe_peer};
+    auto tx_relay = peer.GetTxRelay();
+    if (!tx_relay) return false;
+    LOCK2(tx_relay->m_tx_inventory_mutex, tx_relay->m_bloom_filter_mutex);
+
+    const CFeeRate filterrate{tx_relay->m_fee_filter_received.load()};
+    // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
+    // A heap is used so that not all items need sorting if only a few are being sent.
+    CompareInvMempoolOrder compareInvMempoolOrder(&m_mempool);
+    std::make_heap(remote_missing_wtxids.begin(), remote_missing_wtxids.end(), compareInvMempoolOrder);
+
+    std::vector<CInv> remote_missing_invs;
+    remote_missing_invs.reserve(std::min<size_t>(remote_missing_wtxids.size(), MAX_INV_SZ));
+    unsigned int nRelayedTransactions = 0;
+    while (!remote_missing_wtxids.empty()) {
+        std::pop_heap(remote_missing_wtxids.begin(), remote_missing_wtxids.end(), compareInvMempoolOrder);
+        auto wtxid = remote_missing_wtxids.back();
+        remote_missing_wtxids.pop_back();
+
+        auto txinfo = m_mempool.info(wtxid);
+        // Reconciliation is only negotiated with wtxid-relay peers, so we always
+        // identify and announce transactions by their wtxid here.
+        Assume(peer.m_wtxid_relay);
+        const uint256 txhash{wtxid.ToUint256()};
+
+        if (!ShouldSendTransaction(txinfo, txhash, tx_relay, filterrate)) {
+            continue;
+        }
+
+        tx_relay->m_tx_inventory_known_filter.insert(txhash);
+        remote_missing_invs.emplace_back(MSG_WTX, txhash);
+        nRelayedTransactions++;
+
+        if (remote_missing_invs.size() == MAX_INV_SZ) {
+            MakeAndPushMessage(node, NetMsgType::INV, remote_missing_invs);
+            remote_missing_invs.clear();
+        }
+    }
+
+    // Send any remaining (due to potential filtering from ShouldSendTransaction)
+    if (!remote_missing_invs.empty()) MakeAndPushMessage(node, NetMsgType::INV, remote_missing_invs);
+
+    return nRelayedTransactions > 0;
+}
+
+bool PeerManagerImpl::ShouldSendTransaction(const TxMempoolInfo& txinfo, uint256 txhash, Peer::TxRelay* tx_relay, const CFeeRate filterrate) const
+{
+    AssertLockHeld(tx_relay->m_tx_inventory_mutex);
+    AssertLockHeld(tx_relay->m_bloom_filter_mutex);
+    // Not in the mempool anymore? don't bother sending it.
+    if (!txinfo.tx) return false;
+
+    // Check if not in the filter already
+    if (tx_relay->m_tx_inventory_known_filter.contains(txhash)) return false;
+
+    // Peer told you to not send transactions at that feerate? Don't bother sending it.
+    if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) return false;
+
+    if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) return false;
+
+    return true;
+}
+
 void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string& msg_type, DataStream& vRecv,
                                      const NodeClock::time_point time_received,
                                      const std::atomic<bool>& interruptMsgProc)
@@ -5651,22 +5741,6 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
     }
 }
 
-namespace {
-class CompareInvMempoolOrder
-{
-    const CTxMemPool* m_mempool;
-public:
-    explicit CompareInvMempoolOrder(CTxMemPool* mempool) : m_mempool{mempool} {}
-
-    bool operator()(std::set<Wtxid>::iterator a, std::set<Wtxid>::iterator b)
-    {
-        /* As std::make_heap produces a max-heap, we want the entries with the
-         * higher mining score to sort later. */
-        return m_mempool->CompareMiningScoreWithTopology(*b, *a);
-    }
-};
-} // namespace
-
 bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
 {
     // block-relay-only peers may never send txs to us
@@ -6169,10 +6243,10 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                 // Determine transactions to relay
                 if (fSendTrickle) {
                     // Produce a vector with all candidates for sending
-                    std::vector<std::set<Wtxid>::iterator> vInvTx;
+                    std::vector<Wtxid> vInvTx;
                     vInvTx.reserve(tx_relay->m_tx_inventory_to_send.size());
                     for (std::set<Wtxid>::iterator it = tx_relay->m_tx_inventory_to_send.begin(); it != tx_relay->m_tx_inventory_to_send.end(); it++) {
-                        vInvTx.push_back(it);
+                        vInvTx.push_back(*it);
                     }
                     const CFeeRate filterrate{tx_relay->m_fee_filter_received.load()};
                     // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
@@ -6188,12 +6262,12 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                     while (!vInvTx.empty() && nRelayedTransactions < broadcast_max) {
                         // Fetch the top element from the heap
                         std::pop_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
-                        std::set<Wtxid>::iterator it = vInvTx.back();
+                        Wtxid wtxid = vInvTx.back();
                         vInvTx.pop_back();
-                        auto wtxid = *it;
                         // Remove it from the to-be-sent set
-                        tx_relay->m_tx_inventory_to_send.erase(it);
-                        // Not in the mempool anymore? don't bother sending it.
+                        tx_relay->m_tx_inventory_to_send.erase(wtxid);
+
+                        // Check if the transaction is worth sending. Skip it otherwise.
                         auto txinfo = m_mempool.info(wtxid);
                         if (!txinfo.tx) {
                             continue;
@@ -6204,15 +6278,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                         const auto inv = peer.m_wtxid_relay ?
                                              CInv{MSG_WTX, wtxid.ToUint256()} :
                                              CInv{MSG_TX, txinfo.tx->GetHash().ToUint256()};
-                        // Check if not in the filter already
-                        if (tx_relay->m_tx_inventory_known_filter.contains(inv.hash)) {
-                            continue;
-                        }
-                        // Peer told you to not send transactions at that feerate? Don't bother sending it.
-                        if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
-                            continue;
-                        }
-                        if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
+                        if (!ShouldSendTransaction(txinfo, inv.hash, tx_relay, filterrate)) continue;
 
                         auto add_to_inv_vec = [&](const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(tx_relay->m_tx_inventory_mutex) {
                             vInv.push_back(inv);
@@ -6229,7 +6295,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                         if (reconcile) {
                             Assume(inv.IsMsgWtx());
                             // Try to add the transaction to the reconciliation set
-                            const auto error = m_txreconciliation->AddToSet(node.GetId(), Wtxid::FromUint256(inv.hash));
+                            const auto error = m_txreconciliation->AddToSet(node.GetId(), wtxid);
                             if  (error.has_value()) {
                                 // If adding fails, fanout instead
                                 reconcile = false;
