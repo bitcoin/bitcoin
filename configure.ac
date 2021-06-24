@@ -1415,37 +1415,23 @@ fi
 if test x$use_boost = xyes; then
 
   dnl Check for Boost headers
-  AX_BOOST_BASE([1.58.0],[],[AC_MSG_ERROR([Boost is not available!])])
+  AX_BOOST_BASE([1.64.0],[],[AC_MSG_ERROR([Boost is not available!])])
   if test x$want_boost = xno; then
     AC_MSG_ERROR([[only libbitcoinconsensus can be built without boost]])
   fi
   AX_BOOST_SYSTEM
   AX_BOOST_FILESYSTEM
 
-  dnl Opt-in to Boost Process if external signer support is requested
-  if test "x$use_external_signer" != xno; then
-    AC_MSG_CHECKING(for Boost Process)
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <boost/process.hpp>]],
-     [[ boost::process::child* child = new boost::process::child; delete child; ]])],
-     [ AC_MSG_RESULT(yes)
-     AC_DEFINE([ENABLE_EXTERNAL_SIGNER],,[define if external signer support is enabled])
-     ],
-     [ AC_MSG_ERROR([Boost::Process is required for external signer support, but not available!])]
-    )
-  fi
-
   if test x$suppress_external_warnings != xno; then
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
   fi
 
-  dnl Boost 1.56 through 1.62 allow using std::atomic instead of its own atomic
-  dnl counter implementations. In 1.63 and later the std::atomic approach is default.
-  m4_pattern_allow(DBOOST_AC_USE_STD_ATOMIC) dnl otherwise it's treated like a macro
-  BOOST_CPPFLAGS="-DBOOST_SP_USE_STD_ATOMIC -DBOOST_AC_USE_STD_ATOMIC $BOOST_CPPFLAGS"
-
   BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB"
 fi
 
+if test "x$use_external_signer" != xno; then
+  AC_DEFINE([ENABLE_EXTERNAL_SIGNER],,[define if external signer support is enabled])
+fi
 AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "x$use_external_signer" = "xyes"])
 
 dnl Check for reduced exports
