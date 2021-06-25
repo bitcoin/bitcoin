@@ -46,6 +46,11 @@ public:
     void GenerateAndSetHDKey();
     void SetActiveHDKey(const CExtPubKey& extpub);
 
+    //! Get extended key and origin info for a given path
+    //! @params[in] path The BIP 32 path: can't be empty.
+    //! @return the resulting extended public key and origin info
+    std::optional<std::pair<CExtPubKey, KeyOriginInfo>> GetExtPubKey(std::vector<uint32_t> path) const EXCLUSIVE_LOCKS_REQUIRED(cs_keyman);
+
     bool AddDescriptorKey(WalletBatch& batch, const uint256& desc_id, const CKey& key, const CPubKey& pubkey);
     bool AddHDKey(WalletBatch& batch, const CExtKey& extkey, const CExtPubKey& extpub);
 

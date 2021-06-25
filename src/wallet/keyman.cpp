@@ -84,6 +84,24 @@ std::optional<CExtPubKey> KeyManager::GetActiveHDPubKey() const
     return m_active_xpub;
 }
 
+std::optional<std::pair<CExtPubKey, KeyOriginInfo>> KeyManager::GetExtPubKey(const std::vector<uint32_t> path) const {
+    assert(!path.empty());
+    std::optional<CExtKey> ext_key = GetActiveHDKey();
+    if (!ext_key) return std::nullopt;
+    KeyOriginInfo origin;
+    origin.clear(); // Prevent spurious unitialized variable warning
+    origin.path = path;
+    bool first = true;
+    for (uint32_t i : path) {
+        if (!ext_key->Derive(*ext_key, i)) return std::nullopt;
+        if (first) {
+            memcpy(origin.fingerprint, &ext_key->vchFingerprint, 4);
+            first = false;
+        }
+    }
+    return std::make_pair(ext_key->Neuter(), origin);
+}
+
 bool KeyManager::AddKeyInner(WalletBatch& batch, const CKey& key, const CPubKey& pubkey)
 {
     AssertLockHeld(cs_keyman);
