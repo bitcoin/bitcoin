@@ -7,7 +7,7 @@
 # Test deterministic masternodes
 #
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment, add_witness_commitment
-from test_framework.messages import CTransaction, ToHex, FromHex, CCbTx, COIN, CTxOut
+from test_framework.messages import CTransaction, from_hex, CCbTx, COIN, CTxOut
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import p2p_port, Decimal, force_finish_mnsync, assert_equal, hex_str_to_bytes, MAX_INITIAL_BROADCAST_DELAY
 class Masternode(object):
@@ -402,7 +402,7 @@ class DIP3Test(SyscoinTestFramework):
         coinbase.nVersion = bt['version_coinbase']
         if len(bt['default_witness_commitment_extra']) != 0:
             if use_mnmerkleroot_from_tip:
-                cbtx = FromHex(CCbTx(version=2), bt['default_witness_commitment_extra'])
+                cbtx = from_hex(CCbTx(version=2), bt['default_witness_commitment_extra'])
                 if 'cbTx' in tip_block:
                     cbtx.merkleRootMNList = int(tip_block['cbTx']['merkleRootMNList'], 16)
                 else:
@@ -419,7 +419,7 @@ class DIP3Test(SyscoinTestFramework):
         block.hashMerkleRoot = block.calc_merkle_root()
         add_witness_commitment(block)
         block.solve()
-        result = node.submitblock(ToHex(block))
+        result = node.submitblock(block.serialize().hex())
         if expected_error is not None and result != expected_error:
             raise AssertionError('mining the block should have failed with error %s, but submitblock returned %s' % (expected_error, result))
         elif expected_error is None and result is not None:
@@ -434,7 +434,7 @@ class DIP3Test(SyscoinTestFramework):
 
         rawtx = node.createrawtransaction(txins, {target_address: amount})
         rawtx = node.signrawtransactionwithwallet(rawtx)['hex']
-        tx = FromHex(CTransaction(), rawtx)
+        tx = from_hex(CTransaction(), rawtx)
 
         self.mine_block(node, [tx], use_mnmerkleroot_from_tip=use_mnmerkleroot_from_tip)
 

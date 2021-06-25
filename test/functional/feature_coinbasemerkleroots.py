@@ -5,7 +5,7 @@
 from test_framework.p2p import P2PInterface, msg_getmnlistd, CBlockHeader
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal,force_finish_mnsync
-from test_framework.messages import FromHex, CMerkleBlock, ser_uint256, hash256, CBlock, QuorumId
+from test_framework.messages import from_hex, CMerkleBlock, ser_uint256, hash256, CBlock, QuorumId
 
 '''
 dip4-coinbasemerkleroots.py
@@ -221,7 +221,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
 
     def test_getmnlistdiff_base(self, baseBlockHash, blockHash):
         hexstr = self.nodes[0].getblockheader(blockHash, False)
-        header = FromHex(CBlockHeader(), hexstr)
+        header = from_hex(CBlockHeader(), hexstr)
 
         d = self.test_node.getmnlistdiff(int(baseBlockHash, 16), int(blockHash, 16))
         assert_equal(d.baseBlockHash, int(baseBlockHash, 16))
