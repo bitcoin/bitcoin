@@ -28,6 +28,7 @@ FALSE_POSITIVES = [
     ("src/util.cpp", "strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
     ("src/wallet/wallet.h",  "WalletLogPrintf(std::string fmt, Params... parameters)"),
     ("src/wallet/wallet.h", "LogPrintf((\"%s \" + fmt).c_str(), GetDisplayName(), parameters...)"),
+    ("src/logging.h", "LogPrintf(const char* fmt, const Args&... args)"),
 ]
 
 def parse_function_calls(function_name, source_code):
