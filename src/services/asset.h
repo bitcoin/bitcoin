@@ -19,7 +19,6 @@ static const unsigned int MAX_AUXFEES = 10;
 uint32_t GenerateSyscoinGuid(const COutPoint& outPoint);
 std::string stringFromSyscoinTx(const int &nVersion);
 std::string assetFromTx(const int &nVersion);
-static CAsset emptyAsset;
 bool GetAsset(const uint32_t &nBaseAsset,CAsset& txPos);
 bool ExistsNFTAsset(const uint64_t &nAsset);
 bool GetAssetPrecision(const uint32_t &nBaseAsset, uint8_t& nPrecision);
