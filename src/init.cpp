@@ -45,9 +45,11 @@
 #include <txmempool.h>
 #include <torcontrol.h>
 #include <ui_interface.h>
-#include <util/system.h>
 #include <util/asmap.h>
+#include <util/error.h>
 #include <util/moneystr.h>
+#include <util/system.h>
+#include <util/validation.h>
 #include <validationinterface.h>
 
 #include <masternode/activemasternode.h>

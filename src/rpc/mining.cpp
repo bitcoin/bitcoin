@@ -12,7 +12,6 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <init.h>
-#include <validation.h>
 #include <key_io.h>
 #include <miner.h>
 #include <net.h>
@@ -22,8 +21,11 @@
 #include <rpc/mining.h>
 #include <rpc/server.h>
 #include <txmempool.h>
-#include <util/system.h>
+#include <util/fees.h>
 #include <util/strencodings.h>
+#include <util/system.h>
+#include <util/validation.h>
+#include <validation.h>
 #include <validationinterface.h>
 #include <warnings.h>
 

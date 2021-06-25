@@ -13,6 +13,7 @@
 #include <chain.h>
 #include <coins.h>
 #include <util/moneystr.h>
+#include <version.h>
 
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {

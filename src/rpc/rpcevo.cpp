@@ -11,6 +11,7 @@
 #include <rpc/server.h>
 #include <txmempool.h>
 #include <util/moneystr.h>
+#include <util/validation.h>
 #include <validation.h>
 
 #ifdef ENABLE_WALLET

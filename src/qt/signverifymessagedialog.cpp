@@ -13,7 +13,8 @@
 #include <init.h>
 #include <key_io.h>
 #include <util/strencodings.h>
-#include <validation.h> // For strMessageMagic
+#include <util/validation.h> // For strMessageMagic
+#include <validation.h>
 
 #include <string>
 #include <vector>
