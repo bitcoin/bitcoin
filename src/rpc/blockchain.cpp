@@ -597,7 +597,7 @@ static RPCHelpMan maxmempool()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    int nSize = request.params[0].get_int();
+    int64_t nSize = request.params[0].get_int64();
     int64_t nMempoolSizeMax = nSize * 1000000;
     int64_t nMempoolSizeMin = maxmempoolMinimum(gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT)) * 1000000;
     if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin)
