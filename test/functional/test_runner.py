@@ -294,6 +294,7 @@ BASE_SCRIPTS = [
     'feature_config_args.py',
     'feature_settings.py',
     'rpc_getdescriptorinfo.py',
+    'wallet_getxpub.py',
     'rpc_addresses_deprecation.py',
     'rpc_help.py',
     'feature_help.py',
