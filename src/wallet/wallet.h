@@ -1054,6 +1054,11 @@ public:
     bool SetActiveHDKey(const CExtPubKey& xpub, const std::optional<CKey>& key, const std::vector<unsigned char>& crypted_key) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     std::optional<CExtPubKey> GetActiveHDPubKey() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     std::optional<CExtKey> GetActiveHDPrivKey() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Get extended key and origin info for a given path
+    //! @params[in] path The BIP 32 path
+    //! @return the resulting extended private key and origin info (blank if path is empty)
+    std::optional<std::pair<CExtKey, KeyOriginInfo>> GetExtKey(const std::vector<uint32_t>& path) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 };
 
 /**

@@ -4545,4 +4545,21 @@ std::optional<CExtKey> CWallet::GetActiveHDPrivKey()
     CExtKey extkey(*m_xpub, key);
     return extkey;
 }
+
+std::optional<std::pair<CExtKey, KeyOriginInfo>> CWallet::GetExtKey(const std::vector<uint32_t>& path) {
+    std::optional<CExtKey> ext_key = GetActiveHDPrivKey();
+    if (!ext_key) return std::nullopt;
+    KeyOriginInfo origin;
+    origin.clear(); // Prevent spurious uninitialized variable warning
+    origin.path = path;
+    bool first = true;
+    for (uint32_t i : path) {
+        if (!ext_key->Derive(*ext_key, i)) return std::nullopt;
+        if (first) {
+            memcpy(origin.fingerprint, &ext_key->vchFingerprint, 4);
+            first = false;
+        }
+    }
+    return std::make_pair(*ext_key, origin);
+}
 } // namespace wallet
