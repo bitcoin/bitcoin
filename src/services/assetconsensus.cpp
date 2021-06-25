@@ -454,7 +454,7 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxU
         }
     }
     
-    auto result = mapAssets.try_emplace(nBaseAsset,  std::make_pair(vecNFTKeys, std::move(emptyAsset))); 
+    auto result = mapAssets.try_emplace(nBaseAsset,  std::make_pair(vecNFTKeys, emptyAsset)); 
     auto mapAsset = result.first;
     const bool& mapAssetNotFound = result.second;
     if(mapAssetNotFound) {
@@ -489,7 +489,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
     const uint64_t &nAsset = it->key;
     const uint32_t& nBaseAsset = GetBaseAssetID(nAsset);
     std::vector<uint64_t> vecNFTKeys;
-    auto result = mapAssets.try_emplace(nBaseAsset,  std::make_pair(vecNFTKeys, std::move(emptyAsset))); 
+    auto result = mapAssets.try_emplace(nBaseAsset,  std::make_pair(vecNFTKeys, emptyAsset)); 
     auto mapAsset = result.first;
     const bool &mapAssetNotFound = result.second;
     if(mapAssetNotFound) {
@@ -551,7 +551,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
     auto it = tx.voutAssets.begin();
     const uint32_t &nBaseAsset = GetBaseAssetID(it->key);
     std::vector<uint64_t> vecNFTKeys;
-    mapAssets.try_emplace(nBaseAsset,  std::make_pair(vecNFTKeys, std::move(emptyAsset))); 
+    mapAssets.try_emplace(nBaseAsset,  std::make_pair(vecNFTKeys, emptyAsset)); 
     return true;  
 }
 
@@ -606,7 +606,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
         }
     }
     CAsset dbAsset;
-    auto result = mapAssets.try_emplace(nBaseAsset,  std::make_pair(vecNFTKeys, std::move(emptyAsset))); 
+    auto result = mapAssets.try_emplace(nBaseAsset,  std::make_pair(vecNFTKeys, emptyAsset)); 
     auto mapAsset = result.first;
     const bool & mapAssetNotFound = result.second;    
     if (mapAssetNotFound) {
@@ -623,7 +623,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
             }
             mapAsset->second.second = std::move(dbAsset);      
         }
-    } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+    } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE && !mapAsset->second.second.IsNull()) {
         return FormatSyscoinErrorMessage(state, "asset-already-existing", bSanityCheck);
     }
     CAsset &storedAssetRef = mapAsset->second.second; 

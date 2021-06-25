@@ -4574,8 +4574,8 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     CCoinsViewCache cache(&db);
     std::vector<uint256> hashHeads = db.GetHeadBlocks();
     // SYSCOIN
-    AssetMap mapAssets;
-    NEVMMintTxMap mapMintKeys;
+    AssetMap mapAssetsDisconnect, mapAssetsConnect;
+    NEVMMintTxMap mapMintKeysDisconnect, mapMintKeysConnect;
     std::vector<uint256> vecNEVMBlocks;
     std::vector<uint256> vecTXIDs;
     if (hashHeads.empty()) return true; // We're already in a consistent state.
@@ -4612,7 +4612,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
             }
             LogPrintf("Rolling back %s (%i)\n", pindexOld->GetBlockHash().ToString(), pindexOld->nHeight);
             // SYSCOIN
-            DisconnectResult res = DisconnectBlock(block, pindexOld, cache, mapAssets, mapMintKeys, vecNEVMBlocks, vecTXIDs);
+            DisconnectResult res = DisconnectBlock(block, pindexOld, cache, mapAssetsDisconnect, mapMintKeysDisconnect, vecNEVMBlocks, vecTXIDs);
             if (res == DISCONNECT_FAILED) {
                 return error("RollbackBlock(): DisconnectBlock failed at %d, hash=%s", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
             }
@@ -4625,12 +4625,10 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     }
     // SYSCOIN must flush for now because disconnect may remove asset data and rolling forward expects it to be clean from db
     if(passetdb != nullptr){
-        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushErase(mapMintKeys) || !pnevmtxrootsdb->FlushErase(vecNEVMBlocks) || !pblockindexdb->FlushErase(vecTXIDs)){
+        if(!passetdb->Flush(mapAssetsDisconnect) || !passetnftdb->Flush(mapAssetsDisconnect) || !pnevmtxmintdb->FlushErase(mapMintKeysDisconnect) || !pnevmtxrootsdb->FlushErase(vecNEVMBlocks) || !pblockindexdb->FlushErase(vecTXIDs)){
             return error("RollbackBlock(): Error flushing to asset dbs on disconnect %s", pindexOld->GetBlockHash().ToString());
         }
     }
-    mapAssets.clear();
-    mapMintKeys.clear();
     std::vector<std::pair<uint256, uint32_t> > vecTXIDPairs;
     // Roll forward from the forking point to the new tip.
     int nForkHeight = pindexFork ? pindexFork->nHeight : 0;
@@ -4639,7 +4637,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
         LogPrintf("Rolling forward %s (%i)\n", pindex->GetBlockHash().ToString(), nHeight);
         // SYSCOIN
         uiInterface.ShowProgress(_("Replaying blocks…").translated, (int) ((nHeight - nForkHeight) * 100.0 / (pindexNew->nHeight - nForkHeight)) , false);
-        if (!RollforwardBlock(pindex, cache, params, mapAssets, mapMintKeys, vecTXIDPairs)) return false;
+        if (!RollforwardBlock(pindex, cache, params, mapAssetsConnect, mapMintKeysConnect, vecTXIDPairs)) return false;
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
@@ -4647,7 +4645,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     evoDb->WriteBestBlock(pindexNew->GetBlockHash());
     cache.Flush();
     if(passetdb != nullptr){
-        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushWrite(mapMintKeys) || !pblockindexdb->FlushWrite(vecTXIDPairs)){
+        if(!passetdb->Flush(mapAssetsConnect) || !passetnftdb->Flush(mapAssetsConnect) || !pnevmtxmintdb->FlushWrite(mapMintKeysConnect) || !pblockindexdb->FlushWrite(vecTXIDPairs)){
             return error("RollbackBlock(): Error flushing to asset dbs on roll forward %s", pindexOld->GetBlockHash().ToString());
         }
     }

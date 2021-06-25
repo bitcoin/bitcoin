@@ -19,12 +19,29 @@ class AssetTest(SyscoinTestFramework):
     def run_test(self):
         self.nodes[0].generate(200)
         self.basic_asset()
+        self.asset_disconnect()
         self.asset_gas_asset()
         self.asset_issue_check_supply()
         self.asset_description_too_big()
         self.asset_symbol_size()
         self.asset_maxsupply()
         self.asset_transfer()
+
+    def asset_disconnect(self):
+        asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
+        self.nodes[0].generate(1)
+        bestblockhash = self.nodes[0].getbestblockhash()
+        self.sync_blocks()
+        assetInfo = self.nodes[0].assetinfo(asset)
+        assert_equal(assetInfo['asset_guid'], asset)
+        assetInfo = self.nodes[1].assetinfo(asset)
+        assert_equal(assetInfo['asset_guid'], asset)
+        for i in range(0, 100):
+            self.nodes[0].invalidateblock(bestblockhash)
+            assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[0].assetinfo, asset)
+            self.nodes[0].reconsiderblock(bestblockhash)
+            assetInfo = self.nodes[0].assetinfo(asset)
+            assert_equal(assetInfo['asset_guid'], asset)
 
     def basic_asset(self):
         asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
