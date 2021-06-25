@@ -388,7 +388,7 @@ static RPCHelpMan maxmempool()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    int nSize = request.params[0].getInt<int>();
+    int64_t nSize = request.params[0].getInt<int64_t>();
     int64_t nMempoolSizeMax = nSize * 1000000;
 
     CTxMemPool& mempool = EnsureAnyMemPool(request.context);
