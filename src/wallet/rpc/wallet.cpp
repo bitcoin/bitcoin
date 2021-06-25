@@ -8,6 +8,7 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <util/translation.h>
+#include <util/bip32.h>
 #include <wallet/context.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/wallet.h>
@@ -812,8 +813,10 @@ static RPCHelpMan migratewallet()
 RPCHelpMan gethdkey()
 {
     return RPCHelpMan{"gethdkey",
-                "Returns the HD key most recently used to generate descriptors for this descriptor wallet. ",
+                "Returns the HD key for a given path. "
+                "The xpub or xpriv needs to be imported in a descriptor in order to see transactions spending from it.",
                 {
+                    {"path", RPCArg::Type::STR, RPCArg::Optional::NO, "BIP 32 derivation path, e.g. m/84'/1'/0'"},
                     {"private", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include the xprv"},
                 },
                 RPCResult{
@@ -821,6 +824,8 @@ RPCHelpMan gethdkey()
                     {{
                         {RPCResult::Type::STR, "xpub", "The xpub"},
                         {RPCResult::Type::STR, "xprv", /*optional=*/true, "The xprv if private is true"},
+                        {RPCResult::Type::STR, "fingerprint",  /*optional=*/true, "The master key fingerprint"},
+                        {RPCResult::Type::STR, "origin", /*optional=*/true, "The fingerprint and path"},
                     }},
                 },
                 RPCExamples{
@@ -843,24 +848,38 @@ RPCHelpMan gethdkey()
             LOCK(pwallet->cs_wallet);
 
             UniValue obj(UniValue::VOBJ);
-            std::optional<CExtPubKey> extpub = pwallet->GetActiveHDPubKey();
-            if (!extpub) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "This wallet does not have an active HD key");
-            }
-            std::string xpub = EncodeExtPubKey(*extpub);
-            obj.pushKV("xpub", xpub);
-
-            bool priv = !request.params[0].isNull() && request.params[0].get_bool();
-            if (priv) {
-                EnsureWalletIsUnlocked(*pwallet);
-                std::optional<CExtKey> extkey = pwallet->GetActiveHDPrivKey();
-                if (!extkey) {
-                    throw JSONRPCError(RPC_WALLET_ERROR, "Could not find the xprv for active HD key");
+            std::optional<CExtPubKey> extpub;
+            std::vector<uint32_t> path = ParsePathBIP32(request.params[0].get_str());
+            bool priv = !request.params[1].isNull() && request.params[1].get_bool();
+            if (path.empty() && !priv) {
+                // Special case: we know the root xpub
+                // TODO: an xpub that's part of a descriptor, or can be obtained
+                //       without hardened deriviation, should not require unlocking.
+                extpub = pwallet->GetActiveHDPubKey();
+                if (!extpub) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, "This wallet does not have an active HD key");
                 }
-                std::string xprv = EncodeExtKey(*extkey);
-                obj.pushKV("xprv", xprv);
+            } else {
+                EnsureWalletIsUnlocked(*pwallet);
+                std::optional<std::pair<CExtKey, KeyOriginInfo>> xpriv_and_origin = pwallet->GetExtKey(path);
+                if (!Assume(xpriv_and_origin != std::nullopt)) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, "This wallet does not have an active HD key");
+                }
+                extpub = xpriv_and_origin->first.Neuter();
+                if (priv) {
+                    std::string xprv = EncodeExtKey(xpriv_and_origin->first);
+                    obj.pushKV("xprv", xprv);
+                }
+                if(!path.empty()) {
+                    const std::string fingerprint = HexStr(xpriv_and_origin->second.fingerprint);
+                    const std::string keypath = FormatHDKeypath(xpriv_and_origin->second.path);
+                    obj.pushKV("fingerprint", fingerprint);
+                    obj.pushKV("origin", "[" + fingerprint + keypath + "]");
+                }
             }
-
+            CHECK_NONFATAL(extpub);
+            const std::string xpub = EncodeExtPubKey(extpub.value());
+            obj.pushKV("xpub", xpub);
             return obj;
         },
     };
