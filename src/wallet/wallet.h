@@ -903,6 +903,12 @@ public:
 
     //! Add a descriptor to the wallet, return a ScriptPubKeyMan & associated output type
     ScriptPubKeyMan* AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label, bool internal);
+
+    //! Get extended key and origin info for a given path
+    //! @params[in] path The BIP 32 path, e.g. "m/87h/0h/0h"
+    //! @params[out] ext_key The resulting private extended key
+    //! @params[out] info Key origin info, including the master key fingerprint
+    bool GetExtendedKey(const std::string path, CExtKey &ext_key, KeyOriginInfo &info) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 };
 
 /**
