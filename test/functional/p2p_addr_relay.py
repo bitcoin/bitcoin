@@ -77,9 +77,9 @@ class AddrTest(SyscoinTestFramework):
 
     def send_addr_msg(self, source, msg, receivers):
         source.send_and_ping(msg)
-        # pop m_next_addr_send timer
-        self.mocktime += 10 * 60
-        self.nodes[0].setmocktime(self.mocktime)
+        # SYSCOIN pop m_next_addr_send timer
+        self.mock_time += 10 * 60
+        self.nodes[0].setmocktime(self.mock_time)
         for peer in receivers:
             peer.sync_send_with_ping()
 
@@ -179,8 +179,8 @@ class AddrTest(SyscoinTestFramework):
         block_relay_peer.send_and_ping(msg_getaddr())
         inbound_peer.send_and_ping(msg_getaddr())
 
-        self.mocktime += 5 * 60
-        self.nodes[0].setmocktime(self.mocktime)
+        self.mock_time += 5 * 60
+        self.nodes[0].setmocktime(self.mock_time)
         inbound_peer.wait_until(lambda: inbound_peer.addr_received() is True)
 
         assert_equal(full_outbound_peer.num_ipv4_received, 0)
