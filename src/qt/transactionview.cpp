@@ -737,7 +737,9 @@ void TransactionView::updateCoinJoinVisibility()
     }
     bool fEnabled = model->node().coinJoinOptions().isEnabled();
     // If CoinJoin gets enabled use "All" else "Most common"
-    typeWidget->setCurrentIndex(fEnabled ? 0 : 1);
+    int idx = fEnabled ? 0 : 1;
+    chooseType(idx);
+    typeWidget->setCurrentIndex(idx);
     // Hide all CoinJoin related filters
     QListView* typeList = qobject_cast<QListView*>(typeWidget->view());
     std::vector<int> vecRows{4, 5, 6, 7, 8};
