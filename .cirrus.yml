@@ -202,6 +202,11 @@ task:
   osx_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
     image: big-sur-xcode-12.5  # https://cirrus-ci.org/guide/macOS
+  pip_cache:
+    folder: /Users/admin/Library/Caches/pip
+    fingerprint_script:
+      - echo "${CIRRUS_TASK_NAME}"
+    populate_script: pip3 install --user $PIP_PACKAGES
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     CI_USE_APT_INSTALL: "no"
