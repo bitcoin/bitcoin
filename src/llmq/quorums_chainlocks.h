@@ -5,7 +5,6 @@
 #ifndef BITCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
 #define BITCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
 
-//#include <llmq/quorums.h>
 #include <llmq/quorums_signing.h>
 
 #include <chainparams.h>

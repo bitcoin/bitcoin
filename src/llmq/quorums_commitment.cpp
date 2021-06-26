@@ -32,11 +32,11 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) c
         return false;
     }
 
-    if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)llmqType)) {
+    if (!Params().GetConsensus().llmqs.count(llmqType)) {
         LogPrintfFinalCommitment("invalid llmqType=%d\n", llmqType);
         return false;
     }
-    const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)llmqType);
+    const auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
     if (!VerifySizes(params)) {
         return false;
@@ -107,11 +107,11 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) c
 
 bool CFinalCommitment::VerifyNull() const
 {
-    if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)llmqType)) {
+    if (!Params().GetConsensus().llmqs.count(llmqType)) {
         LogPrintfFinalCommitment("invalid llmqType=%d\n", llmqType);
         return false;
     }
-    const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)llmqType);
+    const auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
     if (!IsNull() || !VerifySizes(params)) {
         return false;
@@ -159,7 +159,7 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-quorum-hash");
     }
 
-    if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)qcTx.commitment.llmqType)) {
+    if (!Params().GetConsensus().llmqs.count(qcTx.commitment.llmqType)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-type");
     }
 

@@ -123,7 +123,7 @@ bool CCoinJoinBroadcastTx::IsExpired(const CBlockIndex* pindex) const
     return llmq::chainLocksHandler->HasChainLock(pindex->nHeight, *pindex->phashBlock);
 }
 
-bool CCoinJoinBroadcastTx::IsValidStructure()
+bool CCoinJoinBroadcastTx::IsValidStructure() const
 {
     // some trivial checks only
     if (tx->vin.size() != tx->vout.size()) {
@@ -324,9 +324,9 @@ void CCoinJoin::InitStandardDenominations()
     */
     vecStandardDenominations.push_back((10 * COIN) + 10000);
     vecStandardDenominations.push_back((1 * COIN) + 1000);
-    vecStandardDenominations.push_back((.1 * COIN) + 100);
-    vecStandardDenominations.push_back((.01 * COIN) + 10);
-    vecStandardDenominations.push_back((.001 * COIN) + 1);
+    vecStandardDenominations.push_back((COIN / 10) + 100);
+    vecStandardDenominations.push_back((COIN / 100) + 10);
+    vecStandardDenominations.push_back((COIN / 1000) + 1);
 }
 
 // check to make sure the collateral provided by the client is valid
@@ -610,7 +610,7 @@ void CCoinJoin::BlockConnected(const std::shared_ptr<const CBlock>& pblock, cons
     }
 }
 
-void CCoinJoin::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
+void CCoinJoin::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex*)
 {
     LOCK(cs_mapdstx);
     for (const auto& tx : pblock->vtx) {

@@ -302,7 +302,7 @@ public:
 
     // Phase 2: complaint
     void VerifyAndComplain(CDKGPendingMessages& pendingMessages);
-    void VerifyConnectionAndMinProtoVersions();
+    void VerifyConnectionAndMinProtoVersions() const;
     void SendComplaint(CDKGPendingMessages& pendingMessages);
     bool PreVerifyMessage(const CDKGComplaint& qc, bool& retBan) const;
     void ReceiveMessage(const CDKGComplaint& qc, bool& retBan);
@@ -331,7 +331,7 @@ public:
     CDKGMember* GetMember(const uint256& proTxHash) const;
 
 private:
-    bool ShouldSimulateError(const std::string& type);
+    bool ShouldSimulateError(const std::string& type) const;
 };
 
 void SetSimulatedDKGErrorRate(const std::string& type, double rate);

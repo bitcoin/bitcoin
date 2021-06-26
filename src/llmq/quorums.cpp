@@ -121,7 +121,7 @@ int CQuorum::GetMemberIndex(const uint256& proTxHash) const
     return -1;
 }
 
-void CQuorum::WriteContributions(CEvoDB& evoDb)
+void CQuorum::WriteContributions(CEvoDB& evoDb) const
 {
     uint256 dbKey = MakeQuorumKey(*this);
 
@@ -266,7 +266,7 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
 {
     const auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
-    auto myProTxHash = activeMasternodeInfo.proTxHash;
+    const auto& myProTxHash = activeMasternodeInfo.proTxHash;
     auto lastQuorums = ScanQuorums(llmqType, pindexNew, (size_t)params.keepOldConnections);
 
     auto connmanQuorumsToDelete = g_connman->GetMasternodeQuorums(llmqType);
@@ -276,7 +276,7 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
     auto curDkgBlock = pindexNew->GetAncestor(curDkgHeight)->GetBlockHash();
     connmanQuorumsToDelete.erase(curDkgBlock);
 
-    for (auto& quorum : lastQuorums) {
+    for (const auto& quorum : lastQuorums) {
         if (CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash)) {
             continue;
         }
@@ -329,7 +329,7 @@ CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const Consensus::LLMQType l
     return quorum;
 }
 
-bool CQuorumManager::BuildQuorumContributions(const CFinalCommitmentPtr& fqc, std::shared_ptr<CQuorum>& quorum) const
+bool CQuorumManager::BuildQuorumContributions(const CFinalCommitmentPtr& fqc, const std::shared_ptr<CQuorum>& quorum) const
 {
     std::vector<uint16_t> memberIndexes;
     std::vector<BLSVerificationVectorPtr> vvecs;
@@ -365,7 +365,7 @@ bool CQuorumManager::HasQuorum(Consensus::LLMQType llmqType, const uint256& quor
     return quorumBlockProcessor->HasMinedCommitment(llmqType, quorumHash);
 }
 
-bool CQuorumManager::RequestQuorumData(CNode* pFrom, Consensus::LLMQType llmqType, const CBlockIndex* pQuorumIndex, uint16_t nDataMask, const uint256& proTxHash)
+bool CQuorumManager::RequestQuorumData(CNode* pFrom, Consensus::LLMQType llmqType, const CBlockIndex* pQuorumIndex, uint16_t nDataMask, const uint256& proTxHash) const
 {
     if (pFrom->nVersion < LLMQ_DATA_MESSAGES_VERSION) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Version must be %d or greater.\n", __func__, LLMQ_DATA_MESSAGES_VERSION);
@@ -529,7 +529,7 @@ size_t CQuorumManager::GetQuorumRecoveryStartOffset(const CQuorumCPtr pQuorum, c
 void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand, CDataStream& vRecv)
 {
     auto strFunc = __func__;
-    auto errorHandler = [&](const std::string strError, int nScore = 10) {
+    auto errorHandler = [&](const std::string& strError, int nScore = 10) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: %s, from peer=%d\n", strFunc, strCommand, strError, pFrom->GetId());
         if (nScore > 0) {
             LOCK(cs_main);

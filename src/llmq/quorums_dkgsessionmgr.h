@@ -68,7 +68,7 @@ public:
     /// Write encrypted (unverified) DKG contributions for the member with the given proTxHash to the llmqDb
     void WriteEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& proTxHash, const CBLSIESMultiRecipientObjects<CBLSSecretKey>& contributions);
     /// Read encrypted (unverified) DKG contributions for the member with the given proTxHash from the llmqDb
-    bool GetEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const std::vector<bool>& validMembers, const uint256& proTxHash, std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vecRet);
+    bool GetEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const std::vector<bool>& validMembers, const uint256& proTxHash, std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vecRet) const;
 
 private:
     void CleanupCache();

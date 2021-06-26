@@ -138,7 +138,7 @@ private:
     bool TrySignInputLocks(const CTransaction& tx, bool allowResigning, Consensus::LLMQType llmqType);
     void TrySignInstantSendLock(const CTransaction& tx);
 
-    void ProcessMessageInstantSendLock(CNode* pfrom, const CInstantSendLockPtr& islock);
+    void ProcessMessageInstantSendLock(const CNode* pfrom, const CInstantSendLockPtr& islock);
     static bool PreVerifyInstantSendLock(const CInstantSendLock& islock);
     bool ProcessPendingInstantSendLocks();
     std::unordered_set<uint256> ProcessPendingInstantSendLocks(int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban);

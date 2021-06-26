@@ -376,7 +376,7 @@ public:
     void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv);
 
     void AsyncSign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
-    CSigShare CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
+    CSigShare CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash) const;
     void ForceReAnnouncement(const CQuorumCPtr& quorum, Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
 
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);

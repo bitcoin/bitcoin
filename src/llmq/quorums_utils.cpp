@@ -121,7 +121,7 @@ std::set<uint256> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType,
         auto mns = GetAllQuorumMembers(llmqType, pindexQuorum);
         std::set<uint256> result;
 
-        for (auto& dmn : mns) {
+        for (const auto& dmn : mns) {
             if (dmn->proTxHash == forMember) {
                 continue;
             }
@@ -144,7 +144,7 @@ std::set<uint256> CLLMQUtils::GetQuorumRelayMembers(Consensus::LLMQType llmqType
     auto mns = GetAllQuorumMembers(llmqType, pindexQuorum);
     std::set<uint256> result;
 
-    auto calcOutbound = [&](size_t i, const uint256 proTxHash) {
+    auto calcOutbound = [&](size_t i, const uint256& proTxHash) {
         // Relay to nodes at indexes (i+2^k)%n, where
         //   k: 0..max(1, floor(log2(n-1))-1)
         //   n: size of the quorum/ring
@@ -154,7 +154,7 @@ std::set<uint256> CLLMQUtils::GetQuorumRelayMembers(Consensus::LLMQType llmqType
         int k = 0;
         while ((gap_max >>= 1) || k <= 1) {
             size_t idx = (i + gap) % mns.size();
-            auto& otherDmn = mns[idx];
+            const auto& otherDmn = mns[idx];
             if (otherDmn->proTxHash == proTxHash) {
                 continue;
             }
@@ -166,7 +166,7 @@ std::set<uint256> CLLMQUtils::GetQuorumRelayMembers(Consensus::LLMQType llmqType
     };
 
     for (size_t i = 0; i < mns.size(); i++) {
-        auto& dmn = mns[i];
+        const auto& dmn = mns[i];
         if (dmn->proTxHash == forMember) {
             auto r = calcOutbound(i, dmn->proTxHash);
             result.insert(r.begin(), r.end());
@@ -256,7 +256,7 @@ void CLLMQUtils::AddQuorumProbeConnections(Consensus::LLMQType llmqType, const C
     auto curTime = GetAdjustedTime();
 
     std::set<uint256> probeConnections;
-    for (auto& dmn : members) {
+    for (const auto& dmn : members) {
         if (dmn->proTxHash == myProTxHash) {
             continue;
         }
@@ -294,7 +294,7 @@ bool CLLMQUtils::IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quo
     // we allow one more active quorum as specified in consensus, as otherwise there is a small window where things could
     // fail while we are on the brink of a new quorum
     auto quorums = quorumManager->ScanQuorums(llmqType, (int)params.signingActiveQuorumCount + 1);
-    for (auto& q : quorums) {
+    for (const auto& q : quorums) {
         if (q->qc->quorumHash == quorumHash) {
             return true;
         }

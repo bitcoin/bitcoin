@@ -82,7 +82,7 @@ public:
     void ConvertInvalidTimeKeys();
     void AddVoteTimeKeys();
 
-    bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
+    bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash) const;
     bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id);
     bool HasRecoveredSigForSession(const uint256& signHash);
     bool HasRecoveredSigForHash(const uint256& hash);
@@ -95,14 +95,14 @@ public:
     void CleanupOldRecoveredSigs(int64_t maxAge);
 
     // votes are removed when the recovered sig is written to the db
-    bool HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id);
-    bool GetVoteForId(Consensus::LLMQType llmqType, const uint256& id, uint256& msgHashRet);
+    bool HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id) const;
+    bool GetVoteForId(Consensus::LLMQType llmqType, const uint256& id, uint256& msgHashRet) const;
     void WriteVoteForId(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
 
     void CleanupOldVotes(int64_t maxAge);
 
 private:
-    bool ReadRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret);
+    bool ReadRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret) const;
     void RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType llmqType, const uint256& id, bool deleteHashKey, bool deleteTimeKey);
 };
 

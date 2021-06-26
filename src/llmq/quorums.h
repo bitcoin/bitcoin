@@ -95,13 +95,13 @@ public:
         }
     }
 
-    const Consensus::LLMQType GetLLMQType() const { return llmqType; }
+    Consensus::LLMQType GetLLMQType() const { return llmqType; }
     const uint256& GetQuorumHash() const { return quorumHash; }
-    const uint16_t GetDataMask() const { return nDataMask; }
+    uint16_t GetDataMask() const { return nDataMask; }
     const uint256& GetProTxHash() const { return proTxHash; }
 
     void SetError(Errors nErrorIn) { nError = nErrorIn; }
-    const Errors GetError() const { return nError; }
+    Errors GetError() const { return nError; }
 
     bool IsExpired() const
     {
@@ -116,14 +116,14 @@ public:
         fProcessed = true;
     }
 
-    bool operator==(const CQuorumDataRequest& other)
+    bool operator==(const CQuorumDataRequest& other) const
     {
         return llmqType == other.llmqType &&
                quorumHash == other.quorumHash &&
                nDataMask == other.nDataMask &&
                proTxHash == other.proTxHash;
     }
-    bool operator!=(const CQuorumDataRequest& other)
+    bool operator!=(const CQuorumDataRequest& other) const
     {
         return !(*this == other);
     }
@@ -183,7 +183,7 @@ public:
     const CBLSSecretKey& GetSkShare() const;
 
 private:
-    void WriteContributions(CEvoDB& evoDb);
+    void WriteContributions(CEvoDB& evoDb) const;
     bool ReadContributions(CEvoDB& evoDb);
 };
 
@@ -222,7 +222,7 @@ public:
 
     static bool HasQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash);
 
-    bool RequestQuorumData(CNode* pFrom, Consensus::LLMQType llmqType, const CBlockIndex* pQuorumIndex, uint16_t nDataMask, const uint256& proTxHash = uint256());
+    bool RequestQuorumData(CNode* pFrom, Consensus::LLMQType llmqType, const CBlockIndex* pQuorumIndex, uint16_t nDataMask, const uint256& proTxHash = uint256()) const;
 
     // all these methods will lock cs_main for a short period of time
     CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
@@ -236,7 +236,7 @@ private:
     void EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex *pindexNew) const;
 
     CQuorumPtr BuildQuorumFromCommitment(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum) const;
-    bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, std::shared_ptr<CQuorum>& quorum) const;
+    bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, const std::shared_ptr<CQuorum>& quorum) const;
 
     CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType, const CBlockIndex* pindex) const;
     /// Returns the start offset for the masternode with the given proTxHash. This offset is applied when picking data recovery members of a quorum's
