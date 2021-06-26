@@ -19,6 +19,7 @@
 #include <httpserver.h>
 #include <httprpc.h>
 #include <utilstrencodings.h>
+#include <utilthreadnames.h>
 #include <walletinitinterface.h>
 #include <stacktraces.h>
 
@@ -56,6 +57,8 @@ static void WaitForShutdown()
 static bool AppInit(int argc, char* argv[])
 {
     bool fRet = false;
+
+    util::ThreadRename("init");
 
     //
     // Parameters

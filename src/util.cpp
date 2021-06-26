@@ -67,10 +67,6 @@
 #include <shlobj.h>
 #endif
 
-#ifdef HAVE_SYS_PRCTL_H
-#include <sys/prctl.h>
-#endif
-
 #ifdef HAVE_MALLOPT_ARENA_MAX
 #include <malloc.h>
 #endif
@@ -1061,38 +1057,6 @@ void runCommand(const std::string& strCommand)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
 }
 
-void RenameThread(const char* name)
-{
-#if defined(PR_SET_NAME)
-    // Only the first 15 characters are used (16 - NUL terminator)
-    ::prctl(PR_SET_NAME, name, 0, 0, 0);
-#elif (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
-    pthread_set_name_np(pthread_self(), name);
-
-#elif defined(MAC_OSX)
-    pthread_setname_np(name);
-#else
-    // Prevent warnings for unused parameters...
-    (void)name;
-#endif
-    LogPrintf("%s: thread new name %s\n", __func__, name);
-}
-
-std::string GetThreadName()
-{
-    char name[16];
-#if defined(PR_GET_NAME)
-    // Only the first 15 characters are used (16 - NUL terminator)
-    ::prctl(PR_GET_NAME, name, 0, 0, 0);
-#elif defined(MAC_OSX)
-    pthread_getname_np(pthread_self(), name, 16);
-// #elif (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
-// #else
-    // no get_name here
-#endif
-    return std::string(name);
-}
-
 void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName)
 {
     auto cond = std::make_shared<std::condition_variable>();
@@ -1102,7 +1066,7 @@ void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName)
 
     for (int i = 0; i < tp.size(); i++) {
         futures[i] = tp.push([baseName, i, cond, mutex, &doneCnt](int threadId) {
-            RenameThread(strprintf("%s-%d", baseName, i).c_str());
+            util::ThreadRename(strprintf("%s-%d", baseName, i).c_str());
             std::unique_lock<std::mutex> l(*mutex);
             doneCnt++;
             cond->wait(l);

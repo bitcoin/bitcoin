@@ -108,7 +108,7 @@ namespace BCLog {
 
         bool m_log_timestamps = DEFAULT_LOGTIMESTAMPS;
         bool m_log_time_micros = DEFAULT_LOGTIMEMICROS;
-        bool m_log_thread_names = DEFAULT_LOGTHREADNAMES;
+        bool m_log_threadnames = DEFAULT_LOGTHREADNAMES;
 
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
