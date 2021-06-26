@@ -53,6 +53,9 @@
 #include <miniupnpc/miniwget.h>
 #include <miniupnpc/upnpcommands.h>
 #include <miniupnpc/upnperrors.h>
+// The minimum supported miniUPnPc API version is set to 10. This keeps compatibility
+// with Ubuntu 16.04 LTS and Debian 8 libminiupnpc-dev packages.
+static_assert(MINIUPNPC_API_VERSION >= 10, "miniUPnPc API version >= 10 assumed");
 #endif
 
 #include <unordered_map>
@@ -61,6 +64,9 @@
 
 // Dump addresses to peers.dat and banlist.dat every 15 minutes (900s)
 #define DUMP_ADDRESSES_INTERVAL 900
+
+/** Number of DNS seeds to query when the number of connections is low. */
+static constexpr int DNSSEEDS_TO_QUERY_AT_ONCE = 3;
 
 // We add a random period time (0 to 1 seconds) to feeler connections to prevent synchronization.
 #define FEELER_SLEEP_WINDOW 1
@@ -198,8 +204,7 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices)
 static int GetnScore(const CService& addr)
 {
     LOCK(cs_mapLocalHost);
-    if (mapLocalHost.count(addr) == LOCAL_NONE)
-        return 0;
+    if (mapLocalHost.count(addr) == 0) return 0;
     return mapLocalHost[addr].nScore;
 }
 
@@ -2077,16 +2082,10 @@ static void ThreadMapPort()
     struct UPNPDev * devlist = nullptr;
     char lanaddr[64];
 
-#ifndef UPNPDISCOVER_SUCCESS
-    /* miniupnpc 1.5 */
-    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0);
-#elif MINIUPNPC_API_VERSION < 14
-    /* miniupnpc 1.6 */
     int error = 0;
+#if MINIUPNPC_API_VERSION < 14
     devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, &error);
 #else
-    /* miniupnpc 1.9.20150730 */
-    int error = 0;
     devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, 2, &error);
 #endif
 
@@ -2100,43 +2099,32 @@ static void ThreadMapPort()
         if (fDiscover) {
             char externalIPAddress[40];
             r = UPNP_GetExternalIPAddress(urls.controlURL, data.first.servicetype, externalIPAddress);
-            if(r != UPNPCOMMAND_SUCCESS)
+            if (r != UPNPCOMMAND_SUCCESS) {
                 LogPrintf("UPnP: GetExternalIPAddress() returned %d\n", r);
-            else
-            {
-                if(externalIPAddress[0])
-                {
+            } else {
+                if (externalIPAddress[0]) {
                     CNetAddr resolved;
-                    if(LookupHost(externalIPAddress, resolved, false)) {
+                    if (LookupHost(externalIPAddress, resolved, false)) {
                         LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToString().c_str());
                         AddLocal(resolved, LOCAL_UPNP);
                     }
-                }
-                else
+                } else {
                     LogPrintf("UPnP: GetExternalIPAddress failed.\n");
+                }
             }
         }
 
-        std::string strDesc = "Dash Core " + FormatFullVersion();
+        std::string strDesc = PACKAGE_NAME " " + FormatFullVersion();
 
         do {
-#ifndef UPNPDISCOVER_SUCCESS
-            /* miniupnpc 1.5 */
-            r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-                                port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0);
-#else
-            /* miniupnpc 1.6 */
-            r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-                                port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0, "0");
-#endif
+            r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype, port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0, "0");
 
-            if(r!=UPNPCOMMAND_SUCCESS)
-                LogPrintf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
-                    port, port, lanaddr, r, strupnperror(r));
-            else
+            if (r != UPNPCOMMAND_SUCCESS) {
+                LogPrintf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n", port, port, lanaddr, r, strupnperror(r));
+            } else {
                 LogPrintf("UPnP Port Mapping successful.\n");
-        }
-        while(g_upnp_interrupt.sleep_for(std::chrono::minutes(20)));
+            }
+        } while (g_upnp_interrupt.sleep_for(std::chrono::minutes(20)));
 
         r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port.c_str(), "TCP", 0);
         LogPrintf("UPNP_DeletePortMapping() returned: %d\n", r);
@@ -2195,35 +2183,41 @@ void StopMapPort()
 
 void CConnman::ThreadDNSAddressSeed()
 {
-    // goal: only query DNS seeds if address need is acute
-    // Avoiding DNS seeds when we don't need them improves user privacy by
-    //  creating fewer identifying DNS requests, reduces trust by giving seeds
-    //  less influence on the network topology, and reduces traffic to the seeds.
-    if ((addrman.size() > 0) &&
-        (!gArgs.GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED))) {
-        if (!interruptNet.sleep_for(std::chrono::seconds(11)))
-            return;
-
-        LOCK(cs_vNodes);
-        int nRelevant = 0;
-        for (auto pnode : vNodes) {
-            nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound && !pnode->m_masternode_probe_connection;
-        }
-        if (nRelevant >= 2) {
-            LogPrintf("P2P peers available. Skipped DNS seeding.\n");
-            return;
-        }
-    }
-
-    const std::vector<std::string> &vSeeds = Params().DNSSeeds();
+    FastRandomContext rng;
+    std::vector<std::string> seeds = Params().DNSSeeds();
+    Shuffle(seeds.begin(), seeds.end(), rng);
+    int seeds_right_now = 0; // Number of seeds left before testing if we have enough connections
     int found = 0;
 
-    LogPrintf("Loading addresses from DNS seeds (could take a while)\n");
+    if (gArgs.GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED)) {
+        // When -forcednsseed is provided, query all.
+        seeds_right_now = seeds.size();
+    }
 
-    for (const std::string &seed : vSeeds) {
+    for (const std::string& seed : seeds) {
+        // goal: only query DNS seed if address need is acute
+        // Avoiding DNS seeds when we don't need them improves user privacy by
+        // creating fewer identifying DNS requests, reduces trust by giving seeds
+        // less influence on the network topology, and reduces traffic to the seeds.
+        if (addrman.size() > 0 && seeds_right_now == 0) {
+            if (!interruptNet.sleep_for(std::chrono::seconds(11))) return;
+
+            LOCK(cs_vNodes);
+            int nRelevant = 0;
+            for (auto pnode : vNodes) {
+                nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound && !pnode->m_masternode_probe_connection;
+            }
+            if (nRelevant >= 2) {
+                LogPrintf("P2P peers available. Skipped DNS seeding.\n");
+                return;
+            }
+            seeds_right_now += DNSSEEDS_TO_QUERY_AT_ONCE;
+        }
+
         if (interruptNet) {
             return;
         }
+        LogPrintf("Loading addresses from DNS seed %s\n", seed);
         if (HaveNameProxy()) {
             AddOneShot(seed);
         } else {
@@ -2236,13 +2230,11 @@ void CConnman::ThreadDNSAddressSeed()
                 continue;
             }
             unsigned int nMaxIPs = 256; // Limits number of IPs learned from a DNS seed
-            if (LookupHost(host.c_str(), vIPs, nMaxIPs, true))
-            {
-                for (const CNetAddr& ip : vIPs)
-                {
+            if (LookupHost(host.c_str(), vIPs, nMaxIPs, true)) {
+                for (const CNetAddr& ip : vIPs) {
                     int nOneDay = 24*3600;
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()), requiredServiceBits);
-                    addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
+                    addr.nTime = GetTime() - 3*nOneDay - rng.randrange(4*nOneDay); // use a random age between 3 and 7 days old
                     vAdd.push_back(addr);
                     found++;
                 }
@@ -2253,8 +2245,8 @@ void CConnman::ThreadDNSAddressSeed()
                 AddOneShot(seed);
             }
         }
+        --seeds_right_now;
     }
-
     LogPrintf("%d addresses found from DNS seeds\n", found);
 }
 
@@ -2465,6 +2457,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             auto dmn = mnList.GetMNByService(addr);
             bool isMasternode = dmn != nullptr;
 
+            // Require outbound connections, other than feelers, to be to distinct network groups
+            if (!fFeeler && setConnected.count(addr.GetGroup(addrman.m_asmap))) {
+                break;
+            }
+
             // if we selected an invalid address, restart
             if (!addr.IsValid() || setConnected.count(addr.GetGroup(addrman.m_asmap)))
                 break;
@@ -2475,8 +2472,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
             // if we selected a local address, restart (local addresses are allowed in regtest and devnet)
             bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
-            if (!fAllowLocal && IsLocal(addrConnect))
+            if (!fAllowLocal && IsLocal(addrConnect)) {
                 break;
+            }
 
             // If we didn't find an appropriate destination after trying 100 addresses fetched from addrman,
             // stop this loop, and let the outer loop run again (which sleeps, adds seed nodes, recalculates
@@ -3887,7 +3885,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     nVersion = 0;
     nNumWarningsSkipped = 0;
     nLastWarningTime = 0;
-    strSubVer = "";
     fWhitelisted = false;
     fOneShot = false;
     m_manual_connection = false;

@@ -2156,7 +2156,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         ServiceFlags nServices;
         int nVersion;
         int nSendVersion;
-        std::string strSubVer;
         std::string cleanSubVer;
         int nStartingHeight = -1;
         bool fRelay = true;
@@ -2193,6 +2192,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (!vRecv.empty())
             vRecv >> addrFrom >> nNonce;
         if (!vRecv.empty()) {
+            std::string strSubVer;
             vRecv >> LIMITED_STRING(strSubVer, MAX_SUBVERSION_LENGTH);
             cleanSubVer = SanitizeString(strSubVer);
         }
@@ -2238,9 +2238,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             PushNodeVersion(pfrom, connman, GetAdjustedTime());
 
         if (Params().NetworkIDString() == CBaseChainParams::DEVNET) {
-            if (strSubVer.find(strprintf("devnet=%s", gArgs.GetDevNetName())) == std::string::npos) {
+            if (cleanSubVer.find(strprintf("devnet=%s", gArgs.GetDevNetName())) == std::string::npos) {
                 LOCK(cs_main);
-                LogPrintf("connected to wrong devnet. Reported version is %s, expected devnet name is %s\n", strSubVer, gArgs.GetDevNetName());
+                LogPrintf("connected to wrong devnet. Reported version is %s, expected devnet name is %s\n", cleanSubVer, gArgs.GetDevNetName());
                 if (!pfrom->fInbound)
                     Misbehaving(pfrom->GetId(), 100); // don't try to connect again
                 else
@@ -2257,7 +2257,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         pfrom->SetAddrLocal(addrMe);
         {
             LOCK(pfrom->cs_SubVer);
-            pfrom->strSubVer = strSubVer;
             pfrom->cleanSubVer = cleanSubVer;
         }
         pfrom->nStartingHeight = nStartingHeight;
@@ -3007,8 +3006,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
-    if (strCommand == NetMsgType::CMPCTBLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
+    if (strCommand == NetMsgType::CMPCTBLOCK)
     {
+        // Ignore cmpctblock received while importing
+        if (fImporting || fReindex) {
+            LogPrint(BCLog::NET, "Unexpected cmpctblock message received from peer %d\n", pfrom->GetId());
+            return true;
+        }
+
         CBlockHeaderAndShortTxIDs cmpctblock;
         vRecv >> cmpctblock;
 
@@ -3222,8 +3227,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
-    if (strCommand == NetMsgType::BLOCKTXN && !fImporting && !fReindex) // Ignore blocks received while importing
+    if (strCommand == NetMsgType::BLOCKTXN)
     {
+        // Ignore blocktxn received while importing
+        if (fImporting || fReindex) {
+            LogPrint(BCLog::NET, "Unexpected blocktxn message received from peer %d\n", pfrom->GetId());
+            return true;
+        }
+
         BlockTransactions resp;
         vRecv >> resp;
 
@@ -3297,8 +3308,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
-    if (strCommand == NetMsgType::HEADERS && !fImporting && !fReindex) // Ignore headers received while importing
+    if (strCommand == NetMsgType::HEADERS)
     {
+        // Ignore headers received while importing
+        if (fImporting || fReindex) {
+            LogPrint(BCLog::NET, "Unexpected headers message received from peer %d\n", pfrom->GetId());
+            return true;
+        }
+
         std::vector<CBlockHeader> headers;
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
@@ -3322,8 +3339,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return ProcessHeadersMessage(pfrom, connman, headers, chainparams, should_punish);
     }
 
-    if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
+    if (strCommand == NetMsgType::BLOCK)
     {
+        // Ignore block received while importing
+        if (fImporting || fReindex) {
+            LogPrint(BCLog::NET, "Unexpected block message received from peer %d\n", pfrom->GetId());
+            return true;
+        }
+
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
         vRecv >> *pblock;
 
