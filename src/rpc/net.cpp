@@ -353,10 +353,6 @@ static RPCHelpMan addconnection()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {
-        throw std::runtime_error("addconnection is for regression testing (-regtest mode) only.");
-    }
-
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR});
     const std::string address = request.params[0].get_str();
     const std::string conn_type_in{TrimString(request.params[1].get_str())};
