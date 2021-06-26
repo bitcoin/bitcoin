@@ -28,6 +28,7 @@
 #include <txmempool.h>
 #include <utilmoneystr.h>
 #include <wallet/fees.h>
+#include <warnings.h>
 
 #include <coinjoin/coinjoin-client.h>
 #include <coinjoin/coinjoin-client-options.h>
@@ -5120,9 +5121,9 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const WalletLocation& loc
         }
     }
 
-    // Warn user every time he starts non-encrypted HD wallet
-    if (gArgs.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsLocked()) {
-        InitWarning(_("Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!"));
+    // Warn user every time a non-encrypted HD wallet is started
+    if (walletInstance->IsHDEnabled() && !walletInstance->IsLocked()) {
+        SetMiscWarning(_("Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!"));
     }
 
     if (gArgs.IsArgSet("-mintxfee")) {
