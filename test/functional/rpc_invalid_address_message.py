@@ -50,15 +50,20 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
         info = self.nodes[0].validateaddress(addr)
         assert info['isvalid']
         assert 'error' not in info
+        assert 'error_index' not in info
         assert 'error_locations' not in info
 
     def check_invalid(self, addr, error_str, error_locations=None):
         res = self.nodes[0].validateaddress(addr)
+        if addr[:2] == 'bc':
+            assert_equal(res, self.nodes[0].validateaddress(address=addr, address_type='bech32'))
         assert not res['isvalid']
         assert_equal(res['error'], error_str)
         if error_locations:
+            assert_equal(res['error_index'], error_locations[0])
             assert_equal(res['error_locations'], error_locations)
         else:
+            assert 'error_index' not in res
             assert_equal(res['error_locations'], [])
 
     def test_validateaddress(self):
