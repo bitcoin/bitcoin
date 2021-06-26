@@ -3206,11 +3206,11 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
 
         // Remove from maps of active spkMans
         auto old_spk_man_id = old_spk_man->GetID();
-        for (bool internal : {false, true}) {
+        for (bool loopInternal : {false, true}) {
             for (OutputType t : OUTPUT_TYPES) {
-                auto active_spk_man = GetScriptPubKeyMan(t, internal);
+                auto active_spk_man = GetScriptPubKeyMan(t, loopInternal);
                 if (active_spk_man && active_spk_man->GetID() == old_spk_man_id) {
-                    if (internal) {
+                    if (loopInternal) {
                         m_internal_spk_managers.erase(t);
                     } else {
                         m_external_spk_managers.erase(t);
