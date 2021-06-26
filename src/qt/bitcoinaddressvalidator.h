@@ -7,6 +7,8 @@
 
 #include <QValidator>
 
+#include <vector>
+
 /** Base58 entry widget validator, checks for valid characters and
  * removes some whitespace.
  */
@@ -17,7 +19,8 @@ class BitcoinAddressEntryValidator : public QValidator
 public:
     explicit BitcoinAddressEntryValidator(QObject *parent);
 
-    State validate(QString &input, int &pos) const override;
+    virtual State validate(QString &input, std::vector<int>&error_locations) const;
+    virtual State validate(QString &input, int &pos) const override;
 };
 
 /** Bitcoin address widget validator, checks for a valid bitcoin address.
@@ -29,7 +32,7 @@ class BitcoinAddressCheckValidator : public BitcoinAddressEntryValidator
 public:
     explicit BitcoinAddressCheckValidator(QObject *parent);
 
-    State validate(QString &input, int &pos) const override;
+    State validate(QString &input, std::vector<int>&error_locations) const override;
 };
 
 #endif // BITCOIN_QT_BITCOINADDRESSVALIDATOR_H

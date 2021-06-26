@@ -6,6 +6,8 @@
 
 #include <key_io.h>
 
+#include <vector>
+
 /* Base58 characters are:
      "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
@@ -20,7 +22,7 @@ BitcoinAddressEntryValidator::BitcoinAddressEntryValidator(QObject *parent) :
 {
 }
 
-QValidator::State BitcoinAddressEntryValidator::validate(QString &input, int &pos) const
+QValidator::State BitcoinAddressEntryValidator::validate(QString &input, std::vector<int>&error_locations) const
 {
     // Empty address is "intermediate" input
     if (input.isEmpty())
@@ -57,6 +59,7 @@ QValidator::State BitcoinAddressEntryValidator::validate(QString &input, int &po
     }
 
     // Validation
+    QValidator::State state = QValidator::Acceptable;
     for (int idx = 0; idx < input.size(); ++idx)
     {
         int ch = input.at(idx).unicode();
@@ -70,12 +73,20 @@ QValidator::State BitcoinAddressEntryValidator::validate(QString &input, int &po
         }
         else
         {
-            pos = idx;
-            return QValidator::Invalid;
+            error_locations.push_back(idx);
+            state = QValidator::Invalid;
         }
     }
 
-    return QValidator::Acceptable;
+    return state;
+}
+
+QValidator::State BitcoinAddressEntryValidator::validate(QString &input, int &pos) const
+{
+    std::vector<int> error_locations;
+    const auto ret = validate(input, error_locations);
+    if (!error_locations.empty()) pos = error_locations.at(0);
+    return ret;
 }
 
 BitcoinAddressCheckValidator::BitcoinAddressCheckValidator(QObject *parent) :
@@ -83,19 +94,15 @@ BitcoinAddressCheckValidator::BitcoinAddressCheckValidator(QObject *parent) :
 {
 }
 
-QValidator::State BitcoinAddressCheckValidator::validate(QString &input, int &pos) const
+QValidator::State BitcoinAddressCheckValidator::validate(QString &input, std::vector<int>&error_locations) const
 {
-    QValidator::State state = BitcoinAddressEntryValidator::validate(input, pos);
-    if (state != QValidator::Acceptable) return state;
-
     // Validate the passed Bitcoin address
     if (IsValidDestinationString(input.toStdString())) {
         return QValidator::Acceptable;
     }
 
-    std::vector<int> error_locations;
     std::string res = LocateErrorsInDestinationString(input.toStdString(), error_locations);
-    if (!(res.empty() || error_locations.empty())) pos = error_locations.at(0);
+    if (res.empty()) error_locations.clear();
 
     return QValidator::Invalid;
 }
