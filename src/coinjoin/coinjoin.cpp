@@ -390,6 +390,22 @@ bool CCoinJoin::IsCollateralAmount(CAmount nInputAmount)
     return (nInputAmount >= GetCollateralAmount() && nInputAmount <= GetMaxCollateralAmount());
 }
 
+int CCoinJoin::CalculateAmountPriority(CAmount nInputAmount)
+{
+    for (const auto& d : GetStandardDenominations()) {
+        // large denoms have lower value
+        if (nInputAmount == d) {
+            return (float)COIN / d * 10000;
+        }
+    }
+    if (nInputAmount < COIN) {
+        return 20000;
+    }
+
+    //nondenom return largest first
+    return -1 * (nInputAmount / COIN);
+}
+
 /*
     Return a bitshifted integer representing a denomination in vecStandardDenominations
     or 0 if none was found
