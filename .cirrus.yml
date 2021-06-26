@@ -84,10 +84,10 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
-  name: 'ARM [unit tests, no functional tests] [buster]'
+  name: 'ARM [unit tests, no functional tests] [bullseye]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: debian:buster
+    image: debian:bullseye
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_arm.sh"
@@ -185,7 +185,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_nowallet.sh"
 
 task:
-  name: 'macOS 10.14 [gui, no tests] [focal]'
+  name: 'macOS 10.15 [gui, no tests] [focal]'
   << : *DEPENDS_SDK_CACHE_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   container:
