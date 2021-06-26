@@ -6,7 +6,7 @@ This guide describes how to build dashd and command-line utilities on NetBSD.
 
 This guide does not contain instructions for building the GUI.
 
-**This guide has not been tested for building Dash Core. Please report your results; contributions welcome.**
+**This guide has not been tested for building Dash Core and is expected to fail due to missing `bls_dash` and `backtrace`. Please report your results; contributions welcome.**
 
 Preparation
 -------------
