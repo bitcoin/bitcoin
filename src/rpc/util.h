@@ -367,4 +367,7 @@ private:
     const RPCExamples m_examples;
 };
 
+bool GetWalletRestrictionFromJSONRPCRequest(const JSONRPCRequest& request, std::string& out_wallet_allowed);
+void EnsureNotWalletRestricted(const JSONRPCRequest& request);
+
 #endif // BITCOIN_RPC_UTIL_H
