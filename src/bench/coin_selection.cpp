@@ -31,21 +31,20 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<Ou
 // same one over and over isn't too useful. Generating random isn't useful
 // either for measurements."
 // (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
-static void CoinSelection(benchmark::State& state)
+static void CoinSelection(benchmark::Bench& bench)
 {
     const CWallet wallet(WalletLocation(), WalletDatabase::CreateDummy());
-    std::vector<OutputGroup> groups;
     LOCK(wallet.cs_wallet);
 
     // Add coins.
+    std::vector<OutputGroup> groups;
     for (int i = 0; i < 1000; ++i) {
         addCoin(1000 * COIN, wallet, groups);
     }
     addCoin(3 * COIN, wallet, groups);
-
     const CoinEligibilityFilter filter_standard(1, 6, 0);
     const CoinSelectionParams coin_selection_params(true, 34, 148, CFeeRate(0), 0);
-    while (state.KeepRunning()) {
+    bench.run([&] {
         std::set<CInputCoin> setCoinsRet;
         CAmount nValueRet;
         bool bnb_used;
@@ -53,7 +52,7 @@ static void CoinSelection(benchmark::State& state)
         assert(success);
         assert(nValueRet == 1003 * COIN);
         assert(setCoinsRet.size() == 2);
-    }
+    });
 }
 
 typedef std::set<CInputCoin> CoinSet;
@@ -83,7 +82,7 @@ static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)
     return target;
 }
 
-static void BnBExhaustion(benchmark::State& state)
+static void BnBExhaustion(benchmark::Bench& bench)
 {
     // Setup
     std::vector<OutputGroup> utxo_pool;
@@ -91,7 +90,7 @@ static void BnBExhaustion(benchmark::State& state)
     CAmount value_ret = 0;
     CAmount not_input_fees = 0;
 
-    while (state.KeepRunning()) {
+    bench.run([&] {
         // Benchmark
         CAmount target = make_hard_case(17, utxo_pool);
         SelectCoinsBnB(utxo_pool, target, 0, selection, value_ret, not_input_fees); // Should exhaust
@@ -99,8 +98,8 @@ static void BnBExhaustion(benchmark::State& state)
         // Cleanup
         utxo_pool.clear();
         selection.clear();
-    }
+    });
 }
 
-BENCHMARK(CoinSelection, 650);
-BENCHMARK(BnBExhaustion, 650);
+BENCHMARK(CoinSelection);
+BENCHMARK(BnBExhaustion);

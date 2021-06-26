@@ -30,6 +30,8 @@ bench_bench_dash_SOURCES = \
   bench/gcs_filter.cpp \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
+  bench/nanobench.h \
+  bench/nanobench.cpp \
   bench/util_time.cpp \
   bench/base58.cpp \
   bench/bech32.cpp \
