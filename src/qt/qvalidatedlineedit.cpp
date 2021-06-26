@@ -33,7 +33,7 @@ void QValidatedLineEdit::setText(const QString& text)
     checkValidity();
 }
 
-void QValidatedLineEdit::setValid(bool _valid, bool with_warning, int error_pos)
+void QValidatedLineEdit::setValid(bool _valid, bool with_warning, const std::vector<int>&error_locations)
 {
     if(_valid && this->valid)
     {
@@ -56,14 +56,16 @@ void QValidatedLineEdit::setValid(bool _valid, bool with_warning, int error_pos)
     else
     {
         setStyleSheet("QValidatedLineEdit { " STYLE_INVALID "}");
-        if (error_pos) {
+        if (!error_locations.empty()) {
             QTextCharFormat format;
             format.setFontUnderline(true);
             format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
             format.setUnderlineColor(Qt::yellow);
             format.setForeground(Qt::yellow);
             format.setFontWeight(QFont::Bold);
-            attributes.append(QInputMethodEvent::Attribute(QInputMethodEvent::TextFormat, error_pos - cursorPosition(), /*length=*/ 1, format));
+            for (auto error_pos : error_locations) {
+                attributes.append(QInputMethodEvent::Attribute(QInputMethodEvent::TextFormat, error_pos - cursorPosition(), /*length=*/ 1, format));
+            }
         }
     }
 
@@ -131,11 +133,20 @@ void QValidatedLineEdit::checkValidity()
         if (checkValidator)
         {
             QString address = text();
-            int pos = 0;
-            if (checkValidator->validate(address, pos) == QValidator::Acceptable)
+            const BitcoinAddressEntryValidator * const addressValidator = dynamic_cast<const BitcoinAddressEntryValidator*>(checkValidator);
+            QValidator::State validation_result;
+            std::vector<int> error_locations;
+            if (addressValidator) {
+                validation_result = addressValidator->validate(address, error_locations);
+            } else {
+                int pos = 0;
+                validation_result = checkValidator->validate(address, pos);
+                error_locations.push_back(pos);
+            }
+            if (validation_result == QValidator::Acceptable)
                 setValid(true, has_warning);
             else
-                setValid(false, false, pos);
+                setValid(false, false, error_locations);
         }
     }
     else
