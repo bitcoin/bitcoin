@@ -142,7 +142,7 @@ public:
         return nBlockHeight;
     }
 
-    int CountPayments() { return (int)vecPayments.size(); }
+    int CountPayments() const { return (int)vecPayments.size(); }
     bool GetPayment(int nPaymentIndex, CGovernancePayment& paymentRet);
     CAmount GetPaymentsTotalAmount();
 

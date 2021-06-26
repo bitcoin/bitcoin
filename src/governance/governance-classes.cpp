@@ -112,7 +112,7 @@ bool CGovernanceTriggerManager::AddNewTrigger(uint256 nHash)
 
     CSuperblock_sptr pSuperblock;
     try {
-        CSuperblock_sptr pSuperblockTmp(new CSuperblock(nHash));
+        auto pSuperblockTmp = std::make_shared<CSuperblock>(nHash);
         pSuperblock = pSuperblockTmp;
     } catch (std::exception& e) {
         LogPrintf("CGovernanceTriggerManager::AddNewTrigger -- Error creating superblock: %s\n", e.what());
@@ -146,7 +146,7 @@ void CGovernanceTriggerManager::CleanAndRemove()
     while (it != mapTrigger.end()) {
         bool remove = false;
         CGovernanceObject* pObj = nullptr;
-        CSuperblock_sptr& pSuperblock = it->second;
+        const CSuperblock_sptr& pSuperblock = it->second;
         if (!pSuperblock) {
             LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- nullptr superblock\n");
             remove = true;
@@ -210,7 +210,7 @@ std::vector<CSuperblock_sptr> CGovernanceTriggerManager::GetActiveTriggers()
 
     // LOOK AT THESE OBJECTS AND COMPILE A VALID LIST OF TRIGGERS
     for (const auto& pair : mapTrigger) {
-        CGovernanceObject* pObj = governance.FindGovernanceObject(pair.first);
+        const CGovernanceObject* pObj = governance.FindGovernanceObject(pair.first);
         if (pObj) {
             vecResults.push_back(pair.second);
         }
@@ -293,7 +293,7 @@ bool CSuperblockManager::GetBestSuperblock(CSuperblock_sptr& pSuperblockRet, int
             continue;
         }
 
-        CGovernanceObject* pObj = pSuperblock->GetGovernanceObject();
+        const CGovernanceObject* pObj = pSuperblock->GetGovernanceObject();
 
         if (!pObj) {
             continue;

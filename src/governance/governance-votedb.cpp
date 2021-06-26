@@ -114,7 +114,7 @@ void CGovernanceObjectVoteFile::RebuildIndex()
     nMemoryVotes = 0;
     auto it = listVotes.begin();
     while (it != listVotes.end()) {
-        CGovernanceVote& vote = *it;
+        const CGovernanceVote& vote = *it;
         uint256 nHash = vote.GetHash();
         if (mapVoteIndex.find(nHash) == mapVoteIndex.end()) {
             mapVoteIndex[nHash] = it;

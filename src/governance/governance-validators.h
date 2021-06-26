@@ -22,7 +22,7 @@ public:
 
     bool Validate(bool fCheckExpiration = true);
 
-    const std::string& GetErrorMessages()
+    const std::string& GetErrorMessages() const
     {
         return strErrorMessages;
     }

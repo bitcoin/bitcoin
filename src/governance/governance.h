@@ -242,7 +242,7 @@ public:
     std::vector<CGovernanceVote> GetCurrentVotes(const uint256& nParentHash, const COutPoint& mnCollateralOutpointFilter) const;
     std::vector<const CGovernanceObject*> GetAllNewerThan(int64_t nMoreThanTime) const;
 
-    void AddGovernanceObject(CGovernanceObject& govobj, CConnman& connman, CNode* pfrom = nullptr);
+    void AddGovernanceObject(CGovernanceObject& govobj, CConnman& connman, const CNode* pfrom = nullptr);
 
     void UpdateCachesAndClean();
 
