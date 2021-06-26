@@ -6,6 +6,7 @@
 
 #include <consensus/consensus.h>
 #include <random.h>
+#include <version.h>
 
 bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }

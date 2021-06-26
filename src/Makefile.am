@@ -260,6 +260,7 @@ BITCOIN_CORE_H = \
   ui_interface.h \
   undo.h \
   unordered_lru_cache.h \
+  util/bytevectorhash.h \
   util/system.h \
   util/asmap.h \
   util/memory.h \
@@ -445,7 +446,9 @@ crypto_libdash_crypto_base_a_SOURCES = \
   crypto/sha3.cpp \
   crypto/sha3.h \
   crypto/sha512.cpp \
-  crypto/sha512.h
+  crypto/sha512.h \
+  crypto/siphash.cpp \
+  crypto/siphash.h
 
 if USE_ASM
 crypto_libdash_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
@@ -589,6 +592,7 @@ libdash_util_a_SOURCES = \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
+  util/bytevectorhash.cpp \
   util/system.cpp \
   util/asmap.cpp \
   util/moneystr.cpp \

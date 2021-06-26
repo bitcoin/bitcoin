@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <crypto/siphash.h>
 #include <hash.h>
 #include <util/strencodings.h>
 #include <test/test_dash.h>
