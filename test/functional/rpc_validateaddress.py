@@ -16,6 +16,7 @@ class ValidateaddressTest(BitcoinTestFramework):
         res = self.nodes[0].validateaddress(address)
         assert_equal(res['isvalid'], True)
         assert 'error' not in res
+        assert 'error_index' not in res
         assert 'error_locations' not in res
 
         # Valid capitalised address
@@ -23,6 +24,7 @@ class ValidateaddressTest(BitcoinTestFramework):
         res = self.nodes[0].validateaddress(address)
         assert_equal(res['isvalid'], True)
         assert 'error' not in res
+        assert 'error_index' not in res
         assert 'error_locations' not in res
 
         # Address with no '1' separator
@@ -39,15 +41,17 @@ class ValidateaddressTest(BitcoinTestFramework):
 
         # Address with an invalid bech32 encoding character
         address = "bcrt1q04oldschfnwystcqnsvyfpj23mpsg3jcedq9xv"
-        res = self.nodes[0].validateaddress(address)
+        res = self.nodes[0].validateaddress(address, 'bech32')
         assert_equal(res['isvalid'], False)
         assert_equal(res['error'], "Invalid Base 32 character")
+        assert_equal(res['error_index'], 8)
         assert_equal(res['error_locations'], [8])
 
         # Address with one error
         address = "bcrt1q049edschfnwystcqnsvyfpj23mpsg3jcedq9xv"
-        res = self.nodes[0].validateaddress(address)
+        res = self.nodes[0].validateaddress(address=address, address_type='bech32')
         assert_equal(res['isvalid'], False)
+        assert_equal(res['error_index'], 9)
         assert_equal(res['error_locations'], [9])
         assert_equal(res['error'], "Invalid checksum")
 
@@ -55,6 +59,7 @@ class ValidateaddressTest(BitcoinTestFramework):
         address = "BCRT1QPLMTZKC2XHARPPZDLNPAQL78RSHJ68U32RAH7R"
         res = self.nodes[0].validateaddress(address)
         assert_equal(res['isvalid'], False)
+        assert_equal(res['error_index'], 38)
         assert_equal(res['error_locations'], [38])
         assert_equal(res['error'], "Invalid checksum")
 
@@ -67,6 +72,7 @@ class ValidateaddressTest(BitcoinTestFramework):
         address = "bcrt1qdg3myrgvzw7ml8q0ejxhlkyxn7vl9r56yzkfgvzclrf4hkpx9yfqhpsuks"
         res = self.nodes[0].validateaddress(address)
         assert_equal(res['isvalid'], False)
+        assert_equal(res['error_index'], 19)
         assert_equal(res['error_locations'], [19, 30])
         assert_equal(res['error'], "Invalid checksum")
 
@@ -74,6 +80,7 @@ class ValidateaddressTest(BitcoinTestFramework):
         address = "bcrt1qax9suht3qv95sw33xavx8crpxduefdrsvgsklu"
         res = self.nodes[0].validateaddress(address)
         assert_equal(res['isvalid'], False)
+        assert_equal(res['error_index'], 22)
         assert_equal(res['error_locations'], [22, 43])
         assert_equal(res['error'], "Invalid checksum")
 
@@ -81,6 +88,7 @@ class ValidateaddressTest(BitcoinTestFramework):
         address = "bcrt1q049edschfnwystcqnsvyfpj23mpsg3jcedq9xv049edschfnwystcqnsvyfpj23mpsg3jcedq9xv049edschfnwystcqnsvyfpj23m"
         res = self.nodes[0].validateaddress(address)
         assert_equal(res['isvalid'], False)
+        assert_equal(res['error_index'], 90)
         assert_equal(res['error_locations'], list(range(90, 108)))
         assert_equal(res['error'], "Bech32 string too long")
 
