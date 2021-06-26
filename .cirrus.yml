@@ -41,6 +41,10 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
     folder: "/tmp/ccache_dir"
   depends_built_cache:
     folder: "depends/built"
+  pip_cache:
+    folder: ~/.cache/pip
+    fingerprint_script:
+      - echo "${CIRRUS_TASK_NAME} py${PYTHON_VERSION}"
   ci_script:
     - ./ci/test_run_all.sh
 
