@@ -10,9 +10,9 @@
 #include <hash.h>
 #include <prevector.h>
 #include <tinyformat.h>
-#include <utilasmap.h>
-#include <utilstrencodings.h>
-#include <utilstring.h>
+#include <util/asmap.h>
+#include <util/strencodings.h>
+#include <util/string.h>
 
 #include <algorithm>
 #include <array>

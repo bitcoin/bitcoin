@@ -5,7 +5,7 @@
 #include <bench/bench.h>
 #include <random.h>
 #include <bls/bls_worker.h>
-#include <utiltime.h>
+#include <util/time.h>
 
 #include <iostream>
 

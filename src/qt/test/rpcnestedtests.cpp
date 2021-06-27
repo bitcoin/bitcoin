@@ -14,7 +14,7 @@
 #include <qt/rpcconsole.h>
 #include <test/test_dash.h>
 #include <univalue.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <llmq/quorums_init.h>
 

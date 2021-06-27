@@ -12,7 +12,7 @@
 
 #include <init.h>
 #include <key_io.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 #include <validation.h> // For strMessageMagic
 
 #include <string>

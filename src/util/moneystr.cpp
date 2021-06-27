@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <utilmoneystr.h>
+#include <util/moneystr.h>
 
 #include <primitives/transaction.h>
 #include <tinyformat.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 std::string FormatMoney(const CAmount& n)
 {

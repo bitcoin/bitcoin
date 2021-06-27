@@ -8,7 +8,7 @@
 #include <serialize.h>
 #include <streams.h>
 #include <test/test_dash.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 #include <version.h>
 
 #include <string>

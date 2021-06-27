@@ -6,7 +6,7 @@
 
 #if defined(Q_OS_WIN)
 #include <init.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <windows.h>
 

@@ -4,7 +4,7 @@
 
 #include <bench/bench.h>
 
-#include <utiltime.h>
+#include <util/time.h>
 
 static void BenchTimeDeprecated(benchmark::State& state)
 {

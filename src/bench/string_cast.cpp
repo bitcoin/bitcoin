@@ -4,7 +4,7 @@
 
 #include <bench/bench.h>
 #include <tinyformat.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <boost/lexical_cast.hpp>
 #include <string>

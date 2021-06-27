@@ -3,7 +3,7 @@
 
 #include <primitives/transaction.h>
 #include <sync.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <QMenu>
 #include <QTimer>

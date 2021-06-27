@@ -11,7 +11,7 @@
 #include <logging.h>
 #include <streams.h>
 #include <threadsafety.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <map>
 #include <vector>

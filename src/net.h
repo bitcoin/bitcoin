@@ -21,7 +21,7 @@
 #include <streams.h>
 #include <sync.h>
 #include <uint256.h>
-#include <util.h>
+#include <util/system.h>
 #include <threadinterrupt.h>
 #include <consensus/params.h>
 

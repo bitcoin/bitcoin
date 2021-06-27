@@ -13,7 +13,7 @@
 #include <sync.h>
 #include <timedata.h>
 #include <tinyformat.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <fs.h>
 #include <hash.h>

@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <test/test_dash.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 #include <wallet/crypter.h>
 
 #include <vector>

@@ -10,7 +10,7 @@
 #endif // ENABLE_WALLET
 #include <coinjoin/coinjoin-server.h>
 #include <rpc/server.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <univalue.h>
 

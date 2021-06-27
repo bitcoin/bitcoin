@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <txmempool.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <test/test_dash.h>
 

@@ -20,7 +20,7 @@
 #include <netbase.h>
 #include <rpc/server.h>
 #include <rpc/client.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <openssl/crypto.h>
 
