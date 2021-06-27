@@ -28,8 +28,6 @@ NftLoaderDialogOptions::NftLoaderDialogOptions(const PlatformStyle* _platformSty
     ui->setupUi(this);
     GUIUtil::handleCloseWindowShortcut(this);
 
-    //ui->nftCreateAssetClassFee->setText("0");
-
     //setCurrentWidget(ui->SendCoins);
 
     // Connect signals
@@ -86,6 +84,10 @@ void NftLoaderDialogOptions::on_createAssetClassButton_clicked()
         // ****************************************************************************** //
         //           2 - hash1 (binary) + txid (in binary) = NFTID
         ui->labelStatus->setText("Transaction mined, NFT ID is XXXXXXXXXXXX.");
+
+        assetClassCurrent = assetClass;
+
+        assetClassCurrent->txnID = "XXXXXXXXXXXX";
         // ****************************************************************************** //
     }
     
@@ -114,11 +116,11 @@ void NftLoaderDialogOptions::on_createAssetButton_clicked()
         // ****************************************************************************** //
         CNFTAsset* asset = new CNFTAsset();
 
-        asset->txnID = "";
+        asset->txnID = assetClassCurrent->txnID;
         asset->hash = "";
-        asset->assetClassHash = "";
+        asset->assetClassHash = assetClassCurrent->hash;
         asset->metaData = ui->nftCreateAssetMetadata->toPlainText().toStdString();
-        asset->binaryData = "";
+        asset->binaryData = ui->nftCreateAssetBinary->currentText().toStdString();
         asset->owner = "";
         asset->serial = 1;
 
@@ -129,6 +131,8 @@ void NftLoaderDialogOptions::on_createAssetButton_clicked()
         // ****************************************************************************** //
         //           2 - hash1 (binary) + txid (in binary) = NFTID
         //ui->labelStatus->setText("Transaction mined, NFT ID is XXXXXXXXXXXX.");
+        asset->hash = "";
+        assetCurrent = asset;
         // ****************************************************************************** //
     }
 
@@ -154,19 +158,16 @@ void NftLoaderDialogOptions::on_sendAssetButton_clicked()
                             QMessageBox::Cancel);
     if (retval == QMessageBox::Yes)
     {
-        CNFTAsset* asset = new CNFTAsset();
-
-        asset->txnID = "";
-        asset->hash = "";
-        asset->assetClassHash = "";
-        asset->metaData = ui->nftCreateAssetMetadata->toPlainText().toStdString();
-        asset->binaryData = "";
-        asset->owner = "";
-        asset->serial = 1;
+        //assetClassCurrent = assetClass;
+        //assetClassCurrent = assetClass;
+        //ui->nftSendAssetClassBinary->currentText().toStdString();
+        //ui->nftSendAssetBinary->currentText().toStdString();
+        //ui->nftSendAssetClassAddress->text().toStdString();
+        
         // ****************************************************************************** //
 
         // ****************************************************************************** //
-        //ui->labelStatus->setText("Loading send asset to NFT database.");
+        //When they press send it needs a warning like "this process cannot be reversed are you sure?" There's no need for status after that, the messagebox can just say "asset sent"
         // ****************************************************************************** //
         QMessageBox msgBox;
         msgBox.setText("Asset sent.");

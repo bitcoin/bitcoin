@@ -12,6 +12,8 @@
 
 class WalletModel;
 class PlatformStyle;
+class CNFTAssetClass;
+class CNFTAsset;
 
 namespace Ui
 {
@@ -44,6 +46,8 @@ private:
     WalletModel* model;
     const PlatformStyle* platformStyle;
     std::unique_ptr<WalletModelTransaction> m_current_transaction;
+    CNFTAssetClass* assetClassCurrent;
+    CNFTAsset* assetCurrent;
 
 private Q_SLOTS:
     void on_createAssetClassButton_clicked();
