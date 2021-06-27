@@ -34,12 +34,13 @@ from test_framework.script import (
     OP_CHECKMULTISIG,
     OP_CHECKSIG,
     OP_DROP,
-    OP_DUP,
     OP_EQUAL,
-    OP_EQUALVERIFY,
     OP_HASH160,
     OP_TRUE,
     hash160,
+)
+from test_framework.script_util import (
+    key_to_p2pkh_script,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -427,7 +428,7 @@ class SegWitTest(BitcoinTestFramework):
         op0 = CScript([OP_0])
         # 2N7MGY19ti4KDMSzRfPAssP6Pxyuxoi6jLe is the P2SH(P2PKH) version of mjoE3sSrb8ByYEvgnC3Aox86u1CHnfJA4V
         unsolvable_address_key = hex_str_to_bytes("02341AEC7587A51CDE5279E0630A531AEA2615A9F80B17E8D9376327BAEAA59E3D")
-        unsolvablep2pkh = CScript([OP_DUP, OP_HASH160, hash160(unsolvable_address_key), OP_EQUALVERIFY, OP_CHECKSIG])
+        unsolvablep2pkh = key_to_p2pkh_script(unsolvable_address_key)
         unsolvablep2wshp2pkh = CScript([OP_0, sha256(unsolvablep2pkh)])
         p2shop0 = CScript([OP_HASH160, hash160(op0), OP_EQUAL])
         p2wshop1 = CScript([OP_0, sha256(op1)])
@@ -454,7 +455,7 @@ class SegWitTest(BitcoinTestFramework):
             else:
                 pubkey = hex_str_to_bytes(v['pubkey'])
                 p2pk = CScript([pubkey, OP_CHECKSIG])
-                p2pkh = CScript([OP_DUP, OP_HASH160, hash160(pubkey), OP_EQUALVERIFY, OP_CHECKSIG])
+                p2pkh = key_to_p2pkh_script(pubkey)
                 importlist.append(p2pk.hex())
                 importlist.append(p2pkh.hex())
                 importlist.append(CScript([OP_0, hash160(pubkey)]).hex())

@@ -60,11 +60,9 @@ from test_framework.script import (
     OP_CHECKMULTISIG,
     OP_CHECKSIG,
     OP_DROP,
-    OP_DUP,
     OP_ELSE,
     OP_ENDIF,
     OP_EQUAL,
-    OP_EQUALVERIFY,
     OP_HASH160,
     OP_IF,
     OP_RETURN,
@@ -76,6 +74,9 @@ from test_framework.script import (
     SegwitV0SignatureHash,
     LegacySignatureHash,
     hash160,
+)
+from test_framework.script_util import (
+    keyhash_to_p2pkh_script,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -99,10 +100,6 @@ class UTXO():
         self.sha256 = sha256
         self.n = n
         self.nValue = value
-
-def get_p2pkh_script(pubkeyhash):
-    """Get the script associated with a P2PKH."""
-    return CScript([CScriptOp(OP_DUP), CScriptOp(OP_HASH160), pubkeyhash, CScriptOp(OP_EQUALVERIFY), CScriptOp(OP_CHECKSIG)])
 
 def sign_p2pk_witness_input(script, tx_to, in_idx, hashtype, value, key):
     """Add signature for a P2PK witness program."""
@@ -1550,7 +1547,7 @@ class SegWitTest(BitcoinTestFramework):
         tx2 = CTransaction()
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, script_wsh))
-        script = get_p2pkh_script(pubkeyhash)
+        script = keyhash_to_p2pkh_script(pubkeyhash)
         sig_hash = SegwitV0SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)
         signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
         tx2.wit.vtxinwit.append(CTxInWitness())
@@ -1587,7 +1584,7 @@ class SegWitTest(BitcoinTestFramework):
         # Test 3: P2SH(P2WSH)
         # Try to spend the P2SH output created in the last test.
         # Send it to a P2PKH output, which we'll use in the next test.
-        script_pubkey = get_p2pkh_script(pubkeyhash)
+        script_pubkey = keyhash_to_p2pkh_script(pubkeyhash)
         tx4 = CTransaction()
         tx4.vin.append(CTxIn(COutPoint(tx3.sha256, 0), script_sig))
         tx4.vout.append(CTxOut(tx3.vout[0].nValue - 1000, script_pubkey))
@@ -1754,7 +1751,7 @@ class SegWitTest(BitcoinTestFramework):
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue, CScript([OP_TRUE])))
 
-        script = get_p2pkh_script(pubkeyhash)
+        script = keyhash_to_p2pkh_script(pubkeyhash)
         sig_hash = SegwitV0SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)
         signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
 
