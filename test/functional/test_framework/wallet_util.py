@@ -106,7 +106,7 @@ def get_multisig(node):
                     redeem_script=script_code.hex(),
                     p2wsh_script=witness_script.hex(),
                     p2wsh_addr=script_to_p2wsh(script_code),
-                    p2sh_p2wsh_script=CScript([OP_HASH160, witness_script, OP_EQUAL]).hex(),
+                    p2sh_p2wsh_script=CScript([OP_HASH160, hash160(witness_script), OP_EQUAL]).hex(),
                     p2sh_p2wsh_addr=script_to_p2sh_p2wsh(script_code))
 
 def test_address(node, address, **kwargs):
