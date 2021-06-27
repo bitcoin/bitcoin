@@ -662,6 +662,9 @@ case $host in
    *hpux*)
      LEVELDB_TARGET_FLAGS="-DOS_HPUX"
      ;;
+   *netbsd*)
+     LEVELDB_TARGET_FLAGS="-DOS_NETBSD"
+     ;;
    *)
      AC_MSG_ERROR(Cannot build leveldb for $host. Please file a bug report.)
      ;;
