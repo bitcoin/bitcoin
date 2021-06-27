@@ -36,12 +36,14 @@ public:
     void setCurrentTab(NftLoaderDialogOptions::Tab tab);
     bool validate(interfaces::Node& node);
     bool validateFee();
+    bool validate2(interfaces::Node& node);
+    bool validateFee2();
 
 private:
     Ui::NftLoaderDialogOptions* ui;
     WalletModel* model;
     const PlatformStyle* platformStyle;
-    //std::unique_ptr<WalletModelTransaction> m_current_transaction;
+    std::unique_ptr<WalletModelTransaction> m_current_transaction;
 
 private Q_SLOTS:
     void on_createAssetClassButton_clicked();

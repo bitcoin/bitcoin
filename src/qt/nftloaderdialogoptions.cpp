@@ -84,6 +84,7 @@ void NftLoaderDialogOptions::on_createAssetClassButton_clicked()
         // ****************************************************************************** //
 
         // ****************************************************************************** //
+        //           2 - hash1 (binary) + txid (in binary) = NFTID
         ui->labelStatus->setText("Transaction mined, NFT ID is XXXXXXXXXXXX.");
         // ****************************************************************************** //
     }
@@ -97,6 +98,40 @@ void NftLoaderDialogOptions::on_createAssetButton_clicked()
     //Then the user can optionally enter a binary file location(e.g.c:\pictures\image.jpg)
     //The status update is the same steps as above
 
+    bool valid = validateFee2();
+    if (valid == false) {
+        QMessageBox msgBox;
+        msgBox.setText("Fee should be greater than zero atom.");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
+    } else {
+        // ****************************************************************************** //
+        //                 When they press send a status should read:
+        // ****************************************************************************** //
+
+        // ****************************************************************************** //
+        //ui->labelStatus->setText("Sending transaction waiting for block confirmation.");
+        // ****************************************************************************** //
+        CNFTAsset* asset = new CNFTAsset();
+
+        asset->txnID = "";
+        asset->hash = "";
+        asset->assetClassHash = "";
+        asset->metaData = ui->nftCreateAssetMetadata->toPlainText().toStdString();
+        asset->binaryData = "";
+        asset->owner = "";
+        asset->serial = 1;
+
+        // ****************************************************************************** //
+        //ui->labelStatus->setText("Loading asset to NFT database.");
+        // ****************************************************************************** //
+
+        // ****************************************************************************** //
+        //           2 - hash1 (binary) + txid (in binary) = NFTID
+        //ui->labelStatus->setText("Transaction mined, NFT ID is XXXXXXXXXXXX.");
+        // ****************************************************************************** //
+    }
+
     return;
 }
 
@@ -106,6 +141,38 @@ void NftLoaderDialogOptions::on_sendAssetButton_clicked()
     //Then select an asset which is filtered by the asset class(it should display the NFT ID somewhere when its picked)
     //Then enter a destination wallet address
     //When they press send it needs a warning like "this process cannot be reversed are you sure?" There's no need for status after that, the messagebox can just say "asset sent"
+
+    // ****************************************************************************** //
+    //                 When they press send a status should read:
+    // ****************************************************************************** //
+
+    // ****************************************************************************** //
+    QMessageBox::StandardButton retval =
+        QMessageBox::question(this, tr("Confirm sending of asset"),
+                            tr("This process cannot be reversed are you sure?"),
+                            QMessageBox::Yes | QMessageBox::Cancel,
+                            QMessageBox::Cancel);
+    if (retval == QMessageBox::Yes)
+    {
+        CNFTAsset* asset = new CNFTAsset();
+
+        asset->txnID = "";
+        asset->hash = "";
+        asset->assetClassHash = "";
+        asset->metaData = ui->nftCreateAssetMetadata->toPlainText().toStdString();
+        asset->binaryData = "";
+        asset->owner = "";
+        asset->serial = 1;
+        // ****************************************************************************** //
+
+        // ****************************************************************************** //
+        //ui->labelStatus->setText("Loading send asset to NFT database.");
+        // ****************************************************************************** //
+        QMessageBox msgBox;
+        msgBox.setText("Asset sent.");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
+    }    
 
     return;
 }
@@ -143,6 +210,34 @@ bool NftLoaderDialogOptions::validateFee()
     // Sending a zero amount is invalid
     if (ui->nftCreateAssetClassFee->value(nullptr) <= 0) {
         ui->nftCreateAssetClassFee->setValid(false);
+        retval = false;
+    }
+
+    return retval;
+}
+
+bool NftLoaderDialogOptions::validate2(interfaces::Node& node)
+{
+    if (!model)
+        return false;
+
+    // Check input validity
+    bool retval = validateFee2();
+
+    return validateFee2();
+}
+
+bool NftLoaderDialogOptions::validateFee2()
+{
+    bool retval = true;
+
+    if (!ui->nftCreateAssetFee->validate()) {
+        retval = false;
+    }
+
+    // Sending a zero amount is invalid
+    if (ui->nftCreateAssetFee->value(nullptr) <= 0) {
+        ui->nftCreateAssetFee->setValid(false);
         retval = false;
     }
 

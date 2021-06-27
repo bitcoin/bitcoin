@@ -23,7 +23,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tabCreateAssetClass">
     <attribute name="title">
@@ -165,19 +165,6 @@
       <string>Fee</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="nftCreateAssetFee">
-     <property name="geometry">
-      <rect>
-       <x>90</x>
-       <y>280</y>
-       <width>113</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="toolTip">
-      <string>The fee is numeric and must be 0 or positive whole number</string>
-     </property>
-    </widget>
     <widget class="QLabel" name="label_4">
      <property name="geometry">
       <rect>
@@ -261,6 +248,19 @@
      </property>
      <property name="placeholderText">
       <string/>
+     </property>
+    </widget>
+    <widget class="BitcoinAmountField" name="nftCreateAssetFee">
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>280</y>
+       <width>133</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>The amount to send in the selected unit</string>
      </property>
     </widget>
    </widget>
