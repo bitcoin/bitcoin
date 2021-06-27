@@ -29,22 +29,6 @@
     <attribute name="title">
      <string>Create Asset Class</string>
     </attribute>
-    <widget class="QLineEdit" name="nftCreateAssetClassMetadata">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>50</y>
-       <width>491</width>
-       <height>171</height>
-      </rect>
-     </property>
-     <property name="toolTip">
-      <string>The metadata is optional</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-     </property>
-    </widget>
     <widget class="QLabel" name="label">
      <property name="geometry">
       <rect>
@@ -117,6 +101,45 @@
       <string>The amount to send in the selected unit</string>
      </property>
     </widget>
+    <widget class="QLabel" name="labelStatus">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>285</y>
+       <width>481</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>XXXXXXXXXXX</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QPlainTextEdit" name="nftCreateAssetClassMetadata">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>40</y>
+       <width>481</width>
+       <height>181</height>
+      </rect>
+     </property>
+     <property name="plainText">
+      <string/>
+     </property>
+     <property name="placeholderText">
+      <string/>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="tabCreateAsset">
     <attribute name="title">
@@ -140,22 +163,6 @@
      </property>
      <property name="text">
       <string>Fee</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="nftCreateAssetMetadata">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>50</y>
-       <width>491</width>
-       <height>171</height>
-      </rect>
-     </property>
-     <property name="toolTip">
-      <string>The metadata is optional</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
      </property>
     </widget>
     <widget class="QLineEdit" name="nftCreateAssetFee">
@@ -238,6 +245,22 @@
      </property>
      <property name="text">
       <string>Binary</string>
+     </property>
+    </widget>
+    <widget class="QPlainTextEdit" name="nftCreateAssetMetadata">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>40</y>
+       <width>481</width>
+       <height>181</height>
+      </rect>
+     </property>
+     <property name="plainText">
+      <string/>
+     </property>
+     <property name="placeholderText">
+      <string/>
      </property>
     </widget>
    </widget>

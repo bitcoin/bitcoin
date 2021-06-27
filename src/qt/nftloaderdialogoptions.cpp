@@ -4,6 +4,7 @@
 
 #include <qt/nftloaderdialogoptions.h>
 #include <qt/forms/ui_nftloaderdialogoptions.h>
+#include <primitives/dynnft_manager.h>
 
 #include <qt/bitcoinunits.h>
 #include <qt/guiutil.h>
@@ -54,21 +55,38 @@ void NftLoaderDialogOptions::on_createAssetClassButton_clicked()
 
     //The fee is numeric and must be 0 or positive whole number (in Atoms)
     bool valid = validateFee();
-    if (valid == false) {
+    if (valid == false)
+    {
         QMessageBox msgBox;
         msgBox.setText("Fee should be greater than zero atom.");
         msgBox.setStandardButtons(QMessageBox::Ok);
         msgBox.exec();
     }
+    else
+    {
+        // ****************************************************************************** //
+        //                 When they press send a status should read:
+        // ****************************************************************************** //
 
-    // ****************************************** //
-    //When they press send a status should read:
-    // ****************************************** //
-    //Sending transaction waiting for block confirmation
-    //Loading asset class to NFT database
-    //Transaction mined, NFT ID is XXXXXXXXXXXX
+        // ****************************************************************************** //
+        ui->labelStatus->setText("Sending transaction waiting for block confirmation.");
+        // ****************************************************************************** //
+        //net_processing.h and net_processing.cpp
+        CNFTAssetClass* assetClass = new CNFTAssetClass();
+        assetClass->txnID = "";
+        assetClass->hash = "";
+        assetClass->metaData = ui->nftCreateAssetClassMetadata->toPlainText().toStdString();
+        assetClass->owner = "";
+        assetClass->maxCount = 1;
 
-    
+        // ****************************************************************************** //
+        ui->labelStatus->setText("Loading asset class to NFT database.");
+        // ****************************************************************************** //
+
+        // ****************************************************************************** //
+        ui->labelStatus->setText("Transaction mined, NFT ID is XXXXXXXXXXXX.");
+        // ****************************************************************************** //
+    }
     
     return;
 }

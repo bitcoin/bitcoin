@@ -41,6 +41,7 @@ private:
     Ui::NftLoaderDialogOptions* ui;
     WalletModel* model;
     const PlatformStyle* platformStyle;
+    //std::unique_ptr<WalletModelTransaction> m_current_transaction;
 
 private Q_SLOTS:
     void on_createAssetClassButton_clicked();
