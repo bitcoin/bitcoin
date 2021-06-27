@@ -3207,13 +3207,13 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
         // Remove from maps of active spkMans
         auto old_spk_man_id = old_spk_man->GetID();
         for (bool active_internal : {false, true}) {
-            for (OutputType t : OUTPUT_TYPES) {
-                auto active_spk_man = GetScriptPubKeyMan(t, active_internal);
+            for (OutputType active_type : OUTPUT_TYPES) {
+                auto active_spk_man = GetScriptPubKeyMan(active_type, active_internal);
                 if (active_spk_man && active_spk_man->GetID() == old_spk_man_id) {
                     if (active_internal) {
-                        m_internal_spk_managers.erase(t);
+                        m_internal_spk_managers.erase(active_type);
                     } else {
-                        m_external_spk_managers.erase(t);
+                        m_external_spk_managers.erase(active_type);
                     }
                     break;
                 }
