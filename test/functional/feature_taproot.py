@@ -57,7 +57,6 @@ from test_framework.script import (
     OP_ENDIF,
     OP_EQUAL,
     OP_EQUALVERIFY,
-    OP_HASH160,
     OP_IF,
     OP_NOP,
     OP_NOT,
@@ -78,6 +77,7 @@ from test_framework.script import (
 )
 from test_framework.script_util import (
     keyhash_to_p2pkh_script,
+    script_to_p2sh_script,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_raises_rpc_error, assert_equal
@@ -499,7 +499,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
     if p2sh:
         # P2SH wrapper can be combined with anything else
         conf["script_p2sh"] = spk
-        spk = CScript([OP_HASH160, hash160(spk), OP_EQUAL])
+        spk = script_to_p2sh_script(spk)
 
     conf = {**conf, **kwargs}
 

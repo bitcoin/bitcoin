@@ -21,13 +21,12 @@ from test_framework.script import (
     OP_2,
     OP_3,
     OP_CHECKMULTISIG,
-    OP_EQUAL,
-    OP_HASH160,
     hash160,
     sha256,
 )
 from test_framework.script_util import (
     key_to_p2pkh_script,
+    script_to_p2sh_script,
 )
 from test_framework.util import hex_str_to_bytes
 
@@ -64,7 +63,7 @@ def get_key(node):
                p2pkh_addr=key_to_p2pkh(pubkey),
                p2wpkh_script=CScript([OP_0, pkh]).hex(),
                p2wpkh_addr=key_to_p2wpkh(pubkey),
-               p2sh_p2wpkh_script=CScript([OP_HASH160, hash160(CScript([OP_0, pkh])), OP_EQUAL]).hex(),
+               p2sh_p2wpkh_script=script_to_p2sh_script(CScript([OP_0, pkh])).hex(),
                p2sh_p2wpkh_redeem_script=CScript([OP_0, pkh]).hex(),
                p2sh_p2wpkh_addr=key_to_p2sh_p2wpkh(pubkey))
 
@@ -83,7 +82,7 @@ def get_generate_key():
                p2pkh_addr=key_to_p2pkh(pubkey),
                p2wpkh_script=CScript([OP_0, pkh]).hex(),
                p2wpkh_addr=key_to_p2wpkh(pubkey),
-               p2sh_p2wpkh_script=CScript([OP_HASH160, hash160(CScript([OP_0, pkh])), OP_EQUAL]).hex(),
+               p2sh_p2wpkh_script=script_to_p2sh_script(CScript([OP_0, pkh])).hex(),
                p2sh_p2wpkh_redeem_script=CScript([OP_0, pkh]).hex(),
                p2sh_p2wpkh_addr=key_to_p2sh_p2wpkh(pubkey))
 
@@ -101,12 +100,12 @@ def get_multisig(node):
     witness_script = CScript([OP_0, sha256(script_code)])
     return Multisig(privkeys=[node.dumpprivkey(addr) for addr in addrs],
                     pubkeys=pubkeys,
-                    p2sh_script=CScript([OP_HASH160, hash160(script_code), OP_EQUAL]).hex(),
+                    p2sh_script=script_to_p2sh_script(script_code).hex(),
                     p2sh_addr=script_to_p2sh(script_code),
                     redeem_script=script_code.hex(),
                     p2wsh_script=witness_script.hex(),
                     p2wsh_addr=script_to_p2wsh(script_code),
-                    p2sh_p2wsh_script=CScript([OP_HASH160, hash160(witness_script), OP_EQUAL]).hex(),
+                    p2sh_p2wsh_script=script_to_p2sh_script(witness_script).hex(),
                     p2sh_p2wsh_addr=script_to_p2sh_p2wsh(script_code))
 
 def test_address(node, address, **kwargs):
