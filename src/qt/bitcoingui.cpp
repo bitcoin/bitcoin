@@ -33,7 +33,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 #include <qt/masternodelist.h>
 
 #include <iostream>

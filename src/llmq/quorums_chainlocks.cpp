@@ -14,6 +14,7 @@
 #include <scheduler.h>
 #include <spork.h>
 #include <txmempool.h>
+#include <util/validation.h>
 
 namespace llmq
 {

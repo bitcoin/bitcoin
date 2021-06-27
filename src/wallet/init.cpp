@@ -7,8 +7,9 @@
 #include <keepass.h>
 #include <net.h>
 #include <scheduler.h>
-#include <util.h>
-#include <utilmoneystr.h>
+#include <util/error.h>
+#include <util/system.h>
+#include <util/moneystr.h>
 #include <validation.h>
 #include <walletinitinterface.h>
 #include <wallet/rpcwallet.h>

@@ -6,8 +6,8 @@
 
 #include <key.h>
 #include <key_io.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 #include <test/test_dash.h>
 #include <bip39.h>
 

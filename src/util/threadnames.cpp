@@ -9,7 +9,7 @@
 #include <atomic>
 #include <thread>
 
-#include <utilthreadnames.h>
+#include <util/threadnames.h>
 
 #ifdef HAVE_SYS_PRCTL_H
 #include <sys/prctl.h> // For prctl, PR_SET_NAME, PR_GET_NAME

@@ -6,8 +6,8 @@
 
 #include <hash.h>
 #include <uint256.h>
-#include <utilstrencodings.h>
-#include <utilstring.h>
+#include <util/strencodings.h>
+#include <util/string.h>
 
 #include <assert.h>
 #include <stdint.h>

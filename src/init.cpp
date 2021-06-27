@@ -39,15 +39,17 @@
 #include <script/standard.h>
 #include <script/sigcache.h>
 #include <scheduler.h>
-#include <utilthreadnames.h>
+#include <util/threadnames.h>
 #include <timedata.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <torcontrol.h>
 #include <ui_interface.h>
-#include <util.h>
-#include <utilasmap.h>
-#include <utilmoneystr.h>
+#include <util/asmap.h>
+#include <util/error.h>
+#include <util/moneystr.h>
+#include <util/system.h>
+#include <util/validation.h>
 #include <validationinterface.h>
 
 #include <masternode/activemasternode.h>

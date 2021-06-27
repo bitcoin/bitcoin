@@ -7,7 +7,7 @@
 
 #include <sync.h>
 #include <tinyformat.h>
-#include <utilthreadnames.h>
+#include <util/threadnames.h>
 
 #include <algorithm>
 #include <vector>

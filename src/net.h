@@ -11,6 +11,7 @@
 #include <bloom.h>
 #include <compat.h>
 #include <fs.h>
+#include <crypto/siphash.h>
 #include <hash.h>
 #include <limitedmap.h>
 #include <netaddress.h>
@@ -21,7 +22,7 @@
 #include <streams.h>
 #include <sync.h>
 #include <uint256.h>
-#include <util.h>
+#include <util/system.h>
 #include <threadinterrupt.h>
 #include <consensus/params.h>
 

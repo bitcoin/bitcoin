@@ -2,9 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTILASMAP_H
-#define BITCOIN_UTILASMAP_H
+#ifndef BITCOIN_UTIL_MACROS_H
+#define BITCOIN_UTIL_MACROS_H
 
-uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip);
+#define PASTE(x, y) x ## y
+#define PASTE2(x, y) PASTE(x, y)
 
-#endif // BITCOIN_UTILASMAP_H
+#endif // BITCOIN_UTIL_MACROS_H

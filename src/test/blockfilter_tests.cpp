@@ -10,7 +10,7 @@
 #include <serialize.h>
 #include <streams.h>
 #include <univalue.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 

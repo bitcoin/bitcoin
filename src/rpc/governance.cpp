@@ -16,7 +16,7 @@
 #include <messagesigner.h>
 #include <net.h>
 #include <rpc/server.h>
-#include <util.h>
+#include <util/system.h>
 #include <validation.h>
 #include <wallet/rpcwallet.h>
 #ifdef ENABLE_WALLET

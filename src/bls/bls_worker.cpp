@@ -6,7 +6,7 @@
 #include <hash.h>
 #include <serialize.h>
 
-#include <util.h>
+#include <util/system.h>
 
 #include <memory>
 #include <utility>

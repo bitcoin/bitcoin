@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <compat.h>
 #include <netbase.h>
 #include <random.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <cmath>
 #include <cstdio>

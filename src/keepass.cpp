@@ -15,8 +15,8 @@
 #include <script/script.h>
 #include <script/standard.h>
 
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 
 #include <event2/event.h>
 #include <event2/http.h>

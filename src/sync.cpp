@@ -6,8 +6,8 @@
 #include <tinyformat.h>
 
 #include <logging.h>
-#include <utilstrencodings.h>
-#include <utilthreadnames.h>
+#include <util/strencodings.h>
+#include <util/threadnames.h>
 
 #include <stdio.h>
 

@@ -23,7 +23,7 @@
 #include <script/script.h>
 #include <script/standard.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 
 #ifdef WIN32
 #ifdef _WIN32_WINNT

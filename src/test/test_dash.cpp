@@ -18,6 +18,7 @@
 #include <rpc/server.h>
 #include <rpc/register.h>
 #include <script/sigcache.h>
+#include <util/validation.h>
 
 #include <coinjoin/coinjoin.h>
 #include <evo/specialtx.h>

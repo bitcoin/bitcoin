@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <batchedlogger.h>
-#include <util.h>
+#include <util/system.h>
 
 CBatchedLogger::CBatchedLogger(BCLog::LogFlags _category, const std::string& _header) :
     accept(LogAcceptCategory(_category)), header(_header)

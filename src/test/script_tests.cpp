@@ -10,8 +10,8 @@
 #include <script/script.h>
 #include <script/script_error.h>
 #include <script/sign.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 #include <test/test_dash.h>
 
 #if defined(HAVE_CONSENSUS_LIB)

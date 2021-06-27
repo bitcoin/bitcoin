@@ -11,7 +11,7 @@
 #include <qt/appearancewidget.h>
 #include <qt/optionsmodel.h>
 
-#include <util.h>
+#include <util/system.h>
 
 #include <QComboBox>
 #include <QDataWidgetMapper>

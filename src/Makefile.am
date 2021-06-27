@@ -260,13 +260,21 @@ BITCOIN_CORE_H = \
   ui_interface.h \
   undo.h \
   unordered_lru_cache.h \
-  util.h \
-  utilasmap.h \
-  utilmemory.h \
-  utilmoneystr.h \
-  utilstring.h \
-  utiltime.h \
-  utilthreadnames.h \
+  util/bytevectorhash.h \
+  util/error.h \
+  util/fees.h \
+  util/system.h \
+  util/asmap.h \
+  util/macros.h \
+  util/memory.h \
+  util/moneystr.h \
+  util/serfloat.h \
+  util/string.h \
+  util/time.h \
+  util/threadnames.h \
+  util/vector.h \
+  util/url.h \
+  util/validation.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
@@ -444,7 +452,9 @@ crypto_libdash_crypto_base_a_SOURCES = \
   crypto/sha3.cpp \
   crypto/sha3.h \
   crypto/sha512.cpp \
-  crypto/sha512.h
+  crypto/sha512.h \
+  crypto/siphash.cpp \
+  crypto/siphash.h
 
 if USE_ASM
 crypto_libdash_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
@@ -529,8 +539,8 @@ libdash_consensus_a_SOURCES = \
   tinyformat.h \
   uint256.cpp \
   uint256.h \
-  utilstrencodings.cpp \
-  utilstrencodings.h \
+  util/strencodings.cpp \
+  util/strencodings.h \
   version.h
 
 # common: shared between dashd, and dash-qt and non-server tools
@@ -588,13 +598,19 @@ libdash_util_a_SOURCES = \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
-  util.cpp \
-  utilasmap.cpp \
-  utilmoneystr.cpp \
-  utilstrencodings.cpp \
-  utiltime.cpp \
-  utilstring.cpp \
-  utilthreadnames.cpp \
+  util/bytevectorhash.cpp \
+  util/error.cpp \
+  util/fees.cpp \
+  util/system.cpp \
+  util/asmap.cpp \
+  util/moneystr.cpp \
+  util/strencodings.cpp \
+  util/time.cpp \
+  util/serfloat.cpp \
+  util/string.cpp \
+  util/threadnames.cpp \
+  util/url.cpp \
+  util/validation.cpp \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT

@@ -4,7 +4,7 @@
 
 #include <coinjoin/coinjoin-client-options.h>
 
-#include <util.h>
+#include <util/system.h>
 #include <univalue.h>
 
 #include <cassert>

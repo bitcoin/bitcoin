@@ -5,7 +5,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 
-#include <util.h>
+#include <util/system.h>
 
 void CCoinControl::SetNull(bool fResetCoinType)
 {
