@@ -2033,8 +2033,8 @@ bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& add
             m_address_book[address].purpose = strPurpose;
         is_mine = IsMine(address) != ISMINE_NO;
     }
-    NotifyAddressBookChanged(this, address, strName, is_mine,
-                             strPurpose, (fUpdated ? CT_UPDATED : CT_NEW) );
+    NotifyAddressBookChanged(address, strName, is_mine,
+                             strPurpose, (fUpdated ? CT_UPDATED : CT_NEW));
     if (!strPurpose.empty() && !batch.WritePurpose(EncodeDestination(address), strPurpose))
         return false;
     return batch.WriteName(EncodeDestination(address), strName);
@@ -2069,7 +2069,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
         is_mine = IsMine(address) != ISMINE_NO;
     }
 
-    NotifyAddressBookChanged(this, address, "", is_mine, "", CT_DELETED);
+    NotifyAddressBookChanged(address, "", is_mine, "", CT_DELETED);
 
     batch.ErasePurpose(EncodeDestination(address));
     return batch.EraseName(EncodeDestination(address));

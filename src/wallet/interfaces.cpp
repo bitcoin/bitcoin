@@ -475,8 +475,8 @@ public:
     std::unique_ptr<Handler> handleAddressBookChanged(AddressBookChangedFn fn) override
     {
         return MakeHandler(m_wallet->NotifyAddressBookChanged.connect(
-            [fn](CWallet*, const CTxDestination& address, const std::string& label, bool is_mine,
-                const std::string& purpose, ChangeType status) { fn(address, label, is_mine, purpose, status); }));
+            [fn](const CTxDestination& address, const std::string& label, bool is_mine,
+                 const std::string& purpose, ChangeType status) { fn(address, label, is_mine, purpose, status); }));
     }
     std::unique_ptr<Handler> handleTransactionChanged(TransactionChangedFn fn) override
     {

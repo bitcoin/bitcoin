@@ -724,12 +724,12 @@ public:
 
     /**
      * Address book entry changed.
-     * @note called with lock cs_wallet held.
+     * @note called without lock cs_wallet held.
      */
-    boost::signals2::signal<void (CWallet *wallet, const CTxDestination
-            &address, const std::string &label, bool isMine,
-            const std::string &purpose,
-            ChangeType status)> NotifyAddressBookChanged;
+    boost::signals2::signal<void(const CTxDestination& address,
+                                 const std::string& label, bool isMine,
+                                 const std::string& purpose, ChangeType status)>
+        NotifyAddressBookChanged;
 
     /**
      * Wallet transaction added, removed or updated.
