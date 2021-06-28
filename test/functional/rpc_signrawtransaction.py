@@ -6,7 +6,6 @@
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.address import (
-    check_script,
     script_to_p2sh,
     script_to_p2wsh,
 )
@@ -20,12 +19,10 @@ from test_framework.util import (
 )
 from test_framework.messages import (
     CTxInWitness,
-    sha256,
     tx_from_hex,
 )
 from test_framework.script import (
     CScript,
-    OP_0,
     OP_CHECKLOCKTIMEVERIFY,
     OP_CHECKSIG,
     OP_CHECKSEQUENCEVERIFY,
@@ -233,7 +230,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
             'P2PKH': key_to_p2pkh_script(embedded_pubkey).hex(),
             'P2PK': CScript([hex_str_to_bytes(embedded_pubkey), OP_CHECKSIG]).hex()
         }.get(tx_type, "Invalid tx_type")
-        redeem_script = CScript([OP_0, sha256(check_script(witness_script))]).hex()
+        redeem_script = script_to_p2wsh_script(witness_script).hex()
         addr = script_to_p2sh(redeem_script)
         script_pub_key = self.nodes[1].validateaddress(addr)['scriptPubKey']
         # Fund that address

@@ -76,15 +76,16 @@ from test_framework.script import (
     taproot_construct,
 )
 from test_framework.script_util import (
+    key_to_p2wpkh_script,
     keyhash_to_p2pkh_script,
     script_to_p2sh_script,
+    script_to_p2wsh_script,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_raises_rpc_error, assert_equal
 from test_framework.key import generate_privkey, compute_xonly_pubkey, sign_schnorr, tweak_add_privkey, ECKey
 from test_framework.address import (
     hash160,
-    sha256,
 )
 from collections import OrderedDict, namedtuple
 from io import BytesIO
@@ -461,13 +462,13 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
             # P2WPKH
             assert script is None
             pubkeyhash = hash160(pkh)
-            spk = CScript([OP_0, pubkeyhash])
+            spk = key_to_p2wpkh_script(pkh)
             conf["scriptcode"] = keyhash_to_p2pkh_script(pubkeyhash)
             conf["script_witv0"] = None
             conf["inputs"] = [getter("sign"), pkh]
         elif script is not None:
             # P2WSH
-            spk = CScript([OP_0, sha256(script)])
+            spk = script_to_p2wsh_script(script)
             conf["scriptcode"] = script
             conf["script_witv0"] = script
         else:
