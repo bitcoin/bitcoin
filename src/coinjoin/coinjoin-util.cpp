@@ -142,7 +142,7 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
             SignatureData sigdata;
             bool res = ProduceSignature(*pwallet, DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata);
             assert(res);
-            UpdateTransaction(dummyTx, nIn, sigdata);
+            UpdateInput(dummyTx.vin[nIn], sigdata);
             nIn++;
         }
     }

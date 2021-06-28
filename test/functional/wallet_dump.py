@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the dumpwallet RPC."""
 import os
-import sys
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -35,10 +34,10 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                     addr_keypath = comment.split(" addr=")[1]
                     addr = addr_keypath.split(" ")[0]
                     keypath = None
-                    if keytype == "inactivehdmaster=1":
+                    if keytype == "inactivehdseed=1":
                         # ensure the old master is still available
                         assert(hd_master_addr_old == addr)
-                    elif keytype == "hdmaster=1":
+                    elif keytype == "hdseed=1":
                         # ensure we have generated a new hd master key
                         assert(hd_master_addr_old != addr)
                         hd_master_addr_ret = addr
@@ -80,13 +79,13 @@ class WalletDumpTest(BitcoinTestFramework):
         # use our own cache and -usehd=1 as extra arg as the default cache is run with -usehd=0
         self.options.tmpdir = os.path.join(self.options.tmpdir, 'hd')
         self.options.cachedir = os.path.join(self.options.cachedir, 'hd')
-        self._initialize_chain(extra_args=self.extra_args[0], stderr=sys.stdout)
+        self._initialize_chain(extra_args=self.extra_args[0])
         self.set_cache_mocktime()
         # Use 1 minute timeout because the initial getnewaddress RPC can take
         # longer than the default 30 seconds due to an expensive
         # CWallet::TopUpKeyPool call, and the encryptwallet RPC made later in
         # the test often takes even longer.
-        self.add_nodes(self.num_nodes, extra_args=self.extra_args, timewait=60, stderr=sys.stdout)
+        self.add_nodes(self.num_nodes, extra_args=self.extra_args, timewait=60)
         self.start_nodes()
 
     def run_test (self):

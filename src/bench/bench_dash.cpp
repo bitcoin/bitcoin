@@ -6,12 +6,11 @@
 
 #include <crypto/sha256.h>
 #include <key.h>
-#include <stacktraces.h>
-#include <validation.h>
-#include <util/system.h>
 #include <random.h>
-
-#include <boost/lexical_cast.hpp>
+#include <stacktraces.h>
+#include <util/strencodings.h>
+#include <util/system.h>
+#include <validation.h>
 
 #include <memory>
 
@@ -48,17 +47,25 @@ static void SetupBenchArgs()
     gArgs.AddArg("-plot-plotlyurl=<uri>", strprintf("URL to use for plotly.js (default: %s)", DEFAULT_PLOT_PLOTLYURL), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-plot-width=<x>", strprintf("Plot width in pixel (default: %u)", DEFAULT_PLOT_WIDTH), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-plot-height=<x>", strprintf("Plot height in pixel (default: %u)", DEFAULT_PLOT_HEIGHT), false, OptionsCategory::OPTIONS);
+
+    // Hidden
+    gArgs.AddArg("-h", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-help", "", false, OptionsCategory::HIDDEN);
 }
 
 int main(int argc, char** argv)
 {
     SetupBenchArgs();
-    gArgs.ParseParameters(argc, argv);
+    std::string error;
+    if (!gArgs.ParseParameters(argc, argv, error)) {
+        fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
+        return EXIT_FAILURE;
+    }
 
     if (HelpRequested(gArgs)) {
         std::cout << gArgs.GetHelpMessage();
 
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     // Set the datadir after parsing the bench options
@@ -82,8 +89,11 @@ int main(int argc, char** argv)
     std::string scaling_str = gArgs.GetArg("-scaling", DEFAULT_BENCH_SCALING);
     bool is_list_only = gArgs.GetBoolArg("-list", false);
 
-    double scaling_factor = boost::lexical_cast<double>(scaling_str);
-
+    double scaling_factor;
+    if (!ParseDouble(scaling_str, &scaling_factor)) {
+        fprintf(stderr, "Error parsing scaling factor as double: %s\n", scaling_str.c_str());
+        return EXIT_FAILURE;
+    }
 
     std::unique_ptr<benchmark::Printer> printer(new benchmark::ConsolePrinter());
     std::string printer_arg = gArgs.GetArg("-printer", DEFAULT_BENCH_PRINTER);
@@ -103,4 +113,6 @@ int main(int argc, char** argv)
     CleanupBLSTests();
 
     ECC_Stop();
+
+    return EXIT_SUCCESS;
 }

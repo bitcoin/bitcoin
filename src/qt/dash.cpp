@@ -580,15 +580,9 @@ int main(int argc, char *argv[])
 
     std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
 
-    /// 1. Parse command-line options. These take precedence over anything else.
-    // Command-line options take precedence:
-    node->setupServerArgs();
-    SetupUIArgs();
-    node->parseParameters(argc, argv);
-
     // Do not refer to data directory yet, this can be overridden by Intro::pickDataDirectory
 
-    /// 2. Basic Qt initialization (not dependent on parameters or configuration)
+    /// 1. Basic Qt initialization (not dependent on parameters or configuration)
     Q_INIT_RESOURCE(dash);
     Q_INIT_RESOURCE(dash_locale);
 
@@ -612,6 +606,17 @@ int main(int argc, char *argv[])
 #ifdef ENABLE_WALLET
     qRegisterMetaType<WalletModel*>("WalletModel*");
 #endif
+
+    /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
+    // Command-line options take precedence:
+    node->setupServerArgs();
+    SetupUIArgs();
+    std::string error;
+    if (!node->parseParameters(argc, argv, error)) {
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
+            QObject::tr("Error parsing command line arguments: %1.").arg(QString::fromStdString(error)));
+        return EXIT_FAILURE;
+    }
 
     /// 3. Application identification
     // must be set before OptionsModel is initialized or translations are loaded,
@@ -654,11 +659,9 @@ int main(int argc, char *argv[])
                               QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(gArgs.GetArg("-datadir", ""))));
         return EXIT_FAILURE;
     }
-    try {
-        node->readConfigFiles();
-    } catch (const std::exception& e) {
+    if (!node->readConfigFiles(error)) {
         QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
-                              QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
+            QObject::tr("Error: Cannot parse configuration file: %1.").arg(QString::fromStdString(error)));
         return EXIT_FAILURE;
     }
 

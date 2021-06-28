@@ -3,8 +3,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-import sys
-
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
@@ -15,7 +13,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 4
         self.extra_args = [['-usehd=1']] * self.num_nodes
-        self.stderr = sys.stdout
 
     def setup_network(self):
         super().setup_network()

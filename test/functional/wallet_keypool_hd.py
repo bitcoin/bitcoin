@@ -7,8 +7,6 @@
 
 # Add python-bitcoinrpc to module search path:
 
-import sys
-
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
@@ -18,7 +16,6 @@ class KeyPoolTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [['-usehd=1']]
-        self.stderr = sys.stdout
 
     def run_test(self):
         nodes = self.nodes

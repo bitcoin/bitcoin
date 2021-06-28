@@ -8,7 +8,6 @@ wallet_upgradetohd.py
 Test upgrade to a Hierarchical Deterministic wallet via upgradetohd rpc
 """
 
-import sys
 import shutil
 import os
 
@@ -24,7 +23,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def setup_network(self):
-        self.add_nodes(self.num_nodes, stderr=sys.stdout)
+        self.add_nodes(self.num_nodes)
         self.start_nodes()
 
     def recover_non_hd(self):

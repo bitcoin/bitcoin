@@ -163,9 +163,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         self.extra_args_from_options = self.options.dashd_extra_args
 
-        os.environ['PATH'] = config['environment']['BUILDDIR'] + os.pathsep + \
-                             config['environment']['BUILDDIR'] + os.path.sep + "qt" + os.pathsep + \
-                             os.environ['PATH']
+        os.environ['PATH'] = os.pathsep.join([
+            os.path.join(config['environment']['BUILDDIR'], 'src'),
+            os.path.join(config['environment']['BUILDDIR'], 'src', 'qt'),
+            os.environ['PATH']
+        ])
 
         # Set up temp directory and start logging
         if self.options.tmpdir:
@@ -270,12 +272,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def setup_nodes(self):
         """Override this method to customize test node setup"""
         extra_args = None
-        stderr = None
         if hasattr(self, "extra_args"):
             extra_args = self.extra_args
-        if hasattr(self, "stderr"):
-            stderr = self.stderr
-        self.add_nodes(self.num_nodes, extra_args, stderr=stderr)
+        self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
 
     def run_test(self):
@@ -284,7 +283,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     # Public helper methods. These can be accessed by the subclass test scripts.
 
-    def add_nodes(self, num_nodes, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
+    def add_nodes(self, num_nodes, extra_args=None, rpchost=None, timewait=None, binary=None):
         """Instantiate TestNode objects"""
         if self.bind_to_localhost_only:
             extra_confs = [["bind=127.0.0.1"]] * num_nodes
@@ -299,7 +298,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         assert_equal(len(binary), num_nodes)
         old_num_nodes = len(self.nodes)
         for i in range(num_nodes):
-            self.nodes.append(TestNode(old_num_nodes + i, get_datadir_path(self.options.tmpdir, old_num_nodes + i), self.extra_args_from_options, chain=self.chain, rpchost=rpchost, timewait=timewait, bitcoind=binary[i], bitcoin_cli=self.options.bitcoincli, stderr=stderr, mocktime=self.mocktime, coverage_dir=self.options.coveragedir, extra_conf=extra_confs[i], extra_args=extra_args[i], use_cli=self.options.usecli))
+            self.nodes.append(TestNode(old_num_nodes + i, get_datadir_path(self.options.tmpdir, old_num_nodes + i), self.extra_args_from_options, chain=self.chain, rpchost=rpchost, timewait=timewait, bitcoind=binary[i], bitcoin_cli=self.options.bitcoincli, mocktime=self.mocktime, coverage_dir=self.options.coveragedir, extra_conf=extra_confs[i], extra_args=extra_args[i], use_cli=self.options.usecli))
 
     def start_node(self, i, *args, **kwargs):
         """Start a dashd"""
@@ -312,7 +311,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if self.options.coveragedir is not None:
             coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
 
-    def start_nodes(self, extra_args=None, stderr=None, *args, **kwargs):
+    def start_nodes(self, extra_args=None, *args, **kwargs):
         """Start multiple dashds"""
 
         if extra_args is None:
@@ -320,7 +319,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         assert_equal(len(extra_args), self.num_nodes)
         try:
             for i, node in enumerate(self.nodes):
-                node.start(extra_args[i], stderr, *args, **kwargs)
+                node.start(extra_args[i], *args, **kwargs)
             for node in self.nodes:
                 node.wait_for_rpc_connection()
         except:
@@ -332,24 +331,24 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             for node in self.nodes:
                 coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
 
-    def stop_node(self, i, wait=0):
+    def stop_node(self, i, expected_stderr='', wait=0):
         """Stop a dashd test node"""
-        self.nodes[i].stop_node(wait=wait)
+        self.nodes[i].stop_node(expected_stderr=expected_stderr, wait=wait)
         self.nodes[i].wait_until_stopped()
 
-    def stop_nodes(self, wait=0):
+    def stop_nodes(self, expected_stderr='', wait=0):
         """Stop multiple dashd test nodes"""
         for node in self.nodes:
             # Issue RPC to stop nodes
-            node.stop_node(wait=wait)
+            node.stop_node(expected_stderr=expected_stderr, wait=wait)
 
         for node in self.nodes:
             # Wait for nodes to stop
             node.wait_until_stopped()
 
-    def restart_node(self, i, extra_args=None):
+    def restart_node(self, i, extra_args=None, expected_stderr=''):
         """Stop and start a test node"""
-        self.stop_node(i)
+        self.stop_node(i, expected_stderr)
         self.start_node(i, extra_args)
 
     def wait_for_node_exit(self, i, timeout):
@@ -440,7 +439,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             rpc_handler.setLevel(logging.DEBUG)
             rpc_logger.addHandler(rpc_handler)
 
-    def _initialize_chain(self, extra_args=None, stderr=None):
+    def _initialize_chain(self, extra_args=None):
         """Initialize a pre-mined blockchain for use by the test.
 
         Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
@@ -470,7 +469,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
                 if extra_args is not None:
                     args.extend(extra_args)
-                self.nodes.append(TestNode(i, get_datadir_path(self.options.cachedir, i), chain=self.chain, extra_conf=["bind=127.0.0.1"], extra_args=[],extra_args_from_options=self.extra_args_from_options, rpchost=None, timewait=None, bitcoind=self.options.bitcoind, bitcoin_cli=self.options.bitcoincli, stderr=stderr, mocktime=self.mocktime, coverage_dir=None))
+                self.nodes.append(TestNode(i, get_datadir_path(self.options.cachedir, i), chain=self.chain, extra_conf=["bind=127.0.0.1"], extra_args=[], extra_args_from_options=self.extra_args_from_options, rpchost=None, timewait=None, bitcoind=self.options.bitcoind, bitcoin_cli=self.options.bitcoincli, mocktime=self.mocktime, coverage_dir=None))
                 self.nodes[i].args = args
                 self.start_node(i)
 

@@ -25,7 +25,6 @@ from test_framework.util import (assert_raises_rpc_error, connect_nodes, assert_
 import collections
 import enum
 import itertools
-import sys
 
 Call = enum.Enum("Call", "single multi")
 Data = enum.Enum("Data", "address pub priv")
@@ -131,7 +130,7 @@ class ImportRescanTest(BitcoinTestFramework):
                 # txindex is enabled by default in Dash and needs to be disabled for import-rescan.py
                 extra_args[i] += ["-prune=1", "-txindex=0", "-reindex"]
 
-        self.add_nodes(self.num_nodes, extra_args=extra_args, stderr=sys.stdout)
+        self.add_nodes(self.num_nodes, extra_args=extra_args)
         self.start_nodes()
         for i in range(1, self.num_nodes):
             connect_nodes(self.nodes[i], 0)
@@ -189,6 +188,10 @@ class ImportRescanTest(BitcoinTestFramework):
                 variant.check(variant.sent_txid, variant.sent_amount, 1)
             else:
                 variant.check()
+        for i, import_node in enumerate(IMPORT_NODES, 2):
+            if import_node.prune:
+                self.stop_node(i, expected_stderr='Warning: You are starting with governance validation disabled. This is expected because you are running a pruned node.')
+
 
 if __name__ == "__main__":
     ImportRescanTest().main()

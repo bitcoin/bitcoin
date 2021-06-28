@@ -13,8 +13,6 @@ from test_framework.mininode import P2PInterface,  wait_until, mininode_lock, ne
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, disconnect_nodes, connect_nodes_bi, sync_blocks
 
-import sys
-
 class P2PIgnoreInv(P2PInterface):
     firstAddrnServices = 0
     def on_inv(self, message):
@@ -34,7 +32,6 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.stderr = sys.stdout
         self.extra_args = [['-prune=550', '-txindex=0', '-addrmantest'], [], []]
 
     def disconnect_all(self):
@@ -117,6 +114,8 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
 
         # sync must be possible, node 1 is no longer in IBD and should therefore connect to node 0 (NODE_NETWORK_LIMITED)
         sync_blocks([self.nodes[0], self.nodes[1]])
+        self.stop_node(0, expected_stderr='Warning: You are starting with governance validation disabled. This is expected because you are running a pruned node.')
+
 
 if __name__ == '__main__':
     NodeNetworkLimitedTest().main()

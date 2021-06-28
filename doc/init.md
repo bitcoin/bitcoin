@@ -15,7 +15,7 @@ Service User
 
 All three Linux startup configurations assume the existence of a "dashcore" user
 and group.  They must be created before attempting to use these scripts.
-The OS X configuration assumes dashd will be set up for the current user.
+The macOS configuration assumes dashd will be set up for the current user.
 
 Configuration
 ---------------------------------
@@ -65,7 +65,7 @@ reasons to make the configuration file and data directory only readable by the
 dashcore user and group.  Access to dash-cli and other dashd rpc clients
 can then be controlled by group membership.
 
-### Mac OS X
+### macOS
 
 Binary:              `/usr/local/bin/dashd`  
 Configuration file:  `~/Library/Application Support/DashCore/dash.conf`  
@@ -111,7 +111,7 @@ Using this script, you can adjust the path and flags to the dashd program by
 setting the DASHD and FLAGS environment variables in the file
 /etc/sysconfig/dashd. You can also use the DAEMONOPTS environment variable here.
 
-### Mac OS X
+### macOS
 
 Copy org.dash.dashd.plist into ~/Library/LaunchAgents. Load the launch agent by
 running `launchctl load ~/Library/LaunchAgents/org.dash.dashd.plist`.

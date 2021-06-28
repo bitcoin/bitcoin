@@ -420,7 +420,7 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
     m_network = network;
 }
 
-void ArgsManager::ParseParameters(int argc, const char* const argv[])
+bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::string& error)
 {
     LOCK(cs_args);
     m_override_args.clear();
@@ -452,6 +452,14 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
         } else {
             m_override_args[key].push_back(val);
         }
+
+        // Check that the arg is known
+        if (!(IsSwitchChar(key[0]) && key.size() == 1)) {
+            if (!IsArgKnown(key, error)) {
+                error = strprintf("Invalid parameter %s", key.c_str());
+                return false;
+            }
+        }
     }
 
     // we do not allow -includeconf from command line, so we clear it here
@@ -459,11 +467,28 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
     if (it != m_override_args.end()) {
         if (it->second.size() > 0) {
             for (const auto& ic : it->second) {
-                fprintf(stderr, "warning: -includeconf cannot be used from commandline; ignoring -includeconf=%s\n", ic.c_str());
+                error += "-includeconf cannot be used from commandline; -includeconf=" + ic + "\n";
             }
-            m_override_args.erase(it);
+            return false;
         }
     }
+    return true;
+}
+
+bool ArgsManager::IsArgKnown(const std::string& key, std::string& error)
+{
+    size_t option_index = key.find('.');
+    std::string arg_no_net;
+    if (option_index == std::string::npos) {
+        arg_no_net = key;
+    } else {
+        arg_no_net = std::string("-") + key.substr(option_index + 1, std::string::npos);
+    }
+
+    for (const auto& arg_map : m_available_args) {
+        if (arg_map.second.count(arg_no_net)) return true;
+    }
+    return false;
 }
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
@@ -557,62 +582,108 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
 
 void ArgsManager::AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat)
 {
-    std::pair<OptionsCategory, std::string> key(cat, name);
-    assert(m_available_args.count(key) == 0);
-    m_available_args.emplace(key, std::pair<std::string, bool>(help, debug_only));
+    // Split arg name from its help param
+    size_t eq_index = name.find('=');
+    if (eq_index == std::string::npos) {
+        eq_index = name.size();
+    }
+
+    std::map<std::string, Arg>& arg_map = m_available_args[cat];
+    auto ret = arg_map.emplace(name.substr(0, eq_index), Arg(name.substr(eq_index, name.size() - eq_index), help, debug_only));
+    assert(ret.second); // Make sure an insertion actually happened
+}
+
+void ArgsManager::AddHiddenArgs(const std::vector<std::string>& names)
+{
+    for (const std::string& name : names) {
+        AddArg(name, "", false, OptionsCategory::HIDDEN);
+    }
 }
 
 std::string ArgsManager::GetHelpMessage()
 {
     const bool show_debug = gArgs.GetBoolArg("-help-debug", false);
 
-    std::string usage = HelpMessageGroup("Options:");
-
-    OptionsCategory last_cat = OptionsCategory::OPTIONS;
-    for (auto& arg : m_available_args) {
-        if (arg.first.first != last_cat) {
-            last_cat = arg.first.first;
-            if (last_cat == OptionsCategory::CONNECTION)
+    std::string usage = "";
+    for (const auto& arg_map : m_available_args) {
+        switch(arg_map.first) {
+            case OptionsCategory::OPTIONS:
+                usage += HelpMessageGroup("Options:");
+                break;
+            case OptionsCategory::CONNECTION:
                 usage += HelpMessageGroup("Connection options:");
-            else if (last_cat == OptionsCategory::INDEXING)
+                break;
+            case OptionsCategory::INDEXING:
                 usage += HelpMessageGroup("Indexing options:");
-            else if (last_cat == OptionsCategory::MASTERNODE)
+                break;
+            case OptionsCategory::MASTERNODE:
                 usage += HelpMessageGroup("Masternode options:");
-            else if (last_cat == OptionsCategory::STATSD)
+                break;
+            case OptionsCategory::STATSD:
                 usage += HelpMessageGroup("Statsd options:");
-            else if (last_cat == OptionsCategory::ZMQ)
+                break;
+            case OptionsCategory::ZMQ:
                 usage += HelpMessageGroup("ZeroMQ notification options:");
-            else if (last_cat == OptionsCategory::DEBUG_TEST)
+                break;
+            case OptionsCategory::DEBUG_TEST:
                 usage += HelpMessageGroup("Debugging/Testing options:");
-            else if (last_cat == OptionsCategory::NODE_RELAY)
+                break;
+            case OptionsCategory::NODE_RELAY:
                 usage += HelpMessageGroup("Node relay options:");
-            else if (last_cat == OptionsCategory::BLOCK_CREATION)
+                break;
+            case OptionsCategory::BLOCK_CREATION:
                 usage += HelpMessageGroup("Block creation options:");
-            else if (last_cat == OptionsCategory::RPC)
+                break;
+            case OptionsCategory::RPC:
                 usage += HelpMessageGroup("RPC server options:");
-            else if (last_cat == OptionsCategory::WALLET)
+                break;
+            case OptionsCategory::WALLET:
                 usage += HelpMessageGroup("Wallet options:");
-            else if (last_cat == OptionsCategory::WALLET)
+                break;
+            case OptionsCategory::WALLET_FEE:
                 usage += HelpMessageGroup("Wallet fee options:");
-            else if (last_cat == OptionsCategory::WALLET)
+                break;
+            case OptionsCategory::WALLET_HD:
                 usage += HelpMessageGroup("HD wallet options:");
-            else if (last_cat == OptionsCategory::WALLET)
+                break;
+            case OptionsCategory::WALLET_KEEPASS:
                 usage += HelpMessageGroup("KeePass options:");
-            else if (last_cat == OptionsCategory::WALLET)
+                break;
+            case OptionsCategory::WALLET_COINJOIN:
                 usage += HelpMessageGroup("CoinJoin options:");
-            else if (last_cat == OptionsCategory::WALLET_DEBUG_TEST && show_debug)
-                usage += HelpMessageGroup("Wallet debugging/testing options:");
-            else if (last_cat == OptionsCategory::CHAINPARAMS)
+                break;
+            case OptionsCategory::WALLET_DEBUG_TEST:
+                if (show_debug) usage += HelpMessageGroup("Wallet debugging/testing options:");
+                break;
+            case OptionsCategory::CHAINPARAMS:
                 usage += HelpMessageGroup("Chain selection options:");
-            else if (last_cat == OptionsCategory::GUI)
+                break;
+            case OptionsCategory::GUI:
                 usage += HelpMessageGroup("UI Options:");
-            else if (last_cat == OptionsCategory::COMMANDS)
+                break;
+            case OptionsCategory::COMMANDS:
                 usage += HelpMessageGroup("Commands:");
-            else if (last_cat == OptionsCategory::REGISTER_COMMANDS)
+                break;
+            case OptionsCategory::REGISTER_COMMANDS:
                 usage += HelpMessageGroup("Register Commands:");
+                break;
+            default:
+                break;
         }
-        if (show_debug || !arg.second.second) {
-            usage += HelpMessageOpt(arg.first.second, arg.second.first);
+
+        // When we get to the hidden options, stop
+        if (arg_map.first == OptionsCategory::HIDDEN) break;
+
+        for (const auto& arg : arg_map.second) {
+            if (show_debug || !arg.second.m_debug_only) {
+                std::string name;
+                if (arg.second.m_help_param.empty()) {
+                    name = arg.first;
+                } else {
+                    name = arg.first + arg.second.m_help_param;
+                }
+                usage += HelpMessageOpt(name, arg.second.m_help_text);
+            }
         }
     }
     return usage;
@@ -782,7 +853,7 @@ fs::path GetConfigFile(const std::string& confPath)
     return AbsPathForConfigVal(fs::path(confPath), false);
 }
 
-void ArgsManager::ReadConfigStream(std::istream& stream)
+bool ArgsManager::ReadConfigStream(std::istream& stream, std::string& error, bool ignore_invalid_keys)
 {
     LOCK(cs_args);
 
@@ -793,15 +864,23 @@ void ArgsManager::ReadConfigStream(std::istream& stream)
     {
         std::string strKey = std::string("-") + it->string_key;
         std::string strValue = it->value[0];
+
         if (InterpretNegatedOption(strKey, strValue)) {
             m_config_args[strKey].clear();
         } else {
             m_config_args[strKey].push_back(strValue);
         }
+
+        // Check that the arg is known
+        if (!IsArgKnown(strKey, error) && !ignore_invalid_keys) {
+            error = strprintf("Invalid configuration value %s", it->string_key.c_str());
+            return false;
+        }
     }
+    return true;
 }
 
-void ArgsManager::ReadConfigFiles()
+bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 {
     {
         LOCK(cs_args);
@@ -812,26 +891,56 @@ void ArgsManager::ReadConfigFiles()
     fsbridge::ifstream stream(GetConfigFile(confPath));
 
     if (stream.good()) {
-        ReadConfigStream(stream);
+        if (!ReadConfigStream(stream, error, ignore_invalid_keys)) {
+            return false;
+        }
         // if there is an -includeconf in the override args, but it is empty, that means the user
         // passed '-noincludeconf' on the command line, in which case we should not include anything
         if (m_override_args.count("-includeconf") == 0) {
+            std::string chain_id = GetChainName();
             std::vector<std::string> includeconf(GetArgs("-includeconf"));
             {
                 // We haven't set m_network yet (that happens in SelectParams()), so manually check
                 // for network.includeconf args.
-                std::vector<std::string> includeconf_net(GetArgs(std::string("-") + GetChainName() + ".includeconf"));
+                std::vector<std::string> includeconf_net(GetArgs(std::string("-") + chain_id + ".includeconf"));
                 includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
+            }
+
+            // Remove -includeconf from configuration, so we can warn about recursion
+            // later
+            {
+                LOCK(cs_args);
+                m_config_args.erase("-includeconf");
+                m_config_args.erase(std::string("-") + chain_id + ".includeconf");
             }
 
             for (const std::string& to_include : includeconf) {
                 fsbridge::ifstream include_config(GetConfigFile(to_include));
                 if (include_config.good()) {
-                    ReadConfigStream(include_config);
+                    if (!ReadConfigStream(include_config, error, ignore_invalid_keys)) {
+                        return false;
+                    }
                     LogPrintf("Included configuration file %s\n", to_include.c_str());
                 } else {
-                    fprintf(stderr, "Failed to include configuration file %s\n", to_include.c_str());
+                    error = "Failed to include configuration file " + to_include;
+                    return false;
                 }
+            }
+
+            // Warn about recursive -includeconf
+            includeconf = GetArgs("-includeconf");
+            {
+                std::vector<std::string> includeconf_net(GetArgs(std::string("-") + chain_id + ".includeconf"));
+                includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
+                std::string chain_id_final = GetChainName();
+                if (chain_id_final != chain_id) {
+                    // Also warn about recursive includeconf for the chain that was specified in one of the includeconfs
+                    includeconf_net = GetArgs(std::string("-") + chain_id_final + ".includeconf");
+                    includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
+                }
+            }
+            for (const std::string& to_include : includeconf) {
+                fprintf(stderr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", to_include.c_str());
             }
         }
     } else {
@@ -839,14 +948,16 @@ void ArgsManager::ReadConfigFiles()
         FILE* configFile = fopen(GetConfigFile(confPath).string().c_str(), "a");
         if (configFile != nullptr)
             fclose(configFile);
-        return; // Nothing to read, so just return
+        return true; // Nothing to read, so just return
     }
 
     // If datadir is changed in .conf file:
     ClearDatadirCache();
     if (!fs::is_directory(GetDataDir(false))) {
-        throw std::runtime_error(strprintf("specified data directory \"%s\" does not exist.", gArgs.GetArg("-datadir", "").c_str()));
+        error = strprintf("specified data directory \"%s\" does not exist.", gArgs.GetArg("-datadir", "").c_str());
+        return false;
     }
+    return true;
 }
 
 std::string ArgsManager::GetChainName() const

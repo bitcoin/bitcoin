@@ -36,6 +36,17 @@ class HelpTest(BitcoinTestFramework):
         output = self.nodes[0].process.stdout.read()
         assert b'version' in output
         self.log.info("Version text received: {} (...)".format(output[0:60]))
+
+        # Test that arguments not in the help results in an error
+        self.log.info("Start dashdd with -fakearg to make sure it does not start")
+        self.nodes[0].start(extra_args=['-fakearg'], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        # Node should exit immediately and output an error to stderr
+        ret_code = self.nodes[0].process.wait(timeout=1)
+        assert_equal(ret_code, 1)
+        output = self.nodes[0].process.stderr.read()
+        assert b'Error parsing command line arguments' in output
+        self.log.info("Error message received: {} (...)".format(output[0:60]))
+
         # Clean up TestNode state
         self.nodes[0].running = False
         self.nodes[0].process = None
