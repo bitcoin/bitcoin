@@ -3,10 +3,11 @@ Fuzz-testing Dash Core
 
 A special test harness `test_dash_fuzzy` is provided to provide an easy
 entry point for fuzzers and the like. In this document we'll describe how to
-use it with AFL.
+use it with AFL and libFuzzer.
 
-Building AFL
--------------
+## AFL
+
+### Building AFL
 
 It is recommended to always use the latest version of afl:
 ```
@@ -17,8 +18,7 @@ make
 export AFLPATH=$PWD
 ```
 
-Instrumentation
-----------------
+### Instrumentation
 
 To build Dash Core using AFL instrumentation (this assumes that the
 `AFLPATH` was set as above):
@@ -39,8 +39,7 @@ compiling using `afl-clang-fast`/`afl-clang-fast++` the resulting
 features "persistent mode" and "deferred forkserver" can be used. See
 https://github.com/mcarpenter/afl/tree/master/llvm_mode for details.
 
-Preparing fuzzing
-------------------
+### Preparing fuzzing
 
 AFL needs an input directory with examples, and an output directory where it
 will place examples that it found. These can be anywhere in the file system,
@@ -60,8 +59,7 @@ Example inputs are available from:
 
 Extract these (or other starting inputs) into the `inputs` directory before starting fuzzing.
 
-Fuzzing
---------
+### Fuzzing
 
 To start the actual fuzzing use:
 ```
@@ -70,3 +68,21 @@ $AFLPATH/afl-fuzz -i ${AFLIN} -o ${AFLOUT} -m52 -- test/test_dash_fuzzy
 
 You may have to change a few kernel parameters to test optimally - `afl-fuzz`
 will print an error and suggestion if so.
+
+## libFuzzer
+
+A recent version of `clang`, the address sanitizer and libFuzzer is needed (all
+found in the `compiler-rt` runtime libraries package).
+
+To build the `test/test_dash_fuzzy` executable run
+
+```
+./configure --disable-ccache --with-sanitizers=fuzzer,address CC=clang CXX=clang++
+make
+```
+
+The fuzzer needs some inputs to work on, but the inputs or seeds can be used
+interchangeably between libFuzzer and AFL.
+
+See https://llvm.org/docs/LibFuzzer.html#running on how to run the libFuzzer
+instrumented executable.

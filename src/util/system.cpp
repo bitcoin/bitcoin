@@ -763,18 +763,17 @@ fs::path GetDefaultDataDir()
 #endif
 }
 
-static fs::path g_blocks_path_cached;
 static fs::path g_blocks_path_cache_net_specific;
 static fs::path pathCached;
 static fs::path pathCachedNetSpecific;
 static CCriticalSection csPathCached;
 
-const fs::path &GetBlocksDir(bool fNetSpecific)
+const fs::path &GetBlocksDir()
 {
 
     LOCK(csPathCached);
 
-    fs::path &path = fNetSpecific ? g_blocks_path_cache_net_specific : g_blocks_path_cached;
+    fs::path &path = g_blocks_path_cache_net_specific;
 
     // This can be called during exceptions by LogPrintf(), so we cache the
     // value so we don't have to do memory allocations after that.
@@ -790,9 +789,8 @@ const fs::path &GetBlocksDir(bool fNetSpecific)
     } else {
         path = GetDataDir(false);
     }
-    if (fNetSpecific)
-        path /= BaseParams().DataDir();
 
+    path /= BaseParams().DataDir();
     path /= "blocks";
     fs::create_directories(path);
     return path;
@@ -844,7 +842,6 @@ void ClearDatadirCache()
 
     pathCached = fs::path();
     pathCachedNetSpecific = fs::path();
-    g_blocks_path_cached = fs::path();
     g_blocks_path_cache_net_specific = fs::path();
 }
 
@@ -1281,7 +1278,7 @@ fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
 int ScheduleBatchPriority(void)
 {
 #ifdef SCHED_BATCH
-    const static sched_param param{0};
+    const static sched_param param{};
     if (int ret = pthread_setschedparam(pthread_self(), SCHED_BATCH, &param)) {
         LogPrintf("Failed to pthread_setschedparam: %s\n", strerror(errno));
         return ret;
