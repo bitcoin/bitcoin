@@ -748,11 +748,18 @@ public:
                 nNow = vchBuf.size() - pos;
             if (nNow + nReadPos > nSrcPos)
                 nNow = nSrcPos - nReadPos;
-            memcpy(pch, &vchBuf[pos], nNow);
+            if (pch) {
+                memcpy(pch, &vchBuf[pos], nNow);
+                pch += nNow;
+            }
             nReadPos += nNow;
-            pch += nNow;
             nSize -= nNow;
         }
+    }
+
+    //! move ahead in the stream
+    void Skip(size_t nSize) {
+        read(nullptr, nSize);
     }
 
     //! return the current reading position
