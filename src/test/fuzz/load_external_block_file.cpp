@@ -31,6 +31,8 @@ FUZZ_TARGET_INIT(load_external_block_file, initialize_load_external_block_file)
     if (fuzzed_block_file == nullptr) {
         return;
     }
-    FlatFilePos flat_file_pos;
-    g_setup->m_node.chainman->ActiveChainstate().LoadExternalBlockFile(Params(), fuzzed_block_file, fuzzed_data_provider.ConsumeBool() ? &flat_file_pos : nullptr);
+    std::vector<fs::path> blk_paths = {"no_such_file"};
+    std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
+    bool write_to_disk = fuzzed_data_provider.ConsumeBool();
+    g_setup->m_node.chainman->ActiveChainstate().LoadExternalBlockFile(Params(), blk_paths, 0, fuzzed_block_file, blocks_with_unknown_parent, write_to_disk);
 }

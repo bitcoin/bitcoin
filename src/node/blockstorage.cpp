@@ -364,29 +364,39 @@ bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& st
 
 bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams)
 {
+    return ReadBlockFromDisk(block, BlockFileSeq().FileName(pos), pos.nPos, consensusParams);
+}
+
+bool ReadBlockFromDisk(CBlock& block, const fs::path& path, unsigned int offset, const Consensus::Params& consensusParams)
+{
     block.SetNull();
 
     // Open history file to read
-    CAutoFile filein(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull()) {
-        return error("ReadBlockFromDisk: OpenBlockFile failed for %s", pos.ToString());
+    FILE* file = fsbridge::fopen(path, "rb");
+    if (!file) {
+        return error("%s: open failed for %s", __func__, path.string());
     }
+    if (offset > 0 && fseek(file, offset, SEEK_SET)) {
+        fclose(file);
+        return error("%s: fseek failed for %s offset %u", __func__, path.string(), offset);
+    }
+    CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
 
     // Read block
     try {
         filein >> block;
     } catch (const std::exception& e) {
-        return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
+        return error("%s: Deserialize or I/O error - %s at %s, %u", __func__, e.what(), path, offset);
     }
 
     // Check the header
     if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams)) {
-        return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
+        return error("%s: Errors in block header at %s, %u", __func__, path, offset);
     }
 
     // Signet only: check block solution
     if (consensusParams.signet_blocks && !CheckSignetBlockSolution(block, consensusParams)) {
-        return error("ReadBlockFromDisk: Errors in block solution at %s", pos.ToString());
+        return error("%s: Errors in block solution at %s, %u", __func__, path, offset);
     }
 
     return true;
@@ -501,24 +511,25 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
 
         // -reindex
         if (fReindex) {
+            // Create a list of block file path names to be loaded.
+            std::vector<fs::path> blk_paths;
             int nFile = 0;
             while (true) {
-                FlatFilePos pos(nFile, 0);
-                if (!fs::exists(GetBlockPosFilename(pos))) {
+                const FlatFilePos pos(nFile, 0);
+                const fs::path blk_file_name = GetBlockPosFilename(pos);
+                if (!fs::exists(blk_file_name)) {
                     break; // No block files left to reindex
                 }
-                FILE* file = OpenBlockFile(pos, true);
-                if (!file) {
-                    break; // This error is logged in OpenBlockFile
-                }
-                LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-                chainman.ActiveChainstate().LoadExternalBlockFile(chainparams, file, &pos);
-                if (ShutdownRequested()) {
-                    LogPrintf("Shutdown requested. Exit %s\n", __func__);
-                    return;
-                }
+                blk_paths.push_back(blk_file_name);
                 nFile++;
             }
+
+            // Load blocks into memory and the index, but it's not necessary to
+            // write the blocks to the data directory (they're already there).
+            chainman.ActiveChainstate().LoadExternalBlockFiles(chainparams, blk_paths, false);
+            if (ShutdownRequested()) return;
+
+            // Clear the reindexing flag only after successful completion.
             pblocktree->WriteReindexing(false);
             fReindex = false;
             LogPrintf("Reindexing finished\n");
@@ -527,18 +538,10 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
         }
 
         // -loadblock=
-        for (const fs::path& path : vImportFiles) {
-            FILE* file = fsbridge::fopen(path, "rb");
-            if (file) {
-                LogPrintf("Importing blocks file %s...\n", path.string());
-                chainman.ActiveChainstate().LoadExternalBlockFile(chainparams, file);
-                if (ShutdownRequested()) {
-                    LogPrintf("Shutdown requested. Exit %s\n", __func__);
-                    return;
-                }
-            } else {
-                LogPrintf("Warning: Could not open blocks file %s\n", path.string());
-            }
+        if (vImportFiles.size() > 0) {
+            // Load blocks into memory and the index, and also write them to the data directory (true argument).
+            chainman.ActiveChainstate().LoadExternalBlockFiles(chainparams, vImportFiles, true);
+            if (ShutdownRequested()) return;
         }
 
         // scan for better chains in the block chain database, that are not yet connected in the active best chain

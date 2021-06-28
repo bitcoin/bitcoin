@@ -4178,16 +4178,22 @@ bool CChainState::LoadGenesisBlock(const CChainParams& chainparams)
     return true;
 }
 
-void CChainState::LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFilePos* dbp)
+//! Read all blocks found in blk_paths[n_file].
+void CChainState::LoadExternalBlockFile(
+    const CChainParams& chainparams,
+    const std::vector<fs::path>& blk_paths,
+    size_t n_file,
+    FILE* file,
+    std::multimap<uint256, FlatFilePos>& blocks_with_unknown_parent,
+    bool write_to_disk)
 {
-    // Map of disk positions for blocks with unknown parent (only used for reindex)
-    static std::multimap<uint256, FlatFilePos> mapBlocksUnknownParent;
     int64_t nStart = GetTimeMillis();
 
+    FlatFilePos pos(n_file, 0);
     int nLoaded = 0;
     try {
-        // This takes over fileIn and calls fclose() on it in the CBufferedFile destructor
-        CBufferedFile blkdat(fileIn, 2*MAX_BLOCK_SERIALIZED_SIZE, MAX_BLOCK_SERIALIZED_SIZE+8, SER_DISK, CLIENT_VERSION);
+        // This takes over file and calls fclose() on it in the CBufferedFile destructor
+        CBufferedFile blkdat(file, 2 * MAX_BLOCK_SERIALIZED_SIZE, MAX_BLOCK_SERIALIZED_SIZE + 8, SER_DISK, CLIENT_VERSION);
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
             if (ShutdownRequested()) return;
@@ -4215,8 +4221,7 @@ void CChainState::LoadExternalBlockFile(const CChainParams& chainparams, FILE* f
             try {
                 // read block
                 uint64_t nBlockPos = blkdat.GetPos();
-                if (dbp)
-                    dbp->nPos = nBlockPos;
+                pos.nPos = nBlockPos;
                 blkdat.SetLimit(nBlockPos + nSize);
                 std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
                 CBlock& block = *pblock;
@@ -4230,8 +4235,7 @@ void CChainState::LoadExternalBlockFile(const CChainParams& chainparams, FILE* f
                     if (hash != chainparams.GetConsensus().hashGenesisBlock && !m_blockman.LookupBlockIndex(block.hashPrevBlock)) {
                         LogPrint(BCLog::REINDEX, "%s: Out of order block %s, parent %s not known\n", __func__, hash.ToString(),
                                 block.hashPrevBlock.ToString());
-                        if (dbp)
-                            mapBlocksUnknownParent.insert(std::make_pair(block.hashPrevBlock, *dbp));
+                        blocks_with_unknown_parent.emplace(block.hashPrevBlock, pos);
                         continue;
                     }
 
@@ -4239,6 +4243,9 @@ void CChainState::LoadExternalBlockFile(const CChainParams& chainparams, FILE* f
                     CBlockIndex* pindex = m_blockman.LookupBlockIndex(hash);
                     if (!pindex || (pindex->nStatus & BLOCK_HAVE_DATA) == 0) {
                       BlockValidationState state;
+                      // Passing nullptr to AcceptBlock() means that the block doesn't already
+                      // exist on disk (datadir/blocks/blk*); it will write the block.
+                      const FlatFilePos* dbp = write_to_disk ? nullptr : &pos;
                       if (AcceptBlock(pblock, state, chainparams, nullptr, true, dbp, nullptr)) {
                           nLoaded++;
                       }
@@ -4266,24 +4273,24 @@ void CChainState::LoadExternalBlockFile(const CChainParams& chainparams, FILE* f
                 while (!queue.empty()) {
                     uint256 head = queue.front();
                     queue.pop_front();
-                    std::pair<std::multimap<uint256, FlatFilePos>::iterator, std::multimap<uint256, FlatFilePos>::iterator> range = mapBlocksUnknownParent.equal_range(head);
+                    auto range = blocks_with_unknown_parent.equal_range(head);
                     while (range.first != range.second) {
-                        std::multimap<uint256, FlatFilePos>::iterator it = range.first;
+                        auto it = range.first;
                         std::shared_ptr<CBlock> pblockrecursive = std::make_shared<CBlock>();
-                        if (ReadBlockFromDisk(*pblockrecursive, it->second, chainparams.GetConsensus()))
-                        {
+                        const FlatFilePos& child_pos = it->second;
+                        if (ReadBlockFromDisk(*pblockrecursive, blk_paths[child_pos.nFile], child_pos.nPos, chainparams.GetConsensus())) {
                             LogPrint(BCLog::REINDEX, "%s: Processing out of order child %s of %s\n", __func__, pblockrecursive->GetHash().ToString(),
                                     head.ToString());
                             LOCK(cs_main);
                             BlockValidationState dummy;
-                            if (AcceptBlock(pblockrecursive, dummy, chainparams, nullptr, true, &it->second, nullptr))
-                            {
+                            const FlatFilePos* dbp = write_to_disk ? nullptr : &child_pos;
+                            if (AcceptBlock(pblockrecursive, dummy, chainparams, nullptr, true, dbp, nullptr)) {
                                 nLoaded++;
                                 queue.push_back(pblockrecursive->GetHash());
                             }
                         }
                         range.first++;
-                        mapBlocksUnknownParent.erase(it);
+                        blocks_with_unknown_parent.erase(it);
                         NotifyHeaderTip(*this);
                     }
                 }
@@ -4295,6 +4302,28 @@ void CChainState::LoadExternalBlockFile(const CChainParams& chainparams, FILE* f
         AbortNode(std::string("System error: ") + e.what());
     }
     LogPrintf("Loaded %i blocks from external file in %dms\n", nLoaded, GetTimeMillis() - nStart);
+}
+
+void CChainState::LoadExternalBlockFiles(
+    const CChainParams& chainparams,
+    const std::vector<fs::path>& blk_paths,
+    bool write_to_disk)
+{
+    std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
+    for (size_t n_file = 0; n_file < blk_paths.size(); ++n_file) {
+        LogPrintf("Loading block file %s ...\n", blk_paths[n_file].filename().string());
+        FILE* file = fsbridge::fopen(blk_paths[n_file], "rb");
+        if (file == nullptr) {
+            LogPrintf("%s: Warning: Could not open blocks file %s\n", __func__, blk_paths[n_file]);
+            return;
+        }
+        LoadExternalBlockFile(chainparams, blk_paths, n_file, file, blocks_with_unknown_parent, write_to_disk);
+        if (ShutdownRequested()) return;
+    }
+    if (blocks_with_unknown_parent.size() > 0) {
+        // Headers-first sync should ensure that this never happens.
+        LogPrintf("Warning: %i blocks have no parent, ignored\n", blocks_with_unknown_parent.size());
+    }
 }
 
 void CChainState::CheckBlockIndex(const Consensus::Params& consensusParams)
