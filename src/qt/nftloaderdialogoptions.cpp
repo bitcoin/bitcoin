@@ -1,7 +1,6 @@
 // Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include <qt/nftloaderdialogoptions.h>
 #include <qt/forms/ui_nftloaderdialogoptions.h>
 #include <primitives/dynnft_manager.h>
@@ -18,6 +17,7 @@
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h> /* for USE_QRCODE */
 #endif
+#include <primitives\dynnft_manager.cpp>
 
 NftLoaderDialogOptions::NftLoaderDialogOptions(const PlatformStyle* _platformStyle, QWidget* parent) :
     QDialog(parent, GUIUtil::dialog_flags),
@@ -80,9 +80,13 @@ void NftLoaderDialogOptions::on_createAssetClassButton_clicked()
         // ****************************************************************************** //
         ui->labelStatus->setText("Loading asset class to NFT database.");
         // ****************************************************************************** //
+        cnftManager->addNFTAssetClass(assetClass);
 
         // ****************************************************************************** //
         //           2 - hash1 (binary) + txid (in binary) = NFTID
+        // ****************************************************************************** //
+        cnftManager->addAssetClassToCache(assetClass);
+
         ui->labelStatus->setText("Transaction mined, NFT ID is XXXXXXXXXXXX.");
 
         assetClassCurrent = assetClass;
@@ -127,9 +131,13 @@ void NftLoaderDialogOptions::on_createAssetButton_clicked()
         // ****************************************************************************** //
         //ui->labelStatus->setText("Loading asset to NFT database.");
         // ****************************************************************************** //
+        cnftManager->addNFTAsset(asset);
 
         // ****************************************************************************** //
         //           2 - hash1 (binary) + txid (in binary) = NFTID
+        // ****************************************************************************** //
+        cnftManager->addAssetToCache(asset);
+
         //ui->labelStatus->setText("Transaction mined, NFT ID is XXXXXXXXXXXX.");
         asset->hash = "";
         assetCurrent = asset;
