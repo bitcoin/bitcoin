@@ -74,7 +74,7 @@ will print an error and suggestion if so.
 A recent version of `clang`, the address sanitizer and libFuzzer is needed (all
 found in the `compiler-rt` runtime libraries package).
 
-To build the `test/test_bitcoin_fuzzy` executable run
+To build the `test/test_dash_fuzzy` executable run
 
 ```
 ./configure --disable-ccache --with-sanitizers=fuzzer,address CC=clang CXX=clang++

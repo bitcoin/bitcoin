@@ -17,7 +17,7 @@ request is opened. Both sets of tests can also be run locally.
 
 # Running tests locally
 
-Before tests can be run locally, Bitcoin Core must be built.  See the [building instructions](/doc#building) for help.
+Before tests can be run locally, Dash Core must be built.  See the [building instructions](/doc#building) for help.
 
 
 ### Functional tests
