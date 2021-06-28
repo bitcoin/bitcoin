@@ -372,6 +372,21 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         address = w1.getrawchangeaddress('legacy')
         assert_equal(address, "mpA2Wh9dvZT7yfELq1UnrUmAoc5qCkMetg")
 
+        self.log.info('Check can deactivate active descriptor')
+        self.test_importdesc({'desc': descsum_create('pkh([12345678]' + xpub + '/*)'),
+                              'range': [0, 5],
+                              'active': False,
+                              'timestamp': 'now',
+                              'internal': True
+                              },
+                             success=True)
+        assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'legacy')
+
+        self.log.info('Verify activation state is persistent')
+        w1.unloadwallet()
+        self.nodes[1].loadwallet('w1')
+        assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'legacy')
+
         # # Test importing a descriptor containing a WIF private key
         wif_priv = "cTe1f5rdT8A8DFgVWTjyPwACsDPJM9ff4QngFxUixCSvvbg1x6sh"
         address = "2MuhcG52uHPknxDgmGPsV18jSHFBnnRgjPg"
