@@ -60,22 +60,7 @@ bool MutableTransactionSignatureCreator::CreateSchnorrSig(const SigningProvider&
     assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
 
     CKey key;
-    {
-        // For now, use the old full pubkey-based key derivation logic. As it is indexed by
-        // Hash160(full pubkey), we need to try both a version prefixed with 0x02, and one
-        // with 0x03.
-        unsigned char b[33] = {0x02};
-        std::copy(pubkey.begin(), pubkey.end(), b + 1);
-        CPubKey fullpubkey;
-        fullpubkey.Set(b, b + 33);
-        CKeyID keyid = fullpubkey.GetID();
-        if (!provider.GetKey(keyid, key)) {
-            b[0] = 0x03;
-            fullpubkey.Set(b, b + 33);
-            CKeyID keyid = fullpubkey.GetID();
-            if (!provider.GetKey(keyid, key)) return false;
-        }
-    }
+    if (!provider.GetKeyByXOnly(pubkey, key)) return false;
 
     // BIP341/BIP342 signing needs lots of precomputed transaction data. While some
     // (non-SIGHASH_DEFAULT) sighash modes exist that can work with just some subset
