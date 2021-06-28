@@ -14,6 +14,7 @@
 #include <atomic>
 #include <cstdint>
 #include <list>
+#include <deque>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -24,6 +25,8 @@ static const bool DEFAULT_LOGTIMESTAMPS = true;
 static const bool DEFAULT_LOGTHREADNAMES = false;
 static const bool DEFAULT_LOGSOURCELOCATIONS = false;
 extern const char * const DEFAULT_DEBUGLOGFILE;
+static const int DEFAULT_DEBUGLOGROTATEKEEP = 10;
+static const int DEFAULT_DEBUGLOGMB = 1;
 
 extern bool fLogIPs;
 
@@ -70,6 +73,12 @@ namespace BCLog {
         FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
         std::list<std::string> m_msgs_before_open GUARDED_BY(m_cs);
         bool m_buffering GUARDED_BY(m_cs) = true; //!< Buffer messages before logging can be started.
+        /** Current debug.log file size (bytes) */
+        size_t m_file_size GUARDED_BY(m_cs);
+        /** The list of rotated debug.log files, oldest at the front */
+        std::deque<fs::path> m_rotated_files GUARDED_BY(m_cs);
+        /** The time (seconds) of the most recent log rotation */
+        int64_t m_last_rotate_time GUARDED_BY(m_cs) {0};
 
         /**
          * m_started_new_line is a state variable that will suppress printing of
@@ -96,6 +105,10 @@ namespace BCLog {
         bool m_log_sourcelocations = DEFAULT_LOGSOURCELOCATIONS;
 
         fs::path m_file_path;
+        /** debug.log file size before being rotated (units are MB) */
+        int m_file_limit;
+        /** The number of old (rotated) debug.log files to retain */
+        int m_rotate_keep;
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
@@ -125,6 +138,12 @@ namespace BCLog {
 
         /** Start logging (and flush all buffered messages) */
         bool StartLogging();
+        /** Initialize debug.log rotation (find existing rotated debug.log files) */
+        void StartRotate() EXCLUSIVE_LOCKS_REQUIRED(m_cs);
+        /** Remove (delete) excess debug.log rotation files */
+        void RemoveRotate() EXCLUSIVE_LOCKS_REQUIRED(m_cs);
+        /** Reopen the debug.log file as an empty file */
+        void ReopenFile() EXCLUSIVE_LOCKS_REQUIRED(m_cs);
         /** Only for testing */
         void DisconnectTestLogger();
 

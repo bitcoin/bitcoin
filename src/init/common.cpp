@@ -61,6 +61,8 @@ bool SanityChecks()
 void AddLoggingArgs(ArgsManager& argsman)
 {
     argsman.AddArg("-debuglogfile=<file>", strprintf("Specify location of debug log file. Relative paths will be prefixed by a net-specific datadir location. (-nodebuglogfile to disable; default: %s)", DEFAULT_DEBUGLOGFILE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-debuglogrotatekeep=count", strprintf("The number of rotated (old) debug log files (0 to disable; default: %d)", DEFAULT_DEBUGLOGROTATEKEEP), ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
+    argsman.AddArg("-debugloglimit=size", strprintf("The (approximate) size (in MB) debug log reaches before log rotation; default: %d)", DEFAULT_DEBUGLOGMB), ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
     argsman.AddArg("-debug=<category>", "Output debugging information (default: -nodebug, supplying <category> is optional). "
         "If <category> is not supplied or if <category> = 1, output all debugging information. <category> can be: " + LogInstance().LogCategoriesString() + ". This option can be specified multiple times to output multiple categories.",
         ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
@@ -89,6 +91,8 @@ void SetLoggingOptions(const ArgsManager& args)
     LogInstance().m_log_threadnames = args.GetBoolArg("-logthreadnames", DEFAULT_LOGTHREADNAMES);
 #endif
     LogInstance().m_log_sourcelocations = args.GetBoolArg("-logsourcelocations", DEFAULT_LOGSOURCELOCATIONS);
+    LogInstance().m_rotate_keep = args.GetArg("-debuglogrotatekeep", DEFAULT_DEBUGLOGROTATEKEEP);
+    LogInstance().m_file_limit = args.GetArg("-debugloglimit", DEFAULT_DEBUGLOGMB);
 
     fLogIPs = args.GetBoolArg("-logips", DEFAULT_LOGIPS);
 }
