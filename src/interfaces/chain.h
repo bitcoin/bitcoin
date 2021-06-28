@@ -114,6 +114,14 @@ public:
     //! Check if transaction will be final given chain height current time.
     virtual bool checkFinalTx(const CTransaction& tx) = 0;
 
+    //! Return the lowest height in the chain at which we've seen block data.
+    //!
+    //! Note that we may have seen block data within a background validation
+    //! chain, but we won't report it here until snapshot validation is complete
+    //! because block data in the background validation chain hasn't yet
+    //! connected contiguously with block data in the snapshot chain.
+    virtual int getLowestBlockDataHeight() = 0;
+
     //! Return whether node has the block and optionally return block metadata
     //! or contents.
     virtual bool findBlock(const uint256& hash, const FoundBlock& block={}) = 0;

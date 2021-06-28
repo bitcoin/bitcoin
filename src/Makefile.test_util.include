@@ -9,6 +9,7 @@ EXTRA_LIBRARIES += \
 
 TEST_UTIL_H = \
     test/util/blockfilter.h \
+    test/util/chainstate.h \
     test/util/logging.h \
     test/util/mining.h \
     test/util/net.h \

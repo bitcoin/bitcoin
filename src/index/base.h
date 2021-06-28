@@ -81,6 +81,10 @@ protected:
 
     void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
 
+    void BackgroundBlockConnected(
+        const std::shared_ptr<const CBlock>& block,
+        const CBlockIndex* pindex) override;
+
     void ChainStateFlushed(const CBlockLocator& locator) override;
 
     const CBlockIndex* CurrentIndex() { return m_best_block_index.load(); };

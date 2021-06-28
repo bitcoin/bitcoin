@@ -110,6 +110,7 @@ extern RecursiveMutex cs_main;
 typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 extern Mutex g_best_block_mutex;
 extern std::condition_variable g_best_block_cv;
+/** Used to notify getblocktemplate RPC of new tips. */
 extern uint256 g_best_block;
 /** Whether there are dedicated script-checking threads running.
  * False indicates all script checking is done on the main threadMessageHandler thread.
@@ -403,7 +404,11 @@ class BlockManager
 
 private:
     /* Calculate the block/rev files to delete based on height specified by user with RPC command pruneblockchain */
-    void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight, int chain_tip_height);
+    void FindFilesToPruneManual(
+        std::set<int>& setFilesToPrune,
+        int nManualPruneHeight,
+        int chain_tip_height,
+        ChainstateManager& chainman);
 
     /**
      * Prune block and undo files (blk???.dat and undo???.dat) so that the disk space used is less than a user-defined target.
@@ -420,7 +425,11 @@ private:
      *
      * @param[out]   setFilesToPrune   The set of file indices that can be unlinked will be returned
      */
-    void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight, int chain_tip_height, int prune_height, bool is_ibd);
+    void FindFilesToPrune(
+        std::set<int>& setFilesToPrune,
+        uint64_t nPruneAfterHeight,
+        int prune_height,
+        ChainstateManager& chainman);
 
 public:
     BlockMap m_block_index GUARDED_BY(cs_main);
@@ -455,14 +464,11 @@ public:
      * Load the blocktree off disk and into memory. Populate certain metadata
      * per index entry (nStatus, nChainWork, nTimeMax, etc.) as well as peripheral
      * collections like setDirtyBlockIndex.
-     *
-     * @param[out] block_index_candidates  Fill this set with any valid blocks for
-     *                                     which we've downloaded all transactions.
      */
     bool LoadBlockIndex(
         const Consensus::Params& consensus_params,
         CBlockTreeDB& blocktree,
-        std::set<CBlockIndex*, CBlockIndexWorkComparator>& block_index_candidates)
+        ChainstateManager& chainman)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Clear all data members. */
@@ -598,12 +604,27 @@ protected:
     //! Manages the UTXO set, which is a reflection of the contents of `m_chain`.
     std::unique_ptr<CoinsViews> m_coins_views;
 
+    //! This toggle exists for use when doing background validation for UTXO
+    //! snapshots. It is set once the background validation chain reaches the
+    //! same height as the base of the snapshot, and signals that we should no
+    //! longer connect blocks to this chainstate.
+    bool m_stop_use{false};
+
 public:
     //! Reference to a BlockManager instance which itself is shared across all
     //! CChainState instances.
     BlockManager& m_blockman;
 
-    explicit CChainState(CTxMemPool& mempool, BlockManager& blockman, std::optional<uint256> from_snapshot_blockhash = std::nullopt);
+    //! The chainstate manager that owns this chainstate. The reference is
+    //! necessary so that this instance can check whether it is the active
+    //! chainstate within deeply nested method calls.
+    ChainstateManager& m_chainman;
+
+    explicit CChainState(
+        CTxMemPool& mempool,
+        BlockManager& blockman,
+        ChainstateManager& chainman,
+        std::optional<uint256> from_snapshot_blockhash = std::nullopt);
 
     /**
      * Initialize the CoinsViews UTXO set database management data structures. The in-memory
@@ -637,6 +658,9 @@ public:
      * std::nullopt if this chainstate was not created from a snapshot.
      */
     const std::optional<uint256> m_from_snapshot_blockhash;
+
+    //! Return true if this chainstate was created from a UTXO snapshot.
+    bool IsFromSnapshot() { return m_from_snapshot_blockhash.has_value(); }
 
     /**
      * The set of all CBlockIndex entries with BLOCK_VALID_TRANSACTIONS (for itself and all ancestors) and
@@ -751,7 +775,7 @@ public:
     bool ReplayBlocks(const CChainParams& params);
 
     /** Whether the chain state needs to be redownloaded due to lack of witness data */
-    [[nodiscard]] bool NeedsRedownload(const CChainParams& params) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    [[nodiscard]] bool NeedsRedownload(const CChainParams& params, std::optional<int> snapshot_height) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
     bool LoadGenesisBlock(const CChainParams& chainparams);
 
@@ -793,8 +817,8 @@ private:
     bool ConnectTip(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions& disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool.cs);
 
     void InvalidBlockFound(CBlockIndex *pindex, const BlockValidationState &state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    CBlockIndex* FindMostWorkChain() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const FlatFilePos& pos, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    CBlockIndex* FindMostWorkChain() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -882,7 +906,10 @@ private:
     CChainState* m_active_chainstate GUARDED_BY(::cs_main) {nullptr};
 
     //! If true, the assumed-valid chainstate has been fully validated
-    //! by the background validation chainstate.
+    //! by the background validation chainstate. This will trigger shutdown
+    //! logic.
+    //!
+    //! @sa ValidatedSnapshotShutdownCleanup()
     bool m_snapshot_validated{false};
 
     //! Internal helper for ActivateSnapshot().
@@ -890,6 +917,11 @@ private:
         CChainState& snapshot_chainstate,
         CAutoFile& coins_file,
         const SnapshotMetadata& metadata);
+
+    //! If we have validated a snapshot chain during this runtime, copy its
+    //! chainstate directory over to the main `chainstate` location, completing
+    //! validation of the snapshot.
+    void ValidatedSnapshotShutdownCleanup(fs::path new_chainstate, fs::path old_chainstate);
 
 public:
     std::thread m_load_block;
@@ -918,6 +950,12 @@ public:
     //! Get all chainstates currently being used.
     std::vector<CChainState*> GetAll();
 
+    //! Return all chainstates to be checked for next blocks to download.
+    //!
+    //! This specifically orders the snapshot chain first (if it exists) to
+    //! expedite syncing to network tip.
+    std::vector<CChainState*> GetAllForBlockDownload() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     //! Construct and activate a Chainstate on the basis of UTXO snapshot data.
     //!
     //! Steps:
@@ -933,6 +971,29 @@ public:
     //!   ChainstateActive().
     [[nodiscard]] bool ActivateSnapshot(
         CAutoFile& coins_file, const SnapshotMetadata& metadata, bool in_memory);
+
+    //! Once the background validation chainstate has reached the height which
+    //! is the base of the UTXO snapshot in use, compare its coins to ensure
+    //! they match those expected by the snapshot.
+    //!
+    //! If the coins match (expected), then mark the validation chainstate for
+    //! deletion and continue using the snapshot chainstate as active.
+    //! Otherwise, revert to using the ibd chainstate and shutdown (TODO).
+    bool CompleteSnapshotValidation(
+        CChainState* validation_chainstate) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    //! Return the relevant chainstate for a new block.
+    //!
+    //! Because the use of UTXO snapshots requires the simultaneous maintenance
+    //! of two chainstates, when a new block message arrives we have to decide
+    //! which chain we should attempt to append it to.
+    //!
+    //! If our most-work chain hasn't seen the incoming blockhash, return that.
+    //! Otherwise we're likely receiving a block that has already been assumed
+    //! valid by the snapshot chain, so attempt to append that to the validation
+    //! chain.
+    CChainState& GetChainstateForNewBlock(
+        const uint256& blockhash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     //! The most-work chain.
     CChainState& ActiveChainstate() const;
@@ -1008,11 +1069,38 @@ public:
     void Unload() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Clear (deconstruct) chainstate data.
-    void Reset();
+    void Reset() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Check to see if caches are out of balance and if so, call
     //! ResizeCoinsCaches() as needed.
     void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Returns true if any chainstate in use is in initial block download.
+    bool IsAnyChainInIBD() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! When starting up, search the datadir for a chainstate based on a UTXO
+    //! snapshot that is in the process of being validated.
+    bool DetectSnapshotChainstate(CTxMemPool& mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! If we completed background validation of the loaded snapshot during the
+    //! last run but didn't for whatever reason shutdown properly, ensure that
+    //! the background validation chainstate is marked accordingly.
+    void CheckForUncleanShutdown() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Return the cached nChainTx value for the snapshot (per the chainparams assumeutxo data),
+    //! if one exists
+    std::optional<unsigned int> GetSnapshotNChainTx() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! @returns height at which the active UTXO snapshot was taken, if applicable.
+    std::optional<CBlockIndex*> GetSnapshotBaseBlock() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! @returns height at which the active UTXO snapshot was taken, if a snapshot is being used.
+    std::optional<int> GetSnapshotHeight() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! If we're pruning the snapshot chainstate, be sure not to
+    //! step on the toes of the background validation by pruning blocks it
+    //! might be currently using.
+    unsigned int PruneStartHeight(CChainState* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     ~ChainstateManager() {
         LOCK(::cs_main);

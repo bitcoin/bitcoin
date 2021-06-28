@@ -162,7 +162,10 @@ public:
         };
 
         m_assumeutxo_data = MapAssumeutxo{
-         // TODO to be specified in a future patch.
+            {
+                685000,
+                {AssumeutxoHash{uint256S("0xa85dd26a5ca449d76bc7cb6103960a2894475f11acef57efb77d833ca84d0ed3")}, 644907744},
+            },
         };
 
         chainTxData = ChainTxData{
@@ -457,6 +460,11 @@ public:
                 200,
                 {AssumeutxoHash{uint256S("0x51c8d11d8b5c1de51543c579736e786aa2736206d1e11e627568029ce092cf62")}, 200},
             },
+            {
+                // For use by test/functional/feature_assumeutxo.py
+                299,
+                {AssumeutxoHash{uint256S("0xb58bd896c7eb420f61d1a6f40a0cdee43853992fcb820a6f854ccc9db95b3e5e")}, 300},
+            }
         };
 
         chainTxData = ChainTxData{

@@ -12,10 +12,12 @@
 #include <coins.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <fs.h>
 #include <hash.h>
-#include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
+#include <index/blockfilterindex.h>
 #include <node/blockstorage.h>
+#include <logging/timer.h>
 #include <node/coinstats.h>
 #include <node/context.h>
 #include <node/utxo_snapshot.h>
@@ -2533,6 +2535,7 @@ static RPCHelpMan dumptxoutset()
                     {RPCResult::Type::STR_HEX, "base_hash", "the hash of the base of the snapshot"},
                     {RPCResult::Type::NUM, "base_height", "the height of the base of the snapshot"},
                     {RPCResult::Type::STR, "path", "the absolute path that the snapshot was written to"},
+                    {RPCResult::Type::STR_HEX, "assumeutxo", "the hash of the UTXO set contents"},
                 }
         },
         RPCExamples{
@@ -2555,7 +2558,8 @@ static RPCHelpMan dumptxoutset()
     FILE* file{fsbridge::fopen(temppath, "wb")};
     CAutoFile afile{file, SER_DISK, CLIENT_VERSION};
     NodeContext& node = EnsureAnyNodeContext(request.context);
-    UniValue result = CreateUTXOSnapshot(node, node.chainman->ActiveChainstate(), afile);
+    UniValue result = CreateUTXOSnapshot(
+        node, node.chainman->ActiveChainstate(), afile, path, temppath);
     fs::rename(temppath, path);
 
     result.pushKV("path", path.string());
@@ -2564,10 +2568,15 @@ static RPCHelpMan dumptxoutset()
     };
 }
 
-UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFile& afile)
+UniValue CreateUTXOSnapshot(
+    NodeContext& node,
+    CChainState& chainstate,
+    CAutoFile& afile,
+    const fs::path path,
+    const fs::path temppath)
 {
     std::unique_ptr<CCoinsViewCursor> pcursor;
-    CCoinsStats stats{CoinStatsHashType::NONE};
+    CCoinsStats stats{CoinStatsHashType::HASH_SERIALIZED};
     CBlockIndex* tip;
 
     {
@@ -2596,6 +2605,9 @@ UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFil
         CHECK_NONFATAL(tip);
     }
 
+    LOG_TIME_SECONDS(strprintf("writing UTXO snapshot at height %s (%s) to file %s (via %s)",
+        tip->nHeight, tip->GetBlockHash().ToString(), path, temppath));
+
     SnapshotMetadata metadata{tip->GetBlockHash(), stats.coins_count, tip->nChainTx};
 
     afile << metadata;
@@ -2621,9 +2633,154 @@ UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFil
     result.pushKV("coins_written", stats.coins_count);
     result.pushKV("base_hash", tip->GetBlockHash().ToString());
     result.pushKV("base_height", tip->nHeight);
-
+    result.pushKV("path", path.string());
+    result.pushKV("assumeutxo", stats.hashSerialized.ToString());
+    result.pushKV("nchaintx", static_cast<int>(tip->nChainTx));
     return result;
 }
+
+static RPCHelpMan loadtxoutset()
+{
+    return RPCHelpMan{
+        "loadtxoutset",
+        "\nLoad the serialized UTXO set from disk.\n",
+        {
+            {"path",
+                RPCArg::Type::STR,
+                RPCArg::Optional::NO,
+                /* default_val */ "",
+                "path to the snapshot file. If relative, will be prefixed by datadir."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::NUM, "coins_loaded", "the number of coins loaded by the snapshot"},
+                    {RPCResult::Type::STR_HEX, "tip_hash", "the hash of the new tip"},
+                    {RPCResult::Type::NUM, "tip_height", "the height of the new chain"},
+                    {RPCResult::Type::STR, "path", "the absolute path that the snapshot was loaded from"},
+                }
+        },
+        RPCExamples{
+            HelpExampleCli("loadtxoutset", "utxo.dat")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    fs::path path = request.params[0].get_str();
+    if (path.is_relative()) {
+        path = fs::absolute(path, gArgs.GetDataDirNet());
+    }
+    FILE* file{fsbridge::fopen(path, "rb")};
+    CAutoFile afile{file, SER_DISK, CLIENT_VERSION};
+    SnapshotMetadata metadata;
+    afile >> metadata;
+
+    uint256 base_blockhash = metadata.m_base_blockhash;
+    int max_secs_to_wait_for_headers = 60 * 10;
+    CBlockIndex* snapshot_start_block = nullptr;
+
+    LogPrintf("[snapshot] waiting to see blockheader %s in headers chain before snapshot activation\n",
+        base_blockhash.ToString());
+
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = *node.chainman;
+
+    while (max_secs_to_wait_for_headers > 0) {
+        {
+            LOCK(cs_main);
+            snapshot_start_block = chainman.m_blockman.LookupBlockIndex(base_blockhash);
+        }
+        max_secs_to_wait_for_headers -= 1;
+
+        if (!snapshot_start_block) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        } else {
+            break;
+        }
+    }
+
+    if (snapshot_start_block == nullptr) {
+        LogPrintf("[snapshot] timed out waiting for snapshot start blockheader %s\n",
+            base_blockhash.ToString());
+        throw JSONRPCError(
+            RPC_INTERNAL_ERROR,
+            "Timed out waiting for base block header to appear in headers chain");
+    }
+
+    // TODO jamesob: no real need to lock cs_main here, but during testing it makes it
+    // easier to follow the logs. We may want to remove this before merge.
+    //
+    LOCK(::cs_main);
+
+    if (!chainman.ActivateSnapshot(afile, metadata, false)) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to load UTXO snapshot " + path.string());
+    }
+    CBlockIndex* new_tip{chainman.ActiveTip()};
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("coins_loaded", metadata.m_coins_count);
+    result.pushKV("tip_hash", new_tip->GetBlockHash().ToString());
+    result.pushKV("base_height", new_tip->nHeight);
+    result.pushKV("path", path.string());
+    return result;
+},
+    };
+}
+
+static RPCHelpMan monitorsnapshot()
+{
+return RPCHelpMan{
+        "monitorsnapshot",
+        "\nReturn information about UTXO snapshot status.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ, "x", "x",
+                {
+                    {RPCResult::Type::NUM, "headers", "the number of headers we've seen"},
+                    {RPCResult::Type::STR, "active_chain_type", "whether active chain is ibd or snapshot"},
+                }
+        },
+        RPCExamples{
+            HelpExampleCli("monitorsnapshot", "")
+    + HelpExampleRpc("monitorsnapshot", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    LOCK(cs_main);
+    UniValue obj(UniValue::VOBJ);
+
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = *node.chainman;
+
+    auto make_chain_data = [](CChainState* cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        UniValue data(UniValue::VOBJ);
+        if (!cs || !cs->m_chain.Tip()) {
+            return data;
+        }
+        const CChain& chain = cs->m_chain;
+        const CBlockIndex* tip = chain.Tip();
+
+        data.pushKV("blocks",                (int)chain.Height());
+        data.pushKV("bestblockhash",         tip->GetBlockHash().GetHex());
+        data.pushKV("difficulty",            (double)GetDifficulty(tip));
+        data.pushKV("mediantime",            (int64_t)tip->GetMedianTimePast());
+        data.pushKV("verificationprogress",  GuessVerificationProgress(Params().TxData(), tip));
+        data.pushKV("snapshot_blockhash",    cs->m_from_snapshot_blockhash.value_or(uint256{}).ToString());
+        data.pushKV("initialblockdownload",  cs->IsInitialBlockDownload());
+        return data;
+    };
+
+    obj.pushKV("active_chain_type", chainman.ActiveChainstate().IsFromSnapshot() ? "snapshot" : "ibd");
+
+    for (CChainState* chainstate : chainman.GetAll()) {
+        obj.pushKV(chainstate->IsFromSnapshot() ? "snapshot" : "ibd", make_chain_data(chainstate));
+    }
+    obj.pushKV("headers", pindexBestHeader ? pindexBestHeader->nHeight : -1);
+
+    return obj;
+}
+    };
+}
+
 
 void RegisterBlockchainRPCCommands(CRPCTable &t)
 {
@@ -2664,6 +2821,8 @@ static const CRPCCommand commands[] =
     { "hidden",              &waitforblockheight,                },
     { "hidden",              &syncwithvalidationinterfacequeue,  },
     { "hidden",              &dumptxoutset,                      },
+    { "hidden",              &loadtxoutset,                      },
+    { "hidden",              &monitorsnapshot,                   },
 };
 // clang-format on
     for (const auto& c : commands) {

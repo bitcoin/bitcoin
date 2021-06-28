@@ -177,6 +177,12 @@ static void FlushUndoFile(int block_file, bool finalize = false)
 void FlushBlockFile(bool fFinalize = false, bool finalize_undo = false)
 {
     LOCK(cs_LastBlockFile);
+
+    if (vinfoBlockFile.size() < 1) {
+        // Nothing to flush
+        return;
+    }
+
     FlatFilePos block_pos_old(nLastBlockFile, vinfoBlockFile[nLastBlockFile].nSize);
     if (!BlockFileSeq().Flush(block_pos_old, fFinalize)) {
         AbortNode("Flushing block file to disk failed. This is likely the result of an I/O error.");

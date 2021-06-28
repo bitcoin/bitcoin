@@ -9,12 +9,12 @@
 #include <rpc/blockchain.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
+#include <test/util/chainstate.h>
 #include <uint256.h>
 #include <validation.h>
 #include <validationinterface.h>
 
 #include <tinyformat.h>
-#include <univalue.h>
 
 #include <vector>
 
@@ -121,7 +121,6 @@ BOOST_AUTO_TEST_CASE(chainstatemanager_rebalance_caches)
 {
     ChainstateManager& manager = *m_node.chainman;
     CTxMemPool& mempool = *m_node.mempool;
-
     size_t max_cache = 10000;
     manager.m_total_coinsdb_cache = max_cache;
     manager.m_total_coinstip_cache = max_cache;
@@ -169,48 +168,41 @@ BOOST_AUTO_TEST_CASE(chainstatemanager_rebalance_caches)
     BOOST_CHECK_CLOSE(c2.m_coinsdb_cache_size_bytes, max_cache * 0.95, 1);
 }
 
-auto NoMalleation = [](CAutoFile& file, SnapshotMetadata& meta){};
-
-template<typename F = decltype(NoMalleation)>
-static bool
-CreateAndActivateUTXOSnapshot(NodeContext& node, const fs::path root, F malleation = NoMalleation)
-{
-    // Write out a snapshot to the test's tempdir.
-    //
-    int height;
-    WITH_LOCK(::cs_main, height = node.chainman->ActiveHeight());
-    fs::path snapshot_path = root / tfm::format("test_snapshot.%d.dat", height);
-    FILE* outfile{fsbridge::fopen(snapshot_path, "wb")};
-    CAutoFile auto_outfile{outfile, SER_DISK, CLIENT_VERSION};
-
-    UniValue result = CreateUTXOSnapshot(node, node.chainman->ActiveChainstate(), auto_outfile);
-    BOOST_TEST_MESSAGE(
-        "Wrote UTXO snapshot to " << snapshot_path.make_preferred().string() << ": " << result.write());
-
-    // Read the written snapshot in and then activate it.
-    //
-    FILE* infile{fsbridge::fopen(snapshot_path, "rb")};
-    CAutoFile auto_infile{infile, SER_DISK, CLIENT_VERSION};
-    SnapshotMetadata metadata;
-    auto_infile >> metadata;
-
-    malleation(auto_infile, metadata);
-
-    return node.chainman->ActivateSnapshot(auto_infile, metadata, /*in_memory*/ true);
-}
-
 //! Test basic snapshot activation.
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
 {
     ChainstateManager& chainman = *Assert(m_node.chainman);
 
+    BOOST_CHECK(!chainman.IsSnapshotActive());
+    BOOST_CHECK(!chainman.IsSnapshotValidated());
+
     size_t initial_size;
     size_t initial_total_coins{100};
+
+    {
+        LOCK(::cs_main);
+        CCoinsViewCache& ibd_coinscache = chainman.ActiveChainstate().CoinsTip();
+        CCoinsViewDB& coinsdb = chainman.ActiveChainstate().CoinsDB();
+        std::unique_ptr<CCoinsViewCursor> curs{coinsdb.Cursor()};
+
+        // Ensure all extant coins are loaded into cache. This is necessary now
+        // that we're rebalanicng caches (and therefore flushing) when we exit IBD,
+        // since in the TestChain100Setup we exit IBD after connecting the first
+        // block, thus flushing the first coin and removing it from the cache.
+        // Calling HaveCoin() drags it back into cacheCoins.
+        while (curs->Valid()) {
+            COutPoint tmp;
+            curs->GetKey(tmp);
+            ibd_coinscache.HaveCoin(tmp);
+            curs->Next();
+        }
+    }
 
     // Make some initial assertions about the contents of the chainstate.
     {
         LOCK(::cs_main);
         CCoinsViewCache& ibd_coinscache = chainman.ActiveChainstate().CoinsTip();
+
         initial_size = ibd_coinscache.GetCacheSize();
         size_t total_coins{0};
 
