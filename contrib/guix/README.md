@@ -75,7 +75,7 @@ crucial differences:
 
 1. Since only Windows and macOS build outputs require codesigning, the `HOSTS`
    environment variable will have a sane default value of `x86_64-w64-mingw32
-   x86_64-apple-darwin18` instead of all the platforms.
+   x86_64-apple-darwin19` instead of all the platforms.
 2. The `guix-codesign` command ***requires*** a `DETACHED_SIGS_REPO` flag.
     * _**DETACHED_SIGS_REPO**_
 
@@ -159,7 +159,7 @@ which case you can override the default list by setting the space-separated
 `HOSTS` environment variable:
 
 ```sh
-env HOSTS='x86_64-w64-mingw32 x86_64-apple-darwin18' ./contrib/guix/guix-build
+env HOSTS='x86_64-w64-mingw32 x86_64-apple-darwin19' ./contrib/guix/guix-build
 ```
 
 See the [recognized environment variables][env-vars-list] section for more
@@ -224,7 +224,7 @@ details.
 
   _(defaults to "x86\_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu
   riscv64-linux-gnu powerpc64-linux-gnu powerpc64le-linux-gnu
-  x86\_64-w64-mingw32 x86\_64-apple-darwin18")_
+  x86\_64-w64-mingw32 x86\_64-apple-darwin19")_
 
 * _**SOURCES_PATH**_
 
