@@ -5,7 +5,7 @@ suites:
 architectures:
 - "amd64"
 packages:
-- "libssl-dev"
+- "libssl-dev" # do not merge bitcoin#13782, see https://github.com/dashpay/dash/pull/3894
 - "autoconf"
 - "automake"
 - "libtool"
