@@ -5,8 +5,7 @@ Below are some notes on how to build Bitcoin Core for Windows.
 
 The options known to work for building Bitcoin Core on Windows are:
 
-* On Linux, using the [Mingw-w64](https://mingw-w64.org/doku.php) cross compiler tool chain. Ubuntu Bionic 18.04 is required
-and is the platform used to build the Bitcoin Core Windows release binaries.
+* On Linux, using the [Mingw-w64](https://mingw-w64.org/doku.php) cross compiler tool chain.
 * On Windows, using [Windows
 Subsystem for Linux (WSL)](https://docs.microsoft.com/windows/wsl/about) and the Mingw-w64 cross compiler tool chain.
 * On Windows, using a native compiler tool chain such as [Visual Studio](https://www.visualstudio.com). See [README.md](/build_msvc/README.md).
@@ -33,6 +32,7 @@ Windows](https://docs.microsoft.com/windows/wsl/install-win10).
 Full instructions to install WSL are available on the above link.
 To install WSL on Windows 10 with Fall Creators Update installed (version >= 16215.0) do the following:
 
+### Install on C:\
 1. Enable the Windows Subsystem for Linux feature
   * Open the Windows Features dialog (`OptionalFeatures.exe`)
   * Enable 'Windows Subsystem for Linux'
@@ -43,6 +43,32 @@ To install WSL on Windows 10 with Fall Creators Update installed (version >= 162
 3. Complete Installation
   * Open a cmd prompt and type "Ubuntu1804"
   * Create a new UNIX user account (this is a separate account from your Windows account)
+
+### Install on non-system drive (D:\ , F:\ ...)
+1. Enable windows subsystem for Linux system feature
+* Open **Powershell** as admin
+*Run this command :*
+
+        Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+
+2. Create an Ubuntu folder
+
+       mkdir D:\WSL\Ubuntu
+
+3. Download and install a Linux distribution (example : Ubuntu 18.04)
+*Run this command :*
+
+        Invoke-WebRequest -Uri https://aka.ms/wsl-ubuntu-1804 -OutFile Ubuntu.appx -UseBasicParsing
+
+*Unpack the zip file*
+
+        move .\Ubuntu.appx .\Ubuntu.zip
+        Expand-Archive .\Ubuntu.zip
+
+*Initialize Linux distro*
+
+        cd .\Ubuntu\
+        .\ubuntu1804.exe
 
 After the bash shell is active, you can follow the instructions below, starting
 with the "Cross-compilation" section. Compiling the 64-bit version is
