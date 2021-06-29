@@ -1613,12 +1613,10 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
     return set_address;
 }
 
-void LegacyScriptPubKeyMan::SetInternal(bool internal) {}
-
 bool DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error)
 {
     // Returns true if this descriptor supports getting new addresses. Conditions where we may be unable to fetch them (e.g. locked) are caught later
-    if (!CanGetAddresses(m_internal)) {
+    if (!CanGetAddresses()) {
         error = "No addresses available";
         return false;
     }
@@ -1894,7 +1892,7 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
     }
 }
 
-bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_key, OutputType addr_type)
+bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_key, OutputType addr_type, bool internal)
 {
     if (addr_type == OutputType::BECH32M) {
         // Don't allow setting up taproot descriptors yet
@@ -1942,7 +1940,7 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
         desc_prefix += "/0'";
     }
 
-    std::string internal_path = m_internal ? "/1" : "/0";
+    std::string internal_path = internal ? "/1" : "/0";
     std::string desc_str = desc_prefix + "/0'" + internal_path + desc_suffix;
 
     // Make the descriptor
@@ -1997,13 +1995,6 @@ int64_t DescriptorScriptPubKeyMan::GetOldestKeyPoolTime() const
     return 0;
 }
 
-size_t DescriptorScriptPubKeyMan::KeypoolCountExternalKeys() const
-{
-    if (m_internal) {
-        return 0;
-    }
-    return GetKeyPoolSize();
-}
 
 unsigned int DescriptorScriptPubKeyMan::GetKeyPoolSize() const
 {
@@ -2203,11 +2194,6 @@ uint256 DescriptorScriptPubKeyMan::GetID() const
     uint256 id;
     CSHA256().Write((unsigned char*)desc_str.data(), desc_str.size()).Finalize(id.begin());
     return id;
-}
-
-void DescriptorScriptPubKeyMan::SetInternal(bool internal)
-{
-    this->m_internal = internal;
 }
 
 void DescriptorScriptPubKeyMan::SetCache(const DescriptorCache& cache)
