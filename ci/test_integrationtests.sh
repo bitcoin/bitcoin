@@ -15,6 +15,9 @@ if [ "$RUN_INTEGRATIONTESTS" != "true" ]; then
   exit 0
 fi
 
+# override LC_ALL to allow special characters and emojis in filenames
+export LC_ALL=C.UTF-8
+
 export LD_LIBRARY_PATH=$BUILD_DIR/depends/$HOST/lib
 
 cd build-ci/dashcore-$BUILD_TARGET
