@@ -1857,7 +1857,7 @@ static RPCHelpMan preciousblock()
     }
 
     BlockValidationState state;
-    chainman.ActiveChainstate().PreciousBlock(state, Params(), pblockindex);
+    chainman.ActiveChainstate().PreciousBlock(state, pblockindex);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
@@ -1894,10 +1894,10 @@ static RPCHelpMan invalidateblock()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
-    chainman.ActiveChainstate().InvalidateBlock(state, Params(), pblockindex);
+    chainman.ActiveChainstate().InvalidateBlock(state, pblockindex);
 
     if (state.IsValid()) {
-        chainman.ActiveChainstate().ActivateBestChain(state, Params());
+        chainman.ActiveChainstate().ActivateBestChain(state);
     }
 
     if (!state.IsValid()) {
@@ -1939,7 +1939,7 @@ static RPCHelpMan reconsiderblock()
     // SYSCOIN do not re-validate eth txroots
     fLoaded = false;
     BlockValidationState state;
-    chainman.ActiveChainstate().ActivateBestChain(state, Params());
+    chainman.ActiveChainstate().ActivateBestChain(state);
     fLoaded = true;
 
     if (!state.IsValid()) {

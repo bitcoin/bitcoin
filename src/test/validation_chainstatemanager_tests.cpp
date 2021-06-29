@@ -31,7 +31,6 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     CTxMemPool& mempool = *m_node.mempool;
 
     std::vector<CChainState*> chainstates;
-    const CChainParams& chainparams = Params();
 
     BOOST_CHECK(!manager.SnapshotBlockhash().has_value());
 
@@ -76,9 +75,9 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     WITH_LOCK(::cs_main, c2.InitCoinsCache(1 << 23));
     // Unlike c1, which doesn't have any blocks. Gets us different tip, height.
-    c2.LoadGenesisBlock(chainparams);
+    c2.LoadGenesisBlock();
     BlockValidationState _;
-    BOOST_CHECK(c2.ActivateBestChain(_, chainparams, nullptr));
+    BOOST_CHECK(c2.ActivateBestChain(_, nullptr));
 
     BOOST_CHECK(manager.IsSnapshotActive());
     BOOST_CHECK(!manager.IsSnapshotValidated());
@@ -138,7 +137,7 @@ BOOST_AUTO_TEST_CASE(chainstatemanager_rebalance_caches)
     {
         LOCK(::cs_main);
         c1.InitCoinsCache(1 << 23);
-        BOOST_REQUIRE(c1.LoadGenesisBlock(Params()));
+        BOOST_REQUIRE(c1.LoadGenesisBlock());
         c1.CoinsTip().SetBestBlock(InsecureRand256());
         manager.MaybeRebalanceCaches();
     }
@@ -156,7 +155,7 @@ BOOST_AUTO_TEST_CASE(chainstatemanager_rebalance_caches)
     {
         LOCK(::cs_main);
         c2.InitCoinsCache(1 << 23);
-        BOOST_REQUIRE(c2.LoadGenesisBlock(Params()));
+        BOOST_REQUIRE(c2.LoadGenesisBlock());
         c2.CoinsTip().SetBestBlock(InsecureRand256());
         manager.MaybeRebalanceCaches();
     }
