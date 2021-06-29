@@ -1347,8 +1347,8 @@ static void AlertNotify(const std::string& strMessage)
 {
     uiInterface.NotifyAlertChanged();
 #if HAVE_SYSTEM
-    std::string strCmd = gArgs.GetArg("-alertnotify", "");
-    if (strCmd.empty()) return;
+    std::string command = gArgs.GetArg("-alertnotify", "");
+    if (command.empty()) return;
 
     // Alert text should be plain ascii coming from a trusted source, but to
     // be safe we first strip anything not in safeChars, then add single quotes around
@@ -1356,9 +1356,9 @@ static void AlertNotify(const std::string& strMessage)
     std::string singleQuote("'");
     std::string safeStatus = SanitizeString(strMessage);
     safeStatus = singleQuote+safeStatus+singleQuote;
-    boost::replace_all(strCmd, "%s", safeStatus);
+    boost::replace_all(command, "%s", safeStatus);
 
-    std::thread t(runCommand, strCmd);
+    std::thread t(runCommand, command);
     t.detach(); // thread runs free
 #endif
 }

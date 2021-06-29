@@ -939,18 +939,18 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
 
 #if HAVE_SYSTEM
     // notify an external script when a wallet transaction comes in or is updated
-    std::string strCmd = gArgs.GetArg("-walletnotify", "");
+    std::string command = gArgs.GetArg("-walletnotify", "");
 
-    if (!strCmd.empty())
+    if (!command.empty())
     {
-        boost::replace_all(strCmd, "%s", hash.GetHex());
+        boost::replace_all(command, "%s", hash.GetHex());
         if (confirm.status == CWalletTx::Status::CONFIRMED)
         {
-            boost::replace_all(strCmd, "%b", confirm.hashBlock.GetHex());
-            boost::replace_all(strCmd, "%h", ToString(confirm.block_height));
+            boost::replace_all(command, "%b", confirm.hashBlock.GetHex());
+            boost::replace_all(command, "%h", ToString(confirm.block_height));
         } else {
-            boost::replace_all(strCmd, "%b", "unconfirmed");
-            boost::replace_all(strCmd, "%h", "-1");
+            boost::replace_all(command, "%b", "unconfirmed");
+            boost::replace_all(command, "%h", "-1");
         }
 #ifndef WIN32
         // Substituting the wallet name isn't currently supported on windows
@@ -958,9 +958,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-537384875
         // A few ways it could be implemented in the future are described in:
         // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-461288094
-        boost::replace_all(strCmd, "%w", ShellEscape(GetName()));
+        boost::replace_all(command, "%w", ShellEscape(GetName()));
 #endif
-        std::thread t(runCommand, strCmd);
+        std::thread t(runCommand, command);
         t.detach(); // thread runs free
     }
 #endif
