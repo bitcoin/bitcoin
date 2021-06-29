@@ -141,6 +141,10 @@ static WorkQueue<HTTPClosure>* workQueue = nullptr;
 static std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
 static std::vector<evhttp_bound_socket *> boundSockets;
+//! Track active requests
+static Mutex g_requests_mutex;
+static std::condition_variable g_requests_cv;
+static std::set<evhttp_request*> g_requests GUARDED_BY(g_requests_mutex);
 
 /** Check if a network address is allowed to access the HTTP server */
 static bool ClientAllowed(const CNetAddr& netaddr)
@@ -205,16 +209,33 @@ std::string RequestMethodString(HTTPRequest::RequestMethod m)
 /** HTTP request callback */
 static void http_request_cb(struct evhttp_request* req, void* arg)
 {
-    // Disable reading to work around a libevent bug, fixed in 2.2.0.
-    if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02020001) {
-        evhttp_connection* conn = evhttp_request_get_connection(req);
-        if (conn) {
-            bufferevent* bev = evhttp_connection_get_bufferevent(conn);
-            if (bev) {
-                bufferevent_disable(bev, EV_READ);
-            }
-        }
+    // Track requests and notify when last active request is completed.
+    {
+        LOCK(g_requests_mutex);
+        g_requests.insert(req);
+        // Enable EV_READ to detect remote disconnection meaning that the close
+        // callback set below is called.
+        auto conn = evhttp_request_get_connection(req);
+        bufferevent* bev = evhttp_connection_get_bufferevent(conn);
+        bufferevent_enable(bev, EV_READ);
+        // Close callback to clear active but running request.
+        // This is also called if the connection is closed after a successful
+        // request, but compleate callback set below already cleared the state.
+        evhttp_connection_set_closecb(conn, [](evhttp_connection* conn, void* arg) {
+            auto req = static_cast<evhttp_request*>(arg);
+            LOCK(g_requests_mutex);
+            auto n = g_requests.erase(req);
+            if (n == 1 && g_requests.empty()) g_requests_cv.notify_all();
+        }, req);
+        // Clear state after successful request.
+        evhttp_request_set_on_complete_cb(req, [](struct evhttp_request* req, void*) {
+            LOCK(g_requests_mutex);
+            auto n = g_requests.erase(req);
+            assert(n == 1);
+            if (g_requests.empty()) g_requests_cv.notify_all();
+        }, nullptr);
     }
+
     std::unique_ptr<HTTPRequest> hreq(new HTTPRequest(req));
 
     // Early address-based allow check
@@ -455,13 +476,21 @@ void StopHTTPServer()
         evhttp_del_accept_socket(eventHTTP, socket);
     }
     boundSockets.clear();
+    {
+        WAIT_LOCK(g_requests_mutex, lock);
+        while (!g_requests.empty()) {
+            g_requests_cv.wait(lock);
+        }
+    }
+    if (eventHTTP) {
+        event_base_once(eventBase, -1, EV_TIMEOUT, [](evutil_socket_t, short, void*) {
+            evhttp_free(eventHTTP);
+            eventHTTP = nullptr;
+        }, nullptr, nullptr);
+    }
     if (eventBase) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP event thread to exit\n");
         if (g_thread_http.joinable()) g_thread_http.join();
-    }
-    if (eventHTTP) {
-        evhttp_free(eventHTTP);
-        eventHTTP = nullptr;
     }
     if (eventBase) {
         event_base_free(eventBase);
@@ -575,17 +604,6 @@ void HTTPRequest::WriteReply(int nStatus, const std::string& strReply)
     auto req_copy = req;
     HTTPEvent* ev = new HTTPEvent(eventBase, true, [req_copy, nStatus]{
         evhttp_send_reply(req_copy, nStatus, nullptr, nullptr);
-        // Re-enable reading from the socket. This is the second part of the libevent
-        // workaround above.
-        if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02020001) {
-            evhttp_connection* conn = evhttp_request_get_connection(req_copy);
-            if (conn) {
-                bufferevent* bev = evhttp_connection_get_bufferevent(conn);
-                if (bev) {
-                    bufferevent_enable(bev, EV_READ | EV_WRITE);
-                }
-            }
-        }
     });
     ev->trigger(nullptr);
     replySent = true;
