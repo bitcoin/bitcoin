@@ -24,6 +24,7 @@ from test_framework.messages import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_approx,
     assert_equal,
     assert_fee_amount,
     assert_greater_than,
@@ -557,8 +558,10 @@ def test_setfeerate(self, rbf_node, dest_address):
     fee_rate = 25
     test_response(requested=fee_rate, expected=fee_rate, msg="Fee rate for transactions with this wallet successfully set to 25.000 sat/vB")
     bumped_tx = rbf_node.bumpfee(rbfid)
-    actual_feerate = bumped_tx["fee"] * COIN / rbf_node.getrawtransaction(bumped_tx["txid"], True)["vsize"]
-    assert_greater_than(Decimal("0.01"), abs(fee_rate - actual_feerate))
+    bumped_txdetails = rbf_node.getrawtransaction(bumped_tx["txid"], True)
+    allow_for_bytes_offset = len(bumped_txdetails['vout']) * 2  # potentially up to 2 bytes per output
+    actual_fee = bumped_tx["fee"] * COIN
+    assert_approx(actual_fee, fee_rate * bumped_txdetails['vsize'], fee_rate * allow_for_bytes_offset)
     test_response(msg="Fee rate for transactions with this wallet successfully unset. By default, automatic fee selection will be used.")
 
     # Test setfeerate with a different -maxtxfee
