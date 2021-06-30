@@ -142,8 +142,8 @@ private:
 
     typedef std::function<void()> StartPhaseFunc;
     typedef std::function<bool()> WhileWaitFunc;
-    void WaitForNextPhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash, const WhileWaitFunc& runWhileWaiting);
-    void WaitForNewQuorum(const uint256& oldQuorumHash);
+    void WaitForNextPhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash, const WhileWaitFunc& runWhileWaiting) const;
+    void WaitForNewQuorum(const uint256& oldQuorumHash) const;
     void SleepBeforePhase(QuorumPhase curPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const WhileWaitFunc& runWhileWaiting);
     void HandlePhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const StartPhaseFunc& startPhaseFunc, const WhileWaitFunc& runWhileWaiting);
     void HandleDKGRound();

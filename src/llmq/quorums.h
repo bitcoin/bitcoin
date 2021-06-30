@@ -74,7 +74,7 @@ public:
     const CBLSSecretKey& GetSkShare() const;
 
 private:
-    void WriteContributions();
+    void WriteContributions() const;
     bool ReadContributions();
 };
 
@@ -121,7 +121,7 @@ private:
     void EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pindexNew);
 
     bool BuildQuorumFromCommitment(const uint8_t llmqType, const CBlockIndex* pindexQuorum, std::shared_ptr<CQuorum>& quorum) const EXCLUSIVE_LOCKS_REQUIRED(quorumsCacheCs);
-    bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, std::shared_ptr<CQuorum>& quorum) const;
+    bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, const std::shared_ptr<CQuorum>& quorum) const;
 
     CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindex) const;
     void StartCachePopulatorThread(const CQuorumCPtr pQuorum) const;

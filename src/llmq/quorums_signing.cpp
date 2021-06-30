@@ -116,7 +116,7 @@ void CRecoveredSigsDb::AddVoteTimeKeys()
     LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%s -- added %d rs_vt entries\n", __func__, cnt);
 }
 
-bool CRecoveredSigsDb::HasRecoveredSig(uint8_t llmqType, const uint256& id, const uint256& msgHash)
+bool CRecoveredSigsDb::HasRecoveredSig(uint8_t llmqType, const uint256& id, const uint256& msgHash) const
 {
     auto k = std::make_tuple(std::string("rs_r"), llmqType, id, msgHash);
     return db.Exists(k);
@@ -178,7 +178,7 @@ bool CRecoveredSigsDb::HasRecoveredSigForHash(const uint256& hash)
     return ret;
 }
 
-bool CRecoveredSigsDb::ReadRecoveredSig(uint8_t llmqType, const uint256& id, CRecoveredSig& ret)
+bool CRecoveredSigsDb::ReadRecoveredSig(uint8_t llmqType, const uint256& id, CRecoveredSig& ret) const
 {
     auto k = std::make_tuple(std::string("rs_r"), llmqType, id);
 
@@ -342,7 +342,7 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
     CDBBatch batch(db);
     {
         LOCK(cs);
-        for (auto& e : toDelete) {
+        for (const auto& e : toDelete) {
             RemoveRecoveredSig(batch, e.first, e.second, true, false);
 
             if (batch.SizeEstimate() >= (1 << 24)) {
@@ -352,7 +352,7 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
         }
     }
 
-    for (auto& e : toDelete2) {
+    for (const auto& e : toDelete2) {
         batch.Erase(e);
     }
 
@@ -361,13 +361,13 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
     LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%d -- deleted %d entries\n", __func__, toDelete.size());
 }
 
-bool CRecoveredSigsDb::HasVotedOnId(uint8_t llmqType, const uint256& id)
+bool CRecoveredSigsDb::HasVotedOnId(uint8_t llmqType, const uint256& id) const
 {
     auto k = std::make_tuple(std::string("rs_v"), llmqType, id);
     return db.Exists(k);
 }
 
-bool CRecoveredSigsDb::GetVoteForId(uint8_t llmqType, const uint256& id, uint256& msgHashRet)
+bool CRecoveredSigsDb::GetVoteForId(uint8_t llmqType, const uint256& id, uint256& msgHashRet) const
 {
     auto k = std::make_tuple(std::string("rs_v"), llmqType, id);
     return db.Read(k, msgHashRet);
@@ -463,7 +463,7 @@ bool CSigningManager::GetRecoveredSigForGetData(const uint256& hash, CRecoveredS
 void CSigningManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
     if (strCommand == NetMsgType::QSIGREC) {
-        std::shared_ptr<CRecoveredSig> recoveredSig = std::make_shared<CRecoveredSig>();
+        auto recoveredSig = std::make_shared<CRecoveredSig>();
         vRecv >> *recoveredSig;
         ProcessMessageRecoveredSig(pfrom, recoveredSig);
     }
@@ -580,7 +580,7 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
         auto& v = p.second;
 
         for (auto it = v.begin(); it != v.end();) {
-            auto& recSig = *it;
+            const auto& recSig = *it;
 
             uint8_t llmqType = recSig->llmqType;
             auto quorumKey = std::make_pair(recSig->llmqType, recSig->quorumHash);
@@ -614,7 +614,7 @@ void CSigningManager::ProcessPendingReconstructedRecoveredSigs()
         LOCK(cs);
         m = std::move(pendingReconstructedRecoveredSigs);
     }
-    for (auto& p : m) {
+    for (const auto& p : m) {
         ProcessRecoveredSig(-1, p.second);
     }
 }
@@ -637,11 +637,11 @@ bool CSigningManager::ProcessPendingRecoveredSigs()
     CBLSBatchVerifier<NodeId, uint256> batchVerifier(false, false);
 
     size_t verifyCount = 0;
-    for (auto& p : recSigsByNode) {
+    for (const auto& p : recSigsByNode) {
         NodeId nodeId = p.first;
-        auto& v = p.second;
+        const auto& v = p.second;
 
-        for (auto& recSig : v) {
+        for (const auto& recSig : v) {
             // we didn't verify the lazy signature until now
             if (!recSig->sig.Get().IsValid()) {
                 batchVerifier.badSources.emplace(nodeId);
@@ -661,9 +661,9 @@ bool CSigningManager::ProcessPendingRecoveredSigs()
     LogPrint(BCLog::LLMQ, "CSigningManager::%s -- verified recovered sig(s). count=%d, vt=%d, nodes=%d\n", __func__, verifyCount, verifyTimer.count(), recSigsByNode.size());
 
     std::unordered_set<uint256, StaticSaltedHasher> processed;
-    for (auto& p : recSigsByNode) {
+    for (const auto& p : recSigsByNode) {
         NodeId nodeId = p.first;
-        auto& v = p.second;
+        const auto& v = p.second;
 
         if (batchVerifier.badSources.count(nodeId)) {
             LogPrint(BCLog::LLMQ, "CSigningManager::%s -- invalid recSig from other node, banning peer=%d\n", __func__, nodeId);

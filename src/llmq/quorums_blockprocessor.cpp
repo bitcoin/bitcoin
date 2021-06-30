@@ -109,10 +109,8 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             auto it = minableCommitmentsByQuorum.find(k);
             if (it != minableCommitmentsByQuorum.end()) {
                 auto jt = minableCommitments.find(it->second);
-                if (jt != minableCommitments.end()) {
-                    if (jt->second.CountSigners() <= qc.CountSigners()) {
+                if (jt != minableCommitments.end() && jt->second.CountSigners() <= qc.CountSigners()) {
                         bReturn = true;
-                    }
                 }
             }
         }
@@ -185,8 +183,8 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
 
     const auto &blockHash = block.GetHash();
 
-    for (auto& p : qcs) {
-        auto& qc = p.second;
+    for (const auto& p : qcs) {
+        const auto& qc = p.second;
         if (!ProcessCommitment(pindex->nHeight, blockHash, qc, state, fJustCheck)) {
             return false;
         }
@@ -478,7 +476,7 @@ void CQuorumBlockProcessor::AddMineableCommitment(const CFinalCommitment& fqc)
             minableCommitments.try_emplace(commitmentHash, fqc);
             relay = true;
         } else {
-            auto& oldFqc = minableCommitments.at(ins.first->second);
+            const auto& oldFqc = minableCommitments.at(ins.first->second);
             if (fqc.CountSigners() > oldFqc.CountSigners()) {
                 // new commitment has more signers, so override the known one
                 ins.first->second = commitmentHash;

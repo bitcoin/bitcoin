@@ -93,7 +93,7 @@ public:
     void ConvertInvalidTimeKeys();
     void AddVoteTimeKeys();
 
-    bool HasRecoveredSig(uint8_t llmqType, const uint256& id, const uint256& msgHash);
+    bool HasRecoveredSig(uint8_t llmqType, const uint256& id, const uint256& msgHash) const;
     bool HasRecoveredSigForId(uint8_t llmqType, const uint256& id);
     bool HasRecoveredSigForSession(const uint256& signHash);
     bool HasRecoveredSigForHash(const uint256& hash);
@@ -106,14 +106,14 @@ public:
     void CleanupOldRecoveredSigs(int64_t maxAge);
 
     // votes are removed when the recovered sig is written to the db
-    bool HasVotedOnId(uint8_t llmqType, const uint256& id);
-    bool GetVoteForId(uint8_t llmqType, const uint256& id, uint256& msgHashRet);
+    bool HasVotedOnId(uint8_t llmqType, const uint256& id) const;
+    bool GetVoteForId(uint8_t llmqType, const uint256& id, uint256& msgHashRet) const;
     void WriteVoteForId(uint8_t llmqType, const uint256& id, const uint256& msgHash);
 
     void CleanupOldVotes(int64_t maxAge);
 
 private:
-    bool ReadRecoveredSig(uint8_t llmqType, const uint256& id, CRecoveredSig& ret);
+    bool ReadRecoveredSig(uint8_t llmqType, const uint256& id, CRecoveredSig& ret) const;
     void RemoveRecoveredSig(CDBBatch& batch, uint8_t llmqType, const uint256& id, bool deleteHashKey, bool deleteTimeKey)  EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 

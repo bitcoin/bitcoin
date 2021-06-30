@@ -282,7 +282,7 @@ public:
 
     // Phase 2: complaint
     void VerifyAndComplain(CDKGPendingMessages& pendingMessages);
-    void VerifyConnectionAndMinProtoVersions();
+    void VerifyConnectionAndMinProtoVersions() const;
     void SendComplaint(CDKGPendingMessages& pendingMessages);
     bool PreVerifyMessage(const CDKGComplaint& qc, bool& retBan) const;
     void ReceiveMessage(const uint256& hash, const CDKGComplaint& qc, bool& retBan);

@@ -99,7 +99,7 @@ int CQuorum::GetMemberIndex(const uint256& proTxHash) const
     return -1;
 }
 
-void CQuorum::WriteContributions()
+void CQuorum::WriteContributions() const
 {
     if(!evoDb)
         return;
@@ -176,7 +176,7 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
 void CQuorumManager::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex* pindexNew)
 {
     const auto& params = Params().GetConsensus().llmqs.at(llmqType);
-    auto myProTxHash = activeMasternodeInfo.proTxHash;
+    const auto &myProTxHash = activeMasternodeInfo.proTxHash;
     std::vector<CQuorumCPtr> lastQuorums;
     ScanQuorums(llmqType, pindexNew, (size_t)params.keepOldConnections, lastQuorums);
     std::set<uint256> connmanQuorumsToDelete;
@@ -186,7 +186,7 @@ void CQuorumManager::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex
     auto curDkgBlock = pindexNew->GetAncestor(curDkgHeight)->GetBlockHash();
     connmanQuorumsToDelete.erase(curDkgBlock);
     bool allowWatch = gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS);
-    for (auto& quorum : lastQuorums) {
+    for (const auto& quorum : lastQuorums) {
         if (!quorum->IsMember(myProTxHash) && !allowWatch) {
             continue;
         }
@@ -239,7 +239,7 @@ bool CQuorumManager::BuildQuorumFromCommitment(const uint8_t llmqType, const CBl
 
     return true;
 }
-bool CQuorumManager::BuildQuorumContributions(const CFinalCommitmentPtr& fqc, std::shared_ptr<CQuorum>& quorum) const
+bool CQuorumManager::BuildQuorumContributions(const CFinalCommitmentPtr& fqc, const std::shared_ptr<CQuorum>& quorum) const
 {
     std::vector<uint16_t> memberIndexes;
     std::vector<BLSVerificationVectorPtr> vvecs;

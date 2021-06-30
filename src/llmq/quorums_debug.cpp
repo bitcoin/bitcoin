@@ -74,7 +74,7 @@ UniValue CDKGDebugSessionStatus::ToJson(ChainstateManager &chainman, int detailL
             }
         }
     };
-    auto push = [&](ArrOrCount& v, const std::string& name) {
+    auto push = [&](const ArrOrCount& v, const std::string& name) {
         if (detailLevel == 0) {
             ret.pushKV(name, v.count);
         } else {
