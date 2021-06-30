@@ -124,14 +124,10 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
 
     // Check that private can produce the normalized descriptors
     std::string norm1;
-    BOOST_CHECK(parse_priv->ToNormalizedString(keys_priv, norm1, false));
+    BOOST_CHECK(parse_priv->ToNormalizedString(keys_priv, norm1));
     BOOST_CHECK(EqualDescriptor(norm1, norm_pub));
-    BOOST_CHECK(parse_pub->ToNormalizedString(keys_priv, norm1, false));
+    BOOST_CHECK(parse_pub->ToNormalizedString(keys_priv, norm1));
     BOOST_CHECK(EqualDescriptor(norm1, norm_pub));
-    BOOST_CHECK(parse_priv->ToNormalizedString(keys_priv, norm1, true));
-    BOOST_CHECK(EqualDescriptor(norm1, norm_prv));
-    BOOST_CHECK(parse_pub->ToNormalizedString(keys_priv, norm1, true));
-    BOOST_CHECK(EqualDescriptor(norm1, norm_prv));
 
     // Check whether IsRange on both returns the expected result
     BOOST_CHECK_EQUAL(parse_pub->IsRange(), (flags & RANGE) != 0);

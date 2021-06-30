@@ -72,6 +72,10 @@ class ListDescriptorsTest(BitcoinTestFramework):
         }
         assert_equal(expected, wallet.listdescriptors())
 
+        self.log.info("Test listdescriptors with encrypted wallet")
+        wallet.encryptwallet("pass")
+        assert_equal(expected, wallet.listdescriptors())
+
         self.log.info('Test non-active non-range combo descriptor')
         node.createwallet(wallet_name='w4', blank=True, descriptors=True)
         wallet = node.get_wallet_rpc('w4')
