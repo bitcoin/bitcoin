@@ -450,8 +450,7 @@ class SegWitTest(BitcoinTestFramework):
             rpc_details = self.nodes[0].getblock(block.hash, True)
             assert_equal(rpc_details["size"], len(block.serialize()))
             assert_equal(rpc_details["strippedsize"], len(block.serialize(False)))
-            weight = 3 * len(block.serialize(False)) + len(block.serialize())
-            assert_equal(rpc_details["weight"], weight)
+            assert_equal(rpc_details["weight"], block.get_weight())
 
             # Upgraded node should not ask for blocks from unupgraded
             block4 = self.build_next_block(version=4)
