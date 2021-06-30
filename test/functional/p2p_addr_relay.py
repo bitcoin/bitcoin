@@ -53,6 +53,7 @@ class AddrTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 1
+        self.extra_args = [["-whitelist=addr@127.0.0.1"]]
 
     def run_test(self):
         self.oversized_addr_test()
@@ -191,7 +192,7 @@ class AddrTest(BitcoinTestFramework):
 
     def blocksonly_mode_tests(self):
         self.log.info('Test addr relay in -blocksonly mode')
-        self.restart_node(0, ["-blocksonly"])
+        self.restart_node(0, ["-blocksonly", "-whitelist=addr@127.0.0.1"])
         self.mocktime = int(time.time())
 
         self.log.info('Check that we send getaddr messages')
