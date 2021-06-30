@@ -300,10 +300,9 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyEVMBlockDisconnect(const CNEV
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-disconnect-empty");
     }
     std::vector<std::string> parts;
-    uint256 hash = evmBlock.nBlockHash;
-    LogPrint(BCLog::ZMQ, "zmq: Publish evm block disconnect %s to %s, subscriber %s\n", hash.GetHex(), this->address, this->addresssub);
+    LogPrint(BCLog::ZMQ, "zmq: Publish evm block disconnect %s to %s, subscriber %s\n", evmBlock.nBlockHash.GetHex(), this->address, this->addresssub);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss << evmBlock << nSYSBlockHash << bWaitForResponse;
+    ss << nSYSBlockHash;
     if(!SendZmqMessage(MSG_NEVMBLOCKDISCONNECT, &(*ss.begin()), ss.size()))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-disconnect-not-sent");
     if(bWaitForResponse) {

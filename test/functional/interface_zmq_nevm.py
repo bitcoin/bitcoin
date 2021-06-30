@@ -6,7 +6,7 @@
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.messages import hash256, CNEVMBlock, CNEVMBlockConnect, uint256_from_str
+from test_framework.messages import hash256, CNEVMBlock, CNEVMBlockConnect, CNEVMBlockDisconnect, uint256_from_str
 from test_framework.util import (
     assert_equal,
 )
@@ -66,17 +66,15 @@ def receive_thread_nevmblockdisconnect(self, idx, subscriber, publisher):
             self.log.info('receive_thread_nevmblockdisconnect waiting to receive... idx {}'.format(idx))
             data = subscriber.receive()
             self.log.info('receive_thread_nevmblockdisconnect received data idx {}'.format(idx))
-            evmBlockConnect = CNEVMBlockConnect()
-            evmBlockConnect.deserialize(BytesIO(data))
-            resBlock = publisher.deleteBlock(evmBlockConnect)
+            evmBlockDisconnect = CNEVMBlockDisconnect()
+            evmBlockDisconnect.deserialize(BytesIO(data))
+            resBlock = publisher.deleteBlock(evmBlockDisconnect)
             res = b""
             if resBlock:
                 res = b"disconnected"
             else:
                 res = b"not disconnected"
-            # only send response if Syscoin node is waiting for it (should always be true for disconnects)
-            if evmBlockConnect.waitforresponse == True:
-                publisher.send([subscriber.topic, res])
+            publisher.send([subscriber.topic, res])
         except zmq.ContextTerminated:
             sleep(1)
             break
@@ -139,18 +137,26 @@ class ZMQPublisher:
         if evmBlockConnect.sysblockhash == 0:
             return True
         # mappings should not already exist, if they do flag the block as invalid
-        if self.sysToNEVMBlockMapping.get(evmBlockConnect.sysblockhash) or self.NEVMToSysBlockMapping.get(evmBlockConnect.blockhash):
+        if self.sysToNEVMBlockMapping.get(evmBlockConnect.sysblockhash) != None or self.NEVMToSysBlockMapping.get(evmBlockConnect.blockhash) != None:
             return False
         self.sysToNEVMBlockMapping[evmBlockConnect.sysblockhash] = evmBlockConnect
         self.NEVMToSysBlockMapping[evmBlockConnect.blockhash] = evmBlockConnect.sysblockhash
         return True
 
-    def deleteBlock(self, evmBlockConnect):
+    def deleteBlock(self, evmBlockDisconnect):
         # mappings should already exist on disconnect, if they do not flag the disconnect as invalid
-        if self.sysToNEVMBlockMapping.get(evmBlockConnect.sysblockhash) == False or self.NEVMToSysBlockMapping.get(evmBlockConnect.blockhash) == False:
+        nevmConnect = self.sysToNEVMBlockMapping.get(evmBlockDisconnect.sysblockhash)
+        if nevmConnect == None:
             return False
-        self.sysToNEVMBlockMapping.pop(evmBlockConnect.sysblockhash, None)
-        self.NEVMToSysBlockMapping.pop(evmBlockConnect.blockhash, None)
+        sysMappingHash = self.NEVMToSysBlockMapping.get(nevmConnect.blockhash)
+        if sysMappingHash == None:
+            return False
+        # sanity to ensure sys block hashes match so the maps are consistent
+        if sysMappingHash != nevmConnect.sysblockhash:
+            return False
+        
+        self.sysToNEVMBlockMapping.pop(evmBlockDisconnect.sysblockhash, None)
+        self.NEVMToSysBlockMapping.pop(nevmConnect.blockhash, None)
         return True
 
     def getLastSYSBlock(self):
