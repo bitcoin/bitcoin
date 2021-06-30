@@ -13,16 +13,18 @@
 #include <core_io.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
-#include <validation.h>
 #include <sync.h>
 #include <uint256.h>
 #include <util/system.h>
+#include <validation.h>
 
 #include <QColor>
 #include <QDateTime>
 #include <QDebug>
 #include <QIcon>
 #include <QList>
+
+#include <boost/bind.hpp>
 
 // Amount column is right-aligned it contains numbers
 static int column_alignments[] = {

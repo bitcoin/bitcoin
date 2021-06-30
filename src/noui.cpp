@@ -13,6 +13,8 @@
 #include <stdint.h>
 #include <string>
 
+#include <boost/signals2/connection.hpp>
+
 static bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
 {
     bool fSecure = style & CClientUIInterface::SECURE;
@@ -53,7 +55,7 @@ static void noui_InitMessage(const std::string& message)
 void noui_connect()
 {
     // Connect dashd signal handlers
-    uiInterface.ThreadSafeMessageBox.connect(noui_ThreadSafeMessageBox);
-    uiInterface.ThreadSafeQuestion.connect(noui_ThreadSafeQuestion);
-    uiInterface.InitMessage.connect(noui_InitMessage);
+    uiInterface.ThreadSafeMessageBox_connect(noui_ThreadSafeMessageBox);
+    uiInterface.ThreadSafeQuestion_connect(noui_ThreadSafeQuestion);
+    uiInterface.InitMessage_connect(noui_InitMessage);
 }

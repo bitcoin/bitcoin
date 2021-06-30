@@ -9,15 +9,16 @@
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
 #include <index/txindex.h>
-#include <validation.h>
 #include <miner.h>
 #include <net_processing.h>
 #include <pow.h>
-#include <ui_interface.h>
-#include <streams.h>
-#include <rpc/server.h>
 #include <rpc/register.h>
+#include <rpc/server.h>
 #include <script/sigcache.h>
+#include <streams.h>
+#include <ui_interface.h>
+#include <validation.h>
+
 #include <util/validation.h>
 
 #include <coinjoin/coinjoin.h>
@@ -25,6 +26,8 @@
 #include <evo/deterministicmns.h>
 #include <evo/cbtx.h>
 #include <llmq/quorums_init.h>
+
+const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 void CConnmanTest::AddNode(CNode& node)
 {
@@ -110,7 +113,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         threadGroup.create_thread(boost::bind(&CScheduler::serviceQueue, &scheduler));
         GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
         mempool.setSanityCheck(1.0);
-        g_connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
+        g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
         connman = g_connman.get();
         pblocktree.reset(new CBlockTreeDB(1 << 20, true));
         pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));

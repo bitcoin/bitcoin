@@ -18,14 +18,16 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
-#include <util/system.h>
 #include <ui_interface.h>
+#include <util/system.h>
 #include <version.h>
 
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDesktopWidget>
 #include <QPainter>
+
+#include <boost/bind.hpp>
 
 SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
     QWidget(0, f), curAlignment(0), m_node(node)

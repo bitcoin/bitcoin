@@ -6,20 +6,20 @@
 #include <config/dash-config.h>
 #endif
 
-#include <consensus/merkle.h>
-#include <primitives/block.h>
-#include <script/script.h>
 #include <addrman.h>
+#include <blockencodings.h>
 #include <chain.h>
 #include <coins.h>
 #include <compressor.h>
+#include <consensus/merkle.h>
 #include <net.h>
+#include <primitives/block.h>
 #include <protocol.h>
+#include <pubkey.h>
+#include <script/script.h>
 #include <streams.h>
 #include <undo.h>
 #include <version.h>
-#include <pubkey.h>
-#include <blockencodings.h>
 
 #include <stdint.h>
 #include <unistd.h>
@@ -27,6 +27,8 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
+
+const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 enum TEST_ID {
     CBLOCK_DESERIALIZE=0,
@@ -277,7 +279,7 @@ static int test_one_input(std::vector<uint8_t> buffer) {
 
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 void initialize() {
-    globalVerifyHandle = std::unique_ptr<ECCVerifyHandle>(new ECCVerifyHandle());
+    globalVerifyHandle = MakeUnique<ECCVerifyHandle>();
 }
 
 // This function is used by libFuzzer
