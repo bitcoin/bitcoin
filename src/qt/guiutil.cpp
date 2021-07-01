@@ -810,11 +810,10 @@ void ThemedLabel::setThemedPixmap(const QString& image_filename, int width, int 
 
 void ThemedLabel::changeEvent(QEvent* e)
 {
-#ifdef Q_OS_MACOS
     if (e->type() == QEvent::PaletteChange) {
         updateThemedPixmap();
     }
-#endif
+
     QLabel::changeEvent(e);
 }
 

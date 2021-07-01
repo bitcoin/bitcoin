@@ -922,7 +922,6 @@ void RPCConsole::keyPressEvent(QKeyEvent *event)
 
 void RPCConsole::changeEvent(QEvent* e)
 {
-#ifdef Q_OS_MACOS
     if (e->type() == QEvent::PaletteChange) {
         ui->clearButton->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/remove")));
         ui->fontBiggerButton->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/fontbigger")));
@@ -936,7 +935,8 @@ void RPCConsole::changeEvent(QEvent* e)
                 platformStyle->SingleColorImage(ICON_MAPPING[i].source).scaled(QSize(consoleFontSize * 2, consoleFontSize * 2), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
         }
     }
-#endif
+
+    QWidget::changeEvent(e);
 }
 
 void RPCConsole::message(int category, const QString &message, bool html)
