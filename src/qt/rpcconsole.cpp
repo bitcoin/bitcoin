@@ -529,6 +529,8 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     //: Secondary shortcut to decrease the RPC console font size.
     GUIUtil::AddButtonShortcut(ui->fontSmallerButton, tr("Ctrl+_"));
 
+    ui->promptIcon->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/prompticon")));
+
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
     ui->lineEdit->setMaxLength(16 * 1024 * 1024);
