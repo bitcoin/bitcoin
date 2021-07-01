@@ -15,8 +15,8 @@ class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
   ExternalSignerScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor)
       :   DescriptorScriptPubKeyMan(storage, descriptor)
       {}
-  ExternalSignerScriptPubKeyMan(WalletStorage& storage, bool internal)
-      :   DescriptorScriptPubKeyMan(storage, internal)
+  ExternalSignerScriptPubKeyMan(WalletStorage& storage)
+      :   DescriptorScriptPubKeyMan(storage)
       {}
 
   /** Provide a descriptor at setup time
