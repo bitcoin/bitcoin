@@ -11,8 +11,11 @@
 
 namespace Consensus {
 
-enum BuriedDeployment : int16_t
-{
+/**
+ * A buried deployment is one where the height of the activation has been hardcoded into
+ * the client implementation long after the consensus change has activated. See BIP 90.
+ */
+enum BuriedDeployment : int16_t {
     // buried deployments get negative values to avoid overlap with DeploymentPos
     DEPLOYMENT_HEIGHTINCB = std::numeric_limits<int16_t>::min(),
     DEPLOYMENT_CLTV,
@@ -22,8 +25,7 @@ enum BuriedDeployment : int16_t
 };
 constexpr bool ValidDeployment(BuriedDeployment dep) { return DEPLOYMENT_HEIGHTINCB <= dep && dep <= DEPLOYMENT_SEGWIT; }
 
-enum DeploymentPos : uint16_t
-{
+enum DeploymentPos : uint16_t {
     DEPLOYMENT_TESTDUMMY,
     DEPLOYMENT_TAPROOT, // Deployment of Schnorr/Taproot (BIPs 340-342)
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in deploymentinfo.cpp
