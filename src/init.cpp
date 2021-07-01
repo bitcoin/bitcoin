@@ -1523,10 +1523,20 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     } else {
         LogPrintf("Using /16 prefix for IP bucketing\n");
     }
-
+    // SYSCOIN
+    const auto &NEVMPub = gArgs.GetArg("-zmqsubnevm", "");
+    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", "");
+    fNEVMConnection = !NEVMPub.empty() && !NEVMSub.empty();
+    if((!fRegTest && !fSigNet && fMasternodeMode) || fNEVMConnection) {
+        DoGethMaintenance();
+    } 
 #if ENABLE_ZMQ
     g_zmq_notification_interface = CZMQNotificationInterface::Create();
-
+    if((!fRegTest && !fSigNet && fMasternodeMode) || fNEVMConnection) {
+        if(!g_zmq_notification_interface) {
+            return InitError(Untranslated("Could not establish ZMQ interface connections, check your ZMQ settings and try again..."));
+        }
+    }
     if (g_zmq_notification_interface) {
         RegisterValidationInterface(g_zmq_notification_interface);
     }
@@ -2003,9 +2013,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey());
     }
     LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
-    const auto &NEVMPub = gArgs.GetArg("-zmqsubnevm", "");
-    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", "");
-    fNEVMConnection = !NEVMPub.empty() && !NEVMSub.empty();
     if(!fRegTest && !fNEVMConnection && fMasternodeMode) {
         return InitError(Untranslated("You must define -zmqsubnevm and -zmqpubnevm on a masternode."));
     }
@@ -2207,10 +2214,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.scheduler->scheduleEvery([banman]{
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL);
-    // SYSCOIN
-    if((!fRegTest && !fSigNet && fMasternodeMode) || fNEVMConnection) {
-        node.scheduler->scheduleFromNow([&] { DoGethMaintenance(); }, std::chrono::seconds{15});
-    } 
 #if HAVE_SYSTEM
     StartupNotify(args);
 #endif
