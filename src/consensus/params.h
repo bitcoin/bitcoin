@@ -12,13 +12,25 @@
 #include <map>
 namespace Consensus {
 
-enum DeploymentPos
+enum BuriedDeployment : int16_t
+{
+    // buried deployments get negative values to avoid overlap with DeploymentPos
+    DEPLOYMENT_HEIGHTINCB = std::numeric_limits<int16_t>::min(),
+    DEPLOYMENT_CLTV,
+    DEPLOYMENT_DERSIG,
+    DEPLOYMENT_CSV,
+    DEPLOYMENT_SEGWIT,
+};
+constexpr bool ValidDeployment(BuriedDeployment dep) { return DEPLOYMENT_HEIGHTINCB <= dep && dep <= DEPLOYMENT_SEGWIT; }
+
+enum DeploymentPos : uint16_t
 {
     DEPLOYMENT_TESTDUMMY,
     DEPLOYMENT_TAPROOT, // Deployment of Schnorr/Taproot (BIPs 340-342)
-    // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
+    // NOTE: Also add new deployments to VersionBitsDeploymentInfo in deploymentinfo.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };
+constexpr bool ValidDeployment(DeploymentPos dep) { return DEPLOYMENT_TESTDUMMY <= dep && dep <= DEPLOYMENT_TAPROOT; }
 
 /**
  * Struct for each individual consensus rule change using BIP9.
@@ -224,6 +236,24 @@ struct Params {
      */
     bool signet_blocks{false};
     std::vector<uint8_t> signet_challenge;
+
+    int DeploymentHeight(BuriedDeployment dep) const
+    {
+        switch (dep) {
+        case DEPLOYMENT_HEIGHTINCB:
+            return BIP34Height;
+        case DEPLOYMENT_CLTV:
+            return BIP65Height;
+        case DEPLOYMENT_DERSIG:
+            return BIP66Height;
+        case DEPLOYMENT_CSV:
+            return CSVHeight;
+        case DEPLOYMENT_SEGWIT:
+            return SegwitHeight;
+        } // no default case, so the compiler can warn about missing cases
+        return std::numeric_limits<int>::max();
+    }
 };
+
 } // namespace Consensus
 #endif // SYSCOIN_CONSENSUS_PARAMS_H

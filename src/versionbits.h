@@ -6,6 +6,8 @@
 #define SYSCOIN_VERSIONBITS_H
 
 #include <chain.h>
+#include <sync.h>
+
 #include <map>
 
 /** What block version to use for new blocks (pre versionbits) */
@@ -71,21 +73,31 @@ public:
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
 };
 
-/** BIP 9 allows multiple softforks to be deployed in parallel. We cache per-period state for every one of them
- *  keyed by the bit position used to signal support. */
-struct VersionBitsCache
+/** BIP 9 allows multiple softforks to be deployed in parallel. We cache
+ *  per-period state for every one of them. */
+class VersionBitsCache
 {
-    ThresholdConditionCache caches[Consensus::MAX_VERSION_BITS_DEPLOYMENTS];
+private:
+    Mutex m_mutex;
+    ThresholdConditionCache m_caches[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] GUARDED_BY(m_mutex);
+
+public:
+    /** Get the numerical statistics for a given deployment for the signalling period that includes the block after pindexPrev. */
+    static BIP9Stats Statistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos);
+
+    static uint32_t Mask(const Consensus::Params& params, Consensus::DeploymentPos pos);
+
+    /** Get the BIP9 state for a given deployment for the block after pindexPrev. */
+    ThresholdState State(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos);
+
+    /** Get the block height at which the BIP9 deployment switched into the state for the block after pindexPrev. */
+    int StateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos);
+
+    /** Determine what nVersion a new block should use
+     */
+    int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 
     void Clear();
 };
-
-/** Get the BIP9 state for a given deployment at the current tip. */
-ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
-/** Get the numerical statistics for the BIP9 state for a given deployment at the current tip. */
-BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos);
-/** Get the block height at which the BIP9 deployment switched into the state for the block building on the current tip. */
-int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
-uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
 #endif // SYSCOIN_VERSIONBITS_H

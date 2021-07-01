@@ -5,6 +5,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/params.h>
+#include <deploymentstatus.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 #include <versionbits.h>
@@ -258,8 +259,8 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
 /** Check that ComputeBlockVersion will set the appropriate bit correctly */
 static void check_computeblockversion(const Consensus::Params& params, Consensus::DeploymentPos dep)
 {
-    // This implicitly uses versionbitscache, so clear it every time
-    versionbitscache.Clear();
+    // This implicitly uses g_versionbitscache, so clear it every time
+    g_versionbitscache.Clear();
 
     int64_t bit = params.vDeployments[dep].bit;
     int64_t nStartTime = params.vDeployments[dep].nStartTime;
@@ -267,7 +268,7 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
     int min_activation_height = params.vDeployments[dep].min_activation_height;
 
     // should not be any signalling for first block
-    BOOST_CHECK_EQUAL(ComputeBlockVersion(nullptr, params), VERSIONBITS_TOP_BITS);
+    BOOST_CHECK_EQUAL(g_versionbitscache.ComputeBlockVersion(nullptr, params), VERSIONBITS_TOP_BITS);
 
     // always/never active deployments shouldn't need to be tested further
     if (nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE ||
@@ -287,7 +288,7 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
     // Check min_activation_height is on a retarget boundary
     BOOST_REQUIRE_EQUAL(min_activation_height % params.nMinerConfirmationWindow, 0U);
 
-    const uint32_t bitmask{VersionBitsMask(params, dep)};
+    const uint32_t bitmask{g_versionbitscache.Mask(params, dep)};
     BOOST_CHECK_EQUAL(bitmask, uint32_t{1} << bit);
 
     // In the first chain, test that the bit is set by CBV until it has failed.
@@ -306,9 +307,9 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
         // earlier time, so will transition from DEFINED to STARTED at the
         // end of the first period by mining blocks at nTime == 0
         lastBlock = firstChain.Mine(params.nMinerConfirmationWindow - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1<<bit), 0);
+        BOOST_CHECK_EQUAL(g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
         lastBlock = firstChain.Mine(params.nMinerConfirmationWindow, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-        BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1<<bit)) != 0);
+        BOOST_CHECK((g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
         // then we'll keep mining at nStartTime...
     } else {
         // use a time 1s earlier than start time to check we stay DEFINED
@@ -316,28 +317,28 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
 
         // Start generating blocks before nStartTime
         lastBlock = firstChain.Mine(params.nMinerConfirmationWindow, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1<<bit), 0);
+        BOOST_CHECK_EQUAL(g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
 
         // Mine more blocks (4 less than the adjustment period) at the old time, and check that CBV isn't setting the bit yet.
         for (uint32_t i = 1; i < params.nMinerConfirmationWindow - 4; i++) {
             lastBlock = firstChain.Mine(params.nMinerConfirmationWindow + i, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-            BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1<<bit), 0);
+            BOOST_CHECK_EQUAL(g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
         }
         // Now mine 5 more blocks at the start time -- MTP should not have passed yet, so
         // CBV should still not yet set the bit.
         nTime = nStartTime;
         for (uint32_t i = params.nMinerConfirmationWindow - 4; i <= params.nMinerConfirmationWindow; i++) {
             lastBlock = firstChain.Mine(params.nMinerConfirmationWindow + i, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-            BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1<<bit), 0);
+            BOOST_CHECK_EQUAL(g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
         }
         // Next we will advance to the next period and transition to STARTED,
     }
 
     lastBlock = firstChain.Mine(params.nMinerConfirmationWindow * 3, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     // so ComputeBlockVersion should now set the bit,
-    BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1<<bit)) != 0);
+    BOOST_CHECK((g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
     // and should also be using the VERSIONBITS_TOP_BITS.
-    BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
+    BOOST_CHECK_EQUAL(g_versionbitscache.ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
 
     // Check that ComputeBlockVersion will set the bit until nTimeout
     nTime += 600;
@@ -346,8 +347,8 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
     // These blocks are all before nTimeout is reached.
     while (nTime < nTimeout && blocksToMine > 0) {
         lastBlock = firstChain.Mine(nHeight+1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-        BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1<<bit)) != 0);
-        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
+        BOOST_CHECK((g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+        BOOST_CHECK_EQUAL(g_versionbitscache.ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
         blocksToMine--;
         nTime += 600;
         nHeight += 1;
@@ -361,7 +362,7 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
         // finish the last period before we start timing out
         while (nHeight % params.nMinerConfirmationWindow != 0) {
             lastBlock = firstChain.Mine(nHeight+1, nTime - 1, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-            BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1<<bit)) != 0);
+            BOOST_CHECK((g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
             nHeight += 1;
         }
 
@@ -369,12 +370,12 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
         // the bit until the period transition.
         for (uint32_t i = 0; i < params.nMinerConfirmationWindow - 1; i++) {
             lastBlock = firstChain.Mine(nHeight+1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-            BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1<<bit)) != 0);
+            BOOST_CHECK((g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
             nHeight += 1;
         }
         // The next block should trigger no longer setting the bit.
         lastBlock = firstChain.Mine(nHeight+1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1<<bit), 0);
+        BOOST_CHECK_EQUAL(g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
     }
 
     // On a new chain:
@@ -385,30 +386,30 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
     // Mine one period worth of blocks, and check that the bit will be on for the
     // next period.
     lastBlock = secondChain.Mine(params.nMinerConfirmationWindow, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-    BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1<<bit)) != 0);
+    BOOST_CHECK((g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
 
     // Mine another period worth of blocks, signaling the new bit.
     lastBlock = secondChain.Mine(params.nMinerConfirmationWindow * 2, nTime, VERSIONBITS_TOP_BITS | (1<<bit)).Tip();
     // After one period of setting the bit on each block, it should have locked in.
     // We keep setting the bit for one more period though, until activation.
-    BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1<<bit)) != 0);
+    BOOST_CHECK((g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
 
     // Now check that we keep mining the block until the end of this period, and
     // then stop at the beginning of the next period.
     lastBlock = secondChain.Mine((params.nMinerConfirmationWindow * 3) - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-    BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+    BOOST_CHECK((g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
     lastBlock = secondChain.Mine(params.nMinerConfirmationWindow * 3, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
 
     if (lastBlock->nHeight + 1 < min_activation_height) {
         // check signalling continues while min_activation_height is not reached
         lastBlock = secondChain.Mine(min_activation_height - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-        BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+        BOOST_CHECK((g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
         // then reach min_activation_height, which was already REQUIRE'd to start a new period
         lastBlock = secondChain.Mine(min_activation_height, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     }
 
     // Check that we don't signal after activation
-    BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1<<bit), 0);
+    BOOST_CHECK_EQUAL(g_versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
 }
 
 BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
@@ -425,7 +426,7 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
             // not take precedence over STARTED/LOCKED_IN. So all softforks on
             // the same bit might overlap, even when non-overlapping start-end
             // times are picked.
-            const uint32_t dep_mask{VersionBitsMask(chainParams->GetConsensus(), dep)};
+            const uint32_t dep_mask{g_versionbitscache.Mask(chainParams->GetConsensus(), dep)};
             BOOST_CHECK(!(chain_all_vbits & dep_mask));
             chain_all_vbits |= dep_mask;
             check_computeblockversion(chainParams->GetConsensus(), dep);

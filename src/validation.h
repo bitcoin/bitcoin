@@ -24,7 +24,6 @@
 #include <sync.h>
 #include <txmempool.h> // For CTxMemPool::cs
 #include <txdb.h>
-#include <versionbits.h>
 #include <serialize.h>
 #include <util/check.h>
 #include <util/hasher.h>
@@ -355,10 +354,6 @@ bool TestBlockValidity(BlockValidationState& state,
                        CBlockIndex* pindexPrev,
                        bool fCheckPOW = true,
                        bool fCheckMerkleRoot = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-/** Check whether witness commitments are required for a block, and whether to enforce NULLDUMMY (BIP 147) rules.
- *  Note that transaction witness validation rules are always enforced when P2SH is enforced. */
-bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 
 /** Update uncommitted block structures (currently: only the witness reserved value). This is safe for submitted blocks. */
 void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
@@ -1080,17 +1075,12 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websock
 bool StopGethNode(pid_t &pid);
 void KillProcess(const pid_t& pid);
 
-extern VersionBitsCache versionbitscache;
 // SYSCOIN
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.
  * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.
  */
 bool GetBlockHash(ChainstateManager& chainman, uint256& hashRet, int nBlockHeight = -1);
-/**
- * Determine what nVersion a new block should use.
- */
-int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 
 using FopenFn = std::function<FILE*(const fs::path&, const char*)>;
 

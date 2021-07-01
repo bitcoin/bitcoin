@@ -16,6 +16,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <compat/sanity.h>
+#include <deploymentstatus.h>
 #include <fs.h>
 #include <hash.h>
 #include <httprpc.h>
@@ -1906,7 +1907,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
-    if (chainparams.GetConsensus().SegwitHeight != std::numeric_limits<int>::max()) {
+    if (DeploymentEnabled(chainparams.GetConsensus(), Consensus::DEPLOYMENT_SEGWIT)) {
         // Advertise witness capabilities.
         // The option to not set NODE_WITNESS is only used in the tests and should be removed.
         nLocalServices = ServiceFlags(nLocalServices | NODE_WITNESS);
