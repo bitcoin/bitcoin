@@ -325,11 +325,37 @@ class WalletTest(BitcoinTestFramework):
         tx_obj = self.nodes[0].gettransaction(txid)
         assert_equal(tx_obj['amount'], Decimal('-0.0001'))
 
+        # General checks for errors from incorrect inputs
         # This will raise an exception because the amount type is wrong
         assert_raises_rpc_error(-3, "Invalid amount", self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "1f-4")
 
         # This will raise an exception since generate does not accept a string
         assert_raises_rpc_error(-1, "not an integer", self.nodes[0].generate, "2")
+
+        # This will raise an exception for the invalid private key format
+        assert_raises_rpc_error(-5, "Invalid private key encoding", self.nodes[0].importprivkey, "invalid")
+
+        # This will raise an exception for importing an address with the PS2H flag
+        temp_address = self.nodes[1].getnewaddress()
+        assert_raises_rpc_error(-5, "Cannot use the p2sh flag with an address - use a script instead", self.nodes[0].importaddress, temp_address, "label", False, True)
+
+        # This will raise an exception for attempting to dump the private key of an address you do not own
+        assert_raises_rpc_error(-4, "Private key for address %s is not known" % temp_address, self.nodes[0].dumpprivkey, temp_address)
+
+        # This will raise an exception for attempting to get the private key of an invalid Dash address
+        assert_raises_rpc_error(-5, "Invalid Dash address", self.nodes[0].dumpprivkey, "invalid")
+
+        # This will raise an exception for attempting to set a label for an invalid Dash address
+        assert_raises_rpc_error(-5, "Invalid Dash address", self.nodes[0].setlabel, "invalid address", "label")
+
+        # This will raise an exception for importing an invalid address
+        assert_raises_rpc_error(-5, "Invalid Dash address or script", self.nodes[0].importaddress, "invalid")
+
+        # This will raise an exception for attempting to import a pubkey that isn't in hex
+        assert_raises_rpc_error(-5, "Pubkey must be a hex string", self.nodes[0].importpubkey, "not hex")
+
+        # This will raise an exception for importing an invalid pubkey
+        assert_raises_rpc_error(-5, "Pubkey is not a valid public key", self.nodes[0].importpubkey, "5361746f736869204e616b616d6f746f")
 
         # Import address and private key to check correct behavior of spendable unspents
         # 1. Send some coins to generate new UTXO
