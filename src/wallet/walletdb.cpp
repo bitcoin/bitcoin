@@ -210,6 +210,12 @@ bool WalletBatch::WriteActiveScriptPubKeyMan(uint8_t type, const uint256& id, bo
     return WriteIC(make_pair(key, type), id);
 }
 
+bool WalletBatch::EraseActiveScriptPubKeyMan(uint8_t type, bool internal)
+{
+    const std::string key{internal ? DBKeys::ACTIVEINTERNALSPK : DBKeys::ACTIVEEXTERNALSPK};
+    return EraseIC(make_pair(key, type));
+}
+
 bool WalletBatch::WriteDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const CPrivKey& privkey)
 {
     // hash pubkey/privkey to accelerate wallet load
