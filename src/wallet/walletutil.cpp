@@ -45,7 +45,12 @@ std::vector<fs::path> ListWalletDir()
 
     for (auto it = fs::recursive_directory_iterator(wallet_dir, ec); it != fs::recursive_directory_iterator(); it.increment(ec)) {
         if (ec) {
-            LogPrintf("%s: %s %s\n", __func__, ec.message(), it->path().string());
+            if (fs::is_directory(*it)) {
+                it.no_push();
+                LogPrintf("%s: %s %s -- skipping.\n", __func__, ec.message(), it->path().string());
+            } else {
+                LogPrintf("%s: %s %s\n", __func__, ec.message(), it->path().string());
+            }
             continue;
         }
 
