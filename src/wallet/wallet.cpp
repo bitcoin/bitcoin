@@ -3289,7 +3289,6 @@ ScriptPubKeyMan* CWallet::GetScriptPubKeyMan(const OutputType& type, bool intern
     const std::map<OutputType, ScriptPubKeyMan*>& spk_managers = internal ? m_internal_spk_managers : m_external_spk_managers;
     std::map<OutputType, ScriptPubKeyMan*>::const_iterator it = spk_managers.find(type);
     if (it == spk_managers.end()) {
-        WalletLogPrintf("%s scriptPubKey Manager for output type %d does not exist\n", internal ? "Internal" : "External", static_cast<int>(type));
         return nullptr;
     }
     return it->second;
