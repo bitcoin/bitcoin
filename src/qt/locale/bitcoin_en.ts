@@ -317,7 +317,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
 <context>
     <name>BitcoinApplication</name>
     <message>
-        <location filename="../bitcoin.cpp" line="+420"/>
+        <location filename="../bitcoin.cpp" line="+421"/>
         <source>Runaway exception</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3197,7 +3197,7 @@ For more information on using this console, type %6.
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="+30"/>
+        <location filename="../recentrequeststablemodel.cpp" line="+32"/>
         <source>Date</source>
         <translation type="unfinished">Date</translation>
     </message>
@@ -4624,7 +4624,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">Send Coins</translation>
     </message>
     <message>
-        <location line="+279"/>
+        <location line="+260"/>
         <location line="+52"/>
         <location line="+13"/>
         <location line="+5"/>
