@@ -694,7 +694,7 @@ bool IsV19Active(gsl::not_null<const CBlockIndex*> pindex)
 bool IsV20Active(gsl::not_null<const CBlockIndex*> pindex)
 {
     LOCK(cs_llmq_vbc);
-    return VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20, llmq_versionbitscache) == ThresholdState::ACTIVE;
+    return llmq_versionbitscache.State(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20) == ThresholdState::ACTIVE;
 }
 
 bool IsMNRewardReallocationActive(gsl::not_null<const CBlockIndex*> pindex)
@@ -702,19 +702,19 @@ bool IsMNRewardReallocationActive(gsl::not_null<const CBlockIndex*> pindex)
     if (!IsV20Active(pindex)) return false;
 
     LOCK(cs_llmq_vbc);
-    return VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR, llmq_versionbitscache) == ThresholdState::ACTIVE;
+    return llmq_versionbitscache.State(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR) == ThresholdState::ACTIVE;
 }
 
 ThresholdState GetV20State(gsl::not_null<const CBlockIndex*> pindex)
 {
     LOCK(cs_llmq_vbc);
-    return VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20, llmq_versionbitscache);
+    return llmq_versionbitscache.State(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20);
 }
 
 int GetV20Since(gsl::not_null<const CBlockIndex*> pindex)
 {
     LOCK(cs_llmq_vbc);
-    return VersionBitsStateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20, llmq_versionbitscache);
+    return llmq_versionbitscache.StateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20);
 }
 
 uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2)
@@ -981,7 +981,7 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
 
         case Consensus::LLMQType::LLMQ_TEST_V17: {
             LOCK(cs_llmq_vbc);
-            return VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY, llmq_versionbitscache) == ThresholdState::ACTIVE;
+            return llmq_versionbitscache.State(pindex, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY) == ThresholdState::ACTIVE;
         }
         case Consensus::LLMQType::LLMQ_100_67:
             return pindex->nHeight + 1 >= consensusParams.DIP0020Height;

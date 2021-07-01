@@ -169,6 +169,8 @@ BITCOIN_CORE_H = \
   cuckoocache.h \
   ctpl_stl.h \
   cxxtimer.hpp \
+  deploymentinfo.h \
+  deploymentstatus.h \
   evo/assetlocktx.h \
   evo/dmn_types.h \
   evo/cbtx.h \
@@ -349,7 +351,6 @@ BITCOIN_CORE_H = \
   validation.h \
   validationinterface.h \
   versionbits.h \
-  versionbitsinfo.h \
   walletinitinterface.h \
   wallet/bdb.h \
   wallet/coincontrol.h \
@@ -403,6 +404,7 @@ libbitcoin_server_a_SOURCES = \
   coinjoin/server.cpp \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
+  deploymentstatus.cpp \
   dsnotificationinterface.cpp \
   evo/assetlocktx.cpp \
   evo/cbtx.cpp \
@@ -698,6 +700,7 @@ libbitcoin_common_a_SOURCES = \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
+  deploymentinfo.cpp \
   key.cpp \
   key_io.cpp \
   merkleblock.cpp \
@@ -717,7 +720,6 @@ libbitcoin_common_a_SOURCES = \
   script/sign.cpp \
   script/signingprovider.cpp \
   script/standard.cpp \
-  versionbitsinfo.cpp \
   warnings.cpp \
   $(BITCOIN_CORE_H)
 
