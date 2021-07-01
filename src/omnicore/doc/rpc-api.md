@@ -410,7 +410,7 @@ Create new tokens with manageable supply.
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `fromaddress`       | string  | required | the address to send from                                                                     |
 | `ecosystem`         | number  | required | the ecosystem to create the tokens in (`1` for main ecosystem, `2` for test ecosystem)       |
-| `type`              | number  | required | the type of the tokens to create: (`1` for indivisible tokens, `2` for divisible tokens)     |
+| `type`              | number  | required | the type of the tokens to create: (`1` for indivisible tokens, `2` for divisible tokens, `5` for NFTs)     |
 | `previousid`        | number  | required | an identifier of a predecessor token (`0` for new tokens)                                    |
 | `category`          | string  | required | a category for the new tokens (can be `""`)                                                  |
 | `subcategory`       | string  | required | a subcategory for the new tokens (can be `""`)                                               |
