@@ -130,6 +130,8 @@ private:
     bool interpret_DisableFreezing();
     bool interpret_FreezeTokens();
     bool interpret_UnfreezeTokens();
+    bool interpret_AddDelegate();
+    bool interpret_RemoveDelegate();
     bool interpret_AnyData();
     bool interpret_NonFungibleData();
     bool interpret_Activation();
@@ -160,6 +162,8 @@ private:
     int logicMath_DisableFreezing(CBlockIndex *pindex);
     int logicMath_FreezeTokens(CBlockIndex *pindex);
     int logicMath_UnfreezeTokens(CBlockIndex *pindex);
+    int logicMath_AddDelegate(CBlockIndex *pindex);
+    int logicMath_RemoveDelegate(CBlockIndex *pindex);
     int logicMath_AnyData();
     int logicMath_NonFungibleData();
     int logicMath_Activation();

@@ -106,6 +106,7 @@ void PropertyToJSON(const CMPSPInfo::Entry& sProperty, UniValue& property_obj)
     property_obj.pushKV("url", sProperty.url);
     property_obj.pushKV("divisible", sProperty.isDivisible());
     property_obj.pushKV("issuer", sProperty.issuer);
+    property_obj.pushKV("delegate", sProperty.delegate);
     property_obj.pushKV("creationtxid", sProperty.txid.GetHex());
     property_obj.pushKV("fixedissuance", sProperty.fixed);
     property_obj.pushKV("managedissuance", sProperty.manual);
@@ -1417,6 +1418,7 @@ static UniValue omni_getproperty(const JSONRPCRequest& request)
                {RPCResult::Type::STR, "url", "a URI, for example pointing to a website"},
                {RPCResult::Type::BOOL, "divisible", "whether the tokens are divisible"},
                {RPCResult::Type::STR, "issuer", "the Bitcoin address of the issuer on record"},
+               {RPCResult::Type::STR, "delegate", "the Bitcoin address of the issuance delegate, if there is one"},
                {RPCResult::Type::STR_HEX, "creationtxid", "the hex-encoded creation transaction hash"},
                {RPCResult::Type::BOOL, "fixedissuance", "whether the token supply is fixed"},
                {RPCResult::Type::BOOL, "managedissuance", "whether the token supply is managed"},

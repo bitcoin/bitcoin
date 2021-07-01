@@ -60,6 +60,9 @@ std::vector<TransactionRestriction> CConsensusParams::GetRestrictions() const
         { MSC_TYPE_FREEZE_PROPERTY_TOKENS,    MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
         { MSC_TYPE_UNFREEZE_PROPERTY_TOKENS,  MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
 
+        { MSC_TYPE_ADD_DELEGATE,              MP_TX_PKT_V0,  false,   MSC_DELEGATED_ISSUANCE_BLOCK },
+        { MSC_TYPE_REMOVE_DELEGATE,           MP_TX_PKT_V0,  false,   MSC_DELEGATED_ISSUANCE_BLOCK },
+
         { MSC_TYPE_SEND_TO_OWNERS,            MP_TX_PKT_V0,  false,   MSC_STO_BLOCK      },
         { MSC_TYPE_SEND_TO_OWNERS,            MP_TX_PKT_V1,  false,   MSC_STOV1_BLOCK    },
 
@@ -251,6 +254,7 @@ CMainConsensusParams::CMainConsensusParams()
     MSC_STOV1_BLOCK = 999999;
     MSC_ANYDATA_BLOCK = 0;
     MSC_NONFUNGIBLE_BLOCK = 999999;
+    MSC_DELEGATED_ISSUANCE_BLOCK = 999999;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 394500;
     DEXMATH_FEATURE_BLOCK = 395000;
@@ -295,6 +299,7 @@ CTestNetConsensusParams::CTestNetConsensusParams()
     MSC_STOV1_BLOCK = 0;
     MSC_ANYDATA_BLOCK = 0;
     MSC_NONFUNGIBLE_BLOCK = 0;
+    MSC_DELEGATED_ISSUANCE_BLOCK = 0;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 0;
     DEXMATH_FEATURE_BLOCK = 0;
@@ -339,6 +344,7 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     MSC_STOV1_BLOCK = 999999;
     MSC_ANYDATA_BLOCK = 0;
     MSC_NONFUNGIBLE_BLOCK = 0;
+    MSC_DELEGATED_ISSUANCE_BLOCK = 0;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;
@@ -518,6 +524,9 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
         case FEATURE_NONFUNGIBLE:
             MutableConsensusParams().MSC_NONFUNGIBLE_BLOCK = activationBlock;
         break;
+        case FEATURE_DELEGATEDISSUANCE:
+            MutableConsensusParams().MSC_DELEGATED_ISSUANCE_BLOCK = activationBlock;
+        break;
         default:
             supported = false;
         break;
@@ -595,6 +604,9 @@ bool DeactivateFeature(uint16_t featureId, int transactionBlock)
         case FEATURE_NONFUNGIBLE:
             MutableConsensusParams().MSC_NONFUNGIBLE_BLOCK = 999999;
         break;
+        case FEATURE_DELEGATEDISSUANCE:
+            MutableConsensusParams().MSC_DELEGATED_ISSUANCE_BLOCK = 999999;
+        break;
         default:
             return false;
         break;
@@ -628,6 +640,7 @@ std::string GetFeatureName(uint16_t featureId)
         case FEATURE_FREEZENOTICE: return "Activate the waiting period for enabling freezing";
         case FEATURE_FREEDEX: return "Activate trading of any token on the distributed exchange";
         case FEATURE_NONFUNGIBLE: return "Uniquely identifiable tokens";
+        case FEATURE_DELEGATEDISSUANCE: return "Activate delegated issuance of tokens";
 
         default: return "Unknown feature";
     }
@@ -680,6 +693,9 @@ bool IsFeatureActivated(uint16_t featureId, int transactionBlock)
         break;
         case FEATURE_NONFUNGIBLE:
             activationBlock = params.MSC_NONFUNGIBLE_BLOCK;
+        break;
+        case FEATURE_DELEGATEDISSUANCE:
+            activationBlock = params.MSC_DELEGATED_ISSUANCE_BLOCK;
         break;
         default:
             return false;

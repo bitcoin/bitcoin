@@ -15,6 +15,8 @@
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 
+#include <boost/lexical_cast.hpp>
+
 #include <stdint.h>
 
 #include <string>
@@ -24,7 +26,7 @@ CMPSPInfo::Entry::Entry()
   : prop_type(0), prev_prop_id(0), num_tokens(0), property_desired(0),
     deadline(0), early_bird(0), percentage(0),
     close_early(false), max_tokens(false), missedTokens(0), timeclosed(0),
-    fixed(false), manual(false), unique(false) {}
+    fixed(false), manual(false), unique(false), delegate("") {}
 
 bool CMPSPInfo::Entry::isDivisible() const
 {
@@ -85,6 +87,55 @@ std::string CMPSPInfo::Entry::getIssuer(int block) const
 
     return _issuer;
 }
+
+/**
+ * Stores a new delegate in the DB.
+ *
+ * @param block  The block of the update
+ * @param idx    The position within the block of the update
+ * @param newIssuer  The new delegate
+ */
+void CMPSPInfo::Entry::addDelegate(int block, int idx, const std::string& newIssuer)
+{
+    historicalDelegates[std::make_pair(block, idx)] = newIssuer;
+}
+   
+/**
+ * Clears the delegate in the DB.
+ *
+ * @param block  The block of the update
+ * @param idx    The position within the block of the update
+ */
+void CMPSPInfo::Entry::removeDelegate(int block, int idx)
+{
+    historicalDelegates[std::make_pair(block, idx)] = "";
+}
+
+/**
+ * Returns the delegate for the given block, if there is one.
+ * If not, return an emptry string.
+ *
+ * @param block  The block to check
+ * @return The issuer of that block
+ */
+std::string CMPSPInfo::Entry::getDelegate(int block) const
+{
+    std::string _delegate = delegate;
+
+    for (auto const& entry : historicalDelegates) {
+        int currentBlock = entry.first.first;
+        std::string currentDelegate = entry.second;
+
+        if (currentBlock > block) {
+            break;
+        }
+
+        _delegate = currentDelegate;
+    }
+
+    return _delegate;
+}
+
 
 CMPSPInfo::CMPSPInfo(const fs::path& path, bool fWipe)
 {
@@ -185,6 +236,17 @@ bool CMPSPInfo::updateSP(uint32_t propertyId, const Entry& info)
         batch.Put(slSpPrevKey, strSpPrevValue);
     }
     batch.Put(slSpKey, slSpValue);
+
+    // Update delegate info if set
+    if (!info.historicalDelegates.empty()) {
+        std::string delegateKey = strprintf("DE-%d", propertyId);
+        CDataStream ssDelegateValue(SER_DISK, CLIENT_VERSION);
+        ssDelegateValue << info.delegate;
+        ssDelegateValue << info.historicalDelegates;
+        leveldb::Slice slDelegateValue(&ssDelegateValue[0], ssDelegateValue.size());
+        batch.Put(delegateKey, slDelegateValue);
+    }
+
     leveldb::Status status = pdb->Write(syncoptions, &batch);
 
     if (!status.ok()) {
@@ -243,10 +305,24 @@ uint32_t CMPSPInfo::putSP(uint8_t ecosystem, const Entry& info)
         PrintToLog("%s() ERROR: %s\n", __func__, strError);
     }
 
+    // Create and check unique field
+    std::string uniqueKey = strprintf("UE-%d", propertyId);
+    if (info.unique) {
+        // sanity checking
+        if (!pdb->Get(readoptions, uniqueKey, &existingEntry).IsNotFound() && existingEntry != strprintf("%d", info.unique)) {
+            std::string strError = strprintf("writing SP %d unique field to DB, when a different SP already exists for that identifier", propertyId);
+            PrintToLog("%s() ERROR: %s\n", __func__, strError);
+        }
+    }
+
     // atomically write both the the SP and the index to the database
     leveldb::WriteBatch batch;
     batch.Put(slSpKey, slSpValue);
     batch.Put(slTxIndexKey, slTxValue);
+
+    if (info.unique) {
+        batch.Put(uniqueKey, strprintf("%d", info.unique));
+    }
 
     leveldb::Status status = pdb->Write(syncoptions, &batch);
 
@@ -289,6 +365,34 @@ bool CMPSPInfo::getSP(uint32_t propertyId, Entry& info) const
     } catch (const std::exception& e) {
         PrintToLog("%s(): ERROR for SP %d: %s\n", __func__, propertyId, e.what());
         return false;
+    }
+
+    // Check for unique entry
+    std::string uniqueKey = strprintf("UE-%d", propertyId);
+    std::string uniqueValue;
+    leveldb::Status statusUnique = pdb->Get(readoptions, uniqueKey, &uniqueValue);
+    if (statusUnique.ok() && !statusUnique.IsNotFound()) {
+        try {
+            info.unique = boost::lexical_cast<bool>(uniqueValue);
+        } catch (boost::bad_lexical_cast const &e) {
+            PrintToLog("%s(): ERROR for SP unique field %d: %s\n", __func__, propertyId, e.what());
+            return false;
+        }
+    }
+
+    // Check for delegate entry
+    std::string delegateKey = strprintf("DE-%d", propertyId);
+    std::string delegateValue;
+    leveldb::Status statusDelegate = pdb->Get(readoptions, delegateKey, &delegateValue);
+    if (statusDelegate.ok() && !statusDelegate.IsNotFound()) {
+        try {
+            CDataStream ssDelegateValue(delegateValue.data(), delegateValue.data() + delegateValue.size(), SER_DISK, CLIENT_VERSION);
+            ssDelegateValue >> info.delegate;
+            ssDelegateValue >> info.historicalDelegates;
+        } catch (const std::exception& e) {
+            PrintToLog("%s(): ERROR for SP delegates %d: %s\n", __func__, propertyId, e.what());
+            return false;
+        }
     }
 
     return true;

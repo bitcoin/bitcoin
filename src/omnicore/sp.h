@@ -80,6 +80,8 @@ std::string getPropertyName(uint32_t propertyId);
 bool isPropertyDivisible(uint32_t propertyId);
 bool IsPropertyIdValid(uint32_t propertyId);
 bool isPropertyNonFungible(uint32_t propertyId);
+bool HasDelegate(uint32_t propertyId);
+std::string GetDelegate(uint32_t propertyId);
 
 CMPCrowd* getCrowd(const std::string& address);
 

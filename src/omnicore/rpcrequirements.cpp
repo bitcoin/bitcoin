@@ -51,6 +51,64 @@ void RequireExistingProperty(uint32_t propertyId)
     }
 }
 
+void RequireExistingDelegate(uint32_t propertyId)
+{
+    LOCK(cs_tally);
+    if (!mastercore::HasDelegate(propertyId)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property does not have a delegate");
+    }
+}
+
+void RequireEmptyDelegate(uint32_t propertyId)
+{
+    LOCK(cs_tally);
+    if (mastercore::HasDelegate(propertyId)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property already has a delegate " + mastercore::GetDelegate(propertyId));
+    }
+}
+
+void RequireSenderDelegateBeforeIssuer(uint32_t propertyId, const std::string& address)
+{
+    LOCK(cs_tally);
+    CMPSPInfo::Entry sp;
+    if (!mastercore::pDbSpInfo->getSP(propertyId, sp)) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to retrieve property");
+    }
+    if (sp.delegate.empty()) {
+        if (address != sp.issuer) {
+            throw JSONRPCError(RPC_TYPE_ERROR, "Sender does not match issuer");
+        }
+    } else {
+        if (address != sp.delegate) {
+            throw JSONRPCError(RPC_TYPE_ERROR, "Sender does not match delegate");
+        }
+    }
+}
+
+void RequireSenderDelegateOrIssuer(uint32_t propertyId, const std::string& address)
+{
+    LOCK(cs_tally);
+    CMPSPInfo::Entry sp;
+    if (!mastercore::pDbSpInfo->getSP(propertyId, sp)) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to retrieve property");
+    }
+    if (address != sp.issuer && address != sp.delegate) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Sender does not match issuer or delegate");
+    }
+}
+
+void RequireMatchingDelegate(uint32_t propertyId, const std::string& address)
+{
+    LOCK(cs_tally);
+    CMPSPInfo::Entry sp;
+    if (!mastercore::pDbSpInfo->getSP(propertyId, sp)) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to retrieve property");
+    }
+    if (sp.delegate != address) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Delegate does not belong to property");
+    }
+}
+
 void RequireSameEcosystem(uint32_t propertyId, uint32_t otherId)
 {
     if (mastercore::isTestEcosystemProperty(propertyId) != mastercore::isTestEcosystemProperty(otherId)) {

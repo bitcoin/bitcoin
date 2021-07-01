@@ -129,6 +129,28 @@ bool mastercore::isPropertyNonFungible(uint32_t propertyId)
     return false;
 }
 
+bool mastercore::HasDelegate(uint32_t propertyId)
+{
+    CMPSPInfo::Entry sp;
+
+    if (pDbSpInfo->getSP(propertyId, sp)) {
+        return !sp.delegate.empty();
+    }
+
+    return false;
+}
+
+std::string mastercore::GetDelegate(uint32_t propertyId)
+{
+    CMPSPInfo::Entry sp;
+
+    if (pDbSpInfo->getSP(propertyId, sp)) {
+        return sp.delegate;
+    }
+
+    return "";
+}
+
 bool mastercore::isPropertyDivisible(uint32_t propertyId)
 {
     // TODO: is a lock here needed

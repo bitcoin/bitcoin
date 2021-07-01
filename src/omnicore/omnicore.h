@@ -38,7 +38,7 @@ int const DONT_STORE_MAINNET_STATE_UNTIL = 622000;
 #define TEST_ECO_PROPERTY_1 (0x80000003UL)
 
 // increment this value to force a refresh of the state (similar to --startclean)
-#define DB_VERSION 9
+#define DB_VERSION 8
 
 // could probably also use: int64_t maxInt64 = std::numeric_limits<int64_t>::max();
 // maximum numeric values from the spec:
@@ -81,6 +81,8 @@ enum TransactionType {
   MSC_TYPE_CHANGE_ISSUER_ADDRESS      = 70,
   MSC_TYPE_ENABLE_FREEZING            = 71,
   MSC_TYPE_DISABLE_FREEZING           = 72,
+  MSC_TYPE_ADD_DELEGATE               = 73,
+  MSC_TYPE_REMOVE_DELEGATE            = 74,
   MSC_TYPE_FREEZE_PROPERTY_TOKENS     = 185,
   MSC_TYPE_UNFREEZE_PROPERTY_TOKENS   = 186,
   MSC_TYPE_ANYDATA                    = 200,

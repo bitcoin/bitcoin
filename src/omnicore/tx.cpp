@@ -73,6 +73,8 @@ std::string mastercore::strTransactionType(uint16_t txType)
         case MSC_TYPE_DISABLE_FREEZING: return "Disable Freezing";
         case MSC_TYPE_FREEZE_PROPERTY_TOKENS: return "Freeze Property Tokens";
         case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS: return "Unfreeze Property Tokens";
+        case MSC_TYPE_ADD_DELEGATE: return "Add Delegate";
+        case MSC_TYPE_REMOVE_DELEGATE: return "Remove Delegate";
         case MSC_TYPE_ANYDATA: return "Embed any data";
         case MSC_TYPE_NONFUNGIBLE_DATA: return "Set Non-Fungible Token Data";
         case MSC_TYPE_NOTIFICATION: return "Notification";
@@ -179,6 +181,12 @@ bool CMPTransaction::interpret_Transaction()
 
         case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS:
             return interpret_UnfreezeTokens();
+
+        case MSC_TYPE_ADD_DELEGATE:
+            return interpret_AddDelegate();
+
+        case MSC_TYPE_REMOVE_DELEGATE:
+            return interpret_RemoveDelegate();
 
         case OMNICORE_MESSAGE_TYPE_DEACTIVATION:
             return interpret_Deactivation();
@@ -821,6 +829,38 @@ bool CMPTransaction::interpret_UnfreezeTokens()
     return true;
 }
 
+/** Tx 73 */
+bool CMPTransaction::interpret_AddDelegate()
+{
+    if (pkt_size < 8) {
+        return false;
+    }
+    memcpy(&property, &pkt[4], 4);
+    SwapByteOrder32(property);
+
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    }
+
+    return true;
+}
+
+/** Tx 74 */
+bool CMPTransaction::interpret_RemoveDelegate()
+{
+    if (pkt_size < 8) {
+        return false;
+    }
+    memcpy(&property, &pkt[4], 4);
+    SwapByteOrder32(property);
+
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    }
+
+    return true;
+}
+
 /** Tx 200 */
 bool CMPTransaction::interpret_AnyData()
 {
@@ -1030,6 +1070,12 @@ int CMPTransaction::interpretPacket()
 
         case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS:
             return logicMath_UnfreezeTokens(pindex);
+            
+        case MSC_TYPE_ADD_DELEGATE:
+            return logicMath_AddDelegate(pindex);
+
+        case MSC_TYPE_REMOVE_DELEGATE:
+            return logicMath_RemoveDelegate(pindex);
 
         case MSC_TYPE_ANYDATA:
             return logicMath_AnyData();
@@ -2145,8 +2191,21 @@ int CMPTransaction::logicMath_GrantTokens(CBlockIndex* pindex, uint256& blockHas
         return (PKT_ERROR_TOKENS -42);
     }
 
-    if (sender != sp.getIssuer(block)) {
-        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
+    bool authorized = true;
+    // check, if there is a delegate and whether the sender is the delegate
+    if (!sp.getDelegate(block).empty()) {
+        if (sender != sp.getDelegate(block)) {
+            authorized = false;
+        }
+    // otherwise ensure sender is issuer
+    } else {
+        if (sender != sp.getIssuer(block)) {
+            authorized = false;
+        }
+    }
+    if (!authorized) {
+        PrintToLog("%s(): rejected: sender %s is not delegate or issuer of property %d [issuer=%s, delegate=%s]\n",
+                __func__, sender, property, sp.getIssuer(block), sp.getDelegate(block));
         return (PKT_ERROR_TOKENS -43);
     }
 
@@ -2461,8 +2520,21 @@ int CMPTransaction::logicMath_FreezeTokens(CBlockIndex* pindex)
         return (PKT_ERROR_TOKENS -42);
     }
 
-    if (sender != sp.getIssuer(block)) {
-        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
+    bool authorized = true;
+    // check, if there is a delegate and whether the sender is the delegate
+    if (!sp.getDelegate(block).empty()) {
+        if (sender != sp.getDelegate(block)) {
+            authorized = false;
+        }
+    // otherwise ensure sender is issuer
+    } else {
+        if (sender != sp.getIssuer(block)) {
+            authorized = false;
+        }
+    }
+    if (!authorized) {
+        PrintToLog("%s(): rejected: sender %s is not delegate or issuer of property %d [issuer=%s, delegate=%s]\n",
+                __func__, sender, property, sp.getIssuer(block), sp.getDelegate(block));
         return (PKT_ERROR_TOKENS -43);
     }
 
@@ -2512,8 +2584,21 @@ int CMPTransaction::logicMath_UnfreezeTokens(CBlockIndex* pindex)
         return (PKT_ERROR_TOKENS -42);
     }
 
-    if (sender != sp.getIssuer(block)) {
-        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
+    bool authorized = true;
+    // check, if there is a delegate and whether the sender is the delegate
+    if (!sp.getDelegate(block).empty()) {
+        if (sender != sp.getDelegate(block)) {
+            authorized = false;
+        }
+    // otherwise ensure sender is issuer
+    } else {
+        if (sender != sp.getIssuer(block)) {
+            authorized = false;
+        }
+    }
+    if (!authorized) {
+        PrintToLog("%s(): rejected: sender %s is not delegate or issuer of property %d [issuer=%s, delegate=%s]\n",
+                __func__, sender, property, sp.getIssuer(block), sp.getDelegate(block));
         return (PKT_ERROR_TOKENS -43);
     }
 
@@ -2528,6 +2613,120 @@ int CMPTransaction::logicMath_UnfreezeTokens(CBlockIndex* pindex)
     }
 
     unfreezeAddress(receiver, property);
+
+    return 0;
+}
+
+/** Tx 73 */
+int CMPTransaction::logicMath_AddDelegate(CBlockIndex* pindex)
+{
+    if (pindex == nullptr) {
+        PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+        return (PKT_ERROR_TOKENS -20);
+    }
+    uint256 blockHash = pindex->GetBlockHash();
+
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR_TOKENS -22);
+    }
+
+    if (!IsPropertyIdValid(property)) {
+        PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
+        return (PKT_ERROR_TOKENS -24);
+    }
+
+    CMPSPInfo::Entry sp;
+    assert(pDbSpInfo->getSP(property, sp));
+
+    if (!sp.manual) {
+        PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);
+        return (PKT_ERROR_TOKENS -42);
+    }
+
+    if (sender != sp.getIssuer(block)) {
+        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.getIssuer(block));
+        return (PKT_ERROR_TOKENS -43);
+    }
+
+    if (receiver.empty()) {
+        PrintToLog("%s(): rejected: receiver is empty\n", __func__);
+        return (PKT_ERROR_TOKENS -45);
+    }
+
+    // ------------------------------------------
+
+    sp.addDelegate(block, tx_idx, receiver);
+
+    sp.delegate = receiver;
+    sp.update_block = blockHash;
+
+    assert(pDbSpInfo->updateSP(property, sp));
+
+    return 0;
+}
+
+/** Tx 74 */
+int CMPTransaction::logicMath_RemoveDelegate(CBlockIndex* pindex)
+{
+    if (pindex == nullptr) {
+        PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+        return (PKT_ERROR_TOKENS -20);
+    }
+    uint256 blockHash = pindex->GetBlockHash();
+
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR_TOKENS -22);
+    }
+
+    if (!IsPropertyIdValid(property)) {
+        PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
+        return (PKT_ERROR_TOKENS -24);
+    }
+
+    CMPSPInfo::Entry sp;
+    assert(pDbSpInfo->getSP(property, sp));
+
+    if (!sp.manual) {
+        PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);
+        return (PKT_ERROR_TOKENS -42);
+    }
+
+    if (sender != sp.getIssuer(block) && sender != sp.getDelegate(block)) {
+        PrintToLog("%s(): rejected: sender %s is not issuer or delegate of property %d [issuer=%s, delegate=%s]\n",
+                __func__, sender, property, sp.getIssuer(block), sp.getDelegate(block));
+        return (PKT_ERROR_TOKENS -43);
+    }
+
+    if (receiver.empty()) {
+        PrintToLog("%s(): rejected: receiver is empty\n", __func__);
+        return (PKT_ERROR_TOKENS -45);
+    }
+
+    if (receiver != sp.getDelegate(block)) {
+        PrintToLog("%s(): rejected: delegate to remove %s does not match current delegate %s\n", __func__, receiver, sp.getDelegate(block));
+        return (PKT_ERROR_TOKENS -46);
+    }
+
+    // ------------------------------------------
+
+    sp.removeDelegate(block, tx_idx);
+
+    sp.delegate = "";
+    sp.update_block = blockHash;
+
+    assert(pDbSpInfo->updateSP(property, sp));
 
     return 0;
 }

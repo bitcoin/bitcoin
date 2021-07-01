@@ -48,6 +48,7 @@ public:
     struct Entry {
         // common SP data
         std::string issuer;
+        std::string delegate;
         uint16_t prop_type;
         uint32_t prev_prop_id;
         std::string category;
@@ -88,6 +89,10 @@ public:
         //   (block, idx) -> issuer
         std::map<std::pair<int, int>, std::string > historicalIssuers;
 
+        // Historical delegates:
+        //   (block, idx) -> delegate
+        std::map<std::pair<int, int>, std::string > historicalDelegates;
+
         Entry();
 
         ADD_SERIALIZE_METHODS;
@@ -117,7 +122,6 @@ public:
             READWRITE(update_block);
             READWRITE(fixed);
             READWRITE(manual);
-            READWRITE(unique);
             READWRITE(historicalData);
             READWRITE(historicalIssuers);
         }
@@ -130,6 +134,15 @@ public:
 
         /** Returns the issuer for the given block. */
         std::string getIssuer(int block) const;
+
+        /** Stores a new delegate in the DB. */
+        void addDelegate(int block, int idx, const std::string& newDelegate);
+
+        /** Clears the delegate in the DB. */
+        void removeDelegate(int block, int idx);
+
+        /** Returns the delegate for the given block, if there is one. */
+        std::string getDelegate(int block) const;
     };
 
 private:

@@ -27,6 +27,8 @@ std::vector<unsigned char> CreatePayload_EnableFreezing(uint32_t propertyId);
 std::vector<unsigned char> CreatePayload_DisableFreezing(uint32_t propertyId);
 std::vector<unsigned char> CreatePayload_FreezeTokens(uint32_t propertyId, uint64_t amount, const std::string& address);
 std::vector<unsigned char> CreatePayload_UnfreezeTokens(uint32_t propertyId, uint64_t amount, const std::string& address);
+std::vector<unsigned char> CreatePayload_AddDelegate(uint32_t propertyId);
+std::vector<unsigned char> CreatePayload_RemoveDelegate(uint32_t propertyId);
 std::vector<unsigned char> CreatePayload_MetaDExTrade(uint32_t propertyIdForSale, uint64_t amountForSale, uint32_t propertyIdDesired, uint64_t amountDesired);
 std::vector<unsigned char> CreatePayload_MetaDExCancelPrice(uint32_t propertyIdForSale, uint64_t amountForSale, uint32_t propertyIdDesired, uint64_t amountDesired);
 std::vector<unsigned char> CreatePayload_MetaDExCancelPair(uint32_t propertyIdForSale, uint32_t propertyIdDesired);

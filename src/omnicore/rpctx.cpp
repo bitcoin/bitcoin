@@ -1136,7 +1136,7 @@ static UniValue omni_sendgrant(const JSONRPCRequest& request)
     // perform checks
     RequireExistingProperty(propertyId);
     RequireManagedProperty(propertyId);
-    RequireTokenIssuer(fromAddress, propertyId);
+    RequireSenderDelegateBeforeIssuer(propertyId, fromAddress);
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_Grant(propertyId, amount, info);
@@ -1189,7 +1189,6 @@ static UniValue omni_sendrevoke(const JSONRPCRequest& request)
     // perform checks
     RequireExistingProperty(propertyId);
     RequireManagedProperty(propertyId);
-    RequireTokenIssuer(fromAddress, propertyId);
     RequireBalance(fromAddress, propertyId, amount);
 
     // create a payload for the transaction
@@ -1661,7 +1660,7 @@ static UniValue omni_sendfreeze(const JSONRPCRequest& request)
     // perform checks
     RequireExistingProperty(propertyId);
     RequireManagedProperty(propertyId);
-    RequireTokenIssuer(fromAddress, propertyId);
+    RequireSenderDelegateBeforeIssuer(propertyId, fromAddress);
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_FreezeTokens(propertyId, amount, refAddress);
@@ -1716,7 +1715,7 @@ static UniValue omni_sendunfreeze(const JSONRPCRequest& request)
     // perform checks
     RequireExistingProperty(propertyId);
     RequireManagedProperty(propertyId);
-    RequireTokenIssuer(fromAddress, propertyId);
+    RequireSenderDelegateBeforeIssuer(propertyId, fromAddress);
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_UnfreezeTokens(propertyId, amount, refAddress);
@@ -1726,6 +1725,110 @@ static UniValue omni_sendunfreeze(const JSONRPCRequest& request)
     uint256 txid;
     std::string rawHex;
     int result = WalletTxBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit, pwallet.get());
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    } else {
+        if (!autoCommit) {
+            return rawHex;
+        } else {
+            return txid.GetHex();
+        }
+    }
+}
+
+static UniValue omni_sendadddelegate(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
+
+    RPCHelpMan{"omni_sendenablefreezing",
+       "\nAdds a delegate for the issuance of tokens of a managed property.\n",
+       {
+           {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the issuer of the tokens\n"},
+           {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens\n"},
+           {"delegateaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the new delegate\n"},
+       },
+       RPCResult{
+           RPCResult::Type::STR_HEX, "hash", "the hex-encoded transaction hash"
+       },
+       RPCExamples{
+           HelpExampleCli("omni_sendadddelegate", "\"12GftZCQ3vwubWmRCmnfZAHdDWXj6ujenx\" 21 \"14TG9NsTxk2fvH8iGiFcVbquC5NPhHcFjh\"")
+           + HelpExampleRpc("omni_sendadddelegate", "\"12GftZCQ3vwubWmRCmnfZAHdDWXj6ujenx\", 21, \"14TG9NsTxk2fvH8iGiFcVbquC5NPhHcFjh\"")
+       }
+    }.Check(request);
+
+    // obtain parameters & info
+    std::string fromAddress = ParseAddress(request.params[0]);
+    uint32_t propertyId = ParsePropertyId(request.params[1]);
+    std::string delegateAddress = ParseAddress(request.params[2]);
+
+    // perform checks
+    RequireExistingProperty(propertyId);
+    RequireManagedProperty(propertyId);
+    RequireTokenIssuer(fromAddress, propertyId);
+
+    // create a payload for the transaction
+    std::vector<unsigned char> payload = CreatePayload_AddDelegate(propertyId);
+
+    // request the wallet build the transaction (and if needed commit it)
+    uint256 txid;
+    std::string rawHex;
+    int result = WalletTxBuilder(fromAddress, delegateAddress, "", 0, payload, txid, rawHex, autoCommit, pwallet.get());
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    } else {
+        if (!autoCommit) {
+            return rawHex;
+        } else {
+            return txid.GetHex();
+        }
+    }
+}
+
+static UniValue omni_sendremovedelegate(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
+
+    RPCHelpMan{"omni_sendremovedelegate",
+       "\nRemoves a delegate for the issuance of tokens of a managed property.\n",
+       {
+           {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the issuer or delegate of the tokens\n"},
+           {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens\n"},
+           {"delegateaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the delegate to be removed\n"},
+       },
+       RPCResult{
+           RPCResult::Type::STR_HEX, "hash", "the hex-encoded transaction hash"
+       },
+       RPCExamples{
+           HelpExampleCli("omni_sendremovedelegate", "\"12GftZCQ3vwubWmRCmnfZAHdDWXj6ujenx\" 21 \"14TG9NsTxk2fvH8iGiFcVbquC5NPhHcFjh\"")
+           + HelpExampleRpc("omni_sendremovedelegate", "\"12GftZCQ3vwubWmRCmnfZAHdDWXj6ujenx\", 21, \"14TG9NsTxk2fvH8iGiFcVbquC5NPhHcFjh\"")
+       }
+    }.Check(request);
+
+    // obtain parameters & info
+    std::string fromAddress = ParseAddress(request.params[0]);
+    uint32_t propertyId = ParsePropertyId(request.params[1]);
+    std::string delegateAddress = ParseAddress(request.params[2]);
+
+    // perform checks
+    RequireExistingProperty(propertyId);
+    RequireManagedProperty(propertyId);
+    RequireExistingDelegate(propertyId);
+    RequireSenderDelegateOrIssuer(propertyId, fromAddress);
+    RequireMatchingDelegate(propertyId, delegateAddress);
+
+    // create a payload for the transaction
+    std::vector<unsigned char> payload = CreatePayload_RemoveDelegate(propertyId);
+
+    // request the wallet build the transaction (and if needed commit it)
+    uint256 txid;
+    std::string rawHex;
+    int result = WalletTxBuilder(fromAddress, delegateAddress, "", 0, payload, txid, rawHex, autoCommit, pwallet.get());
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {
@@ -2043,6 +2146,8 @@ static const CRPCCommand commands[] =
     { "omni layer (transaction creation)", "omni_senddisablefreezing",     &omni_senddisablefreezing,     {"fromaddress", "propertyid"} },
     { "omni layer (transaction creation)", "omni_sendfreeze",              &omni_sendfreeze,              {"fromaddress", "toaddress", "propertyid", "amount"} },
     { "omni layer (transaction creation)", "omni_sendunfreeze",            &omni_sendunfreeze,            {"fromaddress", "toaddress", "propertyid", "amount"} },
+    { "omni layer (transaction creation)", "omni_sendadddelegate",         &omni_sendadddelegate,         {"fromaddress", "propertyid", "delegateaddress"} },
+    { "omni layer (transaction creation)", "omni_sendremovedelegate",      &omni_sendremovedelegate,      {"fromaddress", "propertyid", "delegateaddress"} },
     { "omni layer (transaction creation)", "omni_sendanydata",             &omni_sendanydata,             {"fromaddress", "data", "toaddress"} },
     { "hidden",                            "omni_senddeactivation",        &omni_senddeactivation,        {"fromaddress", "featureid"} },
     { "hidden",                            "omni_sendactivation",          &omni_sendactivation,          {"fromaddress", "featureid", "block", "minclientversion"} },
