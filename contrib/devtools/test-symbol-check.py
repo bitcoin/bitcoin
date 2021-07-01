@@ -99,7 +99,7 @@ class TestSymbolChecks(unittest.TestCase):
 
         ''')
 
-        self.assertEqual(call_symbol_check(cc, source, executable, ['-lexpat']),
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-lexpat', '-Wl,-platform_version','-Wl,macos', '-Wl,11.4', '-Wl,11.4']),
             (1, 'libexpat.1.dylib is not in ALLOWED_LIBRARIES!\n' +
                 f'{executable}: failed DYNAMIC_LIBRARIES MIN_OS SDK'))
 
@@ -116,7 +116,7 @@ class TestSymbolChecks(unittest.TestCase):
                 }
         ''')
 
-        self.assertEqual(call_symbol_check(cc, source, executable, ['-framework', 'CoreGraphics']),
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-framework', 'CoreGraphics', '-Wl,-platform_version','-Wl,macos', '-Wl,11.4', '-Wl,11.4']),
                 (1, f'{executable}: failed MIN_OS SDK'))
 
         source = 'test3.c'
@@ -129,7 +129,7 @@ class TestSymbolChecks(unittest.TestCase):
                 }
         ''')
 
-        self.assertEqual(call_symbol_check(cc, source, executable, ['-mmacosx-version-min=10.14']),
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-Wl,-platform_version','-Wl,macos', '-Wl,10.14', '-Wl,11.4']),
                 (1, f'{executable}: failed SDK'))
 
     def test_PE(self):
