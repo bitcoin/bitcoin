@@ -83,6 +83,8 @@ class CWalletTx;
 struct FeeCalculation;
 enum class FeeEstimateMode;
 
+extern CCriticalSection cs_main;
+
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
 {
@@ -877,7 +879,7 @@ public:
     /**
      * Return list of available coins and locked coins grouped by non-change output address.
      */
-    std::map<CTxDestination, std::vector<COutput>> ListCoins() const;
+    std::map<CTxDestination, std::vector<COutput>> ListCoins() const EXCLUSIVE_LOCKS_REQUIRED(cs_main, cs_wallet);
 
     /**
      * Find non-change parent output.

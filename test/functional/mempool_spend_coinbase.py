@@ -15,11 +15,10 @@ but less mature coinbase spends are NOT.
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-# Create one-input, one-output, no-fee transaction:
+
 class MempoolSpendCoinbaseTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [["-checkmempool"]]
 
     def run_test(self):
         chain_height = self.nodes[0].getblockcount()
