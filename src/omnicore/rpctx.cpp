@@ -1637,7 +1637,7 @@ static UniValue omni_sendfreeze(const JSONRPCRequest& request)
        "\nFreeze an address for a centrally managed token.\n"
        "\nNote: Only the issuer may freeze tokens, and only if the token is of the managed type with the freezing option enabled.\n",
        {
-           {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from (must be the issuer of the property)\n"},
+           {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from (must be the delegate or issuer of the property)\n"},
            {"toaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to freeze tokens for\n"},
            {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the property to freeze tokens for (must be managed type and have freezing option enabled)\n"},
            {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to freeze (note: this is unused - once frozen an address cannot send any transactions for the property)\n"},
@@ -1692,7 +1692,7 @@ static UniValue omni_sendunfreeze(const JSONRPCRequest& request)
        "\nUnfreezes an address for a centrally managed token.\n"
        "\nNote: Only the issuer may unfreeze tokens.\n",
        {
-           {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from (must be the issuer of the property)\n"},
+           {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from (must be the delegate or issuer of the property)\n"},
            {"toaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to unfreeze tokens for\n"},
            {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the property to unfreeze tokens for (must be managed type and have freezing option enabled)\n"},
            {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "the amount of tokens to unfreeze (note: this is unused - once frozen an address cannot send any transactions for the property)\n"},
@@ -1743,7 +1743,7 @@ static UniValue omni_sendadddelegate(const JSONRPCRequest& request)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
 
-    RPCHelpMan{"omni_sendenablefreezing",
+    RPCHelpMan{"omni_sendadddelegate",
        "\nAdds a delegate for the issuance of tokens of a managed property.\n",
        {
            {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the issuer of the tokens\n"},
