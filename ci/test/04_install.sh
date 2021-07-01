@@ -79,12 +79,13 @@ fi
 DOCKER_EXEC echo "Free disk space:"
 DOCKER_EXEC df -h
 
-if [ ! -d ${DIR_QA_ASSETS} ]; then
- if [ "$RUN_FUZZ_TESTS" = "true" ]; then
-  DOCKER_EXEC git clone https://github.com/bitcoin-core/qa-assets ${DIR_QA_ASSETS}
- fi
+if [ "$RUN_FUZZ_TESTS" = "true" ] || [ "$RUN_UNIT_TESTS" = "true" ] || [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
+  if [ ! -d ${DIR_QA_ASSETS} ]; then
+    DOCKER_EXEC git clone --depth=1 https://github.com/bitcoin-core/qa-assets ${DIR_QA_ASSETS}
+  fi
+
+  export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
 fi
-export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
 
 DOCKER_EXEC mkdir -p "${BASE_SCRATCH_DIR}/sanitizer-output/"
 
