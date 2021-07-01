@@ -71,7 +71,6 @@
 #include <univalue.h>
 // SYSCOIN only features
 bool fMasternodeMode = false;
-bool bGethTestnet = false;
 bool fDisableGovernance = false;
 bool fRegTest = false;
 bool fSigNet = false;

@@ -1084,7 +1084,7 @@ public:
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 bool PruneSyscoinDBs(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 void DoGethMaintenance();
-bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websocketport=8646, int ethrpcport=8645, const std::string & mode="light");
+bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid);
 bool StopGethNode(pid_t &pid);
 void KillProcess(const pid_t& pid);
 

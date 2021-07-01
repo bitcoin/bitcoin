@@ -6085,6 +6085,44 @@ bool GetDescriptorStats(const fs::path filePath, DescriptorDetails& details) {
     }
     return false;
 }
+std::vector<std::string> SanitizeGethCmdLine(const std::string& binaryURL, const std::string& dataDir) {
+    const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
+    std::vector<std::string> cmdLineRet;
+    cmdLineRet.push_back(binaryURL);
+    for(const auto &cmd: cmdLine){
+        cmdLineRet.push_back(cmd);
+    }
+    if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--syncmode") == cmdLineRet.end()) {
+        cmdLineRet.push_back("--syncmode");
+        cmdLineRet.push_back("snap");
+    }
+    if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--datadir") == cmdLineRet.end()) {
+        cmdLineRet.push_back("--datadir");
+        cmdLineRet.push_back(dataDir);
+    }
+    if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--tanenbaum") == cmdLineRet.end() && std::find(cmdLineRet.begin(), cmdLineRet.end(), "--polygon") == cmdLineRet.end()) {
+        if(fTestNet) {
+            cmdLineRet.push_back("--tanenbaum");
+        } else {
+            cmdLineRet.push_back("--polygon");
+        }
+    }
+    if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--miner.nevmsub") == cmdLineRet.end()) {
+        if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--miner") == cmdLineRet.end()) {
+            cmdLineRet.push_back("--miner");
+        }
+        const std::string &strSub = gArgs.GetArg("-zmqsubnevm", "");
+        cmdLineRet.push_back("--miner.nevmsub");
+        cmdLineRet.push_back(strSub);
+    }
+      if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--miner.nevmpub") == cmdLineRet.end()) {
+        const std::string &strPub = gArgs.GetArg("-zmqpubnevm", "");
+        cmdLineRet.push_back("--miner.nevmpub");
+        cmdLineRet.push_back(strPub);
+    } 
+
+    return cmdLineRet;
+}
 bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const std::string& binaryDestPath, const std::string& descriptorURL) {
     DescriptorDetails descriptorDetailsLocal, descriptorDetailsRemote;
     GetDescriptorStats(descriptorDestPath, descriptorDetailsLocal);
@@ -6109,12 +6147,8 @@ bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const s
     LogPrintf("%s: Version (%s) is up-to-date!\n", __func__, descriptorDetailsRemote.version);
     return true;
 }
-bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websocketport, int ethrpcport, const std::string &mode)
+bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
 {
-    if(mode == "disabled") {
-        LogPrintf("%s: Geth is disabled, user chose to deploy their own Geth instance!\n", __func__);
-        return true;
-    }
     LOCK(cs_geth);
     // stop any geth nodes before starting
     StopGethNode(pid);
@@ -6138,13 +6172,13 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websock
         }
         return false;
     }
-    LogPrintf("%s: Starting geth on wsport %d rpcport %d (testnet=%d)...\n", __func__, websocketport, ethrpcport, bGethTestnet? 1:0);
-    
 
     fs::path attempt1 = binaryURL.string();
     attempt1 = attempt1.make_preferred();
 
     fs::path dataDir = gArgs.GetDataDirNet() / "geth";
+    const std::vector<std::string> &vecCmdLineStr = SanitizeGethCmdLine(attempt1.string(), dataDir.string());
+    
     #ifndef WIN32
     // Prevent killed child-processes remaining as "defunct"
     struct sigaction sa;
@@ -6162,35 +6196,30 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websock
     }
 	// TODO: sanitize environment variables as per
 	// https://wiki.sei.cmu.edu/confluence/display/c/ENV03-C.+Sanitize+the+environment+when+invoking+external+programs
-    if( pid == 0 ) {
-        std::string portStr = itostr(websocketport);
-        std::string rpcportStr = itostr(ethrpcport);
-        char * argvAttempt1[20] = {(char*)attempt1.string().c_str(), 
-                (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(),
-                (char*)"--http", (char*)"--http.api", (char*)"personal,eth", (char*)"--http.port", (char*)rpcportStr.c_str(),
-                (char*)"--ws.origins", (char*)"*",
-                (char*)"--syncmode", (char*)mode.c_str(), 
-                (char*)"--datadir", (char*)dataDir.c_str(),
-                (char*)"--allow-insecure-unlock",
-                bGethTestnet?(char*)"--rinkeby": NULL,
-                (char*)"--http.corsdomain",(char*)"*",
-                NULL };                                                              
-        execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
+    if( pid == 0 ) {     
+        std::vector<char*> commandVector;
+        for(const std::string &cmdStr: vecCmdLineStr) {
+            commandVector.push_back(const_cast<char*>(cmdStr.c_str()));
+        }
+        // push NULL to the end of the vector (execvp expects NULL as last element)
+        commandVector.push_back(NULL);
+        char **command = commandVector.data();    
+        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]);                                                  
+        execvp(command[0], &command[0]);
         if (errno != 0) {
-            LogPrintf("Geth not found at %s\n", argvAttempt1[0]);
+            LogPrintf("Geth not found at %s\n", attempt1.string());
         }
     } else {
         boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
         ofs << pid;
     }
     #else
-        std::string portStr = itostr(websocketport);
-        std::string rpcportStr = itostr(ethrpcport);
-        std::string args =  std::string("--http --http.api personal,eth --http.corsdomain * --http.port ") + rpcportStr + std::string(" --ws --ws.port ") + portStr + std::string(" --ws.origins * --syncmode ") + mode + std::string(" --datadir ") +  dataDir.string();
-        if(bGethTestnet) {
-            args += std::string(" --rinkeby");
+        std::string commandStr = "";
+        for(const std::string &cmdStr: vecCmdLineStr) {
+            commandStr += cmdStr + " "
         }
-        pid = fork(attempt1.string(), args);
+        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, commandStr);   
+        pid = fork(attempt1.string(), commandStr);
         if( pid <= 0 ) {
             LogPrintf("Geth not found at %s\n", attempt1.string());
         }  
@@ -6285,12 +6314,8 @@ void DoGethMaintenance() {
     if(!fReindexGeth && gethPID == 0) {
         gethPID = -1;
         LogPrintf("%s: Starting Geth because PID's were uninitialized\n", __func__);
-        int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
-        int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
         const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-        bGethTestnet = gArgs.GetBoolArg("-gethtestnet", gArgs.GetChainName() != CBaseChainParams::MAIN);
-        const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-        if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
+        if(!StartGethNode(gethDescriptorURL, gethPID))
             LogPrintf("%s: Failed to start Geth\n", __func__); 
     } else if(fReindexGeth){
         fReindexGeth = false;
@@ -6327,12 +6352,8 @@ void DoGethMaintenance() {
             fs::remove_all(keyStoreTmpDir);
         }
         LogPrintf("%s: Restarting Geth \n", __func__);
-        int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
-        int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
-        bGethTestnet = gArgs.GetBoolArg("-gethtestnet", gArgs.GetChainName() != CBaseChainParams::MAIN);
-        const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
         const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-        if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
+        if(!StartGethNode(gethDescriptorURL, gethPID))
             LogPrintf("%s: Failed to start Geth\n", __func__); 
         // set flag that geth is resyncing
         fGethSynced = false;

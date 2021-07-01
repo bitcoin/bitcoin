@@ -40,7 +40,6 @@
 #include <amount.h>
 class JSONRPCRequest;
 extern bool fMasternodeMode;
-extern bool bGethTestnet;
 extern bool fDisableGovernance;
 extern bool fRegTest;
 extern bool fSigNet;

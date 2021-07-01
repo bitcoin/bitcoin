@@ -505,10 +505,7 @@ void SetupServerArgs(ArgsManager& argsman)
 #endif
     argsman.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     // SYSCOIN
-    argsman.AddArg("-gethwebsocketport=<port>", strprintf("Listen for GETH Web Socket connections on <port> (default: %u)", 8646), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    argsman.AddArg("-gethrpcport=<port>", strprintf("Listen for GETH RPC connections on <port> (default: %u)", 8645), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    argsman.AddArg("-gethtestnet", strprintf("Connect to NEVM Rinkeby testnet network (default: %d)", false), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    argsman.AddArg("-gethsyncmode", strprintf("Geth sync mode, light, fast, full or disabled (to run your own geth node) (default: light)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    argsman.AddArg("-gethcommandline=<port>", strprintf("Geth command line parameters (default: %s)", ""), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-gethDescriptorURL", strprintf("Geth descriptor URL where to do versioning checks and binary downloads for Geth (default: https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-disablegovernance=<n>", strprintf("Disable governance validation (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS); 
@@ -599,13 +596,8 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-zmqpubrawblockhwm=<n>", strprintf("Set publish raw block outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubrawtxhwm=<n>", strprintf("Set publish raw transaction outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     // SYSCOIN
-    argsman.AddArg("-zmqsub=<address>", "Enable NEVM notifications, zmqsub followed by the topic (see zmqsubpubnevmblock, zmqpubnevmconnect, zmqpubnevmdisconnect for examples)", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
-    argsman.AddArg("-zmqpubnevmblock=<address>", "Enable NEVM block publishing for Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
-    argsman.AddArg("-zmqsubpubnevmblock=<address>", "Enable NEVM block subscribing from Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
-    argsman.AddArg("-zmqpubnevmconnect=<address>", "Enable NEVM block connect messages for Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
-    argsman.AddArg("-zmqsubpubnevmconnect=<address>", "Enable NEVM block connect messages from Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
-    argsman.AddArg("-zmqpubnevmdisconnect=<address>", "Enable NEVM block disconnect messages for Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
-    argsman.AddArg("-zmqsubpubnevmdisconnect=<address>", "Enable NEVM block disconnect messages from Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
+    argsman.AddArg("-zmqpubnevm=<address>", "Enable NEVM publishing for Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
+    argsman.AddArg("-zmqsubnevm=<address>", "Enable NEVM subscribing from Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubhashgovernancevote=<address>", "Enable publish hash of governance votes transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubhashgovernanceobject=<address>", "Enable publish hash of governance objects transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubrawgovernancevote=<address>", "Enable publish raw governance votes transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
@@ -615,7 +607,6 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-zmqpubsequencehwm=<n>", strprintf("Set publish hash sequence message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
 #else
     // SYSCOIN
-    hidden_args.emplace_back("-zmqsub=<address>");
     hidden_args.emplace_back("-zmqpubhashblock=<address>");
     hidden_args.emplace_back("-zmqpubhashtx=<address>");
     hidden_args.emplace_back("-zmqpubrawblock=<address>");
@@ -632,12 +623,8 @@ void SetupServerArgs(ArgsManager& argsman)
     hidden_args.emplace_back("-zmqpubrawblockhwm=<n>");
     hidden_args.emplace_back("-zmqpubrawtxhwm=<n>");
     hidden_args.emplace_back("-zmqpubsequencehwm=<n>");
-    hidden_args.emplace_back("-zmqpubnevmblock=<address>");
-    hidden_args.emplace_back("-zmqsubpubnevmblock=<address>");
-    hidden_args.emplace_back("-zmqpubnevmconnect=<address>");
-    hidden_args.emplace_back("-zmqsubpubnevmconnect=<address>");
-    hidden_args.emplace_back("-zmqpubnevmdisconnect=<address>");
-    hidden_args.emplace_back("-zmqsubpubnevmdisconnect=<address>");
+    hidden_args.emplace_back("-zmqpubnevm=<address>");
+    hidden_args.emplace_back("-zmqsubnevm=<address>");
 #endif
 
     argsman.AddArg("-checkblocks=<n>", strprintf("How many blocks to check at startup (default: %u, 0 = all)", DEFAULT_CHECKBLOCKS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
@@ -2016,11 +2003,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey());
     }
     LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
-    const auto &NEVMConnectVec = gArgs.GetArgs("-zmqsubpubnevmconnect");
-    const auto &NEVMDisconnectVec = gArgs.GetArgs("-zmqsubpubnevmdisconnect");
-    fNEVMConnection = !NEVMConnectVec.empty() && !NEVMDisconnectVec.empty();
+    const auto &NEVMPub = gArgs.GetArg("-zmqsubnevm", "");
+    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", "");
+    fNEVMConnection = !NEVMPub.empty() && !NEVMSub.empty();
     if(!fRegTest && !fNEVMConnection && fMasternodeMode) {
-        return InitError(Untranslated("You must define -zmqsubpubnevmconnect and -zmqsubpubnevmdisconnect on a masternode."));
+        return InitError(Untranslated("You must define -zmqsubnevm and -zmqpubnevm on a masternode."));
     }
     #if ENABLE_ZMQ
         if(!g_zmq_notification_interface && fNEVMConnection) {
@@ -2221,7 +2208,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL);
     // SYSCOIN
-    if(!fRegTest && !fSigNet && (fMasternodeMode || gArgs.IsArgSet("-gethsyncmode"))) {
+    if((!fRegTest && !fSigNet && fMasternodeMode) || fNEVMConnection) {
         node.scheduler->scheduleFromNow([&] { DoGethMaintenance(); }, std::chrono::seconds{15});
     } 
 #if HAVE_SYSTEM

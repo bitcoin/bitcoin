@@ -648,11 +648,8 @@ static RPCHelpMan syscoinstartgeth()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     StopGethNode(gethPID);
-    int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
-    int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
-    const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
     const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-    if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
+    if(!StartGethNode(gethDescriptorURL, gethPID))
         throw JSONRPCError(RPC_MISC_ERROR, "Could not start Geth");
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", "success");

@@ -40,28 +40,55 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     factories["pubrawblock"] = CZMQAbstractNotifier::Create<CZMQPublishRawBlockNotifier>;
     factories["pubrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
     // SYSCOIN
-    factories["pubnevmblock"] = CZMQAbstractNotifier::Create<CZMQPublishNEVMBlockNotifier>;
-    factories["pubnevmconnect"] = CZMQAbstractNotifier::Create<CZMQPublishNEVMBlockConnectNotifier>;
-    factories["pubnevmdisconnect"] = CZMQAbstractNotifier::Create<CZMQPublishNEVMBlockDisconnectNotifier>;
     factories["pubrawmempooltx"] = CZMQAbstractNotifier::Create<CZMQPublishRawMempoolTransactionNotifier>;
     factories["pubhashgovernancevote"] = CZMQAbstractNotifier::Create<CZMQPublishHashGovernanceVoteNotifier>;
     factories["pubhashgovernanceobject"] = CZMQAbstractNotifier::Create<CZMQPublishHashGovernanceObjectNotifier>;
     factories["pubrawgovernancevote"] = CZMQAbstractNotifier::Create<CZMQPublishRawGovernanceVoteNotifier>;
     factories["pubrawgovernanceobject"] = CZMQAbstractNotifier::Create<CZMQPublishRawGovernanceObjectNotifier>;
     factories["pubsequence"] = CZMQAbstractNotifier::Create<CZMQPublishSequenceNotifier>;
-
     std::list<std::unique_ptr<CZMQAbstractNotifier>> notifiers;
+
+    const std::string &strSub = gArgs.GetArg("-zmqsubnevm", "");
+    const std::string &strPub = gArgs.GetArg("-zmqpubnevm", "");
+    if(!strPub.empty()) {
+        std::string pubCmd = "pubnevmblock";
+        CZMQNotifierFactory factory = CZMQAbstractNotifier::Create<CZMQPublishNEVMBlockNotifier>;
+        std::string arg("-zmq" + pubCmd);
+        std::unique_ptr<CZMQAbstractNotifier> notifier = factory();
+        notifier->SetAddressSub(strSub);
+        notifier->SetType(pubCmd);
+        notifier->SetAddress(strPub);
+        notifier->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
+        notifiers.push_back(std::move(notifier));
+
+        pubCmd = "pubnevmconnect";
+        CZMQNotifierFactory factory1 = CZMQAbstractNotifier::Create<CZMQPublishNEVMBlockConnectNotifier>;
+        arg = std::string("-zmq" + pubCmd);
+        std::unique_ptr<CZMQAbstractNotifier> notifier1 = factory1();
+        notifier1->SetAddressSub(strSub);
+        notifier1->SetType(pubCmd);
+        notifier1->SetAddress(strPub);
+        notifier1->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
+        notifiers.push_back(std::move(notifier1));
+
+        pubCmd = "pubnevmdisconnect";
+        CZMQNotifierFactory factory2 = CZMQAbstractNotifier::Create<CZMQPublishNEVMBlockDisconnectNotifier>;
+        arg = std::string("-zmq" + pubCmd);
+        std::unique_ptr<CZMQAbstractNotifier> notifier2 = factory2();
+        notifier2->SetAddressSub(strSub);
+        notifier2->SetType(pubCmd);
+        notifier2->SetAddress(strPub);
+        notifier2->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
+        notifiers.push_back(std::move(notifier2));
+    }
+    
+    
     for (const auto& entry : factories)
     {
         std::string arg("-zmq" + entry.first);
         const auto& factory = entry.second;
         for (const std::string& address : gArgs.GetArgs(arg)) {
             std::unique_ptr<CZMQAbstractNotifier> notifier = factory();
-            std::string argsub("-zmq" + entry.first);
-            const std::vector<std::string> &vecSub = gArgs.GetArgs("-zmqsub" + entry.first);
-            if(!vecSub.empty()) {
-                notifier->SetAddressSub(vecSub[0]);
-            }
             notifier->SetType(entry.first);
             notifier->SetAddress(address);
             notifier->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));

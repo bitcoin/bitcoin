@@ -190,20 +190,23 @@ class ZMQTest (SyscoinTestFramework):
             self.ctxpub.destroy(linger=None)
     # Restart node with the specified zmq notifications enabled, subscribe to
     # all of them and return the corresponding ZMQSubscriber objects.
-    def setup_zmq_test(self, services, servicessub, idx, *, recv_timeout=60, sync_blocks=True):
+    def setup_zmq_test(self, address, addresssub, idx, *, recv_timeout=60, sync_blocks=True):
         subscribers = []
-        for topic, address in services:
+        subscribeServices = [(topic, address) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]]
+        for topic, address in subscribeServices:
             socket = self.ctx.socket(zmq.SUB)
             subscribers.append(ZMQSubscriber(socket, topic.encode()))
-        self.extra_args[idx] = ["-zmqpub%s=%s" % (topic, address) for topic, address in services]
+
+        self.extra_args[idx] = ["-zmqpubnevm=%s" % address]
         # publisher on Syscoin can have option to also be a subscriber on another address, related each publisher to a subscriber (in our case we have 3 publisher events that also would subscribe to events on the same topic)
-        self.extra_args[idx] += ["-zmqsubpub%s=%s" % (topic, address) for topic, address in servicessub]
+        self.extra_args[idx] += ["-zmqsubnevm=%s" % addresssub]
+
+       
         self.restart_node(idx, self.extra_args[idx])
-        for i, sub in enumerate(subscribers):
-            sub.socket.connect(services[i][1])
 
         # set subscriber's desired timeout for the test
         for sub in subscribers:
+            sub.socket.connect(address)
             sub.socket.set(zmq.RCVTIMEO, recv_timeout*1000)
 
         return subscribers
@@ -224,8 +227,8 @@ class ZMQTest (SyscoinTestFramework):
         publisher = self.setup_zmq_test_pub(addresspub)
         publisher1 = self.setup_zmq_test_pub(addresspub1)
         self.log.info("setup subscribers...")
-        subs = self.setup_zmq_test([(topic, address) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], [(topic, addresspub) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], 0)
-        subs1 = self.setup_zmq_test([(topic, address1) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], [(topic, addresspub1) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]], 1)
+        subs = self.setup_zmq_test(address, addresspub, 0)
+        subs1 = self.setup_zmq_test(address1, addresspub1, 1)
         self.connect_nodes(0, 1)
         self.sync_blocks()
 

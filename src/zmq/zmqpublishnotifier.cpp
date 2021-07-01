@@ -126,30 +126,6 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext, void *pcontextsub)
 
     // check if address is being used by other publish notifier
     std::multimap<std::string, CZMQAbstractPublishNotifier*>::iterator i = mapPublishNotifiers.find(address);
-    // SYSCOIN
-    if(!addresssub.empty()) {
-        psocketsub = zmq_socket(pcontextsub, ZMQ_SUB);
-        if (!psocketsub)
-        {
-            zmqError("Failed to create socket");
-            return false;
-        }
-        int rc = zmq_connect(psocketsub, addresssub.c_str());
-        if (rc != 0)
-        {
-            zmqError("Failed to bind address for subscriber");
-            zmq_close(psocketsub);
-            return false;
-        }
-        const char* typecstr = GetSubscribeType(type);
-        rc = zmq_setsockopt(psocketsub, ZMQ_SUBSCRIBE, typecstr, sizeof(typecstr));
-        if (rc != 0) {
-            zmqError("Failed to set SUBSCRIBE");
-            zmq_close(psocketsub);
-            return false;
-        }
-        LogPrint(BCLog::ZMQ, "zmq: subscribed to topic %s on address %s\n", typecstr, addresssub);
-    }
     if (i==mapPublishNotifiers.end())
     {
         psocket = zmq_socket(pcontext, ZMQ_PUB);
@@ -184,6 +160,27 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext, void *pcontextsub)
             zmq_close(psocket);
             return false;
         }
+        psocketsub = zmq_socket(pcontextsub, ZMQ_SUB);
+        if (!psocketsub)
+        {
+            zmqError("Failed to create socket");
+            return false;
+        }
+        rc = zmq_connect(psocketsub, addresssub.c_str());
+        if (rc != 0)
+        {
+            zmqError("Failed to bind address for subscriber");
+            zmq_close(psocketsub);
+            return false;
+        }
+        const char* typecstr = GetSubscribeType(type);
+        rc = zmq_setsockopt(psocketsub, ZMQ_SUBSCRIBE, typecstr, sizeof(typecstr));
+        if (rc != 0) {
+            zmqError("Failed to set SUBSCRIBE");
+            zmq_close(psocketsub);
+            return false;
+        }
+        LogPrint(BCLog::ZMQ, "zmq: subscribed to topic %s on address %s\n", typecstr, addresssub);
         // register this notifier for the address, so it can be reused for other publish notifier
         mapPublishNotifiers.insert(std::make_pair(address, this));
         return true;
@@ -194,6 +191,14 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext, void *pcontextsub)
         LogPrint(BCLog::ZMQ, "zmq: Outbound message high water mark for %s at %s is %d\n", type, address, outbound_message_high_water_mark);
 
         psocket = i->second->psocket;
+        psocketsub = i->second->psocketsub;
+        const char* typecstr = GetSubscribeType(type);
+        int rc = zmq_setsockopt(psocketsub, ZMQ_SUBSCRIBE, typecstr, sizeof(typecstr));
+        if (rc != 0) {
+            zmqError("Failed to set SUBSCRIBE");
+            zmq_close(psocketsub);
+            return false;
+        }
         mapPublishNotifiers.insert(std::make_pair(address, this));
 
         return true;
