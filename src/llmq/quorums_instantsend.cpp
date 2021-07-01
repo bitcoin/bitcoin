@@ -161,9 +161,12 @@ void CInstantSendDb::WriteInstantSendLockArchived(CDBBatch& batch, const uint256
 
 std::unordered_map<uint256, CInstantSendLockPtr> CInstantSendDb::RemoveConfirmedInstantSendLocks(int nUntilHeight)
 {
-    if (nUntilHeight <= 0) {
+    if (nUntilHeight <= best_confirmed_height) {
+        LogPrint(BCLog::ALL, "CInstantSendDb::%s -- Attempting to confirm height %d, however we've already confirmed height %d. This should never happen.\n", __func__,
+                 nUntilHeight, best_confirmed_height);
         return {};
     }
+    best_confirmed_height = nUntilHeight;
 
     auto it = std::unique_ptr<CDBIterator>(db.NewIterator());
 

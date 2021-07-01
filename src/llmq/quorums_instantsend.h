@@ -42,6 +42,8 @@ class CInstantSendDb
 private:
     static const int CURRENT_VERSION = 1;
 
+    int best_confirmed_height{0};
+
     CDBWrapper& db;
 
     mutable unordered_lru_cache<uint256, CInstantSendLockPtr, StaticSaltedHasher, 10000> islockCache;
