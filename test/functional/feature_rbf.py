@@ -122,6 +122,9 @@ class ReplaceByFeeTest(SyscoinTestFramework):
         self.log.info("Running test no inherited signaling...")
         self.test_no_inherited_signaling()
 
+        self.log.info("Running test replacement relay fee...")
+        self.test_replacement_relay_fee()
+
         self.log.info("Passed")
 
     def test_simple_doublespend(self):
@@ -627,6 +630,15 @@ class ReplaceByFeeTest(SyscoinTestFramework):
         assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['bip125-replaceable'])
         assert_raises_rpc_error(-26, 'txn-mempool-conflict', self.nodes[0].sendrawtransaction, replacement_child_tx["hex"], 0)
 
+    def test_replacement_relay_fee(self):
+        wallet = MiniWallet(self.nodes[0])
+        wallet.scan_blocks(start=77, num=1)
+        tx = wallet.send_self_transfer(from_node=self.nodes[0])['tx']
+
+        # Higher fee, higher feerate, different txid, but the replacement does not provide a relay
+        # fee conforming to node's `incrementalrelayfee` policy of 1000 sat per KB.
+        tx.vout[0].nValue -= 1
+        assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx.serialize().hex())
 
 if __name__ == '__main__':
     ReplaceByFeeTest().main()
