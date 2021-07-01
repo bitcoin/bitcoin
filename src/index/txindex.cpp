@@ -91,7 +91,7 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
     bool f_legacy_flag = false;
     block_tree_db.ReadFlag("txindex", f_legacy_flag);
     if (f_legacy_flag) {
-        if (!block_tree_db.Write(DB_TXINDEX_BLOCK, best_locator)) {
+        if (!block_tree_db.Db().Write(DB_TXINDEX_BLOCK, best_locator)) {
             return error("%s: cannot write block indicator", __func__);
         }
         if (!block_tree_db.WriteFlag("txindex", false)) {
@@ -100,7 +100,7 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
     }
 
     CBlockLocator locator;
-    if (!block_tree_db.Read(DB_TXINDEX_BLOCK, locator)) {
+    if (!block_tree_db.Db().Read(DB_TXINDEX_BLOCK, locator)) {
         return true;
     }
 
@@ -111,14 +111,14 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
     const size_t batch_size = 1 << 24; // 16 MiB
 
     CDBBatch batch_newdb(*this);
-    CDBBatch batch_olddb(block_tree_db);
+    CDBBatch batch_olddb(block_tree_db.Db());
 
     std::pair<uint8_t, uint256> key;
     std::pair<uint8_t, uint256> begin_key{DB_TXINDEX, uint256()};
     std::pair<uint8_t, uint256> prev_key = begin_key;
 
     bool interrupted = false;
-    std::unique_ptr<CDBIterator> cursor(block_tree_db.NewIterator());
+    std::unique_ptr<CDBIterator> cursor(block_tree_db.Db().NewIterator());
     for (cursor->Seek(begin_key); cursor->Valid(); cursor->Next()) {
         if (ShutdownRequested()) {
             interrupted = true;
@@ -160,7 +160,7 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
             // NOTE: it's OK to delete the key pointed at by the current DB cursor while iterating
             // because LevelDB iterators are guaranteed to provide a consistent view of the
             // underlying data, like a lightweight snapshot.
-            WriteTxIndexMigrationBatches(*this, block_tree_db,
+            WriteTxIndexMigrationBatches(*this, block_tree_db.Db(),
                                          batch_newdb, batch_olddb,
                                          prev_key, key);
             prev_key = key;
@@ -176,7 +176,7 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
         batch_newdb.Write(DB_BEST_BLOCK, locator);
     }
 
-    WriteTxIndexMigrationBatches(*this, block_tree_db,
+    WriteTxIndexMigrationBatches(*this, block_tree_db.Db(),
                                  batch_newdb, batch_olddb,
                                  begin_key, key);
 

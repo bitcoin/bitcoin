@@ -7,12 +7,15 @@
 
 #include <fs.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
+#include <sync.h>
+#include <util/check.h>
 
 #include <atomic>
 #include <cstdint>
 #include <vector>
 
 class ArgsManager;
+class BlockManager;
 class BlockValidationState;
 class CBlock;
 class CBlockFileInfo;
@@ -20,7 +23,9 @@ class CBlockIndex;
 class CBlockUndo;
 class CChain;
 class CChainParams;
+class CDBWrapper;
 class ChainstateManager;
+struct CBlockIndexWorkComparator;
 struct FlatFilePos;
 namespace Consensus {
 struct Params;
@@ -44,6 +49,32 @@ extern bool fHavePruned;
 extern bool fPruneMode;
 /** Number of MiB of block files that we're trying to stay below. */
 extern uint64_t nPruneTarget;
+
+extern RecursiveMutex cs_main;
+
+/** Access to the block database (blocks/index/) */
+class CBlockTreeDB
+{
+private:
+    std::unique_ptr<CDBWrapper> m_db;
+
+public:
+    CDBWrapper& Db() { return *Assert(m_db); }
+    explicit CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+
+    bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*>>& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
+    bool ReadBlockFileInfo(int nFile, CBlockFileInfo& info);
+    bool ReadLastBlockFile(int& nFile);
+    bool WriteReindexing(bool fReindexing);
+    void ReadReindexing(bool& fReindexing);
+    bool WriteFlag(const std::string& name, bool fValue);
+    bool ReadFlag(const std::string& name, bool& fValue);
+    bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex);
+};
+
+bool LoadBlockIndexDB(BlockManager& blockman,
+                      std::set<CBlockIndex*, CBlockIndexWorkComparator>& block_index_candidates,
+                      const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 //! Check whether the block associated with this index entry is pruned or not.
 bool IsBlockPruned(const CBlockIndex* pblockindex);
@@ -78,5 +109,8 @@ bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& st
 FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp);
 
 void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args);
+
+/** Global variable that points to the active block tree (protected by cs_main) */
+extern std::unique_ptr<CBlockTreeDB> pblocktree;
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H
