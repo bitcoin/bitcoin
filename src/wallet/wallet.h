@@ -479,7 +479,7 @@ public:
     void UpgradeKeyMetadata(WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Upgrade DescriptorCaches
-    void UpgradeDescriptorCache() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void UpgradeDescriptorCache(WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     bool LoadMinVersion(int nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); nWalletVersion = nVersion; return true; }
 

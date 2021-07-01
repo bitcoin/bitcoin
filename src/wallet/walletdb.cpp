@@ -893,7 +893,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     // Upgrade all of the descriptor caches to cache the last hardened xpub
     // This operation is not atomic, but if it fails, only new entries are added so it is backwards compatible
     try {
-        pwallet->UpgradeDescriptorCache();
+        pwallet->UpgradeDescriptorCache(*this);
     } catch (...) {
         result = DBErrors::CORRUPT;
     }

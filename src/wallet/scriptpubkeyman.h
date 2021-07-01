@@ -623,7 +623,7 @@ public:
 
     bool GetDescriptorString(std::string& out) const;
 
-    void UpgradeDescriptorCache();
+    void UpgradeDescriptorCache(WalletBatch& batch);
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H

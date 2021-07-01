@@ -2267,7 +2267,7 @@ bool DescriptorScriptPubKeyMan::GetDescriptorString(std::string& out) const
     return m_wallet_descriptor.descriptor->ToNormalizedString(provider, out, &m_wallet_descriptor.cache);
 }
 
-void DescriptorScriptPubKeyMan::UpgradeDescriptorCache()
+void DescriptorScriptPubKeyMan::UpgradeDescriptorCache(WalletBatch& batch)
 {
     LOCK(cs_desc_man);
     if (m_storage.IsLocked() || m_storage.IsWalletFlagSet(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED)) {
@@ -2291,7 +2291,7 @@ void DescriptorScriptPubKeyMan::UpgradeDescriptorCache()
 
     // Cache the last hardened xpubs
     DescriptorCache diff = m_wallet_descriptor.cache.MergeAndDiff(temp_cache);
-    if (!WalletBatch(m_storage.GetDatabase()).WriteDescriptorCacheItems(GetID(), diff)) {
+    if (!batch.WriteDescriptorCacheItems(GetID(), diff)) {
         throw std::runtime_error(std::string(__func__) + ": writing cache items failed");
     }
 }

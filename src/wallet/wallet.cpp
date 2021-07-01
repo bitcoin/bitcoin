@@ -375,7 +375,7 @@ void CWallet::UpgradeKeyMetadata(WalletBatch& batch)
     SetWalletFlagWithDB(batch, WALLET_FLAG_KEY_ORIGIN_METADATA);
 }
 
-void CWallet::UpgradeDescriptorCache()
+void CWallet::UpgradeDescriptorCache(WalletBatch& batch)
 {
     if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) || IsLocked() || IsWalletFlagSet(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED)) {
         return;
@@ -383,9 +383,9 @@ void CWallet::UpgradeDescriptorCache()
 
     for (ScriptPubKeyMan* spkm : GetAllScriptPubKeyMans()) {
         DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
-        desc_spkm->UpgradeDescriptorCache();
+        desc_spkm->UpgradeDescriptorCache(batch);
     }
-    SetWalletFlag(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED);
+    SetWalletFlagWithDB(batch, WALLET_FLAG_LAST_HARDENED_XPUB_CACHED);
 }
 
 bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool accept_no_keys)
@@ -406,7 +406,7 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool accept_no_key
                 WalletBatch batch(GetDatabase());
                 UpgradeKeyMetadata(batch);
                 // Now that we've unlocked, upgrade the descriptor cache
-                UpgradeDescriptorCache();
+                UpgradeDescriptorCache(batch);
                 return true;
             }
         }
