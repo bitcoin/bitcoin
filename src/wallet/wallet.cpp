@@ -5477,7 +5477,6 @@ ScriptPubKeyMan* CWallet::GetScriptPubKeyMan(bool internal) const
 {
     const auto spk_manager = internal ? m_internal_spk_managers : m_external_spk_managers;
     if (spk_manager == nullptr) {
-        WalletLogPrintf("%s scriptPubKey Manager does not exist\n", internal ? "Internal" : "External");
         return nullptr;
     }
     return spk_manager;
