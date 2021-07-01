@@ -286,7 +286,6 @@ bool SignVerifyMessageDialog::eventFilter(QObject *object, QEvent *event)
 
 void SignVerifyMessageDialog::changeEvent(QEvent* e)
 {
-#ifdef Q_OS_MACOS
     if (e->type() == QEvent::PaletteChange) {
         ui->addressBookButton_SM->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/address-book")));
         ui->pasteButton_SM->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/editpaste")));
@@ -297,5 +296,6 @@ void SignVerifyMessageDialog::changeEvent(QEvent* e)
         ui->verifyMessageButton_VM->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/transaction_0")));
         ui->clearButton_VM->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/remove")));
     }
-#endif
+
+    QDialog::changeEvent(e);
 }
