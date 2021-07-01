@@ -58,20 +58,16 @@ class OmniDelegation(BitcoinTestFramework):
         node.generatetoaddress(1, coinbase_address)
 
         # Try to issue new tokens from the delegate address without delegating access to it - expected to fail
-        try:
-            node.omni_sendgrant(delegate_address, sink_address, 3, "55")
-        except:
-            assert_equal(1, 1)
-        else:
-            raise AssertionError("Issue new tokens from the delegate address without delegating access to it - expected to fail")
+        txid = node.omni_sendgrant(delegate_address, sink_address, 3, "55")
+        node.generatetoaddress(1, coinbase_address)
+        tx = node.omni_gettransaction(txid)
+        assert_equal(tx['valid'], False)
 
         # Try to name a delegate from an unrelated address - expected to fail
-        try:
-            node.omni_sendadddelegate(unrelated_address, 3, delegate_address)
-        except:
-            assert_equal(1, 1)
-        else:
-            raise AssertionError("Name a delegate from an unrelated address - expected to fail")
+        txid = node.omni_sendadddelegate(unrelated_address, 3, delegate_address)
+        node.generatetoaddress(1, coinbase_address)
+        tx = node.omni_gettransaction(txid)
+        assert_equal(tx['valid'], False)
 
         # Name delegate - pass
         txid = node.omni_sendadddelegate(issuer_address, 3, delegate_address)
@@ -82,28 +78,22 @@ class OmniDelegation(BitcoinTestFramework):
         assert_equal(info['delegate'], delegate_address)
 
         # Try to remove the delegate from an unrelated address - expected to fail
-        try:
-            txid = node.omni_sendremovedelegate(unrelated_address, 3, delegate_address)
-        except:
-            assert_equal(1, 1)
-        else:
-            raise AssertionError("Remove the delegate from an unrelated address - expected to fail")
+        txid = node.omni_sendremovedelegate(unrelated_address, 3, delegate_address)
+        node.generatetoaddress(1, coinbase_address)
+        tx = node.omni_gettransaction(txid)
+        assert_equal(tx['valid'], False)
 
         # Try to remove an unrelated address as issuer - expected to fail
-        try:
-            node.omni_sendremovedelegate(issuer_address, 3, unrelated_address)
-        except:
-            assert_equal(1, 1)
-        else:
-            raise AssertionError("Remove an unrelated address as issuer - expected to fail")
+        txid = node.omni_sendremovedelegate(issuer_address, 3, unrelated_address)
+        node.generatetoaddress(1, coinbase_address)
+        tx = node.omni_gettransaction(txid)
+        assert_equal(tx['valid'], False)
 
         # Try to remove an unrelated address as delegate - expected to fail
-        try:
-            node.omni_sendremovedelegate(delegate_address, 3, unrelated_address)
-        except:
-            assert_equal(1, 1)
-        else:
-            raise AssertionError("Remove an unrelated address as delegate - expected to fail")
+        txid = node.omni_sendremovedelegate(delegate_address, 3, unrelated_address)
+        node.generatetoaddress(1, coinbase_address)
+        tx = node.omni_gettransaction(txid)
+        assert_equal(tx['valid'], False)
 
         # Remove delegate as delegate - pass
         txid = node.omni_sendremovedelegate(delegate_address, 3, delegate_address)
@@ -114,12 +104,10 @@ class OmniDelegation(BitcoinTestFramework):
         assert_equal(info['delegate'], "")
 
         # Try again to remove delegate as delegate - expected to fail
-        try:
-            node.omni_sendremovedelegate(delegate_address, 3, delegate_address)
-        except:
-            assert_equal(1, 1)
-        else:
-            raise AssertionError("Remove delegate as delegate - expected to fail")
+        txid = node.omni_sendremovedelegate(delegate_address, 3, delegate_address)
+        node.generatetoaddress(1, coinbase_address)
+        tx = node.omni_gettransaction(txid)
+        assert_equal(tx['valid'], False)
 
         # Name delegate again - pass
         txid = node.omni_sendadddelegate(issuer_address, 3, delegate_address)
@@ -138,12 +126,10 @@ class OmniDelegation(BitcoinTestFramework):
         assert_equal(info['delegate'], "")
 
         # Try again to remove delegate as issuer - expected to fail
-        try:
-            node.omni_sendremovedelegate(issuer_address, 3, delegate_address)
-        except:
-            assert_equal(1, 1)
-        else:
-            raise AssertionError("Remove delegate as issuer - expected to fail")
+        txid = node.omni_sendremovedelegate(issuer_address, 3, delegate_address)
+        node.generatetoaddress(1, coinbase_address)
+        tx = node.omni_gettransaction(txid)
+        assert_equal(tx['valid'], False)
 
         # Name delegate again - pass
         txid = node.omni_sendadddelegate(issuer_address, 3, delegate_address)
@@ -154,12 +140,10 @@ class OmniDelegation(BitcoinTestFramework):
         assert_equal(info['delegate'], delegate_address)
 
         # Try to enable freezing as delegate - expected to fail
-        try:
-            node.omni_sendenablefreezing(delegate_address, 3)
-        except:
-            assert_equal(1, 1)
-        else:
-            raise AssertionError("Enable freezing as delegate - expected to fail")
+        txid = node.omni_sendenablefreezing(delegate_address, 3)
+        node.generatetoaddress(1, coinbase_address)
+        tx = node.omni_gettransaction(txid)
+        assert_equal(tx['valid'], False)
 
         # Enable freezing as issuer - pass
         txid = node.omni_sendenablefreezing(issuer_address, 3)
@@ -170,20 +154,16 @@ class OmniDelegation(BitcoinTestFramework):
         assert_equal(info['freezingenabled'], True)
 
         # Try to disable freezing as delegated - expected to fail
-        try:
-            node.omni_senddisablefreezing(delegate_address, 3)
-        except:
-            assert_equal(1, 1)
-        else:
-            raise AssertionError("Disable freezing as delegated - expected to fail")
+        txid = node.omni_senddisablefreezing(delegate_address, 3)
+        node.generatetoaddress(1, coinbase_address)
+        tx = node.omni_gettransaction(txid)
+        assert_equal(tx['valid'], False)
 
         # Freeze tokens as issuer, while delegate is set - expected to fail
-        try:
-            node.omni_sendfreeze(issuer_address, sink_address, 3, "1000")
-        except:
-            assert_equal(1, 1)
-        else:
-            raise AssertionError("Freeze tokens as issuer, while delegate is set - expected to fail")
+        txid = node.omni_sendfreeze(issuer_address, sink_address, 3, "1000")
+        node.generatetoaddress(1, coinbase_address)
+        tx = node.omni_gettransaction(txid)
+        assert_equal(tx['valid'], False)
 
         # Freeze tokens as delegate, while delegate is set - pass
         txid = node.omni_sendfreeze(delegate_address, sink_address, 3, "1000")
@@ -204,12 +184,10 @@ class OmniDelegation(BitcoinTestFramework):
         assert_equal(tx['valid'], True)
 
         # Try to freeze tokens as delegate, while delegate is set - expected to fail
-        try:
-            node.omni_sendfreeze(delegate_address, sink_address, 3, "1000")
-        except:
-            assert_equal(1, 1)
-        else:
-            raise AssertionError("Freeze tokens as delegate, while delegate is set - expected to fail")
+        txid = node.omni_sendfreeze(delegate_address, sink_address, 3, "1000")
+        node.generatetoaddress(1, coinbase_address)
+        tx = node.omni_gettransaction(txid)
+        assert_equal(tx['valid'], False)
 
         # Freeze tokens as issuer, while delegate is set - pass
         txid = node.omni_sendfreeze(issuer_address, sink_address, 3, "1000")
@@ -232,20 +210,16 @@ class OmniDelegation(BitcoinTestFramework):
         assert_equal(info['freezingenabled'], False)
 
         # Try to grant tokens as holder - expected to fail
-        try:
-            node.omni_sendgrant(sink_address, sink_address, 3, "50")
-        except:
-            assert_equal(1, 1)
-        else:
-            raise AssertionError("Grant tokens as holder - expected to fail")
+        txid = node.omni_sendgrant(sink_address, sink_address, 3, "50")
+        node.generatetoaddress(1, coinbase_address)
+        tx = node.omni_gettransaction(txid)
+        assert_equal(tx['valid'], False)
 
         # Try to grant tokens as delegate, while no delegate is set - expected to fail
-        try:
-            node.omni_sendgrant(delegate_address, sink_address, 3, "77")
-        except:
-            assert_equal(1, 1)
-        else:
-            raise AssertionError("Grant tokens as delegate, while no delegate is set - expected to fail")
+        txid = node.omni_sendgrant(delegate_address, sink_address, 3, "77")
+        node.generatetoaddress(1, coinbase_address)
+        tx = node.omni_gettransaction(txid)
+        assert_equal(tx['valid'], False)
 
         # Grant tokens as issuer, while no delegate is set - pass
         txid = node.omni_sendgrant(issuer_address, sink_address, 3, "33")
@@ -268,12 +242,10 @@ class OmniDelegation(BitcoinTestFramework):
         assert_equal(info['delegate'], delegate_address)
 
         # Try to grant tokens as issuer, while delegate is set - expected to fail
-        try:
-            node.omni_sendgrant(issuer_address, sink_address, 3, "45")
-        except:
-            assert_equal(1, 1)
-        else:
-            raise AssertionError("Grant tokens as issuer, while delegate is set - expected to fail")
+        txid = node.omni_sendgrant(issuer_address, sink_address, 3, "45")
+        node.generatetoaddress(1, coinbase_address)
+        tx = node.omni_gettransaction(txid)
+        assert_equal(tx['valid'], False)
 
         # Grant tokens as delegate, while delegate is set - pass
         txid = node.omni_sendgrant(delegate_address, sink_address, 3, "53")

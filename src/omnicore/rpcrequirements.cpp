@@ -62,17 +62,50 @@ void RequireExistingDelegate(uint32_t propertyId)
 void RequireEmptyDelegate(uint32_t propertyId)
 {
     LOCK(cs_tally);
-    PrintToConsole("has delegate: %d\n", mastercore::HasDelegate(propertyId));
     if (mastercore::HasDelegate(propertyId)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Property already has a delegate " + mastercore::GetDelegate(propertyId));
     }
 }
 
-void RequireSimilarDelegate(uint32_t propertyId, const std::string& delegate)
+void RequireSenderDelegateBeforeIssuer(uint32_t propertyId, const std::string& address)
 {
     LOCK(cs_tally);
-    if (mastercore::GetDelegate(propertyId).compare(delegate) != 0) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Delegate does not match with current delegate");
+    CMPSPInfo::Entry sp;
+    if (!mastercore::pDbSpInfo->getSP(propertyId, sp)) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to retrieve property");
+    }
+    if (sp.delegate.empty()) {
+        if (address != sp.issuer) {
+            throw JSONRPCError(RPC_TYPE_ERROR, "Sender does not match issuer");
+        }
+    } else {
+        if (address != sp.delegate) {
+            throw JSONRPCError(RPC_TYPE_ERROR, "Sender does not match delegate");
+        }
+    }
+}
+
+void RequireSenderDelegateOrIssuer(uint32_t propertyId, const std::string& address)
+{
+    LOCK(cs_tally);
+    CMPSPInfo::Entry sp;
+    if (!mastercore::pDbSpInfo->getSP(propertyId, sp)) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to retrieve property");
+    }
+    if (address != sp.issuer && address != sp.delegate) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Sender does not match issuer or delegate");
+    }
+}
+
+void RequireMatchingDelegate(uint32_t propertyId, const std::string& address)
+{
+    LOCK(cs_tally);
+    CMPSPInfo::Entry sp;
+    if (!mastercore::pDbSpInfo->getSP(propertyId, sp)) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to retrieve property");
+    }
+    if (sp.delegate != address) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Delegate does not belong to property");
     }
 }
 

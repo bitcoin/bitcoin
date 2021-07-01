@@ -1136,7 +1136,7 @@ static UniValue omni_sendgrant(const JSONRPCRequest& request)
     // perform checks
     RequireExistingProperty(propertyId);
     RequireManagedProperty(propertyId);
-    // RequireTokenIssuer(fromAddress, propertyId); TODO!!!!
+    RequireSenderDelegateBeforeIssuer(propertyId, fromAddress);
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_Grant(propertyId, amount, info);
@@ -1189,7 +1189,6 @@ static UniValue omni_sendrevoke(const JSONRPCRequest& request)
     // perform checks
     RequireExistingProperty(propertyId);
     RequireManagedProperty(propertyId);
-    RequireTokenIssuer(fromAddress, propertyId);
     RequireBalance(fromAddress, propertyId, amount);
 
     // create a payload for the transaction
@@ -1661,7 +1660,7 @@ static UniValue omni_sendfreeze(const JSONRPCRequest& request)
     // perform checks
     RequireExistingProperty(propertyId);
     RequireManagedProperty(propertyId);
-    RequireTokenIssuer(fromAddress, propertyId);
+    RequireSenderDelegateBeforeIssuer(propertyId, fromAddress);
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_FreezeTokens(propertyId, amount, refAddress);
@@ -1716,7 +1715,7 @@ static UniValue omni_sendunfreeze(const JSONRPCRequest& request)
     // perform checks
     RequireExistingProperty(propertyId);
     RequireManagedProperty(propertyId);
-    RequireTokenIssuer(fromAddress, propertyId);
+    RequireSenderDelegateBeforeIssuer(propertyId, fromAddress);
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_UnfreezeTokens(propertyId, amount, refAddress);
@@ -1769,8 +1768,6 @@ static UniValue omni_sendadddelegate(const JSONRPCRequest& request)
     RequireExistingProperty(propertyId);
     RequireManagedProperty(propertyId);
     RequireTokenIssuer(fromAddress, propertyId);
-    
-    RequireEmptyDelegate(propertyId);
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_AddDelegate(propertyId);
@@ -1800,7 +1797,7 @@ static UniValue omni_sendremovedelegate(const JSONRPCRequest& request)
     RPCHelpMan{"omni_sendremovedelegate",
        "\nRemoves a delegate for the issuance of tokens of a managed property.\n",
        {
-           {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the issuer of the tokens\n"},
+           {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the issuer or delegate of the tokens\n"},
            {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens\n"},
            {"delegateaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the delegate to be removed\n"},
        },
@@ -1821,9 +1818,9 @@ static UniValue omni_sendremovedelegate(const JSONRPCRequest& request)
     // perform checks
     RequireExistingProperty(propertyId);
     RequireManagedProperty(propertyId);
-    RequireTokenIssuer(fromAddress, propertyId);
     RequireExistingDelegate(propertyId);
-    RequireSimilarDelegate(propertyId, delegateAddress);
+    RequireSenderDelegateOrIssuer(propertyId, fromAddress);
+    RequireMatchingDelegate(propertyId, delegateAddress);
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_RemoveDelegate(propertyId);

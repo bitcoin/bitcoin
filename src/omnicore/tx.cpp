@@ -2191,8 +2191,21 @@ int CMPTransaction::logicMath_GrantTokens(CBlockIndex* pindex, uint256& blockHas
         return (PKT_ERROR_TOKENS -42);
     }
 
-    if (sender != sp.getIssuer(block) && sender != sp.getDelegate(block)) {
-        PrintToLog("%s(): rejected: sender %s is not issuer or delegate of property %d [issuer=%s, delegate=%s]\n", __func__, sender, property, sp.issuer, sp.delegate);
+    bool authorized = true;
+    // check, if there is a delegate and whether the sender is the delegate
+    if (!sp.getDelegate(block).empty()) {
+        if (sender != sp.getDelegate(block)) {
+            authorized = false;
+        }
+    // otherwise ensure sender is issuer
+    } else {
+        if (sender != sp.getIssuer(block)) {
+            authorized = false;
+        }
+    }
+    if (!authorized) {
+        PrintToLog("%s(): rejected: sender %s is not delegate or issuer of property %d [issuer=%s, delegate=%s]\n",
+                __func__, sender, property, sp.getIssuer(block), sp.getDelegate(block));
         return (PKT_ERROR_TOKENS -43);
     }
 
@@ -2507,8 +2520,21 @@ int CMPTransaction::logicMath_FreezeTokens(CBlockIndex* pindex)
         return (PKT_ERROR_TOKENS -42);
     }
 
-    if (sender != sp.getIssuer(block)) {
-        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
+    bool authorized = true;
+    // check, if there is a delegate and whether the sender is the delegate
+    if (!sp.getDelegate(block).empty()) {
+        if (sender != sp.getDelegate(block)) {
+            authorized = false;
+        }
+    // otherwise ensure sender is issuer
+    } else {
+        if (sender != sp.getIssuer(block)) {
+            authorized = false;
+        }
+    }
+    if (!authorized) {
+        PrintToLog("%s(): rejected: sender %s is not delegate or issuer of property %d [issuer=%s, delegate=%s]\n",
+                __func__, sender, property, sp.getIssuer(block), sp.getDelegate(block));
         return (PKT_ERROR_TOKENS -43);
     }
 
@@ -2558,8 +2584,21 @@ int CMPTransaction::logicMath_UnfreezeTokens(CBlockIndex* pindex)
         return (PKT_ERROR_TOKENS -42);
     }
 
-    if (sender != sp.getIssuer(block)) {
-        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
+    bool authorized = true;
+    // check, if there is a delegate and whether the sender is the delegate
+    if (!sp.getDelegate(block).empty()) {
+        if (sender != sp.getDelegate(block)) {
+            authorized = false;
+        }
+    // otherwise ensure sender is issuer
+    } else {
+        if (sender != sp.getIssuer(block)) {
+            authorized = false;
+        }
+    }
+    if (!authorized) {
+        PrintToLog("%s(): rejected: sender %s is not delegate or issuer of property %d [issuer=%s, delegate=%s]\n",
+                __func__, sender, property, sp.getIssuer(block), sp.getDelegate(block));
         return (PKT_ERROR_TOKENS -43);
     }
 
@@ -2611,7 +2650,7 @@ int CMPTransaction::logicMath_AddDelegate(CBlockIndex* pindex)
     }
 
     if (sender != sp.getIssuer(block)) {
-        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
+        PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.getIssuer(block));
         return (PKT_ERROR_TOKENS -43);
     }
 
@@ -2665,7 +2704,8 @@ int CMPTransaction::logicMath_RemoveDelegate(CBlockIndex* pindex)
     }
 
     if (sender != sp.getIssuer(block) && sender != sp.getDelegate(block)) {
-        PrintToLog("%s(): rejected: sender %s is not issuer or delegate of property %d [issuer=%s, delegate=%s]\n", __func__, sender, property, sp.getIssuer(block), sp.getDelegate(block));
+        PrintToLog("%s(): rejected: sender %s is not issuer or delegate of property %d [issuer=%s, delegate=%s]\n",
+                __func__, sender, property, sp.getIssuer(block), sp.getDelegate(block));
         return (PKT_ERROR_TOKENS -43);
     }
 
@@ -2674,7 +2714,7 @@ int CMPTransaction::logicMath_RemoveDelegate(CBlockIndex* pindex)
         return (PKT_ERROR_TOKENS -45);
     }
 
-    if (receiver.compare(sp.getDelegate(block)) != 0) {
+    if (receiver != sp.getDelegate(block)) {
         PrintToLog("%s(): rejected: delegate to remove %s does not match current delegate %s\n", __func__, receiver, sp.getDelegate(block));
         return (PKT_ERROR_TOKENS -46);
     }
