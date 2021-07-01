@@ -14,8 +14,8 @@ class HelpRpcTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
 
-        # wrong argument count
-        assert_raises_rpc_error(-1, 'help', node.help, 'foo', 'bar')
+        # wrong argument count, note: Dash's help allows for two options since we utilize subcommands
+        assert_raises_rpc_error(-1, 'help', node.help, 'foo', 'bar', 'foobar')
 
         # invalid argument
         assert_raises_rpc_error(-1, 'JSON value is not a string as expected', node.help, 0)
@@ -25,7 +25,7 @@ class HelpRpcTest(BitcoinTestFramework):
 
         # command titles
         titles = [line[3:-3] for line in node.help().splitlines() if line.startswith('==')]
-        assert_equal(titles, ['Blockchain', 'Control', 'Generating', 'Mining', 'Network', 'Rawtransactions', 'Util', 'Wallet', 'Zmq'])
+        assert_equal(titles, ['Addressindex', 'Blockchain', 'Control', 'Dash', 'Evo', 'Generating', 'Mining', 'Network', 'Rawtransactions', 'Util', 'Wallet', 'Zmq'])
 
 if __name__ == '__main__':
     HelpRpcTest().main()
