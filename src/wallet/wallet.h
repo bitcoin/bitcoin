@@ -83,6 +83,8 @@ class CWalletTx;
 struct FeeCalculation;
 enum class FeeEstimateMode;
 
+extern CCriticalSection cs_main;
+
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
 {
