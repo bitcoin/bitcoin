@@ -36,6 +36,8 @@ All available commands can be listed with `"help"`, and information about a spec
   - [omni_senddisablefreezing](#omni_senddisablefreezing)
   - [omni_sendfreeze](#omni_sendfreeze)
   - [omni_sendunfreeze](#omni_sendunfreeze)
+  - [omni_sendadddelegate](#omni_sendadddelegate)
+  - [omni_sendremovedelegate](#omni_sendremovedelegate)
   - [omni_sendanydata](#omni_sendanydata)
   - [omni_sendrawtx](#omni_sendrawtx)
   - [omni_funded_send](#omni_funded_send)
@@ -107,6 +109,8 @@ All available commands can be listed with `"help"`, and information about a spec
   - [omni_createpayload_disablefreezing](#omni_createpayload_disablefreezing)
   - [omni_createpayload_freeze](#omni_createpayload_freeze)
   - [omni_createpayload_unfreeze](#omni_createpayload_unfreeze)
+  - [omni_createpayload_adddelegate](#omni_createpayload_adddelegate)
+  - [omni_createpayload_removedelegate](#omni_createpayload_removedelegate)
   - [omni_createpayload_anydata](#omni_createpayload_anydata)
   - [omni_createpayload_sendnonfungible](#omni_createpayload_sendnonfungible)
   - [omni_createpayload_setnonfungibledata](#omni_createpayload_setnonfungibledata)
@@ -753,7 +757,7 @@ Note: Only the issuer may freeze tokens, and only if the token is of the managed
 
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `fromaddress`       | string  | required | the address to send from (must be issuer of a managed property with freezing enabled         |
+| `fromaddress`       | string  | required | the address to send from (must be delegate or issuer of a managed property with freezing enabled |
 | `toaddress`         | string  | required | the address to freeze                                                                        |
 | `propertyid`        | number  | required | the identifier of the tokens to freeze                                                       |
 | `amount`            | string  | required | the amount to freeze (note: currently unused, frozen addresses cannot transact the property) |
@@ -781,7 +785,7 @@ Note: Only the issuer may unfreeze tokens
 
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `fromaddress`       | string  | required | the address to send from (must be issuer of a managed property with freezing enabled         |
+| `fromaddress`       | string  | required | the address to send from (must be delegate or issuer of a managed property with freezing enabled |
 | `toaddress`         | string  | required | the address to unfreeze                                                                      |
 | `propertyid`        | number  | required | the identifier of the tokens to unfreeze                                                     |
 | `amount`            | string  | required | the amount to unfreeze (note: currently unused                                               |
@@ -795,6 +799,56 @@ Note: Only the issuer may unfreeze tokens
 
 ```bash
 $ omnicore-cli "omni_sendunfreeze" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs" 2 1000
+```
+
+---
+
+### omni_sendadddelegate
+
+Adds a delegate for the issuance of tokens of a managed property.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the issuer of the tokens                                                                     |
+| `propertyid`        | number  | required | the identifier of the tokens                                                                 |
+| `delegateaddress`   | string  | required | the new delegate                                                                             |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_sendadddelegate" "12GftZCQ3vwubWmRCmnfZAHdDWXj6ujenx" 21 "14TG9NsTxk2fvH8iGiFcVbquC5NPhHcFjh"
+```
+
+---
+
+### omni_sendremovedelegate
+
+Removes a delegate for the issuance of tokens of a managed property.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the issuer or delegate of the tokens                                                         |
+| `propertyid`        | number  | required | the identifier of the tokens                                                                 |
+| `delegateaddress`   | string  | required | the delegate to be removed                                                                   |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_sendremovedelegate" "12GftZCQ3vwubWmRCmnfZAHdDWXj6ujenx" 21 "14TG9NsTxk2fvH8iGiFcVbquC5NPhHcFjh"
 ```
 
 ---
@@ -1463,6 +1517,7 @@ Returns details for about the tokens or smart property to lookup.
   "url" : "uri",                  // (string) an URI, for example pointing to a website
   "divisible" : true|false,       // (boolean) whether the tokens are divisible
   "issuer" : "address",           // (string) the Bitcoin address of the issuer on record
+  "delegate" : "address",         // (string) the Bitcoin address of the issuance delegate, if there is one
   "creationtxid" : "hash",        // (string) the hex-encoded creation transaction hash
   "fixedissuance" : true|false,   // (boolean) whether the token supply is fixed
   "managedissuance" : true|false, // (boolean) whether the token supply is managed by the issuer
@@ -3075,6 +3130,58 @@ Note: if the server is not synchronized, amounts are considered as divisible, ev
 $ omnicore-cli "omni_createpayload_unfreeze" "3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs" 31 "100"
 ```
 
+
+
+
+
+
+
+
+---
+
+### omni_createpayload_adddelegate
+
+Creates the payload to add a delegate for the issuance of tokens of a managed property.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                                 |
+|---------------------|---------|----------|-------------------------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the tokens                                                                                |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_adddelegate" 21
+```
+
+---
+
+### omni_createpayload_removedelegate
+
+Creates the payload to remove a delegate for the issuance of tokens of a managed property.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                                 |
+|---------------------|---------|----------|-------------------------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the tokens                                                                                |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_removedelegate" 21
+
 ---
 
 ### omni_createpayload_anydata
@@ -3083,7 +3190,7 @@ Creates the payload to embed arbitrary data.
 
 **Arguments:**
 
-| Name                | Type    | Presence | Description                                                                                                 |
+| Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `data`              | string  | required | the hex-encoded data                                                                         |
 
