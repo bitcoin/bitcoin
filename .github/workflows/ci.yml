@@ -125,6 +125,12 @@ jobs:
         env:
           VBITCOIND_PATH: './src/vbitcoind'
         run: python3 test/integration/test_runner.py
+      - name: run pop integration benchmark
+        if: always()
+        timeout-minutes: 60
+        env:
+          VBITCOIND_PATH: './src/vbitcoind'
+        run: python3 test/integration/benchmark_runner.py
 
   x86_64-w64-mingw32:
     runs-on: ubuntu-latest
