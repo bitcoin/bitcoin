@@ -11,28 +11,6 @@ import sys
 from typing import List, Optional
 
 import lief
-import pixie
-
-def check_ELF_PIE(executable) -> bool:
-    '''
-    Check for position independent executable (PIE), allowing for address space randomization.
-    '''
-    elf = pixie.load(executable)
-    return elf.hdr.e_type == pixie.ET_DYN
-
-def check_ELF_NX(executable) -> bool:
-    '''
-    Check that no sections are writable and executable (including the stack)
-    '''
-    elf = pixie.load(executable)
-    have_wx = False
-    have_gnu_stack = False
-    for ph in elf.program_headers:
-        if ph.p_type == pixie.PT_GNU_STACK:
-            have_gnu_stack = True
-        if (ph.p_flags & pixie.PF_W) != 0 and (ph.p_flags & pixie.PF_X) != 0: # section is both writable and executable
-            have_wx = True
-    return have_gnu_stack and not have_wx
 
 def check_ELF_RELRO(executable) -> bool:
     '''
@@ -40,23 +18,25 @@ def check_ELF_RELRO(executable) -> bool:
     GNU_RELRO program header must exist
     Dynamic section must have BIND_NOW flag
     '''
-    elf = pixie.load(executable)
+    binary = lief.parse(executable)
     have_gnu_relro = False
-    for ph in elf.program_headers:
+    for segment in binary.segments:
         # Note: not checking p_flags == PF_R: here as linkers set the permission differently
         # This does not affect security: the permission flags of the GNU_RELRO program
         # header are ignored, the PT_LOAD header determines the effective permissions.
         # However, the dynamic linker need to write to this area so these are RW.
         # Glibc itself takes care of mprotecting this area R after relocations are finished.
         # See also https://marc.info/?l=binutils&m=1498883354122353
-        if ph.p_type == pixie.PT_GNU_RELRO:
+        if segment.type == lief.ELF.SEGMENT_TYPES.GNU_RELRO:
             have_gnu_relro = True
 
     have_bindnow = False
-    for flags in elf.query_dyn_tags(pixie.DT_FLAGS):
-        assert isinstance(flags, int)
-        if flags & pixie.DF_BIND_NOW:
+    try:
+        flags = binary.get(lief.ELF.DYNAMIC_TAGS.FLAGS)
+        if flags.value & lief.ELF.DYNAMIC_FLAGS.BIND_NOW:
             have_bindnow = True
+    except:
+        have_bindnow = False
 
     return have_gnu_relro and have_bindnow
 
@@ -64,12 +44,8 @@ def check_ELF_Canary(executable) -> bool:
     '''
     Check for use of stack canary
     '''
-    elf = pixie.load(executable)
-    ok = False
-    for symbol in elf.dyn_symbols:
-        if symbol.name == b'__stack_chk_fail':
-            ok = True
-    return ok
+    binary = lief.parse(executable)
+    return binary.has_symbol('__stack_chk_fail')
 
 def check_ELF_separate_code(executable):
     '''
@@ -77,60 +53,60 @@ def check_ELF_separate_code(executable):
     based on their permissions. This checks for missing -Wl,-z,separate-code
     and potentially other problems.
     '''
-    elf = pixie.load(executable)
-    R = pixie.PF_R
-    W = pixie.PF_W
-    E = pixie.PF_X
+    binary = lief.parse(executable)
+    R = lief.ELF.SEGMENT_FLAGS.R
+    W = lief.ELF.SEGMENT_FLAGS.W
+    E = lief.ELF.SEGMENT_FLAGS.X
     EXPECTED_FLAGS = {
         # Read + execute
-        b'.init': R | E,
-        b'.plt': R | E,
-        b'.plt.got': R | E,
-        b'.plt.sec': R | E,
-        b'.text': R | E,
-        b'.fini': R | E,
+        '.init': R | E,
+        '.plt': R | E,
+        '.plt.got': R | E,
+        '.plt.sec': R | E,
+        '.text': R | E,
+        '.fini': R | E,
         # Read-only data
-        b'.interp': R,
-        b'.note.gnu.property': R,
-        b'.note.gnu.build-id': R,
-        b'.note.ABI-tag': R,
-        b'.gnu.hash': R,
-        b'.dynsym': R,
-        b'.dynstr': R,
-        b'.gnu.version': R,
-        b'.gnu.version_r': R,
-        b'.rela.dyn': R,
-        b'.rela.plt': R,
-        b'.rodata': R,
-        b'.eh_frame_hdr': R,
-        b'.eh_frame': R,
-        b'.qtmetadata': R,
-        b'.gcc_except_table': R,
-        b'.stapsdt.base': R,
+        '.interp': R,
+        '.note.gnu.property': R,
+        '.note.gnu.build-id': R,
+        '.note.ABI-tag': R,
+        '.gnu.hash': R,
+        '.dynsym': R,
+        '.dynstr': R,
+        '.gnu.version': R,
+        '.gnu.version_r': R,
+        '.rela.dyn': R,
+        '.rela.plt': R,
+        '.rodata': R,
+        '.eh_frame_hdr': R,
+        '.eh_frame': R,
+        '.qtmetadata': R,
+        '.gcc_except_table': R,
+        '.stapsdt.base': R,
         # Writable data
-        b'.init_array': R | W,
-        b'.fini_array': R | W,
-        b'.dynamic': R | W,
-        b'.got': R | W,
-        b'.data': R | W,
-        b'.bss': R | W,
+        '.init_array': R | W,
+        '.fini_array': R | W,
+        '.dynamic': R | W,
+        '.got': R | W,
+        '.data': R | W,
+        '.bss': R | W,
     }
-    if elf.hdr.e_machine == pixie.EM_PPC64:
+    if binary.header.machine_type == lief.ELF.ARCH.PPC64:
         # .plt is RW on ppc64 even with separate-code
-        EXPECTED_FLAGS[b'.plt'] = R | W
+        EXPECTED_FLAGS['.plt'] = R | W
     # For all LOAD program headers get mapping to the list of sections,
     # and for each section, remember the flags of the associated program header.
     flags_per_section = {}
-    for ph in elf.program_headers:
-        if ph.p_type == pixie.PT_LOAD:
-            for section in ph.sections:
+    for segment in binary.segments:
+        if segment.type ==  lief.ELF.SEGMENT_TYPES.LOAD:
+            for section in segment.sections:
                 assert(section.name not in flags_per_section)
-                flags_per_section[section.name] = ph.p_flags
+                flags_per_section[section.name] = segment.flags
     # Spot-check ELF LOAD program header flags per section
     # If these sections exist, check them against the expected R/W/E flags
     for (section, flags) in flags_per_section.items():
         if section in EXPECTED_FLAGS:
-            if EXPECTED_FLAGS[section] != flags:
+            if int(EXPECTED_FLAGS[section]) != int(flags):
                 return False
     return True
 
@@ -203,8 +179,8 @@ def check_control_flow(executable) -> bool:
 
 CHECKS = {
 'ELF': [
-    ('PIE', check_ELF_PIE),
-    ('NX', check_ELF_NX),
+    ('PIE', check_PIE),
+    ('NX', check_NX),
     ('RELRO', check_ELF_RELRO),
     ('Canary', check_ELF_Canary),
     ('separate_code', check_ELF_separate_code),
