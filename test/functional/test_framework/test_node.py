@@ -60,18 +60,14 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir, extra_args_from_options, chain, rpchost, timewait, bitcoind, bitcoin_cli, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False):
+    def __init__(self, i, datadir, extra_args_from_options, *, chain, rpchost, timewait, bitcoind, bitcoin_cli, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False):
         self.index = i
         self.datadir = datadir
         self.chain = chain
         self.stdout_dir = os.path.join(self.datadir, "stdout")
         self.stderr_dir = os.path.join(self.datadir, "stderr")
         self.rpchost = rpchost
-        if timewait:
-            self.rpc_timeout = timewait
-        else:
-            # Wait for up to 60 seconds for the RPC server to respond
-            self.rpc_timeout = 60
+        self.rpc_timeout = timewait
         self.rpc_timeout *= Options.timeout_scale
         self.binary = bitcoind
         self.coverage_dir = coverage_dir
@@ -316,7 +312,7 @@ class TestNode():
         if 'dstaddr' not in kwargs:
             kwargs['dstaddr'] = '127.0.0.1'
 
-        p2p_conn.peer_connect(*args, **kwargs, net=self.chain)
+        p2p_conn.peer_connect(*args, **kwargs, net=self.chain)()
         self.p2ps.append(p2p_conn)
 
         return p2p_conn
@@ -380,16 +376,15 @@ class TestNodeCLI():
     def batch(self, requests):
         results = []
         for request in requests:
-           try:
-               results.append(dict(result=request()))
-           except JSONRPCException as e:
-               results.append(dict(error=e))
+            try:
+                results.append(dict(result=request()))
+            except JSONRPCException as e:
+                results.append(dict(error=e))
         return results
 
     def send_cli(self, command=None, *args, **kwargs):
         """Run dash-cli command. Deserializes returned string as python object."""
-
-        pos_args = [str(arg) for arg in args]
+        pos_args = [str(arg).lower() if type(arg) is bool else str(arg) for arg in args]
         named_args = [str(key) + "=" + str(value) for (key, value) in kwargs.items()]
         assert not (pos_args and named_args), "Cannot use positional arguments and named arguments in the same dash-cli call"
         p_args = [self.binary, "-datadir=" + self.datadir] + self.options

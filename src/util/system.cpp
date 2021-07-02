@@ -71,8 +71,6 @@
 #include <malloc.h>
 #endif
 
-#include <boost/program_options/detail/config_file.hpp>
-#include <boost/program_options/parsers.hpp>
 #include <boost/thread.hpp>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
@@ -453,7 +451,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
 
         // Check that the arg is known
         if (!(IsSwitchChar(key[0]) && key.size() == 1)) {
-            if (!IsArgKnown(key, error)) {
+            if (!IsArgKnown(key)) {
                 error = strprintf("Invalid parameter %s", key.c_str());
                 return false;
             }
@@ -473,7 +471,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
     return true;
 }
 
-bool ArgsManager::IsArgKnown(const std::string& key, std::string& error)
+bool ArgsManager::IsArgKnown(const std::string& key) const
 {
     size_t option_index = key.find('.');
     std::string arg_no_net;
@@ -598,7 +596,7 @@ void ArgsManager::AddHiddenArgs(const std::vector<std::string>& names)
     }
 }
 
-std::string ArgsManager::GetHelpMessage()
+std::string ArgsManager::GetHelpMessage() const
 {
     const bool show_debug = gArgs.GetBoolArg("-help-debug", false);
 
@@ -848,17 +846,47 @@ fs::path GetConfigFile(const std::string& confPath)
     return AbsPathForConfigVal(fs::path(confPath), false);
 }
 
+static std::string TrimString(const std::string& str, const std::string& pattern)
+{
+    std::string::size_type front = str.find_first_not_of(pattern);
+    if (front == std::string::npos) {
+        return std::string();
+    }
+    std::string::size_type end = str.find_last_not_of(pattern);
+    return str.substr(front, end - front + 1);
+}
+
+static std::vector<std::pair<std::string, std::string>> GetConfigOptions(std::istream& stream)
+{
+    std::vector<std::pair<std::string, std::string>> options;
+    std::string str, prefix;
+    std::string::size_type pos;
+    while (std::getline(stream, str)) {
+        if ((pos = str.find('#')) != std::string::npos) {
+            str = str.substr(0, pos);
+        }
+        const static std::string pattern = " \t\r\n";
+        str = TrimString(str, pattern);
+        if (!str.empty()) {
+            if (*str.begin() == '[' && *str.rbegin() == ']') {
+                prefix = str.substr(1, str.size() - 2) + '.';
+            } else if ((pos = str.find('=')) != std::string::npos) {
+                std::string name = prefix + TrimString(str.substr(0, pos), pattern);
+                std::string value = TrimString(str.substr(pos + 1), pattern);
+                options.emplace_back(name, value);
+            }
+        }
+    }
+    return options;
+}
+
 bool ArgsManager::ReadConfigStream(std::istream& stream, std::string& error, bool ignore_invalid_keys)
 {
     LOCK(cs_args);
 
-    std::set<std::string> setOptions;
-    setOptions.insert("*");
-
-    for (boost::program_options::detail::config_file_iterator it(stream, setOptions), end; it != end; ++it)
-    {
-        std::string strKey = std::string("-") + it->string_key;
-        std::string strValue = it->value[0];
+    for (const std::pair<std::string, std::string>& option : GetConfigOptions(stream)) {
+        std::string strKey = std::string("-") + option.first;
+        std::string strValue = option.second;
 
         if (InterpretNegatedOption(strKey, strValue)) {
             m_config_args[strKey].clear();
@@ -867,9 +895,13 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, std::string& error, boo
         }
 
         // Check that the arg is known
-        if (!IsArgKnown(strKey, error) && !ignore_invalid_keys) {
-            error = strprintf("Invalid configuration value %s", it->string_key.c_str());
-            return false;
+        if (!IsArgKnown(strKey)) {
+            if (!ignore_invalid_keys) {
+                error = strprintf("Invalid configuration value %s", option.first.c_str());
+                return false;
+            } else {
+                LogPrintf("Ignoring unknown configuration value %s\n", option.first);
+            }
         }
     }
     return true;

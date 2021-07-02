@@ -174,6 +174,7 @@ BITCOIN_CORE_H = \
   fs.h \
   httprpc.h \
   httpserver.h \
+  index/base.h \
   index/txindex.h \
   indirectmap.h \
   init.h \
@@ -240,6 +241,7 @@ BITCOIN_CORE_H = \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
+  shutdown.h \
   spork.h \
   stacktraces.h \
   streams.h \
@@ -328,6 +330,7 @@ libdash_server_a_SOURCES = \
   evo/specialtx.cpp \
   httprpc.cpp \
   httpserver.cpp \
+  index/base.cpp \
   index/txindex.cpp \
   init.cpp \
   dbwrapper.cpp \
@@ -380,6 +383,7 @@ libdash_server_a_SOURCES = \
   rpc/coinjoin.cpp \
   rpc/util.cpp \
   script/sigcache.cpp \
+  shutdown.cpp \
   spork.cpp \
   statsd_client.cpp \
   timedata.cpp \

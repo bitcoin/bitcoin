@@ -4,7 +4,6 @@
 
 #include <httpserver.h>
 
-#include <init.h>
 #include <chainparamsbase.h>
 #include <compat.h>
 #include <util/system.h>
@@ -12,6 +11,7 @@
 #include <util/threadnames.h>
 #include <netbase.h>
 #include <rpc/protocol.h> // For HTTP status codes
+#include <shutdown.h>
 #include <sync.h>
 #include <ui_interface.h>
 
@@ -285,7 +285,7 @@ static void http_reject_request_cb(struct evhttp_request* req, void*)
 }
 
 /** Event dispatcher thread */
-static bool ThreadHTTP(struct event_base* base, struct evhttp* http)
+static bool ThreadHTTP(struct event_base* base)
 {
     util::ThreadRename("http");
     LogPrint(BCLog::HTTP, "Entering http event loop\n");
@@ -433,17 +433,16 @@ bool UpdateHTTPServerLogging(bool enable) {
 std::thread threadHTTP;
 static std::vector<std::thread> g_thread_http_workers;
 
-bool StartHTTPServer()
+void StartHTTPServer()
 {
     LogPrint(BCLog::HTTP, "Starting HTTP server\n");
     int rpcThreads = std::max((long)gArgs.GetArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
     LogPrintf("HTTP: starting %d worker threads\n", rpcThreads);
-    threadHTTP = std::thread(ThreadHTTP, eventBase, eventHTTP);
+    threadHTTP = std::thread(ThreadHTTP, eventBase);
 
     for (int i = 0; i < rpcThreads; i++) {
         g_thread_http_workers.emplace_back(HTTPWorkQueueRun, workQueue, i);
     }
-    return true;
 }
 
 void InterruptHTTPServer()

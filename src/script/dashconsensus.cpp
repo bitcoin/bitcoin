@@ -81,7 +81,7 @@ int dashconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int 
                                     unsigned int nIn, unsigned int flags, dashconsensus_error* err)
 {
     if (!verify_flags(flags)) {
-        return dashconsensus_ERR_INVALID_FLAGS;
+        return set_error(err, dashconsensus_ERR_INVALID_FLAGS);
     }
     try {
         TxInputStream stream(SER_NETWORK, PROTOCOL_VERSION, txTo, txToLen);

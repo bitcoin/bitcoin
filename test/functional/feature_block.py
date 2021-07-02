@@ -19,7 +19,7 @@ from test_framework.mininode import (
     uint256_from_compact,
     uint256_from_str,
 )
-from test_framework.mininode import P2PDataStore, network_thread_start, network_thread_join
+from test_framework.mininode import P2PDataStore
 from test_framework.script import (
     CScript,
     MAX_SCRIPT_ELEMENT_SIZE,
@@ -74,14 +74,14 @@ class FullBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+        # Very large reorgs cause cs_main to be held for a very long time in ActivateBestChainStep,
+        # which causes RPC to hang, so we need to increase RPC timeouts
+        self.rpc_timeout = 180
         # Must set '-dip3params=2000:2000' to create pre-dip3 blocks only
         self.extra_args = [['-dip3params=2000:2000']]
 
     def setup_nodes(self):
-        # Very large reorgs cause cs_main to be held for a very long time in ActivateBestChainStep,
-        # which causes RPC to hang, so we need to increase RPC timeouts
-        # TODO remove this when bitcoin#13837 gets backported and change it to use self.rpc_timeout
-        self.add_nodes(self.num_nodes, self.extra_args, timewait=180)
+        self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
 
     def run_test(self):
@@ -1303,7 +1303,6 @@ class FullBlockTest(BitcoinTestFramework):
 
         Helper to connect and wait for version handshake."""
         self.nodes[0].add_p2p_connection(P2PDataStore())
-        network_thread_start()
         # We need to wait for the initial getheaders from the peer before we
         # start populating our blockstore. If we don't, then we may run ahead
         # to the next subtest before we receive the getheaders. We'd then send
@@ -1318,7 +1317,6 @@ class FullBlockTest(BitcoinTestFramework):
         The node gets disconnected several times in this test. This helper
         method reconnects the p2p and restarts the network thread."""
         self.nodes[0].disconnect_p2ps()
-        network_thread_join()
         self.bootstrap_p2p()
 
     def send_blocks(self, blocks, success=True, reject_code=None, reject_reason=None, request_block=True, reconnect=False, timeout=60):

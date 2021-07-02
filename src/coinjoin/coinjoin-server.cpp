@@ -8,12 +8,12 @@
 #include <evo/deterministicmns.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <init.h>
 #include <masternode/masternode-meta.h>
 #include <masternode/masternode-sync.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <script/interpreter.h>
+#include <shutdown.h>
 #include <txmempool.h>
 #include <util/system.h>
 #include <util/moneystr.h>

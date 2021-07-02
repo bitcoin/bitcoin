@@ -192,6 +192,7 @@ public:
     bool saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest);
 
     static bool isWalletEnabled();
+    bool privateKeysDisabled() const;
 
     int getNumBlocks() const;
     int getNumISLocks() const;

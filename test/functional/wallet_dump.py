@@ -73,6 +73,7 @@ class WalletDumpTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [["-keypool=90", "-usehd=1"]]
+        self.rpc_timeout = 120
 
     def setup_network(self):
         # TODO remove this when usehd=1 becomes the default
@@ -81,14 +82,10 @@ class WalletDumpTest(BitcoinTestFramework):
         self.options.cachedir = os.path.join(self.options.cachedir, 'hd')
         self._initialize_chain(extra_args=self.extra_args[0])
         self.set_cache_mocktime()
-        # Use 1 minute timeout because the initial getnewaddress RPC can take
-        # longer than the default 30 seconds due to an expensive
-        # CWallet::TopUpKeyPool call, and the encryptwallet RPC made later in
-        # the test often takes even longer.
-        self.add_nodes(self.num_nodes, extra_args=self.extra_args, timewait=60)
+        self.add_nodes(self.num_nodes, extra_args=self.extra_args)
         self.start_nodes()
 
-    def run_test (self):
+    def run_test(self):
         wallet_unenc_dump = os.path.join(self.nodes[0].datadir, "wallet.unencrypted.dump")
         wallet_enc_dump = os.path.join(self.nodes[0].datadir, "wallet.encrypted.dump")
 

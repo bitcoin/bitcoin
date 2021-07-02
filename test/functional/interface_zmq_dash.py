@@ -18,7 +18,7 @@ finally:
 
 from test_framework.test_framework import (
      DashTestFramework, skip_if_no_bitcoind_zmq, skip_if_no_py3_zmq)
-from test_framework.mininode import P2PInterface, network_thread_start
+from test_framework.mininode import P2PInterface
 from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str
 from test_framework.messages import (
     CBlock,
@@ -242,7 +242,6 @@ class DashZMQTest (DashTestFramework):
         self.subscribe(instantsend_publishers)
         # Initialize test node
         self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
-        network_thread_start()
         self.nodes[0].p2p.wait_for_verack()
         # Make sure all nodes agree
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())

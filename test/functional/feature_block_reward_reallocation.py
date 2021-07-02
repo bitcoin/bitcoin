@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment
-from test_framework.mininode import P2PDataStore, network_thread_start
+from test_framework.mininode import P2PDataStore
 from test_framework.messages import CTxOut, FromHex, CCbTx, CTransaction, ToHex
 from test_framework.script import CScript
 from test_framework.test_framework import DashTestFramework
@@ -85,7 +85,6 @@ class BlockRewardReallocationTest(DashTestFramework):
             self.nodes[0].generate(10)
 
         self.nodes[0].add_p2p_connection(P2PDataStore())
-        network_thread_start()
         self.nodes[0].p2p.wait_for_verack()
 
         self.log.info("Mine all but one remaining block in the window")
