@@ -1,7 +1,7 @@
 Widecoin Core integration/staging tree
 =====================================
 
-https://widecoincore.org
+https://widecoin.org
 
 What is Widecoin?
 ----------------
