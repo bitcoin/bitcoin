@@ -47,7 +47,7 @@ export RUN_FUZZ_TESTS=${RUN_FUZZ_TESTS:-false}
 export EXPECTED_TESTS_DURATION_IN_SECONDS=${EXPECTED_TESTS_DURATION_IN_SECONDS:-1000}
 
 export CONTAINER_NAME=${CONTAINER_NAME:-ci_unnamed}
-export DOCKER_NAME_TAG=${DOCKER_NAME_TAG:-ubuntu:18.04}
+export DOCKER_NAME_TAG=${DOCKER_NAME_TAG:-ubuntu:20.04}
 # Randomize test order.
 # See https://www.boost.org/doc/libs/1_71_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/random.html
 export BOOST_TEST_RANDOM=${BOOST_TEST_RANDOM:-1}
