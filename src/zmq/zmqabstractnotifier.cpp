@@ -22,11 +22,15 @@ bool CZMQAbstractNotifier::NotifyGovernanceVote(const std::shared_ptr<const CGov
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyEVMBlockConnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash, const bool bWaitForResponse)
+bool CZMQAbstractNotifier::NotifyNEVMComms(bool bConnect) 
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash, const bool bWaitForResponse)
+bool CZMQAbstractNotifier::NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash)
+{
+    return true;
+}
+bool CZMQAbstractNotifier::NotifyNEVMBlockDisconnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash)
 {
     return true;
 }

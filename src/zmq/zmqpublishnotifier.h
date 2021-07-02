@@ -26,6 +26,7 @@ public:
     */
     bool SendZmqMessage(const char *command, const void* data, size_t size);
     // SYSCOIN
+    bool SendZmqMessageNEVM(const char *command, const void* data, size_t size);
     /* receive zmq message
        parts:
           * command
@@ -36,6 +37,11 @@ public:
     void Shutdown() override;
 };
 // SYSCOIN
+class CZMQPublishNEVMCommsNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyNEVMComms(bool bConnect) override;
+};
 class CZMQPublishNEVMBlockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
@@ -44,12 +50,12 @@ public:
 class CZMQPublishNEVMBlockConnectNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyEVMBlockConnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash, const bool bWaitForResponse) override;
+    bool NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash) override;
 };
 class CZMQPublishNEVMBlockDisconnectNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyEVMBlockDisconnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash, const bool bWaitForResponse) override;
+    bool NotifyNEVMBlockDisconnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash) override;
 };
 class CZMQPublishHashBlockNotifier : public CZMQAbstractPublishNotifier
 {

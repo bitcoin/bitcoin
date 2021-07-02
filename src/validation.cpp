@@ -1817,16 +1817,12 @@ bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTx
     if(it != mapNEVMTxRoots.end() || pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-duplicate");
     }
-    // wait for nevm response if not IBD
-    const bool bWaitForResponse = !fInitialDownload && fLoaded;
-    // if we should be waiting for response and this block comes in from RPC/P2P, we should send nevm block data to Geth
-    if(bWaitForResponse) {
-        if(block.vchNEVMBlockData.empty()) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-empty");
-        }
+    if(!block.vchNEVMBlockData.empty()) {
         evmBlock.vchNEVMBlockData = std::move(block.vchNEVMBlockData);
-    }
-    GetMainSignals().NotifyEVMBlockConnect(evmBlock, state, fJustCheck? uint256(): nBlockHash, bWaitForResponse);
+    } else if(!fInitialDownload && fLoaded) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-empty");
+     }
+    GetMainSignals().NotifyNEVMBlockConnect(evmBlock, state, fJustCheck? uint256(): nBlockHash);
     bool res = state.IsValid();
     if(res) {
         NEVMTxRoot txRootDB;
@@ -1844,9 +1840,7 @@ bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> 
     if(!pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-missing");
     }
-    // wait for nevm response if block does exist in our txroot db
-    const bool bWaitForResponse = true;
-    GetMainSignals().NotifyEVMBlockDisconnect(evmBlock, state, nBlockHash, bWaitForResponse);
+    GetMainSignals().NotifyNEVMBlockDisconnect(evmBlock, state, nBlockHash);
     bool res = state.IsValid();
     if(res) {
         vecNEVMBlocks.emplace_back(evmBlock.nBlockHash);
@@ -6119,19 +6113,17 @@ std::vector<std::string> SanitizeGethCmdLine(const std::string& binaryURL, const
             cmdLineRet.push_back("--polygon");
         }
     }
-    if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--miner.nevmsub") == cmdLineRet.end()) {
-        if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--miner") == cmdLineRet.end()) {
-            cmdLineRet.push_back("--miner");
+    if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--miner.nevmpub") == cmdLineRet.end()) {
+        if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--mine") == cmdLineRet.end()) {
+            cmdLineRet.push_back("--mine");
         }
-        const std::string &strSub = gArgs.GetArg("-zmqsubnevm", "");
-        cmdLineRet.push_back("--miner.nevmsub");
-        cmdLineRet.push_back(strSub);
-    }
-      if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--miner.nevmpub") == cmdLineRet.end()) {
+        // Geth should subscribe to our publisher
         const std::string &strPub = gArgs.GetArg("-zmqpubnevm", "");
         cmdLineRet.push_back("--miner.nevmpub");
         cmdLineRet.push_back(strPub);
-    } 
+    }
+    cmdLineRet.push_back("--miner.etherbase");
+    cmdLineRet.push_back("0xe3b93f7cec062424eb3b9c90fc046d0f15fe54c0");
 
     return cmdLineRet;
 }
@@ -6254,7 +6246,7 @@ void KillProcess(const pid_t& pid){
     #ifndef WIN32
         int result = 0;
         for(int i =0;i<10;i++){
-            UninterruptibleSleep(std::chrono::milliseconds(500));
+            UninterruptibleSleep(std::chrono::milliseconds(1000));
             result = kill( pid, SIGINT ) ;
             if(result == 0){
                 LogPrintf("%s: Killing with SIGINT %d\n", __func__, pid);
@@ -6282,14 +6274,18 @@ void KillProcess(const pid_t& pid){
             }  
             LogPrintf("%s: Killed with SIGKILL\n", __func__);
             return;
-        }  
+        }
         LogPrintf("%s: Done trying to kill with SIGINT-SIGTERM-SIGKILL\n", __func__);            
     #endif 
 }
 bool StopGethNode(pid_t &pid)
 {
-    if(pid < 0)
+    if(pid < 0) {
         return false;
+    }
+    if(fNEVMConnection && pid > 0) {
+        GetMainSignals().NotifyNEVMComms(false);
+    }
     if(pid){
         try{
             KillProcess(pid);

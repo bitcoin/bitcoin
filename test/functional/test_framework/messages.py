@@ -271,26 +271,23 @@ class CNEVMBlock:
         return "CEVMBlock(blockhash=%064x txroot=%s receiptroot=%s blockdata=%s)" % (self.blockhash, self.txroot, self.receiptroot, self.blockdata)
 
 class CNEVMBlockConnect(CNEVMBlock):
-    __slots__ = ("sysblockhash","waitforresponse")
+    __slots__ = ("sysblockhash")
     def __init__(self):
         super(CNEVMBlockConnect, self).__init__()
         self.sysblockhash = 0
-        self.waitforresponse = False
 
     def deserialize(self, f):
         super(CNEVMBlockConnect, self).deserialize(f)
         self.sysblockhash = deser_uint256(f)
-        self.waitforresponse = struct.unpack("<?", f.read(1))[0]
 
     def serialize(self):
         r = b""
         r += super(CNEVMBlockConnect, self).serialize()
         r += ser_uint256(self.sysblockhash)
-        r += struct.pack("<?", self.waitforresponse)
         return r
 
     def __repr__(self):
-        return "CNEVMBlockConnect(blockhash=%064x sysblockhash=%064x txroot=%s receiptroot=%s blockdata=%s waitforresponse=%d)" % (self.blockhash, self.sysblockhash, self.txroot, self.receiptroot, self.blockdata, self.waitforresponse)
+        return "CNEVMBlockConnect(blockhash=%064x sysblockhash=%064x txroot=%s receiptroot=%s blockdata=%s)" % (self.blockhash, self.sysblockhash, self.txroot, self.receiptroot, self.blockdata)
 
 class CNEVMBlockDisconnect():
     __slots__ = ("sysblockhash")

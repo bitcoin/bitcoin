@@ -9,21 +9,50 @@ from test_framework.test_framework import SyscoinTestFramework
 from test_framework.messages import hash256, CNEVMBlock, CNEVMBlockConnect, CNEVMBlockDisconnect, uint256_from_str
 from test_framework.util import (
     assert_equal,
+    assert_raises_rpc_error,
 )
 from io import BytesIO
 from time import sleep
 from threading import Thread
 import random
 # these would be handlers for the 3 types of calls from Syscoin on Geth
-def receive_thread_nevmblock(self, subscriber, publisher):
+def receive_thread_nevm(self, idx, subscriber):
     while True:
         try:
-            self.log.info('receive_thread_nevmblock waiting to receive...')
-            subscriber.receive()
-            hashStr = hash256(str(random.randint(-0x80000000, 0x7fffffff)).encode())
-            hashTopic = uint256_from_str(hashStr)
-            nevmBlock = CNEVMBlock(hashTopic, hashStr, hashStr, subscriber.topic)
-            publisher.send([subscriber.topic, nevmBlock.serialize()])
+            self.log.info('receive_thread_nevm waiting to receive... idx {}'.format(idx))
+            data = subscriber.receive()
+            if data[0] == b"nevmcomms":
+                subscriber.send([b"nevmcomms", b"ack"])
+            elif data[0] == b"nevmblock":
+                hashStr = hash256(str(random.randint(-0x80000000, 0x7fffffff)).encode())
+                hashTopic = uint256_from_str(hashStr)
+                nevmBlock = CNEVMBlock(hashTopic, hashStr, hashStr, b"nevmblock")
+                subscriber.send([b"nevmblock", nevmBlock.serialize()])
+            elif data[0] == b"nevmconnect":
+                evmBlockConnect = CNEVMBlockConnect()
+                evmBlockConnect.deserialize(BytesIO(data[1]))
+                resBlock = subscriber.addBlock(evmBlockConnect)
+                res = b""
+                if resBlock:
+                    res = b"connected"
+                else:
+                    res = b"not connected"
+                # stay paused during delay test
+                while subscriber.artificialDelay == True:
+                    sleep(0.1)
+                subscriber.send([b"nevmconnect", res])
+            elif data[0] == b"nevmdisconnect":
+                evmBlockDisconnect = CNEVMBlockDisconnect()
+                evmBlockDisconnect.deserialize(BytesIO(data[1]))
+                resBlock = subscriber.deleteBlock(evmBlockDisconnect)
+                res = b""
+                if resBlock:
+                    res = b"disconnected"
+                else:
+                    res = b"not disconnected"
+                subscriber.send([b"nevmdisconnect", res])
+            else:
+                self.log.info("Unknown topic in REQ {}".format(data))
         except zmq.ContextTerminated:
             sleep(1)
             break
@@ -32,56 +61,7 @@ def receive_thread_nevmblock(self, subscriber, publisher):
             sleep(1)
             break
 
-def receive_thread_nevmblockconnect(self, idx, subscriber, publisher):
-    while True:
-        try:
-            self.log.info('receive_thread_nevmblockconnect waiting to receive... idx {}'.format(idx))
-            data = subscriber.receive()
-            self.log.info('receive_thread_nevmblockconnect received data idx {}'.format(idx))
-            evmBlockConnect = CNEVMBlockConnect()
-            evmBlockConnect.deserialize(BytesIO(data))
-            resBlock = publisher.addBlock(evmBlockConnect)
-            res = b""
-            if resBlock:
-                res = b"connected"
-            else:
-                res = b"not connected"
-            # stay paused during delay test
-            while publisher.artificialDelay == True:
-                sleep(0.1)
-            # only send response if Syscoin node is waiting for it
-            if evmBlockConnect.waitforresponse == True:
-                publisher.send([subscriber.topic, res])
-        except zmq.ContextTerminated:
-            sleep(1)
-            break
-        except zmq.ZMQError:
-            self.log.warning('zmq error, socket closed unexpectedly.')
-            sleep(1)
-            break
 
-def receive_thread_nevmblockdisconnect(self, idx, subscriber, publisher):
-    while True:
-        try:
-            self.log.info('receive_thread_nevmblockdisconnect waiting to receive... idx {}'.format(idx))
-            data = subscriber.receive()
-            self.log.info('receive_thread_nevmblockdisconnect received data idx {}'.format(idx))
-            evmBlockDisconnect = CNEVMBlockDisconnect()
-            evmBlockDisconnect.deserialize(BytesIO(data))
-            resBlock = publisher.deleteBlock(evmBlockDisconnect)
-            res = b""
-            if resBlock:
-                res = b"disconnected"
-            else:
-                res = b"not disconnected"
-            publisher.send([subscriber.topic, res])
-        except zmq.ContextTerminated:
-            sleep(1)
-            break
-        except zmq.ZMQError:
-            self.log.warning('zmq error, socket closed unexpectedly.')
-            sleep(1)
-            break
 
 def thread_generate(self, node):
     self.log.info('thread_generate start')
@@ -93,26 +73,6 @@ try:
     import zmq
 except ImportError:
     pass
-# this simulates the Geth node subscriber, subscribing to Syscoin publisher
-class ZMQSubscriber:
-    def __init__(self, socket, topic):
-        self.socket = socket
-        self.topic = topic
-
-        self.socket.setsockopt(zmq.SUBSCRIBE, self.topic)
-
-    # Receive message from publisher and verify that topic and sequence match
-    def _receive_from_publisher_and_check(self):
-        topic, body, seq = self.socket.recv_multipart()
-        # Topic should match the subscriber topic.
-        assert_equal(topic, self.topic)
-        return body
-
-    def receive(self):
-        return self._receive_from_publisher_and_check()
-
-    def close(self):
-        self.socket.close()
 
 # this simulates the Geth node publisher, publishing back to Syscoin subscriber
 class ZMQPublisher:
@@ -121,10 +81,14 @@ class ZMQPublisher:
         self.sysToNEVMBlockMapping = {}
         self.NEVMToSysBlockMapping = {}
         self.artificialDelay = False
+        self.doneTest = False
 
     # Send message to subscriber
     def _send_to_publisher_and_check(self, msg_parts):
         self.socket.send_multipart(msg_parts)
+
+    def receive(self):
+        return self.socket.recv_multipart()
 
     def send(self, msg_parts):
         return self._send_to_publisher_and_check(msg_parts)
@@ -164,6 +128,10 @@ class ZMQPublisher:
 
     def getLastNEVMBlock(self):
         return self.sysToNEVMBlockMapping[self.getLastSYSBlock()]
+    
+    def clearMappings(self):
+        self.sysToNEVMBlockMapping = {}
+        self.NEVMToSysBlockMapping = {}
 
 class ZMQTest (SyscoinTestFramework):
     def set_test_params(self):
@@ -190,72 +158,42 @@ class ZMQTest (SyscoinTestFramework):
             self.ctxpub.destroy(linger=None)
     # Restart node with the specified zmq notifications enabled, subscribe to
     # all of them and return the corresponding ZMQSubscriber objects.
-    def setup_zmq_test(self, address, addresssub, idx, *, recv_timeout=60, sync_blocks=True):
-        subscribers = []
-        subscribeServices = [(topic, address) for topic in ["nevmconnect", "nevmdisconnect", "nevmblock"]]
-        for topic, address in subscribeServices:
-            socket = self.ctx.socket(zmq.SUB)
-            subscribers.append(ZMQSubscriber(socket, topic.encode()))
-
+    def setup_zmq_test(self, address, idx, *, recv_timeout=60, sync_blocks=True):
+        socket = self.ctx.socket(zmq.REP)
+        subscriber = ZMQPublisher(socket)
         self.extra_args[idx] = ["-zmqpubnevm=%s" % address]
-        # publisher on Syscoin can have option to also be a subscriber on another address, related each publisher to a subscriber (in our case we have 3 publisher events that also would subscribe to events on the same topic)
-        self.extra_args[idx] += ["-zmqsubnevm=%s" % addresssub]
 
        
         self.restart_node(idx, self.extra_args[idx])
 
         # set subscriber's desired timeout for the test
-        for sub in subscribers:
-            sub.socket.connect(address)
-            sub.socket.set(zmq.RCVTIMEO, recv_timeout*1000)
-
-        return subscribers
-
-    # setup the publisher socket to publish events back to Syscoin from Geth simulated publisher
-    def setup_zmq_test_pub(self, address):
-        socket = self.ctxpub.socket(zmq.PUB)
-        publisher = ZMQPublisher(socket)
-        publisher.socket.bind(address)
-        return publisher
+        subscriber.socket.bind(address)
+        subscriber.socket.set(zmq.RCVTIMEO, recv_timeout*1000)
+        return subscriber
 
     def test_basic(self):
-        addresspub = 'tcp://127.0.0.1:29476'
-        addresspub1 = 'tcp://127.0.0.1:29446'
         address = 'tcp://127.0.0.1:29445'
         address1 = 'tcp://127.0.0.1:29443'
-        self.log.info("setup publishers...")
-        publisher = self.setup_zmq_test_pub(addresspub)
-        publisher1 = self.setup_zmq_test_pub(addresspub1)
+
         self.log.info("setup subscribers...")
-        subs = self.setup_zmq_test(address, addresspub, 0)
-        subs1 = self.setup_zmq_test(address1, addresspub1, 1)
+        nevmsub  = self.setup_zmq_test(address, 0)
+        nevmsub1 = self.setup_zmq_test(address1, 1)
         self.connect_nodes(0, 1)
         self.sync_blocks()
 
-        nevmblockconnect = subs[0]
-        nevmblockdisconnect = subs[1]
-        nevmblock = subs[2]
-
-        nevmblockconnect1 = subs1[0]
-        nevmblockdisconnect1 = subs1[1]
-        nevmblock1 = subs1[2]
 
         num_blocks = 10
         self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
         # start the threads to handle pub/sub of SYS/GETH communications
-        Thread(target=receive_thread_nevmblock, args=(self, nevmblock,publisher,)).start()
-        Thread(target=receive_thread_nevmblockconnect, args=(self, 0, nevmblockconnect,publisher,)).start()
-        Thread(target=receive_thread_nevmblockdisconnect, args=(self, 0, nevmblockdisconnect,publisher,)).start()
+        Thread(target=receive_thread_nevm, args=(self, 0, nevmsub,)).start()
+        Thread(target=receive_thread_nevm, args=(self, 1, nevmsub1,)).start()
 
-        Thread(target=receive_thread_nevmblock, args=(self, nevmblock1,publisher1,)).start()
-        Thread(target=receive_thread_nevmblockconnect, args=(self, 1, nevmblockconnect1,publisher1,)).start()
-        Thread(target=receive_thread_nevmblockdisconnect, args=(self, 1, nevmblockdisconnect1,publisher1,)).start()
         self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
         self.sync_blocks()
         # test simple disconnect, save best block go back to 205 (first NEVM block) and then reconsider back to tip
         bestblockhash = self.nodes[0].getbestblockhash()
-        assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
-        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        assert_equal(int(bestblockhash, 16), nevmsub.getLastSYSBlock())
+        assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
         # save 205 since when invalidating 206, the best block should be 205
         prevblockhash = self.nodes[0].getblockhash(205)
@@ -264,48 +202,52 @@ class ZMQTest (SyscoinTestFramework):
         self.nodes[1].invalidateblock(blockhash)
         self.sync_blocks()
         # ensure block 205 is the latest on publisher
-        assert_equal(int(prevblockhash, 16), publisher.getLastSYSBlock())
-        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        assert_equal(int(prevblockhash, 16), nevmsub.getLastSYSBlock())
+        assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
         # go back to 210 (tip)
         self.nodes[0].reconsiderblock(blockhash)
         self.nodes[1].reconsiderblock(blockhash)
         self.sync_blocks()
         # check that publisher is on the tip (210) again
-        assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
+        assert_equal(int(bestblockhash, 16), nevmsub.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
-        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
         # restart nodes and check for consistency
         self.log.info('restarting node 0')
         self.restart_node(0, self.extra_args[0])
         self.sync_blocks()
-        assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
+        assert_equal(int(bestblockhash, 16), nevmsub.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
-        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
         self.log.info('restarting node 1')
         self.restart_node(1, self.extra_args[1])
         self.connect_nodes(0, 1)
         self.sync_blocks()
-        assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
+        assert_equal(int(bestblockhash, 16), nevmsub.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
-        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
         # reindex nodes and there should be 6 connect messages from blocks 205-210
         # but SYS node does not wait and validate a response, because publisher would have returned "not connected" yet its still OK because its set and forget on sync/reindex
         self.log.info('reindexing node 0')
         self.extra_args[0] += ["-reindex"]
+        # clear mappings since reindex should replace
+        nevmsub.clearMappings()
         self.restart_node(0, self.extra_args[0])
         self.connect_nodes(0, 1)
         self.sync_blocks()
-        assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
+        assert_equal(int(bestblockhash, 16), nevmsub.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
-        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
         self.log.info('reindexing node 1')
         self.extra_args[1] += ["-reindex"]
+        # clear mappings since reindex should replace
+        nevmsub1.clearMappings()
         self.restart_node(1, self.extra_args[1])
         self.connect_nodes(0, 1)
         self.sync_blocks()
-        assert_equal(int(bestblockhash, 16), publisher.getLastSYSBlock())
+        assert_equal(int(bestblockhash, 16), nevmsub.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
-        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
+        assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
         # reorg test
         self.disconnect_nodes(0, 1)
         self.log.info("Mine 4 blocks on Node 0")
@@ -333,17 +275,17 @@ class ZMQTest (SyscoinTestFramework):
         self.sync_blocks()
         # test artificially delaying node0 then fork, and remove artificial delay and see node0 gets onto longest chain of node1
         self.log.info("Artificially delaying node0")
-        publisher.artificialDelay = True
+        nevmsub.artificialDelay = True
         self.log.info("Generating on node0 in separate thread")
         Thread(target=thread_generate, args=(self, self.nodes[0],)).start()
         self.log.info("Creating re-org and letting node1 become longest chain, node0 should re-org to node0")
         self.nodes[1].generatetoaddress(10, ADDRESS_BCRT1_UNSPENDABLE)
         besthash = self.nodes[1].getbestblockhash()
-        publisher.artificialDelay = False
+        nevmsub.artificialDelay = False
         sleep(1)
         self.sync_blocks()
-        assert_equal(publisher1.getLastSYSBlock(), publisher.getLastSYSBlock())
-        assert_equal(int(besthash, 16), publisher.getLastSYSBlock())
+        assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
+        assert_equal(int(besthash, 16), nevmsub.getLastSYSBlock())
         assert_equal(self.nodes[0].getbestblockhash(), self.nodes[1].getbestblockhash())
         self.log.info('done')
 if __name__ == '__main__':
