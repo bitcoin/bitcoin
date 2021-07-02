@@ -60,7 +60,7 @@ class TestSymbolChecks(unittest.TestCase):
         ''')
 
         self.assertEqual(call_symbol_check(cc, source, executable, ['-lm']),
-                (1, executable + ': symbol nextup from unsupported version GLIBC_2.24\n' +
+                (1, executable + ': symbol nextup from unsupported version GLIBC_2.24(3)\n' +
                     executable + ': failed IMPORTED_SYMBOLS'))
 
         # -lutil is part of the libc6 package so a safe bet that it's installed
@@ -79,7 +79,7 @@ class TestSymbolChecks(unittest.TestCase):
         ''')
 
         self.assertEqual(call_symbol_check(cc, source, executable, ['-lutil']),
-                (1, executable + ': NEEDED library libutil.so.1 is not allowed\n' +
+                (1, executable + ': libutil.so.1 is not in ALLOWED_LIBRARIES!\n' +
                     executable + ': failed LIBRARY_DEPENDENCIES'))
 
         # finally, check a simple conforming binary
