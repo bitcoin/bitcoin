@@ -1867,7 +1867,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
         }
     }
-
+    uiInterface.InitMessage("Loading Geth...");
+    UninterruptibleSleep(std::chrono::milliseconds{5000});
     // As LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill the GUI during the last operation. If so, exit.
     // As the program has not fully started yet, Shutdown() is possibly overkill.
