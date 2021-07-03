@@ -572,7 +572,6 @@ bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
         case Qt::Key_Enter:
             // forward these events to lineEdit
             if(obj == autoCompleter->popup()) {
-                autoCompleter->popup()->hide();
                 QApplication::postEvent(ui->lineEdit, new QKeyEvent(*keyevt));
                 autoCompleter->popup()->hide();
                 return true;
