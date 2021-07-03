@@ -583,7 +583,8 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 return false;
             }
         }
-        else if (strType != "bestblock" && strType != "bestblock_nomerkle"){
+        else if (strType != "bestblock" && strType != "bestblock_nomerkle" &&
+                strType != "minversion"){
             wss.m_unknown_records++;
         }
     } catch (...)

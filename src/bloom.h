@@ -55,10 +55,6 @@ private:
 
     unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const;
 
-    // Private constructor for CRollingBloomFilter, no restrictions on size
-    CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweak);
-    friend class CRollingBloomFilter;
-
     // Check matches for arbitrary script data elements
     bool CheckScript(const CScript& script) const;
     // Check additional matches for special transactions
