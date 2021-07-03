@@ -20,9 +20,9 @@ class RPCBindTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, None)
 
     def add_options(self, parser):
-        parser.add_option("--ipv4", action='store_true', dest="run_ipv4", help="Run ipv4 tests only", default=False)
-        parser.add_option("--ipv6", action='store_true', dest="run_ipv6", help="Run ipv6 tests only", default=False)
-        parser.add_option("--nonloopback", action='store_true', dest="run_nonloopback", help="Run non-loopback tests only", default=False)
+        parser.add_argument("--ipv4", action='store_true', dest="run_ipv4", help="Run ipv4 tests only", default=False)
+        parser.add_argument("--ipv6", action='store_true', dest="run_ipv6", help="Run ipv6 tests only", default=False)
+        parser.add_argument("--nonloopback", action='store_true', dest="run_nonloopback", help="Run non-loopback tests only", default=False)
 
     def run_bind_test(self, allow_ips, connect_to, addresses, expected):
         '''
