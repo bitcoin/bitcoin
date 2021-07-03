@@ -70,7 +70,7 @@ tool to clean up patches automatically before submission.
 - **Symbol naming conventions**. These are preferred in new code, but are not
 required when doing so would need changes to significant pieces of existing
 code.
-  - Variable and namespace names are all lowercase, and may use `_` to
+  - Variable (including function arguments) and namespace names are all lowercase, and may use `_` to
     separate words (snake_case).
     - Class member variables have a `m_` prefix.
     - Global variables have a `g_` prefix.
@@ -546,7 +546,7 @@ Strings and formatting
   - *Rationale*: These functions do overflow checking, and avoid pesky locale issues.
 
 - Avoid using locale dependent functions if possible. You can use the provided
-  [`lint-locale-dependence.sh`](/contrib/devtools/lint-locale-dependence.sh)
+  [`lint-locale-dependence.sh`](/test/lint/lint-locale-dependence.sh)
   to check for accidental use of locale dependent functions.
 
   - *Rationale*: Unnecessary locale dependence can cause bugs that are very tricky to isolate and fix.

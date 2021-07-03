@@ -19,6 +19,8 @@
 
 #ifndef WIN32
 #include <fcntl.h>
+#else
+#include <codecvt>
 #endif
 
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
@@ -671,13 +673,13 @@ bool LookupSubNet(const char* pszName, CSubNet& ret)
 #ifdef WIN32
 std::string NetworkErrorString(int err)
 {
-    char buf[256];
+    wchar_t buf[256];
     buf[0] = 0;
-    if(FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
+    if(FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
             nullptr, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            buf, sizeof(buf), nullptr))
+            buf, ARRAYSIZE(buf), nullptr))
     {
-        return strprintf("%s (%d)", buf, err);
+        return strprintf("%s (%d)", std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t>().to_bytes(buf), err);
     }
     else
     {
