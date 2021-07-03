@@ -147,7 +147,7 @@ public:
  *   - Within single quotes, no escaping is possible and no special interpretation takes place
  *
  * @param[in]    node    optional node to execute command on
- * @param[out]   result      stringified Result from the executed command(chain)
+ * @param[out]   strResult   stringified result from the executed command(chain)
  * @param[in]    strCommand  Command line to split
  * @param[in]    fExecute    set true if you want the command to be executed
  * @param[out]   pstrFilteredOut  Command line, filtered to remove any sensitive data

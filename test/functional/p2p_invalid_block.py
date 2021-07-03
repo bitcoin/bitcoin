@@ -43,7 +43,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         # Save the coinbase for later
         block1 = block
         tip = block.sha256
-        node.p2p.send_blocks_and_test([block1], node, True)
+        node.p2p.send_blocks_and_test([block1], node, success=True)
 
         self.log.info("Mature the block.")
         node.generate(100)
@@ -80,7 +80,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         assert_equal(orig_hash, block2.rehash())
         assert(block2_orig.vtx != block2.vtx)
 
-        node.p2p.send_blocks_and_test([block2], node, False, False, 16, b'bad-txns-duplicate')
+        node.p2p.send_blocks_and_test([block2], node, success=False, request_block=False, reject_code=16, reject_reason=b'bad-txns-duplicate')
 
         self.log.info("Test very broken block.")
 
@@ -93,7 +93,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         block3.rehash()
         block3.solve()
 
-        node.p2p.send_blocks_and_test([block3], node, False, False, 16, b'bad-cb-amount')
+        node.p2p.send_blocks_and_test([block3], node, success=False, request_block=False, reject_code=16, reject_reason=b'bad-cb-amount')
 
 if __name__ == '__main__':
     InvalidBlockRequestTest().main()
