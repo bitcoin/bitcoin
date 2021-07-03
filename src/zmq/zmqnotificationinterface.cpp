@@ -188,29 +188,42 @@ void TryForEachAndRemoveFailed(std::list<std::unique_ptr<CZMQAbstractNotifier>>&
         }
     }
 }
+// SYSCOIN
+template <typename Function>
+void TryForEach(std::list<std::unique_ptr<CZMQAbstractNotifier>>& notifiers, const Function& func)
+{
+    for (auto i = notifiers.begin(); i != notifiers.end(); ) {
+        CZMQAbstractNotifier* notifier = i->get();
+        if (func(notifier)) {
+            ++i;
+        } else {
+            break;
+        }
+    }
+}
 } // anonymous namespace
 // SYSCOIN
 void CZMQNotificationInterface::NotifyNEVMComms(bool bConnect)
 {
-    TryForEachAndRemoveFailed(notifiers, [&bConnect](CZMQAbstractNotifier* notifier) {
+    TryForEach(notifiers, [&bConnect](CZMQAbstractNotifier* notifier) {
         return notifier->NotifyNEVMComms(bConnect);
     });
 }
 void CZMQNotificationInterface::NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash)
 {
-    TryForEachAndRemoveFailed(notifiers, [&evmBlock, &nBlockHash, &state](CZMQAbstractNotifier* notifier) {
+    TryForEach(notifiers, [&evmBlock, &nBlockHash, &state](CZMQAbstractNotifier* notifier) {
         return notifier->NotifyNEVMBlockConnect(evmBlock, state, nBlockHash);
     });
 }
 void CZMQNotificationInterface::NotifyNEVMBlockDisconnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash)
 {
-    TryForEachAndRemoveFailed(notifiers, [&evmBlock, &nBlockHash, &state](CZMQAbstractNotifier* notifier) {
+    TryForEach(notifiers, [&evmBlock, &nBlockHash, &state](CZMQAbstractNotifier* notifier) {
         return notifier->NotifyNEVMBlockDisconnect(evmBlock, state, nBlockHash);
     });
 }
 void CZMQNotificationInterface::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state)
 {
-    TryForEachAndRemoveFailed(notifiers, [&evmBlock, &state](CZMQAbstractNotifier* notifier) {
+    TryForEach(notifiers, [&evmBlock, &state](CZMQAbstractNotifier* notifier) {
         return notifier->NotifyGetNEVMBlock(evmBlock, state);
     });
 }

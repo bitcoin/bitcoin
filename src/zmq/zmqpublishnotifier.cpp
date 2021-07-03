@@ -99,7 +99,11 @@ static int zmq_receive_multipart(void *socket, std::vector<std::string>& parts)
     assert (rc == 0);
     /* Block until a message is available to be received from socket */
     rc = zmq_msg_recv (&part, socket, 0);
-    assert (rc != -1);
+    // timed out
+    if (rc == -1) {
+        zmq_msg_close (&part);
+        return -1;
+    }
     int size = zmq_msg_size (&part);
     char* buf = static_cast<char*>(zmq_msg_data(&part));
     parts.emplace_back(std::string(buf, size));
@@ -129,6 +133,13 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext, void *pcontextsub)
             if (rc != 0)
             {
                 zmqError("Failed to bind address for subscriber");
+                zmq_close(psocketsub);
+                return false;
+            }
+            int timeout = 60000;
+            rc = zmq_setsockopt(psocketsub, ZMQ_SNDTIMEO, &timeout, sizeof(timeout));
+            if (rc != 0) {
+                zmqError("Failed to set ZMQ_SNDTIMEO");
                 zmq_close(psocketsub);
                 return false;
             }
@@ -264,6 +275,15 @@ bool CZMQAbstractPublishNotifier::ReceiveZmqMessage(std::vector<std::string>& pa
 }
 bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(bool bConnect)
 {
+    if(psocketsub) {
+        int timeout = 5000;
+        int rc = zmq_setsockopt(psocketsub, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
+        if (rc != 0) {
+            zmqError("Failed to set ZMQ_RCVTIMEO");
+            zmq_close(psocketsub);
+            return false;
+        }
+    }
     std::vector<std::string> parts;
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm communication connect %d, subscriber %s\n", bConnect? 1: 0, this->addresssub);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
@@ -283,7 +303,7 @@ bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(bool bConnect)
                 return false;
             }
             if(parts[1] != "ack") {
-                LogPrintf("NotifyNEVMComms: nevm-connect-response-invalid-data\n");
+                LogPrintf("NotifyNEVMComms: nevm-comms-response-invalid-data\n");
                 return false;
             }
         } else {
@@ -299,6 +319,15 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMBloc
     if(bFirstTime) {
         bFirstTime = false;
         GetMainSignals().NotifyNEVMComms(true);
+    }
+    if(psocketsub) {
+        int timeout = 60000;
+        int rc = zmq_setsockopt(psocketsub, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
+        if (rc != 0) {
+            zmqError("Failed to set ZMQ_RCVTIMEO");
+            zmq_close(psocketsub);
+            return false;
+        }
     }
     std::vector<std::string> parts;
     uint256 hash = evmBlock.nBlockHash;
@@ -329,6 +358,15 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(const CNE
     if(bFirstTime) {
         bFirstTime = false;
         GetMainSignals().NotifyNEVMComms(true);
+    }
+    if(psocketsub) {
+        int timeout = 30000;
+        int rc = zmq_setsockopt(psocketsub, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
+        if (rc != 0) {
+            zmqError("Failed to set ZMQ_RCVTIMEO");
+            zmq_close(psocketsub);
+            return false;
+        }
     }
     // disconnect shouldn't include the block data
     if(!evmBlock.vchNEVMBlockData.empty()) {
