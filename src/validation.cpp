@@ -1821,7 +1821,7 @@ bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTx
         evmBlock.vchNEVMBlockData = std::move(block.vchNEVMBlockData);
     } else if(!fInitialDownload && fLoaded) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-empty");
-     }
+    }
     GetMainSignals().NotifyNEVMBlockConnect(evmBlock, state, fJustCheck? uint256(): nBlockHash);
     bool res = state.IsValid();
     if(res) {
@@ -3499,9 +3499,9 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, enum Block
         return it->second;
     // SYSCOIN
     if(!block.vchNEVMBlockData.empty()) {
-        CNEVMBlockIndex* pindexNewNEVM = new CNEVMBlockIndex(block.vchNEVMBlockData);
+        CNEVMBlockIndex* pindexNewNEVM = new CNEVMBlockIndex(block);
         NEVMBlockMap::iterator mi = m_block_nevm_index.insert(std::make_pair(hash, pindexNewNEVM)).first;
-        pindexNewNEVM->phashBlock = &((*mi).first);
+        pindexNewNEVM->hashBlock = ((*mi).first);
         NEVMBlockMap::iterator miPrev = m_block_nevm_index.find(block.hashPrevBlock);
         if (miPrev != m_block_nevm_index.end())
         {
@@ -4386,21 +4386,25 @@ CNEVMBlockIndex * BlockManager::InsertNEVMBlockIndex(const uint256& hash)
     // Create new
     CNEVMBlockIndex* pindexNew = new CNEVMBlockIndex();
     mi = m_block_nevm_index.insert(std::make_pair(hash, pindexNew)).first;
-    pindexNew->phashBlock = &((*mi).first);
+    pindexNew->hashBlock = ((*mi).first);
 
     return pindexNew;
 }
-
+bool BlockManager::LoadBlockIndex(
+    const Consensus::Params& consensus_params,
+    CNEVMBlockTreeDB& nevmblocktree)
+{
+    // SYSCOIN
+    if (!nevmblocktree.LoadBlockIndexGuts(consensus_params, [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertNEVMBlockIndex(hash); }))
+        return false;
+    return true;
+}
 bool BlockManager::LoadBlockIndex(
     const Consensus::Params& consensus_params,
     CBlockTreeDB& blocktree,
-    CNEVMBlockTreeDB& nevmblocktree,
     std::set<CBlockIndex*, CBlockIndexWorkComparator>& block_index_candidates)
 {
     if (!blocktree.LoadBlockIndexGuts(consensus_params, [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); }))
-        return false;
-    // SYSCOIN
-    if (!nevmblocktree.LoadBlockIndexGuts(consensus_params, [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertNEVMBlockIndex(hash); }))
         return false;
     // Calculate nChainWork
     std::vector<std::pair<int, CBlockIndex*> > vSortedByHeight;
@@ -4470,12 +4474,19 @@ void BlockManager::Unload() {
 
     m_block_nevm_index.clear();
 }
-
-bool CChainState::LoadBlockIndexDB(const CChainParams& chainparams)
+bool CChainState::LoadNEVMBlockIndexDB(const CChainParams& chainparams)
 {
     // SYSCOIN
     if (!m_blockman.LoadBlockIndex(
-            chainparams.GetConsensus(), *pblocktree, *pnevmblocktree,
+            chainparams.GetConsensus(), *pnevmblocktree)) {
+        return false;
+    }
+    return true;
+}
+bool CChainState::LoadBlockIndexDB(const CChainParams& chainparams)
+{
+    if (!m_blockman.LoadBlockIndex(
+            chainparams.GetConsensus(), *pblocktree,
             setBlockIndexCandidates)) {
         return false;
     }
@@ -4887,6 +4898,9 @@ bool ChainstateManager::LoadBlockIndex(const CChainParams& chainparams)
 {
     AssertLockHeld(cs_main);
     // Load block index from databases
+    // SYSCOIN
+    bool retnevm = ActiveChainstate().LoadNEVMBlockIndexDB(chainparams);
+    if (!retnevm) return false;
     bool needs_init = fReindex;
     if (!fReindex) {
         bool ret = ActiveChainstate().LoadBlockIndexDB(chainparams);

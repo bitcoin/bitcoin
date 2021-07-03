@@ -340,7 +340,6 @@ bool CNEVMBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusPara
             break;
         }
     }
-
     return true;
 }
 

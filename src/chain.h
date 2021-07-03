@@ -331,22 +331,22 @@ public:
 class CNEVMBlockIndex
 {
 public:
-    //! pointer to the hash of the block, if any. Memory is owned by this CNEVMBlockIndex
-    const uint256* phashBlock{nullptr};
     //! pointer to the index of the predecessor of this block
     CNEVMBlockIndex* pprev{nullptr};
 
     std::vector<unsigned char> vchNEVMBlockData;
     uint32_t nTime{0};
+    uint256 hashBlock;
     CNEVMBlockIndex()
     {
     }
-    explicit CNEVMBlockIndex(const std::vector<unsigned char> &vchNEVMBlockDataIn): vchNEVMBlockData(vchNEVMBlockDataIn)
+    explicit CNEVMBlockIndex(const CBlock& block): vchNEVMBlockData(block.vchNEVMBlockData), nTime(block.nTime), hashBlock(block.GetHash())
     {
     }
+
     uint256 GetBlockHash() const
     {
-        return *phashBlock;
+        return hashBlock;
     }
     int64_t GetBlockTime() const
     {
@@ -458,6 +458,7 @@ public:
 
     SERIALIZE_METHODS(CDiskNEVMBlockIndex, obj)
     {
+        READWRITE(obj.hashBlock);
         READWRITE(obj.hashPrev);
         READWRITE(obj.nTime);
         READWRITE(obj.vchNEVMBlockData);
@@ -466,8 +467,8 @@ public:
     {
         std::string str = "CDiskNEVMBlockIndex(";
         str += CNEVMBlockIndex::ToString();
-        str += strprintf("\n                hashPrev=%s)",
-            hashPrev.ToString());
+        str += strprintf("\n               hashBlock=%s hashPrev=%s)",
+            hashBlock.ToString(), hashPrev.ToString());
         return str;
     }
 };

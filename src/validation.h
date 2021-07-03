@@ -485,8 +485,11 @@ public:
     // SYSCOIN
     bool LoadBlockIndex(
         const Consensus::Params& consensus_params,
+        CNEVMBlockTreeDB& nevmblocktree)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool LoadBlockIndex(
+        const Consensus::Params& consensus_params,
         CBlockTreeDB& blocktree,
-        CNEVMBlockTreeDB& nevmblocktree,
         std::set<CBlockIndex*, CBlockIndexWorkComparator>& block_index_candidates)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -837,9 +840,10 @@ private:
     void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void InvalidChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ConflictingChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool LoadBlockIndexDB(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 // SYSCOIN
-bool LoadBlockIndexDB(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool LoadNEVMBlockIndexDB(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 friend ChainstateManager;
 };
 void PruneNEVMData(CNEVMBlockIndex* pindex);
