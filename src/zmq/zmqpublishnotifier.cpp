@@ -423,11 +423,12 @@ bool CZMQPublishNEVMBlockNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, Bloc
         if(evmBlock.nBlockHash.IsNull()) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-parse-hash");
         }
-
+        if(evmBlock.nParentBlockHash.IsNull()) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-parse-phash");
+        }
         if(evmBlock.vchTxRoot.size() != 32) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-txroot");
         }
-
         if(evmBlock.vchReceiptRoot.size() != 32) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-receiptroot");
         }

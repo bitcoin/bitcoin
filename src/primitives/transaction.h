@@ -1023,12 +1023,13 @@ class NEVMTxRoot {
 class CNEVMBlock {
     public:
     uint256 nBlockHash;
+    uint256 nParentBlockHash;
     std::vector<unsigned char> vchTxRoot;
     std::vector<unsigned char> vchReceiptRoot;
     std::vector<unsigned char>  vchNEVMBlockData;
     SERIALIZE_METHODS(CNEVMBlock, obj)
     {
-        READWRITE(obj.nBlockHash, obj.vchTxRoot, obj.vchReceiptRoot, obj.vchNEVMBlockData);
+        READWRITE(obj.nBlockHash, obj.nParentBlockHash, obj.vchTxRoot, obj.vchReceiptRoot, obj.vchNEVMBlockData);
     }
 };
 bool IsSyscoinTx(const int &nVersion);

@@ -26,7 +26,7 @@ def receive_thread_nevm(self, idx, subscriber):
             elif data[0] == b"nevmblock":
                 hashStr = hash256(str(random.randint(-0x80000000, 0x7fffffff)).encode())
                 hashTopic = uint256_from_str(hashStr)
-                nevmBlock = CNEVMBlock(hashTopic, hashStr, hashStr, b"nevmblock")
+                nevmBlock = CNEVMBlock(hashTopic, hashStr, hashStr, hashStr, b"nevmblock")
                 subscriber.send([b"nevmblock", nevmBlock.serialize()])
             elif data[0] == b"nevmconnect":
                 evmBlockConnect = CNEVMBlockConnect()
