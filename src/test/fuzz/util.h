@@ -37,7 +37,7 @@
 #include <vector>
 
 template <typename... Callables>
-void CallOneOf(FuzzedDataProvider& fuzzed_data_provider, Callables... callables)
+size_t CallOneOf(FuzzedDataProvider& fuzzed_data_provider, Callables... callables)
 {
     constexpr size_t call_size{sizeof...(callables)};
     static_assert(call_size >= 1);
@@ -45,6 +45,7 @@ void CallOneOf(FuzzedDataProvider& fuzzed_data_provider, Callables... callables)
 
     size_t i{0};
     ((i++ == call_index ? callables() : void()), ...);
+    return call_size;
 }
 
 template <typename Collection>
