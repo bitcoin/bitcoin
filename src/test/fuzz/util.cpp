@@ -304,3 +304,34 @@ uint32_t ConsumeSequence(FuzzedDataProvider& fuzzed_data_provider) noexcept
                }) :
                fuzzed_data_provider.ConsumeIntegral<uint32_t>();
 }
+
+CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    CTxDestination tx_destination;
+    CallOneOf(
+        fuzzed_data_provider,
+        [&] {
+            tx_destination = CNoDestination{};
+        },
+        [&] {
+            tx_destination = PKHash{ConsumeUInt160(fuzzed_data_provider)};
+        },
+        [&] {
+            tx_destination = ScriptHash{ConsumeUInt160(fuzzed_data_provider)};
+        },
+        [&] {
+            tx_destination = WitnessV0ScriptHash{ConsumeUInt256(fuzzed_data_provider)};
+        },
+        [&] {
+            tx_destination = WitnessV0KeyHash{ConsumeUInt160(fuzzed_data_provider)};
+        },
+        [&] {
+            WitnessUnknown witness_unknown{};
+            witness_unknown.version = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+            const std::vector<uint8_t> witness_unknown_program_1 = fuzzed_data_provider.ConsumeBytes<uint8_t>(40);
+            witness_unknown.length = witness_unknown_program_1.size();
+            std::copy(witness_unknown_program_1.begin(), witness_unknown_program_1.end(), witness_unknown.program);
+            tx_destination = witness_unknown;
+        });
+    return tx_destination;
+}
