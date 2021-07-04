@@ -3719,22 +3719,11 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                 }
 
                 auto calculateFee = [&](CAmount& nFee) -> bool {
-                    // Fill in dummy signatures for fee calculation.
-                    int nIn = 0;
-                    for (const auto& coin : vecCoins) {
-                        const CScript& scriptPubKey = coin.txout.scriptPubKey;
-                        SignatureData sigdata;
-                        if (!ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata)) {
-                            strFailReason = _("Signing transaction failed");
-                            return false;
-                        } else {
-                            UpdateInput(txNew.vin[nIn], sigdata);
-                        }
-
-                        nIn++;
+                    nBytes = CalculateMaximumSignedTxSize(txNew, this, coin_control.fAllowWatchOnly);
+                    if (nBytes < 0) {
+                        strFailReason = _("Signing transaction failed");
+                        return false;
                     }
-
-                    nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
 
                     if (nExtraPayloadSize != 0) {
                         // account for extra payload in fee calculation
