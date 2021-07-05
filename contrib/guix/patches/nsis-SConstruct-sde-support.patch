@@ -1,3 +1,6 @@
+https://github.com/kichik/nsis/pull/13
+https://sourceforge.net/p/nsis/code/7248/
+
 diff --git a/SConstruct b/SConstruct
 index e8252c9..41786f2 100755
 --- a/SConstruct
