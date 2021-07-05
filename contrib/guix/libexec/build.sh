@@ -214,6 +214,7 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    x86_64_linux_NM=x86_64-linux-gnu-nm \
                                    x86_64_linux_STRIP=x86_64-linux-gnu-strip \
                                    qt_config_opts_i686_linux='-platform linux-g++ -xplatform bitcoin-linux-g++' \
+                                   qt_config_opts_x86_64_linux='-platform linux-g++ -xplatform bitcoin-linux-g++' \
                                    FORCE_USE_SYSTEM_CLANG=1
 
 
@@ -445,5 +446,6 @@ mv --no-target-directory "$OUTDIR" "$ACTUAL_OUTDIR" \
         find "$ACTUAL_OUTDIR" -type f
     } | xargs realpath --relative-base="$PWD" \
       | xargs sha256sum \
+      | sort -k2 \
       | sponge "$ACTUAL_OUTDIR"/SHA256SUMS.part
 )
