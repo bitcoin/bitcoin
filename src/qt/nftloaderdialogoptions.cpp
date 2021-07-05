@@ -18,6 +18,8 @@
 #include <config/bitcoin-config.h> /* for USE_QRCODE */
 #endif
 #include <primitives\dynnft_manager.cpp>
+#include <QSettings>
+#include <QFileDialog>
 
 NftLoaderDialogOptions::NftLoaderDialogOptions(const PlatformStyle* _platformStyle, QWidget* parent) :
     QDialog(parent, GUIUtil::dialog_flags),
@@ -28,11 +30,9 @@ NftLoaderDialogOptions::NftLoaderDialogOptions(const PlatformStyle* _platformSty
     ui->setupUi(this);
     GUIUtil::handleCloseWindowShortcut(this);
 
-    //setCurrentWidget(ui->SendCoins);
-
-    // Connect signals
-    //connect(ui->deleteButton, &QPushButton::clicked, this, &createAssetClassButto::deleteClicked);
-    //connect(ui->nftCreateAssetClassFee, &BitcoinAmountField::valueChanged, this, &NftLoaderDialogOptions::payAmountChanged);
+    // init transaction fee section
+    ui->nftCreateAssetClassFee->setDisplayUnit(1); //1 = Atom
+    ui->nftCreateAssetFee->setDisplayUnit(1);      //1 = Atom
 }
 
 void NftLoaderDialogOptions::setModel(WalletModel* _model)
@@ -98,6 +98,30 @@ void NftLoaderDialogOptions::on_createAssetClassButton_clicked()
     return;
 }
 
+void NftLoaderDialogOptions::on_ellipsisButton_clicked()
+{
+    QString dir = QDir::toNativeSeparators(QFileDialog::getOpenFileName(nullptr, "Choose data file", ui->nftCreateAssetBinary->text(),"*.jpg; *.png"));
+    if (!dir.isEmpty())
+        ui->nftCreateAssetBinary->setText(dir);
+}
+
+QString NftLoaderDialogOptions::getAssetBinaryFile()
+{
+    return ui->nftCreateAssetBinary->text();
+}
+
+void NftLoaderDialogOptions::setAssetBinaryFile(const QString& dataDir)
+{
+    ui->nftCreateAssetBinary->setText(dataDir);
+    if (dataDir == GUIUtil::getDefaultDataDirectory()) {
+        ui->nftCreateAssetBinary->setEnabled(false);
+        ui->ellipsisButton->setEnabled(false);
+    } else {
+        ui->nftCreateAssetBinary->setEnabled(true);
+        ui->ellipsisButton->setEnabled(true);
+    }
+}
+
 void NftLoaderDialogOptions::on_createAssetButton_clicked()
 {
     //Create asset workflow is basically the same as create asset except the user needs to pick an asset class from the dropdown
@@ -124,7 +148,7 @@ void NftLoaderDialogOptions::on_createAssetButton_clicked()
         asset->hash = "";
         asset->assetClassHash = assetClassCurrent->hash;
         asset->metaData = ui->nftCreateAssetMetadata->toPlainText().toStdString();
-        asset->binaryData = ui->nftCreateAssetBinary->currentText().toStdString();
+        asset->binaryData = ui->nftCreateAssetBinary->text().toStdString();
         asset->owner = "";
         asset->serial = 1;
 

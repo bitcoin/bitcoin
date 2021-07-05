@@ -93,12 +93,12 @@
       <rect>
        <x>80</x>
        <y>240</y>
-       <width>133</width>
+       <width>191</width>
        <height>20</height>
       </rect>
      </property>
      <property name="toolTip">
-      <string>The amount to send in the selected unit</string>
+      <string>The fee is numeric and must be 0 or positive whole number (in Atoms)</string>
      </property>
     </widget>
     <widget class="QLabel" name="labelStatus">
@@ -204,16 +204,6 @@
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QComboBox" name="nftCreateAssetBinary">
-     <property name="geometry">
-      <rect>
-       <x>90</x>
-       <y>240</y>
-       <width>171</width>
-       <height>22</height>
-      </rect>
-     </property>
-    </widget>
     <widget class="QLabel" name="label_5">
      <property name="geometry">
       <rect>
@@ -253,14 +243,52 @@
     <widget class="BitcoinAmountField" name="nftCreateAssetFee">
      <property name="geometry">
       <rect>
-       <x>100</x>
+       <x>90</x>
        <y>280</y>
-       <width>133</width>
+       <width>221</width>
        <height>20</height>
       </rect>
      </property>
      <property name="toolTip">
-      <string>The amount to send in the selected unit</string>
+      <string>The fee is numeric and must be 0 or positive whole number (in Atoms)</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="nftCreateAssetBinary">
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>240</y>
+       <width>371</width>
+       <height>20</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="ellipsisButton">
+     <property name="geometry">
+      <rect>
+       <x>470</x>
+       <y>240</y>
+       <width>30</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>30</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="text">
+      <string notr="true">…</string>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
      </property>
     </widget>
    </widget>

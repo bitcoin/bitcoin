@@ -29,6 +29,9 @@ public:
     explicit NftLoaderDialogOptions(const PlatformStyle* platformStyle, QWidget* parent = nullptr);
     ~NftLoaderDialogOptions();
 
+     QString getAssetBinaryFile();
+    void setAssetBinaryFile(const QString& dataDir);
+
     enum Tab {
         TAB_CREATE_ASSET_CLASS,
         TAB_CREATE_ASSET,
@@ -40,7 +43,7 @@ public:
     bool validate(interfaces::Node& node);
     bool validateFee();
     bool validate2(interfaces::Node& node);
-    bool validateFee2();
+    bool validateFee2();   
 
 private:
     Ui::NftLoaderDialogOptions* ui;
@@ -55,6 +58,7 @@ private Q_SLOTS:
     void on_createAssetClassButton_clicked();
     void on_createAssetButton_clicked();
     void on_sendAssetButton_clicked();
+    void on_ellipsisButton_clicked();
 };
 
 #endif // BITCOIN_QT_NftLoaderDialogOptions_H
