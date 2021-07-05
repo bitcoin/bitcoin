@@ -1,0 +1,98 @@
+commit dc23a45db566095e83ff0b7a57afc87fb5ca89a1
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Wed Sep 21 10:45:32 2016 +0200
+
+    Avoid running $(CXX) during build to obtain header file paths
+    
+    This reduces the build time somewhat and is particularly noticeable
+    during rebuilds with few code changes.
+
+diff --git a/Makerules b/Makerules
+index 7e4077ee50..c338850de5 100644
+--- a/Makerules
++++ b/Makerules
+@@ -121,14 +121,10 @@ ifneq (,$(CXX))
+ # will be used instead of /usr/include/stdlib.h and /usr/include/math.h.
+ before-compile := $(common-objpfx)cstdlib $(common-objpfx)cmath \
+ 	          $(before-compile)
+-cstdlib=$(shell echo "\#include <cstdlib>" | $(CXX) -M -MP -x c++ - \
+-		| sed -n "/cstdlib:/{s/:$$//;p}")
+-$(common-objpfx)cstdlib: $(cstdlib)
++$(common-objpfx)cstdlib: $(c++-cstdlib-header)
+ 	$(INSTALL_DATA) $< $@T
+ 	$(move-if-change) $@T $@
+-cmath=$(shell echo "\#include <cmath>" | $(CXX) -M -MP -x c++ - \
+-		| sed -n "/cmath:/{s/:$$//;p}")
+-$(common-objpfx)cmath: $(cmath)
++$(common-objpfx)cmath: $(c++-cmath-header)
+ 	$(INSTALL_DATA) $< $@T
+ 	$(move-if-change) $@T $@
+ endif
+diff --git a/config.make.in b/config.make.in
+index 95c6f36876..04a8b3ed7f 100644
+--- a/config.make.in
++++ b/config.make.in
+@@ -45,6 +45,8 @@ defines = @DEFINES@
+ sysheaders = @sysheaders@
+ sysincludes = @SYSINCLUDES@
+ c++-sysincludes = @CXX_SYSINCLUDES@
++c++-cstdlib-header = @CXX_CSTDLIB_HEADER@
++c++-cmath-header = @CXX_CMATH_HEADER@
+ all-warnings = @all_warnings@
+ enable-werror = @enable_werror@
+ 
+diff --git a/configure b/configure
+index 17625e1041..6ff252744b 100755
+--- a/configure
++++ b/configure
+@@ -635,6 +635,8 @@ BISON
+ INSTALL_INFO
+ PERL
+ BASH_SHELL
++CXX_CMATH_HEADER
++CXX_CSTDLIB_HEADER
+ CXX_SYSINCLUDES
+ SYSINCLUDES
+ AUTOCONF
+@@ -5054,6 +5056,18 @@ fi
+ 
+ 
+ 
++# Obtain some C++ header file paths.  This is used to make a local
++# copy of those headers in Makerules.
++if test -n "$CXX"; then
++  find_cxx_header () {
++    echo "#include <$1>" | $CXX -M -MP -x c++ - | sed -n "/$1:/{s/:\$//;p}"
++  }
++  CXX_CSTDLIB_HEADER="$(find_cxx_header cstdlib)"
++  CXX_CMATH_HEADER="$(find_cxx_header cmath)"
++fi
++
++
++
+ # Test if LD_LIBRARY_PATH contains the notation for the current directory
+ # since this would lead to problems installing/building glibc.
+ # LD_LIBRARY_PATH contains the current directory if one of the following
+diff --git a/configure.ac b/configure.ac
+index 33bcd62180..9938ab0dc2 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1039,6 +1039,18 @@ fi
+ AC_SUBST(SYSINCLUDES)
+ AC_SUBST(CXX_SYSINCLUDES)
+ 
++# Obtain some C++ header file paths.  This is used to make a local
++# copy of those headers in Makerules.
++if test -n "$CXX"; then
++  find_cxx_header () {
++    echo "#include <$1>" | $CXX -M -MP -x c++ - | sed -n "/$1:/{s/:\$//;p}"
++  }
++  CXX_CSTDLIB_HEADER="$(find_cxx_header cstdlib)"
++  CXX_CMATH_HEADER="$(find_cxx_header cmath)"
++fi
++AC_SUBST(CXX_CSTDLIB_HEADER)
++AC_SUBST(CXX_CMATH_HEADER)
++
+ # Test if LD_LIBRARY_PATH contains the notation for the current directory
+ # since this would lead to problems installing/building glibc.
+ # LD_LIBRARY_PATH contains the current directory if one of the following

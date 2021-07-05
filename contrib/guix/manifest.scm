@@ -135,11 +135,25 @@ chain for " target " development."))
   (package-with-extra-patches gcc-8
     (search-our-patches "gcc-8-sort-libtool-find-output.patch")))
 
+;; Building glibc with stack smashing protector first landed in glibc 2.25, use
+;; this function to disable for older glibcs
+;;
+;; From glibc 2.25 changelog:
+;;
+;;   * Most of glibc can now be built with the stack smashing protector enabled.
+;;     It is recommended to build glibc with --enable-stack-protector=strong.
+;;     Implemented by Nick Alcock (Oracle).
+(define (make-glibc-without-ssp xglibc)
+  (package-with-extra-configure-variable
+   (package-with-extra-configure-variable
+    xglibc "libc_cv_ssp" "no")
+   "libc_cv_ssp_strong" "no"))
+
 (define* (make-syscoin-cross-toolchain target
                                        #:key
                                        (base-gcc-for-libc gcc-7)
                                        (base-kernel-headers linux-libre-headers-5.4)
-                                       (base-libc glibc)  ; glibc 2.31
+                                       (base-libc (make-glibc-without-ssp glibc-2.24))
                                        (base-gcc (make-gcc-rpath-link base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Syscoin Core release binaries."
@@ -557,6 +571,28 @@ and endian independent.")
 inspecting signatures in Mach-O binaries.")
       (license license:expat))))
 
+(define-public glibc-2.24
+  (package
+    (inherit glibc)
+    (version "2.24")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://sourceware.org/git/glibc.git")
+                    (commit "0d7f1ed30969886c8dde62fbf7d2c79967d4bace")))
+              (file-name (git-file-name "glibc" "0d7f1ed30969886c8dde62fbf7d2c79967d4bace"))
+              (sha256
+               (base32
+                "0g5hryia5v1k0qx97qffgwzrz4lr4jw3s5kj04yllhswsxyjbic3"))
+              (patches (search-our-patches "glibc-ldd-x86_64.patch"
+                                           "glibc-versioned-locpath.patch"
+                                           "glibc-2.24-elfm-loadaddr-dynamic-rewrite.patch"
+                                           "glibc-2.24-no-build-time-cxx-header-run.patch"))))))
+
+(define glibc-2.27/bitcoin-patched
+  (package-with-extra-patches glibc-2.27
+    (search-our-patches "glibc-2.27-riscv64-Use-__has_include__-to-include-asm-syscalls.h.patch")))
+
 (packages->manifest
  (append
   (list ;; The Basics
@@ -606,7 +642,10 @@ inspecting signatures in Mach-O binaries.")
                  (make-nsis-with-sde-support nsis-x86_64)
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list (make-syscoin-cross-toolchain target)))
+           (list (cond ((string-contains target "riscv64-")
+                        (make-syscoin-cross-toolchain target #:base-libc glibc-2.27/syscoin-patched))
+                       (else
+                        (make-syscoin-cross-toolchain target)))))
           ((string-contains target "darwin")
            (list clang-toolchain-10 binutils imagemagick libtiff librsvg font-tuffy cmake xorriso python-signapple))
           (else '())))))
