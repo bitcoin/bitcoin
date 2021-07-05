@@ -18,6 +18,8 @@ $(1)_ldflags=$$($$($(1)_type)_LDFLAGS) \
 $(1)_cppflags=$$($$($(1)_type)_CPPFLAGS) \
               $$($$($(1)_type)_$$(release_type)_CPPFLAGS) \
               -I$$($$($(1)_type)_prefix)/include
+$(1)_autoconfflags=$$($$($(1)_type)_AUTOCONFFLAGS) \
+                   $$($$($(1)_type)_$$(release_type)_AUTOCONFFLAGS)
 $(1)_recipe_hash:=
 endef
 
@@ -129,6 +131,11 @@ $(1)_config_opts+=$$($(1)_config_opts_$(host_arch)) $$($(1)_config_opts_$(host_a
 $(1)_config_opts+=$$($(1)_config_opts_$(host_os)) $$($(1)_config_opts_$(host_os)_$(release_type))
 $(1)_config_opts+=$$($(1)_config_opts_$(host_arch)_$(host_os)) $$($(1)_config_opts_$(host_arch)_$(host_os)_$(release_type))
 
+$(1)_autoconfflags+=$$($(1)_autoconfflags_$(release_type))
+$(1)_autoconfflags+=$$($(1)_autoconfflags_$(host_arch)) $$($(1)_autoconfflags_$(host_arch)_$(release_type))
+$(1)_autoconfflags+=$$($(1)_autoconfflags_$(host_os)) $$($(1)_autoconfflags_$(host_os)_$(release_type))
+$(1)_autoconfflags+=$$($(1)_autoconfflags_$(host_arch)_$(host_os)) $$($(1)_autoconfflags_$(host_arch)_$(host_os)_$(release_type))
+
 $(1)_config_env+=$$($(1)_config_env_$(release_type))
 $(1)_config_env+=$($(1)_config_env_$(host_arch)) $($(1)_config_env_$(host_arch)_$(release_type))
 $(1)_config_env+=$($(1)_config_env_$(host_os)) $($(1)_config_env_$(host_os)_$(release_type))
@@ -146,7 +153,7 @@ $(1)_stage_env+=PATH=$(build_prefix)/bin:$(PATH)
 # config.guess, which is what we set it too here. This also quells autoconf
 # warnings, "If you wanted to set the --build type, don't use --host.",
 # when using versions older than 2.70.
-$(1)_autoconf=./configure --build=$(BUILD) --host=$($($(1)_type)_host) --prefix=$($($(1)_type)_prefix) $$($(1)_config_opts) CC="$$($(1)_cc)" CXX="$$($(1)_cxx)"
+$(1)_autoconf=./configure --build=$(BUILD) --host=$($($(1)_type)_host) --prefix=$($($(1)_type)_prefix) $$($(1)_config_opts) $$($(1)_autoconfflags) CC="$$($(1)_cc)" CXX="$$($(1)_cxx)"
 ifneq ($($(1)_nm),)
 $(1)_autoconf += NM="$$($(1)_nm)"
 endif
