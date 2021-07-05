@@ -372,7 +372,7 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel,
                               Q_ARG(bool, isMine),
                               Q_ARG(QString, strPurpose),
                               Q_ARG(int, status),
-                              Q_ARG(bool, walletmodel->wallet().isUsedAddress(address)));
+                              Q_ARG(bool, walletmodel->wallet().hasAddressReceived(address)));
     assert(invoked);
 }
 

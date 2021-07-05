@@ -133,8 +133,8 @@ public:
     //! List locked coins.
     virtual void listLockedCoins(std::vector<COutPoint>& outputs) = 0;
 
-    //! Whether this address has been used.
-    virtual bool isUsedAddress(const CTxDestination& dst) = 0;
+    //! Whether this address has been used (has received).
+    virtual bool hasAddressReceived(const CTxDestination& dst) = 0;
 
     //! Create transaction.
     virtual CTransactionRef createTransaction(const std::vector<CRecipient>& recipients,
