@@ -37,6 +37,7 @@
 #endif
 
 #include <QAbstractButton>
+#include <QAbstractItemModel>
 #include <QDateTime>
 #include <QFont>
 #include <QKeyEvent>
@@ -698,7 +699,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
 
         // peer table signal handling - update peer details when selecting new node
         connect(ui->peerWidget->selectionModel(), &QItemSelectionModel::selectionChanged, this, &RPCConsole::updateDetailWidget);
-        connect(model->getPeerTableModel(), &PeerTableModel::changed, this, &RPCConsole::updateDetailWidget);
+        connect(model->getPeerTableModel(), &QAbstractItemModel::dataChanged, [this] { updateDetailWidget(); });
 
         // set up ban table
         ui->banlistWidget->setModel(model->getBanTableModel());
