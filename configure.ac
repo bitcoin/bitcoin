@@ -1627,8 +1627,8 @@ if test "x$use_ccache" != "xno"; then
   fi
   AC_MSG_RESULT($use_ccache)
   if test "x$use_ccache" = "xyes"; then
-    AX_CHECK_COMPILE_FLAG([-fdebug-prefix-map=A=B],[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -fdebug-prefix-map=\$(abs_srcdir)=."],,[[$CXXFLAG_WERROR]])
-    AX_CHECK_PREPROC_FLAG([-fmacro-prefix-map=A=B],[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -fmacro-prefix-map=\$(abs_srcdir)=."],,[[$CXXFLAG_WERROR]])
+    AX_CHECK_COMPILE_FLAG([-fdebug-prefix-map=A=B],[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -fdebug-prefix-map=\$(abs_top_srcdir)=."],,[[$CXXFLAG_WERROR]])
+    AX_CHECK_PREPROC_FLAG([-fmacro-prefix-map=A=B],[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -fmacro-prefix-map=\$(abs_top_srcdir)=."],,[[$CXXFLAG_WERROR]])
   fi
 fi
 
