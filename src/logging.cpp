@@ -73,7 +73,7 @@ void BCLog::Logger::StartRotate()
     RemoveRotate();
 }
 
-bool BCLog::Logger::StartLogging()
+const std::string BCLog::Logger::StartLogging()
 {
     StdLockGuard scoped_lock(m_cs);
 
@@ -84,18 +84,42 @@ bool BCLog::Logger::StartLogging()
         assert(!m_file_path.empty());
         m_fileout = fsbridge::fopen(m_file_path, "a");
         if (!m_fileout) {
-            return false;
+            return strprintf("Could not open debug log file %s", m_file_path.string());
         }
+
         // Special files (e.g. device nodes) may not have a size.
         try {
             m_file_size = fs::file_size(m_file_path);
         } catch (const fs::filesystem_error&) {
             // We can't do log rotation if it's not a regular file.
+            if (m_rotate_requested) {
+                return strprintf(
+                    "The debug log file %s does not appear to be a regular file; "
+                    "this prevents log rotation. Please disable log rotation by "
+                    "specifying -debuglogrotatekeep=0 or specify a regular file "
+                    "as the debug log file using -debuglogfile.",
+                    m_file_path.string());
+            }
             m_rotate_keep = 0;
         }
         // It gets complicated to add a timestamp to an arbitrary file name,
         // so require "debug.log".
-        if (m_file_path.filename() != "debug.log") m_rotate_keep = 0;
+        if (m_file_path.filename() != "debug.log") {
+            if (m_rotate_requested) {
+                return strprintf(
+                    "The debug log file %s is not named \"debug.log\"; "
+                    "this prevents log rotation. Please disable log rotation by "
+                    "specifying -debuglogrotatekeep=0 or specify a debug log file "
+                    "path that ends in \"/debug.log\" using -debuglogfile.",
+                    m_file_path.string());
+            }
+            m_rotate_keep = 0;
+        }
+        if (m_file_limit == 0) {
+            return strprintf(
+                "The debug log file %s size limit in MB must be greater than zero.",
+                m_file_path.string());
+        }
         if (m_rotate_keep > 0) StartRotate();
 
         setbuf(m_fileout, nullptr); // unbuffered
@@ -120,7 +144,7 @@ bool BCLog::Logger::StartLogging()
     }
     if (m_print_to_console) fflush(stdout);
 
-    return true;
+    return {};
 }
 
 void BCLog::Logger::DisconnectTestLogger()

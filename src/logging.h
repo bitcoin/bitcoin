@@ -109,6 +109,8 @@ namespace BCLog {
         int m_file_limit;
         /** The number of old (rotated) debug.log files to retain */
         int m_rotate_keep;
+        /** Whether log rotation was explicitly requested */
+        bool m_rotate_requested;
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
@@ -136,8 +138,8 @@ namespace BCLog {
             m_print_callbacks.erase(it);
         }
 
-        /** Start logging (and flush all buffered messages) */
-        bool StartLogging();
+        /** Start logging (and flush all buffered messages), returns error string (empty if none ) */
+        const std::string StartLogging();
         /** Initialize debug.log rotation (find existing rotated debug.log files) */
         void StartRotate() EXCLUSIVE_LOCKS_REQUIRED(m_cs);
         /** Remove (delete) excess debug.log rotation files */

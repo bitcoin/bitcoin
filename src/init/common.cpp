@@ -92,6 +92,7 @@ void SetLoggingOptions(const ArgsManager& args)
 #endif
     LogInstance().m_log_sourcelocations = args.GetBoolArg("-logsourcelocations", DEFAULT_LOGSOURCELOCATIONS);
     LogInstance().m_rotate_keep = args.GetArg("-debuglogrotatekeep", DEFAULT_DEBUGLOGROTATEKEEP);
+    LogInstance().m_rotate_requested = args.IsArgSet("-debuglogrotatekeep") && LogInstance().m_rotate_keep > 0;
     LogInstance().m_file_limit = args.GetArg("-debugloglimit", DEFAULT_DEBUGLOGMB);
 
     fLogIPs = args.GetBoolArg("-logips", DEFAULT_LOGIPS);
@@ -130,9 +131,11 @@ bool StartLogging(const ArgsManager& args)
             LogInstance().ShrinkDebugFile();
         }
     }
-    if (!LogInstance().StartLogging()) {
-            return InitError(strprintf(Untranslated("Could not open debug log file %s"),
-                LogInstance().m_file_path.string()));
+    {
+        const std::string err_msg = LogInstance().StartLogging();
+        if (!err_msg.empty()) {
+            return InitError(Untranslated(err_msg));
+        }
     }
 
     if (!LogInstance().m_log_timestamps)
