@@ -1401,6 +1401,9 @@ CAmount GetBlockSubsidy(unsigned int nHeight, const CChainParams& params, bool f
     }
 
     CAmount nSubsidy = 38.5 * COIN;
+    // account for adjustment from 1 to 2.5 min blocks
+    if(nHeight >= (unsigned int)consensusParams.nNEVMStartBlock)
+        nSubsidy *= 2.5;
     int reductions = nHeight / consensusParams.nSubsidyHalvingInterval;
     if (reductions >= 50) {
         return 0;
@@ -6112,33 +6115,18 @@ std::vector<std::string> SanitizeGethCmdLine(const std::string& binaryURL, const
     for(const auto &cmd: cmdLine){
         cmdLineRet.push_back(cmd);
     }
-    if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--syncmode") == cmdLineRet.end()) {
-        cmdLineRet.push_back("--syncmode");
-        cmdLineRet.push_back("snap");
+    cmdLineRet.push_back("--datadir");
+    cmdLineRet.push_back(dataDir);
+    if(fTestNet || fRegTest) {
+        cmdLineRet.push_back("--tanenbaum");
+    } else {
+        cmdLineRet.push_back("--polygon");
     }
-    if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--datadir") == cmdLineRet.end()) {
-        cmdLineRet.push_back("--datadir");
-        cmdLineRet.push_back(dataDir);
-    }
-    if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--tanenbaum") == cmdLineRet.end() && std::find(cmdLineRet.begin(), cmdLineRet.end(), "--polygon") == cmdLineRet.end()) {
-        if(fTestNet || fRegTest) {
-            cmdLineRet.push_back("--tanenbaum");
-        } else {
-            cmdLineRet.push_back("--polygon");
-        }
-    }
-    if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--miner.nevmpub") == cmdLineRet.end()) {
-        if(std::find(cmdLineRet.begin(), cmdLineRet.end(), "--mine") == cmdLineRet.end()) {
-            cmdLineRet.push_back("--mine");
-        }
-        // Geth should subscribe to our publisher
-        const std::string &strPub = gArgs.GetArg("-zmqpubnevm", "");
-        cmdLineRet.push_back("--miner.nevmpub");
-        cmdLineRet.push_back(strPub);
-    }
-    cmdLineRet.push_back("--miner.etherbase");
-    cmdLineRet.push_back("0xe3b93f7cec062424eb3b9c90fc046d0f15fe54c0");
-
+    // Geth should subscribe to our publisher
+    const std::string &strPub = gArgs.GetArg("-zmqpubnevm", "");
+    cmdLineRet.push_back("--nevmpub");
+    cmdLineRet.push_back(strPub);
+    cmdLineRet.push_back("--v5disc");
     return cmdLineRet;
 }
 bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const std::string& binaryDestPath, const std::string& descriptorURL) {
