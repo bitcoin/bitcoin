@@ -254,6 +254,10 @@ esac
 # CXXFLAGS
 HOST_CXXFLAGS="$HOST_CFLAGS"
 
+case "$HOST" in
+    arm-linux-gnueabihf) HOST_CXXFLAGS="${HOST_CXXFLAGS} -Wno-psabi" ;;
+esac
+
 # LDFLAGS
 case "$HOST" in
     *linux*)  HOST_LDFLAGS="-Wl,--as-needed -Wl,--dynamic-linker=$glibc_dynamic_linker -static-libstdc++ -Wl,-O2" ;;
