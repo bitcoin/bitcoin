@@ -329,7 +329,8 @@ static bool IsCurrentForFeeEstimation(CChainState& active_chainstate) EXCLUSIVE_
     return true;
 }
 
-/* Make mempool consistent after a reorg, by re-adding or recursively erasing
+/**
+ * Make mempool consistent after a reorg, by re-adding or recursively erasing
  * disconnected block transactions from the mempool, and also removing any
  * other transactions from the mempool that are no longer valid given the new
  * tip/height.
@@ -1208,7 +1209,7 @@ void CoinsViews::InitCache()
     m_cacheview = std::make_unique<CCoinsViewCache>(&m_catcherview);
 }
 
-CChainState::CChainState(CTxMemPool& mempool, BlockManager& blockman, std::optional<uint256> from_snapshot_blockhash)
+CChainState::CChainState(CTxMemPool* mempool, BlockManager& blockman, std::optional<uint256> from_snapshot_blockhash)
     : m_mempool(mempool),
       m_params(::Params()),
       m_blockman(blockman),
@@ -2053,7 +2054,7 @@ bool CChainState::FlushStateToDisk(
         bool fFlushForPrune = false;
         bool fDoFullFlush = false;
 
-        CoinsCacheSizeState cache_state = GetCoinsCacheSizeState(&m_mempool);
+        CoinsCacheSizeState cache_state = GetCoinsCacheSizeState(m_mempool);
         LOCK(cs_LastBlockFile);
         if (fPruneMode && (fCheckForPruning || nManualPruneHeight > 0) && !fReindex) {
             // make sure we don't prune above the blockfilterindexes bestblocks
@@ -2205,11 +2206,13 @@ static void AppendWarning(bilingual_str& res, const bilingual_str& warn)
 }
 
 /** Check warning conditions and do some notifications on new chain tip set. */
-static void UpdateTip(CTxMemPool& mempool, const CBlockIndex* pindexNew, const CChainParams& chainParams, CChainState& active_chainstate)
+static void UpdateTip(CTxMemPool* mempool, const CBlockIndex* pindexNew, const CChainParams& chainParams, CChainState& active_chainstate)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     // New best block
-    mempool.AddTransactionsUpdated(1);
+    if (mempool) {
+        mempool->AddTransactionsUpdated(1);
+    }
 
     {
         LOCK(g_best_block_mutex);
@@ -2254,7 +2257,7 @@ static void UpdateTip(CTxMemPool& mempool, const CBlockIndex* pindexNew, const C
 bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTransactions* disconnectpool)
 {
     AssertLockHeld(cs_main);
-    AssertLockHeld(m_mempool.cs);
+    if (m_mempool) AssertLockHeld(m_mempool->cs);
 
     CBlockIndex *pindexDelete = m_chain.Tip();
     assert(pindexDelete);
@@ -2280,7 +2283,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
         return false;
     }
 
-    if (disconnectpool) {
+    if (disconnectpool && m_mempool) {
         // Save transactions to re-add to mempool at end of reorg
         for (auto it = block.vtx.rbegin(); it != block.vtx.rend(); ++it) {
             disconnectpool->addTransaction(*it);
@@ -2288,7 +2291,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
         while (disconnectpool->DynamicMemoryUsage() > MAX_DISCONNECTED_TX_POOL_SIZE * 1000) {
             // Drop the earliest entry, and remove its children from the mempool.
             auto it = disconnectpool->queuedTx.get<insertion_order>().begin();
-            m_mempool.removeRecursive(**it, MemPoolRemovalReason::REORG);
+            m_mempool->removeRecursive(**it, MemPoolRemovalReason::REORG);
             disconnectpool->removeEntry(it);
         }
     }
@@ -2357,7 +2360,7 @@ public:
 bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions& disconnectpool)
 {
     AssertLockHeld(cs_main);
-    AssertLockHeld(m_mempool.cs);
+    if (m_mempool) AssertLockHeld(m_mempool->cs);
 
     assert(pindexNew->pprev == m_chain.Tip());
     // Read block from disk.
@@ -2401,8 +2404,10 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint(BCLog::BENCH, "  - Writing chainstate: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime5 - nTime4) * MILLI, nTimeChainState * MICRO, nTimeChainState * MILLI / nBlocksTotal);
     // Remove conflicting transactions from the mempool.;
-    m_mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight);
-    disconnectpool.removeForBlock(blockConnecting.vtx);
+    if (m_mempool) {
+        m_mempool->removeForBlock(blockConnecting.vtx, pindexNew->nHeight);
+        disconnectpool.removeForBlock(blockConnecting.vtx);
+    }
     // Update m_chain & related variables.
     m_chain.SetTip(pindexNew);
     UpdateTip(m_mempool, pindexNew, m_params, *this);
@@ -2495,7 +2500,7 @@ void CChainState::PruneBlockIndexCandidates() {
 bool CChainState::ActivateBestChainStep(BlockValidationState& state, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace)
 {
     AssertLockHeld(cs_main);
-    AssertLockHeld(m_mempool.cs);
+    if (m_mempool) AssertLockHeld(m_mempool->cs);
 
     const CBlockIndex* pindexOldTip = m_chain.Tip();
     const CBlockIndex* pindexFork = m_chain.FindFork(pindexMostWork);
@@ -2507,7 +2512,7 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, CBlockIndex
         if (!DisconnectTip(state, &disconnectpool)) {
             // This is likely a fatal error, but keep the mempool consistent,
             // just in case. Only remove from the mempool in this case.
-            UpdateMempoolForReorg(*this, m_mempool, disconnectpool, false);
+            if (m_mempool) UpdateMempoolForReorg(*this, *m_mempool, disconnectpool, false);
 
             // If we're unable to disconnect a block during normal operation,
             // then that is a failure of our local system -- we should abort
@@ -2551,7 +2556,7 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, CBlockIndex
                     // A system error occurred (disk space, database error, ...).
                     // Make the mempool consistent with the current tip, just in case
                     // any observers try to use it before shutdown.
-                    UpdateMempoolForReorg(*this, m_mempool, disconnectpool, false);
+                    if (m_mempool) UpdateMempoolForReorg(*this, *m_mempool, disconnectpool, false);
                     return false;
                 }
             } else {
@@ -2565,12 +2570,12 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, CBlockIndex
         }
     }
 
-    if (fBlocksDisconnected) {
+    if (fBlocksDisconnected && m_mempool) {
         // If any blocks were disconnected, disconnectpool may be non empty.  Add
         // any disconnected transactions back to the mempool.
-        UpdateMempoolForReorg(*this, m_mempool, disconnectpool, true);
+        UpdateMempoolForReorg(*this, *m_mempool, disconnectpool, true);
     }
-    m_mempool.check(*this);
+    if (m_mempool) m_mempool->check(*this);
 
     CheckForkWarningConditions();
 
@@ -2642,7 +2647,8 @@ bool CChainState::ActivateBestChain(BlockValidationState& state, std::shared_ptr
 
         {
             LOCK(cs_main);
-            LOCK(m_mempool.cs); // Lock transaction pool for at least as long as it takes for connectTrace to be consumed
+            // Lock transaction pool for at least as long as it takes for connectTrace to be consumed
+            LOCK(MempoolMutex());
             CBlockIndex* starting_tip = m_chain.Tip();
             bool blocks_connected = false;
             do {
@@ -2792,7 +2798,9 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, CBlockIndex* pind
         LimitValidationInterfaceQueue();
 
         LOCK(cs_main);
-        LOCK(m_mempool.cs); // Lock for as long as disconnectpool is in scope to make sure UpdateMempoolForReorg is called after DisconnectTip without unlocking in between
+        // Lock for as long as disconnectpool is in scope to make sure UpdateMempoolForReorg is
+        // called after DisconnectTip without unlocking in between
+        LOCK(MempoolMutex());
         if (!m_chain.Contains(pindex)) break;
         pindex_was_in_chain = true;
         CBlockIndex *invalid_walk_tip = m_chain.Tip();
@@ -2806,7 +2814,9 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, CBlockIndex* pind
         // transactions back to the mempool if disconnecting was successful,
         // and we're not doing a very deep invalidation (in which case
         // keeping the mempool up to date is probably futile anyway).
-        UpdateMempoolForReorg(*this, m_mempool, disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && ret);
+        if (m_mempool) {
+            UpdateMempoolForReorg(*this, *m_mempool, disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && ret);
+        }
         if (!ret) return false;
         assert(invalid_walk_tip->pprev == m_chain.Tip());
 
@@ -3817,10 +3827,11 @@ bool CChainState::LoadBlockIndexDB()
 
 void CChainState::LoadMempool(const ArgsManager& args)
 {
+    if (!m_mempool) return;
     if (args.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
-        ::LoadMempool(m_mempool, *this);
+        ::LoadMempool(*m_mempool, *this);
     }
-    m_mempool.SetIsLoaded(!ShutdownRequested());
+    m_mempool->SetIsLoaded(!ShutdownRequested());
 }
 
 bool CChainState::LoadChainTip()
@@ -4684,7 +4695,8 @@ std::vector<CChainState*> ChainstateManager::GetAll()
     return out;
 }
 
-CChainState& ChainstateManager::InitializeChainstate(CTxMemPool& mempool, const std::optional<uint256>& snapshot_blockhash)
+CChainState& ChainstateManager::InitializeChainstate(
+    CTxMemPool* mempool, const std::optional<uint256>& snapshot_blockhash)
 {
     bool is_snapshot = snapshot_blockhash.has_value();
     std::unique_ptr<CChainState>& to_modify =
@@ -4763,7 +4775,7 @@ bool ChainstateManager::ActivateSnapshot(
     }
 
     auto snapshot_chainstate = WITH_LOCK(::cs_main, return std::make_unique<CChainState>(
-            this->ActiveChainstate().m_mempool, m_blockman, base_blockhash));
+        /* mempool */ nullptr, m_blockman, base_blockhash));
 
     {
         LOCK(::cs_main);
@@ -4879,7 +4891,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
             }
 
             const auto snapshot_cache_state = WITH_LOCK(::cs_main,
-                return snapshot_chainstate.GetCoinsCacheSizeState(&snapshot_chainstate.m_mempool));
+                return snapshot_chainstate.GetCoinsCacheSizeState(snapshot_chainstate.m_mempool));
 
             if (snapshot_cache_state >=
                     CoinsCacheSizeState::CRITICAL) {
