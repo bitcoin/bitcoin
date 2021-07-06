@@ -6,7 +6,7 @@
 
 #include <key.h>
 
-static void ECDSASign(benchmark::State& state)
+static void ECDSASign(benchmark::Bench& bench)
 {
     std::vector<CKey> keys;
     std::vector<uint256> hashes;
@@ -19,14 +19,14 @@ static void ECDSASign(benchmark::State& state)
 
     // Benchmark.
     size_t i = 0;
-    while (state.KeepRunning()) {
+    bench.run([&] {
         std::vector<unsigned char> sig;
         keys[i].Sign(hashes[i], sig);
         i = (i + 1) % keys.size();
-    }
+    });
 }
 
-static void ECDSAVerify(benchmark::State& state)
+static void ECDSAVerify(benchmark::Bench& bench)
 {
     std::vector<CPubKey> keys;
     std::vector<uint256> hashes;
@@ -43,13 +43,13 @@ static void ECDSAVerify(benchmark::State& state)
 
     // Benchmark.
     size_t i = 0;
-    while (state.KeepRunning()) {
+    bench.run([&] {
         keys[i].Verify(hashes[i], sigs[i]);
         i = (i + 1) % keys.size();
-    }
+    });
 }
 
-static void ECDSAVerify_LargeBlock(benchmark::State& state)
+static void ECDSAVerify_LargeBlock(benchmark::Bench& bench)
 {
     std::vector<CPubKey> keys;
     std::vector<uint256> hashes;
@@ -65,13 +65,13 @@ static void ECDSAVerify_LargeBlock(benchmark::State& state)
     }
 
     // Benchmark.
-    while (state.KeepRunning()) {
+    bench.run([&] {
         for (size_t i = 0; i < keys.size(); i++) {
             keys[i].Verify(hashes[i], sigs[i]);
         }
-    }
+    });
 }
 
-BENCHMARK(ECDSASign, 22 * 1000)
-BENCHMARK(ECDSAVerify, 15 * 1000)
-BENCHMARK(ECDSAVerify_LargeBlock, 15)
+BENCHMARK(ECDSASign)
+BENCHMARK(ECDSAVerify)
+BENCHMARK(ECDSAVerify_LargeBlock)

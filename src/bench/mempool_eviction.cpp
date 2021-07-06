@@ -24,7 +24,7 @@ static void AddTx(const CMutableTransaction& tx, const CAmount& nFee, CTxMemPool
 // Right now this is only testing eviction performance in an extremely small
 // mempool. Code needs to be written to generate a much wider variety of
 // unique transactions for a more meaningful performance measurement.
-static void MempoolEviction(benchmark::State& state)
+static void MempoolEviction(benchmark::Bench& bench)
 {
     CMutableTransaction tx1 = CMutableTransaction();
     tx1.vin.resize(1);
@@ -99,7 +99,7 @@ static void MempoolEviction(benchmark::State& state)
     CTxMemPool pool;
     LOCK(pool.cs);
 
-    while (state.KeepRunning()) {
+    bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
         AddTx(tx1, 10000LL, pool);
         AddTx(tx2, 5000LL, pool);
         AddTx(tx3, 20000LL, pool);
@@ -109,7 +109,7 @@ static void MempoolEviction(benchmark::State& state)
         AddTx(tx7, 9000LL, pool);
         pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4);
         pool.TrimToSize(::GetSerializeSize(tx1, SER_NETWORK, PROTOCOL_VERSION));
-    }
+    });
 }
 
-BENCHMARK(MempoolEviction, 41000);
+BENCHMARK(MempoolEviction);
