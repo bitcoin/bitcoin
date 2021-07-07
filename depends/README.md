@@ -87,6 +87,14 @@ For linux S390X cross compilation:
 
     sudo apt-get install g++-s390x-linux-gnu binutils-s390x-linux-gnu
 
+### Install the required dependencies: M1-based macOS
+
+To be able to build the `qt` package, ensure that Rosetta 2 is installed:
+
+```
+softwareupdate --install-rosetta
+```
+
 ### Dependency Options
 
 The following can be set when running make: `make FOO=bar`
