@@ -566,17 +566,17 @@ public:
         auto& blockman = m_node.chainman->m_blockman;
         return blockman.PruneLockExists(name);
     }
-    void updatePruneLock(const std::string& name, const node::PruneLockInfo& lock_info) override
+    bool updatePruneLock(const std::string& name, const node::PruneLockInfo& lock_info, bool sync) override
     {
         LOCK(cs_main);
         auto& blockman = m_node.chainman->m_blockman;
-        blockman.UpdatePruneLock(name, lock_info);
+        return blockman.UpdatePruneLock(name, lock_info, sync);
     }
-    void deletePruneLock(const std::string& name) override
+    bool deletePruneLock(const std::string& name) override
     {
         LOCK(cs_main);
         auto& blockman = m_node.chainman->m_blockman;
-        blockman.DeletePruneLock(name);
+        return blockman.DeletePruneLock(name);
     }
     CBlockLocator getTipLocator() override
     {

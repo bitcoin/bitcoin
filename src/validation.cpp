@@ -3068,12 +3068,13 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
 
     {
         // Prune locks that began around the tip should be moved backward so they get a chance to reorg
-        const int max_height_first{pindexDelete->nHeight - 1};
+        const uint64_t max_height_first{static_cast<uint64_t>(pindexDelete->nHeight - 1)};
         for (auto& prune_lock : m_blockman.m_prune_locks) {
             if (prune_lock.second.height_first < max_height_first) continue;
 
             --prune_lock.second.height_first;
             LogDebug(BCLog::PRUNE, "%s prune lock moved back to %d\n", prune_lock.first, prune_lock.second.height_first);
+            // NOTE: Don't need to write to db here, since it will get synced with the rest of the chainstate
         }
     }
 
