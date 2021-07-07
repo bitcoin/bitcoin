@@ -1,4 +1,4 @@
-// Copyright (c) 2017 The Bitcoin Core developers
+// Copyright (c) 2017-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -569,14 +569,17 @@ void NetWatchLogModel::searchDisable() {
 void NetWatchLogModel::log_append(const LogEntry& le, size_t& rows_used)
 {
     AssertLockHeld(cs);
-    if (m_logskip) {
+    if (m_log.size() < logsizelimit) {
+        // Haven't filled up yet, so just push_back
+        // Ensure push_back will append the current circular buffer, not go in the middle somewhere
+        // NOTE: m_logpos and m_logskip can be non-zero here, when further outputs will be overwriting
+        assert(m_logpos == m_logskip);
+        m_log.push_back(le);
+    } else {
         // Replace a deleted row
+        assert(m_logskip);
         getLogEntryRow(rows_used) = le;
         --m_logskip;
-    } else {
-        // Haven't filled up yet, so just push_back
-        assert(!m_logpos);
-        m_log.push_back(le);
     }
     ++rows_used;
     if (rows_used > max_nonweak_txouts) {
