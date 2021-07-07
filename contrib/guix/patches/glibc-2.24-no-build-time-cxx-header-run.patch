@@ -1,3 +1,5 @@
+https://sourceware.org/git/?p=glibc.git;a=commit;h=fc3e1337be1c6935ab58bd13520f97a535cf70cc
+
 commit dc23a45db566095e83ff0b7a57afc87fb5ca89a1
 Author: Florian Weimer <fweimer@redhat.com>
 Date:   Wed Sep 21 10:45:32 2016 +0200

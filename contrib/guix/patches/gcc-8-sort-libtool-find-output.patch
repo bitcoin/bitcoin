@@ -1,3 +1,11 @@
+guix: repro: Sort find output in libtool for gcc-8
+
+Otherwise the resulting .a static libraries (e.g. libstdc++.a) will not
+be reproducible and end up making the Bitcoin binaries non-reproducible
+as well.
+
+See: https://reproducible-builds.org/docs/archives/#gnu-libtool
+
 diff --git a/gcc/configure b/gcc/configure
 index 97ba7d7d69c..e37a96f0c0c 100755
 --- a/gcc/configure
