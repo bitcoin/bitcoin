@@ -41,6 +41,9 @@ class ChainstateManager;
 namespace Consensus {
 struct Params;
 }
+namespace node {
+struct PruneLockInfo;
+};
 namespace util {
 class SignalInterrupt;
 } // namespace util
@@ -51,15 +54,18 @@ class BlockTreeDB : public CDBWrapper
 {
 public:
     using CDBWrapper::CDBWrapper;
-    bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*>>& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
+    bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*>>& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo, const std::unordered_map<std::string, node::PruneLockInfo>& prune_locks);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo& info);
     bool ReadLastBlockFile(int& nFile);
     bool WriteReindexing(bool fReindexing);
     void ReadReindexing(bool& fReindexing);
+    bool WritePruneLock(const std::string& name, const node::PruneLockInfo&);
+    bool DeletePruneLock(const std::string& name);
     bool WriteFlag(const std::string& name, bool fValue);
     bool ReadFlag(const std::string& name, bool& fValue);
     bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex, const util::SignalInterrupt& interrupt)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool LoadPruneLocks(std::unordered_map<std::string, node::PruneLockInfo>& prune_locks, const util::SignalInterrupt& interrupt);
 };
 } // namespace kernel
 
@@ -93,8 +99,16 @@ struct CBlockIndexHeightOnlyComparator {
 
 struct PruneLockInfo {
     std::string desc; //! Arbitrary human-readable description of the lock purpose
-    int height_first{std::numeric_limits<int>::max()}; //! Height of earliest block that should be kept and not pruned
-    int height_last{std::numeric_limits<int>::max()}; //! Height of latest block that should be kept and not pruned
+    uint64_t height_first{std::numeric_limits<uint64_t>::max()}; //! Height of earliest block that should be kept and not pruned
+    uint64_t height_last{std::numeric_limits<uint64_t>::max()}; //! Height of latest block that should be kept and not pruned
+    bool temporary{true};
+
+    SERIALIZE_METHODS(PruneLockInfo, obj)
+    {
+        READWRITE(obj.desc);
+        READWRITE(VARINT(obj.height_first));
+        READWRITE(VARINT(obj.height_last));
+    }
 };
 
 enum BlockfileType {
@@ -412,8 +426,8 @@ public:
 
     bool PruneLockExists(const std::string& name) const SHARED_LOCKS_REQUIRED(::cs_main);
     //! Create or update a prune lock identified by its name
-    void UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    void DeletePruneLock(const std::string& name) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info, bool sync=false) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool DeletePruneLock(const std::string& name) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Open a block file (blk?????.dat) */
     AutoFile OpenBlockFile(const FlatFilePos& pos, bool fReadOnly = false) const;

@@ -150,8 +150,8 @@ public:
     virtual bool haveBlockOnDisk(int height) = 0;
 
     virtual bool pruneLockExists(const std::string& name) const = 0;
-    virtual void updatePruneLock(const std::string& name, const node::PruneLockInfo& lock_info) = 0;
-    virtual void deletePruneLock(const std::string& name) = 0;
+    virtual bool updatePruneLock(const std::string& name, const node::PruneLockInfo& lock_info, bool sync=false) = 0;
+    virtual bool deletePruneLock(const std::string& name) = 0;
 
     //! Get locator for the current chain tip.
     virtual CBlockLocator getTipLocator() = 0;
