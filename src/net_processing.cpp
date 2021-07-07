@@ -466,6 +466,10 @@ struct Peer {
     double m_addr_token_bucket{1.0};
     /** When m_addr_token_bucket was last updated */
     std::chrono::microseconds m_addr_token_timestamp{GetTime<std::chrono::microseconds>()};
+    /** Total number of addresses that were dropped due to rate limiting. */
+    std::atomic<uint64_t> m_addr_rate_limited{0};
+    /** Total number of addresses that were processed (excludes rate limited ones). */
+    std::atomic<uint64_t> m_addr_processed{0};
 
     Peer(NodeId id) : m_id(id) {}
 };
@@ -919,6 +923,8 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
     PeerRef peer = GetPeerRef(nodeid);
     if (peer == nullptr) return false;
     stats.m_misbehavior_score = WITH_LOCK(peer->m_misbehavior_mutex, return peer->m_misbehavior_score);
+    stats.m_addr_processed = peer->m_addr_processed.load();
+    stats.m_addr_rate_limited = peer->m_addr_rate_limited.load();
 
     return true;
 }
@@ -2619,6 +2625,8 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         peer->m_addr_token_timestamp = current_time;
 
         const bool rate_limited = !pfrom.HasPermission(NetPermissionFlags::PF_ADDR);
+        uint64_t num_proc = 0;
+        uint64_t num_rate_limit = 0;
         Shuffle(vAddr.begin(), vAddr.end(), FastRandomContext());
         for (CAddress& addr : vAddr)
         {
@@ -2627,7 +2635,10 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
 
             // Apply rate limiting.
             if (rate_limited) {
-                if (peer->m_addr_token_bucket < 1.0) break;
+                if (peer->m_addr_token_bucket < 1.0) {
+                    ++num_rate_limit;
+                    continue;
+                }
                 peer->m_addr_token_bucket -= 1.0;
             }
             // We only bother storing full nodes, though this may include
@@ -2643,6 +2654,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
                 // Do not process banned/discouraged addresses beyond remembering we received them
                 continue;
             }
+            ++num_proc;
             bool fReachable = IsReachable(addr);
             if (addr.nTime > nSince && !pfrom.fGetAddr && vAddr.size() <= 10 && addr.IsRoutable())
             {
@@ -2653,6 +2665,15 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             if (fReachable)
                 vAddrOk.push_back(addr);
         }
+        peer->m_addr_processed += num_proc;
+        peer->m_addr_rate_limited += num_rate_limit;
+        LogPrint(BCLog::NET, "Received addr: %u addresses (%u processed, %u rate-limited) from peer=%d%s\n",
+                 vAddr.size(),
+                 num_proc,
+                 num_rate_limit,
+                 pfrom.GetId(),
+                 fLogIPs ? ", peeraddr=" + pfrom.addr.ToString() : "");
+
         m_connman.AddNewAddresses(vAddrOk, pfrom.addr, 2 * 60 * 60);
         if (vAddr.size() < 1000)
             pfrom.fGetAddr = false;
