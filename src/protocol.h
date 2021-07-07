@@ -262,6 +262,35 @@ extern const char* CFCHECKPT;
  * @since protocol version 70016 as described by BIP 339.
  */
 extern const char* WTXIDRELAY;
+/**
+ * Contains 2 1-byte bools, a 4-byte version number and an 8-byte salt.
+ * Indicates that a node is willing to participate in transaction reconciliation,
+ * either as a sender or a receiver.
+ * The salt is used to compute short txids needed for efficient reconciliation.
+ */
+extern const char *SENDRECON;
+/**
+ * Requests a reconciliation, and provides local reconciliation set size
+ * and coefficient used to accurately estimate reconciliation set difference
+ * for a peer to construct a set sketch.
+ * Peer should respond with "sketch" message.
+ */
+extern const char *REQRECON;
+/**
+ * Contains a sketch of the local reconciliation set,
+ * used to efficiently reconcile transactions.
+ * Peer should respond with "reconcildiff" or "reqsketchext" message.
+ */
+extern const char *SKETCH;
+/**
+ * Indicates whether ongoing reconciliation has succeeded,
+ * and requests the missing transactions by short ids.
+ */
+extern const char *RECONCILDIFF;
+/**
+ * Requests a sketch extension for ongoing reconciliation.
+ */
+extern const char *REQSKETCHEXT;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */

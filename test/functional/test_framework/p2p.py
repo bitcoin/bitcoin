@@ -24,6 +24,7 @@ import asyncio
 from collections import defaultdict
 from io import BytesIO
 import logging
+import socket
 import struct
 import sys
 import threading
@@ -56,8 +57,13 @@ from test_framework.messages import (
     msg_notfound,
     msg_ping,
     msg_pong,
+    msg_reconcildiff,
+    msg_reqrecon,
+    msg_reqsketchext,
     msg_sendaddrv2,
     msg_sendcmpct,
+    msg_sendrecon,
+    msg_sketch,
     msg_sendheaders,
     msg_tx,
     MSG_TX,
@@ -81,8 +87,8 @@ logger = logging.getLogger("TestFramework.p2p")
 # The minimum P2P version that this test framework supports
 MIN_P2P_VERSION_SUPPORTED = 60001
 # The P2P version that this test framework implements and sends in its `version` message
-# Version 70016 supports wtxid relay
-P2P_VERSION = 70016
+# Version 70017 supports tx reconciliations
+P2P_VERSION = 70017
 # The services that this test framework offers in its `version` message
 P2P_SERVICES = NODE_NETWORK | NODE_WITNESS
 # The P2P user agent string that this test framework sends in its `version` message
@@ -115,9 +121,14 @@ MESSAGEMAP = {
     b"notfound": msg_notfound,
     b"ping": msg_ping,
     b"pong": msg_pong,
+    b"reconcildiff": msg_reconcildiff,
+    b"reqrecon": msg_reqrecon,
+    b"reqsketchext": msg_reqsketchext,
     b"sendaddrv2": msg_sendaddrv2,
     b"sendcmpct": msg_sendcmpct,
     b"sendheaders": msg_sendheaders,
+    b"sendrecon": msg_sendrecon,
+    b"sketch": msg_sketch,
     b"tx": msg_tx,
     b"verack": msg_verack,
     b"version": msg_version,
@@ -164,12 +175,27 @@ class P2PConnection(asyncio.Protocol):
         self.recvbuf = b""
         self.magic_bytes = MAGIC_BYTES[net]
 
-    def peer_connect(self, dstaddr, dstport, *, net, timeout_factor):
+    def peer_connect(self, dstaddr, dstport, *, net, timeout_factor, inbound=False):
         self.peer_connect_helper(dstaddr, dstport, net, timeout_factor)
 
         loop = NetworkThread.network_event_loop
         logger.debug('Connecting to Bitcoin Node: %s:%d' % (self.dstaddr, self.dstport))
-        coroutine = loop.create_connection(lambda: self, host=self.dstaddr, port=self.dstport)
+
+        if inbound:
+            listen_sock = socket.socket()
+            listen_sock.bind(('127.0.0.1', 0))
+            listen_sock.listen(1)
+            listen_port = listen_sock.getsockname()[1]
+            self.rpc.addnode('127.0.0.1:%u' % (listen_port,), 'onetry')
+            (sock, addr) = listen_sock.accept()
+            assert sock
+            listen_sock.close()
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            sock.setblocking(False)
+            coroutine = loop.create_connection(lambda: self, sock=sock)
+        else:
+            coroutine = loop.create_connection(lambda: self, host=self.dstaddr, port=self.dstport)
+
         return lambda: loop.call_soon_threadsafe(loop.create_task, coroutine)
 
     def peer_accept_connection(self, connect_id, connect_cb=lambda: None, *, net, timeout_factor):
@@ -413,6 +439,7 @@ class P2PInterface(P2PConnection):
     def on_sendaddrv2(self, message): pass
     def on_sendcmpct(self, message): pass
     def on_sendheaders(self, message): pass
+    def on_sendrecon(self, message): pass
     def on_tx(self, message): pass
     def on_wtxidrelay(self, message): pass
 
