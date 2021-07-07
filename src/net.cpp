@@ -519,6 +519,10 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         return nullptr;
     }
 
+    NetPermissionFlags permission_flags = NetPermissionFlags::None;
+    std::vector<NetWhitelistPermissions> whitelist_permissions = conn_type == ConnectionType::MANUAL ? vWhitelistedRangeOutgoing : std::vector<NetWhitelistPermissions>{};
+    AddWhitelistPermissionFlags(permission_flags, addrConnect, whitelist_permissions);
+
     // Add node
     NodeId id = GetNewNodeId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
@@ -535,6 +539,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                              conn_type,
                              /*inbound_onion=*/false,
                              CNodeOptions{
+                                 .permission_flags = permission_flags,
                                  .i2p_sam_session = std::move(i2p_transient_session),
                                  .recv_flood_size = nReceiveFloodSize,
                                  .use_v2transport = use_v2transport,
@@ -1735,7 +1740,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
 {
     int nInbound = 0;
 
-    AddWhitelistPermissionFlags(permission_flags, addr, vWhitelistedRange);
+    AddWhitelistPermissionFlags(permission_flags, addr, vWhitelistedRangeIncoming);
 
     {
         LOCK(m_nodes_mutex);
