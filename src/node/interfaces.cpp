@@ -456,6 +456,21 @@ public:
         CBlockIndex* block = active[height];
         return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
     }
+    bool pruneLockExists(const std::string& lockid) override
+    {
+        LOCK(g_prune_locks_mutex);
+        return PruneLockExists(lockid);
+    }
+    void setPruneLock(const std::string& lockid, const PruneLockInfo& lockinfo) override
+    {
+        LOCK(g_prune_locks_mutex);
+        SetPruneLock(lockid, lockinfo);
+    }
+    void deletePruneLock(const std::string& lockid) override
+    {
+        LOCK(g_prune_locks_mutex);
+        DeletePruneLock(lockid);
+    }
     CBlockLocator getTipLocator() override
     {
         LOCK(cs_main);

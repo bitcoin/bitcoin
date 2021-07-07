@@ -37,6 +37,7 @@
 #include <stdint.h>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -159,6 +160,12 @@ bool AbortNode(BlockValidationState& state, const std::string& strMessage, const
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
 double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pindex);
+
+extern Mutex g_prune_locks_mutex;
+extern std::unordered_map<std::string, PruneLockInfo> g_prune_locks GUARDED_BY(g_prune_locks_mutex);
+bool PruneLockExists(const std::string& lockid) SHARED_LOCKS_REQUIRED(g_prune_locks_mutex);
+void SetPruneLock(const std::string& lockid, const PruneLockInfo&) EXCLUSIVE_LOCKS_REQUIRED(g_prune_locks_mutex);
+void DeletePruneLock(const std::string& lockid) EXCLUSIVE_LOCKS_REQUIRED(g_prune_locks_mutex);
 
 /** Prune block files up to a given height */
 void PruneBlockFilesManual(CChainState& active_chainstate, int nManualPruneHeight);
