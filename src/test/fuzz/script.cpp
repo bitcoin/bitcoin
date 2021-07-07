@@ -6,8 +6,10 @@
 #include <primitives/transaction.h>
 #include <core_io.h>
 #include <core_memusage.h>
+#include <key_io.h>
 #include <policy/policy.h>
 #include <pubkey.h>
+#include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/interpreter.h>
 #include <script/script.h>
@@ -184,26 +186,26 @@ FUZZ_TARGET_INIT(script, initialize_script)
     }
 
     {
-        WitnessUnknown witness_unknown_1{};
-        witness_unknown_1.version = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
-        const std::vector<uint8_t> witness_unknown_program_1 = fuzzed_data_provider.ConsumeBytes<uint8_t>(40);
-        witness_unknown_1.length = witness_unknown_program_1.size();
-        std::copy(witness_unknown_program_1.begin(), witness_unknown_program_1.end(), witness_unknown_1.program);
+        const CTxDestination tx_destination_1{
+            fuzzed_data_provider.ConsumeBool() ?
+                DecodeDestination(fuzzed_data_provider.ConsumeRandomLengthString()) :
+                ConsumeTxDestination(fuzzed_data_provider)};
+        const CTxDestination tx_destination_2{ConsumeTxDestination(fuzzed_data_provider)};
+        const std::string encoded_dest{EncodeDestination(tx_destination_1)};
+        const UniValue json_dest{DescribeAddress(tx_destination_1)};
+        Assert(tx_destination_1 == DecodeDestination(encoded_dest));
+        (void)GetKeyForDestination(/* store */ {}, tx_destination_1);
+        const CScript dest{GetScriptForDestination(tx_destination_1)};
+        const bool valid{IsValidDestination(tx_destination_1)};
+        Assert(dest.empty() != valid);
 
-        WitnessUnknown witness_unknown_2{};
-        witness_unknown_2.version = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
-        const std::vector<uint8_t> witness_unknown_program_2 = fuzzed_data_provider.ConsumeBytes<uint8_t>(40);
-        witness_unknown_2.length = witness_unknown_program_2.size();
-        std::copy(witness_unknown_program_2.begin(), witness_unknown_program_2.end(), witness_unknown_2.program);
+        Assert(valid == IsValidDestinationString(encoded_dest));
 
-        (void)(witness_unknown_1 == witness_unknown_2);
-        (void)(witness_unknown_1 < witness_unknown_2);
-    }
-
-    {
-        const CTxDestination tx_destination_1 = ConsumeTxDestination(fuzzed_data_provider);
-        const CTxDestination tx_destination_2 = ConsumeTxDestination(fuzzed_data_provider);
-        (void)(tx_destination_1 == tx_destination_2);
         (void)(tx_destination_1 < tx_destination_2);
+        if (tx_destination_1 == tx_destination_2) {
+            Assert(encoded_dest == EncodeDestination(tx_destination_2));
+            Assert(json_dest.write() == DescribeAddress(tx_destination_2).write());
+            Assert(dest == GetScriptForDestination(tx_destination_2));
+        }
     }
 }

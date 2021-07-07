@@ -37,7 +37,7 @@
 #include <vector>
 
 template <typename... Callables>
-void CallOneOf(FuzzedDataProvider& fuzzed_data_provider, Callables... callables)
+size_t CallOneOf(FuzzedDataProvider& fuzzed_data_provider, Callables... callables)
 {
     constexpr size_t call_size{sizeof...(callables)};
     static_assert(call_size >= 1);
@@ -45,6 +45,7 @@ void CallOneOf(FuzzedDataProvider& fuzzed_data_provider, Callables... callables)
 
     size_t i{0};
     ((i++ == call_index ? callables() : void()), ...);
+    return call_size;
 }
 
 template <typename Collection>
@@ -178,36 +179,7 @@ template <typename WeakEnumType, size_t size>
     return CTxMemPoolEntry{MakeTransactionRef(tx), fee, time, entry_height, spends_coinbase, sig_op_cost, {}};
 }
 
-[[nodiscard]] inline CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    CTxDestination tx_destination;
-    CallOneOf(
-        fuzzed_data_provider,
-        [&] {
-            tx_destination = CNoDestination{};
-        },
-        [&] {
-            tx_destination = PKHash{ConsumeUInt160(fuzzed_data_provider)};
-        },
-        [&] {
-            tx_destination = ScriptHash{ConsumeUInt160(fuzzed_data_provider)};
-        },
-        [&] {
-            tx_destination = WitnessV0ScriptHash{ConsumeUInt256(fuzzed_data_provider)};
-        },
-        [&] {
-            tx_destination = WitnessV0KeyHash{ConsumeUInt160(fuzzed_data_provider)};
-        },
-        [&] {
-            WitnessUnknown witness_unknown{};
-            witness_unknown.version = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
-            const std::vector<uint8_t> witness_unknown_program_1 = fuzzed_data_provider.ConsumeBytes<uint8_t>(40);
-            witness_unknown.length = witness_unknown_program_1.size();
-            std::copy(witness_unknown_program_1.begin(), witness_unknown_program_1.end(), witness_unknown.program);
-            tx_destination = witness_unknown;
-        });
-    return tx_destination;
-}
+[[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 template <typename T>
 [[nodiscard]] bool MultiplicationOverflow(const T i, const T j) noexcept
