@@ -446,6 +446,13 @@ struct PruneLockInfo {
     std::string m_desc;
     uint64_t m_height_first{std::numeric_limits<uint64_t>::max()};
     uint64_t m_height_last{std::numeric_limits<uint64_t>::max()};
+
+    SERIALIZE_METHODS(PruneLockInfo, obj)
+    {
+        READWRITE(obj.m_desc);
+        READWRITE(VARINT(obj.m_height_first));
+        READWRITE(VARINT(obj.m_height_last));
+    }
 };
 
 #endif // BITCOIN_CHAIN_H

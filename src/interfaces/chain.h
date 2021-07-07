@@ -105,8 +105,8 @@ public:
     virtual bool haveBlockOnDisk(int height) = 0;
 
     virtual bool pruneLockExists(const std::string& lockid) = 0;
-    virtual void setPruneLock(const std::string& lockid, const PruneLockInfo&) = 0;
-    virtual void deletePruneLock(const std::string& lockid) = 0;
+    virtual bool setPruneLock(const std::string& lockid, const PruneLockInfo&, bool sync=false) = 0;
+    virtual bool deletePruneLock(const std::string& lockid) = 0;
 
     //! Get locator for the current chain tip.
     virtual CBlockLocator getTipLocator() = 0;

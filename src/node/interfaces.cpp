@@ -461,15 +461,15 @@ public:
         LOCK(g_prune_locks_mutex);
         return PruneLockExists(lockid);
     }
-    void setPruneLock(const std::string& lockid, const PruneLockInfo& lockinfo) override
+    bool setPruneLock(const std::string& lockid, const PruneLockInfo& lockinfo, bool sync) override
     {
         LOCK(g_prune_locks_mutex);
-        SetPruneLock(lockid, lockinfo);
+        return SetPruneLock(lockid, lockinfo, sync);
     }
-    void deletePruneLock(const std::string& lockid) override
+    bool deletePruneLock(const std::string& lockid) override
     {
         LOCK(g_prune_locks_mutex);
-        DeletePruneLock(lockid);
+        return DeletePruneLock(lockid);
     }
     CBlockLocator getTipLocator() override
     {

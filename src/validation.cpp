@@ -2130,7 +2130,8 @@ bool CChainState::FlushStateToDisk(
                     vBlocks.push_back(*it);
                     setDirtyBlockIndex.erase(it++);
                 }
-                if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks)) {
+                LOCK(g_prune_locks_mutex);
+                if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks, g_prune_locks)) {
                     return AbortNode(state, "Failed to write to block index database");
                 }
             }
@@ -3600,14 +3601,25 @@ bool PruneLockExists(const std::string& lockid) {
     return g_prune_locks.count(lockid);
 }
 
-void SetPruneLock(const std::string& lockid, const PruneLockInfo& lockinfo)
+bool SetPruneLock(const std::string& lockid, const PruneLockInfo& lockinfo, const bool sync)
 {
+    if (sync) {
+        if (!pblocktree->WritePruneLock(lockid, lockinfo)) {
+            return error("%s: failed to %s prune lock '%s'", __func__, "write", lockid);
+        }
+    }
     g_prune_locks[lockid] = lockinfo;
+    return true;
 }
 
-void DeletePruneLock(const std::string& lockid)
+bool DeletePruneLock(const std::string& lockid)
 {
     g_prune_locks.erase(lockid);
+    // Since there is no reasonable expectation for any follow-up to this prune lock, actually ensure it gets committed to disk immediately
+    if (!pblocktree->DeletePruneLock(lockid)) {
+        return error("%s: failed to %s prune lock '%s'", __func__, "erase", lockid);
+    }
+    return true;
 }
 
 void BlockManager::FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight, int chain_tip_height)
@@ -3734,6 +3746,10 @@ bool BlockManager::LoadBlockIndex(
 {
     if (!blocktree.LoadBlockIndexGuts(consensus_params, [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); }))
         return false;
+    {
+        LOCK(g_prune_locks_mutex);
+        if (!blocktree.LoadPruneLocks(g_prune_locks)) return false;
+    }
 
     // Calculate nChainWork
     std::vector<std::pair<int, CBlockIndex*> > vSortedByHeight;

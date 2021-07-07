@@ -26,6 +26,7 @@ static constexpr uint8_t DB_HEAD_BLOCKS{'H'};
 static constexpr uint8_t DB_FLAG{'F'};
 static constexpr uint8_t DB_REINDEX_FLAG{'R'};
 static constexpr uint8_t DB_LAST_BLOCK{'l'};
+static constexpr uint8_t DB_PRUNE_LOCK{'L'};
 
 namespace {
 
@@ -247,7 +248,7 @@ void CCoinsViewDBCursor::Next()
     }
 }
 
-bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo) {
+bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo, const std::unordered_map<std::string, PruneLockInfo>& prune_locks) {
     CDBBatch batch(*this);
     for (std::vector<std::pair<int, const CBlockFileInfo*> >::const_iterator it=fileInfo.begin(); it != fileInfo.end(); it++) {
         batch.Write(std::make_pair(DB_BLOCK_FILES, it->first), *it->second);
@@ -256,7 +257,34 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
     for (std::vector<const CBlockIndex*>::const_iterator it=blockinfo.begin(); it != blockinfo.end(); it++) {
         batch.Write(std::make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), CDiskBlockIndex(*it));
     }
+    for (const auto& prune_lock : prune_locks) {
+        batch.Write(std::make_pair(DB_PRUNE_LOCK, prune_lock.first), prune_lock.second);
+    }
     return WriteBatch(batch, true);
+}
+
+bool CBlockTreeDB::WritePruneLock(const std::string& name, const PruneLockInfo& lockinfo) {
+    return Write(std::make_pair(DB_PRUNE_LOCK, name), lockinfo);
+}
+
+bool CBlockTreeDB::DeletePruneLock(const std::string& name) {
+    return Erase(std::make_pair(DB_PRUNE_LOCK, name));
+}
+
+bool CBlockTreeDB::LoadPruneLocks(std::unordered_map<std::string, PruneLockInfo>& prune_locks) {
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    for (pcursor->Seek(DB_PRUNE_LOCK); pcursor->Valid(); pcursor->Next()) {
+        if (ShutdownRequested()) return false;
+
+        std::pair<char, std::string> key;
+        if ((!pcursor->GetKey(key)) || key.first != DB_PRUNE_LOCK) break;
+
+        if (!pcursor->GetValue(prune_locks[key.second])) {
+            return error("%s: failed to %s prune lock '%s'", __func__, "read", key.second);
+        }
+    }
+
+    return true;
 }
 
 bool CBlockTreeDB::WriteFlag(const std::string &name, bool fValue) {
