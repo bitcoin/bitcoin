@@ -5,6 +5,7 @@
 #include <net_processing.h>
 #include <netaddress.h>
 #include <netmessagemaker.h>
+#include <pubkey.h>
 #include <test/fuzz/util.h>
 #include <test/util/script.h>
 #include <util/overflow.h>
@@ -433,6 +434,24 @@ uint32_t ConsumeSequence(FuzzedDataProvider& fuzzed_data_provider) noexcept
                    CTxIn::MAX_SEQUENCE_NONFINAL,
                }) :
                fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+}
+
+CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    CTxDestination tx_destination;
+    const size_t call_size{CallOneOf(
+        fuzzed_data_provider,
+        [&] {
+            tx_destination = CNoDestination{};
+        },
+        [&] {
+            tx_destination = PKHash{ConsumeUInt160(fuzzed_data_provider)};
+        },
+        [&] {
+            tx_destination = ScriptHash{ConsumeUInt160(fuzzed_data_provider)};
+        })};
+    Assert(call_size == std::variant_size_v<CTxDestination>);
+    return tx_destination;
 }
 
 CKey ConsumePrivateKey(FuzzedDataProvider& fuzzed_data_provider, std::optional<bool> compressed) noexcept

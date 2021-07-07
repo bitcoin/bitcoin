@@ -7,8 +7,10 @@
 #include <core_io.h>
 #include <core_memusage.h>
 #include <key.h>
+#include <key_io.h>
 #include <policy/policy.h>
 #include <pubkey.h>
+#include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/interpreter.h>
 #include <script/script.h>
@@ -126,9 +128,26 @@ FUZZ_TARGET(script, .init = initialize_script)
     }
 
     {
-        const CTxDestination tx_destination_1 = ConsumeTxDestination(fuzzed_data_provider);
-        const CTxDestination tx_destination_2 = ConsumeTxDestination(fuzzed_data_provider);
-        (void)(tx_destination_1 == tx_destination_2);
+        const CTxDestination tx_destination_1{
+            fuzzed_data_provider.ConsumeBool() ?
+                DecodeDestination(fuzzed_data_provider.ConsumeRandomLengthString()) :
+                ConsumeTxDestination(fuzzed_data_provider)};
+        const CTxDestination tx_destination_2{ConsumeTxDestination(fuzzed_data_provider)};
+        const std::string encoded_dest{EncodeDestination(tx_destination_1)};
+        const UniValue json_dest{DescribeAddress(tx_destination_1)};
+        Assert(tx_destination_1 == DecodeDestination(encoded_dest));
+        (void)GetKeyForDestination(/* store */ {}, tx_destination_1);
+        const CScript dest{GetScriptForDestination(tx_destination_1)};
+        const bool valid{IsValidDestination(tx_destination_1)};
+        Assert(dest.empty() != valid);
+
+        Assert(valid == IsValidDestinationString(encoded_dest));
+
         (void)(tx_destination_1 < tx_destination_2);
+        if (tx_destination_1 == tx_destination_2) {
+            Assert(encoded_dest == EncodeDestination(tx_destination_2));
+            Assert(json_dest.write() == DescribeAddress(tx_destination_2).write());
+            Assert(dest == GetScriptForDestination(tx_destination_2));
+        }
     }
 }
