@@ -540,6 +540,11 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         return nullptr;
     }
 
+    NetPermissionFlags permission_flags = NetPermissionFlags::None;
+    ServiceFlags node_services = nLocalServices;
+    AddWhitelistPermissionFlags(permission_flags, addrConnect, vWhitelistedRangeOutgoing);
+    InitializePermissionFlags(permission_flags, node_services);
+
     // Add node
     NodeId id = GetNewNodeId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
@@ -555,7 +560,8 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                              pszDest ? pszDest : "",
                              conn_type,
                              /*inbound_onion=*/false,
-                             CNodeOptions{ .i2p_sam_session = std::move(i2p_transient_session) });
+                             CNodeOptions{ .i2p_sam_session = std::move(i2p_transient_session),
+                                           .permission_flags = permission_flags });
     pnode->AddRef();
 
     // We're making a new connection, harvest entropy from the time (and our peer count)
@@ -575,8 +581,8 @@ void CNode::CloseSocketDisconnect()
     m_i2p_sam_session.reset();
 }
 
-void CConnman::AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNetAddr &addr) const {
-    for (const auto& subnet : vWhitelistedRange) {
+void CConnman::AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNetAddr &addr, const std::vector<NetWhitelistPermissions>& ranges) const {
+    for (const auto& subnet : ranges) {
         if (subnet.m_subnet.Match(addr)) NetPermissions::AddFlag(flags, subnet.m_flags);
     }
 }

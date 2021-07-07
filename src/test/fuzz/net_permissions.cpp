@@ -31,7 +31,8 @@ FUZZ_TARGET(net_permissions)
 
     NetWhitelistPermissions net_whitelist_permissions;
     bilingual_str error_net_whitelist_permissions;
-    if (NetWhitelistPermissions::TryParse(s, net_whitelist_permissions, error_net_whitelist_permissions)) {
+    ConnectionDirection connection_direction;
+    if (NetWhitelistPermissions::TryParse(s, net_whitelist_permissions, connection_direction, error_net_whitelist_permissions)) {
         (void)NetPermissions::ToStrings(net_whitelist_permissions.m_flags);
         (void)NetPermissions::AddFlag(net_whitelist_permissions.m_flags, net_permission_flags);
         assert(NetPermissions::HasFlag(net_whitelist_permissions.m_flags, net_permission_flags));
