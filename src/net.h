@@ -1070,6 +1070,7 @@ private:
     bool AttemptToEvictConnection();
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, ConnectionType conn_type);
     void AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNetAddr &addr) const;
+    static void InitializePermissionFlags(NetPermissionFlags& flags);
 
     void DeleteNode(CNode* pnode);
 
