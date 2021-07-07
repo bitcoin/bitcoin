@@ -512,13 +512,17 @@ void CConnman::AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNet
     }
 }
 
-void CConnman::InitializePermissionFlags(NetPermissionFlags& flags) {
+void CConnman::InitializePermissionFlags(NetPermissionFlags& flags, ServiceFlags& service_flags) {
     if (NetPermissions::HasFlag(flags, NetPermissionFlags::Implicit)) {
         NetPermissions::ClearFlag(flags, NetPermissionFlags::Implicit);
         if (gArgs.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) NetPermissions::AddFlag(flags, NetPermissionFlags::ForceRelay);
         if (gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)) NetPermissions::AddFlag(flags, NetPermissionFlags::Relay);
         NetPermissions::AddFlag(flags, NetPermissionFlags::Mempool);
         NetPermissions::AddFlag(flags, NetPermissionFlags::NoBan);
+    }
+
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::BloomFilter)) {
+        service_flags = static_cast<ServiceFlags>(service_flags | NODE_BLOOM);
     }
 }
 
@@ -1128,7 +1132,8 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
     int nMaxInbound = nMaxConnections - m_max_outbound;
 
     AddWhitelistPermissionFlags(permissionFlags, addr);
-    InitializePermissionFlags(permissionFlags);
+    ServiceFlags nodeServices = nLocalServices;
+    InitializePermissionFlags(permissionFlags, nodeServices);
 
     {
         LOCK(cs_vNodes);
@@ -1184,11 +1189,6 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
 
     NodeId id = GetNewNodeId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
-
-    ServiceFlags nodeServices = nLocalServices;
-    if (NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::BloomFilter)) {
-        nodeServices = static_cast<ServiceFlags>(nodeServices | NODE_BLOOM);
-    }
 
     const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
     CNode* pnode = new CNode(id, nodeServices, hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", ConnectionType::INBOUND, inbound_onion);
