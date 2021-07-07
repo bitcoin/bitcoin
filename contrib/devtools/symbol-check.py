@@ -3,12 +3,12 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
-A script to check that the executables produced by gitian only contain
-certain symbols and are only linked against allowed libraries.
+A script to check that release executables only contain certain symbols
+and are only linked against allowed libraries.
 
 Example usage:
 
-    find ../gitian-builder/build -type f -executable | xargs python3 contrib/devtools/symbol-check.py
+    find ../path/to/binaries -type f -executable | xargs python3 contrib/devtools/symbol-check.py
 '''
 import subprocess
 import sys
