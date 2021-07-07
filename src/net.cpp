@@ -480,14 +480,21 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         return nullptr;
     }
 
+    NetPermissionFlags permission_flags = NetPermissionFlags::None;
+    ServiceFlags node_services = nLocalServices;
+    AddWhitelistPermissionFlags(permission_flags, addrConnect, vWhitelistedRangeOutgoing);
+    InitializePermissionFlags(permission_flags, node_services);
+
     // Add node
     NodeId id = GetNewNodeId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
     if (!addr_bind.IsValid()) {
         addr_bind = GetBindAddress(sock->Get());
     }
-    CNode* pnode = new CNode(id, nLocalServices, sock->Release(), addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", conn_type, /* inbound_onion */ false);
+    CNode* pnode = new CNode(id, node_services, sock->Release(), addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", conn_type, /* inbound_onion */ false);
     pnode->AddRef();
+
+    pnode->m_permissionFlags = permission_flags;
 
     // We're making a new connection, harvest entropy from the time (and our peer count)
     RandAddEvent((uint32_t)id);
@@ -506,8 +513,8 @@ void CNode::CloseSocketDisconnect()
     }
 }
 
-void CConnman::AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNetAddr &addr) const {
-    for (const auto& subnet : vWhitelistedRange) {
+void CConnman::AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNetAddr &addr, const std::vector<NetWhitelistPermissions>& ranges) const {
+    for (const auto& subnet : ranges) {
         if (subnet.m_subnet.Match(addr)) NetPermissions::AddFlag(flags, subnet.m_flags);
     }
 }
@@ -1131,7 +1138,7 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
     int nInbound = 0;
     int nMaxInbound = nMaxConnections - m_max_outbound;
 
-    AddWhitelistPermissionFlags(permissionFlags, addr);
+    AddWhitelistPermissionFlags(permissionFlags, addr, vWhitelistedRange);
     ServiceFlags nodeServices = nLocalServices;
     InitializePermissionFlags(permissionFlags, nodeServices);
 

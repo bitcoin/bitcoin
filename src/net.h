@@ -765,6 +765,7 @@ public:
         int64_t m_peer_connect_timeout = DEFAULT_PEER_CONNECT_TIMEOUT;
         std::vector<std::string> vSeedNodes;
         std::vector<NetWhitelistPermissions> vWhitelistedRange;
+        std::vector<NetWhitelistPermissions> vWhitelistedRangeOutgoing;
         std::vector<NetWhitebindPermissions> vWhiteBinds;
         std::vector<CService> vBinds;
         std::vector<CService> onion_binds;
@@ -795,6 +796,7 @@ public:
             nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
         }
         vWhitelistedRange = connOptions.vWhitelistedRange;
+        vWhitelistedRangeOutgoing = connOptions.vWhitelistedRangeOutgoing;
         {
             LOCK(cs_vAddedNodes);
             vAddedNodes = connOptions.m_added_nodes;
@@ -1013,7 +1015,7 @@ private:
 
     bool AttemptToEvictConnection();
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, ConnectionType conn_type);
-    void AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNetAddr &addr) const;
+    void AddWhitelistPermissionFlags(NetPermissionFlags& output_flags, const CNetAddr &addr, const std::vector<NetWhitelistPermissions>& ranges) const;
     static void InitializePermissionFlags(NetPermissionFlags& flags, ServiceFlags& service_flags);
 
     void DeleteNode(CNode* pnode);
@@ -1052,6 +1054,8 @@ private:
     // Whitelisted ranges. Any node connecting from these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).
     std::vector<NetWhitelistPermissions> vWhitelistedRange;
+    // Whitelisted ranges for outgoing connections.
+    std::vector<NetWhitelistPermissions> vWhitelistedRangeOutgoing;
 
     unsigned int nSendBufferMaxSize{0};
     unsigned int nReceiveFloodSize{0};
