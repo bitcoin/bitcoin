@@ -1,4 +1,4 @@
-// Copyright (c) 2017 The Bitcoin Core developers
+// Copyright (c) 2017-2021 The Bitcoin Core developers
 // Copyright (c) 2011-2013 David Krauss (std::align substitute from c-plus)
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -25,7 +25,8 @@ class LogEntry;
 class NetworkStyle;
 class PlatformStyle;
 
-static const int nLongestAddress = 35;
+static constexpr int LONGEST_BASE58_ADDRESS{35};
+static constexpr int LONGEST_BECH32_ADDRESS{62};  // NOTE: Up to 74 in theory, but 62 in practice
 
 class LogEntry {
 private:

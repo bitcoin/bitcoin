@@ -518,7 +518,7 @@ NetWatchLogSearch::NetWatchLogSearch(const QString& query, int display_unit) :
 
     m_check_type = m_query.length() < 4 && reType.exactMatch(m_query);
     m_check_id = m_query.length() <= 64 && reHex.exactMatch(m_query);
-    m_check_addr = m_query.length() <= nLongestAddress;
+    m_check_addr = m_query.length() <= LONGEST_BECH32_ADDRESS;
     CAmount val;
     m_check_value = BitcoinUnits::parse(display_unit, m_query, &val) && val >= 0 && val <= BitcoinUnits::maxMoney();
 }
@@ -704,7 +704,11 @@ QVariant NetWatchLogTestModel::data(const QModelIndex& index, int role) const
         case NWLMH_ID:
             return QString(64, '0');
         case NWLMH_ADDR:
-            return QString(nLongestAddress, 'W');
+            if (index.row()) {
+                return QString{"bc1" + QString(LONGEST_BECH32_ADDRESS-3, 'x')};
+            } else {
+                return QString(LONGEST_BASE58_ADDRESS, 'W');
+            }
         case NWLMH_VALUE:
             return "20000000.00000000";
     }
