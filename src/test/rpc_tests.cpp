@@ -444,7 +444,8 @@ BOOST_AUTO_TEST_CASE(help_example)
     // test array params
     UniValue arr_value(UniValue::VARR);
     arr_value.push_back("bar");
-    arr_value.push_back(false);
+    // NOTE: push_back(bool) converts the bool to Number, so explicitly make a boolean UniValue first
+    arr_value.push_back(UniValue(false));
     arr_value.push_back(1);
     BOOST_CHECK_EQUAL(HelpExampleCliNamed("test", {{"name", arr_value}}), "> bitcoin-cli -named test name='[\"bar\",false,1]'\n");
     BOOST_CHECK_EQUAL(HelpExampleRpcNamed("test", {{"name", arr_value}}), "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\": \"curltest\", \"method\": \"test\", \"params\": {\"name\":[\"bar\",false,1]}}' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n");
