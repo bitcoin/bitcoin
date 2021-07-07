@@ -3,7 +3,7 @@ import sys
 
 from pypoptools.pypoptesting.framework.node import Node
 from pypoptools.pypoptesting.test_runner import benchmark_running
-from pypoptools.pypoptesting.altchain_node_adaptors.vbitcoind_node import VBitcoindNode
+from vbitcoind_node import VBitcoindNode
 
 
 def create_node(number: int, path: pathlib.Path) -> Node:
