@@ -581,6 +581,16 @@ void CConnman::AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNet
     }
 }
 
+void CConnman::InitializePermissionFlags(NetPermissionFlags& flags) {
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Implicit)) {
+        NetPermissions::ClearFlag(flags, NetPermissionFlags::Implicit);
+        if (gArgs.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) NetPermissions::AddFlag(flags, NetPermissionFlags::ForceRelay);
+        if (gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)) NetPermissions::AddFlag(flags, NetPermissionFlags::Relay);
+        NetPermissions::AddFlag(flags, NetPermissionFlags::Mempool);
+        NetPermissions::AddFlag(flags, NetPermissionFlags::NoBan);
+    }
+}
+
 CService CNode::GetAddrLocal() const
 {
     AssertLockNotHeld(m_addr_local_mutex);
@@ -949,14 +959,8 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     int nInbound = 0;
     int nMaxInbound = nMaxConnections - m_max_outbound;
 
-    AddWhitelistPermissionFlags(permission_flags, addr);
-    if (NetPermissions::HasFlag(permission_flags, NetPermissionFlags::Implicit)) {
-        NetPermissions::ClearFlag(permission_flags, NetPermissionFlags::Implicit);
-        if (gArgs.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) NetPermissions::AddFlag(permission_flags, NetPermissionFlags::ForceRelay);
-        if (gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)) NetPermissions::AddFlag(permission_flags, NetPermissionFlags::Relay);
-        NetPermissions::AddFlag(permission_flags, NetPermissionFlags::Mempool);
-        NetPermissions::AddFlag(permission_flags, NetPermissionFlags::NoBan);
-    }
+    AddWhitelistPermissionFlags(permission_flags, addr, vWhitelistedRange);
+    InitializePermissionFlags(permission_flags);
 
     {
         LOCK(m_nodes_mutex);
