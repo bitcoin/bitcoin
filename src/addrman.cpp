@@ -76,6 +76,39 @@ double CAddrInfo::GetChance(int64_t nNow) const
 
     return fChance;
 }
+
+void CAddrMan::RemoveInvalid()
+{
+    for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; ++bucket) {
+        for (size_t i = 0; i < ADDRMAN_BUCKET_SIZE; ++i) {
+            const auto id = vvNew[bucket][i];
+            if (id != -1 && !mapInfo[id].IsValid()) {
+                ClearNew(bucket, i);
+            }
+        }
+    }
+
+    for (size_t bucket = 0; bucket < ADDRMAN_TRIED_BUCKET_COUNT; ++bucket) {
+        for (size_t i = 0; i < ADDRMAN_BUCKET_SIZE; ++i) {
+            const auto id = vvTried[bucket][i];
+            if (id == -1) {
+                continue;
+            }
+            const auto& addr_info = mapInfo[id];
+            if (addr_info.IsValid()) {
+                continue;
+            }
+            vvTried[bucket][i] = -1;
+            --nTried;
+            SwapRandom(addr_info.nRandomPos, vRandom.size() - 1);
+            vRandom.pop_back();
+            mapAddr.erase(addr_info);
+            mapInfo.erase(id);
+            m_tried_collisions.erase(id);
+        }
+    }
+}
+
 // SYSCOIN
 CAddrInfo* CAddrMan::Find(const CService& addr, int* pnId)
 {

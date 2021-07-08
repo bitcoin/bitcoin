@@ -784,6 +784,46 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     BOOST_CHECK(bucketAndEntry_asmap1_deser_addr1.second != bucketAndEntry_asmap1_deser_addr2.second);
 }
 
+BOOST_AUTO_TEST_CASE(remove_invalid)
+{
+    // Confirm that invalid addresses are ignored in unserialization.
+
+    CAddrManTest addrman;
+    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+
+    const CAddress new1{ResolveService("5.5.5.5"), NODE_NONE};
+    const CAddress new2{ResolveService("6.6.6.6"), NODE_NONE};
+    const CAddress tried1{ResolveService("7.7.7.7"), NODE_NONE};
+    const CAddress tried2{ResolveService("8.8.8.8"), NODE_NONE};
+
+    addrman.Add({new1, tried1, new2, tried2}, CNetAddr{});
+    addrman.Good(tried1);
+    addrman.Good(tried2);
+    BOOST_REQUIRE_EQUAL(addrman.size(), 4);
+
+    stream << addrman;
+
+    const std::string str{stream.str()};
+    size_t pos;
+
+    const char new2_raw[]{6, 6, 6, 6};
+    const uint8_t new2_raw_replacement[]{0, 0, 0, 0}; // 0.0.0.0 is !IsValid()
+    pos = str.find(new2_raw, 0, sizeof(new2_raw));
+    BOOST_REQUIRE(pos != std::string::npos);
+    BOOST_REQUIRE(pos + sizeof(new2_raw_replacement) <= stream.size());
+    memcpy(stream.data() + pos, new2_raw_replacement, sizeof(new2_raw_replacement));
+
+    const char tried2_raw[]{8, 8, 8, 8};
+    const uint8_t tried2_raw_replacement[]{255, 255, 255, 255}; // 255.255.255.255 is !IsValid()
+    pos = str.find(tried2_raw, 0, sizeof(tried2_raw));
+    BOOST_REQUIRE(pos != std::string::npos);
+    BOOST_REQUIRE(pos + sizeof(tried2_raw_replacement) <= stream.size());
+    memcpy(stream.data() + pos, tried2_raw_replacement, sizeof(tried2_raw_replacement));
+
+    addrman.Clear();
+    stream >> addrman;
+    BOOST_CHECK_EQUAL(addrman.size(), 2);
+}
 
 BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
 {
