@@ -61,12 +61,13 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
     }
     QRcode_free(code);
 
-    const int qr_image_size = QR_IMAGE_SIZE + (text.isEmpty() ? 0 : 2 * QR_IMAGE_MARGIN);
+    const int qr_image_margin = text.isEmpty() ? 0 : 2 * QR_IMAGE_MARGIN;
+    const int qr_image_size = QR_IMAGE_SIZE + qr_image_margin;
     QImage qrAddrImage(qr_image_size, qr_image_size, QImage::Format_RGB32);
     qrAddrImage.fill(0xffffff);
     {
         QPainter painter(&qrAddrImage);
-        painter.drawImage(QR_IMAGE_MARGIN, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
+        painter.drawImage(qr_image_margin, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
 
         if (!text.isEmpty()) {
             QRect paddedRect = qrAddrImage.rect();
