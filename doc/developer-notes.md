@@ -742,7 +742,7 @@ Current subtrees include:
   - Upstream at https://github.com/bitcoin-core/ctaes ; actively maintained by Core contributors.
 
 - src/univalue
-  - Upstream at https://github.com/jgarzik/univalue ; report important PRs to Core to avoid delay.
+  - Upstream at https://github.com/bitcoin-core/univalue ; actively maintained by Core contributors, deviates from upstream https://github.com/jgarzik/univalue
 
 Upgrading LevelDB
 ---------------------
@@ -807,7 +807,16 @@ To create a scripted-diff:
     - `-BEGIN VERIFY SCRIPT-`
     - `-END VERIFY SCRIPT-`
 
-The scripted-diff is verified by the tool `test/lint/commit-script-check.sh`
+The scripted-diff is verified by the tool `test/lint/commit-script-check.sh`. The tool's default behavior when supplied
+with a commit is to verify all scripted-diffs from the beginning of time up to said commit. Internally, the tool passes
+the first supplied argument to `git rev-list --reverse` to determine which commits to verify script-diffs for, ignoring
+commits that don't conform to the commit message format described above.
+
+For development, it might be more convenient to verify all scripted-diffs in a range `A..B`, for example:
+
+```bash
+test/lint/commit-script-check.sh origin/master..HEAD
+```
 
 Commit [`bb81e173`](https://github.com/bitcoin/bitcoin/commit/bb81e173) is an example of a scripted-diff.
 
