@@ -51,8 +51,13 @@ PairingPage::PairingPage(QWidget *parent) :
 
 void PairingPage::setClientModel(ClientModel *client_model)
 {
+    if (m_client_model) {
+        disconnect(m_client_model, &ClientModel::networkLocalChanged, this, &PairingPage::refresh);
+    }
     m_client_model = client_model;
-    connect(client_model, &ClientModel::networkLocalChanged, this, &PairingPage::refresh);
+    if (client_model) {
+        connect(client_model, &ClientModel::networkLocalChanged, this, &PairingPage::refresh);
+    }
     refresh();
 }
 
