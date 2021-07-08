@@ -36,6 +36,8 @@ Documentation for C++ subprocessing library.
 #ifndef BITCOIN_UTIL_SUBPROCESS_H
 #define BITCOIN_UTIL_SUBPROCESS_H
 
+#include <util/fs.h>
+#include <util/strencodings.h>
 #include <util/syserror.h>
 
 #include <algorithm>
@@ -1302,6 +1304,29 @@ namespace detail {
 
       // Close all the inherited fd's except the error write pipe
       if (parent_->close_fds_) {
+        // If possible, try to get the list of open file descriptors from the
+        // operating system. This is more efficient, but not guaranteed to be
+        // available.
+#ifdef __linux__
+        // For Linux, enumerate /proc/<pid>/fd.
+        try {
+          std::vector<int> fds_to_close;
+          for (const auto& it : fs::directory_iterator(strprintf("/proc/%d/fd", getpid()))) {
+            auto fd{ToIntegral<uint64_t>(it.path().filename().native())};
+            if (!fd || *fd > std::numeric_limits<int>::max()) continue;
+            if (*fd <= 2) continue;  // leave std{in,out,err} alone
+            if (*fd == static_cast<uint64_t>(err_wr_pipe_)) continue;
+            fds_to_close.push_back(*fd);
+          }
+          for (const int fd : fds_to_close) {
+            close(fd);
+          }
+        } catch (const fs::filesystem_error &e) {
+          throw OSError("/proc/<pid>/fd iteration failed", e.code().value());
+        }
+#else
+        // On other operating systems, iterate over all file descriptor slots
+        // and try to close them all.
         int max_fd = sysconf(_SC_OPEN_MAX);
         if (max_fd == -1) throw OSError("sysconf failed", errno);
 
@@ -1309,6 +1334,7 @@ namespace detail {
           if (i == err_wr_pipe_) continue;
           close(i);
         }
+#endif
       }
 
       // Replace the current image with the executable
