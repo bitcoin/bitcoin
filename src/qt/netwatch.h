@@ -30,19 +30,20 @@ static constexpr int LONGEST_BECH32_ADDRESS{62};  // NOTE: Up to 74 in theory, b
 
 class LogEntry {
 private:
-    /* m_data is a uint32_t (meta_t) with the top two bits used for:
+    /**
+     * m_data is a uint32_t (meta_t) with the top two bits used for:
      *   1: CBlockIndex*
      *   2: CTransactionRef
      *   3: weak_ptr<const CTransaction>
      * The subsequent 30 bits are the timestamp, assumed to be most recent to the current time.
      * Following this, and any padding necessary for alignment, the object itself is stored
      */
-    uint8_t *m_data = nullptr;
+    uint8_t *m_data{nullptr};
 
     typedef uint32_t meta_t;
     typedef std::weak_ptr<const CTransaction> CTransactionWeakref;
-    static const uint32_t rel_ts_mask = 0x3fffffff;
-    static const uint64_t rel_ts_mask64 = rel_ts_mask;
+    static constexpr uint32_t rel_ts_mask{0x3fffffff};
+    static constexpr uint64_t rel_ts_mask64{rel_ts_mask};
 
     template<typename T> static size_t data_sizeof(size_t& offset) {
         void *p = (void *)intptr_t(sizeof(meta_t));
@@ -71,11 +72,11 @@ private:
     void clear();
 
 public:
-    enum LogEntryType {
-        LET_BLOCK,
-        LET_TX,
+    enum class Type {
+        Block,
+        Transaction,
     };
-    static const QString LogEntryTypeAbbreviation(LogEntryType);
+    static const QString LogEntryTypeAbbreviation(Type);
 
     LogEntry(const LogEntry&);
     LogEntry() { }
@@ -89,7 +90,7 @@ public:
     explicit operator bool() const;
     int32_t getRelTimestamp() const;
     uint64_t getTimestamp(uint64_t now) const;
-    LogEntryType getType() const;
+    Type getType() const;
 
     template <typename T> T* get() const {
         void *p = m_data + sizeof(meta_t);
@@ -129,33 +130,33 @@ class NetWatchLogModel : public QAbstractTableModel
 
 private:
     QWidget * const m_widget;
-    ClientModel *m_client_model = nullptr;
+    ClientModel *m_client_model{nullptr};
 
     NetWatchValidationInterface *m_validation_interface;
 
     mutable RecursiveMutex cs;
     std::vector<LogEntry> m_log GUARDED_BY(cs);
-    static const size_t logsizelimit = 0x400;
-    size_t m_logpos GUARDED_BY(cs) = 0;
-    size_t m_logskip GUARDED_BY(cs) = 0;
+    static constexpr size_t logsizelimit{0x400};
+    size_t m_logpos GUARDED_BY(cs) {0};
+    size_t m_logskip GUARDED_BY(cs) {0};
 
-    static const size_t max_nonweak_txouts = 0x200;
-    static const size_t max_vout_per_tx = 0x100;
+    static constexpr size_t max_nonweak_txouts{0x200};
+    static constexpr size_t max_vout_per_tx{0x100};
 
-    NetWatchLogSearch *m_current_search GUARDED_BY(cs) = nullptr;
+    NetWatchLogSearch *m_current_search GUARDED_BY(cs) {nullptr};
 
     const LogEntry& getLogEntryRow(int row) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     LogEntry& getLogEntryRow(int row) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void log_append(const LogEntry&, size_t& rows_used) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
-    static const int NWLMHeaderCount = 5;
-    enum Header {
-        NWLMH_TIME,
-        NWLMH_TYPE,
-        NWLMH_ID,
-        NWLMH_ADDR,
-        NWLMH_VALUE,
+    static constexpr int HeaderCount{5};
+    enum class Header {
+        Time,
+        Type,
+        Id,
+        Address,
+        Value,
     };
 
     explicit NetWatchLogModel(QWidget *parent);
@@ -212,7 +213,7 @@ public:
     void setClientModel(ClientModel *model);
 
     NetWatchLogModel *log_model;
-    bool m_dont_cancel_search = false;
+    bool m_dont_cancel_search{false};
 
     QLineEdit *m_search_editor;
     QTableView *m_log_view;
