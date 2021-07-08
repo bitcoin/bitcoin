@@ -18,7 +18,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
 # Required non-builtin commands should be invokable
 ################
 
-check_tools cat env basename mkdir xargs find
+check_tools cat env basename mkdir diff sort
 if [ -z "$NO_SIGN" ]; then
     check_tools gpg
 fi
