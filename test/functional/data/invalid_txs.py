@@ -151,6 +151,19 @@ class DuplicateInput(BadTxTemplate):
         return tx
 
 
+class PrevoutNullInput(BadTxTemplate):
+    reject_reason = 'bad-txns-prevout-null'
+    expect_disconnect = True
+
+    def get_tx(self):
+        tx = CTransaction()
+        tx.vin.append(self.valid_txin)
+        tx.vin.append(CTxIn(COutPoint(hash=0, n=0xffffffff)))
+        tx.vout.append(CTxOut(1, basic_p2sh))
+        tx.calc_sha256()
+        return tx
+
+
 class NonexistentInput(BadTxTemplate):
     reject_reason = None  # Added as an orphan tx.
     expect_disconnect = False
