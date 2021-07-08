@@ -778,6 +778,26 @@ Basically:
 6. Turn NTP back on
 7. Turn networking back on
 
+### coreutils: FAIL: tests/tail-2/inotify-dir-recreate
+
+The inotify-dir-create test fails on "remote" filesystems such as overlayfs
+(Docker's default filesystem) due to the filesystem being mistakenly recognized
+as non-remote.
+
+A relatively easy workaround to this is to make sure that a somewhat traditional
+filesystem is mounted at `/tmp` (where `guix-daemon` performs its builds). For
+Docker users, this might mean [using a volume][docker/volumes], [binding
+mounting][docker/bind-mnt] from host, or (for those with enough RAM and swap)
+[mounting a tmpfs][docker/tmpfs] using the `--tmpfs` flag.
+
+Please see the following links for more details:
+
+- An upstream coreutils bug has been filed: [debbugs#47940](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=47940)
+- A Guix bug detailing the underlying problem has been filed: [guix-issues#47935](https://issues.guix.gnu.org/47935)
+- A commit to skip this test in Guix has been merged into the core-updates branch:
+[savannah/guix@6ba1058](https://git.savannah.gnu.org/cgit/guix.git/commit/?id=6ba1058df0c4ce5611c2367531ae5c3cdc729ab4)
+
+
 [install-script]: #options-1-and-2-using-the-official-shell-installer-script-or-binary-tarball
 [install-bin-tarball]: #options-1-and-2-using-the-official-shell-installer-script-or-binary-tarball
 [install-fanquake-docker]: #option-3-using-fanquakes-docker-image
@@ -786,3 +806,7 @@ Basically:
 
 [fix-argv0]: #creating-and-starting-a-guix-daemon-original-service-with-a-fixed-argv0
 [security-model]: ./README.md#choosing-your-security-model
+
+[docker/volumes]: https://docs.docker.com/storage/volumes/
+[docker/bind-mnt]: https://docs.docker.com/storage/bind-mounts/
+[docker/tmpfs]: https://docs.docker.com/storage/tmpfs/
