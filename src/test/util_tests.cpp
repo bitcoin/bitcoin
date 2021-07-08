@@ -318,6 +318,25 @@ BOOST_FIXTURE_TEST_CASE(util_CheckValue, CheckValueTest)
     CheckValue(M::ALLOW_ANY, "-value=abc", Expect{"abc"}.String("abc").Int(0).Bool(false).List({"abc"}));
 }
 
+struct NoIncludeConfTest {
+    std::string Parse(const char* arg)
+    {
+        TestArgsManager test;
+        test.SetupArgs({{"-includeconf", ArgsManager::ALLOW_ANY}});
+        std::array<const char*, 2> argv{"ignored", arg};
+        std::string error;
+        (void)test.ParseParameters(argv.size(), argv.data(), error);
+        return error;
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(util_NoIncludeConf, NoIncludeConfTest)
+{
+    BOOST_CHECK_EQUAL(Parse("-noincludeconf"), "");
+    BOOST_CHECK_EQUAL(Parse("-includeconf"), "-includeconf cannot be used from commandline; -includeconf=\"\"");
+    BOOST_CHECK_EQUAL(Parse("-includeconf=file"), "-includeconf cannot be used from commandline; -includeconf=\"file\"");
+}
+
 BOOST_AUTO_TEST_CASE(util_ParseParameters)
 {
     TestArgsManager testArgs;
