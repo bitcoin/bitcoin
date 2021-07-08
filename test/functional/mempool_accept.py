@@ -16,6 +16,7 @@ from test_framework.messages import (
     COIN,
     COutPoint,
     CTransaction,
+    CTxIn,
     CTxOut,
     MAX_BLOCK_SIZE,
     MAX_MONEY,
@@ -247,6 +248,14 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.vin = [tx.vin[0]] * 2
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-inputs-duplicate'}],
+            rawtxs=[tx.serialize().hex()],
+        )
+
+        self.log.info('A non-coinbase transaction with coinbase-like outpoint')
+        tx = tx_from_hex(raw_tx_reference)
+        tx.vin.append(CTxIn(COutPoint(hash=0, n=0xffffffff)))
+        self.check_mempool_result(
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-prevout-null'}],
             rawtxs=[tx.serialize().hex()],
         )
 
