@@ -3589,7 +3589,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
     assert(txNew.nLockTime < LOCKTIME_THRESHOLD);
     FeeCalculation feeCalc;
     CFeeRate discard_rate = coin_control.m_discard_feerate ? *coin_control.m_discard_feerate : GetDiscardRate(*this, ::feeEstimator);
-    unsigned int nBytes;
+    unsigned int nBytes{0};
     {
         std::vector<CInputCoin> vecCoins;
         LOCK2(cs_main, mempool.cs);
