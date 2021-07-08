@@ -132,7 +132,9 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
         LOCK(pwallet->cs_wallet);
         WalletBatch dummyBatch(pwallet->GetDBHandle(), "r+", false);
         dummyBatch.TxnBegin();
-        CPubKey dummyPubkey = pwallet->GenerateNewKey(dummyBatch, 0, false);
+        CKey secret;
+        secret.MakeNewKey(pwallet->CanSupportFeature(FEATURE_COMPRPUBKEY));
+        CPubKey dummyPubkey = secret.GetPubKey();
         dummyBatch.TxnAbort();
         dummyScript = ::GetScriptForDestination(dummyPubkey.GetID());
         // Create dummy signatures for all inputs
