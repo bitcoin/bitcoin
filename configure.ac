@@ -1505,11 +1505,25 @@ if test "$use_external_signer" != "no"; then
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[
     #define BOOST_PROCESS_USE_STD_FS
     #include <boost/process.hpp>
+
+    #ifdef BOOST_POSIX_API
+    # include <fcntl.h>
+    # ifdef FD_CLOEXEC
+    #  include <boost/process/extend.hpp>
+    # endif
+    #endif
   ]],[[
     namespace bp = boost::process;
     bp::opstream stdin_stream;
     bp::ipstream stdout_stream;
-    bp::child c("dummy", bp::std_out > stdout_stream, bp::std_err > stdout_stream, bp::std_in < stdin_stream);
+    #if defined(BOOST_POSIX_API) && defined(FD_CLOEXEC)
+    struct dummy_extension : boost::process::extend::handler {};
+    #endif
+    bp::child c("dummy", bp::std_out > stdout_stream, bp::std_err > stdout_stream, bp::std_in < stdin_stream
+    #if defined(BOOST_POSIX_API) && defined(FD_CLOEXEC)
+        , dummy_extension()
+    #endif
+    );
     stdin_stream << std::string{"test"} << std::endl;
     if (c.running()) c.terminate();
     c.wait();
