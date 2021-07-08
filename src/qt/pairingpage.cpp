@@ -32,7 +32,7 @@ PairingPage::PairingPage(QWidget *parent) :
     label_summary->setText(tr("Below you will find information to pair other software or devices with this node:"));
     layout->addWidget(label_summary);
 
-    QFormLayout *form_layout = new QFormLayout(this);
+    QFormLayout *form_layout = new QFormLayout();
     m_onion_address = new QLineEdit(this);
     m_onion_address->setReadOnly(true);
     form_layout->addRow(tr("Onion address: "), m_onion_address);
