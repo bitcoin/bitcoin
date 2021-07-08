@@ -615,7 +615,11 @@ std::string TorController::LaunchTor()
 
     boost::process::opstream in;
     try {
-        m_process = new boost::process::child(m_execute + " -f -", boost::process::std_in < in);
+        m_process = new boost::process::child(m_execute + " -f -", boost::process::std_in < in
+#ifdef HAVE_BPE_CLOSE_EXCESS_FDS
+            , bpe_close_excess_fds()
+#endif
+        );
     } catch (...) {
         LogPrint(BCLog::TOR, "tor: Failed to execute Tor process\n");
         throw;
