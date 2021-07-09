@@ -442,10 +442,10 @@ can be found
 [here](https://www.gnu.org/software/automake/manual/html_node/Standard-Directory-Variables.html).
 
 However, the Guix init scripts and service configurations for Upstart, systemd,
-SysV, and OpenRC are installed to launch
+SysV, and OpenRC are installed (in `${libdir}`) to launch
 `${localstatedir}/guix/profiles/per-user/root/current-guix/bin/guix-daemon`,
-which does not yet exist, and will only exist after `root` performs their first
-`guix pull`. TODO: Link to `guix pull` as root section
+which does not yet exist, and will only exist after [`root` performs their first
+`guix pull`](#guix-pull-as-root).
 
 We need to create a `-original` version of these init scripts that's pointed to
 the binaries we just built and `make install`'ed in `${bindir}` (normally,
@@ -455,8 +455,9 @@ Example for `systemd`, run as `root`:
 
 ```sh
 # Create guix-daemon-original.service by modifying guix-daemon.service
+libdir=# set according to your PREFIX (default is /usr/local/lib)
 bindir="$(dirname $(command -v guix-daemon))"
-sed -E -e "s|/\S*/guix/profiles/per-user/root/current-guix/bin/guix-daemon|${bindir}/guix-daemon|" /etc/systemd/system/guix-daemon.service > /etc/systemd/system/guix-daemon-original.service
+sed -E -e "s|/\S*/guix/profiles/per-user/root/current-guix/bin/guix-daemon|${bindir}/guix-daemon|" "${libdir}"/systemd/system/guix-daemon.service > /etc/systemd/system/guix-daemon-original.service
 chmod 664 /etc/systemd/system/guix-daemon-original.service
 
 # Make systemd recognize the new service
