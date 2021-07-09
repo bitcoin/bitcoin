@@ -81,5 +81,9 @@ std::optional<CAmount> ParseMoney(const std::string& money_string)
 
     CAmount value = nWhole * COIN + nUnits;
 
+    if (!MoneyRange(value)) {
+        return std::nullopt;
+    }
+
     return value;
 }
