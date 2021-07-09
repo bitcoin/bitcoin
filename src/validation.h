@@ -171,21 +171,39 @@ struct MempoolAcceptResult {
     enum class ResultType {
         VALID, //!> Fully validated, valid.
         INVALID, //!> Invalid.
+        MEMPOOL_INFO, //!> Entry already in mempool prior to validation.
+        WTXID_CONFLICT, //!> Tx with the same txid but different wtxid already exists in mempool.
     };
     const ResultType m_result_type;
     const TxValidationState m_state;
+
+    /** Witness hash of a conflicting (same txid but different witness) transaction that exists in
+     * the mempool. */
+    const std::optional<uint256> m_wtxid_in_mempool;
 
     // The following fields are only present when m_result_type = ResultType::VALID
     /** Mempool transactions replaced by the tx per BIP 125 rules. */
     const std::optional<std::list<CTransactionRef>> m_replaced_transactions;
     /** Raw base fees in satoshis. */
     const std::optional<CAmount> m_base_fees;
+    /** Size in virtual bytes. */
+    const std::optional<int64_t> m_vsize;
     static MempoolAcceptResult Failure(TxValidationState state) {
         return MempoolAcceptResult(state);
     }
 
-    static MempoolAcceptResult Success(std::list<CTransactionRef>&& replaced_txns, CAmount fees) {
-        return MempoolAcceptResult(std::move(replaced_txns), fees);
+    static MempoolAcceptResult Failure(TxValidationState state, uint256 wtxid) {
+        Assume(state.GetResult() == TxValidationResult::TX_CONFLICT);
+        return MempoolAcceptResult(state, wtxid);
+    }
+
+    static MempoolAcceptResult Success(std::list<CTransactionRef>&& replaced_txns, CAmount fees,
+                                       int64_t vsize) {
+        return MempoolAcceptResult(std::move(replaced_txns), fees, vsize);
+    }
+
+    static MempoolAcceptResult MempoolEntry(CAmount fees, int64_t vsize) {
+        return MempoolAcceptResult(fees, vsize);
     }
 
 // Private constructors. Use static methods MempoolAcceptResult::Success, etc. to construct.
@@ -197,9 +215,18 @@ private:
         }
 
     /** Constructor for success case */
-    explicit MempoolAcceptResult(std::list<CTransactionRef>&& replaced_txns, CAmount fees)
+    explicit MempoolAcceptResult(std::list<CTransactionRef>&& replaced_txns, CAmount fees, int64_t vsize)
         : m_result_type(ResultType::VALID),
-        m_replaced_transactions(std::move(replaced_txns)), m_base_fees(fees) {}
+        m_replaced_transactions(std::move(replaced_txns)), m_base_fees(fees), m_vsize{vsize} {}
+
+    /** Constructor for case where transaction is already in mempool */
+    explicit MempoolAcceptResult(CAmount fees, int64_t vsize)
+        : m_result_type{ResultType::MEMPOOL_INFO}, m_base_fees{fees}, m_vsize{vsize} {}
+
+    /** Constructor for case where transaction conflicts (same txid different wtxid) with another
+     * transaction in mempool */
+    explicit MempoolAcceptResult(TxValidationState state, uint256 wtxid)
+        : m_result_type{ResultType::WTXID_CONFLICT}, m_wtxid_in_mempool{wtxid} {}
 };
 
 /**

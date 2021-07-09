@@ -587,9 +587,13 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (!CheckFinalTx(m_active_chainstate.m_chain.Tip(), tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-final");
 
-    // is it already in the memory pool?
-    if (m_pool.exists(hash)) {
+    if (m_pool.exists(GenTxid(true, tx.GetWitnessHash()))) {
+        // Exact transaction already exists in the mempool.
         return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-already-in-mempool");
+    } else if (m_pool.exists(GenTxid(false, tx.GetHash()))) {
+        // Transaction with the same nonwitness data but different witnes (same txid, different
+        // wtxid) already exists in the mempool. TODO: allow replacements
+        return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-same-nonwitness-data-in-mempool");
     }
 
     // Check for conflicts with in-memory transactions
@@ -1038,14 +1042,16 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
 
     // Tx was accepted, but not added
     if (args.m_test_accept) {
-        return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_base_fees);
+        return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_base_fees,
+                                            GetVirtualTransactionSize(*ws.m_ptx));
     }
 
     if (!Finalize(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
     GetMainSignals().TransactionAddedToMempool(ptx, m_pool.GetAndIncrementSequence());
 
-    return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_base_fees);
+    return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_base_fees,
+                                        GetVirtualTransactionSize(*ws.m_ptx));
 }
 
 PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::vector<CTransactionRef>& txns, ATMPArgs& args)
@@ -1058,11 +1064,30 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
 
     std::vector<Workspace> workspaces{};
     workspaces.reserve(txns.size());
-    std::transform(txns.cbegin(), txns.cend(), std::back_inserter(workspaces),
-                   [](const auto& tx) { return Workspace(tx); });
     std::map<const uint256, const MempoolAcceptResult> results;
 
     LOCK(m_pool.cs);
+    // Detect transactions that are already in the mempool (by txid) and "trim" them from the
+    // package. Don't check by wtxid because we don't want to reject this package simply because a
+    // transaction's witness data is different from the one in the mempool.
+    for(const auto& tx: txns) {
+        if (m_pool.exists(GenTxid(true, tx->GetWitnessHash())) || m_pool.exists(GenTxid(false, tx->GetHash()))) {
+            // Grab information from the mempool entry.
+            const auto mempool_info = m_pool.info(GenTxid(false, tx->GetHash()));
+            const auto& mempool_wtxid = mempool_info.tx->GetWitnessHash();
+            results.emplace(mempool_wtxid, MempoolAcceptResult::MempoolEntry(mempool_info.fee, mempool_info.vsize));
+
+            // If we have a same-txid-different-wtxid situation, add a result for the original
+            // transaction so that the caller knows where to look for the mempool result.
+            if (mempool_wtxid != tx->GetWitnessHash()) {
+                TxValidationState state_conflict;
+                state_conflict.Invalid(TxValidationResult::TX_CONFLICT, "txn-same-nonwitness-data-in-mempool");
+                results.emplace(tx->GetWitnessHash(), MempoolAcceptResult::Failure(state_conflict, mempool_wtxid));
+            }
+        } else {
+            workspaces.emplace_back(Workspace(tx));
+        }
+    }
 
     // Do all PreChecks first and fail fast to avoid running expensive script checks when unnecessary.
     for (Workspace& ws : workspaces) {
@@ -1080,6 +1105,35 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
         m_viewmempool.PackageAddTransaction(ws.m_ptx);
     }
 
+    // Apply package mempool ancestor/descendant limits. Limit the scope of package_entries and
+    // package_ancestors; we shouldn't use them for anything other than calculating limits. When we
+    // submit the transactions to mempool, We should calculate ancestors for each transaction
+    // individually before calling Finalize(). Exclude transactions trimmed for having the same txid
+    // as transaction(s) in the mempool, otherwise we would double-count them.
+    if (workspaces.size() > 1) {
+        std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> package_entries;
+        std::transform(workspaces.cbegin(), workspaces.cend(), std::back_inserter(package_entries),
+                       [](const auto& ws) { return std::cref(*ws.m_entry); });
+        // We won't use the set of ancestors returned for calling Finalize().
+        CTxMemPool::setEntries package_ancestors;
+        std::string err_string;
+        if (!m_pool.CalculateMemPoolAncestors(package_entries,
+                                              package_ancestors, m_limit_ancestors, m_limit_ancestor_size,
+                                              m_limit_descendants, m_limit_descendant_size, err_string,
+                                              /* fSearchForParents */ true)) {
+            // All transactions must have individually passed mempool ancestor and descendant limits
+            // inside of PreChecks(). Figuring out which transaction to attribute this failure to may
+            // be implementation-dependent, and it's likely to be multiple transactions because we
+            // evaluated all of them together. Return the same failure for all transactions.
+            for (auto& ws : workspaces) {
+                ws.m_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "exceeds-ancestor-descendant-limits", err_string);
+                results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
+            }
+            package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-mempool-limits");
+            return PackageMempoolAcceptResult(package_state, std::move(results));
+        }
+    }
+
     for (Workspace& ws : workspaces) {
         PrecomputedTransactionData txdata;
         if (!PolicyScriptChecks(args, ws, txdata)) {
@@ -1092,7 +1146,8 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
             // When test_accept=true, transactions that pass PolicyScriptChecks are valid because there are
             // no further mempool checks (passing PolicyScriptChecks implies passing ConsensusScriptChecks).
             results.emplace(ws.m_ptx->GetWitnessHash(),
-                            MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_base_fees));
+                            MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_base_fees,
+                                                         GetVirtualTransactionSize(*ws.m_ptx)));
         }
     }
 

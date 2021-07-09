@@ -906,7 +906,7 @@ static RPCHelpMan testmempoolaccept()
                 RPCResult{
                     RPCResult::Type::ARR, "", "The result of the mempool acceptance test for each raw transaction in the input array.\n"
                         "Returns results for each transaction in the same order they were passed in.\n"
-                        "It is possible for transactions to not be fully validated ('allowed' unset) if another transaction failed.\n",
+                        "Transactions that cannot be fully validated due to failures in other transactions will not contain an 'allowed' result.\n",
                     {
                         {RPCResult::Type::OBJ, "", "",
                         {
@@ -994,8 +994,7 @@ static RPCHelpMan testmempoolaccept()
         if (tx_result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             const CAmount fee = tx_result.m_base_fees.value();
             // Check that fee does not exceed maximum fee
-            const int64_t virtual_size = GetVirtualTransactionSize(*tx);
-            const CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
+            const CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(tx_result.m_vsize.value());
             if (max_raw_tx_fee && fee > max_raw_tx_fee) {
                 result_inner.pushKV("allowed", false);
                 result_inner.pushKV("reject-reason", "max-fee-exceeded");
@@ -1004,11 +1003,30 @@ static RPCHelpMan testmempoolaccept()
                 // Only return the fee and vsize if the transaction would pass ATMP.
                 // These can be used to calculate the feerate.
                 result_inner.pushKV("allowed", true);
-                result_inner.pushKV("vsize", virtual_size);
+                result_inner.pushKV("vsize", tx_result.m_vsize.value());
                 UniValue fees(UniValue::VOBJ);
                 fees.pushKV("base", ValueFromAmount(fee));
                 result_inner.pushKV("fees", fees);
             }
+        } else if (tx_result.m_result_type == MempoolAcceptResult::ResultType::WTXID_CONFLICT) {
+            result_inner.pushKV("allowed", false);
+            // This is the result that would be returned in a single test accept.
+            result_inner.pushKV("reject-reason", "txn-same-nonwitness-data-in-mempool");
+            // MemPoolAccept found a mempool match and replaced this transaction with a mempool
+            // transaction that has the same txid. We just need to look it up in the results map.
+            const auto mempool_entry_wtxid = tx_result.m_wtxid_in_mempool.value();
+            UniValue result_additional(UniValue::VOBJ);
+            result_additional.pushKV("txid", tx->GetHash().GetHex());
+            result_additional.pushKV("wtxid", mempool_entry_wtxid.GetHex());
+            result_additional.pushKV("allowed", true);
+            auto it_additional = package_result.m_tx_results.find(mempool_entry_wtxid);
+            CHECK_NONFATAL(it_additional != package_result.m_tx_results.end());
+            CHECK_NONFATAL(it_additional->second.m_result_type == MempoolAcceptResult::ResultType::MEMPOOL_INFO);
+            result_additional.pushKV("vsize", it_additional->second.m_vsize.value());
+            UniValue fees(UniValue::VOBJ);
+            fees.pushKV("base", ValueFromAmount(it_additional->second.m_base_fees.value()));
+            result_additional.pushKV("fees", fees);
+            rpc_result.push_back(result_additional);
         } else {
             result_inner.pushKV("allowed", false);
             const TxValidationState state = tx_result.m_state;
