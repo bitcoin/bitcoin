@@ -29,27 +29,32 @@ from test_framework.messages import (
     CTxOut,
     MAX_MONEY,
 )
-from test_framework import script as sc
 from test_framework.blocktools import create_tx_with_script, MAX_BLOCK_SIGOPS
 from test_framework.script import (
     CScript,
-    OP_CAT,
-    OP_SUBSTR,
-    OP_LEFT,
-    OP_RIGHT,
-    OP_INVERT,
-    OP_AND,
-    OP_OR,
-    OP_XOR,
-    OP_2MUL,
+    OP_0,
     OP_2DIV,
-    OP_MUL,
+    OP_2MUL,
+    OP_AND,
+    OP_CAT,
+    OP_CHECKSIG,
     OP_DIV,
-    OP_MOD,
+    OP_INVERT,
+    OP_LEFT,
     OP_LSHIFT,
-    OP_RSHIFT
+    OP_MOD,
+    OP_MUL,
+    OP_OR,
+    OP_RIGHT,
+    OP_RSHIFT,
+    OP_SUBSTR,
+    OP_TRUE,
+    OP_XOR,
 )
-basic_p2sh = sc.CScript([sc.OP_HASH160, sc.hash160(sc.CScript([sc.OP_0])), sc.OP_EQUAL])
+from test_framework.script_util import (
+    script_to_p2sh_script,
+)
+basic_p2sh = script_to_p2sh_script(CScript([OP_0]))
 
 
 class BadTxTemplate:
@@ -116,7 +121,7 @@ class SizeTooSmall(BadTxTemplate):
     def get_tx(self):
         tx = CTransaction()
         tx.vin.append(self.valid_txin)
-        tx.vout.append(CTxOut(0, sc.CScript([sc.OP_TRUE])))
+        tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
         tx.calc_sha256()
         return tx
 
@@ -230,7 +235,7 @@ class TooManySigops(BadTxTemplate):
     expect_disconnect = False
 
     def get_tx(self):
-        lotsa_checksigs = sc.CScript([sc.OP_CHECKSIG] * (MAX_BLOCK_SIGOPS))
+        lotsa_checksigs = CScript([OP_CHECKSIG] * (MAX_BLOCK_SIGOPS))
         return create_tx_with_script(
             self.spend_tx, 0,
             script_pub_key=lotsa_checksigs,
