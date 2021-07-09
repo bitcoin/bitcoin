@@ -2199,13 +2199,11 @@ static void AppendWarning(bilingual_str& res, const bilingual_str& warn)
     res += warn;
 }
 
-/** Check warning conditions and do some notifications on new chain tip set. */
-static void UpdateTip(CTxMemPool* mempool, const CBlockIndex* pindexNew, const CChainParams& chainParams, CChainState& active_chainstate)
-    EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+void CChainState::UpdateTip(const CBlockIndex* pindexNew)
 {
     // New best block
-    if (mempool) {
-        mempool->AddTransactionsUpdated(1);
+    if (m_mempool) {
+        m_mempool->AddTransactionsUpdated(1);
     }
 
     {
@@ -2215,11 +2213,11 @@ static void UpdateTip(CTxMemPool* mempool, const CBlockIndex* pindexNew, const C
     }
 
     bilingual_str warning_messages;
-    if (!active_chainstate.IsInitialBlockDownload()) {
+    if (!this->IsInitialBlockDownload()) {
         const CBlockIndex* pindex = pindexNew;
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
             WarningBitsConditionChecker checker(bit);
-            ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
+            ThresholdState state = checker.GetStateFor(pindex, m_params.GetConsensus(), warningcache[bit]);
             if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
                 const bilingual_str warning = strprintf(_("Unknown new rules activated (versionbit %i)"), bit);
                 if (state == ThresholdState::ACTIVE) {
@@ -2234,7 +2232,7 @@ static void UpdateTip(CTxMemPool* mempool, const CBlockIndex* pindexNew, const C
       pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
       log(pindexNew->nChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx,
       FormatISO8601DateTime(pindexNew->GetBlockTime()),
-      GuessVerificationProgress(chainParams.TxData(), pindexNew), active_chainstate.CoinsTip().DynamicMemoryUsage() * (1.0 / (1<<20)), active_chainstate.CoinsTip().GetCacheSize(),
+      GuessVerificationProgress(m_params.TxData(), pindexNew), this->CoinsTip().DynamicMemoryUsage() * (1.0 / (1<<20)), this->CoinsTip().GetCacheSize(),
       !warning_messages.empty() ? strprintf(" warning='%s'", warning_messages.original) : "");
 }
 
@@ -2292,7 +2290,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
 
     m_chain.SetTip(pindexDelete->pprev);
 
-    UpdateTip(m_mempool, pindexDelete->pprev, m_params, *this);
+    UpdateTip(pindexDelete->pprev);
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     GetMainSignals().BlockDisconnected(pblock, pindexDelete);
@@ -2404,7 +2402,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
     }
     // Update m_chain & related variables.
     m_chain.SetTip(pindexNew);
-    UpdateTip(m_mempool, pindexNew, m_params, *this);
+    UpdateTip(pindexNew);
 
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
     LogPrint(BCLog::BENCH, "  - Connect postprocess: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime6 - nTime5) * MILLI, nTimePostConnect * MICRO, nTimePostConnect * MILLI / nBlocksTotal);

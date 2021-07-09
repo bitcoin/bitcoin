@@ -823,6 +823,10 @@ private:
         DisconnectedBlockTransactions& disconnectpool,
         bool fAddToMempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
 
+    /** Check warning conditions and do some notifications on new chain tip set. */
+    void UpdateTip(const CBlockIndex* pindexNew)
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     friend ChainstateManager;
 };
 
