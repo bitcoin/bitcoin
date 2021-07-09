@@ -26,7 +26,6 @@ from .messages import (
     hash256,
     hex_str_to_bytes,
     ser_uint256,
-    sha256,
     tx_from_hex,
     uint256_from_str,
     CCbTx,
@@ -35,13 +34,15 @@ from .script import (
     CScript,
     CScriptNum,
     CScriptOp,
-    OP_0,
     OP_1,
     OP_CHECKMULTISIG,
     OP_CHECKSIG,
     OP_RETURN,
     OP_TRUE,
-    hash160,
+)
+from .script_util import (
+    key_to_p2wpkh_script,
+    script_to_p2wsh_script,
 )
 from .util import assert_equal
 
@@ -238,13 +239,11 @@ def witness_script(use_p2wsh, pubkey):
     scriptPubKey."""
     if not use_p2wsh:
         # P2WPKH instead
-        pubkeyhash = hash160(hex_str_to_bytes(pubkey))
-        pkscript = CScript([OP_0, pubkeyhash])
+        pkscript = key_to_p2wpkh_script(pubkey)
     else:
         # 1-of-1 multisig
         witness_program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
-        scripthash = sha256(witness_program)
-        pkscript = CScript([OP_0, scripthash])
+        pkscript = script_to_p2wsh_script(witness_program)
     return pkscript.hex()
 
 def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):

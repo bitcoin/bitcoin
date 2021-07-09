@@ -57,7 +57,6 @@ from test_framework.script import (
     OP_ENDIF,
     OP_EQUAL,
     OP_EQUALVERIFY,
-    OP_HASH160,
     OP_IF,
     OP_NOP,
     OP_NOT,
@@ -76,12 +75,17 @@ from test_framework.script import (
     is_op_success,
     taproot_construct,
 )
+from test_framework.script_util import (
+    key_to_p2wpkh_script,
+    keyhash_to_p2pkh_script,
+    script_to_p2sh_script,
+    script_to_p2wsh_script,
+)
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_raises_rpc_error, assert_equal, force_finish_mnsync
 from test_framework.key import generate_privkey, compute_xonly_pubkey, sign_schnorr, tweak_add_privkey, ECKey
 from test_framework.address import (
     hash160,
-    sha256,
 )
 from collections import OrderedDict, namedtuple
 from io import BytesIO
@@ -458,13 +462,13 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
             # P2WPKH
             assert script is None
             pubkeyhash = hash160(pkh)
-            spk = CScript([OP_0, pubkeyhash])
-            conf["scriptcode"] = CScript([OP_DUP, OP_HASH160, pubkeyhash, OP_EQUALVERIFY, OP_CHECKSIG])
+            spk = key_to_p2wpkh_script(pkh)
+            conf["scriptcode"] = keyhash_to_p2pkh_script(pubkeyhash)
             conf["script_witv0"] = None
             conf["inputs"] = [getter("sign"), pkh]
         elif script is not None:
             # P2WSH
-            spk = CScript([OP_0, sha256(script)])
+            spk = script_to_p2wsh_script(script)
             conf["scriptcode"] = script
             conf["script_witv0"] = script
         else:
@@ -475,7 +479,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
             # P2PKH
             assert script is None
             pubkeyhash = hash160(pkh)
-            spk = CScript([OP_DUP, OP_HASH160, pubkeyhash, OP_EQUALVERIFY, OP_CHECKSIG])
+            spk = keyhash_to_p2pkh_script(pubkeyhash)
             conf["scriptcode"] = spk
             conf["inputs"] = [getter("sign"), pkh]
         elif script is not None:
@@ -496,7 +500,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
     if p2sh:
         # P2SH wrapper can be combined with anything else
         conf["script_p2sh"] = spk
-        spk = CScript([OP_HASH160, hash160(spk), OP_EQUAL])
+        spk = script_to_p2sh_script(spk)
 
     conf = {**conf, **kwargs}
 

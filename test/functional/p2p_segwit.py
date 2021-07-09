@@ -41,7 +41,6 @@ from test_framework.messages import (
     ser_vector,
     sha256,
     tx_from_hex,
-    uint256_from_str,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -60,12 +59,8 @@ from test_framework.script import (
     OP_CHECKMULTISIG,
     OP_CHECKSIG,
     OP_DROP,
-    OP_DUP,
     OP_ELSE,
     OP_ENDIF,
-    OP_EQUAL,
-    OP_EQUALVERIFY,
-    OP_HASH160,
     OP_IF,
     OP_RETURN,
     OP_TRUE,
@@ -76,6 +71,12 @@ from test_framework.script import (
     SegwitV0SignatureHash,
     LegacySignatureHash,
     hash160,
+)
+from test_framework.script_util import (
+    key_to_p2wpkh_script,
+    keyhash_to_p2pkh_script,
+    script_to_p2sh_script,
+    script_to_p2wsh_script,
 )
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
@@ -99,10 +100,6 @@ class UTXO():
         self.sha256 = sha256
         self.n = n
         self.nValue = value
-
-def get_p2pkh_script(pubkeyhash):
-    """Get the script associated with a P2PKH."""
-    return CScript([CScriptOp(OP_DUP), CScriptOp(OP_HASH160), pubkeyhash, CScriptOp(OP_EQUALVERIFY), CScriptOp(OP_CHECKSIG)])
 
 def sign_p2pk_witness_input(script, tx_to, in_idx, hashtype, value, key):
     """Add signature for a P2PK witness program."""
@@ -494,11 +491,8 @@ class SegWitTest(SyscoinTestFramework):
 
         # Create two outputs, a p2wsh and p2sh-p2wsh
         witness_program = CScript([OP_TRUE])
-        witness_hash = sha256(witness_program)
-        script_pubkey = CScript([OP_0, witness_hash])
-
-        p2sh_pubkey = hash160(script_pubkey)
-        p2sh_script_pubkey = CScript([OP_HASH160, p2sh_pubkey, OP_EQUAL])
+        script_pubkey = script_to_p2wsh_script(witness_program)
+        p2sh_script_pubkey = script_to_p2sh_script(script_pubkey)
 
         value = self.utxo[0].nValue // 3
 
@@ -633,11 +627,8 @@ class SegWitTest(SyscoinTestFramework):
         V0 segwit inputs may only be mined after activation, but not before."""
 
         witness_program = CScript([OP_TRUE])
-        witness_hash = sha256(witness_program)
-        script_pubkey = CScript([OP_0, witness_hash])
-
-        p2sh_pubkey = hash160(witness_program)
-        p2sh_script_pubkey = CScript([OP_HASH160, p2sh_pubkey, OP_EQUAL])
+        script_pubkey = script_to_p2wsh_script(witness_program)
+        p2sh_script_pubkey = script_to_p2sh_script(witness_program)
 
         # First prepare a p2sh output (so that spending it will pass standardness)
         p2sh_tx = CTransaction()
@@ -664,6 +655,7 @@ class SegWitTest(SyscoinTestFramework):
         test_transaction_acceptance(self.nodes[1], self.std_node, tx, with_witness=True, accepted=True)
 
         # Now create something that looks like a P2PKH output. This won't be spendable.
+        witness_hash = sha256(witness_program)
         script_pubkey = CScript([OP_0, hash160(witness_hash)])
         tx2 = CTransaction()
         # tx was accepted, so we spend the second output.
@@ -742,10 +734,8 @@ class SegWitTest(SyscoinTestFramework):
 
         # Prepare the p2sh-wrapped witness output
         witness_program = CScript([OP_DROP, OP_TRUE])
-        witness_hash = sha256(witness_program)
-        p2wsh_pubkey = CScript([OP_0, witness_hash])
-        p2sh_witness_hash = hash160(p2wsh_pubkey)
-        script_pubkey = CScript([OP_HASH160, p2sh_witness_hash, OP_EQUAL])
+        p2wsh_pubkey = script_to_p2wsh_script(witness_program)
+        script_pubkey = script_to_p2sh_script(p2wsh_pubkey)
         script_sig = CScript([p2wsh_pubkey])  # a push of the redeem script
 
         # Fund the P2SH output
@@ -839,8 +829,7 @@ class SegWitTest(SyscoinTestFramework):
 
         # Let's construct a witness program
         witness_program = CScript([OP_TRUE])
-        witness_hash = sha256(witness_program)
-        script_pubkey = CScript([OP_0, witness_hash])
+        script_pubkey = script_to_p2wsh_script(witness_program)
         tx.vout.append(CTxOut(self.utxo[0].nValue - 1000, script_pubkey))
         tx.rehash()
 
@@ -953,8 +942,7 @@ class SegWitTest(SyscoinTestFramework):
         NUM_OUTPUTS = 50
 
         witness_program = CScript([OP_2DROP] * NUM_DROPS + [OP_TRUE])
-        witness_hash = uint256_from_str(sha256(witness_program))
-        script_pubkey = CScript([OP_0, ser_uint256(witness_hash)])
+        script_pubkey = script_to_p2wsh_script(witness_program)
 
         prevout = COutPoint(self.utxo[0].sha256, self.utxo[0].n)
         value = self.utxo[0].nValue
@@ -1056,8 +1044,7 @@ class SegWitTest(SyscoinTestFramework):
         block = self.build_next_block()
 
         witness_program = CScript([OP_DROP, OP_TRUE])
-        witness_hash = sha256(witness_program)
-        script_pubkey = CScript([OP_0, witness_hash])
+        script_pubkey = script_to_p2wsh_script(witness_program)
 
         # First try extra witness data on a tx that doesn't require a witness
         tx = CTransaction()
@@ -1129,8 +1116,7 @@ class SegWitTest(SyscoinTestFramework):
         block = self.build_next_block()
 
         witness_program = CScript([OP_DROP, OP_TRUE])
-        witness_hash = sha256(witness_program)
-        script_pubkey = CScript([OP_0, witness_hash])
+        script_pubkey = script_to_p2wsh_script(witness_program)
 
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b""))
@@ -1168,8 +1154,7 @@ class SegWitTest(SyscoinTestFramework):
         # This program is 19 max pushes (9937 bytes), then 64 more opcode-bytes.
         long_witness_program = CScript([b'a' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [OP_DROP] * 63 + [OP_TRUE])
         assert len(long_witness_program) == MAX_PROGRAM_LENGTH + 1
-        long_witness_hash = sha256(long_witness_program)
-        long_script_pubkey = CScript([OP_0, long_witness_hash])
+        long_script_pubkey = script_to_p2wsh_script(long_witness_program)
 
         block = self.build_next_block()
 
@@ -1192,8 +1177,7 @@ class SegWitTest(SyscoinTestFramework):
         # Try again with one less byte in the witness program
         witness_program = CScript([b'a' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [OP_DROP] * 62 + [OP_TRUE])
         assert len(witness_program) == MAX_PROGRAM_LENGTH
-        witness_hash = sha256(witness_program)
-        script_pubkey = CScript([OP_0, witness_hash])
+        script_pubkey = script_to_p2wsh_script(witness_program)
 
         tx.vout[0] = CTxOut(tx.vout[0].nValue, script_pubkey)
         tx.rehash()
@@ -1212,8 +1196,7 @@ class SegWitTest(SyscoinTestFramework):
         """Test that vin length must match vtxinwit length."""
 
         witness_program = CScript([OP_DROP, OP_TRUE])
-        witness_hash = sha256(witness_program)
-        script_pubkey = CScript([OP_0, witness_hash])
+        script_pubkey = script_to_p2wsh_script(witness_program)
 
         # Create a transaction that splits our utxo into many outputs
         tx = CTransaction()
@@ -1320,8 +1303,7 @@ class SegWitTest(SyscoinTestFramework):
 
         # Now try to add extra witness data to a valid witness tx.
         witness_program = CScript([OP_TRUE])
-        witness_hash = sha256(witness_program)
-        script_pubkey = CScript([OP_0, witness_hash])
+        script_pubkey = script_to_p2wsh_script(witness_program)
         tx2 = CTransaction()
         tx2.vin.append(CTxIn(COutPoint(tx_hash, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, script_pubkey))
@@ -1333,9 +1315,8 @@ class SegWitTest(SyscoinTestFramework):
 
         # Add too-large for IsStandard witness and check that it does not enter reject filter
         p2sh_program = CScript([OP_TRUE])
-        p2sh_pubkey = hash160(p2sh_program)
         witness_program2 = CScript([b'a' * 400000])
-        tx3.vout.append(CTxOut(tx2.vout[0].nValue - 1000, CScript([OP_HASH160, p2sh_pubkey, OP_EQUAL])))
+        tx3.vout.append(CTxOut(tx2.vout[0].nValue - 1000, script_to_p2sh_script(p2sh_program)))
         tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program2]
         tx3.rehash()
 
@@ -1484,8 +1465,7 @@ class SegWitTest(SyscoinTestFramework):
         block = self.build_next_block()
         # Change the output of the block to be a witness output.
         witness_program = CScript([OP_TRUE])
-        witness_hash = sha256(witness_program)
-        script_pubkey = CScript([OP_0, witness_hash])
+        script_pubkey = script_to_p2wsh_script(witness_program)
         block.vtx[0].vout[0].scriptPubKey = script_pubkey
         # This next line will rehash the coinbase and update the merkle
         # root, and solve.
@@ -1532,7 +1512,7 @@ class SegWitTest(SyscoinTestFramework):
         # Test 1: P2WPKH
         # First create a P2WPKH output that uses an uncompressed pubkey
         pubkeyhash = hash160(pubkey)
-        script_pkh = CScript([OP_0, pubkeyhash])
+        script_pkh = key_to_p2wpkh_script(pubkey)
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(utxo.sha256, utxo.n), b""))
         tx.vout.append(CTxOut(utxo.nValue - 1000, script_pkh))
@@ -1546,13 +1526,12 @@ class SegWitTest(SyscoinTestFramework):
         # Now try to spend it. Send it to a P2WSH output, which we'll
         # use in the next test.
         witness_program = CScript([pubkey, CScriptOp(OP_CHECKSIG)])
-        witness_hash = sha256(witness_program)
-        script_wsh = CScript([OP_0, witness_hash])
+        script_wsh = script_to_p2wsh_script(witness_program)
 
         tx2 = CTransaction()
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, script_wsh))
-        script = get_p2pkh_script(pubkeyhash)
+        script = keyhash_to_p2pkh_script(pubkeyhash)
         sig_hash = SegwitV0SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)
         signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
         tx2.wit.vtxinwit.append(CTxInWitness())
@@ -1569,8 +1548,7 @@ class SegWitTest(SyscoinTestFramework):
         # Test 2: P2WSH
         # Try to spend the P2WSH output created in last test.
         # Send it to a P2SH(P2WSH) output, which we'll use in the next test.
-        p2sh_witness_hash = hash160(script_wsh)
-        script_p2sh = CScript([OP_HASH160, p2sh_witness_hash, OP_EQUAL])
+        script_p2sh = script_to_p2sh_script(script_wsh)
         script_sig = CScript([script_wsh])
 
         tx3 = CTransaction()
@@ -1589,7 +1567,7 @@ class SegWitTest(SyscoinTestFramework):
         # Test 3: P2SH(P2WSH)
         # Try to spend the P2SH output created in the last test.
         # Send it to a P2PKH output, which we'll use in the next test.
-        script_pubkey = get_p2pkh_script(pubkeyhash)
+        script_pubkey = keyhash_to_p2pkh_script(pubkeyhash)
         tx4 = CTransaction()
         tx4.vin.append(CTxIn(COutPoint(tx3.sha256, 0), script_sig))
         tx4.vout.append(CTxOut(tx3.vout[0].nValue - 1000, script_pubkey))
@@ -1626,8 +1604,7 @@ class SegWitTest(SyscoinTestFramework):
         pubkey = key.get_pubkey().get_bytes()
 
         witness_program = CScript([pubkey, CScriptOp(OP_CHECKSIG)])
-        witness_hash = sha256(witness_program)
-        script_pubkey = CScript([OP_0, witness_hash])
+        script_pubkey = script_to_p2wsh_script(witness_program)
 
         # First create a witness output for use in the tests.
         tx = CTransaction()
@@ -1746,7 +1723,7 @@ class SegWitTest(SyscoinTestFramework):
 
         # Now test witness version 0 P2PKH transactions
         pubkeyhash = hash160(pubkey)
-        script_pkh = CScript([OP_0, pubkeyhash])
+        script_pkh = key_to_p2wpkh_script(pubkey)
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(temp_utxos[0].sha256, temp_utxos[0].n), b""))
         tx.vout.append(CTxOut(temp_utxos[0].nValue, script_pkh))
@@ -1756,7 +1733,7 @@ class SegWitTest(SyscoinTestFramework):
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue, CScript([OP_TRUE])))
 
-        script = get_p2pkh_script(pubkeyhash)
+        script = keyhash_to_p2pkh_script(pubkeyhash)
         sig_hash = SegwitV0SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)
         signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
 
@@ -1808,8 +1785,7 @@ class SegWitTest(SyscoinTestFramework):
         # rules (an anyone-can-spend OP_TRUE would be rejected, if not wrapped
         # in P2SH).
         p2sh_program = CScript([OP_TRUE])
-        p2sh_pubkey = hash160(p2sh_program)
-        script_pubkey = CScript([OP_HASH160, p2sh_pubkey, OP_EQUAL])
+        script_pubkey = script_to_p2sh_script(p2sh_program)
 
         # Now check that unnecessary witnesses can't be used to blind a node
         # to a transaction, eg by violating standardness checks.
@@ -1874,11 +1850,10 @@ class SegWitTest(SyscoinTestFramework):
         # For each script, generate a pair of P2WSH and P2SH-P2WSH output.
         outputvalue = (self.utxo[0].nValue - 1000) // (len(scripts) * 2)
         for i in scripts:
-            p2wsh = CScript([OP_0, sha256(i)])
-            p2sh = hash160(p2wsh)
+            p2wsh = script_to_p2wsh_script(i)
             p2wsh_scripts.append(p2wsh)
             tx.vout.append(CTxOut(outputvalue, p2wsh))
-            tx.vout.append(CTxOut(outputvalue, CScript([OP_HASH160, p2sh, OP_EQUAL])))
+            tx.vout.append(CTxOut(outputvalue, script_to_p2sh_script(p2wsh)))
         tx.rehash()
         txid = tx.sha256
         test_transaction_acceptance(self.nodes[0], self.test_node, tx, with_witness=False, accepted=True)
@@ -1892,13 +1867,13 @@ class SegWitTest(SyscoinTestFramework):
         for i in range(len(scripts)):
             p2wsh_tx = CTransaction()
             p2wsh_tx.vin.append(CTxIn(COutPoint(txid, i * 2)))
-            p2wsh_tx.vout.append(CTxOut(outputvalue - 5000, CScript([OP_0, hash160(hex_str_to_bytes(""))])))
+            p2wsh_tx.vout.append(CTxOut(outputvalue - 5000, CScript([OP_0, hash160(b"")])))
             p2wsh_tx.wit.vtxinwit.append(CTxInWitness())
             p2wsh_tx.rehash()
             p2wsh_txs.append(p2wsh_tx)
             p2sh_tx = CTransaction()
             p2sh_tx.vin.append(CTxIn(COutPoint(txid, i * 2 + 1), CScript([p2wsh_scripts[i]])))
-            p2sh_tx.vout.append(CTxOut(outputvalue - 5000, CScript([OP_0, hash160(hex_str_to_bytes(""))])))
+            p2sh_tx.vout.append(CTxOut(outputvalue - 5000, CScript([OP_0, hash160(b"")])))
             p2sh_tx.wit.vtxinwit.append(CTxInWitness())
             p2sh_tx.rehash()
             p2sh_txs.append(p2sh_tx)
@@ -1993,8 +1968,7 @@ class SegWitTest(SyscoinTestFramework):
 
         # Keep this under MAX_OPS_PER_SCRIPT (201)
         witness_program = CScript([OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKMULTISIG] * 5 + [OP_CHECKSIG] * 193 + [OP_ENDIF])
-        witness_hash = sha256(witness_program)
-        script_pubkey = CScript([OP_0, witness_hash])
+        script_pubkey = script_to_p2wsh_script(witness_program)
 
         sigops_per_script = 20 * 5 + 193 * 1
         # We'll produce 2 extra outputs, one with a program that would take us
@@ -2010,14 +1984,12 @@ class SegWitTest(SyscoinTestFramework):
         # N(=MAX_SIGOP_COST//sigops_per_script) outputs of our transaction,
         # would push us just over the block sigop limit.
         witness_program_toomany = CScript([OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKSIG] * (extra_sigops_available + 1) + [OP_ENDIF])
-        witness_hash_toomany = sha256(witness_program_toomany)
-        script_pubkey_toomany = CScript([OP_0, witness_hash_toomany])
+        script_pubkey_toomany = script_to_p2wsh_script(witness_program_toomany)
 
         # If we spend this script instead, we would exactly reach our sigop
         # limit (for witness sigops).
         witness_program_justright = CScript([OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKSIG] * (extra_sigops_available) + [OP_ENDIF])
-        witness_hash_justright = sha256(witness_program_justright)
-        script_pubkey_justright = CScript([OP_0, witness_hash_justright])
+        script_pubkey_justright = script_to_p2wsh_script(witness_program_justright)
 
         # First split our available utxo into a bunch of outputs
         split_value = self.utxo[0].nValue // outputs
@@ -2150,8 +2122,7 @@ class SegWitTest(SyscoinTestFramework):
         # Create a Segwit output from the latest UTXO
         # and announce it to the network
         witness_program = CScript([OP_TRUE])
-        witness_hash = sha256(witness_program)
-        script_pubkey = CScript([OP_0, witness_hash])
+        script_pubkey = script_to_p2wsh_script(witness_program)
 
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b""))
