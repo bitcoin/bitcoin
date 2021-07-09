@@ -8,17 +8,16 @@ Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
 '''
 import sys
-from typing import List, Optional
+from typing import List
 
 import lief
 
-def check_ELF_RELRO(executable) -> bool:
+def check_ELF_RELRO(binary) -> bool:
     '''
     Check for read-only relocations.
     GNU_RELRO program header must exist
     Dynamic section must have BIND_NOW flag
     '''
-    binary = lief.parse(executable)
     have_gnu_relro = False
     for segment in binary.segments:
         # Note: not checking p_flags == PF_R: here as linkers set the permission differently
@@ -40,20 +39,18 @@ def check_ELF_RELRO(executable) -> bool:
 
     return have_gnu_relro and have_bindnow
 
-def check_ELF_Canary(executable) -> bool:
+def check_ELF_Canary(binary) -> bool:
     '''
     Check for use of stack canary
     '''
-    binary = lief.parse(executable)
     return binary.has_symbol('__stack_chk_fail')
 
-def check_ELF_separate_code(executable):
+def check_ELF_separate_code(binary):
     '''
     Check that sections are appropriately separated in virtual memory,
     based on their permissions. This checks for missing -Wl,-z,separate-code
     and potentially other problems.
     '''
-    binary = lief.parse(executable)
     R = lief.ELF.SEGMENT_FLAGS.R
     W = lief.ELF.SEGMENT_FLAGS.W
     E = lief.ELF.SEGMENT_FLAGS.X
@@ -110,66 +107,56 @@ def check_ELF_separate_code(executable):
                 return False
     return True
 
-def check_PE_DYNAMIC_BASE(executable) -> bool:
+def check_PE_DYNAMIC_BASE(binary) -> bool:
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
-    binary = lief.parse(executable)
     return lief.PE.DLL_CHARACTERISTICS.DYNAMIC_BASE in binary.optional_header.dll_characteristics_lists
 
 # Must support high-entropy 64-bit address space layout randomization
 # in addition to DYNAMIC_BASE to have secure ASLR.
-def check_PE_HIGH_ENTROPY_VA(executable) -> bool:
+def check_PE_HIGH_ENTROPY_VA(binary) -> bool:
     '''PIE: DllCharacteristics bit 0x20 signifies high-entropy ASLR'''
-    binary = lief.parse(executable)
     return lief.PE.DLL_CHARACTERISTICS.HIGH_ENTROPY_VA in binary.optional_header.dll_characteristics_lists
 
-def check_PE_RELOC_SECTION(executable) -> bool:
+def check_PE_RELOC_SECTION(binary) -> bool:
     '''Check for a reloc section. This is required for functional ASLR.'''
-    binary = lief.parse(executable)
     return binary.has_relocations
 
-def check_MACHO_NOUNDEFS(executable) -> bool:
+def check_MACHO_NOUNDEFS(binary) -> bool:
     '''
     Check for no undefined references.
     '''
-    binary = lief.parse(executable)
     return binary.header.has(lief.MachO.HEADER_FLAGS.NOUNDEFS)
 
-def check_MACHO_LAZY_BINDINGS(executable) -> bool:
+def check_MACHO_LAZY_BINDINGS(binary) -> bool:
     '''
     Check for no lazy bindings.
     We don't use or check for MH_BINDATLOAD. See #18295.
     '''
-    binary = lief.parse(executable)
     return binary.dyld_info.lazy_bind == (0,0)
 
-def check_MACHO_Canary(executable) -> bool:
+def check_MACHO_Canary(binary) -> bool:
     '''
     Check for use of stack canary
     '''
-    binary = lief.parse(executable)
     return binary.has_symbol('___stack_chk_fail')
 
-def check_PIE(executable) -> bool:
+def check_PIE(binary) -> bool:
     '''
     Check for position independent executable (PIE),
     allowing for address space randomization.
     '''
-    binary = lief.parse(executable)
     return binary.is_pie
 
-def check_NX(executable) -> bool:
+def check_NX(binary) -> bool:
     '''
     Check for no stack execution
     '''
-    binary = lief.parse(executable)
     return binary.has_nx
 
-def check_control_flow(executable) -> bool:
+def check_control_flow(binary) -> bool:
     '''
     Check for control flow instrumentation
     '''
-    binary = lief.parse(executable)
-
     content = binary.get_content_from_virtual_address(binary.entrypoint, 4, lief.Binary.VA_TYPES.AUTO)
 
     if content == [243, 15, 30, 250]: # endbr64
@@ -202,30 +189,20 @@ CHECKS = {
 ]
 }
 
-def identify_executable(executable) -> Optional[str]:
-    with open(filename, 'rb') as f:
-        magic = f.read(4)
-    if magic.startswith(b'MZ'):
-        return 'PE'
-    elif magic.startswith(b'\x7fELF'):
-        return 'ELF'
-    elif magic.startswith(b'\xcf\xfa'):
-        return 'MACHO'
-    return None
-
 if __name__ == '__main__':
     retval: int = 0
     for filename in sys.argv[1:]:
         try:
-            etype = identify_executable(filename)
-            if etype is None:
-                print(f'{filename}: unknown format')
+            binary = lief.parse(filename)
+            etype = binary.format.name
+            if etype == lief.EXE_FORMATS.UNKNOWN:
+                print(f'{filename}: unknown executable format')
                 retval = 1
                 continue
 
             failed: List[str] = []
             for (name, func) in CHECKS[etype]:
-                if not func(filename):
+                if not func(binary):
                     failed.append(name)
             if failed:
                 print(f'{filename}: failed {" ".join(failed)}')
