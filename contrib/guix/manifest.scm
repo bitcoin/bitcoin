@@ -80,6 +80,10 @@ http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
                  (("-rpath=") "-rpath-link="))
                #t))))))))
 
+(define (make-binutils-with-mingw-w64-disable-flags xbinutils)
+  (package-with-extra-patches xbinutils
+    (search-our-patches "binutils-mingw-w64-disable-flags.patch")))
+
 (define (make-cross-toolchain target
                               base-gcc-for-libc
                               base-kernel-headers
@@ -168,7 +172,7 @@ desirable for building Syscoin Core release binaries."
 
 (define (make-mingw-pthreads-cross-toolchain target)
   "Create a cross-compilation toolchain package for TARGET"
-  (let* ((xbinutils (cross-binutils target))
+  (let* ((xbinutils (make-binutils-with-mingw-w64-disable-flags (cross-binutils target)))
          (pthreads-xlibc mingw-w64-x86_64-winpthreads)
          (pthreads-xgcc (make-gcc-with-pthreads
                          (cross-gcc target

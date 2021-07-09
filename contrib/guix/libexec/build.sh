@@ -299,10 +299,11 @@ mkdir -p "$DISTSRC"
     # Build Syscoin Core
     make --jobs="$JOBS" ${V:+V=1}
 
-    # Perform basic ELF security checks on a series of executables.
+    # Check that symbol/security checks tools are sane.
+    make test-security-check ${V:+V=1}
+    # Perform basic security checks on a series of executables.
     make -C src --jobs=1 check-security ${V:+V=1}
-    # Check that executables only contain allowed gcc, glibc and libstdc++
-    # version symbols for Linux distro back-compatibility.
+    # Check that executables only contain allowed version symbols.
     make -C src --jobs=1 check-symbols  ${V:+V=1}
 
     mkdir -p "$OUTDIR"
