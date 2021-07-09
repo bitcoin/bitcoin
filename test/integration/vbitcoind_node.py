@@ -1,5 +1,6 @@
 import os
 import time
+from typing import Dict
 
 from pathlib import Path
 
@@ -339,3 +340,21 @@ class VBitcoindNode(Node):
             code=s.get('code', ''),
             message=s.get('message', '')
         )
+
+    def getrpcfunctions(self) -> Dict[str, str]:
+        return {
+            'get_popdata_by_height' : 'getpopdatabyheight',
+            'get_popdata_by_hash' : 'getpopdatabyhash',
+            'submit_atv' : '',
+            'submit_vtb' : '',
+            'submit_vbk' : '',
+            'submit_atv' : '',
+            'get_missing_btc_blockhashes' : '',
+            'extract_block_info' : '',
+            'get_vbk_block' : '',
+            'get_btc_block' : '',
+            'get_vbk_best_block_hash' : '',
+            'get_btc_best_block_hash' : '',
+            'get_raw_atv' : '',
+            'get_raw_vtb' : '',
+        }
