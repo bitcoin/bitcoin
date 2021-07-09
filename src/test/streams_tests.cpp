@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
     uint32_t varint = 0;
     // Deserialize into r-value
     reader >> VARINT(varint);
-    BOOST_CHECK_EQUAL(varint, 54321);
+    BOOST_CHECK_EQUAL(varint, 54321U);
     BOOST_CHECK(reader.empty());
 }
 
