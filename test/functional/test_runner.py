@@ -279,6 +279,7 @@ BASE_SCRIPTS = [
     'feature_asmap.py',
     'mempool_unbroadcast.py',
     'mempool_compatibility.py',
+    'mempool_accept_wtxid.py',
     'rpc_deriveaddresses.py',
     'rpc_deriveaddresses.py --usecli',
     'p2p_ping.py',
