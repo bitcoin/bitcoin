@@ -808,6 +808,23 @@ private:
         return m_mempool ? &m_mempool->cs : nullptr;
     }
 
+    /**
+     * Make mempool consistent after a reorg, by re-adding or recursively erasing
+     * disconnected block transactions from the mempool, and also removing any
+     * other transactions from the mempool that are no longer valid given the new
+     * tip/height.
+     *
+     * Note: we assume that disconnectpool only contains transactions that are NOT
+     * confirmed in the current chain nor already in the mempool (otherwise,
+     * in-mempool descendants of such transactions would be removed).
+     *
+     * Passing fAddToMempool=false will skip trying to add the transactions back,
+     * and instead just erase from the mempool as needed.
+     */
+    void MaybeUpdateMempoolForReorg(
+        DisconnectedBlockTransactions& disconnectpool,
+        bool fAddToMempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
+
     friend ChainstateManager;
 };
 

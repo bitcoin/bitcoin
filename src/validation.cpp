@@ -329,24 +329,14 @@ static bool IsCurrentForFeeEstimation(CChainState& active_chainstate) EXCLUSIVE_
     return true;
 }
 
-/**
- * Make mempool consistent after a reorg, by re-adding or recursively erasing
- * disconnected block transactions from the mempool, and also removing any
- * other transactions from the mempool that are no longer valid given the new
- * tip/height.
- *
- * Note: we assume that disconnectpool only contains transactions that are NOT
- * confirmed in the current chain nor already in the mempool (otherwise,
- * in-mempool descendants of such transactions would be removed).
- *
- * Passing fAddToMempool=false will skip trying to add the transactions back,
- * and instead just erase from the mempool as needed.
- */
-
-static void UpdateMempoolForReorg(CChainState& active_chainstate, CTxMemPool& mempool, DisconnectedBlockTransactions& disconnectpool, bool fAddToMempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, mempool.cs)
+void CChainState::MaybeUpdateMempoolForReorg(
+    DisconnectedBlockTransactions& disconnectpool,
+    bool fAddToMempool)
 {
+    if (!m_mempool) return;
+
     AssertLockHeld(cs_main);
-    AssertLockHeld(mempool.cs);
+    AssertLockHeld(m_mempool->cs);
     std::vector<uint256> vHashUpdate;
     // disconnectpool's insertion_order index sorts the entries from
     // oldest to newest, but the oldest entry will be the last tx from the
@@ -358,11 +348,13 @@ static void UpdateMempoolForReorg(CChainState& active_chainstate, CTxMemPool& me
     while (it != disconnectpool.queuedTx.get<insertion_order>().rend()) {
         // ignore validation errors in resurrected transactions
         if (!fAddToMempool || (*it)->IsCoinBase() ||
-            AcceptToMemoryPool(active_chainstate, mempool, *it, true /* bypass_limits */).m_result_type != MempoolAcceptResult::ResultType::VALID) {
+            AcceptToMemoryPool(
+                *this, *m_mempool, *it, true /* bypass_limits */).m_result_type !=
+                    MempoolAcceptResult::ResultType::VALID) {
             // If the transaction doesn't make it in to the mempool, remove any
             // transactions that depend on it (which would now be orphans).
-            mempool.removeRecursive(**it, MemPoolRemovalReason::REORG);
-        } else if (mempool.exists((*it)->GetHash())) {
+            m_mempool->removeRecursive(**it, MemPoolRemovalReason::REORG);
+        } else if (m_mempool->exists((*it)->GetHash())) {
             vHashUpdate.push_back((*it)->GetHash());
         }
         ++it;
@@ -373,12 +365,16 @@ static void UpdateMempoolForReorg(CChainState& active_chainstate, CTxMemPool& me
     // previously-confirmed transactions back to the mempool.
     // UpdateTransactionsFromBlock finds descendants of any transactions in
     // the disconnectpool that were added back and cleans up the mempool state.
-    mempool.UpdateTransactionsFromBlock(vHashUpdate);
+    m_mempool->UpdateTransactionsFromBlock(vHashUpdate);
 
     // We also need to remove any now-immature transactions
-    mempool.removeForReorg(active_chainstate, STANDARD_LOCKTIME_VERIFY_FLAGS);
+    m_mempool->removeForReorg(*this, STANDARD_LOCKTIME_VERIFY_FLAGS);
     // Re-limit mempool size, in case we added any transactions
-    LimitMempoolSize(mempool, active_chainstate.CoinsTip(), gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, std::chrono::hours{gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY)});
+    LimitMempoolSize(
+        *m_mempool,
+        this->CoinsTip(),
+        gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000,
+        std::chrono::hours{gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY)});
 }
 
 /**
@@ -2247,7 +2243,7 @@ static void UpdateTip(CTxMemPool* mempool, const CBlockIndex* pindexNew, const C
 /** Disconnect m_chain's tip.
   * After calling, the mempool will be in an inconsistent state, with
   * transactions from disconnected blocks being added to disconnectpool.  You
-  * should make the mempool consistent again by calling UpdateMempoolForReorg.
+  * should make the mempool consistent again by calling MaybeUpdateMempoolForReorg.
   * with cs_main held.
   *
   * If disconnectpool is nullptr, then no disconnected transactions are added to
@@ -2512,7 +2508,7 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, CBlockIndex
         if (!DisconnectTip(state, &disconnectpool)) {
             // This is likely a fatal error, but keep the mempool consistent,
             // just in case. Only remove from the mempool in this case.
-            if (m_mempool) UpdateMempoolForReorg(*this, *m_mempool, disconnectpool, false);
+            MaybeUpdateMempoolForReorg(disconnectpool, false);
 
             // If we're unable to disconnect a block during normal operation,
             // then that is a failure of our local system -- we should abort
@@ -2556,7 +2552,7 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, CBlockIndex
                     // A system error occurred (disk space, database error, ...).
                     // Make the mempool consistent with the current tip, just in case
                     // any observers try to use it before shutdown.
-                    if (m_mempool) UpdateMempoolForReorg(*this, *m_mempool, disconnectpool, false);
+                    MaybeUpdateMempoolForReorg(disconnectpool, false);
                     return false;
                 }
             } else {
@@ -2570,10 +2566,10 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, CBlockIndex
         }
     }
 
-    if (fBlocksDisconnected && m_mempool) {
+    if (fBlocksDisconnected) {
         // If any blocks were disconnected, disconnectpool may be non empty.  Add
         // any disconnected transactions back to the mempool.
-        UpdateMempoolForReorg(*this, *m_mempool, disconnectpool, true);
+        MaybeUpdateMempoolForReorg(disconnectpool, true);
     }
     if (m_mempool) m_mempool->check(*this);
 
@@ -2798,7 +2794,7 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, CBlockIndex* pind
         LimitValidationInterfaceQueue();
 
         LOCK(cs_main);
-        // Lock for as long as disconnectpool is in scope to make sure UpdateMempoolForReorg is
+        // Lock for as long as disconnectpool is in scope to make sure MaybeUpdateMempoolForReorg is
         // called after DisconnectTip without unlocking in between
         LOCK(MempoolMutex());
         if (!m_chain.Contains(pindex)) break;
@@ -2814,9 +2810,7 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, CBlockIndex* pind
         // transactions back to the mempool if disconnecting was successful,
         // and we're not doing a very deep invalidation (in which case
         // keeping the mempool up to date is probably futile anyway).
-        if (m_mempool) {
-            UpdateMempoolForReorg(*this, *m_mempool, disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && ret);
-        }
+        MaybeUpdateMempoolForReorg(disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && ret);
         if (!ret) return false;
         assert(invalid_walk_tip->pprev == m_chain.Tip());
 
