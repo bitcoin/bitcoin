@@ -168,7 +168,7 @@ CSHA512& CSHA512::Write(const unsigned char* data, size_t len)
         sha512::Transform(s, buf);
         bufsize = 0;
     }
-    while (end >= data + 128) {
+    while (end - data >= 128) {
         // Process full chunks directly from the source.
         sha512::Transform(s, data);
         data += 128;

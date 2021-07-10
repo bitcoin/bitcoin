@@ -43,7 +43,7 @@ Commit messages should be verbose by default consisting of a short subject line
 paragraph(s), unless the title alone is self-explanatory (like "Corrected typo
 in init.cpp") in which case a single title line is sufficient. Commit messages should be
 helpful to people reading your code in the future, so explain the reasoning for
-your decisions. Further explanation [here](http://chris.beams.io/posts/git-commit/).
+your decisions. Further explanation [here](https://chris.beams.io/posts/git-commit/).
 
 If a particular commit references another issue, please add the reference. For
 example: `refs #1234` or `fixes #4321`. Using the `fixes` or `closes` keywords
@@ -193,6 +193,7 @@ In general, all pull requests must:
   - Not break the existing test suite;
   - Where bugs are fixed, where possible, there should be unit tests
     demonstrating the bug and also proving the fix. This helps prevent regression.
+  - Change relevant comments and documentation when behaviour of code changes.
 
 Patches that change Dash consensus rules are considerably more involved than
 normal because they affect the entire ecosystem and so must be preceded by
@@ -212,7 +213,10 @@ consensus to merge a pull request (remember that discussions may have been
 spread out over GitHub, mailing list and IRC discussions). The following
 language is used within pull-request comments:
 
-  - ACK means "I have tested the code and I agree it should be merged";
+  - (t)ACK means "I have tested the code and I agree it should be merged", involving
+    change-specific manual testing in addition to running the unit and functional
+    tests, and in case it is not obvious how the manual testing was done, it should
+    be described;
   - NACK means "I disagree this should be merged", and must be accompanied by
     sound technical justification (or in certain cases of copyright/patent/licensing
     issues, legal justification). NACKs without accompanying reasoning may be

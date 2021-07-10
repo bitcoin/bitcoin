@@ -7,6 +7,8 @@ clang-format-diff.py
 
 A script to format unified git diffs according to [.clang-format](../../src/.clang-format).
 
+Requires `clang-format`, installed e.g. via `brew install clang-format` on macOS.
+
 For instance, to format the last commit with 0 lines of context,
 the script should be called from the git root folder as follows.
 
