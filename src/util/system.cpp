@@ -238,7 +238,7 @@ public:
     }
 
     /** Convert regular argument into the network-specific setting */
-    static inline std::string NetworkArg(const ArgsManager& am, const std::string& arg)
+    static inline std::string NetworkArg(const ArgsManager& am, const std::string& arg) EXCLUSIVE_LOCKS_REQUIRED(am.cs_args)
     {
         assert(arg.length() > 1 && arg[0] == '-');
         return "-" + am.m_network + "." + arg.substr(1);
