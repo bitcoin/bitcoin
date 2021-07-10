@@ -50,7 +50,6 @@ class AddrTest(BitcoinTestFramework):
 
         self.log.info('Create connection that sends addrv2 messages')
         addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
-        addr_source.wait_for_verack()
 
         msg = msg_addrv2()
 
@@ -64,8 +63,6 @@ class AddrTest(BitcoinTestFramework):
         self.log.info('Check that addrv2 message content is relayed and added to addrman')
         addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
         addr_receiver = self.nodes[0].add_p2p_connection(AddrReceiver())
-        addr_source.wait_for_verack()
-        addr_receiver.wait_for_verack()
 
         msg.addrs = ADDRS
         with self.nodes[0].assert_debug_log([

@@ -329,28 +329,32 @@ public:
 const DummySignatureChecker DUMMY_CHECKER;
 
 class DummySignatureCreator final : public BaseSignatureCreator {
+private:
+    char m_r_len = 32;
+    char m_s_len = 32;
 public:
-    DummySignatureCreator() {}
+    DummySignatureCreator(char r_len, char s_len) : m_r_len(r_len), m_s_len(s_len) {}
     const BaseSignatureChecker& Checker() const override { return DUMMY_CHECKER; }
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override
     {
         // Create a dummy signature that is a valid DER-encoding
-        vchSig.assign(72, '\000');
+        vchSig.assign(m_r_len + m_s_len + 7, '\000');
         vchSig[0] = 0x30;
-        vchSig[1] = 69;
+        vchSig[1] = m_r_len + m_s_len + 4;
         vchSig[2] = 0x02;
-        vchSig[3] = 33;
+        vchSig[3] = m_r_len;
         vchSig[4] = 0x01;
-        vchSig[4 + 33] = 0x02;
-        vchSig[5 + 33] = 32;
-        vchSig[6 + 33] = 0x01;
-        vchSig[6 + 33 + 32] = SIGHASH_ALL;
+        vchSig[4 + m_r_len] = 0x02;
+        vchSig[5 + m_r_len] = m_s_len;
+        vchSig[6 + m_r_len] = 0x01;
+        vchSig[6 + m_r_len + m_s_len] = SIGHASH_ALL;
         return true;
     }
 };
 }
 
-const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR = DummySignatureCreator();
+const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR = DummySignatureCreator(32, 32);
+const BaseSignatureCreator& DUMMY_MAXIMUM_SIGNATURE_CREATOR = DummySignatureCreator(33, 32);
 const SigningProvider& DUMMY_SIGNING_PROVIDER = SigningProvider();
 
 bool IsSolvable(const SigningProvider& provider, const CScript& script)

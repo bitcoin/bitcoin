@@ -3,9 +3,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.mininode import *
+from test_framework.messages import hash256
+from test_framework.mininode import P2PInterface
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str, hex_str_to_bytes
 
 '''
 rpc_mnauth.py
@@ -21,8 +22,7 @@ class FakeMNAUTHTest(DashTestFramework):
     def run_test(self):
 
         masternode = self.mninfo[0]
-        p2p_masternode = masternode.node.add_p2p_connection(P2PInterface())
-        p2p_masternode.wait_for_verack()
+        masternode.node.add_p2p_connection(P2PInterface())
 
         protx_hash = masternode.proTxHash
         public_key = masternode.pubKeyOperator

@@ -7,11 +7,13 @@
 # Test txindex generation and fetching
 #
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.script import *
-from test_framework.mininode import *
 import binascii
+
+from test_framework.messages import COutPoint, CTransaction, CTxIn, CTxOut
+from test_framework.script import CScript, OP_CHECKSIG, OP_DUP, OP_EQUALVERIFY, OP_HASH160
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal, connect_nodes
+
 
 class TxIndexTest(BitcoinTestFramework):
 

@@ -96,10 +96,7 @@ class AssumeValidTest(BitcoinTestFramework):
                 break
 
     def run_test(self):
-
-        # Connect to node0
         p2p0 = self.nodes[0].add_p2p_connection(BaseNode())
-        self.nodes[0].p2p.wait_for_verack()
 
         # Build the blockchain
         self.tip = int(self.nodes[0].getbestblockhash(), 16)
@@ -168,10 +165,6 @@ class AssumeValidTest(BitcoinTestFramework):
         p2p0 = self.nodes[0].add_p2p_connection(BaseNode())
         p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
         p2p2 = self.nodes[2].add_p2p_connection(BaseNode())
-
-        p2p0.wait_for_verack()
-        p2p1.wait_for_verack()
-        p2p2.wait_for_verack()
 
         # Make sure nodes actually accept the many headers
         self.mocktime = self.block_time

@@ -9,7 +9,7 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
-from test_framework.util import *
+from test_framework.util import assert_equal, connect_nodes
 
 
 class TimestampIndexTest(BitcoinTestFramework):

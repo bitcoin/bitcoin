@@ -5,9 +5,15 @@
 #ifndef BITCOIN_RPC_BLOCKCHAIN_H
 #define BITCOIN_RPC_BLOCKCHAIN_H
 
+#include <vector>
+#include <stdint.h>
+#include <amount.h>
+
 class CBlock;
 class CBlockIndex;
 class UniValue;
+
+static constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
 
 /**
  * Get the difficulty of the net wrt to the given block index.
@@ -31,5 +37,8 @@ UniValue mempoolToJSON(bool fVerbose = false);
 
 /** Block header to JSON */
 UniValue blockheaderToJSON(const CBlockIndex* blockindex);
+
+/** Used by getblockstats to get feerates at different percentiles by weight  */
+void CalculatePercentilesBySize(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], std::vector<std::pair<CAmount, int64_t>>& scores, int64_t total_size);
 
 #endif

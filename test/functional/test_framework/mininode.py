@@ -20,9 +20,10 @@ from io import BytesIO
 import logging
 import struct
 import sys
+import time
 import threading
 
-from test_framework.messages import *
+from test_framework.messages import CBlockHeader, MIN_VERSION_SUPPORTED, msg_addr, msg_addrv2, msg_block, msg_blocktxn, msg_clsig, msg_cmpctblock, msg_getaddr, msg_getblocks, msg_getblocktxn, msg_getdata, msg_getheaders, msg_getmnlistd, msg_headers, msg_inv, msg_islock, msg_mempool, msg_mnlistdiff, msg_ping, msg_pong, msg_qdata, msg_qgetdata, msg_reject, msg_sendaddrv2, msg_sendcmpct, msg_sendheaders, msg_tx, msg_verack, msg_version, MY_SUBVERSION, NODE_NETWORK, sha256
 from test_framework.util import wait_until
 
 MSG_TX = 1
@@ -385,6 +386,15 @@ class P2PInterface(P2PConnection):
 
     def wait_for_block(self, blockhash, timeout=60):
         test_function = lambda: self.last_message.get("block") and self.last_message["block"].block.rehash() == blockhash
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
+    def wait_for_header(self, blockhash, timeout=60):
+        def test_function():
+            last_headers = self.last_message.get('headers')
+            if not last_headers:
+                return False
+            return last_headers.headers[0].rehash() == blockhash
+
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_getdata(self, timeout=60):

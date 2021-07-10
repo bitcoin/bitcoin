@@ -210,6 +210,7 @@ RES_ICONS = \
   qt/res/icons/hd_enabled.png \
   qt/res/icons/lock_closed.png \
   qt/res/icons/lock_open.png \
+  qt/res/icons/proxy.png \
   qt/res/icons/remove.png \
   qt/res/icons/synced.png \
   qt/res/icons/fontbigger.png \

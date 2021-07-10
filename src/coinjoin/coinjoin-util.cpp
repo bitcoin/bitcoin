@@ -137,19 +137,9 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
         CPubKey dummyPubkey = secret.GetPubKey();
         dummyBatch.TxnAbort();
         dummyScript = ::GetScriptForDestination(dummyPubkey.GetID());
-        // Create dummy signatures for all inputs
-        int nIn = 0;
-        for (const auto& coin : tallyItem.vecInputCoins) {
-            const CScript& scriptPubKey = coin.txout.scriptPubKey;
-            SignatureData sigdata;
-            bool res = ProduceSignature(*pwallet, DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata);
-            assert(res);
-            UpdateInput(dummyTx.vin[nIn], sigdata);
-            nIn++;
-        }
+        // Calculate required bytes for the dummy signed tx with tallyItem's inputs only
+        nBytesBase = CalculateMaximumSignedTxSize(dummyTx, pwallet.get(), false);
     }
-    // Calculate required bytes for the dummy tx with tallyItem's inputs only
-    nBytesBase = ::GetSerializeSize(dummyTx, SER_NETWORK, PROTOCOL_VERSION);
     // Calculate the output size
     nBytesOutput = ::GetSerializeSize(CTxOut(0, dummyScript), SER_NETWORK, PROTOCOL_VERSION);
     // Just to make sure..

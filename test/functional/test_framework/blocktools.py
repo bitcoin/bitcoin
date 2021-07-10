@@ -15,6 +15,8 @@ from .messages import (
     ser_string,
 )
 from .script import CScript, OP_TRUE, OP_CHECKSIG
+from .util import assert_equal, hex_str_to_bytes
+from io import BytesIO
 
 def create_block(hashprev, coinbase, ntime=None):
     """Create a block (with regtest difficulty)."""
@@ -71,16 +73,42 @@ def create_coinbase(height, pubkey=None, dip4_activated=False):
     coinbase.calc_sha256()
     return coinbase
 
-def create_transaction(prevtx, n, sig, value, script_pub_key=CScript()):
-    """Create a transaction.
+def create_tx_with_script(prevtx, n, script_sig=b"", amount=1, script_pub_key=CScript()):
+    """Return one-input, one-output transaction object
+       spending the prevtx's n-th output with the given amount.
 
-    If the script_pub_key is not specified, make it anyone-can-spend."""
+       Can optionally pass scriptPubKey and scriptSig, default is anyone-can-spend ouput.
+    """
     tx = CTransaction()
     assert(n < len(prevtx.vout))
-    tx.vin.append(CTxIn(COutPoint(prevtx.sha256, n), sig, 0xffffffff))
-    tx.vout.append(CTxOut(value, script_pub_key))
+    tx.vin.append(CTxIn(COutPoint(prevtx.sha256, n), script_sig, 0xffffffff))
+    tx.vout.append(CTxOut(amount, script_pub_key))
     tx.calc_sha256()
     return tx
+
+def create_transaction(node, txid, to_address, amount):
+    """ Return signed transaction spending the first output of the
+        input txid. Note that the node must be able to sign for the
+        output that is being spent, and the node must not be running
+        multiple wallets.
+    """
+    raw_tx = create_raw_transaction(node, txid, to_address, amount)
+    tx = CTransaction()
+    tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx)))
+    return tx
+
+def create_raw_transaction(node, txid, to_address, amount):
+    """ Return raw signed transaction spending the first output of the
+        input txid. Note that the node must be able to sign for the
+        output that is being spent, and the node must not be running
+        multiple wallets.
+    """
+    inputs = [{"txid": txid, "vout": 0}]
+    outputs = {to_address: amount}
+    rawtx = node.createrawtransaction(inputs, outputs)
+    signresult = node.signrawtransactionwithwallet(rawtx)
+    assert_equal(signresult["complete"], True)
+    return signresult['hex']
 
 def get_legacy_sigopcount_block(block, accurate=True):
     count = 0

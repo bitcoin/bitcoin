@@ -3,17 +3,18 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-import time
-
-from test_framework.test_framework import DashTestFramework
-from test_framework.util import *
-
 '''
 feature_llmq_simplepose.py
 
 Checks simple PoSe system based on LLMQ commitments
 
 '''
+
+import time
+
+from test_framework.test_framework import DashTestFramework
+from test_framework.util import connect_nodes, force_finish_mnsync, p2p_port, wait_until
+
 
 class LLMQSimplePoSeTest(DashTestFramework):
     def set_test_params(self):

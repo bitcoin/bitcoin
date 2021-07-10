@@ -4,9 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the prioritisetransaction mining RPC."""
 
+from test_framework.messages import COIN, MAX_BLOCK_SIZE
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.mininode import COIN, MAX_BLOCK_SIZE
+from test_framework.util import assert_equal, assert_raises_rpc_error, create_confirmed_utxos, create_lots_of_big_transactions, gen_return_txouts
 
 class PrioritiseTransactionTest(BitcoinTestFramework):
     def set_test_params(self):

@@ -46,8 +46,8 @@ from decimal import Decimal
 from itertools import product
 from io import BytesIO
 
-from test_framework.blocktools import create_coinbase, create_block
-from test_framework.mininode import ToHex, CTransaction
+from test_framework.blocktools import create_coinbase, create_block, create_transaction
+from test_framework.messages import ToHex, CTransaction
 from test_framework.mininode import P2PDataStore
 from test_framework.script import (
     CScript,
@@ -83,15 +83,6 @@ def relative_locktime(sdf, srhb, stf, srlb):
 
 def all_rlt_txs(txs):
     return [tx['tx'] for tx in txs]
-
-def create_transaction(node, txid, to_address, amount):
-    inputs = [{"txid": txid, "vout": 0}]
-    outputs = {to_address: amount}
-    rawtx = node.createrawtransaction(inputs, outputs)
-    tx = CTransaction()
-    f = BytesIO(hex_str_to_bytes(rawtx))
-    tx.deserialize(f)
-    return tx
 
 def sign_transaction(node, unsignedtx):
     rawtx = ToHex(unsignedtx)
@@ -187,7 +178,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
     def run_test(self):
         self.nodes[0].add_p2p_connection(P2PDataStore())
-        self.nodes[0].p2p.wait_for_verack()
 
         self.log.info("Generate blocks in the past for coinbase outputs.")
         self.coinbase_blocks = self.nodes[0].generate(1 + 16 + 2 * 32 + 1)  # 82 blocks generated for inputs

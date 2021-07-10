@@ -5,8 +5,7 @@
 """Test wallet group functionality."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.mininode import FromHex, ToHex
-from test_framework.messages import CTransaction
+from test_framework.messages import CTransaction, FromHex, ToHex
 from test_framework.util import (
     assert_equal,
 )

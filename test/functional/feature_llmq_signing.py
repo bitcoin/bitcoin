@@ -3,10 +3,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.mininode import *
-from test_framework.test_framework import DashTestFramework
-from test_framework.util import *
-
 '''
 feature_llmq_signing.py
 
@@ -14,14 +10,20 @@ Checks LLMQs signing sessions
 
 '''
 
+from test_framework.messages import CSigShare, msg_qsigshare, uint256_to_string
+from test_framework.mininode import P2PInterface
+from test_framework.test_framework import DashTestFramework
+from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes, force_finish_mnsync, hex_str_to_bytes, wait_until
+
+
 class LLMQSigningTest(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(5, 3)
 
     def add_options(self, parser):
-        parser.add_option("--spork21", dest="spork21", default=False, action="store_true",
-                          help="Test with spork21 enabled")
+        parser.add_argument("--spork21", dest="spork21", default=False, action="store_true",
+                            help="Test with spork21 enabled")
 
     def run_test(self):
 
@@ -95,7 +97,6 @@ class LLMQSigningTest(DashTestFramework):
             mn = self.get_mninfo(q['recoveryMembers'][0])
             # Open a P2P connection to it
             p2p_interface = mn.node.add_p2p_connection(P2PInterface())
-            mn.node.p2p.wait_for_verack()
             # Send the last required QSIGSHARE message to the recovery member
             p2p_interface.send_message(msg_qsigshare([sig_share]))
         else:

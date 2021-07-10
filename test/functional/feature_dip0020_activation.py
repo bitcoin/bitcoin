@@ -2,8 +2,7 @@
 # Copyright (c) 2015-2020 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-from test_framework.messages import COutPoint, CTransaction, CTxIn, CTxOut, ToHex
-from test_framework.mininode import COIN
+from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, ToHex
 from test_framework.script import CScript, OP_CAT, OP_DROP, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, get_bip9_status, satoshi_round

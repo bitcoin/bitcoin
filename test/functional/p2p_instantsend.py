@@ -3,10 +3,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import isolate_node, reconnect_isolated_node, assert_equal, \
-    assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str, hash256, hex_str_to_bytes, isolate_node, reconnect_isolated_node
 
 '''
 p2p_instantsend.py

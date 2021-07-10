@@ -7,8 +7,11 @@
 
 # Add python-bitcoinrpc to module search path:
 
+import time
+
+from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal
 
 class KeyPoolTest(BitcoinTestFramework):
 

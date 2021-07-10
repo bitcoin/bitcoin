@@ -16,6 +16,8 @@
 
 #include <univalue.h>
 
+#include <rpc/blockchain.h>
+
 UniValue CallRPC(std::string args)
 {
     std::vector<std::string> vArgs;
@@ -335,5 +337,83 @@ BOOST_AUTO_TEST_CASE(rpc_convert_values_generatetoaddress)
     BOOST_CHECK_EQUAL(result[2].get_int(), 9);
 }
 #endif // ENABLE_MINER
+
+BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_size)
+{
+    int64_t total_size = 200;
+    std::vector<std::pair<CAmount, int64_t>> feerates;
+    CAmount result[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
+
+    for (int64_t i = 0; i < 100; i++) {
+        feerates.emplace_back(std::make_pair(1 ,1));
+    }
+
+    for (int64_t i = 0; i < 100; i++) {
+        feerates.emplace_back(std::make_pair(2 ,1));
+    }
+
+    CalculatePercentilesBySize(result, feerates, total_size);
+    BOOST_CHECK_EQUAL(result[0], 1);
+    BOOST_CHECK_EQUAL(result[1], 1);
+    BOOST_CHECK_EQUAL(result[2], 1);
+    BOOST_CHECK_EQUAL(result[3], 2);
+    BOOST_CHECK_EQUAL(result[4], 2);
+
+    // Test with more pairs, and two pairs overlapping 2 percentiles.
+    total_size = 100;
+    CAmount result2[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
+    feerates.clear();
+
+    feerates.emplace_back(std::make_pair(1, 9));
+    feerates.emplace_back(std::make_pair(2 , 16)); //10th + 25th percentile
+    feerates.emplace_back(std::make_pair(4 ,50)); //50th + 75th percentile
+    feerates.emplace_back(std::make_pair(5 ,10));
+    feerates.emplace_back(std::make_pair(9 ,15));  // 90th percentile
+
+    CalculatePercentilesBySize(result2, feerates, total_size);
+
+    BOOST_CHECK_EQUAL(result2[0], 2);
+    BOOST_CHECK_EQUAL(result2[1], 2);
+    BOOST_CHECK_EQUAL(result2[2], 4);
+    BOOST_CHECK_EQUAL(result2[3], 4);
+    BOOST_CHECK_EQUAL(result2[4], 9);
+
+    // Same test as above, but one of the percentile-overlapping pairs is split in 2.
+    total_size = 100;
+    CAmount result3[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
+    feerates.clear();
+
+    feerates.emplace_back(std::make_pair(1, 9));
+    feerates.emplace_back(std::make_pair(2 , 11)); // 10th percentile
+    feerates.emplace_back(std::make_pair(2 , 5)); // 25th percentile
+    feerates.emplace_back(std::make_pair(4 ,50)); //50th + 75th percentile
+    feerates.emplace_back(std::make_pair(5 ,10));
+    feerates.emplace_back(std::make_pair(9 ,15)); // 90th percentile
+
+    CalculatePercentilesBySize(result3, feerates, total_size);
+
+    BOOST_CHECK_EQUAL(result3[0], 2);
+    BOOST_CHECK_EQUAL(result3[1], 2);
+    BOOST_CHECK_EQUAL(result3[2], 4);
+    BOOST_CHECK_EQUAL(result3[3], 4);
+    BOOST_CHECK_EQUAL(result3[4], 9);
+
+    // Test with one transaction spanning all percentiles.
+    total_size = 104;
+    CAmount result4[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
+    feerates.clear();
+
+    feerates.emplace_back(std::make_pair(1, 100));
+    feerates.emplace_back(std::make_pair(2, 1));
+    feerates.emplace_back(std::make_pair(3, 1));
+    feerates.emplace_back(std::make_pair(3, 1));
+    feerates.emplace_back(std::make_pair(999999, 1));
+
+    CalculatePercentilesBySize(result4, feerates, total_size);
+
+    for (int64_t i = 0; i < NUM_GETBLOCKSTATS_PERCENTILES; i++) {
+        BOOST_CHECK_EQUAL(result4[i], 1);
+    }
+}
 
 BOOST_AUTO_TEST_SUITE_END()
