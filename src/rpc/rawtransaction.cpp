@@ -1055,6 +1055,10 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
     new_request.id = request.id;
     new_request.params.setArray();
 
+    // This is needed to ensure that signrawtransactionwithwallet can figure out what wallet to use when multiple
+    // wallets are loaded
+    new_request.URI = request.URI;
+
     // For signing with private keys
     if (!request.params[2].isNull()) {
         new_request.params.push_back(request.params[0]);
