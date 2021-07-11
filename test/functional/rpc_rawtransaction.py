@@ -50,11 +50,12 @@ class multidict(dict):
 class RawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 3
+        self.num_nodes = 4
         self.extra_args = [
             ["-txindex"],
             ["-txindex"],
             ["-txindex"],
+            [],
         ]
         # whitelist all peers to speed up tx relay / mempool sync
         for args in self.extra_args:
@@ -226,28 +227,40 @@ class RawTransactionsTest(BitcoinTestFramework):
         tx = self.nodes[2].sendtoaddress(self.nodes[1].getnewaddress(), 1)
         block1, block2 = self.nodes[2].generate(2)
         self.sync_all()
-        # We should be able to get the raw transaction by providing the correct block
-        gottx = self.nodes[0].getrawtransaction(tx, True, block1)
-        assert_equal(gottx['txid'], tx)
-        assert_equal(gottx['in_active_chain'], True)
-        # We should not have the 'in_active_chain' flag when we don't provide a block
-        gottx = self.nodes[0].getrawtransaction(tx, True)
-        assert_equal(gottx['txid'], tx)
-        assert 'in_active_chain' not in gottx
-        # We should not get the tx if we provide an unrelated block
-        assert_raises_rpc_error(-5, "No such transaction found", self.nodes[0].getrawtransaction, tx, True, block2)
-        # An invalid block hash should raise the correct errors
-        assert_raises_rpc_error(-1, "JSON value is not a string as expected", self.nodes[0].getrawtransaction, tx, True, True)
-        assert_raises_rpc_error(-8, "parameter 3 must be of length 64 (not 6, for 'foobar')", self.nodes[0].getrawtransaction, tx, True, "foobar")
-        assert_raises_rpc_error(-8, "parameter 3 must be of length 64 (not 8, for 'abcd1234')", self.nodes[0].getrawtransaction, tx, True, "abcd1234")
-        assert_raises_rpc_error(-8, "parameter 3 must be hexadecimal string (not 'ZZZ0000000000000000000000000000000000000000000000000000000000000')", self.nodes[0].getrawtransaction, tx, True, "ZZZ0000000000000000000000000000000000000000000000000000000000000")
-        assert_raises_rpc_error(-5, "Block hash not found", self.nodes[0].getrawtransaction, tx, True, "0000000000000000000000000000000000000000000000000000000000000000")
-        # Undo the blocks and check in_active_chain
-        self.nodes[0].invalidateblock(block1)
-        gottx = self.nodes[0].getrawtransaction(txid=tx, verbose=True, blockhash=block1)
-        assert_equal(gottx['in_active_chain'], False)
-        self.nodes[0].reconsiderblock(block1)
-        assert_equal(self.nodes[0].getbestblockhash(), block2)
+        for n in [0, 3]:
+            self.log.info(f"Test getrawtransaction {'with' if n == 0 else 'without'} -txindex, with blockhash")
+            # We should be able to get the raw transaction by providing the correct block
+            gottx = self.nodes[n].getrawtransaction(txid=tx, verbose=True, blockhash=block1)
+            assert_equal(gottx['txid'], tx)
+            assert_equal(gottx['in_active_chain'], True)
+            if n == 0:
+                self.log.info("Test getrawtransaction with -txindex, without blockhash: 'in_active_chain' should be absent")
+                gottx = self.nodes[n].getrawtransaction(txid=tx, verbose=True)
+                assert_equal(gottx['txid'], tx)
+                assert 'in_active_chain' not in gottx
+            else:
+                self.log.info("Test getrawtransaction without -txindex, without blockhash: expect the call to raise")
+                err_msg = (
+                    "No such mempool transaction. Use -txindex or provide a block hash to enable"
+                    " blockchain transaction queries. Use gettransaction for wallet transactions."
+                )
+                assert_raises_rpc_error(-5, err_msg, self.nodes[n].getrawtransaction, txid=tx, verbose=True)
+            # We should not get the tx if we provide an unrelated block
+            assert_raises_rpc_error(-5, "No such transaction found", self.nodes[n].getrawtransaction, txid=tx, blockhash=block2)
+            # An invalid block hash should raise the correct errors
+            assert_raises_rpc_error(-1, "JSON value is not a string as expected", self.nodes[n].getrawtransaction, txid=tx, blockhash=True)
+            assert_raises_rpc_error(-8, "parameter 3 must be of length 64 (not 6, for 'foobar')", self.nodes[n].getrawtransaction, txid=tx, blockhash="foobar")
+            assert_raises_rpc_error(-8, "parameter 3 must be of length 64 (not 8, for 'abcd1234')", self.nodes[n].getrawtransaction, txid=tx, blockhash="abcd1234")
+            foo = "ZZZ0000000000000000000000000000000000000000000000000000000000000"
+            assert_raises_rpc_error(-8, f"parameter 3 must be hexadecimal string (not '{foo}')", self.nodes[n].getrawtransaction, txid=tx, blockhash=foo)
+            bar = "0000000000000000000000000000000000000000000000000000000000000000"
+            assert_raises_rpc_error(-5, "Block hash not found", self.nodes[n].getrawtransaction, txid=tx, blockhash=bar)
+            # Undo the blocks and verify that "in_active_chain" is false.
+            self.nodes[n].invalidateblock(block1)
+            gottx = self.nodes[n].getrawtransaction(txid=tx, verbose=True, blockhash=block1)
+            assert_equal(gottx['in_active_chain'], False)
+            self.nodes[n].reconsiderblock(block1)
+            assert_equal(self.nodes[n].getbestblockhash(), block2)
 
         if not self.options.descriptors:
             # The traditional multisig workflow does not work with descriptor wallets so these are legacy only.
