@@ -152,7 +152,9 @@ OverviewPage::OverviewPage(QWidget* parent) :
     ui->labelCoinJoinSyncStatus->setText("(" + tr("out of sync") + ")");
     ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
 
-    ui->labelAnonymizedText->setText(tr("%1 Balance").arg("CoinJoin"));
+    QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
+    ui->labelCoinJoinHeader->setText(strCoinJoinName);
+    ui->labelAnonymizedText->setText(tr("%1 Balance").arg(strCoinJoinName));
 
     // hide PS frame (helps to preserve saved size)
     // we'll setup and make it visible in coinJoinStatus() later
@@ -505,6 +507,7 @@ void OverviewPage::coinJoinStatus(bool fForce)
     }
     ui->labelCoinJoinEnabled->setToolTip(strKeysLeftText);
 
+    QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
     if (!walletModel->coinJoin().isMixing()) {
         if (nBestHeight != walletModel->coinJoin().getCachedBlocks()) {
             walletModel->coinJoin().setCachedBlocks(nBestHeight);
@@ -512,7 +515,7 @@ void OverviewPage::coinJoinStatus(bool fForce)
         }
 
         setWidgetsVisible(false);
-        ui->toggleCoinJoin->setText(tr("Start %1").arg("CoinJoin"));
+        ui->toggleCoinJoin->setText(tr("Start %1").arg(strCoinJoinName));
 
         QString strEnabled = tr("Disabled");
         // Show how many keys left in advanced PS UI mode only
@@ -540,7 +543,7 @@ void OverviewPage::coinJoinStatus(bool fForce)
                                 tr("Note: You can turn this message off in options.");
             ui->labelCoinJoinEnabled->setToolTip(strWarn);
             LogPrint(BCLog::COINJOIN, "OverviewPage::coinJoinStatus -- Very low number of keys left since last automatic backup, warning user and trying to create new backup...\n");
-            QMessageBox::warning(this, "CoinJoin", strWarn, QMessageBox::Ok, QMessageBox::Ok);
+            QMessageBox::warning(this, strCoinJoinName, strWarn, QMessageBox::Ok, QMessageBox::Ok);
         } else {
             LogPrint(BCLog::COINJOIN, "OverviewPage::coinJoinStatus -- Very low number of keys left since last automatic backup, skipping warning and trying to create new backup...\n");
         }
@@ -552,7 +555,7 @@ void OverviewPage::coinJoinStatus(bool fForce)
                 // It's still more or less safe to continue but warn user anyway
                 LogPrint(BCLog::COINJOIN, "OverviewPage::coinJoinStatus -- WARNING! Something went wrong on automatic backup: %s\n", strBackupWarning.toStdString());
 
-                QMessageBox::warning(this, "CoinJoin",
+                QMessageBox::warning(this, strCoinJoinName,
                     tr("WARNING! Something went wrong on automatic backup") + ":<br><br>" + strBackupWarning,
                     QMessageBox::Ok, QMessageBox::Ok);
             }
@@ -560,7 +563,7 @@ void OverviewPage::coinJoinStatus(bool fForce)
                 // Things are really broken, warn user and stop mixing immediately
                 LogPrint(BCLog::COINJOIN, "OverviewPage::coinJoinStatus -- ERROR! Failed to create automatic backup: %s\n", strBackupError.toStdString());
 
-                QMessageBox::warning(this, "CoinJoin",
+                QMessageBox::warning(this, strCoinJoinName,
                     tr("ERROR! Failed to create automatic backup") + ":<br><br>" + strBackupError + "<br>" +
                     tr("Mixing is disabled, please close your wallet and fix the issue!"),
                     QMessageBox::Ok, QMessageBox::Ok);
@@ -605,9 +608,10 @@ void OverviewPage::toggleCoinJoin(){
     QSettings settings;
     // Popup some information on first mixing
     QString hasMixed = settings.value("hasMixed").toString();
+    QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
     if(hasMixed.isEmpty()){
-        QMessageBox::information(this, "CoinJoin",
-                tr("If you don't want to see internal %1 fees/transactions select \"Most Common\" as Type on the \"Transactions\" tab.").arg("CoinJoin"),
+        QMessageBox::information(this, strCoinJoinName,
+                tr("If you don't want to see internal %1 fees/transactions select \"Most Common\" as Type on the \"Transactions\" tab.").arg(strCoinJoinName),
                 QMessageBox::Ok, QMessageBox::Ok);
         settings.setValue("hasMixed", "hasMixed");
     }
@@ -617,8 +621,8 @@ void OverviewPage::toggleCoinJoin(){
         const CAmount nMinAmount = options.getSmallestDenomination() + options.getMaxCollateralAmount();
         if(m_balances.balance < nMinAmount) {
             QString strMinAmount(BitcoinUnits::formatWithUnit(nDisplayUnit, nMinAmount));
-            QMessageBox::warning(this, "CoinJoin",
-                tr("%1 requires at least %2 to use.").arg("CoinJoin").arg(strMinAmount),
+            QMessageBox::warning(this, strCoinJoinName,
+                tr("%1 requires at least %2 to use.").arg(strCoinJoinName).arg(strMinAmount),
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
         }
@@ -631,8 +635,8 @@ void OverviewPage::toggleCoinJoin(){
             {
                 //unlock was cancelled
                 walletModel->coinJoin().resetCachedBlocks();
-                QMessageBox::warning(this, "CoinJoin",
-                    tr("Wallet is locked and user declined to unlock. Disabling %1.").arg("CoinJoin"),
+                QMessageBox::warning(this, strCoinJoinName,
+                    tr("Wallet is locked and user declined to unlock. Disabling %1.").arg(strCoinJoinName),
                     QMessageBox::Ok, QMessageBox::Ok);
                 LogPrint(BCLog::COINJOIN, "OverviewPage::toggleCoinJoin -- Wallet is locked and user declined to unlock. Disabling CoinJoin.\n");
                 return;
@@ -644,11 +648,11 @@ void OverviewPage::toggleCoinJoin(){
     walletModel->coinJoin().resetCachedBlocks();
 
     if (walletModel->coinJoin().isMixing()) {
-        ui->toggleCoinJoin->setText(tr("Start %1").arg("CoinJoin"));
+        ui->toggleCoinJoin->setText(tr("Start %1").arg(strCoinJoinName));
         walletModel->coinJoin().resetPool();
         walletModel->coinJoin().stopMixing();
     } else {
-        ui->toggleCoinJoin->setText(tr("Stop %1").arg("CoinJoin"));
+        ui->toggleCoinJoin->setText(tr("Stop %1").arg(strCoinJoinName));
         walletModel->coinJoin().startMixing();
     }
 }

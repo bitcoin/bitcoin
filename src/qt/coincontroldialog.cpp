@@ -668,11 +668,11 @@ void CoinControlDialog::updateView()
         if (fHideAdditional) {
             strHideButton = tr("Show all coins");
         } else {
-            strHideButton = tr("Hide %1 coins").arg("CoinJoin");
+            strHideButton = tr("Hide %1 coins").arg(QString::fromStdString(gCoinJoinName));
         }
     } else {
         if (fHideAdditional) {
-            strHideButton = tr("Show all %1 coins").arg("CoinJoin");
+            strHideButton = tr("Show all %1 coins").arg(QString::fromStdString(gCoinJoinName));
         } else {
             strHideButton = tr("Show spendable coins only");
         }

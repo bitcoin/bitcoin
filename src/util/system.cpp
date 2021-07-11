@@ -84,6 +84,8 @@ const int64_t nStartupTime = GetTime();
 //Dash only features
 bool fMasternodeMode = false;
 bool fDisableGovernance = false;
+const std::string gCoinJoinName = "CoinJoin";
+
 /**
     nWalletBackups:
         1..10   - number of automatic backups to keep

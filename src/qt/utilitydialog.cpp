@@ -119,7 +119,8 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, He
         ui->helpMessage->moveCursor(QTextCursor::Start);
         ui->scrollArea->setVisible(false);
     } else if (helpMode == pshelp) {
-        setWindowTitle(tr("%1 information").arg("CoinJoin"));
+        QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
+        setWindowTitle(tr("%1 information").arg(strCoinJoinName));
 
         ui->aboutMessage->setTextFormat(Qt::RichText);
         ui->scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -150,7 +151,7 @@ It can only do this, however, if you have automatic backups enabled.<br> \
 Consequently, users who have backups disabled will also have %1 disabled. <hr>\
 For more information, see the <a style=\"%2\" href=\"%3\">%1 documentation</a>."
         )
-        .arg("CoinJoin")
+        .arg(strCoinJoinName)
         .arg(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND))
         .arg("https://docs.dash.org/en/stable/wallets/dashcore/coinjoin-instantsend.html")
         );

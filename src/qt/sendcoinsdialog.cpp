@@ -141,7 +141,7 @@ SendCoinsDialog::SendCoinsDialog(bool _fCoinJoin, QWidget* parent) :
 
     if (_fCoinJoin) {
         ui->sendButton->setText(tr("S&end mixed funds"));
-        ui->sendButton->setToolTip(tr("Confirm the %1 send action").arg("CoinJoin"));
+        ui->sendButton->setToolTip(tr("Confirm the %1 send action").arg(QString::fromStdString(gCoinJoinName)));
     } else {
         ui->sendButton->setText(tr("S&end"));
         ui->sendButton->setToolTip(tr("Confirm the send action"));
@@ -360,9 +360,10 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     questionString.append(formatted.join("<br />"));
     questionString.append("<br />");
 
+    QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
 
     if(m_coin_control->IsUsingCoinJoin()) {
-        questionString.append(tr("using") + " <b>" + tr("%1 funds only").arg("CoinJoin") + "</b>");
+        questionString.append(tr("using") + " <b>" + tr("%1 funds only").arg(strCoinJoinName) + "</b>");
     } else {
         questionString.append(tr("using") + " <b>" + tr("any available funds") + "</b>");
     }
@@ -386,7 +387,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
 
         if (m_coin_control->IsUsingCoinJoin()) {
             questionString.append(QString("<br /><span style='font-size:10pt; font-weight:normal;'>%1</span>")
-                .arg(tr("(%1 transactions have higher fees usually due to no change output being allowed)").arg("CoinJoin")));
+                .arg(tr("(%1 transactions have higher fees usually due to no change output being allowed)").arg(strCoinJoinName)));
         }
     }
 
@@ -408,7 +409,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
         if (nInputs >= 10 && m_coin_control->IsUsingCoinJoin()) {
             questionString.append("<br />");
             questionString.append("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>");
-            questionString.append(tr("Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended").arg("CoinJoin").arg(10));
+            questionString.append(tr("Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended").arg(strCoinJoinName).arg(10));
             questionString.append("<a style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND) + "' href=\"https://docs.dash.org/en/stable/wallets/dashcore/coinjoin-instantsend.html#inputs\">");
             questionString.append(tr("Click to learn more"));
             questionString.append("</a>");

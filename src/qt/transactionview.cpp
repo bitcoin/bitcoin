@@ -75,6 +75,7 @@ TransactionView::TransactionView(QWidget* parent) :
     dateWidget->setCurrentIndex(settings.value("transactionDate").toInt());
     hlayout->addWidget(dateWidget);
 
+    QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
     typeWidget = new QComboBox(this);
     typeWidget->setFixedWidth(TYPE_COLUMN_WIDTH - 1);
     typeWidget->addItem(tr("All"), TransactionFilterProxy::ALL_TYPES);
@@ -83,11 +84,11 @@ TransactionView::TransactionView(QWidget* parent) :
                                         TransactionFilterProxy::TYPE(TransactionRecord::RecvFromOther));
     typeWidget->addItem(tr("Sent to"), TransactionFilterProxy::TYPE(TransactionRecord::SendToAddress) |
                                   TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
-    typeWidget->addItem(tr("%1 Send").arg("CoinJoin"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinSend));
-    typeWidget->addItem(tr("%1 Make Collateral Inputs").arg("CoinJoin"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinMakeCollaterals));
-    typeWidget->addItem(tr("%1 Create Denominations").arg("CoinJoin"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinCreateDenominations));
-    typeWidget->addItem(tr("%1 Mixing").arg("CoinJoin"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinMixing));
-    typeWidget->addItem(tr("%1 Collateral Payment").arg("CoinJoin"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinCollateralPayment));
+    typeWidget->addItem(tr("%1 Send").arg(strCoinJoinName), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinSend));
+    typeWidget->addItem(tr("%1 Make Collateral Inputs").arg(strCoinJoinName), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinMakeCollaterals));
+    typeWidget->addItem(tr("%1 Create Denominations").arg(strCoinJoinName), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinCreateDenominations));
+    typeWidget->addItem(tr("%1 Mixing").arg(strCoinJoinName), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinMixing));
+    typeWidget->addItem(tr("%1 Collateral Payment").arg(strCoinJoinName), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinCollateralPayment));
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
