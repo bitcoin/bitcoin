@@ -722,7 +722,7 @@ static RPCHelpMan getindexinfo()
                     HelpExampleCli("getindexinfo", "")
                   + HelpExampleRpc("getindexinfo", "")
                   + HelpExampleCli("getindexinfo", "txindex")
-                  + HelpExampleRpc("getindexinfo", "txindex")
+                  + HelpExampleRpc("getindexinfo", "\"txindex\"")
                 },
                 [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
