@@ -21,9 +21,6 @@ struct NodeContext;
 namespace interfaces {
 struct BlockAndHeaderTipInfo;
 } // namespace interfaces
-namespace boost {
-class thread_group;
-} // namespace boost
 
 /** Interrupt threads */
 void Interrupt(NodeContext& node);
