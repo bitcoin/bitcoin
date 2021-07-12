@@ -21,7 +21,6 @@ unsigned-integer-overflow:addrman.cpp
 unsigned-integer-overflow:arith_uint256.h
 unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
-unsigned-integer-overflow:concurrentqueue.h
 unsigned-integer-overflow:syscoin-tx.cpp
 unsigned-integer-overflow:bloom.cpp
 unsigned-integer-overflow:chain.cpp
@@ -58,7 +57,6 @@ implicit-integer-sign-change:chain.cpp
 implicit-integer-sign-change:chain.h
 implicit-integer-sign-change:coins.h
 implicit-integer-sign-change:compat/stdin.cpp
-implicit-integer-sign-change:concurrentqueue.h
 implicit-integer-sign-change:primitives/transaction.h
 implicit-integer-sign-change:compressor.h
 implicit-integer-sign-change:crc32c/

@@ -36,7 +36,6 @@
 #include <vector>
 
 // SYSCOIN
-#include <ctpl.h>
 #include <amount.h>
 class JSONRPCRequest;
 extern bool fMasternodeMode;

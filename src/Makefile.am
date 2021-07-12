@@ -144,7 +144,6 @@ SYSCOIN_CORE_H = \
   governance/governancevalidators.h \
   governance/governancevote.h \
   governance/governancevotedb.h \
-  concurrentqueue.h \
   ctpl.h \
   cxxtimer.hpp \
   evo/cbtx.h \
@@ -199,6 +198,7 @@ SYSCOIN_CORE_H = \
   deploymentstatus.h \
   external_signer.h \
   flatfile.h \
+  ctpl_stl.h \
   fs.h \
   httprpc.h \
   httpserver.h \

@@ -6,7 +6,7 @@
 #define SYSCOIN_LLMQ_QUORUMS_DKGSESSIONHANDLER_H
 
 
-#include <ctpl.h>
+#include <ctpl_stl.h>
 #include <net.h>
 
 class CBLSWorker;

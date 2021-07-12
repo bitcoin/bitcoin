@@ -1,25 +1,24 @@
-
 /*********************************************************
- *
- *  Copyright (C) 2014 by Vitaliy Vitsentiy
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- *********************************************************/
+*
+*  Copyright (C) 2014 by Vitaliy Vitsentiy
+*
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*
+*********************************************************/
 
 
-#ifndef SYSCOIN_CTPL_H
-#define SYSCOIN_CTPL_H
+#ifndef __ctpl_stl_thread_pool_H__
+#define __ctpl_stl_thread_pool_H__
 
 #include <functional>
 #include <thread>
@@ -29,11 +28,8 @@
 #include <exception>
 #include <future>
 #include <mutex>
-#include <concurrentqueue.h>
+#include <queue>
 
-#ifndef _ctplThreadPoolLength_
-#define _ctplThreadPoolLength_  512
-#endif
 
 
 // thread pool to run user's functors with signature
@@ -44,12 +40,40 @@
 
 namespace ctpl {
 
+    namespace detail {
+        template <typename T>
+        class Queue {
+        public:
+            bool push(T const & value) {
+                std::unique_lock<std::mutex> lock(this->mutex);
+                this->q.push(value);
+                return true;
+            }
+            // deletes the retrieved element, do not use for non integral types
+            bool pop(T & v) {
+                std::unique_lock<std::mutex> lock(this->mutex);
+                if (this->q.empty())
+                    return false;
+                v = this->q.front();
+                this->q.pop();
+                return true;
+            }
+            bool empty() {
+                std::unique_lock<std::mutex> lock(this->mutex);
+                return this->q.empty();
+            }
+        private:
+            std::queue<T> q;
+            std::mutex mutex;
+        };
+    }
+
     class thread_pool {
 
     public:
 
-        thread_pool() : q(_ctplThreadPoolLength_) { this->init(); }
-        thread_pool(int nThreads, int queueSize = _ctplThreadPoolLength_) : q(queueSize) { this->init(); this->resize(nThreads); }
+        thread_pool() { this->init(); }
+        thread_pool(int nThreads) { this->init(); this->resize(nThreads); }
 
         // the destructor waits for all the functions in the queue to be finished
         ~thread_pool() {
@@ -97,22 +121,20 @@ namespace ctpl {
         // empty the queue
         void clear_queue() {
             std::function<void(int id)> * _f;
-            while (this->q.try_dequeue(_f))
-                delete _f;  // empty the queue
+            while (this->q.pop(_f))
+                delete _f; // empty the queue
         }
 
         // pops a functional wrapper to the original function
         std::function<void(int)> pop() {
             std::function<void(int id)> * _f = nullptr;
-            this->q.try_dequeue(_f);
-            std::unique_ptr<std::function<void(int id)>> func(_f);  // at return, delete the function even if an exception occurred
-            
+            this->q.pop(_f);
+            std::unique_ptr<std::function<void(int id)>> func(_f); // at return, delete the function even if an exception occurred
             std::function<void(int)> f;
             if (_f)
                 f = *_f;
             return f;
         }
-
 
         // wait for all computing threads to finish and stop all threads
         // may be called asynchronously to not pause the calling thread while waiting
@@ -149,38 +171,29 @@ namespace ctpl {
 
         template<typename F, typename... Rest>
         auto push(F && f, Rest&&... rest) ->std::future<decltype(f(0, rest...))> {
-            std::unique_lock<std::mutex> lock(this->mutex);
             auto pck = std::make_shared<std::packaged_task<decltype(f(0, rest...))(int)>>(
-                std::bind(std::forward<F>(f), std::placeholders::_1, std::forward<Rest>(rest)...)
+                    std::bind(std::forward<F>(f), std::placeholders::_1, std::forward<Rest>(rest)...)
             );
-
             auto _f = new std::function<void(int id)>([pck](int id) {
                 (*pck)(id);
             });
-            if(!this->q.try_enqueue(_f))
-                this->q.enqueue(_f);
-
+            this->q.push(_f);
+            std::unique_lock<std::mutex> lock(this->mutex);
             this->cv.notify_one();
-
             return pck->get_future();
         }
 
         // run the user's function that excepts argument int - id of the running thread. returned value is templatized
-        // operator returns std::future, where the user can get the result and rethrow the caught exceptions
+        // operator returns std::future, where the user can get the result and rethrow the catched exceptins
         template<typename F>
         auto push(F && f) ->std::future<decltype(f(0))> {
-            std::unique_lock<std::mutex> lock(this->mutex);
             auto pck = std::make_shared<std::packaged_task<decltype(f(0))(int)>>(std::forward<F>(f));
-
             auto _f = new std::function<void(int id)>([pck](int id) {
                 (*pck)(id);
             });
-
-            if(!this->q.try_enqueue(_f))
-                this->q.enqueue(_f);
-
+            this->q.push(_f);
+            std::unique_lock<std::mutex> lock(this->mutex);
             this->cv.notify_one();
-
             return pck->get_future();
         }
 
@@ -194,40 +207,37 @@ namespace ctpl {
         thread_pool & operator=(thread_pool &&);// = delete;
 
         void set_thread(int i) {
-            std::shared_ptr<std::atomic<bool>> flag(this->flags[i]);  // a copy of the shared ptr to the flag
+            std::shared_ptr<std::atomic<bool>> flag(this->flags[i]); // a copy of the shared ptr to the flag
             auto f = [this, i, flag/* a copy of the shared ptr to the flag */]() {
                 std::atomic<bool> & _flag = *flag;
                 std::function<void(int id)> * _f;
-                bool isPop = this->q.try_dequeue(_f);
+                bool isPop = this->q.pop(_f);
                 while (true) {
                     while (isPop) {  // if there is anything in the queue
-                        std::unique_ptr<std::function<void(int id)>> func(_f);  // at return, delete the function even if an exception occurred
+                        std::unique_ptr<std::function<void(int id)>> func(_f); // at return, delete the function even if an exception occurred
                         (*_f)(i);
-
                         if (_flag)
                             return;  // the thread is wanted to stop, return even if the queue is not empty yet
                         else
-                            isPop = this->q.try_dequeue(_f);
+                            isPop = this->q.pop(_f);
                     }
-
                     // the queue is empty here, wait for the next command
                     std::unique_lock<std::mutex> lock(this->mutex);
                     ++this->nWaiting;
-                    this->cv.wait(lock, [this, &_f, &isPop, &_flag](){ isPop = this->q.try_dequeue(_f); return isPop || this->isDone || _flag; });
+                    this->cv.wait(lock, [this, &_f, &isPop, &_flag](){ isPop = this->q.pop(_f); return isPop || this->isDone || _flag; });
                     --this->nWaiting;
-
                     if (!isPop)
                         return;  // if the queue is empty and this->isDone == true or *flag then return
                 }
             };
-            this->threads[i].reset(new std::thread(f));  // compiler may not support std::make_unique()
+            this->threads[i].reset(new std::thread(f)); // compiler may not support std::make_unique()
         }
 
         void init() { this->nWaiting = 0; this->isStop = false; this->isDone = false; }
 
         std::vector<std::unique_ptr<std::thread>> threads;
         std::vector<std::shared_ptr<std::atomic<bool>>> flags;
-        mutable moodycamel::ConcurrentQueue<std::function<void(int id)> *> q;
+        detail::Queue<std::function<void(int id)> *> q;
         std::atomic<bool> isDone;
         std::atomic<bool> isStop;
         std::atomic<int> nWaiting;  // how many threads are waiting
@@ -238,5 +248,4 @@ namespace ctpl {
 
 }
 
-#endif // SYSCOIN_CTPL_H
-
+#endif // __ctpl_stl_thread_pool_H__
