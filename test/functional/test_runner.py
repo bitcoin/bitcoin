@@ -139,6 +139,7 @@ BASE_SCRIPTS = [
     'interface_zmq.py',
     'rpc_invalid_address_message.py',
     'interface_bitcoin_cli.py',
+    'feature_bind_extra.py',
     'mempool_resurrect.py',
     'wallet_txn_doublespend.py --mineblock',
     'tool_wallet.py --legacy-wallet',
