@@ -894,8 +894,7 @@ static RPCHelpMan testmempoolaccept()
                 "\nThis checks if transactions violate the consensus or policy rules.\n"
                 "\nSee sendrawtransaction call.\n",
                 {
-                    {"rawtxs", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings of raw transactions.\n"
-            "                                        Length must be one for now.",
+                    {"rawtxs", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings of raw transactions.",
                         {
                             {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
                         },
