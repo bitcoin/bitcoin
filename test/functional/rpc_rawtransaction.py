@@ -74,7 +74,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.connect_nodes(0, 2)
 
     def run_test(self):
-        self.log.info('prepare some coins for multiple *rawtransaction commands')
+        self.log.info("Prepare some coins for multiple *rawtransaction commands")
         self.nodes[2].generate(1)
         self.sync_all()
         self.nodes[0].generate(COINBASE_MATURITY + 1)
@@ -86,11 +86,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].generate(5)
         self.sync_all()
 
-        self.log.info('Test getrawtransaction on genesis block coinbase returns an error')
+        self.log.info("Test getrawtransaction on genesis block coinbase returns an error")
         block = self.nodes[0].getblock(self.nodes[0].getblockhash(0))
         assert_raises_rpc_error(-5, "The genesis block coinbase is not considered an ordinary transaction", self.nodes[0].getrawtransaction, block['merkleroot'])
 
-        self.log.info('Check parameter types and required parameters of createrawtransaction')
+        self.log.info("Test createrawtransaction")
         # Test `createrawtransaction` required parameters
         assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction)
         assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [])
@@ -146,7 +146,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Test `createrawtransaction` invalid `replaceable`
         assert_raises_rpc_error(-3, "Expected type bool", self.nodes[0].createrawtransaction, [], {}, 0, 'foo')
 
-        self.log.info('Check that createrawtransaction accepts an array and object as outputs')
+        # Test that createrawtransaction accepts an array and object as outputs
         # One output
         tx = tx_from_hex(self.nodes[2].createrawtransaction(inputs=[{'txid': TXID, 'vout': 9}], outputs={address: 99}))
         assert_equal(len(tx.vout), 1)
@@ -170,13 +170,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         )
 
         for type in ["bech32", "p2sh-segwit", "legacy"]:
+            self.log.info(f"Test signrawtransactionwithwallet with missing prevtx info ({type})")
             addr = self.nodes[0].getnewaddress("", type)
             addrinfo = self.nodes[0].getaddressinfo(addr)
             pubkey = addrinfo["scriptPubKey"]
-
-            self.log.info('sendrawtransaction with missing prevtx info (%s)' %(type))
-
-            # Test `signrawtransactionwithwallet` invalid `prevtxs`
             inputs  = [ {'txid' : TXID, 'vout' : 3, 'sequence' : 1000}]
             outputs = { self.nodes[0].getnewaddress() : 1 }
             rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
@@ -224,7 +221,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # sendrawtransaction with missing input #
         #########################################
 
-        self.log.info('sendrawtransaction with missing input')
+        self.log.info("Test sendrawtransaction with missing input")
         inputs  = [{'txid' : TXID, 'vout' : 1}]  # won't exist
         outputs = { self.nodes[0].getnewaddress() : 4.998 }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
@@ -237,7 +234,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # getrawtransaction with block hash #
         #####################################
 
-        # make a tx by sending then generate 2 blocks; block1 has the tx in it
+        # Make a tx by sending, then generate 2 blocks; block1 has the tx in it
         tx = self.nodes[2].sendtoaddress(self.nodes[1].getnewaddress(), 1)
         block1, block2 = self.nodes[2].generate(2)
         self.sync_all()
@@ -277,6 +274,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             assert_equal(self.nodes[n].getbestblockhash(), block2)
 
         if not self.options.descriptors:
+            self.log.info("Test raw multisig transactions (legacy)")
             # The traditional multisig workflow does not work with descriptor wallets so these are legacy only.
             # The multisig workflow with descriptor wallets uses PSBTs and is tested elsewhere, no need to do them here.
             #########################
@@ -395,7 +393,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             self.sync_all()
             assert_equal(self.nodes[0].getbalance(), bal+Decimal('50.00000000')+Decimal('2.19000000')) #block reward + tx
 
-        # decoderawtransaction tests
+        self.log.info("Test decoderawtransaction")
         # witness transaction
         encrawtx = "010000000001010000000000000072c1a6a246ae63f74f931e8365e15a089c68d61900000000000000000000ffffffff0100e1f50500000000000102616100000000"
         decrawtx = self.nodes[0].decoderawtransaction(encrawtx, True) # decode as witness transaction
@@ -413,7 +411,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(decrawtx, decrawtx_wit) # the witness interpretation should be chosen
         assert_equal(decrawtx['vin'][0]['coinbase'], "03c68708046ff8415c622f4254432e434f4d2ffabe6d6de1965d02c68f928e5b244ab1965115a36f56eb997633c7f690124bbf43644e23080000000ca3d3af6d005a65ff0200fd00000000")
 
-        # Basic signrawtransaction test
+        self.log.info("Test signrawtransactionwithwallet")
         addr = self.nodes[1].getnewaddress()
         txid = self.nodes[0].sendtoaddress(addr, 10)
         self.nodes[0].generate(1)
@@ -458,6 +456,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         # TRANSACTION VERSION NUMBER TESTS #
         ####################################
 
+        self.log.info("Test transaction version numbers")
+
         # Test the minimum transaction version number that fits in a signed 32-bit integer.
         # As transaction version is unsigned, this should convert to its unsigned equivalent.
         tx = CTransaction()
@@ -473,7 +473,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['version'], 0x7fffffff)
 
-        self.log.info('sendrawtransaction/testmempoolaccept with maxfeerate')
+        self.log.info("Test sendrawtransaction/testmempoolaccept with maxfeerate")
 
         # Test a transaction with a small fee.
         txId = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.0)
@@ -523,7 +523,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(testres['allowed'], True)
         self.nodes[2].sendrawtransaction(hexstring=rawTxSigned['hex'], maxfeerate='0.20000000')
 
-        self.log.info('sendrawtransaction/testmempoolaccept with tx that is already in the chain')
+        self.log.info("Test sendrawtransaction/testmempoolaccept with tx already in the chain")
         self.nodes[2].generate(1)
         self.sync_blocks()
         for node in self.nodes:
