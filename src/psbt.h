@@ -97,22 +97,30 @@ void UnserializeFromVector(Stream& s, X&... args)
     }
 }
 
-// Deserialize an individual HD keypath to a stream
+// Deserialize bytes of given length from the stream as a KeyOriginInfo
 template<typename Stream>
-void DeserializeHDKeypath(Stream& s, KeyOriginInfo& hd_keypath)
+KeyOriginInfo DeserializeKeyOrigin(Stream& s, uint64_t length)
 {
     // Read in key path
-    uint64_t value_len = ReadCompactSize(s);
-    if (value_len % 4 || value_len == 0) {
+    if (length % 4 || length == 0) {
         throw std::ios_base::failure("Invalid length for HD key path");
     }
 
+    KeyOriginInfo hd_keypath;
     s >> hd_keypath.fingerprint;
-    for (unsigned int i = 4; i < value_len; i += sizeof(uint32_t)) {
+    for (unsigned int i = 4; i < length; i += sizeof(uint32_t)) {
         uint32_t index;
         s >> index;
         hd_keypath.path.push_back(index);
     }
+    return hd_keypath;
+}
+
+// Deserialize a length prefixed KeyOriginInfo from a stream
+template<typename Stream>
+void DeserializeHDKeypath(Stream& s, KeyOriginInfo& hd_keypath)
+{
+    hd_keypath = DeserializeKeyOrigin(s, ReadCompactSize(s));
 }
 
 // Deserialize HD keypaths into a map
@@ -139,15 +147,22 @@ void DeserializeHDKeypaths(Stream& s, const std::vector<unsigned char>& key, std
     hd_keypaths.emplace(pubkey, std::move(keypath));
 }
 
-// Serialize an individual HD keypath to a stream
+// Serialize a KeyOriginInfo to a stream
 template<typename Stream>
-void SerializeHDKeypath(Stream& s, KeyOriginInfo hd_keypath)
+void SerializeKeyOrigin(Stream& s, KeyOriginInfo hd_keypath)
 {
-    WriteCompactSize(s, (hd_keypath.path.size() + 1) * sizeof(uint32_t));
     s << hd_keypath.fingerprint;
     for (const auto& path : hd_keypath.path) {
         s << path;
     }
+}
+
+// Serialize a length prefixed KeyOriginInfo to a stream
+template<typename Stream>
+void SerializeHDKeypath(Stream& s, KeyOriginInfo hd_keypath)
+{
+    WriteCompactSize(s, (hd_keypath.path.size() + 1) * sizeof(uint32_t));
+    SerializeKeyOrigin(s, hd_keypath);
 }
 
 // Serialize HD keypaths to a stream from a map
