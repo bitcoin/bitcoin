@@ -822,8 +822,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
                 "\nThis checks if the transaction violates the consensus or policy rules.\n"
                 "\nSee sendrawtransaction call.\n",
                 {
-                    {"rawtxs", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings of raw transactions.\n"
-            "                                        Length must be one for now.",
+                    {"rawtxs", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings of raw transactions.",
                         {
                             {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
                         },
