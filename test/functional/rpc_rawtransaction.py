@@ -5,11 +5,11 @@
 """Test the rawtransaction RPCs.
 
 Test the following RPCs:
+   - getrawtransaction
    - createrawtransaction
    - signrawtransactionwithwallet
    - sendrawtransaction
    - decoderawtransaction
-   - getrawtransaction
 """
 
 from collections import OrderedDict
@@ -85,7 +85,17 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].generate(5)
         self.sync_all()
 
-        # getrawtransaction tests
+        self.getrawtransaction_tests()
+        self.createrawtransaction_tests()
+        self.signrawtransactionwithwallet_tests()
+        self.sendrawtransaction_tests()
+        self.sendrawtransaction_testmempoolaccept_tests()
+        self.decoderawtransaction_tests()
+        self.transaction_version_number_tests()
+        if not self.options.descriptors:
+            self.raw_multisig_transaction_legacy_tests()
+
+    def getrawtransaction_tests(self):
         addr = self.nodes[1].getnewaddress()
         txid = self.nodes[0].sendtoaddress(addr, 10)
         self.nodes[0].generate(1)
@@ -168,6 +178,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         block = self.nodes[0].getblock(self.nodes[0].getblockhash(0))
         assert_raises_rpc_error(-5, "The genesis block coinbase is not considered an ordinary transaction", self.nodes[0].getrawtransaction, block['merkleroot'])
 
+    def createrawtransaction_tests(self):
         self.log.info("Test createrawtransaction")
         # Test `createrawtransaction` required parameters
         assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction)
@@ -247,6 +258,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             self.nodes[2].createrawtransaction(inputs=[{'txid': TXID, 'vout': 9}], outputs=[{address: 99}, {address2: 99}, {'data': '99'}]),
         )
 
+    def signrawtransactionwithwallet_tests(self):
         for type in ["bech32", "p2sh-segwit", "legacy"]:
             self.log.info(f"Test signrawtransactionwithwallet with missing prevtx info ({type})")
             addr = self.nodes[0].getnewaddress("", type)
@@ -259,12 +271,12 @@ class RawTransactionsTest(BitcoinTestFramework):
             prevtx = dict(txid=TXID, scriptPubKey=pubkey, vout=3, amount=1)
             succ = self.nodes[0].signrawtransactionwithwallet(rawtx, [prevtx])
             assert succ["complete"]
+
             if type == "legacy":
                 del prevtx["amount"]
                 succ = self.nodes[0].signrawtransactionwithwallet(rawtx, [prevtx])
                 assert succ["complete"]
-
-            if type != "legacy":
+            else:
                 assert_raises_rpc_error(-3, "Missing amount", self.nodes[0].signrawtransactionwithwallet, rawtx, [
                     {
                         "txid": TXID,
@@ -295,6 +307,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                 }
             ])
 
+    def sendrawtransaction_tests(self):
         self.log.info("Test sendrawtransaction with missing input")
         inputs  = [{'txid' : TXID, 'vout' : 1}]  # won't exist
         outputs = { self.nodes[0].getnewaddress() : 4.998 }
@@ -302,6 +315,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx   = self.nodes[2].signrawtransactionwithwallet(rawtx)
         assert_raises_rpc_error(-25, "bad-txns-inputs-missingorspent", self.nodes[2].sendrawtransaction, rawtx['hex'])
 
+    def sendrawtransaction_testmempoolaccept_tests(self):
         self.log.info("Test sendrawtransaction/testmempoolaccept with maxfeerate")
         # Test a transaction with a small fee.
         txId = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.0)
@@ -360,6 +374,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             assert_equal(testres['reject-reason'], 'txn-already-known')
             assert_raises_rpc_error(-27, 'Transaction already in block chain', node.sendrawtransaction, rawTxSigned['hex'])
 
+    def decoderawtransaction_tests(self):
         self.log.info("Test decoderawtransaction")
         # witness transaction
         encrawtx = "010000000001010000000000000072c1a6a246ae63f74f931e8365e15a089c68d61900000000000000000000ffffffff0100e1f50500000000000102616100000000"
@@ -378,6 +393,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(decrawtx, decrawtx_wit) # the witness interpretation should be chosen
         assert_equal(decrawtx['vin'][0]['coinbase'], "03c68708046ff8415c622f4254432e434f4d2ffabe6d6de1965d02c68f928e5b244ab1965115a36f56eb997633c7f690124bbf43644e23080000000ca3d3af6d005a65ff0200fd00000000")
 
+    def transaction_version_number_tests(self):
         self.log.info("Test transaction version numbers")
 
         # Test the minimum transaction version number that fits in a signed 32-bit integer.
@@ -395,122 +411,122 @@ class RawTransactionsTest(BitcoinTestFramework):
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['version'], 0x7fffffff)
 
-        if not self.options.descriptors:
-            self.log.info("Test raw multisig transactions (legacy)")
-            # The traditional multisig workflow does not work with descriptor wallets so these are legacy only.
-            # The multisig workflow with descriptor wallets uses PSBTs and is tested elsewhere, no need to do them here.
-            # 2of2 test
-            addr1 = self.nodes[2].getnewaddress()
-            addr2 = self.nodes[2].getnewaddress()
+    def raw_multisig_transaction_legacy_tests(self):
+        self.log.info("Test raw multisig transactions (legacy)")
+        # The traditional multisig workflow does not work with descriptor wallets so these are legacy only.
+        # The multisig workflow with descriptor wallets uses PSBTs and is tested elsewhere, no need to do them here.
+        # 2of2 test
+        addr1 = self.nodes[2].getnewaddress()
+        addr2 = self.nodes[2].getnewaddress()
 
-            addr1Obj = self.nodes[2].getaddressinfo(addr1)
-            addr2Obj = self.nodes[2].getaddressinfo(addr2)
+        addr1Obj = self.nodes[2].getaddressinfo(addr1)
+        addr2Obj = self.nodes[2].getaddressinfo(addr2)
 
-            # Tests for createmultisig and addmultisigaddress
-            assert_raises_rpc_error(-5, "Invalid public key", self.nodes[0].createmultisig, 1, ["01020304"])
-            self.nodes[0].createmultisig(2, [addr1Obj['pubkey'], addr2Obj['pubkey']]) # createmultisig can only take public keys
-            assert_raises_rpc_error(-5, "Invalid public key", self.nodes[0].createmultisig, 2, [addr1Obj['pubkey'], addr1]) # addmultisigaddress can take both pubkeys and addresses so long as they are in the wallet, which is tested here.
+        # Tests for createmultisig and addmultisigaddress
+        assert_raises_rpc_error(-5, "Invalid public key", self.nodes[0].createmultisig, 1, ["01020304"])
+        self.nodes[0].createmultisig(2, [addr1Obj['pubkey'], addr2Obj['pubkey']]) # createmultisig can only take public keys
+        assert_raises_rpc_error(-5, "Invalid public key", self.nodes[0].createmultisig, 2, [addr1Obj['pubkey'], addr1]) # addmultisigaddress can take both pubkeys and addresses so long as they are in the wallet, which is tested here.
 
-            mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr1])['address']
+        mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr1])['address']
 
-            #use balance deltas instead of absolute values
-            bal = self.nodes[2].getbalance()
+        #use balance deltas instead of absolute values
+        bal = self.nodes[2].getbalance()
 
-            # send 1.2 BTC to msig adr
-            txId = self.nodes[0].sendtoaddress(mSigObj, 1.2)
-            self.sync_all()
-            self.nodes[0].generate(1)
-            self.sync_all()
-            assert_equal(self.nodes[2].getbalance(), bal+Decimal('1.20000000')) #node2 has both keys of the 2of2 ms addr., tx should affect the balance
+        # send 1.2 BTC to msig adr
+        txId = self.nodes[0].sendtoaddress(mSigObj, 1.2)
+        self.sync_all()
+        self.nodes[0].generate(1)
+        self.sync_all()
+        assert_equal(self.nodes[2].getbalance(), bal+Decimal('1.20000000')) #node2 has both keys of the 2of2 ms addr., tx should affect the balance
 
 
-            # 2of3 test from different nodes
-            bal = self.nodes[2].getbalance()
-            addr1 = self.nodes[1].getnewaddress()
-            addr2 = self.nodes[2].getnewaddress()
-            addr3 = self.nodes[2].getnewaddress()
+        # 2of3 test from different nodes
+        bal = self.nodes[2].getbalance()
+        addr1 = self.nodes[1].getnewaddress()
+        addr2 = self.nodes[2].getnewaddress()
+        addr3 = self.nodes[2].getnewaddress()
 
-            addr1Obj = self.nodes[1].getaddressinfo(addr1)
-            addr2Obj = self.nodes[2].getaddressinfo(addr2)
-            addr3Obj = self.nodes[2].getaddressinfo(addr3)
+        addr1Obj = self.nodes[1].getaddressinfo(addr1)
+        addr2Obj = self.nodes[2].getaddressinfo(addr2)
+        addr3Obj = self.nodes[2].getaddressinfo(addr3)
 
-            mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey']])['address']
+        mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey']])['address']
 
-            txId = self.nodes[0].sendtoaddress(mSigObj, 2.2)
-            decTx = self.nodes[0].gettransaction(txId)
-            rawTx = self.nodes[0].decoderawtransaction(decTx['hex'])
-            self.sync_all()
-            self.nodes[0].generate(1)
-            self.sync_all()
+        txId = self.nodes[0].sendtoaddress(mSigObj, 2.2)
+        decTx = self.nodes[0].gettransaction(txId)
+        rawTx = self.nodes[0].decoderawtransaction(decTx['hex'])
+        self.sync_all()
+        self.nodes[0].generate(1)
+        self.sync_all()
 
-            #THIS IS AN INCOMPLETE FEATURE
-            #NODE2 HAS TWO OF THREE KEY AND THE FUNDS SHOULD BE SPENDABLE AND COUNT AT BALANCE CALCULATION
-            assert_equal(self.nodes[2].getbalance(), bal) #for now, assume the funds of a 2of3 multisig tx are not marked as spendable
+        #THIS IS AN INCOMPLETE FEATURE
+        #NODE2 HAS TWO OF THREE KEY AND THE FUNDS SHOULD BE SPENDABLE AND COUNT AT BALANCE CALCULATION
+        assert_equal(self.nodes[2].getbalance(), bal) #for now, assume the funds of a 2of3 multisig tx are not marked as spendable
 
-            txDetails = self.nodes[0].gettransaction(txId, True)
-            rawTx = self.nodes[0].decoderawtransaction(txDetails['hex'])
-            vout = next(o for o in rawTx['vout'] if o['value'] == Decimal('2.20000000'))
+        txDetails = self.nodes[0].gettransaction(txId, True)
+        rawTx = self.nodes[0].decoderawtransaction(txDetails['hex'])
+        vout = next(o for o in rawTx['vout'] if o['value'] == Decimal('2.20000000'))
 
-            bal = self.nodes[0].getbalance()
-            inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount" : vout['value']}]
-            outputs = { self.nodes[0].getnewaddress() : 2.19 }
-            rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
-            rawTxPartialSigned = self.nodes[1].signrawtransactionwithwallet(rawTx, inputs)
-            assert_equal(rawTxPartialSigned['complete'], False) #node1 only has one key, can't comp. sign the tx
+        bal = self.nodes[0].getbalance()
+        inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount" : vout['value']}]
+        outputs = { self.nodes[0].getnewaddress() : 2.19 }
+        rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
+        rawTxPartialSigned = self.nodes[1].signrawtransactionwithwallet(rawTx, inputs)
+        assert_equal(rawTxPartialSigned['complete'], False) #node1 only has one key, can't comp. sign the tx
 
-            rawTxSigned = self.nodes[2].signrawtransactionwithwallet(rawTx, inputs)
-            assert_equal(rawTxSigned['complete'], True) #node2 can sign the tx compl., own two of three keys
-            self.nodes[2].sendrawtransaction(rawTxSigned['hex'])
-            rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
-            self.sync_all()
-            self.nodes[0].generate(1)
-            self.sync_all()
-            assert_equal(self.nodes[0].getbalance(), bal+Decimal('50.00000000')+Decimal('2.19000000')) #block reward + tx
+        rawTxSigned = self.nodes[2].signrawtransactionwithwallet(rawTx, inputs)
+        assert_equal(rawTxSigned['complete'], True) #node2 can sign the tx compl., own two of three keys
+        self.nodes[2].sendrawtransaction(rawTxSigned['hex'])
+        rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
+        self.sync_all()
+        self.nodes[0].generate(1)
+        self.sync_all()
+        assert_equal(self.nodes[0].getbalance(), bal+Decimal('50.00000000')+Decimal('2.19000000')) #block reward + tx
 
-            # 2of2 test for combining transactions
-            bal = self.nodes[2].getbalance()
-            addr1 = self.nodes[1].getnewaddress()
-            addr2 = self.nodes[2].getnewaddress()
+        # 2of2 test for combining transactions
+        bal = self.nodes[2].getbalance()
+        addr1 = self.nodes[1].getnewaddress()
+        addr2 = self.nodes[2].getnewaddress()
 
-            addr1Obj = self.nodes[1].getaddressinfo(addr1)
-            addr2Obj = self.nodes[2].getaddressinfo(addr2)
+        addr1Obj = self.nodes[1].getaddressinfo(addr1)
+        addr2Obj = self.nodes[2].getaddressinfo(addr2)
 
-            self.nodes[1].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
-            mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
-            mSigObjValid = self.nodes[2].getaddressinfo(mSigObj)
+        self.nodes[1].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
+        mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
+        mSigObjValid = self.nodes[2].getaddressinfo(mSigObj)
 
-            txId = self.nodes[0].sendtoaddress(mSigObj, 2.2)
-            decTx = self.nodes[0].gettransaction(txId)
-            rawTx2 = self.nodes[0].decoderawtransaction(decTx['hex'])
-            self.sync_all()
-            self.nodes[0].generate(1)
-            self.sync_all()
+        txId = self.nodes[0].sendtoaddress(mSigObj, 2.2)
+        decTx = self.nodes[0].gettransaction(txId)
+        rawTx2 = self.nodes[0].decoderawtransaction(decTx['hex'])
+        self.sync_all()
+        self.nodes[0].generate(1)
+        self.sync_all()
 
-            assert_equal(self.nodes[2].getbalance(), bal) # the funds of a 2of2 multisig tx should not be marked as spendable
+        assert_equal(self.nodes[2].getbalance(), bal) # the funds of a 2of2 multisig tx should not be marked as spendable
 
-            txDetails = self.nodes[0].gettransaction(txId, True)
-            rawTx2 = self.nodes[0].decoderawtransaction(txDetails['hex'])
-            vout = next(o for o in rawTx2['vout'] if o['value'] == Decimal('2.20000000'))
+        txDetails = self.nodes[0].gettransaction(txId, True)
+        rawTx2 = self.nodes[0].decoderawtransaction(txDetails['hex'])
+        vout = next(o for o in rawTx2['vout'] if o['value'] == Decimal('2.20000000'))
 
-            bal = self.nodes[0].getbalance()
-            inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "redeemScript" : mSigObjValid['hex'], "amount" : vout['value']}]
-            outputs = { self.nodes[0].getnewaddress() : 2.19 }
-            rawTx2 = self.nodes[2].createrawtransaction(inputs, outputs)
-            rawTxPartialSigned1 = self.nodes[1].signrawtransactionwithwallet(rawTx2, inputs)
-            self.log.debug(rawTxPartialSigned1)
-            assert_equal(rawTxPartialSigned1['complete'], False) #node1 only has one key, can't comp. sign the tx
+        bal = self.nodes[0].getbalance()
+        inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "redeemScript" : mSigObjValid['hex'], "amount" : vout['value']}]
+        outputs = { self.nodes[0].getnewaddress() : 2.19 }
+        rawTx2 = self.nodes[2].createrawtransaction(inputs, outputs)
+        rawTxPartialSigned1 = self.nodes[1].signrawtransactionwithwallet(rawTx2, inputs)
+        self.log.debug(rawTxPartialSigned1)
+        assert_equal(rawTxPartialSigned1['complete'], False) #node1 only has one key, can't comp. sign the tx
 
-            rawTxPartialSigned2 = self.nodes[2].signrawtransactionwithwallet(rawTx2, inputs)
-            self.log.debug(rawTxPartialSigned2)
-            assert_equal(rawTxPartialSigned2['complete'], False) #node2 only has one key, can't comp. sign the tx
-            rawTxComb = self.nodes[2].combinerawtransaction([rawTxPartialSigned1['hex'], rawTxPartialSigned2['hex']])
-            self.log.debug(rawTxComb)
-            self.nodes[2].sendrawtransaction(rawTxComb)
-            rawTx2 = self.nodes[0].decoderawtransaction(rawTxComb)
-            self.sync_all()
-            self.nodes[0].generate(1)
-            self.sync_all()
-            assert_equal(self.nodes[0].getbalance(), bal+Decimal('50.00000000')+Decimal('2.19000000')) #block reward + tx
+        rawTxPartialSigned2 = self.nodes[2].signrawtransactionwithwallet(rawTx2, inputs)
+        self.log.debug(rawTxPartialSigned2)
+        assert_equal(rawTxPartialSigned2['complete'], False) #node2 only has one key, can't comp. sign the tx
+        rawTxComb = self.nodes[2].combinerawtransaction([rawTxPartialSigned1['hex'], rawTxPartialSigned2['hex']])
+        self.log.debug(rawTxComb)
+        self.nodes[2].sendrawtransaction(rawTxComb)
+        rawTx2 = self.nodes[0].decoderawtransaction(rawTxComb)
+        self.sync_all()
+        self.nodes[0].generate(1)
+        self.sync_all()
+        assert_equal(self.nodes[0].getbalance(), bal+Decimal('50.00000000')+Decimal('2.19000000')) #block reward + tx
 
 
 if __name__ == '__main__':
