@@ -1,6 +1,6 @@
 OpenBSD build guide
 ======================
-(updated for OpenBSD 6.7)
+(updated for OpenBSD 6.9)
 
 This guide describes how to build syscoind, syscoin-qt, and command-line utilities on OpenBSD.
 
@@ -67,9 +67,16 @@ export AUTOMAKE_VERSION=1.16
 ```
 Make sure `BDB_PREFIX` is set to the appropriate path from the above steps.
 
+Note that building with external signer support currently fails on OpenBSD,
+hence you have to explicitely disable it by passing the parameter
+`--disable-external-signer` to the configure script.
+(Background: the feature requires the header-only library boost::process, which
+is available on OpenBSD 6.9 via Boost 1.72.0, but contains certain system calls
+and preprocessor defines like `waitid()` and `WEXITED` that are not available.)
+
 To configure with wallet:
 ```bash
-./configure --with-gui=no CC=cc CXX=c++ \
+./configure --with-gui=no --disable-external-signer CC=cc CXX=c++ \
     BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
     BDB_CFLAGS="-I${BDB_PREFIX}/include" \
     MAKE=gmake
@@ -77,12 +84,12 @@ To configure with wallet:
 
 To configure without wallet:
 ```bash
-./configure --disable-wallet --with-gui=no CC=cc CC_FOR_BUILD=cc CXX=c++ MAKE=gmake
+./configure --disable-wallet --with-gui=no --disable-external-signer CC=cc CC_FOR_BUILD=cc CXX=c++ MAKE=gmake
 ```
 
 To configure with GUI:
 ```bash
-./configure --with-gui=yes CC=cc CXX=c++ \
+./configure --with-gui=yes --disable-external-signer CC=cc CXX=c++ \
     BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
     BDB_CFLAGS="-I${BDB_PREFIX}/include" \
     MAKE=gmake
