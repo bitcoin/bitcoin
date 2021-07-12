@@ -49,7 +49,6 @@ class multidict(dict):
         return self.x
 
 
-# Create one-input, one-output, no-fee transaction:
 class RawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -217,10 +216,6 @@ class RawTransactionsTest(BitcoinTestFramework):
                 }
             ])
 
-        #########################################
-        # sendrawtransaction with missing input #
-        #########################################
-
         self.log.info("Test sendrawtransaction with missing input")
         inputs  = [{'txid' : TXID, 'vout' : 1}]  # won't exist
         outputs = { self.nodes[0].getnewaddress() : 4.998 }
@@ -229,10 +224,6 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # This will raise an exception since there are missing inputs
         assert_raises_rpc_error(-25, "bad-txns-inputs-missingorspent", self.nodes[2].sendrawtransaction, rawtx['hex'])
-
-        #####################################
-        # getrawtransaction with block hash #
-        #####################################
 
         # Make a tx by sending, then generate 2 blocks; block1 has the tx in it
         tx = self.nodes[2].sendtoaddress(self.nodes[1].getnewaddress(), 1)
@@ -277,9 +268,6 @@ class RawTransactionsTest(BitcoinTestFramework):
             self.log.info("Test raw multisig transactions (legacy)")
             # The traditional multisig workflow does not work with descriptor wallets so these are legacy only.
             # The multisig workflow with descriptor wallets uses PSBTs and is tested elsewhere, no need to do them here.
-            #########################
-            # RAW TX MULTISIG TESTS #
-            #########################
             # 2of2 test
             addr1 = self.nodes[2].getnewaddress()
             addr2 = self.nodes[2].getnewaddress()
@@ -451,10 +439,6 @@ class RawTransactionsTest(BitcoinTestFramework):
 
             # 8. invalid parameters - supply txid and empty dict
             assert_raises_rpc_error(-1, "not a boolean", self.nodes[n].getrawtransaction, txId, {})
-
-        ####################################
-        # TRANSACTION VERSION NUMBER TESTS #
-        ####################################
 
         self.log.info("Test transaction version numbers")
 
