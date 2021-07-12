@@ -28,6 +28,9 @@ from test_framework.util import (
 )
 
 
+TXID = "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000"
+
+
 class multidict(dict):
     """Dictionary that allows duplicate keys.
 
@@ -96,24 +99,23 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [], {}, 0, False, 'foo')
 
         # Test `createrawtransaction` invalid `inputs`
-        txid = '1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000'
         assert_raises_rpc_error(-3, "Expected type array", self.nodes[0].createrawtransaction, 'foo', {})
         assert_raises_rpc_error(-1, "JSON value is not an object as expected", self.nodes[0].createrawtransaction, ['foo'], {})
         assert_raises_rpc_error(-1, "JSON value is not a string as expected", self.nodes[0].createrawtransaction, [{}], {})
         assert_raises_rpc_error(-8, "txid must be of length 64 (not 3, for 'foo')", self.nodes[0].createrawtransaction, [{'txid': 'foo'}], {})
         assert_raises_rpc_error(-8, "txid must be hexadecimal string (not 'ZZZ7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844')", self.nodes[0].createrawtransaction, [{'txid': 'ZZZ7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844'}], {})
-        assert_raises_rpc_error(-8, "Invalid parameter, missing vout key", self.nodes[0].createrawtransaction, [{'txid': txid}], {})
-        assert_raises_rpc_error(-8, "Invalid parameter, missing vout key", self.nodes[0].createrawtransaction, [{'txid': txid, 'vout': 'foo'}], {})
-        assert_raises_rpc_error(-8, "Invalid parameter, vout cannot be negative", self.nodes[0].createrawtransaction, [{'txid': txid, 'vout': -1}], {})
+        assert_raises_rpc_error(-8, "Invalid parameter, missing vout key", self.nodes[0].createrawtransaction, [{'txid': TXID}], {})
+        assert_raises_rpc_error(-8, "Invalid parameter, missing vout key", self.nodes[0].createrawtransaction, [{'txid': TXID, 'vout': 'foo'}], {})
+        assert_raises_rpc_error(-8, "Invalid parameter, vout cannot be negative", self.nodes[0].createrawtransaction, [{'txid': TXID, 'vout': -1}], {})
         # sequence number out of range
         for invalid_seq in [-1, 4294967296]:
-            inputs = [{'txid': txid, 'vout': 1, 'sequence': invalid_seq}]
+            inputs = [{'txid': TXID, 'vout': 1, 'sequence': invalid_seq}]
             outputs = {self.nodes[0].getnewaddress(): 1}
             assert_raises_rpc_error(-8, 'Invalid parameter, sequence number is out of range',
                                     self.nodes[0].createrawtransaction, inputs, outputs)
         # with valid sequence number
         for valid_seq in [1000, 4294967294]:
-            inputs = [{'txid': txid, 'vout': 1, 'sequence': valid_seq}]
+            inputs = [{'txid': TXID, 'vout': 1, 'sequence': valid_seq}]
             outputs = {self.nodes[0].getnewaddress(): 1}
             rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
             decrawtx = self.nodes[0].decoderawtransaction(rawtx)
@@ -146,25 +148,25 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         self.log.info('Check that createrawtransaction accepts an array and object as outputs')
         # One output
-        tx = tx_from_hex(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs={address: 99}))
+        tx = tx_from_hex(self.nodes[2].createrawtransaction(inputs=[{'txid': TXID, 'vout': 9}], outputs={address: 99}))
         assert_equal(len(tx.vout), 1)
         assert_equal(
             tx.serialize().hex(),
-            self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=[{address: 99}]),
+            self.nodes[2].createrawtransaction(inputs=[{'txid': TXID, 'vout': 9}], outputs=[{address: 99}]),
         )
         # Two outputs
-        tx = tx_from_hex(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=OrderedDict([(address, 99), (address2, 99)])))
+        tx = tx_from_hex(self.nodes[2].createrawtransaction(inputs=[{'txid': TXID, 'vout': 9}], outputs=OrderedDict([(address, 99), (address2, 99)])))
         assert_equal(len(tx.vout), 2)
         assert_equal(
             tx.serialize().hex(),
-            self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=[{address: 99}, {address2: 99}]),
+            self.nodes[2].createrawtransaction(inputs=[{'txid': TXID, 'vout': 9}], outputs=[{address: 99}, {address2: 99}]),
         )
         # Multiple mixed outputs
-        tx = tx_from_hex(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=multidict([(address, 99), (address2, 99), ('data', '99')])))
+        tx = tx_from_hex(self.nodes[2].createrawtransaction(inputs=[{'txid': TXID, 'vout': 9}], outputs=multidict([(address, 99), (address2, 99), ('data', '99')])))
         assert_equal(len(tx.vout), 3)
         assert_equal(
             tx.serialize().hex(),
-            self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=[{address: 99}, {address2: 99}, {'data': '99'}]),
+            self.nodes[2].createrawtransaction(inputs=[{'txid': TXID, 'vout': 9}], outputs=[{address: 99}, {address2: 99}, {'data': '99'}]),
         )
 
         for type in ["bech32", "p2sh-segwit", "legacy"]:
@@ -175,11 +177,11 @@ class RawTransactionsTest(BitcoinTestFramework):
             self.log.info('sendrawtransaction with missing prevtx info (%s)' %(type))
 
             # Test `signrawtransactionwithwallet` invalid `prevtxs`
-            inputs  = [ {'txid' : txid, 'vout' : 3, 'sequence' : 1000}]
+            inputs  = [ {'txid' : TXID, 'vout' : 3, 'sequence' : 1000}]
             outputs = { self.nodes[0].getnewaddress() : 1 }
             rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
 
-            prevtx = dict(txid=txid, scriptPubKey=pubkey, vout=3, amount=1)
+            prevtx = dict(txid=TXID, scriptPubKey=pubkey, vout=3, amount=1)
             succ = self.nodes[0].signrawtransactionwithwallet(rawtx, [prevtx])
             assert succ["complete"]
             if type == "legacy":
@@ -190,7 +192,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             if type != "legacy":
                 assert_raises_rpc_error(-3, "Missing amount", self.nodes[0].signrawtransactionwithwallet, rawtx, [
                     {
-                        "txid": txid,
+                        "txid": TXID,
                         "scriptPubKey": pubkey,
                         "vout": 3,
                     }
@@ -198,7 +200,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
             assert_raises_rpc_error(-3, "Missing vout", self.nodes[0].signrawtransactionwithwallet, rawtx, [
                 {
-                    "txid": txid,
+                    "txid": TXID,
                     "scriptPubKey": pubkey,
                     "amount": 1,
                 }
@@ -212,7 +214,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             ])
             assert_raises_rpc_error(-3, "Missing scriptPubKey", self.nodes[0].signrawtransactionwithwallet, rawtx, [
                 {
-                    "txid": txid,
+                    "txid": TXID,
                     "vout": 3,
                     "amount": 1
                 }
@@ -223,7 +225,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         #########################################
 
         self.log.info('sendrawtransaction with missing input')
-        inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1}] #won't exists
+        inputs  = [{'txid' : TXID, 'vout' : 1}]  # won't exist
         outputs = { self.nodes[0].getnewaddress() : 4.998 }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         rawtx   = self.nodes[2].signrawtransactionwithwallet(rawtx)
