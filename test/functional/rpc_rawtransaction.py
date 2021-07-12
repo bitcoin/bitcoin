@@ -105,7 +105,19 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Invalid parameter, missing vout key", self.nodes[0].createrawtransaction, [{'txid': txid}], {})
         assert_raises_rpc_error(-8, "Invalid parameter, missing vout key", self.nodes[0].createrawtransaction, [{'txid': txid, 'vout': 'foo'}], {})
         assert_raises_rpc_error(-8, "Invalid parameter, vout cannot be negative", self.nodes[0].createrawtransaction, [{'txid': txid, 'vout': -1}], {})
-        assert_raises_rpc_error(-8, "Invalid parameter, sequence number is out of range", self.nodes[0].createrawtransaction, [{'txid': txid, 'vout': 0, 'sequence': -1}], {})
+        # sequence number out of range
+        for invalid_seq in [-1, 4294967296]:
+            inputs = [{'txid': txid, 'vout': 1, 'sequence': invalid_seq}]
+            outputs = {self.nodes[0].getnewaddress(): 1}
+            assert_raises_rpc_error(-8, 'Invalid parameter, sequence number is out of range',
+                                    self.nodes[0].createrawtransaction, inputs, outputs)
+        # with valid sequence number
+        for valid_seq in [1000, 4294967294]:
+            inputs = [{'txid': txid, 'vout': 1, 'sequence': valid_seq}]
+            outputs = {self.nodes[0].getnewaddress(): 1}
+            rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
+            decrawtx = self.nodes[0].decoderawtransaction(rawtx)
+            assert_equal(decrawtx['vin'][0]['sequence'], valid_seq)
 
         # Test `createrawtransaction` invalid `outputs`
         address = self.nodes[0].getnewaddress()
@@ -436,28 +448,6 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # 8. invalid parameters - supply txid and empty dict
         assert_raises_rpc_error(-1, "not a boolean", self.nodes[0].getrawtransaction, txId, {})
-
-        inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 1000}]
-        outputs = { self.nodes[0].getnewaddress() : 1 }
-        rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
-        decrawtx= self.nodes[0].decoderawtransaction(rawtx)
-        assert_equal(decrawtx['vin'][0]['sequence'], 1000)
-
-        # 9. invalid parameters - sequence number out of range
-        inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : -1}]
-        outputs = { self.nodes[0].getnewaddress() : 1 }
-        assert_raises_rpc_error(-8, 'Invalid parameter, sequence number is out of range', self.nodes[0].createrawtransaction, inputs, outputs)
-
-        # 10. invalid parameters - sequence number out of range
-        inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 4294967296}]
-        outputs = { self.nodes[0].getnewaddress() : 1 }
-        assert_raises_rpc_error(-8, 'Invalid parameter, sequence number is out of range', self.nodes[0].createrawtransaction, inputs, outputs)
-
-        inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 4294967294}]
-        outputs = { self.nodes[0].getnewaddress() : 1 }
-        rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
-        decrawtx= self.nodes[0].decoderawtransaction(rawtx)
-        assert_equal(decrawtx['vin'][0]['sequence'], 4294967294)
 
         ####################################
         # TRANSACTION VERSION NUMBER TESTS #
