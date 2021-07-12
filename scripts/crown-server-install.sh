@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2018-2020 The Crown developers
+# Copyright (c) 2018-2021 The Crown developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -217,7 +217,7 @@ download_package() {
         # Download bootstrap if requested
         if [ -n "$bootstrap" ]; then
             echo "Downloading bootstrap"
-            wget "https://nextcloud.crownplatform.com/index.php/s/Mb5G2xy4NcKbLrJ/download" -O $dir/bootstrap.zip
+            wget "https://storage.crownplatform.com/s/erB9Y95HkpA4Nmk/download" -O $dir/bootstrap.zip
 	    if [ ! -e "$dir/bootstrap.zip" ]; then
 	        echo "Failed to download bootstrap. Continuing without it."
 	        bootstrap=
