@@ -620,7 +620,14 @@ void SetupServerArgs()
 
     gArgs.AddArg("-checkblockindex", strprintf("Do a full consistency check for mapBlockIndex, setBlockIndexCandidates, chainActive and mapBlocksUnlinked occasionally. (default: %u)", defaultChainParams->DefaultConsistencyChecks()), true, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-checkblocks=<n>", strprintf("How many blocks to check at startup (default: %u, 0 = all)", DEFAULT_CHECKBLOCKS), true, OptionsCategory::DEBUG_TEST);
-    gArgs.AddArg("-checklevel=<n>", strprintf("How thorough the block verification of -checkblocks is (0-4, default: %u)", DEFAULT_CHECKLEVEL), true, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-checklevel=<n>", strprintf("How thorough the block verification of -checkblocks is: "
+        "level 0 reads the blocks from disk, "
+        "level 1 verifies block validity, "
+        "level 2 verifies undo data, "
+        "level 3 checks disconnection of tip blocks, "
+        "and level 4 tries to reconnect the blocks, "
+        "each level includes the checks of the previous levels "
+        "(0-4, default: %u)", DEFAULT_CHECKLEVEL), true, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-checkmempool=<n>", strprintf("Run checks every <n> transactions (default: %u)", defaultChainParams->DefaultConsistencyChecks()), true, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-checkpoints", strprintf("Disable expensive verification for known chain history (default: %u)", DEFAULT_CHECKPOINTS_ENABLED), true, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-deprecatedrpc=<method>", "Allows deprecated RPC method(s) to be used", true, OptionsCategory::DEBUG_TEST);
@@ -642,7 +649,7 @@ void SetupServerArgs()
     gArgs.AddArg("-dip3params=<activation>:<enforcement>", "Override DIP3 activation and enforcement heights", false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-dip8params=<activation>", "Override DIP8 activation height", false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-disablegovernance", strprintf("Disable governance validation (0-1, default: %u)", 0), false, OptionsCategory::DEBUG_TEST);
-    gArgs.AddArg("-help-debug", "Show all debugging options (usage: --help -help-debug)", false, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-help-debug", "Print help message with debugging options and exit", false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-highsubsidyblocks=<n>", strprintf("The number of blocks with a higher than normal subsidy to mine at the start of a devnet (default: %u)", devnetConsensus.nHighSubsidyBlocks), false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-highsubsidyfactor=<n>", strprintf("The factor to multiply the normal block subsidy by while in the highsubsidyblocks window of a devnet (default: %u)", devnetConsensus.nHighSubsidyFactor), false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-llmqchainlocks=<quorum name>", strprintf("Override the default LLMQ type used for ChainLocks on a devnet. Allows using ChainLocks with smaller LLMQs. (default: %s)", devnetConsensus.llmqs.at(devnetConsensus.llmqTypeChainLocks).name), false, OptionsCategory::DEBUG_TEST);
@@ -987,7 +994,7 @@ void PeriodicStats()
  *  Ensure that Dash Core is running in a usable environment with all
  *  necessary library support.
  */
-static bool InitSanityCheck(void)
+static bool InitSanityCheck()
 {
     if(!ECC_InitSanityCheck()) {
         InitError("Elliptic curve cryptography sanity check failure. Aborting.");

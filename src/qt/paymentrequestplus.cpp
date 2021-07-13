@@ -143,7 +143,6 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         if (result != 1) {
             int error = X509_STORE_CTX_get_error(store_ctx);
             // For testing payment requests, we allow self signed root certs!
-            // This option is just shown in the UI options, if -help-debug is enabled.
             if (!(error == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT && gArgs.GetBoolArg("-allowselfsignedrootcertificates", DEFAULT_SELFSIGNED_ROOTCERTS))) {
                 throw SSLVerifyError(X509_verify_cert_error_string(error));
             } else {

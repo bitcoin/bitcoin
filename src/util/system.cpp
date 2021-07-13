@@ -717,7 +717,7 @@ void ArgsManager::ForceRemoveArg(const std::string& strArg)
 
 bool HelpRequested(const ArgsManager& args)
 {
-    return args.IsArgSet("-?") || args.IsArgSet("-h") || args.IsArgSet("-help");
+    return args.IsArgSet("-?") || args.IsArgSet("-h") || args.IsArgSet("-help") || args.IsArgSet("-help-debug");
 }
 
 static const int screenWidth = 79;
@@ -1191,14 +1191,14 @@ void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
 {
-    char pszPath[MAX_PATH] = "";
+    WCHAR pszPath[MAX_PATH] = L"";
 
-    if(SHGetSpecialFolderPathA(nullptr, pszPath, nFolder, fCreate))
+    if(SHGetSpecialFolderPathW(nullptr, pszPath, nFolder, fCreate))
     {
         return fs::path(pszPath);
     }
 
-    LogPrintf("SHGetSpecialFolderPathA() failed, could not obtain requested path.\n");
+    LogPrintf("SHGetSpecialFolderPathW() failed, could not obtain requested path.\n");
     return fs::path("");
 }
 #endif
@@ -1325,7 +1325,7 @@ fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
     return fs::absolute(path, GetDataDir(net_specific));
 }
 
-int ScheduleBatchPriority(void)
+int ScheduleBatchPriority()
 {
 #ifdef SCHED_BATCH
     const static sched_param param{};
