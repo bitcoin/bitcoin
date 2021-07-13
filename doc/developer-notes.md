@@ -31,7 +31,6 @@ Developer Notes
     - [Source code organization](#source-code-organization)
     - [GUI](#gui)
     - [Subtrees](#subtrees)
-    - [Git and GitHub tips](#git-and-github-tips)
     - [Scripted diffs](#scripted-diffs)
     - [Release notes](#release-notes)
     - [RPC interface guidelines](#rpc-interface-guidelines)

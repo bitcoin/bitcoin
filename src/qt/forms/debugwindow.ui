@@ -608,6 +608,9 @@
            <property name="placeholderText">
             <string/>
            </property>
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
           </widget>
          </item>
         </layout>

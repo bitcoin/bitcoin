@@ -35,11 +35,11 @@ BASH = os.getenv('BASH','bash')
 # OS specific configuration for terminal attributes
 ATTR_RESET = ''
 ATTR_PR = ''
-COMMIT_FORMAT = '%h %s (%an)%d'
+COMMIT_FORMAT = '%H %s (%an)%d'
 if os.name == 'posix': # if posix, assume we can use basic terminal escapes
     ATTR_RESET = '\033[0m'
     ATTR_PR = '\033[1;36m'
-    COMMIT_FORMAT = '%C(bold blue)%h%Creset %s %C(cyan)(%an)%Creset%C(green)%d%Creset'
+    COMMIT_FORMAT = '%C(bold blue)%H%Creset %s %C(cyan)(%an)%Creset%C(green)%d%Creset'
 
 def git_config_get(option, default=None):
     '''
@@ -227,10 +227,10 @@ def main():
         else:
             firstline = 'Merge #%s' % (pull,)
         message = firstline + '\n\n'
-        message += subprocess.check_output([GIT,'log','--no-merges','--topo-order','--pretty=format:%h %s (%an)',base_branch+'..'+head_branch]).decode('utf-8')
+        message += subprocess.check_output([GIT,'log','--no-merges','--topo-order','--pretty=format:%H %s (%an)',base_branch+'..'+head_branch]).decode('utf-8')
         message += '\n\nPull request description:\n\n  ' + body.replace('\n', '\n  ') + '\n'
         try:
-            subprocess.check_call([GIT,'merge','-q','--commit','--no-edit','--no-ff','-m',message.encode('utf-8'),head_branch])
+            subprocess.check_call([GIT,'merge','-q','--commit','--no-edit','--no-ff','--no-gpg-sign','-m',message.encode('utf-8'),head_branch])
         except subprocess.CalledProcessError:
             print("ERROR: Cannot be merged cleanly.",file=stderr)
             subprocess.check_call([GIT,'merge','--abort'])
@@ -254,7 +254,7 @@ def main():
             print("ERROR: Unable to compute tree hash")
             sys.exit(4)
         try:
-            subprocess.check_call([GIT,'commit','--amend','-m',message.encode('utf-8')])
+            subprocess.check_call([GIT,'commit','--amend','--no-gpg-sign','-m',message.encode('utf-8')])
         except subprocess.CalledProcessError:
             print("ERROR: Cannot update message.", file=stderr)
             sys.exit(4)

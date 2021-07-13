@@ -210,7 +210,22 @@ request. Typically reviewers will review the code for obvious errors, as well as
 test out the patch set and opine on the technical merits of the patch. Project
 maintainers take into account the peer review when determining if there is
 consensus to merge a pull request (remember that discussions may have been
-spread out over GitHub, mailing list and IRC discussions). The following
+spread out over GitHub, mailing list and IRC discussions).
+
+#### Conceptual Review
+
+A review can be a conceptual review, where the reviewer leaves a comment
+ * `Concept (N)ACK`, meaning "I do (not) agree in the general goal of this pull
+   request",
+ * `Approach (N)ACK`, meaning `Concept ACK`, but "I do (not) agree with the
+   approach of this change".
+
+#### Code Review
+
+After conceptual agreement on the change, code review can be provided. It is
+starting with `ACK BRANCH_COMMIT`, where `BRANCH_COMMIT` is the top of the
+topic branch. The review is followed by a description of how the reviewer did
+the review. The following
 language is used within pull-request comments:
 
   - (t)ACK means "I have tested the code and I agree it should be merged", involving
@@ -223,10 +238,7 @@ language is used within pull-request comments:
     disregarded;
   - utACK means "I have not tested the code, but I have reviewed it and it looks
     OK, I agree it can be merged";
-  - Concept ACK means "I agree in the general principle of this pull request";
   - Nit refers to trivial, often non-blocking issues.
-
-Reviewers should include the commit hash which they reviewed in their comments.
 
 Project maintainers reserve the right to weigh the opinions of peer reviewers
 using common sense judgement and also may weight based on meritocracy: Those
