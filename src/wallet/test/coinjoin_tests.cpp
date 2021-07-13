@@ -107,7 +107,7 @@ public:
 BOOST_FIXTURE_TEST_CASE(CTransactionBuilderTest, CTransactionBuilderTestSetup)
 {
     // NOTE: Mock wallet version is FEATURE_BASE which means that it uses uncompressed pubkeys
-    // (65 bytes instead of 33 bytes), so CTxIn size is 179 bytes, not 147 bytes as one might expect.
+    // (65 bytes instead of 33 bytes) and we use Low R signatures, so CTxIn size is 179 bytes.
     // Each output is 34 bytes, vin and vout compact sizes are 1 byte each.
     // Therefore base size (i.e. for a tx with 1 input, 0 outputs) is expected to be
     // 4(n32bitVersion) + 1(vin size) + 179(vin[0]) + 1(vout size) + 4(nLockTime) = 189 bytes.

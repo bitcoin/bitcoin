@@ -119,6 +119,7 @@ BASE_SCRIPTS = [
     'wallet_disableprivatekeys.py',
     'wallet_disableprivatekeys.py --usecli',
     'interface_http.py',
+    'rpc_psbt.py',
     'rpc_users.py',
     'feature_proxy.py',
     'rpc_signrawtransaction.py',
