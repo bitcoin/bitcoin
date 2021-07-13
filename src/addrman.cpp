@@ -6,6 +6,7 @@
 #include <addrman.h>
 
 #include <hash.h>
+#include <i2p.h>
 #include <logging.h>
 #include <netaddress.h>
 #include <serialize.h>
@@ -730,4 +731,101 @@ std::vector<bool> CAddrMan::DecodeAsmap(fs::path path)
         return {};
     }
     return bits;
+}
+
+void CAddrMan::ResetI2PPorts()
+{
+    for (int bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; ++bucket) {
+        for (int i = 0; i < ADDRMAN_BUCKET_SIZE; ++i) {
+            const auto id = vvNew[bucket][i];
+            if (id == -1) {
+                continue;
+            }
+            auto it = mapInfo.find(id);
+            if (it == mapInfo.end()) {
+                return;
+            }
+            auto& addr_info = it->second;
+            if (!addr_info.IsI2P() || addr_info.GetPort() == I2P_SAM31_PORT) {
+                continue;
+            }
+
+            auto addr_info_newport = addr_info;
+            // The below changes addr_info_newport.GetKey(), which is used in finding a
+            // bucket and a position within that bucket. So a re-bucketing may be necessary.
+            addr_info_newport.port = I2P_SAM31_PORT;
+
+            // Reposition entries of vvNew within the same bucket because we don't know the source
+            // address which led to the decision to store the entry in vvNew[bucket] so we can't
+            // re-evaluate that decision, but even if we could, CAddrInfo::GetNewBucket() does not
+            // use CAddrInfo::GetKey() so it would end up in the same bucket as before the port
+            // change.
+            const auto i_target = addr_info_newport.GetBucketPosition(nKey, true, bucket);
+
+            if (i_target == i) { // No need to re-position.
+                addr_info = addr_info_newport;
+                continue;
+            }
+
+            // Reposition from i to i_target, removing the entry from i_target (if any).
+            ClearNew(bucket, i_target);
+            vvNew[bucket][i_target] = id;
+            vvNew[bucket][i] = -1;
+            addr_info = addr_info_newport;
+        }
+    }
+
+    for (int bucket = 0; bucket < ADDRMAN_TRIED_BUCKET_COUNT; ++bucket) {
+        for (int i = 0; i < ADDRMAN_BUCKET_SIZE; ++i) {
+            const auto id = vvTried[bucket][i];
+            if (id == -1) {
+                continue;
+            }
+            auto it = mapInfo.find(id);
+            if (it == mapInfo.end()) {
+                return;
+            }
+            auto& addr_info = it->second;
+            if (!addr_info.IsI2P() || addr_info.GetPort() == I2P_SAM31_PORT) {
+                continue;
+            }
+
+            auto addr_info_newport = addr_info;
+            // The below changes addr_info_newport.GetKey(), which is used in finding a
+            // bucket and a position within that bucket. So a re-bucketing may be necessary.
+            addr_info_newport.port = I2P_SAM31_PORT;
+
+            const auto bucket_target = addr_info_newport.GetTriedBucket(nKey, m_asmap);
+            const auto i_target = addr_info_newport.GetBucketPosition(nKey, false, bucket_target);
+
+            if (bucket_target == bucket && i_target == i) { // No need to re-position.
+                addr_info = addr_info_newport;
+                continue;
+            }
+
+            // Reposition from (bucket, i) to (bucket_target, i_target). If the latter is
+            // occupied, then move the entry from there to vvNew.
+
+            const auto old_target_id = vvTried[bucket_target][i_target];
+            if (old_target_id != -1) {
+                CAddrInfo& old_target_info = mapInfo[old_target_id];
+
+                old_target_info.fInTried = false;
+                vvTried[bucket_target][i_target] = -1;
+                --nTried;
+
+                const auto new_bucket = old_target_info.GetNewBucket(nKey, m_asmap);
+                const auto new_bucket_i = old_target_info.GetBucketPosition(nKey, true, new_bucket);
+                ClearNew(new_bucket, new_bucket_i);
+
+                old_target_info.nRefCount = 1;
+                vvNew[new_bucket][new_bucket_i] = old_target_id;
+                ++nNew;
+            }
+
+            vvTried[bucket_target][i_target] = id;
+            vvTried[bucket][i] = -1;
+            addr_info = addr_info_newport;
+        }
+    }
 }
