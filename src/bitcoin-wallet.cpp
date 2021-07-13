@@ -8,6 +8,7 @@
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <interfaces/init.h>
 #include <logging.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -17,7 +18,7 @@
 #include <functional>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
-UrlDecodeFn* const URL_DECODE = nullptr;
+UrlDecodeFn* const URL_DECODE = urlDecode;
 
 static void SetupWalletToolArgs(ArgsManager& argsman)
 {
@@ -83,6 +84,13 @@ int main(int argc, char* argv[])
     util::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
 #endif
+
+    int exit_status;
+    std::unique_ptr<interfaces::Init> init = interfaces::MakeWalletInit(argc, argv, exit_status);
+    if (!init) {
+        return exit_status;
+    }
+
     SetupEnvironment();
     RandomInit();
     try {

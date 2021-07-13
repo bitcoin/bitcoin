@@ -72,7 +72,7 @@ class NodeImpl : public Node
 private:
     ChainstateManager& chainman() { return *Assert(m_context->chainman); }
 public:
-    explicit NodeImpl(NodeContext* context) { setContext(context); }
+    explicit NodeImpl(NodeContext& context) { setContext(&context); }
     void initLogging() override { InitLogging(*Assert(m_context->args)); }
     void initParameterInteraction() override { InitParameterInteraction(*Assert(m_context->args)); }
     bilingual_str getWarnings() override { return GetWarnings(true); }
@@ -171,24 +171,6 @@ public:
             return m_context->connman->DisconnectNode(id);
         }
         return false;
-    }
-    std::vector<ExternalSigner> externalSigners() override
-    {
-#ifdef ENABLE_EXTERNAL_SIGNER
-        std::vector<ExternalSigner> signers = {};
-        const std::string command = gArgs.GetArg("-signer", "");
-        if (command == "") return signers;
-        ExternalSigner::Enumerate(command, signers, Params().NetworkIDString());
-        return signers;
-#else
-        // This result is indistinguishable from a successful call that returns
-        // no signers. For the current GUI this doesn't matter, because the wallet
-        // creation dialog disables the external signer checkbox in both
-        // cases. The return type could be changed to std::optional<std::vector>
-        // (or something that also includes error messages) if this distinction
-        // becomes important.
-        return {};
-#endif // ENABLE_EXTERNAL_SIGNER
     }
     int64_t getTotalBytesRecv() override { return m_context->connman ? m_context->connman->GetTotalBytesRecv() : 0; }
     int64_t getTotalBytesSent() override { return m_context->connman ? m_context->connman->GetTotalBytesSent() : 0; }
@@ -334,6 +316,7 @@ bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<Rec
         REVERSE_LOCK(lock);
         if (!ReadBlockFromDisk(*block.m_data, index, Params().GetConsensus())) block.m_data->SetNull();
     }
+    block.found = true;
     return true;
 }
 
@@ -660,6 +643,14 @@ public:
         RPCRunLater(name, std::move(fn), seconds);
     }
     int rpcSerializationFlags() override { return RPCSerializationFlags(); }
+    util::SettingsValue getSetting(const std::string& name) override
+    {
+        return gArgs.GetSetting(name);
+    }
+    std::vector<util::SettingsValue> getSettingsList(const std::string& name) override
+    {
+        return gArgs.GetSettingsList(name);
+    }
     util::SettingsValue getRwSetting(const std::string& name) override
     {
         util::SettingsValue result;
@@ -670,7 +661,7 @@ public:
         });
         return result;
     }
-    bool updateRwSetting(const std::string& name, const util::SettingsValue& value) override
+    bool updateRwSetting(const std::string& name, const util::SettingsValue& value, bool write) override
     {
         gArgs.LockSettings([&](util::Settings& settings) {
             if (value.isNull()) {
@@ -679,7 +670,7 @@ public:
                 settings.rw_settings[name] = value;
             }
         });
-        return gArgs.WriteSettingsFile();
+        return !write || gArgs.WriteSettingsFile();
     }
     void requestMempoolTransactions(Notifications& notifications) override
     {
@@ -689,7 +680,7 @@ public:
             notifications.transactionAddedToMempool(entry.GetSharedTx(), 0 /* mempool_sequence */);
         }
     }
-    bool isTaprootActive() const override
+    bool isTaprootActive() override
     {
         LOCK(::cs_main);
         const CBlockIndex* tip = Assert(m_node.chainman)->ActiveChain().Tip();
@@ -701,6 +692,6 @@ public:
 } // namespace node
 
 namespace interfaces {
-std::unique_ptr<Node> MakeNode(NodeContext* context) { return std::make_unique<node::NodeImpl>(context); }
+std::unique_ptr<Node> MakeNode(NodeContext& context) { return std::make_unique<node::NodeImpl>(context); }
 std::unique_ptr<Chain> MakeChain(NodeContext& context) { return std::make_unique<node::ChainImpl>(context); }
 } // namespace interfaces

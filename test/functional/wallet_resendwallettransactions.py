@@ -67,7 +67,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         self.log.info("Bump time & check that transaction is rebroadcast")
         # Transaction should be rebroadcast approximately 24 hours in the future,
         # but can range from 12-36. So bump 36 hours to be sure.
-        with node.assert_debug_log(['ResendWalletTransactions: resubmit 1 unconfirmed transactions']):
+        with node.assert_debug_log(['ResendWalletTransactions: resubmit 1 unconfirmed transactions'], wallet=True):
             node.setmocktime(now + 36 * 60 * 60)
             # Tell scheduler to call MaybeResendWalletTxn now.
             node.mockscheduler(1)

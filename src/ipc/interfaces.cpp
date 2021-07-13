@@ -60,6 +60,7 @@ public:
     {
         m_protocol->addCleanup(type, iface, std::move(cleanup));
     }
+    Context& context() override { return m_protocol->context(); }
     const char* m_exe_name;
     const char* m_process_argv0;
     interfaces::Init& m_init;
