@@ -68,8 +68,6 @@
 #include <QMouseEvent>
 #include <QVBoxLayout>
 
-static fs::detail::utf8_codecvt_facet utf8;
-
 #if defined(Q_OS_MAC)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -1776,12 +1774,12 @@ void setClipboard(const QString& str)
 
 fs::path qstringToBoostPath(const QString &path)
 {
-    return fs::path(path.toStdString(), utf8);
+    return fs::path(path.toStdString());
 }
 
 QString boostPathToQString(const fs::path &path)
 {
-    return QString::fromStdString(path.string(utf8));
+    return QString::fromStdString(path.string());
 }
 
 QString formatDurationStr(int secs)
