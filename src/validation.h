@@ -1096,6 +1096,7 @@ extern VersionBitsCache versionbitscache;
 // SYSCOIN
 bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const bool fInitialDownload, const bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMBlock &evmBlock);
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.
  * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.

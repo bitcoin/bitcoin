@@ -528,7 +528,7 @@ static RPCHelpMan syscoingetspvproof()
         {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED_NAMED_ARG, "If specified, looks for txid in the block with this hash"}
     },
     RPCResult{
-        RPCResult::Type::STR, "proof", "JSON representation of merkle proof (transaction index, siblings and block header and some other information useful for moving coins/assets to another chain)"},
+        RPCResult::Type::ANY, "proof", "JSON representation of merkle proof (transaction index, siblings and block header and some other information useful for moving coins/assets to another chain)"},
     RPCExamples{""},
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -551,6 +551,12 @@ static RPCHelpMan syscoingetspvproof()
                 pblockindex = node.chainman->ActiveChain()[coin.nHeight];
             }
         }
+        if (pblockindex == nullptr) {
+            uint32_t nBlockHeight;
+            if(pblockindexdb != nullptr && pblockindexdb->ReadBlockHeight(txhash, nBlockHeight)) {	    
+                pblockindex = node.chainman->ActiveChain()[nBlockHeight];
+            }
+        } 
     }
 
     // Allow txindex to catch up if we need to query it and before we acquire cs_main.
@@ -558,16 +564,12 @@ static RPCHelpMan syscoingetspvproof()
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
     CTransactionRef tx;
-    if (pblockindex == nullptr)
     {
         LOCK(cs_main);
-        tx = GetTransaction(nullptr, nullptr, txhash, Params().GetConsensus(), hashBlock);
+        hashBlock = pblockindex->GetBlockHash();
+        tx = GetTransaction(pblockindex, nullptr, txhash, Params().GetConsensus(), hashBlock);
         if(!tx || hashBlock.IsNull())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
-        pblockindex = node.chainman->m_blockman.LookupBlockIndex(hashBlock);
-        if (!pblockindex) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");
-        }
     }
 
     CBlock block;
@@ -600,7 +602,14 @@ static RPCHelpMan syscoingetspvproof()
         siblings.push_back(txHashFromBlock.GetHex());
     }
     res.__pushKV("siblings", siblings);
-    res.__pushKV("index", nIndex);    
+    res.__pushKV("index", nIndex);  
+    CNEVMBlock evmBlock;
+    BlockValidationState state;
+    if(!GetNEVMData(state, block, evmBlock)) {
+        throw JSONRPCError(RPC_MISC_ERROR, "NEVM data not found");
+    }  
+    std::reverse (evmBlock.nBlockHash.begin (), evmBlock.nBlockHash.end ()); // correct endian
+    res.__pushKV("nevm_blockhash", evmBlock.nBlockHash.GetHex());
     return res;
 },
     };

@@ -105,10 +105,10 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
                      return FormatSyscoinErrorMessage(state, "mint-receipt-log-data-invalid-size", bSanityCheck);
                 }
                 // get last data field which should be our precisions
-                const std::vector<unsigned char> bridgeIdValue(dataValue.begin()+64, dataValue.end());
+                const std::vector<unsigned char> precisions(dataValue.begin()+64, dataValue.end());
                 // get precision
-                nERC20Precision = static_cast<uint8_t>(bridgeIdValue[31]);
-                nSPTPrecision = static_cast<uint8_t>(bridgeIdValue[30]);
+                nERC20Precision = static_cast<uint8_t>(precisions[31]);
+                nSPTPrecision = static_cast<uint8_t>(precisions[27]);
             }
         }
     }
