@@ -112,6 +112,9 @@ static constexpr size_t ADDR_CJDNS_SIZE = 16;
 /// Size of "internal" (NET_INTERNAL) address (in bytes).
 static constexpr size_t ADDR_INTERNAL_SIZE = 10;
 
+/// SAM 3.1 and earlier do not support specifying ports and force the port to 0.
+static constexpr uint16_t I2P_SAM31_PORT{0};
+
 /**
  * Network address.
  */
