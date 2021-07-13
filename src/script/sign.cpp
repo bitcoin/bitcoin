@@ -42,15 +42,22 @@ static bool GetCScript(const SigningProvider& provider, const SignatureData& sig
     return false;
 }
 
-static bool GetPubKey(const SigningProvider& provider, const SignatureData& sigdata, const CKeyID& address, CPubKey& pubkey)
+static bool GetPubKey(const SigningProvider& provider, SignatureData& sigdata, const CKeyID& address, CPubKey& pubkey)
 {
     if (provider.GetPubKey(address, pubkey)) {
+        sigdata.misc_pubkeys.emplace(pubkey.GetID(), pubkey);
         return true;
     }
     // Look for pubkey in all partial sigs
     const auto it = sigdata.signatures.find(address);
     if (it != sigdata.signatures.end()) {
         pubkey = it->second.first;
+        return true;
+    }
+    // Look for pubkey in pubkey list
+    const auto& pk_it = sigdata.misc_pubkeys.find(address);
+    if (pk_it != sigdata.misc_pubkeys.end()) {
+        pubkey = pk_it->second;
         return true;
     }
     return false;
@@ -63,9 +70,9 @@ static bool CreateSig(const BaseSignatureCreator& creator, SignatureData& sigdat
         sig_out = it->second.second;
         return true;
     }
+    CPubKey pubkey;
+    GetPubKey(provider, sigdata, keyid, pubkey);
     if (creator.CreateSig(provider, sig_out, keyid, scriptcode, sigversion)) {
-        CPubKey pubkey;
-        GetPubKey(provider, sigdata, keyid, pubkey);
         auto i = sigdata.signatures.emplace(keyid, SigPair(pubkey, sig_out));
         assert(i.second);
         return true;
@@ -181,6 +188,32 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
     // Test solution
     sigdata.complete = solved && VerifyScript(sigdata.scriptSig, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, creator.Checker());
     return sigdata.complete;
+}
+
+bool SignPSBTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSBTInput& input, SignatureData& sigdata, int index, int sighash)
+{
+    // if this input has a final scriptsig or scriptwitness, don't do anything with it
+    if (!input.final_script_sig.empty() || !input.final_script_witness.IsNull()) {
+        return true;
+    }
+
+    // Fill SignatureData with input info
+    input.FillSignatureData(sigdata);
+
+    // Get UTXO
+    CTxOut utxo;
+    if (input.non_witness_utxo) {
+        utxo = input.non_witness_utxo->vout[tx.vin[index].prevout.n];
+    } else if (!input.witness_utxo.IsNull()) {
+        utxo = input.witness_utxo;
+    } else {
+        return false;
+    }
+
+    MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, sighash);
+    bool sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
+    input.FromSignatureData(sigdata);
+    return sig_complete;
 }
 
 class SignatureExtractorChecker final : public BaseSignatureChecker
@@ -370,4 +403,162 @@ bool IsSolvable(const SigningProvider& provider, const CScript& script)
         return true;
     }
     return false;
+}
+
+
+bool PartiallySignedTransaction::IsNull() const
+{
+    return !tx && inputs.empty() && outputs.empty() && unknown.empty();
+}
+
+void PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
+{
+    for (unsigned int i = 0; i < inputs.size(); ++i) {
+        inputs[i].Merge(psbt.inputs[i]);
+    }
+    for (unsigned int i = 0; i < outputs.size(); ++i) {
+        outputs[i].Merge(psbt.outputs[i]);
+    }
+}
+
+bool PartiallySignedTransaction::IsSane() const
+{
+    for (PSBTInput input : inputs) {
+        if (!input.IsSane()) return false;
+    }
+    return true;
+}
+
+bool PSBTInput::IsNull() const
+{
+    return !non_witness_utxo && witness_utxo.IsNull() && partial_sigs.empty() && unknown.empty() && hd_keypaths.empty() && redeem_script.empty() && witness_script.empty();
+}
+
+void PSBTInput::FillSignatureData(SignatureData& sigdata) const
+{
+    if (!final_script_sig.empty()) {
+        sigdata.scriptSig = final_script_sig;
+        sigdata.complete = true;
+    }
+    if (!final_script_witness.IsNull()) {
+        sigdata.scriptWitness = final_script_witness;
+        sigdata.complete = true;
+    }
+    if (sigdata.complete) {
+        return;
+    }
+
+    sigdata.signatures.insert(partial_sigs.begin(), partial_sigs.end());
+    if (!redeem_script.empty()) {
+        sigdata.redeem_script = redeem_script;
+    }
+    if (!witness_script.empty()) {
+        sigdata.witness_script = witness_script;
+    }
+    for (const auto& key_pair : hd_keypaths) {
+        sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair.first);
+    }
+}
+
+void PSBTInput::FromSignatureData(const SignatureData& sigdata)
+{
+    if (sigdata.complete) {
+        partial_sigs.clear();
+        hd_keypaths.clear();
+        redeem_script.clear();
+        witness_script.clear();
+
+        if (!sigdata.scriptSig.empty()) {
+            final_script_sig = sigdata.scriptSig;
+        }
+        if (!sigdata.scriptWitness.IsNull()) {
+            final_script_witness = sigdata.scriptWitness;
+        }
+        return;
+    }
+
+    partial_sigs.insert(sigdata.signatures.begin(), sigdata.signatures.end());
+    if (redeem_script.empty() && !sigdata.redeem_script.empty()) {
+        redeem_script = sigdata.redeem_script;
+    }
+    if (witness_script.empty() && !sigdata.witness_script.empty()) {
+        witness_script = sigdata.witness_script;
+    }
+}
+
+void PSBTInput::Merge(const PSBTInput& input)
+{
+    if (!non_witness_utxo && input.non_witness_utxo) non_witness_utxo = input.non_witness_utxo;
+    if (witness_utxo.IsNull() && !input.witness_utxo.IsNull()) {
+        witness_utxo = input.witness_utxo;
+        non_witness_utxo = nullptr; // Clear out any non-witness utxo when we set a witness one.
+    }
+
+    partial_sigs.insert(input.partial_sigs.begin(), input.partial_sigs.end());
+    hd_keypaths.insert(input.hd_keypaths.begin(), input.hd_keypaths.end());
+    unknown.insert(input.unknown.begin(), input.unknown.end());
+
+    if (redeem_script.empty() && !input.redeem_script.empty()) redeem_script = input.redeem_script;
+    if (witness_script.empty() && !input.witness_script.empty()) witness_script = input.witness_script;
+    if (final_script_sig.empty() && !input.final_script_sig.empty()) final_script_sig = input.final_script_sig;
+    if (final_script_witness.IsNull() && !input.final_script_witness.IsNull()) final_script_witness = input.final_script_witness;
+}
+
+bool PSBTInput::IsSane() const
+{
+    // Cannot have both witness and non-witness utxos
+    if (!witness_utxo.IsNull() && non_witness_utxo) return false;
+
+    // If we have a witness_script or a scriptWitness, we must also have a witness utxo
+    if (!witness_script.empty() && witness_utxo.IsNull()) return false;
+    if (!final_script_witness.IsNull() && witness_utxo.IsNull()) return false;
+
+    return true;
+}
+
+void PSBTOutput::FillSignatureData(SignatureData& sigdata) const
+{
+    if (!redeem_script.empty()) {
+        sigdata.redeem_script = redeem_script;
+    }
+    if (!witness_script.empty()) {
+        sigdata.witness_script = witness_script;
+    }
+    for (const auto& key_pair : hd_keypaths) {
+        sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair.first);
+    }
+}
+
+void PSBTOutput::FromSignatureData(const SignatureData& sigdata)
+{
+    if (redeem_script.empty() && !sigdata.redeem_script.empty()) {
+        redeem_script = sigdata.redeem_script;
+    }
+    if (witness_script.empty() && !sigdata.witness_script.empty()) {
+        witness_script = sigdata.witness_script;
+    }
+}
+
+bool PSBTOutput::IsNull() const
+{
+    return redeem_script.empty() && witness_script.empty() && hd_keypaths.empty() && unknown.empty();
+}
+
+void PSBTOutput::Merge(const PSBTOutput& output)
+{
+    hd_keypaths.insert(output.hd_keypaths.begin(), output.hd_keypaths.end());
+    unknown.insert(output.unknown.begin(), output.unknown.end());
+
+    if (redeem_script.empty() && !output.redeem_script.empty()) redeem_script = output.redeem_script;
+    if (witness_script.empty() && !output.witness_script.empty()) witness_script = output.witness_script;
+}
+
+bool PublicOnlySigningProvider::GetCScript(const CScriptID &scriptid, CScript& script) const
+{
+    return m_provider->GetCScript(scriptid, script);
+}
+
+bool PublicOnlySigningProvider::GetPubKey(const CKeyID &address, CPubKey& pubkey) const
+{
+    return m_provider->GetPubKey(address, pubkey);
 }
