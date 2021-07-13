@@ -1246,7 +1246,7 @@ void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName)
 
     do {
         // Always sleep to let all threads acquire locks
-        MilliSleep(10);
+        UninterruptibleSleep(std::chrono::milliseconds{10});
         // `doneCnt` should be at least `futures.size()` if tp size was increased (for whatever reason),
         // or at least `tp.size()` if tp size was decreased and queue was cleared
         // (which can happen on `stop()` if we were not fast enough to get all jobs to their threads).

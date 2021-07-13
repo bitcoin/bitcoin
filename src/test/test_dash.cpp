@@ -151,7 +151,7 @@ TestChainSetup::TestChainSetup(int blockCount) : TestingSetup(CBaseChainParams::
     int64_t time_start = GetTimeMillis();
     while (!g_txindex->BlockUntilSyncedToCurrentChain()) {
         assert(time_start + timeout_ms > GetTimeMillis());
-        MilliSleep(100);
+        UninterruptibleSleep(std::chrono::milliseconds{100});
     }
 }
 

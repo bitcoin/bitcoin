@@ -519,7 +519,7 @@ static int CommandLineRPC(int argc, char *argv[])
             }
             catch (const CConnectionFailed&) {
                 if (fWait)
-                    MilliSleep(1000);
+                    UninterruptibleSleep(std::chrono::milliseconds{1000});
                 else
                     throw;
             }

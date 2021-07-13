@@ -208,7 +208,7 @@ void CDKGSessionHandler::WaitForNextPhase(QuorumPhase curPhase,
             throw AbortPhaseException();
         }
         if (!runWhileWaiting()) {
-            MilliSleep(100);
+            UninterruptibleSleep(std::chrono::milliseconds{100});
         }
     }
 
@@ -238,7 +238,7 @@ void CDKGSessionHandler::WaitForNewQuorum(const uint256& oldQuorumHash) const
         if (p.second != oldQuorumHash) {
             break;
         }
-        MilliSleep(100);
+        UninterruptibleSleep(std::chrono::milliseconds{100});
     }
 
     LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - done\n", __func__, params.name);
@@ -305,7 +305,7 @@ void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
             }
         }
         if (!runWhileWaiting()) {
-            MilliSleep(100);
+            UninterruptibleSleep(std::chrono::milliseconds{100});
         }
     }
 
