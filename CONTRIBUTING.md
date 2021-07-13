@@ -237,6 +237,7 @@ language is used within pull-request comments:
     issues, legal justification). NACKs without accompanying reasoning may be
     disregarded;
   - utACK means "I have not tested the code, but I have reviewed it and it looks
+    OK, I agree it can be merged";
   - Nit refers to trivial, often non-blocking issues.
 
 Project maintainers reserve the right to weigh the opinions of peer reviewers
