@@ -10,11 +10,11 @@
 
 /** Test Suite for CuckooCache
  *
- *  1) All tests should have a deterministic result (using insecure rand
+ *  1. All tests should have a deterministic result (using insecure rand
  *  with deterministic seeds)
- *  2) Some test methods are templated to allow for easier testing
+ *  2. Some test methods are templated to allow for easier testing
  *  against new versions / comparing
- *  3) Results should be treated as a regression test, i.e., did the behavior
+ *  3. Results should be treated as a regression test, i.e., did the behavior
  *  change significantly from what was expected. This can be OK, depending on
  *  the nature of the change, but requires updating the tests to reflect the new
  *  expected behavior. For example improving the hit rate may cause some tests
@@ -99,9 +99,9 @@ static double test_cache(size_t megabytes, double load)
  *
  * Examples:
  *
- * 1) at load 0.5, we expect a perfect hit rate, so we multiply by
+ * 1. at load 0.5, we expect a perfect hit rate, so we multiply by
  * 1.0
- * 2) at load 2.0, we expect to see half the entries, so a perfect hit rate
+ * 2. at load 2.0, we expect to see half the entries, so a perfect hit rate
  * would be 0.5. Therefore, if we see a hit rate of 0.4, 0.4*2.0 = 0.8 is the
  * normalized hit rate.
  *

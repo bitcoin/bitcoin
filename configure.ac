@@ -86,6 +86,10 @@ fi
 AC_PROG_OBJCXX
 ])
 
+dnl Since libtool 1.5.2 (released 2004-01-25), on Linux libtool no longer
+dnl sets RPATH for any directories in the dynamic linker search path.
+dnl See more: https://wiki.debian.org/RpathIssue
+LT_PREREQ([1.5.2])
 dnl Libtool init checks.
 LT_INIT([pic-only])
 
@@ -228,7 +232,7 @@ AM_CONDITIONAL(ENABLE_MAN, test "$enable_man" != no)
 # Enable debug
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
-                    [use debug compiler flags and macros (default is no)])],
+                    [use compiler flags and macros suited for debugging (default is no)])],
     [enable_debug=$enableval],
     [enable_debug=no])
 
@@ -285,12 +289,9 @@ if test "x$enable_debug" = xyes; then
   if test "x$CXXFLAGS_overridden" = xno; then
 	CXXFLAGS=""
   fi
-  # Prefer -Og, fall back to -O0 if that is unavailable.
-  AX_CHECK_COMPILE_FLAG(
-    [-Og],
-    [[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -Og"]],
-    [AX_CHECK_COMPILE_FLAG([-O0],[[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -O0"]],,[[$CXXFLAG_WERROR]])],
-    [[$CXXFLAG_WERROR]])
+
+  # Disable all optimizations
+  AX_CHECK_COMPILE_FLAG([-O0], [[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -O0"]],,[[$CXXFLAG_WERROR]])
 
   # Prefer -g3, fall back to -g if that is unavailable.
   AX_CHECK_COMPILE_FLAG(
@@ -795,12 +796,17 @@ if test x$use_hardening != xno; then
   AX_CHECK_COMPILE_FLAG([-Wstack-protector],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -Wstack-protector"])
   AX_CHECK_COMPILE_FLAG([-fstack-protector-all],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
 
-  AX_CHECK_PREPROC_FLAG([-D_FORTIFY_SOURCE=2],[
-    AX_CHECK_PREPROC_FLAG([-U_FORTIFY_SOURCE],[
-      HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -U_FORTIFY_SOURCE"
+  # When enable_debug is yes, all optimizations are disabled.
+  # However, FORTIFY_SOURCE requires that there is some level of optimization, otherwise it does nothing and just creates a compiler warning.
+  # Since FORTIFY_SOURCE is a no-op without optimizations, do not enable it when enable_debug is yes.
+  if test x$enable_debug != xyes; then
+    AX_CHECK_PREPROC_FLAG([-D_FORTIFY_SOURCE=2],[
+      AX_CHECK_PREPROC_FLAG([-U_FORTIFY_SOURCE],[
+        HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -U_FORTIFY_SOURCE"
+      ])
+      HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -D_FORTIFY_SOURCE=2"
     ])
-    HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -D_FORTIFY_SOURCE=2"
-  ])
+  fi
 
   AX_CHECK_LINK_FLAG([[-Wl,--dynamicbase]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--dynamicbase"])
   AX_CHECK_LINK_FLAG([[-Wl,--nxcompat]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--nxcompat"])
@@ -1589,21 +1595,10 @@ if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
 fi
 
-ac_configure_args="${ac_configure_args} --disable-shared --with-pic --with-bignum=no --enable-module-recovery --disable-jni"
+ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --with-bignum=no --enable-module-recovery --disable-jni"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT
-
-dnl Taken from https://wiki.debian.org/RpathIssue
-case $host in
-   *-*-linux-gnu)
-     AC_MSG_RESULT([Fixing libtool for -rpath problems.])
-     sed < libtool > libtool-2 \
-     's/^hardcode_libdir_flag_spec.*$'/'hardcode_libdir_flag_spec=" -D__LIBTOOL_IS_A_FOOL__ "/'
-     mv libtool-2 libtool
-     chmod 755 libtool
-   ;;
-esac
 
 dnl Replace the BUILDDIR path with the correct Windows path if compiling on Native Windows
 case ${OS} in

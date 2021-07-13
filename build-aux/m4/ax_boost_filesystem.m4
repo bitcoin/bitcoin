@@ -1,5 +1,5 @@
 # ===========================================================================
-#    http://www.gnu.org/software/autoconf-archive/ax_boost_filesystem.html
+#   https://www.gnu.org/software/autoconf-archive/ax_boost_filesystem.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -31,7 +31,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 26
+#serial 28
 
 AC_DEFUN([AX_BOOST_FILESYSTEM],
 [
@@ -80,7 +80,6 @@ AC_DEFUN([AX_BOOST_FILESYSTEM],
 		if test "x$ax_cv_boost_filesystem" = "xyes"; then
 			AC_DEFINE(HAVE_BOOST_FILESYSTEM,,[define if the Boost::Filesystem library is available])
             BOOSTLIBDIR=`echo $BOOST_LDFLAGS | sed -e 's/@<:@^\/@:>@*//'`
-            ax_lib=
             if test "x$ax_boost_user_filesystem_lib" = "x"; then
                 for libextension in `ls -r $BOOSTLIBDIR/libboost_filesystem* 2>/dev/null | sed 's,.*/lib,,' | sed 's,\..*,,'` ; do
                      ax_lib=${libextension}
@@ -105,7 +104,7 @@ AC_DEFUN([AX_BOOST_FILESYSTEM],
 
             fi
             if test "x$ax_lib" = "x"; then
-                AC_MSG_ERROR(Could not find a version of the boost_filesystem library!)
+                AC_MSG_ERROR(Could not find a version of the Boost::Filesystem library!)
             fi
 			if test "x$link_filesystem" != "xyes"; then
 				AC_MSG_ERROR(Could not link against $ax_lib !)

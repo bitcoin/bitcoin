@@ -1787,6 +1787,7 @@ static UniValue getchaintxstats(const JSONRPCRequest& request)
             "  \"time\": xxxxx,                         (numeric) The timestamp for the final block in the window in UNIX format.\n"
             "  \"txcount\": xxxxx,                      (numeric) The total number of transactions in the chain up to that point.\n"
             "  \"window_final_block_hash\": \"...\",      (string) The hash of the final block in the window.\n"
+            "  \"window_final_block_height\": xxxxx,    (numeric) The height of the final block in the window.\n"
             "  \"window_block_count\": xxxxx,           (numeric) Size of the window in number of blocks.\n"
             "  \"window_tx_count\": xxxxx,              (numeric) The number of transactions in the window. Only returned if \"window_block_count\" is > 0.\n"
             "  \"window_interval\": xxxxx,              (numeric) The elapsed time in the window in seconds. Only returned if \"window_block_count\" is > 0.\n"
@@ -1835,6 +1836,7 @@ static UniValue getchaintxstats(const JSONRPCRequest& request)
     ret.pushKV("time", (int64_t)pindex->nTime);
     ret.pushKV("txcount", (int64_t)pindex->nChainTx);
     ret.pushKV("window_final_block_hash", pindex->GetBlockHash().GetHex());
+    ret.pushKV("window_final_block_height", pindex->nHeight);
     ret.pushKV("window_block_count", blockcount);
     if (blockcount > 0) {
         ret.pushKV("window_tx_count", nTxDiff);

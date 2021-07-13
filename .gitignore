@@ -40,6 +40,7 @@ libtool
 src/config/dash-config.h
 src/config/dash-config.h.in
 src/config/stamp-h1
+src/obj
 share/setup.nsi
 share/qt/Info.plist
 
@@ -89,6 +90,9 @@ dash-qt
 Dash-Qt.app
 background.tiff*
 !/depends/Makefile
+
+# Qt Creator
+Makefile.am.user
 
 # Unit-tests
 Makefile.test

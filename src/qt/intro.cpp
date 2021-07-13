@@ -152,6 +152,7 @@ Intro::Intro(QWidget *parent) :
         storageRequiresMsg.arg(requiredSpace) + " " +
         tr("The wallet will also be stored in this directory.")
     );
+    this->adjustSize();
     startThread();
 }
 

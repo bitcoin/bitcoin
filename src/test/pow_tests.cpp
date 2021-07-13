@@ -179,6 +179,60 @@ BOOST_AUTO_TEST_CASE(get_next_work)
 //     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00e1fdU);
 // }
 
+BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)
+{
+    const auto consensus = CreateChainParams(CBaseChainParams::MAIN)->GetConsensus();
+    uint256 hash;
+    unsigned int nBits;
+    nBits = UintToArith256(consensus.powLimit).GetCompact(true);
+    hash.SetHex("0x1");
+    BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
+}
+
+BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_overflow_target)
+{
+    const auto consensus = CreateChainParams(CBaseChainParams::MAIN)->GetConsensus();
+    uint256 hash;
+    unsigned int nBits = ~0x00800000;
+    hash.SetHex("0x1");
+    BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
+}
+
+BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_too_easy_target)
+{
+    const auto consensus = CreateChainParams(CBaseChainParams::MAIN)->GetConsensus();
+    uint256 hash;
+    unsigned int nBits;
+    arith_uint256 nBits_arith = UintToArith256(consensus.powLimit);
+    nBits_arith *= 2;
+    nBits = nBits_arith.GetCompact();
+    hash.SetHex("0x1");
+    BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
+}
+
+BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_biger_hash_than_target)
+{
+    const auto consensus = CreateChainParams(CBaseChainParams::MAIN)->GetConsensus();
+    uint256 hash;
+    unsigned int nBits;
+    arith_uint256 hash_arith = UintToArith256(consensus.powLimit);
+    nBits = hash_arith.GetCompact();
+    hash_arith *= 2; // hash > nBits
+    hash = ArithToUint256(hash_arith);
+    BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
+}
+
+BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_zero_target)
+{
+    const auto consensus = CreateChainParams(CBaseChainParams::MAIN)->GetConsensus();
+    uint256 hash;
+    unsigned int nBits;
+    arith_uint256 hash_arith{0};
+    nBits = hash_arith.GetCompact();
+    hash = ArithToUint256(hash_arith);
+    BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
+}
+
 BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
 {
     const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);

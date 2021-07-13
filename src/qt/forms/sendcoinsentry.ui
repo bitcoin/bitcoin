@@ -17,9 +17,6 @@
    <bool>false</bool>
   </property>
   <widget class="QFrame" name="SendCoins">
-   <property name="toolTip">
-    <string>This is a normal payment.</string>
-   </property>
    <property name="frameShape">
     <enum>QFrame::NoFrame</enum>
    </property>
@@ -153,7 +150,11 @@
     <item row="2" column="1">
      <layout class="QHBoxLayout" name="horizontalLayoutAmount" stretch="0,1,0">
       <item>
-       <widget class="BitcoinAmountField" name="payAmount"/>
+       <widget class="BitcoinAmountField" name="payAmount">
+         <property name="toolTip">
+          <string>The amount to send in the selected unit</string>
+         </property>
+       </widget>
       </item>
       <item>
        <widget class="QCheckBox" name="checkboxSubtractFeeFromAmount">
