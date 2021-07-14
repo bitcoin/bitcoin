@@ -158,6 +158,16 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 BitcoinCore::BitcoinCore(interfaces::Node& node) :
     QObject(), m_node(node)
 {
+    this->moveToThread(&m_thread);
+    m_thread.start();
+}
+
+BitcoinCore::~BitcoinCore()
+{
+    qDebug() << __func__ << ": Stopping thread";
+    m_thread.quit();
+    m_thread.wait();
+    qDebug() << __func__ << ": Stopped thread";
 }
 
 void BitcoinCore::handleRunawayException(const std::exception *e)
@@ -202,7 +212,6 @@ static const char* qt_argv = "bitcoin-qt";
 
 BitcoinApplication::BitcoinApplication():
     QApplication(qt_argc, const_cast<char **>(&qt_argv)),
-    coreThread(nullptr),
     optionsModel(nullptr),
     clientModel(nullptr),
     window(nullptr),
@@ -230,13 +239,7 @@ void BitcoinApplication::setupPlatformStyle()
 
 BitcoinApplication::~BitcoinApplication()
 {
-    if(coreThread)
-    {
-        qDebug() << __func__ << ": Stopping thread";
-        coreThread->quit();
-        coreThread->wait();
-        qDebug() << __func__ << ": Stopped thread";
-    }
+    m_executor.reset();
 
     delete window;
     window = nullptr;
@@ -291,22 +294,15 @@ bool BitcoinApplication::baseInitialize()
 
 void BitcoinApplication::startThread()
 {
-    if(coreThread)
-        return;
-    coreThread = new QThread(this);
-    BitcoinCore *executor = new BitcoinCore(node());
-    executor->moveToThread(coreThread);
+    assert(!m_executor);
+    m_executor.emplace(node());
 
     /*  communication to and from thread */
-    connect(executor, &BitcoinCore::initializeResult, this, &BitcoinApplication::initializeResult);
-    connect(executor, &BitcoinCore::shutdownResult, this, &BitcoinApplication::shutdownResult);
-    connect(executor, &BitcoinCore::runawayException, this, &BitcoinApplication::handleRunawayException);
-    connect(this, &BitcoinApplication::requestedInitialize, executor, &BitcoinCore::initialize);
-    connect(this, &BitcoinApplication::requestedShutdown, executor, &BitcoinCore::shutdown);
-    /*  make sure executor object is deleted in its own thread */
-    connect(coreThread, &QThread::finished, executor, &QObject::deleteLater);
-
-    coreThread->start();
+    connect(&m_executor.value(), &BitcoinCore::initializeResult, this, &BitcoinApplication::initializeResult);
+    connect(&m_executor.value(), &BitcoinCore::shutdownResult, this, &BitcoinApplication::shutdownResult);
+    connect(&m_executor.value(), &BitcoinCore::runawayException, this, &BitcoinApplication::handleRunawayException);
+    connect(this, &BitcoinApplication::requestedInitialize, &m_executor.value(), &BitcoinCore::initialize);
+    connect(this, &BitcoinApplication::requestedShutdown, &m_executor.value(), &BitcoinCore::shutdown);
 }
 
 void BitcoinApplication::parameterSetup()
@@ -339,7 +335,6 @@ void BitcoinApplication::requestShutdown()
     shutdownWindow.reset(ShutdownWindow::showShutdownWindow(window));
 
     qDebug() << __func__ << ": Requesting shutdown";
-    startThread();
     window->hide();
     // Must disconnect node signals otherwise current thread can deadlock since
     // no event loop is running.
