@@ -522,9 +522,9 @@ def add_spender(spenders, *args, **kwargs):
 def random_checksig_style(pubkey):
     """Creates a random CHECKSIG* tapscript that would succeed with only the valid signature on witness stack."""
     opcode = random.choice([OP_CHECKSIG, OP_CHECKSIGVERIFY, OP_CHECKSIGADD])
-    if (opcode == OP_CHECKSIGVERIFY):
+    if opcode == OP_CHECKSIGVERIFY:
         ret = CScript([pubkey, opcode, OP_1])
-    elif (opcode == OP_CHECKSIGADD):
+    elif opcode == OP_CHECKSIGADD:
         num = random.choice([0, 0x7fffffff, -0x7fffffff])
         ret = CScript([num, pubkey, opcode, num + 1, OP_EQUAL])
     else:
@@ -1193,19 +1193,36 @@ def dump_json_test(tx, input_utxos, idx, success, failure):
 # Data type to keep track of UTXOs, where they were created, and how to spend them.
 UTXOData = namedtuple('UTXOData', 'outpoint,output,spender')
 
+
 class TaprootTest(BitcoinTestFramework):
     def add_options(self, parser):
         parser.add_argument("--dumptests", dest="dump_tests", default=False, action="store_true",
                             help="Dump generated test cases to directory set by TEST_DUMP_DIR environment variable")
+        parser.add_argument("--previous_release", dest="previous_release", default=False, action="store_true",
+                            help="Use a previous release as taproot-inactive node")
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        if self.options.previous_release:
+            self.skip_if_no_previous_releases()
 
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
         # Node 0 has Taproot inactive, Node 1 active.
-        self.extra_args = [["-par=1", "-vbparams=taproot:1:1"], ["-par=1"]]
+        self.extra_args = [["-par=1"], ["-par=1"]]
+        if self.options.previous_release:
+            self.wallet_names = [None, self.default_wallet_name]
+        else:
+            self.extra_args[0].append("-vbparams=taproot:1:1")
+
+    def setup_nodes(self):
+        self.add_nodes(self.num_nodes, self.extra_args, versions=[
+            200100 if self.options.previous_release else None,
+            None,
+        ])
+        self.start_nodes()
+        self.import_deterministic_coinbase_privkeys()
 
     def block_submit(self, node, txs, msg, err_msg, cb_pubkey=None, fees=0, sigops_weight=0, witness=False, accept=False):
 
@@ -1227,7 +1244,7 @@ class TaprootTest(BitcoinTestFramework):
         block_response = node.submitblock(block.serialize().hex())
         if err_msg is not None:
             assert block_response is not None and err_msg in block_response, "Missing error message '%s' from block response '%s': %s" % (err_msg, "(None)" if block_response is None else block_response, msg)
-        if (accept):
+        if accept:
             assert node.getbestblockhash() == block.hash, "Failed to accept: %s (response: %s)" % (msg, block_response)
             self.tip = block.sha256
             self.lastblockhash = block.hash
