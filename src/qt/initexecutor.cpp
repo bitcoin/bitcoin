@@ -15,8 +15,8 @@
 #include <QString>
 #include <QThread>
 
-InitExecutor::InitExecutor(interfaces::Node& node) :
-    QObject(), m_node(node)
+InitExecutor::InitExecutor(interfaces::Node& node)
+    : QObject(), m_node(node)
 {
     this->moveToThread(&m_thread);
     m_thread.start();
@@ -30,7 +30,7 @@ InitExecutor::~InitExecutor()
     qDebug() << __func__ << ": Stopped thread";
 }
 
-void InitExecutor::handleRunawayException(const std::exception *e)
+void InitExecutor::handleRunawayException(const std::exception* e)
 {
     PrintExceptionContinue(e, "Runaway exception");
     Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings().translated));
@@ -38,8 +38,7 @@ void InitExecutor::handleRunawayException(const std::exception *e)
 
 void InitExecutor::initialize()
 {
-    try
-    {
+    try {
         util::ThreadRename("qt-init");
         qDebug() << __func__ << ": Running initialization in thread";
         interfaces::BlockAndHeaderTipInfo tip_info;
@@ -54,8 +53,7 @@ void InitExecutor::initialize()
 
 void InitExecutor::shutdown()
 {
-    try
-    {
+    try {
         qDebug() << __func__ << ": Running Shutdown in thread";
         m_node.appShutdown();
         qDebug() << __func__ << ": Shutdown finished";
