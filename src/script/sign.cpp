@@ -15,16 +15,10 @@
 
 typedef std::vector<unsigned char> valtype;
 
-MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn)
-    : txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn, MissingDataBehavior::FAIL),
-      m_txdata(nullptr)
-{
-}
 
-MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData* txdata, int nHashTypeIn)
+MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction& txToIn, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData& txdata, int nHashTypeIn)
     : txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn),
-      checker(txdata ? MutableTransactionSignatureChecker(txTo, nIn, amount, *txdata, MissingDataBehavior::FAIL) :
-          MutableTransactionSignatureChecker(txTo, nIn, amount, MissingDataBehavior::FAIL)),
+      checker(MutableTransactionSignatureChecker(txTo, nIn, amount, txdata, MissingDataBehavior::FAIL)),
       m_txdata(txdata)
 {
 }
@@ -47,7 +41,7 @@ bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provid
     // BASE/WITNESS_V0 signatures don't support explicit SIGHASH_DEFAULT, use SIGHASH_ALL instead.
     const int hashtype = nHashType == SIGHASH_DEFAULT ? SIGHASH_ALL : nHashType;
 
-    uint256 hash = SignatureHash(scriptCode, *txTo, nIn, hashtype, amount, sigversion, m_txdata);
+    uint256 hash = SignatureHash(scriptCode, txTo, nIn, hashtype, amount, sigversion, &m_txdata);
     if (!key.Sign(hash, vchSig))
         return false;
     vchSig.push_back((unsigned char)hashtype);
@@ -79,7 +73,7 @@ bool MutableTransactionSignatureCreator::CreateSchnorrSig(const SigningProvider&
     // BIP341/BIP342 signing needs lots of precomputed transaction data. While some
     // (non-SIGHASH_DEFAULT) sighash modes exist that can work with just some subset
     // of data present, for now, only support signing when everything is provided.
-    if (!m_txdata || !m_txdata->m_bip341_taproot_ready || !m_txdata->m_spent_outputs_ready) return false;
+    if (!m_txdata.m_bip341_taproot_ready || !m_txdata.m_spent_outputs_ready) return false;
 
     ScriptExecutionData execdata;
     execdata.m_annex_init = true;
@@ -92,7 +86,7 @@ bool MutableTransactionSignatureCreator::CreateSchnorrSig(const SigningProvider&
         execdata.m_tapleaf_hash = *leaf_hash;
     }
     uint256 hash;
-    if (!SignatureHashSchnorr(hash, execdata, *txTo, nIn, nHashType, sigversion, *m_txdata, MissingDataBehavior::FAIL)) return false;
+    if (!SignatureHashSchnorr(hash, execdata, txTo, nIn, nHashType, sigversion, m_txdata, MissingDataBehavior::FAIL)) return false;
     sig.resize(64);
     if (!key.SignSchnorr(hash, sig, merkle_root, nullptr)) return false;
     if (nHashType) sig.push_back(nHashType);
@@ -446,7 +440,8 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
     Stacks stack(data);
 
     // Get signatures
-    MutableTransactionSignatureChecker tx_checker(&tx, nIn, txout.nValue, MissingDataBehavior::FAIL);
+    PrecomputedTransactionData txdata{tx};
+    MutableTransactionSignatureChecker tx_checker(tx, nIn, txout.nValue, txdata, MissingDataBehavior::FAIL);
     SignatureExtractorChecker extractor_checker(data, tx_checker);
     if (VerifyScript(data.scriptSig, txout.scriptPubKey, &data.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, extractor_checker)) {
         data.complete = true;
@@ -528,7 +523,8 @@ bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, C
 {
     assert(nIn < txTo.vin.size());
 
-    MutableTransactionSignatureCreator creator(&txTo, nIn, amount, nHashType);
+    PrecomputedTransactionData txdata{txTo};
+    MutableTransactionSignatureCreator creator(txTo, nIn, amount, txdata, nHashType);
 
     SignatureData sigdata;
     bool ret = ProduceSignature(provider, creator, fromPubKey, sigdata);
@@ -667,7 +663,7 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
         SignatureData sigdata = DataFromTransaction(mtx, i, coin->second.out);
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.vout.size())) {
-            ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, amount, &txdata, nHashType), prevPubKey, sigdata);
+            ProduceSignature(*keystore, MutableTransactionSignatureCreator(mtx, i, amount, txdata, nHashType), prevPubKey, sigdata);
         }
 
         UpdateInput(txin, sigdata);
@@ -679,7 +675,7 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
         }
 
         ScriptError serror = SCRIPT_ERR_OK;
-        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount, txdata, MissingDataBehavior::FAIL), &serror)) {
+        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(txConst, i, amount, txdata, MissingDataBehavior::FAIL), &serror)) {
             if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
                 // Unable to sign input and verification failed (possible attempt to partially sign).
                 input_errors[i] = "Unable to sign input, invalid stack size (possibly missing key)";
