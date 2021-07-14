@@ -112,6 +112,7 @@ BASE_SCRIPTS = [
     'wallet_dump.py --legacy-wallet',
     'wallet_listtransactions.py --legacy-wallet',
     'wallet_listtransactions.py --descriptors',
+    'feature_taproot.py --previous_release',
     'feature_taproot.py',
     'feature_llmqsigning.py',
     'feature_llmqsigning.py --spork21',
