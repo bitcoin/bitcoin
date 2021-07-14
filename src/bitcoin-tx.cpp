@@ -651,8 +651,8 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         const CScript& prevPubKey = coin.out.scriptPubKey;
         const CAmount& amount = coin.out.nValue;
 
-        SignatureData sigdata = DataFromTransaction(mergedTx, i, coin.out);
         PrecomputedTransactionData txdata{mergedTx};
+        SignatureData sigdata = DataFromTransaction(mergedTx, i, coin.out, txdata);
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mergedTx.vout.size()))
             ProduceSignature(keystore, MutableTransactionSignatureCreator(mergedTx, i, amount, txdata, nHashType), prevPubKey, sigdata);

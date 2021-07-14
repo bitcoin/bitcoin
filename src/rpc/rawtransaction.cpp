@@ -711,7 +711,8 @@ static RPCHelpMan combinerawtransaction()
         // ... and merge in other signatures:
         for (const CMutableTransaction& txv : txVariants) {
             if (txv.vin.size() > i) {
-                sigdata.MergeSignatureData(DataFromTransaction(txv, i, coin.out));
+                PrecomputedTransactionData txdata{txv};
+                sigdata.MergeSignatureData(DataFromTransaction(txv, i, coin.out, txdata));
             }
         }
         PrecomputedTransactionData txdata{mergedTx};
