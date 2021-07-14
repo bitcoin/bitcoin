@@ -32,12 +32,12 @@ class WalletModel;
 /** Class encapsulating Bitcoin Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
-class BitcoinCore: public QObject
+class InitExecutor: public QObject
 {
     Q_OBJECT
 public:
-    explicit BitcoinCore(interfaces::Node& node);
-    ~BitcoinCore();
+    explicit InitExecutor(interfaces::Node& node);
+    ~InitExecutor();
 
 public Q_SLOTS:
     void initialize();
@@ -117,7 +117,7 @@ Q_SIGNALS:
     void windowShown(BitcoinGUI* window);
 
 private:
-    std::optional<BitcoinCore> m_executor;
+    std::optional<InitExecutor> m_executor;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
     BitcoinGUI *window;

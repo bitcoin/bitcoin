@@ -155,14 +155,14 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
     }
 }
 
-BitcoinCore::BitcoinCore(interfaces::Node& node) :
+InitExecutor::InitExecutor(interfaces::Node& node) :
     QObject(), m_node(node)
 {
     this->moveToThread(&m_thread);
     m_thread.start();
 }
 
-BitcoinCore::~BitcoinCore()
+InitExecutor::~InitExecutor()
 {
     qDebug() << __func__ << ": Stopping thread";
     m_thread.quit();
@@ -170,13 +170,13 @@ BitcoinCore::~BitcoinCore()
     qDebug() << __func__ << ": Stopped thread";
 }
 
-void BitcoinCore::handleRunawayException(const std::exception *e)
+void InitExecutor::handleRunawayException(const std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
     Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings().translated));
 }
 
-void BitcoinCore::initialize()
+void InitExecutor::initialize()
 {
     try
     {
@@ -192,7 +192,7 @@ void BitcoinCore::initialize()
     }
 }
 
-void BitcoinCore::shutdown()
+void InitExecutor::shutdown()
 {
     try
     {
@@ -298,11 +298,11 @@ void BitcoinApplication::startThread()
     m_executor.emplace(node());
 
     /*  communication to and from thread */
-    connect(&m_executor.value(), &BitcoinCore::initializeResult, this, &BitcoinApplication::initializeResult);
-    connect(&m_executor.value(), &BitcoinCore::shutdownResult, this, &BitcoinApplication::shutdownResult);
-    connect(&m_executor.value(), &BitcoinCore::runawayException, this, &BitcoinApplication::handleRunawayException);
-    connect(this, &BitcoinApplication::requestedInitialize, &m_executor.value(), &BitcoinCore::initialize);
-    connect(this, &BitcoinApplication::requestedShutdown, &m_executor.value(), &BitcoinCore::shutdown);
+    connect(&m_executor.value(), &InitExecutor::initializeResult, this, &BitcoinApplication::initializeResult);
+    connect(&m_executor.value(), &InitExecutor::shutdownResult, this, &BitcoinApplication::shutdownResult);
+    connect(&m_executor.value(), &InitExecutor::runawayException, this, &BitcoinApplication::handleRunawayException);
+    connect(this, &BitcoinApplication::requestedInitialize, &m_executor.value(), &InitExecutor::initialize);
+    connect(this, &BitcoinApplication::requestedShutdown, &m_executor.value(), &InitExecutor::shutdown);
 }
 
 void BitcoinApplication::parameterSetup()
