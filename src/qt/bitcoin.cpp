@@ -7,12 +7,19 @@
 #endif
 
 #include <qt/bitcoin.h>
-#include <qt/bitcoingui.h>
 
 #include <chainparams.h>
+#include <init.h>
+#include <interfaces/handler.h>
+#include <interfaces/node.h>
+#include <node/context.h>
+#include <node/ui_interface.h>
+#include <noui.h>
+#include <qt/bitcoingui.h>
 #include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
+#include <qt/initexecutor.h>
 #include <qt/intro.h>
 #include <qt/networkstyle.h>
 #include <qt/optionsmodel.h>
@@ -20,24 +27,17 @@
 #include <qt/splashscreen.h>
 #include <qt/utilitydialog.h>
 #include <qt/winshutdownmonitor.h>
+#include <uint256.h>
+#include <util/system.h>
+#include <util/threadnames.h>
+#include <util/translation.h>
+#include <validation.h>
 
 #ifdef ENABLE_WALLET
 #include <qt/paymentserver.h>
 #include <qt/walletcontroller.h>
 #include <qt/walletmodel.h>
 #endif // ENABLE_WALLET
-
-#include <init.h>
-#include <interfaces/handler.h>
-#include <interfaces/node.h>
-#include <node/context.h>
-#include <node/ui_interface.h>
-#include <noui.h>
-#include <uint256.h>
-#include <util/system.h>
-#include <util/threadnames.h>
-#include <util/translation.h>
-#include <validation.h>
 
 #include <boost/signals2/connection.hpp>
 #include <memory>
@@ -152,58 +152,6 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
         LogPrint(BCLog::QT, "GUI: %s\n", msg.toStdString());
     } else {
         LogPrintf("GUI: %s\n", msg.toStdString());
-    }
-}
-
-InitExecutor::InitExecutor(interfaces::Node& node) :
-    QObject(), m_node(node)
-{
-    this->moveToThread(&m_thread);
-    m_thread.start();
-}
-
-InitExecutor::~InitExecutor()
-{
-    qDebug() << __func__ << ": Stopping thread";
-    m_thread.quit();
-    m_thread.wait();
-    qDebug() << __func__ << ": Stopped thread";
-}
-
-void InitExecutor::handleRunawayException(const std::exception *e)
-{
-    PrintExceptionContinue(e, "Runaway exception");
-    Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings().translated));
-}
-
-void InitExecutor::initialize()
-{
-    try
-    {
-        util::ThreadRename("qt-init");
-        qDebug() << __func__ << ": Running initialization in thread";
-        interfaces::BlockAndHeaderTipInfo tip_info;
-        bool rv = m_node.appInitMain(&tip_info);
-        Q_EMIT initializeResult(rv, tip_info);
-    } catch (const std::exception& e) {
-        handleRunawayException(&e);
-    } catch (...) {
-        handleRunawayException(nullptr);
-    }
-}
-
-void InitExecutor::shutdown()
-{
-    try
-    {
-        qDebug() << __func__ << ": Running Shutdown in thread";
-        m_node.appShutdown();
-        qDebug() << __func__ << ": Shutdown finished";
-        Q_EMIT shutdownResult();
-    } catch (const std::exception& e) {
-        handleRunawayException(&e);
-    } catch (...) {
-        handleRunawayException(nullptr);
     }
 }
 
