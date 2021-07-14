@@ -104,7 +104,12 @@ def download_binary(tag, args) -> int:
     tarballHash = hasher.hexdigest()
 
     if tarballHash not in SHA256_SUMS or SHA256_SUMS[tarballHash] != tarball:
-        print("Checksum did not match")
+        if sum_exists(tag[1:]):
+            print("Checksum did not match")
+            return 1
+
+        print("Cannot compare checksum for version {version}".format(
+            version=tag[1:]))
         return 1
     print("Checksum matched")
 
@@ -117,6 +122,13 @@ def download_binary(tag, args) -> int:
 
     Path(tarball).unlink()
     return 0
+
+
+def sum_exists(version) -> bool:
+    for sum in SHA256_SUMS:
+        if "bitcoin-" + version in SHA256_SUMS[sum]:
+            return True
+    return False
 
 
 def build_release(tag, args) -> int:
