@@ -171,13 +171,19 @@ bool CTxMemPool::calculateAncestorsAndCheckLimits(size_t entry_size,
         totalSizeWithAncestors += stageit->GetTxSize();
 
         if (stageit->GetSizeWithDescendants() + entry_size > limitDescendantSize) {
-            errString = strprintf("exceeds descendant size limit for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limitDescendantSize);
+            errString = strprintf("%sexceeds descendant size limit for tx %s [limit: %u]",
+                                  entry_count > 1 ? "possibly " : "",
+                                  stageit->GetTx().GetHash().ToString(), limitDescendantSize);
             return false;
         } else if (stageit->GetCountWithDescendants() + entry_count > limitDescendantCount) {
-            errString = strprintf("too many descendants for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limitDescendantCount);
+            errString = strprintf("%stoo many descendants for tx %s [limit: %u]",
+                                  entry_count > 1 ? "possibly " : "",
+                                  stageit->GetTx().GetHash().ToString(), limitDescendantCount);
             return false;
         } else if (totalSizeWithAncestors > limitAncestorSize) {
-            errString = strprintf("exceeds ancestor size limit [limit: %u]", limitAncestorSize);
+            errString = strprintf("%sexceeds ancestor size limit [limit: %u]",
+                                  entry_count > 1 ? "possibly " : "",
+                                  limitAncestorSize);
             return false;
         }
 
@@ -190,7 +196,9 @@ bool CTxMemPool::calculateAncestorsAndCheckLimits(size_t entry_size,
                 staged_ancestors.insert(parent);
             }
             if (staged_ancestors.size() + setAncestors.size() + entry_count > limitAncestorCount) {
-                errString = strprintf("too many unconfirmed ancestors [limit: %u]", limitAncestorCount);
+                errString = strprintf("%stoo many unconfirmed ancestors [limit: %u]",
+                                      entry_count > 1 ? "possibly " : "",
+                                      limitAncestorCount);
                 return false;
             }
         }
