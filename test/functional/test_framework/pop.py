@@ -9,32 +9,32 @@ import time
 from typing import Optional
 
 from .messages import ser_uint256, hash256, uint256_from_str, CBlockHeader, hash256lr
-from .pop_const import KEYSTONE_INTERVAL, NETWORK_ID, POP_ACTIVATION_HEIGHT, POW_REWARD_PERCENTAGE, POP_PAYOUT_DELAY, \
+from .pop_const import NETWORK_ID, POP_ACTIVATION_HEIGHT, POW_REWARD_PERCENTAGE, POP_PAYOUT_DELAY, \
     EMPTY_POPDATA_ROOT_V1
 from .script import hash160, CScript, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG
 from .test_node import TestNode
 from .util import hex_str_to_bytes
 
 
-def getHighestKeystoneAtOrBefore(height: int):
+def getHighestKeystoneAtOrBefore(height: int, keystoneInterval: int):
     assert height >= 0
-    diff = height % KEYSTONE_INTERVAL
+    diff = height % keystoneInterval
     return height - diff
 
 
-def getFirstPreviousKeystoneHeight(height: int):
+def getFirstPreviousKeystoneHeight(height: int, keystoneInterval: int):
     if height <= 1:
         return 0
 
-    ret = getHighestKeystoneAtOrBefore((height - 2) if ((height - 1) % KEYSTONE_INTERVAL) == 0 else (height - 1))
+    ret = getHighestKeystoneAtOrBefore((height - 2) if ((height - 1) % keystoneInterval) == 0 else (height - 1), keystoneInterval)
     return 0 if ret < 0 else ret
 
 
-def getSecondPreviousKeystoneHeight(height: int):
-    if height <= 1 + KEYSTONE_INTERVAL:
+def getSecondPreviousKeystoneHeight(height: int, keystoneInterval: int):
+    if height <= 1 + keystoneInterval:
         return 0
 
-    ret = getFirstPreviousKeystoneHeight(height) - KEYSTONE_INTERVAL
+    ret = getFirstPreviousKeystoneHeight(height, keystoneInterval) - keystoneInterval
     return 0 if ret < 0 else ret
 
 
@@ -194,6 +194,10 @@ def mine_until_pop_active(node, address=None):
             node.generatetoaddress(nblocks=(activate - existing), address=address)
         node.waitforblockheight(activate)
 
+def get_keystone_interval(node):
+    params = node.getpopparams()
+    return params['keystoneInterval']
+
 
 class BlockIndex:
     __slots__ = ("height", "hash", "prev")
@@ -246,6 +250,7 @@ class PopMiningContext:
         self.params = node.getpopparams()
 
         bootstrap = self.params['bootstrapBlock']
+        keystoneInterval = get_keystone_interval(node)
         self.bootstrap = BlockIndex(
             height=bootstrap['height'],
             # TODO: put in normal order ALT-363
@@ -268,7 +273,7 @@ class PopMiningContext:
                     )
                 )
 
-        test_config("KEYSTONE_INTERVAL", KEYSTONE_INTERVAL, lambda x: x["keystoneInterval"])
+        test_config("KEYSTONE_INTERVAL", keystoneInterval, lambda x: x["keystoneInterval"])
         test_config("NETWORK_ID", NETWORK_ID, lambda x: x["networkId"])
         test_config("POP_ACTIVATION_HEIGHT", POP_ACTIVATION_HEIGHT, lambda x: x["popActivationHeight"])
         test_config("POW_REWARD_PERCENTAGE", POW_REWARD_PERCENTAGE, lambda x: x["popRewardPercentage"])
@@ -323,9 +328,10 @@ class PopMiningContext:
         c.keystone2 = ""
         try:
             prev = self.get_block(prevHash)
+            keystoneInterval = get_keystone_interval(self.node)
             c.height = prev.height + 1
-            ks1height = getFirstPreviousKeystoneHeight(c.height)
-            ks2height = getSecondPreviousKeystoneHeight(c.height)
+            ks1height = getFirstPreviousKeystoneHeight(c.height, keystoneInterval)
+            ks2height = getSecondPreviousKeystoneHeight(c.height, keystoneInterval)
 
             ks1 = self._get_ancestor(prevHash, ks1height)
             if ks1:

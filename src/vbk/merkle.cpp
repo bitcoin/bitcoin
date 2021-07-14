@@ -58,10 +58,4 @@ bool VerifyTopLevelMerkleRoot(const CBlock& block, const CBlockIndex* pprevIndex
     return true;
 }
 
-bool isKeystone(const CBlockIndex& block)
-{
-    auto keystoneInterval = VeriBlock::GetPop().getConfig().getAltParams().getKeystoneInterval();
-    return (block.nHeight % keystoneInterval) == 0;
-}
-
 } // namespace VeriBlock

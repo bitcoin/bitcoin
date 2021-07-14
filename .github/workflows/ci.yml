@@ -257,7 +257,13 @@ jobs:
       - name: run apt update
         run: sudo apt-get update
       - name: install build requirements
-        run: sudo apt-get install python3 python3-pip python3-setuptools python-setuptools curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools ccache
+        run: sudo apt-get install python3 python3-pip python3-setuptools python-setuptools curl librsvg2-bin libtiff-tools bsdmainutils imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools ccache
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v1.9
+        with:
+          cmake-version: '3.12.4'
+      - name: Use cmake
+        run: cmake --version
       - name: download and extract macos sdk
         run: |
           wget -P depends/sdk-sources https://github.com/phracker/MacOSX-SDKs/releases/download/10.15/MacOSX10.14.sdk.tar.xz
@@ -268,7 +274,7 @@ jobs:
           BUILD_TYPE: Release
           HOST: x86_64-apple-darwin16
           BASE_CACHE: ~/.depends_cache
-        run: cd depends && make -j2
+        run: cd depends && make -j1
       - name: autogen
         run: ./autogen.sh
       - name: configure

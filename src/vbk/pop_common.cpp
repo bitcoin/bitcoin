@@ -52,5 +52,11 @@ altintegration::BlockIndex<altintegration::AltBlock>* GetAltBlockIndex(const CBl
     return index == nullptr ? nullptr : GetAltBlockIndex(index->GetBlockHash());
 }
 
+bool isKeystone(const CBlockIndex& block)
+{
+    auto keystoneInterval = GetPop().getConfig().getAltParams().getKeystoneInterval();
+    return (block.nHeight % keystoneInterval) == 0;
+}
+
 
 } // namespace VeriBlock

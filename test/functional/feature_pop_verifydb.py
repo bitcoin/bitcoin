@@ -7,7 +7,7 @@
 
 import time
 
-from test_framework.pop import KEYSTONE_INTERVAL, endorse_block, sync_pop_mempools, create_endorsed_chain, \
+from test_framework.pop import endorse_block, sync_pop_mempools, create_endorsed_chain, \
     assert_pop_state_equal, mine_until_pop_active
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
