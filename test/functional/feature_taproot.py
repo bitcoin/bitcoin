@@ -1219,7 +1219,7 @@ class TaprootTest(SyscoinTestFramework):
 
     def setup_nodes(self):
         self.add_nodes(self.num_nodes, self.extra_args, versions=[
-            4100300 if self.options.previous_release else None,
+            4010300 if self.options.previous_release else None,
             None,
         ])
         self.start_nodes()
