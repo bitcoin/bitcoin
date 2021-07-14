@@ -4,9 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """upgradewallet RPC functional test
 
-Test upgradewallet RPC. Download v0.15.2 v0.16.3 node binaries:
-
-test/get_previous_releases.py -b v0.15.2 v0.16.3
+Requires previous releases binaries, see test/README.md.
+Only v0.15.2 and v0.16.3 are required by this test. The others are used in feature_backwards_compatibility.py
 """
 
 import os

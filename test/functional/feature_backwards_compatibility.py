@@ -4,11 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Backwards compatibility functional test
 
-Test various backwards compatibility scenarios. Download the previous node binaries:
+Test various backwards compatibility scenarios. Requires previous releases binaries,
+see test/README.md.
 
-test/get_previous_releases.py -b v0.19.0.1 v0.18.1 v0.17.1
-
-v0.15.2 is not required by this test, but it is used in wallet_upgradewallet.py.
+v0.15.0.0 is not required by this test, but it is used in wallet_upgradewallet.py.
 Due to a hardfork in regtest, it can't be used to sync nodes.
 
 Due to RPC changes introduced in various versions the below tests
