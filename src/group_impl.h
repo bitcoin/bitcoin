@@ -100,8 +100,8 @@ static void secp256k1_ge_set_gej(secp256k1_ge *r, secp256k1_gej *a) {
 
 static void secp256k1_ge_set_gej_var(secp256k1_ge *r, secp256k1_gej *a) {
     secp256k1_fe z2, z3;
-    r->infinity = a->infinity;
     if (a->infinity) {
+        secp256k1_ge_set_infinity(r);
         return;
     }
     secp256k1_fe_inv_var(&a->z, &a->z);
@@ -110,8 +110,7 @@ static void secp256k1_ge_set_gej_var(secp256k1_ge *r, secp256k1_gej *a) {
     secp256k1_fe_mul(&a->x, &a->x, &z2);
     secp256k1_fe_mul(&a->y, &a->y, &z3);
     secp256k1_fe_set_int(&a->z, 1);
-    r->x = a->x;
-    r->y = a->y;
+    secp256k1_ge_set_xy(r, &a->x, &a->y);
 }
 
 static void secp256k1_ge_set_all_gej_var(secp256k1_ge *r, const secp256k1_gej *a, size_t len) {
@@ -120,7 +119,9 @@ static void secp256k1_ge_set_all_gej_var(secp256k1_ge *r, const secp256k1_gej *a
     size_t last_i = SIZE_MAX;
 
     for (i = 0; i < len; i++) {
-        if (!a[i].infinity) {
+        if (a[i].infinity) {
+            secp256k1_ge_set_infinity(&r[i]);
+        } else {
             /* Use destination's x coordinates as scratch space */
             if (last_i == SIZE_MAX) {
                 r[i].x = a[i].z;
@@ -148,7 +149,6 @@ static void secp256k1_ge_set_all_gej_var(secp256k1_ge *r, const secp256k1_gej *a
     r[last_i].x = u;
 
     for (i = 0; i < len; i++) {
-        r[i].infinity = a[i].infinity;
         if (!a[i].infinity) {
             secp256k1_ge_set_gej_zinv(&r[i], &a[i], &r[i].x);
         }
@@ -311,7 +311,7 @@ static void secp256k1_gej_double_var(secp256k1_gej *r, const secp256k1_gej *a, s
      *  point will be gibberish (z = 0 but infinity = 0).
      */
     if (a->infinity) {
-        r->infinity = 1;
+        secp256k1_gej_set_infinity(r);
         if (rzr != NULL) {
             secp256k1_fe_set_int(rzr, 1);
         }

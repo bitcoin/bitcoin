@@ -4,8 +4,10 @@
  * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
  ***********************************************************************/
 
-#include "include/secp256k1.h"
-#include "include/secp256k1_preallocated.h"
+#define SECP256K1_BUILD
+
+#include "../include/secp256k1.h"
+#include "../include/secp256k1_preallocated.h"
 
 #include "assumptions.h"
 #include "util.h"
@@ -20,6 +22,10 @@
 #include "hash_impl.h"
 #include "scratch_impl.h"
 #include "selftest.h"
+
+#ifdef SECP256K1_NO_BUILD
+# error "secp256k1.h processed without SECP256K1_BUILD defined while building secp256k1.c"
+#endif
 
 #if defined(VALGRIND)
 # include <valgrind/memcheck.h>
@@ -314,6 +320,32 @@ int secp256k1_ec_pubkey_serialize(const secp256k1_context* ctx, unsigned char *o
         }
     }
     return ret;
+}
+
+int secp256k1_ec_pubkey_cmp(const secp256k1_context* ctx, const secp256k1_pubkey* pubkey0, const secp256k1_pubkey* pubkey1) {
+    unsigned char out[2][33];
+    const secp256k1_pubkey* pk[2];
+    int i;
+
+    VERIFY_CHECK(ctx != NULL);
+    pk[0] = pubkey0; pk[1] = pubkey1;
+    for (i = 0; i < 2; i++) {
+        size_t out_size = sizeof(out[i]);
+        /* If the public key is NULL or invalid, ec_pubkey_serialize will call
+         * the illegal_callback and return 0. In that case we will serialize the
+         * key as all zeros which is less than any valid public key. This
+         * results in consistent comparisons even if NULL or invalid pubkeys are
+         * involved and prevents edge cases such as sorting algorithms that use
+         * this function and do not terminate as a result. */
+        if (!secp256k1_ec_pubkey_serialize(ctx, out[i], &out_size, pk[i], SECP256K1_EC_COMPRESSED)) {
+            /* Note that ec_pubkey_serialize should already set the output to
+             * zero in that case, but it's not guaranteed by the API, we can't
+             * test it and writing a VERIFY_CHECK is more complex than
+             * explicitly memsetting (again). */
+            memset(out[i], 0, sizeof(out[i]));
+        }
+    }
+    return secp256k1_memcmp_var(out[0], out[1], sizeof(out[0]));
 }
 
 static void secp256k1_ecdsa_signature_load(const secp256k1_context* ctx, secp256k1_scalar* r, secp256k1_scalar* s, const secp256k1_ecdsa_signature* sig) {
@@ -755,6 +787,19 @@ int secp256k1_ec_pubkey_combine(const secp256k1_context* ctx, secp256k1_pubkey *
     }
     secp256k1_ge_set_gej(&Q, &Qj);
     secp256k1_pubkey_save(pubnonce, &Q);
+    return 1;
+}
+
+int secp256k1_tagged_sha256(const secp256k1_context* ctx, unsigned char *hash32, const unsigned char *tag, size_t taglen, const unsigned char *msg, size_t msglen) {
+    secp256k1_sha256 sha;
+    VERIFY_CHECK(ctx != NULL);
+    ARG_CHECK(hash32 != NULL);
+    ARG_CHECK(tag != NULL);
+    ARG_CHECK(msg != NULL);
+
+    secp256k1_sha256_initialize_tagged(&sha, tag, taglen);
+    secp256k1_sha256_write(&sha, msg, msglen);
+    secp256k1_sha256_finalize(&sha, hash32);
     return 1;
 }
 

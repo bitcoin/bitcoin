@@ -51,7 +51,13 @@
 #ifndef SECP256K1_CONTRIB_LAX_DER_PARSING_H
 #define SECP256K1_CONTRIB_LAX_DER_PARSING_H
 
+/* #include secp256k1.h only when it hasn't been included yet.
+   This enables this file to be #included directly in other project
+   files (such as tests.c) without the need to set an explicit -I flag,
+   which would be necessary to locate secp256k1.h. */
+#ifndef SECP256K1_H
 #include <secp256k1.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
