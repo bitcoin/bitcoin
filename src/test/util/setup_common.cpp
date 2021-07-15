@@ -202,7 +202,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    m_node.chainman->InitializeChainstate(*m_node.mempool);
+    m_node.chainman->InitializeChainstate(m_node.mempool.get());
     m_node.chainman->ActiveChainstate().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!m_node.chainman->ActiveChainstate().CanFlushToDisk());
