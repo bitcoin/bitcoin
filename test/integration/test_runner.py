@@ -11,4 +11,5 @@ def create_node(number: int, path: pathlib.Path) -> Node:
 
 
 if __name__ == '__main__':
-    tests_running(test_names=sys.argv[1:], create_node=create_node)
+    all_passed = tests_running(test_names=sys.argv[1:], create_node=create_node)
+    sys.exit(not all_passed)
