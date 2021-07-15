@@ -186,7 +186,7 @@ Codesigner only: Commit the detached codesign payloads:
     rm -rf *
     tar xf signature-osx.tar.gz
     tar xf signature-win.tar.gz
-    git add -a
+    git add -A
     git commit -m "point to ${VERSION}"
     git tag -s v${VERSION} HEAD
     git push the current branch and new tag

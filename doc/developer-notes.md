@@ -32,6 +32,7 @@ Developer Notes
     - [GUI](#gui)
     - [Subtrees](#subtrees)
     - [Scripted diffs](#scripted-diffs)
+        - [Suggestions and examples](#suggestions-and-examples)
     - [Release notes](#release-notes)
     - [RPC interface guidelines](#rpc-interface-guidelines)
 
@@ -782,7 +783,7 @@ Scripted diffs
 For reformatting and refactoring commits where the changes can be easily automated using a bash script, we use
 scripted-diff commits. The bash script is included in the commit message and our Travis CI job checks that
 the result of the script is identical to the commit. This aids reviewers since they can verify that the script
-does exactly what it's supposed to do. It is also helpful for rebasing (since the same script can just be re-run
+does exactly what it is supposed to do. It is also helpful for rebasing (since the same script can just be re-run
 on the new master commit).
 
 To create a scripted-diff:
@@ -803,7 +804,35 @@ For development, it might be more convenient to verify all scripted-diffs in a r
 test/lint/commit-script-check.sh origin/master..HEAD
 ```
 
-Commit [`bb81e173`](https://github.com/bitcoin/bitcoin/commit/bb81e173) is an example of a scripted-diff.
+### Suggestions and examples
+
+If you need to replace in multiple files, prefer `git ls-files` to `find` or globbing, and `git grep` to `grep`, to
+avoid changing files that are not under version control.
+
+For efficient replacement scripts, reduce the selection to the files that potentially need to be modified, so for
+example, instead of a blanket `git ls-files src | xargs sed -i s/apple/orange/`, use
+`git grep -l apple src | xargs sed -i s/apple/orange/`.
+
+Also, it is good to keep the selection of files as specific as possible — for example, replace only in directories where
+you expect replacements — because it reduces the risk that a rebase of your commit by re-running the script will
+introduce accidental changes.
+
+Some good examples of scripted-diff:
+
+- [scripted-diff: Rename InitInterfaces to NodeContext](https://github.com/bitcoin/bitcoin/commit/301bd41a2e6765b185bd55f4c541f9e27aeea29d)
+uses an elegant script to replace occurences of multiple terms in all source files.
+
+- [scripted-diff: Remove g_connman, g_banman globals](https://github.com/bitcoin/bitcoin/commit/8922d7f6b751a3e6b3b9f6fb7961c442877fb65a)
+replaces specific terms in a list of specific source files.
+
+- [scripted-diff: Replace fprintf with tfm::format](https://github.com/bitcoin/bitcoin/commit/fac03ec43a15ad547161e37e53ea82482cc508f9)
+does a global replacement but excludes certain directories.
+
+To find all previous uses of scripted diffs in the repository, do:
+
+```
+git log --grep="-BEGIN VERIFY SCRIPT-"
+```
 
 Release notes
 -------------

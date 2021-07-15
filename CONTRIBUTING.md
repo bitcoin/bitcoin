@@ -103,12 +103,12 @@ At this stage one should expect comments and review from other contributors. You
 can add more commits to your pull request by committing them locally and pushing
 to your fork until you have satisfied all feedback.
 
-Note: Code review is a burdensome but important part of the development process, and as such, certain types of pull requests are rejected. In general, if the **improvements** do not warrant the **review effort** required, the PR has a high chance of being rejected. It is up to the PR author to convince the reviewers that the changes warrant the review effort, and if reviewers are "Concept NAK'ing" the PR, the author may need to present arguments and/or do research backing their suggested changes.
+Note: Code review is a burdensome but important part of the development process, and as such, certain types of pull requests are rejected. In general, if the **improvements** do not warrant the **review effort** required, the PR has a high chance of being rejected. It is up to the PR author to convince the reviewers that the changes warrant the review effort, and if reviewers are "Concept NACK'ing" the PR, the author may need to present arguments and/or do research backing their suggested changes.
 
-Squashing Commits
----------------------------
-If your pull request is accepted for merging, you may be asked by a maintainer
-to squash and or [rebase](https://git-scm.com/docs/git-rebase) your commits
+### Squashing Commits
+
+If your pull request contains fixup commits (commits that change the same line of code repeatedly) or too fine-grained
+commits, you may be asked to [squash](https://git-scm.com/docs/git-rebase#_interactive_mode) your commits
 before it will be merged. The basic squashing workflow is shown below.
 
     git checkout your_branch_name
@@ -135,6 +135,20 @@ the respective change set.
 The length of time required for peer review is unpredictable and will vary from
 pull request to pull request.
 
+### Rebasing Changes
+
+When a pull request conflicts with the target branch, you may be asked to rebase it on top of the current target branch.
+The `git rebase` command will take care of rebuilding your commits on top of the new base.
+
+This project aims to have a clean git history, where code changes are only made in non-merge commits. This simplifies
+auditability because merge commits can be assumed to not contain arbitrary code changes. Merge commits should be signed,
+and the resulting git tree hash must be deterministic and reproducible. The script in
+[/contrib/verify-commits](/contrib/verify-commits) checks that.
+
+After a rebase, reviewers are encouraged to sign off on the force push. This should be relatively straightforward with
+the `git range-diff` tool explained in the [productivity
+notes](/doc/productivity.md#diff-the-diffs-with-git-range-diff). To avoid needless review churn, maintainers will
+generally merge pull requests that received the most review attention first.
 
 Pull Request Philosophy
 -----------------------
@@ -305,6 +319,31 @@ of reasons for this, some of which you can do something about:
     no particular reason (few lines changed, etc), this is totally fine. Try to return the favor
     when someone else is asking for feedback on their code, and universe balances out.
 
+
+Backporting
+-----------
+
+Security and bug fixes can be backported from `master` to release
+branches.
+If the backport is non-trivial, it may be appropriate to open an
+additional PR, to backport the change, only after the original PR
+has been merged.
+Otherwise, backports will be done in batches and
+the maintainers will use the proper `Needs backport (...)` labels
+when needed (the original author does not need to worry).
+
+A backport should contain the following metadata in the commit body:
+
+```
+Github-Pull: #<PR number>
+Rebased-From: <commit hash of the original commit>
+```
+
+Have a look at [an example backport PR](
+https://github.com/bitcoin/bitcoin/pull/16189).
+
+Also see the [backport.py script](
+https://github.com/bitcoin-core/bitcoin-maintainer-tools#backport).
 
 Release Policy
 --------------

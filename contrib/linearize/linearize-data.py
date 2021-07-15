@@ -16,6 +16,7 @@ import sys
 import dash_hash
 import datetime
 import time
+import glob
 from collections import namedtuple
 from binascii import hexlify, unhexlify
 
@@ -95,6 +96,30 @@ def mkblockmap(blkindex):
         blkmap[hash] = height
     return blkmap
 
+# This gets the first block file ID that exists from the input block
+# file directory.
+def getFirstBlockFileId(block_dir_path):
+    # First, this sets up a pattern to search for block files, for
+    # example 'blkNNNNN.dat'.
+    blkFilePattern = os.path.join(block_dir_path, "blk[0-9][0-9][0-9][0-9][0-9].dat")
+
+    # This search is done with glob
+    blkFnList = glob.glob(blkFilePattern)
+
+    if len(blkFnList) == 0:
+        print("blocks not pruned - starting at 0")
+        return 0
+    # We then get the lexicographic minimum, which should be the first
+    # block file name.
+    firstBlkFilePath = min(blkFnList)
+    firstBlkFn = os.path.basename(firstBlkFilePath)
+
+    # now, the string should be ['b','l','k','N','N','N','N','N','.','d','a','t']
+    # So get the ID by choosing:              3   4   5   6   7
+    # The ID is not necessarily 0 if this is a pruned node.
+    blkId = int(firstBlkFn[3:8])
+    return blkId
+
 # Block header and extent on disk
 BlockExtent = namedtuple('BlockExtent', ['fn', 'offset', 'inhdr', 'blkhdr', 'size'])
 
@@ -104,7 +129,9 @@ class BlockDataCopier:
         self.blkindex = blkindex
         self.blkmap = blkmap
 
-        self.inFn = 0
+        # Get first occurring block file id - for pruned nodes this
+        # will not necessarily be 0
+        self.inFn = getFirstBlockFileId(self.settings['input'])
         self.inF = None
         self.outFn = 0
         self.outsz = 0

@@ -54,8 +54,6 @@ struct LockPoints
     LockPoints() : height(0), time(0), maxInputBlock(nullptr) { }
 };
 
-class CTxMemPool;
-
 /** \class CTxMemPoolEntry
  *
  * CTxMemPoolEntry stores data about the corresponding transaction, as well

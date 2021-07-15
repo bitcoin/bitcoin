@@ -1,5 +1,4 @@
-dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
-AC_PREREQ([2.60])
+AC_PREREQ([2.69])
 define(_CLIENT_VERSION_MAJOR, 0)
 define(_CLIENT_VERSION_MINOR, 17)
 define(_CLIENT_VERSION_REVISION, 0)
@@ -825,6 +824,7 @@ fi
 dnl this flag screws up non-darwin gcc even when the check fails. special-case it.
 if test x$TARGET_OS = xdarwin; then
   AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"])
+  AX_CHECK_LINK_FLAG([[-Wl,-dead_strip_dylibs]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip_dylibs"])
 fi
 
 AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h])
@@ -1423,18 +1423,16 @@ if test x$bitcoin_enable_qt != xno; then
   AC_MSG_CHECKING([whether to build GUI with support for QR codes])
   if test x$have_qrencode = xno; then
     if test x$use_qr = xyes; then
-     AC_MSG_ERROR("QR support requested but cannot be built. use --without-qrencode")
+      AC_MSG_ERROR([QR support requested but cannot be built. Use --without-qrencode])
     fi
-    AC_MSG_RESULT(no)
+    use_qr=no
   else
     if test x$use_qr != xno; then
-      AC_MSG_RESULT(yes)
       AC_DEFINE([USE_QRCODE],[1],[Define if QR support should be compiled in])
       use_qr=yes
-    else
-      AC_MSG_RESULT(no)
     fi
   fi
+  AC_MSG_RESULT([$use_qr])
 
   if test x$XGETTEXT = x; then
     AC_MSG_WARN("xgettext is required to update qt translations")
