@@ -27,7 +27,8 @@ static void EvictionProtectionCommon(
         candidate_setup_fn(c);
     }
 
-    std::vector<Candidates> copies{bench.epochs() * bench.epochIterations(), candidates};
+    std::vector<Candidates> copies{
+        static_cast<size_t>(bench.epochs() * bench.epochIterations()), candidates};
     size_t i{0};
     bench.run([&] {
         ProtectEvictionCandidatesByRatio(copies.at(i));
