@@ -2,6 +2,9 @@
 
 #ifndef WIN32
 #include <fcntl.h>
+#include <string>
+#include <sys/file.h>
+#include <sys/utsname.h>
 #else
 #include <codecvt>
 #include <windows.h>
@@ -40,20 +43,38 @@ FileLock::~FileLock()
     }
 }
 
+static bool IsWSL()
+{
+    struct utsname uname_data;
+    return uname(&uname_data) == 0 && std::string(uname_data.version).find("Microsoft") != std::string::npos;
+}
+
 bool FileLock::TryLock()
 {
     if (fd == -1) {
         return false;
     }
-    struct flock lock;
-    lock.l_type = F_WRLCK;
-    lock.l_whence = SEEK_SET;
-    lock.l_start = 0;
-    lock.l_len = 0;
-    if (fcntl(fd, F_SETLK, &lock) == -1) {
-        reason = GetErrorReason();
-        return false;
+
+    // Exclusive file locking is broken on WSL using fcntl (issue #18622)
+    // This workaround can be removed once the bug on WSL is fixed
+    static const bool is_wsl = IsWSL();
+    if (is_wsl) {
+        if (flock(fd, LOCK_EX | LOCK_NB) == -1) {
+            reason = GetErrorReason();
+            return false;
+        }
+    } else {
+        struct flock lock;
+        lock.l_type = F_WRLCK;
+        lock.l_whence = SEEK_SET;
+        lock.l_start = 0;
+        lock.l_len = 0;
+        if (fcntl(fd, F_SETLK, &lock) == -1) {
+            reason = GetErrorReason();
+            return false;
+        }
     }
+
     return true;
 }
 #else
