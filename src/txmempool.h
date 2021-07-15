@@ -587,12 +587,15 @@ private:
 
 
     /**
-     * Helper function to populate setAncestors with all the ancestors of entry and apply ancestor
-     * and descendant limits.
-     * param@[out]  setAncestors        Will be populated with all mempool ancestors of entry.
-     * param@[in]   staged_ancestors    Should contain mempool parents of entry.
+     * Helper function to calculate all in-mempool ancestors of staged_ancestors and apply ancestor
+     * and descendant limits (including staged_ancestors thsemselves, entry_size and entry_count).
+     * param@[in]   entry_size          Virtual size to include in the limits.
+     * param@[in]   entry_count         How many entries to include in the limits.
+     * param@[in]   staged_ancestors    Should contain entries in the mempool.
+     * param@[out]  setAncestors        Will be populated with all mempool ancestors.
      */
-    bool CalculateAncestorsAndCheckLimits(const CTxMemPoolEntry& entry,
+    bool CalculateAncestorsAndCheckLimits(size_t entry_size,
+                                          size_t entry_count,
                                           setEntries& setAncestors,
                                           CTxMemPoolEntry::Parents &staged_ancestors,
                                           uint64_t limitAncestorCount,
