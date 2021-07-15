@@ -49,7 +49,7 @@ inline bool DeploymentEnabled(const Consensus::Params& params, Consensus::Buried
 inline bool DeploymentEnabled(const Consensus::Params& params, Consensus::DeploymentPos dep)
 {
     assert(Consensus::ValidDeployment(dep));
-    return params.vDeployments[dep].nTimeout != 0;
+    return params.vDeployments[dep].nStartTime != Consensus::BIP9Deployment::NEVER_ACTIVE;
 }
 
 #endif // SYSCOIN_DEPLOYMENTSTATUS_H
