@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
         return outp;
     };
 
-    CChainState& c1 = WITH_LOCK(cs_main, return manager.InitializeChainstate(mempool));
+    CChainState& c1 = WITH_LOCK(cs_main, return manager.InitializeChainstate(&mempool));
     c1.InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     WITH_LOCK(::cs_main, c1.InitCoinsCache(1 << 23));
