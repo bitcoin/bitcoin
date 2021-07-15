@@ -190,7 +190,7 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey,
     }
 }
 
-void TxToUniv(const CTransaction& tx, const uint256& hashBlock, bool include_addresses, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo)
+void TxToUniv(const CTransaction& tx, const uint256& hashBlock, bool include_addresses, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo, TxVerbosity verbosity)
 {
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
@@ -231,8 +231,27 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, bool include_add
             in.pushKV("txinwitness", txinwitness);
         }
         if (calculate_fee) {
-            const CTxOut& prev_txout = txundo->vprevout[i].out;
+            const Coin&   prev_coin  = txundo->vprevout[i];
+            const CTxOut& prev_txout = prev_coin.out;
+
             amt_total_in += prev_txout.nValue;
+            switch (verbosity) {
+                case TxVerbosity::SHOW_TXID:
+                case TxVerbosity::SHOW_DETAILS:
+                    break;
+
+                case TxVerbosity::SHOW_DETAILS_AND_PREV_OUT:
+                    UniValue p(UniValue::VOBJ);
+                    UniValue o_script_pub_key(UniValue::VOBJ);
+
+                    p.pushKV("value", ValueFromAmount(prev_txout.nValue));
+                    p.pushKV("height", uint64_t(prev_coin.nHeight));
+                    p.pushKV("generated", bool(prev_coin.fCoinBase));
+                    ScriptPubKeyToUniv(prev_txout.scriptPubKey, o_script_pub_key, true, include_addresses);
+                    p.pushKV("scriptPubKey", o_script_pub_key);
+                    in.pushKV("prevout", p);
+                    break;
+            }
         }
         in.pushKV("sequence", (int64_t)txin.nSequence);
         vin.push_back(in);
