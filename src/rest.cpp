@@ -186,7 +186,7 @@ static bool rest_headers(HTTPRequest* req,
         return true;
     }
     default: {
-        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: .bin, .hex)");
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: .bin, .hex, .json)");
     }
     }
 }

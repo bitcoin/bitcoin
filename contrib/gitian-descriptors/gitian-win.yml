@@ -36,8 +36,8 @@ script: |
   CONFIGFLAGS="--enable-reduce-exports --disable-miner --disable-bench --disable-gui-tests --enable-crash-hooks"
   FAKETIME_HOST_PROGS="ar ranlib nm windres strip objcopy"
   FAKETIME_PROGS="date makensis zip"
-  HOST_CFLAGS="-O2 -g"
-  HOST_CXXFLAGS="-O2 -g"
+  HOST_CFLAGS="-O2 -g -fno-ident"
+  HOST_CXXFLAGS="-O2 -g -fno-ident"
 
   export QT_RCC_TEST=1
   export QT_RCC_SOURCE_DATE_OVERRIDE=1
