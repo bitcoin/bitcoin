@@ -63,17 +63,12 @@ username = USERNAME
 The Transifex Bitcoin project config file is included as part of the repo. It can be found at `.tx/config`, however you shouldn’t need to change anything.
 
 ### Synchronising translations
-To assist in updating translations, a helper script is available in the [maintainer-tools repo](https://github.com/bitcoin-core/bitcoin-maintainer-tools).
 
-1. `python3 ../bitcoin-maintainer-tools/update-translations.py`
-2. `git add` new translations from `src/qt/locale/`
-3. Update `src/qt/bitcoin_locale.qrc` manually or via
-```bash
-git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/        <file alias="\2">locale\/\1.qm<\/file>/'
+To assist in updating translations, a helper script is available in the [maintainer-tools repo](https://github.com/bitcoin-core/bitcoin-maintainer-tools). To use it and commit the result, simply do:
+
 ```
-4. Update `src/Makefile.qt_locale.include` manually or via
-```bash
-git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'
+python3 ../bitcoin-maintainer-tools/update-translations.py
+git commit -a
 ```
 
 **Do not directly download translations** one by one from the Transifex website, as we do a few post-processing steps before committing the translations.
