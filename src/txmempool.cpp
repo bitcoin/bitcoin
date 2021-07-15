@@ -199,6 +199,38 @@ bool CTxMemPool::calculateAncestorsAndCheckLimits(size_t entry_size,
     return true;
 }
 
+bool CTxMemPool::CalculateMemPoolAncestors(const Package& package,
+                                           setEntries& setAncestors,
+                                           uint64_t limitAncestorCount,
+                                           uint64_t limitAncestorSize,
+                                           uint64_t limitDescendantCount,
+                                           uint64_t limitDescendantSize,
+                                           std::string &errString) const
+{
+    CTxMemPoolEntry::Parents staged_ancestors;
+    size_t total_size = 0;
+    for (const auto& tx : package) {
+        total_size += GetVirtualTransactionSize(*tx);
+        for (const auto& input : tx->vin) {
+            std::optional<txiter> piter = GetIter(input.prevout.hash);
+            if (piter) {
+                staged_ancestors.insert(**piter);
+                if (staged_ancestors.size() + package.size() > limitAncestorCount) {
+                    errString = strprintf("too many unconfirmed parents [limit: %u]", limitAncestorCount);
+                    return false;
+                }
+            }
+        }
+    }
+    // When multiple transactions are passed in, the ancestors and descendants of all transactions
+    // considered together must be within limits even if they are not interdependent. This may be
+    // stricter than the limits for each individual transaction.
+    return calculateAncestorsAndCheckLimits(total_size, package.size(),
+                                            setAncestors, staged_ancestors,
+                                            limitAncestorCount, limitAncestorSize,
+                                            limitDescendantCount, limitDescendantSize, errString);
+}
+
 bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntries &setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string &errString, bool fSearchForParents /* = true */) const
 {
     CTxMemPoolEntry::Parents staged_ancestors;
