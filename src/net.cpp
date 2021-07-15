@@ -953,14 +953,17 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     size_t num_protected{0};
 
     while (num_protected < max_protect_by_network) {
+        // Count the number of disadvantaged networks from which we have peers to protect.
+        auto num_networks = std::count_if(networks.begin(), networks.end(), [](const Net& n) { return n.count; });
+        if (num_networks == 0) {
+            break;
+        }
         const size_t disadvantaged_to_protect{max_protect_by_network - num_protected};
-        const size_t protect_per_network{
-            std::max(disadvantaged_to_protect / networks.size(), static_cast<size_t>(1))};
-
+        const size_t protect_per_network{std::max(disadvantaged_to_protect / num_networks, static_cast<size_t>(1))};
         // Early exit flag if there are no remaining candidates by disadvantaged network.
         bool protected_at_least_one{false};
 
-        for (const Net& n : networks) {
+        for (Net& n : networks) {
             if (n.count == 0) continue;
             const size_t before = eviction_candidates.size();
             EraseLastKElements(eviction_candidates, CompareNodeNetworkTime(n.is_local, n.id),
@@ -970,10 +973,12 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
             const size_t after = eviction_candidates.size();
             if (before > after) {
                 protected_at_least_one = true;
-                num_protected += before - after;
+                const size_t delta{before - after};
+                num_protected += delta;
                 if (num_protected >= max_protect_by_network) {
                     break;
                 }
+                n.count -= delta;
             }
         }
         if (!protected_at_least_one) {
