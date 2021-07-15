@@ -150,16 +150,18 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
         UpdateForDescendants(it, mapMemPoolDescendantsToUpdate, setAlreadyIncluded);
     }
 }
-bool CTxMemPool::calculateAncestorsAndCheckLimits(const CTxMemPoolEntry& entry,
-                                                  setEntries &setAncestors,
-                                                  CTxMemPoolEntry::Parents &staged_ancestors,
+
+bool CTxMemPool::calculateAncestorsAndCheckLimits(size_t entry_size,
+                                                  size_t entry_count,
+                                                  setEntries& setAncestors,
+                                                  CTxMemPoolEntry::Parents& staged_ancestors,
                                                   uint64_t limitAncestorCount,
                                                   uint64_t limitAncestorSize,
                                                   uint64_t limitDescendantCount,
                                                   uint64_t limitDescendantSize,
                                                   std::string &errString) const
 {
-    size_t totalSizeWithAncestors = entry.GetTxSize();
+    size_t totalSizeWithAncestors = entry_size;
     while (!staged_ancestors.empty()) {
         const CTxMemPoolEntry& stage = staged_ancestors.begin()->get();
         txiter stageit = mapTx.iterator_to(stage);
@@ -168,10 +170,10 @@ bool CTxMemPool::calculateAncestorsAndCheckLimits(const CTxMemPoolEntry& entry,
         staged_ancestors.erase(stage);
         totalSizeWithAncestors += stageit->GetTxSize();
 
-        if (stageit->GetSizeWithDescendants() + entry.GetTxSize() > limitDescendantSize) {
+        if (stageit->GetSizeWithDescendants() + entry_size > limitDescendantSize) {
             errString = strprintf("exceeds descendant size limit for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limitDescendantSize);
             return false;
-        } else if (stageit->GetCountWithDescendants() + 1 > limitDescendantCount) {
+        } else if (stageit->GetCountWithDescendants() + entry_count > limitDescendantCount) {
             errString = strprintf("too many descendants for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limitDescendantCount);
             return false;
         } else if (totalSizeWithAncestors > limitAncestorSize) {
@@ -187,7 +189,7 @@ bool CTxMemPool::calculateAncestorsAndCheckLimits(const CTxMemPoolEntry& entry,
             if (setAncestors.count(parent_it) == 0) {
                 staged_ancestors.insert(parent);
             }
-            if (staged_ancestors.size() + setAncestors.size() + 1 > limitAncestorCount) {
+            if (staged_ancestors.size() + setAncestors.size() + entry_count > limitAncestorCount) {
                 errString = strprintf("too many unconfirmed ancestors [limit: %u]", limitAncestorCount);
                 return false;
             }
@@ -223,7 +225,7 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
         staged_ancestors = it->GetMemPoolParentsConst();
     }
 
-    return calculateAncestorsAndCheckLimits(entry, setAncestors, staged_ancestors,
+    return calculateAncestorsAndCheckLimits(entry.GetTxSize(), 1, setAncestors, staged_ancestors,
                                             limitAncestorCount, limitAncestorSize,
                                             limitDescendantCount, limitDescendantSize, errString);
 }
