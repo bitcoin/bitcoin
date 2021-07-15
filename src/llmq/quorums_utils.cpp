@@ -42,10 +42,9 @@ std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(Consensus::LLM
         }
     }
 
-    auto& params = Params().GetConsensus().llmqs.at(llmqType);
     auto allMns = deterministicMNManager->GetListForBlock(pindexQuorum);
     auto modifier = ::SerializeHash(std::make_pair(llmqType, pindexQuorum->GetBlockHash()));
-    quorumMembers = allMns.CalculateQuorum(params.size, modifier);
+    quorumMembers = allMns.CalculateQuorum(GetLLMQParams(llmqType).size, modifier);
     LOCK(cs_members);
     mapQuorumMembers[llmqType].insert(pindexQuorum->GetBlockHash(), quorumMembers);
     return quorumMembers;
@@ -288,12 +287,10 @@ void CLLMQUtils::AddQuorumProbeConnections(Consensus::LLMQType llmqType, const C
 
 bool CLLMQUtils::IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quorumHash)
 {
-    auto& params = Params().GetConsensus().llmqs.at(llmqType);
-
     // sig shares and recovered sigs are only accepted from recent/active quorums
     // we allow one more active quorum as specified in consensus, as otherwise there is a small window where things could
     // fail while we are on the brink of a new quorum
-    auto quorums = quorumManager->ScanQuorums(llmqType, (int)params.signingActiveQuorumCount + 1);
+    auto quorums = quorumManager->ScanQuorums(llmqType, GetLLMQParams(llmqType).signingActiveQuorumCount + 1);
     for (const auto& q : quorums) {
         if (q->qc->quorumHash == quorumHash) {
             return true;

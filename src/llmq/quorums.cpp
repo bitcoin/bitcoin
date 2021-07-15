@@ -264,15 +264,15 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
 
 void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex* pindexNew) const
 {
-    const auto& params = Params().GetConsensus().llmqs.at(llmqType);
+    const auto& llmq_params = GetLLMQParams(llmqType);
 
     const auto& myProTxHash = activeMasternodeInfo.proTxHash;
-    auto lastQuorums = ScanQuorums(llmqType, pindexNew, (size_t)params.keepOldConnections);
+    auto lastQuorums = ScanQuorums(llmqType, pindexNew, (size_t)llmq_params.keepOldConnections);
 
     auto connmanQuorumsToDelete = g_connman->GetMasternodeQuorums(llmqType);
 
     // don't remove connections for the currently in-progress DKG round
-    int curDkgHeight = pindexNew->nHeight - (pindexNew->nHeight % params.dkgInterval);
+    int curDkgHeight = pindexNew->nHeight - (pindexNew->nHeight % llmq_params.dkgInterval);
     auto curDkgBlock = pindexNew->GetAncestor(curDkgHeight)->GetBlockHash();
     connmanQuorumsToDelete.erase(curDkgBlock);
 
