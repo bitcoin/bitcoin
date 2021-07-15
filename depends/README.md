@@ -20,6 +20,10 @@ created. To use it during compilation:
 
     CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure
 
+For the current arch+OS:
+
+    CONFIG_SITE=$PWD/depends/$(depends/config.guess)/share/config.site ./configure
+
 The default install prefix when using `config.site` is `--prefix=depends/<host-platform-triplet>`,
 so depends build outputs will be installed in that location.
 
