@@ -874,8 +874,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 return _state.DoS(100, false, REJECT_INVALID, "bad-qc-payload");
             }
             if (!qc.commitment.IsNull()) {
-                const auto& params = Params().GetConsensus().llmqs.at(qc.commitment.llmqType);
-                uint32_t quorumHeight = qc.nHeight - (qc.nHeight % params.dkgInterval);
+                const auto& llmq_params = llmq::GetLLMQParams(qc.commitment.llmqType);
+                uint32_t quorumHeight = qc.nHeight - (qc.nHeight % llmq_params.dkgInterval);
                 auto quorumIndex = pindexPrev->GetAncestor(quorumHeight);
                 if (!quorumIndex || quorumIndex->GetBlockHash() != qc.commitment.quorumHash) {
                     // we should actually never get into this case as validation should have catched it...but lets be sure

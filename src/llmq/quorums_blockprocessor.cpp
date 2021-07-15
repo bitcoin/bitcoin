@@ -66,7 +66,6 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             return;
         }
         auto type = qc.llmqType;
-        const auto& params = Params().GetConsensus().llmqs.at(type);
 
         // Verify that quorumHash is part of the active chain and that it's the first block in the DKG interval
         const CBlockIndex* pquorumIndex;
@@ -86,7 +85,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 // same, can't punish
                 return;
             }
-            int quorumHeight = pquorumIndex->nHeight - (pquorumIndex->nHeight % params.dkgInterval);
+            int quorumHeight = pquorumIndex->nHeight - (pquorumIndex->nHeight % GetLLMQParams(type).dkgInterval);
             if (quorumHeight != pquorumIndex->nHeight) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
                           qc.quorumHash.ToString(), pfrom->GetId());
@@ -189,7 +188,7 @@ static std::tuple<std::string, Consensus::LLMQType, uint32_t> BuildInversedHeigh
 
 bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, CValidationState& state, bool fJustCheck)
 {
-    auto& params = Params().GetConsensus().llmqs.at(qc.llmqType);
+    const auto& llmq_params = GetLLMQParams(qc.llmqType);
 
     uint256 quorumHash = GetQuorumBlockHash(qc.llmqType, nHeight);
 
@@ -212,12 +211,12 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
         return true;
     }
 
-    if (HasMinedCommitment(params.type, quorumHash)) {
+    if (HasMinedCommitment(llmq_params.type, quorumHash)) {
         // should not happen as it's already handled in ProcessBlock
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-dup");
     }
 
-    if (!IsMiningPhase(params.type, nHeight)) {
+    if (!IsMiningPhase(llmq_params.type, nHeight)) {
         // should not happen as it's already handled in ProcessBlock
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-height");
     }
@@ -233,9 +232,9 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     }
 
     // Store commitment in DB
-    auto cacheKey = std::make_pair(params.type, quorumHash);
+    auto cacheKey = std::make_pair(llmq_params.type, quorumHash);
     evoDb.Write(std::make_pair(DB_MINED_COMMITMENT, cacheKey), std::make_pair(qc, blockHash));
-    evoDb.Write(BuildInversedHeightKey(params.type, nHeight), quorumIndex->nHeight);
+    evoDb.Write(BuildInversedHeightKey(llmq_params.type, nHeight), quorumIndex->nHeight);
 
     {
         LOCK(minableCommitmentsCs);
@@ -369,9 +368,9 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
 
 bool CQuorumBlockProcessor::IsMiningPhase(Consensus::LLMQType llmqType, int nHeight)
 {
-    const auto& params = Params().GetConsensus().llmqs.at(llmqType);
-    int phaseIndex = nHeight % params.dkgInterval;
-    if (phaseIndex >= params.dkgMiningWindowStart && phaseIndex <= params.dkgMiningWindowEnd) {
+    const auto& llmq_params = GetLLMQParams(llmqType);
+    int phaseIndex = nHeight % llmq_params.dkgInterval;
+    if (phaseIndex >= llmq_params.dkgMiningWindowStart && phaseIndex <= llmq_params.dkgMiningWindowEnd) {
         return true;
     }
     return false;
@@ -396,9 +395,7 @@ uint256 CQuorumBlockProcessor::GetQuorumBlockHash(Consensus::LLMQType llmqType, 
 {
     AssertLockHeld(cs_main);
 
-    auto& params = Params().GetConsensus().llmqs.at(llmqType);
-
-    int quorumStartHeight = nHeight - (nHeight % params.dkgInterval);
+    int quorumStartHeight = nHeight - (nHeight % GetLLMQParams(llmqType).dkgInterval);
     uint256 quorumBlockHash;
     if (!GetBlockHash(quorumBlockHash, quorumStartHeight)) {
         return {};
@@ -567,7 +564,7 @@ bool CQuorumBlockProcessor::GetMineableCommitment(Consensus::LLMQType llmqType, 
     auto it = minableCommitmentsByQuorum.find(k);
     if (it == minableCommitmentsByQuorum.end()) {
         // null commitment required
-        ret = CFinalCommitment(Params().GetConsensus().llmqs.at(llmqType), quorumHash);
+        ret = CFinalCommitment(GetLLMQParams(llmqType), quorumHash);
         return true;
     }
 

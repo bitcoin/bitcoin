@@ -107,16 +107,16 @@ std::string CBatchedSigShares::ToInvString() const
 template<typename T>
 static void InitSession(CSigSharesNodeState::Session& s, const uint256& signHash, T& from)
 {
-    const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)from.llmqType);
+    const auto& llmq_params = GetLLMQParams((Consensus::LLMQType)from.llmqType);
 
     s.llmqType = (Consensus::LLMQType)from.llmqType;
     s.quorumHash = from.quorumHash;
     s.id = from.id;
     s.msgHash = from.msgHash;
     s.signHash = signHash;
-    s.announced.Init((size_t)params.size);
-    s.requested.Init((size_t)params.size);
-    s.knows.Init((size_t)params.size);
+    s.announced.Init((size_t)llmq_params.size);
+    s.requested.Init((size_t)llmq_params.size);
+    s.knows.Init((size_t)llmq_params.size);
 }
 
 CSigSharesNodeState::Session& CSigSharesNodeState::GetOrCreateSessionFromShare(const llmq::CSigShare& sigShare)
@@ -350,12 +350,7 @@ bool CSigSharesManager::ProcessMessageSigSesAnn(CNode* pfrom, const CSigSesAnn& 
 
 bool CSigSharesManager::VerifySigSharesInv(Consensus::LLMQType llmqType, const CSigSharesInv& inv)
 {
-    size_t quorumSize = (size_t)Params().GetConsensus().llmqs.at(llmqType).size;
-
-    if (inv.inv.size() != quorumSize) {
-        return false;
-    }
-    return true;
+    return inv.inv.size() == GetLLMQParams(llmqType).size;
 }
 
 bool CSigSharesManager::ProcessMessageSigSharesInv(CNode* pfrom, const CSigSharesInv& inv)
@@ -949,8 +944,7 @@ void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, std
                 }
                 auto& inv = (*invMap)[signHash];
                 if (inv.inv.empty()) {
-                    const auto& params = Params().GetConsensus().llmqs.at(session.llmqType);
-                    inv.Init((size_t)params.size);
+                    inv.Init(GetLLMQParams(session.llmqType).size);
                 }
                 inv.inv[k.second] = true;
 
@@ -1101,8 +1095,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
 
             auto& inv = sigSharesToAnnounce[nodeId][signHash];
             if (inv.inv.empty()) {
-                const auto& params = Params().GetConsensus().llmqs.at(sigShare->llmqType);
-                inv.Init((size_t)params.size);
+                inv.Init(GetLLMQParams(sigShare->llmqType).size);
             }
             inv.inv[quorumMember] = true;
             session.knows.inv[quorumMember] = true;

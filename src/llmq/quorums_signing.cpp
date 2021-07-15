@@ -899,8 +899,7 @@ bool CSigningManager::GetVoteForId(Consensus::LLMQType llmqType, const uint256& 
 
 CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType, const uint256& selectionHash, int signHeight, int signOffset)
 {
-    auto& llmqParams = Params().GetConsensus().llmqs.at(llmqType);
-    size_t poolSize = (size_t)llmqParams.signingActiveQuorumCount;
+    size_t poolSize = GetLLMQParams(llmqType).signingActiveQuorumCount;
 
     CBlockIndex* pindexStart;
     {

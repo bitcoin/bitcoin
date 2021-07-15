@@ -36,17 +36,17 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) c
         LogPrintfFinalCommitment("invalid llmqType=%d\n", llmqType);
         return false;
     }
-    const auto& params = Params().GetConsensus().llmqs.at(llmqType);
+    const auto& llmq_params = GetLLMQParams(llmqType);
 
-    if (!VerifySizes(params)) {
+    if (!VerifySizes(llmq_params)) {
         return false;
     }
 
-    if (CountValidMembers() < params.minSize) {
+    if (CountValidMembers() < llmq_params.minSize) {
         LogPrintfFinalCommitment("invalid validMembers count. validMembersCount=%d\n", CountValidMembers());
         return false;
     }
-    if (CountSigners() < params.minSize) {
+    if (CountSigners() < llmq_params.minSize) {
         LogPrintfFinalCommitment("invalid signers count. signersCount=%d\n", CountSigners());
         return false;
     }
@@ -68,7 +68,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) c
     }
 
     auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumIndex);
-    for (size_t i = members.size(); i < params.size; i++) {
+    for (size_t i = members.size(); i < llmq_params.size; i++) {
         if (validMembers[i]) {
             LogPrintfFinalCommitment("invalid validMembers bitset. bit %d should not be set\n", i);
             return false;
@@ -81,7 +81,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) c
 
     // sigs are only checked when the block is processed
     if (checkSigs) {
-        uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
+        uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(llmq_params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
 
         std::vector<CBLSPublicKey> memberPubKeys;
         for (size_t i = 0; i < members.size(); i++) {
@@ -111,9 +111,8 @@ bool CFinalCommitment::VerifyNull() const
         LogPrintfFinalCommitment("invalid llmqType=%d\n", llmqType);
         return false;
     }
-    const auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
-    if (!IsNull() || !VerifySizes(params)) {
+    if (!IsNull() || !VerifySizes(GetLLMQParams(llmqType))) {
         return false;
     }
 
