@@ -94,10 +94,11 @@ class UpgradeWalletTest(BitcoinTestFramework):
     def test_upgradewallet(self, wallet, previous_version, requested_version=None, expected_version=None):
         unchanged = expected_version == previous_version
         new_version = previous_version if unchanged else expected_version if expected_version else requested_version
-        assert_equal(wallet.getwalletinfo()["walletversion"], previous_version)
+        old_wallet_info = wallet.getwalletinfo()
+        assert_equal(old_wallet_info["walletversion"], previous_version)
         assert_equal(wallet.upgradewallet(requested_version),
             {
-                "wallet_name": "",
+                "wallet_name": old_wallet_info["walletname"],
                 "previous_version": previous_version,
                 "current_version": new_version,
                 "result": "Already at latest version. Wallet version unchanged." if unchanged else "Wallet upgraded successfully from version {} to version {}.".format(previous_version, new_version),
@@ -352,6 +353,11 @@ class UpgradeWalletTest(BitcoinTestFramework):
         v16_3_kvs = dump_bdb_kv(v16_3_wallet)
         assert b'\x0adefaultkey' not in v16_3_kvs
 
+        if self.is_sqlite_compiled():
+            self.log.info("Checking that descriptor wallets do nothing, successfully")
+            self.nodes[0].createwallet(wallet_name="desc_upgrade", descriptors=True)
+            desc_wallet = self.nodes[0].get_wallet_rpc("desc_upgrade")
+            self.test_upgradewallet(desc_wallet, previous_version=169900, expected_version=169900)
 
 if __name__ == '__main__':
     UpgradeWalletTest().main()
