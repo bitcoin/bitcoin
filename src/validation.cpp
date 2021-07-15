@@ -1825,6 +1825,7 @@ bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTx
     } else if(!fInitialDownload && fLoaded) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-empty");
     }
+    
     GetMainSignals().NotifyNEVMBlockConnect(evmBlock, state, fJustCheck? uint256(): nBlockHash);
     bool res = state.IsValid();
     if(res && !fJustCheck) {
@@ -6127,6 +6128,7 @@ std::vector<std::string> SanitizeGethCmdLine(const std::string& binaryURL, const
     cmdLineRet.push_back("--nevmpub");
     cmdLineRet.push_back(strPub);
     cmdLineRet.push_back("--v5disc");
+    cmdLineRet.push_back("--nodiscover");
     return cmdLineRet;
 }
 bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const std::string& binaryDestPath, const std::string& descriptorURL) {
