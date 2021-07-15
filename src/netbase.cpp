@@ -23,7 +23,6 @@
 #include <codecvt>
 #endif
 
-#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #ifdef USE_POLL
 #include <poll.h>
 #endif
@@ -44,7 +43,7 @@ static const int SOCKS5_RECV_TIMEOUT = 20 * 1000;
 static std::atomic<bool> interruptSocks5Recv(false);
 
 enum Network ParseNetwork(std::string net) {
-    boost::to_lower(net);
+    Downcase(net);
     if (net == "ipv4") return NET_IPV4;
     if (net == "ipv6") return NET_IPV6;
     if (net == "onion") return NET_ONION;
