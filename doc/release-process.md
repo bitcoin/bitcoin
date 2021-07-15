@@ -221,8 +221,12 @@ EOF
 
     2. The combined clear-signed message you just created `SHA256SUMS.asc`
 
-- A `.torrent` will appear in the directory after a few minutes. Optionally help
-  seed this torrent. To get the `magnet:` URI use:
+- Create a torrent of the `/var/www/bin/bitcoin-core-${VERSION}` directory such
+  that at the top level there is only one file: the `bitcoin-core-${VERSION}`
+  directory containing everything else. Name the torrent
+  `bitcoin-${VERSION}.torrent` (note that there is no `-core-` in this name).
+
+  Optionally help seed this torrent. To get the `magnet:` URI use:
 
   ```sh
   transmission-show -m <torrent file>
