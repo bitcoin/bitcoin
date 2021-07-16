@@ -532,10 +532,10 @@ public:
                     peer.network,
                     PingTimeToString(peer.min_ping),
                     PingTimeToString(peer.ping),
-                    peer.last_send == 0 ? "" : ToString(m_time_now - peer.last_send),
-                    peer.last_recv == 0 ? "" : ToString(m_time_now - peer.last_recv),
-                    peer.last_trxn == 0 ? "" : ToString((m_time_now - peer.last_trxn) / 60),
-                    peer.last_blck == 0 ? "" : ToString((m_time_now - peer.last_blck) / 60),
+                    peer.last_send ? ToString(m_time_now - peer.last_send) : "",
+                    peer.last_recv ? ToString(m_time_now - peer.last_recv) : "",
+                    peer.last_trxn ? ToString((m_time_now - peer.last_trxn) / 60) : "",
+                    peer.last_blck ? ToString((m_time_now - peer.last_blck) / 60) : "",
                     strprintf("%s%s", peer.is_bip152_hb_to ? "." : " ", peer.is_bip152_hb_from ? "*" : " "),
                     m_max_addr_processed_length, // variable spacing
                     peer.addr_processed ? ToString(peer.addr_processed) : "",
@@ -544,7 +544,7 @@ public:
                     m_max_age_length, // variable spacing
                     peer.age,
                     m_is_asmap_on ? 7 : 0, // variable spacing
-                    m_is_asmap_on && peer.mapped_as != 0 ? ToString(peer.mapped_as) : "",
+                    m_is_asmap_on && peer.mapped_as ? ToString(peer.mapped_as) : "",
                     m_max_id_length, // variable spacing
                     peer.id,
                     IsAddressSelected() ? m_max_addr_length : 0, // variable spacing
