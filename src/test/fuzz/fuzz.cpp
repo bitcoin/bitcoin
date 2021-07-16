@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <exception>
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <unistd.h>
@@ -127,6 +128,12 @@ int main(int argc, char** argv)
     }
     test_one_input(buffer);
 #endif
+    if (std::getenv("CLEAN_TMP_AFTER_FUZZ")) {
+        std::error_code errorCode;
+        if (!std::filesystem::remove_all("/tmp/test_common_Bitcoin Core", errorCode)) {
+            std::cout << errorCode.message() << std::endl;
+        }
+    }
     return 0;
 }
 #endif
