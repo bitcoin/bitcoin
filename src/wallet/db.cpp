@@ -17,8 +17,6 @@
 #include <sys/stat.h>
 #endif
 
-#include <boost/thread.hpp>
-
 namespace {
 
 //! Make sure database has a unique fileid within the environment. If it
@@ -770,7 +768,6 @@ bool BerkeleyBatch::PeriodicFlush(BerkeleyDatabase& database)
 
         if (nRefCount == 0)
         {
-            boost::this_thread::interruption_point();
             std::map<std::string, int>::iterator mi = env->mapFileUseCount.find(strFile);
             if (mi != env->mapFileUseCount.end())
             {
