@@ -60,3 +60,20 @@ bool CheckPackage(const Package& txns, PackageValidationState& state)
     }
     return true;
 }
+
+bool IsChildWithParents(const Package& package)
+{
+    assert(std::all_of(package.cbegin(), package.cend(), [](const auto& tx){return tx != nullptr;}));
+    if (package.size() < 2) return false;
+
+    // The package is expected to be sorted, so the last transaction is the child.
+    const auto& child = package.back();
+    std::unordered_set<uint256, SaltedTxidHasher> input_txids;
+    std::transform(child->vin.cbegin(), child->vin.cend(),
+                   std::inserter(input_txids, input_txids.end()),
+                   [](const auto& input) { return input.prevout.hash; });
+
+    // Every transaction must be a parent of the last transaction in the package.
+    return std::all_of(package.cbegin(), package.cend() - 1,
+                       [&input_txids](const auto& ptx) { return input_txids.count(ptx->GetHash()) > 0; });
+}
