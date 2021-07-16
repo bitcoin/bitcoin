@@ -183,7 +183,7 @@ class MultiWalletTest(BitcoinTestFramework):
 
         self.restart_node(0, ['-nowallet'])
         assert_equal(node.listwallets(), [])
-        assert_raises_rpc_error(-32601, "Method not found", node.getwalletinfo)
+        assert_raises_rpc_error(-18, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)", node.getwalletinfo)
 
         self.log.info("Load first wallet")
         loadwallet_name = node.loadwallet(wallet_names[0])
@@ -278,7 +278,7 @@ class MultiWalletTest(BitcoinTestFramework):
         for wallet_name in self.nodes[0].listwallets():
             self.nodes[0].unloadwallet(wallet_name)
         assert_equal(self.nodes[0].listwallets(), [])
-        assert_raises_rpc_error(-32601, "Method not found (wallet method is disabled because no wallet is loaded)", self.nodes[0].getwalletinfo)
+        assert_raises_rpc_error(-18, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)", self.nodes[0].getwalletinfo)
 
         # Successfully load a previously unloaded wallet
         self.nodes[0].loadwallet('w1')

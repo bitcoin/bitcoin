@@ -79,9 +79,18 @@ AC_DEFUN([BITCOIN_QT_INIT],[
 
   AC_ARG_WITH([qtdbus],
     [AS_HELP_STRING([--with-qtdbus],
-    [enable DBus support (default is yes if qt is enabled and QtDBus is found)])],
+    [enable DBus support (default is yes if qt is enabled and QtDBus is found, except on Android)])],
     [use_dbus=$withval],
     [use_dbus=auto])
+
+  dnl Android doesn't support D-Bus and certainly doesn't use it for notifications
+  case $host in
+    *android*)
+      if test "x$use_dbus" != xyes; then
+        use_dbus=no
+      fi
+    ;;
+  esac
 
   AC_SUBST(QT_TRANSLATION_DIR,$qt_translation_path)
 ])
