@@ -594,6 +594,7 @@ void CSigSharesManager::CollectPendingSigSharesToVerify(
             }
             auto& sigShare = *ns.pendingIncomingSigShares.GetFirst();
 
+            AssertLockHeld(cs);
             bool alreadyHave = this->sigShares.Has(sigShare.GetKey());
             if (!alreadyHave) {
                 uniqueSignHashes.emplace(nodeId, sigShare.GetSignHash());
@@ -1062,6 +1063,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
     std::unordered_map<std::pair<Consensus::LLMQType, uint256>, std::unordered_set<NodeId>, StaticSaltedHasher> quorumNodesMap;
 
     sigSharesQueuedToAnnounce.ForEach([&](const SigShareKey& sigShareKey, bool) {
+        AssertLockHeld(cs);
         auto& signHash = sigShareKey.first;
         auto quorumMember = sigShareKey.second;
         const CSigShare* sigShare = sigShares.Get(sigShareKey);
@@ -1421,6 +1423,7 @@ void CSigSharesManager::Cleanup()
         }
         // remove global requested state to force a re-request from another node
         it->second.requestedSigShares.ForEach([&](const SigShareKey& k, bool) {
+            AssertLockHeld(cs);
             sigSharesRequested.Erase(k);
         });
         nodeStates.erase(nodeId);
@@ -1455,6 +1458,7 @@ void CSigSharesManager::RemoveBannedNodeStates()
         if (IsBanned(it->first)) {
             // re-request sigshares from other nodes
             it->second.requestedSigShares.ForEach([&](const SigShareKey& k, int64_t) {
+                AssertLockHeld(cs);
                 sigSharesRequested.Erase(k);
             });
             it = nodeStates.erase(it);
@@ -1484,6 +1488,7 @@ void CSigSharesManager::BanNode(NodeId nodeId)
 
     // Whatever we requested from him, let's request it from someone else now
     nodeState.requestedSigShares.ForEach([&](const SigShareKey& k, int64_t) {
+        AssertLockHeld(cs);
         sigSharesRequested.Erase(k);
     });
     nodeState.requestedSigShares.Clear();

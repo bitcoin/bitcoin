@@ -860,6 +860,7 @@ void CTxMemPool::removeProTxSpentCollateralConflicts(const CTransaction &tx)
     // Remove TXs that refer to a MN for which the collateral was spent
     auto removeSpentCollateralConflict = [&](const uint256& proTxHash) {
         // Can't use equal_range here as every call to removeRecursive might invalidate iterators
+        AssertLockHeld(cs);
         while (true) {
             auto it = mapProTxRefs.find(proTxHash);
             if (it == mapProTxRefs.end()) {
@@ -1248,6 +1249,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
     LOCK(cs);
 
     auto hasKeyChangeInMempool = [&](const uint256& proTxHash) {
+        AssertLockHeld(cs);
         for (auto its = mapProTxRefs.equal_range(proTxHash); its.first != its.second; ++its.first) {
             auto txit = mapTx.find(its.first->second);
             if (txit == mapTx.end()) {

@@ -487,8 +487,8 @@ public:
     CAmount GetImmatureWatchOnlyCredit(const bool fUseCache=true) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     CAmount GetChange() const;
 
-    CAmount GetAnonymizedCredit(const CCoinControl* coinControl = nullptr) const;
-    CAmount GetDenominatedCredit(bool unconfirmed, bool fUseCache=true) const;
+    CAmount GetAnonymizedCredit(const CCoinControl* coinControl = nullptr) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    CAmount GetDenominatedCredit(bool unconfirmed, bool fUseCache=true) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     // Get the marginal bytes if spending the specified output from this transaction
     int GetSpendSize(unsigned int out, bool use_max_sig = false) const

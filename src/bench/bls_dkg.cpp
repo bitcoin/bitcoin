@@ -86,8 +86,6 @@ public:
         ReceiveVvecs();
         size_t memberIdx = 0;
         bench.minEpochIterations(epoch_iters).run([&] {
-            auto& m = members[memberIdx];
-
             ReceiveShares(memberIdx);
 
             std::set<size_t> invalidIndexes;

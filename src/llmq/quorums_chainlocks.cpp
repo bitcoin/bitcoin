@@ -555,23 +555,24 @@ void CChainLocksHandler::EnforceBestChainLock()
         activateNeeded = chainActive.Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) != currentBestChainLockBlockIndex;
     }
 
-    if (activateNeeded && !ActivateBestChain(state, params)) {
-        LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, FormatStateMessage(state));
-    }
-
-    const CBlockIndex* pindexNotify = nullptr;
-    {
+    if (activateNeeded) {
+        if(!ActivateBestChain(state, params)) {
+            LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, FormatStateMessage(state));
+            return;
+        }
         LOCK(cs_main);
-        if (lastNotifyChainLockBlockIndex != currentBestChainLockBlockIndex &&
-            chainActive.Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) == currentBestChainLockBlockIndex) {
-            lastNotifyChainLockBlockIndex = currentBestChainLockBlockIndex;
-            pindexNotify = currentBestChainLockBlockIndex;
+        if (chainActive.Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) != currentBestChainLockBlockIndex) {
+            return;
         }
     }
 
-    if (pindexNotify) {
-        GetMainSignals().NotifyChainLock(pindexNotify, clsig);
+    {
+        LOCK(cs);
+        if (lastNotifyChainLockBlockIndex == currentBestChainLockBlockIndex) return;
+        lastNotifyChainLockBlockIndex = currentBestChainLockBlockIndex;
     }
+
+    GetMainSignals().NotifyChainLock(currentBestChainLockBlockIndex, clsig);
 }
 
 void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig)

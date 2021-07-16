@@ -925,7 +925,7 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
     try {
         LOCK(cs_feeEstimator);
         int nVersionRequired, nVersionThatWrote;
-        unsigned int nFileBestSeenHeight, nFileHistoricalFirst, nFileHistoricalBest;
+        unsigned int nFileBestSeenHeight;
         filein >> nVersionRequired >> nVersionThatWrote;
         if (nVersionRequired > CLIENT_VERSION)
             return error("CBlockPolicyEstimator::Read(): up-version (%d) fee estimate file", nVersionRequired);

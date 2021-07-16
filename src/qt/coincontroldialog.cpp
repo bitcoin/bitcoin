@@ -482,7 +482,6 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
     unsigned int nBytes         = 0;
     unsigned int nBytesInputs   = 0;
     unsigned int nQuantity      = 0;
-    int nQuantityUncompressed   = 0;
     bool fUnselectedSpent{false};
     bool fUnselectedNonMixed{false};
 

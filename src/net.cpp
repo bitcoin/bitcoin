@@ -1278,15 +1278,15 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     m_msgproc->InitializeNode(pnode);
 
     if (fLogIPs) {
-        LogPrint(BCLog::NET_NETCONN, "connection from %s accepted, sock=%d, peer=%d\n", addr.ToString(), pnode->hSocket, pnode->GetId());
+        LogPrint(BCLog::NET_NETCONN, "connection from %s accepted, sock=%d, peer=%d\n", addr.ToString(), hSocket, pnode->GetId());
     } else {
-        LogPrint(BCLog::NET_NETCONN, "connection accepted, sock=%d, peer=%d\n", pnode->hSocket, pnode->GetId());
+        LogPrint(BCLog::NET_NETCONN, "connection accepted, sock=%d, peer=%d\n", hSocket, pnode->GetId());
     }
 
     {
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
-        mapSocketToNode.emplace(pnode->hSocket, pnode);
+        mapSocketToNode.emplace(hSocket, pnode);
         RegisterEvents(pnode);
         WakeSelect();
     }
@@ -1443,8 +1443,9 @@ void CConnman::CalculateNumConnectionsChangedStats()
     }
     mapRecvBytesMsgStats[NET_MESSAGE_COMMAND_OTHER] = 0;
     mapSentBytesMsgStats[NET_MESSAGE_COMMAND_OTHER] = 0;
-    LOCK(cs_vNodes);
-    for (const CNode* pnode : vNodes) {
+    auto vNodesCopy = CopyNodeVector(CConnman::FullyConnectedOnly);
+    for (auto pnode : vNodesCopy) {
+        LOCK(pnode->cs_vRecv);
         for (const mapMsgCmdSize::value_type &i : pnode->mapRecvBytesPerMsgCmd)
             mapRecvBytesMsgStats[i.first] += i.second;
         for (const mapMsgCmdSize::value_type &i : pnode->mapSendBytesPerMsgCmd)
@@ -1466,6 +1467,7 @@ void CConnman::CalculateNumConnectionsChangedStats()
         if(pnode->nPingUsecTime > 0)
             statsClient.timing("peers.ping_us", pnode->nPingUsecTime, 1.0f);
     }
+    ReleaseNodeVector(vNodesCopy);
     for (const std::string &msg : getAllNetMessageTypes()) {
         statsClient.gauge("bandwidth.message." + msg + ".totalBytesReceived", mapRecvBytesMsgStats[msg], 1.0f);
         statsClient.gauge("bandwidth.message." + msg + ".totalBytesSent", mapSentBytesMsgStats[msg], 1.0f);
@@ -2787,7 +2789,12 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- ConnectNode failed for %s\n", __func__, getIpStr());
         return;
     }
-    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- succesfully connected to %s, sock=%d, peer=%d\n", __func__, getIpStr(), pnode->hSocket, pnode->GetId());
+
+    {
+        LOCK(pnode->cs_hSocket);
+        LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- succesfully connected to %s, sock=%d, peer=%d\n", __func__, getIpStr(), pnode->hSocket, pnode->GetId());
+    }
+
     if (grantOutbound)
         grantOutbound->MoveTo(pnode->grantOutbound);
     if (fOneShot)
@@ -2802,7 +2809,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         pnode->m_masternode_probe_connection = true;
 
     {
-        LOCK(cs_vNodes);
+        LOCK2(cs_vNodes, pnode->cs_hSocket);
         mapSocketToNode.emplace(pnode->hSocket, pnode);
     }
 
@@ -3374,7 +3381,10 @@ void CConnman::Stop()
     }
     vNodes.clear();
     mapSocketToNode.clear();
-    mapReceivableNodes.clear();
+    {
+        LOCK(cs_vNodes);
+        mapReceivableNodes.clear();
+    }
     {
         LOCK(cs_mapNodesWithDataToSend);
         mapNodesWithDataToSend.clear();
