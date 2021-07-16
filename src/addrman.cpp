@@ -750,20 +750,18 @@ void CAddrMan::ResetI2PPorts()
                 continue;
             }
 
-            auto addr_info_newport = addr_info;
-            // The below changes addr_info_newport.GetKey(), which is used in finding a
+            // The below changes addr_info.GetKey(), which is used in finding a
             // bucket and a position within that bucket. So a re-bucketing may be necessary.
-            addr_info_newport.port = I2P_SAM31_PORT;
+            addr_info.port = I2P_SAM31_PORT;
 
             // Reposition entries of vvNew within the same bucket because we don't know the source
             // address which led to the decision to store the entry in vvNew[bucket] so we can't
             // re-evaluate that decision, but even if we could, CAddrInfo::GetNewBucket() does not
             // use CAddrInfo::GetKey() so it would end up in the same bucket as before the port
             // change.
-            const auto i_target = addr_info_newport.GetBucketPosition(nKey, true, bucket);
+            const auto i_target = addr_info.GetBucketPosition(nKey, true, bucket);
 
             if (i_target == i) { // No need to re-position.
-                addr_info = addr_info_newport;
                 continue;
             }
 
@@ -771,7 +769,6 @@ void CAddrMan::ResetI2PPorts()
             ClearNew(bucket, i_target);
             vvNew[bucket][i_target] = id;
             vvNew[bucket][i] = -1;
-            addr_info.port = I2P_SAM31_PORT;
         }
     }
 
@@ -790,16 +787,14 @@ void CAddrMan::ResetI2PPorts()
                 continue;
             }
 
-            auto addr_info_newport = addr_info;
-            // The below changes addr_info_newport.GetKey(), which is used in finding a
+            // The below changes addr_info.GetKey(), which is used in finding a
             // bucket and a position within that bucket. So a re-bucketing may be necessary.
-            addr_info_newport.port = I2P_SAM31_PORT;
+            addr_info.port = I2P_SAM31_PORT;
 
-            const auto bucket_target = addr_info_newport.GetTriedBucket(nKey, m_asmap);
-            const auto i_target = addr_info_newport.GetBucketPosition(nKey, false, bucket_target);
+            const auto bucket_target = addr_info.GetTriedBucket(nKey, m_asmap);
+            const auto i_target = addr_info.GetBucketPosition(nKey, false, bucket_target);
 
             if (bucket_target == bucket && i_target == i) { // No need to re-position.
-                addr_info = addr_info_newport;
                 continue;
             }
 
@@ -825,7 +820,6 @@ void CAddrMan::ResetI2PPorts()
 
             vvTried[bucket_target][i_target] = id;
             vvTried[bucket][i] = -1;
-            addr_info.port = I2P_SAM31_PORT;
         }
     }
 }
