@@ -21,8 +21,6 @@
 
 #include <atomic>
 
-#include <boost/thread.hpp>
-
 //
 // WalletBatch
 //
@@ -666,11 +664,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         // Store initial external keypool size since we mostly use external keys in mixing
         pwallet->nKeysLeftSinceAutoBackup = pwallet->KeypoolCountExternalKeys();
         pwallet->WalletLogPrintf("nKeysLeftSinceAutoBackup: %d\n", pwallet->nKeysLeftSinceAutoBackup);
-    }
-    catch (const boost::thread_interrupted&) {
-        throw;
-    }
-    catch (...) {
+    } catch (...) {
         result = DBErrors::CORRUPT;
     }
 
@@ -762,11 +756,7 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::vector<CW
             }
         }
         pcursor->close();
-    }
-    catch (const boost::thread_interrupted&) {
-        throw;
-    }
-    catch (...) {
+    } catch (...) {
         result = DBErrors::CORRUPT;
     }
 

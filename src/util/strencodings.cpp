@@ -8,6 +8,7 @@
 
 #include <tinyformat.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
@@ -614,4 +615,16 @@ std::string HexStr(const Span<const uint8_t> s)
         rv.push_back(hexmap[v & 15]);
     }
     return rv;
+}
+
+void Downcase(std::string& str)
+{
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c){return ToLower(c);});
+}
+
+std::string Capitalize(std::string str)
+{
+    if (str.empty()) return str;
+    str[0] = ToUpper(str.front());
+    return str;
 }
