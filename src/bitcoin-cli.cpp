@@ -386,7 +386,9 @@ private:
     bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
     bool m_is_asmap_on{false};
     size_t m_max_addr_length{0};
-    size_t m_max_age_length{3};
+    size_t m_max_addr_processed_length{5};
+    size_t m_max_addr_rate_limited_length{6};
+    size_t m_max_age_length{5};
     size_t m_max_id_length{2};
     struct Peer {
         std::string addr;
@@ -396,6 +398,8 @@ private:
         std::string age;
         double min_ping;
         double ping;
+        int64_t addr_processed;
+        int64_t addr_rate_limited;
         int64_t last_blck;
         int64_t last_recv;
         int64_t last_send;
@@ -483,6 +487,8 @@ public:
                 const int peer_id{peer["id"].get_int()};
                 const int mapped_as{peer["mapped_as"].isNull() ? 0 : peer["mapped_as"].get_int()};
                 const int version{peer["version"].get_int()};
+                const int64_t addr_processed{peer["addr_processed"].isNull() ? 0 : peer["addr_processed"].get_int64()};
+                const int64_t addr_rate_limited{peer["addr_rate_limited"].isNull() ? 0 : peer["addr_rate_limited"].get_int64()};
                 const int64_t conn_time{peer["conntime"].get_int64()};
                 const int64_t last_blck{peer["last_block"].get_int64()};
                 const int64_t last_recv{peer["lastrecv"].get_int64()};
@@ -495,8 +501,10 @@ public:
                 const std::string sub_version{peer["subver"].get_str()};
                 const bool is_bip152_hb_from{peer["bip152_hb_from"].get_bool()};
                 const bool is_bip152_hb_to{peer["bip152_hb_to"].get_bool()};
-                m_peers.push_back({addr, sub_version, conn_type, network, age, min_ping, ping, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_bip152_hb_from, is_bip152_hb_to, is_block_relay, is_outbound});
+                m_peers.push_back({addr, sub_version, conn_type, network, age, min_ping, ping, addr_processed, addr_rate_limited, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_bip152_hb_from, is_bip152_hb_to, is_block_relay, is_outbound});
                 m_max_addr_length = std::max(addr.length() + 1, m_max_addr_length);
+                m_max_addr_processed_length = std::max(ToString(addr_processed).length(), m_max_addr_processed_length);
+                m_max_addr_rate_limited_length = std::max(ToString(addr_rate_limited).length(), m_max_addr_rate_limited_length);
                 m_max_age_length = std::max(age.length(), m_max_age_length);
                 m_max_id_length = std::max(ToString(peer_id).length(), m_max_id_length);
                 m_is_asmap_on |= (mapped_as != 0);
@@ -509,13 +517,16 @@ public:
         // Report detailed peer connections list sorted by direction and minimum ping time.
         if (DetailsRequested() && !m_peers.empty()) {
             std::sort(m_peers.begin(), m_peers.end());
-            result += strprintf("<->   type   net  mping   ping send recv  txn  blk  hb %*s ", m_max_age_length, "age");
+            result += strprintf("<->   type   net  mping   ping send recv  txn  blk  hb %*s%*s%*s ",
+                                m_max_addr_processed_length, "addrp",
+                                m_max_addr_rate_limited_length, "addrl",
+                                m_max_age_length, "age");
             if (m_is_asmap_on) result += " asmap ";
             result += strprintf("%*s %-*s%s\n", m_max_id_length, "id", IsAddressSelected() ? m_max_addr_length : 0, IsAddressSelected() ? "address" : "", IsVersionSelected() ? "version" : "");
             for (const Peer& peer : m_peers) {
                 std::string version{ToString(peer.version) + peer.sub_version};
                 result += strprintf(
-                    "%3s %6s %5s%7s%7s%5s%5s%5s%5s  %2s %*s%*i %*s %-*s%s\n",
+                    "%3s %6s %5s%7s%7s%5s%5s%5s%5s  %2s %*s%*s%*s%*i %*s %-*s%s\n",
                     peer.is_outbound ? "out" : "in",
                     ConnectionTypeForNetinfo(peer.conn_type),
                     peer.network,
@@ -526,6 +537,10 @@ public:
                     peer.last_trxn == 0 ? "" : ToString((m_time_now - peer.last_trxn) / 60),
                     peer.last_blck == 0 ? "" : ToString((m_time_now - peer.last_blck) / 60),
                     strprintf("%s%s", peer.is_bip152_hb_to ? "." : " ", peer.is_bip152_hb_from ? "*" : " "),
+                    m_max_addr_processed_length, // variable spacing
+                    peer.addr_processed ? ToString(peer.addr_processed) : "",
+                    m_max_addr_rate_limited_length, // variable spacing
+                    peer.addr_rate_limited ? ToString(peer.addr_rate_limited) : "",
                     m_max_age_length, // variable spacing
                     peer.age,
                     m_is_asmap_on ? 7 : 0, // variable spacing
@@ -536,7 +551,7 @@ public:
                     IsAddressSelected() ? peer.addr : "",
                     IsVersionSelected() && version != "0" ? version : "");
             }
-            result += strprintf("                     ms     ms  sec  sec  min  min     %*s\n\n", m_max_age_length, "min");
+            result += strprintf("                     ms     ms  sec  sec  min  min                %*s\n\n", m_max_age_length, "min");
         }
 
         // Report peer connection totals by type.
@@ -614,6 +629,8 @@ public:
         "  hb       High-bandwidth BIP152 compact block relay\n"
         "           \".\" (to)   - we selected the peer as a high-bandwidth peer\n"
         "           \"*\" (from) - the peer selected us as a high-bandwidth peer\n"
+        "  addrp    Total number of addresses processed, excluding those dropped due to rate limiting\n"
+        "  addrl    Total number of addresses dropped due to rate limiting\n"
         "  age      Duration of connection to the peer, in minutes\n"
         "  asmap    Mapped AS (Autonomous System) number in the BGP route to the peer, used for diversifying\n"
         "           peer selection (only displayed if the -asmap config option is set)\n"
