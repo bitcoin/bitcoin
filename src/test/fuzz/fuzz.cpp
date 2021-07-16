@@ -129,9 +129,9 @@ int main(int argc, char** argv)
     test_one_input(buffer);
 #endif
     if (std::getenv("CLEAN_TMP_AFTER_FUZZ")) {
-        std::error_code errorCode;
-        if (!boost::filesystem::remove_all("/tmp/test_common_Bitcoin Core", errorCode)) {
-            std::cout << errorCode.message() << std::endl;
+        system::error_code ec;;
+        if (!boost::filesystem::remove_all("/tmp/test_common_Bitcoin Core", ec)) {
+            std::cout << ec << std::endl;
         }
     }
     return 0;
