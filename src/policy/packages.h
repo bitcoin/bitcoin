@@ -43,4 +43,12 @@ class PackageValidationState : public ValidationState<PackageValidationResult> {
  */
 bool CheckPackage(const Package& txns, PackageValidationState& state);
 
+/** Context-free check that a package is exactly one child and at least one of its parents. It is
+ * expected to be sorted, which means the last transaction must be the child. The package cannot
+ * contain any transactions that are not the child's parents.
+ * @param[in]   exact   When true, return whether this package is exactly one child and all of its
+ *                      parents. Otherwise, only require that non-child transactions are parents.
+ */
+bool IsChildWithParents(const Package& package, bool exact);
+
 #endif // BITCOIN_POLICY_PACKAGES_H

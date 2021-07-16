@@ -60,3 +60,33 @@ bool CheckPackage(const Package& txns, PackageValidationState& state)
     }
     return true;
 }
+
+bool IsChildWithParents(const Package& package, bool exact)
+{
+    assert(!package.empty());
+    assert(std::all_of(package.cbegin(), package.cend(), [](const auto& tx){return tx != nullptr;}));
+
+    if (package.size() < 2) return false;
+
+    const auto& child = package[package.size() - 1];
+
+    std::unordered_set<uint256, SaltedTxidHasher> input_txids;
+    std::transform(child->vin.cbegin(), child->vin.cend(),
+                   std::inserter(input_txids, input_txids.end()),
+                   [](const auto& input) { return input.prevout.hash; });
+
+    std::unordered_set<uint256, SaltedTxidHasher> parent_txids;
+    std::transform(package.cbegin(), package.cbegin() + (package.size() - 1),
+                   std::inserter(parent_txids, parent_txids.end()),
+                   [](const auto& tx) { return tx->GetHash(); });
+
+    // Require that parent_txids is subset of input_txids
+    if (parent_txids.size() > input_txids.size()) return false;
+    if (!std::all_of(parent_txids.cbegin(), parent_txids.cend(),
+                    [&input_txids](const auto& txid) { return input_txids.count(txid) > 0; })) return false;
+    if (!exact) return true;
+    // Also require that input_txids is subset of parent_txids
+    return input_txids.size() <= parent_txids.size() &&
+        std::all_of(input_txids.cbegin(), input_txids.cend(),
+                    [&parent_txids](const auto& txid) { return parent_txids.count(txid) > 0; });
+}
