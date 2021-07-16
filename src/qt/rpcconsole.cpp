@@ -620,7 +620,6 @@ void RPCConsole::setClientModel(ClientModel *model)
         // set up peer table
         ui->peerWidget->setModel(model->getPeerTableModel());
         ui->peerWidget->verticalHeader()->hide();
-        ui->peerWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
         ui->peerWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui->peerWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
         ui->peerWidget->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -673,7 +672,6 @@ void RPCConsole::setClientModel(ClientModel *model)
         // set up ban table
         ui->banlistWidget->setModel(model->getBanTableModel());
         ui->banlistWidget->verticalHeader()->hide();
-        ui->banlistWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
         ui->banlistWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui->banlistWidget->setSelectionMode(QAbstractItemView::SingleSelection);
         ui->banlistWidget->setContextMenuPolicy(Qt::CustomContextMenu);

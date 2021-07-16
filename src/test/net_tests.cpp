@@ -549,6 +549,16 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     BOOST_CHECK_EQUAL(addr.ToString(), "fc00:1:2:3:4:5:6:7");
     BOOST_REQUIRE(s.empty());
 
+    // Invalid CJDNS, wrong prefix.
+    s << MakeSpan(ParseHex("06"                               // network type (CJDNS)
+                           "10"                               // address length
+                           "aa000001000200030004000500060007" // address
+                           ));
+    s >> addr;
+    BOOST_CHECK(addr.IsCJDNS());
+    BOOST_CHECK(!addr.IsValid());
+    BOOST_REQUIRE(s.empty());
+
     // Invalid CJDNS, with bogus length.
     s << MakeSpan(ParseHex("06" // network type (CJDNS)
                            "01" // address length
