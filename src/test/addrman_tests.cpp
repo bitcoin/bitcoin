@@ -1000,6 +1000,13 @@ BOOST_AUTO_TEST_CASE(reset_i2p_ports)
         NODE_NONE,
         good_time};
 
+    // Will be located in 2 new buckets (due to coming from 2 different sources).
+    // Has its port changed, repositioned in the 2 new buckets and afterwards we make it "tried".
+    const CAddress i2p_new5{
+        ResolveService("zsxwyo6qcn3chqzwxnseusqgsnuw3maqnztkiypyfxtya4snkoka.b32.i2p", port),
+        NODE_NONE,
+        good_time};
+
     // Remains unchanged.
     const CAddress ipv4_new{ResolveService("1.2.3.4", port), NODE_NONE, good_time};
 
@@ -1040,6 +1047,10 @@ BOOST_AUTO_TEST_CASE(reset_i2p_ports)
     addrman1.Add(i2p_new2, source);
     addrman1.Add(i2p_new3, source);
     addrman1.Add(i2p_new4, source);
+    addrman1.Add(i2p_new5, source);
+    CAddress i2p_new5_updated_time{i2p_new5};
+    ++i2p_new5_updated_time.nTime;
+    addrman1.Add(i2p_new5_updated_time, ResolveIP("1.2.3.4"));
     addrman1.Add(ipv4_new, source);
 
     addrman1.Add(i2p_tried1, source);
@@ -1060,7 +1071,7 @@ BOOST_AUTO_TEST_CASE(reset_i2p_ports)
     const size_t max_pct{0};
 
     auto addresses = addrman2.GetAddr(max_addresses, max_pct, NET_I2P);
-    BOOST_REQUIRE_EQUAL(addresses.size(), 7UL);
+    BOOST_REQUIRE_EQUAL(addresses.size(), 8UL);
     std::sort(addresses.begin(), addresses.end()); // Just some deterministic order.
     BOOST_CHECK_EQUAL(addresses[0].ToStringIP(), i2p_new4.ToStringIP());
     BOOST_CHECK_EQUAL(addresses[0].GetPort(), I2P_SAM31_PORT);
@@ -1074,8 +1085,18 @@ BOOST_AUTO_TEST_CASE(reset_i2p_ports)
     BOOST_CHECK_EQUAL(addresses[4].GetPort(), I2P_SAM31_PORT);
     BOOST_CHECK_EQUAL(addresses[5].ToStringIP(), i2p_tried2.ToStringIP());
     BOOST_CHECK_EQUAL(addresses[5].GetPort(), I2P_SAM31_PORT);
-    BOOST_CHECK_EQUAL(addresses[6].ToStringIP(), i2p_new1.ToStringIP());
+    BOOST_CHECK_EQUAL(addresses[6].ToStringIP(), i2p_new5.ToStringIP());
     BOOST_CHECK_EQUAL(addresses[6].GetPort(), I2P_SAM31_PORT);
+    BOOST_CHECK_EQUAL(addresses[7].ToStringIP(), i2p_new1.ToStringIP());
+    BOOST_CHECK_EQUAL(addresses[7].GetPort(), I2P_SAM31_PORT);
+
+    const CAddress i2p_new5_changed_port{
+        ResolveService("zsxwyo6qcn3chqzwxnseusqgsnuw3maqnztkiypyfxtya4snkoka.b32.i2p",
+                       I2P_SAM31_PORT),
+        NODE_NONE,
+        good_time};
+    // Crashes due to https://github.com/bitcoin/bitcoin/issues/22470
+    addrman2.Good(i2p_new5_changed_port);
 
     addresses = addrman2.GetAddr(max_addresses, max_pct, NET_IPV4);
     BOOST_REQUIRE_EQUAL(addresses.size(), 2UL);
