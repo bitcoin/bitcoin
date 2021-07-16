@@ -8,6 +8,20 @@ on:
   pull_request_target:
     types: [synchronize]
 
+permissions:
+  contents: read
+  pull-requests: write
+  # Enforce other not needed permissions are off
+  actions: none
+  checks: none
+  deployments: none
+  issues: none
+  #metadata: read
+  packages: none
+  repository-projects: none
+  security-events: none
+  statuses: none
+
 jobs:
   main:
     runs-on: ubuntu-latest
