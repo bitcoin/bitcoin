@@ -771,7 +771,7 @@ void CAddrMan::ResetI2PPorts()
             ClearNew(bucket, i_target);
             vvNew[bucket][i_target] = id;
             vvNew[bucket][i] = -1;
-            addr_info = addr_info_newport;
+            addr_info.port = I2P_SAM31_PORT;
         }
     }
 
@@ -825,7 +825,7 @@ void CAddrMan::ResetI2PPorts()
 
             vvTried[bucket_target][i_target] = id;
             vvTried[bucket][i] = -1;
-            addr_info = addr_info_newport;
+            addr_info.port = I2P_SAM31_PORT;
         }
     }
 }
