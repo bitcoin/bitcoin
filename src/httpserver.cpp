@@ -74,12 +74,11 @@ template <typename WorkItem>
 class WorkQueue
 {
 private:
-    /** Mutex protects entire object */
     Mutex cs;
-    std::condition_variable cond;
-    std::deque<std::unique_ptr<WorkItem>> queue;
-    bool running;
-    size_t maxDepth;
+    std::condition_variable cond GUARDED_BY(cs);
+    std::deque<std::unique_ptr<WorkItem>> queue GUARDED_BY(cs);
+    bool running GUARDED_BY(cs);
+    const size_t maxDepth;
 
 public:
     explicit WorkQueue(size_t _maxDepth) : running(true),
@@ -95,7 +94,7 @@ public:
     bool Enqueue(WorkItem* item)
     {
         LOCK(cs);
-        if (queue.size() >= maxDepth) {
+        if (!running || queue.size() >= maxDepth) {
             return false;
         }
         queue.emplace_back(std::unique_ptr<WorkItem>(item));
@@ -111,7 +110,7 @@ public:
                 WAIT_LOCK(cs, lock);
                 while (running && queue.empty())
                     cond.wait(lock);
-                if (!running)
+                if (!running && queue.empty())
                     break;
                 i = std::move(queue.front());
                 queue.pop_front();
@@ -469,8 +468,6 @@ void StopHTTPServer()
             thread.join();
         }
         g_thread_http_workers.clear();
-        delete workQueue;
-        workQueue = nullptr;
     }
     // Unlisten sockets, these are what make the event loop running, which means
     // that after this and all connections are closed the event loop will quit.
@@ -489,6 +486,10 @@ void StopHTTPServer()
     if (eventBase) {
         event_base_free(eventBase);
         eventBase = nullptr;
+    }
+    if (workQueue) {
+        delete workQueue;
+        workQueue = nullptr;
     }
     LogPrint(BCLog::HTTP, "Stopped HTTP server\n");
 }
