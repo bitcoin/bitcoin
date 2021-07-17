@@ -657,7 +657,7 @@ static RPCHelpMan syscoinstartgeth()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     StopGethNode(gethPID);
-    const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+    const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet || fRegTest? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
     if(!StartGethNode(gethDescriptorURL, gethPID))
         throw JSONRPCError(RPC_MISC_ERROR, "Could not start Geth");
     UniValue ret(UniValue::VOBJ);
