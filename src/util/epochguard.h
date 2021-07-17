@@ -51,6 +51,10 @@ public:
         // only allow modification via Epoch member functions
         friend class Epoch;
         Marker& operator=(const Marker&) = delete;
+
+    public:
+        Marker() = default;
+        Marker(const Marker&) = default;
     };
 
     class SCOPED_LOCKABLE Guard
