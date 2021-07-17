@@ -878,7 +878,7 @@ class FullBlockTest(BitcoinTestFramework):
         #                                                                                    \-> b67 (20)
         #
         #
-        self.log.info("Reject a block with a transaction double spending a transaction creted in the same block")
+        self.log.info("Reject a block with a transaction double spending a transaction created in the same block")
         self.move_tip(65)
         b67 = self.next_block(67)
         tx1 = self.create_and_sign_transaction(out[20], out[20].vout[0].nValue)

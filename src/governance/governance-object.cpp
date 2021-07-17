@@ -456,7 +456,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
     fMissingConfirmations = false;
 
     if (fUnparsable) {
-        strError = "Object data unparseable";
+        strError = "Object data unparsable";
         return false;
     }
 

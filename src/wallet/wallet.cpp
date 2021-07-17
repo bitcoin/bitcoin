@@ -4071,7 +4071,7 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 }
 
 // Goes through all wallet transactions and checks if they are masternode collaterals, in which case these are locked
-// This avoids accidential spending of collaterals. They can still be unlocked manually if a spend is really intended.
+// This avoids accidental spending of collaterals. They can still be unlocked manually if a spend is really intended.
 void CWallet::AutoLockMasternodeCollaterals()
 {
     auto mnList = deterministicMNManager->GetListAtChainTip();

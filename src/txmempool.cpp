@@ -886,7 +886,7 @@ void CTxMemPool::removeProTxSpentCollateralConflicts(const CTransaction &tx)
         }
         auto dmn = mnList.GetMNByCollateral(in.prevout);
         if (dmn) {
-            // These are updates refering to a mined ProRegTx
+            // These are updates referring to a mined ProRegTx
             removeSpentCollateralConflict(dmn->proTxHash);
         }
     }

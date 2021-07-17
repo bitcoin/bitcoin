@@ -146,7 +146,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         node.walletpassphrase(walletpass, 100)
         assert_equal(mnemonic, node.dumphdinfo()['mnemonic'])
         assert_equal(chainid, node.getwalletinfo()['hdchainid'])
-        # Note: wallet encryption results in additonal keypool topup,
+        # Note: wallet encryption results in additional keypool topup,
         # so we can't compare new balance to balance_non_HD here,
         # assert_equal(balance_non_HD, node.getbalance())  # won't work
         assert(balance_non_HD != node.getbalance())
@@ -170,7 +170,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         node.walletpassphrase(walletpass, 100)
         assert_equal(mnemonic, node.dumphdinfo()['mnemonic'])
         assert_equal(chainid, node.getwalletinfo()['hdchainid'])
-        # Note: wallet encryption results in additonal keypool topup,
+        # Note: wallet encryption results in additional keypool topup,
         # so we can't compare new balance to balance_non_HD here,
         # assert_equal(balance_non_HD, node.getbalance())  # won't work
         assert(balance_non_HD != node.getbalance())

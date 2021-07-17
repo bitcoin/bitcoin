@@ -566,7 +566,7 @@ static void CheckTypeConversionOp(const valtype& bin, const valtype& num)
                                    << bin.size() << OP_NUM2BIN,
                                {rebuilt_bin});
 
-    // BIN2NUM is indempotent.
+    // BIN2NUM is idempotent.
     CheckTestResultForAllFlags({bin}, CScript() << OP_BIN2NUM << OP_BIN2NUM,
                                {num});
 }

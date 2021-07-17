@@ -424,7 +424,7 @@ int CCoinJoin::AmountToDenomination(CAmount nInputAmount)
     Returns:
     - one of standard denominations from vecStandardDenominations based on the provided bitshifted integer
     - 0 for non-initialized sessions (nDenom = 0)
-    - a value below 0 if an error occured while converting from one to another
+    - a value below 0 if an error occurred while converting from one to another
 */
 CAmount CCoinJoin::DenominationToAmount(int nDenom)
 {

@@ -1092,7 +1092,7 @@ class DashTestFramework(BitcoinTestFramework):
         assert_equal(q, new_quorum)
         quorum_info = self.nodes[0].quorum("info", 100, new_quorum)
 
-        # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligable for signing sessions
+        # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
         self.nodes[0].generate(8)
 
         sync_blocks(nodes)

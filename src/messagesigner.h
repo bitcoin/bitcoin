@@ -16,9 +16,9 @@ public:
     static bool GetKeysFromSecret(const std::string& strSecret, CKey& keyRet, CPubKey& pubkeyRet);
     /// Sign the message, returns true if successful
     static bool SignMessage(const std::string& strMessage, std::vector<unsigned char>& vchSigRet, const CKey& key);
-    /// Verify the message signature, returns true if succcessful
+    /// Verify the message signature, returns true if successful
     static bool VerifyMessage(const CPubKey& pubkey, const std::vector<unsigned char>& vchSig, const std::string& strMessage, std::string& strErrorRet);
-    /// Verify the message signature, returns true if succcessful
+    /// Verify the message signature, returns true if successful
     static bool VerifyMessage(const CKeyID& keyID, const std::vector<unsigned char>& vchSig, const std::string& strMessage, std::string& strErrorRet);
 };
 
