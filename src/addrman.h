@@ -732,6 +732,7 @@ private:
     {
 #ifdef DEBUG_ADDRMAN
         AssertLockHeld(cs);
+        LogPrint(BCLog::ADDRMAN, "Check addrman\n");
         const int err = Check_();
         if (err) {
             LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
