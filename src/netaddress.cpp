@@ -1039,17 +1039,16 @@ std::string CService::ToString() const
     return ToStringIPPort();
 }
 
-CSubNet::CSubNet():
-    valid(false)
+CSubNet::CSubNet()
 {
     memset(netmask, 0, sizeof(netmask));
 }
 
 CSubNet::CSubNet(const CNetAddr& addr, uint8_t mask) : CSubNet()
 {
-    valid = (addr.IsIPv4() && mask <= ADDR_IPV4_SIZE * 8) ||
-            (addr.IsIPv6() && mask <= ADDR_IPV6_SIZE * 8);
-    if (!valid) {
+    bool valid = (addr.IsIPv4() && mask <= ADDR_IPV4_SIZE * 8) ||
+                 (addr.IsIPv6() && mask <= ADDR_IPV6_SIZE * 8);
+    if (!addr.IsValid() || !valid) {
         return;
     }
 
@@ -1088,7 +1087,7 @@ static inline int NetmaskBits(uint8_t x)
 
 CSubNet::CSubNet(const CNetAddr& addr, const CNetAddr& mask) : CSubNet()
 {
-    valid = (addr.IsIPv4() || addr.IsIPv6()) && addr.m_net == mask.m_net;
+    const bool valid{addr.IsValid() && (addr.IsIPv4() || addr.IsIPv6()) && addr.m_net == mask.m_net};
     if (!valid) {
         return;
     }
@@ -1097,7 +1096,6 @@ CSubNet::CSubNet(const CNetAddr& addr, const CNetAddr& mask) : CSubNet()
     for (auto b : mask.m_addr) {
         const int num_bits = NetmaskBits(b);
         if (num_bits == -1 || (zeros_found && num_bits != 0)) {
-            valid = false;
             return;
         }
         if (num_bits < 8) {
@@ -1122,14 +1120,12 @@ CSubNet::CSubNet(const CNetAddr& addr) : CSubNet()
     switch (addr.m_net) {
     case NET_IPV4:
     case NET_IPV6:
-        valid = true;
         assert(addr.m_addr.size() <= sizeof(netmask));
         memset(netmask, 0xFF, addr.m_addr.size());
         break;
     case NET_ONION:
     case NET_I2P:
     case NET_CJDNS:
-        valid = true;
         break;
     case NET_INTERNAL:
     case NET_UNROUTABLE:
@@ -1146,8 +1142,9 @@ CSubNet::CSubNet(const CNetAddr& addr) : CSubNet()
  */
 bool CSubNet::Match(const CNetAddr &addr) const
 {
-    if (!valid || !addr.IsValid() || network.m_net != addr.m_net)
+    if (!IsValid() || network.m_net != addr.m_net) {
         return false;
+    }
 
     switch (network.m_net) {
     case NET_IPV4:
@@ -1207,7 +1204,7 @@ std::string CSubNet::ToString() const
 
 bool CSubNet::IsValid() const
 {
-    return valid;
+    return SanityCheck() && network.IsValid();
 }
 
 bool CSubNet::SanityCheck() const
@@ -1235,7 +1232,7 @@ bool CSubNet::SanityCheck() const
 
 bool operator==(const CSubNet& a, const CSubNet& b)
 {
-    return a.valid == b.valid && a.network == b.network && !memcmp(a.netmask, b.netmask, 16);
+    return a.network == b.network && !memcmp(a.netmask, b.netmask, 16);
 }
 
 bool operator<(const CSubNet& a, const CSubNet& b)

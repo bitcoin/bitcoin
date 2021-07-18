@@ -19,8 +19,11 @@
 #include <util/settings.h>
 #include <util/system.h>
 
+static const char* BANMAN_JSON_VERSION_KEY{"version"};
+
 CBanEntry::CBanEntry(const UniValue& json)
-    : nVersion(json["version"].get_int()), nCreateTime(json["ban_created"].get_int64()),
+    : nVersion(json[BANMAN_JSON_VERSION_KEY].get_int()),
+      nCreateTime(json["ban_created"].get_int64()),
       nBanUntil(json["banned_until"].get_int64())
 {
 }
@@ -28,7 +31,7 @@ CBanEntry::CBanEntry(const UniValue& json)
 UniValue CBanEntry::ToJson() const
 {
     UniValue json(UniValue::VOBJ);
-    json.pushKV("version", nVersion);
+    json.pushKV(BANMAN_JSON_VERSION_KEY, nVersion);
     json.pushKV("ban_created", nCreateTime);
     json.pushKV("banned_until", nBanUntil);
     return json;
@@ -67,11 +70,16 @@ UniValue BanMapToJson(const banmap_t& bans)
 void BanMapFromJson(const UniValue& bans_json, banmap_t& bans)
 {
     for (const auto& ban_entry_json : bans_json.getValues()) {
+        const int version{ban_entry_json[BANMAN_JSON_VERSION_KEY].get_int()};
+        if (version != CBanEntry::CURRENT_VERSION) {
+            LogPrintf("Dropping entry with unknown version (%s) from ban list\n", version);
+            continue;
+        }
         CSubNet subnet;
         const auto& subnet_str = ban_entry_json[BANMAN_JSON_ADDR_KEY].get_str();
         if (!LookupSubNet(subnet_str, subnet)) {
-            throw std::runtime_error(
-                strprintf("Cannot parse banned address or subnet: %s", subnet_str));
+            LogPrintf("Dropping entry with unparseable address or subnet: %s\n", subnet_str);
+            continue;
         }
         bans.insert_or_assign(subnet, CBanEntry{ban_entry_json});
     }
@@ -203,7 +211,21 @@ bool CBanDB::Read(banmap_t& banSet, bool& dirty)
     if (!fs::exists(m_banlist_json)) {
         // If this succeeds then we need to flush to disk in order to create the JSON banlist.
         dirty = true;
-        return DeserializeFileDB(m_banlist_dat, banSet, CLIENT_VERSION);
+        if (!DeserializeFileDB(m_banlist_dat, banSet, CLIENT_VERSION)) {
+            // Issue already logged
+            return false;
+        }
+        for (auto it{banSet.begin()}; it != banSet.end();) {
+            const bool version_valid{CBanEntry::CURRENT_VERSION == it->second.nVersion};
+            const CSubNet& subnet{it->first};
+            if (subnet.IsValid() && version_valid) {
+                ++it;
+            } else {
+                LogPrintf("Cannot parse banned address or subnet: %s\n", subnet.ToString());
+                it = banSet.erase(it);
+            }
+        }
+        return true;
     }
 
     dirty = false;

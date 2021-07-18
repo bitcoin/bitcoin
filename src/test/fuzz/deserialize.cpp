@@ -143,15 +143,16 @@ FUZZ_TARGET_DESERIALIZE(script_deserialize, {
         DeserializeFromFuzzingInput(buffer, script);
 })
 FUZZ_TARGET_DESERIALIZE(sub_net_deserialize, {
-        CSubNet sub_net_1;
-        DeserializeFromFuzzingInput(buffer, sub_net_1, INIT_PROTO_VERSION);
-        AssertEqualAfterSerializeDeserialize(sub_net_1, INIT_PROTO_VERSION);
-        CSubNet sub_net_2;
-        DeserializeFromFuzzingInput(buffer, sub_net_2, INIT_PROTO_VERSION | ADDRV2_FORMAT);
-        AssertEqualAfterSerializeDeserialize(sub_net_2, INIT_PROTO_VERSION | ADDRV2_FORMAT);
-        CSubNet sub_net_3;
-        DeserializeFromFuzzingInput(buffer, sub_net_3);
-        AssertEqualAfterSerializeDeserialize(sub_net_3, INIT_PROTO_VERSION | ADDRV2_FORMAT);
+    CDataStream ds(buffer, 0, 0);
+    try {
+        {
+            int version;
+            ds >> version;
+            ds.SetVersion(version);
+        }
+        ds >> CSubNet{};
+    } catch (const std::ios_base::failure&) {
+    }
 })
 FUZZ_TARGET_DESERIALIZE(tx_in_deserialize, {
         CTxIn tx_in;
