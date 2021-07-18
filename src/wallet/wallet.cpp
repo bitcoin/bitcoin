@@ -359,8 +359,9 @@ const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
     return &(it->second);
 }
 
-void CWallet::UpgradeKeyMetadata()
+void CWallet::UpgradeKeyMetadata(WalletBatch& batch)
 {
+    AssertLockHeld(cs_wallet);
     if (IsLocked() || IsWalletFlagSet(WALLET_FLAG_KEY_ORIGIN_METADATA)) {
         return;
     }
@@ -370,11 +371,11 @@ void CWallet::UpgradeKeyMetadata()
         return;
     }
 
-    spk_man->UpgradeKeyMetadata();
-    SetWalletFlag(WALLET_FLAG_KEY_ORIGIN_METADATA);
+    spk_man->UpgradeKeyMetadata(batch);
+    SetWalletFlagWithDB(batch, WALLET_FLAG_KEY_ORIGIN_METADATA);
 }
 
-void CWallet::UpgradeDescriptorCache()
+void CWallet::UpgradeDescriptorCache(WalletBatch& batch)
 {
     if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) || IsLocked() || IsWalletFlagSet(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED)) {
         return;
@@ -382,9 +383,9 @@ void CWallet::UpgradeDescriptorCache()
 
     for (ScriptPubKeyMan* spkm : GetAllScriptPubKeyMans()) {
         DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
-        desc_spkm->UpgradeDescriptorCache();
+        desc_spkm->UpgradeDescriptorCache(batch);
     }
-    SetWalletFlag(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED);
+    SetWalletFlagWithDB(batch, WALLET_FLAG_LAST_HARDENED_XPUB_CACHED);
 }
 
 bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool accept_no_keys)
@@ -402,9 +403,10 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool accept_no_key
                 continue; // try another master key
             if (Unlock(_vMasterKey, accept_no_keys)) {
                 // Now that we've unlocked, upgrade the key metadata
-                UpgradeKeyMetadata();
+                WalletBatch batch(GetDatabase());
+                UpgradeKeyMetadata(batch);
                 // Now that we've unlocked, upgrade the descriptor cache
-                UpgradeDescriptorCache();
+                UpgradeDescriptorCache(batch);
                 return true;
             }
         }
@@ -1379,13 +1381,19 @@ bool CWallet::CanGetAddresses(bool internal) const
     }
     return false;
 }
+void CWallet::SetWalletFlagWithDB(WalletBatch& batch, uint64_t flags)
+{
+    AssertLockHeld(cs_wallet);
+    m_wallet_flags |= flags;
+    if (!batch.WriteWalletFlags(m_wallet_flags))
+        throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
+}
 
 void CWallet::SetWalletFlag(uint64_t flags)
 {
     LOCK(cs_wallet);
-    m_wallet_flags |= flags;
-    if (!WalletBatch(GetDatabase()).WriteWalletFlags(m_wallet_flags))
-        throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
+    WalletBatch batch(GetDatabase());
+    SetWalletFlagWithDB(batch, flags);
 }
 
 void CWallet::UnsetWalletFlag(uint64_t flag)

@@ -370,7 +370,7 @@ public:
     void MarkUnusedAddresses(const CScript& script) override;
 
     //! Upgrade stored CKeyMetadata objects to store key origin info as KeyOriginInfo
-    void UpgradeKeyMetadata();
+    void UpgradeKeyMetadata(WalletBatch& batch);
 
     bool IsHDEnabled() const override;
 
@@ -440,6 +440,7 @@ public:
     bool HaveWatchOnly() const;
     //! Remove a watch only script from the keystore
     bool RemoveWatchOnly(const CScript &dest);
+    bool RemoveWatchOnlyWithDB(WalletBatch& batch, const CScript &dest);
     bool AddWatchOnly(const CScript& dest, int64_t nCreateTime) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     //! Fetches a pubkey from mapWatchKeys if it exists there
@@ -483,13 +484,13 @@ public:
      * software, as FillableSigningProvider automatically does this implicitly for all
      * keys now.
      */
-    void LearnRelatedScripts(const CPubKey& key, OutputType);
+    void LearnRelatedScripts(WalletBatch& batch, const CPubKey& key, OutputType);
 
     /**
      * Same as LearnRelatedScripts, but when the OutputType is not known (and could
      * be anything).
      */
-    void LearnAllRelatedScripts(const CPubKey& key);
+    void LearnAllRelatedScripts(WalletBatch& batch, const CPubKey& key);
 
     /**
      * Marks all keys in the keypool up to and including reserve_key as used.
@@ -623,7 +624,7 @@ public:
 
     bool GetDescriptorString(std::string& out) const;
 
-    void UpgradeDescriptorCache();
+    void UpgradeDescriptorCache(WalletBatch& batch);
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H

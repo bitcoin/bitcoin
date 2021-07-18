@@ -885,7 +885,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     // Upgrade all of the wallet keymetadata to have the hd master key id
     // This operation is not atomic, but if it fails, updated entries are still backwards compatible with older software
     try {
-        pwallet->UpgradeKeyMetadata();
+        pwallet->UpgradeKeyMetadata(*this);
     } catch (...) {
         result = DBErrors::CORRUPT;
     }
@@ -893,7 +893,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     // Upgrade all of the descriptor caches to cache the last hardened xpub
     // This operation is not atomic, but if it fails, only new entries are added so it is backwards compatible
     try {
-        pwallet->UpgradeDescriptorCache();
+        pwallet->UpgradeDescriptorCache(*this);
     } catch (...) {
         result = DBErrors::CORRUPT;
     }

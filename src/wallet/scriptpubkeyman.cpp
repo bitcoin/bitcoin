@@ -37,7 +37,8 @@ bool LegacyScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestinat
         error = _("Error: Keypool ran out, please call keypoolrefill first").translated;
         return false;
     }
-    LearnRelatedScripts(new_key, type);
+    WalletBatch batch(m_storage.GetDatabase());
+    LearnRelatedScripts(batch, new_key, type);
     dest = GetDestinationForKey(new_key, type);
     return true;
 }
@@ -386,14 +387,13 @@ void LegacyScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
     }
 }
 
-void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
+void LegacyScriptPubKeyMan::UpgradeKeyMetadata(WalletBatch& batch)
 {
     LOCK(cs_KeyStore);
     if (m_storage.IsLocked() || m_storage.IsWalletFlagSet(WALLET_FLAG_KEY_ORIGIN_METADATA)) {
         return;
     }
 
-    std::unique_ptr<WalletBatch> batch = std::make_unique<WalletBatch>(m_storage.GetDatabase());
     for (auto& meta_pair : mapKeyMetadata) {
         CKeyMetadata& meta = meta_pair.second;
         if (!meta.hd_seed_id.IsNull() && !meta.has_key_origin && meta.hdKeypath != "s") { // If the hdKeypath is "s", that's the seed and it doesn't have a key origin
@@ -415,7 +415,7 @@ void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
             // Write meta to wallet
             CPubKey pubkey;
             if (GetPubKey(meta_pair.first, pubkey)) {
-                batch->WriteKeyMetadata(meta, pubkey, true);
+                batch.WriteKeyMetadata(meta, pubkey, true);
             }
         }
     }
@@ -736,11 +736,11 @@ bool LegacyScriptPubKeyMan::AddKeyPubKeyWithDB(WalletBatch& batch, const CKey& s
     CScript script;
     script = GetScriptForDestination(PKHash(pubkey));
     if (HaveWatchOnly(script)) {
-        RemoveWatchOnly(script);
+        RemoveWatchOnlyWithDB(batch, script);
     }
     script = GetScriptForRawPubKey(pubkey);
     if (HaveWatchOnly(script)) {
-        RemoveWatchOnly(script);
+        RemoveWatchOnlyWithDB(batch, script);
     }
 
     if (!m_storage.HasEncryptionKeys()) {
@@ -863,6 +863,12 @@ static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
 
 bool LegacyScriptPubKeyMan::RemoveWatchOnly(const CScript &dest)
 {
+    WalletBatch batch(m_storage.GetDatabase());
+    return RemoveWatchOnlyWithDB(batch, dest);
+}
+
+bool LegacyScriptPubKeyMan::RemoveWatchOnlyWithDB(WalletBatch& batch, const CScript &dest)
+{
     {
         LOCK(cs_KeyStore);
         setWatchOnly.erase(dest);
@@ -876,7 +882,7 @@ bool LegacyScriptPubKeyMan::RemoveWatchOnly(const CScript &dest)
 
     if (!HaveWatchOnly())
         NotifyWatchonlyChanged(false);
-    if (!WalletBatch(m_storage.GetDatabase()).EraseWatchOnly(dest))
+    if (!batch.EraseWatchOnly(dest))
         return false;
 
     return true;
@@ -1217,20 +1223,22 @@ bool LegacyScriptPubKeyMan::NewKeyPool()
     }
     {
         LOCK(cs_KeyStore);
-        WalletBatch batch(m_storage.GetDatabase());
+        {
+            WalletBatch batch(m_storage.GetDatabase());
 
-        for (const int64_t nIndex : setInternalKeyPool) {
-            batch.ErasePool(nIndex);
-        }
-        setInternalKeyPool.clear();
+            for (const int64_t nIndex : setInternalKeyPool) {
+                batch.ErasePool(nIndex);
+            }
+            setInternalKeyPool.clear();
 
-        for (const int64_t nIndex : setExternalKeyPool) {
-            batch.ErasePool(nIndex);
-        }
-        setExternalKeyPool.clear();
+            for (const int64_t nIndex : setExternalKeyPool) {
+                batch.ErasePool(nIndex);
+            }
+            setExternalKeyPool.clear();
 
-        for (const int64_t nIndex : set_pre_split_keypool) {
-            batch.ErasePool(nIndex);
+            for (const int64_t nIndex : set_pre_split_keypool) {
+                batch.ErasePool(nIndex);
+            }
         }
         set_pre_split_keypool.clear();
 
@@ -1315,7 +1323,7 @@ void LegacyScriptPubKeyMan::KeepDestination(int64_t nIndex, const OutputType& ty
     CPubKey pubkey;
     bool have_pk = GetPubKey(m_index_to_reserved_key.at(nIndex), pubkey);
     assert(have_pk);
-    LearnRelatedScripts(pubkey, type);
+    LearnRelatedScripts(batch ,pubkey, type);
     m_index_to_reserved_key.erase(nIndex);
     WalletLogPrintf("keypool keep %d\n", nIndex);
 }
@@ -1409,7 +1417,7 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
     return true;
 }
 
-void LegacyScriptPubKeyMan::LearnRelatedScripts(const CPubKey& key, OutputType type)
+void LegacyScriptPubKeyMan::LearnRelatedScripts(WalletBatch& batch, const CPubKey& key, OutputType type)
 {
     assert(type != OutputType::BECH32M);
     if (key.IsCompressed() && (type == OutputType::P2SH_SEGWIT || type == OutputType::BECH32)) {
@@ -1417,14 +1425,14 @@ void LegacyScriptPubKeyMan::LearnRelatedScripts(const CPubKey& key, OutputType t
         CScript witprog = GetScriptForDestination(witdest);
         // Make sure the resulting program is solvable.
         assert(IsSolvable(*this, witprog));
-        AddCScript(witprog);
+        AddCScriptWithDB(batch, witprog);
     }
 }
 
-void LegacyScriptPubKeyMan::LearnAllRelatedScripts(const CPubKey& key)
+void LegacyScriptPubKeyMan::LearnAllRelatedScripts(WalletBatch& batch, const CPubKey& key)
 {
     // OutputType::P2SH_SEGWIT always adds all necessary scripts for all types.
-    LearnRelatedScripts(key, OutputType::P2SH_SEGWIT);
+    LearnRelatedScripts(batch, key, OutputType::P2SH_SEGWIT);
 }
 
 void LegacyScriptPubKeyMan::MarkReserveKeysAsUsed(int64_t keypool_id)
@@ -1444,7 +1452,7 @@ void LegacyScriptPubKeyMan::MarkReserveKeysAsUsed(int64_t keypool_id)
         if (batch.ReadPool(index, keypool)) { //TODO: This should be unnecessary
             m_pool_key_to_index.erase(keypool.vchPubKey.GetID());
         }
-        LearnAllRelatedScripts(keypool.vchPubKey);
+        LearnAllRelatedScripts(batch, keypool.vchPubKey);
         batch.ErasePool(index);
         WalletLogPrintf("keypool index %d removed\n", index);
         it = setKeyPool->erase(it);
@@ -1933,18 +1941,20 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     m_wallet_descriptor = w_desc;
 
     // Store the master private key, and descriptor
-    WalletBatch batch(m_storage.GetDatabase());
-    if (!AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
-        throw std::runtime_error(std::string(__func__) + ": writing descriptor master private key failed");
-    }
-    if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
-        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+    {
+        WalletBatch batch(m_storage.GetDatabase());
+        if (!AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
+            throw std::runtime_error(std::string(__func__) + ": writing descriptor master private key failed");
+        }
+        if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
+            throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+        }
+        m_storage.UnsetBlankWalletFlag(batch);
     }
 
     // TopUp
     TopUp();
 
-    m_storage.UnsetBlankWalletFlag(batch);
     return true;
 }
 
@@ -2268,7 +2278,7 @@ bool DescriptorScriptPubKeyMan::GetDescriptorString(std::string& out) const
     return m_wallet_descriptor.descriptor->ToNormalizedString(provider, out, &m_wallet_descriptor.cache);
 }
 
-void DescriptorScriptPubKeyMan::UpgradeDescriptorCache()
+void DescriptorScriptPubKeyMan::UpgradeDescriptorCache(WalletBatch& batch)
 {
     LOCK(cs_desc_man);
     if (m_storage.IsLocked() || m_storage.IsWalletFlagSet(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED)) {
@@ -2292,7 +2302,7 @@ void DescriptorScriptPubKeyMan::UpgradeDescriptorCache()
 
     // Cache the last hardened xpubs
     DescriptorCache diff = m_wallet_descriptor.cache.MergeAndDiff(temp_cache);
-    if (!WalletBatch(m_storage.GetDatabase()).WriteDescriptorCacheItems(GetID(), diff)) {
+    if (!batch.WriteDescriptorCacheItems(GetID(), diff)) {
         throw std::runtime_error(std::string(__func__) + ": writing cache items failed");
     }
 }

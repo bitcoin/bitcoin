@@ -113,10 +113,12 @@ public:
      */
     bool Rewrite(const char* pszSkip=nullptr) override;
 
+    //! Counts the number of active database users to be sure that the database is not closed while someone is using it
+    std::atomic<int> m_refcount{0};
     /** Indicate the a new database user has began using the database. */
-    void AddRef() override;
+    void AddRef();
     /** Indicate that database user has stopped using the database and that it could be flushed or closed. */
-    void RemoveRef() override;
+    void RemoveRef();
 
     /** Back up the entire database to a file.
      */

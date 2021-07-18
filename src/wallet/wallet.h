@@ -476,10 +476,10 @@ public:
     double ScanningProgress() const { return fScanningWallet ? (double) m_scanning_progress : 0; }
 
     //! Upgrade stored CKeyMetadata objects to store key origin info as KeyOriginInfo
-    void UpgradeKeyMetadata() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void UpgradeKeyMetadata(WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Upgrade DescriptorCaches
-    void UpgradeDescriptorCache() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void UpgradeDescriptorCache(WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     bool LoadMinVersion(int nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); nWalletVersion = nVersion; return true; }
 
@@ -797,6 +797,7 @@ public:
     void BlockUntilSyncedToCurrentChain() const LOCKS_EXCLUDED(::cs_main) EXCLUSIVE_LOCKS_REQUIRED(!cs_wallet);
 
     /** set a single wallet flag */
+    void SetWalletFlagWithDB(WalletBatch& batch, uint64_t flags) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void SetWalletFlag(uint64_t flags);
 
     /** Unsets a single wallet flag */
