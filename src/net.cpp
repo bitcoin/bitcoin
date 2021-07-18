@@ -1908,19 +1908,22 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 if (pnode->IsFullOutboundConn()) nOutboundFullRelay++;
                 if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
 
-                // Netgroups for inbound and manual peers are not excluded because our goal here
-                // is to not use multiple of our limited outbound slots on a single netgroup
-                // but inbound and manual peers do not use our outbound slots. Inbound peers
-                // also have the added issue that they could be attacker controlled and used
-                // to prevent us from connecting to particular hosts if we used them here.
+                // Our goal here is to not use multiple of our limited outbound slots on a single netgroup.
                 switch (pnode->m_conn_type) {
                     case ConnectionType::INBOUND:
-                    case ConnectionType::MANUAL:
+                        // Not an outbound slot.
+                        // Additionally, they could be attacker controlled and used to prevent
+                        // us from connecting to particular hosts if we used them here.
+                    case ConnectionType::ADDR_FETCH:
+                        // Short-lived outbound connection should not affect our peer selection.
+                    case ConnectionType::FEELER:
+                        // Short-lived outbound connection should not affect our peer selection.
                         break;
+                    case ConnectionType::MANUAL:
+                        // Consider them same as full-relay connections when enforcing diversity
+                        // of new outbound connections.
                     case ConnectionType::OUTBOUND_FULL_RELAY:
                     case ConnectionType::BLOCK_RELAY:
-                    case ConnectionType::ADDR_FETCH:
-                    case ConnectionType::FEELER:
                         setConnected.insert(pnode->addr.GetGroup(addrman.m_asmap));
                 } // no default case, so the compiler can warn about missing cases
             }
