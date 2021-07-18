@@ -9,6 +9,12 @@
 
 #include <crypto/common.h>
 
+#if defined(__clang__)
+#pragma clang attribute push(__attribute__((__target__("avx,avx2"))), apply_to = function)
+#elif defined(__GNUC__)
+#pragma GCC target ("avx,avx2")
+#endif
+
 namespace sha256d64_avx2 {
 namespace {
 
@@ -324,5 +330,9 @@ void Transform_8way(unsigned char* out, const unsigned char* in)
 }
 
 }
+
+#if defined(__clang__)
+#pragma clang attribute pop
+#endif
 
 #endif
