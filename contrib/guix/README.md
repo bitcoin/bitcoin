@@ -1,6 +1,6 @@
 # Bootstrappable Syscoin Core Builds
 
-This directory contains the files necessary to perform bootstrappable Bitcoin
+This directory contains the files necessary to perform bootstrappable Syscoin
 Core builds.
 
 [Bootstrappability][b17e] furthers our binary security guarantees by allowing us
@@ -255,7 +255,7 @@ This can be overridden for all `guix` invocations by passing the
 overridden on a call-by-call basis by passing the same `--substitute-urls`
 option to client tools such at `guix environment`.
 
-To use dongcarl's substitute server for Bitcoin Core builds after having
+To use dongcarl's substitute server for Syscoin Core builds after having
 [authorized his signing key](#authorize-the-signing-keys):
 
 ```
