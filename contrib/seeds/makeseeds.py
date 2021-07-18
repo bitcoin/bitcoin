@@ -30,6 +30,7 @@ PATTERN_AGENT = re.compile(
     r"^/Satoshi:("
     r"4.1.(0|1|2|3)|"
     r"4.2.(0|1)|"
+    r"4.3.(0|1)|"
     r")")
 
 def parseline(line):
