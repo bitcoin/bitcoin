@@ -1040,19 +1040,18 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, int64_t nTime)
     NodeId nodeid = pnode.GetId();
     CAddress addr = pnode.addr;
 
-    CAddress addrYou = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ?
-                           addr :
-                           CAddress(CService(), addr.nServices);
-    CAddress addrMe = CAddress(CService(), nLocalNodeServices);
+    CService addr_you = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? addr : CService();
 
     const bool tx_relay = !m_ignore_incoming_txs && pnode.m_tx_relay != nullptr;
-    m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
+    m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime,
+            (uint64_t)addr.nServices, addr_you, // Together the pre-version-31402 serialization of CAddress "addrYou" (without nTime)
+            (uint64_t)nLocalNodeServices, CService(), // Together the pre-version-31402 serialization of CAddress "addrMe" (without nTime)
             nonce, strSubVersion, nNodeStartingHeight, tx_relay));
 
     if (fLogIPs) {
-        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), tx_relay, nodeid);
+        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, them=%s, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addr_you.ToString(), tx_relay, nodeid);
     } else {
-        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), tx_relay, nodeid);
+        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, tx_relay, nodeid);
     }
 }
 
@@ -2442,18 +2441,18 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         CAddress addrMe;
         CAddress addrFrom;
         uint64_t nNonce = 1;
-        uint64_t nServiceInt;
         ServiceFlags nServices;
         int nVersion;
         std::string cleanSubVer;
         int starting_height = -1;
         bool fRelay = true;
 
-        vRecv >> nVersion >> nServiceInt >> nTime >> addrMe;
+        vRecv >> nVersion >> Using<CustomUintFormatter<8>>(nServices) >> nTime;
         if (nTime < 0) {
             nTime = 0;
         }
-        nServices = ServiceFlags(nServiceInt);
+        // The pre-31402 serialization of addrMe (which didn't include nTime):
+        vRecv >> Using<CustomUintFormatter<8>>(addrMe.nServices) >> static_cast<CService&>(addrMe);
         if (!pfrom.IsInboundConn())
         {
             m_addrman.SetServices(pfrom.addr, nServices);
@@ -2472,8 +2471,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        if (!vRecv.empty())
-            vRecv >> addrFrom >> nNonce;
+        if (!vRecv.empty()) {
+            // The pre-31402 serialization of addrFrom (which didn't include nTime).
+            vRecv >> Using<CustomUintFormatter<8>>(addrFrom.nServices) >> static_cast<CService&>(addrFrom);
+            vRecv >> nNonce;
+        }
         if (!vRecv.empty()) {
             std::string strSubVer;
             vRecv >> LIMITED_STRING(strSubVer, MAX_SUBVERSION_LENGTH);
