@@ -100,11 +100,11 @@ static RPCHelpMan getnetworkhashps()
                     HelpExampleCli("getnetworkhashps", "")
             + HelpExampleRpc("getnetworkhashps", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCContext& ctx) -> UniValue
 {
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    ChainstateManager& chainman = EnsureAnyChainman(ctx.request.context);
     LOCK(cs_main);
-    return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1, chainman.ActiveChain());
+    return GetNetworkHashPS(ctx.param<int>(0), ctx.param<int>(1), chainman.ActiveChain());
 },
     };
 }
