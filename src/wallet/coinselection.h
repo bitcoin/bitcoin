@@ -166,9 +166,66 @@ struct OutputGroup
     CAmount GetSelectionAmount() const;
 };
 
-bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret);
+/** Compute the waste for this result given the cost of change
+ * waste = change_cost + excess + inputs * (effective_feerate - long_term_feerate)
+ * excess = selected_effective_value - target
+ * change_cost = change_fee + change_long_term_fee
+ *
+ * Note this function is separate from SelectionResult for the tests.
+ *
+ * @param[in] inputs The selected inputs
+ * @param[in] change_cost The cost of creating change and spending it in the future. Only used if there is change. Must be 0 if there is no change.
+ * @param[in] target The amount targeted by the coin selection algorithm.
+ * @param[in] real_value Whether to use the input's real value (when true) or the effective value (when false)
+ * @return The waste
+ */
+CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, const CAmount change_cost, const CAmount target, bool real_value = false);
+
+struct SelectionResult
+{
+    /** Set of inputs selected by the algorithm to use in the transaction */
+    std::set<CInputCoin> selected_inputs;
+    /** Amount of fees that cover all of the inputs.
+     *  Because we include the fees for transaction overhead and outputs in the
+     *  selection target, we are unable to account for those here.
+     *  This is not a function because the fees we pay may differ from the fee set
+     *  in the CInputCoins as some algorithms will overpay the fee a little bit to
+     *  hit a specific target.
+     */
+    CAmount input_fees{0};
+    /** Whether the input values for calculations should be the real value (true) or the effective value (false) */
+    bool m_real_value{false};
+    /** The algorithm used supports making change outputs. */
+    bool m_make_change{false};
+    /** The cost of making a change output and spending it in the future. Since this is largely a static parameter independent of the selection, it is not cleared by Clear() */
+    CAmount m_change_cost{0};
+    /** The target the algorithm selected for. Note that this may not be equal to the recipient amount as it can include non-input fees */
+    CAmount m_target{0};
+
+    SelectionResult() {}
+    explicit SelectionResult(const CAmount change_cost, bool use_real_value) : m_change_cost(change_cost), m_real_value(use_real_value) {}
+
+    /** Get the sum of the input values */
+    CAmount GetSelectedValue() const;
+    /** Check if this selection is equivalent to another one. Equivalent means same input values, but maybe different inputs (i.e. same value, different prevout) */
+    bool EquivalentResult(const SelectionResult& other) const;
+    /** Check if this selection is equal to another one. Equal means same inputs (i.e same value and prevout) */
+    bool EqualResult(const SelectionResult& other) const;
+
+    void Clear();
+
+    void AddInput(const OutputGroup& group);
+
+    /** Calculates the waste for this selection via GetSelectionWaste */
+    CAmount GetWaste() const;
+
+    /** Get the vector of CInputCoins that will be used to fill in a CTransaction's vin */
+    std::vector<CInputCoin> GetInputVector() const;
+};
+
+bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, SelectionResult& result);
 
 // Original coin selection algorithm as a fallback
-bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
+bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, SelectionResult& result);
 
 #endif // BITCOIN_WALLET_COINSELECTION_H
