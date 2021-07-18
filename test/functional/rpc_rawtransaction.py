@@ -46,7 +46,9 @@ class multidict(dict):
         return self.x
 
 
-# Create one-input, one-output, no-fee transaction:
+TX_HEURISTIC = '0200000000010100000000000008cb2fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0100000000feffffff02d09e8a1a00000000160014aaaaaa35aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa086010000000000160014aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa0247304402200bdddddddddddddddddddddd5332dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddda44c012102290761671bdddddddddddddddddddddddddddddddddddddddddddddddddddddd3e010000'
+
+
 class RawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -70,6 +72,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.connect_nodes(0, 2)
 
     def run_test(self):
+        self.log.info('Check that decoderawtransaction heuristic may fail (deserialization giving two different txids)')
+        assert_equal('efb992', self.nodes[0].decoderawtransaction(hexstring=TX_HEURISTIC)['txid'][:6])
+        assert_equal('efb992', self.nodes[0].decoderawtransaction(hexstring=TX_HEURISTIC, iswitness=False)['txid'][:6])
+        assert_equal('567737', self.nodes[0].decoderawtransaction(hexstring=TX_HEURISTIC, iswitness=True)['txid'][:6])
+
         self.log.info('prepare some coins for multiple *rawtransaction commands')
         self.nodes[2].generate(1)
         self.sync_all()
