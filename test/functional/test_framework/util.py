@@ -286,15 +286,15 @@ class PortSeed:
     n = None
 
 
-def get_rpc_proxy(url, node_number, *, timeout=None, coveragedir=None):
+def get_rpc_proxy(url: str, node_number: int, *, timeout: int=None, coveragedir: str=None) -> coverage.AuthServiceProxyWrapper:
     """
     Args:
-        url (str): URL of the RPC server to call
-        node_number (int): the node number (or id) that this calls to
+        url: URL of the RPC server to call
+        node_number: the node number (or id) that this calls to
 
     Kwargs:
-        timeout (int): HTTP timeout in seconds
-        coveragedir (str): Directory
+        timeout: HTTP timeout in seconds
+        coveragedir: Directory
 
     Returns:
         AuthServiceProxy. convenience object for making RPC calls.
@@ -305,11 +305,10 @@ def get_rpc_proxy(url, node_number, *, timeout=None, coveragedir=None):
         proxy_kwargs['timeout'] = int(timeout)
 
     proxy = AuthServiceProxy(url, **proxy_kwargs)
-    proxy.url = url  # store URL on proxy for info
 
     coverage_logfile = coverage.get_filename(coveragedir, node_number) if coveragedir else None
 
-    return coverage.AuthServiceProxyWrapper(proxy, coverage_logfile)
+    return coverage.AuthServiceProxyWrapper(proxy, url, coverage_logfile)
 
 
 def p2p_port(n):
