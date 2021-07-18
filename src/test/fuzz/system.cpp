@@ -38,13 +38,21 @@ FUZZ_TARGET(system)
                 args_manager.SelectConfigNetwork(fuzzed_data_provider.ConsumeRandomLengthString(16));
             },
             [&] {
-                args_manager.SoftSetArg(fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeRandomLengthString(16));
+                // Avoid Can't call SoftSetArg on arg registered with flags 0x8d8d8d00 (requires 0x2, disallows 0x10)
+                try {
+                    args_manager.SoftSetArg(fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeRandomLengthString(16));
+                } catch (const std::logic_error&) {
+                }
             },
             [&] {
                 args_manager.ForceSetArg(fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeRandomLengthString(16));
             },
             [&] {
-                args_manager.SoftSetBoolArg(fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeBool());
+                // Avoid Can't call SoftSetBoolArg on arg registered with flags 0x8d8d8d00 (requires 0x2, disallows 0x10)
+                try {
+                    args_manager.SoftSetBoolArg(fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeBool());
+                } catch (const std::logic_error&) {
+                }
             },
             [&] {
                 const OptionsCategory options_category = fuzzed_data_provider.PickValueInArray<OptionsCategory>({OptionsCategory::OPTIONS, OptionsCategory::CONNECTION, OptionsCategory::WALLET, OptionsCategory::WALLET_DEBUG_TEST, OptionsCategory::ZMQ, OptionsCategory::DEBUG_TEST, OptionsCategory::CHAINPARAMS, OptionsCategory::NODE_RELAY, OptionsCategory::BLOCK_CREATION, OptionsCategory::RPC, OptionsCategory::GUI, OptionsCategory::COMMANDS, OptionsCategory::REGISTER_COMMANDS, OptionsCategory::HIDDEN});
@@ -54,7 +62,16 @@ FUZZ_TARGET(system)
                 if (args_manager.GetArgFlags(argument_name) != std::nullopt) {
                     return;
                 }
-                args_manager.AddArg(argument_name, fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeIntegral<unsigned int>() & ~ArgsManager::COMMAND, options_category);
+                unsigned int flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
+                // Avoid hitting "ALLOW_{BOOL|INT|STRING} flags would have no effect with ALLOW_ANY present (ALLOW_ANY disables validation)"
+                if (flags & ArgsManager::ALLOW_ANY) {
+                    flags &= ~(ArgsManager::ALLOW_BOOL | ArgsManager::ALLOW_INT | ArgsManager::ALLOW_STRING);
+                }
+                // Avoid hitting "ALLOW_INT would have no effect with ALLOW_STRING present (any valid integer is also a valid string)"
+                if (flags & ArgsManager::ALLOW_STRING) {
+                    flags &= ~ArgsManager::ALLOW_INT;
+                }
+                args_manager.AddArg(argument_name, fuzzed_data_provider.ConsumeRandomLengthString(16), flags & ~ArgsManager::COMMAND, options_category);
             },
             [&] {
                 // Avoid hitting:
@@ -96,11 +113,23 @@ FUZZ_TARGET(system)
     const int64_t i64 = fuzzed_data_provider.ConsumeIntegral<int64_t>();
     const bool b = fuzzed_data_provider.ConsumeBool();
 
-    (void)args_manager.GetArg(s1, i64);
-    (void)args_manager.GetArg(s1, s2);
+    try {
+        (void)args_manager.GetArg(s1, i64);
+    } catch (const std::logic_error&) {
+    }
+    try {
+        (void)args_manager.GetArg(s1, s2);
+    } catch (const std::logic_error&) {
+    }
     (void)args_manager.GetArgFlags(s1);
-    (void)args_manager.GetArgs(s1);
-    (void)args_manager.GetBoolArg(s1, b);
+    try {
+        (void)args_manager.GetArgs(s1);
+    } catch (const std::logic_error&) {
+    }
+    try {
+        (void)args_manager.GetBoolArg(s1, b);
+    } catch (const std::logic_error&) {
+    }
     try {
         (void)args_manager.GetChainName();
     } catch (const std::runtime_error&) {
