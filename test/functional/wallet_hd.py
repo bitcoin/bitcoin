@@ -136,7 +136,7 @@ class WalletHDTest(BitcoinTestFramework):
                 keypath = self.nodes[1].getaddressinfo(out['scriptPubKey']['address'])['hdkeypath']
 
         if self.options.descriptors:
-            assert_equal(keypath[0:14], "m/84'/1'/0'/1/")
+            assert_equal(keypath[0:14], "m/86'/1'/0'/1/")
         else:
             assert_equal(keypath[0:7], "m/0'/1'")
 

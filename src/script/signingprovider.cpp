@@ -208,5 +208,15 @@ CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& 
             }
         }
     }
+    if (auto output_key = std::get_if<WitnessV1Taproot>(&dest)) {
+        TaprootSpendData spenddata;
+        CPubKey pub;
+        if (store.GetTaprootSpendData(*output_key, spenddata)
+            && !spenddata.internal_key.IsNull()
+            && spenddata.merkle_root.IsNull()
+            && store.GetPubKeyByXOnly(spenddata.internal_key, pub)) {
+            return pub.GetID();
+        }
+    }
     return CKeyID();
 }

@@ -12,6 +12,7 @@ import hashlib
 import inspect
 import json
 import logging
+import math
 import os
 import re
 import time
@@ -37,12 +38,13 @@ def assert_approx(v, vexp, vspan=0.00001):
 
 def assert_fee_amount(fee, tx_size, fee_per_kB):
     """Assert the fee was in range"""
-    target_fee = round(tx_size * fee_per_kB / 1000, 8)
+    target_fee = math.floor(tx_size * fee_per_kB / 1000 * 100000000)
+    fee = int(fee * 100000000)
     if fee < target_fee:
-        raise AssertionError("Fee of %s BTC too low! (Should be %s BTC)" % (str(fee), str(target_fee)))
+        raise AssertionError("Fee of %s Sats too low! (Should be %s Sats)" % (str(fee), str(target_fee)))
     # allow the wallet's estimation to be at most 2 bytes off
-    if fee > (tx_size + 2) * fee_per_kB / 1000:
-        raise AssertionError("Fee of %s BTC too high! (Should be %s BTC)" % (str(fee), str(target_fee)))
+    if fee > int((tx_size + 2) * fee_per_kB / 1000 * 100000000):
+        raise AssertionError("Fee of %s Sats too high! (Should be %s Sats)" % (str(fee), str(target_fee)))
 
 
 def assert_equal(thing1, thing2, *args):

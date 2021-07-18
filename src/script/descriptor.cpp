@@ -851,6 +851,7 @@ protected:
         builder.Finalize(xpk);
         WitnessV1Taproot output = builder.GetOutput();
         out.tr_spenddata[output].Merge(builder.GetSpendData());
+        out.pubkeys.emplace(keys[0].GetID(), keys[0]);
         return Vector(GetScriptForDestination(output));
     }
     bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type, const DescriptorCache* cache = nullptr) const override
@@ -1242,14 +1243,8 @@ std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, ParseS
     CPubKey pubkey(full_key);
     std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey, true);
     KeyOriginInfo info;
-    if (provider.GetKeyOrigin(pubkey.GetID(), info)) {
+    if (provider.GetKeyOriginByXOnly(xkey, info)) {
         return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
-    } else {
-        full_key[0] = 0x03;
-        pubkey = CPubKey(full_key);
-        if (provider.GetKeyOrigin(pubkey.GetID(), info)) {
-            return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
-        }
     }
     return key_provider;
 }
