@@ -29,10 +29,11 @@ struct AddressTableEntry
     Type type;
     QString label;
     QString address;
+    bool is_used;
 
     AddressTableEntry() {}
-    AddressTableEntry(Type _type, const QString &_label, const QString &_address):
-        type(_type), label(_label), address(_address) {}
+    AddressTableEntry(Type _type, const QString &_label, const QString &_address, bool _is_used = false):
+        type(_type), label(_label), address(_address), is_used(_is_used) {}
 };
 
 struct AddressTableEntryLessThan
@@ -88,7 +89,8 @@ public:
                         QString::fromStdString(address.purpose), address.is_mine);
                 cachedAddressTable.append(AddressTableEntry(addressType,
                                   QString::fromStdString(address.name),
-                                  QString::fromStdString(EncodeDestination(address.dest))));
+                                  QString::fromStdString(EncodeDestination(address.dest)),
+                                  address.is_used));
             }
         }
         // std::lower_bound() and std::upper_bound() require our cachedAddressTable list to be sorted in asc order
@@ -97,7 +99,7 @@ public:
         std::sort(cachedAddressTable.begin(), cachedAddressTable.end(), AddressTableEntryLessThan());
     }
 
-    void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status)
+    void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status, bool is_used)
     {
         // Find address / label in model
         QList<AddressTableEntry>::iterator lower = std::lower_bound(
@@ -129,6 +131,7 @@ public:
             }
             lower->type = newEntryType;
             lower->label = label;
+            lower->is_used = is_used;
             parent->emitDataChanged(lowerIndex);
             break;
         case CT_DELETED:
@@ -230,6 +233,16 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
             return {};
         } // no default case, so the compiler can warn about missing cases
         assert(false);
+    }
+    else if (role == Qt::ForegroundRole) {
+        if (rec->is_used == true) {
+            return QColor(Qt::gray);
+        }
+    }
+    else if (role == Qt::ToolTipRole) {
+        if (rec->is_used == true) {
+            return tr("This address has been used (Right-click to edit address or label)");
+        }
     }
     return QVariant();
 }
@@ -334,10 +347,10 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex &par
 }
 
 void AddressTableModel::updateEntry(const QString &address,
-        const QString &label, bool isMine, const QString &purpose, int status)
+        const QString &label, bool isMine, const QString &purpose, int status, bool is_used)
 {
     // Update address book model from Bitcoin core
-    priv->updateEntry(address, label, isMine, purpose, status);
+    priv->updateEntry(address, label, isMine, purpose, status, is_used);
 }
 
 QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address, const OutputType address_type)

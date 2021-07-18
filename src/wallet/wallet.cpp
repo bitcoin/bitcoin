@@ -875,6 +875,33 @@ bool CWallet::IsSpentKey(const uint256& hash, unsigned int n) const
     return false;
 }
 
+void CWallet::SetAddressReceivedState(WalletBatch& batch, const CTxOut& cout, const uint256& hash)
+{
+    AssertLockHeld(cs_wallet);
+    CTxDestination dst;
+    if (ExtractDestination(cout.scriptPubKey, dst) && IsMine(dst)) {
+
+        m_address_book[dst].destdata.insert(std::make_pair("first_txid", hash.ToString()));
+        NotifyAddressBookChanged(dst, m_address_book[dst].GetLabel(), IsMine(dst) != ISMINE_NO, "receive", CT_UPDATED);
+    }
+}
+
+bool CWallet::HasAddressReceived(const CTxDestination& dst) const
+{
+
+    const std::string key{"first_txid"};
+    std::map<CTxDestination, CAddressBookData>::const_iterator i = m_address_book.find(dst);
+    if(i != m_address_book.end())
+    {
+        CAddressBookData::StringMap::const_iterator j = i->second.destdata.find(key);
+        if(j != i->second.destdata.end())
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmation& confirm, const UpdateWalletTxFn& update_wtx, bool fFlushOnClose)
 {
     LOCK(cs_wallet);
@@ -890,6 +917,10 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         for (const CTxIn& txin : tx->vin) {
             const COutPoint& op = txin.prevout;
             SetSpentKeyState(batch, op.hash, op.n, true, tx_destinations);
+        }
+
+        for (const CTxOut& txout : tx->vout) {
+            SetAddressReceivedState(batch, txout, hash);
         }
 
         MarkDestinationsDirty(tx_destinations);
