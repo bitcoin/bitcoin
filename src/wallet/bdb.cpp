@@ -104,16 +104,8 @@ void BerkeleyEnvironment::Close()
     UnlockDirectory(strPath, ".walletlock");
 }
 
-void BerkeleyEnvironment::Reset()
-{
-    dbenv.reset(new DbEnv(DB_CXX_NO_EXCEPTIONS));
-    fDbEnvInit = false;
-    fMockDb = false;
-}
-
 BerkeleyEnvironment::BerkeleyEnvironment(const fs::path& dir_path) : strPath(dir_path.string())
 {
-    Reset();
 }
 
 BerkeleyEnvironment::~BerkeleyEnvironment()
@@ -172,7 +164,6 @@ bool BerkeleyEnvironment::Open(bilingual_str& err)
         if (ret2 != 0) {
             LogPrintf("BerkeleyEnvironment::Open: Error %d closing failed database environment: %s\n", ret2, DbEnv::strerror(ret2));
         }
-        Reset();
         err = strprintf(_("Error initializing wallet database environment %s!"), Directory());
         if (ret == DB_RUNRECOVERY) {
             err += Untranslated(" ") + _("This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet");
@@ -188,8 +179,6 @@ bool BerkeleyEnvironment::Open(bilingual_str& err)
 //! Construct an in-memory mock Berkeley environment for testing
 BerkeleyEnvironment::BerkeleyEnvironment()
 {
-    Reset();
-
     LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::MakeMock\n");
 
     dbenv->set_cachesize(1, 0, 1);
@@ -441,7 +430,9 @@ void BerkeleyEnvironment::ReloadDbEnv()
     }
     // Reset the environment
     Flush(true); // This will flush and close the environment
-    Reset();
+    dbenv = std::make_unique<DbEnv>(DB_CXX_NO_EXCEPTIONS);
+    fDbEnvInit = false;
+    fMockDb = false;
     bilingual_str open_err;
     Open(open_err);
 }
