@@ -992,8 +992,27 @@ private:
     void NotifyNumConnectionsChanged();
     /** Return true if the peer is inactive and should be disconnected. */
     bool InactivityCheck(const CNode& node) const;
-    bool GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
-    void SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+
+    /**
+     * Generate a collection of sockets that we want to be checked for readiness for IO.
+     * @param[in] nodes Select from these nodes' sockets.
+     * @param[out] recv_set Sockets to check for read readiness.
+     * @param[out] send_set Sockets to check for write readiness.
+     * @param[out] error_set Sockets to check for errors.
+     * @return true if at least one socket is to be checked (the returned set is not empty)
+     */
+    bool GenerateSelectSet(const std::vector<CNode*>& nodes, std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+
+    /**
+     * Check which sockets are ready for IO.
+     * @param[in] nodes Select from these nodes' sockets.
+     * @param[out] recv_set Sockets which are ready for read.
+     * @param[out] send_set Sockets which are ready for write.
+     * @param[out] error_set Sockets which have errors.
+     * This calls `GenerateSelectSet()` to gather a list of sockets to check.
+     */
+    void SocketEvents(const std::vector<CNode*>& nodes, std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+
     void SocketHandler();
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
@@ -1185,6 +1204,44 @@ private:
      * an address and port that are designated for incoming Tor connections.
      */
     std::vector<CService> m_onion_binds;
+
+    /**
+     * RAII helper to atomically create a copy of `vNodes` and add a reference
+     * to each of the nodes. The nodes are released when this object is destroyed.
+     */
+    class NodesSnapshot
+    {
+    public:
+        explicit NodesSnapshot(const CConnman& connman, bool shuffle)
+        {
+            {
+                LOCK(connman.cs_vNodes);
+                m_nodes_copy = connman.vNodes;
+                for (auto& node : m_nodes_copy) {
+                    node->AddRef();
+                }
+            }
+            if (shuffle) {
+                FastRandomContext rng;
+                Shuffle(m_nodes_copy.begin(), m_nodes_copy.end(), rng);
+            }
+        }
+
+        ~NodesSnapshot()
+        {
+            for (auto& node : m_nodes_copy) {
+                node->Release();
+            }
+        }
+
+        const std::vector<CNode*>& Nodes() const
+        {
+            return m_nodes_copy;
+        }
+
+    private:
+        std::vector<CNode*> m_nodes_copy;
+    };
 
     friend struct CConnmanTest;
     friend struct ConnmanTestMsg;
