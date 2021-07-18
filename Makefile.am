@@ -58,8 +58,7 @@ DIST_SHARE = \
 
 BIN_CHECKS=$(top_srcdir)/contrib/devtools/symbol-check.py \
            $(top_srcdir)/contrib/devtools/security-check.py \
-           $(top_srcdir)/contrib/devtools/utils.py \
-           $(top_srcdir)/contrib/devtools/pixie.py
+           $(top_srcdir)/contrib/devtools/utils.py
 
 WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/bitcoin.ico \
   $(top_srcdir)/share/pixmaps/nsis-header.bmp \
@@ -376,5 +375,5 @@ if TARGET_WINDOWS
 endif
 if TARGET_LINUX
 	$(AM_V_at) CC='$(CC)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-security-check.py TestSecurityChecks.test_ELF
-	$(AM_V_at) CC='$(CC)' CPPFILT='$(CPPFILT)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-symbol-check.py TestSymbolChecks.test_ELF
+	$(AM_V_at) CC='$(CC)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-symbol-check.py TestSymbolChecks.test_ELF
 endif
