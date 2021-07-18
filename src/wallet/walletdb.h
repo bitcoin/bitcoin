@@ -77,6 +77,7 @@ extern const std::string VERSION;
 extern const std::string WALLETDESCRIPTOR;
 extern const std::string WALLETDESCRIPTORCKEY;
 extern const std::string WALLETDESCRIPTORKEY;
+extern const std::string WALLETID;
 extern const std::string WATCHMETA;
 extern const std::string WATCHS;
 } // namespace DBKeys
@@ -265,6 +266,8 @@ public:
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
+
+    bool WriteWalletID(const uint160& id);
 
     bool WriteWalletFlags(const uint64_t flags);
     //! Begin a new transaction

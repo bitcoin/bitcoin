@@ -327,6 +327,8 @@ private:
     // ScriptPubKeyMan::GetID. In many cases it will be the hash of an internal structure
     std::map<uint256, std::unique_ptr<ScriptPubKeyMan>> m_spk_managers;
 
+    uint160 wallet_id;
+
     bool CreateTransactionInternal(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
@@ -913,6 +915,13 @@ public:
 
     //! Add a descriptor to the wallet, return a ScriptPubKeyMan & associated output type
     ScriptPubKeyMan* AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label, bool internal);
+
+    //! Set the wallet ID
+    void LoadWalletID(const uint160& id);
+    //! Get the wallet iD
+    const uint160& GetWalletID() const;
+    //! Ensure that a wallet ID already exists. If one does not, add it.
+    void EnsureWalletIDWithDB(WalletBatch& batch);
 };
 
 /**

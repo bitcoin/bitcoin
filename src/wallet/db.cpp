@@ -6,6 +6,7 @@
 #include <chainparams.h>
 #include <fs.h>
 #include <logging.h>
+#include <random.h>
 #include <wallet/db.h>
 
 #include <string>
@@ -134,4 +135,12 @@ bool IsSQLiteFile(const fs::path& path)
 
     // Check the application id matches our network magic
     return memcmp(Params().MessageStart(), app_id, 4) == 0;
+}
+
+uint160 WalletDatabase::MakeNewWalletID() const
+{
+    // Generate a random ID
+    uint160 id;
+    GetStrongRandBytes(id.data(), id.size());
+    return id;
 }

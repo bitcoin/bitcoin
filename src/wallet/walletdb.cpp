@@ -55,6 +55,7 @@ const std::string WALLETDESCRIPTORCACHE{"walletdescriptorcache"};
 const std::string WALLETDESCRIPTORLHCACHE{"walletdescriptorlhcache"};
 const std::string WALLETDESCRIPTORCKEY{"walletdescriptorckey"};
 const std::string WALLETDESCRIPTORKEY{"walletdescriptorkey"};
+const std::string WALLETID{"walletid"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
 } // namespace DBKeys
@@ -701,6 +702,10 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 
             wss.m_descriptor_crypt_keys.insert(std::make_pair(std::make_pair(desc_id, pubkey.GetID()), std::make_pair(pubkey, privkey)));
             wss.fIsEncrypted = true;
+        } else if (strType == DBKeys::WALLETID) {
+            uint160 wallet_id;
+            ssValue >> wallet_id;
+            pwallet->LoadWalletID(wallet_id);
         } else if (strType != DBKeys::BESTBLOCK && strType != DBKeys::BESTBLOCK_NOMERKLE &&
                    strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
                    strType != DBKeys::VERSION && strType != DBKeys::SETTINGS &&
@@ -912,6 +917,9 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         }
     }
 
+    // Make sure there is a wallet id
+    pwallet->EnsureWalletIDWithDB(*this);
+
     return result;
 }
 
@@ -1050,6 +1058,11 @@ bool WalletBatch::WriteHDChain(const CHDChain& chain)
 bool WalletBatch::WriteWalletFlags(const uint64_t flags)
 {
     return WriteIC(DBKeys::FLAGS, flags);
+}
+
+bool WalletBatch::WriteWalletID(const uint160& id)
+{
+    return WriteIC(DBKeys::WALLETID, id);
 }
 
 bool WalletBatch::TxnBegin()

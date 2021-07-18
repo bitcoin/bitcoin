@@ -32,6 +32,7 @@
 #include <util/rbf.h>
 #include <util/string.h>
 #include <util/translation.h>
+#include <wallet/bdb.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 #include <wallet/external_signer_scriptpubkeyman.h>
@@ -3279,4 +3280,24 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
     spk_man->WriteDescriptor();
 
     return spk_man;
+}
+
+void CWallet::LoadWalletID(const uint160& id)
+{
+    assert(wallet_id.IsNull());
+    wallet_id = id;
+}
+
+const uint160& CWallet::GetWalletID() const
+{
+    assert(!wallet_id.IsNull());
+    return wallet_id;
+}
+
+void CWallet::EnsureWalletIDWithDB(WalletBatch& batch)
+{
+    if (!wallet_id.IsNull()) return;
+
+    wallet_id = GetDatabase().MakeNewWalletID();
+    batch.WriteWalletID(wallet_id);
 }
