@@ -914,6 +914,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         CAmount n = 0;
         if (!ParseMoney(args.GetArg("-incrementalrelayfee", ""), n))
             return InitError(AmountErrMsg("incrementalrelayfee", args.GetArg("-incrementalrelayfee", "")));
+        // High fee check
+        if (n > MAX_FEE_PER_KVB)
+            return InitError(AmountHighWarn("-incrementalrelayfee"));
         incrementalRelayFee = CFeeRate(n);
     }
 
@@ -950,7 +953,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (!ParseMoney(args.GetArg("-minrelaytxfee", ""), n)) {
             return InitError(AmountErrMsg("minrelaytxfee", args.GetArg("-minrelaytxfee", "")));
         }
-        // High fee check is done afterward in CWallet::Create()
+        // High fee check
+        if (n > MAX_FEE_PER_KVB)
+            return InitError(AmountHighWarn("-minrelaytxfee"));
+
         ::minRelayTxFee = CFeeRate(n);
     } else if (incrementalRelayFee > ::minRelayTxFee) {
         // Allow only setting incrementalRelayFee to control both
@@ -964,6 +970,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         CAmount n = 0;
         if (!ParseMoney(args.GetArg("-blockmintxfee", ""), n))
             return InitError(AmountErrMsg("blockmintxfee", args.GetArg("-blockmintxfee", "")));
+        // High fee check
+        if (n > MAX_FEE_PER_KVB)
+            return InitError(AmountHighWarn("-blockmintxfee"));
     }
 
     // Feerate used to define dust.  Shouldn't be changed lightly as old
@@ -972,6 +981,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         CAmount n = 0;
         if (!ParseMoney(args.GetArg("-dustrelayfee", ""), n))
             return InitError(AmountErrMsg("dustrelayfee", args.GetArg("-dustrelayfee", "")));
+        // High fee check
+        if (n > MAX_FEE_PER_KVB)
+            return InitError(AmountHighWarn("-dustrelayfee"));
         dustRelayFee = CFeeRate(n);
     }
 
