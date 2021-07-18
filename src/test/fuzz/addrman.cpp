@@ -12,6 +12,7 @@
 #include <time.h>
 #include <util/asmap.h>
 
+#include <cassert>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -25,10 +26,164 @@ void initialize_addrman()
 class CAddrManDeterministic : public CAddrMan
 {
 public:
-    void MakeDeterministic(const uint256& random_seed)
+    explicit CAddrManDeterministic(FuzzedDataProvider& fuzzed_data_provider)
     {
-        insecure_rand = FastRandomContext{random_seed};
-        Clear();
+        insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)};
+        if (fuzzed_data_provider.ConsumeBool()) {
+            m_asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
+            if (!SanityCheckASMap(m_asmap)) {
+                m_asmap.clear();
+            }
+        }
+    }
+
+    /**
+     * Generate a random address.
+     */
+    CNetAddr RandAddr()
+    {
+        // The networks [1..6] correspond to CNetAddr::BIP155Network (private).
+        static const std::map<uint8_t, uint8_t> net_len_map = {
+            {1, ADDR_IPV4_SIZE},  {2, ADDR_IPV6_SIZE}, {3, ADDR_TORV2_SIZE},
+            {4, ADDR_TORV3_SIZE}, {5, ADDR_I2P_SIZE},  {6, ADDR_CJDNS_SIZE}};
+        const uint8_t net = insecure_rand.randrange(6) + 1; // [1..6]
+
+        CDataStream s(SER_NETWORK, PROTOCOL_VERSION | ADDRV2_FORMAT);
+
+        s << net;
+        s << insecure_rand.randbytes(net_len_map.at(net));
+
+        CNetAddr addr;
+        s >> addr;
+        return addr;
+    }
+
+    /**
+     * Fill this addrman with lots of addresses from lots of sources.
+     */
+    void Fill()
+    {
+        LOCK(cs);
+
+        // Add some of the addresses directly to the "tried" table.
+        const auto n = insecure_rand.randrange(4); // 0, 1, 2, 3 corresponding to 0%, 100%, 50%, 33%
+
+        const size_t num_sources = insecure_rand.randrange(100) + 1; // [1..100]
+        CNetAddr prev_source;
+        for (size_t i = 0; i < num_sources; ++i) {
+            const auto source = RandAddr();
+            const size_t num_addresses = insecure_rand.randrange(1000) + 1; // [1..1000]
+
+            for (size_t j = 0; j < num_addresses; ++j) {
+                const auto addr = CAddress{CService{RandAddr(), 8333}, NODE_NETWORK};
+                const auto time_penalty = insecure_rand.randrange(100000001);
+#if 1
+                // 2.83 sec to fill.
+                if (n > 0 && mapInfo.size() % n == 0 && mapAddr.find(addr) == mapAddr.end()) {
+                    // Add to the "tried" table (if the bucket slot is free).
+                    const CAddrInfo dummy{addr, source};
+                    const int bucket = dummy.GetTriedBucket(nKey, m_asmap);
+                    const int bucket_pos = dummy.GetBucketPosition(nKey, false, bucket);
+                    if (vvTried[bucket][bucket_pos] == -1) {
+                        int id;
+                        CAddrInfo* addr_info = Create(addr, source, &id);
+                        vvTried[bucket][bucket_pos] = id;
+                        addr_info->fInTried = true;
+                        ++nTried;
+                    }
+                } else {
+                    // Add to the "new" table.
+                    Add_(addr, source, time_penalty);
+                }
+#else
+                // 261.91 sec to fill.
+                Add_(addr, source, time_penalty);
+                if (n > 0 && mapInfo.size() % n == 0) {
+                    Good_(addr, false, GetTime());
+                }
+#endif
+                // Add 10% of the addresses from more than one source.
+                if (insecure_rand.randrange(10) == 0 && prev_source.IsValid()) {
+                    Add_(addr, prev_source, time_penalty);
+                }
+            }
+            prev_source = source;
+        }
+    }
+
+    /**
+     * Compare with another AddrMan.
+     * This compares:
+     * - the values in `mapInfo` (the keys aka ids are ignored)
+     * - vvNew entries refer to the same addresses
+     * - vvTried entries refer to the same addresses
+     */
+    bool operator==(const CAddrManDeterministic& other)
+    {
+        LOCK2(cs, other.cs);
+
+        if (mapInfo.size() != other.mapInfo.size() || nNew != other.nNew ||
+            nTried != other.nTried) {
+            return false;
+        }
+
+        // Check that all values in `mapInfo` are equal to all values in `other.mapInfo`.
+        // Keys may be different.
+
+        auto GetSortedAddresses = [](std::map<int, CAddrInfo> m) {
+            std::vector<CAddrInfo> addresses(m.size());
+            size_t i = 0;
+            for (const auto& [id, addr] : m) {
+                addresses[i++] = addr;
+            }
+            std::sort(addresses.begin(), addresses.end());
+            return addresses;
+        };
+
+        const auto& addresses = GetSortedAddresses(mapInfo);
+        const auto& other_addresses = GetSortedAddresses(other.mapInfo);
+
+        for (size_t i = 0; i < addresses.size(); ++i) {
+            const auto& addr = addresses[i];
+            const auto& other_addr = other_addresses.at(i);
+            if (addr.source != other_addr.source || addr.nLastSuccess != other_addr.nLastSuccess ||
+                addr.nAttempts != other_addr.nAttempts || addr.nRefCount != other_addr.nRefCount ||
+                addr.fInTried != other_addr.fInTried) {
+                return false;
+            }
+        }
+
+        auto IdsReferToSameAddress = [&](int id, int other_id) EXCLUSIVE_LOCKS_REQUIRED(cs, other.cs) {
+            if (id == -1 && other_id == -1) {
+                return true;
+            }
+            if ((id == -1 && other_id != -1) || (id != -1 && other_id == -1)) {
+                return false;
+            }
+            return mapInfo.at(id) == other.mapInfo.at(other_id);
+        };
+
+        // Check that `vvNew` contains the same addresses as `other.vvNew`. Notice - `vvNew[i][j]`
+        // contains just an id and the address is to be found in `mapInfo.at(id)`. The ids
+        // themselves may differ between `vvNew` and `other.vvNew`.
+        for (size_t i = 0; i < ADDRMAN_NEW_BUCKET_COUNT; ++i) {
+            for (size_t j = 0; j < ADDRMAN_BUCKET_SIZE; ++j) {
+                if (!IdsReferToSameAddress(vvNew[i][j], other.vvNew[i][j])) {
+                    return false;
+                }
+            }
+        }
+
+        // Same for `vvTried`.
+        for (size_t i = 0; i < ADDRMAN_TRIED_BUCKET_COUNT; ++i) {
+            for (size_t j = 0; j < ADDRMAN_BUCKET_SIZE; ++j) {
+                if (!IdsReferToSameAddress(vvTried[i][j], other.vvTried[i][j])) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 };
 
@@ -36,14 +191,7 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    CAddrManDeterministic addr_man;
-    addr_man.MakeDeterministic(ConsumeUInt256(fuzzed_data_provider));
-    if (fuzzed_data_provider.ConsumeBool()) {
-        addr_man.m_asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-        if (!SanityCheckASMap(addr_man.m_asmap)) {
-            addr_man.m_asmap.clear();
-        }
-    }
+    CAddrManDeterministic addr_man{fuzzed_data_provider};
     while (fuzzed_data_provider.ConsumeBool()) {
         CallOneOf(
             fuzzed_data_provider,
@@ -111,4 +259,22 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
     (void)const_addr_man.size();
     CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);
     data_stream << const_addr_man;
+}
+
+// Check that serialize followed by unserialize produces the same addrman.
+FUZZ_TARGET_INIT(addrman_serdeser, initialize_addrman)
+{
+    FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
+
+    CAddrManDeterministic addr_man1{fuzzed_data_provider};
+    CAddrManDeterministic addr_man2{fuzzed_data_provider};
+    addr_man2.m_asmap = addr_man1.m_asmap;
+
+    CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);
+
+    addr_man1.Fill();
+    data_stream << addr_man1;
+    data_stream >> addr_man2;
+    assert(addr_man1 == addr_man2);
 }
