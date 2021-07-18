@@ -497,9 +497,9 @@ BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_reorg, TestChainDIP3Setup)
 
     // Create ProUpServ and test block reorg which double-spend ProRegTx
     auto tx_up_serv = CreateProUpServTx(utxos, tx_reg.GetHash(), operatorKey, 2, CScript(), coinbaseKey);
-    testPool.addUnchecked(tx_up_serv.GetHash(), entry.FromTx(tx_up_serv));
+    testPool.addUnchecked(entry.FromTx(tx_up_serv));
     // A disconnected block would insert ProRegTx back into mempool
-    testPool.addUnchecked(tx_reg.GetHash(), entry.FromTx(tx_reg));
+    testPool.addUnchecked(entry.FromTx(tx_reg));
     BOOST_CHECK_EQUAL(testPool.size(), 2U);
 
     // Create a tx that will double-spend ProRegTx
@@ -565,7 +565,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_dual_proregtx, TestChainDIP3Setup)
     TestMemPoolEntryHelper entry;
     LOCK(testPool.cs);
 
-    testPool.addUnchecked(tx_reg1.GetHash(), entry.FromTx(tx_reg1));
+    testPool.addUnchecked(entry.FromTx(tx_reg1));
     BOOST_CHECK_EQUAL(testPool.size(), 1U);
     BOOST_CHECK(testPool.existsProviderTxConflict(tx_reg2));
 }

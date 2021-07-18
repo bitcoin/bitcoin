@@ -859,7 +859,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         bool validForFeeEstimation = (nFees !=0) && !bypass_limits && IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
 
         // Store transaction in memory
-        pool.addUnchecked(hash, entry, setAncestors, validForFeeEstimation);
+        pool.addUnchecked(entry, setAncestors, validForFeeEstimation);
         CAmount nValueOut = tx.GetValueOut();
         statsClient.count("transactions.sizeBytes", nSize, 1.0f);
         statsClient.count("transactions.fees", nFees, 1.0f);
