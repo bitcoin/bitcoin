@@ -74,3 +74,19 @@ start debugging, just like you would with any other program:
 ```bash
 gdb src/test/test_bitcoin
 ```
+
+#### Segmentation faults
+
+By default, the boost test runner will intercept system errors and not produce a core
+file. To bypass this, add `--catch_system_errors=no` to the `test_bitcoin` arguments
+and ensure that your ulimits are set properly (e.g. `ulimit -c unlimited`).
+
+Running the tests and hitting a segmentation fault should now produce a file called `core`
+depending upon your `/proc/sys/kernel/core_pattern` contents (on Linux platforms).
+
+You can then explore the core dump using
+``` bash
+gdb src/test/test_bitcoin core
+
+(gbd) bt  # produce a backtrace for where a segfault occurred
+```
