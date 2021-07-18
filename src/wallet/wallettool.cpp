@@ -40,7 +40,7 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
     wallet_instance->TopUpKeyPool();
 }
 
-static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::path& path, DatabaseOptions options)
+static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::path& path, const ArgsManager& args, DatabaseOptions options)
 {
     DatabaseStatus status;
     bilingual_str error;
@@ -51,7 +51,7 @@ static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::pa
     }
 
     // dummy chain interface
-    std::shared_ptr<CWallet> wallet_instance{new CWallet(nullptr /* chain */, name, std::move(database)), WalletToolReleaseWallet};
+    std::shared_ptr<CWallet> wallet_instance{new CWallet(nullptr /* chain */, name, args, std::move(database)), WalletToolReleaseWallet};
     DBErrors load_wallet_ret;
     try {
         load_wallet_ret = wallet_instance->LoadWallet();
@@ -131,7 +131,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
             options.require_format = DatabaseFormat::SQLITE;
         }
 
-        std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
+        std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, args, options);
         if (wallet_instance) {
             WalletShowInfo(wallet_instance.get());
             wallet_instance->Close();
@@ -139,7 +139,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
     } else if (command == "info") {
         DatabaseOptions options;
         options.require_existing = true;
-        std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
+        std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, args, options);
         if (!wallet_instance) return false;
         WalletShowInfo(wallet_instance.get());
         wallet_instance->Close();
@@ -164,7 +164,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
     } else if (command == "dump") {
         DatabaseOptions options;
         options.require_existing = true;
-        std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
+        std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, args, options);
         if (!wallet_instance) return false;
         bilingual_str error;
         bool ret = DumpWallet(*wallet_instance, error);

@@ -534,14 +534,14 @@ public:
         options.require_create = true;
         options.create_flags = wallet_creation_flags;
         options.create_passphrase = passphrase;
-        return MakeWallet(CreateWallet(*m_context.chain, name, true /* load_on_start */, options, status, error, warnings));
+        return MakeWallet(CreateWallet(*m_context.chain, name, true /* load_on_start */, gArgs, options, status, error, warnings));
     }
     std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         DatabaseOptions options;
         DatabaseStatus status;
         options.require_existing = true;
-        return MakeWallet(LoadWallet(*m_context.chain, name, true /* load_on_start */, options, status, error, warnings));
+        return MakeWallet(LoadWallet(*m_context.chain, name, true /* load_on_start */, gArgs, options, status, error, warnings));
     }
     std::string getWalletDir() override
     {
