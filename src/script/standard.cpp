@@ -504,6 +504,7 @@ WitnessV1Taproot TaprootBuilder::GetOutput() { return WitnessV1Taproot{m_output_
 
 TaprootSpendData TaprootBuilder::GetSpendData() const
 {
+    assert(IsComplete());
     TaprootSpendData spd;
     spd.merkle_root = m_branch.size() == 0 ? uint256() : m_branch[0]->hash;
     spd.internal_key = m_internal_key;

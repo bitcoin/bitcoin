@@ -227,8 +227,11 @@ struct TaprootSpendData
     /** The Merkle root of the script tree (0 if no scripts). */
     uint256 merkle_root;
     /** Map from (script, leaf_version) to (sets of) control blocks.
-     *  The control blocks are sorted by size, so that the signing logic can
-     *  easily prefer the cheapest one. */
+     *  More than one control block for a given script is only possible if it
+     *  appears in multiple branches of the tree. We keep them all so that
+     *  inference can reconstruct the full tree. Within each set, the control
+     *  blocks are sorted by size, so that the signing logic can easily
+     *  prefer the cheapest one. */
     std::map<std::pair<CScript, int>, std::set<std::vector<unsigned char>, ShortestVectorFirstComparator>> scripts;
     /** Merge other TaprootSpendData (for the same scriptPubKey) into this. */
     void Merge(TaprootSpendData other);
@@ -252,7 +255,7 @@ private:
         /** Merkle hash of this node. */
         uint256 hash;
         /** Tracked leaves underneath this node (either from the node itself, or its children).
-         *  The merkle_branch field for each is the partners to get to *this* node. */
+         *  The merkle_branch field of each is the partners to get to *this* node. */
         std::vector<LeafInfo> leaves;
     };
     /** Whether the builder is in a valid state so far. */
