@@ -480,10 +480,8 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         return false;
     }
 
-    const bool create_psbt = m_wallet->privateKeysDisabled();
-
     // allow a user based fee verification
-    QString questionString = create_psbt ? tr("Do you want to draft a transaction with fee increase?") : tr("Do you want to increase the fee?");
+    QString questionString = tr("Do you want to increase the fee?");
     questionString.append("<br />");
     questionString.append("<table style=\"text-align: left;\">");
     questionString.append("<tr><td>");
@@ -506,12 +504,15 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         questionString.append(tr("Warning: This may pay the additional fee by reducing change outputs or adding inputs, when necessary. It may add a new change output if one does not already exist. These changes may potentially leak privacy."));
     }
 
-    SendConfirmationDialog confirmationDialog(tr("Confirm fee bump"), questionString);
+    // Show the Craete Unsigned button if the option is set or private keys are disabled
+    bool show_unsigned_button = getOptionsModel()->getEnablePSBTControls() || m_wallet->privateKeysDisabled();
+
+    SendConfirmationDialog confirmationDialog(tr("Confirm fee bump"), questionString, "", "", SEND_CONFIRM_DELAY, "Send", !m_wallet->privateKeysDisabled(), "Create Unsigned", show_unsigned_button, nullptr);
     confirmationDialog.exec();
     QMessageBox::StandardButton retval = static_cast<QMessageBox::StandardButton>(confirmationDialog.result());
 
     // cancel sign&broadcast if user doesn't want to bump the fee
-    if (retval != QMessageBox::Yes) {
+    if (retval != QMessageBox::Yes && retval != QMessageBox::Save) {
         return false;
     }
 
@@ -522,7 +523,7 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
     }
 
     // Short-circuit if we are returning a bumped transaction PSBT to clipboard
-    if (create_psbt) {
+    if (retval == QMessageBox::Save) {
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
         const TransactionError err = wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, nullptr, psbtx, complete);
@@ -537,6 +538,8 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         Q_EMIT message(tr("PSBT copied"), "Copied to clipboard", CClientUIInterface::MSG_INFORMATION);
         return true;
     }
+
+    assert(!m_wallet->privateKeysDisabled());
 
     // sign bumped transaction
     if (!m_wallet->signBumpTransaction(mtx)) {

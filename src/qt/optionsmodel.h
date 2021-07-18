@@ -68,6 +68,7 @@ public:
         ExternalSignerPath,     // QString
         SpendZeroConfChange,    // bool
         Listen,                 // bool
+        EnablePSBTControls,     // bool
         OptionIDRowCount,
     };
 
@@ -88,6 +89,7 @@ public:
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
     bool getUseEmbeddedMonospacedFont() const { return m_use_embedded_monospaced_font; }
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
+    bool getEnablePSBTControls() const { return fEnablePSBTControls; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Explicit setters */
@@ -112,6 +114,7 @@ private:
     QString strThirdPartyTxUrls;
     bool m_use_embedded_monospaced_font;
     bool fCoinControlFeatures;
+    bool fEnablePSBTControls;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
 

@@ -226,6 +226,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="m_enable_psbt_controls">
+            <property name="text">
+             <string>Enable Advanced PSBT Controls</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
