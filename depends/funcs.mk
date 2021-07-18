@@ -228,7 +228,9 @@ $($(1)_postprocessed): | $($(1)_staged)
 	$(AT)touch $$@
 $($(1)_cached): | $($(1)_dependencies) $($(1)_postprocessed)
 	$(AT)echo Caching $(1)...
-	$(AT)cd $$($(1)_staging_dir)/$(host_prefix); find . | sort | tar --no-recursion -czf $$($(1)_staging_dir)/$$(@F) -T -
+	$(AT)cd $$($(1)_staging_dir)/$(host_prefix); \
+	  find . ! -name '.stamp_postprocessed' -print0 | TZ=UTC xargs -0 touch -m -t 200001011200; \
+	  find . ! -name '.stamp_postprocessed' -print0 | LC_ALL=C sort -z | tar --create --numeric-owner --no-recursion --null -T - | gzip -9n > $$($(1)_staging_dir)/$$(@F)
 	$(AT)mkdir -p $$(@D)
 	$(AT)rm -rf $$(@D) && mkdir -p $$(@D)
 	$(AT)mv $$($(1)_staging_dir)/$$(@F) $$(@)
