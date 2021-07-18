@@ -10,7 +10,9 @@
 #include <util/time.h>
 
 #include <chrono>
+#include <memory>
 #include <string>
+#include <unordered_map>
 
 /**
  * Maximum time to wait for I/O readiness.
@@ -19,17 +21,11 @@
 static constexpr auto MAX_WAIT_FOR_IO = 1s;
 
 /**
- * RAII helper class that manages a socket. Mimics `std::unique_ptr`, but instead of a pointer it
- * contains a socket and closes it automatically when it goes out of scope.
+ * RAII helper class that manages a socket and closes it automatically when it goes out of scope.
  */
 class Sock
 {
 public:
-    /**
-     * Default constructor, creates an empty object that does nothing when destroyed.
-     */
-    Sock();
-
     /**
      * Take ownership of an existent socket.
      */
@@ -61,19 +57,6 @@ public:
     virtual Sock& operator=(Sock&& other);
 
     /**
-     * Get the value of the contained socket.
-     * @return socket or INVALID_SOCKET if empty
-     */
-    [[nodiscard]] virtual SOCKET Get() const;
-
-    /**
-     * Get the value of the contained socket and drop ownership. It will not be closed by the
-     * destructor after this call.
-     * @return socket or INVALID_SOCKET if empty
-     */
-    virtual SOCKET Release();
-
-    /**
      * Close if non-empty.
      */
     virtual void Reset();
@@ -97,6 +80,26 @@ public:
     [[nodiscard]] virtual int Connect(const sockaddr* addr, socklen_t addr_len) const;
 
     /**
+     * bind(2) wrapper. Equivalent to `bind(this->Get(), addr, addr_len)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    [[nodiscard]] virtual int Bind(const sockaddr* addr, socklen_t addr_len) const;
+
+    /**
+     * listen(2) wrapper. Equivalent to `listen(this->Get(), backlog)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    [[nodiscard]] virtual int Listen(int backlog) const;
+
+    /**
+     * accept(2) wrapper. Equivalent to `std::make_unique<Sock>(accept(this->Get(), addr, addr_len))`.
+     * Code that uses this wrapper can be unit tested if this method is overridden by a mock Sock
+     * implementation.
+     * The returned unique_ptr is empty if `accept()` failed in which case errno will be set.
+     */
+    [[nodiscard]] virtual std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const;
+
+    /**
      * getsockopt(2) wrapper. Equivalent to
      * `getsockopt(this->Get(), level, opt_name, opt_val, opt_len)`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
@@ -106,30 +109,122 @@ public:
                                          void* opt_val,
                                          socklen_t* opt_len) const;
 
+    /**
+     * setsockopt(2) wrapper. Equivalent to
+     * `setsockopt(this->Get(), level, opt_name, opt_val, opt_len)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    [[nodiscard]] virtual int SetSockOpt(int level,
+                                         int opt_name,
+                                         const void* opt_val,
+                                         socklen_t opt_len) const;
+
+    /**
+     * getsockname(2) wrapper. Equivalent to
+     * `getsockname(this->Get(), name, name_len)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    [[nodiscard]] virtual int GetSockName(sockaddr* name, socklen_t* name_len) const;
+
+    /**
+     * Shortcut to set the TCP_NODELAY option with SetSockOpt().
+     * @return true if set successfully
+     */
+    [[nodiscard]] virtual bool SetNoDelay() const;
+
+    /**
+     * Set the non-blocking option on the socket.
+     * @return true if set successfully
+     */
+    [[nodiscard]] virtual bool SetNonBlocking() const;
+
+    /**
+     * Check if the underlying socket can be used for `select(2)` (or the `Wait()` method).
+     * @return true if selectable
+     */
+    [[nodiscard]] virtual bool IsSelectable() const;
+
     using Event = uint8_t;
 
     /**
      * If passed to `Wait()`, then it will wait for readiness to read from the socket.
      */
-    static constexpr Event RECV = 0b01;
+    static constexpr Event RECV = 0b001;
 
     /**
      * If passed to `Wait()`, then it will wait for readiness to send to the socket.
      */
-    static constexpr Event SEND = 0b10;
+    static constexpr Event SEND = 0b010;
+
+    /**
+     * Ignored if passed to `Wait()`, but could be set in the occurred events if an
+     * exceptional condition has occurred on the socket or if it has been disconnected.
+     */
+    static constexpr Event ERR = 0b100;
 
     /**
      * Wait for readiness for input (recv) or output (send).
      * @param[in] timeout Wait this much for at least one of the requested events to occur.
      * @param[in] requested Wait for those events, bitwise-or of `RECV` and `SEND`.
      * @param[out] occurred If not nullptr and `true` is returned, then upon return this
-     * indicates which of the requested events occurred. A timeout is indicated by return
-     * value of `true` and `occurred` being set to 0.
+     * indicates which of the requested events occurred (`ERR` will be added, even if
+     * not requested, if an exceptional event occurs on the socket).
+     * A timeout is indicated by return value of `true` and `occurred` being set to 0.
      * @return true on success and false otherwise
      */
     [[nodiscard]] virtual bool Wait(std::chrono::milliseconds timeout,
                                     Event requested,
                                     Event* occurred = nullptr) const;
+
+    /**
+     * Auxiliary requested/occurred events to wait for in `WaitMany()`.
+     */
+    struct WaitEvents {
+        Event requested;
+        Event occurred;
+    };
+
+    struct Hash {
+        size_t operator()(const std::shared_ptr<const Sock>& s) const
+        {
+            return s ? s->m_socket : std::numeric_limits<SOCKET>::max();
+        }
+    };
+
+    struct Equal {
+        bool operator()(const std::shared_ptr<const Sock>& lhs,
+                        const std::shared_ptr<const Sock>& rhs) const
+        {
+            if (lhs && rhs) {
+                return lhs->m_socket == rhs->m_socket;
+            }
+            if (!lhs && !rhs) {
+                return true;
+            }
+            return false;
+        }
+    };
+
+    /**
+     * On which socket to wait for what events in `WaitMany()`.
+     * The `shared_ptr` is copied into the map to ensure that the `Sock` object
+     * is not destroyed and the underlying socket closed. If this happens
+     * shortly before or after we call `poll(2)` and a new socket gets created
+     * under the same file descriptor number then the report from `WaitMany()`
+     * will be bogus.
+     */
+    using WaitData = std::unordered_map<std::shared_ptr<const Sock>, WaitEvents, Hash, Equal>;
+
+    /**
+     * Same as `Wait()`, but wait on many sockets within the same timeout.
+     * @param[in] timeout Wait this much for at least one of the requested events to occur.
+     * @param[in,out] what Wait for the requested events on these sockets and set `occurred`
+     * to the events that actually occur.
+     * A timeout is indicated by return value of `true` and all `what[].occurred`
+     * being set to 0.
+     * @return true on success and false otherwise
+     */
+    [[nodiscard]] virtual bool WaitMany(std::chrono::milliseconds timeout, WaitData& what) const;
 
     /* Higher level, convenience, methods. These may throw. */
 
@@ -178,8 +273,5 @@ protected:
 
 /** Return readable error string for a network error code */
 std::string NetworkErrorString(int err);
-
-/** Close socket and set hSocket to INVALID_SOCKET */
-bool CloseSocket(SOCKET& hSocket);
 
 #endif // BITCOIN_UTIL_SOCK_H

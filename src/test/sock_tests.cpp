@@ -38,7 +38,6 @@ BOOST_AUTO_TEST_CASE(constructor_and_destructor)
 {
     const SOCKET s = CreateSocket();
     Sock* sock = new Sock(s);
-    BOOST_CHECK_EQUAL(sock->Get(), s);
     BOOST_CHECK(!SocketIsClosed(s));
     delete sock;
     BOOST_CHECK(SocketIsClosed(s));
@@ -51,32 +50,31 @@ BOOST_AUTO_TEST_CASE(move_constructor)
     Sock* sock2 = new Sock(std::move(*sock1));
     delete sock1;
     BOOST_CHECK(!SocketIsClosed(s));
-    BOOST_CHECK_EQUAL(sock2->Get(), s);
     delete sock2;
     BOOST_CHECK(SocketIsClosed(s));
 }
 
 BOOST_AUTO_TEST_CASE(move_assignment)
 {
-    const SOCKET s = CreateSocket();
-    Sock* sock1 = new Sock(s);
-    Sock* sock2 = new Sock();
-    *sock2 = std::move(*sock1);
-    delete sock1;
-    BOOST_CHECK(!SocketIsClosed(s));
-    BOOST_CHECK_EQUAL(sock2->Get(), s);
-    delete sock2;
-    BOOST_CHECK(SocketIsClosed(s));
-}
+    const SOCKET s1 = CreateSocket();
+    const SOCKET s2 = CreateSocket();
+    Sock* sock1 = new Sock(s1);
+    Sock* sock2 = new Sock(s2);
 
-BOOST_AUTO_TEST_CASE(release)
-{
-    SOCKET s = CreateSocket();
-    Sock* sock = new Sock(s);
-    BOOST_CHECK_EQUAL(sock->Release(), s);
-    delete sock;
-    BOOST_CHECK(!SocketIsClosed(s));
-    BOOST_REQUIRE(CloseSocket(s));
+    BOOST_CHECK(!SocketIsClosed(s1));
+    BOOST_CHECK(!SocketIsClosed(s2));
+
+    *sock2 = std::move(*sock1);
+    BOOST_CHECK(!SocketIsClosed(s1));
+    BOOST_CHECK(SocketIsClosed(s2));
+
+    delete sock1;
+    BOOST_CHECK(!SocketIsClosed(s1));
+    BOOST_CHECK(SocketIsClosed(s2));
+
+    delete sock2;
+    BOOST_CHECK(SocketIsClosed(s1));
+    BOOST_CHECK(SocketIsClosed(s2));
 }
 
 BOOST_AUTO_TEST_CASE(reset)
@@ -116,7 +114,7 @@ BOOST_AUTO_TEST_CASE(send_and_receive)
     SendAndRecvMessage(*sock0, *sock1);
 
     Sock* sock0moved = new Sock(std::move(*sock0));
-    Sock* sock1moved = new Sock();
+    Sock* sock1moved = new Sock(INVALID_SOCKET);
     *sock1moved = std::move(*sock1);
 
     delete sock0;

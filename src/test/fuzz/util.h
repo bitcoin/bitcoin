@@ -36,6 +36,67 @@
 #include <string>
 #include <vector>
 
+class FuzzedSock : public Sock
+{
+    FuzzedDataProvider& m_fuzzed_data_provider;
+
+    /**
+     * Data to return when `MSG_PEEK` is used as a `Recv()` flag.
+     * If `MSG_PEEK` is used, then our `Recv()` returns some random data as usual, but on the next
+     * `Recv()` call we must return the same data, thus we remember it here.
+     */
+    mutable std::optional<uint8_t> m_peek_data;
+
+    /**
+     * Whether to pretend that the socket is select(2)-able. This is randomly set in the
+     * constructor. It should remain constant so that repeated calls to `IsSelectable()`
+     * return the same value.
+     */
+    const bool m_selectable;
+
+public:
+    explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider);
+
+    ~FuzzedSock() override;
+
+    FuzzedSock& operator=(Sock&& other) override;
+
+    void Reset() override;
+
+    ssize_t Send(const void* data, size_t len, int flags) const override;
+
+    ssize_t Recv(void* buf, size_t len, int flags) const override;
+
+    int Connect(const sockaddr*, socklen_t) const override;
+
+    int Bind(const sockaddr*, socklen_t) const override;
+
+    int Listen(int backlog) const override;
+
+    std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override;
+
+    int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override;
+
+    int SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt_len) const override;
+
+    int GetSockName(sockaddr* name, socklen_t* name_len) const override;
+
+    bool SetNonBlocking() const override;
+
+    bool IsSelectable() const override;
+
+    bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override;
+
+    bool WaitMany(std::chrono::milliseconds timeout, WaitData& what) const override;
+
+    bool IsConnected(std::string& errmsg) const override;
+};
+
+[[nodiscard]] inline FuzzedSock ConsumeSock(FuzzedDataProvider& fuzzed_data_provider)
+{
+    return FuzzedSock{fuzzed_data_provider};
+}
+
 template <typename... Callables>
 size_t CallOneOf(FuzzedDataProvider& fuzzed_data_provider, Callables... callables)
 {
@@ -291,6 +352,19 @@ inline CService ConsumeService(FuzzedDataProvider& fuzzed_data_provider) noexcep
     return {ConsumeNetAddr(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
 }
 
+inline std::vector<CService> ConsumeServiceVector(FuzzedDataProvider& fuzzed_data_provider,
+                                                  size_t max_vector_size) noexcept
+{
+    std::vector<CService> ret;
+    const size_t size = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_vector_size);
+    ret.reserve(size);
+    for (size_t i = 0; i < size; ++i) {
+        ret.emplace_back(ConsumeNetAddr(fuzzed_data_provider),
+                         fuzzed_data_provider.ConsumeIntegral<uint16_t>());
+    }
+    return ret;
+}
+
 inline CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     return {ConsumeService(fuzzed_data_provider), ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS), fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
@@ -301,7 +375,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
 {
     const NodeId node_id = node_id_in.value_or(fuzzed_data_provider.ConsumeIntegral<NodeId>());
     const ServiceFlags local_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
-    const SOCKET socket = INVALID_SOCKET;
+    auto sock = std::make_shared<FuzzedSock>(fuzzed_data_provider);
     const CAddress address = ConsumeAddress(fuzzed_data_provider);
     const uint64_t keyed_net_group = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
     const uint64_t local_host_nonce = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
@@ -310,9 +384,9 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
     const ConnectionType conn_type = fuzzed_data_provider.PickValueInArray(ALL_CONNECTION_TYPES);
     const bool inbound_onion{conn_type == ConnectionType::INBOUND ? fuzzed_data_provider.ConsumeBool() : false};
     if constexpr (ReturnUniquePtr) {
-        return std::make_unique<CNode>(node_id, local_services, socket, address, keyed_net_group, local_host_nonce, addr_bind, addr_name, conn_type, inbound_onion);
+        return std::make_unique<CNode>(node_id, local_services, sock, address, keyed_net_group, local_host_nonce, addr_bind, addr_name, conn_type, inbound_onion);
     } else {
-        return CNode{node_id, local_services, socket, address, keyed_net_group, local_host_nonce, addr_bind, addr_name, conn_type, inbound_onion};
+        return CNode{node_id, local_services, sock, address, keyed_net_group, local_host_nonce, addr_bind, addr_name, conn_type, inbound_onion};
     }
 }
 inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, const std::optional<NodeId>& node_id_in = std::nullopt) { return ConsumeNode<true>(fdp, node_id_in); }
@@ -521,44 +595,6 @@ void ReadFromStream(FuzzedDataProvider& fuzzed_data_provider, Stream& stream) no
             break;
         }
     }
-}
-
-class FuzzedSock : public Sock
-{
-    FuzzedDataProvider& m_fuzzed_data_provider;
-
-    /**
-     * Data to return when `MSG_PEEK` is used as a `Recv()` flag.
-     * If `MSG_PEEK` is used, then our `Recv()` returns some random data as usual, but on the next
-     * `Recv()` call we must return the same data, thus we remember it here.
-     */
-    mutable std::optional<uint8_t> m_peek_data;
-
-public:
-    explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider);
-
-    ~FuzzedSock() override;
-
-    FuzzedSock& operator=(Sock&& other) override;
-
-    void Reset() override;
-
-    ssize_t Send(const void* data, size_t len, int flags) const override;
-
-    ssize_t Recv(void* buf, size_t len, int flags) const override;
-
-    int Connect(const sockaddr*, socklen_t) const override;
-
-    int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override;
-
-    bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override;
-
-    bool IsConnected(std::string& errmsg) const override;
-};
-
-[[nodiscard]] inline FuzzedSock ConsumeSock(FuzzedDataProvider& fuzzed_data_provider)
-{
-    return FuzzedSock{fuzzed_data_provider};
 }
 
 #endif // BITCOIN_TEST_FUZZ_UTIL_H

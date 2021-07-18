@@ -13,6 +13,7 @@
 #include <array>
 #include <cassert>
 #include <cstring>
+#include <memory>
 #include <string>
 
 struct ConnmanTestMsg : public CConnman {
@@ -87,10 +88,9 @@ constexpr auto ALL_NETWORKS = std::array{
 class StaticContentsSock : public Sock
 {
 public:
-    explicit StaticContentsSock(const std::string& contents) : m_contents{contents}, m_consumed{0}
+    explicit StaticContentsSock(const std::string& contents)
+        : Sock{INVALID_SOCKET}, m_contents{contents}, m_consumed{0}
     {
-        // Just a dummy number that is not INVALID_SOCKET.
-        m_socket = INVALID_SOCKET - 1;
     }
 
     ~StaticContentsSock() override { Reset(); }
@@ -120,11 +120,43 @@ public:
 
     int Connect(const sockaddr*, socklen_t) const override { return 0; }
 
+    int Bind(const sockaddr*, socklen_t) const override { return 0; }
+
+    int Listen(int) const override { return 0; }
+
+    std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override
+    {
+        if (addr != nullptr) {
+            // Pretend all connections come from 5.5.5.5:6789
+            memset(addr, 0x00, *addr_len);
+            if (*addr_len >= sizeof(sockaddr_in)) {
+                *addr_len = sizeof(sockaddr_in);
+                sockaddr_in* addr_in = reinterpret_cast<sockaddr_in*>(addr);
+                addr_in->sin_family = AF_INET;
+                memset(&addr_in->sin_addr, 0x05, sizeof(addr_in->sin_addr));
+                addr_in->sin_port = htons(6789);
+            }
+        }
+        return std::make_unique<StaticContentsSock>("");
+    };
+
     int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override
     {
         std::memset(opt_val, 0x0, *opt_len);
         return 0;
     }
+
+    int SetSockOpt(int, int, const void*, socklen_t) const override { return 0; }
+
+    int GetSockName(sockaddr* name, socklen_t* name_len) const override
+    {
+        std::memset(name, 0x0, *name_len);
+        return 0;
+    }
+
+    bool SetNonBlocking() const override { return true; }
+
+    bool IsSelectable() const override { return true; }
 
     bool Wait(std::chrono::milliseconds timeout,
               Event requested,
@@ -133,6 +165,20 @@ public:
         if (occurred != nullptr) {
             *occurred = requested;
         }
+        return true;
+    }
+
+    bool WaitMany(std::chrono::milliseconds timeout, WaitData& what) const override
+    {
+        for (auto& [sock, events] : what) {
+            (void)sock;
+            events.occurred = events.requested;
+        }
+        return true;
+    }
+
+    bool IsConnected(std::string&) const override
+    {
         return true;
     }
 

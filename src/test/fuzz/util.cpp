@@ -9,16 +9,18 @@
 #include <util/time.h>
 #include <version.h>
 
+#include <memory>
+
 FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider)
-    : m_fuzzed_data_provider{fuzzed_data_provider}
+    : Sock{fuzzed_data_provider.ConsumeIntegralInRange<SOCKET>(INVALID_SOCKET - 1, INVALID_SOCKET)},
+      m_fuzzed_data_provider{fuzzed_data_provider}, m_selectable{fuzzed_data_provider.ConsumeBool()}
 {
-    m_socket = fuzzed_data_provider.ConsumeIntegralInRange<SOCKET>(INVALID_SOCKET - 1, INVALID_SOCKET);
 }
 
 FuzzedSock::~FuzzedSock()
 {
     // Sock::~Sock() will be called after FuzzedSock::~FuzzedSock() and it will call
-    // Sock::Reset() (not FuzzedSock::Reset()!) which will call CloseSocket(m_socket).
+    // Sock::Reset() (not FuzzedSock::Reset()!) which will call close(m_socket).
     // Avoid closing an arbitrary file descriptor (m_socket is just a random very high number which
     // theoretically may concide with a real opened file descriptor).
     Reset();
@@ -154,6 +156,48 @@ int FuzzedSock::Connect(const sockaddr*, socklen_t) const
     return 0;
 }
 
+int FuzzedSock::Bind(const sockaddr*, socklen_t) const
+{
+    constexpr std::array bind_errnos{
+        EACCES,
+        EADDRINUSE,
+        EADDRNOTAVAIL,
+        EAGAIN,
+    };
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        SetFuzzedErrNo(m_fuzzed_data_provider, bind_errnos);
+        return -1;
+    }
+    return 0;
+}
+
+int FuzzedSock::Listen(int) const
+{
+    constexpr std::array listen_errnos{
+        EINVAL,
+        EOPNOTSUPP,
+    };
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        SetFuzzedErrNo(m_fuzzed_data_provider, listen_errnos);
+        return -1;
+    }
+    return 0;
+}
+
+std::unique_ptr<Sock> FuzzedSock::Accept(sockaddr* addr, socklen_t* addr_len) const
+{
+    constexpr std::array accept_errnos{
+        ECONNABORTED,
+        EINTR,
+        ENOMEM,
+    };
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        SetFuzzedErrNo(m_fuzzed_data_provider, accept_errnos);
+        return std::unique_ptr<FuzzedSock>();
+    }
+    return std::make_unique<FuzzedSock>(m_fuzzed_data_provider);
+}
+
 int FuzzedSock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const
 {
     constexpr std::array getsockopt_errnos{
@@ -173,6 +217,51 @@ int FuzzedSock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* op
     return 0;
 }
 
+int FuzzedSock::SetSockOpt(int, int, const void*, socklen_t) const
+{
+    constexpr std::array setsockopt_errnos{
+        ENOMEM,
+        ENOBUFS,
+    };
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        SetFuzzedErrNo(m_fuzzed_data_provider, setsockopt_errnos);
+        return -1;
+    }
+    return 0;
+}
+
+int FuzzedSock::GetSockName(sockaddr* name, socklen_t* name_len) const
+{
+    constexpr std::array getsockname_errnos{
+        ECONNRESET,
+        ENOBUFS,
+    };
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        SetFuzzedErrNo(m_fuzzed_data_provider, getsockname_errnos);
+        return -1;
+    }
+    *name_len = m_fuzzed_data_provider.ConsumeData(name, *name_len);
+    return 0;
+}
+
+bool FuzzedSock::SetNonBlocking() const
+{
+    constexpr std::array setnonblocking_errnos{
+        EBADF,
+        EPERM,
+    };
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        SetFuzzedErrNo(m_fuzzed_data_provider, setnonblocking_errnos);
+        return false;
+    }
+    return true;
+}
+
+bool FuzzedSock::IsSelectable() const
+{
+    return m_selectable;
+}
+
 bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
     constexpr std::array wait_errnos{
@@ -186,6 +275,15 @@ bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event*
     }
     if (occurred != nullptr) {
         *occurred = m_fuzzed_data_provider.ConsumeBool() ? requested : 0;
+    }
+    return true;
+}
+
+bool FuzzedSock::WaitMany(std::chrono::milliseconds timeout, WaitData& what) const
+{
+    for (auto& [sock, events] : what) {
+        (void)sock;
+        events.occurred = m_fuzzed_data_provider.ConsumeBool() ? events.requested : 0;
     }
     return true;
 }
