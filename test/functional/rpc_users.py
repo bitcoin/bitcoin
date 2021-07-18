@@ -103,12 +103,17 @@ class HTTPBasicsTest(BitcoinTestFramework):
 
         self.log.info('Check -rpcauth are validated')
         # Empty -rpcauth= are ignored
-        self.restart_node(0, extra_args=['-rpcauth='])
-        self.stop_node(0)
-        self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=foo'])
-        self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=foo:bar'])
+        with self.nodes[0].assert_debug_log(unexpected_msgs=['Ignoring invalid -rpcauth argument.']):
+            self.restart_node(0, extra_args=['-rpcauth='])
+        with self.nodes[0].assert_debug_log(expected_msgs=['Ignoring invalid -rpcauth argument.']):
+            self.restart_node(0, extra_args=['-rpcauth=foo'])
+        with self.nodes[0].assert_debug_log(expected_msgs=['Ignoring invalid -rpcauth argument.']):
+            self.restart_node(0, extra_args=['-rpcauth=foo:bar'])
+        with self.nodes[0].assert_debug_log(expected_msgs=['Ignoring invalid -rpcauth argument.']):
+            self.restart_node(0, extra_args=['-rpcauth=foo:bar:baz:foo'])
 
         self.log.info('Check that failure to write cookie file will abort the node gracefully')
+        self.stop_node(0)
         cookie_file = os.path.join(get_datadir_path(self.options.tmpdir, 0), self.chain, '.cookie.tmp')
         os.mkdir(cookie_file)
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error)
