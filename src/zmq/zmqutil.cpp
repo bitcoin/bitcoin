@@ -5,10 +5,12 @@
 #include <zmq/zmqutil.h>
 
 #include <logging.h>
-
 #include <zmq.h>
 
-void zmqError(const char* str)
+#include <cerrno>
+#include <string>
+
+void zmqError(const std::string& str)
 {
-    LogPrint(BCLog::ZMQ, "zmq: Error: %s, errno=%s\n", str, zmq_strerror(errno));
+    LogPrint(BCLog::ZMQ, "zmq: Error: %s, msg: %s\n", str, zmq_strerror(errno));
 }

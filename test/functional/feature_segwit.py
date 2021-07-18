@@ -5,7 +5,6 @@
 """Test the SegWit changeover logic."""
 
 from decimal import Decimal
-from io import BytesIO
 
 from test_framework.address import (
     key_to_p2pkh,
@@ -14,9 +13,34 @@ from test_framework.address import (
     script_to_p2sh_p2wsh,
     script_to_p2wsh,
 )
-from test_framework.blocktools import witness_script, send_to_witness
-from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, FromHex, sha256, ToHex
-from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, OP_TRUE, OP_DROP
+from test_framework.blocktools import (
+    send_to_witness,
+    witness_script,
+)
+from test_framework.messages import (
+    COIN,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+    tx_from_hex,
+)
+from test_framework.script import (
+    CScript,
+    OP_0,
+    OP_1,
+    OP_2,
+    OP_CHECKMULTISIG,
+    OP_CHECKSIG,
+    OP_DROP,
+    OP_TRUE,
+)
+from test_framework.script_util import (
+    key_to_p2pkh_script,
+    key_to_p2wpkh_script,
+    script_to_p2sh_script,
+    script_to_p2wsh_script,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -179,7 +203,7 @@ class SegWitTest(BitcoinTestFramework):
         assert self.nodes[1].getblock(blockhash, False) == self.nodes[2].getblock(blockhash, False)
 
         for tx_id in segwit_tx_list:
-            tx = FromHex(CTransaction(), self.nodes[2].gettransaction(tx_id)["hex"])
+            tx = tx_from_hex(self.nodes[2].gettransaction(tx_id)["hex"])
             assert self.nodes[2].getrawtransaction(tx_id, False, blockhash) != self.nodes[0].getrawtransaction(tx_id, False, blockhash)
             assert self.nodes[1].getrawtransaction(tx_id, False, blockhash) == self.nodes[2].getrawtransaction(tx_id, False, blockhash)
             assert self.nodes[0].getrawtransaction(tx_id, False, blockhash) != self.nodes[2].gettransaction(tx_id)["hex"]
@@ -225,12 +249,12 @@ class SegWitTest(BitcoinTestFramework):
         # tx1 is allowed to appear in the block, but no others.
         txid1 = send_to_witness(1, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.996"))
         hex_tx = self.nodes[0].gettransaction(txid)['hex']
-        tx = FromHex(CTransaction(), hex_tx)
+        tx = tx_from_hex(hex_tx)
         assert tx.wit.is_null()  # This should not be a segwit input
         assert txid1 in self.nodes[0].getrawmempool()
 
         tx1_hex = self.nodes[0].gettransaction(txid1)['hex']
-        tx1 = FromHex(CTransaction(), tx1_hex)
+        tx1 = tx_from_hex(tx1_hex)
 
         # Check that wtxid is properly reported in mempool entry (txid1)
         assert_equal(int(self.nodes[0].getmempoolentry(txid1)["wtxid"], 16), tx1.calc_sha256(True))
@@ -243,9 +267,9 @@ class SegWitTest(BitcoinTestFramework):
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(int(txid1, 16), 0), b''))
         tx.vout.append(CTxOut(int(49.99 * COIN), CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
-        tx2_hex = self.nodes[0].signrawtransactionwithwallet(ToHex(tx))['hex']
+        tx2_hex = self.nodes[0].signrawtransactionwithwallet(tx.serialize().hex())['hex']
         txid2 = self.nodes[0].sendrawtransaction(tx2_hex)
-        tx = FromHex(CTransaction(), tx2_hex)
+        tx = tx_from_hex(tx2_hex)
         assert not tx.wit.is_null()
 
         # Check that wtxid is properly reported in mempool entry (txid2)
@@ -260,7 +284,7 @@ class SegWitTest(BitcoinTestFramework):
         tx.vin.append(CTxIn(COutPoint(int(txid2, 16), 0), b""))
         tx.vout.append(CTxOut(int(49.95 * COIN), CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))  # Huge fee
         tx.calc_sha256()
-        txid3 = self.nodes[0].sendrawtransaction(hexstring=ToHex(tx), maxfeerate=0)
+        txid3 = self.nodes[0].sendrawtransaction(hexstring=tx.serialize().hex(), maxfeerate=0)
         assert tx.wit.is_null()
         assert txid3 in self.nodes[0].getrawmempool()
 
@@ -329,7 +353,7 @@ class SegWitTest(BitcoinTestFramework):
 
         multisig_without_privkey_address = self.nodes[0].addmultisigaddress(2, [pubkeys[3], pubkeys[4]])['address']
         script = CScript([OP_2, hex_str_to_bytes(pubkeys[3]), hex_str_to_bytes(pubkeys[4]), OP_2, OP_CHECKMULTISIG])
-        solvable_after_importaddress.append(CScript([OP_HASH160, hash160(script), OP_EQUAL]))
+        solvable_after_importaddress.append(script_to_p2sh_script(script))
 
         for i in compressed_spendable_address:
             v = self.nodes[0].getaddressinfo(i)
@@ -403,10 +427,10 @@ class SegWitTest(BitcoinTestFramework):
         op0 = CScript([OP_0])
         # 2N7MGY19ti4KDMSzRfPAssP6Pxyuxoi6jLe is the P2SH(P2PKH) version of mjoE3sSrb8ByYEvgnC3Aox86u1CHnfJA4V
         unsolvable_address_key = hex_str_to_bytes("02341AEC7587A51CDE5279E0630A531AEA2615A9F80B17E8D9376327BAEAA59E3D")
-        unsolvablep2pkh = CScript([OP_DUP, OP_HASH160, hash160(unsolvable_address_key), OP_EQUALVERIFY, OP_CHECKSIG])
-        unsolvablep2wshp2pkh = CScript([OP_0, sha256(unsolvablep2pkh)])
-        p2shop0 = CScript([OP_HASH160, hash160(op0), OP_EQUAL])
-        p2wshop1 = CScript([OP_0, sha256(op1)])
+        unsolvablep2pkh = key_to_p2pkh_script(unsolvable_address_key)
+        unsolvablep2wshp2pkh = script_to_p2wsh_script(unsolvablep2pkh)
+        p2shop0 = script_to_p2sh_script(op0)
+        p2wshop1 = script_to_p2wsh_script(op1)
         unsolvable_after_importaddress.append(unsolvablep2pkh)
         unsolvable_after_importaddress.append(unsolvablep2wshp2pkh)
         unsolvable_after_importaddress.append(op1)  # OP_1 will be imported as script
@@ -426,16 +450,16 @@ class SegWitTest(BitcoinTestFramework):
             if (v['isscript']):
                 bare = hex_str_to_bytes(v['hex'])
                 importlist.append(bare.hex())
-                importlist.append(CScript([OP_0, sha256(bare)]).hex())
+                importlist.append(script_to_p2wsh_script(bare).hex())
             else:
                 pubkey = hex_str_to_bytes(v['pubkey'])
                 p2pk = CScript([pubkey, OP_CHECKSIG])
-                p2pkh = CScript([OP_DUP, OP_HASH160, hash160(pubkey), OP_EQUALVERIFY, OP_CHECKSIG])
+                p2pkh = key_to_p2pkh_script(pubkey)
                 importlist.append(p2pk.hex())
                 importlist.append(p2pkh.hex())
-                importlist.append(CScript([OP_0, hash160(pubkey)]).hex())
-                importlist.append(CScript([OP_0, sha256(p2pk)]).hex())
-                importlist.append(CScript([OP_0, sha256(p2pkh)]).hex())
+                importlist.append(key_to_p2wpkh_script(pubkey).hex())
+                importlist.append(script_to_p2wsh_script(p2pk).hex())
+                importlist.append(script_to_p2wsh_script(p2pkh).hex())
 
         importlist.append(unsolvablep2pkh.hex())
         importlist.append(unsolvablep2wshp2pkh.hex())
@@ -590,31 +614,29 @@ class SegWitTest(BitcoinTestFramework):
     def p2sh_address_to_script(self, v):
         bare = CScript(hex_str_to_bytes(v['hex']))
         p2sh = CScript(hex_str_to_bytes(v['scriptPubKey']))
-        p2wsh = CScript([OP_0, sha256(bare)])
-        p2sh_p2wsh = CScript([OP_HASH160, hash160(p2wsh), OP_EQUAL])
+        p2wsh = script_to_p2wsh_script(bare)
+        p2sh_p2wsh = script_to_p2sh_script(p2wsh)
         return([bare, p2sh, p2wsh, p2sh_p2wsh])
 
     def p2pkh_address_to_script(self, v):
         pubkey = hex_str_to_bytes(v['pubkey'])
-        p2wpkh = CScript([OP_0, hash160(pubkey)])
-        p2sh_p2wpkh = CScript([OP_HASH160, hash160(p2wpkh), OP_EQUAL])
+        p2wpkh = key_to_p2wpkh_script(pubkey)
+        p2sh_p2wpkh = script_to_p2sh_script(p2wpkh)
         p2pk = CScript([pubkey, OP_CHECKSIG])
         p2pkh = CScript(hex_str_to_bytes(v['scriptPubKey']))
-        p2sh_p2pk = CScript([OP_HASH160, hash160(p2pk), OP_EQUAL])
-        p2sh_p2pkh = CScript([OP_HASH160, hash160(p2pkh), OP_EQUAL])
-        p2wsh_p2pk = CScript([OP_0, sha256(p2pk)])
-        p2wsh_p2pkh = CScript([OP_0, sha256(p2pkh)])
-        p2sh_p2wsh_p2pk = CScript([OP_HASH160, hash160(p2wsh_p2pk), OP_EQUAL])
-        p2sh_p2wsh_p2pkh = CScript([OP_HASH160, hash160(p2wsh_p2pkh), OP_EQUAL])
+        p2sh_p2pk = script_to_p2sh_script(p2pk)
+        p2sh_p2pkh = script_to_p2sh_script(p2pkh)
+        p2wsh_p2pk = script_to_p2wsh_script(p2pk)
+        p2wsh_p2pkh = script_to_p2wsh_script(p2pkh)
+        p2sh_p2wsh_p2pk = script_to_p2sh_script(p2wsh_p2pk)
+        p2sh_p2wsh_p2pkh = script_to_p2sh_script(p2wsh_p2pkh)
         return [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh]
 
     def create_and_mine_tx_from_txids(self, txids, success=True):
         tx = CTransaction()
         for i in txids:
-            txtmp = CTransaction()
             txraw = self.nodes[0].getrawtransaction(i, 0, txs_mined[i])
-            f = BytesIO(hex_str_to_bytes(txraw))
-            txtmp.deserialize(f)
+            txtmp = tx_from_hex(txraw)
             for j in range(len(txtmp.vout)):
                 tx.vin.append(CTxIn(COutPoint(int('0x' + i, 0), j)))
         tx.vout.append(CTxOut(0, CScript()))

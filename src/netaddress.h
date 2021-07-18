@@ -11,7 +11,9 @@
 
 #include <attributes.h>
 #include <compat.h>
+#include <crypto/siphash.h>
 #include <prevector.h>
+#include <random.h>
 #include <serialize.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
@@ -97,9 +99,6 @@ static constexpr size_t ADDR_IPV4_SIZE = 4;
 /// Size of IPv6 address (in bytes).
 static constexpr size_t ADDR_IPV6_SIZE = 16;
 
-/// Size of TORv2 address (in bytes).
-static constexpr size_t ADDR_TORV2_SIZE = 10;
-
 /// Size of TORv3 address (in bytes). This is the length of just the address
 /// as used in BIP155, without the checksum and the version byte.
 static constexpr size_t ADDR_TORV3_SIZE = 32;
@@ -112,6 +111,9 @@ static constexpr size_t ADDR_CJDNS_SIZE = 16;
 
 /// Size of "internal" (NET_INTERNAL) address (in bytes).
 static constexpr size_t ADDR_INTERNAL_SIZE = 10;
+
+/// SAM 3.1 and earlier do not support specifying ports and force the port to 0.
+static constexpr uint16_t I2P_SAM31_PORT{0};
 
 /**
  * Network address.
@@ -225,7 +227,7 @@ class CNetAddr
          */
         bool IsRelayable() const
         {
-            return IsIPv4() || IsIPv6() || IsTor();
+            return IsIPv4() || IsIPv6() || IsTor() || IsI2P();
         }
 
         /**
@@ -254,14 +256,14 @@ class CNetAddr
             }
         }
 
+        friend class CNetAddrHash;
         friend class CSubNet;
 
     private:
         /**
          * Parse a Tor address and set this object to it.
          * @param[in] addr Address to parse, must be a valid C string, for example
-         * pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion or
-         * 6hzph5hv6337r6p2.onion.
+         * pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion.
          * @returns Whether the operation was successful.
          * @see CNetAddr::IsTor()
          */
@@ -303,7 +305,7 @@ class CNetAddr
         /**
          * Get the BIP155 network id of this address.
          * Must not be called for IsInternal() objects.
-         * @returns BIP155 network id
+         * @returns BIP155 network id, except TORV2 which is no longer supported.
          */
         BIP155Network GetBIP155Network() const;
 
@@ -334,23 +336,14 @@ class CNetAddr
                 memcpy(arr, IPV4_IN_IPV6_PREFIX.data(), prefix_size);
                 memcpy(arr + prefix_size, m_addr.data(), m_addr.size());
                 return;
-            case NET_ONION:
-                if (m_addr.size() == ADDR_TORV3_SIZE) {
-                    break;
-                }
-                prefix_size = sizeof(TORV2_IN_IPV6_PREFIX);
-                assert(prefix_size + m_addr.size() == sizeof(arr));
-                memcpy(arr, TORV2_IN_IPV6_PREFIX.data(), prefix_size);
-                memcpy(arr + prefix_size, m_addr.data(), m_addr.size());
-                return;
             case NET_INTERNAL:
                 prefix_size = sizeof(INTERNAL_IN_IPV6_PREFIX);
                 assert(prefix_size + m_addr.size() == sizeof(arr));
                 memcpy(arr, INTERNAL_IN_IPV6_PREFIX.data(), prefix_size);
                 memcpy(arr + prefix_size, m_addr.data(), m_addr.size());
                 return;
+            case NET_ONION:
             case NET_I2P:
-                break;
             case NET_CJDNS:
                 break;
             case NET_UNROUTABLE:
@@ -358,7 +351,7 @@ class CNetAddr
                 assert(false);
             } // no default case, so the compiler can warn about missing cases
 
-            // Serialize TORv3, I2P and CJDNS as all-zeros.
+            // Serialize ONION, I2P and CJDNS as all-zeros.
             memset(arr, 0x0, V1_SERIALIZATION_SIZE);
         }
 
@@ -475,6 +468,22 @@ class CNetAddr
             m_net = NET_IPV6;
             m_addr.assign(ADDR_IPV6_SIZE, 0x0);
         }
+};
+
+class CNetAddrHash
+{
+public:
+    size_t operator()(const CNetAddr& a) const noexcept
+    {
+        CSipHasher hasher(m_salt_k0, m_salt_k1);
+        hasher.Write(a.m_net);
+        hasher.Write(a.m_addr.data(), a.m_addr.size());
+        return static_cast<size_t>(hasher.Finalize());
+    }
+
+private:
+    const uint64_t m_salt_k0 = GetRand(std::numeric_limits<uint64_t>::max());
+    const uint64_t m_salt_k1 = GetRand(std::numeric_limits<uint64_t>::max());
 };
 
 class CSubNet

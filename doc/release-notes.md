@@ -1,3 +1,5 @@
+# Release notes now being edited on https://github.com/bitcoin-core/bitcoin-devwiki/wiki/22.0-Release-Notes-draft
+
 *After branching off for a major version release of Bitcoin Core, use this
 template to create the initial release notes draft.*
 
@@ -59,6 +61,13 @@ Notable changes
 P2P and network changes
 -----------------------
 
+- This release removes support for Tor version 2 hidden services in favor of Tor
+  v3 only, as the Tor network [dropped support for Tor
+  v2](https://blog.torproject.org/v2-deprecation-timeline) with the release of
+  Tor version 0.4.6.  Henceforth, Bitcoin Core ignores Tor v2 addresses; it
+  neither rumors them over the network to other peers, nor stores them in memory
+  or to `peers.dat`.  (#22050)
+
 - Added NAT-PMP port mapping support via
   [`libnatpmp`](https://miniupnp.tuxfamily.org/libnatpmp.html). (#18077)
 
@@ -114,6 +123,18 @@ Updated RPCs
 - `getnodeaddresses` now also accepts a "network" argument (ipv4, ipv6, onion,
   or i2p) to return only addresses of the specified network.  (#21843)
 
+- The `testmempoolaccept` RPC now accepts multiple transactions (still experimental at the moment,
+  API may be unstable). This is intended for testing transaction packages with dependency
+  relationships; it is not recommended for batch-validating independent transactions. In addition to
+  mempool policy, package policies apply: the list cannot contain more than 25 transactions or have a
+  total size exceeding 101K virtual bytes, and cannot conflict with (spend the same inputs as) each other or
+  the mempool, even if it would be a valid BIP125 replace-by-fee. There are some known limitations to
+  the accuracy of the test accept: it's possible for `testmempoolaccept` to return "allowed"=True for a
+  group of transactions, but "too-long-mempool-chain" if they are actually submitted. (#20833)
+
+- `addmultisigaddress` and `createmultisig` now support up to 20 keys for
+  Segwit addresses. (#20867)
+
 Changes to Wallet or GUI related RPCs can be found in the GUI or Wallet section below.
 
 New RPCs
@@ -142,8 +163,12 @@ Tools and Utilities
 - A new CLI `-addrinfo` command returns the number of addresses known to the
   node per network type (including Tor v2 versus v3) and total. This can be
   useful to see if the node knows enough addresses in a network to use options
-  like `-onlynet=<network>` or to upgrade to current and future Tor releases
-  that support Tor v3 addresses only.  (#21595)
+  like `-onlynet=<network>` or to upgrade to this release of Bitcoin Core 22.0
+  that supports Tor v3 only.  (#21595)
+
+- A new `-rpcwaittimeout` argument to `bitcoin-cli` sets the timeout
+  in seconds to use with `-rpcwait`. If the timeout expires,
+  `bitcoin-cli` will report a failure. (#21056)
 
 Wallet
 ------
@@ -159,6 +184,9 @@ Wallet
   that when `true` allows using unsafe inputs to fund the transaction.
   Note that the resulting transaction may become invalid if one of the unsafe inputs disappears.
   If that happens, the transaction must be funded with different inputs and republished. (#21359)
+
+- We now support up to 20 keys in `multi()` and `sortedmulti()` descriptors
+  under `wsh()`. (#20867)
 
 GUI changes
 -----------

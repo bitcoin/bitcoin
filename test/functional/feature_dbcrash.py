@@ -36,7 +36,6 @@ from test_framework.messages import (
     CTransaction,
     CTxIn,
     CTxOut,
-    ToHex,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -208,7 +207,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
                 tx.vout.append(CTxOut(output_amount, hex_str_to_bytes(utxo['scriptPubKey'])))
 
             # Sign and send the transaction to get into the mempool
-            tx_signed_hex = node.signrawtransactionwithwallet(ToHex(tx))['hex']
+            tx_signed_hex = node.signrawtransactionwithwallet(tx.serialize().hex())['hex']
             node.sendrawtransaction(tx_signed_hex)
             num_transactions += 1
 

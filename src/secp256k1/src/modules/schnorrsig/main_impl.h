@@ -1,11 +1,11 @@
-/**********************************************************************
- * Copyright (c) 2018-2020 Andrew Poelstra, Jonas Nick                *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2018-2020 Andrew Poelstra, Jonas Nick                 *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
-#ifndef _SECP256K1_MODULE_SCHNORRSIG_MAIN_
-#define _SECP256K1_MODULE_SCHNORRSIG_MAIN_
+#ifndef SECP256K1_MODULE_SCHNORRSIG_MAIN_H
+#define SECP256K1_MODULE_SCHNORRSIG_MAIN_H
 
 #include "include/secp256k1.h"
 #include "include/secp256k1_schnorrsig.h"
@@ -179,7 +179,7 @@ int secp256k1_schnorrsig_sign(const secp256k1_context* ctx, unsigned char *sig64
     secp256k1_scalar_add(&e, &e, &k);
     secp256k1_scalar_get_b32(&sig64[32], &e);
 
-    memczero(sig64, 64, !ret);
+    secp256k1_memczero(sig64, 64, !ret);
     secp256k1_scalar_clear(&k);
     secp256k1_scalar_clear(&sk);
     memset(seckey, 0, sizeof(seckey));

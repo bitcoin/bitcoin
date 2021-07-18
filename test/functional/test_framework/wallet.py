@@ -6,6 +6,7 @@
 
 from decimal import Decimal
 from enum import Enum
+from typing import Optional
 from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.key import ECKey
 from test_framework.messages import (
@@ -87,12 +88,20 @@ class MiniWallet:
             if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
                 self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value']})
 
-    def sign_tx(self, tx):
+    def sign_tx(self, tx, fixed_length=True):
         """Sign tx that has been created by MiniWallet in P2PK mode"""
         assert self._priv_key is not None
         (sighash, err) = LegacySignatureHash(CScript(self._scriptPubKey), tx, 0, SIGHASH_ALL)
         assert err is None
-        tx.vin[0].scriptSig = CScript([self._priv_key.sign_ecdsa(sighash) + bytes(bytearray([SIGHASH_ALL]))])
+        # for exact fee calculation, create only signatures with fixed size by default (>49.89% probability):
+        # 65 bytes: high-R val (33 bytes) + low-S val (32 bytes)
+        # with the DER header/skeleton data of 6 bytes added, this leads to a target size of 71 bytes
+        der_sig = b''
+        while not len(der_sig) == 71:
+            der_sig = self._priv_key.sign_ecdsa(sighash)
+            if not fixed_length:
+                break
+        tx.vin[0].scriptSig = CScript([der_sig + bytes(bytearray([SIGHASH_ALL]))])
 
     def generate(self, num_blocks):
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
@@ -105,12 +114,12 @@ class MiniWallet:
     def get_address(self):
         return self._address
 
-    def get_utxo(self, *, txid='', mark_as_spent=True):
+    def get_utxo(self, *, txid: Optional[str]='', mark_as_spent=True):
         """
         Returns a utxo and marks it as spent (pops it from the internal list)
 
         Args:
-        txid (string), optional: get the first utxo we find from a specific transaction
+        txid: get the first utxo we find from a specific transaction
 
         Note: Can be used to get the change output immediately after a send_self_transfer
         """
@@ -123,23 +132,26 @@ class MiniWallet:
         else:
             return self._utxos[index]
 
-    def send_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None, locktime=0):
+    def send_self_transfer(self, **kwargs):
         """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
-        tx = self.create_self_transfer(fee_rate=fee_rate, from_node=from_node, utxo_to_spend=utxo_to_spend)
-        self.sendrawtransaction(from_node=from_node, tx_hex=tx['hex'])
+        tx = self.create_self_transfer(**kwargs)
+        self.sendrawtransaction(from_node=kwargs['from_node'], tx_hex=tx['hex'])
         return tx
 
-    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None, mempool_valid=True, locktime=0):
+    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
         """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
         self._utxos = sorted(self._utxos, key=lambda k: k['value'])
         utxo_to_spend = utxo_to_spend or self._utxos.pop()  # Pick the largest utxo (if none provided) and hope it covers the fee
-        vsize = Decimal(96)
+        if self._priv_key is None:
+            vsize = Decimal(96)  # anyone-can-spend
+        else:
+            vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
         send_value = satoshi_round(utxo_to_spend['value'] - fee_rate * (vsize / 1000))
         fee = utxo_to_spend['value'] - send_value
         assert send_value > 0
 
         tx = CTransaction()
-        tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']))]
+        tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=sequence)]
         tx.vout = [CTxOut(int(send_value * COIN), self._scriptPubKey)]
         tx.nLockTime = locktime
         if not self._address:
@@ -158,10 +170,7 @@ class MiniWallet:
         tx_info = from_node.testmempoolaccept([tx_hex])[0]
         assert_equal(mempool_valid, tx_info['allowed'])
         if mempool_valid:
-            # TODO: for P2PK, vsize is not constant due to varying scriptSig length,
-            # so only check this for anyone-can-spend outputs right now
-            if self._priv_key is None:
-                assert_equal(tx_info['vsize'], vsize)
+            assert_equal(tx_info['vsize'], vsize)
             assert_equal(tx_info['fees']['base'], fee)
         return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex, 'tx': tx}
 

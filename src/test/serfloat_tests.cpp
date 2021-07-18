@@ -36,9 +36,9 @@ uint64_t TestDouble(double f) {
 } // namespace
 
 BOOST_AUTO_TEST_CASE(double_serfloat_tests) {
-    BOOST_CHECK_EQUAL(TestDouble(0.0), 0);
+    BOOST_CHECK_EQUAL(TestDouble(0.0), 0U);
     BOOST_CHECK_EQUAL(TestDouble(-0.0), 0x8000000000000000);
-    BOOST_CHECK_EQUAL(TestDouble(std::numeric_limits<double>::infinity()), 0x7ff0000000000000);
+    BOOST_CHECK_EQUAL(TestDouble(std::numeric_limits<double>::infinity()), 0x7ff0000000000000U);
     BOOST_CHECK_EQUAL(TestDouble(-std::numeric_limits<double>::infinity()), 0xfff0000000000000);
     BOOST_CHECK_EQUAL(TestDouble(0.5), 0x3fe0000000000000ULL);
     BOOST_CHECK_EQUAL(TestDouble(1.0), 0x3ff0000000000000ULL);
@@ -48,8 +48,8 @@ BOOST_AUTO_TEST_CASE(double_serfloat_tests) {
 
     // Roundtrip test on IEC559-compatible systems
     if (std::numeric_limits<double>::is_iec559) {
-        BOOST_CHECK_EQUAL(sizeof(double), 8);
-        BOOST_CHECK_EQUAL(sizeof(uint64_t), 8);
+        BOOST_CHECK_EQUAL(sizeof(double), 8U);
+        BOOST_CHECK_EQUAL(sizeof(uint64_t), 8U);
         // Test extreme values
         TestDouble(std::numeric_limits<double>::min());
         TestDouble(-std::numeric_limits<double>::min());

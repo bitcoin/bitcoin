@@ -22,6 +22,7 @@
              (gnu packages linux)
              (gnu packages llvm)
              (gnu packages mingw)
+             (gnu packages moreutils)
              (gnu packages perl)
              (gnu packages pkg-config)
              (gnu packages python)
@@ -79,6 +80,10 @@ http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
                  (("-rpath=") "-rpath-link="))
                #t))))))))
 
+(define (make-binutils-with-mingw-w64-disable-flags xbinutils)
+  (package-with-extra-patches xbinutils
+    (search-our-patches "binutils-mingw-w64-disable-flags.patch")))
+
 (define (make-cross-toolchain target
                               base-gcc-for-libc
                               base-kernel-headers
@@ -134,11 +139,25 @@ chain for " target " development."))
   (package-with-extra-patches gcc-8
     (search-our-patches "gcc-8-sort-libtool-find-output.patch")))
 
+;; Building glibc with stack smashing protector first landed in glibc 2.25, use
+;; this function to disable for older glibcs
+;;
+;; From glibc 2.25 changelog:
+;;
+;;   * Most of glibc can now be built with the stack smashing protector enabled.
+;;     It is recommended to build glibc with --enable-stack-protector=strong.
+;;     Implemented by Nick Alcock (Oracle).
+(define (make-glibc-without-ssp xglibc)
+  (package-with-extra-configure-variable
+   (package-with-extra-configure-variable
+    xglibc "libc_cv_ssp" "no")
+   "libc_cv_ssp_strong" "no"))
+
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
                                        (base-gcc-for-libc gcc-7)
                                        (base-kernel-headers linux-libre-headers-5.4)
-                                       (base-libc glibc)  ; glibc 2.31
+                                       (base-libc (make-glibc-without-ssp glibc-2.24))
                                        (base-gcc (make-gcc-rpath-link base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
@@ -153,7 +172,7 @@ desirable for building Bitcoin Core release binaries."
 
 (define (make-mingw-pthreads-cross-toolchain target)
   "Create a cross-compilation toolchain package for TARGET"
-  (let* ((xbinutils (cross-binutils target))
+  (let* ((xbinutils (make-binutils-with-mingw-w64-disable-flags (cross-binutils target)))
          (pthreads-xlibc mingw-w64-x86_64-winpthreads)
          (pthreads-xgcc (make-gcc-with-pthreads
                          (cross-gcc target
@@ -205,7 +224,7 @@ chain for " target " development."))
 (define-public lief
   (package
    (name "python-lief")
-   (version "0.11.4")
+   (version "0.11.5")
    (source
     (origin
      (method git-fetch)
@@ -215,7 +234,7 @@ chain for " target " development."))
      (file-name (git-file-name name version))
      (sha256
       (base32
-       "0h4kcwr9z478almjqhmils8imfpflzk0r7d05g4xbkdyknn162qf"))))
+       "0qahjfg1n0x76ps2mbyljvws1l3qhkqvmxqbahps4qgywl2hbdkj"))))
    (build-system python-build-system)
    (native-inputs
     `(("cmake" ,cmake)))
@@ -524,7 +543,7 @@ and endian independent.")
     (license license:expat)))
 
 (define-public python-signapple
-  (let ((commit "4ff1c1754e37042c002a3f6375c47fd931f2030b"))
+  (let ((commit "b084cbbf44d5330448ffce0c7d118f75781b64bd"))
     (package
       (name "python-signapple")
       (version (git-version "0.1" "1" commit))
@@ -532,12 +551,12 @@ and endian independent.")
        (origin
          (method git-fetch)
          (uri (git-reference
-               (url "https://github.com/dongcarl/signapple")
+               (url "https://github.com/achow101/signapple")
                (commit commit)))
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "043czyzfm04rcx5xsp59vsppla3vm5g45dbp1npy2hww4066rlnh"))))
+           "0k7inccl2mzac3wq4asbr0kl8s4cghm8982z54kfascqg45shv01"))))
       (build-system python-build-system)
       (propagated-inputs
        `(("python-asn1crypto" ,python-asn1crypto)
@@ -556,6 +575,28 @@ and endian independent.")
 inspecting signatures in Mach-O binaries.")
       (license license:expat))))
 
+(define-public glibc-2.24
+  (package
+    (inherit glibc)
+    (version "2.24")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://sourceware.org/git/glibc.git")
+                    (commit "0d7f1ed30969886c8dde62fbf7d2c79967d4bace")))
+              (file-name (git-file-name "glibc" "0d7f1ed30969886c8dde62fbf7d2c79967d4bace"))
+              (sha256
+               (base32
+                "0g5hryia5v1k0qx97qffgwzrz4lr4jw3s5kj04yllhswsxyjbic3"))
+              (patches (search-our-patches "glibc-ldd-x86_64.patch"
+                                           "glibc-versioned-locpath.patch"
+                                           "glibc-2.24-elfm-loadaddr-dynamic-rewrite.patch"
+                                           "glibc-2.24-no-build-time-cxx-header-run.patch"))))))
+
+(define glibc-2.27/bitcoin-patched
+  (package-with-extra-patches glibc-2.27
+    (search-our-patches "glibc-2.27-riscv64-Use-__has_include__-to-include-asm-syscalls.h.patch")))
+
 (packages->manifest
  (append
   (list ;; The Basics
@@ -572,6 +613,7 @@ inspecting signatures in Mach-O binaries.")
         patch
         gawk
         sed
+        moreutils
         ;; Compression and archiving
         tar
         bzip2
@@ -604,7 +646,10 @@ inspecting signatures in Mach-O binaries.")
                  (make-nsis-with-sde-support nsis-x86_64)
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list (make-bitcoin-cross-toolchain target)))
+           (list (cond ((string-contains target "riscv64-")
+                        (make-bitcoin-cross-toolchain target #:base-libc glibc-2.27/bitcoin-patched))
+                       (else
+                        (make-bitcoin-cross-toolchain target)))))
           ((string-contains target "darwin")
            (list clang-toolchain-10 binutils imagemagick libtiff librsvg font-tuffy cmake xorriso python-signapple))
           (else '())))))

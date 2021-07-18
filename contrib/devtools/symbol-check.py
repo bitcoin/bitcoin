@@ -3,20 +3,21 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
-A script to check that the executables produced by gitian only contain
-certain symbols and are only linked against allowed libraries.
+A script to check that release executables only contain certain symbols
+and are only linked against allowed libraries.
 
 Example usage:
 
-    find ../gitian-builder/build -type f -executable | xargs python3 contrib/devtools/symbol-check.py
+    find ../path/to/binaries -type f -executable | xargs python3 contrib/devtools/symbol-check.py
 '''
 import subprocess
 import sys
-import os
 from typing import List, Optional
 
 import lief
 import pixie
+
+from utils import determine_wellknown_cmd
 
 # Debian 8 (Jessie) EOL: 2020. https://wiki.debian.org/DebianReleases#Production_Releases
 #
@@ -41,8 +42,16 @@ import pixie
 #
 MAX_VERSIONS = {
 'GCC':       (4,8,0),
-'GLIBC':     (2,17),
-'LIBATOMIC': (1,0)
+'GLIBC': {
+    pixie.EM_386:    (2,17),
+    pixie.EM_X86_64: (2,17),
+    pixie.EM_ARM:    (2,17),
+    pixie.EM_AARCH64:(2,17),
+    pixie.EM_PPC64:  (2,17),
+    pixie.EM_RISCV:  (2,27),
+},
+'LIBATOMIC': (1,0),
+'V':         (0,5,0),  # xkb (bitcoin-qt only)
 }
 # See here for a description of _IO_stdin_used:
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=634261#109
@@ -52,7 +61,6 @@ IGNORE_EXPORTS = {
 '_edata', '_end', '__end__', '_init', '__bss_start', '__bss_start__', '_bss_end__', '__bss_end__', '_fini', '_IO_stdin_used', 'stdin', 'stdout', 'stderr',
 'environ', '_environ', '__environ',
 }
-CPPFILT_CMD = os.getenv('CPPFILT', '/usr/bin/c++filt')
 
 # Allowed NEEDED libraries
 ELF_ALLOWED_LIBRARIES = {
@@ -77,14 +85,6 @@ ELF_ALLOWED_LIBRARIES = {
 'libfontconfig.so.1', # font support
 'libfreetype.so.6', # font parsing
 'libdl.so.2' # programming interface to dynamic linker
-}
-ARCH_MIN_GLIBC_VER = {
-pixie.EM_386:    (2,1),
-pixie.EM_X86_64: (2,2,5),
-pixie.EM_ARM:    (2,4),
-pixie.EM_AARCH64:(2,17),
-pixie.EM_PPC64:  (2,17),
-pixie.EM_RISCV:  (2,27)
 }
 
 MACHO_ALLOWED_LIBRARIES = {
@@ -140,7 +140,7 @@ class CPPFilt(object):
     Use a pipe to the 'c++filt' command.
     '''
     def __init__(self):
-        self.proc = subprocess.Popen(CPPFILT_CMD, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
+        self.proc = subprocess.Popen(determine_wellknown_cmd('CPPFILT', 'c++filt'), stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 
     def __call__(self, mangled):
         self.proc.stdin.write(mangled + '\n')
@@ -161,7 +161,10 @@ def check_version(max_versions, version, arch) -> bool:
     ver = tuple([int(x) for x in ver.split('.')])
     if not lib in max_versions:
         return False
-    return ver <= max_versions[lib] or lib == 'GLIBC' and ver <= ARCH_MIN_GLIBC_VER[arch]
+    if isinstance(max_versions[lib], tuple):
+        return ver <= max_versions[lib]
+    else:
+        return ver <= max_versions[lib][arch]
 
 def check_imported_symbols(filename) -> bool:
     elf = pixie.load(filename)
@@ -212,6 +215,18 @@ def check_MACHO_libraries(filename) -> bool:
             ok = False
     return ok
 
+def check_MACHO_min_os(filename) -> bool:
+    binary = lief.parse(filename)
+    if binary.build_version.minos == [10,14,0]:
+        return True
+    return False
+
+def check_MACHO_sdk(filename) -> bool:
+    binary = lief.parse(filename)
+    if binary.build_version.sdk == [10, 15, 6]:
+        return True
+    return False
+
 def check_PE_libraries(filename) -> bool:
     ok: bool = True
     binary = lief.parse(filename)
@@ -221,6 +236,14 @@ def check_PE_libraries(filename) -> bool:
             ok = False
     return ok
 
+def check_PE_subsystem_version(filename) -> bool:
+    binary = lief.parse(filename)
+    major: int = binary.optional_header.major_subsystem_version
+    minor: int = binary.optional_header.minor_subsystem_version
+    if major == 6 and minor == 1:
+        return True
+    return False
+
 CHECKS = {
 'ELF': [
     ('IMPORTED_SYMBOLS', check_imported_symbols),
@@ -228,10 +251,13 @@ CHECKS = {
     ('LIBRARY_DEPENDENCIES', check_ELF_libraries)
 ],
 'MACHO': [
-    ('DYNAMIC_LIBRARIES', check_MACHO_libraries)
+    ('DYNAMIC_LIBRARIES', check_MACHO_libraries),
+    ('MIN_OS', check_MACHO_min_os),
+    ('SDK', check_MACHO_sdk),
 ],
 'PE' : [
-    ('DYNAMIC_LIBRARIES', check_PE_libraries)
+    ('DYNAMIC_LIBRARIES', check_PE_libraries),
+    ('SUBSYSTEM_VERSION', check_PE_subsystem_version),
 ]
 }
 

@@ -1,4 +1,34 @@
 [
+  { "exec": "./bitcoin-util",
+    "args": ["foo"],
+    "return_code": 1,
+    "error_txt": "Error parsing command line arguments: Invalid command 'foo'",
+    "description": ""
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["help"],
+    "return_code": 1,
+    "error_txt": "Error parsing command line arguments: Invalid command 'help'",
+    "description": "`help` raises an error. Use `-help`"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["grind"],
+    "return_code": 1,
+    "error_txt": "Must specify block header to grind",
+    "description": ""
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["grind", "1", "2"],
+    "return_code": 1,
+    "error_txt": "Must specify block header to grind",
+    "description": ""
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["grind", "aa"],
+    "return_code": 1,
+    "error_txt": "Could not decode block header",
+    "description": ""
+  },
   { "exec": "./bitcoin-tx",
     "args": ["-create", "nversion=1"],
     "output_cmp": "blanktxv1.hex",

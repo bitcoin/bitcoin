@@ -6,8 +6,23 @@
 from decimal import Decimal
 import random
 
-from test_framework.messages import CTransaction, CTxIn, CTxOut, COutPoint, ToHex, COIN
-from test_framework.script import CScript, OP_1, OP_DROP, OP_2, OP_HASH160, OP_EQUAL, hash160, OP_TRUE
+from test_framework.messages import (
+    COIN,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+)
+from test_framework.script import (
+    CScript,
+    OP_1,
+    OP_2,
+    OP_DROP,
+    OP_TRUE,
+)
+from test_framework.script_util import (
+    script_to_p2sh_script,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -22,8 +37,8 @@ from test_framework.util import (
 # time signing.
 REDEEM_SCRIPT_1 = CScript([OP_1, OP_DROP])
 REDEEM_SCRIPT_2 = CScript([OP_2, OP_DROP])
-P2SH_1 = CScript([OP_HASH160, hash160(REDEEM_SCRIPT_1), OP_EQUAL])
-P2SH_2 = CScript([OP_HASH160, hash160(REDEEM_SCRIPT_2), OP_EQUAL])
+P2SH_1 = script_to_p2sh_script(REDEEM_SCRIPT_1)
+P2SH_2 = script_to_p2sh_script(REDEEM_SCRIPT_2)
 
 # Associated ScriptSig's to spend satisfy P2SH_1 and P2SH_2
 SCRIPT_SIG = [CScript([OP_TRUE, REDEEM_SCRIPT_1]), CScript([OP_TRUE, REDEEM_SCRIPT_2])]
@@ -64,11 +79,11 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
     # the ScriptSig that will satisfy the ScriptPubKey.
     for inp in tx.vin:
         inp.scriptSig = SCRIPT_SIG[inp.prevout.n]
-    txid = from_node.sendrawtransaction(hexstring=ToHex(tx), maxfeerate=0)
+    txid = from_node.sendrawtransaction(hexstring=tx.serialize().hex(), maxfeerate=0)
     unconflist.append({"txid": txid, "vout": 0, "amount": total_in - amount - fee})
     unconflist.append({"txid": txid, "vout": 1, "amount": amount})
 
-    return (ToHex(tx), fee)
+    return (tx.serialize().hex(), fee)
 
 
 def split_inputs(from_node, txins, txouts, initial_split=False):
@@ -91,10 +106,10 @@ def split_inputs(from_node, txins, txouts, initial_split=False):
     # If this is the initial split we actually need to sign the transaction
     # Otherwise we just need to insert the proper ScriptSig
     if (initial_split):
-        completetx = from_node.signrawtransactionwithwallet(ToHex(tx))["hex"]
+        completetx = from_node.signrawtransactionwithwallet(tx.serialize().hex())["hex"]
     else:
         tx.vin[0].scriptSig = SCRIPT_SIG[prevtxout["vout"]]
-        completetx = ToHex(tx)
+        completetx = tx.serialize().hex()
     txid = from_node.sendrawtransaction(hexstring=completetx, maxfeerate=0)
     txouts.append({"txid": txid, "vout": 0, "amount": half_change})
     txouts.append({"txid": txid, "vout": 1, "amount": rem_change})

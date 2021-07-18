@@ -57,8 +57,6 @@
 /src/util/settings.*                        @ryanofsky
 
 # Fuzzing
-/src/test/fuzz/                             @practicalswift
-/doc/fuzzing.md                             @practicalswift
 
 # Tests
 /src/test/net_peer_eviction_tests.cpp       @jonatack
@@ -117,7 +115,6 @@
 /src/dbwrapper.*                            @jamesob
 
 # Linter
-/test/lint/                                 @practicalswift
 /test/lint/lint-shell.sh                    @hebasto
 
 # Bech32

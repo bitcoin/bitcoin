@@ -23,7 +23,7 @@ PATH_BASE_TEST_FUNCTIONAL = os.path.abspath(os.path.join(PATH_BASE_CONTRIB_SIGNE
 sys.path.insert(0, PATH_BASE_TEST_FUNCTIONAL)
 
 from test_framework.blocktools import WITNESS_COMMITMENT_HEADER, script_BIP34_coinbase_height # noqa: E402
-from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, FromHex, ToHex, deser_string, hash256, ser_compact_size, ser_string, ser_uint256, uint256_from_str # noqa: E402
+from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, from_hex, deser_string, hash256, ser_compact_size, ser_string, ser_uint256, tx_from_hex, uint256_from_str # noqa: E402
 from test_framework.script import CScriptOp # noqa: E402
 
 logging.basicConfig(
@@ -37,7 +37,7 @@ RE_MULTIMINER = re.compile("^(\d+)(-(\d+))?/(\d+)$")
 
 # #### some helpers that could go into test_framework
 
-# like FromHex, but without the hex part
+# like from_hex, but without the hex part
 def FromBinary(cls, stream):
     """deserialize a binary stream (or bytes object) into an object"""
     # handle bytes object by turning it into a stream
@@ -195,7 +195,7 @@ def finish_block(block, signet_solution, grind_cmd):
         headhex = CBlockHeader.serialize(block).hex()
         cmd = grind_cmd.split(" ") + [headhex]
         newheadhex = subprocess.run(cmd, stdout=subprocess.PIPE, input=b"", check=True).stdout.strip()
-        newhead = FromHex(CBlockHeader(), newheadhex.decode('utf8'))
+        newhead = from_hex(CBlockHeader(), newheadhex.decode('utf8'))
         block.nNonce = newhead.nNonce
         block.rehash()
     return block
@@ -216,7 +216,7 @@ def generate_psbt(tmpl, reward_spk, *, blocktime=None):
         block.nTime = tmpl["mintime"]
     block.nBits = int(tmpl["bits"], 16)
     block.nNonce = 0
-    block.vtx = [cbtx] + [FromHex(CTransaction(), t["data"]) for t in tmpl["transactions"]]
+    block.vtx = [cbtx] + [tx_from_hex(t["data"]) for t in tmpl["transactions"]]
 
     witnonce = 0
     witroot = block.calc_witness_merkle_root()
@@ -274,7 +274,7 @@ def do_genpsbt(args):
 def do_solvepsbt(args):
     block, signet_solution = do_decode_psbt(sys.stdin.read())
     block = finish_block(block, signet_solution, args.grind_cmd)
-    print(ToHex(block))
+    print(block.serialize().hex())
 
 def nbits_to_target(nbits):
     shift = (nbits >> 24) & 0xff
@@ -428,10 +428,13 @@ def do_generate(args):
             action_time = now
             is_mine = True
         elif bestheader["height"] == 0:
-            logging.error("When mining first block in a new signet, must specify --set-block-time")
-            return 1
+            time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson)
+            time_delta *= 100 # 100 blocks
+            logging.info("Backdating time for first block to %d minutes ago" % (time_delta/60))
+            mine_time = now - time_delta
+            action_time = now
+            is_mine = True
         else:
-
             time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson)
             mine_time = bestheader["time"] + time_delta
 
@@ -500,7 +503,7 @@ def do_generate(args):
         block = finish_block(block, signet_solution, args.grind_cmd)
 
         # submit block
-        r = args.bcli("-stdin", "submitblock", input=ToHex(block).encode('utf8'))
+        r = args.bcli("-stdin", "submitblock", input=block.serialize().hex().encode('utf8'))
 
         # report
         bstr = "block" if is_mine else "backup block"
@@ -520,12 +523,11 @@ def do_calibrate(args):
         sys.stderr.write("Can only specify one of --nbits or --seconds\n")
         return 1
     if args.nbits is not None and len(args.nbits) != 8:
-        sys.stderr.write("Must specify 8 hex digits for --nbits")
+        sys.stderr.write("Must specify 8 hex digits for --nbits\n")
         return 1
 
     TRIALS = 600 # gets variance down pretty low
     TRIAL_BITS = 0x1e3ea75f # takes about 5m to do 600 trials
-    #TRIAL_BITS = 0x1e7ea75f # XXX
 
     header = CBlockHeader()
     header.nBits = TRIAL_BITS
@@ -533,23 +535,14 @@ def do_calibrate(args):
 
     start = time.time()
     count = 0
-    #CHECKS=[]
     for i in range(TRIALS):
         header.nTime = i
         header.nNonce = 0
         headhex = header.serialize().hex()
         cmd = args.grind_cmd.split(" ") + [headhex]
         newheadhex = subprocess.run(cmd, stdout=subprocess.PIPE, input=b"", check=True).stdout.strip()
-        #newhead = FromHex(CBlockHeader(), newheadhex.decode('utf8'))
-        #count += newhead.nNonce
-        #if (i+1) % 100 == 0:
-        #   CHECKS.append((i+1, count, time.time()-start))
-
-    #print("checks =", [c*1.0 / (b*targ*2**-256) for _,b,c in CHECKS])
 
     avg = (time.time() - start) * 1.0 / TRIALS
-    #exp_count = 2**256 / targ * TRIALS
-    #print("avg =", avg, "count =", count, "exp_count =", exp_count)
 
     if args.nbits is not None:
         want_targ = nbits_to_target(int(args.nbits,16))
@@ -590,7 +583,6 @@ def main():
     generate.add_argument("--nbits", default=None, type=str, help="Target nBits (specify difficulty)")
     generate.add_argument("--min-nbits", action="store_true", help="Target minimum nBits (use min difficulty)")
     generate.add_argument("--poisson", action="store_true", help="Simulate randomised block times")
-    #generate.add_argument("--signcmd", default=None, type=str, help="Alternative signing command")
     generate.add_argument("--multiminer", default=None, type=str, help="Specify which set of blocks to mine (eg: 1-40/100 for the first 40%%, 2/3 for the second 3rd)")
     generate.add_argument("--backup-delay", default=300, type=int, help="Seconds to delay before mining blocks reserved for other miners (default=300)")
     generate.add_argument("--standby-delay", default=0, type=int, help="Seconds to delay before mining blocks (default=0)")
@@ -605,7 +597,7 @@ def main():
         sp.add_argument("--descriptor", default=None, type=str, help="Descriptor for block reward payment")
 
     for sp in [solvepsbt, generate, calibrate]:
-        sp.add_argument("--grind-cmd", default=None, type=str, help="Command to grind a block header for proof-of-work")
+        sp.add_argument("--grind-cmd", default=None, type=str, required=(sp==calibrate), help="Command to grind a block header for proof-of-work")
 
     args = parser.parse_args(sys.argv[1:])
 

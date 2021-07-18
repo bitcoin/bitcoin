@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
@@ -10,7 +9,7 @@
 
 using namespace std::literals;
 
-BOOST_FIXTURE_TEST_SUITE(base64_tests, BasicTestingSetup)
+BOOST_AUTO_TEST_SUITE(base64_tests)
 
 BOOST_AUTO_TEST_CASE(base64_testvectors)
 {

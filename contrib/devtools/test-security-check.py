@@ -9,6 +9,8 @@ import os
 import subprocess
 import unittest
 
+from utils import determine_wellknown_cmd
+
 def write_testcode(filename):
     with open(filename, 'w', encoding="utf8") as f:
         f.write('''
@@ -25,7 +27,7 @@ def clean_files(source, executable):
     os.remove(executable)
 
 def call_security_check(cc, source, executable, options):
-    subprocess.run([cc,source,'-o',executable] + options, check=True)
+    subprocess.run([*cc,source,'-o',executable] + options, check=True)
     p = subprocess.run(['./contrib/devtools/security-check.py',executable], stdout=subprocess.PIPE, universal_newlines=True)
     return (p.returncode, p.stdout.rstrip())
 
@@ -33,7 +35,7 @@ class TestSecurityChecks(unittest.TestCase):
     def test_ELF(self):
         source = 'test1.c'
         executable = 'test1'
-        cc = 'gcc'
+        cc = determine_wellknown_cmd('CC', 'gcc')
         write_testcode(source)
 
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-zexecstack','-fno-stack-protector','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code']),
@@ -54,18 +56,20 @@ class TestSecurityChecks(unittest.TestCase):
     def test_PE(self):
         source = 'test1.c'
         executable = 'test1.exe'
-        cc = 'x86_64-w64-mingw32-gcc'
+        cc = determine_wellknown_cmd('CC', 'x86_64-w64-mingw32-gcc')
         write_testcode(source)
 
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--no-nxcompat','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va','-no-pie','-fno-PIE']),
-            (1, executable+': failed DYNAMIC_BASE HIGH_ENTROPY_VA NX RELOC_SECTION'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va','-no-pie','-fno-PIE']),
-            (1, executable+': failed DYNAMIC_BASE HIGH_ENTROPY_VA RELOC_SECTION'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--no-high-entropy-va','-no-pie','-fno-PIE']),
-            (1, executable+': failed HIGH_ENTROPY_VA RELOC_SECTION'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--high-entropy-va','-no-pie','-fno-PIE']),
-            (1, executable+': failed RELOC_SECTION'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--high-entropy-va','-pie','-fPIE']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--no-nxcompat','-Wl,--disable-reloc-section','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va','-no-pie','-fno-PIE']),
+            (1, executable+': failed PIE DYNAMIC_BASE HIGH_ENTROPY_VA NX RELOC_SECTION'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--disable-reloc-section','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va','-no-pie','-fno-PIE']),
+            (1, executable+': failed PIE DYNAMIC_BASE HIGH_ENTROPY_VA RELOC_SECTION'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--enable-reloc-section','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va','-no-pie','-fno-PIE']),
+            (1, executable+': failed PIE DYNAMIC_BASE HIGH_ENTROPY_VA'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--enable-reloc-section','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va','-pie','-fPIE']),
+            (1, executable+': failed PIE DYNAMIC_BASE HIGH_ENTROPY_VA'))  # -pie -fPIE does nothing unless --dynamicbase is also supplied
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--enable-reloc-section','-Wl,--dynamicbase','-Wl,--no-high-entropy-va','-pie','-fPIE']),
+            (1, executable+': failed HIGH_ENTROPY_VA'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--enable-reloc-section','-Wl,--dynamicbase','-Wl,--high-entropy-va','-pie','-fPIE']),
             (0, ''))
 
         clean_files(source, executable)
@@ -73,7 +77,7 @@ class TestSecurityChecks(unittest.TestCase):
     def test_MACHO(self):
         source = 'test1.c'
         executable = 'test1'
-        cc = 'clang'
+        cc = determine_wellknown_cmd('CC', 'clang')
         write_testcode(source)
 
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-Wl,-allow_stack_execute','-fno-stack-protector']),
@@ -95,4 +99,3 @@ class TestSecurityChecks(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
