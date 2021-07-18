@@ -27,6 +27,9 @@ class NotificationsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
+        # The experimental syscall sandbox feature (-sandbox) is not compatible with -alertnotify,
+        # -blocknotify or -walletnotify (which all invoke execve).
+        self.disable_syscall_sandbox = True
 
     def setup_network(self):
         self.wallet = ''.join(chr(i) for i in range(FILE_CHAR_START, FILE_CHAR_END) if chr(i) not in FILE_CHARS_DISALLOWED)
