@@ -182,6 +182,8 @@ RPCHelpMan importprivkey()
                 pwallet->ImportScripts({GetScriptForDestination(WitnessV0KeyHash(vchAddress))}, 0 /* timestamp */);
             }
         }
+        // Scan mempool for transactions
+        pwallet->chain().requestMempoolTransactions(*pwallet);
     }
     if (fRescan) {
         RescanWallet(*pwallet, reserver);
@@ -308,6 +310,8 @@ RPCHelpMan importaddress()
         } else {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
         }
+        // Scan mempool for transactions
+        pwallet->chain().requestMempoolTransactions(*pwallet);
     }
     if (fRescan)
     {
