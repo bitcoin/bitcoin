@@ -20,6 +20,7 @@ $(package)_config_opts += --disable-xevie --disable-xfixes --disable-xfree86-dri
 $(package)_config_opts += --disable-xinerama --disable-xinput
 $(package)_config_opts += --disable-xprint --disable-selinux --disable-xtest
 $(package)_config_opts += --disable-xv --disable-xvmc
+$(package)_cflags=-std=c11
 endef
 
 define $(package)_preprocess_cmds

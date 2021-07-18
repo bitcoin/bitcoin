@@ -8,6 +8,7 @@ define $(package)_set_vars
   $(package)_config_opts=--without-zlib --without-png --without-harfbuzz --without-bzip2 --disable-static
   $(package)_config_opts += --enable-option-checking
   $(package)_config_opts_linux=--with-pic
+  $(package)_cflags=-std=c11
 endef
 
 define $(package)_config_cmds

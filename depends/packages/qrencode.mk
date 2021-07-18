@@ -10,6 +10,7 @@ $(package)_config_opts += --disable-gprof --disable-gcov --disable-mudflap
 $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
 $(package)_config_opts_linux=--with-pic
 $(package)_config_opts_android=--with-pic
+$(package)_cflags=-std=c11
 endef
 
 define $(package)_preprocess_cmds
