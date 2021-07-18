@@ -536,7 +536,6 @@ private:
 
     bool AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
-    KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
     // Fetch the SigningProvider for the given script and optionally include private keys
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CScript& script, bool include_private = false) const;
@@ -549,6 +548,8 @@ protected:
   WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
 
 public:
+    KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor)
         :   ScriptPubKeyMan(storage),
             m_wallet_descriptor(descriptor)

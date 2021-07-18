@@ -1554,7 +1554,10 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
         // If private keys are enabled, check some things.
         if (!wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
            if (keys.keys.empty()) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import descriptor without private keys to a wallet with private keys enabled");
+               // TODO: if the desciptor contains one of our own HD fingerprints:
+               //       * copy its hd master key
+               //       * check that it produces a matching xpub
+               // throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import descriptor without private keys to a wallet with private keys enabled");
            }
            if (!have_all_privkeys) {
                warnings.push_back("Not all private keys provided. Some wallet functionality may return unexpected errors");
@@ -1824,6 +1827,55 @@ RPCHelpMan listdescriptors()
     response.pushKV("wallet_name", wallet->GetName());
     response.pushKV("descriptors", descriptors);
 
+    return response;
+},
+    };
+}
+
+RPCHelpMan getxpub()
+{
+    return RPCHelpMan{"getxpub",
+                "\nReturn extended public key for a given path.\n"
+                "The xpub needs to be imported in a descriptor in order to see transactions spend from it.\n",
+                {
+                    {"path", RPCArg::Type::STR, RPCArg::Optional::NO, "BIP 32 derivation path"},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "xpub", "The extended public key."},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("getxpub", "\"m/87h/0h/0h\"") +
+                    HelpExampleRpc("getxpub", "\"m/87h/0h/0h\"")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
+
+    //  Since it's not possible to import an xpub into a legacy wallet, for safety
+    //  make sure wallet is a descriptor wallet
+    if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "getxpub is not available for non-descriptor wallets");
+    }
+
+    // TODO: make sure wallet has a seed (i.e. not watch-only or blank)
+    LOCK(pwallet->cs_wallet);
+    EnsureWalletIsUnlocked(*pwallet);
+
+    CExtKey dest_key;   // key at the destination path
+    KeyOriginInfo info; // origin information
+    if (!pwallet->GetExtendedKey(request.params[0].get_str(), dest_key, info)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "failed to derive extended key");
+    }
+
+    std::string xpub = EncodeExtPubKey(dest_key.Neuter());
+
+    UniValue response(UniValue::VOBJ);
+    response.pushKV("xpub", xpub);
+    response.pushKV("masterfingerprint", HexStr(info.fingerprint));
     return response;
 },
     };

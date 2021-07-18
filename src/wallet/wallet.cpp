@@ -3280,3 +3280,34 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
 
     return spk_man;
 }
+
+bool CWallet::GetExtendedKey(const std::string path, CExtKey &ext_key, KeyOriginInfo &info) {
+    if (IsCrypted()) {
+        if (IsLocked()) {
+            return false;
+        }
+        // TODO: decrypt master key if unlocked
+        return false;
+    }
+
+    // TODO: avoid needing a pre-existing ScriptPubKeyMan for obtaining the HD seed
+    auto spk_man = GetScriptPubKeyMan(OutputType::BECH32, true);
+    if (!spk_man) return false;
+    auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
+    CKey seed = desc_spk_man->GetKeys().begin()->second;
+    CExtKey master_key;
+    master_key.SetSeed(seed.begin(), seed.size());
+
+    // TODO: parse path param
+    //! Value for the first BIP 32 hardened derivation. Can be used as a bit mask and as a value. See BIP 32 for more details.
+    const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
+    master_key.Derive(ext_key, BIP32_HARDENED_KEY_LIMIT + 87);
+    ext_key.Derive(ext_key, BIP32_HARDENED_KEY_LIMIT);
+    ext_key.Derive(ext_key, BIP32_HARDENED_KEY_LIMIT); // m/87'/0'/0'
+
+    CKeyID master_id = master_key.key.GetPubKey().GetID();
+    std::copy(master_id.begin(), master_id.begin() + 4, info.fingerprint);
+    // TODO: copy path info origin info
+
+    return true;
+}

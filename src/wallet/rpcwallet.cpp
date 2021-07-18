@@ -4621,6 +4621,7 @@ RPCHelpMan removeprunedfunds();
 RPCHelpMan importmulti();
 RPCHelpMan importdescriptors();
 RPCHelpMan listdescriptors();
+RPCHelpMan getxpub();
 
 Span<const CRPCCommand> GetWalletRPCCommands()
 {
@@ -4650,6 +4651,7 @@ static const CRPCCommand commands[] =
     { "wallet",             &getunconfirmedbalance,          },
     { "wallet",             &getbalances,                    },
     { "wallet",             &getwalletinfo,                  },
+    { "wallet",             &getxpub,                        },
     { "wallet",             &importaddress,                  },
     { "wallet",             &importdescriptors,              },
     { "wallet",             &importmulti,                    },
