@@ -524,6 +524,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
         // convert hex to bin, continue then with bin part
         std::vector<unsigned char> strRequestV = ParseHex(strRequestMutable);
         strRequestMutable.assign(strRequestV.begin(), strRequestV.end());
+        [[fallthrough]];
     }
 
     case RetFormat::BINARY: {
