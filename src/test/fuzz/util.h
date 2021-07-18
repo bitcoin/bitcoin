@@ -164,20 +164,7 @@ template <typename WeakEnumType, size_t size>
     return UintToArith256(ConsumeUInt256(fuzzed_data_provider));
 }
 
-[[nodiscard]] inline CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzzed_data_provider, const CTransaction& tx) noexcept
-{
-    // Avoid:
-    // policy/feerate.cpp:28:34: runtime error: signed integer overflow: 34873208148477500 * 1000 cannot be represented in type 'long'
-    //
-    // Reproduce using CFeeRate(348732081484775, 10).GetFeePerK()
-    const CAmount fee = std::min<CAmount>(ConsumeMoney(fuzzed_data_provider), std::numeric_limits<CAmount>::max() / static_cast<CAmount>(100000));
-    assert(MoneyRange(fee));
-    const int64_t time = fuzzed_data_provider.ConsumeIntegral<int64_t>();
-    const unsigned int entry_height = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
-    const bool spends_coinbase = fuzzed_data_provider.ConsumeBool();
-    const unsigned int sig_op_cost = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, MAX_BLOCK_SIGOPS_COST);
-    return CTxMemPoolEntry{MakeTransactionRef(tx), fee, time, entry_height, spends_coinbase, sig_op_cost, {}};
-}
+[[nodiscard]] CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzzed_data_provider, const CTransaction& tx) noexcept;
 
 [[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
@@ -215,16 +202,7 @@ template <class T>
     return std::numeric_limits<T>::max() - i < j;
 }
 
-[[nodiscard]] inline bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept
-{
-    for (const CTxIn& tx_in : tx.vin) {
-        const Coin& coin = inputs.AccessCoin(tx_in.prevout);
-        if (coin.IsSpent()) {
-            return true;
-        }
-    }
-    return false;
-}
+[[nodiscard]] bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept;
 
 /**
  * Sets errno to a value selected from the given std::array `errnos`.
@@ -259,27 +237,7 @@ inline void SetFuzzedErrNo(FuzzedDataProvider& fuzzed_data_provider) noexcept
     return result;
 }
 
-inline CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    const Network network = fuzzed_data_provider.PickValueInArray({Network::NET_IPV4, Network::NET_IPV6, Network::NET_INTERNAL, Network::NET_ONION});
-    CNetAddr net_addr;
-    if (network == Network::NET_IPV4) {
-        in_addr v4_addr = {};
-        v4_addr.s_addr = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
-        net_addr = CNetAddr{v4_addr};
-    } else if (network == Network::NET_IPV6) {
-        if (fuzzed_data_provider.remaining_bytes() >= 16) {
-            in6_addr v6_addr = {};
-            memcpy(v6_addr.s6_addr, fuzzed_data_provider.ConsumeBytes<uint8_t>(16).data(), 16);
-            net_addr = CNetAddr{v6_addr, fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
-        }
-    } else if (network == Network::NET_INTERNAL) {
-        net_addr.SetInternal(fuzzed_data_provider.ConsumeBytesAsString(32));
-    } else if (network == Network::NET_ONION) {
-        net_addr.SetSpecial(fuzzed_data_provider.ConsumeBytesAsString(32));
-    }
-    return net_addr;
-}
+CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 inline CSubNet ConsumeSubNet(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
@@ -329,112 +287,15 @@ public:
     {
     }
 
-    FILE* open()
-    {
-        SetFuzzedErrNo(m_fuzzed_data_provider);
-        if (m_fuzzed_data_provider.ConsumeBool()) {
-            return nullptr;
-        }
-        std::string mode;
-        CallOneOf(
-            m_fuzzed_data_provider,
-            [&] {
-                mode = "r";
-            },
-            [&] {
-                mode = "r+";
-            },
-            [&] {
-                mode = "w";
-            },
-            [&] {
-                mode = "w+";
-            },
-            [&] {
-                mode = "a";
-            },
-            [&] {
-                mode = "a+";
-            });
-#if defined _GNU_SOURCE && !defined __ANDROID__
-        const cookie_io_functions_t io_hooks = {
-            FuzzedFileProvider::read,
-            FuzzedFileProvider::write,
-            FuzzedFileProvider::seek,
-            FuzzedFileProvider::close,
-        };
-        return fopencookie(this, mode.c_str(), io_hooks);
-#else
-        (void)mode;
-        return nullptr;
-#endif
-    }
+    FILE* open();
 
-    static ssize_t read(void* cookie, char* buf, size_t size)
-    {
-        FuzzedFileProvider* fuzzed_file = (FuzzedFileProvider*)cookie;
-        SetFuzzedErrNo(fuzzed_file->m_fuzzed_data_provider);
-        if (buf == nullptr || size == 0 || fuzzed_file->m_fuzzed_data_provider.ConsumeBool()) {
-            return fuzzed_file->m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
-        }
-        const std::vector<uint8_t> random_bytes = fuzzed_file->m_fuzzed_data_provider.ConsumeBytes<uint8_t>(size);
-        if (random_bytes.empty()) {
-            return 0;
-        }
-        std::memcpy(buf, random_bytes.data(), random_bytes.size());
-        if (AdditionOverflow(fuzzed_file->m_offset, (int64_t)random_bytes.size())) {
-            return fuzzed_file->m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
-        }
-        fuzzed_file->m_offset += random_bytes.size();
-        return random_bytes.size();
-    }
+    static ssize_t read(void* cookie, char* buf, size_t size);
 
-    static ssize_t write(void* cookie, const char* buf, size_t size)
-    {
-        FuzzedFileProvider* fuzzed_file = (FuzzedFileProvider*)cookie;
-        SetFuzzedErrNo(fuzzed_file->m_fuzzed_data_provider);
-        const ssize_t n = fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<ssize_t>(0, size);
-        if (AdditionOverflow(fuzzed_file->m_offset, (int64_t)n)) {
-            return fuzzed_file->m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
-        }
-        fuzzed_file->m_offset += n;
-        return n;
-    }
+    static ssize_t write(void* cookie, const char* buf, size_t size);
 
-    static int seek(void* cookie, int64_t* offset, int whence)
-    {
-        assert(whence == SEEK_SET || whence == SEEK_CUR || whence == SEEK_END);
-        FuzzedFileProvider* fuzzed_file = (FuzzedFileProvider*)cookie;
-        SetFuzzedErrNo(fuzzed_file->m_fuzzed_data_provider);
-        int64_t new_offset = 0;
-        if (whence == SEEK_SET) {
-            new_offset = *offset;
-        } else if (whence == SEEK_CUR) {
-            if (AdditionOverflow(fuzzed_file->m_offset, *offset)) {
-                return -1;
-            }
-            new_offset = fuzzed_file->m_offset + *offset;
-        } else if (whence == SEEK_END) {
-            const int64_t n = fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, 4096);
-            if (AdditionOverflow(n, *offset)) {
-                return -1;
-            }
-            new_offset = n + *offset;
-        }
-        if (new_offset < 0) {
-            return -1;
-        }
-        fuzzed_file->m_offset = new_offset;
-        *offset = new_offset;
-        return fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<int>(-1, 0);
-    }
+    static int seek(void* cookie, int64_t* offset, int whence);
 
-    static int close(void* cookie)
-    {
-        FuzzedFileProvider* fuzzed_file = (FuzzedFileProvider*)cookie;
-        SetFuzzedErrNo(fuzzed_file->m_fuzzed_data_provider);
-        return fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<int>(-1, 0);
-    }
+    static int close(void* cookie);
 };
 
 [[nodiscard]] inline FuzzedFileProvider ConsumeFile(FuzzedDataProvider& fuzzed_data_provider) noexcept
