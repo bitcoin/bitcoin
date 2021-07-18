@@ -1683,7 +1683,7 @@ bool GenericTransactionSignatureChecker<T>::CheckECDSASignature(const std::vecto
     // Witness sighashes need the amount.
     if (sigversion == SigVersion::WITNESS_V0 && amount < 0) return HandleMissingData(m_mdb);
 
-    uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata);
+    uint256 sighash = SignatureHash(scriptCode, txTo, nIn, nHashType, amount, sigversion, &this->txdata);
 
     if (!VerifyECDSASignature(vchSig, pubkey, sighash))
         return false;
@@ -1711,8 +1711,7 @@ bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(Span<const uns
         if (hashtype == SIGHASH_DEFAULT) return set_error(serror, SCRIPT_ERR_SCHNORR_SIG_HASHTYPE);
     }
     uint256 sighash;
-    if (!this->txdata) return HandleMissingData(m_mdb);
-    if (!SignatureHashSchnorr(sighash, execdata, *txTo, nIn, hashtype, sigversion, *this->txdata, m_mdb)) {
+    if (!SignatureHashSchnorr(sighash, execdata, txTo, nIn, hashtype, sigversion, this->txdata, m_mdb)) {
         return set_error(serror, SCRIPT_ERR_SCHNORR_SIG_HASHTYPE);
     }
     if (!VerifySchnorrSignature(sig, pubkey, sighash)) return set_error(serror, SCRIPT_ERR_SCHNORR_SIG);
@@ -1730,14 +1729,14 @@ bool GenericTransactionSignatureChecker<T>::CheckLockTime(const CScriptNum& nLoc
     // unless the type of nLockTime being tested is the same as
     // the nLockTime in the transaction.
     if (!(
-        (txTo->nLockTime <  LOCKTIME_THRESHOLD && nLockTime <  LOCKTIME_THRESHOLD) ||
-        (txTo->nLockTime >= LOCKTIME_THRESHOLD && nLockTime >= LOCKTIME_THRESHOLD)
+        (txTo.nLockTime <  LOCKTIME_THRESHOLD && nLockTime <  LOCKTIME_THRESHOLD) ||
+        (txTo.nLockTime >= LOCKTIME_THRESHOLD && nLockTime >= LOCKTIME_THRESHOLD)
     ))
         return false;
 
     // Now that we know we're comparing apples-to-apples, the
     // comparison is a simple numeric one.
-    if (nLockTime > (int64_t)txTo->nLockTime)
+    if (nLockTime > (int64_t)txTo.nLockTime)
         return false;
 
     // Finally the nLockTime feature can be disabled in IsFinalTx()
@@ -1750,7 +1749,7 @@ bool GenericTransactionSignatureChecker<T>::CheckLockTime(const CScriptNum& nLoc
     // prevent this condition. Alternatively we could test all
     // inputs, but testing just this input minimizes the data
     // required to prove correct CHECKLOCKTIMEVERIFY execution.
-    if (CTxIn::SEQUENCE_FINAL == txTo->vin[nIn].nSequence)
+    if (CTxIn::SEQUENCE_FINAL == txTo.vin[nIn].nSequence)
         return false;
 
     return true;
@@ -1761,11 +1760,11 @@ bool GenericTransactionSignatureChecker<T>::CheckSequence(const CScriptNum& nSeq
 {
     // Relative lock times are supported by comparing the passed
     // in operand to the sequence number of the input.
-    const int64_t txToSequence = (int64_t)txTo->vin[nIn].nSequence;
+    const int64_t txToSequence = (int64_t)txTo.vin[nIn].nSequence;
 
     // Fail if the transaction's version number is not set high
     // enough to trigger BIP 68 rules.
-    if (static_cast<uint32_t>(txTo->nVersion) < 2)
+    if (static_cast<uint32_t>(txTo.nVersion) < 2)
         return false;
 
     // Sequence numbers with their most significant bit set are not

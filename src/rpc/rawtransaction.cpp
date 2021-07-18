@@ -711,10 +711,12 @@ static RPCHelpMan combinerawtransaction()
         // ... and merge in other signatures:
         for (const CMutableTransaction& txv : txVariants) {
             if (txv.vin.size() > i) {
-                sigdata.MergeSignatureData(DataFromTransaction(txv, i, coin.out));
+                PrecomputedTransactionData txdata{txv};
+                sigdata.MergeSignatureData(DataFromTransaction(txv, i, coin.out, txdata));
             }
         }
-        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&mergedTx, i, coin.out.nValue, 1), coin.out.scriptPubKey, sigdata);
+        PrecomputedTransactionData txdata{mergedTx};
+        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(mergedTx, i, coin.out.nValue, txdata, 1), coin.out.scriptPubKey, sigdata);
 
         UpdateInput(txin, sigdata);
     }

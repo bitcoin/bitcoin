@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_SIGN_H
 #define BITCOIN_SCRIPT_SIGN_H
 
+#include <attributes.h>
 #include <coins.h>
 #include <hash.h>
 #include <pubkey.h>
@@ -36,16 +37,15 @@ public:
 
 /** A signature creator for transactions. */
 class MutableTransactionSignatureCreator : public BaseSignatureCreator {
-    const CMutableTransaction* txTo;
+    const CMutableTransaction& txTo;
     unsigned int nIn;
     int nHashType;
     CAmount amount;
     const MutableTransactionSignatureChecker checker;
-    const PrecomputedTransactionData* m_txdata;
+    const PrecomputedTransactionData& m_txdata;
 
 public:
-    MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn = SIGHASH_ALL);
-    MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData* txdata, int nHashTypeIn = SIGHASH_ALL);
+    MutableTransactionSignatureCreator(const CMutableTransaction& txToIn LIFETIMEBOUND, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData& txdata LIFETIMEBOUND, int nHashTypeIn = SIGHASH_ALL);
     const BaseSignatureChecker& Checker() const override { return checker; }
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
     bool CreateSchnorrSig(const SigningProvider& provider, std::vector<unsigned char>& sig, const XOnlyPubKey& pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion) const override;
@@ -165,7 +165,7 @@ bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, C
 bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType);
 
 /** Extract signature data from a transaction input, and insert it. */
-SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout);
+SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout, const PrecomputedTransactionData& txdata);
 void UpdateInput(CTxIn& input, const SignatureData& data);
 
 /* Check whether we know how to sign for an output like this, assuming we
