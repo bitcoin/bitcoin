@@ -527,6 +527,19 @@ struct CompactSizeFormatter
     }
 };
 
+class CompactSizeWriter
+{
+protected:
+    uint64_t n;
+public:
+    explicit CompactSizeWriter(uint64_t n_in) : n(n_in) { }
+
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        WriteCompactSize<Stream>(s, n);
+    }
+};
+
 template<size_t Limit>
 struct LimitedStringFormatter
 {
