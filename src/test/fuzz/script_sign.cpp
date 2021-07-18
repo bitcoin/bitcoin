@@ -13,6 +13,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/translation.h>
 
 #include <cassert>
 #include <cstdint>
@@ -135,7 +136,7 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
                 }
                 coins[*outpoint] = *coin;
             }
-            std::map<int, std::string> input_errors;
+            std::map<int, bilingual_str> input_errors;
             (void)SignTransaction(sign_transaction_tx_to, &provider, coins, fuzzed_data_provider.ConsumeIntegral<int>(), input_errors);
         }
     }

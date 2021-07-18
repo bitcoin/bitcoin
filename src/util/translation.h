@@ -28,6 +28,12 @@ struct bilingual_str {
     {
         return original.empty();
     }
+
+    void clear()
+    {
+        original.clear();
+        translated.clear();
+    }
 };
 
 inline bilingual_str operator+(bilingual_str lhs, const bilingual_str& rhs)
