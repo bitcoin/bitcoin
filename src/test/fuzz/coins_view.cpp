@@ -65,7 +65,7 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                     coins_view_cache.AddCoin(random_out_point, std::move(coin), possible_overwrite);
                     expected_code_path = true;
                 } catch (const std::logic_error& e) {
-                    if (e.what() == std::string{"Attempted to overwrite an unspent coin (when possible_overwrite is false)"}) {
+                    if (e.what() == std::string{"FRESH flag misapplied to cache of unspent coin"}) {
                         assert(!possible_overwrite);
                         expected_code_path = true;
                     }
