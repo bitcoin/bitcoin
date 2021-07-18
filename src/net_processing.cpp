@@ -234,9 +234,6 @@ struct Peer {
     /** Whether this peer has already sent us a getaddr message. */
     bool m_getaddr_recvd{false};
 
-    /** Set of txids to reconsider once their parent transactions have been accepted **/
-    std::set<uint256> m_orphan_work_set GUARDED_BY(g_cs_orphans);
-
     /** Protects m_getdata_requests **/
     Mutex m_getdata_requests_mutex;
     /** Work queue of items requested by this peer **/
@@ -268,7 +265,7 @@ public:
     void InitializeNode(CNode* pnode) override;
     void FinalizeNode(const CNode& node) override;
     bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override;
-    bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
+    bool SendMessages(CNode* pto) override;
 
     /** Implement PeerManager */
     void CheckForStaleTipAndEvictPeers() override;
@@ -279,9 +276,20 @@ public:
     void SetBestHeight(int height) override { m_best_height = height; };
     void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message) override;
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
-                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override;
+                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override LOCKS_EXCLUDED(m_mutex_message_handling);
 
 private:
+    /** Message handling mutex.
+     *  Message processing is single-threaded, so anything only accessed
+     *  by ProcessMessage(s) or SendMessages can be guarded by this mutex,
+     *  which guarantees it's only accessed by a single thread.
+     */
+    Mutex m_mutex_message_handling;
+
+    void _ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
+                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc)
+        EXCLUSIVE_LOCKS_REQUIRED(m_mutex_message_handling);
+
     void _RelayTransaction(const uint256& txid, const uint256& wtxid)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -330,7 +338,17 @@ private:
      */
     bool MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer);
 
-    void ProcessOrphanTx(std::set<uint256>& orphan_work_set) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
+    /**
+     * Reconsider orphan transactions after a parent has been accepted to the mempool.
+     *
+     * @param[in,out]  peer             The peer whose orphan transactions we will reconsider. Generally only one
+     *                                  orphan will be reconsidered on each call of this function. This peer's set
+     *                                  may be added to if accepting an orphan causes its children to be
+     *                                  reconsidered.
+     * @return                          True if there are still orphans in this peer's work set
+     */
+    bool ProcessOrphanTx(Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(m_mutex_message_handling, cs_main);
+
     /** Process a single headers message from a peer. */
     void ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
                                const std::vector<CBlockHeader>& headers,
@@ -522,14 +540,14 @@ private:
     /** Storage for orphan information */
     TxOrphanage m_orphanage;
 
-    void AddToCompactExtraTransactions(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+    void AddToCompactExtraTransactions(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(m_mutex_message_handling);
 
     /** Orphan/conflicted/etc transactions that are kept for compact block reconstruction.
      *  The last -blockreconstructionextratxn/DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN of
      *  these are kept in a ring buffer */
-    std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact GUARDED_BY(g_cs_orphans);
+    std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact GUARDED_BY(m_mutex_message_handling);
     /** Offset into vExtraTxnForCompact to insert the next tx */
-    size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
+    size_t vExtraTxnForCompactIt GUARDED_BY(m_mutex_message_handling) = 0;
 
     /** Check whether the last unknown block a peer advertised is not yet known. */
     void ProcessBlockAvailability(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -1158,7 +1176,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
     for (const QueuedBlock& entry : state->vBlocksInFlight) {
         mapBlocksInFlight.erase(entry.pindex->GetBlockHash());
     }
-    WITH_LOCK(g_cs_orphans, m_orphanage.EraseForPeer(nodeid));
+    m_orphanage.EraseForPeer(nodeid);
     m_txrequest.DisconnectedPeer(nodeid);
     nPreferredDownload -= state->fPreferredDownload;
     m_peers_downloading_from -= (state->nBlocksInFlight != 0);
@@ -1245,6 +1263,8 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
 
 void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)
 {
+    AssertLockHeld(m_mutex_message_handling);
+
     size_t max_extra_txn = gArgs.GetArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN);
     if (max_extra_txn <= 0)
         return;
@@ -2162,33 +2182,26 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
     return;
 }
 
-/**
- * Reconsider orphan transactions after a parent has been accepted to the mempool.
- *
- * @param[in,out]  orphan_work_set  The set of orphan transactions to reconsider. Generally only one
- *                                  orphan will be reconsidered on each call of this function. This set
- *                                  may be added to if accepting an orphan causes its children to be
- *                                  reconsidered.
- */
-void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
+bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
 {
+    AssertLockHeld(m_mutex_message_handling);
     AssertLockHeld(cs_main);
-    AssertLockHeld(g_cs_orphans);
 
-    while (!orphan_work_set.empty()) {
-        const uint256 orphanHash = *orphan_work_set.begin();
-        orphan_work_set.erase(orphan_work_set.begin());
+    CTransactionRef porphanTx = nullptr;
+    NodeId from_peer = -1;
+    bool more = false;
 
-        const auto [porphanTx, from_peer] = m_orphanage.GetTx(orphanHash);
-        if (porphanTx == nullptr) continue;
+    while (m_orphanage.GetTxToReconsider(peer.m_id, porphanTx, from_peer, more)) {
+        if (!Assume(porphanTx)) break;
 
+        const uint256& orphanHash = porphanTx->GetHash();
         const MempoolAcceptResult result = AcceptToMemoryPool(m_chainman.ActiveChainstate(), m_mempool, porphanTx, false /* bypass_limits */);
         const TxValidationState& state = result.m_state;
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             _RelayTransaction(orphanHash, porphanTx->GetWitnessHash());
-            m_orphanage.AddChildrenToWorkSet(*porphanTx, orphan_work_set);
+            m_orphanage.AddChildrenToWorkSet(*porphanTx, peer.m_id);
             m_orphanage.EraseTx(orphanHash);
             for (const CTransactionRef& removedTx : result.m_replaced_transactions.value()) {
                 AddToCompactExtraTransactions(removedTx);
@@ -2240,7 +2253,10 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
             break;
         }
     }
+
     m_mempool.check(m_chainman.ActiveChainstate());
+
+    return more;
 }
 
 bool PeerManagerImpl::PrepareBlockFilterRequest(CNode& peer,
@@ -2427,6 +2443,16 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                                      const std::chrono::microseconds time_received,
                                      const std::atomic<bool>& interruptMsgProc)
 {
+    LOCK(m_mutex_message_handling);
+    return _ProcessMessage(pfrom, msg_type, vRecv, time_received, interruptMsgProc);
+}
+
+void PeerManagerImpl::_ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
+                                     const std::chrono::microseconds time_received,
+                                     const std::atomic<bool>& interruptMsgProc)
+{
+    AssertLockHeld(m_mutex_message_handling);
+
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom.GetId());
 
     PeerRef peer = GetPeerRef(pfrom.GetId());
@@ -3114,7 +3140,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const uint256& txid = ptx->GetHash();
         const uint256& wtxid = ptx->GetWitnessHash();
 
-        LOCK2(cs_main, g_cs_orphans);
+        LOCK(cs_main);
 
         CNodeState* nodestate = State(pfrom.GetId());
 
@@ -3169,7 +3195,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             m_txrequest.ForgetTxHash(tx.GetHash());
             m_txrequest.ForgetTxHash(tx.GetWitnessHash());
             _RelayTransaction(tx.GetHash(), tx.GetWitnessHash());
-            m_orphanage.AddChildrenToWorkSet(tx, peer->m_orphan_work_set);
+            m_orphanage.AddChildrenToWorkSet(tx, peer->m_id);
 
             pfrom.nLastTXTime = GetTime();
 
@@ -3183,7 +3209,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             }
 
             // Recursively process any orphan transactions that depended on this one
-            ProcessOrphanTx(peer->m_orphan_work_set);
+            ProcessOrphanTx(*peer);
         }
         else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
         {
@@ -3362,7 +3388,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         bool fBlockReconstructed = false;
 
         {
-        LOCK2(cs_main, g_cs_orphans);
+        LOCK(cs_main);
         // If AcceptBlockHeader returned true, it set pindex
         assert(pindex);
         UpdateBlockAvailability(pfrom.GetId(), pindex->GetBlockHash());
@@ -3483,7 +3509,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         } // cs_main
 
         if (fProcessBLOCKTXN) {
-            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, time_received, interruptMsgProc);
+            return _ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, time_received, interruptMsgProc);
         }
 
         if (fRevertToHeaderProcessing) {
@@ -3950,6 +3976,8 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     PeerRef peer = GetPeerRef(pfrom->GetId());
     if (peer == nullptr) return false;
 
+    LOCK(m_mutex_message_handling);
+
     {
         LOCK(peer->m_getdata_requests_mutex);
         if (!peer->m_getdata_requests.empty()) {
@@ -3958,10 +3986,8 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     }
 
     {
-        LOCK2(cs_main, g_cs_orphans);
-        if (!peer->m_orphan_work_set.empty()) {
-            ProcessOrphanTx(peer->m_orphan_work_set);
-        }
+        LOCK(cs_main);
+        if (ProcessOrphanTx(*peer)) return true;
     }
 
     if (pfrom->fDisconnect)
@@ -3972,11 +3998,6 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     {
         LOCK(peer->m_getdata_requests_mutex);
         if (!peer->m_getdata_requests.empty()) return true;
-    }
-
-    {
-        LOCK(g_cs_orphans);
-        if (!peer->m_orphan_work_set.empty()) return true;
     }
 
     // Don't bother if send buffer is too full to respond anyway
@@ -4005,7 +4026,7 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     unsigned int nMessageSize = msg.m_message_size;
 
     try {
-        ProcessMessage(*pfrom, msg_type, msg.m_recv, msg.m_time, interruptMsgProc);
+        _ProcessMessage(*pfrom, msg_type, msg.m_recv, msg.m_time, interruptMsgProc);
         if (interruptMsgProc) return false;
         {
             LOCK(peer->m_getdata_requests_mutex);
@@ -4376,6 +4397,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     PeerRef peer = GetPeerRef(pto->GetId());
     if (!peer) return false;
     const Consensus::Params& consensusParams = m_chainparams.GetConsensus();
+
+    LOCK(m_mutex_message_handling);
 
     // We must call MaybeDiscourageAndDisconnect first, to ensure that we'll
     // disconnect misbehaving peers even before the version handshake is complete.

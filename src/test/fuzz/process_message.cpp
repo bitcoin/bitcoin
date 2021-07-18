@@ -18,7 +18,6 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
-#include <txorphanage.h>
 #include <validationinterface.h>
 #include <version.h>
 
@@ -107,10 +106,7 @@ void fuzz_target(FuzzBufferType buffer, const std::string& LIMIT_TO_MESSAGE_TYPE
                                                 GetTime<std::chrono::microseconds>(), std::atomic<bool>{false});
     } catch (const std::ios_base::failure&) {
     }
-    {
-        LOCK(p2p_node.cs_sendProcessing);
-        g_setup->m_node.peerman->SendMessages(&p2p_node);
-    }
+    g_setup->m_node.peerman->SendMessages(&p2p_node);
     SyncWithValidationInterfaceQueue();
     g_setup->m_node.connman->StopNodes();
 }

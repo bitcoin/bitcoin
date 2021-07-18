@@ -13,7 +13,6 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
-#include <txorphanage.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -74,10 +73,7 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
             connman.ProcessMessagesOnce(random_node);
         } catch (const std::ios_base::failure&) {
         }
-        {
-            LOCK(random_node.cs_sendProcessing);
-            g_setup->m_node.peerman->SendMessages(&random_node);
-        }
+        g_setup->m_node.peerman->SendMessages(&random_node);
     }
     SyncWithValidationInterfaceQueue();
     g_setup->m_node.connman->StopNodes();
