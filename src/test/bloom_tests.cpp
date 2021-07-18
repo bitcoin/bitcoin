@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_key)
     CBloomFilter filter(2, 0.001, 0, BLOOM_UPDATE_ALL);
     filter.insert(vchPubKey);
     uint160 hash = pubkey.GetID();
-    filter.insert(std::vector<unsigned char>(hash.begin(), hash.end()));
+    filter.insert(MakeUCharSpan(hash));
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << filter;
