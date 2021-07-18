@@ -43,7 +43,7 @@ class RESTTest (BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [["-rest"], []]
+        self.extra_args = [["-rest", "-blockfilterindex=1"], []]
         self.supports_cli = False
 
     def skip_test_if_missing_module(self):
@@ -280,6 +280,9 @@ class RESTTest (BitcoinTestFramework):
         self.sync_all()
         json_obj = self.test_rest_request("/headers/5/{}".format(bb_hash))
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
+        json_obj = self.test_rest_request("/blockfilterheaders/basic/5/{}".format(bb_hash))
+        assert_equal(len(json_obj), 5)  # now we should have 5 filter header objects
+        self.test_rest_request("/blockfilter/basic/{}".format(bb_hash), req_type=ReqType.BIN, ret_type=RetType.OBJ)
 
         self.log.info("Test tx inclusion in the /mempool and /block URIs")
 
