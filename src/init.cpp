@@ -1184,6 +1184,64 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                      *node.scheduler, chainman, *node.mempool, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
+    // Check port numbers
+    if (args.IsArgSet("-port")) {
+        uint64_t portIn = args.GetArg("-port", 0);
+        if (portIn > std::numeric_limits<uint16_t>::max())
+            return InitError(strprintf(_("Invalid port specified in -port: '%d'"), portIn));
+    }
+    if (args.IsArgSet("-rpcport")) {
+        uint64_t portIn = args.GetArg("-rpcport", 0);
+        if (portIn > std::numeric_limits<uint16_t>::max())
+            return InitError(strprintf(_("Invalid port specified in -rpcport: '%d'"), portIn));
+    }
+    for (const std::string& socketAddr : args.GetArgs("-bind")) {
+        if (HasInvalidPort(socketAddr))
+            return InitError(strprintf(_("Invalid port specified in -bind: '%s'"), socketAddr));
+    }
+    for (const std::string& socketAddr : args.GetArgs("-i2psam")) {
+        if (HasInvalidPort(socketAddr))
+            return InitError(strprintf(_("Invalid port specified in -i2psam: '%s'"), socketAddr));
+    }
+    for (const std::string& socketAddr : args.GetArgs("-onion")) {
+        if (HasInvalidPort(socketAddr))
+            return InitError(strprintf(_("Invalid port specified in -onion: '%s'"), socketAddr));
+    }
+    for (const std::string& socketAddr : args.GetArgs("-proxy")) {
+        if (HasInvalidPort(socketAddr))
+            return InitError(strprintf(_("Invalid port specified in -proxy: '%s'"), socketAddr));
+    }
+    for (const std::string& socketAddr : args.GetArgs("-rpcbind")) {
+        if (HasInvalidPort(socketAddr))
+            return InitError(strprintf(_("Invalid port specified in -rpcbind: '%s'"), socketAddr));
+    }
+    for (const std::string& socketAddr : args.GetArgs("-torcontrol")) {
+        if (HasInvalidPort(socketAddr))
+            return InitError(strprintf(_("Invalid port specified in -torcontrol: '%s'"), socketAddr));
+    }
+    for (const std::string& socketAddr : args.GetArgs("-whitebind")) {
+        if (HasInvalidPort(socketAddr))
+            return InitError(strprintf(_("Invalid port specified in -whitebind: '%s'"), socketAddr));
+    }
+    for (const std::string& socketAddr : args.GetArgs("-zmqpubhashblock")) {
+        if (HasInvalidPort(socketAddr))
+            return InitError(strprintf(_("Invalid port specified in -zmqpubhashblock: '%s'"), socketAddr));
+    }
+    for (const std::string& socketAddr : args.GetArgs("-zmqpubhashtx")) {
+        if (HasInvalidPort(socketAddr))
+            return InitError(strprintf(_("Invalid port specified in -zmqpubhashtx: '%s'"), socketAddr));
+    }
+    for (const std::string& socketAddr : args.GetArgs("-zmqpubrawblock")) {
+        if (HasInvalidPort(socketAddr))
+            return InitError(strprintf(_("Invalid port specified in -zmqpubrawblock: '%s'"), socketAddr));
+    }
+#if ENABLE_ZMQ
+    for (const std::string& socketAddr : args.GetArgs("-zmqpubsequence")) {
+        if (HasInvalidPort(socketAddr))
+            return InitError(strprintf(_("Invalid port specified in -zmqpubsequence: '%s'"), socketAddr));
+    }
+#endif
+
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;
     for (const std::string& cmt : args.GetArgs("-uacomment")) {
