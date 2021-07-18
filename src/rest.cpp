@@ -15,6 +15,7 @@
 #include <rpc/blockchain.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
+#include <rpc/server_util.h>
 #include <streams.h>
 #include <sync.h>
 #include <txmempool.h>

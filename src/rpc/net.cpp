@@ -8,7 +8,6 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <core_io.h>
-#include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>
 #include <net_types.h> // For banmap_t
@@ -17,12 +16,12 @@
 #include <policy/settings.h>
 #include <rpc/blockchain.h>
 #include <rpc/protocol.h>
+#include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <sync.h>
 #include <timedata.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <version.h>
@@ -40,22 +39,6 @@ const std::vector<std::string> CONNECTION_TYPE_DOC{
         "addr-fetch (short-lived automatic connection for soliciting addresses)",
         "feeler (short-lived automatic connection for testing addresses)"
 };
-
-CConnman& EnsureConnman(const NodeContext& node)
-{
-    if (!node.connman) {
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-    }
-    return *node.connman;
-}
-
-PeerManager& EnsurePeerman(const NodeContext& node)
-{
-    if (!node.peerman) {
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-    }
-    return *node.peerman;
-}
 
 static RPCHelpMan getconnectioncount()
 {
