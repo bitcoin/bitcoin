@@ -757,9 +757,8 @@ bool CWallet::CreateTransactionInternal(
     nFeeRet = coin_selection_params.m_effective_feerate.GetFee(nBytes);
 
     // Subtract fee from the change output if not subtracting it from recipient outputs
-    CAmount fee_needed = nFeeRet;
     if (!coin_selection_params.m_subtract_fee_outputs) {
-        change_position->nValue -= fee_needed;
+        change_position->nValue -= nFeeRet;
     }
 
     // We want to drop the change to fees if:
@@ -775,17 +774,12 @@ bool CWallet::CreateTransactionInternal(
         // Because we have dropped this change, the tx size and required fee will be different, so let's recalculate those
         tx_sizes = CalculateMaximumSignedTxSize(CTransaction(txNew), this, coin_control.fAllowWatchOnly);
         nBytes = tx_sizes.vsize;
-        fee_needed = coin_selection_params.m_effective_feerate.GetFee(nBytes);
-    }
-
-    // Update nFeeRet in case fee_needed changed due to dropping the change output
-    if (fee_needed <= change_and_fee - change_amount) {
-        nFeeRet = change_and_fee - change_amount;
+        nFeeRet = coin_selection_params.m_effective_feerate.GetFee(nBytes);
     }
 
     // Reduce output values for subtractFeeFromAmount
     if (coin_selection_params.m_subtract_fee_outputs) {
-        CAmount to_reduce = fee_needed + change_amount - change_and_fee;
+        CAmount to_reduce = nFeeRet + change_amount - change_and_fee;
         int i = 0;
         bool fFirst = true;
         for (const auto& recipient : vecSend)
@@ -817,7 +811,15 @@ bool CWallet::CreateTransactionInternal(
             }
             ++i;
         }
-        nFeeRet = fee_needed;
+    } else if (nFeeRet <= change_and_fee - change_amount) {
+        // If dropping the change output covered the fee, update the returned
+        // fee amount. Note that that in subtract-fee-from-recipients case
+        // above, if the change output is dropped, the change dust value will
+        // be paid to recipients, rather than to the miner (`to_reduce` above
+        // will be negative). In that case, the dust amount sent is an
+        // additional cost of the transaction, but it's not considered part of
+        // the fee since it isn't paid to the miner.
+        nFeeRet = change_and_fee - change_amount;
     }
 
     // Give up if change keypool ran out and change is required
