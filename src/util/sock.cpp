@@ -71,6 +71,21 @@ int Sock::Connect(const sockaddr* addr, socklen_t addr_len) const
     return connect(m_socket, addr, addr_len);
 }
 
+std::unique_ptr<Sock> Sock::Accept(sockaddr* addr, socklen_t* addr_len) const
+{
+#ifdef WIN32
+    static constexpr auto ERR = INVALID_SOCKET;
+#else
+    static constexpr auto ERR = SOCKET_ERROR;
+#endif
+
+    const auto socket = accept(m_socket, addr, addr_len);
+    if (socket == ERR) {
+        return nullptr;
+    }
+    return std::make_unique<Sock>(socket);
+}
+
 int Sock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const
 {
     return getsockopt(m_socket, level, opt_name, static_cast<char*>(opt_val), opt_len);
