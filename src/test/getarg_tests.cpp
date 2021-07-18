@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(logargs)
 
     LogInstance().DeleteCallback(print_connection);
     // Check that what should appear does, and what shouldn't doesn't.
-    BOOST_CHECK(str.find("Command-line arg: okaylog-bool=\"\"") != std::string::npos);
+    BOOST_CHECK(str.find("Command-line arg: okaylog-bool=true") != std::string::npos);
     BOOST_CHECK(str.find("Command-line arg: okaylog-negbool=false") != std::string::npos);
     BOOST_CHECK(str.find("Command-line arg: okaylog=\"public\"") != std::string::npos);
     BOOST_CHECK(str.find("dontlog=****") != std::string::npos);
