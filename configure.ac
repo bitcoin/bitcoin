@@ -1601,6 +1601,11 @@ AC_MSG_RESULT($build_bitcoin_libs)
 
 AC_LANG_POP
 
+dnl To enable ccache the code below makes the CC variable an actual list of two
+dnl paths. For `make apk` it is expected to have a path to a compiler only, that
+dnl is saved in the CC_UNPREFIXED variable.
+CC_UNPREFIXED=$CC
+AC_SUBST(CC_UNPREFIXED)
 if test "x$use_ccache" != "xno"; then
   AC_MSG_CHECKING(if ccache should be used)
   if test x$CCACHE = x; then
