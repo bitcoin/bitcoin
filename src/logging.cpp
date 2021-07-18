@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <fs.h>
 #include <logging.h>
 #include <util/threadnames.h>
 #include <util/string.h>
@@ -40,7 +41,39 @@ static int FileWriteStr(const std::string &str, FILE *fp)
     return fwrite(str.data(), 1, str.size(), fp);
 }
 
-bool BCLog::Logger::StartLogging()
+// Remove the oldest rotated files if there are too many.
+void BCLog::Logger::RemoveRotate()
+{
+    while (static_cast<int>(m_rotated_files.size()) > m_rotate_keep) {
+        try {
+            fs::remove(m_rotated_files.front());
+        } catch (const fs::filesystem_error&) {}
+        m_rotated_files.pop_front();
+    }
+}
+
+void BCLog::Logger::StartRotate()
+{
+    // Find all the rotated log files and add them to our list.
+    fs::path parent = m_file_path.parent_path();
+    if (parent.empty()) parent = ".";
+    for (fs::directory_iterator it(parent); it != fs::directory_iterator(); it++) {
+        std::string fn{it->path().filename().string()};
+        if (fs::is_regular_file(*it) &&
+            fn.length() == 30 &&
+            fn.substr(0,5) == "debug" &&
+            fn.substr(26,4) == ".log")
+        {
+            m_rotated_files.push_back(it->path());
+        }
+    }
+    std::sort(m_rotated_files.begin(), m_rotated_files.end());
+
+    // There may be extra rotation files if m_rotate_keep config decreased.
+    RemoveRotate();
+}
+
+const std::string BCLog::Logger::StartLogging()
 {
     StdLockGuard scoped_lock(m_cs);
 
@@ -51,8 +84,43 @@ bool BCLog::Logger::StartLogging()
         assert(!m_file_path.empty());
         m_fileout = fsbridge::fopen(m_file_path, "a");
         if (!m_fileout) {
-            return false;
+            return strprintf("Could not open debug log file %s", m_file_path.string());
         }
+
+        // Special files (e.g. device nodes) may not have a size.
+        try {
+            m_file_size = fs::file_size(m_file_path);
+        } catch (const fs::filesystem_error&) {
+            // We can't do log rotation if it's not a regular file.
+            if (m_rotate_requested) {
+                return strprintf(
+                    "The debug log file %s does not appear to be a regular file; "
+                    "this prevents log rotation. Please disable log rotation by "
+                    "specifying -debuglogrotatekeep=0 or specify a regular file "
+                    "as the debug log file using -debuglogfile.",
+                    m_file_path.string());
+            }
+            m_rotate_keep = 0;
+        }
+        // It gets complicated to add a timestamp to an arbitrary file name,
+        // so require "debug.log".
+        if (m_file_path.filename() != "debug.log") {
+            if (m_rotate_requested) {
+                return strprintf(
+                    "The debug log file %s is not named \"debug.log\"; "
+                    "this prevents log rotation. Please disable log rotation by "
+                    "specifying -debuglogrotatekeep=0 or specify a debug log file "
+                    "path that ends in \"/debug.log\" using -debuglogfile.",
+                    m_file_path.string());
+            }
+            m_rotate_keep = 0;
+        }
+        if (m_file_limit == 0) {
+            return strprintf(
+                "The debug log file %s size limit in MB must be greater than zero.",
+                m_file_path.string());
+        }
+        if (m_rotate_keep > 0) StartRotate();
 
         setbuf(m_fileout, nullptr); // unbuffered
 
@@ -76,7 +144,7 @@ bool BCLog::Logger::StartLogging()
     }
     if (m_print_to_console) fflush(stdout);
 
-    return true;
+    return {};
 }
 
 void BCLog::Logger::DisconnectTestLogger()
@@ -276,14 +344,43 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
         // reopen the log file, if requested
         if (m_reopen_file) {
             m_reopen_file = false;
-            FILE* new_fileout = fsbridge::fopen(m_file_path, "a");
-            if (new_fileout) {
-                setbuf(new_fileout, nullptr); // unbuffered
-                fclose(m_fileout);
-                m_fileout = new_fileout;
-            }
+            ReopenFile();
         }
         FileWriteStr(str_prefixed, m_fileout);
+        m_file_size += str_prefixed.size();
+
+        // If debug.log is large, rotate it (rename and recreate).
+        if (m_rotate_keep > 0 && m_file_size > m_file_limit * 1e6) {
+            // Rename debug.log to a name like debug-2021-06-25T22:57:54.log
+            int64_t seconds = GetTimeMicros()/1e6;
+            // Don't rotate within the same second to avoid name conflict.
+            if (m_last_rotate_time < seconds) {
+                m_last_rotate_time = seconds;
+                std::string now = FormatISO8601DateTime(seconds);
+                fs::path rotate{m_file_path};
+                rotate.remove_filename();
+                rotate /= "debug-" +  now + ".log";
+                try {
+                    fs::rename(m_file_path, rotate);
+                } catch (const fs::filesystem_error&) {};
+                m_rotated_files.push_back(rotate);
+                RemoveRotate();
+
+                // Recreate debug.log as an empty file.
+                ReopenFile();
+            }
+        }
+    }
+}
+
+void BCLog::Logger::ReopenFile()
+{
+    FILE* new_fileout = fsbridge::fopen(m_file_path, "a");
+    if (new_fileout) {
+        setbuf(new_fileout, nullptr); // unbuffered
+        fclose(m_fileout);
+        m_fileout = new_fileout;
+        m_file_size = 0;
     }
 }
 
@@ -293,6 +390,9 @@ void BCLog::Logger::ShrinkDebugFile()
     constexpr size_t RECENT_DEBUG_HISTORY_SIZE = 10 * 1000000;
 
     assert(!m_file_path.empty());
+
+    // File rotation makes this unnecessary.
+    if (m_rotate_keep > 0) return;
 
     // Scroll debug.log if it's getting too big
     FILE* file = fsbridge::fopen(m_file_path, "r");

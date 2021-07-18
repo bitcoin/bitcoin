@@ -8,6 +8,7 @@ import os
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
+from test_framework.util import assert_equal
 
 
 class LoggingTest(BitcoinTestFramework):
@@ -68,6 +69,40 @@ class LoggingTest(BitcoinTestFramework):
 
         # just sanity check no crash here
         self.restart_node(0, ["-debuglogfile=%s" % os.devnull])
+
+        # a nonstandard name can't be combined with log rotation
+        self.stop_node(0)
+        args = ["-debuglogfile=notdebug.log", "-debuglogrotatekeep=2"]
+        exp_stderr = r"Error: .* this prevents log rotation"
+        self.nodes[0].assert_start_raises_init_error(args, exp_stderr, match=ErrorMatch.PARTIAL_REGEX)
+        assert not os.path.isfile(os.path.join(invdir, "notdebug.log"))
+
+        # It's not necessary to test -debuglogrotate=0, because all functional tests run that way
+        # (and some of them break if the debug log file does get rotated. So just test rotation.
+        self.stop_node(0)
+        self.start_node(0, ["-debuglogrotatekeep=2", "-debugloglimit=1"])
+        self.log.info("Generating a bunch of log messages")
+        # Each getblockcount RPC logs 251 bytes, so 13k of them generates
+        # more than 3 MB of logging, which will test that one of the
+        # rotated log files gets deleted.
+        for _ in range(13000):
+            self.nodes[0].getblockcount()
+        n_debugfiles = 0
+        with os.scandir(os.path.join(self.nodes[0].datadir, 'regtest')) as it:
+            for entry in it:
+                if not entry.name.startswith('debug'):
+                    continue
+                if not entry.name.endswith('.log'):
+                    continue
+                # the name should be either debug.log or like debug-2021-07-09T01:49:59Z.log
+                assert len(entry.name) == 9 or len(entry.name) == 30
+                # rotated files should have sizes slightly more than 1 MB
+                if len(entry.name) == 30:
+                    assert entry.stat().st_size > 1000000
+                    assert entry.stat().st_size < int(1000000 * 1.01)
+                n_debugfiles += 1
+        # There should be debug.log and two rotated files
+        assert_equal(n_debugfiles, 3)
 
 
 if __name__ == '__main__':

@@ -101,6 +101,7 @@ class TestNode():
             "-debug",
             "-debugexclude=libevent",
             "-debugexclude=leveldb",
+            "-debuglogrotatekeep=0",
             "-uacomment=testnode%d" % i,
         ]
         if use_valgrind:
