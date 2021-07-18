@@ -41,7 +41,6 @@
 /doc/dependencies.md                        @fanquake
 /doc/developer-notes.md                     @laanwj
 /doc/files.md                               @hebasto
-/doc/gitian-building.md                     @laanwj
 /doc/reduce-memory.md                       @fanquake
 /doc/reduce-traffic.md                      @jonasschnelli
 /doc/release-process.md                     @laanwj
@@ -77,8 +76,7 @@
 /contrib/devtools/test-security-check.py    @fanquake
 /contrib/devtools/symbol-check.py           @fanquake
 
-# Gitian/Guix
-/contrib/gitian-build.py                    @hebasto
+# Guix
 /contrib/guix/                              @dongcarl
 
 # Compatibility
