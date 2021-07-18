@@ -112,6 +112,10 @@ void MockTime(FuzzedDataProvider& fuzzed_data_provider, const CChainState& chain
 
 FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
 {
+    // Pick an arbitrary upper bound to limit the runtime and avoid timeouts on
+    // inputs.
+    int limit_max_ops{300};
+
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;
     auto& chainstate = node.chainman->ActiveChainstate();
@@ -142,7 +146,7 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
         return c.out.nValue;
     };
 
-    while (fuzzed_data_provider.ConsumeBool()) {
+    while (--limit_max_ops >= 0 && fuzzed_data_provider.ConsumeBool()) {
         {
             // Total supply is the mempool fee + all outpoints
             CAmount supply_now{WITH_LOCK(tx_pool.cs, return tx_pool.GetTotalFee())};
@@ -285,6 +289,10 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
 
 FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
 {
+    // Pick an arbitrary upper bound to limit the runtime and avoid timeouts on
+    // inputs.
+    int limit_max_ops{300};
+
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;
     auto& chainstate = node.chainman->ActiveChainstate();
@@ -305,7 +313,7 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
     CTxMemPool tx_pool_{/* estimator */ nullptr, /* check_ratio */ 1};
     MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
 
-    while (fuzzed_data_provider.ConsumeBool()) {
+    while (--limit_max_ops >= 0 && fuzzed_data_provider.ConsumeBool()) {
         const auto mut_tx = ConsumeTransaction(fuzzed_data_provider, txids);
 
         if (fuzzed_data_provider.ConsumeBool()) {
