@@ -99,6 +99,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_subtract_fee_with_presets()
         self.test_transaction_too_large()
         self.test_include_unsafe()
+        self.test_input_confs_control()
 
     def test_change_position(self):
         """Ensure setting changePosition in fundraw with an exact match is handled properly."""
@@ -969,6 +970,68 @@ class RawTransactionsTest(BitcoinTestFramework):
         signedtx = wallet.signrawtransactionwithwallet(fundedtx['hex'])
         wallet.sendrawtransaction(signedtx['hex'])
 
+    def test_input_confs_control(self):
+        self.nodes[0].createwallet("minconf")
+        wallet = self.nodes[0].get_wallet_rpc("minconf")
+
+        # Fund the wallet with different chain heights
+        self.nodes[2].sendtoaddress(wallet.getnewaddress(), 1)
+        self.nodes[2].sendtoaddress(wallet.getnewaddress(), 1)
+        self.nodes[2].generate(1)
+        self.nodes[2].sendtoaddress(wallet.getnewaddress(), 1)
+        self.nodes[2].sendtoaddress(wallet.getnewaddress(), 1)
+        self.nodes[2].generate(1)
+
+        self.sync_blocks()
+
+        unconfirmed_txid = wallet.sendtoaddress(wallet.getnewaddress(), 0.5)
+
+        self.log.info("Crafting TX using an unconfirmed input")
+        target_address = self.nodes[2].getnewaddress()
+        raw_tx1 = wallet.createrawtransaction([], {target_address: 0.1}, 0, True)
+        funded_tx1 = wallet.fundrawtransaction(raw_tx1, {'fee_rate': 1, 'maxconf': 0})['hex']
+
+        # Make sure we only had the one input
+        tx1_inputs = self.nodes[0].decoderawtransaction(funded_tx1)['vin']
+        assert_equal(len(tx1_inputs), 1)
+
+        utxo1 = tx1_inputs[0]
+        assert unconfirmed_txid == utxo1['txid']
+
+        final_tx1 = wallet.signrawtransactionwithwallet(funded_tx1)['hex']
+        txid1 = self.nodes[0].sendrawtransaction(final_tx1)
+
+        mempool = self.nodes[0].getrawmempool()
+        assert txid1 in mempool
+
+        self.log.info("Fail to craft a new TX that sends more funds with add_inputs = False")
+        raw_tx2 = wallet.createrawtransaction([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {target_address: 1})
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, raw_tx2, {'fee_rate': 1, 'add_inputs': False})
+
+        self.log.info("Fail to craft a new TX with minconf above highest one")
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, raw_tx2, {'add_inputs': True, 'minconf': 3, 'fee_rate': 10})
+
+        self.log.info("Fail to broadcast a new TX with maxconf 0 due to BIP125 rules to verify it actually chose unconfirmed outputs")
+        funded_invalid = wallet.fundrawtransaction(raw_tx2, {'add_inputs': True, 'maxconf': 0, 'fee_rate': 10})['hex']
+        final_invalid = wallet.signrawtransactionwithwallet(funded_invalid)['hex']
+        assert_raises_rpc_error(-26, "bad-txns-spends-conflicting-tx", self.nodes[0].sendrawtransaction, final_invalid)
+
+        self.log.info("Craft a replacement adding inputs with highest depth possible")
+        funded_tx2 = wallet.fundrawtransaction(raw_tx2, {'add_inputs': True, 'minconf': 2, 'fee_rate': 10})['hex']
+        tx2_inputs = self.nodes[0].decoderawtransaction(funded_tx2)['vin']
+        assert_greater_than_or_equal(len(tx2_inputs), 2)
+        for vin in tx2_inputs:
+            if vin['txid'] != unconfirmed_txid:
+                assert_greater_than_or_equal(self.nodes[0].gettxout(vin['txid'], vin['vout'])['confirmations'], 2)
+
+        final_tx2 = wallet.signrawtransactionwithwallet(funded_tx2)['hex']
+        txid2 = self.nodes[0].sendrawtransaction(final_tx2)
+
+        mempool = self.nodes[0].getrawmempool()
+        assert txid1 not in mempool
+        assert txid2 in mempool
+
+        wallet.unloadwallet()
 
 if __name__ == '__main__':
     RawTransactionsTest().main()
