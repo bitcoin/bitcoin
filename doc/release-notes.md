@@ -170,6 +170,8 @@ Tools and Utilities
   in seconds to use with `-rpcwait`. If the timeout expires,
   `bitcoin-cli` will report a failure. (#21056)
 
+- Update `-getinfo` to return data in a user-friendly format that also reduces vertical space. (#21832)
+
 Wallet
 ------
 
