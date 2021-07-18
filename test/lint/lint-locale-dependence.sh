@@ -47,6 +47,7 @@ KNOWN_VIOLATIONS=(
     "src/qt/rpcconsole.cpp:.*atoi"
     "src/rest.cpp:.*strtol"
     "src/test/dbwrapper_tests.cpp:.*snprintf"
+    "src/test/fee_est/fee_est.cpp:.*printf"
     "src/test/fuzz/locale.cpp"
     "src/test/fuzz/parse_numbers.cpp:.*atoi"
     "src/torcontrol.cpp:.*atoi"

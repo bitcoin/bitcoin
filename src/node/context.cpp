@@ -10,6 +10,7 @@
 #include <net.h>
 #include <net_processing.h>
 #include <policy/fees.h>
+#include <policy/fees_input.h>
 #include <scheduler.h>
 #include <txmempool.h>
 #include <validation.h>

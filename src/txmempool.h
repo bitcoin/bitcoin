@@ -366,7 +366,7 @@ struct entry_time {};
 struct ancestor_score {};
 struct index_by_wtxid {};
 
-class CBlockPolicyEstimator;
+class FeeEstInput;
 
 /**
  * Information about a mempool transaction.
@@ -479,7 +479,7 @@ class CTxMemPool
 protected:
     const int m_check_ratio; //!< Value n means that 1 times in n we check.
     std::atomic<unsigned int> nTransactionsUpdated{0}; //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
-    CBlockPolicyEstimator* const minerPolicyEstimator;
+    FeeEstInput* const minerPolicyEstimator;
 
     uint64_t totalTxSize GUARDED_BY(cs);      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
     CAmount m_total_fee GUARDED_BY(cs);       //!< sum of all mempool tx's fees (NOT modified fee)
@@ -597,7 +597,7 @@ public:
      * @param[in] estimator is used to estimate appropriate transaction fees.
      * @param[in] check_ratio is the ratio used to determine how often sanity checks will run.
      */
-    explicit CTxMemPool(CBlockPolicyEstimator* estimator = nullptr, int check_ratio = 0);
+    explicit CTxMemPool(FeeEstInput* estimator = nullptr, int check_ratio = 0);
 
     /**
      * If sanity-checking is turned on, check makes sure the pool is
