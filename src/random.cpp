@@ -134,6 +134,25 @@ static uint64_t GetRdRand() noexcept
         if (ok) break;
     }
     return r1;
+#elif defined(_MSC_VER) && defined(_M_X64)
+    uint64_t r1 = 0; // See above why we initialize to 0.
+    for (int i = 0; i < 10; ++i) {
+        uint8_t ok = _rdrand64_step(&r1);
+        if (ok) break;
+    }
+    return r1;
+#elif defined(_MSC_VER) && defined(_M_IX86)
+    uint32_t r1 = 0; // See above why we initialize to 0.
+    uint32_t r2 = 0;
+    for (int i = 0; i < 10; ++i) {
+        uint8_t ok = _rdrand32_step(&r1);
+        if (ok) break;
+    }
+    for (int i = 0; i < 10; ++i) {
+        int ok = _rdrand32_step(&r2);
+        if (ok) break;
+    }
+    return (((uint64_t)r2) << 32) | r1;
 #else
 #error "RdRand is only supported on x86 and x86_64"
 #endif
@@ -170,6 +189,25 @@ static uint64_t GetRdSeed() noexcept
         __asm__ volatile ("pause");
     } while(true);
     return r1;
+#elif defined(_MSC_VER) && defined(_M_X64)
+    uint64_t r1 = 0; // See above why we initialize to 0.
+    do {
+        uint8_t ok = _rdseed64_step(&r1);
+        if (ok) break;
+    } while(true);
+    return r1;
+#elif defined(_MSC_VER) && defined(_M_IX86)
+    uint32_t r1 = 0; // See above why we initialize to 0.
+    uint32_t r2 = 0;
+    for (int i = 0; i < 10; ++i) {
+        uint8_t ok = _rdseed32_step(&r1);
+        if (ok) break;
+    }
+    for (int i = 0; i < 10; ++i) {
+        int ok = _rdseed32_step(&r2);
+        if (ok) break;
+    }
+    return (((uint64_t)r2) << 32) | r1;
 #else
 #error "RdSeed is only supported on x86 and x86_64"
 #endif
@@ -187,7 +225,7 @@ static void ReportHardwareRand() {}
 
 /** Add 64 bits of entropy gathered from hardware to hasher. Do nothing if not supported. */
 static void SeedHardwareFast(CSHA512& hasher) noexcept {
-#if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
+#if defined(__x86_64__) || defined(__amd64__) || defined(__i386__) || (defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64)))
     if (g_rdrand_supported) {
         uint64_t out = GetRdRand();
         hasher.Write((const unsigned char*)&out, sizeof(out));
@@ -198,7 +236,7 @@ static void SeedHardwareFast(CSHA512& hasher) noexcept {
 
 /** Add 256 bits of entropy gathered from hardware to hasher. Do nothing if not supported. */
 static void SeedHardwareSlow(CSHA512& hasher) noexcept {
-#if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
+#if defined(__x86_64__) || defined(__amd64__) || defined(__i386__) || (defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64)))
     // When we want 256 bits of entropy, prefer RdSeed over RdRand, as it's
     // guaranteed to produce independent randomness on every call.
     if (g_rdseed_supported) {

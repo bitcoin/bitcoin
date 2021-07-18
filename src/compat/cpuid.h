@@ -21,4 +21,20 @@ void static inline GetCPUID(uint32_t leaf, uint32_t subleaf, uint32_t& a, uint32
 }
 
 #endif // defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
+
+#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
+#define HAVE_GETCPUID
+
+#include <intrin.h>
+void static inline GetCPUID(uint32_t leaf, uint32_t subleaf, uint32_t& a, uint32_t& b, uint32_t& c, uint32_t& d)
+{
+  int regs[4];
+  __cpuidex(regs, leaf, subleaf);
+  a = regs[0];
+  b = regs[1];
+  c = regs[2];
+  d = regs[3];
+}
+
+#endif  // defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
 #endif // BITCOIN_COMPAT_CPUID_H
