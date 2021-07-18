@@ -239,13 +239,14 @@ public:
         bilingual_str& fail_reason) override
     {
         LOCK(m_wallet->cs_wallet);
-        CTransactionRef tx;
         FeeCalculation fee_calc_out;
-        if (!m_wallet->CreateTransaction(recipients, tx, fee, change_pos,
-                fail_reason, coin_control, fee_calc_out, sign)) {
-            return {};
-        }
-        return tx;
+        std::optional<CreatedTransactionResult> txr = m_wallet->CreateTransaction(recipients, change_pos,
+                fail_reason, coin_control, fee_calc_out, sign);
+        if (!txr) return {};
+        fee = txr->fee;
+        change_pos = txr->change_pos;
+
+        return txr->tx;
     }
     void commitTransaction(CTransactionRef tx,
         WalletValueMap value_map,
