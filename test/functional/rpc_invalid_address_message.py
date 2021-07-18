@@ -72,7 +72,7 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
         # Invalid address format
         info = node.validateaddress(INVALID_ADDRESS)
         assert not info['isvalid']
-        assert_equal(info['error'], 'Invalid address format')
+        assert_equal(info['error'], 'Invalid HRP or Base58 character in address')
 
     def test_getaddressinfo(self):
         node = self.nodes[0]

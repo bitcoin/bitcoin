@@ -44,6 +44,9 @@ struct DecodeResult
 /** Decode a Bech32 or Bech32m string. */
 DecodeResult Decode(const std::string& str);
 
+/** Return the positions of errors in a Bech32 string. */
+std::string LocateErrors(const std::string& str, std::vector<int>& error_locations);
+
 } // namespace bech32
 
 #endif // BITCOIN_BECH32_H
