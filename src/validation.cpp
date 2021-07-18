@@ -1209,10 +1209,15 @@ void CoinsViews::InitCache()
     m_cacheview = std::make_unique<CCoinsViewCache>(&m_catcherview);
 }
 
-CChainState::CChainState(CTxMemPool* mempool, BlockManager& blockman, std::optional<uint256> from_snapshot_blockhash)
+CChainState::CChainState(
+    CTxMemPool* mempool,
+    BlockManager& blockman,
+    ChainstateManager& chainman,
+    std::optional<uint256> from_snapshot_blockhash)
     : m_mempool(mempool),
       m_params(::Params()),
       m_blockman(blockman),
+      m_chainman(chainman),
       m_from_snapshot_blockhash(from_snapshot_blockhash) {}
 
 void CChainState::InitCoinsDB(
@@ -2205,6 +2210,33 @@ static void AppendWarning(bilingual_str& res, const bilingual_str& warn)
 
 void CChainState::UpdateTip(const CBlockIndex* pindexNew)
 {
+    auto& func_name = __func__;
+    auto log_progress = [this, pindexNew, &func_name](
+            const std::string& prefix,
+            const std::string& warning_messages) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        LogPrintf("%s%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n",
+            prefix, func_name,
+            pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
+            log(pindexNew->nChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx,
+            FormatISO8601DateTime(pindexNew->GetBlockTime()),
+            GuessVerificationProgress(m_params.TxData(), pindexNew),
+            this->CoinsTip().DynamicMemoryUsage() * (1.0 / (1<<20)),
+            this->CoinsTip().GetCacheSize(),
+            !warning_messages.empty() ? strprintf(" warning='%s'", warning_messages) : "");
+    };
+
+    // The remainder of the function isn't relevant if we are not acting on
+    // the active chainstate, so return if need be.
+    if (this != &m_chainman.ActiveChainstate()) {
+        // Only log every so often so that we don't bury log messages at the tip.
+        constexpr int BACKGROUND_LOG_INTERVAL = 2000;
+        if (pindexNew->nHeight % BACKGROUND_LOG_INTERVAL == 0) {
+            log_progress("[background validation] ", "");
+        }
+        return;
+    }
+
     // New best block
     if (m_mempool) {
         m_mempool->AddTransactionsUpdated(1);
@@ -2232,12 +2264,7 @@ void CChainState::UpdateTip(const CBlockIndex* pindexNew)
             }
         }
     }
-    LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n", __func__,
-      pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
-      log(pindexNew->nChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx,
-      FormatISO8601DateTime(pindexNew->GetBlockTime()),
-      GuessVerificationProgress(m_params.TxData(), pindexNew), this->CoinsTip().DynamicMemoryUsage() * (1.0 / (1<<20)), this->CoinsTip().GetCacheSize(),
-      !warning_messages.empty() ? strprintf(" warning='%s'", warning_messages.original) : "");
+    log_progress("", warning_messages.original);
 }
 
 /** Disconnect m_chain's tip.
@@ -4282,6 +4309,9 @@ void CChainState::CheckBlockIndex()
 
     LOCK(cs_main);
 
+    const bool is_active_chain = this == &m_chainman.ActiveChainstate();
+    const int snapshot_height = m_chainman.GetSnapshotHeight().value_or(-1);
+
     // During a reindex, we read the genesis block and call CheckBlockIndex before ActivateBestChain,
     // so we have the genesis block in m_blockman.m_block_index but no active chain. (A few of the
     // tests when iterating the block tree require that m_chain has been initialized.)
@@ -4292,6 +4322,7 @@ void CChainState::CheckBlockIndex()
 
     // Build forward-pointing map of the entire block tree.
     std::multimap<CBlockIndex*,CBlockIndex*> forward;
+
     for (const std::pair<const uint256, CBlockIndex*>& entry : m_blockman.m_block_index) {
         forward.insert(std::make_pair(entry.second->pprev, entry.second));
     }
@@ -4318,8 +4349,11 @@ void CChainState::CheckBlockIndex()
     while (pindex != nullptr) {
         nNodes++;
         if (pindexFirstInvalid == nullptr && pindex->nStatus & BLOCK_FAILED_VALID) pindexFirstInvalid = pindex;
-        if (pindexFirstMissing == nullptr && !(pindex->nStatus & BLOCK_HAVE_DATA)) pindexFirstMissing = pindex;
-        if (pindexFirstNeverProcessed == nullptr && pindex->nTx == 0) pindexFirstNeverProcessed = pindex;
+        // Don't start being rigorous about missing block data if we're within a utxo snapshot
+        if (pindex->nHeight > snapshot_height) {
+            if (pindexFirstMissing == nullptr && !(pindex->nStatus & BLOCK_HAVE_DATA)) pindexFirstMissing = pindex;
+            if (pindexFirstNeverProcessed == nullptr && pindex->nTx == 0) pindexFirstNeverProcessed = pindex;
+        }
         if (pindex->pprev != nullptr && pindexFirstNotTreeValid == nullptr && (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_TREE) pindexFirstNotTreeValid = pindex;
         if (pindex->pprev != nullptr && pindexFirstNotTransactionsValid == nullptr && (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_TRANSACTIONS) pindexFirstNotTransactionsValid = pindex;
         if (pindex->pprev != nullptr && pindexFirstNotChainValid == nullptr && (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_CHAIN) pindexFirstNotChainValid = pindex;
@@ -4334,7 +4368,7 @@ void CChainState::CheckBlockIndex()
         if (!pindex->HaveTxsDownloaded()) assert(pindex->nSequenceId <= 0); // nSequenceId can't be set positive for blocks that aren't linked (negative is used for preciousblock)
         // VALID_TRANSACTIONS is equivalent to nTx > 0 for all nodes (whether or not pruning has occurred).
         // HAVE_DATA is only equivalent to nTx > 0 (or VALID_TRANSACTIONS) if no pruning has occurred.
-        if (!fHavePruned) {
+        if (!fHavePruned && (pindex->nHeight > snapshot_height)) {
             // If we've never pruned, then HAVE_DATA should be equivalent to nTx > 0
             assert(!(pindex->nStatus & BLOCK_HAVE_DATA) == (pindex->nTx == 0));
             assert(pindexFirstMissing == pindexFirstNeverProcessed);
@@ -4364,7 +4398,10 @@ void CChainState::CheckBlockIndex()
                 // is valid and we have all data for its parents, it must be in
                 // setBlockIndexCandidates.  m_chain.Tip() must also be there
                 // even if some data has been pruned.
-                if (pindexFirstMissing == nullptr || pindex == m_chain.Tip()) {
+                //
+                // Don't perform this check for the background validation chainstate since
+                // setBlockIndexCandidates corresponds to the active chainstate.
+                if (is_active_chain && (pindexFirstMissing == nullptr || pindex == m_chain.Tip())) {
                     assert(setBlockIndexCandidates.count(pindex));
                 }
                 // If some parent is missing, then it could be that this block was in
@@ -4372,7 +4409,11 @@ void CChainState::CheckBlockIndex()
                 // In this case it must be in m_blocks_unlinked -- see test below.
             }
         } else { // If this block sorts worse than the current tip or some ancestor's block has never been seen, it cannot be in setBlockIndexCandidates.
-            assert(setBlockIndexCandidates.count(pindex) == 0);
+            // Don't perform this check for the background validation chainstate since
+            // setBlockIndexCandidates corresponds to the active chainstate.
+            if (is_active_chain) {
+                assert(setBlockIndexCandidates.count(pindex) == 0);
+            }
         }
         // Check whether this block is in m_blocks_unlinked.
         std::pair<std::multimap<CBlockIndex*,CBlockIndex*>::iterator,std::multimap<CBlockIndex*,CBlockIndex*>::iterator> rangeUnlinked = m_blockman.m_blocks_unlinked.equal_range(pindex->pprev);
@@ -4699,7 +4740,7 @@ CChainState& ChainstateManager::InitializeChainstate(
     if (to_modify) {
         throw std::logic_error("should not be overwriting a chainstate");
     }
-    to_modify.reset(new CChainState(mempool, m_blockman, snapshot_blockhash));
+    to_modify.reset(new CChainState(mempool, m_blockman, *this, snapshot_blockhash));
 
     // Snapshot chainstates and initial IBD chaintates always become active.
     if (is_snapshot || (!is_snapshot && !m_active_chainstate)) {
@@ -4768,8 +4809,9 @@ bool ChainstateManager::ActivateSnapshot(
             static_cast<size_t>(current_coinsdb_cache_size * IBD_CACHE_PERC));
     }
 
-    auto snapshot_chainstate = WITH_LOCK(::cs_main, return std::make_unique<CChainState>(
-        /* mempool */ nullptr, m_blockman, base_blockhash));
+    auto snapshot_chainstate = WITH_LOCK(::cs_main,
+        return std::make_unique<CChainState>(
+            /* mempool */ nullptr, m_blockman, *this, base_blockhash));
 
     {
         LOCK(::cs_main);
@@ -4972,6 +5014,9 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         // Fake nChainTx so that GuessVerificationProgress reports accurately
         index->nChainTx = index->pprev ? index->pprev->nChainTx + index->nTx : 1;
 
+        // Since this block is assumed-valid, set nStatus accordingly.
+        index->nStatus |= BLOCK_VALID_MASK;
+
         // Fake BLOCK_OPT_WITNESS so that CChainState::NeedsRedownload()
         // won't ask to rewind the entire assumed-valid chain on startup.
         if (index->pprev && DeploymentActiveAt(*index, ::Params().GetConsensus(), Consensus::DEPLOYMENT_SEGWIT)) {
@@ -4999,22 +5044,6 @@ bool ChainstateManager::IsSnapshotActive() const
 {
     LOCK(::cs_main);
     return m_snapshot_chainstate && m_active_chainstate == m_snapshot_chainstate.get();
-}
-
-CChainState& ChainstateManager::ValidatedChainstate() const
-{
-    LOCK(::cs_main);
-    if (m_snapshot_chainstate && IsSnapshotValidated()) {
-        return *m_snapshot_chainstate.get();
-    }
-    assert(m_ibd_chainstate);
-    return *m_ibd_chainstate.get();
-}
-
-bool ChainstateManager::IsBackgroundIBD(CChainState* chainstate) const
-{
-    LOCK(::cs_main);
-    return (m_snapshot_chainstate && chainstate == m_ibd_chainstate.get());
 }
 
 void ChainstateManager::Unload()
@@ -5064,4 +5093,23 @@ void ChainstateManager::MaybeRebalanceCaches()
                 m_total_coinstip_cache * 0.95, m_total_coinsdb_cache * 0.95);
         }
     }
+}
+
+std::optional<CBlockIndex*> ChainstateManager::GetSnapshotBaseBlock()
+{
+    auto blockhash_op = SnapshotBlockhash();
+    if (!blockhash_op) return std::nullopt;
+    CBlockIndex* pindex = m_blockman.LookupBlockIndex(*blockhash_op);
+    if (pindex == nullptr) return std::nullopt;
+    return pindex;
+
+}
+
+std::optional<int> ChainstateManager::GetSnapshotHeight()
+{
+    std::optional<CBlockIndex*> base = this->GetSnapshotBaseBlock();
+    if (!base) {
+        return std::nullopt;
+    }
+    return (*base)->nHeight;
 }
