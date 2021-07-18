@@ -70,6 +70,7 @@ TEST_EXIT_SKIPPED = 77
 TEST_FRAMEWORK_MODULES = [
     "address",
     "blocktools",
+    "chacha20",
     "muhash",
     "key",
     "script",
