@@ -905,7 +905,7 @@ static RPCHelpMan testmempoolaccept()
                 RPCResult{
                     RPCResult::Type::ARR, "", "The result of the mempool acceptance test for each raw transaction in the input array.\n"
                         "Returns results for each transaction in the same order they were passed in.\n"
-                        "It is possible for transactions to not be fully validated ('allowed' unset) if another transaction failed.\n",
+                        "Transactions that cannot be fully validated due to failures in other transactions will not contain an 'allowed' result.\n",
                     {
                         {RPCResult::Type::OBJ, "", "",
                         {
@@ -1019,6 +1019,116 @@ static RPCHelpMan testmempoolaccept()
         }
         rpc_result.push_back(result_inner);
     }
+    return rpc_result;
+},
+    };
+}
+
+static RPCHelpMan submitrawpackage()
+{
+    return RPCHelpMan{"submitrawpackage",
+        "\nSubmit a package of raw transactions (serialized, hex-encoded) to local node (-regtest only).\n"
+        "\nThe package will be validated and accepted to mempool if it passes consensus and mempool policy rules.\n"
+        "\nThe node will attempt to broadcast the transactions individually if the package is accepted to the mempool, but peers will not necessarily accept the transactions.\n",
+        {
+            {"package", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of raw transactions.\n",
+                {
+                    {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
+                },
+            },
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "package-error", "error string for package-wide validation error (empty when all successful)"},
+                {RPCResult::Type::OBJ_DYN, "tx-results", "transaction results keyed by wtxid",
+                {
+                    {RPCResult::Type::OBJ, "xxxx", "transaction wtxid", {
+                        {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
+                        {RPCResult::Type::STR_HEX, "wtxid", "The transaction witness hash in hex"},
+                        {RPCResult::Type::STR, "result", "Validation Result. One of \"valid\", \"invalid\", \"validation-unfinished\""},
+                        {RPCResult::Type::NUM, "vsize", "Virtual transaction size as defined in BIP 141."},
+                        {RPCResult::Type::OBJ, "fees", "Transaction fees (only present if result=\"valid\")", {
+                            {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
+                            {RPCResult::Type::STR_AMOUNT, "descendant", "transaction fee in " + CURRENCY_UNIT},
+                        }},
+                        {RPCResult::Type::STR, "reject-reason", "Rejection string"},
+                    }}
+                }},
+            },
+        },
+        RPCExamples{
+            HelpExampleCli("testmempoolaccept", "[rawtx1, rawtx2]") +
+            HelpExampleCli("submitrawtransaction", "[rawtx1, rawtx2]")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    if (!Params().IsMockableChain()) {
+        throw std::runtime_error("submitrawpackage is for regression testing (-regtest mode) only");
+    }
+    RPCTypeCheck(request.params, {
+        UniValue::VARR,
+    });
+    const UniValue raw_transactions = request.params[0].get_array();
+    if (raw_transactions.size() < 1 || raw_transactions.size() > MAX_PACKAGE_COUNT) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                           "Array must contain between 1 and " + ToString(MAX_PACKAGE_COUNT) + " transactions.");
+    }
+
+    std::vector<CTransactionRef> txns;
+    txns.reserve(raw_transactions.size());
+    for (const auto& rawtx : raw_transactions.getValues()) {
+        CMutableTransaction mtx;
+        if (!DecodeHexTx(mtx, rawtx.get_str())) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR,
+                               "TX decode failed: " + rawtx.get_str() + " Make sure the tx has at least one input.");
+        }
+        txns.emplace_back(MakeTransactionRef(std::move(mtx)));
+    }
+
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    CTxMemPool& mempool = EnsureMemPool(node);
+    CChainState& chainstate = EnsureChainman(node).ActiveChainstate();
+    const PackageMempoolAcceptResult package_result = WITH_LOCK(::cs_main,
+        return ProcessNewPackage(chainstate, mempool, txns, /* test_accept */ false));
+
+    UniValue rpc_result{UniValue::VOBJ};
+    if (package_result.m_state.GetResult() == PackageValidationResult::PCKG_POLICY) {
+        rpc_result.pushKV("package-error", package_result.m_state.GetRejectReason());
+    }
+    UniValue tx_result_map{UniValue::VOBJ};
+    for (const auto& tx : txns) {
+        UniValue result_inner{UniValue::VOBJ};
+        result_inner.pushKV("txid", tx->GetHash().GetHex());
+        result_inner.pushKV("wtxid", tx->GetWitnessHash().GetHex());
+        auto it = package_result.m_tx_results.find(tx->GetWitnessHash());
+        if (it == package_result.m_tx_results.end()) {
+            result_inner.pushKV("result", "unfinished");
+            rpc_result.push_back(result_inner);
+            continue;
+        }
+        const auto& tx_result = it->second;
+        switch (tx_result.m_result_type) {
+            case MempoolAcceptResult::ResultType::VALID:
+            {
+                result_inner.pushKV("result", "valid");
+                result_inner.pushKV("vsize", GetVirtualTransactionSize(*tx));
+                UniValue fees(UniValue::VOBJ);
+                fees.pushKV("base", ValueFromAmount(tx_result.m_base_fees.value()));
+                fees.pushKV("descendant", ValueFromAmount(tx_result.m_descendant_fees.value()));
+                result_inner.pushKV("fees", fees);
+                break;
+            }
+            case MempoolAcceptResult::ResultType::INVALID:
+            {
+                result_inner.pushKV("result", "invalid");
+                result_inner.pushKV("reject-reason", tx_result.m_state.GetRejectReason());
+                break;
+            }
+        }
+        tx_result_map.pushKV(tx->GetWitnessHash().GetHex(), result_inner);
+    }
+    rpc_result.pushKV("tx-results", tx_result_map);
     return rpc_result;
 },
     };
@@ -1919,6 +2029,8 @@ static const CRPCCommand commands[] =
 
     { "blockchain",          &gettxoutproof,              },
     { "blockchain",          &verifytxoutproof,           },
+
+    { "hidden",              &submitrawpackage,           },
 };
 // clang-format on
     for (const auto& c : commands) {

@@ -180,12 +180,21 @@ struct MempoolAcceptResult {
     const std::optional<std::list<CTransactionRef>> m_replaced_transactions;
     /** Raw base fees in satoshis. */
     const std::optional<CAmount> m_base_fees;
+    /** Total modified fees including this tx and its descendants in the package. */
+    const std::optional<CAmount> m_descendant_fees;
+    /** Total virtual size including this tx and its descendants in the package. */
+    const std::optional<size_t> m_descendant_vsize;
     static MempoolAcceptResult Failure(TxValidationState state) {
         return MempoolAcceptResult(state);
     }
 
     static MempoolAcceptResult Success(std::list<CTransactionRef>&& replaced_txns, CAmount fees) {
         return MempoolAcceptResult(std::move(replaced_txns), fees);
+    }
+
+    static MempoolAcceptResult Success(std::list<CTransactionRef>&& replaced_txns, CAmount fees,
+                                       CAmount descendant_fees, size_t descendant_vsize) {
+        return MempoolAcceptResult(std::move(replaced_txns), fees, descendant_fees, descendant_vsize);
     }
 
 // Private constructors. Use static methods MempoolAcceptResult::Success, etc. to construct.
@@ -196,10 +205,17 @@ private:
             Assume(!state.IsValid()); // Can be invalid or error
         }
 
-    /** Constructor for success case */
+    /** Constructor for success case (single transaction) */
     explicit MempoolAcceptResult(std::list<CTransactionRef>&& replaced_txns, CAmount fees)
         : m_result_type(ResultType::VALID),
         m_replaced_transactions(std::move(replaced_txns)), m_base_fees(fees) {}
+
+    /** Constructor for success case (transaction in a package) */
+    explicit MempoolAcceptResult(std::list<CTransactionRef>&& replaced_txns, CAmount fees,
+                                 CAmount descendant_fees, size_t descendant_vsize)
+        : m_result_type(ResultType::VALID),
+        m_replaced_transactions(std::move(replaced_txns)), m_base_fees(fees),
+        m_descendant_fees{descendant_fees}, m_descendant_vsize{descendant_vsize} {}
 };
 
 /**
@@ -239,7 +255,8 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPoo
 * @param[in]    txns                Group of transactions which may be independent or contain
 *                                   parent-child dependencies. The transactions must not conflict
 *                                   with each other, i.e., must not spend the same inputs. If any
-*                                   dependencies exist, parents must appear before children.
+*                                   dependencies exist, parents must appear anywhere in the list
+*                                   before their children.
 * @returns a PackageMempoolAcceptResult which includes a MempoolAcceptResult for each transaction.
 * If a transaction fails, validation will exit early and some results may be missing.
 */
