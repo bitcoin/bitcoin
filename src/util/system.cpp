@@ -75,6 +75,16 @@
 #include <typeinfo>
 #include <univalue.h>
 
+#ifndef WIN32
+namespace {
+constexpr mode_t private_umask = 077;
+void SetDefaultUmask()
+{
+    umask(private_umask);
+}
+} // namespace
+#endif // WIN32
+
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
 
@@ -1319,6 +1329,7 @@ void SetupEnvironment()
     std::locale loc = fs::path::imbue(std::locale::classic());
 #ifndef WIN32
     fs::path::imbue(loc);
+    SetDefaultUmask();
 #else
     fs::path::imbue(std::locale(loc, new std::codecvt_utf8_utf16<wchar_t>()));
 #endif
