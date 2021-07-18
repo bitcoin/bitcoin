@@ -710,6 +710,8 @@ unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon hori
     }
     } // no default case, so the compiler can warn about missing cases
     assert(false);
+
+    return 0; // -Wreturn-type
 }
 
 unsigned int CBlockPolicyEstimator::BlockSpan() const

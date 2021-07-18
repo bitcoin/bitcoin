@@ -667,6 +667,8 @@ QString NetworkToQString(Network net)
     case NET_MAX: assert(false);
     } // no default case, so the compiler can warn about missing cases
     assert(false);
+
+    return ""; // -Wreturn-type
 }
 
 QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction)

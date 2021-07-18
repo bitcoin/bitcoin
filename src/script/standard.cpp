@@ -264,6 +264,8 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         return false;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
+
+    return false;
 }
 
 // TODO: from v23 ("addresses" and "reqSigs" deprecated) "ExtractDestinations" should be removed

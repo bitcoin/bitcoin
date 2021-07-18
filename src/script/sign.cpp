@@ -322,6 +322,8 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
         return SignTaproot(provider, creator, WitnessV1Taproot(XOnlyPubKey{vSolutions[0]}), sigdata, ret);
     } // no default case, so the compiler can warn about missing cases
     assert(false);
+
+    return false;
 }
 
 static CScript PushAll(const std::vector<valtype>& values)
