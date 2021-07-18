@@ -7,6 +7,7 @@
 
 #include <amount.h>
 #include <primitives/transaction.h>
+#include <script/signingprovider.h>
 #include <serialize.h>
 #include <wallet/ismine.h>
 #include <threadsafety.h>
@@ -23,6 +24,7 @@ typedef std::map<std::string, std::string> mapValue_t;
 
 //Get the marginal bytes of spending the specified output
 int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, bool use_max_sig = false);
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const SigningProvider* pwallet, bool use_max_sig = false);
 
 static inline void ReadOrderPos(int64_t& nOrderPos, mapValue_t& mapValue)
 {

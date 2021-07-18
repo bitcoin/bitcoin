@@ -41,6 +41,7 @@
 
 #include <univalue.h>
 
+#include <map>
 
 using interfaces::FoundBlock;
 
@@ -3065,7 +3066,7 @@ static RPCHelpMan listunspent()
     };
 }
 
-void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, const UniValue& options, CCoinControl& coinControl, bool override_min_fee)
+void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, const UniValue& options, CCoinControl& coinControl, bool override_min_fee, const UniValue& solving_data)
 {
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -3107,6 +3108,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"conf_target", UniValueType(UniValue::VNUM)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
+                {"solving_data", UniValueType(UniValue::VOBJ)},
             },
             true, true);
 
@@ -3178,6 +3180,47 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
         coinControl.fAllowWatchOnly = ParseIncludeWatchonly(NullUniValue, wallet);
     }
 
+    if (!solving_data.isNull()) {
+        if (solving_data.exists("pubkeys")) {
+            const UniValue pubkey_strs = solving_data["pubkeys"].get_array();
+            for (unsigned int i = 0; i < pubkey_strs.size(); ++i) {
+                const std::vector<unsigned char> data(ParseHex(pubkey_strs[i].get_str()));
+                CPubKey pubkey(data.begin(), data.end());
+                if (!pubkey.IsFullyValid()) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("%s is not a valid public key", pubkey_strs[i].get_str()));
+                }
+                coinControl.m_external_provider.pubkeys.emplace(pubkey.GetID(), pubkey);
+                // Add witness script for pubkeys
+                const CScript wit_script = GetScriptForDestination(WitnessV0KeyHash(pubkey));
+                coinControl.m_external_provider.scripts.emplace(CScriptID(wit_script), wit_script);
+            }
+        }
+
+        if (solving_data.exists("scripts")) {
+            const UniValue script_strs = solving_data["scripts"].get_array();
+            for (unsigned int i = 0; i < script_strs.size(); ++i) {
+                std::vector<unsigned char> script_data(ParseHex(script_strs[i].get_str()));
+                const CScript script(script_data.begin(), script_data.end());
+                coinControl.m_external_provider.scripts.emplace(CScriptID(script), script);
+            }
+        }
+
+        if (solving_data.exists("descriptors")) {
+            const UniValue desc_strs = solving_data["descriptors"].get_array();
+            for (unsigned int i = 0; i < desc_strs.size(); ++i) {
+                FlatSigningProvider desc_out;
+                std::string error;
+                std::vector<CScript> scripts_temp;
+                std::unique_ptr<Descriptor> desc = Parse(desc_strs[i].get_str(), desc_out, error, true);
+                if (!desc) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unable to parse descriptor %s: %s", desc_strs[i].get_str(), error));
+                }
+                desc->Expand(i, desc_out, scripts_temp, desc_out);
+                coinControl.m_external_provider = Merge(coinControl.m_external_provider, desc_out);
+            }
+        }
+    }
+
     if (tx.vout.size() == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
@@ -3195,6 +3238,19 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
         setSubtractFeeFromOutputs.insert(pos);
     }
 
+    // Fetch specified UTXOs from the UTXO set to get the scriptPubKeys and values of the outputs being selected
+    // and to match with the given solving_data. Only used for non-wallet outputs.
+    std::map<COutPoint, Coin> coins;
+    for (const CTxIn& txin : tx.vin) {
+        coins[txin.prevout]; // Create empty map entry keyed by prevout.
+    }
+    wallet.chain().findCoins(coins);
+    for (const auto& coin : coins) {
+        if (!coin.second.out.IsNull()) {
+            coinControl.Select(coin.first, coin.second.out);
+        }
+    }
+
     bilingual_str error;
 
     if (!wallet.FundTransaction(tx, fee_out, change_position, error, lockUnspents, setSubtractFeeFromOutputs, coinControl)) {
@@ -3210,8 +3266,9 @@ static RPCHelpMan fundrawtransaction()
                 "No existing outputs will be modified unless \"subtractFeeFromOutputs\" is specified.\n"
                 "Note that inputs which were signed may need to be resigned after completion since in/outputs have been added.\n"
                 "The inputs added will not be signed, use signrawtransactionwithkey\n"
-                " or signrawtransactionwithwallet for that.\n"
-                "Note that all existing inputs must have their previous output transaction be in the wallet.\n"
+                "or signrawtransactionwithwallet for that.\n"
+                "All existing inputs must either have their previous output transaction be in the wallet\n"
+                "or be in the UTXO set. Solving data must be provided for non-wallet inputs.\n"
                 "Note that all inputs selected must be of standard form and P2SH scripts must be\n"
                 "in the wallet using importaddress or addmultisigaddress (to calculate fees).\n"
                 "You can see whether this is the case by checking the \"solvable\" field in the listunspent output.\n"
@@ -3255,6 +3312,26 @@ static RPCHelpMan fundrawtransaction()
                         "This boolean should reflect whether the transaction has inputs\n"
                         "(e.g. fully valid, or on-chain transactions), if known by the caller."
                     },
+                    {"solving_data", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "Keys and scripts needed for producing a final transaction with a dummy signature.\n"
+                        "Used for fee estimation during coin selection.",
+                        {
+                            {"pubkeys", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Public keys involved in this transaction.",
+                                {
+                                    {"pubkey", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A public key"},
+                                },
+                            },
+                            {"scripts", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Scripts involved in this transaction.",
+                                {
+                                    {"script", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A script"},
+                                },
+                            },
+                            {"descriptors", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Descriptors that provide solving data for this transaction.",
+                                {
+                                    {"descriptor", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A descriptor"},
+                                },
+                            }
+                        }
+                    },
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -3294,7 +3371,7 @@ static RPCHelpMan fundrawtransaction()
     CCoinControl coin_control;
     // Automatically select (additional) coins. Can be overridden by options.add_inputs.
     coin_control.m_add_inputs = true;
-    FundTransaction(*pwallet, tx, fee, change_position, request.params[1], coin_control, /* override_min_fee */ true);
+    FundTransaction(*pwallet, tx, fee, change_position, request.params[1], coin_control, /* override_min_fee */ true, request.params[3]);
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("hex", EncodeHexTx(CTransaction(tx)));
@@ -4088,6 +4165,26 @@ static RPCHelpMan send()
                     },
                     {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Marks this transaction as BIP125 replaceable.\n"
                                                   "Allows this transaction to be replaced by a transaction with higher fees"},
+                    {"solving_data", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "Keys and scripts needed for producing a final transaction with a dummy signature.\n"
+                        "Used for fee estimation during coin selection.",
+                        {
+                            {"pubkeys", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Public keys involved in this transaction.",
+                                {
+                                    {"pubkey", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A public key"},
+                                },
+                            },
+                            {"scripts", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Scripts involved in this transaction.",
+                                {
+                                    {"script", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A script"},
+                                },
+                            },
+                            {"descriptors", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Descriptors that provide solving data for this transaction.",
+                                {
+                                    {"descriptor", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A descriptor"},
+                                },
+                            }
+                        }
+                    },
                 },
                 "options"},
         },
@@ -4177,7 +4274,7 @@ static RPCHelpMan send()
             // Automatically select coins, unless at least one is manually selected. Can
             // be overridden by options.add_inputs.
             coin_control.m_add_inputs = rawTx.vin.size() == 0;
-            FundTransaction(*pwallet, rawTx, fee, change_position, options, coin_control, /* override_min_fee */ false);
+            FundTransaction(*pwallet, rawTx, fee, change_position, options, coin_control, /* override_min_fee */ false, options["solving_data"] /* solving_data */);
 
             bool add_to_wallet = true;
             if (options.exists("add_to_wallet")) {
@@ -4372,7 +4469,9 @@ static RPCHelpMan walletcreatefundedpsbt()
 {
     return RPCHelpMan{"walletcreatefundedpsbt",
                 "\nCreates and funds a transaction in the Partially Signed Transaction format.\n"
-                "Implements the Creator and Updater roles.\n",
+                "Implements the Creator and Updater roles.\n"
+                "All existing inputs must either have their previous output transaction be in the wallet\n"
+                "or be in the UTXO set. Solving data must be provided for non-wallet inputs.\n",
                 {
                     {"inputs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "Leave empty to add inputs automatically. See add_inputs option.",
                         {
@@ -4432,6 +4531,26 @@ static RPCHelpMan walletcreatefundedpsbt()
                         },
                         "options"},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
+                    {"solving_data", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "Keys and scripts needed for producing a final transaction with a dummy signature.\n"
+                        "Used for fee estimation during coin selection.",
+                        {
+                            {"pubkeys", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Public keys involved in this transaction.",
+                                {
+                                    {"pubkey", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A public key"},
+                                },
+                            },
+                            {"scripts", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Scripts involved in this transaction.",
+                                {
+                                    {"script", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A script"},
+                                },
+                            },
+                            {"descriptors", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Descriptors that provide solving data for this transaction.",
+                                {
+                                    {"descriptor", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A descriptor"},
+                                },
+                            }
+                        }
+                    },
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -4477,7 +4596,7 @@ static RPCHelpMan walletcreatefundedpsbt()
     // Automatically select coins, unless at least one is manually selected. Can
     // be overridden by options.add_inputs.
     coin_control.m_add_inputs = rawTx.vin.size() == 0;
-    FundTransaction(wallet, rawTx, fee, change_position, request.params[3], coin_control, /* override_min_fee */ true);
+    FundTransaction(wallet, rawTx, fee, change_position, request.params[3], coin_control, /* override_min_fee */ true, request.params[5]);
 
     // Make a blank psbt
     PartiallySignedTransaction psbtx(rawTx);
