@@ -258,6 +258,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     // Import key into wallet and call dumpwallet to create backup file.
     {
         std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), "", CreateDummyWalletDatabase());
+        wallet->m_default_address_type = OutputType::BECH32;
         {
             auto spk_man = wallet->GetOrCreateLegacyScriptPubKeyMan();
             LOCK2(wallet->cs_wallet, spk_man->cs_KeyStore);
@@ -481,6 +482,7 @@ public:
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
         wallet = std::make_unique<CWallet>(m_node.chain.get(), "", CreateMockWalletDatabase());
+        wallet->m_default_address_type = OutputType::BECH32;
         {
             LOCK2(wallet->cs_wallet, ::cs_main);
             wallet->SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
