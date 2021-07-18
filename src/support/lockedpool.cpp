@@ -26,6 +26,7 @@
 #include <iomanip>
 #include <iostream>
 #endif
+#include <utility>
 
 LockedPoolManager* LockedPoolManager::_instance = nullptr;
 
@@ -42,12 +43,12 @@ static inline size_t align_up(size_t x, size_t align)
 // Implementation: Arena
 
 Arena::Arena(void *base_in, size_t size_in, size_t alignment_in):
-    base(static_cast<char*>(base_in)), end(static_cast<char*>(base_in) + size_in), alignment(alignment_in)
+    base(base_in), end(static_cast<char*>(base_in) + size_in), alignment(alignment_in)
 {
     // Start with one free chunk that covers the entire arena
     auto it = size_to_free_chunk.emplace(size_in, base);
     chunks_free.emplace(base, it);
-    chunks_free_end.emplace(base + size_in, it);
+    chunks_free_end.emplace(static_cast<char*>(base) + size_in, it);
 }
 
 Arena::~Arena()
@@ -73,8 +74,9 @@ void* Arena::alloc(size_t size)
 
     // Create the used-chunk, taking its space from the end of the free-chunk
     const size_t size_remaining = size_ptr_it->first - size;
-    auto allocated = chunks_used.emplace(size_ptr_it->second + size_remaining, size).first;
-    chunks_free_end.erase(size_ptr_it->second + size_ptr_it->first);
+    char* const free_chunk = static_cast<char*>(size_ptr_it->second);
+    auto allocated = chunks_used.emplace(free_chunk + size_remaining, size).first;
+    chunks_free_end.erase(free_chunk + size_ptr_it->first);
     if (size_ptr_it->first == size) {
         // whole chunk is used up
         chunks_free.erase(size_ptr_it->second);
@@ -82,11 +84,11 @@ void* Arena::alloc(size_t size)
         // still some memory left in the chunk
         auto it_remaining = size_to_free_chunk.emplace(size_remaining, size_ptr_it->second);
         chunks_free[size_ptr_it->second] = it_remaining;
-        chunks_free_end.emplace(size_ptr_it->second + size_remaining, it_remaining);
+        chunks_free_end.emplace(free_chunk + size_remaining, it_remaining);
     }
     size_to_free_chunk.erase(size_ptr_it);
 
-    return reinterpret_cast<void*>(allocated->first);
+    return allocated->first;
 }
 
 void Arena::free(void *ptr)
@@ -97,11 +99,11 @@ void Arena::free(void *ptr)
     }
 
     // Remove chunk from used map
-    auto i = chunks_used.find(static_cast<char*>(ptr));
+    auto i = chunks_used.find(ptr);
     if (i == chunks_used.end()) {
         throw std::runtime_error("Arena: invalid or double free");
     }
-    std::pair<char*, size_t> freed = *i;
+    auto freed = std::make_pair(static_cast<char*>(i->first), i->second);
     chunks_used.erase(i);
 
     // coalesce freed with previous chunk
