@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\common.init.vcxproj" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{542007E3-BE0D-4B0D-A6B0-AA8813E2558D}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\minisketch\src\minisketch.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\clmul_1byte.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\clmul_2bytes.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\clmul_3bytes.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\clmul_4bytes.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\clmul_5bytes.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\clmul_6bytes.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\clmul_7bytes.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\clmul_8bytes.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\generic_1byte.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\generic_2bytes.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\generic_3bytes.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\generic_4bytes.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\generic_5bytes.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\generic_6bytes.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\generic_7bytes.cpp" />
+    <ClCompile Include="..\..\src\minisketch\src\fields\generic_8bytes.cpp" />
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <DisableSpecificWarnings>4060;4065;4146;4244;4267;4554</DisableSpecificWarnings>
+      <PreprocessorDefinitions>HAVE_CLMUL;DISABLE_FIELD_2;DISABLE_FIELD_3;DISABLE_FIELD_4;DISABLE_FIELD_5;DISABLE_FIELD_6;DISABLE_FIELD_7;DISABLE_FIELD_8;DISABLE_FIELD_9;DISABLE_FIELD_10;DISABLE_FIELD_11;DISABLE_FIELD_12;DISABLE_FIELD_13;DISABLE_FIELD_14;DISABLE_FIELD_15;DISABLE_FIELD_16;DISABLE_FIELD_17;DISABLE_FIELD_18;DISABLE_FIELD_19;DISABLE_FIELD_20;DISABLE_FIELD_21;DISABLE_FIELD_22;DISABLE_FIELD_23;DISABLE_FIELD_24;DISABLE_FIELD_25;DISABLE_FIELD_26;DISABLE_FIELD_27;DISABLE_FIELD_28;DISABLE_FIELD_29;DISABLE_FIELD_30;DISABLE_FIELD_31;DISABLE_FIELD_33;DISABLE_FIELD_34;DISABLE_FIELD_35;DISABLE_FIELD_36;DISABLE_FIELD_37;DISABLE_FIELD_38;DISABLE_FIELD_39;DISABLE_FIELD_40;DISABLE_FIELD_41;DISABLE_FIELD_42;DISABLE_FIELD_43;DISABLE_FIELD_44;DISABLE_FIELD_45;DISABLE_FIELD_46;DISABLE_FIELD_47;DISABLE_FIELD_48;DISABLE_FIELD_49;DISABLE_FIELD_50;DISABLE_FIELD_51;DISABLE_FIELD_52;DISABLE_FIELD_53;DISABLE_FIELD_54;DISABLE_FIELD_55;DISABLE_FIELD_56;DISABLE_FIELD_57;DISABLE_FIELD_58;DISABLE_FIELD_59;DISABLE_FIELD_60;DISABLE_FIELD_61;DISABLE_FIELD_62;DISABLE_FIELD_63;DISABLE_FIELD_64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="..\common.vcxproj" />
+</Project>

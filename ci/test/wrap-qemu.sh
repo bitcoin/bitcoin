@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-for b_name in {"${BASE_OUTDIR}/bin"/*,src/secp256k1/*tests,src/univalue/{no_nul,test_json,unitester,object}}; do
+for b_name in {"${BASE_OUTDIR}/bin"/*,src/secp256k1/*tests,src/minisketch/test{,-verify},src/univalue/{no_nul,test_json,unitester,object}}; do
     # shellcheck disable=SC2044
     for b in $(find "${BASE_ROOT_DIR}" -executable -type f -name $(basename $b_name)); do
       echo "Wrap $b ..."
