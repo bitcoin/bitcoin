@@ -41,7 +41,7 @@ from test_framework.script_util import (
     script_to_p2sh_script,
     script_to_p2wsh_script,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinWalletTestFramework
 from test_framework.util import (
     assert_equal,
     assert_is_hex_string,
@@ -70,7 +70,7 @@ def find_spendable_utxo(node, min_value):
 
 txs_mined = {} # txindex from txid to blockhash
 
-class SegWitTest(BitcoinTestFramework):
+class SegWitTest(BitcoinWalletTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
@@ -98,6 +98,7 @@ class SegWitTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        self.skip_if_not_legacy_wallet()
 
     def setup_network(self):
         super().setup_network()

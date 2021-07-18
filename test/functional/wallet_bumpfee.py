@@ -26,7 +26,7 @@ from test_framework.messages import (
     BIP125_SEQUENCE_NUMBER,
     tx_from_hex,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinWalletTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -44,7 +44,7 @@ HIGH         =    500
 TOO_HIGH     = 100000
 
 
-class BumpFeeTest(BitcoinTestFramework):
+class BumpFeeTest(BitcoinWalletTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True

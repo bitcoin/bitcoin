@@ -10,11 +10,11 @@ from test_framework.blocktools import (
     create_coinbase,
 )
 from test_framework.p2p import P2PTxInvStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinWalletTestFramework
 from test_framework.util import assert_equal
 
 
-class ResendWalletTransactionsTest(BitcoinTestFramework):
+class ResendWalletTransactionsTest(BitcoinWalletTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

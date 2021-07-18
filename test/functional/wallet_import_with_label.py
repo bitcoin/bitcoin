@@ -10,17 +10,18 @@ with or without a label and then its private key is imported with importprivkey
 with and without a label.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinWalletTestFramework
 from test_framework.wallet_util import test_address
 
 
-class ImportWithLabel(BitcoinTestFramework):
+class ImportWithLabel(BitcoinWalletTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        self.skip_if_not_legacy_wallet()
 
     def run_test(self):
         """Main test logic"""

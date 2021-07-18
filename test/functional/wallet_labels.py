@@ -12,12 +12,12 @@ RPCs tested are:
 from collections import defaultdict
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinWalletTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet_util import test_address
 
 
-class WalletLabelsTest(BitcoinTestFramework):
+class WalletLabelsTest(BitcoinWalletTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

@@ -22,7 +22,7 @@ import os
 import shutil
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinWalletTestFramework
 from test_framework.descriptors import descsum_create
 
 from test_framework.util import (
@@ -31,7 +31,7 @@ from test_framework.util import (
 )
 
 
-class BackwardsCompatibilityTest(BitcoinTestFramework):
+class BackwardsCompatibilityTest(BitcoinWalletTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 6

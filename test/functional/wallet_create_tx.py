@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinWalletTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -13,7 +13,7 @@ from test_framework.blocktools import (
 )
 
 
-class CreateTxWalletTest(BitcoinTestFramework):
+class CreateTxWalletTest(BitcoinWalletTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
