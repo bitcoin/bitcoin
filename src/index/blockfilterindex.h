@@ -51,6 +51,8 @@ protected:
 
     const char* GetName() const override { return m_name.c_str(); }
 
+    bool AllowPrune() const override { return true; }
+
 public:
     /** Constructs the index, which becomes available to be queried. */
     explicit BlockFilterIndex(BlockFilterType filter_type,

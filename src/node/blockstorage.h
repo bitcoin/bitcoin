@@ -48,6 +48,9 @@ extern uint64_t nPruneTarget;
 //! Check whether the block associated with this index entry is pruned or not.
 bool IsBlockPruned(const CBlockIndex* pblockindex);
 
+//! Find the last block that is pruned
+const CBlockIndex* GetLastPrunedBlock(const CBlockIndex& start_block);
+
 void CleanupBlockRevFiles();
 
 /** Open a block file (blk?????.dat) */

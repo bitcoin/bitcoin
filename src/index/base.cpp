@@ -62,21 +62,17 @@ bool BaseIndex::Init()
     LOCK(cs_main);
     CChain& active_chain = m_chainstate->m_chain;
     if (locator.IsNull()) {
-        m_best_block_index = nullptr;
+        SetBestBlockIndex(nullptr);
     } else {
-        m_best_block_index = m_chainstate->m_blockman.FindForkInGlobalIndex(active_chain, locator);
+        SetBestBlockIndex(m_chainstate->m_blockman.FindForkInGlobalIndex(active_chain, locator));
     }
     m_synced = m_best_block_index.load() == active_chain.Tip();
-    if (!m_synced) {
+    if (!m_synced && (fPruneMode || fHavePruned) && !fReindex) {
         bool prune_violation = false;
         if (!m_best_block_index) {
             // index is not built yet
             // make sure we have all block data back to the genesis
-            const CBlockIndex* block = active_chain.Tip();
-            while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
-                block = block->pprev;
-            }
-            prune_violation = block != active_chain.Genesis();
+            prune_violation = GetLastPrunedBlock(*active_chain.Tip()) != active_chain.Genesis();
         }
         // in case the index has a best block set and is not fully synced
         // check if we have the required blocks to continue building the index
@@ -131,7 +127,7 @@ void BaseIndex::ThreadSync()
         int64_t last_locator_write_time = 0;
         while (true) {
             if (m_interrupt) {
-                m_best_block_index = pindex;
+                SetBestBlockIndex(pindex);
                 // No need to handle errors in Commit. If it fails, the error will be already be
                 // logged. The best way to recover is to continue, as index cannot be corrupted by
                 // a missed commit to disk for an advanced index state.
@@ -143,7 +139,7 @@ void BaseIndex::ThreadSync()
                 LOCK(cs_main);
                 const CBlockIndex* pindex_next = NextSyncBlock(pindex, m_chainstate->m_chain);
                 if (!pindex_next) {
-                    m_best_block_index = pindex;
+                    SetBestBlockIndex(pindex);
                     m_synced = true;
                     // No need to handle errors in Commit. See rationale above.
                     Commit();
@@ -165,7 +161,7 @@ void BaseIndex::ThreadSync()
             }
 
             if (last_locator_write_time + SYNC_LOCATOR_WRITE_INTERVAL < current_time) {
-                m_best_block_index = pindex;
+                SetBestBlockIndex(pindex);
                 last_locator_write_time = current_time;
                 // No need to handle errors in Commit. See rationale above.
                 Commit();
@@ -218,10 +214,10 @@ bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_ti
     // out of sync may be possible but a users fault.
     // In case we reorg beyond the pruned depth, ReadBlockFromDisk would
     // throw and lead to a graceful shutdown
-    m_best_block_index = new_tip;
+    SetBestBlockIndex(new_tip);
     if (!Commit()) {
         // If commit fails, revert the best block index to avoid corruption.
-        m_best_block_index = current_tip;
+        SetBestBlockIndex(current_tip);
         return false;
     }
 
@@ -262,7 +258,7 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
     }
 
     if (WriteBlock(*block, pindex)) {
-        m_best_block_index = pindex;
+        SetBestBlockIndex(pindex);
     } else {
         FatalError("%s: Failed to write block %s to index",
                    __func__, pindex->GetBlockHash().ToString());
@@ -368,4 +364,12 @@ IndexSummary BaseIndex::GetSummary() const
     summary.synced = m_synced;
     summary.best_block_height = m_best_block_index ? m_best_block_index.load()->nHeight : 0;
     return summary;
+}
+
+void BaseIndex::SetBestBlockIndex(const CBlockIndex* block) {
+    m_best_block_index = block;
+    if (AllowPrune() && (fPruneMode || fHavePruned) && !fReindex) {
+        LOCK(::cs_main);
+        g_chainman.m_blockman.UpdatePruneBlocker(GetName(), block ? block : ::ChainActive().Genesis());
+    }
 }

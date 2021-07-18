@@ -51,6 +51,14 @@ bool IsBlockPruned(const CBlockIndex* pblockindex)
     return (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
 }
 
+const CBlockIndex* GetLastPrunedBlock(const CBlockIndex& start_block) {
+    const CBlockIndex* block = &start_block;
+    while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
+        block = block->pprev;
+    }
+    return block;
+}
+
 // If we're using -prune with -reindex, then delete block files that will be ignored by the
 // reindex.  Since reindexing works by starting at block file 0 and looping until a blockfile
 // is missing, do the same here to delete any later block files after a gap.  Also delete all

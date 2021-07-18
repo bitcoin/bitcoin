@@ -104,6 +104,8 @@ protected:
     /// Get the name of the index for display in logs.
     virtual const char* GetName() const = 0;
 
+    virtual bool AllowPrune() const = 0;
+
 public:
     /// Destructor interrupts sync thread if running and blocks until it exits.
     virtual ~BaseIndex();
@@ -126,6 +128,8 @@ public:
 
     /// Get a summary of the index and its state.
     IndexSummary GetSummary() const;
+
+    void SetBestBlockIndex(const CBlockIndex* block);
 };
 
 #endif // BITCOIN_INDEX_BASE_H

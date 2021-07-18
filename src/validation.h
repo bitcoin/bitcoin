@@ -417,6 +417,9 @@ private:
      */
     void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight, int chain_tip_height, int prune_height, bool is_ibd);
 
+    /* Blocks to keep below deepest prune blocker */
+    static constexpr int PRUNE_BLOCKER_BUFFER = 10;
+
 public:
     BlockMap m_block_index GUARDED_BY(cs_main);
 
@@ -494,6 +497,12 @@ public:
      * This is also true for mempool checks.
      */
     int GetSpendHeight(const CCoinsViewCache& inputs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    std::unordered_map<std::string, const CBlockIndex*> m_prune_blockers;
+
+    void UpdatePruneBlocker(const std::string& name, const CBlockIndex* block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    void GetLastPruneBlockerHeight(int& last_prune);
 
     ~BlockManager() {
         Unload();

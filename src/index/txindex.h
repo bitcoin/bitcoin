@@ -32,6 +32,8 @@ protected:
 
     const char* GetName() const override { return "txindex"; }
 
+    bool AllowPrune() const override { return false; }
+
 public:
     /// Constructs the index, which becomes available to be queried.
     explicit TxIndex(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
