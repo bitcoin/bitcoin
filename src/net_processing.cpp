@@ -279,9 +279,20 @@ public:
     void SetBestHeight(int height) override { m_best_height = height; };
     void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message) override;
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
-                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override;
+                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override LOCKS_EXCLUDED(m_mutex_message_handling);
 
 private:
+    /** Message handling mutex.
+     *  Message processing is single-threaded, so anything only accessed
+     *  by ProcessMessage(s) or SendMessages can be guarded by this mutex,
+     *  which guarantees it's only accessed by a single thread.
+     */
+    Mutex m_mutex_message_handling;
+
+    void _ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
+                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc)
+        EXCLUSIVE_LOCKS_REQUIRED(m_mutex_message_handling);
+
     void _RelayTransaction(const uint256& txid, const uint256& wtxid)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -366,7 +377,7 @@ private:
     void RelayAddress(NodeId originator, const CAddress& addr, bool fReachable);
 
     /** Send `feefilter` message. */
-    void MaybeSendFeefilter(CNode& node, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void MaybeSendFeefilter(CNode& node, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(m_mutex_message_handling);
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
@@ -2427,6 +2438,14 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                                      const std::chrono::microseconds time_received,
                                      const std::atomic<bool>& interruptMsgProc)
 {
+    LOCK(m_mutex_message_handling);
+    return _ProcessMessage(pfrom, msg_type, vRecv, time_received, interruptMsgProc);
+}
+
+void PeerManagerImpl::_ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
+                                     const std::chrono::microseconds time_received,
+                                     const std::atomic<bool>& interruptMsgProc)
+{
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom.GetId());
 
     PeerRef peer = GetPeerRef(pfrom.GetId());
@@ -3483,7 +3502,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         } // cs_main
 
         if (fProcessBLOCKTXN) {
-            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, time_received, interruptMsgProc);
+            return _ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, time_received, interruptMsgProc);
         }
 
         if (fRevertToHeaderProcessing) {
@@ -3950,6 +3969,8 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     PeerRef peer = GetPeerRef(pfrom->GetId());
     if (peer == nullptr) return false;
 
+    LOCK(m_mutex_message_handling);
+
     {
         LOCK(peer->m_getdata_requests_mutex);
         if (!peer->m_getdata_requests.empty()) {
@@ -4005,7 +4026,7 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     unsigned int nMessageSize = msg.m_message_size;
 
     try {
-        ProcessMessage(*pfrom, msg_type, msg.m_recv, msg.m_time, interruptMsgProc);
+        _ProcessMessage(*pfrom, msg_type, msg.m_recv, msg.m_time, interruptMsgProc);
         if (interruptMsgProc) return false;
         {
             LOCK(peer->m_getdata_requests_mutex);
@@ -4309,7 +4330,7 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
 
 void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, std::chrono::microseconds current_time)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(m_mutex_message_handling);
 
     if (m_ignore_incoming_txs) return;
     if (!pto.m_tx_relay) return;
@@ -4376,6 +4397,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     PeerRef peer = GetPeerRef(pto->GetId());
     if (!peer) return false;
     const Consensus::Params& consensusParams = m_chainparams.GetConsensus();
+
+    LOCK(m_mutex_message_handling);
 
     // We must call MaybeDiscourageAndDisconnect first, to ensure that we'll
     // disconnect misbehaving peers even before the version handshake is complete.
@@ -4835,8 +4858,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
         if (!vGetData.empty())
             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
-
-        MaybeSendFeefilter(*pto, current_time);
     } // release cs_main
+
+    MaybeSendFeefilter(*pto, current_time);
     return true;
 }
