@@ -174,7 +174,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         # Include both txs in a block
         self.nodes[0].generate(1)
-        self.sync_all()
 
         self.wait_until(lambda: not try_rpc(-32603, "Unable to read UTXO set", index_node.gettxoutsetinfo, 'muhash'))
         for hash_option in index_hash_options:
@@ -234,7 +233,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         res9 = index_node.gettxoutsetinfo('muhash')
         assert_equal(res8, res9)
 
-        index_node.generate(1)
+        index_node.generate(1, sync_fun=None)
         self.wait_until(lambda: not try_rpc(-32603, "Unable to read UTXO set", index_node.gettxoutsetinfo, 'muhash'))
         res10 = index_node.gettxoutsetinfo('muhash')
         assert(res8['txouts'] < res10['txouts'])
@@ -262,7 +261,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         assert_equal(index_node.gettxoutsetinfo('muhash')['height'], 110)
 
         # Add two new blocks
-        block = index_node.generate(2)[1]
+        block = index_node.generate(2, sync_fun=None)[1]
         self.wait_until(lambda: not try_rpc(-32603, "Unable to read UTXO set", index_node.gettxoutsetinfo, 'muhash'))
         res = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=False)
 
@@ -280,7 +279,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # Add another block, so we don't depend on reconsiderblock remembering which
         # blocks were touched by invalidateblock
         index_node.generate(1)
-        self.sync_all()
 
         # Ensure that removing and re-adding blocks yields consistent results
         block = index_node.getblockhash(99)

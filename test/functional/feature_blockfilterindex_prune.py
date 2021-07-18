@@ -26,9 +26,7 @@ class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
         assert_greater_than(len(self.nodes[0].getblockfilter(self.nodes[0].getbestblockhash())['filter']), 0)
         # Mine two batches of blocks to avoid hitting NODE_NETWORK_LIMITED_MIN_BLOCKS disconnection
         self.nodes[0].generate(250)
-        self.sync_all()
         self.nodes[0].generate(250)
-        self.sync_all()
         self.sync_index(height=700)
 
         self.log.info("prune some blocks")

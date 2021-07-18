@@ -26,10 +26,8 @@ class GetChainTipsTest (BitcoinTestFramework):
 
         # Split the network and build two chains of different lengths.
         self.split_network()
-        self.nodes[0].generatetoaddress(10, self.nodes[0].get_deterministic_priv_key().address)
-        self.nodes[2].generatetoaddress(20, self.nodes[2].get_deterministic_priv_key().address)
-        self.sync_all(self.nodes[:2])
-        self.sync_all(self.nodes[2:])
+        self.nodes[0].generate(10, sync_fun=lambda: self.sync_all(self.nodes[:2]))
+        self.nodes[2].generate(20, sync_fun=lambda: self.sync_all(self.nodes[2:]))
 
         tips = self.nodes[1].getchaintips ()
         assert_equal (len (tips), 1)

@@ -62,8 +62,8 @@ class ImportMultiTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Mining blocks...")
-        self.nodes[0].generate(1)
-        self.nodes[1].generate(1)
+        self.nodes[0].generate(1, sync_fun=None)
+        self.nodes[1].generate(1, sync_fun=None)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
         self.nodes[1].syncwithvalidationinterfacequeue()  # Sync the timestamp to the wallet, so that importmulti works
 
@@ -256,9 +256,9 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # P2SH address
         multisig = get_multisig(self.nodes[0])
-        self.nodes[1].generate(COINBASE_MATURITY)
+        self.nodes[1].generate(COINBASE_MATURITY, sync_fun=None)
         self.nodes[1].sendtoaddress(multisig.p2sh_addr, 10.00)
-        self.nodes[1].generate(1)
+        self.nodes[1].generate(1, sync_fun=None)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
         self.nodes[1].syncwithvalidationinterfacequeue()
 
@@ -277,9 +277,9 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # P2SH + Redeem script
         multisig = get_multisig(self.nodes[0])
-        self.nodes[1].generate(COINBASE_MATURITY)
+        self.nodes[1].generate(COINBASE_MATURITY, sync_fun=None)
         self.nodes[1].sendtoaddress(multisig.p2sh_addr, 10.00)
-        self.nodes[1].generate(1)
+        self.nodes[1].generate(1, sync_fun=None)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
         self.nodes[1].syncwithvalidationinterfacequeue()
 
@@ -298,9 +298,9 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # P2SH + Redeem script + Private Keys + !Watchonly
         multisig = get_multisig(self.nodes[0])
-        self.nodes[1].generate(COINBASE_MATURITY)
+        self.nodes[1].generate(COINBASE_MATURITY, sync_fun=None)
         self.nodes[1].sendtoaddress(multisig.p2sh_addr, 10.00)
-        self.nodes[1].generate(1)
+        self.nodes[1].generate(1, sync_fun=None)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
         self.nodes[1].syncwithvalidationinterfacequeue()
 
@@ -324,9 +324,9 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # P2SH + Redeem script + Private Keys + Watchonly
         multisig = get_multisig(self.nodes[0])
-        self.nodes[1].generate(COINBASE_MATURITY)
+        self.nodes[1].generate(COINBASE_MATURITY, sync_fun=None)
         self.nodes[1].sendtoaddress(multisig.p2sh_addr, 10.00)
-        self.nodes[1].generate(1)
+        self.nodes[1].generate(1, sync_fun=None)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
         self.nodes[1].syncwithvalidationinterfacequeue()
 

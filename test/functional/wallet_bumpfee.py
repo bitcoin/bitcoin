@@ -60,7 +60,6 @@ class BumpFeeTest(BitcoinTestFramework):
     def clear_mempool(self):
         # Clear mempool between subtests. The subtests may only depend on chainstate (utxos)
         self.nodes[1].generate(1)
-        self.sync_all()
 
     def run_test(self):
         # Encrypt wallet for test_locked_wallet_fails test
@@ -73,12 +72,10 @@ class BumpFeeTest(BitcoinTestFramework):
         # fund rbf node with 10 coins of 0.001 btc (100,000 satoshis)
         self.log.info("Mining blocks...")
         peer_node.generate(110)
-        self.sync_all()
         for _ in range(25):
             peer_node.sendtoaddress(rbf_node_address, 0.001)
         self.sync_all()
         peer_node.generate(1)
-        self.sync_all()
         assert_equal(rbf_node.getbalance(), Decimal("0.025"))
 
         self.log.info("Running tests")
@@ -434,7 +431,6 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
     funding_address2 = watcher.getnewaddress(address_type='bech32')
     peer_node.sendmany("", {funding_address1: 0.001, funding_address2: 0.001})
     peer_node.generate(1)
-    self.sync_all()
 
     # Create single-input PSBT for transaction to be bumped
     psbt = watcher.walletcreatefundedpsbt([], {dest_address: 0.0005}, 0, {"fee_rate": 1}, True)['psbt']
@@ -519,7 +515,7 @@ def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
     assert_equal([t for t in rbf_node.listunspent(minconf=0, include_unsafe=False) if t["txid"] == rbfid], [])
 
     # check that the main output from the rbf tx is spendable after confirmed
-    rbf_node.generate(1)
+    rbf_node.generate(1, sync_fun=None)
     assert_equal(
         sum(1 for t in rbf_node.listunspent(minconf=0, include_unsafe=False)
             if t["txid"] == rbfid and t["address"] == rbf_node_address and t["spendable"]), 1)

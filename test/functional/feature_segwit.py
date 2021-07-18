@@ -158,7 +158,6 @@ class SegWitTest(BitcoinTestFramework):
                     p2sh_ids[n][v].append(send_to_witness(v, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[n], True, Decimal("49.999")))
 
         self.nodes[0].generate(1)  # block 163
-        self.sync_blocks()
 
         # Make sure all nodes recognize the transactions as theirs
         assert_equal(self.nodes[0].getbalance(), balance_presetup - 60 * 50 + 20 * Decimal("49.999") + 50)
@@ -166,7 +165,6 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), 20 * Decimal("49.999"))
 
         self.nodes[0].generate(260)  # block 423
-        self.sync_blocks()
 
         self.log.info("Verify witness txs are skipped for mining before the fork")
         self.skip_mine(self.nodes[2], wit_ids[NODE_2][P2WPKH][0], True)  # block 424
@@ -183,7 +181,6 @@ class SegWitTest(BitcoinTestFramework):
         self.log.info("Verify previous witness txs skipped for mining can now be mined")
         assert_equal(len(self.nodes[2].getrawmempool()), 4)
         blockhash = self.nodes[2].generate(1)[0]  # block 432 (first block with new rules; 432 = 144 * 3)
-        self.sync_blocks()
         assert_equal(len(self.nodes[2].getrawmempool()), 0)
         segwit_tx_list = self.nodes[2].getblock(blockhash)["tx"]
         assert_equal(len(segwit_tx_list), 5)
@@ -594,7 +591,6 @@ class SegWitTest(BitcoinTestFramework):
         signresults = self.nodes[0].signrawtransactionwithwallet(tx.serialize_without_witness().hex())['hex']
         txid = self.nodes[0].sendrawtransaction(hexstring=signresults, maxfeerate=0)
         txs_mined[txid] = self.nodes[0].generate(1)[0]
-        self.sync_blocks()
         watchcount = 0
         spendcount = 0
         for i in self.nodes[0].listunspent():
@@ -644,7 +640,6 @@ class SegWitTest(BitcoinTestFramework):
         signresults = self.nodes[0].signrawtransactionwithwallet(tx.serialize_without_witness().hex())['hex']
         self.nodes[0].sendrawtransaction(hexstring=signresults, maxfeerate=0)
         self.nodes[0].generate(1)
-        self.sync_blocks()
 
 
 if __name__ == '__main__':

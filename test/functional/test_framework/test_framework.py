@@ -407,7 +407,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # To ensure that all nodes are out of IBD, the most recent block
             # must have a timestamp not too old (see IsInitialBlockDownload()).
             self.log.debug('Generate a block with current time')
-            block_hash = self.nodes[0].generate(1)[0]
+            block_hash = self.nodes[0].generate(1, sync_fun=None)[0]
             block = self.nodes[0].getblock(blockhash=block_hash, verbosity=0)
             for n in self.nodes:
                 n.submitblock(block)
@@ -476,6 +476,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         assert_equal(len(binary_cli), num_nodes)
         for i in range(num_nodes):
             test_node_i = TestNode(
+                self.sync_all,
                 i,
                 get_datadir_path(self.options.tmpdir, i),
                 chain=self.chain,
@@ -714,6 +715,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             initialize_datadir(self.options.cachedir, CACHE_NODE_ID, self.chain)
             self.nodes.append(
                 TestNode(
+                    self.sync_all,
                     CACHE_NODE_ID,
                     cache_node_dir,
                     chain=self.chain,
