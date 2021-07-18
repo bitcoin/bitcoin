@@ -51,6 +51,10 @@ private:
     /// Whether the index is in sync with the main chain. The flag is flipped
     /// from false to true once, after which point this starts processing
     /// ValidationInterface notifications to stay in sync.
+    ///
+    /// Note that this will latch to true *immediately* upon startup if
+    /// `m_chainstate->m_chain` is empty, which will be the case upon startup
+    /// with an empty datadir if, e.g., `-txindex=1` is specified.
     std::atomic<bool> m_synced{false};
 
     /// The last block in the chain that the index is in sync with.
