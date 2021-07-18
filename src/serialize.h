@@ -527,6 +527,32 @@ struct CompactSizeFormatter
     }
 };
 
+class CompactSizeReader
+{
+protected:
+    uint64_t& n;
+public:
+    explicit CompactSizeReader(uint64_t& n_in) : n(n_in) {}
+
+    template<typename Stream>
+    void Unserialize(Stream &s) const {
+        n = ReadCompactSize<Stream>(s);
+    }
+};
+
+class CompactSizeWriter
+{
+protected:
+    uint64_t n;
+public:
+    explicit CompactSizeWriter(uint64_t n_in) : n(n_in) { }
+
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        WriteCompactSize<Stream>(s, n);
+    }
+};
+
 template<size_t Limit>
 struct LimitedStringFormatter
 {

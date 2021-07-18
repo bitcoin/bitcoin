@@ -17,6 +17,7 @@
 #include <vector>
 
 const unsigned int BIP32_EXTKEY_SIZE = 74;
+const unsigned int BIP32_EXTKEY_WITH_VERSION_SIZE = 78;
 
 /** A reference to a CKey: the Hash160 of its serialized public key */
 class CKeyID : public uint160
@@ -280,6 +281,7 @@ public:
 };
 
 struct CExtPubKey {
+    unsigned char version[4];
     unsigned char nDepth;
     unsigned char vchFingerprint[4];
     unsigned int nChild;
@@ -300,8 +302,18 @@ struct CExtPubKey {
         return !(a == b);
     }
 
+    friend bool operator<(const CExtPubKey &a, const CExtPubKey &b)
+    {
+        if (a.pubkey < b.pubkey) {
+            return true;
+        }
+        return a.chaincode < b.chaincode;
+    }
+
     void Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const;
     void Decode(const unsigned char code[BIP32_EXTKEY_SIZE]);
+    void EncodeWithVersion(unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE]) const;
+    void DecodeWithVersion(const unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE]);
     bool Derive(CExtPubKey& out, unsigned int nChild) const;
 };
 
