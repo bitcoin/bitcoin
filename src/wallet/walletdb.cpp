@@ -115,6 +115,14 @@ bool WalletBatch::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey,
     return WriteIC(std::make_pair(DBKeys::KEY, vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey)), false);
 }
 
+bool WalletBatch::EraseKey(const CPubKey& pubkey)
+{
+    if (!EraseIC(std::make_pair(DBKeys::KEYMETA, pubkey))) {
+        return false;
+    }
+    return EraseIC(std::make_pair(DBKeys::KEY, pubkey));
+}
+
 bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
                                 const std::vector<unsigned char>& vchCryptedSecret,
                                 const CKeyMetadata &keyMeta)
@@ -141,6 +149,14 @@ bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
     return true;
 }
 
+bool WalletBatch::EraseCryptedKey(const CPubKey& pubkey)
+{
+    if (!EraseIC(std::make_pair(DBKeys::KEYMETA, pubkey))) {
+        return false;
+    }
+    return EraseIC(std::make_pair(DBKeys::CRYPTED_KEY, pubkey));
+}
+
 bool WalletBatch::WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey)
 {
     return WriteIC(std::make_pair(DBKeys::MASTER_KEY, nID), kMasterKey, true);
@@ -149,6 +165,11 @@ bool WalletBatch::WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey)
 bool WalletBatch::WriteCScript(const uint160& hash, const CScript& redeemScript)
 {
     return WriteIC(std::make_pair(DBKeys::CSCRIPT, hash), redeemScript, false);
+}
+
+bool WalletBatch::EraseCScript(const uint160& hash)
+{
+    return EraseIC(std::make_pair(DBKeys::CSCRIPT, hash));
 }
 
 bool WalletBatch::WriteWatchOnly(const CScript &dest, const CKeyMetadata& keyMeta)
@@ -1045,6 +1066,11 @@ bool WalletBatch::EraseDestData(const std::string &address, const std::string &k
 bool WalletBatch::WriteHDChain(const CHDChain& chain)
 {
     return WriteIC(DBKeys::HDCHAIN, chain);
+}
+
+bool WalletBatch::EraseHDChain()
+{
+    return EraseIC(DBKeys::HDCHAIN);
 }
 
 bool WalletBatch::WriteWalletFlags(const uint64_t flags)

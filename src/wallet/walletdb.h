@@ -116,6 +116,10 @@ public:
     {
         return seed_id == chain.seed_id;
     }
+    bool operator<(const CHDChain& chain) const
+    {
+        return seed_id < chain.seed_id;
+    }
 };
 
 class CKeyMetadata
@@ -222,10 +226,13 @@ public:
 
     bool WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, const bool overwrite);
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
+    bool EraseKey(const CPubKey& pubkey);
     bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
+    bool EraseCryptedKey(const CPubKey& pubkey);
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
 
     bool WriteCScript(const uint160& hash, const CScript& redeemScript);
+    bool EraseCScript(const uint160& hash);
 
     bool WriteWatchOnly(const CScript &script, const CKeyMetadata &keymeta);
     bool EraseWatchOnly(const CScript &script);
@@ -265,6 +272,7 @@ public:
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
+    bool EraseHDChain();
 
     bool WriteWalletFlags(const uint64_t flags);
     //! Begin a new transaction

@@ -302,6 +302,7 @@ BASE_SCRIPTS = [
     'rpc_help.py',
     'feature_help.py',
     'feature_shutdown.py',
+    'wallet_migration.py',
     'p2p_ibd_txrelay.py',
     'feature_blockfilterindex_prune.py'
     # Don't append tests at the end to avoid merge conflicts
