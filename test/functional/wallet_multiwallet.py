@@ -413,7 +413,7 @@ class MultiWalletTest(BitcoinTestFramework):
             assert_equal(rpc.getaddressinfo(addr)['ismine'], True)
 
         # Test .walletlock file is closed
-        self.start_node(1)
+        self.start_node(1, ['-walletcrosschain'])
         wallet = os.path.join(self.options.tmpdir, 'my_wallet')
         self.nodes[0].createwallet(wallet)
         if self.options.descriptors:

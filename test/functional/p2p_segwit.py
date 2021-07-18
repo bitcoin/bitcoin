@@ -1931,6 +1931,7 @@ class SegWitTest(BitcoinTestFramework):
     def test_upgrade_after_activation(self):
         """Test the behavior of starting up a segwit-aware node after the softfork has activated."""
 
+
         # All nodes are caught up and node 2 is a pre-segwit node that will soon upgrade.
         for n in range(2):
             assert_equal(self.nodes[n].getblockcount(), self.nodes[2].getblockcount())
@@ -1942,12 +1943,12 @@ class SegWitTest(BitcoinTestFramework):
         # insufficiently validated blocks per segwit consensus rules.
         self.stop_node(2)
         self.nodes[2].assert_start_raises_init_error(
-            extra_args=[f"-segwitheight={SEGWIT_HEIGHT}"],
+            extra_args=[f"-segwitheight={SEGWIT_HEIGHT}", "-walletcrosschain"],
             expected_msg=f": Witness data for blocks after height {SEGWIT_HEIGHT} requires validation. Please restart with -reindex..\nPlease restart with -reindex or -reindex-chainstate to recover.",
         )
 
         # As directed, the user restarts the node with -reindex
-        self.start_node(2, extra_args=["-reindex", f"-segwitheight={SEGWIT_HEIGHT}"])
+        self.start_node(2, extra_args=["-reindex", f"-segwitheight={SEGWIT_HEIGHT}", "-walletcrosschain"])
 
         # With the segwit consensus rules, the node is able to validate only up to SEGWIT_HEIGHT - 1
         assert_equal(self.nodes[2].getblockcount(), SEGWIT_HEIGHT - 1)
