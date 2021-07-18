@@ -109,6 +109,15 @@ Updated RPCs
   of `decodescript` these fields are top-level attributes, and included again as attributes
   of the `scriptPubKey` object. (#20286)
 
+- The `getblock` RPC command now supports verbose level 3 containing transaction inputs
+  `prevout` information.  The existing `/rest/block/` REST endpoint is modified to contain
+  this information too. Every `vin` field will contain an additional `prevout` subfield
+  describing the spent output. `prevout` contains the following keys:
+  - `generated` - true if the spent coins was a coinbase.
+  - `height`
+  - `value`
+  - `scriptPubKey`
+
 - When creating a hex-encoded bitcoin transaction using the `bitcoin-tx` utility
   with the `-json` option set, the following fields: `addresses`, `reqSigs` are no longer
   returned in the tx output of the response. (#20286)
