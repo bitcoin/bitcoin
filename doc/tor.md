@@ -137,6 +137,12 @@ auth cookie will usually be `/run/tor/control.authcookie`:
 stat -c '%G' /run/tor/control.authcookie
 ```
 
+You can assign the Tor group to a variable called `TORGROUP`:
+
+```
+TORGROUP=$(stat -c '%G' /run/tor/control.authcookie)
+```
+
 Once you have determined the `${TORGROUP}` and selected the `${USER}` that will
 run bitcoind, run this as root:
 
