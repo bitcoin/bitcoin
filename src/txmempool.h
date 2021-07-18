@@ -435,12 +435,12 @@ enum class MemPoolRemovalReason {
  * Usually when a new transaction is added to the mempool, it has no in-mempool
  * children (because any such children would be an orphan).  So in
  * addUnchecked(), we:
- * - update a new entry's setMemPoolParents to include all in-mempool parents
+ * - update a new entry's CTxMemPoolEntry::m_parents to include all in-mempool parents
  * - update the new entry's direct parents to include the new tx as a child
  * - update all ancestors of the transaction to include the new tx's size/fee
  *
  * When a transaction is removed from the mempool, we must:
- * - update all in-mempool parents to not track the tx in setMemPoolChildren
+ * - update all in-mempool parents to not track the tx in each CTxMemPoolEntry::m_children
  * - update all ancestors to not include the tx's size/fees in descendant state
  * - update all in-mempool children to not include it as a parent
  *
@@ -607,7 +607,7 @@ public:
      */
     void check(CChainState& active_chainstate) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    // addUnchecked must updated state for all ancestors of a given transaction,
+    // addUnchecked must update state for all ancestors of a given transaction,
     // to track size/count of descendant transactions.  First version of
     // addUnchecked can be used to have it call CalculateMemPoolAncestors(), and
     // then invoke the second version.
@@ -677,7 +677,7 @@ public:
      *  limitDescendantSize = max size of descendants any ancestor can have
      *  errString = populated with error reason if any limits are hit
      *  fSearchForParents = whether to search a tx's vin for in-mempool parents, or
-     *    look up parents from mapLinks. Must be true for entries not in the mempool
+     *    look up parents from CTxMemPoolEntry::m_parents. Must be true for entries not in the mempool
      */
     bool CalculateMemPoolAncestors(const CTxMemPoolEntry& entry, setEntries& setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string& errString, bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -821,7 +821,7 @@ private:
     /** Before calling removeUnchecked for a given transaction,
      *  UpdateForRemoveFromMempool must be called on the entire (dependent) set
      *  of transactions being removed at the same time.  We use each
-     *  CTxMemPoolEntry's setMemPoolParents in order to walk ancestors of a
+     *  CTxMemPoolEntry::m_parents in order to walk ancestors of a
      *  given transaction that is removed, so we can't remove intermediate
      *  transactions in a chain before we've updated all the state for the
      *  removal.
