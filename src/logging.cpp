@@ -239,13 +239,86 @@ namespace BCLog {
     }
 }
 
-void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line)
+static constexpr uint64_t HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION{1024 * 1024};
+
+bool BCLog::Logger::RateLimit(std::string& str, const std::string& logging_function, const SourceLocation& source_location)
+{
+    if (!m_rate_limiting) {
+        // Rate limiting is disabled.
+        return false;
+    }
+
+    const std::chrono::seconds now = GetTime<std::chrono::seconds>();
+    QuotaUsage& quota_usage = m_quota_usage_per_source_location[source_location];
+    // Is the quota exceeded before this log call?
+    bool quota_exceeded_before = quota_usage.m_bytes_logged > HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION;
+
+    bool dont_skip = false;
+    // Every hour the quota usage for a source location is reset.
+    if ((now - quota_usage.m_last_reset) > std::chrono::hours{1}) {
+        // Should logging to disk continue to be disabled?
+        bool quota_still_exceeded = quota_usage.m_bytes_dropped > HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION;
+
+        if (quota_still_exceeded) {
+            str = LogTimestampStr(strprintf(
+                "Not restarting logging from %s:%d (%s): "
+                "because %d messages (%d MiB) were dropped during the last hour which still exceeds the limit of %d MiB.\n",
+                source_location.m_file, source_location.m_line, logging_function, quota_usage.m_messages_dropped,
+                quota_usage.m_bytes_dropped / (1024 * 1024), HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION / (1024 * 1024)));
+        } else if (quota_exceeded_before) {
+            str = LogTimestampStr(strprintf(
+                "Restarting logging from %s:%d (%s): "
+                "%d messages (%d MiB) were dropped during the last hour.\n"
+                "%s",
+                source_location.m_file, source_location.m_line, logging_function, quota_usage.m_messages_dropped,
+                quota_usage.m_bytes_dropped / (1024 * 1024), str));
+            --m_rate_limited_locations;
+        }
+
+        // Dont skip the reset logs.
+        dont_skip = quota_exceeded_before || quota_still_exceeded;
+
+        // Logging to disk is only re-enabled if the number of dropped bytes did not exceed the limit.
+        if (!quota_still_exceeded) quota_usage.m_bytes_logged = 0;
+        quota_usage.m_messages_dropped = 0;
+        quota_usage.m_bytes_dropped = 0;
+        quota_usage.m_last_reset = now;
+    }
+
+    if (!quota_exceeded_before) quota_usage.m_bytes_logged += str.size();
+
+    bool quota_exceeded_after = quota_usage.m_bytes_logged > HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION;
+    if (!quota_exceeded_after) {
+        // The limits were not exceeded and the message should not be dropped.
+        return false;
+    }
+
+    if (!quota_exceeded_before) {
+        str = LogTimestampStr(strprintf(
+            "Excessive logging detected from %s:%d (%s): "
+            ">%d MiB logged during the last hour. "
+            "Suppressing logging to disk from this source location for up to one hour. "
+            "Console logging unaffected. Last log entry: %s",
+            source_location.m_file, source_location.m_line, logging_function,
+            HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION / (1024 * 1024), str));
+        ++m_rate_limited_locations;
+    } else if (!dont_skip) {
+        // The log message should be dropped.
+        quota_usage.m_messages_dropped++;
+        quota_usage.m_bytes_dropped += str.size();
+        return true;
+    }
+
+    return false;
+}
+
+void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const SourceLocation& source_location, const bool skip_disk_usage_rate_limiting)
 {
     StdLockGuard scoped_lock(m_cs);
     std::string str_prefixed = LogEscapeMessage(str);
 
     if (m_log_sourcelocations && m_started_new_line) {
-        str_prefixed.insert(0, "[" + RemovePrefix(source_file, "./") + ":" + ToString(source_line) + "] [" + logging_function + "] ");
+        str_prefixed.insert(0, "[" + RemovePrefix(source_location.m_file, "./") + ":" + ToString(source_location.m_line) + "] [" + logging_function + "] ");
     }
 
     if (m_log_threadnames && m_started_new_line) {
@@ -253,6 +326,16 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
     }
 
     str_prefixed = LogTimestampStr(str_prefixed);
+
+    // Rate limit logging to disk to avoid disk filling attacks.
+    bool log_quota_exceeded = !skip_disk_usage_rate_limiting &&
+                              RateLimit(str_prefixed, logging_function, source_location);
+
+    // To avoid confusion caused by dropped log messages when debugging an issue, we prefix log lines with "[*]"
+    // when there are any supressed source locations.
+    if (m_rate_limited_locations > 0) {
+        str_prefixed.insert(0, "[*] ");
+    }
 
     m_started_new_line = !str.empty() && str[str.size()-1] == '\n';
 
@@ -270,7 +353,7 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
     for (const auto& cb : m_print_callbacks) {
         cb(str_prefixed);
     }
-    if (m_print_to_file) {
+    if (m_print_to_file && !log_quota_exceeded) {
         assert(m_fileout != nullptr);
 
         // reopen the log file, if requested

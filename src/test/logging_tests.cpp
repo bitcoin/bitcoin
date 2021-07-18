@@ -30,4 +30,117 @@ BOOST_AUTO_TEST_CASE(logging_timer)
     BOOST_CHECK_EQUAL(micro_timer.LogMsg("test micros"), "tests: test micros (1000000.00μs)");
 }
 
+size_t GetLogFileSize()
+{
+    boost::system::error_code ec;
+    size_t size = fs::file_size(LogInstance().m_file_path, ec);
+    if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), LogInstance().m_file_path);
+    BOOST_CHECK(!ec);
+    return size;
+}
+
+void LogFromFixedLocation(const std::string& str)
+{
+    LogPrintf("%s\n", str);
+}
+
+BOOST_AUTO_TEST_CASE(rate_limiting)
+{
+#if defined(_WIN32)
+    // TODO
+    // Since windows prints \r\n to file instead of \n, the log file size
+    // does not match up with the internal "bytes logged" count.
+    // This test relies on matching file sizes with expected values.
+    return;
+#endif
+
+    // This allows us to check for exact size differences in the log file.
+    bool prev_log_timestamps = LogInstance().m_log_sourcelocations;
+    LogInstance().m_log_timestamps = false;
+    bool prev_log_sourcelocations = LogInstance().m_log_sourcelocations;
+    LogInstance().m_log_sourcelocations = false;
+    bool prev_log_threadnames = LogInstance().m_log_threadnames;
+    LogInstance().m_log_threadnames = false;
+
+    // Log 1024-character lines (1023 plus newline) to make the math simple.
+    std::string log_message(1023, 'a');
+
+    SetMockTime(std::chrono::seconds{1});
+
+    size_t prev_log_file_size, curr_log_file_size;
+    prev_log_file_size = GetLogFileSize();
+
+    // Log 1 MiB, this should be allowed.
+    for (int i = 0; i < 1024; ++i) {
+        LogFromFixedLocation(log_message);
+    }
+    curr_log_file_size = GetLogFileSize();
+    BOOST_CHECK(curr_log_file_size - prev_log_file_size == 1024 * 1024);
+
+    LogFromFixedLocation("This should trigger rate limiting");
+    prev_log_file_size = GetLogFileSize();
+
+    // Log 0.5 MiB, this should not be allowed and all messages should be dropped.
+    for (int i = 0; i < 512; ++i) {
+        LogFromFixedLocation(log_message);
+    }
+    curr_log_file_size = GetLogFileSize();
+    BOOST_CHECK(curr_log_file_size - prev_log_file_size == 0);
+
+    // Let one hour pass.
+    SetMockTime(std::chrono::seconds{60 * 60 + 1});
+    LogFromFixedLocation("This should trigger the quota usage reset");
+    prev_log_file_size = GetLogFileSize();
+
+    // Log 1 MiB, this should be allowed since the usage was reset.
+    for (int i = 0; i < 1024; ++i) {
+        LogFromFixedLocation(log_message);
+    }
+    curr_log_file_size = GetLogFileSize();
+    BOOST_CHECK(curr_log_file_size - prev_log_file_size == 1024 * 1024);
+
+    LogFromFixedLocation("This should trigger rate limiting");
+    prev_log_file_size = GetLogFileSize();
+
+    // Log 1 MiB, this should not be allowed and all messages should be dropped.
+    for (int i = 0; i < 1024; ++i) {
+        LogFromFixedLocation(log_message);
+    }
+    curr_log_file_size = GetLogFileSize();
+    BOOST_CHECK(curr_log_file_size - prev_log_file_size == 0);
+
+    LogFromFixedLocation("This should also be dropped and bring the total of dropped bytes above 1 MiB.");
+    curr_log_file_size = GetLogFileSize();
+    BOOST_CHECK(curr_log_file_size - prev_log_file_size == 0);
+
+    // Let another hour pass
+    SetMockTime(std::chrono::seconds{2 * (60 * 60 + 1)});
+    LogFromFixedLocation("Normally this would reset the usage but it does not because we dropped more than 1 MiB in the previous hour.");
+    prev_log_file_size = GetLogFileSize();
+
+    // Log 1 MiB, this should not be allowed and all messages should be dropped.
+    for (int i = 0; i < 1024; ++i) {
+        LogFromFixedLocation(log_message);
+    }
+    curr_log_file_size = GetLogFileSize();
+    BOOST_CHECK(curr_log_file_size - prev_log_file_size == 0);
+
+    // Let another hour pass
+    SetMockTime(std::chrono::seconds{3 * (60 * 60 + 1)});
+    LogFromFixedLocation("This should trigger the quota usage reset");
+    prev_log_file_size = GetLogFileSize();
+
+    // Log 1 MiB, this should be allowed since the usage was reset.
+    for (int i = 0; i < 1024; ++i) {
+        LogFromFixedLocation(log_message);
+    }
+    curr_log_file_size = GetLogFileSize();
+    BOOST_CHECK(curr_log_file_size - prev_log_file_size == 1024 * 1024);
+
+    LogInstance().m_log_timestamps = prev_log_timestamps;
+    LogInstance().m_log_sourcelocations = prev_log_sourcelocations;
+    LogInstance().m_log_threadnames = prev_log_threadnames;
+    SetMockTime(std::chrono::seconds{0});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
