@@ -645,9 +645,9 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                         // Under witness v0 rules it is only a policy rule, enabled through SCRIPT_VERIFY_MINIMALIF.
                         if (sigversion == SigVersion::WITNESS_V0 && (flags & SCRIPT_VERIFY_MINIMALIF)) {
                             if (vch.size() > 1)
-                                return set_error(serror, SCRIPT_ERR_MINIMALIF);
+                                return set_error(serror, SCRIPT_ERR_WITNESS_MINIMALIF);
                             if (vch.size() == 1 && vch[0] != 1)
-                                return set_error(serror, SCRIPT_ERR_MINIMALIF);
+                                return set_error(serror, SCRIPT_ERR_WITNESS_MINIMALIF);
                         }
                         fValue = CastToBool(vch);
                         if (opcode == OP_NOTIF)
@@ -1842,7 +1842,7 @@ static bool ExecuteWitnessScript(const Span<const valtype>& stack_span, const CS
     if (!EvalScript(stack, scriptPubKey, flags, checker, sigversion, execdata, serror)) return false;
 
     // Scripts inside witness implicitly require cleanstack behaviour
-    if (stack.size() != 1) return set_error(serror, SCRIPT_ERR_CLEANSTACK);
+    if (stack.size() != 1) return set_error(serror, SCRIPT_ERR_WITNESS_CLEANSTACK);
     if (!CastToBool(stack.back())) return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
     return true;
 }
@@ -1993,7 +1993,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         return false;
     if (stack.empty())
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
-    if (CastToBool(stack.back()) == false)
+    if (!CastToBool(stack.back()))
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
 
     // Bare witness programs
@@ -2009,9 +2009,6 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
             if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror, /* is_p2sh */ false)) {
                 return false;
             }
-            // Bypass the cleanstack check at the end. The actual stack is obviously not clean
-            // for witness programs.
-            stack.resize(1);
         }
     }
 
@@ -2054,9 +2051,6 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
                 if (!VerifyWitnessProgram(*witness, witnessversion, witnessprogram, flags, checker, serror, /* is_p2sh */ true)) {
                     return false;
                 }
-                // Bypass the cleanstack check at the end. The actual stack is obviously not clean
-                // for witness programs.
-                stack.resize(1);
             }
         }
     }
@@ -2069,7 +2063,8 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         // would be possible, which is not a softfork (and P2SH should be one).
         assert((flags & SCRIPT_VERIFY_P2SH) != 0);
         assert((flags & SCRIPT_VERIFY_WITNESS) != 0);
-        if (stack.size() != 1) {
+        // Bypass the cleanstack check at the end for witness programs
+        if (!hadWitness && stack.size() != 1) {
             return set_error(serror, SCRIPT_ERR_CLEANSTACK);
         }
     }
