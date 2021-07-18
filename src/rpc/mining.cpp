@@ -878,7 +878,7 @@ static RPCHelpMan getblocktemplate()
             case ThresholdState::LOCKED_IN:
                 // Ensure bit is set in block version
                 pblock->nVersion |= g_versionbitscache.Mask(consensusParams, pos);
-                // FALL THROUGH to get vbavailable set...
+                [[fallthrough]];
             case ThresholdState::STARTED:
             {
                 const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
