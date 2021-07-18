@@ -911,10 +911,12 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
     // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
     if (args.IsArgSet("-incrementalrelayfee")) {
-        CAmount n = 0;
-        if (!ParseMoney(args.GetArg("-incrementalrelayfee", ""), n))
-            return InitError(AmountErrMsg("incrementalrelayfee", args.GetArg("-incrementalrelayfee", "")));
-        incrementalRelayFee = CFeeRate(n);
+        const auto arg = args.GetArg("-incrementalrelayfee", "");
+        if (auto inc_relay_fee = ParseMoney(arg)) {
+            incrementalRelayFee = CFeeRate(inc_relay_fee.value());
+        } else {
+            return InitError(AmountErrMsg("incrementalrelayfee", arg));
+        }
     }
 
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
@@ -946,12 +948,13 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     if (args.IsArgSet("-minrelaytxfee")) {
-        CAmount n = 0;
-        if (!ParseMoney(args.GetArg("-minrelaytxfee", ""), n)) {
-            return InitError(AmountErrMsg("minrelaytxfee", args.GetArg("-minrelaytxfee", "")));
+        const auto arg = args.GetArg("-minrelaytxfee", "");
+        if (auto min_relay_fee = ParseMoney(arg)) {
+            // High fee check is done afterward in CWallet::Create()
+            ::minRelayTxFee = CFeeRate(min_relay_fee.value());
+        } else {
+            return InitError(AmountErrMsg("minrelaytxfee", arg));
         }
-        // High fee check is done afterward in CWallet::Create()
-        ::minRelayTxFee = CFeeRate(n);
     } else if (incrementalRelayFee > ::minRelayTxFee) {
         // Allow only setting incrementalRelayFee to control both
         ::minRelayTxFee = incrementalRelayFee;
@@ -961,18 +964,20 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // Sanity check argument for min fee for including tx in block
     // TODO: Harmonize which arguments need sanity checking and where that happens
     if (args.IsArgSet("-blockmintxfee")) {
-        CAmount n = 0;
-        if (!ParseMoney(args.GetArg("-blockmintxfee", ""), n))
-            return InitError(AmountErrMsg("blockmintxfee", args.GetArg("-blockmintxfee", "")));
+        const auto arg = args.GetArg("-blockmintxfee", "");
+        if (!ParseMoney(arg))
+            return InitError(AmountErrMsg("blockmintxfee", arg));
     }
 
     // Feerate used to define dust.  Shouldn't be changed lightly as old
     // implementations may inadvertently create non-standard transactions
     if (args.IsArgSet("-dustrelayfee")) {
-        CAmount n = 0;
-        if (!ParseMoney(args.GetArg("-dustrelayfee", ""), n))
-            return InitError(AmountErrMsg("dustrelayfee", args.GetArg("-dustrelayfee", "")));
-        dustRelayFee = CFeeRate(n);
+        const auto arg = args.GetArg("-dustrelayfee", "");
+        if (auto parsed = ParseMoney(arg)) {
+            dustRelayFee = CFeeRate(parsed.value());
+        } else {
+            return InitError(AmountErrMsg("dustrelayfee", arg));
+        }
     }
 
     fRequireStandard = !args.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
