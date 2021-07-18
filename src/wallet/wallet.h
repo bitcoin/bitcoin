@@ -123,7 +123,8 @@ static constexpr uint64_t KNOWN_WALLET_FLAGS =
     |   WALLET_FLAG_EXTERNAL_SIGNER;
 
 static constexpr uint64_t MUTABLE_WALLET_FLAGS =
-        WALLET_FLAG_AVOID_REUSE;
+        WALLET_FLAG_EXTERNAL_SIGNER
+    |   WALLET_FLAG_AVOID_REUSE;
 
 static const std::map<std::string,WalletFlags> WALLET_FLAG_MAP{
     {"avoid_reuse", WALLET_FLAG_AVOID_REUSE},

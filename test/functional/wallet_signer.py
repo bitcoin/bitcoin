@@ -61,7 +61,9 @@ class WalletSignerTest(BitcoinTestFramework):
         # Flag can't be set afterwards (could be added later for non-blank descriptor based watch-only wallets)
         self.nodes[1].createwallet(wallet_name='not_hww', disable_private_keys=True, descriptors=True, external_signer=False)
         not_hww = self.nodes[1].get_wallet_rpc('not_hww')
-        assert_raises_rpc_error(-8, "Wallet flag is immutable: external_signer", not_hww.setwalletflag, "external_signer", True)
+        # Flag can be toggled
+        not_hww.setwalletflag("external_signer", True)
+        not_hww.setwalletflag("external_signer", False)
 
         # assert_raises_rpc_error(-4, "Multiple signers found, please specify which to use", wallet_name='not_hww', disable_private_keys=True, descriptors=True, external_signer=True)
 
@@ -73,6 +75,7 @@ class WalletSignerTest(BitcoinTestFramework):
         # self.clear_mock_result(self.nodes[1])
 
         assert_equal(hww.getwalletinfo()["keypoolsize"], 30)
+        assert_equal(hww.getwalletinfo()["external_signer"], True)
 
         address1 = hww.getnewaddress(address_type="bech32")
         assert_equal(address1, "bcrt1qm90ugl4d48jv8n6e5t9ln6t9zlpm5th68x4f8g")
