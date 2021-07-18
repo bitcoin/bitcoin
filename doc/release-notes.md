@@ -213,6 +213,9 @@ RPC
 Tests
 -----
 
+- For the `regtest` network the BIP 65 activation height was changed from 1351
+  to 112. (#21862)
+
 Credits
 =======
 
