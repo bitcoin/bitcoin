@@ -8,16 +8,15 @@
 #include <chainparamsbase.h>
 #include <fs.h>
 #include <key.h>
-#include <util/system.h>
 #include <node/context.h>
-#include <pubkey.h>
 #include <random.h>
-#include <stdexcept>
 #include <txmempool.h>
 #include <util/check.h>
 #include <util/string.h>
+#include <util/system.h>
 #include <util/vector.h>
 
+#include <stdexcept>
 #include <type_traits>
 #include <vector>
 
@@ -74,7 +73,6 @@ static constexpr CAmount CENT{1000000};
  * This just configures logging, data dir and chain parameters.
  */
 struct BasicTestingSetup {
-    ECCVerifyHandle globalVerifyHandle;
     NodeContext m_node;
 
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
