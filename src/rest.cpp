@@ -29,6 +29,8 @@
 
 #include <univalue.h>
 
+#include <optional>
+
 static const size_t MAX_GETUTXOS_OUTPOINTS = 15; //allow a max of 15 outpoints to be queried at once
 
 enum class RetFormat {
@@ -373,7 +375,7 @@ static bool rest_mempool_info(const std::any& context, HTTPRequest* req, const s
 
     switch (rf) {
     case RetFormat::JSON: {
-        UniValue mempoolInfoObject = MempoolInfoToJSON(*mempool);
+        UniValue mempoolInfoObject = MempoolInfoToJSON(*mempool, std::nullopt);
 
         std::string strJSON = mempoolInfoObject.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
