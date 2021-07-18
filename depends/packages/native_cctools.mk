@@ -16,6 +16,10 @@ define $(package)_set_vars
   $(package)_cxx=$(clangxx_prog)
 endef
 
+define $(package)_preprocess_cmds
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub cctools
+endef
+
 define $(package)_config_cmds
   $($(package)_autoconf)
 endef
