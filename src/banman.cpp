@@ -87,33 +87,13 @@ bool BanMan::IsBanned(const CNetAddr& net_addr)
     return false;
 }
 
-bool BanMan::IsBanned(const CSubNet& sub_net)
-{
-    auto current_time = GetTime();
-    LOCK(m_cs_banned);
-    banmap_t::iterator i = m_banned.find(sub_net);
-    if (i != m_banned.end()) {
-        CBanEntry ban_entry = (*i).second;
-        if (current_time < ban_entry.nBanUntil) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void BanMan::Ban(const CNetAddr& net_addr, int64_t ban_time_offset, bool since_unix_epoch)
-{
-    CSubNet sub_net(net_addr);
-    Ban(sub_net, ban_time_offset, since_unix_epoch);
-}
-
 void BanMan::Discourage(const CNetAddr& net_addr)
 {
     LOCK(m_cs_banned);
     m_discouraged.insert(net_addr.GetAddrBytes());
 }
 
-void BanMan::Ban(const CSubNet& sub_net, int64_t ban_time_offset, bool since_unix_epoch)
+bool BanMan::Ban(const CSubNet& sub_net, int64_t ban_time_offset, bool since_unix_epoch)
 {
     CBanEntry ban_entry(GetTime());
 
@@ -127,22 +107,18 @@ void BanMan::Ban(const CSubNet& sub_net, int64_t ban_time_offset, bool since_uni
 
     {
         LOCK(m_cs_banned);
+        // If ban entry is absent, add it. If it's shorter, update it.
         if (m_banned[sub_net].nBanUntil < ban_entry.nBanUntil) {
             m_banned[sub_net] = ban_entry;
             m_is_dirty = true;
         } else
-            return;
+            return false; // nothing to do, longer ban already exists
     }
     if (m_client_interface) m_client_interface->BannedListChanged();
 
     //store banlist to disk immediately
     DumpBanlist();
-}
-
-bool BanMan::Unban(const CNetAddr& net_addr)
-{
-    CSubNet sub_net(net_addr);
-    return Unban(sub_net);
+    return true;
 }
 
 bool BanMan::Unban(const CSubNet& sub_net)
@@ -155,6 +131,25 @@ bool BanMan::Unban(const CSubNet& sub_net)
     if (m_client_interface) m_client_interface->BannedListChanged();
     DumpBanlist(); //store banlist to disk immediately
     return true;
+}
+
+void BanMan::UnbanAll(const CNetAddr& net_addr)
+{
+    {
+        LOCK(m_cs_banned);
+        for (auto it = m_banned.begin(); it != m_banned.end();) {
+            CSubNet sub_net = it->first;
+            if (sub_net.Match(net_addr)) {
+                it = m_banned.erase(it);
+                m_is_dirty = true;
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    if (m_client_interface) m_client_interface->BannedListChanged();
+    DumpBanlist(); //store banlist to disk immediately
 }
 
 void BanMan::GetBanned(banmap_t& banmap)

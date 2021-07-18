@@ -60,22 +60,24 @@ class BanMan
 public:
     ~BanMan();
     BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t default_ban_time);
-    void Ban(const CNetAddr& net_addr, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
-    void Ban(const CSubNet& sub_net, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
+
+    //! Returns true if a new ban is added
+    // Updates existing ban entries with longer ones
+    bool Ban(const CSubNet& sub_net, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
+
     void Discourage(const CNetAddr& net_addr);
     void ClearBanned();
 
     //! Return whether net_addr is banned
     bool IsBanned(const CNetAddr& net_addr);
 
-    //! Return whether sub_net is exactly banned
-    bool IsBanned(const CSubNet& sub_net);
-
     //! Return whether net_addr is discouraged.
     bool IsDiscouraged(const CNetAddr& net_addr);
 
-    bool Unban(const CNetAddr& net_addr);
     bool Unban(const CSubNet& sub_net);
+
+    // Removes all ban entries that include net_addr
+    void UnbanAll(const CNetAddr& net_addr);
     void GetBanned(banmap_t& banmap);
     void DumpBanlist();
 

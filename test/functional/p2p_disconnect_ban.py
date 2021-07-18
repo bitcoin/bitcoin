@@ -7,6 +7,7 @@ import time
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_approx,
     assert_equal,
     assert_raises_rpc_error,
 )
@@ -38,16 +39,25 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[1].listbanned()), 0)
         self.nodes[1].setban("127.0.0.0/24", "add")
 
-        self.log.info("setban: fail to ban an already banned subnet")
+        self.log.info("adding a subset ban creates a new ban entry")
         assert_equal(len(self.nodes[1].listbanned()), 1)
-        assert_raises_rpc_error(-23, "IP/Subnet already banned", self.nodes[1].setban, "127.0.0.1", "add")
+        self.nodes[1].setban("127.0.0.1", "add", 500)
+        listbanned_response = self.nodes[1].listbanned()
+        assert_equal(len(listbanned_response), 2)
+        assert_equal(listbanned_response[1]["address"], "127.0.0.1/32")
+
+        # Verify that relative bantime is correct
+        now = int(time.time())
+        assert_approx(listbanned_response[1]["banned_until"] - now, 10, 500)
+        self.nodes[1].setban("127.0.0.1/32", "remove", 500)
 
         self.log.info("setban: fail to ban an invalid subnet")
         assert_raises_rpc_error(-30, "Error: Invalid IP/Subnet", self.nodes[1].setban, "127.0.0.1/42", "add")
-        assert_equal(len(self.nodes[1].listbanned()), 1)  # still only one banned ip because 127.0.0.1 is within the range of 127.0.0.0/24
+        assert_equal(len(self.nodes[1].listbanned()), 1)  # still only one banned ip because 127.0.0.1/42 is invalid
 
-        self.log.info("setban remove: fail to unban a non-banned subnet")
-        assert_raises_rpc_error(-30, "Error: Unban failed", self.nodes[1].setban, "127.0.0.1", "remove")
+        # Unbanning a non-banned subnet should succeed as user intent is accomplished
+        self.log.info("setban remove: unban a non-banned subnet")
+        self.nodes[1].setban("127.0.0.1", "remove")
         assert_equal(len(self.nodes[1].listbanned()), 1)
 
         self.log.info("setban remove: successfully unban subnet")
@@ -55,6 +65,38 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[1].listbanned()), 0)
         self.nodes[1].clearbanned()
         assert_equal(len(self.nodes[1].listbanned()), 0)
+
+        self.log.info("setban listbanned and removeall: ipv4 test")
+        self.nodes[1].setban("127.0.0.1/16", "add")
+        self.nodes[1].setban("127.0.0.1/24", "add")
+        self.nodes[1].setban("127.0.0.1/32", "add")
+        assert_equal(len(self.nodes[1].listbanned()), 3)
+        assert_raises_rpc_error(-8, "Error: Invalid IP address", self.nodes[1].listbanned, "127.0.0.3/32")
+        relevant_bans = self.nodes[1].listbanned("127.0.0.3")
+        assert_equal({x["address"] for x in relevant_bans}, {"127.0.0.0/16", "127.0.0.0/24"})
+        assert_raises_rpc_error(-8, "Error: setban removeall requires a single IP address",
+            self.nodes[1].setban, "127.0.0.3/32", "removeall")
+        self.nodes[1].setban("127.0.0.3", "removeall")
+        listbanned_response = self.nodes[1].listbanned()
+        assert_equal(len(listbanned_response), 1)
+        assert_equal(listbanned_response[0]["address"], "127.0.0.1/32")
+        self.nodes[1].clearbanned()
+
+        self.log.info("setban listbanned and removeall: ipv6 test")
+        self.nodes[1].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/96", "add")
+        self.nodes[1].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/112", "add")
+        self.nodes[1].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128", "add")
+        assert_equal(len(self.nodes[1].listbanned()), 3)
+        assert_raises_rpc_error(-8, "Error: Invalid IP address",
+            self.nodes[1].listbanned, "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c64/128")
+        relevant_bans = self.nodes[1].listbanned("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c64")
+        assert_raises_rpc_error(-8, "Error: setban removeall requires a single IP address",
+            self.nodes[1].setban, "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c64/128", "removeall")
+        self.nodes[1].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c64", "removeall")
+        listbanned_response = self.nodes[1].listbanned()
+        assert_equal(len(listbanned_response), 1)
+        assert_equal(listbanned_response[0]["address"], "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128")
+        self.nodes[1].clearbanned()
 
         self.log.info("setban: test persistence across node restart")
         self.nodes[1].setban("127.0.0.0/32", "add")

@@ -671,10 +671,10 @@ static RPCHelpMan getnetworkinfo()
 static RPCHelpMan setban()
 {
     return RPCHelpMan{"setban",
-                "\nAttempts to add or remove an IP/Subnet from the banned list.\n",
+                "\nAttempts to add or remove an IP/Subnet from the banned list. If a ban is already in effect, no changes are made.\n",
                 {
                     {"subnet", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP/Subnet (see getpeerinfo for nodes IP) with an optional netmask (default is /32 = single IP)"},
-                    {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add an IP/Subnet to the list, 'remove' to remove an IP/Subnet from the list"},
+                    {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add an IP/Subnet to the list, 'remove' to remove an IP/Subnet from the list, 'removeall' to remove all bans that include the single IP address"},
                     {"bantime", RPCArg::Type::NUM, RPCArg::Default{0}, "time in seconds how long (or until when if [absolute] is set) the IP is banned (0 or empty means using the default time of 24h which can also be overwritten by the -bantime startup argument)"},
                     {"absolute", RPCArg::Type::BOOL, RPCArg::Default{false}, "If set, the bantime must be an absolute timestamp expressed in " + UNIX_EPOCH_TIME},
                 },
@@ -689,7 +689,7 @@ static RPCHelpMan setban()
     std::string strCommand;
     if (!request.params[1].isNull())
         strCommand = request.params[1].get_str();
-    if (strCommand != "add" && strCommand != "remove") {
+    if (strCommand != "add" && strCommand != "remove" && strCommand != "removeall") {
         throw std::runtime_error(help.ToString());
     }
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -697,30 +697,24 @@ static RPCHelpMan setban()
         throw JSONRPCError(RPC_DATABASE_ERROR, "Error: Ban database not loaded");
     }
 
+    bool isSubnet = (request.params[0].get_str().find('/') != std::string::npos);
+    if (strCommand == "removeall" && isSubnet) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: setban removeall requires a single IP address");
+    }
+
     CSubNet subNet;
     CNetAddr netAddr;
-    bool isSubnet = false;
-
-    if (request.params[0].get_str().find('/') != std::string::npos)
-        isSubnet = true;
-
-    if (!isSubnet) {
-        CNetAddr resolved;
-        LookupHost(request.params[0].get_str(), resolved, false);
-        netAddr = resolved;
-    }
-    else
+    if (isSubnet) {
         LookupSubNet(request.params[0].get_str(), subNet);
+    } else {
+        LookupHost(request.params[0].get_str(), netAddr, false);
+        subNet = CSubNet(netAddr);
+    }
 
-    if (! (isSubnet ? subNet.IsValid() : netAddr.IsValid()) )
+    if (!subNet.IsValid())
         throw JSONRPCError(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Error: Invalid IP/Subnet");
 
-    if (strCommand == "add")
-    {
-        if (isSubnet ? node.banman->IsBanned(subNet) : node.banman->IsBanned(netAddr)) {
-            throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: IP/Subnet already banned");
-        }
-
+    if (strCommand == "add") {
         int64_t banTime = 0; //use standard bantime if not specified
         if (!request.params[2].isNull())
             banTime = request.params[2].get_int64();
@@ -729,23 +723,13 @@ static RPCHelpMan setban()
         if (request.params[3].isTrue())
             absolute = true;
 
-        if (isSubnet) {
-            node.banman->Ban(subNet, banTime, absolute);
-            if (node.connman) {
-                node.connman->DisconnectNode(subNet);
-            }
-        } else {
-            node.banman->Ban(netAddr, banTime, absolute);
-            if (node.connman) {
-                node.connman->DisconnectNode(netAddr);
-            }
+        if (node.banman->Ban(subNet, banTime, absolute) && node.connman) {
+            node.connman->DisconnectNode(subNet);
         }
-    }
-    else if(strCommand == "remove")
-    {
-        if (!( isSubnet ? node.banman->Unban(subNet) : node.banman->Unban(netAddr) )) {
-            throw JSONRPCError(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Error: Unban failed. Requested address/subnet was not previously manually banned.");
-        }
+    } else if (strCommand == "remove") {
+        node.banman->Unban(subNet);
+    } else if (strCommand == "removeall") {
+        node.banman->UnbanAll(netAddr);
     }
     return NullUniValue;
 },
@@ -756,7 +740,9 @@ static RPCHelpMan listbanned()
 {
     return RPCHelpMan{"listbanned",
                 "\nList all manually banned IPs/Subnets.\n",
-                {},
+                {
+                    {"ip", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "If IP is provided, only bans which include the IP will be returned."},
+                },
         RPCResult{RPCResult::Type::ARR, "", "",
             {
                 {RPCResult::Type::OBJ, "", "",
@@ -781,8 +767,24 @@ static RPCHelpMan listbanned()
 
     banmap_t banMap;
     node.banman->GetBanned(banMap);
-    const int64_t current_time{GetTime()};
 
+    if (!request.params[0].isNull()) {
+        CNetAddr netAddr;
+        LookupHost(request.params[0].get_str(), netAddr, false);
+        if (!netAddr.IsValid()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid IP address");
+        }
+        for (auto it = banMap.begin(); it != banMap.end();) {
+            CSubNet ban_sub_net = it->first;
+            if (!ban_sub_net.Match(netAddr)) {
+                it = banMap.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    const int64_t current_time{GetTime()};
     UniValue bannedAddresses(UniValue::VARR);
     for (const auto& entry : banMap)
     {
