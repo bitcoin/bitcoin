@@ -1823,7 +1823,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
     {
         for (int64_t nLoop = 0;; nLoop++)
         {
-            ProcessAddrFetch();
             for (const std::string& strAddr : connect)
             {
                 CAddress addr(CService(), NODE_NONE);
