@@ -31,7 +31,8 @@ enum class NetPermissionFlags : uint32_t {
     NoBan = (1U << 4) | Download,
     // Can query the mempool
     Mempool = (1U << 5),
-    // Can request addrs without hitting a privacy-preserving cache
+    // Can request addrs without hitting a privacy-preserving cache, and send us
+    // unlimited amounts of addrs.
     Addr = (1U << 7),
 
     // True if the user did not specifically set fine grained permissions
