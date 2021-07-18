@@ -61,7 +61,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(sizes)
 {
-    BOOST_CHECK_EQUAL(sizeof(char), GetSerializeSize(char(0), 0));
+    BOOST_CHECK_EQUAL(sizeof(unsigned char), GetSerializeSize((unsigned char)0, 0));
     BOOST_CHECK_EQUAL(sizeof(int8_t), GetSerializeSize(int8_t(0), 0));
     BOOST_CHECK_EQUAL(sizeof(uint8_t), GetSerializeSize(uint8_t(0), 0));
     BOOST_CHECK_EQUAL(sizeof(int16_t), GetSerializeSize(int16_t(0), 0));
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(sizes)
     BOOST_CHECK_EQUAL(sizeof(uint8_t), GetSerializeSize(bool(0), 0));
 
     // Sanity-check GetSerializeSize and c++ type matching
-    BOOST_CHECK_EQUAL(GetSerializeSize(char(0), 0), 1U);
+    BOOST_CHECK_EQUAL(GetSerializeSize((unsigned char)0, 0), 1U);
     BOOST_CHECK_EQUAL(GetSerializeSize(int8_t(0), 0), 1U);
     BOOST_CHECK_EQUAL(GetSerializeSize(uint8_t(0), 0), 1U);
     BOOST_CHECK_EQUAL(GetSerializeSize(int16_t(0), 0), 2U);
@@ -186,32 +186,32 @@ BOOST_AUTO_TEST_CASE(noncanonical)
     std::vector<char>::size_type n;
 
     // zero encoded with three bytes:
-    ss.write("\xfd\x00\x00", 3);
+    ss.write(Uint8Ptr("\xfd\x00\x00"), 3);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0xfc encoded with three bytes:
-    ss.write("\xfd\xfc\x00", 3);
+    ss.write(Uint8Ptr("\xfd\xfc\x00"), 3);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0xfd encoded with three bytes is OK:
-    ss.write("\xfd\xfd\x00", 3);
+    ss.write(Uint8Ptr("\xfd\xfd\x00"), 3);
     n = ReadCompactSize(ss);
     BOOST_CHECK(n == 0xfd);
 
     // zero encoded with five bytes:
-    ss.write("\xfe\x00\x00\x00\x00", 5);
+    ss.write(Uint8Ptr("\xfe\x00\x00\x00\x00"), 5);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0xffff encoded with five bytes:
-    ss.write("\xfe\xff\xff\x00\x00", 5);
+    ss.write(Uint8Ptr("\xfe\xff\xff\x00\x00"), 5);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // zero encoded with nine bytes:
-    ss.write("\xff\x00\x00\x00\x00\x00\x00\x00\x00", 9);
+    ss.write(Uint8Ptr("\xff\x00\x00\x00\x00\x00\x00\x00\x00"), 9);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0x01ffffff encoded with nine bytes:
-    ss.write("\xff\xff\xff\xff\x01\x00\x00\x00\x00", 9);
+    ss.write(Uint8Ptr("\xff\xff\xff\xff\x01\x00\x00\x00\x00"), 9);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 }
 
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(insert_delete)
     CDataStream ss(SER_DISK, 0);
     BOOST_CHECK_EQUAL(ss.size(), 0U);
 
-    ss.write("\x00\x01\x02\xff", 4);
+    ss.write(Uint8Ptr("\x00\x01\x02\xff"), 4);
     BOOST_CHECK_EQUAL(ss.size(), 4U);
 
     char c = (char)11;

@@ -111,8 +111,9 @@ public:
     int GetType() const { return nType; }
     int GetVersion() const { return nVersion; }
 
-    void write(const char *pch, size_t size) {
-        ctx.Write((const unsigned char*)pch, size);
+    void write(const uint8_t* pch, size_t size)
+    {
+        ctx.Write(pch, size);
     }
 
     /** Compute the double-SHA256 hash of all data written to this object.
@@ -162,7 +163,7 @@ private:
 public:
     explicit CHashVerifier(Source* source_) : CHashWriter(source_->GetType(), source_->GetVersion()), source(source_) {}
 
-    void read(char* pch, size_t nSize)
+    void read(uint8_t* pch, size_t nSize)
     {
         source->read(pch, nSize);
         this->write(pch, nSize);
@@ -170,7 +171,7 @@ public:
 
     void ignore(size_t nSize)
     {
-        char data[1024];
+        uint8_t data[1024];
         while (nSize > 0) {
             size_t now = std::min<size_t>(nSize, 1024);
             read(data, now);

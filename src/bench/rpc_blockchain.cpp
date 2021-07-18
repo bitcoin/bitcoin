@@ -23,7 +23,7 @@ struct TestBlockAndIndex {
     TestBlockAndIndex()
     {
         CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
-        char a = '\0';
+        uint8_t a{'\0'};
         stream.write(&a, 1); // Prevent compaction
 
         stream >> block;

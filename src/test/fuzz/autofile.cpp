@@ -25,14 +25,14 @@ FUZZ_TARGET(autofile)
             [&] {
                 std::array<uint8_t, 4096> arr{};
                 try {
-                    auto_file.read((char*)arr.data(), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
+                    auto_file.read(arr.data(), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
                 } catch (const std::ios_base::failure&) {
                 }
             },
             [&] {
                 const std::array<uint8_t, 4096> arr{};
                 try {
-                    auto_file.write((const char*)arr.data(), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
+                    auto_file.write(arr.data(), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
                 } catch (const std::ios_base::failure&) {
                 }
             },

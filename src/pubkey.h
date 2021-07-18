@@ -136,20 +136,20 @@ public:
     {
         unsigned int len = size();
         ::WriteCompactSize(s, len);
-        s.write((char*)vch, len);
+        s.write(vch, len);
     }
     template <typename Stream>
     void Unserialize(Stream& s)
     {
         unsigned int len = ::ReadCompactSize(s);
         if (len <= SIZE) {
-            s.read((char*)vch, len);
+            s.read(vch, len);
             if (len != size()) {
                 Invalidate();
             }
         } else {
             // invalid pubkey, skip available data
-            char dummy;
+            uint8_t dummy;
             while (len--)
                 s.read(&dummy, 1);
             Invalidate();

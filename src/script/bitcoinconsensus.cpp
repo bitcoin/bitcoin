@@ -22,7 +22,7 @@ public:
     m_remaining(txToLen)
     {}
 
-    void read(char* pch, size_t nSize)
+    void read(uint8_t* pch, size_t nSize)
     {
         if (nSize > m_remaining)
             throw std::ios_base::failure(std::string(__func__) + ": end of data");
