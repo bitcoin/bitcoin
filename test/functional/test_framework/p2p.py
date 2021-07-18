@@ -503,7 +503,7 @@ class P2PInterface(P2PConnection):
 
         self.wait_until(test_function, timeout=timeout)
 
-    def wait_for_getheaders(self, timeout=60):
+    def wait_for_getheaders(self, hash_list, timeout=60):
         """Waits for a getheaders message.
 
         Receiving any getheaders message will satisfy the predicate. the last_message["getheaders"]
@@ -511,7 +511,10 @@ class P2PInterface(P2PConnection):
         immediately with success. TODO: change this method to take a hash value and only
         return true if the correct block header has been requested."""
         def test_function():
-            return self.last_message.get("getheaders")
+            last_headers = self.last_message.get("getheaders")
+            if not last_headers:
+                return False
+            #TODO: verify has for the hashlist provided
 
         self.wait_until(test_function, timeout=timeout)
 
