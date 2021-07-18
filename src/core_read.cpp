@@ -69,7 +69,7 @@ CScript ParseScript(const std::string& s)
             (w->front() == '-' && w->size() > 1 && std::all_of(w->begin()+1, w->end(), ::IsDigit)))
         {
             // Number
-            int64_t n = atoi64(*w);
+            int64_t n = LocaleIndependentAtoi<int64_t>(*w);
 
             //limit the range of numbers ParseScript accepts in decimal
             //since numbers outside -0xFFFFFFFF...0xFFFFFFFF are illegal in scripts

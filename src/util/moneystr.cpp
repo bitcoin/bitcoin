@@ -74,7 +74,7 @@ bool ParseMoney(const std::string& money_string, CAmount& nRet)
         return false;
     if (nUnits < 0 || nUnits > COIN)
         return false;
-    int64_t nWhole = atoi64(strWhole);
+    int64_t nWhole = LocaleIndependentAtoi<int64_t>(strWhole);
     CAmount nValue = nWhole*COIN + nUnits;
 
     nRet = nValue;

@@ -31,7 +31,7 @@ static inline void ReadOrderPos(int64_t& nOrderPos, mapValue_t& mapValue)
         nOrderPos = -1; // TODO: calculate elsewhere
         return;
     }
-    nOrderPos = atoi64(mapValue["n"]);
+    nOrderPos = LocaleIndependentAtoi<int64_t>(mapValue["n"]);
 }
 
 static inline void WriteOrderPos(const int64_t& nOrderPos, mapValue_t& mapValue)
@@ -240,7 +240,7 @@ public:
         }
 
         ReadOrderPos(nOrderPos, mapValue);
-        nTimeSmart = mapValue.count("timesmart") ? (unsigned int)atoi64(mapValue["timesmart"]) : 0;
+        nTimeSmart = mapValue.count("timesmart") ? (unsigned int)LocaleIndependentAtoi<int64_t>(mapValue["timesmart"]) : 0;
 
         mapValue.erase("fromaccount");
         mapValue.erase("spent");
