@@ -366,6 +366,14 @@ void SQLiteBatch::Close()
     }
 }
 
+// disable -Wzero-as-null-pointer-constant due to SQLITE_STATIC
+#if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+#endif
+
 bool SQLiteBatch::ReadKey(CDataStream&& key, CDataStream& value)
 {
     if (!m_database.m_db) return false;
@@ -574,3 +582,8 @@ std::string SQLiteDatabaseVersion()
 {
     return std::string(sqlite3_libversion());
 }
+
+#if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
+#endif

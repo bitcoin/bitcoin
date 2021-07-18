@@ -430,6 +430,10 @@ if test "x$enable_werror" = "xyes"; then
 
   if test x$suppress_external_warnings != xno ; then
     AX_CHECK_COMPILE_FLAG([-Werror=documentation],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=documentation"],,[[$CXXFLAG_WERROR]])
+    AX_CHECK_COMPILE_FLAG([-Werror=zero-as-null-pointer-constant],[
+      ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=zero-as-null-pointer-constant"
+      AC_DEFINE(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT, 1, [Define this symbol if -Wzero-as-null-pointer-constant is available])
+    ],[],[$CXXFLAG_WERROR])
   fi
 fi
 
@@ -461,6 +465,10 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
 
   if test x$suppress_external_warnings != xno ; then
     AX_CHECK_COMPILE_FLAG([-Wdocumentation],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wdocumentation"],,[[$CXXFLAG_WERROR]])
+    AX_CHECK_COMPILE_FLAG([-Wzero-as-null-pointer-constant],[
+      WARN_CXXFLAGS="$WARN_CXXFLAGS -Wzero-as-null-pointer-constant"
+      AC_DEFINE(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT, 1, [Define this symbol if -Wzero-as-null-pointer-constant is available])
+    ],[],[$CXXFLAG_WERROR])
   fi
 
   dnl Some compilers (gcc) ignore unknown -Wno-* options, but warn about all

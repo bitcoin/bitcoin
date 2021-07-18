@@ -668,7 +668,7 @@ bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, uin
             return false;
         }
     } else {
-        if (!Socks5(strDest, port, 0, sock)) {
+        if (!Socks5(strDest, port, nullptr, sock)) {
             return false;
         }
     }

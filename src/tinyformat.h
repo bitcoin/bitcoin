@@ -124,6 +124,17 @@
 #ifndef TINYFORMAT_H_INCLUDED
 #define TINYFORMAT_H_INCLUDED
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
+#if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+#endif
+
 namespace tinyformat {}
 //------------------------------------------------------------------------------
 // Config section.  Customize to your liking!
@@ -1162,5 +1173,10 @@ std::string format(const std::string &fmt, const Args&... args)
 // Added for Bitcoin Core:
 /** Format arguments and return the string or write to given std::ostream (see tinyformat::format doc for details) */
 #define strprintf tfm::format
+
+#if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
+#endif
 
 #endif // TINYFORMAT_H_INCLUDED

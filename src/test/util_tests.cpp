@@ -40,6 +40,14 @@
 using namespace std::literals;
 static const std::string STRING_WITH_EMBEDDED_NULL_CHAR{"1"s "\0" "1"s};
 
+// disable Wzero-as-null-pointer-constant for SIG_DFL
+#if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+#endif
+
 /* defined in logging.cpp */
 namespace BCLog {
     std::string LogEscapeMessage(const std::string& str);
@@ -2320,3 +2328,8 @@ BOOST_AUTO_TEST_CASE(remove_prefix)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
+#endif
