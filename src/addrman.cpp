@@ -746,7 +746,7 @@ void CAddrMan::ResetI2PPorts()
                 return;
             }
             auto& addr_info = it->second;
-            if (!addr_info.IsI2P() || addr_info.GetPort() == I2P_SAM31_PORT) {
+            if (!addr_info.IsI2P()) {
                 continue;
             }
 
