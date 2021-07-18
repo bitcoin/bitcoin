@@ -18,12 +18,13 @@ if test -z $1; then
 fi
 
 RET=0
+BAD_CMDS="sed -i" # Extend with regular expressions e.g. "sed -i|..."
 PREV_BRANCH=$(git name-rev --name-only HEAD)
 PREV_HEAD=$(git rev-parse HEAD)
 for commit in $(git rev-list --reverse $1); do
     if git rev-list -n 1 --pretty="%s" $commit | grep -q "^scripted-diff:"; then
         git checkout --quiet $commit^ || exit
-        SCRIPT="$(git rev-list --format=%b -n1 $commit | sed '/^-BEGIN VERIFY SCRIPT-$/,/^-END VERIFY SCRIPT-$/{//!b};d')"
+        SCRIPT="$(git rev-list --format=%b -n1 $commit | sed -n '/^-BEGIN VERIFY SCRIPT-$/,/^-END VERIFY SCRIPT-$/{//!p;}')"
         if test -z "$SCRIPT"; then
             echo "Error: missing script for: $commit"
             echo "Failed"
@@ -31,8 +32,22 @@ for commit in $(git rev-list --reverse $1); do
         else
             echo "Running script for: $commit"
             echo "$SCRIPT"
-            (eval "$SCRIPT")
-            git --no-pager diff --exit-code $commit && echo "OK" || (echo "Failed"; false) || RET=1
+
+            if ! (eval "$SCRIPT"); then
+	    	echo "Warning: script failed (non-zero exit code)"
+	    fi
+
+            if git --no-pager diff --exit-code $commit; then
+	    	echo "OK"
+	    else
+		echo "Failed. Please ensure that commands are portable."
+		echo "$SCRIPT" | grep "$BAD_CMDS" | # Extend with grep -E
+		while IFS= read -r line;
+		do
+		    echo "$line may not portable."
+		done
+		RET=1
+	    fi
         fi
         git reset --quiet --hard HEAD
      else
