@@ -4,6 +4,7 @@
 
 #include <test/fuzz/fuzz.h>
 
+#include <boost/filesystem.hpp>
 #include <netaddress.h>
 #include <netbase.h>
 #include <test/util/setup_common.h>
@@ -127,6 +128,9 @@ int main(int argc, char** argv)
     }
     test_one_input(buffer);
 #endif
+    if (std::getenv("CLEAN_TMP_AFTER_FUZZ")) {
+        boost::filesystem::remove_all("/tmp/test_common_Bitcoin Core");
+    }
     return 0;
 }
 #endif
