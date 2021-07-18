@@ -51,31 +51,16 @@ previous stage) as the first argument.
 ```
 
 ## Deterministic macOS DMG Notes
-Working macOS DMGs are created in Linux by combining a recent `clang`, the Apple
-`binutils` (`ld`, `ar`, etc) and DMG authoring tools.
+Working macOS DMGs are created on Linux by combining a recent LLVM (`clang`,
+`lld` + binutils) and DMG authoring tools.
 
 Apple uses `clang` extensively for development and has upstreamed the necessary
-functionality so that a vanilla clang can take advantage. It supports the use of `-F`,
+functionality so that a vanilla clang can take advantage. It supports the use of
 `-target`, `-mmacosx-version-min`, and `-isysroot`, which are all necessary when
 building for macOS.
 
-Apple's version of `binutils` (called `cctools`) contains lots of functionality missing in the
-FSF's `binutils`. In addition to extra linker options for frameworks and sysroots, several
-other tools are needed as well such as `install_name_tool`, `lipo`, and `nmedit`. These
-do not build under Linux, so they have been patched to do so. The work here was used as
-a starting point: [mingwandroid/toolchain4](https://github.com/mingwandroid/toolchain4).
-
-In order to build a working toolchain, the following source packages are needed from
-Apple: `cctools`, `dyld`, and `ld64`.
-
-These tools inject timestamps by default, which produce non-deterministic binaries. The
-`ZERO_AR_DATE` environment variable is used to disable that.
-
-This version of `cctools` has been patched to use the current version of `clang`'s headers
-and its `libLTO.so` rather than those from `llvmgcc`, as it was originally done in `toolchain4`.
-
-To complicate things further, all builds must target an Apple SDK. These SDKs are free to
-download, but not redistributable. To obtain it, register for an Apple Developer Account,
+All macOS builds must target an Apple SDK. These SDKs are free to download, but
+not redistributable. To obtain it, register for an Apple Developer Account,
 then download [Xcode_11.3.1](https://download.developer.apple.com/Developer_Tools/Xcode_11.3.1/Xcode_11.3.1.xip).
 
 This file is many gigabytes in size, but most (but not all) of what we need is
