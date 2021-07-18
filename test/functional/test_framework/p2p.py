@@ -438,6 +438,7 @@ class P2PInterface(P2PConnection):
             self.send_message(msg_sendaddrv2())
         self.send_message(msg_verack())
         self.nServices = message.nServices
+        self.send_message(msg_getaddr())
 
     # Connection helper methods
 
