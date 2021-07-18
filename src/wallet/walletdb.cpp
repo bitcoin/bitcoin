@@ -954,7 +954,7 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWal
                 uint256 hash;
                 ssKey >> hash;
                 vTxHash.push_back(hash);
-                vWtx.emplace_back(nullptr /* wallet */, nullptr /* tx */);
+                vWtx.emplace_back(nullptr /* tx */);
                 ssValue >> vWtx.back();
             }
         }
