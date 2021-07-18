@@ -52,26 +52,31 @@
 #define ASSERT_EXCLUSIVE_LOCK(...)
 #endif // __GNUC__
 
-// StdMutex provides an annotated version of std::mutex for us,
-// and should only be used when sync.h Mutex/LOCK/etc are not usable.
-class LOCKABLE StdMutex : public std::mutex
+template<typename Mutex>
+class LOCKABLE Lockable : public Mutex
 {
 public:
 #ifdef __clang__
     //! For negative capabilities in the Clang Thread Safety Analysis.
     //! A negative requirement uses the EXCLUSIVE_LOCKS_REQUIRED attribute, in conjunction
     //! with the ! operator, to indicate that a mutex should not be held.
-    const StdMutex& operator!() const { return *this; }
+    const Lockable& operator!() const { return *this; }
 #endif // __clang__
 };
 
-// StdLockGuard provides an annotated version of std::lock_guard for us,
-// and should only be used when sync.h Mutex/LOCK/etc are not usable.
-class SCOPED_LOCKABLE StdLockGuard : public std::lock_guard<StdMutex>
+template<typename Mutex, template<typename> class Lock>
+class SCOPED_LOCKABLE ScopedLockable : public Lock<Mutex>
 {
 public:
-    explicit StdLockGuard(StdMutex& cs) EXCLUSIVE_LOCK_FUNCTION(cs) : std::lock_guard<StdMutex>(cs) {}
-    ~StdLockGuard() UNLOCK_FUNCTION() {}
+    explicit ScopedLockable(Mutex& mutex) EXCLUSIVE_LOCK_FUNCTION(mutex) : Lock<Mutex>(mutex) {}
+    ~ScopedLockable() UNLOCK_FUNCTION() {}
 };
+
+// StdMutex, StdLockGuard, and StdUniqueLock provide annotated versions of
+// standard synchronization classes, and should only be used when sync.h
+// Mutex/LOCK/etc are not usable.
+using StdMutex = Lockable<std::mutex>;
+using StdLockGuard = ScopedLockable<std::mutex, std::lock_guard>;
+using StdUniqueLock = ScopedLockable<std::mutex, std::unique_lock>;
 
 #endif // BITCOIN_THREADSAFETY_H

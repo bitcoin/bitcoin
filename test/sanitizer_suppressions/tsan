@@ -30,6 +30,15 @@ race:validation_chainstatemanager_tests
 deadlock:libdb
 race:libzmq
 
+# Disable spurious error about std::cout.
+# data race /usr/lib/llvm-10/bin/../include/c++/v1/ios:522:12 in std::__1::ios_base::width() const
+# Location is global 'std::__1::cout' of size 160 at 0x7f492785e270 (libc++.so.1+0x0000000c0290)
+# https://travis-ci.org/github/bitcoin/bitcoin/jobs/695004018
+#
+# Uses of std::cout are guaranteed thread safe by the c++ standard
+# https://stackoverflow.com/questions/50322790/thread-safety-and-piping-to-streams
+race:std::__1::ios_base::width
+
 # Intermittent issues
 # -------------------
 #
