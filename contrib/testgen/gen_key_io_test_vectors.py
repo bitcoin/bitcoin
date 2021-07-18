@@ -4,14 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 Generate valid and invalid base58/bech32(m) address and private key test vectors.
-
-Usage:
-    PYTHONPATH=../../test/functional/test_framework ./gen_key_io_test_vectors.py valid 70 > ../../src/test/data/key_io_valid.json
-    PYTHONPATH=../../test/functional/test_framework ./gen_key_io_test_vectors.py invalid 70 > ../../src/test/data/key_io_invalid.json
 '''
 # 2012 Wladimir J. van der Laan
 # Released under MIT License
-import os
 from itertools import islice
 from base58 import b58encode_chk, b58decode_chk, b58chars
 import random
@@ -135,7 +130,7 @@ def is_valid_bech32(v):
 def gen_valid_base58_vector(template):
     '''Generate valid base58 vector'''
     prefix = bytearray(template[0])
-    payload = bytearray(os.urandom(template[1]))
+    payload = rand_bytes(size=template[1])
     suffix = bytearray(template[2])
     dst_prefix = bytearray(template[4])
     dst_suffix = bytearray(template[5])
@@ -146,7 +141,7 @@ def gen_valid_bech32_vector(template):
     '''Generate valid bech32 vector'''
     hrp = template[0]
     witver = template[1]
-    witprog = bytearray(os.urandom(template[2]))
+    witprog = rand_bytes(size=template[2])
     encoding = template[4]
     dst_prefix = bytearray(template[5])
     rv = bech32_encode(encoding, hrp, [witver] + convertbits(witprog, 8, 5))
@@ -176,17 +171,17 @@ def gen_invalid_base58_vector(template):
     corrupt_suffix = randbool(0.2)
 
     if corrupt_prefix:
-        prefix = os.urandom(1)
+        prefix = rand_bytes(size=1)
     else:
         prefix = bytearray(template[0])
 
     if randomize_payload_size:
-        payload = os.urandom(max(int(random.expovariate(0.5)), 50))
+        payload = rand_bytes(size=max(int(random.expovariate(0.5)), 50))
     else:
-        payload = os.urandom(template[1])
+        payload = rand_bytes(size=template[1])
 
     if corrupt_suffix:
-        suffix = os.urandom(len(template[2]))
+        suffix = rand_bytes(size=len(template[2]))
     else:
         suffix = bytearray(template[2])
 
@@ -206,7 +201,7 @@ def gen_invalid_bech32_vector(template):
     to_upper = randbool(0.1)
     hrp = template[0]
     witver = template[1]
-    witprog = bytearray(os.urandom(template[2]))
+    witprog = rand_bytes(size=template[2])
     encoding = template[3]
 
     if no_data:
@@ -236,6 +231,9 @@ def randbool(p = 0.5):
     '''Return True with P(p)'''
     return random.random() < p
 
+def rand_bytes(*, size):
+    return bytearray(random.getrandbits(8) for _ in range(size))
+
 def gen_invalid_vectors():
     '''Generate invalid test vectors'''
     # start with some manual edge-cases
@@ -253,6 +251,7 @@ if __name__ == '__main__':
     import sys
     import json
     iters = {'valid':gen_valid_vectors, 'invalid':gen_invalid_vectors}
+    random.seed(42)
     try:
         uiter = iters[sys.argv[1]]
     except IndexError:
