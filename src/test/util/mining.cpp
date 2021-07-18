@@ -56,15 +56,18 @@ std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const
     return ret;
 }
 
+void SolvePow(CBlock& block)
+{
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus())) {
+        ++block.nNonce;
+        assert(block.nNonce);
+    }
+}
+
 CTxIn MineBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
 {
     auto block = PrepareBlock(node, coinbase_scriptPubKey);
-
-    while (!CheckProofOfWork(block->GetHash(), block->nBits, Params().GetConsensus())) {
-        ++block->nNonce;
-        assert(block->nNonce);
-    }
-
+    SolvePow(*block);
     bool processed{Assert(node.chainman)->ProcessNewBlock(Params(), block, true, nullptr)};
     assert(processed);
 

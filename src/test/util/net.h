@@ -9,6 +9,7 @@
 #include <netaddress.h>
 #include <net.h>
 #include <util/sock.h>
+#include <netmessagemaker.h>
 
 #include <array>
 #include <cassert>
@@ -36,6 +37,15 @@ struct ConnmanTestMsg : public CConnman {
     void NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const;
 
     bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) const;
+
+    template <typename P>
+    void ReceiveMsgFrom(CNode& node, const std::string& type, const P& payload)
+    {
+        const CNetMsgMaker msg_maker(PROTOCOL_VERSION);
+        CSerializedNetMsg m_ser = msg_maker.Make(type.c_str(), payload);
+
+        assert(ReceiveMsgFrom(node, m_ser));
+    }
 };
 
 constexpr ServiceFlags ALL_SERVICE_FLAGS[]{
