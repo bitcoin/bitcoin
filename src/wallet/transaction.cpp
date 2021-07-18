@@ -15,7 +15,7 @@ bool CWalletTx::IsEquivalentTo(const CWalletTx& _tx) const
 
 bool CWalletTx::InMempool() const
 {
-    return fInMempool;
+    return state<TxStateInMempool>();
 }
 
 int64_t CWalletTx::GetTxTime() const
