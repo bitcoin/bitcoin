@@ -28,6 +28,21 @@ print-%: FORCE
 # this means that sub-makes will be invoked as if:
 #   $(MAKE) A=1 blah blah
 MAKEOVERRIDES := $(filter V=%,$(MAKEOVERRIDES))
+
+# Disable builtin rules and suffixes.
+# Construct mflags to ensure -r is not passed down to children. Some packages
+# use builtin rules.
+# Long options which have no short form (--trace, ---warn-undefined-variables)
+# are present in MAKEFLAGS with both dashes. Filter them out here, to avoid
+# benign duplication when these options are added again when mflags is
+# constructed.
+# After expansion in the recipe mflags will contain all user specified options
+# and command line variable definitions, but it won't contain the change
+# introduced here.
+oldmflags := $(filter-out -%,$(MAKEFLAGS))
+MAKEFLAGS += -r
+mflags = MAKEFLAGS="$(oldmflags) $(filter -%,$(MAKEFLAGS)) $(MAKEOVERRIDES)"
+
 SOURCES_PATH ?= $(BASEDIR)/sources
 WORK_PATH = $(BASEDIR)/work
 BASE_CACHE ?= $(BASEDIR)/built
