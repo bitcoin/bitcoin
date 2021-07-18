@@ -13,3 +13,4 @@ define $(package)_stage_cmds
     mkdir -p $($(package)_install_libdir) && \
     python3 setup.py install --root=$($(package)_staging_dir) --prefix=$(build_prefix) --install-lib=$($(package)_install_libdir)
 endef
+packages/$(package).mk:: ;

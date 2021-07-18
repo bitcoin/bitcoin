@@ -119,3 +119,4 @@ darwin_debug_CFLAGS=-O1
 darwin_debug_CXXFLAGS=$(darwin_debug_CFLAGS)
 
 darwin_cmake_system=Darwin
+hosts/darwin.mk:: ;

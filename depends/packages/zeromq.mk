@@ -35,3 +35,4 @@ endef
 define $(package)_postprocess_cmds
   rm -rf bin share lib/*.la
 endef
+packages/$(package).mk:: ;

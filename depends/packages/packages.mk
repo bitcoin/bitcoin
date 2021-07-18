@@ -31,3 +31,4 @@ darwin_native_packages+= native_clang
 endif
 
 endif
+packages/packages.mk:: ;
