@@ -7,7 +7,7 @@
 #ifndef SECP256K1_MODULE_EXTRAKEYS_TESTS_H
 #define SECP256K1_MODULE_EXTRAKEYS_TESTS_H
 
-#include "secp256k1_extrakeys.h"
+#include "../../../include/secp256k1_extrakeys.h"
 
 static secp256k1_context* api_test_context(int flags, int *ecount) {
     secp256k1_context *ctx0 = secp256k1_context_create(flags);
@@ -135,6 +135,43 @@ void test_xonly_pubkey(void) {
     secp256k1_context_destroy(none);
     secp256k1_context_destroy(sign);
     secp256k1_context_destroy(verify);
+}
+
+void test_xonly_pubkey_comparison(void) {
+    unsigned char pk1_ser[32] = {
+        0x58, 0x84, 0xb3, 0xa2, 0x4b, 0x97, 0x37, 0x88, 0x92, 0x38, 0xa6, 0x26, 0x62, 0x52, 0x35, 0x11,
+        0xd0, 0x9a, 0xa1, 0x1b, 0x80, 0x0b, 0x5e, 0x93, 0x80, 0x26, 0x11, 0xef, 0x67, 0x4b, 0xd9, 0x23
+    };
+    const unsigned char pk2_ser[32] = {
+        0xde, 0x36, 0x0e, 0x87, 0x59, 0x8f, 0x3c, 0x01, 0x36, 0x2a, 0x2a, 0xb8, 0xc6, 0xf4, 0x5e, 0x4d,
+        0xb2, 0xc2, 0xd5, 0x03, 0xa7, 0xf9, 0xf1, 0x4f, 0xa8, 0xfa, 0x95, 0xa8, 0xe9, 0x69, 0x76, 0x1c
+    };
+    secp256k1_xonly_pubkey pk1;
+    secp256k1_xonly_pubkey pk2;
+    int ecount = 0;
+    secp256k1_context *none = api_test_context(SECP256K1_CONTEXT_NONE, &ecount);
+
+    CHECK(secp256k1_xonly_pubkey_parse(none, &pk1, pk1_ser) == 1);
+    CHECK(secp256k1_xonly_pubkey_parse(none, &pk2, pk2_ser) == 1);
+
+    CHECK(secp256k1_xonly_pubkey_cmp(none, NULL, &pk2) < 0);
+    CHECK(ecount == 1);
+    CHECK(secp256k1_xonly_pubkey_cmp(none, &pk1, NULL) > 0);
+    CHECK(ecount == 2);
+    CHECK(secp256k1_xonly_pubkey_cmp(none, &pk1, &pk2) < 0);
+    CHECK(secp256k1_xonly_pubkey_cmp(none, &pk2, &pk1) > 0);
+    CHECK(secp256k1_xonly_pubkey_cmp(none, &pk1, &pk1) == 0);
+    CHECK(secp256k1_xonly_pubkey_cmp(none, &pk2, &pk2) == 0);
+    CHECK(ecount == 2);
+    memset(&pk1, 0, sizeof(pk1)); /* illegal pubkey */
+    CHECK(secp256k1_xonly_pubkey_cmp(none, &pk1, &pk2) < 0);
+    CHECK(ecount == 3);
+    CHECK(secp256k1_xonly_pubkey_cmp(none, &pk1, &pk1) == 0);
+    CHECK(ecount == 5);
+    CHECK(secp256k1_xonly_pubkey_cmp(none, &pk2, &pk1) > 0);
+    CHECK(ecount == 6);
+
+    secp256k1_context_destroy(none);
 }
 
 void test_xonly_pubkey_tweak(void) {
@@ -540,6 +577,7 @@ void run_extrakeys_tests(void) {
     test_xonly_pubkey_tweak();
     test_xonly_pubkey_tweak_check();
     test_xonly_pubkey_tweak_recursive();
+    test_xonly_pubkey_comparison();
 
     /* keypair tests */
     test_keypair();

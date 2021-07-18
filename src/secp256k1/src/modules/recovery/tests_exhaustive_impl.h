@@ -8,7 +8,7 @@
 #define SECP256K1_MODULE_RECOVERY_EXHAUSTIVE_TESTS_H
 
 #include "src/modules/recovery/main_impl.h"
-#include "include/secp256k1_recovery.h"
+#include "../../../include/secp256k1_recovery.h"
 
 void test_exhaustive_recovery_sign(const secp256k1_context *ctx, const secp256k1_ge *group) {
     int i, j, k;

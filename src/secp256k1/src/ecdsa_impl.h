@@ -140,7 +140,7 @@ static int secp256k1_der_parse_integer(secp256k1_scalar *r, const unsigned char 
         overflow = 1;
     }
     if (!overflow) {
-        memcpy(ra + 32 - rlen, *sig, rlen);
+        if (rlen) memcpy(ra + 32 - rlen, *sig, rlen);
         secp256k1_scalar_set_b32(r, ra, &overflow);
     }
     if (overflow) {

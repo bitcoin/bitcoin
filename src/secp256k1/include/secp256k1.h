@@ -7,7 +7,9 @@ extern "C" {
 
 #include <stddef.h>
 
-/* These rules specify the order of arguments in API calls:
+/* Unless explicitly stated all pointer arguments must not be NULL.
+ *
+ * The following rules specify the order of arguments in API calls:
  *
  * 1. Context pointers go first, followed by output arguments, combined
  *    output/input arguments, and finally input-only arguments.
@@ -61,8 +63,9 @@ typedef struct secp256k1_scratch_space_struct secp256k1_scratch_space;
  *  The exact representation of data inside is implementation defined and not
  *  guaranteed to be portable between different platforms or versions. It is
  *  however guaranteed to be 64 bytes in size, and can be safely copied/moved.
- *  If you need to convert to a format suitable for storage, transmission, or
- *  comparison, use secp256k1_ec_pubkey_serialize and secp256k1_ec_pubkey_parse.
+ *  If you need to convert to a format suitable for storage or transmission,
+ *  use secp256k1_ec_pubkey_serialize and secp256k1_ec_pubkey_parse. To
+ *  compare keys, use secp256k1_ec_pubkey_cmp.
  */
 typedef struct {
     unsigned char data[64];
@@ -126,6 +129,17 @@ typedef int (*secp256k1_nonce_function)(
 # else
 #  define SECP256K1_INLINE inline
 # endif
+
+/** When this header is used at build-time the SECP256K1_BUILD define needs to be set
+ *  to correctly setup export attributes and nullness checks.  This is normally done
+ *  by secp256k1.c but to guard against this header being included before secp256k1.c
+ *  has had a chance to set the define (e.g. via test harnesses that just includes
+ *  secp256k1.c) we set SECP256K1_NO_BUILD when this header is processed without the
+ *  BUILD define so this condition can be caught.
+ */
+#ifndef SECP256K1_BUILD
+# define SECP256K1_NO_BUILD
+#endif
 
 #ifndef SECP256K1_API
 # if defined(_WIN32)
@@ -369,6 +383,21 @@ SECP256K1_API int secp256k1_ec_pubkey_serialize(
     const secp256k1_pubkey* pubkey,
     unsigned int flags
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
+
+/** Compare two public keys using lexicographic (of compressed serialization) order
+ *
+ *  Returns: <0 if the first public key is less than the second
+ *           >0 if the first public key is greater than the second
+ *           0 if the two public keys are equal
+ *  Args: ctx:      a secp256k1 context object.
+ *  In:   pubkey1:  first public key to compare
+ *        pubkey2:  second public key to compare
+ */
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_cmp(
+    const secp256k1_context* ctx,
+    const secp256k1_pubkey* pubkey1,
+    const secp256k1_pubkey* pubkey2
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Parse an ECDSA signature in compact (64 bytes) format.
  *
@@ -763,6 +792,31 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_combine(
     const secp256k1_pubkey * const * ins,
     size_t n
 ) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
+
+/** Compute a tagged hash as defined in BIP-340.
+ *
+ *  This is useful for creating a message hash and achieving domain separation
+ *  through an application-specific tag. This function returns
+ *  SHA256(SHA256(tag)||SHA256(tag)||msg). Therefore, tagged hash
+ *  implementations optimized for a specific tag can precompute the SHA256 state
+ *  after hashing the tag hashes.
+ *
+ *  Returns 0 if the arguments are invalid and 1 otherwise.
+ *  Args:    ctx: pointer to a context object
+ *  Out:  hash32: pointer to a 32-byte array to store the resulting hash
+ *  In:      tag: pointer to an array containing the tag
+ *        taglen: length of the tag array
+ *           msg: pointer to an array containing the message
+ *        msglen: length of the message array
+ */
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_tagged_sha256(
+    const secp256k1_context* ctx,
+    unsigned char *hash32,
+    const unsigned char *tag,
+    size_t taglen,
+    const unsigned char *msg,
+    size_t msglen
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(5);
 
 #ifdef __cplusplus
 }

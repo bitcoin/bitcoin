@@ -15,9 +15,9 @@ extern "C" {
  *  The exact representation of data inside is implementation defined and not
  *  guaranteed to be portable between different platforms or versions. It is
  *  however guaranteed to be 64 bytes in size, and can be safely copied/moved.
- *  If you need to convert to a format suitable for storage, transmission, or
- *  comparison, use secp256k1_xonly_pubkey_serialize and
- *  secp256k1_xonly_pubkey_parse.
+ *  If you need to convert to a format suitable for storage, transmission, use
+ *  use secp256k1_xonly_pubkey_serialize and secp256k1_xonly_pubkey_parse. To
+ *  compare keys, use secp256k1_xonly_pubkey_cmp.
  */
 typedef struct {
     unsigned char data[64];
@@ -65,6 +65,21 @@ SECP256K1_API int secp256k1_xonly_pubkey_serialize(
     const secp256k1_context* ctx,
     unsigned char *output32,
     const secp256k1_xonly_pubkey* pubkey
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
+
+/** Compare two x-only public keys using lexicographic order
+ *
+ *  Returns: <0 if the first public key is less than the second
+ *           >0 if the first public key is greater than the second
+ *           0 if the two public keys are equal
+ *  Args: ctx:      a secp256k1 context object.
+ *  In:   pubkey1:  first public key to compare
+ *        pubkey2:  second public key to compare
+ */
+SECP256K1_API int secp256k1_xonly_pubkey_cmp(
+    const secp256k1_context* ctx,
+    const secp256k1_xonly_pubkey* pk1,
+    const secp256k1_xonly_pubkey* pk2
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Converts a secp256k1_pubkey into a secp256k1_xonly_pubkey.

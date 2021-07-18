@@ -5,7 +5,6 @@
  ***********************************************************************/
 
 #include <string.h>
-#include <secp256k1.h>
 
 #include "lax_der_parsing.h"
 
@@ -121,7 +120,7 @@ int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1_ecdsa_
     /* Copy R value */
     if (rlen > 32) {
         overflow = 1;
-    } else {
+    } else if (rlen) {
         memcpy(tmpsig + 32 - rlen, input + rpos, rlen);
     }
 
@@ -133,7 +132,7 @@ int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1_ecdsa_
     /* Copy S value */
     if (slen > 32) {
         overflow = 1;
-    } else {
+    } else if (slen) {
         memcpy(tmpsig + 64 - slen, input + spos, slen);
     }
 
