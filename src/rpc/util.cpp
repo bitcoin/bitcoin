@@ -662,8 +662,9 @@ UniValue RPCHelpMan::GetArgMap() const
             map.push_back(m_name);
             map.push_back(i);
             map.push_back(arg_name);
-            map.push_back(arg.m_type == RPCArg::Type::STR ||
-                          arg.m_type == RPCArg::Type::STR_HEX);
+            // NOTE: push_back(bool) converts the bool to Number, so explicitly make a boolean UniValue first
+            map.push_back(UniValue(arg.m_type == RPCArg::Type::STR ||
+                          arg.m_type == RPCArg::Type::STR_HEX));
             arr.push_back(map);
         }
     }
