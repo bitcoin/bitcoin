@@ -1088,6 +1088,8 @@ bool TryCreateDirectories(const fs::path& p)
 
 bool FileCommit(FILE *file)
 {
+    bool failure = false;
+
     if (fflush(file) != 0) { // harmless if redundantly called
         LogPrintf("%s: fflush failed: %d\n", __func__, errno);
         return false;
@@ -1096,36 +1098,61 @@ bool FileCommit(FILE *file)
     HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
     if (FlushFileBuffers(hFile) == 0) {
         LogPrintf("%s: FlushFileBuffers failed: %d\n", __func__, GetLastError());
-        return false;
+        failure = true;
+    } else {
+        return true;
     }
-#elif defined(MAC_OSX) && defined(F_FULLFSYNC)
+#endif
+#if defined(MAC_OSX) && defined(F_FULLFSYNC)
     if (fcntl(fileno(file), F_FULLFSYNC, 0) == -1) { // Manpage says "value other than -1" is returned on success
         LogPrintf("%s: fcntl F_FULLFSYNC failed: %d\n", __func__, errno);
-        return false;
-    }
-#elif HAVE_FDATASYNC
-    if (fdatasync(fileno(file)) != 0 && errno != EINVAL) { // Ignore EINVAL for filesystems that don't support sync
-        LogPrintf("%s: fdatasync failed: %d\n", __func__, errno);
-        return false;
-    }
-#else
-    if (fsync(fileno(file)) != 0 && errno != EINVAL) {
-        LogPrintf("%s: fsync failed: %d\n", __func__, errno);
-        return false;
+        failure = true;
+    } else {
+        return true;
     }
 #endif
-    return true;
+#if HAVE_FDATASYNC
+    if (fdatasync(fileno(file)) == 0) {
+        return true;
+    } else if (errno != EINVAL) {  // Ignore EINVAL for filesystems that don't support sync
+        LogPrintf("%s: fdatasync failed: %d\n", __func__, errno);
+        failure = true;
+    }
+#endif
+#if HAVE_FSYNC
+    if (fsync(fileno(file)) == 0) {
+        return true;
+    } else if (errno != EINVAL) {
+        LogPrintf("%s: fsync failed: %d\n", __func__, errno);
+        failure = true;
+    }
+#endif
+
+    // If no platform-specific flush mechanisms, entirely dependent on the result of fflush.
+    // If platform-specific flush mechanisms exist, they must succeed, or we return failure.
+    return !failure;
 }
 
-void DirectoryCommit(const fs::path &dirname)
+bool DirectoryCommit(const fs::path &dirname)
 {
+    bool success = false;
+
 #ifndef WIN32
     FILE* file = fsbridge::fopen(dirname, "r");
-    if (file) {
-        fsync(fileno(file));
-        fclose(file);
+    if (file == NULL) {
+        LogPrintf("%s: %s failed on %s: %d\n", __func__, "fopen", dirname, errno);
+        return false;
     }
+
+    if (fsync(fileno(file)) == 0 || errno == EINVAL) {  // Ignore EINVAL for filesystems that don't support sync
+        success = true;
+    } else {
+        LogPrintf("%s: %s failed on %s: %d\n", __func__, "fsync", dirname, errno);
+    }
+    fclose(file);
 #endif
+
+    return success;
 }
 
 bool TruncateFile(FILE *file, unsigned int length) {
