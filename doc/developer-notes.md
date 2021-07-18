@@ -16,6 +16,7 @@ Developer Notes
         - [`debug.log`](#debuglog)
         - [Signet, testnet, and regtest modes](#signet-testnet-and-regtest-modes)
         - [DEBUG_LOCKORDER](#debug_lockorder)
+        - [DEBUG_ADDRMAN](#debug_addrman)
         - [Valgrind suppressions file](#valgrind-suppressions-file)
         - [Compiling for test coverage](#compiling-for-test-coverage)
         - [Performance profiling with perf](#performance-profiling-with-perf)
@@ -281,6 +282,20 @@ multi-threading bugs can be very difficult to track down. The `--enable-debug`
 configure option adds `-DDEBUG_LOCKORDER` to the compiler flags. This inserts
 run-time checks to keep track of which locks are held and adds warnings to the
 `debug.log` file if inconsistencies are detected.
+
+### DEBUG_ADDRMAN
+
+Defining `DEBUG_ADDRMAN` performs frequent (and expensive) consistency checks on
+the entire addrman data structure. Add this line to enable it, e.g. in
+`src/addrman.h`
+
+```cpp
+#define DEBUG_ADDRMAN
+```
+
+and then build (`make`) and run bitcoind. You can use the `-debug=addrman`
+configuration option or `bitcoin-cli logging '["addrman"]'` to see the
+consistency checks in the debug log.
 
 ### Assertions and Checks
 
