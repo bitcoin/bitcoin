@@ -63,8 +63,8 @@ void AddLoggingArgs(ArgsManager& argsman)
     argsman.AddArg("-debuglogfile=<file>", strprintf("Specify location of debug log file. Relative paths will be prefixed by a net-specific datadir location. (-nodebuglogfile to disable; default: %s)", DEFAULT_DEBUGLOGFILE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-debug=<category>", "Output debugging information (default: -nodebug, supplying <category> is optional). "
         "If <category> is not supplied or if <category> = 1, output all debugging information. <category> can be: " + LogInstance().LogCategoriesString() + ". This option can be specified multiple times to output multiple categories.",
-        ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-debugexclude=<category>", strprintf("Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except the specified category. This option can be specified multiple times to exclude multiple categories."), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+        ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-debugexclude=<category>", strprintf("Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except the specified category. This option can be specified multiple times to exclude multiple categories."), ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logips", strprintf("Include IP addresses in debug output (default: %u)", DEFAULT_LOGIPS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logtimestamps", strprintf("Prepend debug output with timestamp (default: %u)", DEFAULT_LOGTIMESTAMPS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 #ifdef HAVE_THREAD_LOCAL
@@ -95,8 +95,9 @@ void SetLoggingOptions(const ArgsManager& args)
 
 void SetLoggingCategories(const ArgsManager& args)
 {
-    if (args.IsArgSet("-debug")) {
-        // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
+    const std::vector<std::string> categories = args.GetArgs("-debug");
+    if (!categories.empty()) {
+        // Special-case: if -debug=0/-debug=none is set, turn off debugging messages
         const std::vector<std::string> categories = args.GetArgs("-debug");
 
         if (std::none_of(categories.begin(), categories.end(),

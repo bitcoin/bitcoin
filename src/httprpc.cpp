@@ -251,7 +251,7 @@ static bool InitRPCAuthentication()
         LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
         strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
     }
-    if (gArgs.GetArg("-rpcauth","") != "")
+    if (!gArgs.GetArgs("-rpcauth").empty())
     {
         LogPrintf("Using rpcauth authentication.\n");
         for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
@@ -266,7 +266,7 @@ static bool InitRPCAuthentication()
         }
     }
 
-    g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", gArgs.IsArgSet("-rpcwhitelist"));
+    g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", gArgs.GetArgs("-rpcwhitelist").size() > 0);
     for (const std::string& strRPCWhitelist : gArgs.GetArgs("-rpcwhitelist")) {
         auto pos = strRPCWhitelist.find(':');
         std::string strUser = strRPCWhitelist.substr(0, pos);

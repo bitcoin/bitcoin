@@ -293,16 +293,20 @@ static bool HTTPBindAddresses(struct evhttp* http)
     std::vector<std::pair<std::string, uint16_t>> endpoints;
 
     // Determine what addresses to bind to
-    if (!(gArgs.IsArgSet("-rpcallowip") && gArgs.IsArgSet("-rpcbind"))) { // Default to loopback if not allowing external IPs
+    // To prevent misconfiguration and accidental exposure of the RPC
+    // interface, require -rpcallowip and -rpcbind to both be specified
+    // together. If either is missing, ignore both values, bind to localhost
+    // instead, and log warnings.
+    if (gArgs.GetArgs("-rpcallowip").size() == 0 || gArgs.GetArgs("-rpcbind").size() == 0) { // Default to loopback if not allowing external IPs
         endpoints.push_back(std::make_pair("::1", http_port));
         endpoints.push_back(std::make_pair("127.0.0.1", http_port));
-        if (gArgs.IsArgSet("-rpcallowip")) {
+        if (gArgs.GetArgs("-rpcallowip").size() > 0) {
             LogPrintf("WARNING: option -rpcallowip was specified without -rpcbind; this doesn't usually make sense\n");
         }
-        if (gArgs.IsArgSet("-rpcbind")) {
+        if (gArgs.GetArgs("-rpcbind").size() > 0) {
             LogPrintf("WARNING: option -rpcbind was ignored because -rpcallowip was not specified, refusing to allow everyone to connect\n");
         }
-    } else if (gArgs.IsArgSet("-rpcbind")) { // Specific bind address
+    } else { // Specific bind addresses
         for (const std::string& strRPCBind : gArgs.GetArgs("-rpcbind")) {
             uint16_t port{http_port};
             std::string host;

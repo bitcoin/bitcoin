@@ -880,7 +880,7 @@ static void GetWalletBalances(UniValue& result)
 static UniValue GetNewAddress()
 {
     std::optional<std::string> wallet_name{};
-    if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
+    if (gArgs.IsArgSet("-rpcwallet") && !gArgs.IsArgNegated("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
     DefaultRequestHandler rh;
     return ConnectAndCallRPC(&rh, "getnewaddress", /* args=*/{}, wallet_name);
 }
@@ -987,14 +987,14 @@ static int CommandLineRPC(int argc, char *argv[])
         if (nRet == 0) {
             // Perform RPC call
             std::optional<std::string> wallet_name{};
-            if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
+            if (gArgs.IsArgSet("-rpcwallet") && !gArgs.IsArgNegated("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
             const UniValue reply = ConnectAndCallRPC(rh.get(), method, args, wallet_name);
 
             // Parse reply
             UniValue result = find_value(reply, "result");
             const UniValue& error = find_value(reply, "error");
             if (error.isNull()) {
-                if (gArgs.IsArgSet("-getinfo") && !gArgs.IsArgSet("-rpcwallet")) {
+                if (gArgs.IsArgSet("-getinfo") && (!gArgs.IsArgSet("-rpcwallet") || gArgs.IsArgNegated("-rpcwallet"))) {
                     GetWalletBalances(result); // fetch multiwallet balances and append to result
                 }
                 ParseResult(result, strPrint);
