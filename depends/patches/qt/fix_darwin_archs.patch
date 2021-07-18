@@ -1,0 +1,16 @@
+To cross compile for the x86_64-darwin host on aarch64-darwin,
+passing QMAKE_APPLE_DEVICE_ARCHS=arm64 to the configure script
+does not work for some reasons.
+This is a simpliest workaround for this issue.
+
+--- old/qtbase/mkspecs/common/macx.conf
++++ new/qtbase/mkspecs/common/macx.conf
+@@ -6,7 +6,7 @@
+ QMAKE_MAC_SDK           = macosx
+ 
+ QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.12
+-QMAKE_APPLE_DEVICE_ARCHS = x86_64
++QMAKE_APPLE_DEVICE_ARCHS = $$system("uname -m")
+ 
+ QT_MAC_SDK_VERSION_MIN = 10.13
+ QT_MAC_SDK_VERSION_MAX = 11.0
