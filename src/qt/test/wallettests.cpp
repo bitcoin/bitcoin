@@ -162,7 +162,7 @@ void TestGUI(interfaces::Node& node)
     std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
     SendCoinsDialog sendCoinsDialog(platformStyle.get());
     TransactionView transactionView(platformStyle.get());
-    OptionsModel optionsModel;
+    OptionsModel optionsModel(node);
     ClientModel clientModel(node, &optionsModel);
     AddWallet(wallet);
     WalletModel walletModel(interfaces::MakeWallet(wallet), clientModel, platformStyle.get());

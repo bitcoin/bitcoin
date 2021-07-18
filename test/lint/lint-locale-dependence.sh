@@ -44,6 +44,7 @@ KNOWN_VIOLATIONS=(
     "src/dbwrapper.cpp:.*vsnprintf"
     "src/httprpc.cpp.*trim"
     "src/node/blockstorage.cpp:.*atoi"
+    "src/qt/optionsmodel.cpp:.*atoi"
     "src/qt/rpcconsole.cpp:.*atoi"
     "src/rest.cpp:.*strtol"
     "src/test/dbwrapper_tests.cpp:.*snprintf"

@@ -24,7 +24,6 @@
 #include <QIntValidator>
 #include <QLocale>
 #include <QMessageBox>
-#include <QSettings>
 #include <QSystemTrayIcon>
 #include <QTimer>
 
@@ -55,8 +54,8 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->mapPortNatpmp->setEnabled(false);
 #endif
     connect(this, &QDialog::accepted, [this](){
-        QSettings settings;
-        model->node().mapPort(settings.value("fUseUPnP").toBool(), settings.value("fUseNatpmp").toBool());
+        model->node().mapPort(model->getOption(OptionsModel::MapPortUPnP).toBool(),
+                              model->getOption(OptionsModel::MapPortNatpmp).toBool());
     });
 
     ui->proxyIp->setEnabled(false);

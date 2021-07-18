@@ -580,6 +580,13 @@ bool ArgsManager::WriteSettingsFile(std::vector<std::string>* errors) const
     return true;
 }
 
+util::SettingsValue ArgsManager::GetPersistentSetting(const std::string& name) const
+{
+    LOCK(cs_args);
+    return util::GetSetting(m_settings, m_network, name, !UseDefaultSection("-" + name),
+        /* ignore_nonpersistent = */ true, /* get_chain_name= */ false);
+}
+
 bool ArgsManager::IsArgNegated(const std::string& strArg) const
 {
     return GetSetting(strArg).isFalse();
@@ -986,6 +993,7 @@ std::string ArgsManager::GetChainName() const
         LOCK(cs_args);
         util::SettingsValue value = util::GetSetting(m_settings, /* section= */ "", SettingName(arg),
             /* ignore_default_section_config= */ false,
+            /* ignore_nonpersistent= */ false,
             /* get_chain_name= */ true);
         return value.isNull() ? false : value.isBool() ? value.get_bool() : InterpretBool(value.get_str());
     };
@@ -1018,7 +1026,8 @@ util::SettingsValue ArgsManager::GetSetting(const std::string& arg) const
 {
     LOCK(cs_args);
     return util::GetSetting(
-        m_settings, m_network, SettingName(arg), !UseDefaultSection(arg), /* get_chain_name= */ false);
+        m_settings, m_network, SettingName(arg), !UseDefaultSection(arg),
+        /* ignore_nonpersistent= */ false, /* get_chain_name= */ false);
 }
 
 std::vector<util::SettingsValue> ArgsManager::GetSettingsList(const std::string& arg) const

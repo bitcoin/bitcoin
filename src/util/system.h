@@ -425,6 +425,12 @@ public:
     bool WriteSettingsFile(std::vector<std::string>* errors = nullptr) const;
 
     /**
+     * Get current setting from config file or read/write settings file,
+     * ignoring runtime command line or forced argument values.
+     */
+    util::SettingsValue GetPersistentSetting(const std::string& name) const;
+
+    /**
      * Access settings with lock held.
      */
     template <typename Fn>

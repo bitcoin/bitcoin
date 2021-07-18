@@ -55,12 +55,18 @@ bool WriteSettings(const fs::path& path,
 //! @param ignore_default_section_config - ignore values in the default section
 //!                                        of the config file (part before any
 //!                                        [section] keywords)
+//! @param ignore_nonpersistent - ignore non-persistent settings values (forced
+//!                               settings values and values specified on the
+//!                               command line). Only return settings in the
+//!                               read-only config and read-write settings
+//!                               files.
 //! @param get_chain_name - enable special backwards compatible behavior
 //!                         for GetChainName
 SettingsValue GetSetting(const Settings& settings,
     const std::string& section,
     const std::string& name,
     bool ignore_default_section_config,
+    bool ignore_nonpersistent,
     bool get_chain_name);
 
 //! Get combined setting value similar to GetSetting(), except if setting was

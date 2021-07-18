@@ -41,7 +41,7 @@ class OptionsModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    explicit OptionsModel(QObject *parent = nullptr, bool resetSettings = false);
+    explicit OptionsModel(interfaces::Node& node, QObject *parent = nullptr, bool resetSettings = false);
 
     enum OptionID {
         StartAtStartup,         // bool
@@ -77,6 +77,8 @@ public:
     int rowCount(const QModelIndex & parent = QModelIndex()) const override;
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
     bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole) override;
+    QVariant getOption(OptionID option) const;
+    bool setOption(OptionID option, const QVariant &value);
     /** Updates current unit in memory, settings and emits displayUnitChanged(newUnit) signal */
     void setDisplayUnit(const QVariant &value);
 
@@ -91,15 +93,14 @@ public:
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Explicit setters */
-    void SetPruneEnabled(bool prune, bool force = false);
-    void SetPruneTargetGB(int prune_target_gb, bool force = false);
+    void SetPruneEnabled(bool prune, bool force);
+    void SetPruneTargetGB(int prune_target_gb, bool force);
 
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
     bool isRestartRequired() const;
 
     interfaces::Node& node() const { assert(m_node); return *m_node; }
-    void setNode(interfaces::Node& node) { assert(!m_node); m_node = &node; }
 
 private:
     interfaces::Node* m_node = nullptr;
@@ -112,6 +113,15 @@ private:
     QString strThirdPartyTxUrls;
     bool m_use_embedded_monospaced_font;
     bool fCoinControlFeatures;
+    //! In-memory settings for display. These are stored persistently by the
+    //! bitcoin node but it's also nice to store them in memory to prevent them
+    //! getting cleared when enable/disable toggles are used in the GUI.
+    int m_prune_size_gb;
+    QString m_proxy_ip;
+    QString m_proxy_port;
+    QString m_onion_ip;
+    QString m_onion_port;
+
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
 

@@ -253,7 +253,7 @@ void BitcoinApplication::createPaymentServer()
 
 void BitcoinApplication::createOptionsModel(bool resetSettings)
 {
-    optionsModel = new OptionsModel(this, resetSettings);
+    optionsModel = new OptionsModel(node(), this, resetSettings);
 }
 
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
@@ -280,7 +280,6 @@ void BitcoinApplication::setNode(interfaces::Node& node)
 {
     assert(!m_node);
     m_node = &node;
-    if (optionsModel) optionsModel->setNode(*m_node);
     if (m_splash) m_splash->setNode(*m_node);
 }
 
@@ -612,6 +611,7 @@ int GuiMain(int argc, char* argv[])
     app.parameterSetup();
     GUIUtil::LogQtInfo();
     // Load GUI settings from QSettings
+    app.setNode(*node);
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
 
     if (did_show_intro) {
@@ -621,8 +621,6 @@ int GuiMain(int argc, char* argv[])
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());
-
-    app.setNode(*node);
 
     int rv = EXIT_SUCCESS;
     try
