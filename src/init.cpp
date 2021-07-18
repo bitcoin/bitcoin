@@ -1786,10 +1786,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     SetRPCWarmupFinished();
     uiInterface.InitMessage(_("Done loading").translated);
 
-    for (const auto& client : node.chain_clients) {
-        client->start(*node.scheduler);
-    }
-
     BanMan* banman = node.banman.get();
     node.scheduler->scheduleEvery([banman]{
         banman->DumpBanlist();
@@ -1800,4 +1796,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 #endif
 
     return true;
+}
+
+void AppInitStartClients(NodeContext& node)
+{
+    for (const auto& client : node.chain_clients) {
+        client->start(*node.scheduler);
+    }
 }

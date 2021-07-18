@@ -86,6 +86,12 @@ public:
     {
         return AppInitMain(*m_context, tip_info);
     }
+
+    void appInitStartClients() override
+    {
+        AppInitStartClients(*m_context);
+    }
+
     void appShutdown() override
     {
         Interrupt(*m_context);
