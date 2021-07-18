@@ -357,17 +357,52 @@ bool CWallet::AttemptSelection(const CAmount& nTargetValue, const CoinEligibilit
 {
     setCoinsRet.clear();
     nValueRet = 0;
+    // Vector of results for use with waste calculation
+    // In order: calculated waste, selected inputs, selected value
+    // TODO: Use a struct representing the selection result
+    std::vector<std::tuple<CAmount, std::set<CInputCoin>, CAmount>> results;
 
     // Note that unlike KnapsackSolver, we do not include the fee for creating a change output as BnB will not create a change output.
     std::vector<OutputGroup> positive_groups = GroupOutputs(coins, coin_selection_params, eligibility_filter, true /* positive_only */);
-    if (SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, setCoinsRet, nValueRet)) {
-        return true;
+    std::set<CInputCoin> bnb_coins;
+    CAmount bnb_value;
+    bool bnb_ret = SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, bnb_coins, bnb_value);
+    if (bnb_ret) {
+        results.push_back(std::make_tuple(GetSelectionWaste(bnb_coins, /* cost of change */ CAmount(0), nTargetValue), std::move(bnb_coins), bnb_value));
     }
+
     // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
     std::vector<OutputGroup> all_groups = GroupOutputs(coins, coin_selection_params, eligibility_filter, false /* positive_only */);
     // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
     // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
-    return KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, all_groups, setCoinsRet, nValueRet);
+    std::set<CInputCoin> knapsack_coins;
+    CAmount knapsack_value;
+    bool knapsack_ret = KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, all_groups, knapsack_coins, knapsack_value);
+    if (knapsack_ret) {
+        results.push_back(std::make_tuple(GetSelectionWaste(knapsack_coins, coin_selection_params.m_cost_of_change, nTargetValue + coin_selection_params.m_change_fee), std::move(knapsack_coins), knapsack_value));
+    }
+
+    std::set<CInputCoin> srd_coins;
+    CAmount srd_value;
+    // We include the minimum final change for SRD as we do want to avoid making really small change.
+    // KnapsackSolver does not need this because it includes MIN_CHANGE internally.
+    bool srd_ret = SelectCoinsSRD(positive_groups, nTargetValue + coin_selection_params.m_change_fee + MIN_FINAL_CHANGE, srd_coins, srd_value);
+    if (srd_ret) {
+        results.push_back(std::make_tuple(GetSelectionWaste(srd_coins, coin_selection_params.m_cost_of_change, nTargetValue + coin_selection_params.m_change_fee + MIN_FINAL_CHANGE), std::move(srd_coins), srd_value));
+    }
+
+    if (results.size() == 0) {
+        // No solution found
+        return false;
+    }
+
+    // Choose the result with the least waste
+    const auto& best_result = std::min_element(results.begin(), results.end(), [](const auto& a, const auto& b){
+        return std::get<0>(a) < std::get<0>(b) || (std::get<0>(a) == std::get<0>(b) && std::get<1>(a).size() > std::get<1>(b).size());
+    });
+    setCoinsRet = std::get<1>(*best_result);
+    nValueRet = std::get<2>(*best_result);
+    return true;
 }
 
 bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params) const
@@ -659,10 +694,9 @@ bool CWallet::CreateTransactionInternal(
         return false;
     }
 
-    // Get long term estimate
-    CCoinControl cc_temp;
-    cc_temp.m_confirm_target = chain().estimateMaxBlocks();
-    coin_selection_params.m_long_term_feerate = GetMinimumFeeRate(*this, cc_temp, nullptr);
+    // Get the long term fee estimate. This estimate is really the fee rate at which we are still willing to consolidate inputs.
+    // By default, we use 10 sat/vbyte.
+    coin_selection_params.m_long_term_feerate = CFeeRate(10, COIN); // Use 10 sat per vbyte
 
     // Calculate the cost of change
     // Cost of change is the cost of creating the change output + cost of spending the change output in the future.

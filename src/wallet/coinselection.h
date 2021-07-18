@@ -166,7 +166,21 @@ struct OutputGroup
     CAmount GetSelectionAmount() const;
 };
 
+/** Compute the waste for this result given the cost of change
+ * waste = change_cost + excess + inputs * (effective_feerate - long_term_feerate)
+ * excess = selected_target - actual_target
+ * change_cost = change_fee + change_long_term_fee
+ *
+ * @param[in] inputs The selected inputs
+ * @param[in] change_cost The cost of creating change and spending it in the future.
+ * @param[in] target The amount targeted by the coin selection algorithm.
+ * @return The waste
+ */
+CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, const CAmount change_cost, const CAmount target);
+
 bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret);
+
+bool SelectCoinsSRD(std::vector<OutputGroup>& utxo_pool, const CAmount& target_value, std::set<CInputCoin>& out_set, CAmount& value_ret);
 
 // Original coin selection algorithm as a fallback
 bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);

@@ -168,6 +168,24 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selectio
     return true;
 }
 
+bool SelectCoinsSRD(std::vector<OutputGroup>& utxo_pool, const CAmount& target_value, std::set<CInputCoin>& out_set, CAmount& value_ret)
+{
+    out_set.clear();
+    value_ret = 0;
+
+    CAmount selected_eff_value = 0;
+    Shuffle(utxo_pool.begin(), utxo_pool.end(), FastRandomContext());
+    for (const auto& group : utxo_pool) {
+        selected_eff_value += group.GetSelectionAmount();
+        value_ret += group.m_value;
+        util::insert(out_set, group.m_outputs);
+        if (selected_eff_value >= target_value) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void ApproximateBestSubset(const std::vector<OutputGroup>& groups, const CAmount& nTotalLower, const CAmount& nTargetValue,
                                   std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000)
 {
@@ -340,4 +358,31 @@ bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_f
 CAmount OutputGroup::GetSelectionAmount() const
 {
     return m_subtract_fee_outputs ? m_value : effective_value;
+}
+
+CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, const CAmount change_cost, const CAmount target)
+{
+    // If the result is empty, then selection failed. Don't use this one, so set waste to very high
+    if (inputs.empty()) {
+        return MAX_MONEY;
+    }
+
+    // Always consider the cost of spending an input now vs in the future.
+    CAmount waste = 0;
+    CAmount selected_value = 0;
+    for (const CInputCoin& coin : inputs) {
+        waste += coin.m_fee - coin.m_long_term_fee;
+        selected_value += coin.txout.nValue;
+    }
+
+    // Consider the cost of making change and spending it in the future
+    // If we aren't making change, the caller should've set change_cost to 0
+    waste += change_cost;
+
+    if (change_cost == 0) {
+        // When we are not making change (change_cost == 0), consider the excess we are throwing away to fees
+        waste += selected_value - target;
+    }
+
+    return waste;
 }
