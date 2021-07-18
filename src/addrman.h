@@ -334,12 +334,18 @@ public:
             nUBuckets ^= (1 << 30);
         }
 
-        if (nNew > ADDRMAN_NEW_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE) {
-            throw std::ios_base::failure("Corrupt CAddrMan serialization, nNew exceeds limit.");
+        if (nNew > ADDRMAN_NEW_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE || nNew < 0) {
+            throw std::ios_base::failure(
+                strprintf("Corrupt CAddrMan serialization: nNew=%d, should be in [0, %u]",
+                          nNew,
+                          ADDRMAN_NEW_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE));
         }
 
-        if (nTried > ADDRMAN_TRIED_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE) {
-            throw std::ios_base::failure("Corrupt CAddrMan serialization, nTried exceeds limit.");
+        if (nTried > ADDRMAN_TRIED_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE || nTried < 0) {
+            throw std::ios_base::failure(
+                strprintf("Corrupt CAddrMan serialization: nTried=%d, should be in [0, %u]",
+                          nTried,
+                          ADDRMAN_TRIED_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE));
         }
 
         // Deserialize entries from the new table.
