@@ -140,6 +140,10 @@ enum
 
     // Making unknown public key versions (in BIP 342 scripts) non-standard
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE = (1U << 20),
+
+    // support OP_CHECKTEMPLATEVERIFY for standard template
+    //
+    SCRIPT_VERIFY_STANDARD_TEMPLATE = (1U << 21),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
@@ -153,8 +157,13 @@ struct PrecomputedTransactionData
     uint256 m_outputs_single_hash;
     uint256 m_spent_amounts_single_hash;
     uint256 m_spent_scripts_single_hash;
+    uint256 m_scriptSigs_single_hash;
+    uint256 m_standard_template_single_hash;
     //! Whether the 5 fields above are initialized.
     bool m_bip341_taproot_ready = false;
+
+    //! Whether the CTV fields above are initialized.
+    bool m_bip119_ctv_ready = false;
 
     // BIP143 precomputed data (double-SHA256).
     uint256 hashPrevouts, hashSequence, hashOutputs;
@@ -173,6 +182,11 @@ struct PrecomputedTransactionData
     template <class T>
     explicit PrecomputedTransactionData(const T& tx);
 };
+
+/* Standard Template Hash Declarations */
+template<typename TxType>
+uint256 GetStandardTemplateHash(const TxType& tx, const uint256& outputs_hash, const uint256& sequences_hash,
+                                const uint32_t input_index);
 
 enum class SigVersion
 {
@@ -248,6 +262,11 @@ public:
          return false;
     }
 
+    virtual bool CheckStandardTemplateHash(const std::vector<unsigned char>& hash) const
+    {
+        return false;
+    }
+
     virtual ~BaseSignatureChecker() {}
 };
 
@@ -284,6 +303,7 @@ public:
     bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, const ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
+    bool CheckStandardTemplateHash(const std::vector<unsigned char>& hash) const override;
 };
 
 using TransactionSignatureChecker = GenericTransactionSignatureChecker<CTransaction>;

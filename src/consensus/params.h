@@ -28,10 +28,11 @@ constexpr bool ValidDeployment(BuriedDeployment dep) { return DEPLOYMENT_HEIGHTI
 enum DeploymentPos : uint16_t {
     DEPLOYMENT_TESTDUMMY,
     DEPLOYMENT_TAPROOT, // Deployment of Schnorr/Taproot (BIPs 340-342)
+    DEPLOYMENT_CHECKTEMPLATEVERIFY, // Deployment of CTV (BIP 119)
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in deploymentinfo.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };
-constexpr bool ValidDeployment(DeploymentPos dep) { return DEPLOYMENT_TESTDUMMY <= dep && dep <= DEPLOYMENT_TAPROOT; }
+constexpr bool ValidDeployment(DeploymentPos dep) { return DEPLOYMENT_TESTDUMMY <= dep && dep <= DEPLOYMENT_CHECKTEMPLATEVERIFY; }
 
 /**
  * Struct for each individual consensus rule change using BIP9.

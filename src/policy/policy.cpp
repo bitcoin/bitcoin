@@ -187,6 +187,8 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
         } else if (whichType == TxoutType::WITNESS_V1_TAPROOT) {
             // Don't allow Taproot spends unless Taproot is active.
             if (!taproot_active) return false;
+        } else if (whichType == TxoutType::TX_STANDARDTEMPLATE) {
+            if (tx.vin[i].scriptSig.size() != 0) return false;
         }
     }
 
