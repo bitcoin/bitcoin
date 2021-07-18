@@ -32,8 +32,12 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    get_datadir_path,
     try_rpc,
 )
+
+import os
+import re
 
 class CoinStatsIndexTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -53,6 +57,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self._test_use_index_option()
         self._test_reorg_index()
         self._test_index_rejects_hash_serialized()
+        self._test_dumpcoinstats_rpc()
 
     def block_sanity_check(self, block_info):
         block_subsidy = 50
@@ -308,6 +313,36 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         for use_index in {True, False, None}:
             assert_raises_rpc_error(-8, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_2', hash_or_height=111, use_index=use_index)
+
+    def _test_dumpcoinstats_rpc(self):
+        self.log.info("Test dumpcoinstats RPC")
+
+        msg = "File name and path for dump file are required"
+        assert_raises_rpc_error(-8, msg, self.nodes[1].dumpcoinstats, None)
+
+        file = "test.csv"
+        path = os.path.join(get_datadir_path(self.options.tmpdir, 1), file)
+        self.nodes[1].dumpcoinstats(path)
+
+        with open(path, 'r', encoding='utf-8') as f:
+            lines = f.read().splitlines()
+
+            # Check header
+            head = "height,bestblock,txouts,bogosize,muhash,total_amount,total_unspendable_amount,total_prevout_spent_amount,total_new_outputs_ex_coinbase_amount,total_coinbase_amount,total_subsidy,total_genesis_block,total_bip30,total_unspendable_scripts,total_unclaimed_rewards"
+            assert_equal(lines[0], head)
+
+            # Check the first line, the genesis block
+            genesis = "0,0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206,0,0,dd5ad2a105c2d29495f577245c357409002329b9f4d6182c0af3dc2f462555c8,0.00,50.00,0.00,0.00,0.00,50.00,50.00,0.00,0.00,0.00"
+            assert_equal(lines[1], genesis)
+
+            # Check the last line, omitting non-deterministic hash values
+            last = "113,,115,8571,,5619.01000001,80.98999999,161.00,139.9998918,5640.01010821,5700.00,50.00,0.00,20.98999999,10.00"
+            line = re.sub(r',[a-z0-9]{64},', ',,', lines[-1])
+            assert_equal(line, last)
+
+        # The RPC does not override existing files
+        msg = "already exists"
+        assert_raises_rpc_error(-8, msg, self.nodes[1].dumpcoinstats, path)
 
 
 if __name__ == '__main__':
