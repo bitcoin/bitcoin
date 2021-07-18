@@ -2074,9 +2074,12 @@ bool CChainState::FlushStateToDisk(
             }
             if (!setFilesToPrune.empty()) {
                 fFlushForPrune = true;
-                if (!fHavePruned) {
-                    pblocktree->WriteFlag("prunedblockfiles", true);
-                    fHavePruned = true;
+                {
+                    LOCK(cs_HavePruned);
+                    if (!fHavePruned) {
+                        pblocktree->WriteFlag("prunedblockfiles", true);
+                        fHavePruned = true;
+                    }
                 }
             }
         }
@@ -3806,10 +3809,13 @@ bool CChainState::LoadBlockIndexDB()
         }
     }
 
-    // Check whether we have ever pruned block & undo files
-    pblocktree->ReadFlag("prunedblockfiles", fHavePruned);
-    if (fHavePruned)
-        LogPrintf("LoadBlockIndexDB(): Block files have previously been pruned\n");
+    {
+        LOCK(cs_HavePruned);
+        // Check whether we have ever pruned block & undo files
+        pblocktree->ReadFlag("prunedblockfiles", fHavePruned);
+        if (fHavePruned)
+            LogPrintf("LoadBlockIndexDB(): Block files have previously been pruned\n");
+    }
 
     // Check whether we need to continue reindexing
     bool fReindexing = false;
@@ -4105,7 +4111,10 @@ void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman)
     for (int b = 0; b < VERSIONBITS_NUM_BITS; b++) {
         warningcache[b].clear();
     }
-    fHavePruned = false;
+    {
+        LOCK(cs_HavePruned);
+        fHavePruned = false;
+    }
 }
 
 bool ChainstateManager::LoadBlockIndex()
@@ -4281,6 +4290,7 @@ void CChainState::CheckBlockIndex()
     }
 
     LOCK(cs_main);
+    LOCK(cs_HavePruned);
 
     // During a reindex, we read the genesis block and call CheckBlockIndex before ActivateBestChain,
     // so we have the genesis block in m_blockman.m_block_index but no active chain. (A few of the
