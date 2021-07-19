@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPC help output."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework, is_zmq_enabled
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
 class HelpRpcTest(BitcoinTestFramework):
@@ -25,7 +25,13 @@ class HelpRpcTest(BitcoinTestFramework):
 
         # command titles
         titles = [line[3:-3] for line in node.help().splitlines() if line.startswith('==')]
-        assert_equal(titles, ['Addressindex', 'Blockchain', 'Control', 'Dash', 'Evo', 'Generating', 'Mining', 'Network', 'Rawtransactions', 'Util', 'Wallet', 'Zmq'])
+
+        components = ['Addressindex', 'Blockchain', 'Control', 'Dash', 'Evo', 'Generating', 'Mining', 'Network', 'Rawtransactions', 'Util', 'Wallet']
+
+        if is_zmq_enabled(self):
+            components.append('Zmq')
+
+        assert_equal(titles, components)
 
 if __name__ == '__main__':
     HelpRpcTest().main()

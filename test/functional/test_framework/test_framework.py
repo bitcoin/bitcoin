@@ -1185,8 +1185,13 @@ def skip_if_no_py3_zmq():
 
 def skip_if_no_bitcoind_zmq(test_instance):
     """Skip the running test if dashd has not been compiled with zmq support."""
+    if not is_zmq_enabled(test_instance):
+        raise SkipTest("dashd has not been built with zmq enabled.")
+
+
+def is_zmq_enabled(test_instance):
+    """Checks whether zmq is enabled or not."""
     config = configparser.ConfigParser()
     config.read_file(open(test_instance.options.configfile))
 
-    if not config["components"].getboolean("ENABLE_ZMQ"):
-        raise SkipTest("dashd has not been built with zmq enabled.")
+    return config["components"].getboolean("ENABLE_ZMQ")

@@ -460,7 +460,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
                 oss >> fCheckMemPool;
                 oss >> vOutPoints;
             }
-        } catch (const std::ios_base::failure& e) {
+        } catch (const std::ios_base::failure&) {
             // abort in case of unreadable binary data
             return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
         }
@@ -634,11 +634,10 @@ static const struct {
       {"/rest/blockhashbyheight/", rest_blockhash_by_height},
 };
 
-bool StartREST()
+void StartREST()
 {
     for (unsigned int i = 0; i < ARRAYLEN(uri_prefixes); i++)
         RegisterHTTPHandler(uri_prefixes[i].prefix, false, uri_prefixes[i].handler);
-    return true;
 }
 
 void InterruptREST()

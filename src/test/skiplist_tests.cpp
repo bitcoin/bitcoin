@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(findearliestatleast_test)
 BOOST_AUTO_TEST_CASE(findearliestatleast_edge_test)
 {
     std::list<CBlockIndex> blocks;
-    for (unsigned int timeMax : {100, 100, 100, 200, 200, 200, 300, 300, 300}) {
+    for (const unsigned int timeMax : {100, 100, 100, 200, 200, 200, 300, 300, 300}) {
         CBlockIndex* prev = blocks.empty() ? nullptr : &blocks.back();
         blocks.emplace_back();
         blocks.back().nHeight = prev ? prev->nHeight + 1 : 0;

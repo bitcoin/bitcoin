@@ -74,7 +74,7 @@ bool IsHexNumber(const std::string& str)
     if (str.size() > 2 && *str.begin() == '0' && *(str.begin()+1) == 'x') {
         starting_location = 2;
     }
-    for (auto c : str.substr(starting_location)) {
+    for (const char c : str.substr(starting_location)) {
         if (HexDigit(c) < 0) return false;
     }
     // Return false for empty string or "0x".

@@ -151,7 +151,7 @@ static void Correct_Queue_range(std::vector<size_t> range)
     small_queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
     // Make vChecks here to save on malloc (this test can be slow...)
     std::vector<FakeCheckCheckCompletion> vChecks;
-    for (auto i : range) {
+    for (const size_t i : range) {
         size_t total = i;
         FakeCheckCheckCompletion::n_calls = 0;
         CCheckQueueControl<FakeCheckCheckCompletion> control(small_queue.get());
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
     fail_queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
 
     for (auto times = 0; times < 10; ++times) {
-        for (bool end_fails : {true, false}) {
+        for (const bool end_fails : {true, false}) {
             CCheckQueueControl<FailingCheck> control(fail_queue.get());
             {
                 std::vector<FailingCheck> vChecks;

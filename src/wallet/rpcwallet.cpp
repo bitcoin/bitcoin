@@ -2896,7 +2896,7 @@ static UniValue listlockunspent(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VARR);
 
-    for (COutPoint &outpt : vOutpts) {
+    for (const COutPoint& outpt : vOutpts) {
         UniValue o(UniValue::VOBJ);
 
         o.pushKV("txid", outpt.hash.GetHex());
@@ -4416,11 +4416,6 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, const C
         const CTxOut& out = txConst->vout.at(i);
         PSBTOutput& psbt_out = psbtx.outputs.at(i);
 
-        // Dummy tx so we can use ProduceSignature to get stuff out
-        CMutableTransaction dummy_tx;
-        dummy_tx.vin.push_back(CTxIn());
-        dummy_tx.vout.push_back(CTxOut());
-
         // Fill a SignatureData with output info
         SignatureData sigdata;
         psbt_out.FillSignatureData(sigdata);
@@ -4458,7 +4453,7 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
             "       \"ALL|ANYONECANPAY\"\n"
             "       \"NONE|ANYONECANPAY\"\n"
             "       \"SINGLE|ANYONECANPAY\"\n"
-            "4. bip32derivs                    (boolean, optiona, default=false) If true, includes the BIP 32 derivation paths for public keys if we know them\n"
+            "4. bip32derivs                    (boolean, optional, default=false) If true, includes the BIP 32 derivation paths for public keys if we know them\n"
 
             "\nResult:\n"
             "{\n"
@@ -4556,7 +4551,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                             "         \"ECONOMICAL\"\n"
                             "         \"CONSERVATIVE\"\n"
                             "   }\n"
-                            "5. bip32derivs                    (boolean, optiona, default=false) If true, includes the BIP 32 derivation paths for public keys if we know them\n"
+                            "5. bip32derivs                    (boolean, optional, default=false) If true, includes the BIP 32 derivation paths for public keys if we know them\n"
                             "\nResult:\n"
                             "{\n"
                             "  \"psbt\": \"value\",        (string)  The resulting raw transaction (base64-encoded string)\n"
