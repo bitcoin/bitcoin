@@ -18,7 +18,7 @@ class ConfArgsTest(BitcoinTestFramework):
         # Assume node is stopped
 
         inc_conf_file_path = os.path.join(self.nodes[0].datadir, 'include.conf')
-        with open(os.path.join(self.nodes[0].datadir, 'bitcoin.conf'), 'a', encoding='utf-8') as conf:
+        with open(os.path.join(self.nodes[0].datadir, 'dash.conf'), 'a', encoding='utf-8') as conf:
             conf.write('includeconf={}\n'.format(inc_conf_file_path))
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
