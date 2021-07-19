@@ -492,12 +492,12 @@ void CAddrMan::Check()
 
     for (int n = 0; n < ADDRMAN_TRIED_BUCKET_COUNT; n++) {
         for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
-             if (vvTried[n][i] != -1) {
+            if (vvTried[n][i] != -1) {
                 assert(setTried.count(vvTried[n][i]));
                 assert(mapInfo[vvTried[n][i]].GetTriedBucket(nKey, m_asmap) == n);
                 assert(mapInfo[vvTried[n][i]].GetBucketPosition(nKey, false, n) == i);
                 setTried.erase(vvTried[n][i]);
-             }
+            }
         }
     }
 
