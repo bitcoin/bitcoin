@@ -183,8 +183,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.sync_mempools()
         assert_array_result(self.nodes[0].listtransactions(), {"txid": txid_4}, {"bip125-replaceable": "no"})
 
-        self.log.info("Test tx with unknown RBF state (bip125-replaceable=unknown)")
-        # Replace tx3, and check that tx4 becomes unknown
+        # Replace tx3
         tx3_b = tx3_modified
         tx3_b.vout[0].nValue -= int(Decimal("0.004") * COIN)  # bump the fee
         tx3_b = tx3_b.serialize().hex()
@@ -192,9 +191,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         txid_3b = self.nodes[0].sendrawtransaction(tx3_b_signed, 0)
         assert is_opt_in(self.nodes[0], txid_3b)
 
-        assert_array_result(self.nodes[0].listtransactions(), {"txid": txid_4}, {"bip125-replaceable": "unknown"})
         self.sync_mempools()
-        assert_array_result(self.nodes[1].listtransactions(), {"txid": txid_4}, {"bip125-replaceable": "unknown"})
 
         self.log.info("Test bip125-replaceable status with gettransaction RPC")
         for n in self.nodes[0:2]:
@@ -202,13 +199,13 @@ class ListTransactionsTest(BitcoinTestFramework):
             assert_equal(n.gettransaction(txid_2)["bip125-replaceable"], "no")
             assert_equal(n.gettransaction(txid_3)["bip125-replaceable"], "yes")
             assert_equal(n.gettransaction(txid_3b)["bip125-replaceable"], "yes")
-            assert_equal(n.gettransaction(txid_4)["bip125-replaceable"], "unknown")
+            assert_equal(n.gettransaction(txid_4)["bip125-replaceable"], "no")
 
         self.log.info("Test mined transactions are no longer bip125-replaceable")
         self.nodes[0].generate(1)
         assert txid_3b not in self.nodes[0].getrawmempool()
         assert_equal(self.nodes[0].gettransaction(txid_3b)["bip125-replaceable"], "no")
-        assert_equal(self.nodes[0].gettransaction(txid_4)["bip125-replaceable"], "unknown")
+        assert_equal(self.nodes[0].gettransaction(txid_4)["bip125-replaceable"], "no")
 
 if __name__ == '__main__':
     ListTransactionsTest().main()

@@ -12,7 +12,6 @@
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
-#include <policy/rbf.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
@@ -22,6 +21,7 @@
 #include <util/fees.h>
 #include <util/message.h> // For MessageSign()
 #include <util/moneystr.h>
+#include <util/rbf.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -174,14 +174,7 @@ static void WalletTxToJSON(interfaces::Chain& chain, const CWalletTx& wtx, UniVa
     entry.pushKV("timereceived", (int64_t)wtx.nTimeReceived);
 
     // Add opt-in RBF status
-    std::string rbfStatus = "no";
-    if (confirms <= 0) {
-        RBFTransactionState rbfState = chain.isRBFOptIn(*wtx.tx);
-        if (rbfState == RBFTransactionState::UNKNOWN)
-            rbfStatus = "unknown";
-        else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125)
-            rbfStatus = "yes";
-    }
+    const std::string rbfStatus = confirms <= 0 && SignalsOptInRBF(*wtx.tx) ? "yes" : "no";
     entry.pushKV("bip125-replaceable", rbfStatus);
 
     for (const std::pair<const std::string, std::string>& item : wtx.mapValue)
@@ -1399,7 +1392,7 @@ static const std::vector<RPCResult> TransactionDescriptionString()
            {RPCResult::Type::NUM_TIME, "time", "The transaction time expressed in " + UNIX_EPOCH_TIME + "."},
            {RPCResult::Type::NUM_TIME, "timereceived", "The time received expressed in " + UNIX_EPOCH_TIME + "."},
            {RPCResult::Type::STR, "comment", "If a comment is associated with the transaction, only present if not empty."},
-           {RPCResult::Type::STR, "bip125-replaceable", "(\"yes|no|unknown\") Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
+           {RPCResult::Type::STR, "bip125-replaceable", "(\"yes|no\") Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
                "may be unknown for unconfirmed transactions not in the mempool"}};
 }
 
