@@ -26,9 +26,7 @@ Drag Dash Core to your applications folder, and then run Dash Core.
 
 * See the [Dash documentation](https://docs.dash.org)
 for help and more information.
-* See the [Dash Developer Documentation](https://dash-docs.github.io/) 
-for technical specifications and implementation details.
-* Ask for help on [Dash Nation Discord](http://dashchat.org)
+* Ask for help on [Dash Discord](http://staydashy.com)
 * Ask for help on the [Dash Forum](https://dash.org/forum)
 
 Building
@@ -62,8 +60,11 @@ The Dash Core repo's [root README](/README.md) contains relevant information on 
 - [Benchmarking](benchmarking.md)
 
 ### Resources
+* See the [Dash Developer Documentation](https://dashcore.readme.io/)
+  for technical specifications and implementation details.
 * Discuss on the [Dash Forum](https://dash.org/forum), in the Development & Technical Discussion board.
-* Discuss on [Dash Nation Discord](http://dashchat.org)
+* Discuss on [Dash Discord](http://staydashy.com)
+* Discuss on [Dash Developers Discord](http://chat.dashdevs.org/)
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
