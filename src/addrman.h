@@ -334,6 +334,9 @@ public:
         }
 
         s >> nKey;
+        if (nKey.IsNull()) {
+            throw std::ios_base::failure("Corrupt CAddrMan serialization, nKey is all zeros.");
+        }
         s >> nNew;
         s >> nTried;
         int nUBuckets = 0;
