@@ -16,6 +16,7 @@ namespace VeriBlock {
 
 struct AltChainParamsVBTC : public altintegration::AltChainParams {
     ~AltChainParamsVBTC() override = default;
+    AltChainParamsVBTC() = default;
 
     AltChainParamsVBTC(const CBlock& genesis)
     {
@@ -48,8 +49,17 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
     altintegration::AltBlock bootstrap;
 };
 
-struct AltChainParamsVBTCDetRegTest : public altintegration::AltChainParams {
-    ~AltChainParamsVBTCDetRegTest() override = default;
+struct AltChainParamsVBTCRegTest : public AltChainParamsVBTC {
+    ~AltChainParamsVBTCRegTest() = default;
+
+    AltChainParamsVBTCRegTest(const CBlock& genesis) : AltChainParamsVBTC(genesis)
+    {
+        mMaxReorgDistance = 1000;
+    }
+};
+
+struct AltChainParamsVBTCDetRegTest : public AltChainParamsVBTC {
+    ~AltChainParamsVBTCDetRegTest() = default;
 
     AltChainParamsVBTCDetRegTest()
     {
@@ -58,28 +68,6 @@ struct AltChainParamsVBTCDetRegTest : public altintegration::AltChainParams {
         bootstrap.height = 1000;
         // intentionally leave timestamp empty
     }
-
-    altintegration::AltBlock getBootstrapBlock() const noexcept override
-    {
-        return bootstrap;
-    }
-
-    int64_t getIdentifier() const noexcept override
-    {
-        return VeriBlock::ALT_CHAIN_ID;
-    }
-
-    std::vector<uint8_t> getHash(const std::vector<uint8_t>& bytes) const noexcept override;
-
-    // we should verify:
-    // - check that 'bytes' can be deserialized to a CBlockHeader
-    // - check that this CBlockHeader is valid (time, pow, version...)
-    // - check that 'root' is equal to Merkle Root in CBlockHeader
-    bool checkBlockHeader(
-            const std::vector<uint8_t>& bytes,
-            const std::vector<uint8_t>& root, altintegration::ValidationState& state) const noexcept override;
-
-    altintegration::AltBlock bootstrap;
 };
 
 void printConfig(const altintegration::Config& config);

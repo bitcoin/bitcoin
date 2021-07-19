@@ -69,8 +69,8 @@ class PoPVerifyDB(BitcoinTestFramework):
                 "-checkblocks={}".format(checkblocks),
                 "-checklevel={}".format(checklevel)
             ])
-            time.sleep(10)
-            self.sync_all(self.nodes, timeout=60)
+            connect_nodes(self.nodes[0], 1)
+            self.sync_all(self.nodes, timeout=120)
             assert_pop_state_equal(self.nodes)
             self.log.info("success")
 

@@ -107,7 +107,6 @@
     <ClCompile Include="..\..\src\vbk\test\unit\pop_reward_tests.cpp" />
     <ClCompile Include="..\..\src\vbk\test\unit\pop_service_tests.cpp" />
     <ClCompile Include="..\..\src\vbk\test\unit\rpc_service_tests.cpp" />
-    <ClCompile Include="..\..\src\vbk\test\unit\util_service_tests.cpp" />
     <ClCompile Include="..\..\src\vbk\test\unit\vbk_merkle_tests.cpp" />
     <ClCompile Include="..\..\src\wallet\test\coinselector_tests.cpp" />
     <ClCompile Include="..\..\src\wallet\test\db_tests.cpp" />

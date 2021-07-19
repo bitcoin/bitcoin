@@ -231,7 +231,8 @@ class VBitcoindNode(Node):
             endorsementSettlementInterval=s['endorsementSettlementInterval'],
             finalityDelay=s['finalityDelay'],
             keystoneInterval=s['keystoneInterval'],
-            maxAltchainFutureBlockTime=s['maxAltchainFutureBlockTime']
+            maxAltchainFutureBlockTime=s['maxAltchainFutureBlockTime'],
+            maxReorgDistance=s['maxReorgDistance']
         )
 
     def getrawatv(self, atvid: Hexstr) -> AtvResponse:

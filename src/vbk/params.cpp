@@ -52,41 +52,6 @@ std::vector<uint8_t> AltChainParamsVBTC::getHash(const std::vector<uint8_t>& byt
     }
 }
 
-bool AltChainParamsVBTCDetRegTest::checkBlockHeader(const std::vector<uint8_t>& bytes, const std::vector<uint8_t>& root, altintegration::ValidationState& state) const noexcept
-{
-    const CChainParams& params = Params();
-
-    try {
-        // this throws
-        auto header = VeriBlock::headerFromBytes(bytes);
-
-        /* top level merkle `root` calculated by library is same as in endorsed header */
-        auto actual = header.hashMerkleRoot.asVector();
-        if(actual != root) {
-            return state.Invalid("bad-merkle-root", strprintf("Expected %s, got %s", HexStr(root), HexStr(actual)));
-        }
-
-        /* and POW of endorsed header is valid */
-        if(!CheckProofOfWork(header.GetHash(), header.nBits, params.GetConsensus())) {
-            return state.Invalid("bad-pow", "Bad proof of work");
-        }
-
-        return true;
-    } catch (...) {
-        return state.Invalid("bad-header", "Can not parse block header");
-    }
-}
-
-std::vector<uint8_t> AltChainParamsVBTCDetRegTest::getHash(const std::vector<uint8_t>& bytes) const noexcept
-{
-    try {
-        return VeriBlock::headerFromBytes(bytes).GetHash().asVector();
-    } catch (...) {
-        // return empty hash, since we can't deserialize header
-        return {};
-    }
-}
-
 static std::vector<std::string> parseBlocks(const std::string& s)
 {
     std::vector<std::string> strs;
@@ -149,7 +114,7 @@ void selectPopConfig(const std::string& network)
         popconfig.setBTC(0, {}, btcparam);
         auto vbkparam = std::make_shared<altintegration::VbkChainParamsRegTest>();
         popconfig.setVBK(0, {}, vbkparam);
-        auto altparam = std::make_shared<VeriBlock::AltChainParamsVBTC>(Params().GenesisBlock());
+        auto altparam = std::make_shared<VeriBlock::AltChainParamsVBTCRegTest>(Params().GenesisBlock());
         popconfig.alt = altparam;
     } else if (network == CBaseChainParams::DETREGTEST) {
         auto btcparam = std::make_shared<altintegration::BtcChainParamsRegTest>();
