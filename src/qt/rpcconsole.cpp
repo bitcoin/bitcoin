@@ -1376,16 +1376,16 @@ void RPCConsole::banSelectedNode(int bantime)
         // Get currently selected peer address
         NodeId id = nodes.at(i).data().toLongLong();
 
-	// Get currently selected peer address
-	int detailNodeRow = clientModel->getPeerTableModel()->getRowByNodeId(id);
-	if(detailNodeRow < 0)
-	    return;
+        // Get currently selected peer address
+        int detailNodeRow = clientModel->getPeerTableModel()->getRowByNodeId(id);
+        if (detailNodeRow < 0) return;
 
-	// Find possible nodes, ban it and clear the selected node
-	const CNodeCombinedStats *stats = clientModel->getPeerTableModel()->getNodeStats(detailNodeRow);
-	if(stats) {
+        // Find possible nodes, ban it and clear the selected node
+        const CNodeCombinedStats *stats = clientModel->getPeerTableModel()->getNodeStats(detailNodeRow);
+        if (stats) {
             m_node.ban(stats->nodeStats.addr, BanReasonManuallyAdded, bantime);
-	}
+            m_node.disconnect(stats->nodeStats.addr);
+        }
     }
     clearSelectedNode();
     clientModel->getBanTableModel()->refresh();

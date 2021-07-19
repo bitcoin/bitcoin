@@ -6,6 +6,7 @@
 #include <net_processing.h>
 
 #include <addrman.h>
+#include <banman.h>
 #include <arith_uint256.h>
 #include <blockencodings.h>
 #include <chainparams.h>
@@ -1111,9 +1112,8 @@ static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Para
         (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, consensusParams) < STALE_RELAY_AGE_LIMIT);
 }
 
-PeerLogicValidation::PeerLogicValidation(CConnman* connmanIn, CScheduler &scheduler, bool enable_bip61)
-    : connman(connmanIn), m_stale_tip_check_time(0), m_enable_bip61(enable_bip61) {
-
+PeerLogicValidation::PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CScheduler &scheduler, bool enable_bip61)
+    : connman(connmanIn), m_banman(banman), m_stale_tip_check_time(0), m_enable_bip61(enable_bip61) {
     // Initialize global variables that cannot be constructed at startup.
     recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
 
@@ -3645,7 +3645,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     return true;
 }
 
-static bool SendRejectsAndCheckIfBanned(CNode* pnode, CConnman* connman, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool PeerLogicValidation::SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     CNodeState &state = *State(pnode->GetId());
@@ -3663,14 +3663,16 @@ static bool SendRejectsAndCheckIfBanned(CNode* pnode, CConnman* connman, bool en
             LogPrintf("Warning: not punishing whitelisted peer %s!\n", pnode->GetLogString());
         else if (pnode->m_manual_connection)
             LogPrintf("Warning: not punishing manually-connected peer %s!\n", pnode->GetLogString());
-        else {
+        else if (pnode->addr.IsLocal()) {
+            // Disconnect but don't ban _this_ local node
+            LogPrintf("Warning: disconnecting but not banning local peer %s!\n", pnode->GetLogString());
             pnode->fDisconnect = true;
-            if (pnode->addr.IsLocal())
-                LogPrintf("Warning: not banning local peer %s!\n", pnode->GetLogString());
-            else
-            {
-                connman->Ban(pnode->addr, BanReasonNodeMisbehaving);
+        } else {
+            // Disconnect and ban all nodes sharing the address
+            if (m_banman) {
+                m_banman->Ban(pnode->addr, BanReasonNodeMisbehaving);
             }
+            connman->DisconnectNode(pnode->addr);
         }
         return true;
     }
@@ -3798,7 +3800,7 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     }
 
     LOCK(cs_main);
-    SendRejectsAndCheckIfBanned(pfrom, connman, m_enable_bip61);
+    SendRejectsAndCheckIfBanned(pfrom, m_enable_bip61);
 
     return fMoreWork;
 }
@@ -3995,8 +3997,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         if (!lockMain)
             return true;
 
-        if (SendRejectsAndCheckIfBanned(pto, connman, m_enable_bip61))
-            return true;
+        if (SendRejectsAndCheckIfBanned(pto, m_enable_bip61)) return true;
         CNodeState &state = *State(pto->GetId());
 
         // Address refresh broadcast

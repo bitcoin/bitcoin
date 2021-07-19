@@ -117,19 +117,18 @@ bool DeserializeFileDB(const fs::path& path, Data& data)
 
 }
 
-CBanDB::CBanDB()
+CBanDB::CBanDB(fs::path ban_list_path) : m_ban_list_path(std::move(ban_list_path))
 {
-    pathBanlist = GetDataDir() / "banlist.dat";
 }
 
 bool CBanDB::Write(const banmap_t& banSet)
 {
-    return SerializeFileDB("banlist", pathBanlist, banSet);
+    return SerializeFileDB("banlist", m_ban_list_path, banSet);
 }
 
 bool CBanDB::Read(banmap_t& banSet)
 {
-    return DeserializeFileDB(pathBanlist, banSet);
+    return DeserializeFileDB(m_ban_list_path, banSet);
 }
 
 CAddrDB::CAddrDB()
