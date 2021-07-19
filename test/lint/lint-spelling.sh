@@ -10,6 +10,6 @@
 export LC_ALL=C
 
 IGNORE_WORDS_FILE=test/lint/lint-spelling.ignore-words.txt
-if ! codespell --check-filenames --disable-colors --quiet-level=7 --ignore-words=${IGNORE_WORDS_FILE} $(git ls-files -- ":(exclude)build-aux/m4/" ":(exclude)contrib/seeds/*.txt" ":(exclude)depends/" ":(exclude)doc/release-notes/" ":(exclude)src/leveldb/" ":(exclude)src/qt/locale/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/"); then
+if ! codespell --check-filenames --disable-colors --quiet-level=7 --ignore-words=${IGNORE_WORDS_FILE} $(git ls-files -- ":(exclude)build-aux/m4/" ":(exclude)contrib/seeds/*.txt" ":(exclude)depends/" ":(exclude)doc/release-notes/" ":(exclude)src/crypto/" ":(exclude)src/immer/" ":(exclude)src/leveldb/" ":(exclude)src/qt/locale/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/"); then
     echo "^ Warning: codespell identified likely spelling errors. Any false positives? Add them to the list of ignored words in ${IGNORE_WORDS_FILE}"
 fi
