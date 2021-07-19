@@ -459,58 +459,44 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
     }
 }
 
-#ifdef DEBUG_ADDRMAN
-int CAddrMan::Check_()
+void CAddrMan::Check()
 {
+#ifdef DEBUG_ADDRMAN
     AssertLockHeld(cs);
 
     std::unordered_set<int> setTried;
     std::unordered_map<int, int> mapNew;
 
-    if (vRandom.size() != (size_t)(nTried + nNew))
-        return -7;
+    assert(vRandom.size() == (size_t)(nTried + nNew));
 
     for (const auto& entry : mapInfo) {
         int n = entry.first;
         const CAddrInfo& info = entry.second;
         if (info.fInTried) {
-            if (!info.nLastSuccess)
-                return -1;
-            if (info.nRefCount)
-                return -2;
+            assert(info.nLastSuccess);
+            assert(!info.nRefCount);
             setTried.insert(n);
         } else {
-            if (info.nRefCount < 0 || info.nRefCount > ADDRMAN_NEW_BUCKETS_PER_ADDRESS)
-                return -3;
-            if (!info.nRefCount)
-                return -4;
+            assert(info.nRefCount >= 0 && info.nRefCount <= ADDRMAN_NEW_BUCKETS_PER_ADDRESS);
+            assert(info.nRefCount);
             mapNew[n] = info.nRefCount;
         }
-        if (mapAddr[info] != n)
-            return -5;
-        if (info.nRandomPos < 0 || (size_t)info.nRandomPos >= vRandom.size() || vRandom[info.nRandomPos] != n)
-            return -14;
-        if (info.nLastTry < 0)
-            return -6;
-        if (info.nLastSuccess < 0)
-            return -8;
+        assert(mapAddr[info] == n);
+        assert(info.nRandomPos >= 0 && (size_t)info.nRandomPos < vRandom.size() && vRandom[info.nRandomPos] == n);
+        assert(info.nLastTry >= 0);
+        assert(info.nLastSuccess >= 0);
     }
 
-    if (setTried.size() != (size_t)nTried)
-        return -9;
-    if (mapNew.size() != (size_t)nNew)
-        return -10;
+    assert(setTried.size() == (size_t)nTried);
+    assert(mapNew.size() == (size_t)nNew);
 
     for (int n = 0; n < ADDRMAN_TRIED_BUCKET_COUNT; n++) {
         for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
              if (vvTried[n][i] != -1) {
-                 if (!setTried.count(vvTried[n][i]))
-                     return -11;
-                 if (mapInfo[vvTried[n][i]].GetTriedBucket(nKey, m_asmap) != n)
-                     return -17;
-                 if (mapInfo[vvTried[n][i]].GetBucketPosition(nKey, false, n) != i)
-                     return -18;
-                 setTried.erase(vvTried[n][i]);
+                assert(setTried.count(vvTried[n][i]));
+                assert(mapInfo[vvTried[n][i]].GetTriedBucket(nKey, m_asmap) == n);
+                assert(mapInfo[vvTried[n][i]].GetBucketPosition(nKey, false, n) == i);
+                setTried.erase(vvTried[n][i]);
              }
         }
     }
@@ -518,26 +504,19 @@ int CAddrMan::Check_()
     for (int n = 0; n < ADDRMAN_NEW_BUCKET_COUNT; n++) {
         for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
             if (vvNew[n][i] != -1) {
-                if (!mapNew.count(vvNew[n][i]))
-                    return -12;
-                if (mapInfo[vvNew[n][i]].GetBucketPosition(nKey, true, n) != i)
-                    return -19;
+                assert(mapNew.count(vvNew[n][i]));
+                assert(mapInfo[vvNew[n][i]].GetBucketPosition(nKey, true, n) == i);
                 if (--mapNew[vvNew[n][i]] == 0)
                     mapNew.erase(vvNew[n][i]);
             }
         }
     }
 
-    if (setTried.size())
-        return -13;
-    if (mapNew.size())
-        return -15;
-    if (nKey.IsNull())
-        return -16;
-
-    return 0;
-}
+    assert(!setTried.size());
+    assert(!mapNew.size());
+    assert(!nKey.IsNull());
 #endif
+}
 
 void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size_t max_pct, std::optional<Network> network)
 {

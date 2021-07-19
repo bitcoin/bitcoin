@@ -722,21 +722,7 @@ private:
 
     //! Consistency check
     void Check()
-        EXCLUSIVE_LOCKS_REQUIRED(cs)
-    {
-#ifdef DEBUG_ADDRMAN
-        AssertLockHeld(cs);
-        const int err = Check_();
-        if (err) {
-            LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
-        }
-#endif
-    }
-
-#ifdef DEBUG_ADDRMAN
-    //! Perform consistency check. Returns an error code or zero.
-    int Check_() EXCLUSIVE_LOCKS_REQUIRED(cs);
-#endif
+        EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /**
      * Return all or many randomly selected addresses, optionally by network.
