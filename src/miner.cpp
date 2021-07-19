@@ -130,13 +130,16 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
     bool fDIP0003Active_context = nHeight >= chainparams.GetConsensus().DIP0003Height;
-    bool NEVMActive_context = nHeight >= chainparams.GetConsensus().nNEVMStartBlock && fNEVMConnection;
+    bool NEVMActive_context = nHeight >= chainparams.GetConsensus().nNEVMStartBlock;
     if(nHeight >= chainparams.GetConsensus().nUTXOAssetsBlock) {
         const int32_t nChainId = chainparams.GetConsensus ().nAuxpowChainId;
         const int32_t nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
         pblock->SetBaseVersion(nVersion, nChainId);
     } else {
         pblock->SetOldBaseVersion(4, chainparams.GetConsensus ().nAuxpowOldChainId);
+    }
+    if(NEVMActive_context && (!fRegTest || fNEVMConnection)) {
+        pblock->SetNEVMVersion();
     }
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
@@ -226,7 +229,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         // get some info back to pass to getblocktemplate
         FillBlockPayments(m_chainstate.m_chain, coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->voutMasternodePayments, pblocktemplate->voutSuperblockPayments);
     }
-    if(NEVMActive_context) {
+    if(NEVMActive_context && fNEVMConnection) {
         CNEVMBlock nevmBlock;
         BlockValidationState state;
         GetMainSignals().NotifyGetNEVMBlock(nevmBlock, state);

@@ -3805,6 +3805,9 @@ static bool ContextualCheckBlockHeader(const bool ibd, const CBlockHeader& block
         if (block.vchNEVMBlockData.size() > MAX_HEADER_SIZE_NEVM) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-data-too-large");
         }
+        if(!block.IsNEVM() && (!fRegTest || fNEVMConnection)) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-version-expected");
+        }
     }
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2, 3 and 4 upgrades

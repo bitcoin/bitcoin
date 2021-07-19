@@ -32,15 +32,13 @@ class UTXOSetHashTest(SyscoinTestFramework):
         # Generate 100 blocks and remove the first since we plan to spend its
         # coinbase
         block_hashes = wallet.generate(1) + node.generate(99)
-        # SYSCOIN
-        blocks = list(map(lambda block: FromHex(CBlock(), node.getblock(block, 3)), block_hashes))
+        blocks = list(map(lambda block: FromHex(CBlock(), node.getblock(block, False)), block_hashes))
         blocks.pop(0)
 
         # Create a spending transaction and mine a block which includes it
         txid = wallet.send_self_transfer(from_node=node)['txid']
         tx_block = node.generateblock(output=wallet.get_address(), transactions=[txid])
-        # SYSCOIN
-        blocks.append(FromHex(CBlock(), node.getblock(tx_block['hash'], 3)))
+        blocks.append(FromHex(CBlock(), node.getblock(tx_block['hash'], False)))
 
         # Serialize the outputs that should be in the UTXO set and add them to
         # a MuHash object

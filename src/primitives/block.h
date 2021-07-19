@@ -42,7 +42,7 @@ public:
             s << *auxpow;
         }
         // SYSCOIN
-        if (s.GetType() & SER_TRANSPORT)
+        if (this->IsNEVM() && (s.GetType() & SER_TRANSPORT))
             s << vchNEVMBlockData;
     }
     template<typename Stream>
@@ -58,7 +58,7 @@ public:
             auxpow.reset();
         }
         // SYSCOIN
-        if (s.GetType() & SER_TRANSPORT)
+        if (this->IsNEVM() && (s.GetType() & SER_TRANSPORT))
             s >> vchNEVMBlockData;
     }
 

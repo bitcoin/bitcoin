@@ -1150,10 +1150,10 @@ static RPCHelpMan getblock()
 
         block = GetBlockChecked(pblockindex);
     }
-    // SYSCOIN
-    if (verbosity <= 0 || verbosity == 3)
+    if (verbosity <= 0)
     {
-        CDataStream ssBlock(verbosity == 3? SER_TRANSPORT: SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        // SYSCOIN
+        CDataStream ssBlock(SER_TRANSPORT, PROTOCOL_VERSION | RPCSerializationFlags());
         ssBlock << block;
         std::string strHex = HexStr(ssBlock);
         return strHex;
