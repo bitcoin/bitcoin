@@ -613,7 +613,7 @@ void CGovernanceManager::SyncSingleObjVotes(CNode* pnode, const uint256& nProp, 
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing single object to peer=%d, nProp = %s\n", __func__, pnode->GetId(), nProp.ToString());
 
-    LOCK2(cs_main, cs);
+    LOCK(cs);
 
     // single valid object and its valid votes
     auto it = mapObjects.find(nProp);
@@ -671,7 +671,7 @@ void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing all objects to peer=%d\n", __func__, pnode->GetId());
 
-    LOCK2(cs_main, cs);
+    LOCK(cs);
 
     // all valid objects, no votes
     for (const auto& objPair : mapObjects) {
@@ -974,7 +974,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
     }
 
     {
-        LOCK2(cs_main, cs);
+        LOCK(cs);
 
         if (mapObjects.empty()) return -2;
 
