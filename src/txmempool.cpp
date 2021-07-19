@@ -28,7 +28,7 @@
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
                                  bool _spendsCoinbase, unsigned int _sigOps, LockPoints lp)
-    : tx(_tx), nFee(_nFee), nTxWeight(GetTransactionWeight(*tx)), nUsageSize(RecursiveDynamicUsage(tx)), nTime(_nTime), entryHeight(_entryHeight),
+    : tx(_tx), nFee(_nFee), nTxSize(tx->GetTotalSize()), nUsageSize(RecursiveDynamicUsage(tx)), nTime(_nTime), entryHeight(_entryHeight),
     spendsCoinbase(_spendsCoinbase), sigOpCount(_sigOps), lockPoints(lp), m_epoch(0)
 {
     nCountWithDescendants = 1;
@@ -408,7 +408,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     totalTxSize += entry.GetTxSize();
     if (minerPolicyEstimator) {minerPolicyEstimator->processTransaction(entry, validFeeEstimate);}
 
-    vTxHashes.emplace_back(hash, newit);
+    vTxHashes.emplace_back(entry.GetTx().GetHash(), newit);
     newit->vTxHashesIdx = vTxHashes.size() - 1;
 
     // Invalid ProTxes should never get this far because transactions should be
