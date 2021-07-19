@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install $APT_ARGS python3-pip python3-setuptools &
 RUN pip3 install pyzmq # really needed?
 RUN pip3 install jinja2
 RUN pip3 install flake8==3.5.0
+RUN pip3 install codespell==1.13.0
 
 # dash_hash
 RUN git clone https://github.com/dashpay/dash_hash
