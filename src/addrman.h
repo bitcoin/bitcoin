@@ -195,7 +195,6 @@ class CAddrMan
 protected:
     friend class CAddrManTest;
 
-protected:
     //! critical section to protect the inner data structures
     mutable CCriticalSection cs;
 
