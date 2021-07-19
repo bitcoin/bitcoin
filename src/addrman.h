@@ -497,7 +497,7 @@ public:
         : insecure_rand{deterministic}
     {
         Clear();
-        if (deterministic) nKey.SetNull();
+        if (deterministic) nKey = uint256{1};
     }
 
     ~CAddrMan()
