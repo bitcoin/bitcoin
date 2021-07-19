@@ -42,7 +42,9 @@ class AddrReceiver(P2PInterface):
         super().__init__(support_addrv2 = True)
 
     def on_addrv2(self, message):
-        if ADDRS == message.addrs:
+        expected_set = set((addr.ip, addr.port) for addr in ADDRS)
+        received_set = set((addr.ip, addr.port) for addr in message.addrs)
+        if expected_set == received_set:
             self.addrv2_received_and_checked = True
 
     def wait_for_addrv2(self):
@@ -53,6 +55,7 @@ class AddrTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.extra_args = [["-whitelist=addr@127.0.0.1"]]
 
     def run_test(self):
         self.log.info('Create connection that sends addrv2 messages')

@@ -59,6 +59,7 @@ class InvalidMessagesTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+        self.extra_args = [["-whitelist=addr@127.0.0.1"]]
 
     def run_test(self):
         # SYSCOIN
