@@ -365,7 +365,8 @@ public:
             s >> info;
             int nKBucket = info.GetTriedBucket(nKey, m_asmap);
             int nKBucketPos = info.GetBucketPosition(nKey, false, nKBucket);
-            if (vvTried[nKBucket][nKBucketPos] == -1) {
+            if (info.IsValid()
+                && vvTried[nKBucket][nKBucketPos] == -1) {
                 info.nRandomPos = vRandom.size();
                 info.fInTried = true;
                 vRandom.push_back(nIdCount);
@@ -419,6 +420,9 @@ public:
             const int entry_index{bucket_entry.second};
             CAddrInfo& info = mapInfo[entry_index];
 
+            // Don't store the entry in the new bucket if it's not a valid address for our addrman
+            if (!info.IsValid()) continue;
+
             // The entry shouldn't appear in more than
             // ADDRMAN_NEW_BUCKETS_PER_ADDRESS. If it has already, just skip
             // this bucket_entry.
@@ -441,7 +445,7 @@ public:
             }
         }
 
-        // Prune new entries with refcount 0 (as a result of collisions).
+        // Prune new entries with refcount 0 (as a result of collisions or invalid address).
         int nLostUnk = 0;
         for (auto it = mapInfo.cbegin(); it != mapInfo.cend(); ) {
             if (it->second.fInTried == false && it->second.nRefCount == 0) {
@@ -453,10 +457,8 @@ public:
             }
         }
         if (nLost + nLostUnk > 0) {
-            LogPrint(BCLog::ADDRMAN, "addrman lost %i new and %i tried addresses due to collisions\n", nLostUnk, nLost);
+            LogPrint(BCLog::ADDRMAN, "addrman lost %i new and %i tried addresses due to collisions or invalid addresses\n", nLostUnk, nLost);
         }
-
-        RemoveInvalid();
 
         Check();
     }
@@ -769,9 +771,6 @@ private:
 
     //! Update an entry's service bits.
     void SetServices_(const CService &addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
-
-    //! Remove invalid addresses.
-    void RemoveInvalid() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     friend class CAddrManTest;
 };
