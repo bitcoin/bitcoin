@@ -24,14 +24,24 @@ namespace immer {
 template <typename Base>
 struct debug_size_heap
 {
-    // temporary fix until https://github.com/arximboldi/immer/issues/78 is fixed
-    constexpr static auto extra_size = sizeof(void*) * 2; //alignof(std::max_align_t);
+#if defined(__MINGW32__) && !defined(__MINGW64__)
+    // There is a bug in MinGW 32bit: https://sourceforge.net/p/mingw-w64/bugs/778/
+    // It causes different versions of std::max_align_t to be defined, depending on inclusion order of stddef.h
+    // and stdint.h. As we have no control over the inclusion order here (as it might be set in stone by the outside
+    // world), we can't easily pin it to one of both versions of std::max_align_t. This means, we have to hardcode
+    // extra_size for MinGW 32bit builds until the mentioned bug is fixed.
+    constexpr static auto extra_size = 8;
+#else
+    constexpr static auto extra_size = sizeof(
+        std::aligned_storage_t<sizeof(std::size_t),
+                               alignof(std::max_align_t)>);
+#endif
 
     template <typename... Tags>
     static void* allocate(std::size_t size, Tags... tags)
     {
         auto p = (std::size_t*) Base::allocate(size + extra_size, tags...);
-        *p = size;
+        new (p) std::size_t{ size };
         return ((char*)p) + extra_size;
     }
 

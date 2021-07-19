@@ -89,35 +89,35 @@ public:
      * collection. It does not allocate memory and its complexity is
      * @f$ O(1) @f$.
      */
-    iterator begin() const { return {impl_}; }
+    IMMER_NODISCARD iterator begin() const { return {impl_}; }
 
     /*!
      * Returns an iterator pointing just after the last element of the
      * collection. It does not allocate and its complexity is @f$ O(1) @f$.
      */
-    iterator end() const { return {impl_, typename iterator::end_t{}}; }
+    IMMER_NODISCARD iterator end() const { return {impl_, typename iterator::end_t{}}; }
 
     /*!
      * Returns the number of elements in the container.  It does
      * not allocate memory and its complexity is @f$ O(1) @f$.
      */
-    size_type size() const { return impl_.size; }
+    IMMER_NODISCARD size_type size() const { return impl_.size; }
 
     /*!
      * Returns `1` when `value` is contained in the set or `0`
      * otherwise. It won't allocate memory and its complexity is
      * *effectively* @f$ O(1) @f$.
      */
-    size_type count(const T& value) const
+    IMMER_NODISCARD size_type count(const T& value) const
     { return impl_.template get<detail::constantly<size_type, 1>,
                                 detail::constantly<size_type, 0>>(value); }
 
     /*!
      * Returns whether the sets are equal.
      */
-    bool operator==(const set& other) const
+    IMMER_NODISCARD bool operator==(const set& other) const
     { return impl_.equals(other.impl_); }
-    bool operator!=(const set& other) const
+    IMMER_NODISCARD bool operator!=(const set& other) const
     { return !(*this == other); }
 
     /*!
@@ -125,7 +125,7 @@ public:
      * the set, it returns the same set.  It may allocate memory and
      * its complexity is *effectively* @f$ O(1) @f$.
      */
-    set insert(T value) const
+    IMMER_NODISCARD set insert(T value) const
     { return impl_.add(std::move(value)); }
 
     /*!
@@ -133,16 +133,16 @@ public:
      * set it returns the same set.  It may allocate memory and its
      * complexity is *effectively* @f$ O(1) @f$.
      */
-    set erase(const T& value) const
+    IMMER_NODISCARD set erase(const T& value) const
     { return impl_.sub(value); }
 
     /*!
      * Returns an @a transient form of this container, a
      * `immer::set_transient`.
      */
-    transient_type transient() const&
+    IMMER_NODISCARD transient_type transient() const&
     { return transient_type{ impl_ }; }
-    transient_type transient() &&
+    IMMER_NODISCARD transient_type transient() &&
     { return transient_type{ std::move(impl_) }; }
 
     // Semi-private

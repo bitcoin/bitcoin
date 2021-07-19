@@ -194,7 +194,7 @@ public:
     /*!
      * Reads the currently stored value in a thread-safe manner.
      */
-    box_type load() const
+    IMMER_NODISCARD box_type load() const
     { return impl_.load(); }
 
     /*!
@@ -206,7 +206,7 @@ public:
     /*!
      * Stores a new value and returns the old value, in a thread-safe manner.
      */
-    box_type exchange(box_type b)
+    IMMER_NODISCARD box_type exchange(box_type b)
     { return impl_.exchange(std::move(b)); }
 
     /*!

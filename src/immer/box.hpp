@@ -102,7 +102,7 @@ public:
     }
 
     /*! Query the current value. */
-    const T& get() const { return impl_->value; }
+    IMMER_NODISCARD const T& get() const { return impl_->value; }
 
     /*! Conversion to the boxed type. */
     operator const T&() const { return get(); }
@@ -114,15 +114,15 @@ public:
     const T* operator-> () const { return &get(); }
 
     /*! Comparison. */
-    bool operator==(detail::exact_t<const box&> other) const
+    IMMER_NODISCARD bool operator==(detail::exact_t<const box&> other) const
     { return impl_ == other.value.impl_ || get() == other.value.get(); }
     // Note that the `exact_t` disambiguates comparisons against `T{}`
     // directly.  In that case we want to use `operator T&` and
     // compare directly.  We definitely never want to convert a value
     // to a box (which causes an allocation) just to compare it.
-    bool operator!=(detail::exact_t<const box&> other) const
+    IMMER_NODISCARD bool operator!=(detail::exact_t<const box&> other) const
     { return !(*this == other.value); }
-    bool operator<(detail::exact_t<const box&> other) const
+    IMMER_NODISCARD bool operator<(detail::exact_t<const box&> other) const
     { return get() < other.value.get(); }
 
     /*!
@@ -141,12 +141,12 @@ public:
      * @endrst
      */
     template <typename Fn>
-    box update(Fn&& fn) const&
+    IMMER_NODISCARD box update(Fn&& fn) const&
     {
         return std::forward<Fn>(fn)(get());
     }
     template <typename Fn>
-    box&& update(Fn&& fn) &&
+    IMMER_NODISCARD box&& update(Fn&& fn) &&
     {
         if (impl_->unique())
             impl_->value = std::forward<Fn>(fn)(std::move(impl_->value));

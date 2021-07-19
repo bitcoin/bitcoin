@@ -60,54 +60,54 @@ public:
      * collection. It does not allocate memory and its complexity is
      * @f$ O(1) @f$.
      */
-    iterator begin() const { return impl_.data(); }
+    IMMER_NODISCARD iterator begin() const { return impl_.data(); }
 
     /*!
      * Returns an iterator pointing just after the last element of the
      * collection. It does not allocate and its complexity is @f$ O(1) @f$.
      */
-    iterator end()   const { return impl_.data() + impl_.size; }
+    IMMER_NODISCARD iterator end()   const { return impl_.data() + impl_.size; }
 
     /*!
      * Returns an iterator that traverses the collection backwards,
      * pointing at the first element of the reversed collection. It
      * does not allocate memory and its complexity is @f$ O(1) @f$.
      */
-    reverse_iterator rbegin() const { return reverse_iterator{end()}; }
+    IMMER_NODISCARD reverse_iterator rbegin() const { return reverse_iterator{end()}; }
 
     /*!
      * Returns an iterator that traverses the collection backwards,
      * pointing after the last element of the reversed collection. It
      * does not allocate memory and its complexity is @f$ O(1) @f$.
      */
-    reverse_iterator rend()   const { return reverse_iterator{begin()}; }
+    IMMER_NODISCARD reverse_iterator rend()   const { return reverse_iterator{begin()}; }
 
     /*!
      * Returns the number of elements in the container.  It does
      * not allocate memory and its complexity is @f$ O(1) @f$.
      */
-    std::size_t size() const { return impl_.size; }
+    IMMER_NODISCARD std::size_t size() const { return impl_.size; }
 
     /*!
      * Returns `true` if there are no elements in the container.  It
      * does not allocate memory and its complexity is @f$ O(1) @f$.
      */
-    bool empty() const { return impl_.d->empty(); }
+    IMMER_NODISCARD bool empty() const { return impl_.d->empty(); }
 
     /*!
      * Access the raw data.
      */
-    const T* data() const { return impl_.data(); }
+    IMMER_NODISCARD const T* data() const { return impl_.data(); }
 
     /*!
      * Access the last element.
      */
-    const T& back() const { return data()[size() - 1]; }
+    IMMER_NODISCARD const T& back() const { return data()[size() - 1]; }
 
     /*!
      * Access the first element.
      */
-    const T& front() const { return data()[0]; }
+    IMMER_NODISCARD const T& front() const { return data()[0]; }
 
     /*!
      * Returns a `const` reference to the element at position `index`.
@@ -166,12 +166,12 @@ public:
      * Returns an @a immutable form of this container, an
      * `immer::array`.
      */
-    persistent_type persistent() &
+    IMMER_NODISCARD persistent_type persistent() &
     {
         this->owner_t::operator=(owner_t{});
         return persistent_type{ impl_ };
     }
-    persistent_type persistent() &&
+    IMMER_NODISCARD persistent_type persistent() &&
     { return persistent_type{ std::move(impl_) }; }
 
 private:

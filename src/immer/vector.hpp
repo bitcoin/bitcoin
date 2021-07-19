@@ -133,49 +133,49 @@ public:
      * collection. It does not allocate memory and its complexity is
      * @f$ O(1) @f$.
      */
-    iterator begin() const { return {impl_}; }
+    IMMER_NODISCARD iterator begin() const { return {impl_}; }
 
     /*!
      * Returns an iterator pointing just after the last element of the
      * collection. It does not allocate and its complexity is @f$ O(1) @f$.
      */
-    iterator end() const { return {impl_, typename iterator::end_t{}}; }
+    IMMER_NODISCARD iterator end() const { return {impl_, typename iterator::end_t{}}; }
 
     /*!
      * Returns an iterator that traverses the collection backwards,
      * pointing at the first element of the reversed collection. It
      * does not allocate memory and its complexity is @f$ O(1) @f$.
      */
-    reverse_iterator rbegin() const { return reverse_iterator{end()}; }
+    IMMER_NODISCARD reverse_iterator rbegin() const { return reverse_iterator{end()}; }
 
     /*!
      * Returns an iterator that traverses the collection backwards,
      * pointing after the last element of the reversed collection. It
      * does not allocate memory and its complexity is @f$ O(1) @f$.
      */
-    reverse_iterator rend()   const { return reverse_iterator{begin()}; }
+    IMMER_NODISCARD reverse_iterator rend()   const { return reverse_iterator{begin()}; }
 
     /*!
      * Returns the number of elements in the container.  It does
      * not allocate memory and its complexity is @f$ O(1) @f$.
      */
-    size_type size() const { return impl_.size; }
+    IMMER_NODISCARD size_type size() const { return impl_.size; }
 
     /*!
      * Returns `true` if there are no elements in the container.  It
      * does not allocate memory and its complexity is @f$ O(1) @f$.
      */
-    bool empty() const { return impl_.size == 0; }
+    IMMER_NODISCARD bool empty() const { return impl_.size == 0; }
 
     /*!
      * Access the last element.
      */
-    const T& back() const { return impl_.back(); }
+    IMMER_NODISCARD const T& back() const { return impl_.back(); }
 
     /*!
      * Access the first element.
      */
-    const T& front() const { return impl_.front(); }
+    IMMER_NODISCARD const T& front() const { return impl_.front(); }
 
     /*!
      * Returns a `const` reference to the element at position `index`.
@@ -183,7 +183,7 @@ public:
      * allocate memory and its complexity is *effectively* @f$ O(1)
      * @f$.
      */
-    reference operator[] (size_type index) const
+    IMMER_NODISCARD reference operator[] (size_type index) const
     { return impl_.get(index); }
 
     /*!
@@ -198,9 +198,9 @@ public:
     /*!
      * Returns whether the vectors are equal.
      */
-    bool operator==(const vector& other) const
+    IMMER_NODISCARD bool operator==(const vector& other) const
     { return impl_.equals(other.impl_); }
-    bool operator!=(const vector& other) const
+    IMMER_NODISCARD bool operator!=(const vector& other) const
     { return !(*this == other); }
 
     /*!
@@ -218,10 +218,10 @@ public:
      *
      * @endrst
      */
-    vector push_back(value_type value) const&
+    IMMER_NODISCARD vector push_back(value_type value) const&
     { return impl_.push_back(std::move(value)); }
 
-    decltype(auto) push_back(value_type value) &&
+    IMMER_NODISCARD decltype(auto) push_back(value_type value) &&
     { return push_back_move(move_t{}, std::move(value)); }
 
     /*!
@@ -241,10 +241,10 @@ public:
      *
      * @endrst
      */
-    vector set(size_type index, value_type value) const&
+    IMMER_NODISCARD vector set(size_type index, value_type value) const&
     { return impl_.assoc(index, std::move(value)); }
 
-    decltype(auto) set(size_type index, value_type value) &&
+    IMMER_NODISCARD decltype(auto) set(size_type index, value_type value) &&
     { return set_move(move_t{}, index, std::move(value)); }
 
     /*!
@@ -266,11 +266,11 @@ public:
      * @endrst
      */
     template <typename FnT>
-    vector update(size_type index, FnT&& fn) const&
+    IMMER_NODISCARD vector update(size_type index, FnT&& fn) const&
     { return impl_.update(index, std::forward<FnT>(fn)); }
 
     template <typename FnT>
-    decltype(auto) update(size_type index, FnT&& fn) &&
+    IMMER_NODISCARD decltype(auto) update(size_type index, FnT&& fn) &&
     { return update_move(move_t{}, index, std::forward<FnT>(fn)); }
 
     /*!
@@ -289,19 +289,19 @@ public:
      *
      * @endrst
      */
-    vector take(size_type elems) const&
+    IMMER_NODISCARD vector take(size_type elems) const&
     { return impl_.take(elems); }
 
-    decltype(auto) take(size_type elems) &&
+    IMMER_NODISCARD decltype(auto) take(size_type elems) &&
     { return take_move(move_t{}, elems); }
 
     /*!
      * Returns an @a transient form of this container, an
      * `immer::vector_transient`.
      */
-    transient_type transient() const&
+    IMMER_NODISCARD transient_type transient() const&
     { return transient_type{ impl_ }; }
-    transient_type transient() &&
+    IMMER_NODISCARD transient_type transient() &&
     { return transient_type{ std::move(impl_) }; }
 
     // Semi-private
