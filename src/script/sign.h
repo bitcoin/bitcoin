@@ -70,6 +70,7 @@ struct SignatureData {
     CScript witness_script; ///< The witnessScript (if any) for the input. witnessScripts are used in P2WSH outputs.
     CScriptWitness scriptWitness; ///< The scriptWitness of an input. Contains complete signatures or the traditional partial signatures format. scriptWitness is part of a transaction input per BIP 144.
     TaprootSpendData tr_spenddata; ///< Taproot spending data.
+    std::optional<TaprootBuilder> tr_builder; ///< Taproot tree used to build tr_spenddata.
     std::map<CKeyID, SigPair> signatures; ///< BIP 174 style partial signatures for the input. May contain all signatures necessary for producing a final scriptSig or scriptWitness.
     std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>> misc_pubkeys;
     std::vector<unsigned char> taproot_key_path_sig; /// Schnorr signature for key path spending

@@ -216,10 +216,14 @@ static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatu
 static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCreator& creator, const WitnessV1Taproot& output, SignatureData& sigdata, std::vector<valtype>& result)
 {
     TaprootSpendData spenddata;
+    TaprootBuilder builder;
 
     // Gather information about this output.
     if (provider.GetTaprootSpendData(output, spenddata)) {
         sigdata.tr_spenddata.Merge(spenddata);
+    }
+    if (provider.GetTaprootBuilder(output, builder)) {
+        sigdata.tr_builder = builder;
     }
 
     // Try key path spending.
