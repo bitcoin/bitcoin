@@ -597,8 +597,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             fee_rate=Decimal('0.01'),
         )
 
-        # Reports true due to inheritance
-        assert_equal(True, self.nodes[0].getmempoolentry(optout_child_tx['txid'])['bip125-replaceable'])
+        # Reports false due to inheritance not being implemented
+        assert_equal(False, self.nodes[0].getmempoolentry(optout_child_tx['txid'])['bip125-replaceable'])
 
         replacement_child_tx = self.wallet.create_self_transfer(
             from_node=self.nodes[0],
