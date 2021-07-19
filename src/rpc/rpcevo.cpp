@@ -882,11 +882,11 @@ static void protx_list_help()
             "If \"height\" is not specified, it defaults to the current chain-tip.\n"
             "\nAvailable types:\n"
             "  registered   - List all ProTx which are registered at the given chain height.\n"
-            "                 This will also include ProTx which failed PoSe verfication.\n"
+            "                 This will also include ProTx which failed PoSe verification.\n"
             "  valid        - List only ProTx which are active/valid at the given chain height.\n"
 #ifdef ENABLE_WALLET
             "  wallet       - List only ProTx which are found in your wallet at the given chain height.\n"
-            "                 This will also include ProTx which failed PoSe verfication.\n"
+            "                 This will also include ProTx which failed PoSe verification.\n"
 #endif
     );
 }

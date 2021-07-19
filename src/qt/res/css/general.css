@@ -1176,7 +1176,7 @@ QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:checked { /*
     background-position: center;
 }
 
-QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::seperator {
+QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::separator {
 
 }
 

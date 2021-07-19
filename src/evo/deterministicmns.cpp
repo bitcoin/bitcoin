@@ -878,7 +878,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 uint32_t quorumHeight = qc.nHeight - (qc.nHeight % llmq_params.dkgInterval);
                 auto quorumIndex = pindexPrev->GetAncestor(quorumHeight);
                 if (!quorumIndex || quorumIndex->GetBlockHash() != qc.commitment.quorumHash) {
-                    // we should actually never get into this case as validation should have catched it...but lets be sure
+                    // we should actually never get into this case as validation should have caught it...but lets be sure
                     return _state.DoS(100, false, REJECT_INVALID, "bad-qc-quorum-hash");
                 }
 

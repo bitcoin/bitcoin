@@ -137,7 +137,6 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
 
         self.log.info("Same mnemonic, same mnemonic passphrase, encrypt wallet on upgrade, should recover all coins after rescan")
         walletpass = "111pass222"
-        # Upgrading and encrypting at the saame time results in a warning
         assert node.upgradetohd(mnemonic, "", walletpass)
         node.stop()
         node.wait_until_stopped()

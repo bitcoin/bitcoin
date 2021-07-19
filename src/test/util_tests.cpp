@@ -1122,7 +1122,7 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     thr.join();
     BOOST_CHECK_EQUAL(threadresult, true);
 #ifndef WIN32
-    // Try to aquire lock in child process while we're holding it, this should fail.
+    // Try to acquire lock in child process while we're holding it, this should fail.
     char ch;
     BOOST_CHECK_EQUAL(write(fd[1], &LockCommand, 1), 1);
     BOOST_CHECK_EQUAL(read(fd[1], &ch, 1), 1);
@@ -1133,7 +1133,7 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     // Probing lock from our side now should succeed, but not hold on to the lock.
     BOOST_CHECK_EQUAL(LockDirectory(dirname, lockname, true), true);
 
-    // Try to acquire the lock in the child process, this should be succesful.
+    // Try to acquire the lock in the child process, this should be successful.
     BOOST_CHECK_EQUAL(write(fd[1], &LockCommand, 1), 1);
     BOOST_CHECK_EQUAL(read(fd[1], &ch, 1), 1);
     BOOST_CHECK_EQUAL((bool)ch, true);

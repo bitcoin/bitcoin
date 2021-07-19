@@ -504,7 +504,7 @@ void BitcoinApplication::initializeResult(bool success)
         }
         Q_EMIT splashFinished(window);
 
-        // Let the users setup their prefered appearance if there are no settings for it defined yet.
+        // Let the users setup their preferred appearance if there are no settings for it defined yet.
         GUIUtil::setupAppearance(window, clientModel->getOptionsModel());
 
 #ifdef ENABLE_WALLET

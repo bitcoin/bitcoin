@@ -748,7 +748,7 @@ public:
      * determine if that transaction has not yet been visited during the current
      * traversal's epoch.
      *     Algorithms using std::set can be replaced on a one by one basis.
-     * Both techniques are not fundamentally incomaptible across the codebase.
+     * Both techniques are not fundamentally incompatible across the codebase.
      * Generally speaking, however, the remaining use of std::set for mempool
      * traversal should be viewed as a TODO for replacement with an epoch based
      * traversal, rather than a preference for std::set over epochs in that

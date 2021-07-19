@@ -1544,7 +1544,7 @@ void updateFonts()
              << ", removed items: mapWidgetDefaultFontSizes/mapFontUpdates(" << nRemovedDefaultFonts << "/" << nRemovedFontUpdates << ")";
 
     // Perform the required font updates
-    // NOTE: This is done as seperate step to avoid scaling issues due to font inheritance
+    // NOTE: This is done as separate step to avoid scaling issues due to font inheritance
     //       hence all fonts are calculated and stored in mapWidgetFonts above.
     for (auto it : mapWidgetFonts) {
         it.first->setFont(it.second);

@@ -127,7 +127,7 @@ Configuring the github-merge tool for the bitcoin repository is done in the foll
 Create and verify timestamps of merge commits
 ---------------------------------------------
 To create or verify timestamps on the merge commits, install the OpenTimestamps
-client via `pip3 install opentimestamps-client`. Then, dowload the gpg wrapper
+client via `pip3 install opentimestamps-client`. Then, download the gpg wrapper
 `ots-git-gpg-wrapper.sh` and set it as git's `gpg.program`. See
 [the ots git integration documentation](https://github.com/opentimestamps/opentimestamps-client/blob/master/doc/git-integration.md#usage)
 for further details.
