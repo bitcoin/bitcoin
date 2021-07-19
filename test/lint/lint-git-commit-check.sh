@@ -27,7 +27,7 @@ if [ -z "${COMMIT_RANGE}" ]; then
     if [ -n "$1" ]; then
       COMMIT_RANGE="HEAD~$1...HEAD"
     else
-      MERGE_BASE=$(git merge-base HEAD master)
+      MERGE_BASE=$(git merge-base HEAD develop)
       COMMIT_RANGE="$MERGE_BASE..HEAD"
     fi
 fi
