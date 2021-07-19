@@ -29,7 +29,7 @@ License: GNU-All-permissive-License
 Files: src/qt/res/icons/proxy.png
        src/qt/res/src/proxy.svg
 Copyright: Cristian Mircea Messel
-Licese: public-domain
+License: public-domain
 
 
 License: Expat

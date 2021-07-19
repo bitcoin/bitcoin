@@ -137,7 +137,6 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
 
         self.log.info("Same mnemonic, same mnemonic passphrase, encrypt wallet on upgrade, should recover all coins after rescan")
         walletpass = "111pass222"
-        # Upgrading and encrypting at the saame time results in a warning
         assert node.upgradetohd(mnemonic, "", walletpass)
         node.stop()
         node.wait_until_stopped()
@@ -146,7 +145,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         node.walletpassphrase(walletpass, 100)
         assert_equal(mnemonic, node.dumphdinfo()['mnemonic'])
         assert_equal(chainid, node.getwalletinfo()['hdchainid'])
-        # Note: wallet encryption results in additonal keypool topup,
+        # Note: wallet encryption results in additional keypool topup,
         # so we can't compare new balance to balance_non_HD here,
         # assert_equal(balance_non_HD, node.getbalance())  # won't work
         assert(balance_non_HD != node.getbalance())
@@ -170,7 +169,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         node.walletpassphrase(walletpass, 100)
         assert_equal(mnemonic, node.dumphdinfo()['mnemonic'])
         assert_equal(chainid, node.getwalletinfo()['hdchainid'])
-        # Note: wallet encryption results in additonal keypool topup,
+        # Note: wallet encryption results in additional keypool topup,
         # so we can't compare new balance to balance_non_HD here,
         # assert_equal(balance_non_HD, node.getbalance())  # won't work
         assert(balance_non_HD != node.getbalance())

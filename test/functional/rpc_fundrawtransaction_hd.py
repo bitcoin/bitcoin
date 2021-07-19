@@ -71,7 +71,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         fee = rawtxfund['fee']
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
-        assert(len(dec_tx['vin']) > 0) #test if we have enought inputs
+        assert(len(dec_tx['vin']) > 0) #test if we have enough inputs
 
         ##############################
         # simple test with two coins #

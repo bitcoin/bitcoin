@@ -98,7 +98,7 @@ CKeePassIntegrator::CKeePassIntegrator()
     nPort = DEFAULT_KEEPASS_HTTP_PORT;
 }
 
-// Initialze from application context
+// Initialize from application context
 void CKeePassIntegrator::init()
 {
     bIsActive = gArgs.GetBoolArg("-keepass", false);
@@ -184,7 +184,7 @@ SecureString CKeePassIntegrator::CKeePassResponse::getSecureStr(const std::strin
     }
     catch (std::exception &e)
     {
-        std::string strError = "Exception occured while decrypting ";
+        std::string strError = "Exception occurred while decrypting ";
         strError += strName + ": " + e.what();
         throw std::runtime_error(strError);
     }

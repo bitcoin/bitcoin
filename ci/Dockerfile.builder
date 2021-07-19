@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install $APT_ARGS python3-pip python3-setuptools &
 RUN pip3 install pyzmq # really needed?
 RUN pip3 install jinja2
 RUN pip3 install flake8==3.5.0
+RUN pip3 install codespell==1.13.0
 
 # dash_hash
 RUN git clone https://github.com/dashpay/dash_hash
@@ -43,7 +44,7 @@ RUN apt-get update && apt-get install $APT_ARGS imagemagick libcap-dev librsvg2-
 
 # This is a hack. It is needed because gcc-multilib and g++-multilib are conflicting with g++-arm-linux-gnueabihf. This is
 # due to gcc-multilib installing the following symbolic link, which is needed for -m32 support. However, this causes
-# arm builds to also have the asm folder implicitely in the include search path. This is kind of ok, because the asm folder
+# arm builds to also have the asm folder implicitly in the include search path. This is kind of ok, because the asm folder
 # for arm has precedence.
 RUN ln -s x86_64-linux-gnu/asm /usr/include/asm
 

@@ -1411,7 +1411,7 @@
         </rect>
        </property>
        <property name="text">
-        <string>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</string>
+        <string>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>

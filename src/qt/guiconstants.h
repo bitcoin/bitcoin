@@ -22,9 +22,9 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 
 /** Defines the half in RGB space, basically a grey in the middle between black and white */
 #define RGB_HALF 0x7f7f7f
-/** Path to the icon ressource folder */
+/** Path to the icon resource folder */
 #define ICONS_PATH ":icons/"
-/** Path to the movies ressource folder */
+/** Path to the movies resource folder */
 #define MOVIES_PATH ":movies/"
 
 /* Tooltips longer than this (in characters) are converted into rich text,

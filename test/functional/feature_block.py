@@ -878,7 +878,7 @@ class FullBlockTest(BitcoinTestFramework):
         #                                                                                    \-> b67 (20)
         #
         #
-        self.log.info("Reject a block with a transaction double spending a transaction creted in the same block")
+        self.log.info("Reject a block with a transaction double spending a transaction created in the same block")
         self.move_tip(65)
         b67 = self.next_block(67)
         tx1 = self.create_and_sign_transaction(out[20], out[20].vout[0].nValue)
@@ -993,7 +993,7 @@ class FullBlockTest(BitcoinTestFramework):
         assert_equal(get_legacy_sigopcount_block(b73), MAX_BLOCK_SIGOPS + 1)
         self.send_blocks([b73], success=False, reject_code=16, reject_reason=b'bad-blk-sigops', reconnect=True)
 
-        # b74/75 - if we push an invalid script element, all prevous sigops are counted,
+        # b74/75 - if we push an invalid script element, all previous sigops are counted,
         #          but sigops after the element are not counted.
         #
         #       The invalid script element is that the push_data indicates that

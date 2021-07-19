@@ -114,7 +114,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
         pixPaint.setFont(fontBold);
         fm = pixPaint.fontMetrics();
         int titleAddTextWidth = fm.width(titleAddText);
-        // Draw the badge backround with the network-specific color
+        // Draw the badge background with the network-specific color
         QRect badgeRect = QRect(width - titleAddTextWidth - 20, 5, width, fm.height() + 10);
         QColor badgeColor = networkStyle->getBadgeColor();
         pixPaint.fillRect(badgeRect, badgeColor);

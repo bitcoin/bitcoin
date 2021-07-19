@@ -22,7 +22,7 @@ if [ "$CHECK_DOC" = 1 ]; then
     #test/lint/git-subtree-check.sh src/secp256k1
     #test/lint/git-subtree-check.sh src/univalue
     #test/lint/git-subtree-check.sh src/leveldb
-    # TODO: Check docs (reenable after all Bitcoin PRs have been merged and docs fully fixed)
+    # TODO: Check docs (re-enable after all Bitcoin PRs have been merged and docs fully fixed)
     #test/lint/check-doc.py
     # Check rpc consistency
     test/lint/check-rpc-mappings.py .

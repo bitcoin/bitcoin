@@ -202,7 +202,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         # Create an ISLOCK but don't broadcast it yet
         islock = self.create_islock(rawtx2)
 
-        # Disable ChainLocks to avoid accidential locking
+        # Disable ChainLocks to avoid accidental locking
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
 
         # Send tx1, which will later conflict with the ISLOCK

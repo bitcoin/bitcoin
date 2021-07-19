@@ -222,7 +222,7 @@ std::vector<CSuperblock_sptr> CGovernanceTriggerManager::GetActiveTriggers()
 /**
 *   Is Superblock Triggered
 *
-*   - Does this block have a non-executed and actived trigger?
+*   - Does this block have a non-executed and activated trigger?
 */
 
 bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
@@ -504,7 +504,7 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
     vecParsed1 = SplitBy(strPaymentAddresses, "|");
     vecParsed2 = SplitBy(strPaymentAmounts, "|");
 
-    // IF THESE DONT MATCH, SOMETHING IS WRONG
+    // IF THESE DON'T MATCH, SOMETHING IS WRONG
 
     if (vecParsed1.size() != vecParsed2.size()) {
         std::ostringstream ostr;

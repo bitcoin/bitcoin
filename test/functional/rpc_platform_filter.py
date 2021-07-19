@@ -100,7 +100,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         self.log.info('Try running all non-whitelisted commands as each user...')
         for command in nonwhitelisted:
             test_command(command, [], rpcuser_authpair_platform, 403)
-            if command != "stop":  # avoid stoping the node while testing
+            if command != "stop":  # avoid stopping the node while testing
                 # we don't care about the exact status here, should simply be anything else but 403
                 test_command(command, [], rpcuser_authpair_operator, 403, True)
 

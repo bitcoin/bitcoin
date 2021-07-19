@@ -1697,7 +1697,7 @@ bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate, con
                                              __func__, (float) it.first / COIN, it.second, (float) nBalanceToDenominate / COIN, txBuilder.ToString());
                 break;
             }
-            LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- 1 - FINSHED - nDenomValue: %f, count: %d, nBalanceToDenominate: %f, %s\n",
+            LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- 1 - FINISHED - nDenomValue: %f, count: %d, nBalanceToDenominate: %f, %s\n",
                                          __func__, (float) it.first / COIN, it.second, (float) nBalanceToDenominate / COIN, txBuilder.ToString());
         }
 
@@ -1731,7 +1731,7 @@ bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate, con
 
             // Number of denoms we can create given our denom and the amount of funds we have left
             int denomsToCreateValue = countPossibleOutputs(nDenomValue);
-            // Prefer overshooting the targed balance by larger denoms (hence `+1`) instead of a more
+            // Prefer overshooting the target balance by larger denoms (hence `+1`) instead of a more
             // accurate approximation by many smaller denoms. This is ok because when we get here we
             // should have nCoinJoinDenomsGoal of each smaller denom already. Also, without `+1`
             // we can end up in a situation when there is already nCoinJoinDenomsHardCap of smaller

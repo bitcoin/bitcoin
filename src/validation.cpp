@@ -3422,7 +3422,7 @@ void ResetBlockFailureFlags(CBlockIndex *pindex) {
 
 CBlockIndex* CChainState::AddToBlockIndex(const CBlockHeader& block, enum BlockStatus nStatus)
 {
-    assert(!(nStatus & BLOCK_FAILED_MASK)); // no failed blocks alowed
+    assert(!(nStatus & BLOCK_FAILED_MASK)); // no failed blocks allowed
     AssertLockHeld(cs_main);
 
     // Check for duplicate

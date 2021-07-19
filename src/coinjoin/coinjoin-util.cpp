@@ -126,7 +126,7 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
         coinControl.Select(coin.outpoint);
         dummyTx.vin.emplace_back(coin.outpoint, CScript());
     }
-    // Get a comparable dummy scriptPubKey, avoid writting/flushing to the actual wallet db
+    // Get a comparable dummy scriptPubKey, avoid writing/flushing to the actual wallet db
     CScript dummyScript;
     {
         LOCK(pwallet->cs_wallet);
