@@ -113,6 +113,24 @@ void PSBTInput::FillSignatureData(SignatureData& sigdata) const
     for (const auto& key_pair : hd_keypaths) {
         sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair);
     }
+    if (!m_tap_key_sig.empty()) {
+        sigdata.taproot_key_path_sig = m_tap_key_sig;
+    }
+    for (const auto& [pubkey_leaf, sig] : m_tap_script_sigs) {
+        sigdata.taproot_script_sigs.emplace(pubkey_leaf, sig);
+    }
+    if (!m_tap_internal_key.IsNull()) {
+        sigdata.tr_spenddata.internal_key = m_tap_internal_key;
+    }
+    if (!m_tap_merkle_root.IsNull()) {
+        sigdata.tr_spenddata.merkle_root = m_tap_merkle_root;
+    }
+    for (const auto& [leaf_script, control_block] : m_tap_scripts) {
+        sigdata.tr_spenddata.scripts.emplace(leaf_script, control_block);
+    }
+    for (const auto& [pubkey, leaf_origin] : m_tap_bip32_paths) {
+        sigdata.taproot_misc_pubkeys.emplace(pubkey, leaf_origin);
+    }
 }
 
 void PSBTInput::FromSignatureData(const SignatureData& sigdata)
@@ -141,6 +159,24 @@ void PSBTInput::FromSignatureData(const SignatureData& sigdata)
     }
     for (const auto& entry : sigdata.misc_pubkeys) {
         hd_keypaths.emplace(entry.second);
+    }
+    if (!sigdata.taproot_key_path_sig.empty()) {
+        m_tap_key_sig = sigdata.taproot_key_path_sig;
+    }
+    for (const auto& [pubkey_leaf, sig] : sigdata.taproot_script_sigs) {
+        m_tap_script_sigs.emplace(pubkey_leaf, sig);
+    }
+    if (!sigdata.tr_spenddata.internal_key.IsNull()) {
+        m_tap_internal_key = sigdata.tr_spenddata.internal_key;
+    }
+    if (!sigdata.tr_spenddata.merkle_root.IsNull()) {
+        m_tap_merkle_root = sigdata.tr_spenddata.merkle_root;
+    }
+    for (const auto& [leaf_script, control_block] : sigdata.tr_spenddata.scripts) {
+        m_tap_scripts.emplace(leaf_script, control_block);
+    }
+    for (const auto& [pubkey, leaf_origin] : sigdata.taproot_misc_pubkeys) {
+        m_tap_bip32_paths.emplace(pubkey, leaf_origin);
     }
 }
 
