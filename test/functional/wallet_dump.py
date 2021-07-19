@@ -209,6 +209,15 @@ class WalletDumpTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(['Flushing wallet.dat'], timeout=20):
             self.nodes[0].getnewaddress()
 
+        # Make sure that dumpwallet doesn't have a lock order issue when there is an unconfirmed tx and it is reloaded
+        # See https://github.com/bitcoin/bitcoin/issues/22489
+        self.nodes[0].createwallet("w3")
+        w3 = self.nodes[0].get_wallet_rpc("w3")
+        w3.importprivkey(privkey=self.nodes[0].get_deterministic_priv_key().key, label="coinbase_import")
+        w3.sendtoaddress(w3.getnewaddress(), 10)
+        w3.unloadwallet()
+        self.nodes[0].loadwallet("w3")
+        w3.dumpwallet(os.path.join(self.nodes[0].datadir, "w3.dump"))
 
 if __name__ == '__main__':
     WalletDumpTest().main()
