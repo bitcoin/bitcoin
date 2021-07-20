@@ -460,6 +460,10 @@ public:
          * partially submitted.
          */
         const bool m_package_submission;
+        /** When true, use package feerates instead of individual transaction feerates for fee-based
+         * policies such as mempool min fee and min relay fee.
+         */
+        const bool m_package_feerates;
 
         /** Parameters for single transaction mempool validation. */
         static ATMPArgs SingleAccept(const CChainParams& chainparams, int64_t accept_time,
@@ -472,6 +476,7 @@ public:
                             /* m_test_accept */ test_accept,
                             /* m_allow_bip125_replacement */ true,
                             /* m_package_submission */ false,
+                            /* m_package_feerates */ false,
             };
         }
 
@@ -485,6 +490,7 @@ public:
                             /* m_test_accept */ true,
                             /* m_allow_bip125_replacement */ false,
                             /* m_package_submission */ false, // not submitting to mempool
+                            /* m_package_feerates */ false,
             };
         }
 
@@ -498,6 +504,7 @@ public:
                             /* m_test_accept */ false,
                             /* m_allow_bip125_replacement */ false,
                             /* m_package_submission */ true,
+                            /* m_package_feerates */ true,
             };
         }
 
@@ -510,14 +517,16 @@ public:
                  std::vector<COutPoint>& coins_to_uncache,
                  bool test_accept,
                  bool allow_bip125_replacement,
-                 bool package_submission)
+                 bool package_submission,
+                 bool package_feerates)
             : m_chainparams{chainparams},
               m_accept_time{accept_time},
               m_bypass_limits{bypass_limits},
               m_coins_to_uncache{coins_to_uncache},
               m_test_accept{test_accept},
               m_allow_bip125_replacement{allow_bip125_replacement},
-              m_package_submission{package_submission}
+              m_package_submission{package_submission},
+              m_package_feerates{package_feerates}
         {
         }
     };
@@ -819,9 +828,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "bad-txns-too-many-sigops",
                 strprintf("%d", nSigOpsCost));
 
-    // No transactions are allowed below minRelayTxFee except from disconnected
-    // blocks
-    if (!bypass_limits && !CheckFeeRate(ws.m_vsize, ws.m_modified_fees, state)) return false;
+    // No individual transactions are allowed below minRelayTxFee and mempool min fee except from
+    // disconnected blocks and transactions in a package. Package transactions will be checked using
+    // package feerate later.
+    if (!bypass_limits && !args.m_package_feerates && !CheckFeeRate(ws.m_vsize, ws.m_modified_fees, state)) return false;
 
     ws.m_iters_conflicting = m_pool.GetIterSet(ws.m_conflicts);
     // Calculate in-mempool ancestors, up to a limit.
@@ -1205,12 +1215,27 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
         m_viewmempool.PackageAddTransaction(ws.m_ptx);
     }
 
+    // Transactions must meet two minimum feerates: the mempool minimum fee and min relay fee.
+    // For transactions consisting of exactly one child and its parents, it suffices to use the
+    // package feerate (total modified fees / total virtual size) to check this requirement.
+    const auto m_total_vsize = std::accumulate(workspaces.cbegin(), workspaces.cend(), int64_t{0},
+        [](int64_t sum, auto& ws) { return sum + ws.m_vsize; });
+    const auto m_total_modified_fees = std::accumulate(workspaces.cbegin(), workspaces.cend(), CAmount{0},
+        [](CAmount sum, auto& ws) { return sum + ws.m_modified_fees; });
+    const CFeeRate package_feerate(m_total_modified_fees, m_total_vsize);
+    TxValidationState placeholder_state;
+    if (args.m_package_feerates &&
+        !CheckFeeRate(m_total_vsize, m_total_modified_fees, placeholder_state)) {
+        package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-fee-too-low");
+        return PackageMempoolAcceptResult(package_state, package_feerate, {});
+    }
+
     // Apply package mempool ancestor/descendant limits. Skip if there is only one transaction,
     // because it's unnecessary. Also, CPFP carve out can increase the limit for individual
     // transactions, but this exemption is not extended to packages in CheckPackageLimits().
     std::string err_string;
     if (txns.size() > 1 && !PackageMempoolChecks(txns, package_state)) {
-        return PackageMempoolAcceptResult(package_state, std::move(results));
+        return PackageMempoolAcceptResult(package_state, package_feerate, std::move(results));
     }
 
     for (Workspace& ws : workspaces) {
@@ -1218,7 +1243,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
             // Exit early to avoid doing pointless work. Update the failed tx result; the rest are unfinished.
             package_state.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
             results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
-            return PackageMempoolAcceptResult(package_state, std::move(results));
+            return PackageMempoolAcceptResult(package_state, package_feerate, std::move(results));
         }
         if (args.m_test_accept) {
             // When test_accept=true, transactions that pass PolicyScriptChecks are valid because there are
@@ -1229,14 +1254,14 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
         }
     }
 
-    if (args.m_test_accept) return PackageMempoolAcceptResult(package_state, std::move(results));
+    if (args.m_test_accept) return PackageMempoolAcceptResult(package_state, package_feerate, std::move(results));
 
     if (!SubmitPackage(args, workspaces, package_state, results)) {
         // PackageValidationState filled in by SubmitPackage().
-        return PackageMempoolAcceptResult(package_state, std::move(results));
+        return PackageMempoolAcceptResult(package_state, package_feerate, std::move(results));
     }
 
-    return PackageMempoolAcceptResult(package_state, std::move(results));
+    return PackageMempoolAcceptResult(package_state, package_feerate, std::move(results));
 }
 
 PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, ATMPArgs& args)
