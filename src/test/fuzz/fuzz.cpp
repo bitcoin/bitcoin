@@ -36,9 +36,6 @@ static TypeTestOneInput* g_test_one_input{nullptr};
 
 void initialize()
 {
-    // In case we didn't clean up properly after last fuzz run.
-    boost::filesystem::remove_all("/tmp/test_common_Bitcoin Core");
-
     // Terminate immediately if a fuzzing harness ever tries to create a TCP socket.
     CreateSock = [](const CService&) -> std::unique_ptr<Sock> { std::terminate(); };
 
@@ -131,6 +128,9 @@ int main(int argc, char** argv)
     }
     test_one_input(buffer);
 #endif
+    if (std::getenv("CLEAN_TMP_AFTER_FUZZ")) {
+        boost::filesystem::remove_all("/tmp/test_common_Bitcoin Core");
+    }
     return 0;
 }
 #endif
