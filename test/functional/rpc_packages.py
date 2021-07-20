@@ -21,6 +21,7 @@ from test_framework.script import (
 )
 from test_framework.util import (
     assert_equal,
+    assert_raises_rpc_error,
 )
 from test_framework.wallet import (
     create_child_with_parents,
@@ -51,7 +52,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         self.address = node.get_deterministic_priv_key().address
         self.coins = []
         # The last 100 coinbase transactions are premature
-        for b in self.generatetoaddress(node, 200, self.address)[:100]:
+        for b in node.generatetoaddress(220, self.address)[:-100]:
             coinbase = node.getblock(blockhash=b, verbosity=2)["tx"][0]
             self.coins.append({
                 "txid": coinbase["txid"],
@@ -82,7 +83,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         self.test_multiple_parents()
         self.test_conflicting()
         self.test_rbf()
-
+        self.test_submitrawpackage()
 
     def test_independent(self):
         self.log.info("Test multiple independent transactions in a package")
@@ -132,8 +133,7 @@ class RPCPackagesTest(BitcoinTestFramework):
 
     def test_chain(self):
         node = self.nodes[0]
-        first_coin = self.coins.pop()
-        (chain_hex, chain_txns) = create_raw_chain(node, first_coin, self.address, self.privkeys)
+        (chain_hex, chain_txns) = create_raw_chain(node, self.coins.pop(), self.address, self.privkeys)
         self.log.info("Check that testmempoolaccept requires packages to be sorted by dependency")
         assert_equal(node.testmempoolaccept(rawtxs=chain_hex[::-1]),
                 [{"txid": tx.rehash(), "wtxid": tx.getwtxid(), "package-error": "package-not-sorted"} for tx in chain_txns[::-1]])
@@ -305,6 +305,72 @@ class RPCPackagesTest(BitcoinTestFramework):
             "reject-reason": "bip125-replacement-disallowed"
         }]
         self.assert_testres_equal(self.independent_txns_hex + [signed_replacement_tx["hex"]], testres_rbf_package)
+
+    def assert_equal_package_results(self, testres_package, submitres_package):
+        """Assert that a successful testmempoolaccept result and submitrawpackage result are
+        consistent. They may return the same information in slightly different forms.
+        """
+        for testres_tx in testres_package:
+            # Grab this result from the submitres
+            submitres_tx = submitres_package["tx-results"][testres_tx["wtxid"]]
+            assert_equal(submitres_tx["txid"], testres_tx["txid"])
+            if "allowed" in testres_tx and testres_tx["allowed"]:
+                assert_equal(submitres_tx["vsize"], testres_tx["vsize"])
+                assert_equal(submitres_tx["fees"]["base"], testres_tx["fees"]["base"])
+
+    def test_submit_child_with_parents(self, num_parents):
+        node = self.nodes[0]
+        # Test a package with num_parents parents and 1 child transaction.
+        package_hex = []
+        package_txns = []
+        values = []
+        scripts = []
+        for _ in range(num_parents):
+            parent_coin = self.coins.pop()
+            value = parent_coin["amount"]
+            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, parent_coin["txid"], value)
+            package_hex.append(txhex)
+            package_txns.append(tx)
+            values.append(value)
+            scripts.append(spk)
+        child_hex = create_child_with_parents(node, self.address, self.privkeys, package_txns, values, scripts)
+        package_hex.append(child_hex)
+        package_txns.append(tx_from_hex(child_hex))
+
+        testres_package = node.testmempoolaccept(rawtxs=package_hex)
+        submitres_package = node.submitrawpackage(package=package_hex)
+
+        # Check that each result is present, with the correct size and fees
+        for i in range(num_parents + 1):
+            tx = package_txns[i]
+            wtxid = tx.getwtxid()
+            assert wtxid in submitres_package["tx-results"]
+            tx_result = submitres_package["tx-results"][wtxid]
+            expected_fee = Decimal("0.0001")
+            assert_equal(tx_result, {
+                "txid": tx.rehash(),
+                "wtxid": wtxid,
+                "vsize": tx.get_vsize(),
+                "fees": {
+                    "base": expected_fee,
+                }
+            })
+
+        # testmempoolaccept and submitrawpackage should return the same results when successful
+        self.assert_equal_package_results(testres_package, submitres_package)
+
+    def test_submitrawpackage(self):
+        node = self.nodes[0]
+
+        self.log.info("Submitrawpackage valid packages with 1 child and some number of parents")
+        for num_parents in [1, 2, 10, 24]:
+            self.test_submit_child_with_parents(num_parents)
+
+        self.log.info("Submitrawpackage only allows packages of 1 child with its parents")
+        # Chain of 3 transactions has too many generations
+        (chain_hex, _) = create_raw_chain(node, self.coins.pop(), self.address, self.privkeys, 3)
+        assert_raises_rpc_error(-25, "not-child-with-parents", node.submitrawpackage, chain_hex)
+
 
 if __name__ == "__main__":
     RPCPackagesTest().main()
