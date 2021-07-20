@@ -983,7 +983,8 @@ static RPCHelpMan testmempoolaccept()
         UniValue result_inner(UniValue::VOBJ);
         result_inner.pushKV("txid", tx->GetHash().GetHex());
         result_inner.pushKV("wtxid", tx->GetWitnessHash().GetHex());
-        if (package_result.m_state.GetResult() == PackageValidationResult::PCKG_POLICY) {
+        if (package_result.m_state.GetResult() == PackageValidationResult::PCKG_BAD ||
+            package_result.m_state.GetResult() == PackageValidationResult::PCKG_POLICY) {
             result_inner.pushKV("package-error", package_result.m_state.GetRejectReason());
         }
         auto it = package_result.m_tx_results.find(tx->GetWitnessHash());

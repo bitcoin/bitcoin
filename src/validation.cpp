@@ -972,7 +972,10 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
     // Do all PreChecks first and fail fast to avoid running expensive script checks when unnecessary.
     for (Workspace& ws : workspaces) {
         if (!PreChecks(args, ws)) {
-            package_state.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+            package_state.Invalid(ws.m_state.GetResult() == TxValidationResult::TX_CONSENSUS
+                                  ? PackageValidationResult::PCKG_TX_CONSENSUS
+                                  : PackageValidationResult::PCKG_TX_POLICY,
+                                  "transaction failed");
             // Exit early to avoid doing pointless work. Update the failed tx result; the rest are unfinished.
             results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
             return PackageMempoolAcceptResult(package_state, std::move(results));
@@ -1002,7 +1005,10 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
         PrecomputedTransactionData txdata;
         if (!PolicyScriptChecks(args, ws, txdata)) {
             // Exit early to avoid doing pointless work. Update the failed tx result; the rest are unfinished.
-            package_state.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+            package_state.Invalid(ws.m_state.GetResult() == TxValidationResult::TX_CONSENSUS
+                                  ? PackageValidationResult::PCKG_TX_CONSENSUS
+                                  : PackageValidationResult::PCKG_TX_POLICY,
+                                  "transaction failed");
             results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
             return PackageMempoolAcceptResult(package_state, std::move(results));
         }

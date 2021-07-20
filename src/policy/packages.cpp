@@ -16,14 +16,14 @@ bool CheckPackage(const Package& txns, PackageValidationState& state)
     const unsigned int package_count = txns.size();
 
     if (package_count > MAX_PACKAGE_COUNT) {
-        return state.Invalid(PackageValidationResult::PCKG_POLICY, "package-too-many-transactions");
+        return state.Invalid(PackageValidationResult::PCKG_BAD, "package-too-many-transactions");
     }
 
     const int64_t total_size = std::accumulate(txns.cbegin(), txns.cend(), 0,
                                [](int64_t sum, const auto& tx) { return sum + GetVirtualTransactionSize(*tx); });
     // If the package only contains 1 tx, it's better to report the policy violation on individual tx size.
     if (package_count > 1 && total_size > MAX_PACKAGE_SIZE * 1000) {
-        return state.Invalid(PackageValidationResult::PCKG_POLICY, "package-too-large");
+        return state.Invalid(PackageValidationResult::PCKG_BAD, "package-too-large");
     }
 
     // Require the package to be sorted in order of dependency, i.e. parents appear before children.
@@ -37,7 +37,7 @@ bool CheckPackage(const Package& txns, PackageValidationState& state)
         for (const auto& input : tx->vin) {
             if (later_txids.find(input.prevout.hash) != later_txids.end()) {
                 // The parent is a subsequent transaction in the package.
-                return state.Invalid(PackageValidationResult::PCKG_POLICY, "package-not-sorted");
+                return state.Invalid(PackageValidationResult::PCKG_BAD, "package-not-sorted");
             }
         }
         later_txids.erase(tx->GetHash());
@@ -49,7 +49,7 @@ bool CheckPackage(const Package& txns, PackageValidationState& state)
         for (const auto& input : tx->vin) {
             if (inputs_seen.find(input.prevout) != inputs_seen.end()) {
                 // This input is also present in another tx in the package.
-                return state.Invalid(PackageValidationResult::PCKG_POLICY, "conflict-in-package");
+                return state.Invalid(PackageValidationResult::PCKG_BAD, "conflict-in-package");
             }
         }
         // Batch-add all the inputs for a tx at a time. If we added them 1 at a time, we could

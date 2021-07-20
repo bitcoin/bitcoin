@@ -113,7 +113,7 @@ BOOST_FIXTURE_TEST_CASE(package_tests, TestChain100Setup)
     }
     auto result_too_many = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package_too_many, /* test_accept */ true);
     BOOST_CHECK(result_too_many.m_state.IsInvalid());
-    BOOST_CHECK_EQUAL(result_too_many.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
+    BOOST_CHECK_EQUAL(result_too_many.m_state.GetResult(), PackageValidationResult::PCKG_BAD);
     BOOST_CHECK_EQUAL(result_too_many.m_state.GetRejectReason(), "package-too-many-transactions");
 
     // Packages can't have a total size of more than 101KvB.
@@ -128,7 +128,7 @@ BOOST_FIXTURE_TEST_CASE(package_tests, TestChain100Setup)
     BOOST_CHECK(package_too_large.size() <= MAX_PACKAGE_COUNT);
     auto result_too_large = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package_too_large, /* test_accept */ true);
     BOOST_CHECK(result_too_large.m_state.IsInvalid());
-    BOOST_CHECK_EQUAL(result_too_large.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
+    BOOST_CHECK_EQUAL(result_too_large.m_state.GetResult(), PackageValidationResult::PCKG_BAD);
     BOOST_CHECK_EQUAL(result_too_large.m_state.GetRejectReason(), "package-too-large");
 
     // A single, giant transaction submitted through ProcessNewPackage fails on single tx policy.
@@ -136,7 +136,7 @@ BOOST_FIXTURE_TEST_CASE(package_tests, TestChain100Setup)
     BOOST_CHECK(GetVirtualTransactionSize(*giant_ptx) > MAX_PACKAGE_SIZE * 1000);
     auto result_single_large = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, {giant_ptx}, /* test_accept */ true);
     BOOST_CHECK(result_single_large.m_state.IsInvalid());
-    BOOST_CHECK_EQUAL(result_single_large.m_state.GetResult(), PackageValidationResult::PCKG_TX);
+    BOOST_CHECK_EQUAL(result_single_large.m_state.GetResult(), PackageValidationResult::PCKG_TX_POLICY);
     BOOST_CHECK_EQUAL(result_single_large.m_state.GetRejectReason(), "transaction failed");
     auto it_giant_tx = result_single_large.m_tx_results.find(giant_ptx->GetWitnessHash());
     BOOST_CHECK(it_giant_tx != result_single_large.m_tx_results.end());
