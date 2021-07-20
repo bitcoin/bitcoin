@@ -18,7 +18,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
 # Required non-builtin commands should be invocable
 ################
 
-check_tools cat mkdir make git guix
+check_tools cat mkdir make getent curl git guix
 
 ################
 # GUIX_BUILD_OPTIONS should be empty
@@ -178,6 +178,29 @@ fi
 #
 # However, the internal API is likely to change more than the CLI invocation
 
+################
+# Services database must have basic entries
+################
+
+if ! getent services http https ftp; then
+cat << EOF
+ERR: Your system's C library can not find service database entries for at least
+     one of the following services: http, https, ftp.
+
+Hint: Most likely, /etc/services does not exist yet (common for docker images
+      and minimal distros), or you don't have permissions to access it.
+
+      If /etc/services does not exist yet, you may want to install the
+      appropriate package for your distro which provides it.
+
+          On Debian/Ubuntu: netbase
+          On Arch Linux: iana-etc
+
+      For more information, see: getent(1), services(5)
+
+EOF
+
+fi
 
 #########
 # SETUP #
