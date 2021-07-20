@@ -222,16 +222,22 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPoo
                                        bool bypass_limits, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
-* Atomically test acceptance of a package. If the package only contains one tx, package rules still
-* apply. Package validation does not allow BIP125 replacements, so the transaction(s) cannot spend
-* the same inputs as any transaction in the mempool.
-* @param[in]    txns                Group of transactions which may be independent or contain
-*                                   parent-child dependencies. The transactions must not conflict
-*                                   with each other, i.e., must not spend the same inputs. If any
-*                                   dependencies exist, parents must appear anywhere in the list
-*                                   before their children.
-* @returns a PackageMempoolAcceptResult which includes a MempoolAcceptResult for each transaction.
-* If a transaction fails, validation will exit early and some results may be missing.
+* The package must meet the following requirements:
+* 1. The package cannot contain more than 25 transactions.
+* 2. The package's total virtual size cannot exceed 101KvB.
+* 3. If dependencies exist, parents must appear anywhere in the lsit before their children.
+* 4. The package transactions cannot conflict with each other, i.e., spend the same inputs.
+* 5. The package transactions cannot conflict with any mempool transactions. BIP125 replacements are
+*    not allowed.
+*
+* When test_accept = false, the package must also meet the following requirements:
+* 1. The package must consist of exactly 1 child and all of its parents (this also means it
+*    must contain at least 2 transactions).
+*
+* @returns a PackageMempoolAcceptResult which includes a MempoolAcceptResult for each transaction
+* that was fully validated. If a transaction fails, validation will exit early and some results may
+* be missing. It is possible for the package to be partially submitted if one or more transactions
+* are trimmed in the call to LimitMempoolSize at the end.
 */
 PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTxMemPool& pool,
                                                    const Package& txns, bool test_accept)
