@@ -870,6 +870,8 @@ nodist_libbitcoin_ipc_a_SOURCES = $(libbitcoin_ipc_mpgen_output)
 CLEANFILES += $(libbitcoin_ipc_mpgen_output)
 endif
 
+include Makefile.minisketch.include
+
 if EMBEDDED_LEVELDB
 include Makefile.crc32c.include
 include Makefile.leveldb.include
