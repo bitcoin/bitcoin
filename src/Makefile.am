@@ -841,8 +841,11 @@ nodist_libbitcoin_ipc_a_SOURCES = $(libbitcoin_ipc_mpgen_output)
 CLEANFILES += $(libbitcoin_ipc_mpgen_output)
 endif
 
+include Makefile.minisketch.include
+
 include Makefile.crc32c.include
 include Makefile.leveldb.include
+
 include Makefile.test_util.include
 include Makefile.test_fuzz.include
 
