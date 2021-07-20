@@ -89,6 +89,11 @@ static bool read_stdin(std::vector<uint8_t>& data)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     static const auto& test_one_input = *Assert(g_test_one_input);
+    static bool clearedTmp = false;
+    if (!clearedTmp) {
+        boost::filesystem::remove_all("/tmp/test_common_Bitcoin Core");
+        clearedTmp = true;
+    }
     test_one_input({data, size});
     return 0;
 }
