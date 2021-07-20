@@ -156,7 +156,7 @@ chain for " target " development."))
 (define* (make-syscoin-cross-toolchain target
                                        #:key
                                        (base-gcc-for-libc gcc-7)
-                                       (base-kernel-headers linux-libre-headers-5.4)
+                                       (base-kernel-headers linux-libre-headers-4.9)
                                        (base-libc (make-glibc-without-ssp glibc-2.24))
                                        (base-gcc (make-gcc-rpath-link base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
@@ -647,7 +647,9 @@ inspecting signatures in Mach-O binaries.")
                  osslsigncode))
           ((string-contains target "-linux-")
            (list (cond ((string-contains target "riscv64-")
-                        (make-syscoin-cross-toolchain target #:base-libc glibc-2.27/syscoin-patched))
+                        (make-syscoin-cross-toolchain target
+                                                      #:base-libc glibc-2.27/syscoin-patched
+                                                      #:base-kernel-headers linux-libre-headers-4.19))
                        (else
                         (make-syscoin-cross-toolchain target)))))
           ((string-contains target "darwin")
