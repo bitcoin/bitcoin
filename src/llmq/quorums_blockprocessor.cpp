@@ -149,6 +149,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
     if (!fDIP0003Active) {
         return true;
     }
+    bool NEVMContext = pindex->nHeight >= Params().GetConsensus().nNEVMStartBlock;
 
 
     std::map<uint8_t, CFinalCommitment> qcs;
@@ -166,6 +167,15 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
         }
 
         auto type = p.first;
+        if(!fRegTest) {
+            if(NEVMContext) {
+                if(type != Consensus::LLMQ_400_60) {
+                    continue;
+                }
+            } else if(type != Consensus::LLMQ_50_60) {
+                continue;
+            }
+        }
 
         // does the currently processed block contain a (possibly null) commitment for the current session?
         bool hasCommitmentInNewBlock = qcs.count(type) != 0;

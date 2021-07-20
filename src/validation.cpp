@@ -1401,15 +1401,14 @@ CAmount GetBlockSubsidy(unsigned int nHeight, const CChainParams& params, bool f
     }
 
     CAmount nSubsidy = 38.5 * COIN;
-    // account for adjustment from 1 to 2.5 min blocks
+    // account for NEVM adjustment to 2.5 blocks
     if(nHeight >= (unsigned int)consensusParams.nNEVMStartBlock)
         nSubsidy *= 2.5;
     int reductions = nHeight / consensusParams.nSubsidyHalvingInterval;
     if (reductions >= 50) {
         return 0;
     }
-    // Subsidy reduced every 525600 blocks which will occur approximately every year.
-    // yearly decline of production by 5% per year, projected ~888M coins max by year 2067+.
+    // Subsidy reduced every 525600 blocks by 5%
     for (int i = 0; i < reductions; i++) {
         nSubsidy -= nSubsidy / 20;
     }
@@ -3645,8 +3644,12 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     // checks that use witness data may be performed here.
 
     // Size limits
-    if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT || ::GetSerializeSize(block, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT)
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-length", "size limits failed");
+    if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT || ::GetSerializeSize(block, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT) {
+        //SYSCOIN
+        if(block.IsNEVM() || fRegTest) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-length", "size limits failed");
+        }
+    }
 
     // First transaction must be coinbase, the rest must not be
     if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
@@ -3915,7 +3918,8 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     // large by filling up the coinbase witness, which doesn't change
     // the block hash, so we couldn't mark the block as permanently
     // failed).
-    if (GetBlockWeight(block) > MAX_BLOCK_WEIGHT) {
+    bool nevmContext = nHeight >= consensusParams.nNEVMStartBlock;
+    if ((fRegTest || nevmContext) && GetBlockWeight(block) > MAX_BLOCK_WEIGHT) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-weight", strprintf("%s : weight limit failed", __func__));
     }
     // SYSCOIN

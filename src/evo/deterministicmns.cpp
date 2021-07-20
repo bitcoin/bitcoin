@@ -674,7 +674,6 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     AssertLockHeld(cs);
 
     int nHeight = pindexPrev->nHeight + 1;
-
     CDeterministicMNList oldList;
     GetListForBlock(pindexPrev, oldList);
     CDeterministicMNList newList = oldList;
@@ -701,7 +700,15 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             newList.UpdateMN(dmn->proTxHash, newState);
         }
     });
-    DecreasePoSePenalties(newList);
+    // decrease PoSe ban score
+    if(!fRegTest) {
+        // in sys we only run one quorum so we need to be more sure in this service we will catch a bad MN within around 1 payment round
+        if((nHeight % 3) == 0) {
+            DecreasePoSePenalties(newList);
+        }
+    } else {
+        DecreasePoSePenalties(newList);
+    }
     // coinbase can be quorum commitments
     // qcIn passed in by createnewblock, but connectblock will pass in null, use gettxpayload there if version is for mn quorum
     const bool &IsQCIn = qcIn && !qcIn->IsNull();

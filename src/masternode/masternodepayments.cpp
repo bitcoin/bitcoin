@@ -218,6 +218,11 @@ bool CMasternodePayments::GetMasternodeTxOuts(CChain& activeChain, int nBlockHei
 CAmount GetBlockMNSubsidy(const CAmount &nBlockReward, unsigned int nHeight, const Consensus::Params& consensusParams, unsigned int nStartHeight, CAmount& nMNSeniorityRet)
 {
     CAmount nSubsidy = nBlockReward*0.75;
+    bool bStatic = false;
+    if(nSubsidy < 5.275) {
+        nSubsidy =  5.275;
+        bStatic = true;
+    }
     if (nHeight > 0 && nStartHeight > 0) {
         unsigned int nDifferenceInBlocks = 0;
         if (nHeight > nStartHeight) {
@@ -232,6 +237,9 @@ CAmount GetBlockMNSubsidy(const CAmount &nBlockReward, unsigned int nHeight, con
         if(fSubsidyAdjustmentPercentage > 0){
             nMNSeniorityRet = nSubsidy*fSubsidyAdjustmentPercentage;
             nSubsidy += nMNSeniorityRet;
+            if(bStatic) {
+                nMNSeniorityRet = nSubsidy;
+            }
         }
     }
     return nSubsidy;
