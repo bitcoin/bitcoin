@@ -450,7 +450,36 @@ public:
         /** Whether we allow transactions to replace mempool transactions by BIP125 rules. If false,
          * any transaction spending the same inputs as a transaction in the mempool is considered
          * a conflict. */
-        const bool m_allow_bip125_replacement{true};
+        const bool m_allow_bip125_replacement;
+
+        /** Parameters for single transaction mempool validation. */
+        static ATMPArgs SingleAccept(const CChainParams& chainparams, int64_t accept_time,
+                                     bool bypass_limits, std::vector<COutPoint>& coins_to_uncache,
+                                     bool test_accept) {
+            return ATMPArgs{/* m_chainparams */ chainparams,
+                            /* m_accept_time */ accept_time,
+                            /* m_bypass_limits */ bypass_limits,
+                            /* m_coins_to_uncache */ coins_to_uncache,
+                            /* m_test_accept */ test_accept,
+                            /* m_allow_bip125_replacement */ true,
+            };
+        }
+
+        /** Parameters for test package mempool validation through testmempoolaccept. */
+        static ATMPArgs PackageTestAccept(const CChainParams& chainparams, int64_t accept_time,
+                                          std::vector<COutPoint>& coins_to_uncache) {
+            return ATMPArgs{/* m_chainparams */ chainparams,
+                            /* m_accept_time */ accept_time,
+                            /* m_bypass_limits */ false,
+                            /* m_coins_to_uncache */ coins_to_uncache,
+                            /* m_test_accept */ true,
+                            /* m_allow_bip125_replacement */ false,
+            };
+        }
+
+        // No default ctor to avoid exposing details to clients and allowing the possibility of
+        // mixing up the order of the arguments. Use static functions above instead.
+        ATMPArgs() = delete;
     };
 
     // Single transaction acceptance
@@ -1019,9 +1048,7 @@ static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainp
                                                       EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     std::vector<COutPoint> coins_to_uncache;
-    MemPoolAccept::ATMPArgs args { chainparams, nAcceptTime, bypass_limits, coins_to_uncache,
-                                   test_accept, /* m_allow_bip125_replacement */ true };
-
+    auto args = MemPoolAccept::ATMPArgs::SingleAccept(chainparams, nAcceptTime, bypass_limits, coins_to_uncache, test_accept);
     const MempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptSingleTransaction(tx, args);
     if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
         // Remove coins that were not present in the coins cache before calling
@@ -1054,8 +1081,7 @@ PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTx
 
     std::vector<COutPoint> coins_to_uncache;
     const CChainParams& chainparams = Params();
-    MemPoolAccept::ATMPArgs args { chainparams, GetTime(), /* bypass_limits */ false, coins_to_uncache,
-                                   test_accept, /* m_allow_bip125_replacement */ false };
+    auto args = MemPoolAccept::ATMPArgs::PackageTestAccept(chainparams, GetTime(), coins_to_uncache);
     const PackageMempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptMultipleTransactions(package, args);
 
     // Uncache coins pertaining to transactions that were not submitted to the mempool.
