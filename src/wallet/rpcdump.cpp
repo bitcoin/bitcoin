@@ -739,7 +739,8 @@ RPCHelpMan dumpwallet()
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     wallet.BlockUntilSyncedToCurrentChain();
-    LOCK2(wallet.cs_wallet, spk_man.cs_KeyStore);
+
+    LOCK(wallet.cs_wallet);
 
     EnsureWalletIsUnlocked(wallet);
 
@@ -761,9 +762,16 @@ RPCHelpMan dumpwallet()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
     std::map<CKeyID, int64_t> mapKeyBirth;
-    const std::map<CKeyID, int64_t>& mapKeyPool = spk_man.GetAllReserveKeys();
     wallet.GetKeyBirthTimes(mapKeyBirth);
 
+    int64_t block_time = 0;
+    CHECK_NONFATAL(wallet.chain().findBlock(wallet.GetLastBlockHash(), FoundBlock().time(block_time)));
+
+    // Note: To avoid a lock order issue, access to cs_main must be locked before cs_KeyStore.
+    // So we do the two things in this function that lock cs_main first: GetKeyBirthTimes, and findBlock.
+    LOCK(spk_man.cs_KeyStore);
+
+    const std::map<CKeyID, int64_t>& mapKeyPool = spk_man.GetAllReserveKeys();
     std::set<CScriptID> scripts = spk_man.GetCScripts();
 
     // sort time/key pairs
@@ -778,8 +786,6 @@ RPCHelpMan dumpwallet()
     file << strprintf("# Wallet dump created by Syscoin %s\n", CLIENT_BUILD);
     file << strprintf("# * Created on %s\n", FormatISO8601DateTime(GetTime()));
     file << strprintf("# * Best block at time of backup was %i (%s),\n", wallet.GetLastBlockHeight(), wallet.GetLastBlockHash().ToString());
-    int64_t block_time = 0;
-    CHECK_NONFATAL(wallet.chain().findBlock(wallet.GetLastBlockHash(), FoundBlock().time(block_time)));
     file << strprintf("#   mined on %s\n", FormatISO8601DateTime(block_time));
     file << "\n";
 
