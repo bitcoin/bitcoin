@@ -203,10 +203,18 @@ struct PackageMempoolAcceptResult
     * was a package-wide error (see result in m_state), m_tx_results will be empty.
     */
     std::map<const uint256, const MempoolAcceptResult> m_tx_results;
+    /** Package feerate, defined as the aggregated modified fees divided by the total virtual size
+     * of all transactions in the package.  May be unavailable if some inputs were not available or
+     * a transaction failure caused validation to terminate early. */
+    std::optional<CFeeRate> m_package_feerate;
 
     explicit PackageMempoolAcceptResult(PackageValidationState state,
                                         std::map<const uint256, const MempoolAcceptResult>&& results)
         : m_state{state}, m_tx_results(std::move(results)) {}
+
+    explicit PackageMempoolAcceptResult(PackageValidationState state, CFeeRate feerate,
+                                        std::map<const uint256, const MempoolAcceptResult>&& results)
+        : m_state{state}, m_tx_results(std::move(results)), m_package_feerate{feerate} {}
 
     /** Constructor to create a PackageMempoolAcceptResult from a single MempoolAcceptResult */
     explicit PackageMempoolAcceptResult(const uint256& wtxid, const MempoolAcceptResult& result)
@@ -229,6 +237,9 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPoo
 * 4. The package transactions cannot conflict with each other, i.e., spend the same inputs.
 * 5. The package transactions cannot conflict with any mempool transactions. BIP125 replacements are
 *    not allowed.
+* 6. For all fee requirements, the package feerate (defined as the aggregated modified fees divided
+*    by the aggregated virtual size of all package transactions) is used. Individual transaction
+*    fee checks may be bypassed.
 *
 * When test_accept = false, the package must also meet the following requirements:
 * 1. The package must consist of exactly 1 child and all of its parents (this also means it

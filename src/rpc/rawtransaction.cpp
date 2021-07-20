@@ -1044,6 +1044,7 @@ static RPCHelpMan submitrawpackage()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
+                {RPCResult::Type::STR_AMOUNT, "package-feerate", "package feerate in " + CURRENCY_UNIT + "/KvB, the total modified fees divided by the total virtual size of all transactions in the package."},
                 {RPCResult::Type::OBJ_DYN, "tx-results", "transaction results keyed by wtxid",
                 {
                     {RPCResult::Type::OBJ, "xxxx", "transaction wtxid", {
@@ -1103,6 +1104,9 @@ static RPCHelpMan submitrawpackage()
     }
 
     UniValue rpc_result{UniValue::VOBJ};
+    if (const auto package_feerate{package_result.m_package_feerate}) {
+        rpc_result.pushKV("package-feerate", ValueFromAmount(package_feerate.value().GetFeePerK()));
+    }
     if (package_result.m_state.IsInvalid()) {
         switch(package_result.m_state.GetResult()) {
             case PackageValidationResult::PCKG_RESULT_UNSET: break;
