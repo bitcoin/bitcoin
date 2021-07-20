@@ -49,7 +49,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
  * Count total signature operations for a transaction.
  * @param[in] tx     Transaction for which we are counting sigops
  * @param[in] inputs Map of previous transactions that have outputs we're spending
- * @param[out] flags Script verification flags
+ * @param[in] flags Script verification flags
  * @return Total signature operation count for a tx
  */
 unsigned int GetTransactionSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs, uint32_t flags);
