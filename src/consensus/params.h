@@ -187,6 +187,13 @@ struct Params {
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
     int64_t nPowTargetSpacing1;
+    int SuperBlockCycle(int nHeight) const { 
+        if (nHeight >= nNEVMStartBlock) {
+            return nSuperblockCycle*2.5;
+        } else {
+            return nSuperblockCycle;
+        }
+    }
     int64_t DifficultyAdjustmentIntervalOld() const { return nPowTargetTimespan / nPowTargetSpacing1; }
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     /** The best chain should have at least this much work */

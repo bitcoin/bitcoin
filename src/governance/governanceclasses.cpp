@@ -442,14 +442,14 @@ bool CSuperblock::IsValidBlockHeight(int nBlockHeight)
 {
     // SUPERBLOCKS CAN HAPPEN ONLY after hardfork and only ONCE PER CYCLE
     return nBlockHeight >= Params().GetConsensus().nSuperblockStartBlock &&
-           ((nBlockHeight % Params().GetConsensus().nSuperblockCycle) == 0);
+           ((nBlockHeight % Params().GetConsensus().SuperBlockCycle(nBlockHeight)) == 0);
 }
 
 void CSuperblock::GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuperblockRet, int& nNextSuperblockRet)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
     int nSuperblockStartBlock = consensusParams.nSuperblockStartBlock;
-    int nSuperblockCycle = consensusParams.nSuperblockCycle;
+    int nSuperblockCycle = consensusParams.SuperBlockCycle(nBlockHeight);
 
     // Get first superblock
     int nFirstSuperblockOffset = (nSuperblockCycle - nSuperblockStartBlock % nSuperblockCycle) % nSuperblockCycle;
@@ -472,12 +472,12 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
     if(!IsValidBlockHeight(nBlockHeight)) {
         return 0;
     }
-    const int nSuperblock = nBlockHeight / consensusParams.nSuperblockCycle;
+    const int nSuperblock = nBlockHeight / consensusParams.SuperBlockCycle(nBlockHeight);
     CAmount nPaymentsLimit = 0;
     if(nSuperblock > 120){
     	// some part of all blocks issued during the cycle goes to superblock, see GetBlockSubsidy
     	const CAmount &nSuperblockPartOfSubsidy = GetBlockSubsidy(nBlockHeight, chainParams, true);
-    	nPaymentsLimit = nSuperblockPartOfSubsidy * consensusParams.nSuperblockCycle;
+    	nPaymentsLimit = nSuperblockPartOfSubsidy * consensusParams.SuperBlockCycle(nBlockHeight);
     }
     // bootstrapping period
     else {
@@ -1029,7 +1029,7 @@ bool CSuperblock::IsExpired() const
     // other valid triggers are kept for ~1 day only, everything else is pruned after ~1h.
     switch (nStatus) {
     case SEEN_OBJECT_EXECUTED:
-        nExpirationBlocks = Params().GetConsensus().nSuperblockCycle;
+        nExpirationBlocks = Params().GetConsensus().SuperBlockCycle(nBlockHeight);
         break;
     case SEEN_OBJECT_IS_VALID:
         nExpirationBlocks = 576;

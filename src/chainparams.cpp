@@ -167,7 +167,7 @@ public:
         consensus.nSeniorityHeight2 = 525600 * 2.5; 
         consensus.nSeniorityLevel2 = 1.0;        
         consensus.nSuperblockStartBlock = 1;
-        consensus.nSuperblockCycle = 43800;
+        consensus.nSuperblockCycle = 17520;
         consensus.nGovernanceMinQuorum = 10; 
         consensus.nGovernanceFilterElements = 20000;
         consensus.nMasternodeMinimumConfirmations = 15;

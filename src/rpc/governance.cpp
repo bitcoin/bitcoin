@@ -725,7 +725,7 @@ static RPCHelpMan getgovernanceinfo()
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("governanceminquorum", Params().GetConsensus().nGovernanceMinQuorum);
     obj.pushKV("proposalfee", ValueFromAmount(GOVERNANCE_PROPOSAL_FEE_TX));
-    obj.pushKV("superblockcycle", Params().GetConsensus().nSuperblockCycle);
+    obj.pushKV("superblockcycle", Params().GetConsensus().SuperBlockCycle(nBlockHeight));
     obj.pushKV("lastsuperblock", nLastSuperblock);
     obj.pushKV("nextsuperblock", nNextSuperblock);
 
