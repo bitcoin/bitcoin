@@ -331,7 +331,6 @@ void Shutdown(NodeContext& node)
                     chainstate->ResetCoinsViews();
                 }
             }
-            pblocktree.reset();
         }
        
         passetdb.reset();
@@ -1608,7 +1607,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 chainman.InitializeChainstate(Assert(node.mempool.get()));
                 chainman.m_total_coinstip_cache = nCoinCacheUsage;
                 chainman.m_total_coinsdb_cache = nCoinDBCache;
-                UnloadBlockIndex(node.mempool.get(), chainman);                 
+                UnloadBlockIndex(node.mempool.get(), chainman); 
+                auto& pblocktree{chainman.m_blockman.m_block_tree_db};                
                 // SYSCOIN
                 fAssetIndex = args.GetBoolArg("-assetindex", false);
                 if(fAssetIndex) {
