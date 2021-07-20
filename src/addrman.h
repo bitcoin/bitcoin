@@ -458,8 +458,6 @@ public:
 
         RemoveInvalid();
 
-        ResetI2PPorts();
-
         Check();
     }
 
@@ -780,14 +778,6 @@ private:
 
     //! Remove invalid addresses.
     void RemoveInvalid() EXCLUSIVE_LOCKS_REQUIRED(cs);
-
-    /**
-     * Reset the ports of I2P peers to 0.
-     * This is needed as a temporary measure because now we enforce port 0 and
-     * only connect to I2P hosts if the port is 0, but in the early days some
-     * I2P addresses with port 8333 were rumoured and persisted into addrmans.
-     */
-    void ResetI2PPorts() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     friend class CAddrManTest;
 };
