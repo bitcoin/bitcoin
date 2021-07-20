@@ -136,7 +136,7 @@ Commit your signature to guix.sigs:
 ```sh
 pushd ./guix.sigs
 git add "${VERSION}/${SIGNER}"/noncodesigned.SHA256SUMS{,.asc}
-git commit -m "Add ${VERSION} unsigned sigs for ${SIGNER}"
+git commit -m "Add attestations by ${SIGNER} for ${VERSION} non-codesigned"
 git push  # Assuming you can push to the guix.sigs tree
 popd
 ```
@@ -189,7 +189,7 @@ Commit your signature for the signed macOS/Windows binaries:
 ```sh
 pushd ./guix.sigs
 git add "${VERSION}/${SIGNER}"/all.SHA256SUMS{,.asc}
-git commit -m "Add ${SIGNER} ${VERSION} signed binaries signatures"
+git commit -m "Add attestations by ${SIGNER} for ${VERSION} codesigned"
 git push  # Assuming you can push to the guix.sigs tree
 popd
 ```
