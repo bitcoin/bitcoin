@@ -43,6 +43,11 @@ Release Process
     - On mainnet, the selected value must not be orphaned, so it may be useful to set the height two blocks back from the tip.
     - Testnet should be set with a height some tens of thousands back from the tip, due to reorgs there.
   - `nMinimumChainWork` with the "chainwork" value of RPC `getblockheader` using the same height as that selected for the previous step.
+  - `m_assumeutxo_data` with the updated assumeutxo hash and nChainTx count.
+    - You can obtain this information, and the corresponding snapshot, by running
+      `./contrib/devtools/utxo_snapshot.sh <blockheight> <snapshot-out-path>`.
+    - The height used should probably the be same as the assumevalid height chosen.
+    - Ensure the resulting snapshot is uploaded somewhere publicly accessible (torrent, HTTP server, etc.).
 - Clear the release notes and move them to the wiki (see "Write the release notes" below).
 - Translations on Transifex:
     - Pull translations from Transifex into the master branch.
