@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 
 static void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerLogicValidation &peerLogic, CConnmanTest* connman)
 {
-    CAddress addr(ip(GetRandInt(0xffffffff)), NODE_NONE);
+    CAddress addr(ip(insecure_rand_ctx.randbits(32)), NODE_NONE);
     vNodes.emplace_back(new CNode(id++, ServiceFlags(NODE_NETWORK), 0, INVALID_SOCKET, addr, 0, 0, CAddress(), "", /*fInboundIn=*/ false));
     CNode &node = *vNodes.back();
     node.SetSendVersion(PROTOCOL_VERSION);

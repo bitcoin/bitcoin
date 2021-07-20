@@ -30,8 +30,7 @@
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
-uint256 insecure_rand_seed = GetRandHash();
-FastRandomContext insecure_rand_ctx(insecure_rand_seed);
+FastRandomContext insecure_rand_ctx;
 
 extern bool fPrintToConsole;
 extern void noui_connect();
