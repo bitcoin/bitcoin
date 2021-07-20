@@ -73,16 +73,16 @@ inline CTransactionRef create_placeholder_tx(size_t num_inputs, size_t num_outpu
 BOOST_FIXTURE_TEST_CASE(package_tests, TestChain100Setup)
 {
     LOCK(cs_main);
-    unsigned int initialPoolSize = m_node.mempool->size();
-
-    // Parent and Child Package
+    unsigned int expected_pool_size = m_node.mempool->size();
+    // Parent and Child Package with CPFP. The parent has a fee of 0 (which would not meet the min
+    // relay fee), but is fee-bumped with the child.
     CKey parent_key;
     parent_key.MakeNewKey(true);
     CScript parent_locking_script = GetScriptForDestination(PKHash(parent_key.GetPubKey()));
     auto mtx_parent = CreateValidMempoolTransaction(/* input_transaction */ m_coinbase_txns[0], /* vout */ 0,
                                                     /* input_height */ 0, /* input_signing_key */ coinbaseKey,
                                                     /* output_destination */ parent_locking_script,
-                                                    /* output_amount */ CAmount(49 * COIN), /* submit */ false);
+                                                    /* output_amount */ CAmount(50 * COIN), /* submit */ false);
     CTransactionRef tx_parent = MakeTransactionRef(mtx_parent);
 
     CKey child_key;
@@ -91,9 +91,10 @@ BOOST_FIXTURE_TEST_CASE(package_tests, TestChain100Setup)
     auto mtx_child = CreateValidMempoolTransaction(/* input_transaction */ tx_parent, /* vout */ 0,
                                                    /* input_height */ 101, /* input_signing_key */ parent_key,
                                                    /* output_destination */ child_locking_script,
-                                                   /* output_amount */ CAmount(48 * COIN), /* submit */ false);
+                                                   /* output_amount */ CAmount(49 * COIN), /* submit */ false);
     CTransactionRef tx_child = MakeTransactionRef(mtx_child);
-    const auto result_parent_child = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, {tx_parent, tx_child}, /* test_accept */ true);
+    const auto result_parent_child = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, {tx_parent, tx_child}, /* test_accept */ false);
+    expected_pool_size += 2;
     BOOST_CHECK_MESSAGE(result_parent_child.m_state.IsValid(),
                         "Package validation unexpectedly failed: " << result_parent_child.m_state.GetRejectReason());
     auto it_parent = result_parent_child.m_tx_results.find(tx_parent->GetWitnessHash());
@@ -101,9 +102,11 @@ BOOST_FIXTURE_TEST_CASE(package_tests, TestChain100Setup)
     BOOST_CHECK(it_parent != result_parent_child.m_tx_results.end());
     BOOST_CHECK_MESSAGE(it_parent->second.m_state.IsValid(),
                         "Package validation unexpectedly failed: " << it_parent->second.m_state.GetRejectReason());
+    BOOST_CHECK(it_parent->second.m_base_fees == 0);
     BOOST_CHECK(it_child != result_parent_child.m_tx_results.end());
     BOOST_CHECK_MESSAGE(it_child->second.m_state.IsValid(),
                         "Package validation unexpectedly failed: " << it_child->second.m_state.GetRejectReason());
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
 
     // Packages can't have more than 25 transactions.
     Package package_too_many;
@@ -143,6 +146,6 @@ BOOST_FIXTURE_TEST_CASE(package_tests, TestChain100Setup)
     BOOST_CHECK_EQUAL(it_giant_tx->second.m_state.GetRejectReason(), "tx-size");
 
     // Check that mempool size hasn't changed.
-    BOOST_CHECK_EQUAL(m_node.mempool->size(), initialPoolSize);
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
 }
 BOOST_AUTO_TEST_SUITE_END()
