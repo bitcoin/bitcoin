@@ -457,7 +457,7 @@ class PSBTTest(BitcoinTestFramework):
             wrpc = self.nodes[2].get_wallet_rpc("wallet{}".format(i))
             for key in signer['privkeys']:
                 wrpc.importprivkey(key)
-            signed_tx = wrpc.walletprocesspsbt(signer['psbt'])['psbt']
+            signed_tx = wrpc.walletprocesspsbt(signer['psbt'], True, "ALL")['psbt']
             assert_equal(signed_tx, signer['result'])
 
         # Combiner test
