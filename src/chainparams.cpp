@@ -160,8 +160,8 @@ public:
         strNetworkID = CBaseChainParams::MAIN;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
-        consensus.nSubsidyHalvingInterval = 525600; 
-        // 35% increase after 1 year, 100% increase after sr level 2
+        consensus.nSubsidyHalvingInterval = 210240; 
+        // 35% increase after 525600 blocks, 100% increase after sr level 2
         consensus.nSeniorityHeight1 = 525600; 
         consensus.nSeniorityLevel1 = 0.35;
         consensus.nSeniorityHeight2 = 525600 * 2.5; 
@@ -180,8 +180,7 @@ public:
         consensus.CSVHeight = 1;
         consensus.SegwitHeight = 0;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
-        consensus.nPowTargetTimespan = 6 * 60 * 60; // 6h retarget
-        consensus.nPowTargetSpacing1 = 1 * 60; // Syscoin: 1 minute
+        consensus.nPowTargetTimespan = 6 * 60 * 60;
         consensus.nPowTargetSpacing = 2.5 * 60; // Syscoin: 2.5 minute
         consensus.nAuxpowChainId = 16;
         consensus.nAuxpowOldChainId = 4096;
@@ -317,8 +316,8 @@ public:
         strNetworkID = CBaseChainParams::TESTNET;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
-        consensus.nSubsidyHalvingInterval = 525600;
-        // 35% increase after 1 hr, 100% increase after 2.5 hr
+        consensus.nSubsidyHalvingInterval = 210240;
+        // 35% increase after 60 blocks, 100% increase after 150 blocks
         consensus.nSeniorityHeight1 = 60;
         consensus.nSeniorityLevel1 = 0.35;
         consensus.nSeniorityHeight2 = 60*2.5;
@@ -336,8 +335,7 @@ public:
         consensus.SegwitHeight = 0;
         consensus.CSVHeight = 1;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
-        consensus.nPowTargetTimespan = 6 * 60 * 60; // 6h retarget
-        consensus.nPowTargetSpacing1 = 1 * 60; // Syscoin: 1 minute
+        consensus.nPowTargetTimespan = 6 * 60 * 60;
         consensus.nPowTargetSpacing = 2.5 * 60; // Syscoin: 2.5 minute
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
@@ -529,7 +527,6 @@ public:
         consensus.CSVHeight = 1;
         consensus.SegwitHeight = 1;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-        consensus.nPowTargetSpacing1 = 10 * 60;
         consensus.nPowTargetSpacing = 2.5 * 60; // Syscoin: 2.5 minute
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
@@ -619,8 +616,7 @@ public:
         consensus.nMasternodeMinimumConfirmations = 1;
         
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetTimespan = 6 * 60 * 60; // Syscoin: 6 hour
-        consensus.nPowTargetSpacing1 = 1 * 60; // Syscoin: 1 minute
+        consensus.nPowTargetTimespan = 6 * 60 * 60;
         consensus.nPowTargetSpacing = 2.5 * 60; // Syscoin: 2.5 minute
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;

@@ -14,9 +14,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 {
     assert(pindexLast != nullptr);
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
-    int64_t adjustmentInterval = params.DifficultyAdjustmentInterval();
-    if(pindexLast->nHeight < params.nNEVMStartBlock)
-        adjustmentInterval = params.DifficultyAdjustmentIntervalOld();
+    int64_t adjustmentInterval = params.DifficultyAdjustmentInterval(pindexLast->nHeight);
 
     // Only change once per difficulty adjustment interval
     if ((pindexLast->nHeight+1) % adjustmentInterval != 0)

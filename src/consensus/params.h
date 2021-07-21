@@ -186,16 +186,30 @@ struct Params {
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
-    int64_t nPowTargetSpacing1;
     int SuperBlockCycle(int nHeight) const { 
         if (nHeight >= nNEVMStartBlock) {
-            return nSuperblockCycle*2.5;
-        } else {
             return nSuperblockCycle;
+        } else {
+            return nSuperblockCycle*2.5;
         }
     }
-    int64_t DifficultyAdjustmentIntervalOld() const { return nPowTargetTimespan / nPowTargetSpacing1; }
-    int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
+    int SubsidyHalvingInterval(int nHeight) const { 
+        if (nHeight >= nNEVMStartBlock) {
+            return nSubsidyHalvingInterval;
+        } else {
+            return nSubsidyHalvingInterval*2.5;
+        }
+    }
+    int64_t PowTargetSpacing(int nHeight) const {
+        if(nHeight >= nNEVMStartBlock) {
+            return nPowTargetSpacing; 
+        } else {
+            return (nPowTargetSpacing/2.5); 
+        }
+    }
+    int64_t DifficultyAdjustmentInterval(int nHeight) const {
+        return nPowTargetTimespan / PowTargetSpacing(nHeight);
+    }
     /** The best chain should have at least this much work */
     uint256 nMinimumChainWork;
     /** By default assume that the signatures in ancestors of this block are valid */

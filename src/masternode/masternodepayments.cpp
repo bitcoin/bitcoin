@@ -217,10 +217,13 @@ bool CMasternodePayments::GetMasternodeTxOuts(CChain& activeChain, int nBlockHei
 }
 CAmount GetBlockMNSubsidy(const CAmount &nBlockReward, unsigned int nHeight, const Consensus::Params& consensusParams, unsigned int nStartHeight, CAmount& nMNSeniorityRet)
 {
+    // MN takes 75% of the subsidy
     CAmount nSubsidy = nBlockReward*0.75;
     bool bStatic = false;
-    if(nSubsidy < 5.275) {
-        nSubsidy =  5.275;
+    // ensure that if subsidy is less than min amount then stick to min for long term MN full node/chainlock incentive
+    const CAmount &nMinMN = CAmount(5.275)*COIN;
+    if(nSubsidy < nMinMN) {
+        nSubsidy = nMinMN;
         bStatic = true;
     }
     if (nHeight > 0 && nStartHeight > 0) {

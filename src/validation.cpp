@@ -1404,11 +1404,11 @@ CAmount GetBlockSubsidy(unsigned int nHeight, const CChainParams& params, bool f
     // account for NEVM adjustment to 2.5 blocks
     if(nHeight >= (unsigned int)consensusParams.nNEVMStartBlock)
         nSubsidy *= 2.5;
-    int reductions = nHeight / consensusParams.nSubsidyHalvingInterval;
+    int reductions = nHeight / consensusParams.SubsidyHalvingInterval(nHeight);
     if (reductions >= 50) {
         return 0;
     }
-    // Subsidy reduced every 525600 blocks by 5%
+    // Subsidy reduced every year by 5%
     for (int i = 0; i < reductions; i++) {
         nSubsidy -= nSubsidy / 20;
     }
@@ -4065,7 +4065,7 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
     }
     if (NotifyHeaderTip(ActiveChainstate())) {
         if (ibd && ppindex && *ppindex) {
-            LogPrintf("Synchronizing blockheaders, height: %d (~%.2f%%)\n", (*ppindex)->nHeight, 100.0/((*ppindex)->nHeight+(GetAdjustedTime() - (*ppindex)->GetBlockTime()) / Params().GetConsensus().nPowTargetSpacing) * (*ppindex)->nHeight);
+            LogPrintf("Synchronizing blockheaders, height: %d (~%.2f%%)\n", (*ppindex)->nHeight, 100.0/((*ppindex)->nHeight+(GetAdjustedTime() - (*ppindex)->GetBlockTime()) / Params().GetConsensus().PowTargetSpacing((*ppindex)->nHeight)) * (*ppindex)->nHeight);
         }
     }
     return true;
