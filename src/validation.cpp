@@ -3773,7 +3773,9 @@ bool BlockManager::LoadBlockIndex(
             pindex->nStatus |= BLOCK_FAILED_CHILD;
             setDirtyBlockIndex.insert(pindex);
         }
-        if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) && (pindex->HaveTxsDownloaded() || pindex->pprev == nullptr)) {
+        if (pindex->IsAssumedValid() ||
+                (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
+                 (pindex->HaveTxsDownloaded() || pindex->pprev == nullptr))) {
             block_index_candidates.insert(pindex);
         }
         if (pindex->nStatus & BLOCK_FAILED_MASK && (!pindexBestInvalid || pindex->nChainWork > pindexBestInvalid->nChainWork))

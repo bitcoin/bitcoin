@@ -647,9 +647,10 @@ public:
     const std::optional<uint256> m_from_snapshot_blockhash;
 
     /**
-     * The set of all CBlockIndex entries with BLOCK_VALID_TRANSACTIONS (for itself and all ancestors) and
-     * as good as our current tip or better. Entries may be failed, though, and pruning nodes may be
-     * missing the data for the block.
+     * The set of all CBlockIndex entries with either BLOCK_VALID_TRANSACTIONS (for
+     * itself and all ancestors) *or* BLOCK_ASSUMED_VALID (if using background
+     * chainstates) and as good as our current tip or better. Entries may be failed,
+     * though, and pruning nodes may be missing the data for the block.
      */
     std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexCandidates;
 
