@@ -119,7 +119,9 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[0].walletpassphrase(passphrase="password", timeout=1000000)
 
         # Sign the transaction and send
-        signed_tx = self.nodes[0].walletprocesspsbt(psbtx)['psbt']
+        signed_tx = self.nodes[0].walletprocesspsbt(psbt=psbtx, finalize=False)['psbt']
+        finalized_tx = self.nodes[0].walletprocesspsbt(psbt=psbtx, finalize=True)['psbt']
+        assert signed_tx != finalized_tx
         final_tx = self.nodes[0].finalizepsbt(signed_tx)['hex']
         self.nodes[0].sendrawtransaction(final_tx)
 
