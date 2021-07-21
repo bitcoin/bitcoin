@@ -5007,11 +5007,25 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         // Fake nChainTx so that GuessVerificationProgress reports accurately
         index->nChainTx = index->pprev ? index->pprev->nChainTx + index->nTx : 1;
 
+        // Mark unvalidated block index entries beneath the snapshot base block as assumed-valid.
+        if (!index->IsValid(BLOCK_VALID_SCRIPTS)) {
+            // This flag will be removed once the block is fully validated by a
+            // background chainstate.
+            index->nStatus |= BLOCK_ASSUMED_VALID;
+        }
+
         // Fake BLOCK_OPT_WITNESS so that CChainState::NeedsRedownload()
         // won't ask to rewind the entire assumed-valid chain on startup.
         if (index->pprev && DeploymentActiveAt(*index, ::Params().GetConsensus(), Consensus::DEPLOYMENT_SEGWIT)) {
             index->nStatus |= BLOCK_OPT_WITNESS;
         }
+
+        setDirtyBlockIndex.insert(index);
+        // Changes to the block index will be flushed to disk after this call
+        // returns in `ActivateSnapshot()`, when `MaybeRebalanceCaches()` is
+        // called, since we've added a snapshot chainstate and therefore will
+        // have to downsize the IBD chainstate, which will result in a call to
+        // `FlushStateToDisk(ALWAYS)`.
     }
 
     assert(index);
