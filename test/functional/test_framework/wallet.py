@@ -80,7 +80,7 @@ class MiniWallet:
             self._scriptPubKey = bytes.fromhex(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
     def scan_blocks(self, *, start=1, num):
-        """Scan the blocks for self._address outputs and add them to self._utxos"""
+        """Scan the blocks for self._scriptPubKey outputs and add them to self._utxos"""
         for i in range(start, start + num):
             block = self._test_node.getblock(blockhash=self._test_node.getblockhash(i), verbosity=2)
             for tx in block['tx']:
@@ -176,7 +176,7 @@ class MiniWallet:
         if mempool_valid:
             assert_equal(tx_info['vsize'], vsize)
             assert_equal(tx_info['fees']['base'], fee)
-        return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex, 'tx': tx}
+        return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex, 'tx': tx, 'fees': fee}
 
     def sendrawtransaction(self, *, from_node, tx_hex):
         from_node.sendrawtransaction(tx_hex)
