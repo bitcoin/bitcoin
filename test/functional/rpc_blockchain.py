@@ -6,13 +6,15 @@
 
 Test the following RPCs:
     - getblockchaininfo
-    - gettxoutsetinfo
-    - getdifficulty
-    - getbestblockhash
-    - getblockhash
-    - getblockheader
     - getchaintxstats
+    - gettxoutsetinfo
+    - getblockheader
+    - getdifficulty
     - getnetworkhashps
+    - waitforblockheight
+    - getblock
+    - getblockhash
+    - getbestblockhash
     - verifychain
 
 Tests correspond to code in rpc/blockchain.cpp.
@@ -246,7 +248,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(len(res['bestblock']), 64)
         assert_equal(len(res['hash_serialized_2']), 64)
 
-        self.log.info("Test that gettxoutsetinfo() works for blockchain with just the genesis block")
+        self.log.info("Test gettxoutsetinfo works for blockchain with just the genesis block")
         b1hash = node.getblockhash(1)
         node.invalidateblock(b1hash)
 
@@ -259,7 +261,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res2['bestblock'], node.getblockhash(0))
         assert_equal(len(res2['hash_serialized_2']), 64)
 
-        self.log.info("Test that gettxoutsetinfo() returns the same result after invalidate/reconsider block")
+        self.log.info("Test gettxoutsetinfo returns the same result after invalidate/reconsider block")
         node.reconsiderblock(b1hash)
 
         res3 = node.gettxoutsetinfo()
@@ -268,7 +270,7 @@ class BlockchainTest(BitcoinTestFramework):
         del res['disk_size'], res3['disk_size']
         assert_equal(res, res3)
 
-        self.log.info("Test hash_type option for gettxoutsetinfo()")
+        self.log.info("Test gettxoutsetinfo hash_type option")
         # Adding hash_type 'hash_serialized_2', which is the default, should
         # not change the result.
         res4 = node.gettxoutsetinfo(hash_type='hash_serialized_2')
@@ -292,6 +294,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "foohash is not a valid hash_type", node.gettxoutsetinfo, "foohash")
 
     def _test_getblockheader(self):
+        self.log.info("Test getblockheader")
         node = self.nodes[0]
 
         assert_raises_rpc_error(-8, "hash must be of length 64 (not 8, for 'nonsense')", node.getblockheader, "nonsense")
@@ -331,17 +334,20 @@ class BlockchainTest(BitcoinTestFramework):
         assert 'nextblockhash' not in node.getblockheader(node.getbestblockhash())
 
     def _test_getdifficulty(self):
+        self.log.info("Test getdifficulty")
         difficulty = self.nodes[0].getdifficulty()
         # 1 hash in 2 should be valid, so difficulty should be 1/2**31
         # binary => decimal => binary math is why we do this check
         assert abs(difficulty * 2**31 - 1) < 0.0001
 
     def _test_getnetworkhashps(self):
+        self.log.info("Test getnetworkhashps")
         hashes_per_second = self.nodes[0].getnetworkhashps()
         # This should be 2 hashes every 10 minutes or 1/300
         assert abs(hashes_per_second * 300 - 1) < 0.0001
 
     def _test_stopatheight(self):
+        self.log.info("Test stopping at height")
         assert_equal(self.nodes[0].getblockcount(), HEIGHT)
         self.nodes[0].generatetoaddress(6, ADDRESS_BCRT1_P2WSH_OP_TRUE)
         assert_equal(self.nodes[0].getblockcount(), HEIGHT + 6)
@@ -406,20 +412,20 @@ class BlockchainTest(BitcoinTestFramework):
         miniwallet.send_self_transfer(fee_rate=fee_per_kb, from_node=node)
         blockhash = node.generate(1)[0]
 
-        self.log.info("Test that getblock with verbosity 1 doesn't include fee")
+        self.log.info("Test getblock with verbosity 1 doesn't include fee")
         block = node.getblock(blockhash, 1)
         assert 'fee' not in block['tx'][1]
 
-        self.log.info('Test that getblock with verbosity 2 includes expected fee')
+        self.log.info('Test getblock with verbosity 2 includes expected fee')
         block = node.getblock(blockhash, 2)
         tx = block['tx'][1]
         assert 'fee' in tx
         assert_equal(tx['fee'], tx['vsize'] * fee_per_byte)
 
-        self.log.info("Test that getblock with verbosity 2 still works with pruned Undo data")
+        self.log.info("Test getblock with verbosity 2 still works with pruned Undo data")
         datadir = get_datadir_path(self.options.tmpdir, 0)
 
-        self.log.info("Test that getblock with invalid verbosity type returns proper error message")
+        self.log.info("Test getblock with invalid verbosity type returns proper error message")
         assert_raises_rpc_error(-1, "JSON value is not an integer as expected", node.getblock, blockhash, "2")
 
         def move_block_file(old, new):
