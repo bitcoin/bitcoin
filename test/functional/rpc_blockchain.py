@@ -92,10 +92,13 @@ class BlockchainTest(SyscoinTestFramework):
             'pruned',
             'size_on_disk',
             'softforks',
+            'time',
             'verificationprogress',
             'warnings',
         ]
         res = self.nodes[0].getblockchaininfo()
+
+        assert isinstance(res['time'], int)
 
         # result should have these additional pruning keys if manual pruning is enabled
         assert_equal(sorted(res.keys()), sorted(['pruneheight', 'automatic_pruning'] + keys))

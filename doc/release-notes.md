@@ -196,6 +196,8 @@ Low-level changes
 RPC
 ---
 
+- `getblockchaininfo` now returns a new `time` field, that provides the chain tip time. (#22407)
+
 - The RPC server can process a limited number of simultaneous RPC requests.
   Previously, if this limit was exceeded, the RPC server would respond with
   [status code 500 (`HTTP_INTERNAL_SERVER_ERROR`)](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#5xx_server_errors).
