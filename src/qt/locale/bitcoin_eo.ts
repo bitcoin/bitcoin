@@ -1,9 +1,9 @@
-<TS language="eo" version="2.1">
+<TS version="2.1" language="eo">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Dekstre-klaku por redakti adreson aŭ etikedon</translation>
+        <translation type="unfinished">Dekstre-klaku por redakti adreson aŭ etikedon</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Nova</translation>
+        <translation type="unfinished">&amp;Nova</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -19,11 +19,11 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Kopii</translation>
+        <translation type="unfinished">&amp;Kopii</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>&amp;Fermi</translation>
+        <translation type="unfinished">&amp;Fermi</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -31,7 +31,7 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>Tajpu adreson aŭ etikedon por serĉi</translation>
+        <translation type="unfinished">Tajpu adreson aŭ etikedon por serĉi</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -47,70 +47,72 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Elekti la adreson por sendi monerojn</translation>
+        <translation type="unfinished">Elekti la adreson por sendi monerojn</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Elekti la adreson ricevi monerojn kun</translation>
+        <translation type="unfinished">Elekti la adreson ricevi monerojn kun</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>&amp;Elekti</translation>
+        <translation type="unfinished">&amp;Elekti</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>Sendaj adresoj</translation>
+        <translation type="unfinished">Sendaj adresoj</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>Ricevaj adresoj</translation>
+        <translation type="unfinished">Ricevaj adresoj</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Jen viaj Bitmon-adresoj por sendi pagojn. Zorge kontrolu la sumon kaj la alsendan adreson antaŭ ol sendi.</translation>
+        <translation type="unfinished">Jen viaj Bitmon-adresoj por sendi pagojn. Zorge kontrolu la sumon kaj la alsendan adreson antaŭ ol sendi.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">Jen viaj bitmonaj adresoj por ricevi pagojn. Estas konsilinde uzi apartan ricevan adreson por ĉiu transakcio.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Kopii Adreson</translation>
+        <translation type="unfinished">&amp;Kopii Adreson</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Kopii &amp;Etikedon</translation>
+        <translation type="unfinished">Kopii &amp;Etikedon</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>&amp;Redakti</translation>
+        <translation type="unfinished">&amp;Redakti</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation>Eksporti Adresliston</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Perkome disigita dosiero (*.csv)</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>ekspotado malsukcesinta</translation>
+        <translation type="unfinished">Eksporti Adresliston</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Okazis eraron dum konservo de adreslisto al %1. Bonvolu provi denove.</translation>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation type="unfinished">Okazis eraron dum konservo de adreslisto al %1. Bonvolu provi denove.</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">ekspotado malsukcesinta</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Etikedo</translation>
+        <translation type="unfinished">Etikedo</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Adreso</translation>
+        <translation type="unfinished">Adreso</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(neniu etikedo)</translation>
+        <translation type="unfinished">(neniu etikedo)</translation>
     </message>
 </context>
 <context>
@@ -132,95 +134,183 @@
         <translation>Ripetu la novan pasfrazon</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation type="unfinished">Montri pasfrazon</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
-        <translation>Ĉifri la monujon</translation>
+        <translation type="unfinished">Ĉifri la monujon</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Ĉi tiu operacio bezonas vian monujan pasfrazon, por malŝlosi la monujon.</translation>
+        <translation type="unfinished">Ĉi tiu operacio bezonas vian monujan pasfrazon, por malŝlosi la monujon.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>Malŝlosi la monujon</translation>
-    </message>
-    <message>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Ĉi tiu operacio bezonas vian monujan pasfrazon, por malĉifri la monujon.</translation>
-    </message>
-    <message>
-        <source>Decrypt wallet</source>
-        <translation>Malĉifri la monujon</translation>
+        <translation type="unfinished">Malŝlosi la monujon</translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Ŝanĝi la pasfrazon</translation>
+        <translation type="unfinished">Ŝanĝi la pasfrazon</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>Konfirmo de ĉifrado de la monujo</translation>
+        <translation type="unfinished">Konfirmo de ĉifrado de la monujo</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Atentu! Se vi ĉifras vian monujon kaj perdas la pasfrazon, vi &lt;b&gt;PERDOS LA TUTON DE VIA BITMONO&lt;b&gt;!</translation>
+        <translation type="unfinished">Atentu! Se vi ĉifras vian monujon kaj perdas la pasfrazon, vi &lt;b&gt;PERDOS LA TUTON DE VIA BITMONO&lt;b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Ĉu vi certas, ke vi volas ĉifri la monujon?</translation>
+        <translation type="unfinished">Ĉu vi certas, ke vi volas ĉifri la monujon?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation>La monujo estas ĉifrita</translation>
+        <translation type="unfinished">La monujo estas ĉifrita</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation type="unfinished">Enigi la novan pasfrazon por la monujo. &lt;br/&gt;Bonvolu uzi pasfrazon de &lt;b&gt;dek aŭ pli hazardaj signoj&lt;/b&gt;, aŭ &lt;b&gt;ok aŭ pli vortoj&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation type="unfinished">Enigi la malnovan pasfrazon kaj la novan pasfrazon por la monujo.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">Monujo ĉifriĝota</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation type="unfinished">Via monujo estas ĉifriĝota.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation type="unfinished">Via monujo ĵus estas ĉifrata.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>GRAVE: antaŭaj sekur-kopioj de via monujo-dosiero estas forigindaj kiam vi havas nove kreitan ĉifritan monujo-dosieron. Pro sekureco, antaŭaj kopioj de la neĉifrita dosiero ne plu funkcios tuj kiam vi ekuzos la novan ĉifritan dosieron.</translation>
+        <translation type="unfinished">GRAVE: antaŭaj sekur-kopioj de via monujo-dosiero estas forigindaj kiam vi havas nove kreitan ĉifritan monujo-dosieron. Pro sekureco, antaŭaj kopioj de la neĉifrita dosiero ne plu funkcios tuj kiam vi ekuzos la novan ĉifritan dosieron.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation>Ĉifrado de la monujo fiaskis</translation>
+        <translation type="unfinished">Ĉifrado de la monujo fiaskis</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Ĉifrado de monujo fiaskis pro interna eraro. Via monujo ne estas ĉifrita.</translation>
+        <translation type="unfinished">Ĉifrado de monujo fiaskis pro interna eraro. Via monujo ne estas ĉifrita.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation>La pasfrazoj entajpitaj ne samas.</translation>
+        <translation type="unfinished">La pasfrazoj entajpitaj ne samas.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation>Malŝloso de la monujo fiaskis</translation>
+        <translation type="unfinished">Malŝloso de la monujo fiaskis</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>La pasfrazo enigita por ĉifrado de monujo ne ĝustas.</translation>
-    </message>
-    <message>
-        <source>Wallet decryption failed</source>
-        <translation>Malĉifrado de la monujo fiaskis</translation>
+        <translation type="unfinished">La pasfrazo enigita por ĉifrado de monujo ne ĝustas.</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>Vi sukcese ŝanĝis la pasfrazon de la monujo.</translation>
+        <translation type="unfinished">Vi sukcese ŝanĝis la pasfrazon de la monujo.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Atentu: la majuskla baskulo estas ŝaltita!</translation>
+        <translation type="unfinished">Atentu: la majuskla baskulo estas ŝaltita!</translation>
     </message>
 </context>
 <context>
     <name>BanTableModel</name>
+    <message>
+        <source>Banned Until</source>
+        <translation type="unfinished">Ekzilita Ĝis</translation>
+    </message>
+</context>
+<context>
+    <name>BitcoinApplication</name>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation type="unfinished">Neriparebla eraro okazis. %1 ne plu sekure povas daŭri kaj ĝi ĉesiĝos.</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject</name>
+    <message>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation type="unfinished">Eraro: la elektita dosierujo por datumoj "%1" ne ekzistas.</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">Eraro: %1</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation type="unfinished">nekonata</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation type="unfinished">Sumo</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">Neniu</translation>
+    </message>
+    <message>
+        <source>N/A</source>
+        <translation type="unfinished">neaplikebla</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation type="unfinished">%1 kaj %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     </context>
 <context>
     <name>BitcoinGUI</name>
-    <message>
-        <source>Sign &amp;message...</source>
-        <translation>Subskribi &amp;mesaĝon...</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Sinkronigante kun reto...</translation>
-    </message>
     <message>
         <source>&amp;Overview</source>
         <translation>&amp;Superrigardo</translation>
@@ -247,7 +337,11 @@
     </message>
     <message>
         <source>&amp;About %1</source>
-        <translation>&amp;Pri %1</translation>
+        <translation type="unfinished">&amp;Pri %1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation type="unfinished">Montri informojn pri %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -258,28 +352,21 @@
         <translation>Vidigi informojn pri Qt</translation>
     </message>
     <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Agordoj...</translation>
+        <source>Modify configuration options for %1</source>
+        <translation type="unfinished">Ŝanĝi agordojn por %1</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>Ĉifri &amp;Monujon...</translation>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">Krei novan monujon</translation>
     </message>
     <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Krei sekurkopion de la monujo...</translation>
+        <source>Wallet:</source>
+        <translation type="unfinished">Monujo:</translation>
     </message>
     <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>Ŝanĝi &amp;Pasfrazon...</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>Malfermi &amp;URI-on...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Reindeksado de blokoj sur disko...</translation>
+        <source>Network activity disabled.</source>
+        <extracomment>A substring of the tooltip.</extracomment>
+        <translation type="unfinished">Retaj agadoj malebliĝas.</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -292,10 +379,6 @@
     <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Ŝanĝi la pasfrazon por ĉifri la monujon</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;Kontroli mesaĝon...</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -343,19 +426,26 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Peti pagon (kreas QR-kodojn kaj URI-ojn kun prefikso bitcoin:)</translation>
+        <translation type="unfinished">Peti pagon (kreas QR-kodojn kaj URI-ojn kun prefikso bitcoin:)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation>Vidigi la liston de uzitaj sendaj adresoj kaj etikedoj</translation>
+        <translation type="unfinished">Vidigi la liston de uzitaj sendaj adresoj kaj etikedoj</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation>Vidigi la liston de uzitaj ricevaj adresoj kaj etikedoj</translation>
+        <translation type="unfinished">Vidigi la liston de uzitaj ricevaj adresoj kaj etikedoj</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>&amp;Komandliniaj agordaĵoj</translation>
+        <translation type="unfinished">&amp;Komandliniaj agordaĵoj</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -386,41 +476,87 @@
         <translation>Ĝisdata</translation>
     </message>
     <message>
-        <source>&amp;Window</source>
-        <translation>&amp;Fenestro</translation>
+        <source>Open Wallet</source>
+        <translation type="unfinished">Malfermi la Monujon</translation>
     </message>
     <message>
-        <source>Catching up...</source>
-        <translation>Ĝisdatigante...</translation>
+        <source>Open a wallet</source>
+        <translation type="unfinished">Malfermi monujon</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation type="unfinished">Fermi monujon</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation type="unfinished">Fermi ĉiujn monujojn</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">defaŭlta monujo</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation type="unfinished">&amp;Fenestro</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation type="unfinished">Zomi</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation type="unfinished">Ĉefa Fenestro</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network.</source>
+        <extracomment>A substring of the tooltip.</extracomment>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">Eraro: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation type="unfinished">Averto: %1</translation>
     </message>
     <message>
         <source>Date: %1
 </source>
-        <translation>Dato: %1
+        <translation type="unfinished">Dato: %1
 </translation>
     </message>
     <message>
         <source>Amount: %1
 </source>
-        <translation>Sumo: %1
+        <translation type="unfinished">Sumo: %1
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation type="unfinished">Monujo: %1
 </translation>
     </message>
     <message>
         <source>Type: %1
 </source>
-        <translation>Tipo: %1
+        <translation type="unfinished">Tipo: %1
 </translation>
     </message>
     <message>
         <source>Label: %1
 </source>
-        <translation>Etikedo: %1
+        <translation type="unfinished">Etikedo: %1
 </translation>
     </message>
     <message>
         <source>Address: %1
 </source>
-        <translation>Adreso: %1
+        <translation type="unfinished">Adreso: %1
 </translation>
     </message>
     <message>
@@ -439,151 +575,201 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Monujo estas &lt;b&gt;ĉifrita&lt;/b&gt; kaj aktuale &lt;b&gt;ŝlosita&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>Original message:</source>
+        <translation type="unfinished">Originala mesaĝo:</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation type="unfinished">Monero-Elektaĵo</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
-        <translation>Kvanto:</translation>
+        <translation type="unfinished">Kvanto:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation>Bajtoj:</translation>
+        <translation type="unfinished">Bajtoj:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Sumo:</translation>
+        <translation type="unfinished">Sumo:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Krompago:</translation>
+        <translation type="unfinished">Krompago:</translation>
     </message>
     <message>
         <source>Dust:</source>
-        <translation>Polvo:</translation>
+        <translation type="unfinished">Polvo:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation>Post krompago:</translation>
+        <translation type="unfinished">Post krompago:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation>Restmono:</translation>
+        <translation type="unfinished">Restmono:</translation>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation>(mal)elekti ĉion</translation>
+        <translation type="unfinished">(mal)elekti ĉion</translation>
     </message>
     <message>
         <source>Tree mode</source>
-        <translation>Arboreĝimo</translation>
+        <translation type="unfinished">Arboreĝimo</translation>
     </message>
     <message>
         <source>List mode</source>
-        <translation>Listreĝimo</translation>
+        <translation type="unfinished">Listreĝimo</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Sumo</translation>
+        <translation type="unfinished">Sumo</translation>
     </message>
     <message>
         <source>Received with label</source>
-        <translation>Ricevita kun etikedo</translation>
+        <translation type="unfinished">Ricevita kun etikedo</translation>
     </message>
     <message>
         <source>Received with address</source>
-        <translation>Ricevita kun adreso</translation>
+        <translation type="unfinished">Ricevita kun adreso</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>Dato</translation>
+        <translation type="unfinished">Dato</translation>
     </message>
     <message>
         <source>Confirmations</source>
-        <translation>Konfirmoj</translation>
+        <translation type="unfinished">Konfirmoj</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation>Konfirmita</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Kopii adreson</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Kopii etikedon</translation>
+        <translation type="unfinished">Konfirmita</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Kopii sumon</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>Kopii transakcian ID-on</translation>
-    </message>
-    <message>
-        <source>Lock unspent</source>
-        <translation>Ŝlosi la neelspezitajn</translation>
-    </message>
-    <message>
-        <source>Unlock unspent</source>
-        <translation>Malŝlosi la neelspezitajn</translation>
+        <translation type="unfinished">Kopii sumon</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation>Kopii kvanton</translation>
+        <translation type="unfinished">Kopii kvanton</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation>Kopii krompagon</translation>
+        <translation type="unfinished">Kopii krompagon</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation>Kopii post krompago</translation>
+        <translation type="unfinished">Kopii post krompago</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>Kopii bajtojn</translation>
+        <translation type="unfinished">Kopii bajtojn</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation>Kopii polvon</translation>
+        <translation type="unfinished">Kopii polvon</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>Kopii restmonon</translation>
+        <translation type="unfinished">Kopii restmonon</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
-        <translation>(%1 ŝlosita)</translation>
+        <translation type="unfinished">(%1 ŝlosita)</translation>
     </message>
     <message>
         <source>yes</source>
-        <translation>jes</translation>
+        <translation type="unfinished">jes</translation>
     </message>
     <message>
         <source>no</source>
-        <translation>ne</translation>
+        <translation type="unfinished">ne</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(neniu etikedo)</translation>
+        <translation type="unfinished">(neniu etikedo)</translation>
     </message>
     <message>
         <source>change from %1 (%2)</source>
-        <translation>restmono de %1 (%2)</translation>
+        <translation type="unfinished">restmono de %1 (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
-        <translation>(restmono)</translation>
+        <translation type="unfinished">(restmono)</translation>
     </message>
 </context>
 <context>
     <name>CreateWalletActivity</name>
+    <message>
+        <source>Create wallet failed</source>
+        <translation type="unfinished">Krei monujon malsukcesis</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation type="unfinished">Averto pro krei monujon</translation>
+    </message>
+    </context>
+<context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation type="unfinished">Malfermi monujon malsukcesis</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation type="unfinished">Malfermi monujon averto</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">defaŭlta monujo</translation>
+    </message>
+    </context>
+<context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation type="unfinished">Fermi monujon</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation type="unfinished">Fermi ĉiujn monujojn</translation>
+    </message>
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation type="unfinished">Krei Monujon</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation type="unfinished">Monujo-Nomo</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">Monujo</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation type="unfinished">Ĉifri Monujon</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation type="unfinished">Malebligi privatajn ŝlosilojn por ĉi tiu monujo. Monujoj kun malebligitaj privataj ŝlosiloj ne havos privatajn ŝlosilojn, kaj povas havi nek HD-semon nek importatajn privatajn ŝlosilojn. Ĉi tio estas ideale por nurspektaj monujoj.</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation type="unfinished">Malebligi Privatajn Ŝlosilojn</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation type="unfinished">Krei</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -597,11 +783,11 @@
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation>La etikedo ligita al tiu ĉi adreslistero</translation>
+        <translation type="unfinished">La etikedo ligita al tiu ĉi adreslistero</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>La adreso ligita al tiu ĉi adreslistero. Eblas modifi tion nur por sendaj adresoj.</translation>
+        <translation type="unfinished">La adreso ligita al tiu ĉi adreslistero. Eblas modifi tion nur por sendaj adresoj.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -609,27 +795,27 @@
     </message>
     <message>
         <source>New sending address</source>
-        <translation>Nova adreso por sendi</translation>
+        <translation type="unfinished">Nova adreso por sendi</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation>Redakti adreson por ricevi</translation>
+        <translation type="unfinished">Redakti adreson por ricevi</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation>Redakti adreson por sendi</translation>
+        <translation type="unfinished">Redakti adreson por sendi</translation>
     </message>
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>La adreso enigita "%1" ne estas valida Bitmon-adreso.</translation>
+        <translation type="unfinished">La adreso enigita "%1" ne estas valida Bitmon-adreso.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation>Ne eblis malŝlosi monujon.</translation>
+        <translation type="unfinished">Ne eblis malŝlosi monujon.</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
-        <translation>Fiaskis kreo de nova ŝlosilo.</translation>
+        <translation type="unfinished">Fiaskis kreo de nova ŝlosilo.</translation>
     </message>
 </context>
 <context>
@@ -656,21 +842,30 @@
     </message>
 </context>
 <context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation>versio</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation>Komandliniaj agordaĵoj</translation>
-    </message>
-</context>
-<context>
     <name>Intro</name>
+    <message>
+        <source>Bitcoin</source>
+        <translation type="unfinished">Bitmono</translation>
+    </message>
+    <message numerus="yes">
+        <source>(sufficient to restore backups %n day(s) old)</source>
+        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Eraro</translation>
+    </message>
     <message>
         <source>Welcome</source>
         <translation>Bonvenon</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">Bonvenon al %1.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -680,39 +875,66 @@
         <source>Use a custom data directory:</source>
         <translation>Uzi alian dosierujon por datumoj:</translation>
     </message>
+</context>
+<context>
+    <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitmono</translation>
+        <source>version</source>
+        <translation type="unfinished">versio</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation>Eraro</translation>
+        <source>About %1</source>
+        <translation type="unfinished">Pri %1</translation>
     </message>
-    <message numerus="yes">
-        <source>%n GB of free space available</source>
-        <translation><numerusform>%n gigabajto de libera loko disponeble</numerusform><numerusform>%n gigabajtoj de libera loko disponebla.</numerusform></translation>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Komandliniaj agordaĵoj</translation>
     </message>
-    </context>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Ne sistemfermu ĝis ĉi tiu fenestro malaperas.</translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
-        <translation>Formularo</translation>
+        <translation type="unfinished">Formularo</translation>
     </message>
     <message>
         <source>Last block time</source>
-        <translation>Horo de la lasta bloko</translation>
+        <translation type="unfinished">Horo de la lasta bloko</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation type="unfinished">Progreso</translation>
+    </message>
+    <message>
+        <source>Progress increase per hour</source>
+        <translation type="unfinished">Hora pligrandigo da progreso</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation type="unfinished">Kaŝi</translation>
+    </message>
+    <message>
+        <source>Esc</source>
+        <translation type="unfinished">Esk</translation>
+    </message>
+    <message>
+        <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
+        <translation type="unfinished">%1 sinkronigadas. Ĝi elŝutos kapaĵojn kaj blokojn de samtavolanoj, kaj validigos ilin, ĝis ĝi atingas la pinton de la blokĉeno.</translation>
     </message>
     </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
-        <source>URI:</source>
-        <translation>URI:</translation>
+        <source>Open bitcoin URI</source>
+        <translation type="unfinished">Malfermi na la URI de bitmono</translation>
     </message>
-</context>
-<context>
-    <name>OpenWalletActivity</name>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -725,8 +947,24 @@
         <translation>Ĉ&amp;efa</translation>
     </message>
     <message>
+        <source>Automatically start %1 after logging in to the system.</source>
+        <translation type="unfinished">Aŭtomate komenci na %1 post ensalutis en la sistemon.</translation>
+    </message>
+    <message>
+        <source>&amp;Start %1 on system login</source>
+        <translation type="unfinished">&amp;Komenci na %1 kiam ensaluti en la sistemon</translation>
+    </message>
+    <message>
         <source>Size of &amp;database cache</source>
-        <translation>Dosiergrando de &amp;datumbasa kaŝmemoro</translation>
+        <translation type="unfinished">Dosiergrando de &amp;datumbasa kaŝmemoro</translation>
+    </message>
+    <message>
+        <source>Number of script &amp;verification threads</source>
+        <translation type="unfinished">Kvanto da skriptaj kaj kontroleraraj fadenoj</translation>
+    </message>
+    <message>
+        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
+        <translation type="unfinished">IP-adreso de prokurilo (ekz. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -742,11 +980,11 @@
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation>Monujo</translation>
+        <translation type="unfinished">Monujo</translation>
     </message>
     <message>
         <source>Expert</source>
-        <translation>Fakulo</translation>
+        <translation type="unfinished">Fakulo</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -767,14 +1005,6 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>la pordo de la prokurilo (ekz. 9050)</translation>
-    </message>
-    <message>
-        <source>IPv4</source>
-        <translation>IPv4</translation>
-    </message>
-    <message>
-        <source>IPv6</source>
-        <translation>IPv6</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -810,7 +1040,7 @@
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation>Ĉu montri detalan adres-regilon, aŭ ne.</translation>
+        <translation type="unfinished">Ĉu montri detalan adres-regilon, aŭ ne.</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -826,7 +1056,7 @@
     </message>
     <message>
         <source>none</source>
-        <translation>neniu</translation>
+        <translation type="unfinished">neniu</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -834,7 +1064,7 @@
     </message>
     <message>
         <source>Error</source>
-        <translation>Eraro</translation>
+        <translation type="unfinished">Eraro</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -850,6 +1080,10 @@
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>Eblas, ke la informoj videblaj ĉi tie estas eksdataj. Via monujo aŭtomate sinkoniĝas kun la bitmona reto kiam ili konektiĝas, sed tiu procezo ankoraŭ ne finfariĝis.</translation>
+    </message>
+    <message>
+        <source>Available:</source>
+        <translation type="unfinished">Disponebla:</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -869,7 +1103,7 @@
     </message>
     <message>
         <source>Balances</source>
-        <translation>Saldoj</translation>
+        <translation type="unfinished">Saldoj</translation>
     </message>
     <message>
         <source>Total:</source>
@@ -881,132 +1115,95 @@
     </message>
     <message>
         <source>Spendable:</source>
-        <translation>Elspezebla:</translation>
+        <translation type="unfinished">Elspezebla:</translation>
     </message>
     <message>
         <source>Recent transactions</source>
-        <translation>Lastaj transakcioj</translation>
+        <translation type="unfinished">Lastaj transakcioj</translation>
     </message>
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
+        <source>Close</source>
+        <translation type="unfinished">Fermi</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation type="unfinished">Totala Sumo</translation>
+    </message>
+    <message>
         <source>or</source>
-        <translation>aŭ</translation>
+        <translation type="unfinished">aŭ</translation>
     </message>
     </context>
 <context>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
-        <translation>Eraro dum pagopeto</translation>
+        <translation type="unfinished">Eraro dum pagopeto</translation>
     </message>
     <message>
         <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Ne eblas lanĉi la ilon 'klaki-por-pagi'</translation>
+        <translation type="unfinished">Ne eblas lanĉi la ilon 'klaki-por-pagi'</translation>
     </message>
     <message>
         <source>URI handling</source>
-        <translation>Traktado de URI-oj</translation>
-    </message>
-    <message>
-        <source>Invalid payment address %1</source>
-        <translation>Nevalida pagadreso %1</translation>
+        <translation type="unfinished">Traktado de URI-oj</translation>
     </message>
     </context>
 <context>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
-        <translation>Uzanto Agento</translation>
+        <extracomment>Title of Peers Table column which contains the peer's User Agent string.</extracomment>
+        <translation type="unfinished">Uzanto Agento</translation>
     </message>
     <message>
         <source>Sent</source>
-        <translation>Sendita</translation>
+        <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
+        <translation type="unfinished">Sendita</translation>
     </message>
     <message>
         <source>Received</source>
-        <translation>Ricevita</translation>
-    </message>
-</context>
-<context>
-    <name>QObject</name>
-    <message>
-        <source>Amount</source>
-        <translation>Sumo</translation>
+        <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
+        <translation type="unfinished">Ricevita</translation>
     </message>
     <message>
-        <source>%1 h</source>
-        <translation>%1 h</translation>
+        <source>Address</source>
+        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
+        <translation type="unfinished">Adreso</translation>
     </message>
     <message>
-        <source>%1 m</source>
-        <translation>%1 m</translation>
+        <source>Type</source>
+        <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
+        <translation type="unfinished">Tipo</translation>
     </message>
     <message>
-        <source>None</source>
-        <translation>Neniu</translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation>neaplikebla</translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 kaj %2</translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
-    </message>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>Eraro: la elektita dosierujo por datumoj "%1" ne ekzistas.</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>nekonata</translation>
+        <source>Network</source>
+        <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
+        <translation type="unfinished">Reto</translation>
     </message>
 </context>
 <context>
     <name>QRImageWidget</name>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Konservi Bildon...</translation>
-    </message>
-    <message>
         <source>&amp;Copy Image</source>
-        <translation>&amp;Kopii Bildon</translation>
+        <translation type="unfinished">&amp;Kopii Bildon</translation>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>La rezultanta URI estas tro longa. Provu malplilongigi la tekston de la etikedo / mesaĝo.</translation>
+        <translation type="unfinished">La rezultanta URI estas tro longa. Provu malplilongigi la tekston de la etikedo / mesaĝo.</translation>
     </message>
     <message>
         <source>Error encoding URI into QR Code.</source>
-        <translation>Eraro de kodigo de URI en la QR-kodon.</translation>
+        <translation type="unfinished">Eraro de kodigo de URI en la QR-kodon.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
-        <translation>Konservi QR-kodon</translation>
+        <translation type="unfinished">Konservi QR-kodon</translation>
     </message>
-    <message>
-        <source>PNG Image (*.png)</source>
-        <translation>PNG-bildo (*.png)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -1023,7 +1220,7 @@
     </message>
     <message>
         <source>General</source>
-        <translation>Ĝenerala</translation>
+        <translation type="unfinished">Ĝenerala</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1035,7 +1232,7 @@
     </message>
     <message>
         <source>Name</source>
-        <translation>Nomo</translation>
+        <translation type="unfinished">Nomo</translation>
     </message>
     <message>
         <source>Number of connections</source>
@@ -1046,32 +1243,36 @@
         <translation>Blokĉeno</translation>
     </message>
     <message>
+        <source>Wallet: </source>
+        <translation type="unfinished">Monujo:</translation>
+    </message>
+    <message>
         <source>Received</source>
-        <translation>Ricevita</translation>
+        <translation type="unfinished">Ricevita</translation>
     </message>
     <message>
         <source>Sent</source>
-        <translation>Sendita</translation>
+        <translation type="unfinished">Sendita</translation>
     </message>
     <message>
         <source>&amp;Peers</source>
-        <translation>&amp;Samuloj</translation>
+        <translation type="unfinished">&amp;Samuloj</translation>
     </message>
     <message>
         <source>Banned peers</source>
-        <translation>Malpermesita samuloj.</translation>
+        <translation type="unfinished">Malpermesita samuloj.</translation>
     </message>
     <message>
         <source>Version</source>
-        <translation>Versio</translation>
+        <translation type="unfinished">Versio</translation>
     </message>
     <message>
         <source>User Agent</source>
-        <translation>Uzanto Agento</translation>
+        <translation type="unfinished">Uzanto Agento</translation>
     </message>
     <message>
         <source>Services</source>
-        <translation>Servoj</translation>
+        <translation type="unfinished">Servoj</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1087,19 +1288,11 @@
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation>&amp;Reta Trafiko</translation>
+        <translation type="unfinished">&amp;Reta Trafiko</translation>
     </message>
     <message>
         <source>Totals</source>
-        <translation>Totaloj</translation>
-    </message>
-    <message>
-        <source>In:</source>
-        <translation>En:</translation>
-    </message>
-    <message>
-        <source>Out:</source>
-        <translation>El:</translation>
+        <translation type="unfinished">Totaloj</translation>
     </message>
     <message>
         <source>Debug log file</source>
@@ -1109,110 +1302,142 @@
         <source>Clear console</source>
         <translation>Malplenigi konzolon</translation>
     </message>
-    </context>
+    <message>
+        <source>In:</source>
+        <translation type="unfinished">En:</translation>
+    </message>
+    <message>
+        <source>Out:</source>
+        <translation type="unfinished">El:</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation type="unfinished">1 &amp;horo</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation type="unfinished">1 &amp;semajno</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation type="unfinished">1 &amp;jaro</translation>
+    </message>
+    <message>
+        <source>&amp;Unban</source>
+        <translation type="unfinished">&amp;Malekzili</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation type="unfinished">Al</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation type="unfinished">De</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation type="unfinished">Nekonata</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Amount:</source>
-        <translation>&amp;Kvanto:</translation>
+        <translation type="unfinished">&amp;Kvanto:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Etikedo:</translation>
+        <translation type="unfinished">&amp;Etikedo:</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
-        <translation>&amp;Mesaĝo:</translation>
+        <translation type="unfinished">&amp;Mesaĝo:</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Malplenigi ĉiujn kampojn de la formularo.</translation>
+        <translation type="unfinished">Malplenigi ĉiujn kampojn de la formularo.</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation>Forigi</translation>
+        <translation type="unfinished">Forigi</translation>
     </message>
     <message>
         <source>Show</source>
-        <translation>Vidigi</translation>
+        <translation type="unfinished">Vidigi</translation>
     </message>
     <message>
         <source>Remove</source>
-        <translation>Forigi</translation>
+        <translation type="unfinished">Forigi</translation>
     </message>
     <message>
-        <source>Copy label</source>
-        <translation>Kopii etikedon</translation>
-    </message>
-    <message>
-        <source>Copy message</source>
-        <translation>Kopiu mesaĝon</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopii sumon</translation>
+        <source>Copy &amp;URI</source>
+        <translation type="unfinished">Kopii &amp;URI</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation>Ne eblis malŝlosi monujon.</translation>
+        <translation type="unfinished">Ne eblis malŝlosi monujon.</translation>
     </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Address:</source>
+        <translation type="unfinished">Adreso:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
-        <translation>Sumo:</translation>
+        <translation type="unfinished">Sumo:</translation>
     </message>
     <message>
         <source>Label:</source>
-        <translation>Etikedo:</translation>
+        <translation type="unfinished">Etikedo:</translation>
     </message>
     <message>
         <source>Message:</source>
-        <translation>Mesaĝo:</translation>
+        <translation type="unfinished">Mesaĝo:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation type="unfinished">Monujo:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation>Kopii &amp;URI</translation>
+        <translation type="unfinished">Kopii &amp;URI</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation>Kopii &amp;Adreson</translation>
-    </message>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Konservi Bildon...</translation>
-    </message>
-    <message>
-        <source>Request payment to %1</source>
-        <translation>Peti pagon al %1</translation>
+        <translation type="unfinished">Kopii &amp;Adreson</translation>
     </message>
     <message>
         <source>Payment information</source>
-        <translation>Paginformoj</translation>
+        <translation type="unfinished">Paginformoj</translation>
+    </message>
+    <message>
+        <source>Request payment to %1</source>
+        <translation type="unfinished">Peti pagon al %1</translation>
     </message>
 </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Dato</translation>
+        <translation type="unfinished">Dato</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Etikedo</translation>
+        <translation type="unfinished">Etikedo</translation>
     </message>
     <message>
         <source>Message</source>
-        <translation>Mesaĝo</translation>
+        <translation type="unfinished">Mesaĝo</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(neniu etikedo)</translation>
+        <translation type="unfinished">(neniu etikedo)</translation>
     </message>
     <message>
         <source>(no message)</source>
-        <translation>(neniu mesaĝo)</translation>
+        <translation type="unfinished">(neniu mesaĝo)</translation>
     </message>
     </context>
 <context>
@@ -1223,43 +1448,43 @@
     </message>
     <message>
         <source>Coin Control Features</source>
-        <translation>Monregaj Opcioj</translation>
-    </message>
-    <message>
-        <source>Inputs...</source>
-        <translation>Enigoj...</translation>
+        <translation type="unfinished">Monregaj Opcioj</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation>Nesufiĉa mono!</translation>
+        <translation type="unfinished">Nesufiĉa mono!</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation>Kvanto:</translation>
+        <translation type="unfinished">Kvanto:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation>Bajtoj:</translation>
+        <translation type="unfinished">Bajtoj:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Sumo:</translation>
+        <translation type="unfinished">Sumo:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Krompago:</translation>
+        <translation type="unfinished">Krompago:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation>Post krompago:</translation>
+        <translation type="unfinished">Post krompago:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation>Restmono:</translation>
+        <translation type="unfinished">Restmono:</translation>
     </message>
     <message>
         <source>Transaction Fee:</source>
-        <translation>Krompago:</translation>
+        <translation type="unfinished">Krompago:</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation type="unfinished">Kaŝi</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1271,11 +1496,11 @@
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Malplenigi ĉiujn kampojn de la formularo.</translation>
+        <translation type="unfinished">Malplenigi ĉiujn kampojn de la formularo.</translation>
     </message>
     <message>
         <source>Dust:</source>
-        <translation>Polvo:</translation>
+        <translation type="unfinished">Polvo:</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -1295,75 +1520,86 @@
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation>Kopii kvanton</translation>
+        <translation type="unfinished">Kopii kvanton</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Kopii sumon</translation>
+        <translation type="unfinished">Kopii sumon</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation>Kopii krompagon</translation>
+        <translation type="unfinished">Kopii krompagon</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation>Kopii post krompago</translation>
+        <translation type="unfinished">Kopii post krompago</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>Kopii bajtojn</translation>
+        <translation type="unfinished">Kopii bajtojn</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation>Kopii polvon</translation>
+        <translation type="unfinished">Kopii polvon</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>Kopii restmonon</translation>
+        <translation type="unfinished">Kopii restmonon</translation>
     </message>
     <message>
         <source>%1 to %2</source>
-        <translation>%1 al %2</translation>
+        <translation type="unfinished">%1 al %2</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
-        <translation>Ĉu vi certas, ke vi volas sendi?</translation>
+        <translation type="unfinished">Ĉu vi certas, ke vi volas sendi?</translation>
     </message>
     <message>
         <source>or</source>
-        <translation>aŭ</translation>
+        <translation type="unfinished">aŭ</translation>
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation>Krompago</translation>
+        <translation type="unfinished">Krompago</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation type="unfinished">Totala Sumo</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation>Konfirmi sendon de bitmono</translation>
+        <translation type="unfinished">Konfirmi sendon de bitmono</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>La pagenda sumo devas esti pli ol 0.</translation>
+        <translation type="unfinished">La pagenda sumo devas esti pli ol 0.</translation>
     </message>
     <message>
         <source>The amount exceeds your balance.</source>
-        <translation>La sumo estas pli granda ol via saldo.</translation>
+        <translation type="unfinished">La sumo estas pli granda ol via saldo.</translation>
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>La sumo kun la %1 krompago estas pli granda ol via saldo.</translation>
+        <translation type="unfinished">La sumo kun la %1 krompago estas pli granda ol via saldo.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation>Kreo de transakcio fiaskis!</translation>
+        <translation type="unfinished">Kreo de transakcio fiaskis!</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation>Averto: Nevalida Bitmon-adreso</translation>
+        <translation type="unfinished">Averto: Nevalida Bitmon-adreso</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(neniu etikedo)</translation>
+        <translation type="unfinished">(neniu etikedo)</translation>
     </message>
 </context>
 <context>
@@ -1382,46 +1618,31 @@
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Elektu la jam uzitan adreson</translation>
-    </message>
-    <message>
-        <source>Alt+A</source>
-        <translation>Alt+A</translation>
+        <translation type="unfinished">Elektu la jam uzitan adreson</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
         <translation>Alglui adreson de tondejo</translation>
     </message>
     <message>
-        <source>Alt+P</source>
-        <translation>Alt+P</translation>
-    </message>
-    <message>
         <source>Remove this entry</source>
-        <translation>Forigu ĉi tiun enskribon</translation>
+        <translation type="unfinished">Forigu ĉi tiun enskribon</translation>
     </message>
     <message>
         <source>Message:</source>
-        <translation>Mesaĝo:</translation>
+        <translation type="unfinished">Mesaĝo:</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>Tajpu etikedon por tiu ĉi adreso por aldoni ĝin al la listo de uzitaj adresoj</translation>
+        <translation type="unfinished">Tajpu etikedon por tiu ĉi adreso por aldoni ĝin al la listo de uzitaj adresoj</translation>
     </message>
     <message>
         <source>Pay To:</source>
-        <translation>Pagi Al:</translation>
+        <translation type="unfinished">Pagi Al:</translation>
     </message>
     <message>
         <source>Memo:</source>
-        <translation>Memorando:</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation>Ne sistemfermu ĝis ĉi tiu fenestro malaperas.</translation>
+        <translation type="unfinished">Memorando:</translation>
     </message>
 </context>
 <context>
@@ -1436,19 +1657,11 @@
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Elektu la jam uzitan adreson</translation>
-    </message>
-    <message>
-        <source>Alt+A</source>
-        <translation>Alt+A</translation>
+        <translation type="unfinished">Elektu la jam uzitan adreson</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
         <translation>Alglui adreson de tondejo</translation>
-    </message>
-    <message>
-        <source>Alt+P</source>
-        <translation>Alt+P</translation>
     </message>
     <message>
         <source>Enter the message you want to sign here</source>
@@ -1496,177 +1709,184 @@
     </message>
     <message>
         <source>Click "Sign Message" to generate signature</source>
-        <translation>Klaku "Subskribi Mesaĝon" por krei subskribon</translation>
+        <translation type="unfinished">Klaku "Subskribi Mesaĝon" por krei subskribon</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
-        <translation>La adreso, kiun vi enmetis, estas nevalida.</translation>
+        <translation type="unfinished">La adreso, kiun vi enmetis, estas nevalida.</translation>
     </message>
     <message>
         <source>Please check the address and try again.</source>
-        <translation>Bonvolu kontroli la adreson kaj reprovi.</translation>
+        <translation type="unfinished">Bonvolu kontroli la adreson kaj reprovi.</translation>
     </message>
     <message>
         <source>The entered address does not refer to a key.</source>
-        <translation>La adreso, kiun vi enmetis, referencas neniun ŝlosilon.</translation>
+        <translation type="unfinished">La adreso, kiun vi enmetis, referencas neniun ŝlosilon.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
-        <translation>Malŝloso de monujo estas nuligita.</translation>
+        <translation type="unfinished">Malŝloso de monujo estas nuligita.</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
-        <translation>La privata ŝlosilo por la enigita adreso ne disponeblas.</translation>
+        <translation type="unfinished">La privata ŝlosilo por la enigita adreso ne disponeblas.</translation>
     </message>
     <message>
         <source>Message signing failed.</source>
-        <translation>Subskribo de mesaĝo fiaskis.</translation>
+        <translation type="unfinished">Subskribo de mesaĝo fiaskis.</translation>
     </message>
     <message>
         <source>Message signed.</source>
-        <translation>Mesaĝo estas subskribita.</translation>
+        <translation type="unfinished">Mesaĝo estas subskribita.</translation>
     </message>
     <message>
         <source>The signature could not be decoded.</source>
-        <translation>Ne eblis malĉifri la subskribon.</translation>
+        <translation type="unfinished">Ne eblis malĉifri la subskribon.</translation>
     </message>
     <message>
         <source>Please check the signature and try again.</source>
-        <translation>Bonvolu kontroli la subskribon kaj reprovu.</translation>
+        <translation type="unfinished">Bonvolu kontroli la subskribon kaj reprovu.</translation>
     </message>
     <message>
         <source>The signature did not match the message digest.</source>
-        <translation>La subskribo ne kongruis kun la mesaĝ-kompilaĵo.</translation>
+        <translation type="unfinished">La subskribo ne kongruis kun la mesaĝ-kompilaĵo.</translation>
     </message>
     <message>
         <source>Message verification failed.</source>
-        <translation>Kontrolo de mesaĝo malsukcesis.</translation>
+        <translation type="unfinished">Kontrolo de mesaĝo malsukcesis.</translation>
     </message>
     <message>
         <source>Message verified.</source>
-        <translation>Mesaĝo sukcese kontrolita.</translation>
-    </message>
-</context>
-<context>
-    <name>TrafficGraphWidget</name>
-    <message>
-        <source>KB/s</source>
-        <translation>KB/s</translation>
+        <translation type="unfinished">Mesaĝo sukcese kontrolita.</translation>
     </message>
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>Open until %1</source>
-        <translation>Malferma ĝis %1</translation>
+        <translation type="unfinished">Malferma ĝis %1</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
-        <translation>%1/nekonfirmite</translation>
+        <translation type="unfinished">%1/nekonfirmite</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
-        <translation>%1 konfirmoj</translation>
+        <translation type="unfinished">%1 konfirmoj</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation>Stato</translation>
+        <translation type="unfinished">Stato</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>Dato</translation>
+        <translation type="unfinished">Dato</translation>
     </message>
     <message>
         <source>Source</source>
-        <translation>Fonto</translation>
+        <translation type="unfinished">Fonto</translation>
     </message>
     <message>
         <source>Generated</source>
-        <translation>Kreita</translation>
+        <translation type="unfinished">Kreita</translation>
     </message>
     <message>
         <source>From</source>
-        <translation>De</translation>
+        <translation type="unfinished">De</translation>
     </message>
     <message>
         <source>unknown</source>
-        <translation>nekonata</translation>
+        <translation type="unfinished">nekonata</translation>
     </message>
     <message>
         <source>To</source>
-        <translation>Al</translation>
+        <translation type="unfinished">Al</translation>
     </message>
     <message>
         <source>own address</source>
-        <translation>propra adreso</translation>
+        <translation type="unfinished">propra adreso</translation>
     </message>
     <message>
         <source>label</source>
-        <translation>etikedo</translation>
+        <translation type="unfinished">etikedo</translation>
     </message>
     <message>
         <source>Credit</source>
-        <translation>Kredito</translation>
+        <translation type="unfinished">Kredito</translation>
+    </message>
+    <message numerus="yes">
+        <source>matures in %n more block(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>not accepted</source>
-        <translation>ne akceptita</translation>
+        <translation type="unfinished">ne akceptita</translation>
     </message>
     <message>
         <source>Debit</source>
-        <translation>Debeto</translation>
+        <translation type="unfinished">Debeto</translation>
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation>Krompago</translation>
+        <translation type="unfinished">Krompago</translation>
     </message>
     <message>
         <source>Net amount</source>
-        <translation>Neta sumo</translation>
+        <translation type="unfinished">Neta sumo</translation>
     </message>
     <message>
         <source>Message</source>
-        <translation>Mesaĝo</translation>
+        <translation type="unfinished">Mesaĝo</translation>
     </message>
     <message>
         <source>Comment</source>
-        <translation>Komento</translation>
+        <translation type="unfinished">Komento</translation>
     </message>
     <message>
         <source>Transaction ID</source>
-        <translation>Transakcia ID</translation>
+        <translation type="unfinished">Transakcia ID</translation>
     </message>
     <message>
         <source>Merchant</source>
-        <translation>Vendisto</translation>
+        <translation type="unfinished">Vendisto</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Kreitaj moneroj devas esti maturaj je %1 blokoj antaŭ ol eblas elspezi ilin. Kiam vi generis tiun ĉi blokon, ĝi estis elsendita al la reto por aldono al la blokĉeno. Se tiu aldono malsukcesas, ĝia stato ŝanĝiĝos al "neakceptita" kaj ne eblos elspezi ĝin. Tio estas malofta, sed povas okazi se alia bloko estas kreita je preskaŭ la sama momento kiel la via.</translation>
+        <translation type="unfinished">Kreitaj moneroj devas esti maturaj je %1 blokoj antaŭ ol eblas elspezi ilin. Kiam vi generis tiun ĉi blokon, ĝi estis elsendita al la reto por aldono al la blokĉeno. Se tiu aldono malsukcesas, ĝia stato ŝanĝiĝos al "neakceptita" kaj ne eblos elspezi ĝin. Tio estas malofta, sed povas okazi se alia bloko estas kreita je preskaŭ la sama momento kiel la via.</translation>
     </message>
     <message>
         <source>Debug information</source>
-        <translation>Sencimigaj informoj</translation>
+        <translation type="unfinished">Sencimigaj informoj</translation>
     </message>
     <message>
         <source>Transaction</source>
-        <translation>Transakcio</translation>
+        <translation type="unfinished">Transakcio</translation>
     </message>
     <message>
         <source>Inputs</source>
-        <translation>Enigoj</translation>
+        <translation type="unfinished">Enigoj</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Sumo</translation>
+        <translation type="unfinished">Sumo</translation>
     </message>
     <message>
         <source>true</source>
-        <translation>vera</translation>
+        <translation type="unfinished">vera</translation>
     </message>
     <message>
         <source>false</source>
-        <translation>malvera</translation>
+        <translation type="unfinished">malvera</translation>
     </message>
 </context>
 <context>
@@ -1680,340 +1900,285 @@
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Dato</translation>
+        <translation type="unfinished">Dato</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation>Tipo</translation>
+        <translation type="unfinished">Tipo</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Etikedo</translation>
+        <translation type="unfinished">Etikedo</translation>
+    </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Open until %1</source>
-        <translation>Malferma ĝis %1</translation>
+        <translation type="unfinished">Malferma ĝis %1</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
-        <translation>Nekonfirmita</translation>
+        <translation type="unfinished">Nekonfirmita</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
-        <translation>Konfirmita (%1 konfirmoj)</translation>
+        <translation type="unfinished">Konfirmita (%1 konfirmoj)</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
-        <translation>Kreita sed ne akceptita</translation>
+        <translation type="unfinished">Kreita sed ne akceptita</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation>Ricevita kun</translation>
+        <translation type="unfinished">Ricevita kun</translation>
     </message>
     <message>
         <source>Received from</source>
-        <translation>Ricevita de</translation>
+        <translation type="unfinished">Ricevita de</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Sendita al</translation>
+        <translation type="unfinished">Sendita al</translation>
     </message>
     <message>
         <source>Payment to yourself</source>
-        <translation>Pago al vi mem</translation>
+        <translation type="unfinished">Pago al vi mem</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation>Minita</translation>
+        <translation type="unfinished">Minita</translation>
     </message>
     <message>
         <source>(n/a)</source>
-        <translation>neaplikebla</translation>
+        <translation type="unfinished">neaplikebla</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(neniu etikedo)</translation>
+        <translation type="unfinished">(neniu etikedo)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Transakcia stato. Ŝvebi super tiu ĉi kampo por montri la nombron de konfirmoj.</translation>
+        <translation type="unfinished">Transakcia stato. Ŝvebi super tiu ĉi kampo por montri la nombron de konfirmoj.</translation>
     </message>
     <message>
         <source>Date and time that the transaction was received.</source>
-        <translation>Dato kaj horo kiam la transakcio alvenis.</translation>
+        <translation type="unfinished">Dato kaj horo kiam la transakcio alvenis.</translation>
     </message>
     <message>
         <source>Type of transaction.</source>
-        <translation>Tipo de transakcio.</translation>
+        <translation type="unfinished">Tipo de transakcio.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
-        <translation>Sumo elprenita de aŭ aldonita al la saldo.</translation>
+        <translation type="unfinished">Sumo elprenita de aŭ aldonita al la saldo.</translation>
     </message>
 </context>
 <context>
     <name>TransactionView</name>
     <message>
         <source>All</source>
-        <translation>Ĉiuj</translation>
+        <translation type="unfinished">Ĉiuj</translation>
     </message>
     <message>
         <source>Today</source>
-        <translation>Hodiaŭ</translation>
+        <translation type="unfinished">Hodiaŭ</translation>
     </message>
     <message>
         <source>This week</source>
-        <translation>Ĉi-semajne</translation>
+        <translation type="unfinished">Ĉi-semajne</translation>
     </message>
     <message>
         <source>This month</source>
-        <translation>Ĉi-monate</translation>
+        <translation type="unfinished">Ĉi-monate</translation>
     </message>
     <message>
         <source>Last month</source>
-        <translation>Pasintmonate</translation>
+        <translation type="unfinished">Pasintmonate</translation>
     </message>
     <message>
         <source>This year</source>
-        <translation>Ĉi-jare</translation>
-    </message>
-    <message>
-        <source>Range...</source>
-        <translation>Intervalo...</translation>
+        <translation type="unfinished">Ĉi-jare</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation>Ricevita kun</translation>
+        <translation type="unfinished">Ricevita kun</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Sendita al</translation>
+        <translation type="unfinished">Sendita al</translation>
     </message>
     <message>
         <source>To yourself</source>
-        <translation>Al vi mem</translation>
+        <translation type="unfinished">Al vi mem</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation>Minita</translation>
+        <translation type="unfinished">Minita</translation>
     </message>
     <message>
         <source>Other</source>
-        <translation>Aliaj</translation>
+        <translation type="unfinished">Aliaj</translation>
     </message>
     <message>
         <source>Min amount</source>
-        <translation>Minimuma sumo</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Kopii adreson</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Kopii etikedon</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopii sumon</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>Kopii transakcian ID-on</translation>
-    </message>
-    <message>
-        <source>Edit label</source>
-        <translation>Redakti etikedon</translation>
-    </message>
-    <message>
-        <source>Show transaction details</source>
-        <translation>Montri detalojn de transakcio</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Perkome disigita dosiero (*.csv)</translation>
+        <translation type="unfinished">Minimuma sumo</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation>Konfirmita</translation>
+        <translation type="unfinished">Konfirmita</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>Dato</translation>
+        <translation type="unfinished">Dato</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation>Tipo</translation>
+        <translation type="unfinished">Tipo</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Etikedo</translation>
+        <translation type="unfinished">Etikedo</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Adreso</translation>
-    </message>
-    <message>
-        <source>ID</source>
-        <translation>ID</translation>
+        <translation type="unfinished">Adreso</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>ekspotado malsukcesinta</translation>
+        <translation type="unfinished">ekspotado malsukcesinta</translation>
     </message>
     <message>
         <source>Range:</source>
-        <translation>Intervalo:</translation>
+        <translation type="unfinished">Intervalo:</translation>
     </message>
     <message>
         <source>to</source>
-        <translation>al</translation>
+        <translation type="unfinished">al</translation>
     </message>
 </context>
 <context>
-    <name>UnitDisplayStatusBarControl</name>
-    </context>
-<context>
-    <name>WalletController</name>
-    </context>
-<context>
     <name>WalletFrame</name>
-    </context>
+    <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">Krei novan monujon</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation>Sendi Bitmonon</translation>
+        <translation type="unfinished">Sendi Bitmonon</translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">defaŭlta monujo</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Eksporti</translation>
+        <translation type="unfinished">&amp;Eksporti</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Eksporti la datumojn el la aktuala langeto al dosiero</translation>
+        <translation type="unfinished">Eksporti la datumojn el la aktuala langeto al dosiero</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Eraro</translation>
+        <translation type="unfinished">Eraro</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation>Krei sekurkopion de monujo</translation>
-    </message>
-    <message>
-        <source>Wallet Data (*.dat)</source>
-        <translation>Monuj-datumoj (*.dat)</translation>
+        <translation type="unfinished">Krei sekurkopion de monujo</translation>
     </message>
     <message>
         <source>Backup Failed</source>
-        <translation>Malsukcesis sekurkopio</translation>
+        <translation type="unfinished">Malsukcesis sekurkopio</translation>
     </message>
     <message>
         <source>Backup Successful</source>
-        <translation>Sukcesis krei sekurkopion</translation>
+        <translation type="unfinished">Sukcesis krei sekurkopion</translation>
     </message>
     </context>
 <context>
     <name>bitcoin-core</name>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Tiu ĉi estas antaŭeldona testa versio - uzu laŭ via propra risko - ne uzu por minado aŭ por aplikaĵoj por vendistoj</translation>
-    </message>
-    <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Averto: La reto ne tute konsentas! Kelkaj minantoj ŝajne spertas problemojn aktuale.</translation>
+        <translation type="unfinished">Tiu ĉi estas antaŭeldona testa versio - uzu laŭ via propra risko - ne uzu por minado aŭ por aplikaĵoj por vendistoj</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Averto: ŝajne ni ne tute konsentas kun niaj samtavolanoj! Eble vi devas ĝisdatigi vian klienton, aŭ eble aliaj nodoj faru same.</translation>
+        <translation type="unfinished">Averto: ŝajne ni ne tute konsentas kun niaj samtavolanoj! Eble vi devas ĝisdatigi vian klienton, aŭ eble aliaj nodoj faru same.</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
-        <translation>Difektita blokdatumbazo trovita</translation>
+        <translation type="unfinished">Difektita blokdatumbazo trovita</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
-        <translation>Ĉu vi volas rekonstrui la blokdatumbazon nun?</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation>Eraro dum pravalorizado de blokdatumbazo</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation>Eraro dum pravalorizado de monuj-datumbaza ĉirkaŭaĵo %s!</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation>Eraro dum ŝargado de blokdatumbazo</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation>Eraro dum malfermado de blokdatumbazo</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Ne sukcesis aŭskulti ajnan pordon. Uzu -listen=0 se tion vi volas.</translation>
-    </message>
-    <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>Geneza bloko aŭ netrovita aŭ neĝusta. Ĉu eble la datadir de la reto malĝustas?</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation>Nesufiĉa nombro de dosierpriskribiloj disponeblas.</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>Kontrolado de blokoj...</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation>Subskriba transakcio fiaskis</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation>ĝi estas eksperimenta programo</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>Transakcia sumo tro malgranda</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>Transakcio estas tro granda</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>Nekonata reto specifita en -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Nesufiĉa mono</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Ŝarĝante blok-indekson...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Ŝargado de monujo...</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Ne eblas malpromocii monujon</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Reskanado...</translation>
+        <translation type="unfinished">Ĉu vi volas rekonstrui la blokdatumbazon nun?</translation>
     </message>
     <message>
         <source>Done loading</source>
-        <translation>Ŝargado finiĝis</translation>
+        <translation type="unfinished">Ŝargado finiĝis</translation>
     </message>
-</context>
+    <message>
+        <source>Error initializing block database</source>
+        <translation type="unfinished">Eraro dum pravalorizado de blokdatumbazo</translation>
+    </message>
+    <message>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation type="unfinished">Eraro dum pravalorizado de monuj-datumbaza ĉirkaŭaĵo %s!</translation>
+    </message>
+    <message>
+        <source>Error loading block database</source>
+        <translation type="unfinished">Eraro dum ŝargado de blokdatumbazo</translation>
+    </message>
+    <message>
+        <source>Error opening block database</source>
+        <translation type="unfinished">Eraro dum malfermado de blokdatumbazo</translation>
+    </message>
+    <message>
+        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
+        <translation type="unfinished">Ne sukcesis aŭskulti ajnan pordon. Uzu -listen=0 se tion vi volas.</translation>
+    </message>
+    <message>
+        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
+        <translation type="unfinished">Geneza bloko aŭ netrovita aŭ neĝusta. Ĉu eble la datadir de la reto malĝustas?</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Nesufiĉa mono</translation>
+    </message>
+    <message>
+        <source>Not enough file descriptors available.</source>
+        <translation type="unfinished">Nesufiĉa nombro de dosierpriskribiloj disponeblas.</translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished">Subskriba transakcio fiaskis</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished">ĝi estas eksperimenta programo</translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished">Transakcia sumo tro malgranda</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished">Transakcio estas tro granda</translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation type="unfinished">Nekonata reto specifita en -onlynet: '%s'</translation>
+    </message>
+    </context>
 </TS>

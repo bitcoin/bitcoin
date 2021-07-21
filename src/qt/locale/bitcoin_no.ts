@@ -1,41 +1,89 @@
-<TS version="2.1" language="my">
+<TS version="2.1" language="no">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">လိပ်စာ သို့မဟုတ် ခေါင်းစဉ်တပ်ရန် Right-click နှိပ်ပါ။</translation>
+        <translation type="unfinished">Høyreklikk for å redigere addressen eller etikketen </translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>လိပ်စာအသစ်ယူမယ်။</translation>
+        <translation>Lag en ny adresse</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;အသစ်</translation>
+        <translation type="unfinished">&amp;Ny
+</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>လက်ရှိရွေးထားတဲ့ လိပ်စာကို clipboard ပေါ်တင်မယ်။</translation>
+        <translation>Kopier den valgte adressen til systemutklippstavlen</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;ကူးမယ်</translation>
+        <translation type="unfinished">&amp;Kopier</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation type="unfinished">C&amp;Tap</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>လက်ရှိရွေးထားတဲ့ လိပ်စာကို ဖျက်မယ်။</translation>
+        <translation>Slett den valgte adressen fra listen </translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation type="unfinished">Tast inn adressen eller etiketten for å søke</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>လက်ရှိ tab မှာရှိတဲ့ဒေတာတွေကို ဖိုင်လ်မှာသိမ်းမယ်။</translation>
+        <translation>Eksporter dataen i gjeldende fane til en fil </translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;ထုတ်ယူသိမ်းဆည်း</translation>
+        <translation>&amp;Eksporter</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;ဖျက်</translation>
+        <translation>&amp;Slett</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation type="unfinished">Velg adressen du vil sende mynter til </translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation type="unfinished">Velg adressen du vil motta mynter med </translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation type="unfinished">Sender adresser </translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation type="unfinished">Mottar adresser </translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Dette er dine Bitcoin adresser for å sende betalinger.Alltid sjekk mengden og mottaker adressen før du sender mynter.  </translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation type="unfinished">&amp;Koper adresse</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation type="unfinished">Eksporter adresse liste</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">Eksportering feilet </translation>
+    </message>
+</context>
+<context>
+    <name>AddressTableModel</name>
+    <message>
+        <source>Address</source>
+        <translation type="unfinished">Adresse </translation>
     </message>
     </context>
 <context>
@@ -44,11 +92,13 @@
         <source>%n second(s)</source>
         <translation>
             <numerusform />
+            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation>
+            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -56,11 +106,13 @@
         <source>%n hour(s)</source>
         <translation type="unfinished">
             <numerusform />
+            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
+            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -68,11 +120,13 @@
         <source>%n week(s)</source>
         <translation type="unfinished">
             <numerusform />
+            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
+            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -83,24 +137,14 @@
         <source>Processed %n block(s) of transaction history.</source>
         <translation>
             <numerusform />
+            <numerusform />
         </translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>အမှား</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>သတိပေးချက်</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>အချက်အလက်</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
+            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -112,18 +156,16 @@
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
             <numerusform />
+            <numerusform />
         </translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>အမှား</translation>
     </message>
     </context>
 <context>
-    <name>OptionsDialog</name>
+    <name>PeerTableModel</name>
     <message>
-        <source>Error</source>
-        <translation type="unfinished">အမှား</translation>
+        <source>Address</source>
+        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
+        <translation type="unfinished">Adresse </translation>
     </message>
     </context>
 <context>
@@ -131,6 +173,7 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation>
+            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -141,11 +184,13 @@
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform />
+            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation>
+            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -156,22 +201,30 @@
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform />
+            <numerusform />
         </translation>
+    </message>
+    </context>
+<context>
+    <name>TransactionView</name>
+    <message>
+        <source>Address</source>
+        <translation type="unfinished">Adresse </translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">Eksportering feilet </translation>
     </message>
     </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;ထုတ်ယူသိမ်းဆည်း</translation>
+        <translation type="unfinished">&amp;Eksporter</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">လက်ရှိ tab မှာရှိတဲ့ဒေတာတွေကို ဖိုင်လ်မှာသိမ်းမယ်။</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">အမှား</translation>
+        <translation type="unfinished">Eksporter dataen i gjeldende fane til en fil </translation>
     </message>
     </context>
 </TS>

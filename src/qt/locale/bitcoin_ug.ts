@@ -1,108 +1,112 @@
-<TS version="2.1" language="mr_IN">
+<TS version="2.1" language="ug">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">पत्ता किंवा लेबल संपादित करण्यासाठी उजवे बटण क्लिक करा.</translation>
+        <translation type="unfinished">ئوڭ كۇنۇپكا چېكىلسە ئادرېس ياكى بەلگىنى تەھرىرلەيدۇ</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>एक नवीन पत्ता तयार करा</translation>
+        <translation>يېڭى ئادرېس قۇر</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;नवा</translation>
+        <translation type="unfinished">يېڭى(&amp;N)</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>सध्याचा निवडलेला पत्ता सिस्टीम क्लिपबोर्डावर कॉपी करा</translation>
+        <translation>نۆۋەتتە تاللىغان ئادرېسنى سىستېما چاپلاش تاختىسىغا كۆچۈرىدۇ</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;कॉपी</translation>
+        <translation type="unfinished">كۆچۈر(&amp;C)</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">&amp;बंद करा</translation>
+        <translation type="unfinished">تاقا(&amp;L)</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>सध्याचा निवडलेला पत्ता यादीमधून काढून टाका</translation>
+        <translation>نۆۋەتتە تاللانغان ئادرېسنى تىزىمدىن ئۆچۈرىدۇ</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">शोधण्यासाठी पत्ता किंवा लेबल दाखल करा</translation>
+        <translation type="unfinished">ئىزدەيدىغان ئادرېس ياكى بەلگىنى كىرگۈزۈڭ</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>सध्याच्या टॅबमधील डेटा एका फाईलमध्ये एक्स्पोर्ट करा</translation>
+        <translation>نۆۋەتتىكى بەتكۈچتىكى سانلىق مەلۇماتنى ھۆججەتكە چىقىرىدۇ</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;एक्स्पोर्ट</translation>
+        <translation>چىقار(&amp;E)</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;काढून टाका</translation>
+        <translation>ئۆچۈر(&amp;D)</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">ज्या पत्त्यावर नाणी पाठवायची आहेत तो निवडा</translation>
+        <translation type="unfinished">تەڭگىنى ئەۋەتىدىغان ئادرېسنى تاللاڭ</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">ज्या पत्त्यावर नाणी प्राप्त करायची आहेत तो</translation>
+        <translation type="unfinished">تەڭگىنى تاپشۇرۇۋالىدىغان ئادرېسنى تاللاڭ</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished">&amp;निवडा</translation>
+        <translation type="unfinished">تاللا(&amp;H)</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">प्रेषक पत्ते</translation>
+        <translation type="unfinished">يوللاش ئادرېسى</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished">स्वीकृती पत्ते</translation>
+        <translation type="unfinished">تاپشۇرۇۋېلىش ئادرېسى</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">पैसे पाठविण्यासाठीचे हे तुमचे बिटकॉईन पत्त्ते आहेत. नाणी पाठविण्यापूर्वी नेहमी रक्कम आणि प्राप्त होणारा पत्ता तपासून पहा.</translation>
+        <translation type="unfinished">بۇلار سىز Bitcoin چىقىم قىلىدىغان ئادرېس. تەڭگە چىقىم قىلىشتىن ئىلگىرى، سومما ۋە تاپشۇرۇۋېلىش ئادرېسىنىڭ توغرا ئىكەنلىكىنى تەكشۈرۈشنى ئۇنۇتماڭ.</translation>
     </message>
     <message>
-        <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;पत्ता कॉपी करा</translation>
-    </message>
-    <message>
-        <source>Copy &amp;Label</source>
-        <translation type="unfinished">शिक्का कॉपी करा</translation>
-    </message>
-    <message>
-        <source>&amp;Edit</source>
-        <translation type="unfinished">&amp;संपादित</translation>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">بۇ Bitcoin تاپشۇرۇۋېلىشقا ئىشلىتىدىغان ئادرېسىڭىز. «قوبۇللاش» بەتكۈچتىكى «يېڭى تاپشۇرۇۋېلىش ئادرېسى قۇر» توپچىنى چېكىپ يېڭى ئادرېس قۇرالايسىز.
+پەقەت «ئەنئەنىۋى(legacy)» تىپتىكى ئادرېسلا ئىمزانى قوللايدۇ.</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">पत्त्याची निर्यात करा</translation>
+        <translation type="unfinished">ئادرېس تىزىمىنى چىقار</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation type="unfinished">ھۆججەت پەش بىلەن ئايرىلىدۇ</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation type="unfinished">ئادرېس تىزىمىنى %1 غا ساقلاشنى سىناۋاتقاندا خاتالىق كۆرۈلدى. قايتا سىناڭ.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">निर्यात अयशस्वी</translation>
+        <translation type="unfinished">چىقىرالمىدى</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">लेबल</translation>
+        <translation type="unfinished">بەلگە</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">पत्ता</translation>
+        <translation type="unfinished">ئادرېس</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(लेबल नाही)</translation>
+        <translation type="unfinished">(بەلگە يوق)</translation>
     </message>
 </context>
 <context>
@@ -172,7 +176,7 @@
     <name>CoinControlDialog</name>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(लेबल नाही)</translation>
+        <translation type="unfinished">(بەلگە يوق)</translation>
     </message>
     </context>
 <context>
@@ -191,18 +195,18 @@
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">पत्ता</translation>
+        <translation type="unfinished">ئادرېس</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">लेबल</translation>
+        <translation type="unfinished">بەلگە</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(लेबल नाही)</translation>
+        <translation type="unfinished">(بەلگە يوق)</translation>
     </message>
     </context>
 <context>
@@ -216,7 +220,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(लेबल नाही)</translation>
+        <translation type="unfinished">(بەلگە يوق)</translation>
     </message>
 </context>
 <context>
@@ -240,7 +244,7 @@
     <name>TransactionTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">लेबल</translation>
+        <translation type="unfinished">بەلگە</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
@@ -251,33 +255,38 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(लेबल नाही)</translation>
+        <translation type="unfinished">(بەلگە يوق)</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation type="unfinished">ھۆججەت پەش بىلەن ئايرىلىدۇ</translation>
+    </message>
+    <message>
         <source>Label</source>
-        <translation type="unfinished">लेबल</translation>
+        <translation type="unfinished">بەلگە</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">पत्ता</translation>
+        <translation type="unfinished">ئادرېس</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">निर्यात अयशस्वी</translation>
+        <translation type="unfinished">چىقىرالمىدى</translation>
     </message>
     </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;एक्स्पोर्ट</translation>
+        <translation type="unfinished">چىقار(&amp;E)</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">सध्याच्या टॅबमधील डेटा एका फाईलमध्ये एक्स्पोर्ट करा</translation>
+        <translation type="unfinished">نۆۋەتتىكى بەتكۈچتىكى سانلىق مەلۇماتنى ھۆججەتكە چىقىرىدۇ</translation>
     </message>
     </context>
 </TS>

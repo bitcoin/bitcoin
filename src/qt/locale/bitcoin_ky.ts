@@ -1,4 +1,4 @@
-<TS language="ky" version="2.1">
+<TS version="2.1" language="ky">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -14,18 +14,57 @@
     <name>AddressTableModel</name>
     <message>
         <source>Address</source>
-        <translation>Дарек</translation>
+        <translation type="unfinished">Дарек</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(аты жок)</translation>
+        <translation type="unfinished">(аты жок)</translation>
     </message>
 </context>
 <context>
-    <name>AskPassphraseDialog</name>
-    </context>
-<context>
-    <name>BanTableModel</name>
+    <name>QObject</name>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     </context>
 <context>
     <name>BitcoinGUI</name>
@@ -34,16 +73,19 @@
         <translation>&amp;Транзакциялар</translation>
     </message>
     <message>
-        <source>&amp;Verify message...</source>
-        <translation>Билдирүүнү &amp;текшерүү...</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Файл</translation>
     </message>
     <message>
         <source>&amp;Help</source>
         <translation>&amp;Жардам</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Error</source>
@@ -63,25 +105,34 @@
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation>&amp;Терезе</translation>
+        <translation type="unfinished">&amp;Терезе</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network.</source>
+        <extracomment>A substring of the tooltip.</extracomment>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
         <source>Date</source>
-        <translation>Дата</translation>
+        <translation type="unfinished">Дата</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(аты жок)</translation>
+        <translation type="unfinished">(аты жок)</translation>
     </message>
     </context>
 <context>
-    <name>CreateWalletActivity</name>
-    </context>
-<context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">Капчык</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -91,20 +142,14 @@
     </message>
     </context>
 <context>
-    <name>FreespaceChecker</name>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation>версия</translation>
-    </message>
-    </context>
-<context>
     <name>Intro</name>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+    <message numerus="yes">
+        <source>(sufficient to restore backups %n day(s) old)</source>
+        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Error</source>
@@ -112,13 +157,11 @@
     </message>
     </context>
 <context>
-    <name>ModalOverlay</name>
-    </context>
-<context>
-    <name>OpenURIDialog</name>
-    </context>
-<context>
-    <name>OpenWalletActivity</name>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">версия</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -128,7 +171,7 @@
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation>Капчык</translation>
+        <translation type="unfinished">Капчык</translation>
     </message>
     <message>
         <source>&amp;Port:</source>
@@ -152,31 +195,26 @@
     </message>
     <message>
         <source>none</source>
-        <translation>жок</translation>
+        <translation type="unfinished">жок</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Ката</translation>
+        <translation type="unfinished">Ката</translation>
     </message>
     </context>
 <context>
-    <name>OverviewPage</name>
-    </context>
-<context>
-    <name>PSBTOperationsDialog</name>
-    </context>
-<context>
-    <name>PaymentServer</name>
-    </context>
-<context>
     <name>PeerTableModel</name>
-    </context>
-<context>
-    <name>QObject</name>
-    </context>
-<context>
-    <name>QRImageWidget</name>
-    </context>
+    <message>
+        <source>Address</source>
+        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
+        <translation type="unfinished">Дарек</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
+        <translation type="unfinished">&amp;Тармак</translation>
+    </message>
+</context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -185,7 +223,7 @@
     </message>
     <message>
         <source>General</source>
-        <translation>Жалпы</translation>
+        <translation type="unfinished">Жалпы</translation>
     </message>
     <message>
         <source>Network</source>
@@ -193,7 +231,7 @@
     </message>
     <message>
         <source>Name</source>
-        <translation>Аты</translation>
+        <translation type="unfinished">Аты</translation>
     </message>
     <message>
         <source>&amp;Open</source>
@@ -212,29 +250,29 @@
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Message:</source>
-        <translation>Билдирүү:</translation>
+        <translation type="unfinished">Билдирүү:</translation>
     </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
         <source>Message:</source>
-        <translation>Билдирүү:</translation>
+        <translation type="unfinished">Билдирүү:</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Дата</translation>
+        <translation type="unfinished">Дата</translation>
     </message>
     <message>
         <source>Message</source>
-        <translation>Билдирүү</translation>
+        <translation type="unfinished">Билдирүү</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(аты жок)</translation>
+        <translation type="unfinished">(аты жок)</translation>
     </message>
     </context>
 <context>
@@ -247,9 +285,16 @@
         <source>S&amp;end</source>
         <translation>&amp;Жөнөтүү</translation>
     </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>(no label)</source>
-        <translation>(аты жок)</translation>
+        <translation type="unfinished">(аты жок)</translation>
     </message>
 </context>
 <context>
@@ -260,11 +305,8 @@
     </message>
     <message>
         <source>Message:</source>
-        <translation>Билдирүү:</translation>
+        <translation type="unfinished">Билдирүү:</translation>
     </message>
-    </context>
-<context>
-    <name>ShutdownWindow</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
@@ -278,64 +320,64 @@
     </message>
     </context>
 <context>
-    <name>TrafficGraphWidget</name>
-    </context>
-<context>
     <name>TransactionDesc</name>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>Date</source>
-        <translation>Дата</translation>
+        <translation type="unfinished">Дата</translation>
+    </message>
+    <message numerus="yes">
+        <source>matures in %n more block(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Message</source>
-        <translation>Билдирүү</translation>
+        <translation type="unfinished">Билдирүү</translation>
     </message>
-    </context>
-<context>
-    <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Дата</translation>
+        <translation type="unfinished">Дата</translation>
+    </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(аты жок)</translation>
+        <translation type="unfinished">(аты жок)</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
         <source>Date</source>
-        <translation>Дата</translation>
+        <translation type="unfinished">Дата</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Дарек</translation>
+        <translation type="unfinished">Дарек</translation>
     </message>
-    </context>
-<context>
-    <name>UnitDisplayStatusBarControl</name>
-    </context>
-<context>
-    <name>WalletController</name>
-    </context>
-<context>
-    <name>WalletFrame</name>
-    </context>
-<context>
-    <name>WalletModel</name>
     </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>Error</source>
-        <translation>Ката</translation>
+        <translation type="unfinished">Ката</translation>
     </message>
-    </context>
-<context>
-    <name>bitcoin-core</name>
     </context>
 </TS>

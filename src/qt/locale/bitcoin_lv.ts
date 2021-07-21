@@ -1,13 +1,17 @@
-<TS language="lv" version="2.1">
+<TS version="2.1" language="lv">
 <context>
     <name>AddressBookPage</name>
+    <message>
+        <source>Right-click to edit address or label</source>
+        <translation type="unfinished">Spiediet labo peles klikšķi, lai labotu adresi vai birku</translation>
+    </message>
     <message>
         <source>Create a new address</source>
         <translation>Izveidot jaunu adresi</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Jauns</translation>
+        <translation type="unfinished">&amp;Jauns</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -15,11 +19,11 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Kopēt</translation>
+        <translation type="unfinished">&amp;Kopēt</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>&amp;Aizvērt</translation>
+        <translation type="unfinished">&amp;Aizvērt</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -27,7 +31,7 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>Ierakstiet meklējamo nosaukumu vai adresi</translation>
+        <translation type="unfinished">Ierakstiet meklējamo nosaukumu vai adresi</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -43,58 +47,67 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Izvēlies adresi uz kuru sūtīt bitcoins</translation>
+        <translation type="unfinished">Izvēlies adresi uz kuru sūtīt bitcoins</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Izvēlies adresi ar kuru saņemt bitcoins</translation>
+        <translation type="unfinished">Izvēlies adresi ar kuru saņemt bitcoins</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>Izvēlēties</translation>
+        <translation type="unfinished">Izvēlēties</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>Adrešu nosūtīšana</translation>
+        <translation type="unfinished">Adrešu nosūtīšana</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>Adrešu saņemšana</translation>
+        <translation type="unfinished">Adrešu saņemšana</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Šīs ir jūsu Bitcoin adreses, kuras izmantojamas maksājumu veikšanai. Vienmēr pārbaudiet summu un saņēmēja adresi pirms monētu nosūtīšanas.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Kopēt adresi</translation>
+        <translation type="unfinished">&amp;Kopēt adresi</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Kopēt &amp;Marķējumu</translation>
+        <translation type="unfinished">Kopēt &amp;Marķējumu</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>&amp;Rediģēt</translation>
+        <translation type="unfinished">&amp;Rediģēt</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation>Eksportēt Adrešu Sarakstu</translation>
+        <translation type="unfinished">Eksportēt Adrešu Sarakstu</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation type="unfinished">Mēģinot saglabāt adrešu sarakstu %1 radās kļūda. Mēģiniet vēlreiz.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Eksportēšana Neizdevās</translation>
+        <translation type="unfinished">Eksportēšana Neizdevās</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Nosaukums</translation>
+        <translation type="unfinished">Nosaukums</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Adrese</translation>
+        <translation type="unfinished">Adrese</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(bez nosaukuma)</translation>
+        <translation type="unfinished">(bez nosaukuma)</translation>
     </message>
 </context>
 <context>
@@ -117,58 +130,134 @@
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation>Rādīt paroli</translation>
+        <translation type="unfinished">Rādīt paroli</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>Šifrēt maciņu</translation>
+        <translation type="unfinished">Šifrēt maciņu</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation type="unfinished">Lai veiktu šo darbību, nepieciešama jūsu maciņa slepenā frāze maciņa atvēršanai.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>Atslēgt maciņu</translation>
-    </message>
-    <message>
-        <source>Decrypt wallet</source>
-        <translation>Atšifrēt maciņu</translation>
+        <translation type="unfinished">Atslēgt maciņu</translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Mainīt paroli</translation>
+        <translation type="unfinished">Mainīt paroli</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>Apstiprināt maciņa šifrēšanu</translation>
+        <translation type="unfinished">Apstiprināt maciņa šifrēšanu</translation>
+    </message>
+    <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">Brīdinājums: Šifrējot Jūsu maciņu, gadījumā ja aizmirsīsiet savu paroli, Jūs NEATGRIEZENISKI ZAUDĒSIET VISUS SAVUS "BITKOINUS"!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Vai tu tiešām vēlies šifrēt savu maciņu?</translation>
+        <translation type="unfinished">Vai tu tiešām vēlies šifrēt savu maciņu?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation>Maciņš šifrēts</translation>
+        <translation type="unfinished">Maciņš šifrēts</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation type="unfinished">Ievadiet savu paroli Jūsu maciņam, lūdzu lietojiet vismaz desmit simbolus, astoņus vai vairāk vārdus.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation type="unfinished">Ievadiet veco un jauno paroli Jūsu maciņam</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">Maciņu nepieciešams šifrēt.</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
-        <translation>Maciņš tagad šifrēts</translation>
+        <translation type="unfinished">Maciņš tagad šifrēts</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation>Maciņa šifrēšana neizdevās</translation>
+        <translation type="unfinished">Maciņa šifrēšana neizdevās</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation type="unfinished">Maciņa atslēgšana neizdevās</translation>
     </message>
     </context>
 <context>
-    <name>BanTableModel</name>
+    <name>QObject</name>
+    <message>
+        <source>unknown</source>
+        <translation type="unfinished">nav zināms</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation type="unfinished">Daudzums</translation>
+    </message>
+    <message>
+        <source>%1 h</source>
+        <translation type="unfinished">%1 st</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation type="unfinished">%1 un %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     </context>
 <context>
     <name>BitcoinGUI</name>
-    <message>
-        <source>Sign &amp;message...</source>
-        <translation>Parakstīt &amp;ziņojumu...</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Sinhronizācija ar tīklu...</translation>
-    </message>
     <message>
         <source>&amp;Overview</source>
         <translation>&amp;Pārskats</translation>
@@ -194,6 +283,10 @@
         <translation>Aizvērt programmu</translation>
     </message>
     <message>
+        <source>&amp;About %1</source>
+        <translation type="unfinished">&amp;Par %1</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>Par &amp;Qt</translation>
     </message>
@@ -202,32 +295,8 @@
         <translation>Parādīt informāciju par Qt</translation>
     </message>
     <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Iespējas...</translation>
-    </message>
-    <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>Šifrēt &amp;maciņu...</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Maciņa Rezerves Kopija...</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>Mainīt &amp;Paroli...</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>Atvērt &amp;URI...</translation>
-    </message>
-    <message>
         <source>Wallet:</source>
-        <translation>Maciņš:</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Bloku reindeksēšana no diska...</translation>
+        <translation type="unfinished">Maciņš:</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -240,10 +309,6 @@
     <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Mainīt maciņa šifrēšanas paroli</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;Pārbaudīt ziņojumu...</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -291,11 +356,19 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Pieprasīt maksājumus (izveido QR kodu un bitcoin: URIs)</translation>
+        <translation type="unfinished">Pieprasīt maksājumus (izveido QR kodu un bitcoin: URIs)</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>&amp;Komandrindas iespējas</translation>
+        <translation type="unfinished">&amp;Komandrindas iespējas</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -323,11 +396,16 @@
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation>&amp;Logs</translation>
+        <translation type="unfinished">&amp;Logs</translation>
     </message>
-    <message>
-        <source>Catching up...</source>
-        <translation>Sinhronizējos...</translation>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network.</source>
+        <extracomment>A substring of the tooltip.</extracomment>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -350,66 +428,67 @@
     <name>CoinControlDialog</name>
     <message>
         <source>Quantity:</source>
-        <translation>Daudzums:</translation>
+        <translation type="unfinished">Daudzums:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation>Baiti:</translation>
+        <translation type="unfinished">Baiti:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Daudzums:</translation>
+        <translation type="unfinished">Daudzums:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Maksa:</translation>
+        <translation type="unfinished">Maksa:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation>Pēc Maksas:</translation>
+        <translation type="unfinished">Pēc Maksas:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation>Atlikums:</translation>
+        <translation type="unfinished">Atlikums:</translation>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation>iezīmēt visus</translation>
+        <translation type="unfinished">iezīmēt visus</translation>
     </message>
     <message>
         <source>Tree mode</source>
-        <translation>Koka režīms</translation>
+        <translation type="unfinished">Koka režīms</translation>
     </message>
     <message>
         <source>List mode</source>
-        <translation>Saraksta režīms</translation>
+        <translation type="unfinished">Saraksta režīms</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Daudzums</translation>
+        <translation type="unfinished">Daudzums</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>Datums</translation>
+        <translation type="unfinished">Datums</translation>
     </message>
     <message>
         <source>Confirmations</source>
-        <translation>Apstiprinājumi</translation>
+        <translation type="unfinished">Apstiprinājumi</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation>Apstiprināts</translation>
+        <translation type="unfinished">Apstiprināts</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(bez nosaukuma)</translation>
+        <translation type="unfinished">(bez nosaukuma)</translation>
     </message>
     </context>
 <context>
-    <name>CreateWalletActivity</name>
-    </context>
-<context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">Maciņš</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -446,18 +525,20 @@
     </message>
 </context>
 <context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation>versija</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation>Komandrindas iespējas</translation>
-    </message>
-</context>
-<context>
     <name>Intro</name>
+    <message numerus="yes">
+        <source>(sufficient to restore backups %n day(s) old)</source>
+        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Kļūda</translation>
+    </message>
     <message>
         <source>Welcome</source>
         <translation>Sveiciens</translation>
@@ -470,35 +551,35 @@
         <source>Use a custom data directory:</source>
         <translation>Izmantot pielāgotu datu mapi:</translation>
     </message>
+</context>
+<context>
+    <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>version</source>
+        <translation type="unfinished">versija</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation>Kļūda</translation>
+        <source>Command-line options</source>
+        <translation type="unfinished">Komandrindas iespējas</translation>
     </message>
-    </context>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Neizslēdziet datoru kamēr šis logs nepazūd.</translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
-        <translation>Forma</translation>
+        <translation type="unfinished">Forma</translation>
     </message>
     <message>
         <source>Last block time</source>
-        <translation>Pēdējā bloka laiks</translation>
+        <translation type="unfinished">Pēdējā bloka laiks</translation>
     </message>
-    </context>
-<context>
-    <name>OpenURIDialog</name>
-    <message>
-        <source>URI:</source>
-        <translation>URI:</translation>
-    </message>
-</context>
-<context>
-    <name>OpenWalletActivity</name>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -512,19 +593,19 @@
     </message>
     <message>
         <source>Size of &amp;database cache</source>
-        <translation>&amp;Datubāzes kešatmiņas izmērs</translation>
+        <translation type="unfinished">&amp;Datubāzes kešatmiņas izmērs</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation>Skriptu &amp;pārbaudes pavedienu skaits</translation>
+        <translation type="unfinished">Skriptu &amp;pārbaudes pavedienu skaits</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation>Starpniekservera IP adrese (piem. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+        <translation type="unfinished">Starpniekservera IP adrese (piem. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
-        <translation>Minimizēt nevis aizvērt aplikāciju, kad logs tiek aizvērts. Kad šī iespēja ir ieslēgta, aplikācija tiks aizvērta, izvēloties Aizvērt izvēlnē.</translation>
+        <translation type="unfinished">Minimizēt nevis aizvērt aplikāciju, kad logs tiek aizvērts. Kad šī iespēja ir ieslēgta, aplikācija tiks aizvērta, izvēloties Aizvērt izvēlnē.</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -540,19 +621,19 @@
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation>&amp;Maciņš</translation>
+        <translation type="unfinished">&amp;Maciņš</translation>
     </message>
     <message>
         <source>Expert</source>
-        <translation>Eksperts</translation>
+        <translation type="unfinished">Eksperts</translation>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation>Ieslēgt bitcoin &amp;kontroles funkcijas</translation>
+        <translation type="unfinished">Ieslēgt bitcoin &amp;kontroles funkcijas</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
-        <translation>&amp;Tērēt neapstiprinātu atlikumu</translation>
+        <translation type="unfinished">&amp;Tērēt neapstiprinātu atlikumu</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -608,7 +689,7 @@
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation>Vai rādīt Bitcoin kontroles funkcijas vai nē.</translation>
+        <translation type="unfinished">Vai rādīt Bitcoin kontroles funkcijas vai nē.</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -624,7 +705,7 @@
     </message>
     <message>
         <source>none</source>
-        <translation>neviena</translation>
+        <translation type="unfinished">neviena</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -632,7 +713,7 @@
     </message>
     <message>
         <source>Error</source>
-        <translation>Kļūda</translation>
+        <translation type="unfinished">Kļūda</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -651,7 +732,7 @@
     </message>
     <message>
         <source>Available:</source>
-        <translation>Pieejams:</translation>
+        <translation type="unfinished">Pieejams:</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -659,7 +740,7 @@
     </message>
     <message>
         <source>Pending:</source>
-        <translation>Neizšķirts:</translation>
+        <translation type="unfinished">Neizšķirts:</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
@@ -679,70 +760,20 @@
     </message>
     </context>
 <context>
-    <name>PSBTOperationsDialog</name>
-    </context>
-<context>
-    <name>PaymentServer</name>
-    </context>
-<context>
     <name>PeerTableModel</name>
-    </context>
-<context>
-    <name>QObject</name>
     <message>
-        <source>Amount</source>
-        <translation>Daudzums</translation>
+        <source>Address</source>
+        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
+        <translation type="unfinished">Adrese</translation>
     </message>
     <message>
-        <source>%1 h</source>
-        <translation>%1 st</translation>
-    </message>
-    <message>
-        <source>%1 m</source>
-        <translation>%1 m</translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation>N/A</translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 un %2</translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>nav zināms</translation>
+        <source>Network</source>
+        <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
+        <translation type="unfinished">Tīkls</translation>
     </message>
 </context>
 <context>
-    <name>QRImageWidget</name>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Saglabāt Attēlu...</translation>
-    </message>
-    </context>
-<context>
     <name>RPCConsole</name>
-    <message>
-        <source>N/A</source>
-        <translation>N/A</translation>
-    </message>
     <message>
         <source>Client version</source>
         <translation>Klienta versija</translation>
@@ -753,7 +784,7 @@
     </message>
     <message>
         <source>General</source>
-        <translation>Vispārējs</translation>
+        <translation type="unfinished">Vispārējs</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -765,7 +796,7 @@
     </message>
     <message>
         <source>Name</source>
-        <translation>Vārds</translation>
+        <translation type="unfinished">Vārds</translation>
     </message>
     <message>
         <source>Number of connections</source>
@@ -789,19 +820,11 @@
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation>&amp;Tīkla Satiksme</translation>
+        <translation type="unfinished">&amp;Tīkla Satiksme</translation>
     </message>
     <message>
         <source>Totals</source>
-        <translation>Kopsummas</translation>
-    </message>
-    <message>
-        <source>In:</source>
-        <translation>Ie.:</translation>
-    </message>
-    <message>
-        <source>Out:</source>
-        <translation>Iz.:</translation>
+        <translation type="unfinished">Kopsummas</translation>
     </message>
     <message>
         <source>Debug log file</source>
@@ -811,90 +834,98 @@
         <source>Clear console</source>
         <translation>Notīrīt konsoli</translation>
     </message>
+    <message>
+        <source>In:</source>
+        <translation type="unfinished">Ie.:</translation>
+    </message>
+    <message>
+        <source>Out:</source>
+        <translation type="unfinished">Iz.:</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Amount:</source>
-        <translation>&amp;Daudzums:</translation>
+        <translation type="unfinished">&amp;Daudzums:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Nosaukums:</translation>
+        <translation type="unfinished">&amp;Nosaukums:</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
-        <translation>&amp;Ziņojums:</translation>
+        <translation type="unfinished">&amp;Ziņojums:</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Notīrīt visus laukus formā.</translation>
+        <translation type="unfinished">Notīrīt visus laukus formā.</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation>Notīrīt</translation>
+        <translation type="unfinished">Notīrīt</translation>
     </message>
     <message>
         <source>Requested payments history</source>
-        <translation>Pieprasīto maksājumu vēsture</translation>
+        <translation type="unfinished">Pieprasīto maksājumu vēsture</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation>Parādīt atlasītos pieprasījumus (tas pats, kas dubultklikšķis uz ieraksta)</translation>
+        <translation type="unfinished">Parādīt atlasītos pieprasījumus (tas pats, kas dubultklikšķis uz ieraksta)</translation>
     </message>
     <message>
         <source>Show</source>
-        <translation>Rādīt</translation>
+        <translation type="unfinished">Rādīt</translation>
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
-        <translation>Noņemt atlasītos ierakstus no saraksta.</translation>
+        <translation type="unfinished">Noņemt atlasītos ierakstus no saraksta.</translation>
     </message>
     <message>
         <source>Remove</source>
-        <translation>Noņemt</translation>
+        <translation type="unfinished">Noņemt</translation>
+    </message>
+    <message>
+        <source>Copy &amp;URI</source>
+        <translation type="unfinished">Kopēt &amp;URI</translation>
     </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
         <source>Amount:</source>
-        <translation>Daudzums:</translation>
+        <translation type="unfinished">Daudzums:</translation>
     </message>
     <message>
         <source>Message:</source>
-        <translation>Ziņojums:</translation>
+        <translation type="unfinished">Ziņojums:</translation>
     </message>
     <message>
         <source>Wallet:</source>
-        <translation>Maciņš:</translation>
+        <translation type="unfinished">Maciņš:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation>Kopēt &amp;URI</translation>
+        <translation type="unfinished">Kopēt &amp;URI</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation>Kopēt &amp;Adresi</translation>
-    </message>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Saglabāt Attēlu...</translation>
+        <translation type="unfinished">Kopēt &amp;Adresi</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Datums</translation>
+        <translation type="unfinished">Datums</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Nosaukums</translation>
+        <translation type="unfinished">Nosaukums</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(bez nosaukuma)</translation>
+        <translation type="unfinished">(bez nosaukuma)</translation>
     </message>
     </context>
 <context>
@@ -905,51 +936,47 @@
     </message>
     <message>
         <source>Coin Control Features</source>
-        <translation>Bitcoin Kontroles Funkcijas</translation>
-    </message>
-    <message>
-        <source>Inputs...</source>
-        <translation>Ieejas...</translation>
+        <translation type="unfinished">Bitcoin Kontroles Funkcijas</translation>
     </message>
     <message>
         <source>automatically selected</source>
-        <translation>automātiski atlasīts</translation>
+        <translation type="unfinished">automātiski atlasīts</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation>Nepietiekami līdzekļi!</translation>
+        <translation type="unfinished">Nepietiekami līdzekļi!</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation>Daudzums:</translation>
+        <translation type="unfinished">Daudzums:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation>Baiti:</translation>
+        <translation type="unfinished">Baiti:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Daudzums:</translation>
+        <translation type="unfinished">Daudzums:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Maksa:</translation>
+        <translation type="unfinished">Maksa:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation>Pēc Maksas:</translation>
+        <translation type="unfinished">Pēc Maksas:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation>Atlikums:</translation>
+        <translation type="unfinished">Atlikums:</translation>
     </message>
     <message>
         <source>Custom change address</source>
-        <translation>Pielāgota atlikuma adrese</translation>
+        <translation type="unfinished">Pielāgota atlikuma adrese</translation>
     </message>
     <message>
         <source>Transaction Fee:</source>
-        <translation>Transakcijas maksa:</translation>
+        <translation type="unfinished">Transakcijas maksa:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -961,7 +988,7 @@
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Notīrīt visus laukus formā.</translation>
+        <translation type="unfinished">Notīrīt visus laukus formā.</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -981,11 +1008,19 @@
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation>Transakcijas maksa</translation>
+        <translation type="unfinished">Transakcijas maksa</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(bez nosaukuma)</translation>
+        <translation type="unfinished">(bez nosaukuma)</translation>
     </message>
 </context>
 <context>
@@ -1004,44 +1039,25 @@
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Izvēlies iepriekš izmantoto adresi</translation>
-    </message>
-    <message>
-        <source>Alt+A</source>
-        <translation>Alt+A</translation>
+        <translation type="unfinished">Izvēlies iepriekš izmantoto adresi</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
         <translation>ielīmēt adresi no starpliktuves</translation>
     </message>
     <message>
-        <source>Alt+P</source>
-        <translation>Alt+P</translation>
-    </message>
-    <message>
         <source>Remove this entry</source>
-        <translation>Noņem šo ierakstu</translation>
+        <translation type="unfinished">Noņem šo ierakstu</translation>
     </message>
     <message>
         <source>Message:</source>
-        <translation>Ziņojums:</translation>
+        <translation type="unfinished">Ziņojums:</translation>
     </message>
     <message>
         <source>Pay To:</source>
-        <translation>Maksāt:</translation>
+        <translation type="unfinished">Maksāt:</translation>
     </message>
-    <message>
-        <source>Memo:</source>
-        <translation>Memo:</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation>Neizslēdziet datoru kamēr šis logs nepazūd.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
@@ -1054,19 +1070,11 @@
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Izvēlies iepriekš izmantoto adresi</translation>
-    </message>
-    <message>
-        <source>Alt+A</source>
-        <translation>Alt+A</translation>
+        <translation type="unfinished">Izvēlies iepriekš izmantoto adresi</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
         <translation>ielīmēt adresi no starpliktuves</translation>
-    </message>
-    <message>
-        <source>Alt+P</source>
-        <translation>Alt+P</translation>
     </message>
     <message>
         <source>Enter the message you want to sign here</source>
@@ -1110,29 +1118,38 @@
     </message>
     </context>
 <context>
-    <name>TrafficGraphWidget</name>
-    <message>
-        <source>KB/s</source>
-        <translation>KB/s</translation>
-    </message>
-</context>
-<context>
     <name>TransactionDesc</name>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>Date</source>
-        <translation>Datums</translation>
+        <translation type="unfinished">Datums</translation>
     </message>
     <message>
         <source>unknown</source>
-        <translation>nav zināms</translation>
+        <translation type="unfinished">nav zināms</translation>
+    </message>
+    <message numerus="yes">
+        <source>matures in %n more block(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation>Transakcijas maksa</translation>
+        <translation type="unfinished">Transakcijas maksa</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Daudzums</translation>
+        <translation type="unfinished">Daudzums</translation>
     </message>
     </context>
 <context>
@@ -1146,124 +1163,99 @@
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Datums</translation>
+        <translation type="unfinished">Datums</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Nosaukums</translation>
+        <translation type="unfinished">Nosaukums</translation>
+    </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation>
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(bez nosaukuma)</translation>
+        <translation type="unfinished">(bez nosaukuma)</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
         <source>Confirmed</source>
-        <translation>Apstiprināts</translation>
+        <translation type="unfinished">Apstiprināts</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>Datums</translation>
+        <translation type="unfinished">Datums</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Nosaukums</translation>
+        <translation type="unfinished">Nosaukums</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Adrese</translation>
+        <translation type="unfinished">Adrese</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Eksportēšana Neizdevās</translation>
+        <translation type="unfinished">Eksportēšana Neizdevās</translation>
     </message>
-    </context>
-<context>
-    <name>UnitDisplayStatusBarControl</name>
-    </context>
-<context>
-    <name>WalletController</name>
-    </context>
-<context>
-    <name>WalletFrame</name>
     </context>
 <context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation>Sūtīt Bitkoinus</translation>
+        <translation type="unfinished">Sūtīt Bitkoinus</translation>
     </message>
     </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Eksportēt</translation>
+        <translation type="unfinished">&amp;Eksportēt</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
+        <translation type="unfinished">Datus no tekošā ieliktņa eksportēt uz failu</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Kļūda</translation>
+        <translation type="unfinished">Kļūda</translation>
     </message>
     </context>
 <context>
     <name>bitcoin-core</name>
     <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Ielāde pabeigta</translation>
+    </message>
+    <message>
         <source>Error loading block database</source>
-        <translation>Kļūda ielādējot bloku datubāzi</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>Importē...</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>Pārbauda blokus...</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation>Transakcijas parakstīšana neizdevās</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>Transakcijas summa ir pārāk maza</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>Transakcija ir pārāk liela</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>-onlynet komandā norādīts nepazīstams tīkls: '%s'</translation>
+        <translation type="unfinished">Kļūda ielādējot bloku datubāzi</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation>Nepietiek bitkoinu</translation>
+        <translation type="unfinished">Nepietiek bitkoinu</translation>
     </message>
     <message>
-        <source>Loading block index...</source>
-        <translation>Ielādē bloku indeksu...</translation>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished">Transakcijas parakstīšana neizdevās</translation>
     </message>
     <message>
-        <source>Loading wallet...</source>
-        <translation>Ielādē maciņu...</translation>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished">Transakcijas summa ir pārāk maza</translation>
     </message>
     <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Nevar maciņa formātu padarīt vecāku</translation>
+        <source>Transaction too large</source>
+        <translation type="unfinished">Transakcija ir pārāk liela</translation>
     </message>
     <message>
-        <source>Rescanning...</source>
-        <translation>Skanēju no jauna...</translation>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation type="unfinished">-onlynet komandā norādīts nepazīstams tīkls: '%s'</translation>
     </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Ielāde pabeigta</translation>
-    </message>
-</context>
+    </context>
 </TS>
