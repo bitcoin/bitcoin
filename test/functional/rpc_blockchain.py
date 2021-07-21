@@ -50,6 +50,7 @@ from test_framework.wallet import MiniWallet
 
 
 TIME_RANGE_STEP = 600  # ten-minute steps
+TIME_RANGE_MTP = TIME_GENESIS_BLOCK + 194 * TIME_RANGE_STEP
 TIME_RANGE_END = TIME_GENESIS_BLOCK + 200 * TIME_RANGE_STEP
 
 
@@ -103,6 +104,7 @@ class BlockchainTest(BitcoinTestFramework):
         res = self.nodes[0].getblockchaininfo()
 
         assert_equal(res['time'], TIME_RANGE_END - TIME_RANGE_STEP)
+        assert_equal(res['mediantime'], TIME_RANGE_MTP)
 
         # result should have these additional pruning keys if manual pruning is enabled
         assert_equal(sorted(res.keys()), sorted(['pruneheight', 'automatic_pruning'] + keys))
@@ -310,7 +312,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_is_hash_string(header['merkleroot'])
         assert_is_hash_string(header['bits'], length=None)
         assert isinstance(header['time'], int)
-        assert isinstance(header['mediantime'], int)
+        assert_equal(header['mediantime'], TIME_RANGE_MTP)
         assert isinstance(header['nonce'], int)
         assert isinstance(header['version'], int)
         assert isinstance(int(header['versionHex'], 16), int)
