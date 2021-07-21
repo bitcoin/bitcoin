@@ -995,6 +995,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Sign the transaction but don't finalize
         processed_psbt = self.nodes[0].walletprocesspsbt(psbt=psbtx, finalize=False)
+        assert_equal(processed_psbt, self.nodes[0].walletprocesspsbt(psbtx, {"finalize": False}))
         assert "hex" not in processed_psbt
         signed_psbt = processed_psbt['psbt']
 
@@ -1004,6 +1005,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Alternative method: sign AND finalize in one command
         processed_finalized_psbt = self.nodes[0].walletprocesspsbt(psbt=psbtx, finalize=True)
+        assert_equal(processed_finalized_psbt, self.nodes[0].walletprocesspsbt(psbtx, {"finalize": True}))
         finalized_psbt = processed_finalized_psbt['psbt']
         finalized_psbt_hex = processed_finalized_psbt['hex']
         assert_not_equal(signed_psbt, finalized_psbt)
@@ -1222,12 +1224,14 @@ class PSBTTest(BitcoinTestFramework):
 
         # Update psbts, should only have data for one input and not the other
         psbt1 = self.nodes[1].walletprocesspsbt(psbt_orig, False, "ALL")['psbt']
+        assert_equal(psbt1, self.nodes[1].walletprocesspsbt(psbt_orig, {"sign": False, "sighashtype": "ALL"})["psbt"])
         psbt1_decoded = self.nodes[0].decodepsbt(psbt1)
         assert len(psbt1_decoded['inputs'][0].keys()) > 3
         assert len(psbt1_decoded['inputs'][1].keys()) == 3
         # Check that BIP32 path was added
         assert "bip32_derivs" in psbt1_decoded['inputs'][0]
         psbt2 = self.nodes[2].walletprocesspsbt(psbt_orig, False, "ALL", False)['psbt']
+        assert_equal(psbt2, self.nodes[2].walletprocesspsbt(psbt_orig, {"sign": False, "sighashtype": "ALL", "bip32derivs": False})["psbt"])
         psbt2_decoded = self.nodes[0].decodepsbt(psbt2)
         assert len(psbt2_decoded['inputs'][0].keys()) == 3
         assert len(psbt2_decoded['inputs'][1].keys()) > 3
@@ -1510,6 +1514,10 @@ class PSBTTest(BitcoinTestFramework):
 
         # After update with wallet, only needs signing
         updated = self.nodes[1].walletprocesspsbt(psbt, False, 'ALL', True)['psbt']
+        assert_equal(updated, self.nodes[1].walletprocesspsbt(psbt, {"sign": False, "sighashtype": 'ALL', "bip32derivs": True})["psbt"])
+        assert_equal(updated, self.nodes[1].walletprocesspsbt(psbt, sign=False, sighashtype='ALL', bip32derivs=True)["psbt"])
+        assert_equal(updated, self.nodes[1].walletprocesspsbt(psbt, sign=False, sighashtype='ALL', bip32derivs=True, finalize=None)["psbt"])
+        assert_equal(updated, self.nodes[1].walletprocesspsbt(psbt, False, 'ALL', bip32derivs=True)["psbt"])
         analyzed = self.nodes[0].analyzepsbt(updated)
         assert_equal(analyzed['inputs'][0]['has_utxo'], True)
         assert_equal(analyzed['inputs'][0]['is_final'], False)
@@ -1708,6 +1716,9 @@ class PSBTTest(BitcoinTestFramework):
         parsed_psbt.make_blank()
         comb_psbt = self.nodes[0].combinepsbt([psbt, parsed_psbt.to_base64()])
         assert_equal(comb_psbt, psbt)
+
+        self.log.info("Test walletprocesspsbt reports an invalid option before an invalid PSBT")
+        assert_raises_rpc_error(-3, "Unexpected key unknown", self.nodes[0].walletprocesspsbt, "notapsbt", {"unknown": True})
 
         self.log.info("Test walletprocesspsbt raises if an invalid sighashtype is passed")
         assert_raises_rpc_error(-8, "'all' is not a valid sighash parameter.", self.nodes[0].walletprocesspsbt, psbt=psbt, sighashtype="all")
