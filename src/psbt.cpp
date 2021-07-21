@@ -184,7 +184,6 @@ void PSBTInput::Merge(const PSBTInput& input)
 {
     if (!non_witness_utxo && input.non_witness_utxo) non_witness_utxo = input.non_witness_utxo;
     if (witness_utxo.IsNull() && !input.witness_utxo.IsNull()) {
-        // TODO: For segwit v1, we will want to clear out the non-witness utxo when setting a witness one. For v0 and non-segwit, this is not safe
         witness_utxo = input.witness_utxo;
     }
 
@@ -367,10 +366,11 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
     input.FromSignatureData(sigdata);
 
     // If we have a witness signature, put a witness UTXO.
-    // TODO: For segwit v1, we should remove the non_witness_utxo
     if (sigdata.witness) {
         input.witness_utxo = utxo;
-        // input.non_witness_utxo = nullptr;
+        // We can remove the non_witness_utxo if and only if there are no non-segwit or segwit v0
+        // inputs in this transaction. Since this requires inspecting the entire transaction, this
+        // is something for the caller to deal with (i.e. FillPSBT).
     }
 
     // Fill in the missing info
