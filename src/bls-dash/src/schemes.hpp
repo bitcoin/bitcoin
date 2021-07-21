@@ -247,7 +247,7 @@ public:
     bool Verify(const Bytes& pubkey, const Bytes& message, const Bytes& signature) final { throw std::runtime_error("Not supported in LegacySchemeMPL"); }
     bool Verify(const G1Element &pubkey, const Bytes& message, const G2Element &signature) final;
 
-    vector<uint8_t> Aggregate(const vector<vector<uint8_t>> &signatures) final { throw std::runtime_error("Not supported in LegacySchemeMPL"); }
+    virtual vector<uint8_t> Aggregate(const vector<vector<uint8_t>> &signatures) final { throw std::runtime_error("Not supported in LegacySchemeMPL"); }
 
     G2Element AggregateSecure(const std::vector<G1Element>& vecPublicKeys,
                               const std::vector<G2Element>& vecSignatures,
