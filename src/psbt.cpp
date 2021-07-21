@@ -247,7 +247,7 @@ PrecomputedTransactionData PrecomputePSBTData(const PartiallySignedTransaction& 
     return txdata;
 }
 
-bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, int sighash, SignatureData* out_sigdata)
+bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, int sighash,  SignatureData* out_sigdata, bool finalize)
 {
     PSBTInput& input = psbt.inputs.at(index);
     const CMutableTransaction& tx = *psbt.tx;
@@ -295,6 +295,10 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
     }
     // Verify that a witness signature was produced in case one was required.
     if (require_witness_sig && !sigdata.witness) return false;
+
+    // If we are not finalizing, set sigdata.complete to false to not set the scriptWitness
+    if (!finalize && sigdata.complete) sigdata.complete = false;
+
     input.FromSignatureData(sigdata);
 
     // If we have a witness signature, put a witness UTXO.
@@ -324,7 +328,7 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx)
     bool complete = true;
     const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, SIGHASH_ALL);
+        complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, SIGHASH_ALL, nullptr, true);
     }
 
     return complete;

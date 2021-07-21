@@ -553,6 +553,8 @@ public:
      * @param[in]  sighash_type the sighash type to use when signing (if PSBT does not specify)
      * @param[in]  sign whether to sign or not
      * @param[in]  bip32derivs whether to fill in bip32 derivation information if available
+     * @param[out] n_signed the number of inputs signed by this wallet
+     * @param[in] finalize whether to create the final scriptSig or scriptWitness if possible
      * return error
      */
     TransactionError FillPSBT(PartiallySignedTransaction& psbtx,
@@ -560,7 +562,8 @@ public:
                   int sighash_type = 1 /* SIGHASH_ALL */,
                   bool sign = true,
                   bool bip32derivs = true,
-                  size_t* n_signed = nullptr) const;
+                  size_t* n_signed = nullptr,
+                  bool finalize = true) const;
 
     /**
      * Submit the transaction to the node's mempool and then relay to peers.
