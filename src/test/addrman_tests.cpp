@@ -76,7 +76,7 @@ public:
     {
          int64_t nLastSuccess = 1;
          // Set last good connection in the deep past.
-         Good(addr, true, nLastSuccess);
+         Good(addr, nLastSuccess);
 
          bool count_failure = false;
          int64_t nLastTry = GetAdjustedTime()-61;
