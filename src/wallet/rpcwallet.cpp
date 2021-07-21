@@ -4305,6 +4305,8 @@ static RPCHelpMan walletprocesspsbt()
         HELP_REQUIRING_PASSPHRASE,
                 {
                     {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
+                    {"options|sign", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
+                    {
                     {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating (requires wallet to be unlocked)"},
                     {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT"}, "The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
             "       \"DEFAULT\"\n"
@@ -4315,7 +4317,10 @@ static RPCHelpMan walletprocesspsbt()
             "       \"NONE|ANYONECANPAY\"\n"
             "       \"SINGLE|ANYONECANPAY\""},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
-                    {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
+                        {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
+                    }, "options"},
+                    {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT"}, "for backwards compatibility", "", {}, /* hidden */ true},
+                    {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "for backwards compatibility", "", {}, /* hidden */ true},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -4346,13 +4351,47 @@ static RPCHelpMan walletprocesspsbt()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
-    // Get the sighash type
-    int nHashType = ParseSighashString(request.params[2]);
+    // Get options
+    bool sign = true;
+    bool bip32derivs = true;
+    bool finalize = true;
+    int nHashType = ParseSighashString(NullUniValue); // Use ParseSighashString default
+    if (request.params[1].isBool() || request.params[1].isNull()) {
+        // Old style positional parameters
+        sign = request.params[1].isNull() ? true : request.params[1].get_bool();
+        nHashType = ParseSighashString(request.params[2]);
+        bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
+    } else {
+        // New style options are in an object
+        UniValue options = request.params[1];
+        RPCTypeCheckArgument(options, UniValue::VOBJ);
+        RPCTypeCheckObj(options,
+            {
+                {"sign", UniValueType(UniValue::VBOOL)},
+                {"bip32derivs", UniValueType(UniValue::VBOOL)},
+                {"finalize", UniValueType(UniValue::VBOOL)},
+                {"sighashtype", UniValueType(UniValue::VSTR)},
+            },
+            true, true);
+        if (options.exists("sign")) {
+            sign = options["sign"].get_bool();
+        }
+        if (options.exists("bip32derivs")) {
+            bip32derivs = options["bip32derivs"].get_bool();
+        }
+        if (options.exists("finalize")) {
+            finalize = options["finalize"].get_bool();
+        }
+        if (options.exists("sighashtype")) {
+            nHashType = ParseSighashString(options["sighashtype"]);
+        }
+        if (request.params.size() > 2) {
+            // Same behaviour as too many args passed normally
+            throw std::runtime_error(self.ToString());
+        }
+    }
 
     // Fill transaction with our data and also sign
-    bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
-    bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
-    bool finalize = request.params[4].isNull() ? true : request.params[4].get_bool();
     bool complete = true;
 
     if (sign) EnsureWalletIsUnlocked(*pwallet);
