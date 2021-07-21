@@ -12,7 +12,7 @@
 #include <uint256.h>
 
 #include <memory>
-
+#include <logging.h>
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
  * requirements.  When they solve the proof-of-work, they broadcast the block
@@ -58,8 +58,11 @@ public:
             auxpow.reset();
         }
         // SYSCOIN
-        if (this->IsNEVM() && (s.GetType() & SER_TRANSPORT))
+        LogPrintf("deserialize header is evm %d is transport %d\n", this->IsNEVM()? 1: 0 ,(s.GetType() & SER_TRANSPORT)? 1: 0);
+        if (this->IsNEVM() && (s.GetType() & SER_TRANSPORT)) {
+            LogPrintf("deserialize header evm data\n");
             s >> vchNEVMBlockData;
+        }
     }
 
     
