@@ -49,6 +49,10 @@ from test_framework.util import (
 from test_framework.wallet import MiniWallet
 
 
+TIME_RANGE_STEP = 600  # ten-minute steps
+TIME_RANGE_END = TIME_GENESIS_BLOCK + 200 * TIME_RANGE_STEP
+
+
 class BlockchainTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -71,9 +75,8 @@ class BlockchainTest(BitcoinTestFramework):
         assert self.nodes[0].verifychain(4, 0)
 
     def mine_chain(self):
-        self.log.info('Create some old blocks')
-        for t in range(TIME_GENESIS_BLOCK, TIME_GENESIS_BLOCK + 200 * 600, 600):
-            # ten-minute steps from genesis block time
+        self.log.info("Generate 200 blocks after the genesis block in ten-minute steps")
+        for t in range(TIME_GENESIS_BLOCK, TIME_RANGE_END, TIME_RANGE_STEP):
             self.nodes[0].setmocktime(t)
             self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_P2WSH_OP_TRUE)
         assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 200)
@@ -99,7 +102,7 @@ class BlockchainTest(BitcoinTestFramework):
         ]
         res = self.nodes[0].getblockchaininfo()
 
-        assert isinstance(res['time'], int)
+        assert_equal(res['time'], TIME_RANGE_END - TIME_RANGE_STEP)
 
         # result should have these additional pruning keys if manual pruning is enabled
         assert_equal(sorted(res.keys()), sorted(['pruneheight', 'automatic_pruning'] + keys))
