@@ -516,6 +516,15 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_equal(testres['allowed'], True)
         self.nodes[2].sendrawtransaction(hexstring=rawTxSigned['hex'], maxfeerate='0.20000000')
 
+        self.log.info('sendrawtransaction/testmempoolaccept with tx that is already in the chain')
+        self.nodes[2].generate(1)
+        self.sync_blocks()
+        for node in self.nodes:
+            testres = node.testmempoolaccept([rawTxSigned['hex']])[0]
+            assert_equal(testres['allowed'], False)
+            assert_equal(testres['reject-reason'], 'txn-already-known')
+            assert_raises_rpc_error(-27, 'Transaction already in block chain', node.sendrawtransaction, rawTxSigned['hex'])
+
 
 if __name__ == '__main__':
     RawTransactionsTest().main()
