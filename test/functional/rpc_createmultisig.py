@@ -9,6 +9,7 @@ import itertools
 import json
 import os
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.authproxy import JSONRPCException
 from test_framework.descriptors import descsum_create, drop_origins
 from test_framework.key import ECPubKey, ECKey
@@ -96,6 +97,9 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             sorted_key_desc = descsum_create('sh(multi(2,{}))'.format(sorted_key_str))
             assert_equal(self.nodes[0].deriveaddresses(sorted_key_desc)[0], t['address'])
 
+        # Check that bech32m is currently not allowed
+        assert_raises_rpc_error(-5, "createmultisig cannot create bech32m multisig addresses", self.nodes[0].createmultisig, 2, self.pub, "bech32m")
+
     def check_addmultisigaddress_errors(self):
         if self.options.descriptors:
             return
@@ -107,9 +111,13 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             self.nodes[0].importaddress(a)
         assert_raises_rpc_error(-5, 'no full public key for address', lambda: self.nodes[0].addmultisigaddress(nrequired=1, keys=addresses))
 
+        # Bech32m address type is disallowed for legacy wallets
+        pubs = [self.nodes[1].getaddressinfo(addr)["pubkey"] for addr in addresses]
+        assert_raises_rpc_error(-5, "Bech32m multisig addresses cannot be created with legacy wallets", self.nodes[0].addmultisigaddress, 2, pubs, "", "bech32m")
+
     def checkbalances(self):
         node0, node1, node2 = self.nodes
-        node0.generate(100)
+        node0.generate(COINBASE_MATURITY)
         self.sync_all()
 
         bal0 = node0.getbalance()
@@ -165,7 +173,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         txid = node0.sendtoaddress(madd, 40)
 
         tx = node0.getrawtransaction(txid, True)
-        vout = [v["n"] for v in tx["vout"] if madd in v["scriptPubKey"].get("addresses", [])]
+        vout = [v["n"] for v in tx["vout"] if madd == v["scriptPubKey"]["address"]]
         assert len(vout) == 1
         vout = vout[0]
         scriptPubKey = tx["vout"][vout]["scriptPubKey"]["hex"]

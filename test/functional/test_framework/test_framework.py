@@ -18,6 +18,8 @@ import sys
 import tempfile
 import time
 
+from typing import List
+from .address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from .authproxy import JSONRPCException
 from . import coverage
 from .p2p import NetworkThread
@@ -89,14 +91,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     This class also contains various public and private helper methods."""
 
-    chain = None  # type: str
-    setup_clean_chain = None  # type: bool
-
     def __init__(self):
         """Sets test framework defaults. Do not override this method. Instead, override the set_test_params() method"""
-        self.chain = 'regtest'
-        self.setup_clean_chain = False
-        self.nodes = []
+        self.chain: str = 'regtest'
+        self.setup_clean_chain: bool = False
+        self.nodes: List[TestNode] = []
         self.network_thread = None
         self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
         self.supports_cli = True
@@ -110,6 +109,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         # skipped. If list is truncated, wallet creation is skipped and keys
         # are not imported.
         self.wallet_names = None
+        # By default the wallet is not required. Set to true by skip_if_no_wallet().
+        # When False, we ignore wallet_names regardless of what it is.
+        self.requires_wallet = False
         self.set_test_params()
         assert self.wallet_names is None or len(self.wallet_names) <= self.num_nodes
         if self.options.timeout_factor == 0 :
@@ -186,14 +188,33 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         parser.add_argument('--timeout-factor', dest="timeout_factor", type=float, default=1.0, help='adjust test timeouts by a factor. Setting it to 0 disables all timeouts')
 
         group = parser.add_mutually_exclusive_group()
-        group.add_argument("--descriptors", default=False, action="store_true",
+        group.add_argument("--descriptors", action='store_const', const=True,
                             help="Run test using a descriptor wallet", dest='descriptors')
-        group.add_argument("--legacy-wallet", default=False, action="store_false",
+        group.add_argument("--legacy-wallet", action='store_const', const=False,
                             help="Run test using legacy wallets", dest='descriptors')
 
         self.add_options(parser)
+        # Running TestShell in a Jupyter notebook causes an additional -f argument
+        # To keep TestShell from failing with an "unrecognized argument" error, we add a dummy "-f" argument
+        # source: https://stackoverflow.com/questions/48796169/how-to-fix-ipykernel-launcher-py-error-unrecognized-arguments-in-jupyter/56349168#56349168
+        parser.add_argument("-f", "--fff", help="a dummy argument to fool ipython", default="1")
         self.options = parser.parse_args()
         self.options.previous_releases_path = previous_releases_path
+
+        config = configparser.ConfigParser()
+        config.read_file(open(self.options.configfile))
+        self.config = config
+
+        if self.options.descriptors is None:
+            # Prefer BDB unless it isn't available
+            if self.is_bdb_compiled():
+                self.options.descriptors = False
+            elif self.is_sqlite_compiled():
+                self.options.descriptors = True
+            else:
+                # If neither are compiled, tests requiring a wallet will be skipped and the value of self.options.descriptors won't matter
+                # It still needs to exist and be None in order for tests to work however.
+                self.options.descriptors = None
 
     def setup(self):
         """Call this method to start up the test framework object with options set."""
@@ -204,9 +225,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         self.options.cachedir = os.path.abspath(self.options.cachedir)
 
-        config = configparser.ConfigParser()
-        config.read_file(open(self.options.configfile))
-        self.config = config
+        config = self.config
+
         fname_bitcoind = os.path.join(
             config["environment"]["BUILDDIR"],
             "src",
@@ -379,7 +399,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             extra_args = self.extra_args
         self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
-        if self.is_wallet_compiled():
+        if self.requires_wallet:
             self.import_deterministic_coinbase_privkeys()
         if not self.setup_clean_chain:
             for n in self.nodes:
@@ -717,16 +737,18 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Set a time in the past, so that blocks don't end up in the future
             cache_node.setmocktime(cache_node.getblockheader(cache_node.getbestblockhash())['time'])
 
-            # Create a 199-block-long chain; each of the 4 first nodes
+            # Create a 199-block-long chain; each of the 3 first nodes
             # gets 25 mature blocks and 25 immature.
-            # The 4th node gets only 24 immature blocks so that the very last
+            # The 4th address gets 25 mature and only 24 immature blocks so that the very last
             # block in the cache does not age too much (have an old tip age).
             # This is needed so that we are out of IBD when the test starts,
             # see the tip age check in IsInitialBlockDownload().
+            gen_addresses = [k.address for k in TestNode.PRIV_KEYS][:3] + [ADDRESS_BCRT1_P2WSH_OP_TRUE]
+            assert_equal(len(gen_addresses), 4)
             for i in range(8):
                 cache_node.generatetoaddress(
                     nblocks=25 if i != 7 else 24,
-                    address=TestNode.PRIV_KEYS[i % 4].address,
+                    address=gen_addresses[i % len(gen_addresses)],
                 )
 
             assert_equal(cache_node.getblockchaininfo()["blocks"], 199)
@@ -740,7 +762,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
             os.rmdir(cache_path('wallets'))  # Remove empty wallets dir
             for entry in os.listdir(cache_path()):
-                if entry not in ['chainstate', 'blocks']:  # Only keep chainstate and blocks folder
+                if entry not in ['chainstate', 'blocks', 'indexes']:  # Only indexes, chainstate and blocks folders
                     os.remove(cache_path(entry))
 
         for i in range(self.num_nodes):
@@ -771,10 +793,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def skip_if_no_wallet(self):
         """Skip the running test if wallet has not been compiled."""
+        self.requires_wallet = True
         if not self.is_wallet_compiled():
             raise SkipTest("wallet has not been compiled.")
         if self.options.descriptors:
             self.skip_if_no_sqlite()
+        else:
+            self.skip_if_no_bdb()
 
     def skip_if_no_sqlite(self):
         """Skip the running test if sqlite has not been compiled."""
@@ -809,9 +834,18 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     self.options.previous_releases_path))
         return self.options.prev_releases
 
+    def skip_if_no_external_signer(self):
+        """Skip the running test if external signer support has not been compiled."""
+        if not self.is_external_signer_compiled():
+            raise SkipTest("external signer support has not been compiled.")
+
     def is_cli_compiled(self):
         """Checks whether bitcoin-cli was compiled."""
         return self.config["components"].getboolean("ENABLE_CLI")
+
+    def is_external_signer_compiled(self):
+        """Checks whether external signer support was compiled."""
+        return self.config["components"].getboolean("ENABLE_EXTERNAL_SIGNER")
 
     def is_wallet_compiled(self):
         """Checks whether the wallet module was compiled."""

@@ -16,7 +16,7 @@
 
 using namespace std::literals;
 
-extern UniValue read_json(const std::string& jsondata);
+UniValue read_json(const std::string& jsondata);
 
 BOOST_FIXTURE_TEST_SUITE(base58_tests, BasicTestingSetup)
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,7 +18,7 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
-#include <util/memory.h>
+#include <txorphanage.h>
 #include <validationinterface.h>
 #include <version.h>
 
@@ -30,45 +30,63 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <vector>
 
 namespace {
 const TestingSetup* g_setup;
 } // namespace
 
+size_t& GetNumMsgTypes()
+{
+    static size_t g_num_msg_types{0};
+    return g_num_msg_types;
+}
+#define FUZZ_TARGET_MSG(msg_type)                                            \
+    struct msg_type##_Count_Before_Main {                                    \
+        msg_type##_Count_Before_Main()                                       \
+        {                                                                    \
+            ++GetNumMsgTypes();                                              \
+        }                                                                    \
+    } const static g_##msg_type##_count_before_main;                         \
+    FUZZ_TARGET_INIT(process_message_##msg_type, initialize_process_message) \
+    {                                                                        \
+        fuzz_target(buffer, #msg_type);                                      \
+    }
+
 void initialize_process_message()
 {
-    static TestingSetup setup{
-        CBaseChainParams::REGTEST,
-        {
-            "-nodebuglogfile",
-        },
-    };
-    g_setup = &setup;
+    Assert(GetNumMsgTypes() == getAllNetMessageTypes().size()); // If this fails, add or remove the message type below
 
+    static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
+    g_setup = testing_setup.get();
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
         MineBlock(g_setup->m_node, CScript() << OP_TRUE);
     }
     SyncWithValidationInterfaceQueue();
 }
 
-void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO_MESSAGE_TYPE)
+void fuzz_target(FuzzBufferType buffer, const std::string& LIMIT_TO_MESSAGE_TYPE)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    ConnmanTestMsg& connman = *(ConnmanTestMsg*)g_setup->m_node.connman.get();
-    TestChainState& chainstate = *(TestChainState*)&g_setup->m_node.chainman->ActiveChainstate();
+
+    ConnmanTestMsg& connman = *static_cast<ConnmanTestMsg*>(g_setup->m_node.connman.get());
+    TestChainState& chainstate = *static_cast<TestChainState*>(&g_setup->m_node.chainman->ActiveChainstate());
+    SetMockTime(1610000000); // any time to successfully reset ibd
     chainstate.ResetIbd();
+
     const std::string random_message_type{fuzzed_data_provider.ConsumeBytesAsString(CMessageHeader::COMMAND_SIZE).c_str()};
     if (!LIMIT_TO_MESSAGE_TYPE.empty() && random_message_type != LIMIT_TO_MESSAGE_TYPE) {
         return;
     }
-    const bool jump_out_of_ibd{fuzzed_data_provider.ConsumeBool()};
-    if (jump_out_of_ibd) chainstate.JumpOutOfIbd();
     CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider).release();
-    FillNode(fuzzed_data_provider, p2p_node);
-    p2p_node.fSuccessfullyConnected = true;
+
+    const bool successfully_connected{fuzzed_data_provider.ConsumeBool()};
+    p2p_node.fSuccessfullyConnected = successfully_connected;
     connman.AddTestNode(p2p_node);
     g_setup->m_node.peerman->InitializeNode(&p2p_node);
+    FillNode(fuzzed_data_provider, p2p_node, /* init_version */ successfully_connected);
+
+    const auto mock_time = ConsumeTime(fuzzed_data_provider);
+    SetMockTime(mock_time);
 
     // fuzzed_data_provider is fully consumed after this call, don't use it
     CDataStream random_bytes_data_stream{fuzzed_data_provider.ConsumeRemainingBytes<unsigned char>(), SER_NETWORK, PROTOCOL_VERSION};
@@ -82,32 +100,41 @@ void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO
         g_setup->m_node.peerman->SendMessages(&p2p_node);
     }
     SyncWithValidationInterfaceQueue();
-    LOCK2(::cs_main, g_cs_orphans); // See init.cpp for rationale for implicit locking order requirement
     g_setup->m_node.connman->StopNodes();
 }
 
 FUZZ_TARGET_INIT(process_message, initialize_process_message) { fuzz_target(buffer, ""); }
-FUZZ_TARGET_INIT(process_message_addr, initialize_process_message) { fuzz_target(buffer, "addr"); }
-FUZZ_TARGET_INIT(process_message_block, initialize_process_message) { fuzz_target(buffer, "block"); }
-FUZZ_TARGET_INIT(process_message_blocktxn, initialize_process_message) { fuzz_target(buffer, "blocktxn"); }
-FUZZ_TARGET_INIT(process_message_cmpctblock, initialize_process_message) { fuzz_target(buffer, "cmpctblock"); }
-FUZZ_TARGET_INIT(process_message_feefilter, initialize_process_message) { fuzz_target(buffer, "feefilter"); }
-FUZZ_TARGET_INIT(process_message_filteradd, initialize_process_message) { fuzz_target(buffer, "filteradd"); }
-FUZZ_TARGET_INIT(process_message_filterclear, initialize_process_message) { fuzz_target(buffer, "filterclear"); }
-FUZZ_TARGET_INIT(process_message_filterload, initialize_process_message) { fuzz_target(buffer, "filterload"); }
-FUZZ_TARGET_INIT(process_message_getaddr, initialize_process_message) { fuzz_target(buffer, "getaddr"); }
-FUZZ_TARGET_INIT(process_message_getblocks, initialize_process_message) { fuzz_target(buffer, "getblocks"); }
-FUZZ_TARGET_INIT(process_message_getblocktxn, initialize_process_message) { fuzz_target(buffer, "getblocktxn"); }
-FUZZ_TARGET_INIT(process_message_getdata, initialize_process_message) { fuzz_target(buffer, "getdata"); }
-FUZZ_TARGET_INIT(process_message_getheaders, initialize_process_message) { fuzz_target(buffer, "getheaders"); }
-FUZZ_TARGET_INIT(process_message_headers, initialize_process_message) { fuzz_target(buffer, "headers"); }
-FUZZ_TARGET_INIT(process_message_inv, initialize_process_message) { fuzz_target(buffer, "inv"); }
-FUZZ_TARGET_INIT(process_message_mempool, initialize_process_message) { fuzz_target(buffer, "mempool"); }
-FUZZ_TARGET_INIT(process_message_notfound, initialize_process_message) { fuzz_target(buffer, "notfound"); }
-FUZZ_TARGET_INIT(process_message_ping, initialize_process_message) { fuzz_target(buffer, "ping"); }
-FUZZ_TARGET_INIT(process_message_pong, initialize_process_message) { fuzz_target(buffer, "pong"); }
-FUZZ_TARGET_INIT(process_message_sendcmpct, initialize_process_message) { fuzz_target(buffer, "sendcmpct"); }
-FUZZ_TARGET_INIT(process_message_sendheaders, initialize_process_message) { fuzz_target(buffer, "sendheaders"); }
-FUZZ_TARGET_INIT(process_message_tx, initialize_process_message) { fuzz_target(buffer, "tx"); }
-FUZZ_TARGET_INIT(process_message_verack, initialize_process_message) { fuzz_target(buffer, "verack"); }
-FUZZ_TARGET_INIT(process_message_version, initialize_process_message) { fuzz_target(buffer, "version"); }
+FUZZ_TARGET_MSG(addr);
+FUZZ_TARGET_MSG(addrv2);
+FUZZ_TARGET_MSG(block);
+FUZZ_TARGET_MSG(blocktxn);
+FUZZ_TARGET_MSG(cfcheckpt);
+FUZZ_TARGET_MSG(cfheaders);
+FUZZ_TARGET_MSG(cfilter);
+FUZZ_TARGET_MSG(cmpctblock);
+FUZZ_TARGET_MSG(feefilter);
+FUZZ_TARGET_MSG(filteradd);
+FUZZ_TARGET_MSG(filterclear);
+FUZZ_TARGET_MSG(filterload);
+FUZZ_TARGET_MSG(getaddr);
+FUZZ_TARGET_MSG(getblocks);
+FUZZ_TARGET_MSG(getblocktxn);
+FUZZ_TARGET_MSG(getcfcheckpt);
+FUZZ_TARGET_MSG(getcfheaders);
+FUZZ_TARGET_MSG(getcfilters);
+FUZZ_TARGET_MSG(getdata);
+FUZZ_TARGET_MSG(getheaders);
+FUZZ_TARGET_MSG(headers);
+FUZZ_TARGET_MSG(inv);
+FUZZ_TARGET_MSG(mempool);
+FUZZ_TARGET_MSG(merkleblock);
+FUZZ_TARGET_MSG(notfound);
+FUZZ_TARGET_MSG(ping);
+FUZZ_TARGET_MSG(pong);
+FUZZ_TARGET_MSG(sendaddrv2);
+FUZZ_TARGET_MSG(sendcmpct);
+FUZZ_TARGET_MSG(sendheaders);
+FUZZ_TARGET_MSG(tx);
+FUZZ_TARGET_MSG(verack);
+FUZZ_TARGET_MSG(version);
+FUZZ_TARGET_MSG(wtxidrelay);

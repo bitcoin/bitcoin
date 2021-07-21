@@ -8,6 +8,7 @@
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/peertablemodel.h>
+#include <qt/peertablesortproxy.h>
 
 #include <clientversion.h>
 #include <interfaces/handler.h>
@@ -19,6 +20,7 @@
 #include <validation.h>
 
 #include <stdint.h>
+#include <functional>
 
 #include <QDebug>
 #include <QThread>
@@ -37,7 +39,11 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
 {
     cachedBestHeaderHeight = -1;
     cachedBestHeaderTime = -1;
+
     peerTableModel = new PeerTableModel(m_node, this);
+    m_peer_table_sort_proxy = new PeerTableSortProxy(this);
+    m_peer_table_sort_proxy->setSourceModel(peerTableModel);
+
     banTableModel = new BanTableModel(m_node, this);
 
     QTimer* timer = new QTimer;
@@ -70,14 +76,14 @@ ClientModel::~ClientModel()
 
 int ClientModel::getNumConnections(unsigned int flags) const
 {
-    CConnman::NumConnections connections = CConnman::CONNECTIONS_NONE;
+    ConnectionDirection connections = ConnectionDirection::None;
 
     if(flags == CONNECTIONS_IN)
-        connections = CConnman::CONNECTIONS_IN;
+        connections = ConnectionDirection::In;
     else if (flags == CONNECTIONS_OUT)
-        connections = CConnman::CONNECTIONS_OUT;
+        connections = ConnectionDirection::Out;
     else if (flags == CONNECTIONS_ALL)
-        connections = CConnman::CONNECTIONS_ALL;
+        connections = ConnectionDirection::Both;
 
     return m_node.getNodeCount(connections);
 }
@@ -183,6 +189,11 @@ PeerTableModel *ClientModel::getPeerTableModel()
     return peerTableModel;
 }
 
+PeerTableSortProxy* ClientModel::peerTableSortProxy()
+{
+    return m_peer_table_sort_proxy;
+}
+
 BanTableModel *ClientModel::getBanTableModel()
 {
     return banTableModel;
@@ -210,12 +221,12 @@ QString ClientModel::formatClientStartupTime() const
 
 QString ClientModel::dataDir() const
 {
-    return GUIUtil::boostPathToQString(GetDataDir());
+    return GUIUtil::boostPathToQString(gArgs.GetDataDirNet());
 }
 
 QString ClientModel::blocksDir() const
 {
-    return GUIUtil::boostPathToQString(GetBlocksDir());
+    return GUIUtil::boostPathToQString(gArgs.GetBlocksDirPath());
 }
 
 void ClientModel::updateBanlist()

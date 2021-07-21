@@ -331,7 +331,7 @@ void BerkeleyDatabase::Open()
 
         if (m_db == nullptr) {
             int ret;
-            std::unique_ptr<Db> pdb_temp = MakeUnique<Db>(env->dbenv.get(), 0);
+            std::unique_ptr<Db> pdb_temp = std::make_unique<Db>(env->dbenv.get(), 0);
 
             bool fMockDb = env->IsMock();
             if (fMockDb) {
@@ -462,7 +462,7 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
                 std::string strFileRes = strFile + ".rewrite";
                 { // surround usage of db with extra {}
                     BerkeleyBatch db(*this, true);
-                    std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(env->dbenv.get(), 0);
+                    std::unique_ptr<Db> pdbCopy = std::make_unique<Db>(env->dbenv.get(), 0);
 
                     int ret = pdbCopy->open(nullptr,               // Txn pointer
                                             strFileRes.c_str(), // Filename
@@ -488,9 +488,9 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
                                 break;
                             }
                             if (pszSkip &&
-                                strncmp(ssKey.data(), pszSkip, std::min(ssKey.size(), strlen(pszSkip))) == 0)
+                                strncmp((const char*)ssKey.data(), pszSkip, std::min(ssKey.size(), strlen(pszSkip))) == 0)
                                 continue;
-                            if (strncmp(ssKey.data(), "\x07version", 8) == 0) {
+                            if (strncmp((const char*)ssKey.data(), "\x07version", 8) == 0) {
                                 // Update version:
                                 ssValue.clear();
                                 ssValue << CLIENT_VERSION;
@@ -723,6 +723,23 @@ bool BerkeleyBatch::TxnAbort()
     return (ret == 0);
 }
 
+bool BerkeleyDatabaseSanityCheck()
+{
+    int major, minor;
+    DbEnv::version(&major, &minor, nullptr);
+
+    /* If the major version differs, or the minor version of library is *older*
+     * than the header that was compiled against, flag an error.
+     */
+    if (major != DB_VERSION_MAJOR || minor < DB_VERSION_MINOR) {
+        LogPrintf("BerkeleyDB database version conflict: header version is %d.%d, library version is %d.%d\n",
+            DB_VERSION_MAJOR, DB_VERSION_MINOR, major, minor);
+        return false;
+    }
+
+    return true;
+}
+
 std::string BerkeleyDatabaseVersion()
 {
     return DbEnv::version(nullptr, nullptr, nullptr);
@@ -802,7 +819,7 @@ void BerkeleyDatabase::RemoveRef()
 
 std::unique_ptr<DatabaseBatch> BerkeleyDatabase::MakeBatch(bool flush_on_close)
 {
-    return MakeUnique<BerkeleyBatch>(*this, false, flush_on_close);
+    return std::make_unique<BerkeleyBatch>(*this, false, flush_on_close);
 }
 
 std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
@@ -818,7 +835,7 @@ std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, con
             status = DatabaseStatus::FAILED_ALREADY_LOADED;
             return nullptr;
         }
-        db = MakeUnique<BerkeleyDatabase>(std::move(env), std::move(data_filename));
+        db = std::make_unique<BerkeleyDatabase>(std::move(env), std::move(data_filename));
     }
 
     if (options.verify && !db->Verify(error)) {

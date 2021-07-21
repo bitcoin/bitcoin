@@ -51,6 +51,9 @@ public:
     static QList<CAmount> payAmounts;
     static bool fSubtractFeeFromAmount;
 
+protected:
+    void changeEvent(QEvent* e) override;
+
 private:
     Ui::CoinControlDialog *ui;
     CCoinControl& m_coin_control;

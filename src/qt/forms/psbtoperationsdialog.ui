@@ -126,7 +126,7 @@
        <item>
         <widget class="QPushButton" name="saveButton">
          <property name="text">
-          <string>Save...</string>
+          <string>Save…</string>
          </property>
         </widget>
        </item>

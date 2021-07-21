@@ -60,17 +60,11 @@ EXPECTED_BOOST_INCLUDES=(
     boost/multi_index/ordered_index.hpp
     boost/multi_index/sequenced_index.hpp
     boost/multi_index_container.hpp
-    boost/preprocessor/cat.hpp
-    boost/preprocessor/stringize.hpp
     boost/process.hpp
     boost/signals2/connection.hpp
     boost/signals2/optional_last_value.hpp
     boost/signals2/signal.hpp
     boost/test/unit_test.hpp
-    boost/thread/condition_variable.hpp
-    boost/thread/mutex.hpp
-    boost/thread/shared_mutex.hpp
-    boost/thread/thread.hpp
 )
 
 for BOOST_INCLUDE in $(git grep '^#include <boost/' -- "*.cpp" "*.h" | cut -f2 -d: | cut -f2 -d'<' | cut -f1 -d'>' | sort -u); do

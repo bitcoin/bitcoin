@@ -21,21 +21,21 @@ The script returns 0 if everything passes the checks. It returns 1 if either the
 
 
 ```sh
-./verify.sh bitcoin-core-0.11.2
-./verify.sh bitcoin-core-0.12.0
-./verify.sh bitcoin-core-0.13.0-rc3
+./verify.py bitcoin-core-0.11.2
+./verify.py bitcoin-core-0.12.0
+./verify.py bitcoin-core-0.13.0-rc3
 ```
 
 If you only want to download the binaries of certain platform, add the corresponding suffix, e.g.:
 
 ```sh
-./verify.sh bitcoin-core-0.11.2-osx
-./verify.sh 0.12.0-linux
-./verify.sh bitcoin-core-0.13.0-rc3-win64
+./verify.py bitcoin-core-0.11.2-osx
+./verify.py 0.12.0-linux
+./verify.py bitcoin-core-0.13.0-rc3-win64
 ```
 
 If you do not want to keep the downloaded binaries, specify anything as the second parameter.
 
 ```sh
-./verify.sh bitcoin-core-0.13.0 delete
+./verify.py bitcoin-core-0.13.0 delete
 ```

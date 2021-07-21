@@ -7,7 +7,39 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
+from collections import defaultdict
 import os
+import re
+
+
+def parse_string(s):
+    assert s[0] == '"'
+    assert s[-1] == '"'
+    return s[1:-1]
+
+
+def process_mapping(fname):
+    """Find and parse conversion table in implementation file `fname`."""
+    cmds = []
+    in_rpcs = False
+    with open(fname, "r", encoding="utf8") as f:
+        for line in f:
+            line = line.rstrip()
+            if not in_rpcs:
+                if line == 'static const CRPCConvertParam vRPCConvertParams[] =':
+                    in_rpcs = True
+            else:
+                if line.startswith('};'):
+                    in_rpcs = False
+                elif '{' in line and '"' in line:
+                    m = re.search(r'{ *("[^"]*"), *([0-9]+) *, *("[^"]*") *},', line)
+                    assert m, 'No match to table expression: %s' % line
+                    name = parse_string(m.group(1))
+                    idx = int(m.group(2))
+                    argname = parse_string(m.group(3))
+                    cmds.append((name, idx, argname))
+    assert not in_rpcs and cmds
+    return cmds
 
 
 class HelpRpcTest(BitcoinTestFramework):
@@ -16,10 +48,42 @@ class HelpRpcTest(BitcoinTestFramework):
         self.supports_cli = False
 
     def run_test(self):
+        self.test_client_conversion_table()
         self.test_categories()
         self.dump_help()
         if self.is_wallet_compiled():
             self.wallet_help()
+
+    def test_client_conversion_table(self):
+        file_conversion_table = os.path.join(self.config["environment"]["SRCDIR"], 'src', 'rpc', 'client.cpp')
+        mapping_client = process_mapping(file_conversion_table)
+        # Ignore echojson in client table
+        mapping_client = [m for m in mapping_client if m[0] != 'echojson']
+
+        mapping_server = self.nodes[0].help("dump_all_command_conversions")
+        # Filter all RPCs whether they need conversion
+        mapping_server_conversion = [tuple(m[:3]) for m in mapping_server if not m[3]]
+
+        # Only check if all RPC methods have been compiled (i.e. wallet is enabled)
+        if self.is_wallet_compiled() and sorted(mapping_client) != sorted(mapping_server_conversion):
+            raise AssertionError("RPC client conversion table ({}) and RPC server named arguments mismatch!\n{}".format(
+                file_conversion_table,
+                set(mapping_client).symmetric_difference(mapping_server_conversion),
+            ))
+
+        # Check for conversion difference by argument name.
+        # It is preferable for API consistency that arguments with the same name
+        # have the same conversion, so bin by argument name.
+        all_methods_by_argname = defaultdict(list)
+        converts_by_argname = defaultdict(list)
+        for m in mapping_server:
+            all_methods_by_argname[m[2]].append(m[0])
+            converts_by_argname[m[2]].append(m[3])
+
+        for argname, convert in converts_by_argname.items():
+            if all(convert) != any(convert):
+                # Only allow dummy to fail consistency check
+                assert argname == 'dummy', ('WARNING: conversion mismatch for argument named %s (%s)' % (argname, list(zip(all_methods_by_argname[argname], converts_by_argname[argname]))))
 
     def test_categories(self):
         node = self.nodes[0]
@@ -41,10 +105,13 @@ class HelpRpcTest(BitcoinTestFramework):
         if self.is_wallet_compiled():
             components.append('Wallet')
 
+        if self.is_external_signer_compiled():
+            components.append('Signer')
+
         if self.is_zmq_compiled():
             components.append('Zmq')
 
-        assert_equal(titles, components)
+        assert_equal(titles, sorted(components))
 
     def dump_help(self):
         dump_dir = os.path.join(self.options.tmpdir, 'rpc_help_dump')

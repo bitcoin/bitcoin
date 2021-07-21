@@ -2,9 +2,10 @@
 # Copyright (c) 2018-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test createwallet arguments.
+"""Test createwallet watchonly arguments.
 """
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -14,7 +15,6 @@ from test_framework.util import (
 
 class CreateWalletWatchonlyTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = False
         self.num_nodes = 1
 
     def skip_test_if_missing_module(self):
@@ -37,7 +37,7 @@ class CreateWalletWatchonlyTest(BitcoinTestFramework):
         wo_wallet.importpubkey(pubkey=def_wallet.getaddressinfo(wo_change)['pubkey'])
 
         # generate some btc for testing
-        node.generatetoaddress(101, a1)
+        node.generatetoaddress(COINBASE_MATURITY + 1, a1)
 
         # send 1 btc to our watch-only address
         txid = def_wallet.sendtoaddress(wo_addr, 1)
@@ -49,6 +49,11 @@ class CreateWalletWatchonlyTest(BitcoinTestFramework):
         assert_equal(wo_wallet.getbalance(), 1)
         assert_equal(len(wo_wallet.listtransactions()), 1)
         assert_equal(wo_wallet.getbalance(include_watchonly=False), 0)
+
+        self.log.info('Test sending from a watch-only wallet raises RPC error')
+        msg = "Error: Private keys are disabled for this wallet"
+        assert_raises_rpc_error(-4, msg, wo_wallet.sendtoaddress, a1, 0.1)
+        assert_raises_rpc_error(-4, msg, wo_wallet.sendmany, amounts={a1: 0.1})
 
         self.log.info('Testing listreceivedbyaddress watch-only defaults')
         result = wo_wallet.listreceivedbyaddress()

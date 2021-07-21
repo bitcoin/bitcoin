@@ -14,17 +14,20 @@
 #include <undo.h>
 #include <univalue.h>
 #include <util/check.h>
-#include <util/system.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 
-UniValue ValueFromAmount(const CAmount& amount)
+UniValue ValueFromAmount(const CAmount amount)
 {
-    bool sign = amount < 0;
-    int64_t n_abs = (sign ? -amount : amount);
-    int64_t quotient = n_abs / COIN;
-    int64_t remainder = n_abs % COIN;
+    static_assert(COIN > 1);
+    int64_t quotient = amount / COIN;
+    int64_t remainder = amount % COIN;
+    if (amount < 0) {
+        quotient = -quotient;
+        remainder = -remainder;
+    }
     return UniValue(UniValue::VNUM,
-            strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder));
+            strprintf("%s%d.%08d", amount < 0 ? "-" : "", quotient, remainder));
 }
 
 std::string FormatScript(const CScript& script)
@@ -153,10 +156,13 @@ void ScriptToUniv(const CScript& script, UniValue& out, bool include_address)
     }
 }
 
+// TODO: from v23 ("addresses" and "reqSigs" deprecated) this method should be refactored to remove the `include_addresses` option
+// this method can also be combined with `ScriptToUniv` as they will overlap
 void ScriptPubKeyToUniv(const CScript& scriptPubKey,
-                        UniValue& out, bool fIncludeHex)
+                        UniValue& out, bool fIncludeHex, bool include_addresses)
 {
     TxoutType type;
+    CTxDestination address;
     std::vector<CTxDestination> addresses;
     int nRequired;
 
@@ -169,17 +175,22 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey,
         return;
     }
 
-    out.pushKV("reqSigs", nRequired);
+    if (ExtractDestination(scriptPubKey, address)) {
+        out.pushKV("address", EncodeDestination(address));
+    }
     out.pushKV("type", GetTxnOutputType(type));
 
-    UniValue a(UniValue::VARR);
-    for (const CTxDestination& addr : addresses) {
-        a.push_back(EncodeDestination(addr));
+    if (include_addresses) {
+        UniValue a(UniValue::VARR);
+        for (const CTxDestination& addr : addresses) {
+            a.push_back(EncodeDestination(addr));
+        }
+        out.pushKV("addresses", a);
+        out.pushKV("reqSigs", nRequired);
     }
-    out.pushKV("addresses", a);
 }
 
-void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo)
+void TxToUniv(const CTransaction& tx, const uint256& hashBlock, bool include_addresses, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo)
 {
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
@@ -238,7 +249,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         out.pushKV("n", (int64_t)i);
 
         UniValue o(UniValue::VOBJ);
-        ScriptPubKeyToUniv(txout.scriptPubKey, o, true);
+        ScriptPubKeyToUniv(txout.scriptPubKey, o, true, include_addresses);
         out.pushKV("scriptPubKey", o);
         vout.push_back(out);
 

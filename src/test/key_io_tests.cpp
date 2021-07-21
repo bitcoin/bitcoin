@@ -15,7 +15,7 @@
 
 #include <univalue.h>
 
-extern UniValue read_json(const std::string& jsondata);
+UniValue read_json(const std::string& jsondata);
 
 BOOST_FIXTURE_TEST_SUITE(key_io_tests, BasicTestingSetup)
 

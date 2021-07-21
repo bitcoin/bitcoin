@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,8 +8,11 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/setup_common.h>
+#include <util/readwritefile.h>
 #include <util/system.h>
 
+#include <cassert>
 #include <cstdint>
 #include <limits>
 #include <string>
@@ -26,64 +29,89 @@ int64_t ConsumeBanTimeOffset(FuzzedDataProvider& fuzzed_data_provider) noexcept
 
 void initialize_banman()
 {
-    InitializeFuzzingContext();
+    static const auto testing_setup = MakeNoLogFileContext<>();
+}
+
+static bool operator==(const CBanEntry& lhs, const CBanEntry& rhs)
+{
+    return lhs.nVersion == rhs.nVersion &&
+           lhs.nCreateTime == rhs.nCreateTime &&
+           lhs.nBanUntil == rhs.nBanUntil;
 }
 
 FUZZ_TARGET_INIT(banman, initialize_banman)
 {
+    // The complexity is O(N^2), where N is the input size, because each call
+    // might call DumpBanlist (or other methods that are at least linear
+    // complexity of the input size).
+    int limit_max_ops{300};
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    const fs::path banlist_file = GetDataDir() / "fuzzed_banlist.dat";
-    fs::remove(banlist_file);
-    {
-        BanMan ban_man{banlist_file, nullptr, ConsumeBanTimeOffset(fuzzed_data_provider)};
-        while (fuzzed_data_provider.ConsumeBool()) {
-            switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 11)) {
-            case 0: {
-                ban_man.Ban(ConsumeNetAddr(fuzzed_data_provider),
-                    ConsumeBanTimeOffset(fuzzed_data_provider), fuzzed_data_provider.ConsumeBool());
-                break;
-            }
-            case 1: {
-                ban_man.Ban(ConsumeSubNet(fuzzed_data_provider),
-                    ConsumeBanTimeOffset(fuzzed_data_provider), fuzzed_data_provider.ConsumeBool());
-                break;
-            }
-            case 2: {
-                ban_man.ClearBanned();
-                break;
-            }
-            case 4: {
-                ban_man.IsBanned(ConsumeNetAddr(fuzzed_data_provider));
-                break;
-            }
-            case 5: {
-                ban_man.IsBanned(ConsumeSubNet(fuzzed_data_provider));
-                break;
-            }
-            case 6: {
-                ban_man.Unban(ConsumeNetAddr(fuzzed_data_provider));
-                break;
-            }
-            case 7: {
-                ban_man.Unban(ConsumeSubNet(fuzzed_data_provider));
-                break;
-            }
-            case 8: {
-                banmap_t banmap;
-                ban_man.GetBanned(banmap);
-                break;
-            }
-            case 9: {
-                ban_man.DumpBanlist();
-                break;
-            }
-            case 11: {
-                ban_man.Discourage(ConsumeNetAddr(fuzzed_data_provider));
-                break;
-            }
-            }
+    fs::path banlist_file = gArgs.GetDataDirNet() / "fuzzed_banlist";
+
+    const bool start_with_corrupted_banlist{fuzzed_data_provider.ConsumeBool()};
+    bool force_read_and_write_to_err{false};
+    if (start_with_corrupted_banlist) {
+        const std::string sfx{fuzzed_data_provider.ConsumeBool() ? ".dat" : ".json"};
+        assert(WriteBinaryFile(banlist_file.string() + sfx,
+                               fuzzed_data_provider.ConsumeRandomLengthString()));
+    } else {
+        force_read_and_write_to_err = fuzzed_data_provider.ConsumeBool();
+        if (force_read_and_write_to_err) {
+            banlist_file = fs::path{"path"} / "to" / "inaccessible" / "fuzzed_banlist";
         }
     }
-    fs::remove(banlist_file);
+
+    {
+        BanMan ban_man{banlist_file, /* client_interface */ nullptr, /* default_ban_time */ ConsumeBanTimeOffset(fuzzed_data_provider)};
+        while (--limit_max_ops >= 0 && fuzzed_data_provider.ConsumeBool()) {
+            CallOneOf(
+                fuzzed_data_provider,
+                [&] {
+                    ban_man.Ban(ConsumeNetAddr(fuzzed_data_provider),
+                                ConsumeBanTimeOffset(fuzzed_data_provider), fuzzed_data_provider.ConsumeBool());
+                },
+                [&] {
+                    ban_man.Ban(ConsumeSubNet(fuzzed_data_provider),
+                                ConsumeBanTimeOffset(fuzzed_data_provider), fuzzed_data_provider.ConsumeBool());
+                },
+                [&] {
+                    ban_man.ClearBanned();
+                },
+                [&] {
+                    ban_man.IsBanned(ConsumeNetAddr(fuzzed_data_provider));
+                },
+                [&] {
+                    ban_man.IsBanned(ConsumeSubNet(fuzzed_data_provider));
+                },
+                [&] {
+                    ban_man.Unban(ConsumeNetAddr(fuzzed_data_provider));
+                },
+                [&] {
+                    ban_man.Unban(ConsumeSubNet(fuzzed_data_provider));
+                },
+                [&] {
+                    banmap_t banmap;
+                    ban_man.GetBanned(banmap);
+                },
+                [&] {
+                    ban_man.DumpBanlist();
+                },
+                [&] {
+                    ban_man.Discourage(ConsumeNetAddr(fuzzed_data_provider));
+                });
+        }
+        if (!force_read_and_write_to_err) {
+            ban_man.DumpBanlist();
+            SetMockTime(ConsumeTime(fuzzed_data_provider));
+            banmap_t banmap;
+            ban_man.GetBanned(banmap);
+            BanMan ban_man_read{banlist_file, /* client_interface */ nullptr, /* default_ban_time */ 0};
+            banmap_t banmap_read;
+            ban_man_read.GetBanned(banmap_read);
+            assert(banmap == banmap_read);
+        }
+    }
+    fs::remove(banlist_file.string() + ".dat");
+    fs::remove(banlist_file.string() + ".json");
 }

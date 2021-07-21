@@ -32,14 +32,7 @@ CNetAddr::BIP155Network CNetAddr::GetBIP155Network() const
     case NET_IPV6:
         return BIP155Network::IPV6;
     case NET_ONION:
-        switch (m_addr.size()) {
-        case ADDR_TORV2_SIZE:
-            return BIP155Network::TORV2;
-        case ADDR_TORV3_SIZE:
-            return BIP155Network::TORV3;
-        default:
-            assert(false);
-        }
+        return BIP155Network::TORV3;
     case NET_I2P:
         return BIP155Network::I2P;
     case NET_CJDNS:
@@ -72,14 +65,6 @@ bool CNetAddr::SetNetFromBIP155Network(uint8_t possible_bip155_net, size_t addre
         throw std::ios_base::failure(
             strprintf("BIP155 IPv6 address with length %u (should be %u)", address_size,
                       ADDR_IPV6_SIZE));
-    case BIP155Network::TORV2:
-        if (address_size == ADDR_TORV2_SIZE) {
-            m_net = NET_ONION;
-            return true;
-        }
-        throw std::ios_base::failure(
-            strprintf("BIP155 TORv2 address with length %u (should be %u)", address_size,
-                      ADDR_TORV2_SIZE));
     case BIP155Network::TORV3:
         if (address_size == ADDR_TORV3_SIZE) {
             m_net = NET_ONION;
@@ -130,7 +115,7 @@ void CNetAddr::SetIP(const CNetAddr& ipIn)
         assert(ipIn.m_addr.size() == ADDR_IPV6_SIZE);
         break;
     case NET_ONION:
-        assert(ipIn.m_addr.size() == ADDR_TORV2_SIZE || ipIn.m_addr.size() == ADDR_TORV3_SIZE);
+        assert(ipIn.m_addr.size() == ADDR_TORV3_SIZE);
         break;
     case NET_I2P:
         assert(ipIn.m_addr.size() == ADDR_I2P_SIZE);
@@ -161,9 +146,12 @@ void CNetAddr::SetLegacyIPv6(Span<const uint8_t> ipv6)
         m_net = NET_IPV4;
         skip = sizeof(IPV4_IN_IPV6_PREFIX);
     } else if (HasPrefix(ipv6, TORV2_IN_IPV6_PREFIX)) {
-        // TORv2-in-IPv6
-        m_net = NET_ONION;
-        skip = sizeof(TORV2_IN_IPV6_PREFIX);
+        // TORv2-in-IPv6 (unsupported). Unserialize as !IsValid(), thus ignoring them.
+        // Mimic a default-constructed CNetAddr object which is !IsValid() and thus
+        // will not be gossiped, but continue reading next addresses from the stream.
+        m_net = NET_IPV6;
+        m_addr.assign(ADDR_IPV6_SIZE, 0x0);
+        return;
     } else if (HasPrefix(ipv6, INTERNAL_IN_IPV6_PREFIX)) {
         // Internal-in-IPv6
         m_net = NET_INTERNAL;
@@ -221,36 +209,40 @@ static void Checksum(Span<const uint8_t> addr_pubkey, uint8_t (&checksum)[CHECKS
 
 }; // namespace torv3
 
-/**
- * Parse a TOR address and set this object to it.
- *
- * @returns Whether or not the operation was successful.
- *
- * @see CNetAddr::IsTor()
- */
-bool CNetAddr::SetSpecial(const std::string& str)
+bool CNetAddr::SetSpecial(const std::string& addr)
+{
+    if (!ValidAsCString(addr)) {
+        return false;
+    }
+
+    if (SetTor(addr)) {
+        return true;
+    }
+
+    if (SetI2P(addr)) {
+        return true;
+    }
+
+    return false;
+}
+
+bool CNetAddr::SetTor(const std::string& addr)
 {
     static const char* suffix{".onion"};
     static constexpr size_t suffix_len{6};
 
-    if (!ValidAsCString(str) || str.size() <= suffix_len ||
-        str.substr(str.size() - suffix_len) != suffix) {
+    if (addr.size() <= suffix_len || addr.substr(addr.size() - suffix_len) != suffix) {
         return false;
     }
 
     bool invalid;
-    const auto& input = DecodeBase32(str.substr(0, str.size() - suffix_len).c_str(), &invalid);
+    const auto& input = DecodeBase32(addr.substr(0, addr.size() - suffix_len).c_str(), &invalid);
 
     if (invalid) {
         return false;
     }
 
-    switch (input.size()) {
-    case ADDR_TORV2_SIZE:
-        m_net = NET_ONION;
-        m_addr.assign(input.begin(), input.end());
-        return true;
-    case torv3::TOTAL_LEN: {
+    if (input.size() == torv3::TOTAL_LEN) {
         Span<const uint8_t> input_pubkey{input.data(), ADDR_TORV3_SIZE};
         Span<const uint8_t> input_checksum{input.data() + ADDR_TORV3_SIZE, torv3::CHECKSUM_LEN};
         Span<const uint8_t> input_version{input.data() + ADDR_TORV3_SIZE + torv3::CHECKSUM_LEN, sizeof(torv3::VERSION)};
@@ -270,9 +262,36 @@ bool CNetAddr::SetSpecial(const std::string& str)
         m_addr.assign(input_pubkey.begin(), input_pubkey.end());
         return true;
     }
-    }
 
     return false;
+}
+
+bool CNetAddr::SetI2P(const std::string& addr)
+{
+    // I2P addresses that we support consist of 52 base32 characters + ".b32.i2p".
+    static constexpr size_t b32_len{52};
+    static const char* suffix{".b32.i2p"};
+    static constexpr size_t suffix_len{8};
+
+    if (addr.size() != b32_len + suffix_len || ToLower(addr.substr(b32_len)) != suffix) {
+        return false;
+    }
+
+    // Remove the ".b32.i2p" suffix and pad to a multiple of 8 chars, so DecodeBase32()
+    // can decode it.
+    const std::string b32_padded = addr.substr(0, b32_len) + "====";
+
+    bool invalid;
+    const auto& address_bytes = DecodeBase32(b32_padded.c_str(), &invalid);
+
+    if (invalid || address_bytes.size() != ADDR_I2P_SIZE) {
+        return false;
+    }
+
+    m_net = NET_I2P;
+    m_addr.assign(address_bytes.begin(), address_bytes.end());
+
+    return true;
 }
 
 CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
@@ -470,7 +489,7 @@ bool CNetAddr::IsValid() const
  */
 bool CNetAddr::IsRoutable() const
 {
-    return IsValid() && !(IsRFC1918() || IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || (IsRFC4193() && !IsTor()) || IsRFC4843() || IsRFC7343() || IsLocal() || IsInternal());
+    return IsValid() && !(IsRFC1918() || IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || IsRFC4193() || IsRFC4843() || IsRFC7343() || IsLocal() || IsInternal());
 }
 
 /**
@@ -491,7 +510,6 @@ bool CNetAddr::IsAddrV1Compatible() const
     case NET_INTERNAL:
         return true;
     case NET_ONION:
-        return m_addr.size() == ADDR_TORV2_SIZE;
     case NET_I2P:
     case NET_CJDNS:
         return false;
@@ -514,64 +532,92 @@ enum Network CNetAddr::GetNetwork() const
     return m_net;
 }
 
-static std::string IPv6ToString(Span<const uint8_t> a)
+static std::string IPv4ToString(Span<const uint8_t> a)
+{
+    return strprintf("%u.%u.%u.%u", a[0], a[1], a[2], a[3]);
+}
+
+// Return an IPv6 address text representation with zero compression as described in RFC 5952
+// ("A Recommendation for IPv6 Address Text Representation").
+static std::string IPv6ToString(Span<const uint8_t> a, uint32_t scope_id)
 {
     assert(a.size() == ADDR_IPV6_SIZE);
-    // clang-format off
-    return strprintf("%x:%x:%x:%x:%x:%x:%x:%x",
-                     ReadBE16(&a[0]),
-                     ReadBE16(&a[2]),
-                     ReadBE16(&a[4]),
-                     ReadBE16(&a[6]),
-                     ReadBE16(&a[8]),
-                     ReadBE16(&a[10]),
-                     ReadBE16(&a[12]),
-                     ReadBE16(&a[14]));
-    // clang-format on
+    const std::array groups{
+        ReadBE16(&a[0]),
+        ReadBE16(&a[2]),
+        ReadBE16(&a[4]),
+        ReadBE16(&a[6]),
+        ReadBE16(&a[8]),
+        ReadBE16(&a[10]),
+        ReadBE16(&a[12]),
+        ReadBE16(&a[14]),
+    };
+
+    // The zero compression implementation is inspired by Rust's std::net::Ipv6Addr, see
+    // https://github.com/rust-lang/rust/blob/cc4103089f40a163f6d143f06359cba7043da29b/library/std/src/net/ip.rs#L1635-L1683
+    struct ZeroSpan {
+        size_t start_index{0};
+        size_t len{0};
+    };
+
+    // Find longest sequence of consecutive all-zero fields. Use first zero sequence if two or more
+    // zero sequences of equal length are found.
+    ZeroSpan longest, current;
+    for (size_t i{0}; i < groups.size(); ++i) {
+        if (groups[i] != 0) {
+            current = {i + 1, 0};
+            continue;
+        }
+        current.len += 1;
+        if (current.len > longest.len) {
+            longest = current;
+        }
+    }
+
+    std::string r;
+    r.reserve(39);
+    for (size_t i{0}; i < groups.size(); ++i) {
+        // Replace the longest sequence of consecutive all-zero fields with two colons ("::").
+        if (longest.len >= 2 && i >= longest.start_index && i < longest.start_index + longest.len) {
+            if (i == longest.start_index) {
+                r += "::";
+            }
+            continue;
+        }
+        r += strprintf("%s%x", ((!r.empty() && r.back() != ':') ? ":" : ""), groups[i]);
+    }
+
+    if (scope_id != 0) {
+        r += strprintf("%%%u", scope_id);
+    }
+
+    return r;
+}
+
+static std::string OnionToString(Span<const uint8_t> addr)
+{
+    uint8_t checksum[torv3::CHECKSUM_LEN];
+    torv3::Checksum(addr, checksum);
+    // TORv3 onion_address = base32(PUBKEY | CHECKSUM | VERSION) + ".onion"
+    prevector<torv3::TOTAL_LEN, uint8_t> address{addr.begin(), addr.end()};
+    address.insert(address.end(), checksum, checksum + torv3::CHECKSUM_LEN);
+    address.insert(address.end(), torv3::VERSION, torv3::VERSION + sizeof(torv3::VERSION));
+    return EncodeBase32(address) + ".onion";
 }
 
 std::string CNetAddr::ToStringIP() const
 {
     switch (m_net) {
     case NET_IPV4:
-    case NET_IPV6: {
-        CService serv(*this, 0);
-        struct sockaddr_storage sockaddr;
-        socklen_t socklen = sizeof(sockaddr);
-        if (serv.GetSockAddr((struct sockaddr*)&sockaddr, &socklen)) {
-            char name[1025] = "";
-            if (!getnameinfo((const struct sockaddr*)&sockaddr, socklen, name,
-                             sizeof(name), nullptr, 0, NI_NUMERICHOST))
-                return std::string(name);
-        }
-        if (m_net == NET_IPV4) {
-            return strprintf("%u.%u.%u.%u", m_addr[0], m_addr[1], m_addr[2], m_addr[3]);
-        }
-        return IPv6ToString(m_addr);
-    }
+        return IPv4ToString(m_addr);
+    case NET_IPV6:
+        return IPv6ToString(m_addr, m_scope_id);
     case NET_ONION:
-        switch (m_addr.size()) {
-        case ADDR_TORV2_SIZE:
-            return EncodeBase32(m_addr) + ".onion";
-        case ADDR_TORV3_SIZE: {
-
-            uint8_t checksum[torv3::CHECKSUM_LEN];
-            torv3::Checksum(m_addr, checksum);
-
-            // TORv3 onion_address = base32(PUBKEY | CHECKSUM | VERSION) + ".onion"
-            prevector<torv3::TOTAL_LEN, uint8_t> address{m_addr.begin(), m_addr.end()};
-            address.insert(address.end(), checksum, checksum + torv3::CHECKSUM_LEN);
-            address.insert(address.end(), torv3::VERSION, torv3::VERSION + sizeof(torv3::VERSION));
-
-            return EncodeBase32(address) + ".onion";
-        }
-        default:
-            assert(false);
-        }
+        return OnionToString(m_addr);
     case NET_I2P:
         return EncodeBase32(m_addr, false /* don't pad with = */) + ".b32.i2p";
     case NET_CJDNS:
-        return IPv6ToString(m_addr);
+        return IPv6ToString(m_addr, 0);
     case NET_INTERNAL:
         return EncodeBase32(m_addr) + ".internal";
     case NET_UNROUTABLE: // m_net is never and should not be set to NET_UNROUTABLE
@@ -840,6 +886,11 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
         default:         return REACH_DEFAULT;
         case NET_IPV4:   return REACH_IPV4; // Tor users can connect to IPv4 as well
         case NET_ONION:    return REACH_PRIVATE;
+        }
+    case NET_I2P:
+        switch (ourNet) {
+        case NET_I2P: return REACH_PRIVATE;
+        default: return REACH_DEFAULT;
         }
     case NET_TEREDO:
         switch(ourNet) {

@@ -7,10 +7,13 @@
 
 #include <crypto/common.h>
 #include <crypto/hmac_sha512.h>
+#include <hash.h>
 #include <random.h>
 
 #include <secp256k1.h>
+#include <secp256k1_extrakeys.h>
 #include <secp256k1_recovery.h>
+#include <secp256k1_schnorrsig.h>
 
 static secp256k1_context* secp256k1_context_sign = nullptr;
 
@@ -258,6 +261,24 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
     return true;
 }
 
+bool CKey::SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint256* merkle_root, const uint256* aux) const
+{
+    assert(sig.size() == 64);
+    secp256k1_keypair keypair;
+    if (!secp256k1_keypair_create(secp256k1_context_sign, &keypair, begin())) return false;
+    if (merkle_root) {
+        secp256k1_xonly_pubkey pubkey;
+        if (!secp256k1_keypair_xonly_pub(secp256k1_context_sign, &pubkey, nullptr, &keypair)) return false;
+        unsigned char pubkey_bytes[32];
+        if (!secp256k1_xonly_pubkey_serialize(secp256k1_context_sign, pubkey_bytes, &pubkey)) return false;
+        uint256 tweak = XOnlyPubKey(pubkey_bytes).ComputeTapTweakHash(merkle_root->IsNull() ? nullptr : merkle_root);
+        if (!secp256k1_keypair_xonly_tweak_add(GetVerifyContext(), &keypair, tweak.data())) return false;
+    }
+    bool ret = secp256k1_schnorrsig_sign(secp256k1_context_sign, sig.data(), hash.data(), &keypair, secp256k1_nonce_function_bip340, aux ? (void*)aux->data() : nullptr);
+    memory_cleanse(&keypair, sizeof(keypair));
+    return ret;
+}
+
 bool CKey::Load(const CPrivKey &seckey, const CPubKey &vchPubKey, bool fSkipCheck=false) {
     if (!ec_seckey_import_der(secp256k1_context_sign, (unsigned char*)begin(), seckey.data(), seckey.size()))
         return false;
@@ -293,7 +314,7 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
 bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
     out.nDepth = nDepth + 1;
     CKeyID id = key.GetPubKey().GetID();
-    memcpy(&out.vchFingerprint[0], &id, 4);
+    memcpy(out.vchFingerprint, &id, 4);
     out.nChild = _nChild;
     return key.Derive(out.key, out.chaincode, _nChild, chaincode);
 }
@@ -312,7 +333,7 @@ void CExtKey::SetSeed(const unsigned char *seed, unsigned int nSeedLen) {
 CExtPubKey CExtKey::Neuter() const {
     CExtPubKey ret;
     ret.nDepth = nDepth;
-    memcpy(&ret.vchFingerprint[0], &vchFingerprint[0], 4);
+    memcpy(ret.vchFingerprint, vchFingerprint, 4);
     ret.nChild = nChild;
     ret.pubkey = key.GetPubKey();
     ret.chaincode = chaincode;

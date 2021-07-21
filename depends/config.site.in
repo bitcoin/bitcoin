@@ -38,6 +38,14 @@ if test -z "$enable_wallet" && test -n "@no_wallet@"; then
   enable_wallet=no
 fi
 
+if test -z "$with_bdb" && test -n "@no_bdb@"; then
+  with_bdb=no
+fi
+
+if test -z "$with_sqlite" && test -n "@no_sqlite@"; then
+  with_sqlite=no
+fi
+
 if test -z "$enable_multiprocess" && test -n "@multiprocess@"; then
   enable_multiprocess=yes
 fi
@@ -54,11 +62,15 @@ if test -z "$with_gui" && test -n "@no_qt@"; then
   with_gui=no
 fi
 
+if test -n "@debug@" && test -z "@no_qt@" && test "x$with_gui" != xno; then
+  with_gui=qt5_debug
+fi
+
 if test -z "$enable_zmq" && test -n "@no_zmq@"; then
   enable_zmq=no
 fi
 
-if test "x@host_os@" = xdarwin; then
+if test "@host_os@" = darwin; then
   BREW=no
   PORT=no
 fi

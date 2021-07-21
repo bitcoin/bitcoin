@@ -151,7 +151,7 @@ def test_ipv6_local():
     have_ipv6 = True
     try:
         s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        s.connect(('::1', 0))
+        s.connect(('::1', 1))
     except socket.error:
         have_ipv6 = False
     return have_ipv6

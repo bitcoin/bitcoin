@@ -10,7 +10,7 @@
 namespace WalletTool {
 
 void WalletShowInfo(CWallet* wallet_instance);
-bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command, const std::string& file);
+bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command);
 
 } // namespace WalletTool
 

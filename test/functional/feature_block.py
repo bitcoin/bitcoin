@@ -37,17 +37,17 @@ from test_framework.script import (
     OP_CHECKSIGVERIFY,
     OP_ELSE,
     OP_ENDIF,
-    OP_EQUAL,
     OP_DROP,
     OP_FALSE,
-    OP_HASH160,
     OP_IF,
     OP_INVALIDOPCODE,
     OP_RETURN,
     OP_TRUE,
     SIGHASH_ALL,
     LegacySignatureHash,
-    hash160,
+)
+from test_framework.script_util import (
+    script_to_p2sh_script,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -469,8 +469,7 @@ class FullBlockTest(BitcoinTestFramework):
 
         # Build the redeem script, hash it, use hash to create the p2sh script
         redeem_script = CScript([self.coinbase_pubkey] + [OP_2DUP, OP_CHECKSIGVERIFY] * 5 + [OP_CHECKSIG])
-        redeem_script_hash = hash160(redeem_script)
-        p2sh_script = CScript([OP_HASH160, redeem_script_hash, OP_EQUAL])
+        p2sh_script = script_to_p2sh_script(redeem_script)
 
         # Create a transaction that spends one satoshi to the p2sh_script, the rest to OP_TRUE
         # This must be signed because it is spending a coinbase
@@ -591,6 +590,8 @@ class FullBlockTest(BitcoinTestFramework):
         b44.hashPrevBlock = self.tip.sha256
         b44.nBits = 0x207fffff
         b44.vtx.append(coinbase)
+        tx = self.create_and_sign_transaction(out[14], 1)
+        b44.vtx.append(tx)
         b44.hashMerkleRoot = b44.calc_merkle_root()
         b44.solve()
         self.tip = b44
@@ -678,7 +679,7 @@ class FullBlockTest(BitcoinTestFramework):
         # Test block timestamps
         #  -> b31 (8) -> b33 (9) -> b35 (10) -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15)
         #                                                                                   \-> b54 (15)
-        #
+        #                                                                        -> b44 (14)\-> b48 ()
         self.move_tip(43)
         b53 = self.next_block(53, spend=out[14])
         self.send_blocks([b53], False)
@@ -697,6 +698,21 @@ class FullBlockTest(BitcoinTestFramework):
         self.update_block(55, [])
         self.send_blocks([b55], True)
         self.save_spendable_output()
+
+        # The block which was previously rejected because of being "too far(3 hours)" must be accepted 2 hours later.
+        # The new block is only 1 hour into future now and we must reorg onto to the new longer chain.
+        # The new bestblock b48p is invalidated manually.
+        #  -> b31 (8) -> b33 (9) -> b35 (10) -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15)
+        #                                                                                   \-> b54 (15)
+        #                                                                        -> b44 (14)\-> b48 () -> b48p ()
+        self.log.info("Accept a previously rejected future block at a later time")
+        node.setmocktime(int(time.time()) + 2*60*60)
+        self.move_tip(48)
+        self.block_heights[b48.sha256] = self.block_heights[b44.sha256] + 1 # b48 is a parent of b44
+        b48p = self.next_block("48p")
+        self.send_blocks([b48, b48p], success=True) # Reorg to the longer chain
+        node.invalidateblock(b48p.hash) # mark b48p as invalid
+        node.setmocktime(0)
 
         # Test Merkle tree malleability
         #
@@ -1308,7 +1324,7 @@ class FullBlockTest(BitcoinTestFramework):
         return create_tx_with_script(spend_tx, n, amount=value, script_pub_key=script)
 
     # sign a transaction, using the key we know about
-    # this signs input 0 in tx, which is assumed to be spending output n in spend_tx
+    # this signs input 0 in tx, which is assumed to be spending output 0 in spend_tx
     def sign_tx(self, tx, spend_tx):
         scriptPubKey = bytearray(spend_tx.vout[0].scriptPubKey)
         if (scriptPubKey[0] == OP_TRUE):  # an anyone-can-spend

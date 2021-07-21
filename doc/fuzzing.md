@@ -16,7 +16,7 @@ $ FUZZ=process_message src/test/fuzz/fuzz
 # abort fuzzing using ctrl-c
 ```
 
-## Fuzzing harnesses, fuzzing output and fuzzing corpora
+## Fuzzing harnesses and output
 
 [`process_message`](https://github.com/bitcoin/bitcoin/blob/master/src/test/fuzz/process_message.cpp) is a fuzzing harness for the [`ProcessMessage(...)` function (`net_processing`)](https://github.com/bitcoin/bitcoin/blob/master/src/net_processing.cpp). The available fuzzing harnesses are found in [`src/test/fuzz/`](https://github.com/bitcoin/bitcoin/tree/master/src/test/fuzz).
 
@@ -64,6 +64,8 @@ block^@M-^?M-^?M-^?M-^?M-^?nM-^?M-^?
 
 In this case the fuzzer managed to create a `block` message which when passed to `ProcessMessage(...)` increased coverage.
 
+## Fuzzing corpora
+
 The project's collection of seed corpora is found in the [`bitcoin-core/qa-assets`](https://github.com/bitcoin-core/qa-assets) repo.
 
 To fuzz `process_message` using the [`bitcoin-core/qa-assets`](https://github.com/bitcoin-core/qa-assets) seed corpus:
@@ -80,6 +82,20 @@ INFO: seed corpus: files: 991 min: 1b max: 1858b total: 288291b rss: 150Mb
 #993    INITED cov: 7063 ft: 8236 corp: 25/3821b exec/s: 0 rss: 181Mb
 …
 ```
+
+## Reproduce a fuzzer crash reported by the CI
+
+- `cd` into the `qa-assets` directory and update it with `git pull qa-assets`
+- locate the crash case described in the CI output, e.g. `Test unit written to
+  ./crash-1bc91feec9fc00b107d97dc225a9f2cdaa078eb6`
+- make sure to compile with all sanitizers, if they are needed (fuzzing runs
+  more slowly with sanitizers enabled, but a crash should be reproducible very
+  quickly from a crash case)
+- run the fuzzer with the case number appended to the seed corpus path:
+  `FUZZ=process_message src/test/fuzz/fuzz
+  qa-assets/fuzz_seed_corpus/process_message/1bc91feec9fc00b107d97dc225a9f2cdaa078eb6`
+
+## Submit improved coverage
 
 If you find coverage increasing inputs when fuzzing you are highly encouraged to submit them for inclusion in the [`bitcoin-core/qa-assets`](https://github.com/bitcoin-core/qa-assets) repo.
 
@@ -108,33 +124,32 @@ Full configure that was tested on macOS Catalina with `brew` installed `llvm`:
 
 Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for more information. This [libFuzzer tutorial](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md) might also be of interest.
 
-# Fuzzing Bitcoin Core using american fuzzy lop (`afl-fuzz`)
+# Fuzzing Bitcoin Core using afl++
 
 ## Quickstart guide
 
-To quickly get started fuzzing Bitcoin Core using [`afl-fuzz`](https://github.com/google/afl):
+To quickly get started fuzzing Bitcoin Core using [afl++](https://github.com/AFLplusplus/AFLplusplus):
 
 ```sh
 $ git clone https://github.com/bitcoin/bitcoin
 $ cd bitcoin/
-$ git clone https://github.com/google/afl
-$ make -C afl/
-$ make -C afl/llvm_mode/
+$ git clone https://github.com/AFLplusplus/AFLplusplus
+$ make -C AFLplusplus/ source-only
 $ ./autogen.sh
-# It is possible to compile with afl-gcc and afl-g++ instead of afl-clang. However, running afl-fuzz
-# may require more memory via the -m flag.
-$ CC=$(pwd)/afl/afl-clang-fast CXX=$(pwd)/afl/afl-clang-fast++ ./configure --enable-fuzz
+# If afl-clang-lto is not available, see
+# https://github.com/AFLplusplus/AFLplusplus#a-selecting-the-best-afl-compiler-for-instrumenting-the-target
+$ CC=$(pwd)/AFLplusplus/afl-clang-lto CXX=$(pwd)/AFLplusplus/afl-clang-lto++ ./configure --enable-fuzz
 $ make
 # For macOS you may need to ignore x86 compilation checks when running "make". If so,
 # try compiling using: AFL_NO_X86=1 make
 $ mkdir -p inputs/ outputs/
 $ echo A > inputs/thin-air-input
-$ FUZZ=bech32 afl/afl-fuzz -i inputs/ -o outputs/ -- src/test/fuzz/fuzz
+$ FUZZ=bech32 AFLplusplus/afl-fuzz -i inputs/ -o outputs/ -- src/test/fuzz/fuzz
 # You may have to change a few kernel parameters to test optimally - afl-fuzz
 # will print an error and suggestion if so.
 ```
 
-Read the [`afl-fuzz` documentation](https://github.com/google/afl) for more information.
+Read the [afl++ documentation](https://github.com/AFLplusplus/AFLplusplus) for more information.
 
 # Fuzzing Bitcoin Core using Honggfuzz
 
@@ -157,3 +172,91 @@ $ FUZZ=process_message honggfuzz/honggfuzz -i inputs/ -- src/test/fuzz/fuzz
 ```
 
 Read the [Honggfuzz documentation](https://github.com/google/honggfuzz/blob/master/docs/USAGE.md) for more information.
+
+## Fuzzing the Bitcoin Core P2P layer using Honggfuzz NetDriver
+
+Honggfuzz NetDriver allows for very easy fuzzing of TCP servers such as Bitcoin
+Core without having to write any custom fuzzing harness. The `bitcoind` server
+process is largely fuzzed without modification.
+
+This makes the fuzzing highly realistic: a bug reachable by the fuzzer is likely
+also remotely triggerable by an untrusted peer.
+
+To quickly get started fuzzing the P2P layer using Honggfuzz NetDriver:
+
+```sh
+$ mkdir bitcoin-honggfuzz-p2p/
+$ cd bitcoin-honggfuzz-p2p/
+$ git clone https://github.com/bitcoin/bitcoin
+$ cd bitcoin/
+$ ./autogen.sh
+$ git clone https://github.com/google/honggfuzz
+$ cd honggfuzz/
+$ make
+$ cd ..
+$ CC=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang \
+      CXX=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang++ \
+      ./configure --disable-wallet --with-gui=no \
+                  --with-sanitizers=address,undefined
+$ git apply << "EOF"
+diff --git a/src/bitcoind.cpp b/src/bitcoind.cpp
+index 455a82e39..2faa3f80f 100644
+--- a/src/bitcoind.cpp
++++ b/src/bitcoind.cpp
+@@ -158,7 +158,11 @@ static bool AppInit(int argc, char* argv[])
+     return fRet;
+ }
+
++#ifdef HFND_FUZZING_ENTRY_FUNCTION_CXX
++HFND_FUZZING_ENTRY_FUNCTION_CXX(int argc, char* argv[])
++#else
+ int main(int argc, char* argv[])
++#endif
+ {
+ #ifdef WIN32
+     util::WinCmdLineArgs winArgs;
+diff --git a/src/net.cpp b/src/net.cpp
+index cf987b699..636a4176a 100644
+--- a/src/net.cpp
++++ b/src/net.cpp
+@@ -709,7 +709,7 @@ int V1TransportDeserializer::readHeader(const char *pch, unsigned int nBytes)
+     }
+
+     // Check start string, network magic
+-    if (memcmp(hdr.pchMessageStart, m_chain_params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) {
++    if (false && memcmp(hdr.pchMessageStart, m_chain_params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) { // skip network magic checking
+         LogPrint(BCLog::NET, "HEADER ERROR - MESSAGESTART (%s, %u bytes), received %s, peer=%d\n", hdr.GetCommand(), hdr.nMessageSize, HexStr(hdr.pchMessageStart), m_node_id);
+         return -1;
+     }
+@@ -768,7 +768,7 @@ Optional<CNetMessage> V1TransportDeserializer::GetMessage(const std::chrono::mic
+     RandAddEvent(ReadLE32(hash.begin()));
+
+     // Check checksum and header command string
+-    if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
++    if (false && memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) { // skip checksum checking
+         LogPrint(BCLog::NET, "CHECKSUM ERROR (%s, %u bytes), expected %s was %s, peer=%d\n",
+                  SanitizeString(msg->m_command), msg->m_message_size,
+                  HexStr(Span<uint8_t>(hash.begin(), hash.begin() + CMessageHeader::CHECKSUM_SIZE)),
+EOF
+$ make -C src/ bitcoind
+$ mkdir -p inputs/
+$ honggfuzz/honggfuzz --exit_upon_crash --quiet --timeout 4 -n 1 -Q \
+      -E HFND_TCP_PORT=18444 -f inputs/ -- \
+          src/bitcoind -regtest -discover=0 -dns=0 -dnsseed=0 -listenonion=0 \
+                       -nodebuglogfile -bind=127.0.0.1:18444 -logthreadnames \
+                       -debug
+```
+
+# OSS-Fuzz
+
+Bitcoin Core participates in Google's [OSS-Fuzz](https://github.com/google/oss-fuzz/tree/master/projects/bitcoin-core)
+program, which includes a dashboard of [publicly disclosed vulnerabilities](https://bugs.chromium.org/p/oss-fuzz/issues/list?q=bitcoin-core).
+Generally, we try to disclose vulnerabilities as soon as possible after they
+are fixed to give users the knowledge they need to be protected. However,
+because Bitcoin is a live P2P network, and not just standalone local software,
+we might not fully disclose every issue within Google's standard
+[90-day disclosure window](https://google.github.io/oss-fuzz/getting-started/bug-disclosure-guidelines/)
+if a partial or delayed disclosure is important to protect users or the
+function of the network.
+
+OSS-Fuzz also produces [a fuzzing coverage report](https://oss-fuzz.com/coverage-report/job/libfuzzer_asan_bitcoin-core/latest).

@@ -5,13 +5,10 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <streams.h>
-#include <util/memory.h>
+#include <test/util/script.h>
 #include <version.h>
 
 #include <test/fuzz/fuzz.h>
-
-/** Flags that are not forbidden by an assert */
-static bool IsValidFlagCombination(unsigned flags);
 
 void initialize_script_flags()
 {
@@ -44,6 +41,10 @@ FUZZ_TARGET_INIT(script_flags, initialize_script_flags)
         for (unsigned i = 0; i < tx.vin.size(); ++i) {
             CTxOut prevout;
             ds >> prevout;
+            if (!MoneyRange(prevout.nValue)) {
+                // prevouts should be consensus-valid
+                prevout.nValue = 1;
+            }
             spent_outputs.push_back(prevout);
         }
         PrecomputedTransactionData txdata;
@@ -51,7 +52,7 @@ FUZZ_TARGET_INIT(script_flags, initialize_script_flags)
 
         for (unsigned i = 0; i < tx.vin.size(); ++i) {
             const CTxOut& prevout = txdata.m_spent_outputs.at(i);
-            const TransactionSignatureChecker checker{&tx, i, prevout.nValue, txdata};
+            const TransactionSignatureChecker checker{&tx, i, prevout.nValue, txdata, MissingDataBehavior::ASSERT_FAIL};
 
             ScriptError serror;
             const bool ret = VerifyScript(tx.vin.at(i).scriptSig, prevout.scriptPubKey, &tx.vin.at(i).scriptWitness, verify_flags, checker, &serror);
@@ -74,11 +75,4 @@ FUZZ_TARGET_INIT(script_flags, initialize_script_flags)
     } catch (const std::ios_base::failure&) {
         return;
     }
-}
-
-static bool IsValidFlagCombination(unsigned flags)
-{
-    if (flags & SCRIPT_VERIFY_CLEANSTACK && ~flags & (SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS)) return false;
-    if (flags & SCRIPT_VERIFY_WITNESS && ~flags & SCRIPT_VERIFY_P2SH) return false;
-    return true;
 }

@@ -17,7 +17,6 @@ namespace {
 using limb_t = Num3072::limb_t;
 using double_limb_t = Num3072::double_limb_t;
 constexpr int LIMB_SIZE = Num3072::LIMB_SIZE;
-constexpr int LIMBS = Num3072::LIMBS;
 /** 2^3072 - 1103717, the largest 3072-bit safe prime number, is used as the modulus. */
 constexpr limb_t MAX_PRIME_DIFF = 1103717;
 
@@ -123,7 +122,7 @@ inline void square_n_mul(Num3072& in_out, const int sq, const Num3072& mul)
 
 } // namespace
 
-/** Indicates wether d is larger than the modulus. */
+/** Indicates whether d is larger than the modulus. */
 bool Num3072::IsOverflow() const
 {
     if (this->limbs[0] <= std::numeric_limits<limb_t>::max() - MAX_PRIME_DIFF) return false;
@@ -276,18 +275,33 @@ void Num3072::Divide(const Num3072& a)
     if (this->IsOverflow()) this->FullReduce();
 }
 
-Num3072 MuHash3072::ToNum3072(Span<const unsigned char> in) {
-    Num3072 out{};
-    uint256 hashed_in = (CHashWriter(SER_DISK, 0) << in).GetSHA256();
-    unsigned char tmp[BYTE_SIZE];
-    ChaCha20(hashed_in.data(), hashed_in.size()).Keystream(tmp, BYTE_SIZE);
+Num3072::Num3072(const unsigned char (&data)[BYTE_SIZE]) {
     for (int i = 0; i < LIMBS; ++i) {
         if (sizeof(limb_t) == 4) {
-            out.limbs[i] = ReadLE32(tmp + 4 * i);
+            this->limbs[i] = ReadLE32(data + 4 * i);
         } else if (sizeof(limb_t) == 8) {
-            out.limbs[i] = ReadLE64(tmp + 8 * i);
+            this->limbs[i] = ReadLE64(data + 8 * i);
         }
     }
+}
+
+void Num3072::ToBytes(unsigned char (&out)[BYTE_SIZE]) {
+    for (int i = 0; i < LIMBS; ++i) {
+        if (sizeof(limb_t) == 4) {
+            WriteLE32(out + i * 4, this->limbs[i]);
+        } else if (sizeof(limb_t) == 8) {
+            WriteLE64(out + i * 8, this->limbs[i]);
+        }
+    }
+}
+
+Num3072 MuHash3072::ToNum3072(Span<const unsigned char> in) {
+    unsigned char tmp[Num3072::BYTE_SIZE];
+
+    uint256 hashed_in = (CHashWriter(SER_DISK, 0) << in).GetSHA256();
+    ChaCha20(hashed_in.data(), hashed_in.size()).Keystream(tmp, Num3072::BYTE_SIZE);
+    Num3072 out{tmp};
+
     return out;
 }
 
@@ -301,14 +315,8 @@ void MuHash3072::Finalize(uint256& out) noexcept
     m_numerator.Divide(m_denominator);
     m_denominator.SetToOne();  // Needed to keep the MuHash object valid
 
-    unsigned char data[384];
-    for (int i = 0; i < LIMBS; ++i) {
-        if (sizeof(limb_t) == 4) {
-            WriteLE32(data + i * 4, m_numerator.limbs[i]);
-        } else if (sizeof(limb_t) == 8) {
-            WriteLE64(data + i * 8, m_numerator.limbs[i]);
-        }
-    }
+    unsigned char data[Num3072::BYTE_SIZE];
+    m_numerator.ToBytes(data);
 
     out = (CHashWriter(SER_DISK, 0) << data).GetSHA256();
 }
@@ -333,6 +341,6 @@ MuHash3072& MuHash3072::Insert(Span<const unsigned char> in) noexcept {
 }
 
 MuHash3072& MuHash3072::Remove(Span<const unsigned char> in) noexcept {
-    m_numerator.Divide(ToNum3072(in));
+    m_denominator.Multiply(ToNum3072(in));
     return *this;
 }

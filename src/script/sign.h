@@ -11,13 +11,13 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/keyorigin.h>
+#include <script/standard.h>
 #include <span.h>
 #include <streams.h>
 
 class CKey;
 class CKeyID;
 class CScript;
-class CScriptID;
 class CTransaction;
 class SigningProvider;
 
@@ -31,6 +31,7 @@ public:
 
     /** Create a singular (non-script) signature. */
     virtual bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const =0;
+    virtual bool CreateSchnorrSig(const SigningProvider& provider, std::vector<unsigned char>& sig, const XOnlyPubKey& pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion) const =0;
 };
 
 /** A signature creator for transactions. */
@@ -40,11 +41,14 @@ class MutableTransactionSignatureCreator : public BaseSignatureCreator {
     int nHashType;
     CAmount amount;
     const MutableTransactionSignatureChecker checker;
+    const PrecomputedTransactionData* m_txdata;
 
 public:
     MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn = SIGHASH_ALL);
+    MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData* txdata, int nHashTypeIn = SIGHASH_ALL);
     const BaseSignatureChecker& Checker() const override { return checker; }
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
+    bool CreateSchnorrSig(const SigningProvider& provider, std::vector<unsigned char>& sig, const XOnlyPubKey& pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion) const override;
 };
 
 /** A signature creator that just produces 71-byte empty signatures. */
@@ -64,8 +68,11 @@ struct SignatureData {
     CScript redeem_script; ///< The redeemScript (if any) for the input
     CScript witness_script; ///< The witnessScript (if any) for the input. witnessScripts are used in P2WSH outputs.
     CScriptWitness scriptWitness; ///< The scriptWitness of an input. Contains complete signatures or the traditional partial signatures format. scriptWitness is part of a transaction input per BIP 144.
+    TaprootSpendData tr_spenddata; ///< Taproot spending data.
     std::map<CKeyID, SigPair> signatures; ///< BIP 174 style partial signatures for the input. May contain all signatures necessary for producing a final scriptSig or scriptWitness.
     std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>> misc_pubkeys;
+    std::vector<unsigned char> taproot_key_path_sig; /// Schnorr signature for key path spending
+    std::map<std::pair<XOnlyPubKey, uint256>, std::vector<unsigned char>> taproot_script_sigs; ///< (Partial) schnorr signatures, indexed by XOnlyPubKey and leaf_hash.
     std::vector<CKeyID> missing_pubkeys; ///< KeyIDs of pubkeys which could not be found
     std::vector<CKeyID> missing_sigs; ///< KeyIDs of pubkeys for signatures which could not be found
     uint160 missing_redeem_script; ///< ScriptID of the missing redeemScript (if any)

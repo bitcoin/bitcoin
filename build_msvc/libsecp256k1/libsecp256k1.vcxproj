@@ -10,11 +10,12 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\secp256k1\src\secp256k1.c" />
   </ItemGroup>
-    <ItemDefinitionGroup>
+  <ItemDefinitionGroup>
     <ClCompile>
       <PreprocessorDefinitions>ENABLE_MODULE_ECDH;ENABLE_MODULE_RECOVERY;ENABLE_MODULE_EXTRAKEYS;ENABLE_MODULE_SCHNORRSIG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-       <AdditionalIncludeDirectories>..\..\src\secp256k1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-     </ClCompile>
+      <AdditionalIncludeDirectories>..\..\src\secp256k1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4146;4244;4267;4334</DisableSpecificWarnings>
+    </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

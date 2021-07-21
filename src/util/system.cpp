@@ -3,14 +3,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <sync.h>
 #include <util/system.h>
 
-#ifdef HAVE_BOOST_PROCESS
+#ifdef ENABLE_EXTERNAL_SIGNER
+#if defined(WIN32) && !defined(__kernel_entry)
+// A workaround for boost 1.71 incompatibility with mingw-w64 compiler.
+// For details see https://github.com/bitcoin/bitcoin/pull/22348.
+#define __kernel_entry
+#endif
 #include <boost/process.hpp>
-#endif // HAVE_BOOST_PROCESS
+#endif // ENABLE_EXTERNAL_SIGNER
 
 #include <chainparamsbase.h>
+#include <sync.h>
+#include <util/check.h>
+#include <util/getuniquepath.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
@@ -98,7 +105,7 @@ bool LockDirectory(const fs::path& directory, const std::string lockfile_name, b
     // Create empty lock file if it doesn't exist.
     FILE* file = fsbridge::fopen(pathLockFile, "a");
     if (file) fclose(file);
-    auto lock = MakeUnique<fsbridge::FileLock>(pathLockFile);
+    auto lock = std::make_unique<fsbridge::FileLock>(pathLockFile);
     if (!lock->TryLock()) {
         return error("Error while attempting to lock directory %s: %s", directory.string(), lock->GetReason());
     }
@@ -123,7 +130,7 @@ void ReleaseDirectoryLocks()
 
 bool DirIsWritable(const fs::path& directory)
 {
-    fs::path tmpFile = directory / fs::unique_path();
+    fs::path tmpFile = GetUniquePath(directory);
 
     FILE* file = fsbridge::fopen(tmpFile, "a");
     if (!file) return false;
@@ -233,6 +240,19 @@ static bool CheckValid(const std::string& key, const util::SettingsValue& val, u
     return true;
 }
 
+namespace {
+fs::path StripRedundantLastElementsOfPath(const fs::path& path)
+{
+    auto result = path;
+    while (result.filename().string() == ".") {
+        result = result.parent_path();
+    }
+
+    assert(fs::equivalent(result, path));
+    return result;
+}
+} // namespace
+
 // Define default constructor and destructor that are not inline, so code instantiating this class doesn't need to
 // #include class definitions for all members.
 // For example, m_settings has an internal dependency on univalue.
@@ -310,8 +330,22 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
             key[0] = '-';
 #endif
 
-        if (key[0] != '-')
+        if (key[0] != '-') {
+            if (!m_accept_any_command && m_command.empty()) {
+                // The first non-dash arg is a registered command
+                std::optional<unsigned int> flags = GetArgFlags(key);
+                if (!flags || !(*flags & ArgsManager::COMMAND)) {
+                    error = strprintf("Invalid command '%s'", argv[i]);
+                    return false;
+                }
+            }
+            m_command.push_back(key);
+            while (++i < argc) {
+                // The remaining args are command args
+                m_command.push_back(argv[i]);
+            }
             break;
+        }
 
         // Transform --foo to -foo
         if (key.length() > 1 && key[1] == '-')
@@ -321,7 +355,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         key.erase(0, 1);
         std::string section;
         util::SettingsValue value = InterpretOption(section, key, val);
-        Optional<unsigned int> flags = GetArgFlags('-' + key);
+        std::optional<unsigned int> flags = GetArgFlags('-' + key);
 
         // Unknown command line options and command line options with dot
         // characters (which are returned from InterpretOption with nonempty
@@ -336,18 +370,19 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         m_settings.command_line_options[key].push_back(value);
     }
 
-    // we do not allow -includeconf from command line
-    bool success = true;
+    // we do not allow -includeconf from command line, only -noincludeconf
     if (auto* includes = util::FindKey(m_settings.command_line_options, "includeconf")) {
-        for (const auto& include : util::SettingsSpan(*includes)) {
-            error += "-includeconf cannot be used from commandline; -includeconf=" + include.get_str() + "\n";
-            success = false;
+        const util::SettingsSpan values{*includes};
+        // Range may be empty if -noincludeconf was passed
+        if (!values.empty()) {
+            error = "-includeconf cannot be used from commandline; -includeconf=" + values.begin()->write();
+            return false; // pick first value as example
         }
     }
-    return success;
+    return true;
 }
 
-Optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
+std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
 {
     LOCK(cs_args);
     for (const auto& arg_map : m_available_args) {
@@ -356,7 +391,93 @@ Optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
             return search->second.m_flags;
         }
     }
-    return nullopt;
+    return std::nullopt;
+}
+
+const fs::path& ArgsManager::GetBlocksDirPath() const
+{
+    LOCK(cs_args);
+    fs::path& path = m_cached_blocks_path;
+
+    // Cache the path to avoid calling fs::create_directories on every call of
+    // this function
+    if (!path.empty()) return path;
+
+    if (IsArgSet("-blocksdir")) {
+        path = fs::system_complete(GetArg("-blocksdir", ""));
+        if (!fs::is_directory(path)) {
+            path = "";
+            return path;
+        }
+    } else {
+        path = GetDataDirBase();
+    }
+
+    path /= BaseParams().DataDir();
+    path /= "blocks";
+    fs::create_directories(path);
+    path = StripRedundantLastElementsOfPath(path);
+    return path;
+}
+
+const fs::path& ArgsManager::GetDataDir(bool net_specific) const
+{
+    LOCK(cs_args);
+    fs::path& path = net_specific ? m_cached_network_datadir_path : m_cached_datadir_path;
+
+    // Cache the path to avoid calling fs::create_directories on every call of
+    // this function
+    if (!path.empty()) return path;
+
+    std::string datadir = GetArg("-datadir", "");
+    if (!datadir.empty()) {
+        path = fs::system_complete(datadir);
+        if (!fs::is_directory(path)) {
+            path = "";
+            return path;
+        }
+    } else {
+        path = GetDefaultDataDir();
+    }
+    if (net_specific)
+        path /= BaseParams().DataDir();
+
+    if (fs::create_directories(path)) {
+        // This is the first run, create wallets subdirectory too
+        fs::create_directories(path / "wallets");
+    }
+
+    path = StripRedundantLastElementsOfPath(path);
+    return path;
+}
+
+void ArgsManager::ClearPathCache()
+{
+    LOCK(cs_args);
+
+    m_cached_datadir_path = fs::path();
+    m_cached_network_datadir_path = fs::path();
+    m_cached_blocks_path = fs::path();
+}
+
+std::optional<const ArgsManager::Command> ArgsManager::GetCommand() const
+{
+    Command ret;
+    LOCK(cs_args);
+    auto it = m_command.begin();
+    if (it == m_command.end()) {
+        // No command was passed
+        return std::nullopt;
+    }
+    if (!m_accept_any_command) {
+        // The registered command
+        ret.command = *(it++);
+    }
+    while (it != m_command.end()) {
+        // The unregistered command and args (if any)
+        ret.args.push_back(*(it++));
+    }
+    return ret;
 }
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
@@ -398,7 +519,7 @@ bool ArgsManager::GetSettingsPath(fs::path* filepath, bool temp) const
     }
     if (filepath) {
         std::string settings = GetArg("-settings", BITCOIN_SETTINGS_FILENAME);
-        *filepath = fs::absolute(temp ? settings + ".tmp" : settings, GetDataDir(/* net_specific= */ true));
+        *filepath = fsbridge::AbsPathJoin(GetDataDirNet(), temp ? settings + ".tmp" : settings);
     }
     return true;
 }
@@ -504,8 +625,22 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     m_settings.forced_settings[SettingName(strArg)] = strValue;
 }
 
+void ArgsManager::AddCommand(const std::string& cmd, const std::string& help)
+{
+    Assert(cmd.find('=') == std::string::npos);
+    Assert(cmd.at(0) != '-');
+
+    LOCK(cs_args);
+    m_accept_any_command = false; // latch to false
+    std::map<std::string, Arg>& arg_map = m_available_args[OptionsCategory::COMMANDS];
+    auto ret = arg_map.emplace(cmd, Arg{"", help, ArgsManager::COMMAND});
+    Assert(ret.second); // Fail on duplicate commands
+}
+
 void ArgsManager::AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat)
 {
+    Assert((flags & ArgsManager::COMMAND) == 0); // use AddCommand
+
     // Split arg name from its help param
     size_t eq_index = name.find('=');
     if (eq_index == std::string::npos) {
@@ -673,94 +808,10 @@ fs::path GetDefaultDataDir()
 #endif
 }
 
-namespace {
-fs::path StripRedundantLastElementsOfPath(const fs::path& path)
-{
-    auto result = path;
-    while (result.filename().string() == ".") {
-        result = result.parent_path();
-    }
-
-    assert(fs::equivalent(result, path));
-    return result;
-}
-} // namespace
-
-static fs::path g_blocks_path_cache_net_specific;
-static fs::path pathCached;
-static fs::path pathCachedNetSpecific;
-static RecursiveMutex csPathCached;
-
-const fs::path &GetBlocksDir()
-{
-    LOCK(csPathCached);
-    fs::path &path = g_blocks_path_cache_net_specific;
-
-    // Cache the path to avoid calling fs::create_directories on every call of
-    // this function
-    if (!path.empty()) return path;
-
-    if (gArgs.IsArgSet("-blocksdir")) {
-        path = fs::system_complete(gArgs.GetArg("-blocksdir", ""));
-        if (!fs::is_directory(path)) {
-            path = "";
-            return path;
-        }
-    } else {
-        path = GetDataDir(false);
-    }
-
-    path /= BaseParams().DataDir();
-    path /= "blocks";
-    fs::create_directories(path);
-    path = StripRedundantLastElementsOfPath(path);
-    return path;
-}
-
-const fs::path &GetDataDir(bool fNetSpecific)
-{
-    LOCK(csPathCached);
-    fs::path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;
-
-    // Cache the path to avoid calling fs::create_directories on every call of
-    // this function
-    if (!path.empty()) return path;
-
-    std::string datadir = gArgs.GetArg("-datadir", "");
-    if (!datadir.empty()) {
-        path = fs::system_complete(datadir);
-        if (!fs::is_directory(path)) {
-            path = "";
-            return path;
-        }
-    } else {
-        path = GetDefaultDataDir();
-    }
-    if (fNetSpecific)
-        path /= BaseParams().DataDir();
-
-    if (fs::create_directories(path)) {
-        // This is the first run, create wallets subdirectory too
-        fs::create_directories(path / "wallets");
-    }
-
-    path = StripRedundantLastElementsOfPath(path);
-    return path;
-}
-
 bool CheckDataDirOption()
 {
     std::string datadir = gArgs.GetArg("-datadir", "");
     return datadir.empty() || fs::is_directory(fs::system_complete(datadir));
-}
-
-void ClearDatadirCache()
-{
-    LOCK(csPathCached);
-
-    pathCached = fs::path();
-    pathCachedNetSpecific = fs::path();
-    g_blocks_path_cache_net_specific = fs::path();
 }
 
 fs::path GetConfigFile(const std::string& confPath)
@@ -824,7 +875,7 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
         std::string section;
         std::string key = option.first;
         util::SettingsValue value = InterpretOption(section, key, option.second);
-        Optional<unsigned int> flags = GetArgFlags('-' + key);
+        std::optional<unsigned int> flags = GetArgFlags('-' + key);
         if (flags) {
             if (!CheckValid(key, value, *flags, error)) {
                 return false;
@@ -921,7 +972,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     }
 
     // If datadir is changed in .conf file:
-    ClearDatadirCache();
+    gArgs.ClearPathCache();
     if (!CheckDataDirOption()) {
         error = strprintf("specified data directory \"%s\" does not exist.", GetArg("-datadir", ""));
         return false;
@@ -984,7 +1035,7 @@ void ArgsManager::logArgsPrefix(
     std::string section_str = section.empty() ? "" : "[" + section + "] ";
     for (const auto& arg : args) {
         for (const auto& value : arg.second) {
-            Optional<unsigned int> flags = GetArgFlags('-' + arg.first);
+            std::optional<unsigned int> flags = GetArgFlags('-' + arg.first);
             if (flags) {
                 std::string value_str = (*flags & SENSITIVE) ? "****" : value.write();
                 LogPrintf("%s %s%s=%s\n", prefix, section_str, arg.first, value_str);
@@ -1197,9 +1248,9 @@ void runCommand(const std::string& strCommand)
 }
 #endif
 
-#ifdef HAVE_BOOST_PROCESS
 UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in)
 {
+#ifdef ENABLE_EXTERNAL_SIGNER
     namespace bp = boost::process;
 
     UniValue result_json;
@@ -1231,8 +1282,10 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
     if (!result_json.read(result)) throw std::runtime_error("Unable to parse JSON: " + result);
 
     return result_json;
+#else
+    throw std::runtime_error("Compiled without external signing support (required for external signing).");
+#endif // ENABLE_EXTERNAL_SIGNER
 }
-#endif // HAVE_BOOST_PROCESS
 
 void SetupEnvironment()
 {
@@ -1311,7 +1364,7 @@ fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
     if (path.is_absolute()) {
         return path;
     }
-    return fs::absolute(path, GetDataDir(net_specific));
+    return fsbridge::AbsPathJoin(net_specific ? gArgs.GetDataDirNet() : gArgs.GetDataDirBase(), path);
 }
 
 void ScheduleBatchPriority()

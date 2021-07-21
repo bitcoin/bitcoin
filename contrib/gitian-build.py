@@ -13,15 +13,16 @@ def setup():
     programs = ['ruby', 'git', 'make', 'wget', 'curl']
     if args.kvm:
         programs += ['apt-cacher-ng', 'python-vm-builder', 'qemu-kvm', 'qemu-utils']
-    elif args.docker and not os.path.isfile('/lib/systemd/system/docker.service'):
-        dockers = ['docker.io', 'docker-ce']
-        for i in dockers:
-            return_code = subprocess.call(['sudo', 'apt-get', 'install', '-qq', i])
-            if return_code == 0:
-                break
-        if return_code != 0:
-            print('Cannot find any way to install Docker.', file=sys.stderr)
-            sys.exit(1)
+    elif args.docker:
+        if not os.path.isfile('/lib/systemd/system/docker.service'):
+            dockers = ['docker.io', 'docker-ce']
+            for i in dockers:
+                return_code = subprocess.call(['sudo', 'apt-get', 'install', '-qq', i])
+                if return_code == 0:
+                    break
+            if return_code != 0:
+                print('Cannot find any way to install Docker.', file=sys.stderr)
+                sys.exit(1)
     else:
         programs += ['apt-cacher-ng', 'lxc', 'debootstrap']
     subprocess.check_call(['sudo', 'apt-get', 'install', '-qq'] + programs)
@@ -34,14 +35,14 @@ def setup():
     if not os.path.isdir('bitcoin'):
         subprocess.check_call(['git', 'clone', 'https://github.com/bitcoin/bitcoin.git'])
     os.chdir('gitian-builder')
-    make_image_prog = ['bin/make-base-vm', '--suite', 'bionic', '--arch', 'amd64']
+    make_image_prog = ['bin/make-base-vm', '--suite', 'focal', '--arch', 'amd64']
     if args.docker:
         make_image_prog += ['--docker']
     elif not args.kvm:
-        make_image_prog += ['--lxc']
+        make_image_prog += ['--lxc', '--disksize', '13000']
     subprocess.check_call(make_image_prog)
     os.chdir(workdir)
-    if args.is_bionic and not args.kvm and not args.docker:
+    if args.is_focal and not args.kvm and not args.docker:
         subprocess.check_call(['sudo', 'sed', '-i', 's/lxcbr0/br0/', '/etc/default/lxc-net'])
         print('Reboot is required')
         sys.exit(0)
@@ -175,7 +176,7 @@ def main():
     args = parser.parse_args()
     workdir = os.getcwd()
 
-    args.is_bionic = b'bionic' in subprocess.check_output(['lsb_release', '-cs'])
+    args.is_focal = b'focal' in subprocess.check_output(['lsb_release', '-cs'])
 
     if args.kvm and args.docker:
         raise Exception('Error: cannot have both kvm and docker')
@@ -209,7 +210,7 @@ def main():
     args.macos = 'm' in args.os
 
     # Disable for MacOS if no SDK found
-    if args.macos and not os.path.isfile('gitian-builder/inputs/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz'):
+    if args.macos and not os.path.isfile('gitian-builder/inputs/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz'):
         print('Cannot build for MacOS, SDK does not exist. Will build for other OSes')
         args.macos = False
 

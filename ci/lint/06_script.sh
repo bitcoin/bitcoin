@@ -21,7 +21,6 @@ test/lint/git-subtree-check.sh src/univalue
 test/lint/git-subtree-check.sh src/leveldb
 test/lint/git-subtree-check.sh src/crc32c
 test/lint/check-doc.py
-test/lint/check-rpc-mappings.py .
 test/lint/lint-all.sh
 
 if [ "$CIRRUS_REPO_FULL_NAME" = "bitcoin/bitcoin" ] && [ -n "$CIRRUS_CRON" ]; then

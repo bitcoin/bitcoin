@@ -9,13 +9,6 @@
 #include <cstddef>
 #include <cstdint>
 
-// Prior to GLIBC_2.14, memcpy was aliased to memmove.
-extern "C" void* memmove(void* a, const void* b, size_t c);
-extern "C" void* memcpy(void* a, const void* b, size_t c)
-{
-    return memmove(a, b, c);
-}
-
 #if defined(__i386__) || defined(__arm__)
 
 extern "C" int64_t __udivmoddi4(uint64_t u, uint64_t v, uint64_t* rp);
@@ -54,6 +47,12 @@ __asm(".symver log2f_old,log2f@GLIBC_2.2.5");
 __asm(".symver log2f_old,log2f@GLIBC_2.4");
 #elif defined(__aarch64__)
 __asm(".symver log2f_old,log2f@GLIBC_2.17");
+#elif defined(__powerpc64__)
+#  ifdef WORDS_BIGENDIAN
+__asm(".symver log2f_old,log2f@GLIBC_2.3");
+#  else
+__asm(".symver log2f_old,log2f@GLIBC_2.17");
+#  endif
 #elif defined(__riscv)
 __asm(".symver log2f_old,log2f@GLIBC_2.27");
 #endif

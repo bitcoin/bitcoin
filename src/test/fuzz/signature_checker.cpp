@@ -6,7 +6,8 @@
 #include <script/interpreter.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <util/memory.h>
+#include <test/fuzz/util.h>
+#include <test/util/script.h>
 
 #include <cstdint>
 #include <limits>
@@ -15,7 +16,7 @@
 
 void initialize_signature_checker()
 {
-    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+    static const auto verify_handle = std::make_unique<ECCVerifyHandle>();
 }
 
 namespace {
@@ -57,17 +58,12 @@ FUZZ_TARGET_INIT(signature_checker, initialize_signature_checker)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const unsigned int flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
     const SigVersion sig_version = fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0});
-    const std::string script_string_1 = fuzzed_data_provider.ConsumeRandomLengthString(65536);
-    const std::vector<uint8_t> script_bytes_1{script_string_1.begin(), script_string_1.end()};
-    const std::string script_string_2 = fuzzed_data_provider.ConsumeRandomLengthString(65536);
-    const std::vector<uint8_t> script_bytes_2{script_string_2.begin(), script_string_2.end()};
+    const auto script_1 = ConsumeScript(fuzzed_data_provider, 65536);
+    const auto script_2 = ConsumeScript(fuzzed_data_provider, 65536);
     std::vector<std::vector<unsigned char>> stack;
-    (void)EvalScript(stack, {script_bytes_1.begin(), script_bytes_1.end()}, flags, FuzzedSignatureChecker(fuzzed_data_provider), sig_version, nullptr);
-    if ((flags & SCRIPT_VERIFY_CLEANSTACK) != 0 && ((flags & SCRIPT_VERIFY_P2SH) == 0 || (flags & SCRIPT_VERIFY_WITNESS) == 0)) {
+    (void)EvalScript(stack, script_1, flags, FuzzedSignatureChecker(fuzzed_data_provider), sig_version, nullptr);
+    if (!IsValidFlagCombination(flags)) {
         return;
     }
-    if ((flags & SCRIPT_VERIFY_WITNESS) != 0 && (flags & SCRIPT_VERIFY_P2SH) == 0) {
-        return;
-    }
-    (void)VerifyScript({script_bytes_1.begin(), script_bytes_1.end()}, {script_bytes_2.begin(), script_bytes_2.end()}, nullptr, flags, FuzzedSignatureChecker(fuzzed_data_provider), nullptr);
+    (void)VerifyScript(script_1, script_2, nullptr, flags, FuzzedSignatureChecker(fuzzed_data_provider), nullptr);
 }

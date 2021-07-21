@@ -19,7 +19,7 @@
 #endif
 
 ReceiveRequestDialog::ReceiveRequestDialog(QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::ReceiveRequestDialog),
     model(nullptr)
 {
@@ -89,6 +89,12 @@ void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info)
         ui->wallet_tag->hide();
         ui->wallet_content->hide();
     }
+
+    ui->btnVerify->setVisible(model->wallet().hasExternalSigner());
+
+    connect(ui->btnVerify, &QPushButton::clicked, [this] {
+        model->displayAddress(info.address.toStdString());
+    });
 }
 
 void ReceiveRequestDialog::updateDisplayUnit()

@@ -9,6 +9,7 @@
 #include <functional>
 #include <list>
 #include <map>
+#include <thread>
 
 #include <sync.h>
 
@@ -34,6 +35,8 @@ class CScheduler
 public:
     CScheduler();
     ~CScheduler();
+
+    std::thread m_service_thread;
 
     typedef std::function<void()> Function;
 
@@ -62,8 +65,7 @@ public:
     void MockForward(std::chrono::seconds delta_seconds);
 
     /**
-     * Services the queue 'forever'. Should be run in a thread,
-     * and interrupted using boost::interrupt_thread
+     * Services the queue 'forever'. Should be run in a thread.
      */
     void serviceQueue();
 
@@ -72,12 +74,14 @@ public:
     {
         WITH_LOCK(newTaskMutex, stopRequested = true);
         newTaskScheduled.notify_all();
+        if (m_service_thread.joinable()) m_service_thread.join();
     }
     /** Tell any threads running serviceQueue to stop when there is no work left to be done */
     void StopWhenDrained()
     {
         WITH_LOCK(newTaskMutex, stopWhenEmpty = true);
         newTaskScheduled.notify_all();
+        if (m_service_thread.joinable()) m_service_thread.join();
     }
 
     /**

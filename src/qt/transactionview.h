@@ -35,6 +35,7 @@ class TransactionView : public QWidget
 
 public:
     explicit TransactionView(const PlatformStyle *platformStyle, QWidget *parent = nullptr);
+    ~TransactionView();
 
     void setModel(WalletModel *model);
 
@@ -59,6 +60,9 @@ public:
         MINIMUM_COLUMN_WIDTH = 23
     };
 
+protected:
+    void changeEvent(QEvent* e) override;
+
 private:
     WalletModel *model{nullptr};
     TransactionFilterProxy *transactionProxyModel{nullptr};
@@ -82,11 +86,9 @@ private:
 
     QWidget *createDateRangeWidget();
 
-    GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer{nullptr};
-
-    virtual void resizeEvent(QResizeEvent* event) override;
-
     bool eventFilter(QObject *obj, QEvent *event) override;
+
+    const PlatformStyle* m_platform_style;
 
 private Q_SLOTS:
     void contextualMenu(const QPoint &);
@@ -102,7 +104,7 @@ private Q_SLOTS:
     void openThirdPartyTxUrl(QString url);
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
     void abandonTx();
-    void bumpFee();
+    void bumpFee(bool checked);
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);

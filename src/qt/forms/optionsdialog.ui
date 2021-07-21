@@ -230,6 +230,36 @@
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="groupBoxHww">
+         <property name="title">
+          <string>External Signer (e.g. hardware wallet)</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayoutHww">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayoutHww">
+             <item>
+              <widget class="QLabel" name="externalSignerPathLabel">
+               <property name="text">
+                <string>&amp;External signer script path</string>
+               </property>
+               <property name="buddy">
+                <cstring>externalSignerPath</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="externalSignerPath">
+                <property name="toolTip">
+                  <string>Full path to a Bitcoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</string>
+                </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer_Wallet">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -704,6 +734,106 @@
           </widget>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="font_groupBox">
+         <property name="title">
+          <string>Monospaced font in the Overview tab:</string>
+         </property>
+         <layout class="QVBoxLayout" name="font_verticalLayout">
+          <item>
+           <layout class="QHBoxLayout" name="embeddedFont_horizontalLayout">
+            <item>
+             <widget class="QRadioButton" name="embeddedFont_radioButton">
+              <property name="text">
+               <string>embedded &quot;%1&quot;</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="embeddedFont_horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="embeddedFont_verticalLayout">
+              <item>
+               <widget class="QLabel" name="embeddedFont_label_1">
+                <property name="text">
+                 <string notr="true">111.11111111 BTC</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="embeddedFont_label_9">
+                <property name="text">
+                 <string notr="true">909.09090909 BTC</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Line" name="font_line">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="systemFont_horizontalLayout">
+            <item>
+             <widget class="QRadioButton" name="systemFont_radioButton">
+              <property name="text">
+               <string>closest matching &quot;%1&quot;</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="systemFont_horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="systemFont_verticalLayout">
+              <item>
+               <widget class="QLabel" name="systemFont_label_1">
+                <property name="text">
+                 <string notr="true">111.11111111 BTC</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="systemFont_label_9">
+                <property name="text">
+                 <string notr="true">909.09090909 BTC</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer_Display">

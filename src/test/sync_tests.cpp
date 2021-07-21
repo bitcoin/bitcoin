@@ -6,9 +6,9 @@
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
-#include <boost/thread/mutex.hpp>
 
 #include <mutex>
+#include <stdexcept>
 
 namespace {
 template <typename MutexType>
@@ -77,7 +77,7 @@ void TestInconsistentLockOrderDetected(MutexType& mutex1, MutexType& mutex2) NO_
 }
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(sync_tests, BasicTestingSetup)
+BOOST_AUTO_TEST_SUITE(sync_tests)
 
 BOOST_AUTO_TEST_CASE(potential_deadlock_detected)
 {
@@ -108,11 +108,6 @@ BOOST_AUTO_TEST_CASE(potential_deadlock_detected)
 BOOST_AUTO_TEST_CASE(double_lock_mutex)
 {
     TestDoubleLock<Mutex>(true /* should throw */);
-}
-
-BOOST_AUTO_TEST_CASE(double_lock_boost_mutex)
-{
-    TestDoubleLock<boost::mutex>(true /* should throw */);
 }
 
 BOOST_AUTO_TEST_CASE(double_lock_recursive_mutex)

@@ -5,12 +5,10 @@
 #include <checkqueue.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
-#include <util/memory.h>
 #include <util/system.h>
 #include <util/time.h>
 
 #include <boost/test/unit_test.hpp>
-#include <boost/thread/thread.hpp>
 
 #include <atomic>
 #include <condition_variable>
@@ -147,11 +145,8 @@ typedef CCheckQueue<FrozenCleanupCheck> FrozenCleanup_Queue;
  */
 static void Correct_Queue_range(std::vector<size_t> range)
 {
-    auto small_queue = MakeUnique<Correct_Queue>(QUEUE_BATCH_SIZE);
-    boost::thread_group tg;
-    for (auto x = 0; x < SCRIPT_CHECK_THREADS; ++x) {
-       tg.create_thread([&]{small_queue->Thread();});
-    }
+    auto small_queue = std::make_unique<Correct_Queue>(QUEUE_BATCH_SIZE);
+    small_queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
     // Make vChecks here to save on malloc (this test can be slow...)
     std::vector<FakeCheckCheckCompletion> vChecks;
     for (const size_t i : range) {
@@ -168,8 +163,7 @@ static void Correct_Queue_range(std::vector<size_t> range)
             BOOST_REQUIRE_EQUAL(FakeCheckCheckCompletion::n_calls, i);
         }
     }
-    tg.interrupt_all();
-    tg.join_all();
+    small_queue->StopWorkerThreads();
 }
 
 /** Test that 0 checks is correct
@@ -211,12 +205,8 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct_Random)
 /** Test that failing checks are caught */
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
 {
-    auto fail_queue = MakeUnique<Failing_Queue>(QUEUE_BATCH_SIZE);
-
-    boost::thread_group tg;
-    for (auto x = 0; x < SCRIPT_CHECK_THREADS; ++x) {
-       tg.create_thread([&]{fail_queue->Thread();});
-    }
+    auto fail_queue = std::make_unique<Failing_Queue>(QUEUE_BATCH_SIZE);
+    fail_queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
 
     for (size_t i = 0; i < 1001; ++i) {
         CCheckQueueControl<FailingCheck> control(fail_queue.get());
@@ -237,18 +227,14 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
             BOOST_REQUIRE(success);
         }
     }
-    tg.interrupt_all();
-    tg.join_all();
+    fail_queue->StopWorkerThreads();
 }
 // Test that a block validation which fails does not interfere with
 // future blocks, ie, the bad state is cleared.
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
 {
-    auto fail_queue = MakeUnique<Failing_Queue>(QUEUE_BATCH_SIZE);
-    boost::thread_group tg;
-    for (auto x = 0; x < SCRIPT_CHECK_THREADS; ++x) {
-       tg.create_thread([&]{fail_queue->Thread();});
-    }
+    auto fail_queue = std::make_unique<Failing_Queue>(QUEUE_BATCH_SIZE);
+    fail_queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
 
     for (auto times = 0; times < 10; ++times) {
         for (const bool end_fails : {true, false}) {
@@ -263,8 +249,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
             BOOST_REQUIRE(r != end_fails);
         }
     }
-    tg.interrupt_all();
-    tg.join_all();
+    fail_queue->StopWorkerThreads();
 }
 
 // Test that unique checks are actually all called individually, rather than
@@ -272,12 +257,8 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
 // more than once as well
 BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueCheck)
 {
-    auto queue = MakeUnique<Unique_Queue>(QUEUE_BATCH_SIZE);
-    boost::thread_group tg;
-    for (auto x = 0; x < SCRIPT_CHECK_THREADS; ++x) {
-       tg.create_thread([&]{queue->Thread();});
-
-    }
+    auto queue = std::make_unique<Unique_Queue>(QUEUE_BATCH_SIZE);
+    queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
 
     size_t COUNT = 100000;
     size_t total = COUNT;
@@ -300,8 +281,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueCheck)
         }
         BOOST_REQUIRE(r);
     }
-    tg.interrupt_all();
-    tg.join_all();
+    queue->StopWorkerThreads();
 }
 
 
@@ -312,11 +292,8 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueCheck)
 // time could leave the data hanging across a sequence of blocks.
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Memory)
 {
-    auto queue = MakeUnique<Memory_Queue>(QUEUE_BATCH_SIZE);
-    boost::thread_group tg;
-    for (auto x = 0; x < SCRIPT_CHECK_THREADS; ++x) {
-       tg.create_thread([&]{queue->Thread();});
-    }
+    auto queue = std::make_unique<Memory_Queue>(QUEUE_BATCH_SIZE);
+    queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
     for (size_t i = 0; i < 1000; ++i) {
         size_t total = i;
         {
@@ -335,20 +312,16 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Memory)
         }
         BOOST_REQUIRE_EQUAL(MemoryCheck::fake_allocated_memory, 0U);
     }
-    tg.interrupt_all();
-    tg.join_all();
+    queue->StopWorkerThreads();
 }
 
 // Test that a new verification cannot occur until all checks
 // have been destructed
 BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
 {
-    auto queue = MakeUnique<FrozenCleanup_Queue>(QUEUE_BATCH_SIZE);
-    boost::thread_group tg;
+    auto queue = std::make_unique<FrozenCleanup_Queue>(QUEUE_BATCH_SIZE);
     bool fails = false;
-    for (auto x = 0; x < SCRIPT_CHECK_THREADS; ++x) {
-        tg.create_thread([&]{queue->Thread();});
-    }
+    queue->StartWorkerThreads(SCRIPT_CHECK_THREADS);
     std::thread t0([&]() {
         CCheckQueueControl<FrozenCleanupCheck> control(queue.get());
         std::vector<FrozenCleanupCheck> vChecks(1);
@@ -367,7 +340,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
     }
     // Try to get control of the queue a bunch of times
     for (auto x = 0; x < 100 && !fails; ++x) {
-        fails = queue->ControlMutex.try_lock();
+        fails = queue->m_control_mutex.try_lock();
     }
     {
         // Unfreeze (we need lock n case of spurious wakeup)
@@ -378,22 +351,21 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
     FrozenCleanupCheck::cv.notify_one();
     // Wait for control to finish
     t0.join();
-    tg.interrupt_all();
-    tg.join_all();
     BOOST_REQUIRE(!fails);
+    queue->StopWorkerThreads();
 }
 
 
 /** Test that CCheckQueueControl is threadsafe */
 BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
 {
-    auto queue = MakeUnique<Standard_Queue>(QUEUE_BATCH_SIZE);
+    auto queue = std::make_unique<Standard_Queue>(QUEUE_BATCH_SIZE);
     {
-        boost::thread_group tg;
+        std::vector<std::thread> tg;
         std::atomic<int> nThreads {0};
         std::atomic<int> fails {0};
         for (size_t i = 0; i < 3; ++i) {
-            tg.create_thread(
+            tg.emplace_back(
                     [&]{
                     CCheckQueueControl<FakeCheck> control(queue.get());
                     // While sleeping, no other thread should execute to this point
@@ -402,11 +374,13 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
                     fails += observed  != nThreads;
                     });
         }
-        tg.join_all();
+        for (auto& thread: tg) {
+            if (thread.joinable()) thread.join();
+        }
         BOOST_REQUIRE_EQUAL(fails, 0);
     }
     {
-        boost::thread_group tg;
+        std::vector<std::thread> tg;
         std::mutex m;
         std::condition_variable cv;
         bool has_lock{false};
@@ -415,7 +389,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
         bool done_ack{false};
         {
             std::unique_lock<std::mutex> l(m);
-            tg.create_thread([&]{
+            tg.emplace_back([&]{
                     CCheckQueueControl<FakeCheck> control(queue.get());
                     std::unique_lock<std::mutex> ll(m);
                     has_lock = true;
@@ -431,7 +405,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
             cv.wait(l, [&](){return has_lock;});
             bool fails = false;
             for (auto x = 0; x < 100 && !fails; ++x) {
-                fails = queue->ControlMutex.try_lock();
+                fails = queue->m_control_mutex.try_lock();
             }
             has_tried = true;
             cv.notify_one();
@@ -441,8 +415,9 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
             cv.notify_one();
             BOOST_REQUIRE(!fails);
         }
-        tg.join_all();
+        for (auto& thread: tg) {
+            if (thread.joinable()) thread.join();
+        }
     }
 }
 BOOST_AUTO_TEST_SUITE_END()
-

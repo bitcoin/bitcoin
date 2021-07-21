@@ -8,6 +8,7 @@
 
 #include <atomic>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
@@ -15,13 +16,13 @@
 
 #include <amount.h>
 #include <coins.h>
-#include <crypto/siphash.h>
 #include <indirectmap.h>
-#include <optional.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
-#include <sync.h>
 #include <random.h>
+#include <sync.h>
+#include <util/epochguard.h>
+#include <util/hasher.h>
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/hashed_index.hpp>
@@ -29,6 +30,7 @@
 #include <boost/multi_index/sequenced_index.hpp>
 
 class CBlockIndex;
+class CChainState;
 extern RecursiveMutex cs_main;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
@@ -63,6 +65,7 @@ struct CompareIteratorByHash {
         return a->GetTx().GetHash() < b->GetTx().GetHash();
     }
 };
+
 /** \class CTxMemPoolEntry
  *
  * CTxMemPoolEntry stores data about the corresponding transaction, as well
@@ -155,7 +158,7 @@ public:
     Children& GetMemPoolChildren() const { return m_children; }
 
     mutable size_t vTxHashesIdx; //!< Index in mempool's vTxHashes
-    mutable uint64_t m_epoch; //!< epoch when last touched, useful for graph algorithms
+    mutable Epoch::Marker m_epoch_marker; //!< epoch when last touched, useful for graph algorithms
 };
 
 // Helpers for modifying CTxMemPool::mapTx, which is a boost multi_index.
@@ -398,20 +401,6 @@ enum class MemPoolRemovalReason {
     REPLACED,    //!< Removed for replacement
 };
 
-class SaltedTxidHasher
-{
-private:
-    /** Salt */
-    const uint64_t k0, k1;
-
-public:
-    SaltedTxidHasher();
-
-    size_t operator()(const uint256& txid) const {
-        return SipHashUint256(k0, k1, txid);
-    }
-};
-
 /**
  * CTxMemPool stores valid-according-to-the-current-best-chain transactions
  * that may be included in the next block.
@@ -487,24 +476,24 @@ public:
  */
 class CTxMemPool
 {
-private:
+protected:
     const int m_check_ratio; //!< Value n means that 1 times in n we check.
     std::atomic<unsigned int> nTransactionsUpdated{0}; //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
-    CBlockPolicyEstimator* minerPolicyEstimator;
+    CBlockPolicyEstimator* const minerPolicyEstimator;
 
-    uint64_t totalTxSize;      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
-    uint64_t cachedInnerUsage; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
+    uint64_t totalTxSize GUARDED_BY(cs);      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
+    CAmount m_total_fee GUARDED_BY(cs);       //!< sum of all mempool tx's fees (NOT modified fee)
+    uint64_t cachedInnerUsage GUARDED_BY(cs); //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
-    mutable int64_t lastRollingFeeUpdate;
-    mutable bool blockSinceLastRollingFeeBump;
-    mutable double rollingMinimumFeeRate; //!< minimum fee to get into the pool, decreases exponentially
-    mutable uint64_t m_epoch{0};
-    mutable bool m_has_epoch_guard{false};
+    mutable int64_t lastRollingFeeUpdate GUARDED_BY(cs);
+    mutable bool blockSinceLastRollingFeeBump GUARDED_BY(cs);
+    mutable double rollingMinimumFeeRate GUARDED_BY(cs); //!< minimum fee to get into the pool, decreases exponentially
+    mutable Epoch m_epoch GUARDED_BY(cs);
 
     // In-memory counter for external mempool tracking purposes.
     // This number is incremented once every time a transaction
     // is added or removed from the mempool for any reason.
-    mutable uint64_t m_sequence_number{1};
+    mutable uint64_t m_sequence_number GUARDED_BY(cs){1};
 
     void trackPackageRemoved(const CFeeRate& rate) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -598,7 +587,7 @@ private:
 
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
-    std::map<uint256, CAmount> mapDeltas;
+    std::map<uint256, CAmount> mapDeltas GUARDED_BY(cs);
 
     /** Create a new CTxMemPool.
      * Sanity checks will be off by default for performance, because otherwise
@@ -616,7 +605,7 @@ public:
      * all inputs are in the mapNextTx array). If sanity-checking is turned off,
      * check does nothing.
      */
-    void check(const CCoinsViewCache *pcoins) const;
+    void check(CChainState& active_chainstate) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     // addUnchecked must updated state for all ancestors of a given transaction,
     // to track size/count of descendant transactions.  First version of
@@ -629,7 +618,7 @@ public:
     void addUnchecked(const CTxMemPoolEntry& entry, setEntries& setAncestors, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
 
     void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void removeForReorg(const CCoinsViewCache* pcoins, unsigned int nMemPoolHeight, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void removeForReorg(CChainState& active_chainstate, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -655,7 +644,7 @@ public:
     const CTransaction* GetConflictTx(const COutPoint& prevout) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Returns an iterator to the given hash, if found */
-    Optional<txiter> GetIter(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::optional<txiter> GetIter(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Translate a set of hashes into a set of pool iterators to avoid repeated lookups */
     setEntries GetIterSet(const std::set<uint256>& hashes) const EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -678,7 +667,7 @@ public:
      *  for).  Note: vHashesToUpdate should be the set of transactions from the
      *  disconnected block that have been accepted back into the mempool.
      */
-    void UpdateTransactionsFromBlock(const std::vector<uint256>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void UpdateTransactionsFromBlock(const std::vector<uint256>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main) LOCKS_EXCLUDED(m_epoch);
 
     /** Try to calculate all in-mempool ancestors of entry.
      *  (these are all calculated including the tx itself)
@@ -736,6 +725,12 @@ public:
     {
         AssertLockHeld(cs);
         return totalTxSize;
+    }
+
+    CAmount GetTotalFee() const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
+        return m_total_fee;
     }
 
     bool exists(const GenTxid& gtxid) const
@@ -833,52 +828,22 @@ private:
      */
     void removeUnchecked(txiter entry, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 public:
-    /** EpochGuard: RAII-style guard for using epoch-based graph traversal algorithms.
-     *     When walking ancestors or descendants, we generally want to avoid
-     * visiting the same transactions twice. Some traversal algorithms use
-     * std::set (or setEntries) to deduplicate the transaction we visit.
-     * However, use of std::set is algorithmically undesirable because it both
-     * adds an asymptotic factor of O(log n) to traverals cost and triggers O(n)
-     * more dynamic memory allocations.
-     *     In many algorithms we can replace std::set with an internal mempool
-     * counter to track the time (or, "epoch") that we began a traversal, and
-     * check + update a per-transaction epoch for each transaction we look at to
-     * determine if that transaction has not yet been visited during the current
-     * traversal's epoch.
-     *     Algorithms using std::set can be replaced on a one by one basis.
-     * Both techniques are not fundamentally incompatible across the codebase.
-     * Generally speaking, however, the remaining use of std::set for mempool
-     * traversal should be viewed as a TODO for replacement with an epoch based
-     * traversal, rather than a preference for std::set over epochs in that
-     * algorithm.
-     */
-    class EpochGuard {
-        const CTxMemPool& pool;
-        public:
-        explicit EpochGuard(const CTxMemPool& in);
-        ~EpochGuard();
-    };
-    // N.B. GetFreshEpoch modifies mutable state via the EpochGuard construction
-    // (and later destruction)
-    EpochGuard GetFreshEpoch() const EXCLUSIVE_LOCKS_REQUIRED(cs);
-
     /** visited marks a CTxMemPoolEntry as having been traversed
-     * during the lifetime of the most recently created EpochGuard
+     * during the lifetime of the most recently created Epoch::Guard
      * and returns false if we are the first visitor, true otherwise.
      *
-     * An EpochGuard must be held when visited is called or an assert will be
+     * An Epoch::Guard must be held when visited is called or an assert will be
      * triggered.
      *
      */
-    bool visited(txiter it) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
-        assert(m_has_epoch_guard);
-        bool ret = it->m_epoch >= m_epoch;
-        it->m_epoch = std::max(it->m_epoch, m_epoch);
-        return ret;
+    bool visited(const txiter it) const EXCLUSIVE_LOCKS_REQUIRED(cs, m_epoch)
+    {
+        return m_epoch.visited(it->m_epoch_marker);
     }
 
-    bool visited(Optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
-        assert(m_has_epoch_guard);
+    bool visited(std::optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs, m_epoch)
+    {
+        assert(m_epoch.guarded()); // verify guard even when it==nullopt
         return !it || visited(*it);
     }
 };
@@ -887,7 +852,8 @@ public:
  * CCoinsView that brings transactions from a mempool into view.
  * It does not check for spendings by memory pool transactions.
  * Instead, it provides access to all Coins which are either unspent in the
- * base CCoinsView, or are outputs from any mempool transaction!
+ * base CCoinsView, are outputs from any mempool transaction, or are
+ * tracked temporarily to allow transaction dependencies in package validation.
  * This allows transaction replacement to work as expected, as you want to
  * have all inputs "available" to check signatures, and any cycles in the
  * dependency graph are checked directly in AcceptToMemoryPool.
@@ -897,12 +863,20 @@ public:
  */
 class CCoinsViewMemPool : public CCoinsViewBacked
 {
+    /**
+    * Coins made available by transactions being validated. Tracking these allows for package
+    * validation, since we can access transaction outputs without submitting them to mempool.
+    */
+    std::unordered_map<COutPoint, Coin, SaltedOutpointHasher> m_temp_added;
 protected:
     const CTxMemPool& mempool;
 
 public:
     CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn);
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+    /** Add the coins created by this transaction. These coins are only temporarily stored in
+     * m_temp_added and cannot be flushed to the back end. Only used for package validation. */
+    void PackageAddTransaction(const CTransactionRef& tx);
 };
 
 /**

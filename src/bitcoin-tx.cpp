@@ -506,11 +506,12 @@ static void MutateTxDelOutput(CMutableTransaction& tx, const std::string& strOut
     tx.vout.erase(tx.vout.begin() + outIdx);
 }
 
-static const unsigned int N_SIGHASH_OPTS = 6;
+static const unsigned int N_SIGHASH_OPTS = 7;
 static const struct {
     const char *flagStr;
     int flags;
 } sighashOptions[N_SIGHASH_OPTS] = {
+    {"DEFAULT", SIGHASH_DEFAULT},
     {"ALL", SIGHASH_ALL},
     {"NONE", SIGHASH_NONE},
     {"SINGLE", SIGHASH_SINGLE},
@@ -725,7 +726,7 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
 static void OutputTxJSON(const CTransaction& tx)
 {
     UniValue entry(UniValue::VOBJ);
-    TxToUniv(tx, uint256(), entry);
+    TxToUniv(tx, uint256(), /* include_addresses */ false, entry);
 
     std::string jsonOutput = entry.write(4);
     tfm::format(std::cout, "%s\n", jsonOutput);

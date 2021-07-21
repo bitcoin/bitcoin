@@ -76,11 +76,10 @@ private:
     // Format confirmation message
     bool PrepareSendText(QString& question_string, QString& informative_text, QString& detailed_text);
     void updateFeeMinimizedLabel();
-    // Update the passed in CCoinControl with state from the GUI
-    void updateCoinControlState(CCoinControl& ctrl);
+    void updateCoinControlState();
 
 private Q_SLOTS:
-    void on_sendButton_clicked();
+    void sendButtonClicked(bool checked);
     void on_buttonChooseFee_clicked();
     void on_buttonMinimizeFee_clicked();
     void removeEntry(SendCoinsEntry* entry);
@@ -115,7 +114,7 @@ class SendConfirmationDialog : public QMessageBox
     Q_OBJECT
 
 public:
-    SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text = "", const QString& detailed_text = "", int secDelay = SEND_CONFIRM_DELAY, const QString& confirmText = "Send", QWidget* parent = nullptr);
+    SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text = "", const QString& detailed_text = "", int secDelay = SEND_CONFIRM_DELAY, const QString& confirmText = "", QWidget* parent = nullptr);
     int exec() override;
 
 private Q_SLOTS:

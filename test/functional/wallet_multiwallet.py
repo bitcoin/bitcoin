@@ -14,6 +14,7 @@ import stat
 import time
 
 from test_framework.authproxy import JSONRPCException
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
 from test_framework.util import (
@@ -34,7 +35,7 @@ def test_load_unload(node, name):
             node.loadwallet(name)
             node.unloadwallet(name)
         except JSONRPCException as e:
-            if e.error['code'] == -4 and 'Wallet already being loading' in e.error['message']:
+            if e.error['code'] == -4 and 'Wallet already loading' in e.error['message']:
                 got_loading_error = True
                 return
 
@@ -229,7 +230,7 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-19, "Wallet file not specified", node.getwalletinfo)
 
         w1, w2, w3, w4, *_ = wallets
-        node.generatetoaddress(nblocks=101, address=w1.getnewaddress())
+        node.generatetoaddress(nblocks=COINBASE_MATURITY + 1, address=w1.getnewaddress())
         assert_equal(w1.getbalance(), 100)
         assert_equal(w2.getbalance(), 0)
         assert_equal(w3.getbalance(), 0)
@@ -304,12 +305,12 @@ class MultiWalletTest(BitcoinTestFramework):
         if self.options.descriptors:
             assert_raises_rpc_error(-4, "Wallet file verification failed. SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another bitcoind?", self.nodes[0].loadwallet, wallet_names[0])
         else:
-            assert_raises_rpc_error(-4, "Wallet file verification failed. Refusing to load database. Data file '{}' is already loaded.".format(path), self.nodes[0].loadwallet, wallet_names[0])
+            assert_raises_rpc_error(-35, "Wallet file verification failed. Refusing to load database. Data file '{}' is already loaded.".format(path), self.nodes[0].loadwallet, wallet_names[0])
 
             # This tests the default wallet that BDB makes, so SQLite wallet doesn't need to test this
             # Fail to load duplicate wallets by different ways (directory and filepath)
             path = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets", "wallet.dat")
-            assert_raises_rpc_error(-4, "Wallet file verification failed. Refusing to load database. Data file '{}' is already loaded.".format(path), self.nodes[0].loadwallet, 'wallet.dat')
+            assert_raises_rpc_error(-35, "Wallet file verification failed. Refusing to load database. Data file '{}' is already loaded.".format(path), self.nodes[0].loadwallet, 'wallet.dat')
 
             # Only BDB doesn't open duplicate wallet files. SQLite does not have this limitation. While this may be desired in the future, it is not necessary
             # Fail to load if one wallet is a copy of another

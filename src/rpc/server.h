@@ -103,7 +103,7 @@ public:
     }
 
     //! Simplified constructor taking plain RpcMethodFnType function pointer.
-    CRPCCommand(std::string category, std::string name_in, RpcMethodFnType fn, std::vector<std::string> args_in)
+    CRPCCommand(std::string category, RpcMethodFnType fn)
         : CRPCCommand(
               category,
               fn().m_name,
@@ -111,8 +111,6 @@ public:
               fn().GetArgNames(),
               intptr_t(fn))
     {
-        CHECK_NONFATAL(fn().m_name == name_in);
-        CHECK_NONFATAL(fn().GetArgNames() == args_in);
     }
 
     std::string category;
@@ -147,6 +145,10 @@ public:
     */
     std::vector<std::string> listCommands() const;
 
+    /**
+     * Return all named arguments that need to be converted by the client from string to another JSON type
+     */
+    UniValue dumpArgMap(const JSONRPCRequest& request) const;
 
     /**
      * Appends a CRPCCommand to the dispatch table.

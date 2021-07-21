@@ -181,7 +181,7 @@ public:
     virtual bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) { return false; }
     virtual bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) { return false; }
 
-    virtual bool GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) { return false; }
+    virtual bool GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool, std::string& error) { return false; }
     virtual void KeepDestination(int64_t index, const OutputType& type) {}
     virtual void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) {}
 
@@ -207,7 +207,7 @@ public:
     virtual bool CanGetAddresses(bool internal = false) const { return false; }
 
     /** Upgrades the wallet to the specified version */
-    virtual bool Upgrade(int prev_version, int new_version, bilingual_str& error) { return false; }
+    virtual bool Upgrade(int prev_version, int new_version, bilingual_str& error) { return true; }
 
     virtual bool HavePrivateKeys() const { return false; }
 
@@ -216,7 +216,6 @@ public:
 
     virtual int64_t GetOldestKeyPoolTime() const { return GetTime(); }
 
-    virtual size_t KeypoolCountExternalKeys() const { return 0; }
     virtual unsigned int GetKeyPoolSize() const { return 0; }
 
     virtual int64_t GetTimeFirstKey() const { return 0; }
@@ -235,11 +234,9 @@ public:
     /** Sign a message with the given script */
     virtual SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const { return SigningResult::SIGNING_FAILED; };
     /** Adds script and derivation path information to a PSBT, and optionally signs it. */
-    virtual TransactionError FillPSBT(PartiallySignedTransaction& psbt, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr) const { return TransactionError::INVALID_PSBT; }
+    virtual TransactionError FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr) const { return TransactionError::INVALID_PSBT; }
 
     virtual uint256 GetID() const { return uint256(); }
-
-    virtual void SetInternal(bool internal) {}
 
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
     template<typename... Params>
@@ -252,6 +249,13 @@ public:
 
     /** Keypool has new keys */
     boost::signals2::signal<void ()> NotifyCanGetAddressesChanged;
+};
+
+/** OutputTypes supported by the LegacyScriptPubKeyMan */
+static const std::unordered_set<OutputType> LEGACY_OUTPUT_TYPES {
+    OutputType::LEGACY,
+    OutputType::P2SH_SEGWIT,
+    OutputType::BECH32,
 };
 
 class LegacyScriptPubKeyMan : public ScriptPubKeyMan, public FillableSigningProvider
@@ -304,7 +308,7 @@ private:
 
     /* the HD chain data model (external chain counters) */
     CHDChain m_hd_chain;
-    std::unordered_map<CKeyID, CHDChain, KeyIDHasher> m_inactive_hd_chains;
+    std::unordered_map<CKeyID, CHDChain, SaltedSipHasher> m_inactive_hd_chains;
 
     /* HD derive new child key (on internal or external chain) */
     void DeriveNewChildKey(WalletBatch& batch, CKeyMetadata& metadata, CKey& secret, CHDChain& hd_chain, bool internal = false) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
@@ -357,7 +361,7 @@ public:
     bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) override;
     bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
 
-    bool GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) override;
+    bool GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool, std::string& error) override;
     void KeepDestination(int64_t index, const OutputType& type) override;
     void ReturnDestination(int64_t index, bool internal, const CTxDestination&) override;
 
@@ -379,7 +383,7 @@ public:
     void RewriteDB() override;
 
     int64_t GetOldestKeyPoolTime() const override;
-    size_t KeypoolCountExternalKeys() const override;
+    size_t KeypoolCountExternalKeys() const;
     unsigned int GetKeyPoolSize() const override;
 
     int64_t GetTimeFirstKey() const override;
@@ -394,11 +398,9 @@ public:
 
     bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const override;
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;
-    TransactionError FillPSBT(PartiallySignedTransaction& psbt, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr) const override;
+    TransactionError FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr) const override;
 
     uint256 GetID() const override;
-
-    void SetInternal(bool internal) override;
 
     // Map from Key ID to key metadata.
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata GUARDED_BY(cs_KeyStore);
@@ -517,8 +519,6 @@ public:
 class DescriptorScriptPubKeyMan : public ScriptPubKeyMan
 {
 private:
-    WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
-
     using ScriptPubKeyMap = std::map<CScript, int32_t>; // Map of scripts to descriptor range index
     using PubKeyMap = std::map<CPubKey, int32_t>; // Map of pubkeys involved in scripts to descriptor range index
     using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
@@ -527,8 +527,6 @@ private:
     ScriptPubKeyMap m_map_script_pub_keys GUARDED_BY(cs_desc_man);
     PubKeyMap m_map_pubkeys GUARDED_BY(cs_desc_man);
     int32_t m_max_cached_index = -1;
-
-    bool m_internal = false;
 
     KeyMap m_map_keys GUARDED_BY(cs_desc_man);
     CryptedKeyMap m_map_crypted_keys GUARDED_BY(cs_desc_man);
@@ -547,14 +545,16 @@ private:
     // Fetch the SigningProvider for a given index and optionally include private keys. Called by the above functions.
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(int32_t index, bool include_private = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
+protected:
+  WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
+
 public:
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor)
         :   ScriptPubKeyMan(storage),
             m_wallet_descriptor(descriptor)
         {}
-    DescriptorScriptPubKeyMan(WalletStorage& storage, bool internal)
-        :   ScriptPubKeyMan(storage),
-            m_internal(internal)
+    DescriptorScriptPubKeyMan(WalletStorage& storage)
+        :   ScriptPubKeyMan(storage)
         {}
 
     mutable RecursiveMutex cs_desc_man;
@@ -565,7 +565,7 @@ public:
     bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) override;
     bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
 
-    bool GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) override;
+    bool GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool, std::string& error) override;
     void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) override;
 
     // Tops up the descriptor cache and m_map_script_pub_keys. The cache is stored in the wallet file
@@ -579,12 +579,16 @@ public:
     bool IsHDEnabled() const override;
 
     //! Setup descriptors based on the given CExtkey
-    bool SetupDescriptorGeneration(const CExtKey& master_key, OutputType addr_type);
+    bool SetupDescriptorGeneration(const CExtKey& master_key, OutputType addr_type, bool internal);
+
+    /** Provide a descriptor at setup time
+    * Returns false if already setup or setup fails, true if setup is successful
+    */
+    bool SetupDescriptor(std::unique_ptr<Descriptor>desc);
 
     bool HavePrivateKeys() const override;
 
     int64_t GetOldestKeyPoolTime() const override;
-    size_t KeypoolCountExternalKeys() const override;
     unsigned int GetKeyPoolSize() const override;
 
     int64_t GetTimeFirstKey() const override;
@@ -599,11 +603,9 @@ public:
 
     bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const override;
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;
-    TransactionError FillPSBT(PartiallySignedTransaction& psbt, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr) const override;
+    TransactionError FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr) const override;
 
     uint256 GetID() const override;
-
-    void SetInternal(bool internal) override;
 
     void SetCache(const DescriptorCache& cache);
 
@@ -611,11 +613,17 @@ public:
     bool AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key);
 
     bool HasWalletDescriptor(const WalletDescriptor& desc) const;
+    void UpdateWalletDescriptor(WalletDescriptor& descriptor);
+    bool CanUpdateToWalletDescriptor(const WalletDescriptor& descriptor, std::string& error);
     void AddDescriptorKey(const CKey& key, const CPubKey &pubkey);
     void WriteDescriptor();
 
     const WalletDescriptor GetWalletDescriptor() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
     const std::vector<CScript> GetScriptPubKeys() const;
+
+    bool GetDescriptorString(std::string& out) const;
+
+    void UpgradeDescriptorCache();
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H

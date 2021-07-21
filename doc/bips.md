@@ -1,4 +1,4 @@
-BIPs that are implemented by Bitcoin Core (up-to-date up to **v0.21.0**):
+BIPs that are implemented by Bitcoin Core (up-to-date up to **v22.0**):
 
 * [`BIP 9`](https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki): The changes allowing multiple soft-forks to be deployed in parallel have been implemented since **v0.12.1**  ([PR #7575](https://github.com/bitcoin/bitcoin/pull/7575))
 * [`BIP 11`](https://github.com/bitcoin/bips/blob/master/bip-0011.mediawiki): Multisig outputs are standard since **v0.6.0** ([PR #669](https://github.com/bitcoin/bitcoin/pull/669)).
@@ -15,6 +15,9 @@ BIPs that are implemented by Bitcoin Core (up-to-date up to **v0.21.0**):
 * [`BIP 35`](https://github.com/bitcoin/bips/blob/master/bip-0035.mediawiki): The 'mempool' protocol message (and the protocol version bump to 60002) has been implemented since **v0.7.0** ([PR #1641](https://github.com/bitcoin/bitcoin/pull/1641)). As of **v0.13.0**, this is only available for `NODE_BLOOM` (BIP 111) peers.
 * [`BIP 37`](https://github.com/bitcoin/bips/blob/master/bip-0037.mediawiki): The bloom filtering for transaction relaying, partial Merkle trees for blocks, and the protocol version bump to 70001 (enabling low-bandwidth SPV clients) has been implemented since **v0.8.0** ([PR #1795](https://github.com/bitcoin/bitcoin/pull/1795)). Disabled by default since **v0.19.0**, can be enabled by the `-peerbloomfilters` option.
 * [`BIP 42`](https://github.com/bitcoin/bips/blob/master/bip-0042.mediawiki): The bug that would have caused the subsidy schedule to resume after block 13440000 was fixed in **v0.9.2** ([PR #3842](https://github.com/bitcoin/bitcoin/pull/3842)).
+* [`BIP 43`](https://github.com/bitcoin/bips/blob/master/bip-0043.mediawiki): The experimental descriptor wallets introduced in **v0.21.0** by default use the Hierarchical Deterministic Wallet derivation proposed by BIP 43. ([PR #16528](https://github.com/bitcoin/bitcoin/pull/16528))
+* [`BIP 44`](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki): The experimental descriptor wallets introduced in **v0.21.0** by default use the Hierarchical Deterministic Wallet derivation proposed by BIP 44. ([PR #16528](https://github.com/bitcoin/bitcoin/pull/16528))
+* [`BIP 49`](https://github.com/bitcoin/bips/blob/master/bip-0049.mediawiki): The experimental descriptor wallets introduced in **v0.21.0** by default use the Hierarchical Deterministic Wallet derivation proposed by BIP 49. ([PR #16528](https://github.com/bitcoin/bitcoin/pull/16528))
 * [`BIP 61`](https://github.com/bitcoin/bips/blob/master/bip-0061.mediawiki): The 'reject' protocol message (and the protocol version bump to 70002) was added in **v0.9.0** ([PR #3185](https://github.com/bitcoin/bitcoin/pull/3185)). Starting **v0.17.0**, whether to send reject messages can be configured with the `-enablebip61` option, and support is deprecated (disabled by default) as of **v0.18.0**. Support was removed in **v0.20.0** ([PR #15437](https://github.com/bitcoin/bitcoin/pull/15437)).
 * [`BIP 65`](https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki): The CHECKLOCKTIMEVERIFY softfork was merged in **v0.12.0** ([PR #6351](https://github.com/bitcoin/bitcoin/pull/6351)), and backported to **v0.11.2** and **v0.10.4**. Mempool-only CLTV was added in [PR #6124](https://github.com/bitcoin/bitcoin/pull/6124).
 * [`BIP 66`](https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki): The strict DER rules and associated version 3 blocks have been implemented since **v0.10.0** ([PR #5713](https://github.com/bitcoin/bitcoin/pull/5713)).
@@ -24,6 +27,7 @@ BIPs that are implemented by Bitcoin Core (up-to-date up to **v0.21.0**):
   Support can be optionally disabled at build time since **v0.18.0** ([PR 14451](https://github.com/bitcoin/bitcoin/pull/14451)),
   and it is disabled by default at build time since **v0.19.0** ([PR #15584](https://github.com/bitcoin/bitcoin/pull/15584)).
   It has been removed as of **v0.20.0** ([PR 17165](https://github.com/bitcoin/bitcoin/pull/17165)).
+* [`BIP 84`](https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki): The experimental descriptor wallets introduced in **v0.21.0** by default use the Hierarchical Deterministic Wallet derivation proposed by BIP 84. ([PR #16528](https://github.com/bitcoin/bitcoin/pull/16528))
 * [`BIP 90`](https://github.com/bitcoin/bips/blob/master/bip-0090.mediawiki): Trigger mechanism for activation of BIPs 34, 65, and 66 has been simplified to block height checks since **v0.14.0** ([PR #8391](https://github.com/bitcoin/bitcoin/pull/8391)).
 * [`BIP 111`](https://github.com/bitcoin/bips/blob/master/bip-0111.mediawiki): `NODE_BLOOM` service bit added, and enforced for all peer versions as of **v0.13.0** ([PR #6579](https://github.com/bitcoin/bitcoin/pull/6579) and [PR #6641](https://github.com/bitcoin/bitcoin/pull/6641)).
 * [`BIP 112`](https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki): The CHECKSEQUENCEVERIFY opcode has been implemented since **v0.12.1** ([PR #7524](https://github.com/bitcoin/bitcoin/pull/7524)), and has been *buried* since **v0.19.0** ([PR #16060](https://github.com/bitcoin/bitcoin/pull/16060)).
@@ -45,4 +49,11 @@ BIPs that are implemented by Bitcoin Core (up-to-date up to **v0.21.0**):
 * [`BIP 176`](https://github.com/bitcoin/bips/blob/master/bip-0176.mediawiki): Bits Denomination [QT only] is supported as of **v0.16.0** ([PR 12035](https://github.com/bitcoin/bitcoin/pull/12035)).
 * [`BIP 325`](https://github.com/bitcoin/bips/blob/master/bip-0325.mediawiki): Signet test network is supported as of **v0.21.0** ([PR 18267](https://github.com/bitcoin/bitcoin/pull/18267)).
 * [`BIP 339`](https://github.com/bitcoin/bips/blob/master/bip-0339.mediawiki): Relay of transactions by wtxid is supported as of **v0.21.0** ([PR 18044](https://github.com/bitcoin/bitcoin/pull/18044)).
-* [`BIP 340`](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki) [`341`](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki) [`342`](https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki): Validation rules for Taproot (including Schnorr signatures and Tapscript leaves) are implemented as of **v0.21.0** ([PR 19953](https://github.com/bitcoin/bitcoin/pull/19953)), without mainnet activation.
+* [`BIP 340`](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki)
+  [`341`](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki)
+  [`342`](https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki):
+  Validation rules for Taproot (including Schnorr signatures and Tapscript
+  leaves) are implemented as of **v0.21.0** ([PR 19953](https://github.com/bitcoin/bitcoin/pull/19953)),
+  with mainnet activation as of **v0.21.1** ([PR 21377](https://github.com/bitcoin/bitcoin/pull/21377),
+  [PR 21686](https://github.com/bitcoin/bitcoin/pull/21686)).
+* [`BIP 350`](https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki): Addresses for native v1+ segregated Witness outputs use Bech32m instead of Bech32 as of **v22.0** ([PR 20861](https://github.com/bitcoin/bitcoin/pull/20861)).

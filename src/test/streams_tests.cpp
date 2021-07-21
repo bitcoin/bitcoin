@@ -112,6 +112,17 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
     BOOST_CHECK_THROW(new_reader >> d, std::ios_base::failure);
 }
 
+BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
+{
+    std::vector<uint8_t> data{0x82, 0xa7, 0x31};
+    VectorReader reader(SER_NETWORK, INIT_PROTO_VERSION, data, /* pos= */ 0);
+    uint32_t varint = 0;
+    // Deserialize into r-value
+    reader >> VARINT(varint);
+    BOOST_CHECK_EQUAL(varint, 54321U);
+    BOOST_CHECK(reader.empty());
+}
+
 BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
 {
     CDataStream data(SER_NETWORK, INIT_PROTO_VERSION);
@@ -149,7 +160,7 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
 
 BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 {
-    std::vector<char> in;
+    std::vector<uint8_t> in;
     std::vector<char> expected_xor;
     std::vector<unsigned char> key;
     CDataStream ds(in, 0, 0);

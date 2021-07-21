@@ -6,7 +6,6 @@
 #include <pubkey.h>
 #include <script/descriptor.h>
 #include <test/fuzz/fuzz.h>
-#include <util/memory.h>
 
 void initialize_descriptor_parse()
 {

@@ -56,7 +56,7 @@ std::string LocksHeld();
 template <typename MutexType>
 void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) EXCLUSIVE_LOCKS_REQUIRED(cs);
 template <typename MutexType>
-void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) LOCKS_EXCLUDED(cs);
 void DeleteLock(void* cs);
 bool LockStackEmpty();
 
@@ -74,7 +74,7 @@ inline void CheckLastCritical(void* cs, std::string& lockname, const char* guard
 template <typename MutexType>
 inline void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) EXCLUSIVE_LOCKS_REQUIRED(cs) {}
 template <typename MutexType>
-void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) EXCLUSIVE_LOCKS_REQUIRED(!cs) {}
+void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) LOCKS_EXCLUDED(cs) {}
 inline void DeleteLock(void* cs) {}
 inline bool LockStackEmpty() { return true; }
 #endif
@@ -258,7 +258,22 @@ using DebugLock = UniqueLock<typename std::remove_reference<typename std::remove
 //!
 //!   int val = WITH_LOCK(cs, return shared_val);
 //!
-#define WITH_LOCK(cs, code) [&] { LOCK(cs); code; }()
+//! Note:
+//!
+//! Since the return type deduction follows that of decltype(auto), while the
+//! deduced type of:
+//!
+//!   WITH_LOCK(cs, return {int i = 1; return i;});
+//!
+//! is int, the deduced type of:
+//!
+//!   WITH_LOCK(cs, return {int j = 1; return (j);});
+//!
+//! is &int, a reference to a local variable
+//!
+//! The above is detectable at compile-time with the -Wreturn-local-addr flag in
+//! gcc and the -Wreturn-stack-address flag in clang, both enabled by default.
+#define WITH_LOCK(cs, code) [&]() -> decltype(auto) { LOCK(cs); code; }()
 
 class CSemaphore
 {

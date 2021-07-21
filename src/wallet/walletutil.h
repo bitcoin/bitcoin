@@ -43,6 +43,9 @@ enum WalletFlags : uint64_t {
     // Indicates that the metadata has already been upgraded to contain key origins
     WALLET_FLAG_KEY_ORIGIN_METADATA = (1ULL << 1),
 
+    // Indicates that the descriptor cache has been upgraded to cache last hardened xpubs
+    WALLET_FLAG_LAST_HARDENED_XPUB_CACHED = (1ULL << 2),
+
     // will enforce the rule that the wallet can't contain any private keys (only watch-only/pubkeys)
     WALLET_FLAG_DISABLE_PRIVATE_KEYS = (1ULL << 32),
 
@@ -60,6 +63,9 @@ enum WalletFlags : uint64_t {
 
     //! Indicate that this wallet supports DescriptorScriptPubKeyMan
     WALLET_FLAG_DESCRIPTORS = (1ULL << 34),
+
+    //! Indicates that the wallet needs an external signer
+    WALLET_FLAG_EXTERNAL_SIGNER = (1ULL << 35),
 };
 
 //! Get the path of the wallet directory.

@@ -8,13 +8,12 @@ Test transaction download behavior
 
 from test_framework.messages import (
     CInv,
-    CTransaction,
-    FromHex,
     MSG_TX,
     MSG_TYPE_MASK,
     MSG_WTX,
     msg_inv,
     msg_notfound,
+    tx_from_hex,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -56,7 +55,6 @@ MAX_GETDATA_INBOUND_WAIT = GETDATA_TX_INTERVAL + INBOUND_PEER_TX_DELAY + TXID_RE
 
 class TxDownloadTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = False
         self.num_nodes = 2
 
     def test_tx_requests(self):
@@ -101,7 +99,7 @@ class TxDownloadTest(BitcoinTestFramework):
             hexstring=tx,
             privkeys=[self.nodes[0].get_deterministic_priv_key().key],
         )['hex']
-        ctx = FromHex(CTransaction(), tx)
+        ctx = tx_from_hex(tx)
         txid = int(ctx.rehash(), 16)
 
         self.log.info(

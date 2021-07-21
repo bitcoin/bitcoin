@@ -44,14 +44,15 @@ from test_framework.netutil import test_ipv6_local
 
 RANGE_BEGIN = PORT_MIN + 2 * PORT_RANGE  # Start after p2p and rpc ports
 
-# Networks returned by RPC getpeerinfo, defined in src/netbase.cpp::GetNetworkName()
-NET_UNROUTABLE = "unroutable"
+# Networks returned by RPC getpeerinfo.
+NET_UNROUTABLE = "not_publicly_routable"
 NET_IPV4 = "ipv4"
 NET_IPV6 = "ipv6"
 NET_ONION = "onion"
+NET_I2P = "i2p"
 
 # Networks returned by RPC getnetworkinfo, defined in src/rpc/net.cpp::GetNetworksInfo()
-NETWORKS = frozenset({NET_IPV4, NET_IPV6, NET_ONION})
+NETWORKS = frozenset({NET_IPV4, NET_IPV6, NET_ONION, NET_I2P})
 
 
 class ProxyTest(BitcoinTestFramework):
@@ -90,11 +91,15 @@ class ProxyTest(BitcoinTestFramework):
             self.serv3 = Socks5Server(self.conf3)
             self.serv3.start()
 
+        # We will not try to connect to this.
+        self.i2p_sam = ('127.0.0.1', 7656)
+
         # Note: proxies are not used to connect to local nodes. This is because the proxy to
         # use is based on CService.GetNetwork(), which returns NET_UNROUTABLE for localhost.
         args = [
             ['-listen', '-proxy=%s:%i' % (self.conf1.addr),'-proxyrandomize=1'],
-            ['-listen', '-proxy=%s:%i' % (self.conf1.addr),'-onion=%s:%i' % (self.conf2.addr),'-proxyrandomize=0'],
+            ['-listen', '-proxy=%s:%i' % (self.conf1.addr),'-onion=%s:%i' % (self.conf2.addr),
+                '-i2psam=%s:%i' % (self.i2p_sam), '-i2pacceptincoming=0', '-proxyrandomize=0'],
             ['-listen', '-proxy=%s:%i' % (self.conf2.addr),'-proxyrandomize=1'],
             []
         ]
@@ -142,13 +147,13 @@ class ProxyTest(BitcoinTestFramework):
             self.network_test(node, addr, network=NET_IPV6)
 
         if test_onion:
-            addr = "bitcoinostk4e4re.onion:8333"
+            addr = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:8333"
             self.log.debug("Test: outgoing onion connection through node for address {}".format(addr))
             node.addnode(addr, "onetry")
             cmd = proxies[2].queue.get()
             assert isinstance(cmd, Socks5Command)
             assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-            assert_equal(cmd.addr, b"bitcoinostk4e4re.onion")
+            assert_equal(cmd.addr, b"pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion")
             assert_equal(cmd.port, 8333)
             if not auth:
                 assert_equal(cmd.username, None)
@@ -199,9 +204,16 @@ class ProxyTest(BitcoinTestFramework):
         n0 = networks_dict(self.nodes[0].getnetworkinfo())
         assert_equal(NETWORKS, n0.keys())
         for net in NETWORKS:
-            assert_equal(n0[net]['proxy'], '%s:%i' % (self.conf1.addr))
-            assert_equal(n0[net]['proxy_randomize_credentials'], True)
+            if net == NET_I2P:
+                expected_proxy = ''
+                expected_randomize = False
+            else:
+                expected_proxy = '%s:%i' % (self.conf1.addr)
+                expected_randomize = True
+            assert_equal(n0[net]['proxy'], expected_proxy)
+            assert_equal(n0[net]['proxy_randomize_credentials'], expected_randomize)
         assert_equal(n0['onion']['reachable'], True)
+        assert_equal(n0['i2p']['reachable'], False)
 
         n1 = networks_dict(self.nodes[1].getnetworkinfo())
         assert_equal(NETWORKS, n1.keys())
@@ -211,21 +223,36 @@ class ProxyTest(BitcoinTestFramework):
         assert_equal(n1['onion']['proxy'], '%s:%i' % (self.conf2.addr))
         assert_equal(n1['onion']['proxy_randomize_credentials'], False)
         assert_equal(n1['onion']['reachable'], True)
+        assert_equal(n1['i2p']['proxy'], '%s:%i' % (self.i2p_sam))
+        assert_equal(n1['i2p']['proxy_randomize_credentials'], False)
+        assert_equal(n1['i2p']['reachable'], True)
 
         n2 = networks_dict(self.nodes[2].getnetworkinfo())
         assert_equal(NETWORKS, n2.keys())
         for net in NETWORKS:
-            assert_equal(n2[net]['proxy'], '%s:%i' % (self.conf2.addr))
-            assert_equal(n2[net]['proxy_randomize_credentials'], True)
+            if net == NET_I2P:
+                expected_proxy = ''
+                expected_randomize = False
+            else:
+                expected_proxy = '%s:%i' % (self.conf2.addr)
+                expected_randomize = True
+            assert_equal(n2[net]['proxy'], expected_proxy)
+            assert_equal(n2[net]['proxy_randomize_credentials'], expected_randomize)
         assert_equal(n2['onion']['reachable'], True)
+        assert_equal(n2['i2p']['reachable'], False)
 
         if self.have_ipv6:
             n3 = networks_dict(self.nodes[3].getnetworkinfo())
             assert_equal(NETWORKS, n3.keys())
             for net in NETWORKS:
-                assert_equal(n3[net]['proxy'], '[%s]:%i' % (self.conf3.addr))
+                if net == NET_I2P:
+                    expected_proxy = ''
+                else:
+                    expected_proxy = '[%s]:%i' % (self.conf3.addr)
+                assert_equal(n3[net]['proxy'], expected_proxy)
                 assert_equal(n3[net]['proxy_randomize_credentials'], False)
             assert_equal(n3['onion']['reachable'], False)
+            assert_equal(n3['i2p']['reachable'], False)
 
 
 if __name__ == '__main__':

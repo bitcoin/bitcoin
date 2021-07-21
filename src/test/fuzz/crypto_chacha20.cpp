@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,31 +20,26 @@ FUZZ_TARGET(crypto_chacha20)
         chacha20 = ChaCha20{key.data(), key.size()};
     }
     while (fuzzed_data_provider.ConsumeBool()) {
-        switch (fuzzed_data_provider.ConsumeIntegralInRange(0, 4)) {
-        case 0: {
-            const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(16, 32));
-            chacha20.SetKey(key.data(), key.size());
-            break;
-        }
-        case 1: {
-            chacha20.SetIV(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
-            break;
-        }
-        case 2: {
-            chacha20.Seek(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
-            break;
-        }
-        case 3: {
-            std::vector<uint8_t> output(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
-            chacha20.Keystream(output.data(), output.size());
-            break;
-        }
-        case 4: {
-            std::vector<uint8_t> output(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
-            const std::vector<uint8_t> input = ConsumeFixedLengthByteVector(fuzzed_data_provider, output.size());
-            chacha20.Crypt(input.data(), output.data(), input.size());
-            break;
-        }
-        }
+        CallOneOf(
+            fuzzed_data_provider,
+            [&] {
+                const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(16, 32));
+                chacha20.SetKey(key.data(), key.size());
+            },
+            [&] {
+                chacha20.SetIV(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
+            },
+            [&] {
+                chacha20.Seek(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
+            },
+            [&] {
+                std::vector<uint8_t> output(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
+                chacha20.Keystream(output.data(), output.size());
+            },
+            [&] {
+                std::vector<uint8_t> output(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
+                const std::vector<uint8_t> input = ConsumeFixedLengthByteVector(fuzzed_data_provider, output.size());
+                chacha20.Crypt(input.data(), output.data(), input.size());
+            });
     }
 }

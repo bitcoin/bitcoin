@@ -6,6 +6,8 @@
 #
 # Test getblockstats rpc call
 #
+
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -41,7 +43,7 @@ class GetblockstatsTest(BitcoinTestFramework):
     def generate_test_data(self, filename):
         mocktime = 1525107225
         self.nodes[0].setmocktime(mocktime)
-        self.nodes[0].generate(101)
+        self.nodes[0].generate(COINBASE_MATURITY + 1)
 
         address = self.nodes[0].get_deterministic_priv_key().address
         self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=True)

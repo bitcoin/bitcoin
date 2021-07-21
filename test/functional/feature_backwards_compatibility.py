@@ -4,9 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Backwards compatibility functional test
 
-Test various backwards compatibility scenarios. Download the previous node binaries:
-
-test/get_previous_releases.py -b v0.19.1 v0.18.1 v0.17.2 v0.16.3 v0.15.2
+Test various backwards compatibility scenarios. Requires previous releases binaries,
+see test/README.md.
 
 v0.15.2 is not required by this test, but it is used in wallet_upgradewallet.py.
 Due to a hardfork in regtest, it can't be used to sync nodes.
@@ -22,6 +21,7 @@ needs an older patch version.
 import os
 import shutil
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
 
@@ -64,13 +64,13 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.import_deterministic_coinbase_privkeys()
 
     def run_test(self):
-        self.nodes[0].generatetoaddress(101, self.nodes[0].getnewaddress())
+        self.nodes[0].generatetoaddress(COINBASE_MATURITY + 1, self.nodes[0].getnewaddress())
 
         self.sync_blocks()
 
         # Sanity check the test framework:
         res = self.nodes[self.num_nodes - 1].getblockchaininfo()
-        assert_equal(res['blocks'], 101)
+        assert_equal(res['blocks'], COINBASE_MATURITY + 1)
 
         node_master = self.nodes[self.num_nodes - 5]
         node_v19 = self.nodes[self.num_nodes - 4]
@@ -354,73 +354,75 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         hdkeypath = v17_info["hdkeypath"]
         pubkey = v17_info["pubkey"]
 
-        # Copy the 0.16 wallet to the last Bitcoin Core version and open it:
-        shutil.copyfile(
-            os.path.join(node_v16_wallets_dir, "wallets/u1_v16"),
-            os.path.join(node_master_wallets_dir, "u1_v16")
-        )
-        load_res = node_master.loadwallet("u1_v16")
-        # Make sure this wallet opens without warnings. See https://github.com/bitcoin/bitcoin/pull/19054
-        assert_equal(load_res['warning'], '')
-        wallet = node_master.get_wallet_rpc("u1_v16")
-        info = wallet.getaddressinfo(v16_addr)
-        descriptor = "wpkh([" + info["hdmasterfingerprint"] + hdkeypath[1:] + "]" + v16_pubkey + ")"
-        assert_equal(info["desc"], descsum_create(descriptor))
+        if self.is_bdb_compiled():
+            # Old wallets are BDB and will only work if BDB is compiled
+            # Copy the 0.16 wallet to the last Bitcoin Core version and open it:
+            shutil.copyfile(
+                os.path.join(node_v16_wallets_dir, "wallets/u1_v16"),
+                os.path.join(node_master_wallets_dir, "u1_v16")
+            )
+            load_res = node_master.loadwallet("u1_v16")
+            # Make sure this wallet opens without warnings. See https://github.com/bitcoin/bitcoin/pull/19054
+            assert_equal(load_res['warning'], '')
+            wallet = node_master.get_wallet_rpc("u1_v16")
+            info = wallet.getaddressinfo(v16_addr)
+            descriptor = "wpkh([" + info["hdmasterfingerprint"] + hdkeypath[1:] + "]" + v16_pubkey + ")"
+            assert_equal(info["desc"], descsum_create(descriptor))
 
-        # Now copy that same wallet back to 0.16 to make sure no automatic upgrade breaks it
-        os.remove(os.path.join(node_v16_wallets_dir, "wallets/u1_v16"))
-        shutil.copyfile(
-            os.path.join(node_master_wallets_dir, "u1_v16"),
-            os.path.join(node_v16_wallets_dir, "wallets/u1_v16")
-        )
-        self.start_node(-1, extra_args=["-wallet=u1_v16"])
-        wallet = node_v16.get_wallet_rpc("u1_v16")
-        info = wallet.validateaddress(v16_addr)
-        assert_equal(info, v16_info)
+            # Now copy that same wallet back to 0.16 to make sure no automatic upgrade breaks it
+            os.remove(os.path.join(node_v16_wallets_dir, "wallets/u1_v16"))
+            shutil.copyfile(
+                os.path.join(node_master_wallets_dir, "u1_v16"),
+                os.path.join(node_v16_wallets_dir, "wallets/u1_v16")
+            )
+            self.start_node(-1, extra_args=["-wallet=u1_v16"])
+            wallet = node_v16.get_wallet_rpc("u1_v16")
+            info = wallet.validateaddress(v16_addr)
+            assert_equal(info, v16_info)
 
-        # Copy the 0.17 wallet to the last Bitcoin Core version and open it:
-        node_v17.unloadwallet("u1_v17")
-        shutil.copytree(
-            os.path.join(node_v17_wallets_dir, "u1_v17"),
-            os.path.join(node_master_wallets_dir, "u1_v17")
-        )
-        node_master.loadwallet("u1_v17")
-        wallet = node_master.get_wallet_rpc("u1_v17")
-        info = wallet.getaddressinfo(address)
-        descriptor = "wpkh([" + info["hdmasterfingerprint"] + hdkeypath[1:] + "]" + pubkey + ")"
-        assert_equal(info["desc"], descsum_create(descriptor))
+            # Copy the 0.17 wallet to the last Bitcoin Core version and open it:
+            node_v17.unloadwallet("u1_v17")
+            shutil.copytree(
+                os.path.join(node_v17_wallets_dir, "u1_v17"),
+                os.path.join(node_master_wallets_dir, "u1_v17")
+            )
+            node_master.loadwallet("u1_v17")
+            wallet = node_master.get_wallet_rpc("u1_v17")
+            info = wallet.getaddressinfo(address)
+            descriptor = "wpkh([" + info["hdmasterfingerprint"] + hdkeypath[1:] + "]" + pubkey + ")"
+            assert_equal(info["desc"], descsum_create(descriptor))
 
-        # Now copy that same wallet back to 0.17 to make sure no automatic upgrade breaks it
-        node_master.unloadwallet("u1_v17")
-        shutil.rmtree(os.path.join(node_v17_wallets_dir, "u1_v17"))
-        shutil.copytree(
-            os.path.join(node_master_wallets_dir, "u1_v17"),
-            os.path.join(node_v17_wallets_dir, "u1_v17")
-        )
-        node_v17.loadwallet("u1_v17")
-        wallet = node_v17.get_wallet_rpc("u1_v17")
-        info = wallet.getaddressinfo(address)
-        assert_equal(info, v17_info)
+            # Now copy that same wallet back to 0.17 to make sure no automatic upgrade breaks it
+            node_master.unloadwallet("u1_v17")
+            shutil.rmtree(os.path.join(node_v17_wallets_dir, "u1_v17"))
+            shutil.copytree(
+                os.path.join(node_master_wallets_dir, "u1_v17"),
+                os.path.join(node_v17_wallets_dir, "u1_v17")
+            )
+            node_v17.loadwallet("u1_v17")
+            wallet = node_v17.get_wallet_rpc("u1_v17")
+            info = wallet.getaddressinfo(address)
+            assert_equal(info, v17_info)
 
-        # Copy the 0.19 wallet to the last Bitcoin Core version and open it:
-        shutil.copytree(
-            os.path.join(node_v19_wallets_dir, "w1_v19"),
-            os.path.join(node_master_wallets_dir, "w1_v19")
-        )
-        node_master.loadwallet("w1_v19")
-        wallet = node_master.get_wallet_rpc("w1_v19")
-        assert wallet.getaddressinfo(address_18075)["solvable"]
+            # Copy the 0.19 wallet to the last Bitcoin Core version and open it:
+            shutil.copytree(
+                os.path.join(node_v19_wallets_dir, "w1_v19"),
+                os.path.join(node_master_wallets_dir, "w1_v19")
+            )
+            node_master.loadwallet("w1_v19")
+            wallet = node_master.get_wallet_rpc("w1_v19")
+            assert wallet.getaddressinfo(address_18075)["solvable"]
 
-        # Now copy that same wallet back to 0.19 to make sure no automatic upgrade breaks it
-        node_master.unloadwallet("w1_v19")
-        shutil.rmtree(os.path.join(node_v19_wallets_dir, "w1_v19"))
-        shutil.copytree(
-            os.path.join(node_master_wallets_dir, "w1_v19"),
-            os.path.join(node_v19_wallets_dir, "w1_v19")
-        )
-        node_v19.loadwallet("w1_v19")
-        wallet = node_v19.get_wallet_rpc("w1_v19")
-        assert wallet.getaddressinfo(address_18075)["solvable"]
+            # Now copy that same wallet back to 0.19 to make sure no automatic upgrade breaks it
+            node_master.unloadwallet("w1_v19")
+            shutil.rmtree(os.path.join(node_v19_wallets_dir, "w1_v19"))
+            shutil.copytree(
+                os.path.join(node_master_wallets_dir, "w1_v19"),
+                os.path.join(node_v19_wallets_dir, "w1_v19")
+            )
+            node_v19.loadwallet("w1_v19")
+            wallet = node_v19.get_wallet_rpc("w1_v19")
+            assert wallet.getaddressinfo(address_18075)["solvable"]
 
 if __name__ == '__main__':
     BackwardsCompatibilityTest().main()

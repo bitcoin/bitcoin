@@ -1,8 +1,8 @@
-/**********************************************************************
- * Copyright (c) 2014 Pieter Wuille                                   *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2014 Pieter Wuille                                    *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 #include <stdio.h>
 #include <string.h>
@@ -29,11 +29,11 @@ typedef struct {
 #ifdef ENABLE_OPENSSL_TESTS
     EC_GROUP* ec_group;
 #endif
-} benchmark_verify_t;
+} bench_verify_data;
 
-static void benchmark_verify(void* arg, int iters) {
+static void bench_verify(void* arg, int iters) {
     int i;
-    benchmark_verify_t* data = (benchmark_verify_t*)arg;
+    bench_verify_data* data = (bench_verify_data*)arg;
 
     for (i = 0; i < iters; i++) {
         secp256k1_pubkey pubkey;
@@ -51,9 +51,9 @@ static void benchmark_verify(void* arg, int iters) {
 }
 
 #ifdef ENABLE_OPENSSL_TESTS
-static void benchmark_verify_openssl(void* arg, int iters) {
+static void bench_verify_openssl(void* arg, int iters) {
     int i;
-    benchmark_verify_t* data = (benchmark_verify_t*)arg;
+    bench_verify_data* data = (bench_verify_data*)arg;
 
     for (i = 0; i < iters; i++) {
         data->sig[data->siglen - 1] ^= (i & 0xFF);
@@ -84,7 +84,7 @@ int main(void) {
     int i;
     secp256k1_pubkey pubkey;
     secp256k1_ecdsa_signature sig;
-    benchmark_verify_t data;
+    bench_verify_data data;
 
     int iters = get_iters(20000);
 
@@ -103,10 +103,10 @@ int main(void) {
     data.pubkeylen = 33;
     CHECK(secp256k1_ec_pubkey_serialize(data.ctx, data.pubkey, &data.pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED) == 1);
 
-    run_benchmark("ecdsa_verify", benchmark_verify, NULL, NULL, &data, 10, iters);
+    run_benchmark("ecdsa_verify", bench_verify, NULL, NULL, &data, 10, iters);
 #ifdef ENABLE_OPENSSL_TESTS
     data.ec_group = EC_GROUP_new_by_curve_name(NID_secp256k1);
-    run_benchmark("ecdsa_verify_openssl", benchmark_verify_openssl, NULL, NULL, &data, 10, iters);
+    run_benchmark("ecdsa_verify_openssl", bench_verify_openssl, NULL, NULL, &data, 10, iters);
     EC_GROUP_free(data.ec_group);
 #endif
 

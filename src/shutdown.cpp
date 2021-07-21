@@ -5,17 +5,30 @@
 
 #include <shutdown.h>
 
+#include <logging.h>
+#include <node/ui_interface.h>
+#include <util/tokenpipe.h>
+#include <warnings.h>
+
 #include <config/bitcoin-config.h>
 
 #include <assert.h>
 #include <atomic>
 #ifdef WIN32
 #include <condition_variable>
-#else
-#include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
 #endif
+
+bool AbortNode(const std::string& strMessage, bilingual_str user_message)
+{
+    SetMiscWarning(Untranslated(strMessage));
+    LogPrintf("*** %s\n", strMessage);
+    if (user_message.empty()) {
+        user_message = _("A fatal internal error occurred, see debug.log for details");
+    }
+    AbortError(user_message);
+    StartShutdown();
+    return false;
+}
 
 static std::atomic<bool> fRequestShutdown(false);
 #ifdef WIN32
@@ -24,25 +37,18 @@ std::mutex g_shutdown_mutex;
 std::condition_variable g_shutdown_cv;
 #else
 /** On UNIX-like operating systems use the self-pipe trick.
- * Index 0 will be the read end of the pipe, index 1 the write end.
  */
-static int g_shutdown_pipe[2] = {-1, -1};
+static TokenPipeEnd g_shutdown_r;
+static TokenPipeEnd g_shutdown_w;
 #endif
 
 bool InitShutdownState()
 {
 #ifndef WIN32
-#if HAVE_O_CLOEXEC
-    // If we can, make sure that the file descriptors are closed on exec()
-    // to prevent interference.
-    if (pipe2(g_shutdown_pipe, O_CLOEXEC) != 0) {
-        return false;
-    }
-#else
-    if (pipe(g_shutdown_pipe) != 0) {
-        return false;
-    }
-#endif
+    std::optional<TokenPipe> pipe = TokenPipe::Make();
+    if (!pipe) return false;
+    g_shutdown_r = pipe->TakeReadEnd();
+    g_shutdown_w = pipe->TakeWriteEnd();
 #endif
     return true;
 }
@@ -59,17 +65,10 @@ void StartShutdown()
     // case of a reentrant signal.
     if (!fRequestShutdown.exchange(true)) {
         // Write an arbitrary byte to the write end of the shutdown pipe.
-        const char token = 'x';
-        while (true) {
-            int result = write(g_shutdown_pipe[1], &token, 1);
-            if (result < 0) {
-                // Failure. It's possible that the write was interrupted by another signal.
-                // Other errors are unexpected here.
-                assert(errno == EINTR);
-            } else {
-                assert(result == 1);
-                break;
-            }
+        int res = g_shutdown_w.TokenWrite('x');
+        if (res != 0) {
+            LogPrintf("Sending shutdown token failed\n");
+            assert(0);
         }
     }
 #endif
@@ -96,17 +95,10 @@ void WaitForShutdown()
     std::unique_lock<std::mutex> lk(g_shutdown_mutex);
     g_shutdown_cv.wait(lk, [] { return fRequestShutdown.load(); });
 #else
-    char token;
-    while (true) {
-        int result = read(g_shutdown_pipe[0], &token, 1);
-        if (result < 0) {
-            // Failure. Check if the read was interrupted by a signal.
-            // Other errors are unexpected here.
-            assert(errno == EINTR);
-        } else {
-            assert(result == 1);
-            break;
-        }
+    int res = g_shutdown_r.TokenRead();
+    if (res != 'x') {
+        LogPrintf("Reading shutdown token failed\n");
+        assert(0);
     }
 #endif
 }

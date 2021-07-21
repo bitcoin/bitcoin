@@ -19,6 +19,7 @@
 
 # Maintainers
 #   @fanquake
+#   @hebasto
 #   @jonasschnelli
 #   @laanwj
 #   @marcofalke
@@ -56,14 +57,17 @@
 /src/util/settings.*                        @ryanofsky
 
 # Fuzzing
-/src/test/fuzz/                             @practicalswift
-/doc/fuzzing.md                             @practicalswift
 
-# Test framework
+# Tests
+/src/test/net_peer_eviction_tests.cpp       @jonatack
 /test/functional/mempool_updatefromblock.py @hebasto
 /test/functional/feature_asmap.py           @jonatack
 /test/functional/interface_bitcoin_cli.py   @jonatack
-/test/functional/tool_wallet.py             @jonatack
+
+# Backwards compatibility tests
+*_compatibility.py                          @sjors
+/test/functional/wallet_upgradewallet.py    @sjors @achow101
+/test/get_previous_releases.py              @sjors
 
 # Translations
 /src/util/translation.h                     @hebasto
@@ -98,6 +102,11 @@
 # Descriptors
 *descriptor*                                @achow101 @sipa
 
+# External signer
+*external_signer*                           @sjors
+/doc/external-signer.md                     @sjors
+*signer.py                                  @sjors
+
 # Interfaces
 /src/interfaces/                            @ryanofsky
 
@@ -105,9 +114,7 @@
 /src/txdb.*                                 @jamesob
 /src/dbwrapper.*                            @jamesob
 
-# Scripts/Linter
-*.sh                                        @practicalswift
-/test/lint/                                 @practicalswift
+# Linter
 /test/lint/lint-shell.sh                    @hebasto
 
 # Bech32

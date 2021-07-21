@@ -6,6 +6,8 @@ fpr
 hights
 hist
 inout
+invokable
+keypair
 mor
 nin
 ser
