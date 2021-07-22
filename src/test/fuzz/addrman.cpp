@@ -44,6 +44,17 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
             addr_man.m_asmap.clear();
         }
     }
+    if (fuzzed_data_provider.ConsumeBool()) {
+        const std::vector<uint8_t> serialized_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
+        CDataStream ds(serialized_data, SER_DISK, INIT_PROTO_VERSION);
+        const auto ser_version{fuzzed_data_provider.ConsumeIntegral<int32_t>()};
+        ds.SetVersion(ser_version);
+        try {
+            ds >> addr_man;
+        } catch (const std::ios_base::failure&) {
+            addr_man.Clear();
+        }
+    }
     while (fuzzed_data_provider.ConsumeBool()) {
         CallOneOf(
             fuzzed_data_provider,
