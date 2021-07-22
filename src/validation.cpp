@@ -6135,8 +6135,6 @@ std::vector<std::string> SanitizeGethCmdLine(const std::string& binaryURL, const
     const std::string &strPub = gArgs.GetArg("-zmqpubnevm", "");
     cmdLineRet.push_back("--nevmpub");
     cmdLineRet.push_back(strPub);
-    cmdLineRet.push_back("--v5disc");
-    cmdLineRet.push_back("--nodiscover");
     return cmdLineRet;
 }
 bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const std::string& binaryDestPath, const std::string& descriptorURL) {
