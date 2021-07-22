@@ -507,15 +507,15 @@ int CAddrMan::Check_()
 
     for (int n = 0; n < ADDRMAN_TRIED_BUCKET_COUNT; n++) {
         for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
-             if (vvTried[n][i] != -1) {
-                 if (!setTried.count(vvTried[n][i]))
-                     return -11;
-                 if (mapInfo[vvTried[n][i]].GetTriedBucket(nKey, m_asmap) != n)
-                     return -17;
-                 if (mapInfo[vvTried[n][i]].GetBucketPosition(nKey, false, n) != i)
-                     return -18;
-                 setTried.erase(vvTried[n][i]);
-             }
+            if (vvTried[n][i] != -1) {
+                if (!setTried.count(vvTried[n][i]))
+                    return -11;
+                if (mapInfo[vvTried[n][i]].GetTriedBucket(nKey, m_asmap) != n)
+                    return -17;
+                if (mapInfo[vvTried[n][i]].GetBucketPosition(nKey, false, n) != i)
+                    return -18;
+                setTried.erase(vvTried[n][i]);
+            }
         }
     }
 
