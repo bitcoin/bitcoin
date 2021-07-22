@@ -13,6 +13,7 @@ from decimal import Decimal
 
 from test_framework.blocktools import (
     create_coinbase,
+    get_witness_script,
     NORMAL_GBT_REQUEST_PARAMS,
     TIME_GENESIS_BLOCK,
 )
@@ -20,6 +21,7 @@ from test_framework.messages import (
     CBlock,
     CBlockHeader,
     BLOCK_HEADER_SIZE,
+    ser_uint256,
     # SYSCOIN
     CHAIN_ID,
     VERSION_START_BIT,
@@ -51,6 +53,9 @@ class MiningTest(SyscoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
         self.supports_cli = False
+
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
 
     def mine_chain(self):
         self.log.info('Create some old blocks')
@@ -95,7 +100,21 @@ class MiningTest(SyscoinTestFramework):
         assert_equal(mining_info['networkhashps'], Decimal('0.003333333333333334'))
         assert_equal(mining_info['pooledtx'], 0)
 
-        # Mine a block to leave initial block download
+        self.log.info("getblocktemplate: Test default witness commitment")
+        txid = int(node.sendtoaddress(node.getnewaddress(), 1), 16)
+        tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
+
+        # Check that default_witness_commitment is present.
+        assert 'default_witness_commitment' in tmpl
+        witness_commitment = tmpl['default_witness_commitment']
+
+        # Check that default_witness_commitment is correct.
+        witness_root = CBlock.get_merkle_root([ser_uint256(0),
+                                               ser_uint256(txid)])
+        script = get_witness_script(witness_root, 0)
+        assert_equal(witness_commitment, script.hex())
+
+        # Mine a block to leave initial block download and clear the mempool
         node.generatetoaddress(1, node.get_deterministic_priv_key().address)
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
         self.log.info("getblocktemplate: Test capability advertised")

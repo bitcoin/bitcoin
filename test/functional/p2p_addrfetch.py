@@ -10,7 +10,7 @@ import time
 
 from test_framework.messages import msg_addr, CAddress, NODE_NETWORK, NODE_WITNESS
 from test_framework.p2p import P2PInterface, p2p_lock
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
 
 ADDR = CAddress()
@@ -20,7 +20,7 @@ ADDR.ip = "192.0.0.8"
 ADDR.port = 18444
 
 
-class P2PAddrFetch(BitcoinTestFramework):
+class P2PAddrFetch(SyscoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True
