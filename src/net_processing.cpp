@@ -3935,18 +3935,14 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         std::vector<CBlockHeader> headers;
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
-        LogPrintf("headers\n");
         unsigned int nCount = ReadCompactSize(vRecv);
-        LogPrintf("headers1 %d\n", nCount);
         if (nCount > MAX_HEADERS_RESULTS) {
             Misbehaving(pfrom.GetId(), 20, strprintf("headers message size = %u", nCount));
             return;
         }
         headers.resize(nCount);
         for (unsigned int n = 0; n < nCount; n++) {
-            LogPrintf("headers index %d\n", n);
             vRecv >> headers[n];
-            LogPrintf("headers read compact %d\n", n);
             ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
 
