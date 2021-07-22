@@ -9,11 +9,14 @@
 #include <config/syscoin-config.h>
 #endif
 
-#include <QApplication>
+#include <interfaces/node.h>
+#include <qt/initexecutor.h>
+
 #include <assert.h>
 #include <memory>
+#include <optional>
 
-#include <interfaces/node.h>
+#include <QApplication>
 
 class SyscoinGUI;
 class ClientModel;
@@ -25,38 +28,8 @@ class SplashScreen;
 class WalletController;
 class WalletModel;
 
-QT_BEGIN_NAMESPACE
-// SYSCOIN
-class QStringList;
-QT_END_NAMESPACE
-/** Class encapsulating Syscoin Core startup and shutdown.
- * Allows running startup and shutdown in a different thread from the UI thread.
- */
-class SyscoinCore: public QObject
-{
-    Q_OBJECT
-public:
-    explicit SyscoinCore(interfaces::Node& node);
 
-public Q_SLOTS:
-    void initialize();
-    void shutdown();
-    // SYSCOIN
-    void restart(const QStringList &args);
-
-Q_SIGNALS:
-    void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
-    void shutdownResult();
-    void runawayException(const QString &message);
-
-private:
-    /// Pass fatal exception message to UI thread
-    void handleRunawayException(const std::exception *e);
-
-    interfaces::Node& m_node;
-};
-
-/** Main Syscoin application object */
+/** Main Bitcoin application object */
 class SyscoinApplication: public QApplication
 {
     Q_OBJECT
@@ -117,7 +90,7 @@ Q_SIGNALS:
     void windowShown(SyscoinGUI* window);
 
 private:
-    QThread *coreThread;
+    std::optional<InitExecutor> m_executor;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
     SyscoinGUI *window;
