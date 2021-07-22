@@ -194,7 +194,7 @@ mkdir -p "$outsigdir"
             # The SHA256SUMS already exists, make sure it's exactly what we
             # expect, error out if not
             if diff -u noncodesigned.SHA256SUMS "$temp_noncodesigned"; then
-                echo "A noncodesigned.SHA256SUMS file already exists for '${VERSION}' and is up-to-date."
+                echo "A non-codesigned.SHA256SUMS file already exists for '${VERSION}' and is up-to-date."
             else
                 shasum_already_exists noncodesigned.SHA256SUMS
                 exit 1
@@ -203,7 +203,7 @@ mkdir -p "$outsigdir"
             mv "$temp_noncodesigned" noncodesigned.SHA256SUMS
         fi
     else
-        echo "ERR: No noncodesigned outputs found for '${VERSION}', exiting..."
+        echo "ERR: No non-codesigned outputs found for '${VERSION}', exiting..."
         exit 1
     fi
 
