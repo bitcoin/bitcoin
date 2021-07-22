@@ -121,6 +121,9 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
         uint256 block_hash;
         if (g_txindex->FindTx(hash, block_hash, tx)) {
             if (!block_index || block_index->GetBlockHash() == block_hash) {
+                // Don't return the transaction if the provided block hash doesn't match.
+                // The case where a transaction appears in multiple blocks (e.g. reorgs or
+                // BIP30) is handled by the block lookup below.
                 hashBlock = block_hash;
                 return tx;
             }
