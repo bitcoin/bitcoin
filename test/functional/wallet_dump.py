@@ -27,43 +27,51 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
             # only read non comment lines
             if line[0] != "#" and len(line) > 10:
                 # split out some data
-                key_label, comment = line.split("#")
-                # key = key_label.split(" ")[0]
-                keytype = key_label.split(" ")[2]
-                if len(comment) > 1:
-                    addr_keypath = comment.split(" addr=")[1]
-                    addr = addr_keypath.split(" ")[0]
+                key_date_label, comment = line.split("#")
+                key_date_label = key_date_label.split(" ")
+                # key = key_date_label[0]
+                date = key_date_label[1]
+                keytype = key_date_label[2]
+
+                imported_key = date == '1970-01-01T00:00:01Z'
+                if imported_key:
+                    # Imported keys have multiple addresses, no label (keypath) and timestamp
+                    # Skip them
+                    continue
+
+                addr_keypath = comment.split(" addr=")[1]
+                addr = addr_keypath.split(" ")[0]
+                keypath = None
+                if keytype == "inactivehdseed=1":
+                    # ensure the old master is still available
+                    assert (hd_master_addr_old == addr)
+                elif keytype == "hdseed=1":
+                    # ensure we have generated a new hd master key
+                    assert (hd_master_addr_old != addr)
+                    hd_master_addr_ret = addr
+                elif keytype == "script=1":
+                    # scripts don't have keypaths
                     keypath = None
-                    if keytype == "inactivehdseed=1":
-                        # ensure the old master is still available
-                        assert(hd_master_addr_old == addr)
-                    elif keytype == "hdseed=1":
-                        # ensure we have generated a new hd master key
-                        assert(hd_master_addr_old != addr)
-                        hd_master_addr_ret = addr
-                    elif keytype == "script=1":
-                        # scripts don't have keypaths
-                        keypath = None
-                    else:
-                        keypath = addr_keypath.rstrip().split("hdkeypath=")[1]
+                else:
+                    keypath = addr_keypath.rstrip().split("hdkeypath=")[1]
 
-                    # count key types
-                    for addrObj in addrs:
-                        if addrObj['address'] == addr and addrObj['hdkeypath'] == keypath and keytype == "label=":
-                            found_addr += 1
-                            break
-                        elif keytype == "change=1":
-                            found_addr_chg += 1
-                            break
-                        elif keytype == "reserve=1":
-                            found_addr_rsv += 1
-                            break
+                # count key types
+                for addrObj in addrs:
+                    if addrObj['address'] == addr and addrObj['hdkeypath'] == keypath and keytype == "label=":
+                        found_addr += 1
+                        break
+                    elif keytype == "change=1":
+                        found_addr_chg += 1
+                        break
+                    elif keytype == "reserve=1":
+                        found_addr_rsv += 1
+                        break
 
-                    # count scripts
-                    for script_addr in script_addrs:
-                        if script_addr == addr.rstrip() and keytype == "script=1":
-                            found_script_addr += 1
-                            break
+                # count scripts
+                for script_addr in script_addrs:
+                    if script_addr == addr.rstrip() and keytype == "script=1":
+                        found_script_addr += 1
+                        break
 
         return found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret
 
@@ -112,7 +120,7 @@ class WalletDumpTest(BitcoinTestFramework):
         assert_equal(found_addr, test_addr_count)  # all keys must be in the dump
         # This is 1, not 2 because we aren't testing for witness scripts
         assert_equal(found_script_addr, 1)  # all scripts must be in the dump
-        assert_equal(found_addr_chg, 50)  # 50 blocks where mined
+        assert_equal(found_addr_chg, 0)  # 0 blocks where mined
         assert_equal(found_addr_rsv, 180)  # keypool size (external+internal)
 
         #encrypt wallet, restart, unlock and dump

@@ -384,6 +384,14 @@ class P2PInterface(P2PConnection):
 
     # Message receiving helper methods
 
+    def wait_for_tx(self, txid, timeout=60):
+        def test_function():
+            if not self.last_message.get('tx'):
+                return False
+            return self.last_message['tx'].tx.rehash() == txid
+
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
     def wait_for_block(self, blockhash, timeout=60):
         test_function = lambda: self.last_message.get("block") and self.last_message["block"].block.rehash() == blockhash
         wait_until(test_function, timeout=timeout, lock=mininode_lock)

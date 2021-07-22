@@ -107,6 +107,22 @@ class TestNode():
 
         self.p2ps = []
 
+    def get_deterministic_priv_key(self):
+        """Return a deterministic priv key in base58, that only depends on the node's index"""
+        PRIV_KEYS = [
+            # address , privkey
+            ('yYdShjQSptFKitYLksFEUSwHe4hnbar5rf', 'cMfbiEsnG5b8Gwm6vEgfWvZLuXZNC4zsN2y7Es3An9xHRWRjmwgR'),
+            ('yfTFJgvq65UZsb9RBbpdYAAzsJoCGXqH2w', 'cStuFACUD1N6JjKQxNLUQ443qJUtSzLitKKEkA8x6utxTPZTLUtA'),
+            ('yU3w4VDjKhHiZpWszkUZVnFTS56AfgdfPV', 'cQb5yh2sTiG7dsxxbXHhWSBLMByYT7jY49A1kC7zKhgL9WNHysWW'),
+            ('yYhzix2R5LiYnDixsUnF8XwBYGYpyeTgB4', 'cW9Gu6uU4KoZJQcdyUvjULNRg4C8srPJw1adhgdTZMr9YQdKHtcn'),
+            ('yiQ3qLx5L1BW9XA6JAG7hC8UQDktcBCeYG', 'cSq7gHVC1QPsswyX2pE5C38UnWZXfCLr7XnkjnDwuZ68NkWp183T'),
+            ('yUL8h8mR7aNDRsU5zhcDbpp6YtA6ieUtK2', 'cTk7hiDKgxZX3JSb37vywdYYjjJows4DQjEaxBJDGF6LC6GXvPKo'),
+            ('yfy21e12jn3A3uDicNehCq486o9fMwJKMc', 'cMuko9rLDbtxCFWuBSrFgBDRSMxsLWKpJKScRGNuWKbhuQsnsjKT'),
+            ('yURgENB3b2YRMWnbhKF7iGs3KoaVRVXsJr', 'cQhdjTMh57MaHCDk9FsWGPtftRMBUuhaYAtouWnetcewmBuSrLSM'),
+            ('yYC9AxBEUs3ZZxfcQvj2LUF5PVxxtqaEs7', 'cQFueiiP13mfytV3Svoe4o4Ux79fRJvwuSgHapXsnBwrHod57EeL'),
+        ]
+        return PRIV_KEYS[self.index]
+
     def _node_msg(self, msg: str) -> str:
         """Return a modified msg that identifies this node by its index as a debugging aid."""
         return "[node %d] %s" % (self.index, msg)

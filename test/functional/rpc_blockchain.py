@@ -50,7 +50,6 @@ class BlockchainTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.extra_args = [['-stopatheight=207', '-prune=1', '-txindex=0']]
 
     def run_test(self):
         # Have to prepare the chain manually here.
@@ -59,6 +58,9 @@ class BlockchainTest(BitcoinTestFramework):
         for i in range(200):
             self.bump_mocktime(156)
             self.nodes[0].generate(1)
+
+        self.restart_node(0, extra_args=['-stopatheight=207', '-prune=1', '-txindex=0'])  # Set extra args with pruning after rescan is complete
+
         # Actual tests
         self._test_getblockchaininfo()
         self._test_getchaintxstats()

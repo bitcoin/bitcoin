@@ -44,6 +44,7 @@ class ZMQTest (BitcoinTestFramework):
     def setup_nodes(self):
         skip_if_no_py3_zmq()
         skip_if_no_bitcoind_zmq(self)
+
         import zmq
 
         # Initialize ZMQ context and socket.
@@ -63,7 +64,10 @@ class ZMQTest (BitcoinTestFramework):
         self.rawblock = ZMQSubscriber(socket, b"rawblock")
         self.rawtx = ZMQSubscriber(socket, b"rawtx")
 
-        self.extra_args = [["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [self.hashblock, self.hashtx, self.rawblock, self.rawtx]], []]
+        self.extra_args = [
+            ["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [self.hashblock, self.hashtx, self.rawblock, self.rawtx]],
+            [],
+        ]
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
 
