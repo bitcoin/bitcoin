@@ -8,6 +8,7 @@
 
 #include <interfaces/node.h>
 #include <qt/bitcoin.h>
+#include <qt/initexecutor.h>
 #include <qt/test/apptests.h>
 #include <qt/test/rpcnestedtests.h>
 #include <qt/test/uritests.h>
