@@ -631,12 +631,12 @@ protected:
     uint256 nKey;
 
     //! Source of random numbers for randomization in inner loops
-    mutable FastRandomContext insecure_rand;
+    mutable FastRandomContext insecure_rand GUARDED_BY(cs);
 
-private:
     //! A mutex to protect the inner data structures.
     mutable Mutex cs;
 
+private:
     //! Serialization versions.
     enum Format : uint8_t {
         V0_HISTORICAL = 0,    //!< historic format, before commit e6b343d88

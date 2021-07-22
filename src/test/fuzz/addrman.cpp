@@ -27,7 +27,7 @@ class CAddrManDeterministic : public CAddrMan
 public:
     void MakeDeterministic(const uint256& random_seed)
     {
-        insecure_rand = FastRandomContext{random_seed};
+        WITH_LOCK(cs, insecure_rand = FastRandomContext{random_seed});
         Clear();
     }
 };
