@@ -216,7 +216,6 @@ mkdir -p "$outsigdir"
         cat "${sha256sum_fragments[@]}" \
             | sort -u \
             | sort -k2 \
-            | sed 's/$/\r/' \
             | rfc4880_normalize_document \
                 > "$temp_all"
         if [ -e all.SHA256SUMS ]; then
