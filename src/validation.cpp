@@ -18,7 +18,6 @@
 #include <flatfile.h>
 #include <hash.h>
 #include <index/blockfilterindex.h>
-#include <index/txindex.h>
 #include <logging.h>
 #include <logging/timer.h>
 #include <node/blockstorage.h>
@@ -1153,38 +1152,6 @@ PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTx
         active_chainstate.CoinsTip().Uncache(hashTx);
     }
     return result;
-}
-
-CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock)
-{
-    LOCK(cs_main);
-
-    if (mempool && !block_index) {
-        CTransactionRef ptx = mempool->get(hash);
-        if (ptx) return ptx;
-    }
-    if (g_txindex) {
-        CTransactionRef tx;
-        uint256 block_hash;
-        if (g_txindex->FindTx(hash, block_hash, tx)) {
-            if (!block_index || block_index->GetBlockHash() == block_hash) {
-                hashBlock = block_hash;
-                return tx;
-            }
-        }
-    }
-    if (block_index) {
-        CBlock block;
-        if (ReadBlockFromDisk(block, block_index, consensusParams)) {
-            for (const auto& tx : block.vtx) {
-                if (tx->GetHash() == hash) {
-                    hashBlock = block_index->GetBlockHash();
-                    return tx;
-                }
-            }
-        }
-    }
-    return nullptr;
 }
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)

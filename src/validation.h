@@ -141,20 +141,7 @@ void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman);
 void StartScriptCheckWorkerThreads(int threads_num);
 /** Stop all of the script checking worker threads */
 void StopScriptCheckWorkerThreads();
-/**
- * Return transaction with a given hash.
- * If mempool is provided and block_index is not provided, check it first for the tx.
- * If -txindex is available, check it next for the tx.
- * Finally, if block_index is provided, check for tx by reading entire block from disk.
- *
- * @param[in]  block_index     The block to read from disk, or nullptr
- * @param[in]  mempool         If provided, check mempool for tx
- * @param[in]  hash            The txid
- * @param[in]  consensusParams The params
- * @param[out] hashBlock       The block hash, if the tx was found via -txindex or block_index
- * @returns                    The tx if found, otherwise nullptr
- */
-CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock);
+
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
 bool AbortNode(BlockValidationState& state, const std::string& strMessage, const bilingual_str& userMessage = bilingual_str{});
