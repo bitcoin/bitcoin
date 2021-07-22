@@ -697,9 +697,9 @@ static RPCHelpMan getblocktemplate()
     // Get expected MN/superblock payees. The call to GetBlockTxOuts might fail on regtest/devnet or when
     // testnet is reset. This is fine and we ignore failure (blocks will be accepted)
     std::vector<CTxOut> voutMasternodePayments;
-    CAmount mnRet;
+    CAmount mnRet, mnRet1;
     int nCollateralHeight;
-    mnpayments.GetBlockTxOuts(node.chainman->ActiveChain(), node.chainman->ActiveHeight() + 1, 0, voutMasternodePayments, 0, mnRet, nCollateralHeight);
+    mnpayments.GetBlockTxOuts(node.chainman->ActiveChain(), node.chainman->ActiveHeight() + 1, 0, voutMasternodePayments, 0, mnRet, mnRet1, nCollateralHeight);
 
     // next bock is a superblock and we need governance info to correctly construct it
     if (!fRegTest && !fSigNet && isSBSportActive

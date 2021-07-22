@@ -290,6 +290,9 @@ def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=Tru
 # Identical to GetBlockMNSubsidy in C++ code
 def get_masternode_payment(nHeight, nBlockReward, nStartHeight):
     nSubsidy = nBlockReward*0.75
+    nMinMN = 5.275*COIN
+    if (nSubsidy < nMinMN):
+        nSubsidy = nMinMN
     if (nHeight > 0 and nStartHeight > 0):
         nDifferenceInBlocks = 0
         if (nHeight > nStartHeight):
@@ -302,6 +305,7 @@ def get_masternode_payment(nHeight, nBlockReward, nStartHeight):
         if(fSubsidyAdjustmentPercentage > 0):
             nMNSeniorityRet = nSubsidy*fSubsidyAdjustmentPercentage
             nSubsidy += nMNSeniorityRet
+            
     return nSubsidy
 
 class TestFrameworkBlockTools(unittest.TestCase):
