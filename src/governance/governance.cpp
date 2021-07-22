@@ -836,7 +836,7 @@ void CGovernanceManager::CheckPostponedObjects(CConnman& connman)
 {
     if (!masternodeSync.IsSynced()) return;
 
-    LOCK(cs);
+    LOCK2(cs_main, cs);
 
     // Check postponed proposals
     for (auto it = mapPostponedObjects.begin(); it != mapPostponedObjects.end();) {
