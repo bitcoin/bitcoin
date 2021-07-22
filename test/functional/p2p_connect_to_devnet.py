@@ -4,8 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test being able to connect to the same devnet"""
 
+from test_framework.mininode import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import connect_nodes_bi
+from test_framework.util import assert_equal, connect_nodes_bi
 
 class ConnectDevnetNodes(BitcoinTestFramework):
     def set_test_params(self):
@@ -22,10 +23,9 @@ class ConnectDevnetNodes(BitcoinTestFramework):
 
 
     def run_test(self):
-        """
-        There isn't any test logic needed, if the nodes can't connect that means it is broken,
-        so the test is seeing if a devnet can be started.
-        """
+        self.nodes[0].add_p2p_connection(P2PInterface())
+        assert_equal(self.nodes[0].getconnectioncount(), 3)  # 2 in/out dashd + 1 p2p
+
 
 if __name__ == '__main__':
     ConnectDevnetNodes().main()
