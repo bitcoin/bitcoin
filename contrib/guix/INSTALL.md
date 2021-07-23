@@ -79,8 +79,8 @@ Guix v1.2.0 is available as a distribution package starting in [Debian
 21.04](https://packages.ubuntu.com/hirsute/guix).
 
 Note that if you intend on using Guix without using any substitutes (more
-details [here][security-model]), v1.2.0 has a known problems when building
-GnuTLS from source. Solutions and workarounds are documented
+details [here][security-model]), v1.2.0 has a known problem when building GnuTLS
+from source. Solutions and workarounds are documented
 [here](#gnutls-test-suite-fail-status-request-revoked).
 
 
@@ -124,7 +124,7 @@ particular commit of Guix). Previous experience with using autotools-style build
 systems to build packages from source will be helpful. *hic sunt dracones.*
 
 I strongly urge you to at least skim through the entire section once before you
-start issuing commands, as it will save you a lot of unncessary pain and
+start issuing commands, as it will save you a lot of unnecessary pain and
 anguish.
 
 ### Installing common build tools
@@ -165,7 +165,7 @@ packaged and installable without manually building and installing.
 
 For reference, the graphic below outlines Guix v1.3.0's dependency graph:
 
-![boostrap map](https://user-images.githubusercontent.com/6399679/125064185-a9a59880-e0b0-11eb-82c1-9b8e5dc9950d.png)
+![bootstrap map](https://user-images.githubusercontent.com/6399679/125064185-a9a59880-e0b0-11eb-82c1-9b8e5dc9950d.png)
 
 #### Guile
 
@@ -270,23 +270,11 @@ Note that these environment variables are used to check for packages during
 `./configure`, so they should be set as soon as possible should you want to use
 a prefix other than `/usr`.
 
-<!-- ##### Example: Consistently using Guile 3.0 on Ubuntu -->
-
-<!-- For example, on Ubuntu, if you choose to use Guile 3.0 and install the -->
-<!-- `guile-3.0` package, you want to make sure that if you also want to install the -->
-<!-- `guile-git` package with `apt` that said `guile-git` package was built for Guile -->
-<!-- v3.0. This can be checked by invoking the following: -->
-
-<!-- ``` -->
-<!-- apt update -->
-<!-- apt show guile-git -->
-<!-- ``` -->
-
 #### Building and installing source-built packages
 
-***IMPORTANT**: A few dependencies have non-obvious quirks/erratas which are documented in the
-sub-sections immediately below. Please read these sections before proceeding to
-build and install these packages.*
+***IMPORTANT**: A few dependencies have non-obvious quirks/errata which are
+documented in the sub-sections immediately below. Please read these sections
+before proceeding to build and install these packages.*
 
 Although you should always refer to the README or INSTALL files for the most
 accurate information, most of these dependencies use autoconf-style build
