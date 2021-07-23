@@ -3238,7 +3238,7 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, CBlockIndex *pind
 bool CChainState::MarkConflictingBlock(BlockValidationState& state, CBlockIndex *pindex)
 {
     AssertLockHeld(cs_main);
-    AssertLockNotHeld(m_mempool.cs);
+    AssertLockNotHeld(m_mempool->cs);
     // We first disconnect backwards and then mark the blocks as conflicting.
 
     bool pindex_was_in_chain = false;
@@ -3253,7 +3253,7 @@ bool CChainState::MarkConflictingBlock(BlockValidationState& state, CBlockIndex 
     while (true) {
         if (ShutdownRequested()) break;
 
-        LOCK(m_mempool.cs); // Lock transaction pool for at least as long as it takes for connectTrace to be consumed
+        LOCK(m_mempool->cs); // Lock transaction pool for at least as long as it takes for connectTrace to be consumed
         if(!m_chain.Contains(pindex)) break;
         const CBlockIndex* pindexOldTip = m_chain.Tip();
         pindex_was_in_chain = true;
@@ -3266,7 +3266,7 @@ bool CChainState::MarkConflictingBlock(BlockValidationState& state, CBlockIndex 
         // transactions back to the mempool if disconnecting was successful,
         // and we're not doing a very deep invalidation (in which case
         // keeping the mempool up to date is probably futile anyway).
-        UpdateMempoolForReorg(*this, m_mempool, disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && ret);
+        MaybeUpdateMempoolForReorg(disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && ret);
         if (!ret) return false;
         if (pindexOldTip == pindexBestHeader) {
             pindexBestHeader = pindexBestHeader->pprev;
