@@ -21,6 +21,6 @@ FUZZ_TARGET_INIT(data_stream_addr_man, initialize_data_stream_addr_man)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     CDataStream data_stream = ConsumeDataStream(fuzzed_data_provider);
-    CAddrMan addr_man;
+    CAddrMan addr_man(/* deterministic */ false);
     CAddrDB::Read(addr_man, data_stream);
 }

@@ -1164,7 +1164,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     const bool ignores_incoming_txs{args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)};
 
     assert(!node.addrman);
-    node.addrman = std::make_unique<CAddrMan>();
+    node.addrman = std::make_unique<CAddrMan>(/* deterministic */ false);
     assert(!node.banman);
     node.banman = std::make_unique<BanMan>(gArgs.GetDataDirNet() / "banlist", &uiInterface, args.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);

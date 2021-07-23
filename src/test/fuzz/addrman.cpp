@@ -29,7 +29,8 @@ public:
     FuzzedDataProvider& m_fuzzed_data_provider;
 
     explicit CAddrManDeterministic(FuzzedDataProvider& fuzzed_data_provider)
-        : m_fuzzed_data_provider(fuzzed_data_provider)
+        : CAddrMan(/* deterministic */ true)
+        , m_fuzzed_data_provider(fuzzed_data_provider)
     {
         WITH_LOCK(cs, insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
         if (fuzzed_data_provider.ConsumeBool()) {
