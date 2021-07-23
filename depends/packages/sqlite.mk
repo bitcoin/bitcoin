@@ -10,6 +10,10 @@ $(package)_config_opts=--disable-shared --disable-readline --disable-dynamic-ext
 $(package)_config_opts_linux=--with-pic
 endef
 
+define $(package)_preprocess_cmds
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub .
+endef
+
 define $(package)_config_cmds
   $($(package)_autoconf)
 endef
