@@ -87,7 +87,7 @@ crucial differences:
 An invocation with all default options would look like:
 
 ```
-env DETACHED_SIGS_REPO=<path/to/bitcoin-detached-sigs> ./contrib/guix-codesign
+env DETACHED_SIGS_REPO=<path/to/bitcoin-detached-sigs> ./contrib/guix/guix-codesign
 ```
 
 ## Cleaning intermediate work directories
