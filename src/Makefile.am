@@ -1054,8 +1054,8 @@ EXTRA_DIST += $(libsyscoin_ipc_mpgen_input)
 %.capnp:
 
 if BUILD_MULTIPROCESS
-LIBBITCOIN_IPC=libsyscoin_ipc.a
-libbitcoin_ipc_a_SOURCES = \
+LIBSYSCOIN_IPC=libsyscoin_ipc.a
+libsyscoin_ipc_a_SOURCES = \
   ipc/capnp/context.h \
   ipc/capnp/init-types.h \
   ipc/capnp/protocol.cpp \
