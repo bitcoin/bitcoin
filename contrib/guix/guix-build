@@ -3,7 +3,7 @@ export LC_ALL=C
 set -e -o pipefail
 
 # Source the common prelude, which:
-#   1. Checks if we're at the top directory of the Bitcoin Core repository
+#   1. Checks if we're at the top directory of the Syscoin Core repository
 #   2. Defines a few common functions and variables
 #
 # shellcheck source=libexec/prelude.bash
@@ -103,6 +103,14 @@ ERR: Build directories for this commit already exist for the following platform
 
      Aborting...
 
+Hint: To blow everything away, you may want to use:
+
+  $ ./contrib/guix/guix-clean
+
+Specifically, this will remove all files without an entry in the index,
+excluding the SDK directory, the depends download cache, the depends built
+packages cache, the garbage collector roots for Guix environments, and the
+output directory.
 EOF
 for host in $hosts_distsrc_exists; do
     echo "     ${host} '$(distsrc_for_host "$host")'"
@@ -119,7 +127,7 @@ fi
 for host in $HOSTS; do
     case "$host" in
         *darwin*)
-            OSX_SDK="$(make -C "${PWD}/depends" --no-print-directory HOST="$host" print-OSX_SDK | sed 's@^[^=]\+=[[:space:]]\+@@g')"
+            OSX_SDK="$(make -C "${PWD}/depends" --no-print-directory HOST="$host" print-OSX_SDK | sed 's@^[^=]\+=@@g')"
             if [ -e "$OSX_SDK" ]; then
                 echo "Found macOS SDK at '${OSX_SDK}', using..."
             else
@@ -148,7 +156,7 @@ done
 if (( total_required_KiB > avail_KiB )); then
     total_required_GiB=$((total_required_KiB / 1048576))
     avail_GiB=$((avail_KiB / 1048576))
-    echo "Performing a Bitcoin Core Guix build for the selected HOSTS requires ${total_required_GiB} GiB, however, only ${avail_GiB} GiB is available. Please free up some disk space before performing the build."
+    echo "Performing a Syscoin Core Guix build for the selected HOSTS requires ${total_required_GiB} GiB, however, only ${avail_GiB} GiB is available. Please free up some disk space before performing the build."
     exit 1
 fi
 
@@ -223,12 +231,6 @@ host_to_commonname() {
     esac
 }
 
-# Download the depends sources now as we won't have internet access in the build
-# container
-for host in $HOSTS; do
-    make -C "${PWD}/depends" -j"$JOBS" download-"$(host_to_commonname "$host")" ${V:+V=1} ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
-done
-
 # Determine the reference time used for determinism (overridable by environment)
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 
@@ -245,6 +247,60 @@ time-machine() {
                       ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS} \
                       -- "$@"
 }
+
+
+# Precious directories are those which should not be cleaned between successive
+# guix builds
+depends_precious_dir_names='SOURCES_PATH BASE_CACHE SDK_PATH'
+precious_dir_names="${depends_precious_dir_names} OUTDIR_BASE PROFILES_BASE"
+
+# Usage: contains IFS-SEPARATED-LIST ITEM
+contains() {
+    for i in ${1}; do
+        if [ "$i" = "${2}" ]; then
+            return 0  # Found!
+        fi
+    done
+    return 1
+}
+
+# If the user explicitly specified a precious directory, create it so we
+# can map it into the container
+for precious_dir_name in $precious_dir_names; do
+    precious_dir_path="${!precious_dir_name}"
+    if [ -n "$precious_dir_path" ]; then
+        if [ ! -e "$precious_dir_path" ]; then
+            mkdir -p "$precious_dir_path"
+        elif [ -L "$precious_dir_path" ]; then
+            echo "ERR: ${precious_dir_name} cannot be a symbolic link"
+            exit 1
+        elif [ ! -d "$precious_dir_path" ]; then
+            echo "ERR: ${precious_dir_name} must be a directory"
+            exit 1
+        fi
+    fi
+done
+
+mkdir -p "$VAR_BASE"
+
+# Record the _effective_ values of precious directories such that guix-clean can
+# avoid clobbering them if appropriate.
+#
+# shellcheck disable=SC2046,SC2086
+{
+    # Get depends precious dir definitions from depends
+    make -C "${PWD}/depends" \
+         --no-print-directory \
+         -- $(printf "print-%s\n" $depends_precious_dir_names)
+
+    # Get remaining precious dir definitions from the environment
+    for precious_dir_name in $precious_dir_names; do
+        precious_dir_path="${!precious_dir_name}"
+        if ! contains "$depends_precious_dir_names" "$precious_dir_name"; then
+            echo "${precious_dir_name}=${precious_dir_path}"
+        fi
+    done
+} > "${VAR_BASE}/precious_dirs"
 
 # Make sure an output directory exists for our builds
 OUTDIR_BASE="${OUTDIR_BASE:-${VERSION_BASE}/output}"
@@ -282,23 +338,18 @@ profiledir_for_host() {
 int_trap() {
 cat << EOF
 ** INT received while building ${1}, you may want to clean up the relevant
-   output, deploy, and distsrc-* directories before rebuilding
+   work directories (e.g. distsrc-*) before rebuilding
 
 Hint: To blow everything away, you may want to use:
 
-  $ git clean -xdff --exclude='/depends/SDKs/*'
+  $ ./contrib/guix/guix-clean
 
 Specifically, this will remove all files without an entry in the index,
-excluding the SDK directory. Practically speaking, this means that all ignored
-and untracked files and directories will be wiped, allowing you to start anew.
+excluding the SDK directory, the depends download cache, the depends built
+packages cache, the garbage collector roots for Guix environments, and the
+output directory.
 EOF
 }
-
-# Create SOURCES_PATH, BASE_CACHE, and SDK_PATH if they are non-empty so that we
-# can map them into the container
-[ -z "$SOURCES_PATH" ] || mkdir -p "$SOURCES_PATH"
-[ -z "$BASE_CACHE" ]   || mkdir -p "$BASE_CACHE"
-[ -z "$SDK_PATH" ]     || mkdir -p "$SDK_PATH"
 
 # Deterministically build Syscoin Core
 # shellcheck disable=SC2153
@@ -376,7 +427,7 @@ EOF
         #
         #   --keep-failed     keep build tree of failed builds
         #
-        #     When builds of the Guix environment itself (not Bitcoin Core)
+        #     When builds of the Guix environment itself (not Syscoin Core)
         #     fail, it is useful for the build tree to be kept for debugging
         #     purposes.
         #
