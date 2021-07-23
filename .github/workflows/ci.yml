@@ -379,7 +379,7 @@ jobs:
         run: make
       - name: run functional tests
         if: always()
-        timeout-minutes: 60
+        timeout-minutes: 90
         run: python3 test/functional/test_runner.py
       - name: run pop integration tests
         if: always()

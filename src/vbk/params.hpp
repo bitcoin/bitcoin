@@ -44,7 +44,8 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
     // - check that 'root' is equal to Merkle Root in CBlockHeader
     bool checkBlockHeader(
         const std::vector<uint8_t>& bytes,
-        const std::vector<uint8_t>& root, altintegration::ValidationState& state) const noexcept override;
+        const std::vector<uint8_t>& root,
+        altintegration::ValidationState& state) const noexcept override;
 
     altintegration::AltBlock bootstrap;
 };

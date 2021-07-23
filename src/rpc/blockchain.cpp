@@ -924,13 +924,16 @@ static UniValue getblock(const JSONRPCRequest& request)
     UniValue json = blockToJSON(block, tip, pblockindex, verbosity >= 2);
 
     if (VeriBlock::isPopEnabled()) {
-        auto& pop = VeriBlock::GetPop();
         LOCK(cs_main);
-        auto index = pop.getAltBlockTree().getBlockIndex(block.GetHash().asVector());
-        VBK_ASSERT(index);
         UniValue obj(UniValue::VOBJ);
 
-        obj.pushKV("state", altintegration::ToJSON<UniValue>(*index));
+        auto* index = VeriBlock::GetAltBlockIndex(block.GetHash());
+        if (index) {
+            obj.pushKV("state", altintegration::ToJSON<UniValue>(*index));
+        } else {
+            obj.pushKV("state", UniValue(UniValue::VNULL));
+        }
+
         obj.pushKV("data", altintegration::ToJSON<UniValue>(block.popData, verbosity >= 2));
         json.pushKV("pop", obj);
     }

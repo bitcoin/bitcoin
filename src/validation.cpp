@@ -3970,16 +3970,15 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
     if (VeriBlock::isPopEnabled()) {
         // VeriBlock: Block that have been passed to TestBlockValidity may not exist in alt tree, because technically it was not created ("mined").
         // in this case, add it and then remove
-        auto& tree = VeriBlock::GetPop().getAltBlockTree();
-        auto _hash = block_hash.asVector();
-        if (!tree.getBlockIndex(_hash)) {
+        if (!VeriBlock::GetAltBlockIndex(block_hash)) {
             shouldRemove = true;
             auto containing = VeriBlock::blockToAltBlock(indexDummy);
             altintegration::ValidationState _state;
+            auto& tree = VeriBlock::GetPop().getAltBlockTree();
             bool ret = tree.acceptBlockHeader(containing, _state);
             assert(ret && "alt tree can not accept alt block");
 
-            tree.acceptBlock(_hash, block.popData);
+            tree.acceptBlock(block_hash.asVector(), block.popData);
         }
     }
 

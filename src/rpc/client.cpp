@@ -36,6 +36,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getrawvbkblock", 1, "verbose"},
     { "getpopdatabyheight", 0, "block_height"},
     { "setmempooldostalledcheck", 0, "flag"},
+    { "extractblockinfo", 0, "pubdata"},
     // end VeriBlock
     { "setmocktime", 0, "timestamp" },
     { "utxoupdatepsbt", 1, "descriptors" },

@@ -130,15 +130,6 @@ UniValue getpopdatabyheight(const JSONRPCRequest& request)
 
     EnsurePopEnabled();
 
-    auto wallet = GetWalletForJSONRPCRequest(request);
-    if (!EnsureWalletIsAvailable(wallet.get(), request.fHelp)) {
-        return NullUniValue;
-    }
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    wallet->BlockUntilSyncedToCurrentChain();
-
     int height = request.params[0].get_int();
 
     LOCK(cs_main);
@@ -160,15 +151,6 @@ UniValue getpopdatabyhash(const JSONRPCRequest& request)
             HelpExampleCli("getpopdatabyhash", "xxx") + HelpExampleRpc("getpopdatabyhash", "xxx"));
 
     EnsurePopEnabled();
-
-    auto wallet = GetWalletForJSONRPCRequest(request);
-    if (!EnsureWalletIsAvailable(wallet.get(), request.fHelp)) {
-        return NullUniValue;
-    }
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    wallet->BlockUntilSyncedToCurrentChain();
 
     std::string hex = request.params[0].get_str();
     LOCK(cs_main);
@@ -209,19 +191,6 @@ static void logSubmitResult(const std::string idhex, const altintegration::MemPo
         auto s = strprintf("(state: %s)", state.toString());
         LogPrintf("accepted %s=%s to POP mempool %s\n", T::name(), idhex, (state.IsValid() ? "" : s));
     }
-}
-
-using VbkTree = altintegration::VbkBlockTree;
-using BtcTree = altintegration::VbkBlockTree::BtcTree;
-
-static const VbkTree& vbk()
-{
-    return VeriBlock::GetPop().getVbkBlockTree();
-}
-
-static const BtcTree& btc()
-{
-    return VeriBlock::GetPop().getBtcBlockTree();
 }
 
 // submitpop
@@ -357,11 +326,11 @@ UniValue getblock(const JSONRPCRequest& req, Tree& tree, const std::string& chai
 
 UniValue getvbkblock(const JSONRPCRequest& req)
 {
-    return getblock(req, vbk(), "vbk");
+    return getblock(req, VeriBlock::GetPop().getAltBlockTree().vbk(), "vbk");
 }
 UniValue getbtcblock(const JSONRPCRequest& req)
 {
-    return getblock(req, btc(), "btc");
+    return getblock(req, VeriBlock::GetPop().getAltBlockTree().btc(), "btc");
 }
 
 } // namespace
@@ -402,12 +371,12 @@ UniValue getbestblockhash(const JSONRPCRequest& request, Tree& tree, const std::
 
 UniValue getvbkbestblockhash(const JSONRPCRequest& request)
 {
-    return getbestblockhash(request, vbk(), "vbk");
+    return getbestblockhash(request, VeriBlock::GetPop().getAltBlockTree().vbk(), "vbk");
 }
 
 UniValue getbtcbestblockhash(const JSONRPCRequest& request)
 {
-    return getbestblockhash(request, btc(), "btc");
+    return getbestblockhash(request, VeriBlock::GetPop().getAltBlockTree().btc(), "btc");
 }
 
 UniValue getmissingbtcblockhashes(const JSONRPCRequest& request)
@@ -475,11 +444,11 @@ UniValue getblockhash(const JSONRPCRequest& request, Tree& tree, const std::stri
 
 UniValue getvbkblockhash(const JSONRPCRequest& request)
 {
-    return getblockhash(request, vbk(), "vbk");
+    return getblockhash(request, VeriBlock::GetPop().getAltBlockTree().vbk(), "vbk");
 }
 UniValue getbtcblockhash(const JSONRPCRequest& request)
 {
-    return getblockhash(request, btc(), "btc");
+    return getblockhash(request, VeriBlock::GetPop().getAltBlockTree().btc(), "btc");
 }
 
 } // namespace
@@ -728,8 +697,8 @@ UniValue getpopparams(const JSONRPCRequest& req)
     auto& config = VeriBlock::GetPop().getConfig();
     auto ret = altintegration::ToJSON<UniValue>(*config.alt);
 
-    auto* vbkfirst = vbk().getBestChain().first();
-    auto* btcfirst = btc().getBestChain().first();
+    auto* vbkfirst = VeriBlock::GetPop().getAltBlockTree().vbk().getBestChain().first();
+    auto* btcfirst = VeriBlock::GetPop().getAltBlockTree().btc().getBestChain().first();
     assert(vbkfirst);
     assert(btcfirst);
 

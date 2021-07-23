@@ -27,12 +27,12 @@ bool AltChainParamsVBTC::checkBlockHeader(const std::vector<uint8_t>& bytes, con
 
         /* top level merkle `root` calculated by library is same as in endorsed header */
         auto actual = header.hashMerkleRoot.asVector();
-        if(actual != root) {
+        if (actual != root) {
             return state.Invalid("bad-merkle-root", strprintf("Expected %s, got %s", HexStr(root), HexStr(actual)));
         }
 
         /* and POW of endorsed header is valid */
-        if(!CheckProofOfWork(header.GetHash(), header.nBits, params.GetConsensus())) {
+        if (!CheckProofOfWork(header.GetHash(), header.nBits, params.GetConsensus())) {
             return state.Invalid("bad-pow", "Bad proof of work");
         }
 

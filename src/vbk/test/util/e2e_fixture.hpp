@@ -203,7 +203,7 @@ struct E2eFixture : public TestChain100Setup {
         std::vector<uint8_t> header{stream.begin(), stream.end()};
 
         auto txRoot = BlockMerkleRoot(block, nullptr).asVector();
-        auto* libendorsed = VeriBlock::GetPop().getAltBlockTree().getBlockIndex(hash.asVector());
+        auto* libendorsed = VeriBlock::GetAltBlockIndex(hash);
         assert(libendorsed && "expected to have endorsed header in library");
         return altintegration::GeneratePublicationData(
             header,

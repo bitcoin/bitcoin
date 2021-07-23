@@ -156,7 +156,7 @@ class VBitcoindNode(Node):
             height=s['height'],
             prevhash=s.get('previousblockhash', ''),
             confirmations=s['confirmations'],
-            endorsedBy=s['pop']['state']['endorsedBy'],
+            endorsedBy=s['pop']['state']['endorsedBy'] if s['pop']['state'] else [],
             blockOfProofEndorsements=[],
             containingATVs=s['pop']['data']['atvs'],
             containingVTBs=s['pop']['data']['vtbs'],
