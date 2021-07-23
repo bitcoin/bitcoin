@@ -644,7 +644,7 @@ public:
         consensus.nLegacyBlocksBefore = 0;
         consensus.nSYSXAsset = 123456;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
-        consensus.vchSYSXERC20Manager = ParseHex("0765EFB302D504751C652C5B1d65E8E9EDf2E70F");
+        consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
         consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");
         consensus.nBridgeStartBlock = 0;
         consensus.nNEVMStartBlock = 205;
