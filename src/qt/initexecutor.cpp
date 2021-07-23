@@ -17,6 +17,7 @@
 // SYSCOIN
 #include <QProcess>
 #include <QStringList>
+#include <QApplication>
 InitExecutor::InitExecutor(interfaces::Node& node)
     : QObject(), m_node(node)
 {
