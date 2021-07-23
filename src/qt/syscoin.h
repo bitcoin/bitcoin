@@ -29,7 +29,7 @@ class WalletController;
 class WalletModel;
 
 
-/** Main Bitcoin application object */
+/** Main Syscoin application object */
 class SyscoinApplication: public QApplication
 {
     Q_OBJECT
