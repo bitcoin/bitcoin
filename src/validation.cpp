@@ -473,7 +473,6 @@ private:
         std::unique_ptr<CTxMemPoolEntry> m_entry;
         std::list<CTransactionRef> m_replaced_transactions;
 
-        bool m_replacement_transaction;
         CAmount m_base_fees;
         CAmount m_modified_fees;
         /** Total modified fees of all transactions being replaced. */
@@ -555,7 +554,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     CTxMemPool::setEntries& allConflicting = ws.m_all_conflicting;
     CTxMemPool::setEntries& setAncestors = ws.m_ancestors;
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
-    bool& fReplacementTransaction = ws.m_replacement_transaction;
     CAmount& nModifiedFees = ws.m_modified_fees;
     CAmount& nConflictingFees = ws.m_conflicting_fees;
     size_t& nConflictingSize = ws.m_conflicting_size;
@@ -778,8 +776,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
 
-    fReplacementTransaction = setConflicts.size();
-    if (fReplacementTransaction) {
+    if (!setConflicts.empty()) {
         CFeeRate newFeeRate(nModifiedFees, nSize);
         // It's possible that the replacement pays more fees than its direct conflicts but not more
         // than all conflicts (i.e. the direct conflicts have high-fee descendants). However, if the
@@ -884,7 +881,6 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
     const CAmount& nModifiedFees = ws.m_modified_fees;
     const CAmount& nConflictingFees = ws.m_conflicting_fees;
     const size_t& nConflictingSize = ws.m_conflicting_size;
-    const bool fReplacementTransaction = ws.m_replacement_transaction;
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
 
     // Remove conflicting transactions from the mempool
@@ -900,11 +896,10 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
     m_pool.RemoveStaged(allConflicting, false, MemPoolRemovalReason::REPLACED);
 
     // This transaction should only count for fee estimation if:
-    // - it isn't a BIP 125 replacement transaction (may not be widely supported)
     // - it's not being re-added during a reorg which bypasses typical mempool fee limits
     // - the node is not behind
     // - the transaction is not dependent on any other transactions in the mempool
-    bool validForFeeEstimation = !fReplacementTransaction && !bypass_limits && IsCurrentForFeeEstimation(m_active_chainstate) && m_pool.HasNoInputsOf(tx);
+    bool validForFeeEstimation = !bypass_limits && IsCurrentForFeeEstimation(m_active_chainstate) && m_pool.HasNoInputsOf(tx);
 
     // Store transaction in memory
     m_pool.addUnchecked(*entry, setAncestors, validForFeeEstimation);
