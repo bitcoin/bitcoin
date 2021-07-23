@@ -232,7 +232,7 @@ host_to_commonname() {
 }
 
 # Determine the reference time used for determinism (overridable by environment)
-SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
+SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -c log.showSignature=false log --format=%at -1)}"
 
 # Execute "$@" in a pinned, possibly older version of Guix, for reproducibility
 # across time.
