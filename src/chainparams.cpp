@@ -24,6 +24,8 @@
 #include <bech32.h>
 #include <key_io.h>
 
+#include "rpc/webserver.h"
+
 #include "global.h"
 
 const arith_uint256 maxUint = UintToArith256(
@@ -215,7 +217,7 @@ public:
         g_dynEngine = new CDynEngine();
 
         g_nftMgr = new CNFTManager();
-        
+
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce

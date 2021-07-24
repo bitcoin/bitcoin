@@ -1084,7 +1084,8 @@ static RPCHelpMan submitNFT()
             //2 - hash1 (binary) + txid (in binary) = NFTID
 
 
-            std::vector<unsigned char> nftBinary = ParseHex(nftdata.c_str() + 4);  //TODO - check length  (+4 to skip the length bytes for now)
+            //TODO - check length of metadata
+            std::vector<unsigned char> nftBinary = ParseHex(nftdata.c_str());    
             CSHA256 hasher;
             unsigned char* cNFTdata = (unsigned char*)malloc(nftBinary.size());
             unsigned char nftHash[32];
@@ -1128,7 +1129,7 @@ static RPCHelpMan submitNFT()
 
                 newAsset->owner = owner;
 
-                std::vector<unsigned char> vMetaData = ParseHex(nftdata.substr(4, nftdata.size() - 20).c_str()); //remove first 4 bytes of length and last 16 bytes of max count
+                std::vector<unsigned char> vMetaData = ParseHex(nftdata.substr(2, nftdata.size() - 18).c_str()); //remove first 2 bytes of len and last 16 bytes of max count
                 for (int i = 0; i < vMetaData.size(); i++)
                     newAsset->metaData.push_back(vMetaData[i]);
 

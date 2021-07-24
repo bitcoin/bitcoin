@@ -29,6 +29,7 @@
 #include <optional>
 #include <consensus/dynengine.h>
 #include <primitives/dynnft_manager.h>
+#include <rpc/webserver.h>
 
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
@@ -38,6 +39,7 @@ CDynHash* g_hashFunction;
 CDynEngine* g_dynEngine;
 CContractManager* g_contractMgr;
 CNFTManager* g_nftMgr;
+CWebServer* g_webServer;
 
 bool IS_TESTNET;
 

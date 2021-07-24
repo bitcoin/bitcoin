@@ -62,6 +62,8 @@
 #include <util/translation.h>
 #include <validation.h>
 
+#include "rpc/webserver.h"
+
 #include "global.h"
 
 #include <validationinterface.h>

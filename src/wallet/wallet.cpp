@@ -3181,7 +3181,7 @@ bool CWallet::CreateTransactionInternal(
                 unsigned char* cNFTdata = (unsigned char*)malloc(vecNFT.size() - 1);
                 unsigned char nftHash[32];
                 for (int i = 0; i < vecNFT.size() - 1; i++)
-                    cNFTdata[i] = vecNFT[i + 1];
+                    cNFTdata[i] = vecNFT[i + 1];                //skip the first byte which is the opcode
                 hasher.Write(cNFTdata, vecNFT.size() - 1);
                 hasher.Write((const unsigned char*)ownerAddr.c_str(), ownerAddr.length());
                 hasher.Finalize(nftHash);
