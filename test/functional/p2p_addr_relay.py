@@ -210,6 +210,11 @@ class AddrTest(BitcoinTestFramework):
         blackhole_peer = self.nodes[0].add_p2p_connection(AddrReceiver(send_getaddr=False))
         initial_addrs_received = receiver_peer.num_ipv4_received
 
+        peerinfo = self.nodes[0].getpeerinfo()
+        assert_equal(peerinfo[0]['addr_relay_enabled'], True)  # addr_source
+        assert_equal(peerinfo[1]['addr_relay_enabled'], True)  # receiver_peer
+        assert_equal(peerinfo[2]['addr_relay_enabled'], False)  # blackhole_peer
+
         # addr_source sends 2 addresses to node0
         msg = self.setup_addr_msg(2)
         addr_source.send_and_ping(msg)
@@ -232,11 +237,14 @@ class AddrTest(BitcoinTestFramework):
 
         self.log.info("After blackhole peer sends addr message, it becomes eligible for addr gossip")
         blackhole_peer.send_and_ping(msg_addr())
-        msg = self.setup_addr_msg(2)
-        self.send_addr_msg(addr_source, msg, [receiver_peer, blackhole_peer])
 
         # Confirm node has now received addr-related messages from blackhole peer
         assert_greater_than(self.sum_addr_messages(peerinfo[1]['bytesrecv_per_msg']), 0)
+        assert_equal(self.nodes[0].getpeerinfo()[2]['addr_relay_enabled'], True)
+
+        msg = self.setup_addr_msg(2)
+        self.send_addr_msg(addr_source, msg, [receiver_peer, blackhole_peer])
+
         # And that peer received addresses
         assert_equal(blackhole_peer.num_ipv4_received, 2)
 
