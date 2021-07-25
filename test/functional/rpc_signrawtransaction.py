@@ -15,6 +15,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     find_vout_for_address,
+    generate_to_height,
     hex_str_to_bytes,
 )
 from test_framework.messages import (
@@ -270,7 +271,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         getcontext().prec = 8
 
         # Make sure CSV is active
-        self.nodes[0].generate(500)
+        generate_to_height(self.nodes[0], 500)
         assert self.nodes[0].getblockchaininfo()['softforks']['csv']['active']
 
         # Create a P2WSH script with CSV
@@ -306,7 +307,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         getcontext().prec = 8
 
         # Make sure CLTV is active
-        self.nodes[0].generate(1500)
+        generate_to_height(self.nodes[0], 1500)
         assert self.nodes[0].getblockchaininfo()['softforks']['bip65']['active']
 
         # Create a P2WSH script with CLTV
