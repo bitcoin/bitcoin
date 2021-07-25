@@ -18,7 +18,7 @@
 static void DeserializeBlockTest(benchmark::Bench& bench)
 {
     CDataStream stream((const char*)raw_bench::block813851,
-            (const char*)&raw_bench::block813851[sizeof(raw_bench::block813851)],
+            (const char*)raw_bench::block813851+sizeof(raw_bench::block813851),
             SER_NETWORK, PROTOCOL_VERSION);
     char a = '\0';
     stream.write(&a, 1); // Prevent compaction
@@ -34,7 +34,7 @@ static void DeserializeBlockTest(benchmark::Bench& bench)
 static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
 {
     CDataStream stream((const char*)raw_bench::block813851,
-            (const char*)&raw_bench::block813851[sizeof(raw_bench::block813851)],
+            (const char*)raw_bench::block813851+sizeof(raw_bench::block813851),
             SER_NETWORK, PROTOCOL_VERSION);
     char a = '\0';
     stream.write(&a, 1); // Prevent compaction

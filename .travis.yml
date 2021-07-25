@@ -76,7 +76,7 @@ install:
 before_script:
   - set -o errexit; source .travis/test_05_before_script.sh
 script:
-  - set -o errexit; source .travis/test_06_script.sh
+  - if [ $SECONDS -gt 1200 ]; then set +o errexit; echo "Travis early exit to cache current state"; false; else set -o errexit; source .travis/test_06_script.sh; fi
 after_script:
   - echo $TRAVIS_COMMIT_RANGE
   - echo $TRAVIS_COMMIT_LOG
@@ -217,8 +217,7 @@ after_success:
     - stage: test
       env: >-
         HOST=arm-linux-gnueabihf
-        PACKAGES="g++-arm-linux-gnueabihf"
-        DEP_OPTS="NO_QT=1"
+        PACKAGES="python3 g++-arm-linux-gnueabihf"
         RUN_UNIT_TESTS=false
         RUN_FUNCTIONAL_TESTS=false
         GOAL="install"
@@ -228,24 +227,21 @@ after_success:
       env: >-
         HOST=i686-w64-mingw32
         DPKG_ADD_ARCH="i386"
-        DEP_OPTS="NO_QT=1"
         PACKAGES="python3 nsis g++-mingw-w64-i686 wine-binfmt wine32"
-        GOAL="install"
-        BITCOIN_CONFIG="--enable-reduce-exports"
+        GOAL="deploy"
+        BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
 # Win64
     - stage: test
       env: >-
         HOST=x86_64-w64-mingw32
-        DEP_OPTS="NO_QT=1"
         PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine-binfmt wine64"
-        GOAL="install"
-        BITCOIN_CONFIG="--enable-reduce-exports"
+        GOAL="deploy"
+        BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
 # 32-bit + dash
     - stage: test
       env: >-
         HOST=i686-pc-linux-gnu
         PACKAGES="g++-multilib python3-zmq"
-        DEP_OPTS="NO_QT=1"
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
         CONFIG_SHELL="/bin/dash"
@@ -291,5 +287,5 @@ after_success:
         OSX_SDK=10.11
         RUN_UNIT_TESTS=false
         RUN_FUNCTIONAL_TESTS=false
-        GOAL="all deploy"
+        GOAL="deploy"
         BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror"

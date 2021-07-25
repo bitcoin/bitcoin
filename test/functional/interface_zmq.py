@@ -15,6 +15,8 @@ from test_framework.util import (assert_equal,
                                  hash256,
                                  )
 
+ADDRESS = "tcp://127.0.0.1:28332"
+
 def dashhash_helper(b):
     return encode(dashhash(b)[::-1], 'hex_codec').decode('ascii')
 
@@ -52,11 +54,10 @@ class ZMQTest (BitcoinTestFramework):
         # that this test fails if the publishing order changes.
         # Note that the publishing order is not defined in the documentation and
         # is subject to change.
-        address = "tcp://127.0.0.1:28332"
         self.zmq_context = zmq.Context()
         socket = self.zmq_context.socket(zmq.SUB)
         socket.set(zmq.RCVTIMEO, 60000)
-        socket.connect(address)
+        socket.connect(ADDRESS)
 
         # Subscribe to all available topics.
         self.hashblock = ZMQSubscriber(socket, b"hashblock")
@@ -65,7 +66,7 @@ class ZMQTest (BitcoinTestFramework):
         self.rawtx = ZMQSubscriber(socket, b"rawtx")
 
         self.extra_args = [
-            ["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [self.hashblock, self.hashtx, self.rawblock, self.rawtx]],
+            ["-zmqpub%s=%s" % (sub.topic.decode(), ADDRESS) for sub in [self.hashblock, self.hashtx, self.rawblock, self.rawtx]],
             [],
         ]
         self.add_nodes(self.num_nodes, self.extra_args)
@@ -114,6 +115,16 @@ class ZMQTest (BitcoinTestFramework):
         # Should receive the broadcasted raw transaction.
         hex = self.rawtx.receive()
         assert_equal(payment_txid, bytes_to_hex_str(hash256(hex)))
+
+        self.log.info("Test the getzmqnotifications RPC")
+        assert_equal(self.nodes[0].getzmqnotifications(), [
+            {"type": "pubhashblock", "address": ADDRESS},
+            {"type": "pubhashtx", "address": ADDRESS},
+            {"type": "pubrawblock", "address": ADDRESS},
+            {"type": "pubrawtx", "address": ADDRESS},
+        ])
+
+        assert_equal(self.nodes[1].getzmqnotifications(), [])
 
 if __name__ == '__main__':
     ZMQTest().main()
