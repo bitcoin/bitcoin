@@ -1819,10 +1819,12 @@ bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTx
     if(it != mapNEVMTxRoots.end() || pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-duplicate");
     }
-    if(!block.vchNEVMBlockData.empty()) {
-        evmBlock.vchNEVMBlockData = std::move(block.vchNEVMBlockData);
-    } else if(!fInitialDownload && fLoaded) {
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-empty");
+    if(!fInitialDownload) {
+        if(!block.vchNEVMBlockData.empty()) {
+            evmBlock.vchNEVMBlockData = std::move(block.vchNEVMBlockData);
+        } else if(fLoaded) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-empty");
+        }
     }
     
     GetMainSignals().NotifyNEVMBlockConnect(evmBlock, state, fJustCheck? uint256(): nBlockHash);
