@@ -78,6 +78,10 @@ void SetMempoolConstraints(ArgsManager& args, FuzzedDataProvider& fuzzed_data_pr
 
 FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
 {
+    // Pick an arbitrary upper bound to limit the runtime and avoid timeouts on
+    // inputs.
+    int limit_max_ops{300};
+
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;
     auto& chainstate = node.chainman->ActiveChainstate();
@@ -108,7 +112,7 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
         return c.out.nValue;
     };
 
-    while (fuzzed_data_provider.ConsumeBool()) {
+    while (--limit_max_ops >= 0 && fuzzed_data_provider.ConsumeBool()) {
         {
             // Total supply is all outpoints
             CAmount supply_now{0};
@@ -259,6 +263,10 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
 
 FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
 {
+    // Pick an arbitrary upper bound to limit the runtime and avoid timeouts on
+    // inputs.
+    int limit_max_ops{300};
+
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;
 
@@ -274,7 +282,7 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
 
     CTxMemPool tx_pool{/* estimator */ nullptr, /* check_ratio */ 1};
 
-    while (fuzzed_data_provider.ConsumeBool()) {
+    while (--limit_max_ops >= 0 && fuzzed_data_provider.ConsumeBool()) {
         const auto mut_tx = ConsumeTransaction(fuzzed_data_provider, txids);
 
         const auto tx = MakeTransactionRef(mut_tx);
