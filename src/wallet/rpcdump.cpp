@@ -134,11 +134,6 @@ RPCHelpMan importprivkey()
 
         EnsureWalletIsUnlocked(*pwallet);
 
-        std::string strSecret = request.params[0].get_str();
-        std::string strLabel = "";
-        if (!request.params[1].isNull())
-            strLabel = request.params[1].get_str();
-
         // Whether to perform rescan after import
         if (!request.params[2].isNull())
             fRescan = request.params[2].get_bool();
@@ -153,6 +148,11 @@ RPCHelpMan importprivkey()
         if (fRescan && !reserver.reserve()) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
         }
+
+        std::string strSecret = request.params[0].get_str();
+        std::string strLabel = "";
+        if (!request.params[1].isNull())
+            strLabel = request.params[1].get_str();
 
         CKey key = DecodeSecret(strSecret);
         if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
