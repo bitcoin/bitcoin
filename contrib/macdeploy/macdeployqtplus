@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import sys, re, os, shutil, stat, os.path
+import sys, re, os, platform, shutil, stat, subprocess, os.path
 from argparse import ArgumentParser
 from ds_store import DSStore
 from mac_alias import Alias
@@ -540,6 +540,9 @@ ds.flush()
 ds.close()
 
 # ------------------------------------------------
+
+if platform.system() == "Darwin":
+    subprocess.check_call(f"codesign --deep --force --sign - {target}", shell=True)
 
 if config.dmg is not None:
 
