@@ -104,7 +104,11 @@ def download_binary(tag, args) -> int:
     tarballHash = hasher.hexdigest()
 
     if tarballHash not in SHA256_SUMS or SHA256_SUMS[tarballHash] != tarball:
-        print("Checksum did not match")
+        if tarball in SHA256_SUMS.values():
+            print("Checksum did not match")
+            return 1
+
+        print("Checksum for given version doesn't exist")
         return 1
     print("Checksum matched")
 
