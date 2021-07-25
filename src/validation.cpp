@@ -6345,7 +6345,9 @@ void DoGethMaintenance() {
         fs::path dataDir = gArgs.GetDataDirNet();
         fs::path gethDir = dataDir / "geth";
         fs::path gethKeyStoreDir = gethDir / "keystore";
+        fs::path gethNodeKeyPath = gethDir / "geth" / "nodekey";
         fs::path keyStoreTmpDir = dataDir / "keystoretmp";
+        fs::path nodeKeyTmpDir = dataDir / "nodekeytmp";
         bool existedKeystore = fs::exists(gethKeyStoreDir);
         if(existedKeystore){
             LogPrintf("%s: Copying keystore for Geth to a temp directory\n", __func__); 
@@ -6356,9 +6358,20 @@ void DoGethMaintenance() {
                 return;
             }
         }
+        bool existedNodekey = fs::exists(gethNodeKeyPath);
+        if(existedNodekey){
+            LogPrintf("%s: Copying temporary nodekey\n", __func__); 
+            try{
+                recursive_copy(gethNodeKeyPath, nodeKeyTmpDir);
+            } catch(const  std::runtime_error& e) {
+                LogPrintf("Failed copying nodekey %s\n", e.what());
+                return;
+            }
+        }
         LogPrintf("%s: Removing Geth data directory\n", __func__);
         // clean geth data dir
         fs::remove_all(gethDir);
+        UninterruptibleSleep(std::chrono::milliseconds{100});
         // replace keystore dir
         if(existedKeystore){
             LogPrintf("%s: Replacing keystore with temp keystore directory\n", __func__);
@@ -6370,6 +6383,18 @@ void DoGethMaintenance() {
                 return;
             }
             fs::remove_all(keyStoreTmpDir);
+        }
+        // preserve nodekey file
+        if(existedNodekey){
+            LogPrintf("%s: Replacing nodekey with temp nodekey\n", __func__);
+            try{
+                fs::create_directory(gethDir / "geth");
+                recursive_copy(nodeKeyTmpDir, gethNodeKeyPath);
+            } catch(const  std::runtime_error& e) {
+                LogPrintf("Failed copying temporary nodekey %s\n", e.what());
+                return;
+            }
+            fs::remove_all(nodeKeyTmpDir);
         }
         LogPrintf("%s: Restarting Geth \n", __func__);
         const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet || fRegTest? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
