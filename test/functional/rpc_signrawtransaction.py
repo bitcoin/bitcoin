@@ -305,7 +305,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         getcontext().prec = 8
 
         # Make sure CSV is active
-        self.nodes[0].generate(1500)
+        self.nodes[0].generate(500)
 
         # Create a P2WSH script with CLTV
         script = CScript([1000, OP_CHECKLOCKTIMEVERIFY, OP_DROP])
