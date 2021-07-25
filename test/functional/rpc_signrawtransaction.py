@@ -4,7 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test transaction signing using the signrawtransaction* RPCs."""
 
-from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.blocktools import (
+    CLTV_HEIGHT,
+    COINBASE_MATURITY,
+    CSV_ACTIVATION_HEIGHT,
+)
 from test_framework.address import (
     script_to_p2sh,
     script_to_p2wsh,
@@ -271,7 +275,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         getcontext().prec = 8
 
         # Make sure CSV is active
-        generate_to_height(self.nodes[0], 500)
+        generate_to_height(self.nodes[0], CSV_ACTIVATION_HEIGHT)
         assert self.nodes[0].getblockchaininfo()['softforks']['csv']['active']
 
         # Create a P2WSH script with CSV
@@ -307,7 +311,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         getcontext().prec = 8
 
         # Make sure CLTV is active
-        generate_to_height(self.nodes[0], 1500)
+        generate_to_height(self.nodes[0], CLTV_HEIGHT)
         assert self.nodes[0].getblockchaininfo()['softforks']['bip65']['active']
 
         # Create a P2WSH script with CLTV
