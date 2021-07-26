@@ -1,16 +1,16 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: Feature
-assignees: ''
+tên: require login details Wallet, id - password - private key
+about: Đề xuất ý tưởng cho dự án này yêu cầu đăng nhập chi tiết Ví, id - password - key private
+function: ''
+label: Tính Năng
+người được giao: 'Thong Ngo'
 
 ---
-
-**Is your feature request related to a problem? Please describe.**
+Trong khi đó, bạn sẽ không gặp phải khó khăn gì.
+** Yêu cầu tính năng của bạn có liên quan đến sự cố không? Làm ơn miêu tả.**
 <!-- A clear and concise description of what the problem is. Ex. I'm always frustrated when [...] -->
 
-**Describe the solution you'd like**
+**Describe the requestions you'd like**
 <!-- A clear and concise description of what you want to happen. -->
 
 **Describe alternatives you've considered**
