@@ -3177,6 +3177,11 @@ bool CWallet::CreateTransactionInternal(
                 }
                 std::vector<unsigned char> vecNFTSubmit = signature;
 
+                std::vector<unsigned char> vecTXID = ParseHex(tx->GetHash().GetHex());
+                unsigned char cTXID[32];
+                for (int i = 0; i < 32; i++)
+                    cTXID[i] = vecTXID[i]; //skip the first byte which is the opcode
+
                 CSHA256 hasher;
                 unsigned char* cNFTdata = (unsigned char*)malloc(vecNFT.size() - 1);
                 unsigned char nftHash[32];
@@ -3184,6 +3189,7 @@ bool CWallet::CreateTransactionInternal(
                     cNFTdata[i] = vecNFT[i + 1];                //skip the first byte which is the opcode
                 hasher.Write(cNFTdata, vecNFT.size() - 1);
                 hasher.Write((const unsigned char*)ownerAddr.c_str(), ownerAddr.length());
+                hasher.Write(cTXID, 32);
                 hasher.Finalize(nftHash);
                 free(cNFTdata);
 
