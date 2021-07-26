@@ -301,9 +301,21 @@ class WalletTaprootTest(BitcoinTestFramework):
             test_balance = int(self.psbt_online.getbalance() * 100000000)
             ret_amnt = random.randrange(100000, test_balance)
             # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
-            psbt = self.psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": 200})['psbt']
-            res = self.psbt_offline.walletprocesspsbt(psbt)
-            assert(res['complete'])
+            psbt = self.psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": 200, "change_type": "bech32m"})['psbt']
+            res = self.psbt_offline.walletprocesspsbt(psbt=psbt, finalize=False)
+
+            decoded = self.psbt_offline.decodepsbt(res["psbt"])
+            if pattern.startswith("tr("):
+                for psbtin in decoded["inputs"]:
+                    assert "non_witness_utxo" not in psbtin
+                    assert "witness_utxo" in psbtin
+                    assert "taproot_internal_key" in psbtin
+                    assert "taproot_bip32_derivs" in psbtin
+                    assert "taproot_key_path_sig" in psbtin or "taproot_script_path_sigs" in psbtin
+                    if "taproot_script_path_sigs" in psbtin:
+                        assert "taproot_merkle_root" in psbtin
+                        assert "taproot_scripts" in psbtin
+
             rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
             txid = self.nodes[0].sendrawtransaction(rawtx)
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
