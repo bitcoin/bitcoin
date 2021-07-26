@@ -239,6 +239,7 @@ BITCOIN_CORE_H = \
   rpc/util.h \
   saltedhasher.h \
   scheduler.h \
+  script/descriptor.h \
   script/ismine.h \
   script/sigcache.h \
   script/sign.h \
@@ -576,6 +577,7 @@ libdash_common_a_SOURCES = \
   protocol.cpp \
   saltedhasher.cpp \
   scheduler.cpp \
+  script/descriptor.cpp \
   script/ismine.cpp \
   script/sign.cpp \
   script/standard.cpp \
