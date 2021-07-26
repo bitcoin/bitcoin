@@ -1,8 +1,8 @@
 ---
 name: Bug report
 about: Create a report to help us improve (use this for suspected bugs only, if not sure, open a regular issue below)
-chức năng: 'bitcoin'
-nhãn: Lỗi
+chức năng: 'Owner'
+nhãn: Bitcoin
 người được giao: 'Thong Ngo'
 Trong khi đó, bạn sẽ không gặp khó khăn gì.
 ---
