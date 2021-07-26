@@ -4785,7 +4785,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
         //Request any NFT asset classes that we need
         if (g_nftMgr->requestAssetClass.size() > 0) {
-
             m_connman.ForEachNode([this, &msgMaker](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
                     AssertLockHeld(::cs_main);
                     {
@@ -4794,13 +4793,15 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         time(&now);
                         std::map<std::string, time_t>::iterator i = g_nftMgr->requestAssetClass.begin();
                         while (i != g_nftMgr->requestAssetClass.end()) {
-                            if (now - i->second > 10) {
-                                char hexHashData[65];
-                                memcpy(hexHashData, i->first.c_str(), 65);
-                                if (pnode->GetCommonVersion() >= NFT_RELAY_VERSION) {
-                                    LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", i->first.c_str(), pnode->GetId());
-                                    m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, hexHashData));
-                                    i->second = now;
+                            char hexHashData[65];
+                            memcpy(hexHashData, i->first.c_str(), 65);
+                            if (now - i->second > 10) { //TODO - hysterisis - could cause a DOS attack by loading lots of NFT hashes and not loading the assets
+                                if (!g_nftMgr->assetClassInDatabase(hexHashData)) {
+                                    if (pnode->GetCommonVersion() >= NFT_RELAY_VERSION) {
+                                        LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", i->first.c_str(), pnode->GetId());
+                                        m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, hexHashData));
+                                        i->second = now;
+                                    }
                                 }
                             }
                             i++;
