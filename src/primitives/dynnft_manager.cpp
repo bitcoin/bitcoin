@@ -93,6 +93,14 @@ void CNFTManager::addNFTAssetClass(CNFTAssetClass* assetClass) {
 
     sqlite3_finalize(stmt);
 
+    {
+        LOCK(requestLock);
+        std::map<std::string,time_t>::iterator i = requestAssetClass.find(assetClass->hash);
+        if (i != requestAssetClass.end())
+            requestAssetClass.erase(i);
+    }
+
+
 }
 
 void CNFTManager::addNFTAsset(CNFTAsset* asset) {
@@ -303,4 +311,39 @@ CNFTAsset* CNFTManager::retrieveAssetFromCache(std::string hash) {
     }
 
     return result;
+}
+
+
+CNFTAssetClass* CNFTManager::retrieveAssetClassFromDatabase(std::string hash)
+{
+
+    CNFTAssetClass* result = NULL;
+
+    std::string sql = "select asset_class_txn_id, asset_class_hash, asset_class_metadata, asset_class_owner, asset_class_count from asset_class where asset_class_hash = @hash";
+    sqlite3_stmt* stmt = NULL;
+    sqlite3_prepare_v2(nftDB, sql.c_str(), -1, &stmt, NULL);
+    sqlite3_bind_text(stmt, 1, hash.c_str(), -1, NULL);
+    int rc = sqlite3_step(stmt);
+    if ((rc != SQLITE_DONE) && (rc != SQLITE_OK)) {
+        const char* cAssetClassTxnID = (const char*)sqlite3_column_text(stmt, 0);
+        const char* cAssetClassHash = (const char*)sqlite3_column_text(stmt, 1);
+        const char* cAssetClassMetaData = (const char*)sqlite3_column_text(stmt, 2);
+        const char* cAssetClassOwner = (const char*)sqlite3_column_text(stmt, 3);
+        UINT64 iCount = sqlite3_column_int64(stmt, 4);
+
+        result = new CNFTAssetClass();
+        result->txnID = std::string(cAssetClassTxnID);
+        result->hash = std::string(cAssetClassHash);
+        result->metaData = std::string(cAssetClassMetaData);
+        result->owner = std::string(cAssetClassOwner);
+        result->maxCount = iCount;
+    }
+
+    sqlite3_finalize(stmt);
+
+    if (result != NULL)
+        addAssetClassToCache(result);
+
+    return result;
+   
 }

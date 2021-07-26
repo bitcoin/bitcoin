@@ -39,6 +39,8 @@ public:
     CNFTAssetClass* retrieveAssetClassFromCache(std::string hash);
     CNFTAsset* retrieveAssetFromCache(std::string hash);
 
+    CNFTAssetClass* retrieveAssetClassFromDatabase(std::string hash);
+
 
     // stores the last timestamp for each asset class hash or asset hash requested
     std::map<std::string, time_t> requestAssetClass;

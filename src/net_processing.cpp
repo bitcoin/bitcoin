@@ -3628,7 +3628,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (gArgs.GetArg("-nftnode", "") == "true") {
             if (g_nftMgr->assetClassInDatabase(assetClassHashHex)) {
                 haveThisOne = true;
-                //send it
+                CNFTAssetClass* assetClass = g_nftMgr->retrieveAssetClassFromDatabase(assetClassHashHex);
+                assetClass->createSerialData();
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSETCLASS, assetClass->strSerialData));
             }
         }
 
@@ -3655,6 +3657,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         CNFTAssetClass* assetClass = new CNFTAssetClass();
         assetClass->loadFromSerialData(assetData);
+
+        g_nftMgr->addAssetClassToCache(assetClass);
 
         return;
     }
@@ -4795,6 +4799,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         while (i != g_nftMgr->requestAssetClass.end()) {
                             char hexHashData[65];
                             memcpy(hexHashData, i->first.c_str(), 65);
+                            hexHashData[64] = 0;
                             if (now - i->second > 10) { //TODO - hysterisis - could cause a DOS attack by loading lots of NFT hashes and not loading the assets
                                 if (!g_nftMgr->assetClassInDatabase(hexHashData)) {
                                     if (pnode->GetCommonVersion() >= NFT_RELAY_VERSION) {
