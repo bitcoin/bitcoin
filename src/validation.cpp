@@ -3972,15 +3972,9 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                     std::string strNFTHash = HexStr(nftHash);
 
                     if (gArgs.GetArg("-nftnode", "") == "true") {
-
-                        std::vector<unsigned char> binaryHash;
-                        for (int i = 0; i < 32; i++)
-                            binaryHash.push_back(vout.scriptPubKey[start + 4 + i]);
-                        std::string hexHash = HexStr(binaryHash);
-
                         //check if we already have this asset class in the database, if not then request it from the net
-                        if (!g_nftMgr->assetClassInDatabase(hexHash)) {
-                            g_nftMgr->queueAssetClassRequest(hexHash);
+                        if (!g_nftMgr->assetClassInDatabase(strNFTHash)) {
+                            g_nftMgr->queueAssetClassRequest(strNFTHash);
                         }
                     }
                 }

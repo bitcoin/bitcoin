@@ -4785,6 +4785,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
         //Request any NFT asset classes that we need
         if (g_nftMgr->requestAssetClass.size() > 0) {
+
             m_connman.ForEachNode([this, &msgMaker](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
                     AssertLockHeld(::cs_main);
                     {
