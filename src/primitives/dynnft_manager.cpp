@@ -187,9 +187,11 @@ void CNFTManager::queueAssetClassRequest(std::string hash) {
 
     {
         LOCK(requestLock);
-        time_t now;
-        time(&now);
-        requestAssetClass.emplace(hash, now);
+        if (requestAssetClass.find(hash) == requestAssetClass.end()) {
+            time_t now;
+            time(&now);
+            requestAssetClass.emplace(hash, now);
+        }
     }
 }
 
@@ -197,9 +199,11 @@ void CNFTManager::queueAssetRequest(std::string hash) {
 
     {
         LOCK(requestLock);
-        time_t now;
-        time(&now);
-        requestAsset.emplace(hash, now);
+        if (requestAsset.find(hash) == requestAsset.end()) {
+            time_t now;
+            time(&now);
+            requestAsset.emplace(hash, now);
+        }
     }
 }
 

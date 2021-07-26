@@ -1096,7 +1096,7 @@ static RPCHelpMan submitNFT()
                     cNFTdata[i] = nftBinary[i+1];
 
                 unsigned char nftHash[32];
-                hasher.Write(cNFTdata, nftBinary.size());
+                hasher.Write(cNFTdata, nftBinary.size()-1);
                 hasher.Write((const unsigned char*)owner.c_str(), owner.length());
                 hasher.Finalize(nftHash);
                 free(cNFTdata);
