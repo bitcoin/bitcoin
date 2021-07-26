@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     addrmanUncorrupted.MakeDeterministic();
 
     CService addr1, addr2, addr3;
-    BOOST_CHECK(Lookup("250.7.1.1", addr1, 8333, false));
+    BOOST_CHECK(Lookup("250.7.1.1", addr1, 26146, false));
     BOOST_CHECK(Lookup("250.7.2.2", addr2, 9999, false));
     BOOST_CHECK(Lookup("250.7.3.3", addr3, 9999, false));
     BOOST_CHECK(Lookup("250.7.3.3"s, addr3, 9999, false));
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
 
     // Add three addresses to new table.
     CService source;
-    BOOST_CHECK(Lookup("252.5.1.1", source, 8333, false));
+    BOOST_CHECK(Lookup("252.5.1.1", source, 26146, false));
     BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), source));
     BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), source));
     BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), source));

@@ -1,11 +1,11 @@
 Bitcoin-Qt version 0.8.0 is now available from:
-  http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.8.0/
+  http://sourceforge.net/projects/bitcoinrupee/files/Bitcoin/bitcoinrupee-0.8.0/
 
 This is a major release designed to improve performance and handle the
 increasing volume of transactions on the network.
 
 Please report bugs using the issue tracker at github:
-  https://github.com/bitcoin/bitcoin/issues
+  https://github.com/bitcoinrupee/bitcoinrupee/issues
 
 How to Upgrade
 --------------
@@ -13,7 +13,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait
 until it has completely shut down (which might take a few minutes for older
 versions), then run the installer (on Windows) or just copy over
-/Applications/Bitcoin-Qt (on Mac) or bitcoind/bitcoin-qt (on Linux).
+/Applications/Bitcoin-Qt (on Mac) or bitcoinrupeed/bitcoinrupee-qt (on Linux).
 
 The first time you run after the upgrade a re-indexing process will be
 started that will take anywhere from 30 minutes to several hours,
@@ -61,7 +61,7 @@ contrib/spendfrom is a python-language command-line utility that demonstrates
 how to use the "raw transactions" JSON-RPC api to send coins received from particular
 addresses (also known as "coin control").
 
-New/changed settings (command-line or bitcoin.conf file)
+New/changed settings (command-line or bitcoinrupee.conf file)
 --------------------------------------------------------
 
 dbcache : controls LevelDB memory usage.

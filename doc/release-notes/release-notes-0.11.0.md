@@ -1,13 +1,13 @@
 Bitcoin Core version 0.11.0 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.11.0/>
+  <https://bitcoinrupee.org/bin/bitcoinrupee-core-0.11.0/>
 
 This is a new major version release, bringing both new features and
 bug fixes.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/bitcoinrupee/bitcoinrupee/issues>
 
 Upgrading and downgrading
 =========================
@@ -18,7 +18,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
-bitcoind/bitcoin-qt (on Linux).
+bitcoinrupeed/bitcoinrupee-qt (on Linux).
 
 Downgrade warning
 ------------------
@@ -67,7 +67,7 @@ free transactions (with enough priority) will be accepted. It defaults to 15.
 Reducing this number reduces the speed at which the mempool can grow due
 to free transactions.
 
-For example, add the following to `bitcoin.conf`:
+For example, add the following to `bitcoinrupee.conf`:
 
     minrelaytxfee=0.00005 
     limitfreerelay=5
@@ -82,7 +82,7 @@ Block file pruning
 
 This release supports running a fully validating node without maintaining a copy 
 of the raw block and undo data on disk. To recap, there are four types of data 
-related to the blockchain in the bitcoin system: the raw blocks as received over 
+related to the blockchain in the bitcoinrupee system: the raw blocks as received over 
 the network (blk???.dat), the undo data (rev???.dat), the block index and the 
 UTXO set (both LevelDB databases). The databases are built from the raw data.
 
@@ -192,7 +192,7 @@ transaction (re)broadcast:
 One such application is selective Tor usage, where the node runs on the normal
 internet but transactions are broadcasted over Tor.
 
-For an example script see [bitcoin-submittx](https://github.com/laanwj/bitcoin-submittx).
+For an example script see [bitcoinrupee-submittx](https://github.com/laanwj/bitcoinrupee-submittx).
 
 Privacy: Stream isolation for Tor
 ----------------------------------
@@ -297,7 +297,7 @@ git merge commit are mentioned.
 
 ### Build system
 - #5501 `c76c9d2` Add mips, mipsel and aarch64 to depends platforms
-- #5334 `cf87536` libbitcoinconsensus: Add pkg-config support
+- #5334 `cf87536` libbitcoinrupeeconsensus: Add pkg-config support
 - #5514 `ed11d53` Fix 'make distcheck'
 - #5505 `a99ef7d` Build winshutdownmonitor.cpp on Windows only
 - #5582 `e8a6639` Osx toolchain update
@@ -309,7 +309,7 @@ git merge commit are mentioned.
 - #5149 `c7abfa5` Add script to verify all merge commits are signed
 - #6082 `7abbb7e` qt: disable qt tests when one of the checks for the gui fails
 - #6244 `0401aa2` configure: Detect (and reject) LibreSSL
-- #6269 `95aca44` gitian: Use the new bitcoin-detached-sigs git repo for OSX signatures
+- #6269 `95aca44` gitian: Use the new bitcoinrupee-detached-sigs git repo for OSX signatures
 - #6285 `ef1d506` Fix scheduler build with some boost versions.
 - #6280 `25c2216` depends: fix Boost 1.55 build on GCC 5
 - #6303 `b711599` gitian: add a gitian-win-signer descriptor
@@ -347,7 +347,7 @@ git merge commit are mentioned.
 - #5683 `c7b22aa` add new osx dmg background picture
 - #5620 `7823598` Payment request expiration bug fix
 - #5729 `9c4a5a5` Allow unit changes for read-only BitcoinAmountField
-- #5753 `0f44672` Add bitcoin logo to about screen
+- #5753 `0f44672` Add bitcoinrupee logo to about screen
 - #5629 `a956586` Prevent amount overflow problem with payment requests
 - #5830 `215475a` Don't save geometry for options and about/help window
 - #5793 `d26f0b2` Honor current network when creating autostart link
@@ -392,11 +392,11 @@ git merge commit are mentioned.
 - #5366 `47a79bb` No longer check osx compatibility in RenameThread
 - #5689 `07f4386` openssl: abstract out OPENSSL_cleanse
 - #5708 `8b298ca` Add list of implemented BIPs
-- #5809 `46bfbe7` Add bitcoin-cli man page
+- #5809 `46bfbe7` Add bitcoinrupee-cli man page
 - #5839 `86eb461` keys: remove libsecp256k1 verification until it's actually supported
 - #5749 `d734d87` Help messages correctly formatted (79 chars)
 - #5884 `7077fe6` BUGFIX: Stack around the variable 'rv' was corrupted
-- #5849 `41259ca` contrib/init/bitcoind.openrc: Compatibility with previous OpenRC init script variables
+- #5849 `41259ca` contrib/init/bitcoinrupeed.openrc: Compatibility with previous OpenRC init script variables
 - #5950 `41113e3` Fix locale fallback and guard tests against invalid locale settings
 - #5965 `7c6bfb1` Add git-subtree-check.sh script
 - #6033 `1623f6e` FreeBSD, OpenBSD thread renaming
@@ -406,7 +406,7 @@ git merge commit are mentioned.
 - #5964 `b4c219b` Lightweight task scheduler
 - #6116 `30dc3c1` [OSX] rename Bitcoin-Qt.app to Bitcoin-Core.app
 - #6168 `b3024f0` contrib/linearize: Support linearization of testnet blocks
-- #6098 `7708fcd` Update Windows resource files (and add one for bitcoin-tx)
+- #6098 `7708fcd` Update Windows resource files (and add one for bitcoinrupee-tx)
 - #6159 `e1412d3` Catch errors on datadir lock and pidfile delete
 - #6186 `182686c` Fix two problems in CSubnet parsing
 - #6174 `df992b9` doc: add translation strings policy
@@ -501,5 +501,5 @@ And all those who contributed additional code review and/or security research:
 
 - Sergio Demian Lerner
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoinrupee/).
 

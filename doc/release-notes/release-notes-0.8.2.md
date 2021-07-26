@@ -1,11 +1,11 @@
 Bitcoin-Qt version 0.8.2 is now available from:
-  http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.8.2/
+  http://sourceforge.net/projects/bitcoinrupee/files/Bitcoin/bitcoinrupee-0.8.2/
 
 This is a maintenance release that fixes many bugs and includes
 a few small new features.
 
 Please report bugs using the issue tracker at github:
-  https://github.com/bitcoin/bitcoin/issues
+  https://github.com/bitcoinrupee/bitcoinrupee/issues
 
 
 How to Upgrade
@@ -13,7 +13,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait
 until it has completely shut down (which might take a few minutes for older
 versions), then run the installer (on Windows) or just copy over
-/Applications/Bitcoin-Qt (on Mac) or bitcoind/bitcoin-qt (on Linux).
+/Applications/Bitcoin-Qt (on Mac) or bitcoinrupeed/bitcoinrupee-qt (on Linux).
 
 If you are upgrading from version 0.7.2 or earlier, the first time you
 run 0.8.2 your blockchain files will be re-indexed, which will take
@@ -58,7 +58,7 @@ Bitcoin-Qt changes
   to current translations
 
 MacOSX:
-* OSX support for click-to-pay (bitcoin:) links
+* OSX support for click-to-pay (bitcoinrupee:) links
 * Fix GUI disappearing problem on MacOSX (issue #1522)
 
 Linux/Unix:

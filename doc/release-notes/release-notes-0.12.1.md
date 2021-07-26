@@ -1,13 +1,13 @@
 Bitcoin Core version 0.12.1 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.12.1/>
+  <https://bitcoinrupee.org/bin/bitcoinrupee-core-0.12.1/>
 
 This is a new minor version release, including the BIP9, BIP68 and BIP112
 softfork, various bugfixes and updated translations.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/bitcoinrupee/bitcoinrupee/issues>
 
 Upgrading and downgrading
 =========================
@@ -18,7 +18,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
-bitcoind/bitcoin-qt (on Linux).
+bitcoinrupeed/bitcoinrupee-qt (on Linux).
 
 Downgrade warning
 -----------------
@@ -49,15 +49,15 @@ bits together with setting bit 0 to indicate support for this combined
 deployment, shown as "csv" in the `getblockchaininfo` RPC call.
 
 For more information about the soft forking change, please see
-<https://github.com/bitcoin/bitcoin/pull/7648>
+<https://github.com/bitcoinrupee/bitcoinrupee/pull/7648>
 
 This specific backport pull-request can be viewed at
-<https://github.com/bitcoin/bitcoin/pull/7543>
+<https://github.com/bitcoinrupee/bitcoinrupee/pull/7543>
 
-[BIP9]: https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki
-[BIP68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
-[BIP112]: https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki
-[BIP113]: https://github.com/bitcoin/bips/blob/master/bip-0113.mediawiki
+[BIP9]: https://github.com/bitcoinrupee/bips/blob/master/bip-0009.mediawiki
+[BIP68]: https://github.com/bitcoinrupee/bips/blob/master/bip-0068.mediawiki
+[BIP112]: https://github.com/bitcoinrupee/bips/blob/master/bip-0112.mediawiki
+[BIP113]: https://github.com/bitcoinrupee/bips/blob/master/bip-0113.mediawiki
 
 BIP68 soft fork to enforce sequence locks for relative locktime
 ---------------------------------------------------------------
@@ -68,7 +68,7 @@ invalid for a defined period of time after confirmation of its corresponding
 outpoint.
 
 For more information about the implementation, see
-<https://github.com/bitcoin/bitcoin/pull/7184>
+<https://github.com/bitcoinrupee/bitcoinrupee/pull/7184>
 
 BIP112 soft fork to enforce OP_CHECKSEQUENCEVERIFY
 --------------------------------------------------
@@ -79,7 +79,7 @@ for a new opcode in the Bitcoin scripting system that in combination with
 on the age of the output being spent.
 
 For more information about the implementation, see
-<https://github.com/bitcoin/bitcoin/pull/7524>
+<https://github.com/bitcoinrupee/bitcoinrupee/pull/7524>
 
 BIP113 locktime enforcement soft fork
 -------------------------------------
@@ -132,7 +132,7 @@ locktimes to allow those transactions to be included in mempools at
 approximately the expected time.
 
 For more information about the implementation, see
-<https://github.com/bitcoin/bitcoin/pull/6566>
+<https://github.com/bitcoinrupee/bitcoinrupee/pull/6566>
 
 Miscellaneous
 -------------
@@ -194,5 +194,5 @@ Thanks to everyone who directly contributed to this release:
 - Suhas Daftuar
 - Wladimir J. van der Laan
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoinrupee/).
 

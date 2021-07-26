@@ -1,7 +1,7 @@
-bitcoind and Bitcoin-Qt version 0.5.5 are now available for download at:
+bitcoinrupeed and Bitcoin-Qt version 0.5.5 are now available for download at:
 Windows: installer | zip (sig)
 Source: tar.gz
-bitcoind and Bitcoin-Qt version 0.6.0.7 are also tagged in git, but it is recommended to upgrade to 0.6.1.
+bitcoinrupeed and Bitcoin-Qt version 0.6.0.7 are also tagged in git, but it is recommended to upgrade to 0.6.1.
 
 These are bugfix-only releases.
 
@@ -27,7 +27,7 @@ Increase time ago of last block for "up to date" status from 30 to 90 minutes
 Show a message box when runaway exception happens (Bitcoin-Qt)
 Use a messagebox to display the error when -server is provided without providing a rpc password
 Show error message instead of exception crash when unable to bind RPC port (Bitcoin-Qt)
-Correct sign message bitcoin address tooltip. Fixes #1050 (Bitcoin-Qt)
+Correct sign message bitcoinrupee address tooltip. Fixes #1050 (Bitcoin-Qt)
 Removed "(no label)" from QR Code dialog titlebar if we have no label (0.6.0.7)
 Removed an ugly line break in tooltip for mature transactions (0.6.0.7)
 Add missing tooltip and key shortcut in settings dialog (part of #1088) (Bitcoin-Qt)

@@ -1,22 +1,22 @@
 Bitcoin version 0.6.3 is now available for download at:
-  http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.6.3/
+  http://sourceforge.net/projects/bitcoinrupee/files/Bitcoin/bitcoinrupee-0.6.3/
 
 This is a bug-fix release, with no new features.
 
 Please report bugs using the issue tracker at github:
-  https://github.com/bitcoin/bitcoin/issues
+  https://github.com/bitcoinrupee/bitcoinrupee/issues
 
 CHANGE SUMMARY
 
 Fixed a serious denial-of-service attack that could cause the
-bitcoin process to become unresponsive. Thanks to Sergio Lerner
+bitcoinrupee process to become unresponsive. Thanks to Sergio Lerner
 for finding and responsibly reporting the problem. (CVE-2012-3789)
 
 Optimized the process of checking transaction signatures, to
 speed up processing of new block messages and make propagating
 blocks across the network faster.
 
-Fixed an obscure bug that could cause the bitcoin process to get
+Fixed an obscure bug that could cause the bitcoinrupee process to get
 stuck on an invalid block-chain, if the invalid chain was
 hundreds of blocks long.
 

@@ -1,5 +1,5 @@
 Version 0.3.14 is now available
-http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.3.14/
+http://sourceforge.net/projects/bitcoinrupee/files/Bitcoin/bitcoinrupee-0.3.14/
 
 Changes:
 * Key pool feature for safer wallet backup

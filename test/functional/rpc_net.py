@@ -193,7 +193,7 @@ class NetTest(BitcoinTestFramework):
 
         # Add an IPv6 address to the address manager.
         ipv6_addr = "1233:3432:2434:2343:3234:2345:6546:4534"
-        self.nodes[0].addpeeraddress(address=ipv6_addr, port=8333)
+        self.nodes[0].addpeeraddress(address=ipv6_addr, port=26146)
 
         # Add 10,000 IPv4 addresses to the address manager. Due to the way bucket
         # and bucket positions are calculated, some of these addresses will collide.
@@ -203,7 +203,7 @@ class NetTest(BitcoinTestFramework):
             second_octet = i % 256
             a = f"{first_octet}.{second_octet}.1.1"
             imported_addrs.append(a)
-            self.nodes[0].addpeeraddress(a, 8333)
+            self.nodes[0].addpeeraddress(a, 26146)
 
         # Fetch the addresses via the RPC and test the results.
         assert_equal(len(self.nodes[0].getnodeaddresses()), 1)  # default count is 1
@@ -219,7 +219,7 @@ class NetTest(BitcoinTestFramework):
             assert_greater_than(a["time"], 1527811200)  # 1st June 2018
             assert_equal(a["services"], services)
             assert a["address"] in imported_addrs
-            assert_equal(a["port"], 8333)
+            assert_equal(a["port"], 26146)
             assert_equal(a["network"], "ipv4")
 
         # Test the IPv6 address.
@@ -227,7 +227,7 @@ class NetTest(BitcoinTestFramework):
         assert_equal(len(res), 1)
         assert_equal(res[0]["address"], ipv6_addr)
         assert_equal(res[0]["network"], "ipv6")
-        assert_equal(res[0]["port"], 8333)
+        assert_equal(res[0]["port"], 26146)
         assert_equal(res[0]["services"], services)
 
         # Test for the absence of onion and I2P addresses.
@@ -248,18 +248,18 @@ class NetTest(BitcoinTestFramework):
         assert "addpeerinfo" in node.help("addpeerinfo")
 
         self.log.debug("Test that adding an empty address fails")
-        assert_equal(node.addpeeraddress(address="", port=8333), {"success": False})
+        assert_equal(node.addpeeraddress(address="", port=26146), {"success": False})
         assert_equal(node.getnodeaddresses(count=0), [])
 
         self.log.debug("Test that adding a valid address succeeds")
-        assert_equal(node.addpeeraddress(address="1.2.3.4", port=8333), {"success": True})
+        assert_equal(node.addpeeraddress(address="1.2.3.4", port=26146), {"success": True})
         addrs = node.getnodeaddresses(count=0)
         assert_equal(len(addrs), 1)
         assert_equal(addrs[0]["address"], "1.2.3.4")
-        assert_equal(addrs[0]["port"], 8333)
+        assert_equal(addrs[0]["port"], 26146)
 
         self.log.debug("Test that adding the same address again when already present fails")
-        assert_equal(node.addpeeraddress(address="1.2.3.4", port=8333), {"success": False})
+        assert_equal(node.addpeeraddress(address="1.2.3.4", port=26146), {"success": False})
         assert_equal(len(node.getnodeaddresses(count=0)), 1)
 
 

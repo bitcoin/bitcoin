@@ -515,6 +515,7 @@ static std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
 
 static RPCHelpMan getblocktemplate()
 {
+    //LogPrintf("getblocktemplate");
     return RPCHelpMan{"getblocktemplate",
         "\nIf the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
         "It returns data needed to construct a block to work on.\n"
@@ -599,18 +600,21 @@ static RPCHelpMan getblocktemplate()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+   // LogPrintf("getblocktemplate 0");
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
     LOCK(cs_main);
-
+   // LogPrintf("getblocktemplate 1");
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
     std::set<std::string> setClientRules;
     int64_t nMaxVersionPreVB = -1;
     CChainState& active_chainstate = chainman.ActiveChainstate();
+    //LogPrintf("getblocktemplate active_chainstate\n");
     CChain& active_chain = active_chainstate.m_chain;
     if (!request.params[0].isNull())
     {
+         //LogPrintf("getblocktemplate params\n");
         const UniValue& oparam = request.params[0].get_obj();
         const UniValue& modeval = find_value(oparam, "mode");
         if (modeval.isStr())
@@ -666,24 +670,28 @@ static RPCHelpMan getblocktemplate()
             }
         }
     }
-
+   
+ //LogPrintf("getblocktemplate executed params %s\n",strMode);
+ //strMode="template";
     if (strMode != "template")
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
     if (!Params().IsTestChain()) {
-        const CConnman& connman = EnsureConnman(node);
-        if (connman.GetNodeCount(ConnectionDirection::Both) == 0) {
-            throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
-        }
 
-        if (active_chainstate.IsInitialBlockDownload()) {
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is in initial sync and waiting for blocks...");
-        }
+         const CConnman& connman = EnsureConnman(node);
+         //if (connman.GetNodeCount(ConnectionDirection::Both) == 0) {
+         //    throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
+       // }
+
+        // if (active_chainstate.IsInitialBlockDownload()) {
+            // throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is in initial sync and waiting for blocks...");
+         //}
     }
+    //LogPrintf("getblocktemplate IsInitialBlockDownload done");
 
     static unsigned int nTransactionsUpdatedLast;
     const CTxMemPool& mempool = EnsureMemPool(node);
-
+    
     if (!lpval.isNull())
     {
         // Wait to respond until either the best block changes, OR a minute has passed and there are more transactions

@@ -1,13 +1,13 @@
 Bitcoin Core version 0.11.1 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.11.1/>
+  <https://bitcoinrupee.org/bin/bitcoinrupee-core-0.11.1/>
 
 This is a new minor version release, bringing security fixes. It is recommended
 to upgrade to this version as soon as possible.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/bitcoinrupee/bitcoinrupee/issues>
 
 Upgrading and downgrading
 =========================
@@ -18,7 +18,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
-bitcoind/bitcoin-qt (on Linux).
+bitcoinrupeed/bitcoinrupee-qt (on Linux).
 
 Downgrade warning
 ------------------
@@ -61,7 +61,7 @@ using distribution provided packages.
 Additionally, upnp has been disabled by default. This may result in a lower
 number of reachable nodes on IPv4, however this prevents future libupnpc
 vulnerabilities from being a structural risk to the network
-(see https://github.com/bitcoin/bitcoin/pull/6795).
+(see https://github.com/bitcoinrupee/bitcoinrupee/pull/6795).
 
 Test for LowS signatures before relaying
 -----------------------------------------
@@ -76,7 +76,7 @@ for nuisance malleability on SIGHASH_ALL P2PKH transactions. On the down-side
 it will block most transactions made by sufficiently out of date software.
 
 Unlike the other avenues to change txids on transactions this
-one was randomly violated by all deployed bitcoin software prior to
+one was randomly violated by all deployed bitcoinrupee software prior to
 its discovery. So, while other malleability vectors where made
 non-standard as soon as they were discovered, this one has remained
 permitted. Even BIP62 did not propose applying this rule to
@@ -95,7 +95,7 @@ only eliminates the cheap and irritating DOS attack.
 
 [1] On the Malleability of Bitcoin Transactions
 Marcin Andrychowicz, Stefan Dziembowski, Daniel Malinowski, Łukasz Mazurek
-http://fc15.ifca.ai/preproceedings/bitcoin/paper_9.pdf
+http://fc15.ifca.ai/preproceedings/bitcoinrupee/paper_9.pdf
 
 Minimum relay fee default increase
 -----------------------------------
@@ -108,7 +108,7 @@ outrageous memory usage on nodes due to the mempool ballooning. This is a
 temporary measure, bridging the time until a dynamic method for determining
 this fee is merged (which will be in 0.12).
 
-(see https://github.com/bitcoin/bitcoin/pull/6793, as well as the 0.11
+(see https://github.com/bitcoinrupee/bitcoinrupee/pull/6793, as well as the 0.11
 release notes, in which this value was suggested)
 
 0.11.1 Change log
@@ -124,7 +124,7 @@ git merge commit are mentioned.
 - #6384 `8e5a969` qt: Force TLS1.0+ for SSL connections
 - #6471 `92401c2` Depends: bump to qt 5.5
 - #6224 `93b606a` Be even stricter in processing unrequested blocks
-- #6571 `100ac4e` libbitcoinconsensus: avoid a crash in multi-threaded environments
+- #6571 `100ac4e` libbitcoinrupeeconsensus: avoid a crash in multi-threaded environments
 - #6545 `649f5d9` Do not store more than 200 timedata samples.
 - #6694 `834e299` [QT] fix thin space word wrap line break issue
 - #6703 `1cd7952` Backport bugfixes to 0.11
@@ -168,5 +168,5 @@ And those who contributed additional code review and/or security research:
 - timothy on IRC for reporting the issue
 - Vulnerability in miniupnp discovered by Aleksandar Nikolic of Cisco Talos
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoinrupee/).
 

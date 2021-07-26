@@ -1,14 +1,14 @@
 Bitcoin version 0.5.3 is now available for download at:
-http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.5.3/
+http://sourceforge.net/projects/bitcoinrupee/files/Bitcoin/bitcoinrupee-0.5.3/
 
 This is a bugfix-only release based on 0.5.1.
 It also includes a few protocol updates.
 
 Please report bugs using the issue tracker at github:
-https://github.com/bitcoin/bitcoin/issues
+https://github.com/bitcoinrupee/bitcoinrupee/issues
 
 Stable source code is hosted at Gitorious:
-http://gitorious.org/bitcoin/bitcoind-stable/archive-tarball/v0.5.3#.tar.gz
+http://gitorious.org/bitcoinrupee/bitcoinrupeed-stable/archive-tarball/v0.5.3#.tar.gz
 
 PROTOCOL UPDATES
 
@@ -27,13 +27,13 @@ Skip splash screen when -min is used, and fix Minimize to Tray function.
 Do not blank "label" in Bitcoin-Qt "Send" tab, if the user has already entered something.
 Correct various labels and messages.
 Various memory leaks and potential null pointer deferences have been fixed.
-Handle invalid Bitcoin URIs using "bitcoin://" instead of "bitcoin:".
+Handle invalid Bitcoin URIs using "bitcoinrupee://" instead of "bitcoinrupee:".
 Several shutdown issues have been fixed.
 Revert to "global progress indication", as starting from zero every time was considered too confusing for many users.
 Check that keys stored in the wallet are valid at startup, and if not, report corruption.
 Enable accessible widgets on Windows, so that people with screen readers such as NVDA can make sense of it.
 Various build fixes.
-If no password is specified to bitcoind, recommend a secure password.
+If no password is specified to bitcoinrupeed, recommend a secure password.
 Automatically focus and scroll to new "Send coins" entries in Bitcoin-Qt.
 Show a message box for --help on Windows, for Bitcoin-Qt.
 Add missing "About Qt" menu option to show built-in Qt About dialog.

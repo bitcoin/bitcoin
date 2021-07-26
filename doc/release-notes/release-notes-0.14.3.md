@@ -1,17 +1,17 @@
 Bitcoin Core version *0.14.3* is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.14.3/>
+  <https://bitcoinrupee.org/bin/bitcoinrupee-core-0.14.3/>
 
 This is a new minor version release, including various bugfixes and
 performance improvements.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/bitcoinrupee/bitcoinrupee/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <https://bitcoinrupeecore.org/en/list/announcements/join/>
 
 Compatibility
 ==============
@@ -72,7 +72,7 @@ git merge commit are mentioned.
 
 ### Miscellaneous
 
-- #10451 `3612219` contrib/init/bitcoind.openrcconf: Don't disable wallet by default (Luke Dashjr)
+- #10451 `3612219` contrib/init/bitcoinrupeed.openrcconf: Don't disable wallet by default (Luke Dashjr)
 - #10250 `e23cef0` Fix some empty vector references (Pieter Wuille)
 - #10196 `d28d583` PrioritiseTransaction updates the mempool tx counter (Suhas Daftuar)
 - #9497 `e207342` Fix CCheckQueue IsIdle (potential) race condition and remove dangerous constructors. (Jeremy Rubin)

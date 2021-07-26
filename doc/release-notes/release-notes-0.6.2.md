@@ -1,10 +1,10 @@
 Bitcoin version 0.6.2 is now available for download at:
-http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.6.2/
+http://sourceforge.net/projects/bitcoinrupee/files/Bitcoin/bitcoinrupee-0.6.2/
 
 This is a bug-fix and code-cleanup release, with no major new features.
 
 Please report bugs using the github issue tracker at:
-https://github.com/bitcoin/bitcoin/issues
+https://github.com/bitcoinrupee/bitcoinrupee/issues
 
 
 NOTABLE CHANGES
@@ -14,7 +14,7 @@ portable to different data directories by default. If you need a
 portable blkindex.dat file then run with the new -detachdb=1 option
 or the "Detach databases at shutdown" GUI preference.
 
-Fixed https://github.com/bitcoin/bitcoin/issues/1065, a bug that
+Fixed https://github.com/bitcoinrupee/bitcoinrupee/issues/1065, a bug that
 could cause long-running nodes to crash.
 
 Mac and Windows binaries are compiled against OpenSSL 1.0.1b (Linux

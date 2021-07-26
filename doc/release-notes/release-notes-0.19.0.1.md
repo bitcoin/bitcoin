@@ -1,17 +1,17 @@
 Bitcoin Core version 0.19.0.1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.19.0.1/>
+  <https://bitcoinrupeecore.org/bin/bitcoinrupee-core-0.19.0.1/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/bitcoinrupee/bitcoinrupee/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <https://bitcoinrupeecore.org/en/list/announcements/join/>
 
 How to Upgrade
 ==============
@@ -19,7 +19,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+or `bitcoinrupeed`/`bitcoinrupee-qt` (on Linux).
 
 Upgrading directly from a version of Bitcoin Core that has reached its EOL is
 possible, but might take some time if the datadir needs to be migrated.  Old
@@ -50,7 +50,7 @@ Notable changes
 New user documentation
 ----------------------
 
-- [Reduce memory](https://github.com/bitcoin/bitcoin/blob/master/doc/reduce-memory.md)
+- [Reduce memory](https://github.com/bitcoinrupee/bitcoinrupee/blob/master/doc/reduce-memory.md)
   suggests configuration tweaks for running Bitcoin Core on systems with
   limited memory. (#16339)
 
@@ -90,7 +90,7 @@ Updated settings
   provide peers connecting using the indicated interfaces or IP
   addresses.  If no permissions are specified with an address or CIDR
   network, the implicit default permissions are the same as previous
-  releases.  See the `bitcoind -help` output for these two options for
+  releases.  See the `bitcoinrupeed -help` output for these two options for
   details about the available permissions. (#16248)
 
 - Users setting custom `dbcache` values can increase their setting slightly
@@ -250,7 +250,7 @@ P2P changes
 Miscellaneous CLI Changes
 -------------------------
 
-- The `testnet` field in `bitcoin-cli -getinfo` has been renamed to
+- The `testnet` field in `bitcoinrupee-cli -getinfo` has been renamed to
   `chain` and now returns the current network name as defined in BIP70
   (main, test, regtest). (#15566)
 
@@ -310,7 +310,7 @@ Network
   (#14897, #15834)
 
 - If a Tor hidden service is being used, Bitcoin Core will be bound to
-  the standard port 8333 even if a different port is configured for
+  the standard port 26146 even if a different port is configured for
   clearnet connections.  This prevents leaking node identity through use
   of identical non-default port numbers. (#15651)
 
@@ -443,7 +443,7 @@ Build system changes
 - #15508 Refactor analyzepsbt for use outside RPC code (gwillen)
 - #15747 Remove plethora of Get*Balance (MarcoFalke)
 - #15728 Refactor relay transactions (jnewbery)
-- #15639 bitcoin-wallet tool: Drop libbitcoin_server.a dependency (ryanofsky)
+- #15639 bitcoinrupee-wallet tool: Drop libbitcoinrupee_server.a dependency (ryanofsky)
 - #15853 Remove unused import checkpoints.h (MarcoFalke)
 - #15780 add cachable amounts for caching credit/debit values (kallewoof)
 - #15778 Move maxtxfee from node to wallet (jnewbery)
@@ -569,7 +569,7 @@ Build system changes
 - #16291 Stop translating PACKAGE_NAME (MarcoFalke)
 - #16380 Remove unused bits from the service flags enum (MarcoFalke)
 - #16379 Fix autostart filenames on Linux for testnet/regtest (hebasto)
-- #16366 init: Use InitError for all errors in bitcoind/qt (MarcoFalke)
+- #16366 init: Use InitError for all errors in bitcoinrupeed/qt (MarcoFalke)
 - #16436 Do not create payment server if -disablewallet option provided (hebasto)
 - #16514 Remove unused RPCConsole::tabFocus (promag)
 - #16497 Generate bech32 addresses by default (take 2, fixup) (MarcoFalke)
@@ -618,7 +618,7 @@ Build system changes
 - #15919 Remove unused OpenSSL includes to make it more clear where OpenSSL is used (practicalswift)
 - #15978 .gitignore: Don't ignore depends patches (dongcarl)
 - #15939 gitian: Remove windows 32 bit build (MarcoFalke)
-- #15239 scripts and tools: Move non-linux build source tarballs to "bitcoin-binaries/version" directory (hebasto)
+- #15239 scripts and tools: Move non-linux build source tarballs to "bitcoinrupee-binaries/version" directory (hebasto)
 - #14047 Add HKDF_HMAC256_L32 and method to negate a private key (jonasschnelli)
 - #16051 add patch to common dependencies (fanquake)
 - #16049 switch to secure download of all dependencies (Kemu)
@@ -630,7 +630,7 @@ Build system changes
 - #16235 Cleaned up and consolidated msbuild files (no code changes) (sipsorcery)
 - #16246 MSVC: Fix error in debug mode (Fix #16245) (NicolasDorier)
 - #16183 xtrans: Configure flags cleanup (dongcarl)
-- #16258 [MSVC]: Create the config.ini as part of bitcoind build (NicolasDorier)
+- #16258 [MSVC]: Create the config.ini as part of bitcoinrupeed build (NicolasDorier)
 - #16271 remove -Wall from rapidcheck build flags (fanquake)
 - #16309 [MSVC] allow user level project customization (NicolasDorier)
 - #16308 [MSVC] Copy build output to src/ automatically after build (NicolasDorier)
@@ -641,7 +641,7 @@ Build system changes
 - #16408 Prune X packages (dongcarl)
 - #16386 disable unused Qt features (fanquake)
 - #16424 Treat -Wswitch as error when --enable-werror (MarcoFalke)
-- #16441 remove qt libjpeg check from bitcoin_qt.m4 (fanquake)
+- #16441 remove qt libjpeg check from bitcoinrupee_qt.m4 (fanquake)
 - #16434 Specify AM_CPPFLAGS for ZMQ (domob1812)
 - #16534 add Qt Creator Makefile.am.user to .gitignore (Bushstar)
 - #16573 disable building libsecp256k1 benchmarks (fanquake)
@@ -654,7 +654,7 @@ Build system changes
 - #16654 build: update RapidCheck Makefile (jonatack)
 - #16370 cleanup package configure flags (fanquake)
 - #16746 msbuild: Ignore linker warning (sipsorcery)
-- #16750 msbuild: adds bench_bitcoin to auto generated project files (sipsorcery)
+- #16750 msbuild: adds bench_bitcoinrupee to auto generated project files (sipsorcery)
 - #16810 guix: Remove ssp spec file hack (dongcarl)
 - #16477 skip deploying plugins we dont use in macdeployqtplus (fanquake)
 - #16413 Bump QT to LTS release 5.9.8 (THETCR)
@@ -691,13 +691,13 @@ Build system changes
 - #15773 Add BitcoinTestFramework::sync_* methods (MarcoFalke)
 - #15797 travis: Bump second timeout to 33 minutes, add rationale (MarcoFalke)
 - #15788 Unify testing setups for fuzz, bench, and unit tests (MarcoFalke)
-- #15352 Reduce noise level in test_bitcoin output (practicalswift)
+- #15352 Reduce noise level in test_bitcoinrupee output (practicalswift)
 - #15779 Add wallet_balance benchmark (MarcoFalke)
 - #15843 fix outdated include in blockfilter_index_tests (jamesob)
 - #15866 Add missing syncwithvalidationinterfacequeue to wallet_import_rescan (MarcoFalke)
 - #15697 Make swap_magic_bytes in p2p_invalid_messages atomic (MarcoFalke)
 - #15895 Avoid re-reading config.ini unnecessarily (luke-jr)
-- #15896 feature_filelock, interface_bitcoin_cli: Use PACKAGE_NAME in messages rather than hardcoding Bitcoin Core (luke-jr)
+- #15896 feature_filelock, interface_bitcoinrupee_cli: Use PACKAGE_NAME in messages rather than hardcoding Bitcoin Core (luke-jr)
 - #15897 QA/mininode: Send all headers upfront in send_blocks_and_test to avoid sending an unconnected one (luke-jr)
 - #15696 test_runner: Move feature_pruning to base tests (MarcoFalke)
 - #15869 Add settings merge test to prevent regresssions (ryanofsky)
@@ -751,7 +751,7 @@ Build system changes
 - #16505 Changes verbosity of msbuild from quiet to normal in the appveyor script (sipsorcery)
 - #16293 Make test cases separate functions (MarcoFalke)
 - #16470 Fail early on disconnect in mininode.wait_for_* (MarcoFalke)
-- #16277 Suppress output in test_bitcoin for expected errors (gertjaap)
+- #16277 Suppress output in test_bitcoinrupee for expected errors (gertjaap)
 - #16493 Fix test failures (MarcoFalke)
 - #16538 Add missing sync_blocks to feature_pruning (MarcoFalke)
 - #16509 Adapt test framework for chains other than "regtest" (MarcoFalke)
@@ -851,7 +851,7 @@ Build system changes
 - #16556 Fix systemd service file configuration directory setup (setpill)
 - #15615 Add log output during initial header sync (jonasschnelli)
 - #16774 Avoid unnecessary "Synchronizing blockheaders" log messages (jonasschnelli)
-- #16489 log: harmonize bitcoind logging (jonatack)
+- #16489 log: harmonize bitcoinrupeed logging (jonatack)
 - #16577 util: Cbufferedfile fixes and unit test (LarryRuane)
 - #16984 util: Make thread names shorter (hebasto)
 - #17038 Don't rename main thread at process level (laanwj)
@@ -859,11 +859,11 @@ Build system changes
 - #17095 util: Filter control characters out of log messages (laanwj)
 - #17085 init: Change fallback locale to C.UTF-8 (laanwj)
 - #16957 9% less memory: make SaltedOutpointHasher noexcept (martinus)
-- #17449 fix uninitialized variable nMinerConfirmationWindow (bitcoinVBR)
+- #17449 fix uninitialized variable nMinerConfirmationWindow (bitcoinrupeeVBR)
 
 ### Documentation
 - #15514 Update Transifex links (fanquake)
-- #15513 add "sections" info to example bitcoin.conf (fanquake)
+- #15513 add "sections" info to example bitcoinrupee.conf (fanquake)
 - #15530 Move wallet lock annotations to header (MarcoFalke)
 - #15562 remove duplicate clone step in build-windows.md (fanquake)
 - #15565 remove release note fragments (fanquake)
@@ -891,7 +891,7 @@ Build system changes
 - #15777 Add doxygen comments for keypool classes (jnewbery)
 - #15820 Add productivity notes for dummy rebases (dongcarl)
 - #15922 Explain how to pass in non-fundamental types into functions (MarcoFalke)
-- #16080 build/doc: update bitcoin_config.h packages, release process (jonatack)
+- #16080 build/doc: update bitcoinrupee_config.h packages, release process (jonatack)
 - #16047 analyzepsbt description in doc/psbt.md (jonatack)
 - #16039 add release note for 14954 (fanquake)
 - #16139 Add riscv64 to outputs list in release-process.md (JeremyRand)
@@ -915,7 +915,7 @@ Build system changes
 - #16484 update labels in CONTRIBUTING.md (MarcoFalke)
 - #16483 update Python command in msvc readme (sipsorcery)
 - #16504 Add release note for the deprecated totalFee option of bumpfee (promag)
-- #16448 add note on precedence of options in bitcoin.conf (fanquake)
+- #16448 add note on precedence of options in bitcoinrupee.conf (fanquake)
 - #16536 Update and extend benchmarking.md (ariard)
 - #16530 Fix grammar and punctuation in developer notes (Tech1k)
 - #16574 Add historical release notes for 0.18.1 (laanwj)
@@ -933,19 +933,19 @@ Build system changes
 - #16629 Add documentation for the new whitelist permissions (NicolasDorier)
 - #16723 Update labels in CONTRIBUTING.md (hebasto)
 - #16461 Tidy up shadowing section (promag)
-- #16621 add default bitcoin.conf locations (GChuf)
+- #16621 add default bitcoinrupee.conf locations (GChuf)
 - #16752 Delete stale URL in test README (michaelfolkson)
 - #14862 Declare BLOCK_VALID_HEADER reserved (MarcoFalke)
 - #16806 Add issue templates for bug and feature request (MarcoFalke)
 - #16857 Elaborate need to re-login on Debian-based after usermod for Tor group (clashicly)
-- #16863 Add a missing closing parenthesis in the bitcoin-wallet's help (darosior)
+- #16863 Add a missing closing parenthesis in the bitcoinrupee-wallet's help (darosior)
 - #16757 CChainState return values (MarcoFalke)
 - #16847 add comments clarifying how local services are advertised (jamesob)
-- #16812 Fix whitespace errs in .md files, bitcoin.conf, and Info.plist.in (ch4ot1c)
+- #16812 Fix whitespace errs in .md files, bitcoinrupee.conf, and Info.plist.in (ch4ot1c)
 - #16885 Update tx-size-small comment with relevant CVE disclosure (instagibbs)
 - #16900 Fix doxygen comment for SignTransaction in rpc/rawtransaction_util (MarcoFalke)
 - #16914 Update homebrew instruction for doxygen (Sjors)
-- #16912 Remove Doxygen intro from src/bitcoind.cpp (ch4ot1c)
+- #16912 Remove Doxygen intro from src/bitcoinrupeed.cpp (ch4ot1c)
 - #16960 replace outdated OpenSSL comment in test README (fanquake)
 - #16968 Remove MSVC update step from translation process (laanwj)
 - #16953 Improve test READMEs (fjahr)
@@ -1086,4 +1086,4 @@ Thanks to everyone who directly contributed to this release:
 - Wladimir J. van der Laan
 - zenosage
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/bitcoinrupee/bitcoinrupee/).

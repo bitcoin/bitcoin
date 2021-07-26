@@ -1,13 +1,13 @@
 Bitcoin Core version 0.10.0 is now available from:
 
-  https://bitcoin.org/bin/0.10.0/
+  https://bitcoinrupee.org/bin/0.10.0/
 
 This is a new major version release, bringing both new features and
 bug fixes.
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/bitcoin/bitcoin/issues
+  https://github.com/bitcoinrupee/bitcoinrupee/issues
 
 Upgrading and downgrading
 =========================
@@ -18,7 +18,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
-bitcoind/bitcoin-qt (on Linux).
+bitcoinrupeed/bitcoinrupee-qt (on Linux).
 
 Downgrading warning
 ---------------------
@@ -142,10 +142,10 @@ unauthenticated access to public node data.
 It is served on the same port as RPC, but does not need a password, and uses
 plain HTTP instead of JSON-RPC.
 
-Assuming a local RPC server running on port 8332, it is possible to request:
-- Blocks: http://localhost:8332/rest/block/*HASH*.*EXT*
-- Blocks without transactions: http://localhost:8332/rest/block/notxdetails/*HASH*.*EXT*
-- Transactions (requires `-txindex`): http://localhost:8332/rest/tx/*HASH*.*EXT*
+Assuming a local RPC server running on port 26145, it is possible to request:
+- Blocks: http://localhost:26145/rest/block/*HASH*.*EXT*
+- Blocks without transactions: http://localhost:26145/rest/block/notxdetails/*HASH*.*EXT*
+- Transactions (requires `-txindex`): http://localhost:26145/rest/tx/*HASH*.*EXT*
 
 In every case, *EXT* can be `bin` (for raw binary data), `hex` (for hex-encoded
 binary) or `json`.
@@ -226,17 +226,17 @@ Starting from 0.10.0, the Bitcoin Core distribution includes a consensus library
 
 The purpose of this library is to make the verification functionality that is
 critical to Bitcoin's consensus available to other applications, e.g. to language
-bindings such as [python-bitcoinlib](https://pypi.python.org/pypi/python-bitcoinlib) or
+bindings such as [python-bitcoinrupeelib](https://pypi.python.org/pypi/python-bitcoinrupeelib) or
 alternative node implementations.
 
-This library is called `libbitcoinconsensus.so` (or, `.dll` for Windows).
-Its interface is defined in the C header [bitcoinconsensus.h](https://github.com/bitcoin/bitcoin/blob/0.10/src/script/bitcoinconsensus.h).
+This library is called `libbitcoinrupeeconsensus.so` (or, `.dll` for Windows).
+Its interface is defined in the C header [bitcoinrupeeconsensus.h](https://github.com/bitcoinrupee/bitcoinrupee/blob/0.10/src/script/bitcoinrupeeconsensus.h).
 
 In its initial version the API includes two functions:
 
-- `bitcoinconsensus_verify_script` verifies a script. It returns whether the indicated input of the provided serialized transaction 
+- `bitcoinrupeeconsensus_verify_script` verifies a script. It returns whether the indicated input of the provided serialized transaction 
 correctly spends the passed scriptPubKey under additional constraints indicated by flags
-- `bitcoinconsensus_version` returns the API version, currently at an experimental `0`
+- `bitcoinrupeeconsensus_version` returns the API version, currently at an experimental `0`
 
 The functionality is planned to be extended to e.g. UTXO management in upcoming releases, but the interface
 for existing methods should remain stable.
@@ -252,20 +252,20 @@ actually using them on mainnet has been previously inconvenient as
 standard Bitcoin Core nodes wouldn't relay them to miners, nor would
 most miners include them in blocks they mined.
 
-bitcoin-tx
+bitcoinrupee-tx
 ----------
 
-It has been observed that many of the RPC functions offered by bitcoind are
-"pure functions", and operate independently of the bitcoind wallet. This
+It has been observed that many of the RPC functions offered by bitcoinrupeed are
+"pure functions", and operate independently of the bitcoinrupeed wallet. This
 included many of the RPC "raw transaction" API functions, such as
 createrawtransaction.
 
-bitcoin-tx is a newly introduced command line utility designed to enable easy
-manipulation of bitcoin transactions. A summary of its operation may be
-obtained via "bitcoin-tx --help" Transactions may be created or signed in a
+bitcoinrupee-tx is a newly introduced command line utility designed to enable easy
+manipulation of bitcoinrupee transactions. A summary of its operation may be
+obtained via "bitcoinrupee-tx --help" Transactions may be created or signed in a
 manner similar to the RPC raw tx API. Transactions may be updated, deleting
 inputs or outputs, or appending new inputs and outputs. Custom scripts may be
-easily composed using a simple text notation, borrowed from the bitcoin test
+easily composed using a simple text notation, borrowed from the bitcoinrupee test
 suite.
 
 This tool may be used for experimenting with new transaction types, signing
@@ -273,7 +273,7 @@ multi-party transactions, and many other uses. Long term, the goal is to
 deprecate and remove "pure function" RPC API calls, as those do not require a
 server round-trip to execute.
 
-Other utilities "bitcoin-key" and "bitcoin-script" have been proposed, making
+Other utilities "bitcoinrupee-key" and "bitcoinrupee-script" have been proposed, making
 key and script operations easily accessible via command line.
 
 Mining and relay policy enhancements
@@ -337,10 +337,10 @@ Detailed release notes follow. This overview includes changes that affect extern
 behavior, not code moves, refactors or string updates.
 
 RPC:
-- `f923c07` Support IPv6 lookup in bitcoin-cli even when IPv6 only bound on localhost
+- `f923c07` Support IPv6 lookup in bitcoinrupee-cli even when IPv6 only bound on localhost
 - `b641c9c` Fix addnode "onetry": Connect with OpenNetworkConnection
 - `171ca77` estimatefee / estimatepriority RPC methods
-- `b750cf1` Remove cli functionality from bitcoind
+- `b750cf1` Remove cli functionality from bitcoinrupeed
 - `f6984e8` Add "chain" to getmininginfo, improve help in getblockchaininfo
 - `99ddc6c` Add nLocalServices info to RPC getinfo
 - `cf0c47b` Remove getwork() RPC call
@@ -391,7 +391,7 @@ Command-line options:
 - `4278b1d` Clarify error message when invalid -rpcallowip
 - `6b407e4` -datadir is now allowed in config files
 - `bdd5b58` Add option `-sysperms` to disable 077 umask (create new files with system default umask)
-- `cbe39a3` Add "bitcoin-tx" command line utility and supporting modules
+- `cbe39a3` Add "bitcoinrupee-tx" command line utility and supporting modules
 - `dbca89b` Trigger -alertnotify if network is upgrading without you
 - `ad96e7c` Make -reindex cope with out-of-order blocks
 - `16d5194` Skip reindexed blocks individually
@@ -465,7 +465,7 @@ P2P protocol and network code:
 - `35e408f` Regard connection failures as attempt for addrman
 - `a3a7317` Introduce 10 minute block download timeout
 - `3022e7d` Require sufficent priority for relay of free transactions
-- `58fda4d` Update seed IPs, based on bitcoin.sipa.be crawler data
+- `58fda4d` Update seed IPs, based on bitcoinrupee.sipa.be crawler data
 - `18021d0` Remove bitnodes.io from dnsseeds.
 
 Validation:
@@ -492,13 +492,13 @@ Build system:
 - `9ce0774` build: Fix windows configure when using --with-qt-libdir
 - `ea96475` build: Add mention of --disable-wallet to bdb48 error messages
 - `1dec09b` depends: add shared dependency builder
-- `c101c76` build: Add --with-utils (bitcoin-cli and bitcoin-tx, default=yes). Help string consistency tweaks. Target sanity check fix
+- `c101c76` build: Add --with-utils (bitcoinrupee-cli and bitcoinrupee-tx, default=yes). Help string consistency tweaks. Target sanity check fix
 - `e432a5f` build: add option for reducing exports (v2)
 - `6134b43` Fixing condition 'sabotaging' MSVC build
 - `af0bd5e` osx: fix signing to make Gatekeeper happy (again)
 - `a7d1f03` build: fix dynamic boost check when --with-boost= is used
 - `d5fd094` build: fix qt test build when libprotobuf is in a non-standard path
-- `2cf5f16` Add libbitcoinconsensus library
+- `2cf5f16` Add libbitcoinrupeeconsensus library
 - `914868a` build: add a deterministic dmg signer 
 - `2d375fe` depends: bump openssl to 1.0.1k
 - `b7a4ecc` Build: Only check for boost when building code that requires it
@@ -585,8 +585,8 @@ Tests:
 - `4cac5db` script tests: value with trailing 0x00 is true
 - `89101c6` script test: test case for 5-byte bools
 - `d2d9dc0` script tests: add tests for CHECKMULTISIG limits
-- `d789386` Add "it works" test for bitcoin-tx
-- `df4d61e` Add bitcoin-tx tests
+- `d789386` Add "it works" test for bitcoinrupee-tx
+- `df4d61e` Add bitcoinrupee-tx tests
 - `aa41ac2` Test IsPushOnly() with invalid push
 - `6022b5d` Make `script_{valid,invalid}.json` validation flags configurable
 - `8138cbe` Add automatic script test generation, and actual checksig tests
@@ -598,7 +598,7 @@ Tests:
 - `2b62e17` Clearly separate PUSHDATA and numeric argument MINIMALDATA tests
 - `16d78bd` Add valid invert of invalid every numeric opcode tests
 - `f635269` tests: enable alertnotify test for Windows
-- `7a41614` tests: allow rpc-tests to get filenames for bitcoind and bitcoin-cli from the environment
+- `7a41614` tests: allow rpc-tests to get filenames for bitcoinrupeed and bitcoinrupee-cli from the environment
 - `5122ea7` tests: fix forknotify.py on windows
 - `fa7f8cd` tests: remove old pull-tester scripts
 - `7667850` tests: replace the old (unused since Travis) tests with new rpc test scripts
@@ -624,7 +624,7 @@ Tests:
 Miscellaneous:
 - `122549f` Fix incorrect checkpoint data for testnet3
 - `5bd02cf` Log used config file to debug.log on startup
-- `68ba85f` Updated Debian example bitcoin.conf with config from wiki + removed some cruft and updated comments
+- `68ba85f` Updated Debian example bitcoinrupee.conf with config from wiki + removed some cruft and updated comments
 - `e5ee8f0` Remove -beta suffix
 - `38405ac` Add comment regarding experimental-use service bits
 - `be873f6` Issue warning if collecting RandSeed data failed
@@ -635,7 +635,7 @@ Miscellaneous:
 - `cd01a5e` Enable paranoid corruption checks in LevelDB >= 1.16
 - `9365937` Add comment about never updating nTimeOffset past 199 samples
 - `403c1bf` contrib: remove getwork-based pyminer (as getwork API call has been removed)
-- `0c3e101` contrib: Added systemd .service file in order to help distributions integrate bitcoind
+- `0c3e101` contrib: Added systemd .service file in order to help distributions integrate bitcoinrupeed
 - `0a0878d` doc: Add new DNSseed policy
 - `2887bff` Update coding style and add .clang-format
 - `5cbda4f` Changed LevelDB cursors to use scoped pointers to ensure destruction when going out of scope
@@ -758,5 +758,5 @@ Thanks to everyone who contributed to this release:
 - Yoichi Hirai
 - Zak Wilcox
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoinrupee/).
 

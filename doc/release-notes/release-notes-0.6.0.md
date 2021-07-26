@@ -1,25 +1,25 @@
 Bitcoin version 0.6.0 is now available for download at:
-http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.6.0/test/
+http://sourceforge.net/projects/bitcoinrupee/files/Bitcoin/bitcoinrupee-0.6.0/test/
 
 This release includes more than 20 language localizations.
 More translations are welcome; join the
 project at Transifex to help:
-https://www.transifex.net/projects/p/bitcoin/
+https://www.transifex.net/projects/p/bitcoinrupee/
 
 Please report bugs using the issue tracker at github:
-https://github.com/bitcoin/bitcoin/issues
+https://github.com/bitcoinrupee/bitcoinrupee/issues
 
 Project source code is hosted at github; we are no longer
 distributing .tar.gz files here, you can get them
 directly from github:
-https://github.com/bitcoin/bitcoin/tarball/v0.6.0  # .tar.gz
-https://github.com/bitcoin/bitcoin/zipball/v0.6.0  # .zip
+https://github.com/bitcoinrupee/bitcoinrupee/tarball/v0.6.0  # .tar.gz
+https://github.com/bitcoinrupee/bitcoinrupee/zipball/v0.6.0  # .zip
 
 For Ubuntu users, there is a ppa maintained by Matt Corallo which
 you can add to your system so that it will automatically keep
-bitcoin up-to-date.  Just type
-sudo apt-add-repository ppa:bitcoin/bitcoin
-in your terminal, then install the bitcoin-qt package.
+bitcoinrupee up-to-date.  Just type
+sudo apt-add-repository ppa:bitcoinrupee/bitcoinrupee
+in your terminal, then install the bitcoinrupee-qt package.
 
 
 KNOWN ISSUES
@@ -44,17 +44,17 @@ and receiving addresses.
 New context menu on addresses to copy/edit/delete them.
 
 New Sign Message dialog that allows you to prove that you
-own a bitcoin address by creating a digital
+own a bitcoinrupee address by creating a digital
 signature.
 
 New wallets created with this version will
 use 33-byte 'compressed' public keys instead of
 65-byte public keys, resulting in smaller
-transactions and less traffic on the bitcoin
+transactions and less traffic on the bitcoinrupee
 network. The shorter keys are already supported
 by the network but wallet.dat files containing
 short keys are not compatible with earlier
-versions of Bitcoin-Qt/bitcoind.
+versions of Bitcoin-Qt/bitcoinrupeed.
 
 New command-line argument -blocknotify=<command>
 that will spawn a shell process to run <command> 
@@ -104,11 +104,11 @@ attacks were fixed.
 
 NOT YET IMPLEMENTED FEATURES
 
-Support for clicking on bitcoin: URIs and
+Support for clicking on bitcoinrupee: URIs and
 opening/launching Bitcoin-Qt is available only on Linux,
 and only if you configure your desktop to launch
 Bitcoin-Qt. All platforms support dragging and dropping
-bitcoin: URIs onto the Bitcoin-Qt window to start
+bitcoinrupee: URIs onto the Bitcoin-Qt window to start
 payment.
 
 
@@ -117,7 +117,7 @@ PRELIMINARY SUPPORT FOR MULTISIGNATURE TRANSACTIONS
 This release has preliminary support for multisignature
 transactions-- transactions that require authorization
 from more than one person or device before they
-will be accepted by the bitcoin network.
+will be accepted by the bitcoinrupee network.
 
 Prior to this release, multisignature transactions
 were considered 'non-standard' and were ignored;
@@ -131,7 +131,7 @@ once enough of the network has upgraded so relaying
 and validating them is robust.
 
 For this release, creation and testing of multisignature
-transactions is limited to the bitcoin test network using
+transactions is limited to the bitcoinrupee test network using
 the "addmultisigaddress" JSON-RPC api call.
 
 Short multisignature address support is included in this

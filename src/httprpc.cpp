@@ -176,6 +176,8 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
     }
 
     try {
+
+        LogPrintf("RPC User %s \n", jreq.authUser);
         // Parse request
         UniValue valRequest;
         if (!valRequest.read(req->ReadBody()))
@@ -187,7 +189,7 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
         std::string strReply;
         bool user_has_whitelist = g_rpc_whitelist.count(jreq.authUser);
         if (!user_has_whitelist && g_rpc_whitelist_default) {
-            LogPrintf("RPC User %s not allowed to call any methods\n", jreq.authUser);
+          //  LogPrintf("RPC User %s not allowed to call any methods\n", jreq.authUser);
             req->WriteReply(HTTP_FORBIDDEN);
             return false;
 
@@ -199,8 +201,9 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
                 req->WriteReply(HTTP_FORBIDDEN);
                 return false;
             }
+            // LogPrintf("calling tableRPC.execute\n");
             UniValue result = tableRPC.execute(jreq);
-
+            //LogPrintf("calling JSONRPCReply\n");
             // Send reply
             strReply = JSONRPCReply(result, NullUniValue, jreq.id);
 
@@ -226,13 +229,16 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
         }
         else
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
-
+        //LogPrintf("calling write header\n");
         req->WriteHeader("Content-Type", "application/json");
+       // LogPrintf("calling write reply\n");
         req->WriteReply(HTTP_OK, strReply);
     } catch (const UniValue& objError) {
+         LogPrintf("exception n error\n");
         JSONErrorReply(req, objError, jreq.id);
         return false;
     } catch (const std::exception& e) {
+        LogPrintf("exception n error %s\n", e.what());
         JSONErrorReply(req, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);
         return false;
     }
