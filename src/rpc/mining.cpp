@@ -1089,10 +1089,13 @@ static RPCHelpMan submitNFT()
                 //TODO - check length of metadata
                 std::vector<unsigned char> nftBinary = ParseHex(nftdata.c_str());
                 CSHA256 hasher;
-                unsigned char* cNFTdata = (unsigned char*)malloc(nftBinary.size());
+
+                //NFT binary data first byte is opcode which we skip
+                unsigned char* cNFTdata = (unsigned char*)malloc(nftBinary.size()-1);
+                for (int i = 0; i < nftBinary.size()-1; i++)
+                    cNFTdata[i] = nftBinary[i+1];
+
                 unsigned char nftHash[32];
-                for (int i = 0; i < nftBinary.size(); i++)
-                    cNFTdata[i] = nftBinary[i];
                 hasher.Write(cNFTdata, nftBinary.size());
                 hasher.Write((const unsigned char*)owner.c_str(), owner.length());
                 hasher.Finalize(nftHash);
