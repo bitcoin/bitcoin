@@ -3953,6 +3953,19 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                 if (foundNFTAssetClassCreate) {
                     //if we are storing the NFT database, see if we need to get this asset class
                     //if we are not storing the NFT database then nothing to do  (maybe add it to the cache?)
+
+                    std::string txID = block.vtx[i]->GetHash().GetHex();
+
+                    CSHA256 hasher;
+                    unsigned char* cNFTdata = (unsigned char*)malloc(32);
+                    unsigned char nftHash[33];
+                    for (int i = 0; i < 32; i++)
+                        cNFTdata[i] = vout.scriptPubKey[start + 4 + i];
+                    hasher.Write(cNFTdata, 32);
+                    hasher.Finalize(nftHash);
+                    nftHash[32] = 0;
+                    std::string strNFTHash = HexStr(nftHash);
+
                     if (gArgs.GetArg("-nftnode", "") == "true") {
 
                         std::vector<unsigned char> binaryHash;
