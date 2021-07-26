@@ -6334,7 +6334,7 @@ void DoGethMaintenance() {
     if(!fReindexGeth && gethPID == 0) {
         gethPID = -1;
         LogPrintf("%s: Starting Geth because PID's were uninitialized\n", __func__);
-        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet || fRegTest? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
         if(!StartGethNode(gethDescriptorURL, gethPID))
             LogPrintf("%s: Failed to start Geth\n", __func__); 
     } else if(fReindexGeth){
@@ -6397,7 +6397,7 @@ void DoGethMaintenance() {
             fs::remove_all(nodeKeyTmpDir);
         }
         LogPrintf("%s: Restarting Geth \n", __func__);
-        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet || fRegTest? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
         if(!StartGethNode(gethDescriptorURL, gethPID))
             LogPrintf("%s: Failed to start Geth\n", __func__); 
         // set flag that geth is resyncing
