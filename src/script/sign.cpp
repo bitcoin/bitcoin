@@ -150,6 +150,7 @@ static bool CreateTaprootScriptSig(const BaseSignatureCreator& creator, Signatur
     auto it = sigdata.taproot_script_sigs.find(lookup_key);
     if (it != sigdata.taproot_script_sigs.end()) {
         sig_out = it->second;
+        return true;
     }
     if (creator.CreateSchnorrSig(provider, sig_out, pubkey, &leaf_hash, nullptr, sigversion)) {
         sigdata.taproot_script_sigs[lookup_key] = sig_out;

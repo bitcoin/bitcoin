@@ -442,8 +442,7 @@ class WalletTaprootTest(BitcoinTestFramework):
         assert(self.rpc_online.gettransaction(txid)["confirmations"] > 0)
 
         psbt = self.psbt_online.sendall(recipients=[self.boring.getnewaddress()], options={"psbt": True})["psbt"]
-        res = self.psbt_offline.walletprocesspsbt(psbt)
-        assert(res['complete'])
+        res = self.psbt_offline.walletprocesspsbt(psbt=psbt, finalize=False)
         rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
         txid = self.nodes[0].sendrawtransaction(rawtx)
         self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
