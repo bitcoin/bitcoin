@@ -761,11 +761,6 @@ static CNodeState *State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     return &it->second;
 }
 
-static bool RelayAddrsWithPeer(const Peer& peer)
-{
-    return peer.m_addr_relay_enabled;
-}
-
 /**
  * Whether the peer supports the address. For example, a peer that does not
  * implement BIP155 cannot receive Tor v3 addresses because it requires
@@ -1708,7 +1703,7 @@ void PeerManagerImpl::RelayAddress(NodeId originator,
     LOCK(m_peer_mutex);
 
     for (auto& [id, peer] : m_peer_map) {
-        if (RelayAddrsWithPeer(*peer) && id != originator && IsAddrCompatible(*peer, addr)) {
+        if (peer->m_addr_relay_enabled && id != originator && IsAddrCompatible(*peer, addr)) {
             uint64_t hashKey = CSipHasher(hasher).Write(id).Finalize();
             for (unsigned int i = 0; i < nRelayNodes; i++) {
                  if (hashKey > best[i].first) {
@@ -4327,7 +4322,7 @@ void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::mic
 void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::microseconds current_time)
 {
     // Nothing to do for non-address-relay peers
-    if (!RelayAddrsWithPeer(peer)) return;
+    if (!peer.m_addr_relay_enabled) return;
 
     LOCK(peer.m_addr_send_times_mutex);
     // Periodically advertise our local address to the peer.
@@ -4462,11 +4457,10 @@ bool PeerManagerImpl::SetupAddressRelay(CNode& node, Peer& peer)
     // information of addr traffic to infer the link.
     if (node.IsBlockOnlyConn()) return false;
 
-    if (!RelayAddrsWithPeer(peer)) {
+    if (!peer.m_addr_relay_enabled.exchange(true)) {
         // First addr message we have received from the peer, initialize
         // m_addr_known
         peer.m_addr_known = std::make_unique<CRollingBloomFilter>(5000, 0.001);
-        peer.m_addr_relay_enabled = true;
     }
 
     return true;
