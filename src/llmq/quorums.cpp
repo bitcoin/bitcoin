@@ -77,15 +77,22 @@ bool CQuorum::IsValidMember(const uint256& proTxHash) const
 
 CBLSPublicKey CQuorum::GetPubKeyShare(size_t memberIdx) const
 {
-    if (quorumVvec == nullptr || memberIdx >= members.size() || !qc->validMembers[memberIdx]) {
+    LOCK(cs);
+    if (!HasVerificationVector() || memberIdx >= members.size() || !qc->validMembers[memberIdx]) {
         return CBLSPublicKey();
     }
     auto& m = members[memberIdx];
     return blsCache.BuildPubKeyShare(m->proTxHash, quorumVvec, CBLSId(m->proTxHash));
 }
 
-const CBLSSecretKey &CQuorum::GetSkShare() const
+bool CQuorum::HasVerificationVector() const {
+    LOCK(cs);
+    return quorumVvec != nullptr;
+}
+
+CBLSSecretKey CQuorum::GetSkShare() const
 {
+    LOCK(cs);
     return skShare;
 }
 
@@ -105,7 +112,8 @@ void CQuorum::WriteContributions() const
         return;
     uint256 dbKey = MakeQuorumKey(*this);
 
-    if (quorumVvec != nullptr) {
+    LOCK(cs);
+    if (HasVerificationVector()) {
         evoDb->GetRawDB().Write(std::make_pair(DB_QUORUM_QUORUM_VVEC, dbKey), *quorumVvec);
     }
     if (skShare.IsValid()) {
@@ -121,14 +129,14 @@ bool CQuorum::ReadContributions()
 
     BLSVerificationVector qv;
     if (evoDb->Read(std::make_pair(DB_QUORUM_QUORUM_VVEC, dbKey), qv)) {
-        quorumVvec = std::make_shared<BLSVerificationVector>(std::move(qv));
+        WITH_LOCK(cs, quorumVvec = std::make_shared<BLSVerificationVector>(std::move(qv)));
     } else {
         return false;
     }
 
     // We ignore the return value here as it is ok if this fails. If it fails, it usually means that we are not a
     // member of the quorum but observed the whole DKG process to have the quorum verification vector.
-    evoDb->Read(std::make_pair(DB_QUORUM_SK_SHARE, dbKey), skShare);
+    WITH_LOCK(cs, evoDb->Read(std::make_pair(DB_QUORUM_SK_SHARE, dbKey), skShare));
 
     return true;
 }
@@ -176,7 +184,6 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
 void CQuorumManager::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex* pindexNew)
 {
     const auto& params = Params().GetConsensus().llmqs.at(llmqType);
-    const auto &myProTxHash = activeMasternodeInfo.proTxHash;
     std::vector<CQuorumCPtr> lastQuorums;
     ScanQuorums(llmqType, pindexNew, (size_t)params.keepOldConnections, lastQuorums);
     std::set<uint256> connmanQuorumsToDelete;
@@ -185,17 +192,14 @@ void CQuorumManager::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex
     int curDkgHeight = pindexNew->nHeight - (pindexNew->nHeight % params.dkgInterval);
     auto curDkgBlock = pindexNew->GetAncestor(curDkgHeight)->GetBlockHash();
     connmanQuorumsToDelete.erase(curDkgBlock);
-    bool allowWatch = gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS);
     for (const auto& quorum : lastQuorums) {
-        if (!quorum->IsMember(myProTxHash) && !allowWatch) {
+        if (CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->pindexQuorum, WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash), dkgManager.connman)) {
             continue;
         }
-        CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash, allowWatch, dkgManager.connman);
-        connmanQuorumsToDelete.erase(quorum->qc->quorumHash);
-    }
-    for (auto& qh : connmanQuorumsToDelete) {
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- removing masternodes quorum connections for quorum %s:\n", __func__, qh.ToString());
-        dkgManager.connman.RemoveMasternodeQuorumNodes(llmqType, qh);
+        if (connmanQuorumsToDelete.count(quorum->qc->quorumHash) > 0) {
+            LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- removing masternodes quorum connections for quorum %s:\n", __func__, quorum->qc->quorumHash.ToString());
+            dkgManager.connman.RemoveMasternodeQuorumNodes(llmqType, quorum->qc->quorumHash);
+        }
     }
 }
 
@@ -250,8 +254,9 @@ bool CQuorumManager::BuildQuorumContributions(const CFinalCommitmentPtr& fqc, co
 
 
     cxxtimer::Timer t2(true);
+    LOCK(quorum->cs);
     quorum->quorumVvec = blsWorker.BuildQuorumVerificationVector(vvecs);
-    if (quorum->quorumVvec == nullptr) {
+    if (!quorum->HasVerificationVector()) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- failed to build quorumVvec\n", __func__);
         // without the quorum vvec, there can't be a skShare, so we fail here. Failure is not fatal here, as it still
         // allows to use the quorum as a non-member (verification through the quorum pub key)
@@ -391,7 +396,7 @@ CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const CBlockIndex* pinde
 
 void CQuorumManager::StartCachePopulatorThread(const CQuorumCPtr pQuorum) const
 {
-    if (pQuorum->quorumVvec == nullptr) {
+    if (!pQuorum->HasVerificationVector()) {
         return;
     }
 

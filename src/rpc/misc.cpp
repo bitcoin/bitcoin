@@ -351,9 +351,8 @@ static RPCHelpMan mnauth()
     }
 
     bool fSuccess = node.connman->ForNode(nodeId, AllNodes, [&](CNode* pNode){
-        LOCK(pNode->cs_mnauth);
-        pNode->verifiedProRegTxHash = proTxHash;
-        pNode->verifiedPubKeyHash = publicKey.GetHash();
+        pNode->SetVerifiedProRegTxHash(proTxHash);
+        pNode->SetVerifiedPubKeyHash(publicKey.GetHash());
         return true;
     });
 

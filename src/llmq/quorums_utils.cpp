@@ -5,6 +5,7 @@
 #include <llmq/quorums.h>
 #include <llmq/quorums_utils.h>
 #include <llmq/quorums_commitment.h>
+#include <llmq/quorums_init.h>
 
 #include <bls/bls.h>
 #include <evo/deterministicmns.h>
@@ -200,14 +201,14 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(uint8_t llmqType,
     return result;
 }
 
-void CLLMQUtils::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pindexQuorum, const uint256& myProTxHash, bool allowWatch, CConnman& connman)
+bool CLLMQUtils::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pindexQuorum, const uint256& myProTxHash, CConnman& connman)
 {
     std::vector<CDeterministicMNCPtr> members;
     GetAllQuorumMembers(llmqType, pindexQuorum, members);
     bool isMember = std::find_if(members.begin(), members.end(), [&](const CDeterministicMNCPtr& dmn) { return dmn->proTxHash == myProTxHash; }) != members.end();
 
-    if (!isMember && !allowWatch) {
-        return;
+    if (!isMember && !CLLMQUtils::IsWatchQuorumsEnabled()) {
+        return false;
     }
 
     std::set<uint256> connections;
@@ -243,6 +244,13 @@ void CLLMQUtils::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pi
     if (!relayMembers.empty()) {
         connman.SetMasternodeQuorumRelayMembers(llmqType, pindexQuorum->GetBlockHash(), relayMembers);
     }
+    return true;
+}
+
+bool CLLMQUtils::IsWatchQuorumsEnabled()
+{
+    static bool fIsWatchQuroumsEnabled = gArgs.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS);
+    return fIsWatchQuroumsEnabled;
 }
 
 void CLLMQUtils::AddQuorumProbeConnections(uint8_t llmqType, const CBlockIndex *pindexQuorum, const uint256 &myProTxHash, CConnman& connman)

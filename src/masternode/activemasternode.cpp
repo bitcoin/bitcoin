@@ -12,8 +12,10 @@
 #include <warnings.h>
 #include <bls/bls.h>
 // Keep track of the active Masternode
-CActiveMasternodeInfo activeMasternodeInfo;
+Mutex activeMasternodeInfoCs;
+CActiveMasternodeInfo activeMasternodeInfo GUARDED_BY(activeMasternodeInfoCs);
 std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
+
 std::string CActiveMasternodeManager::GetStateString() const
 {
     switch (state) {
@@ -60,7 +62,8 @@ std::string CActiveMasternodeManager::GetStatus() const
 
 void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 {
-    LOCK(cs_main);
+    LOCK2(cs_main, activeMasternodeInfoCs);
+
     if (!fMasternodeMode) return;
 
     if (!deterministicMNManager || !deterministicMNManager->IsDIP3Enforced(pindex->nHeight)) return;
@@ -151,7 +154,8 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 
 void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
-    LOCK(cs_main);
+    LOCK2(cs_main, activeMasternodeInfoCs);
+
     if (!fMasternodeMode) return;
     if (!deterministicMNManager || !deterministicMNManager->IsDIP3Enforced(pindexNew->nHeight)) return;
 
@@ -217,10 +221,11 @@ bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
     if (!fFoundLocal) {
         bool empty = true;
         // If we have some peers, let's try to find our local address from one of them
-        connman.ForEachNodeContinueIf(AllNodes, [&fFoundLocal, &empty](CNode* pnode) {
+        auto service = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.service);
+        connman.ForEachNodeContinueIf(AllNodes, [&](CNode* pnode) {
             empty = false;
             if (pnode->addr.IsIPv4())
-                fFoundLocal = GetLocal(activeMasternodeInfo.service, &pnode->addr) && IsValidNetAddr(activeMasternodeInfo.service);
+                fFoundLocal = GetLocal(service, &pnode->addr) && IsValidNetAddr(service);
             return !fFoundLocal;
         });
         // nothing and no live connections, can't do anything for now

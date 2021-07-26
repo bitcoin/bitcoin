@@ -13,6 +13,7 @@ class CBLSPublicKey;
 class CBLSSecretKey;
 struct CActiveMasternodeInfo;
 extern CActiveMasternodeInfo activeMasternodeInfo;
+extern Mutex activeMasternodeInfoCs;
 
 struct CActiveMasternodeInfo {
     // Keys for the active Masternode

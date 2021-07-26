@@ -1177,7 +1177,7 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
             {
                 LOCK(pnode->cs_mnauth);
                 nInbound++;
-                if (!pnode->verifiedProRegTxHash.IsNull()) {
+                if (!pnode->GetVerifiedProRegTxHash().IsNull()) {
                     nVerifiedInboundMasternodes++;
                 }
             }
@@ -2014,9 +2014,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         {
             LOCK(cs_vNodes);
             for (CNode* pnode : vNodes) {
-                LOCK(pnode->cs_mnauth);
-                if (!pnode->verifiedProRegTxHash.IsNull()) {
-                    setConnectedMasternodes.emplace(pnode->verifiedProRegTxHash);
+                auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+                if (!verifiedProRegTxHash.IsNull()) {
+                    setConnectedMasternodes.emplace(verifiedProRegTxHash);
                 }
             }
         }
@@ -2223,10 +2223,10 @@ void CConnman::ThreadOpenMasternodeConnections()
         std::set<CService> connectedNodes;
         std::map<uint256, bool> connectedProRegTxHashes;
         ForEachNode([&](const CNode* pnode) {
-            LOCK(pnode->cs_mnauth);
+            auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
             connectedNodes.emplace(pnode->addr);
-            if (!pnode->verifiedProRegTxHash.IsNull()) {
-                connectedProRegTxHashes.try_emplace(pnode->verifiedProRegTxHash, pnode->IsInboundConn());
+            if (!verifiedProRegTxHash.IsNull()) {
+                connectedProRegTxHashes.emplace(verifiedProRegTxHash, pnode->IsInboundConn());
             }
         });
         CDeterministicMNList mnList;
@@ -3183,7 +3183,8 @@ void CConnman::GetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumH
         if (pnode->fDisconnect) {
             continue;
         }
-        if (!pnode->qwatch && (pnode->verifiedProRegTxHash.IsNull() || !proRegTxHashes.count(pnode->verifiedProRegTxHash))) {
+        auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+        if (!pnode->qwatch && (verifiedProRegTxHash.IsNull() || !proRegTxHashes.count(verifiedProRegTxHash))) {
             continue;
         }
         nodes.emplace(pnode->GetId());

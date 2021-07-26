@@ -2774,8 +2774,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             vRecv >> fRelay;
         // SYSCOIN
         if (!vRecv.empty()) {
-            LOCK(pfrom.cs_mnauth);
-            vRecv >> pfrom.receivedMNAuthChallenge;
+            uint256 receivedMNAuthChallenge;
+            vRecv >> receivedMNAuthChallenge;
+            pfrom.SetReceivedMNAuthChallenge(receivedMNAuthChallenge);
         }
         if (!vRecv.empty()) {
             bool fOtherMasternode = false;
@@ -2995,7 +2996,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             nCMPCTBLOCKVersion = 1;
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SENDCMPCT, fAnnounceUsingCMPCTBLOCK, nCMPCTBLOCKVersion));
         }
-        if (gArgs.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS) && !pfrom.IsMasternodeConnection()) {
+        if (llmq::CLLMQUtils::IsWatchQuorumsEnabled() && !pfrom.IsMasternodeConnection()) {
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QWATCH));
         }
         pfrom.fSuccessfullyConnected = true;
@@ -5082,11 +5083,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         // Message: inventory
         //
         std::vector<CInv> vInv;
-        uint256 verifiedProRegTxHash;
-        {
-            LOCK(pto->cs_mnauth);
-            verifiedProRegTxHash = pto->verifiedProRegTxHash;
-        }
+        uint256 verifiedProRegTxHash = pto->GetVerifiedProRegTxHash();
         {
             LOCK(peer->m_block_inv_mutex);
             vInv.reserve(std::max<size_t>(peer->m_blocks_for_inv_relay.size(), INVENTORY_BROADCAST_MAX));

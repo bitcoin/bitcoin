@@ -140,11 +140,11 @@ static RPCHelpMan gobject_submit()
     CDeterministicMNList mnList;
     if(deterministicMNManager)
         deterministicMNManager->GetListAtChainTip(mnList);
-    bool fMnFound = mnList.HasValidMNByCollateral(activeMasternodeInfo.outpoint);
+    bool fMnFound = WITH_LOCK(activeMasternodeInfoCs, return mnList.HasValidMNByCollateral(activeMasternodeInfo.outpoint));
 
     LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",
-            (activeMasternodeInfo.blsPubKeyOperator ? activeMasternodeInfo.blsPubKeyOperator->ToString() : "N/A"),
-            activeMasternodeInfo.outpoint.ToStringShort(), request.params.size(), fMnFound);
+            (WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.blsPubKeyOperator ? activeMasternodeInfo.blsPubKeyOperator->ToString() : "N/A")),
+            WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.outpoint.ToStringShort()), request.params.size(), fMnFound);
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -181,6 +181,7 @@ static RPCHelpMan gobject_submit()
     // Attempt to sign triggers if we are a MN
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
         if (fMnFound) {
+            LOCK(activeMasternodeInfoCs);
             govobj.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
             govobj.Sign(*activeMasternodeInfo.blsKeyOperator);
         } else {
@@ -282,7 +283,7 @@ static RPCHelpMan gobject_vote_conf()
     CDeterministicMNList mnList;
     if(deterministicMNManager)
         deterministicMNManager->GetListAtChainTip(mnList);
-    auto dmn = mnList.GetValidMNByCollateral(activeMasternodeInfo.outpoint);
+    auto dmn = WITH_LOCK(activeMasternodeInfoCs, return mnList.GetValidMNByCollateral(activeMasternodeInfo.outpoint));
 
     if (!dmn) {
         nFailed++;
@@ -300,8 +301,12 @@ static RPCHelpMan gobject_vote_conf()
     if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf for proposals");
     }
-    if (activeMasternodeInfo.blsKeyOperator) {
-        signSuccess = vote.Sign(*activeMasternodeInfo.blsKeyOperator);
+
+    {
+        LOCK(activeMasternodeInfoCs);
+        if (activeMasternodeInfo.blsKeyOperator) {
+            signSuccess = vote.Sign(*activeMasternodeInfo.blsKeyOperator);
+        }
     }
 
     if (!signSuccess) {

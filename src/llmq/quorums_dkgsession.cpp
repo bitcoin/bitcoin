@@ -198,7 +198,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
 
     logger.Batch("encrypted contributions. time=%d", t1.count());
 
-    qc.sig = activeMasternodeInfo.blsKeyOperator->Sign(qc.GetSignHash());
+    qc.sig = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.blsKeyOperator->Sign(qc.GetSignHash()));
 
     logger.Flush();
 
@@ -322,7 +322,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc
 
     bool complain = false;
     CBLSSecretKey skContribution;
-    if (!qc.contributions->Decrypt(myIdx, *activeMasternodeInfo.blsKeyOperator, skContribution, PROTOCOL_VERSION)) {
+    if (!qc.contributions->Decrypt(myIdx, WITH_LOCK(activeMasternodeInfoCs, return *activeMasternodeInfo.blsKeyOperator), skContribution, PROTOCOL_VERSION)) {
         logger.Batch("contribution from %s could not be decrypted", member->dmn->proTxHash.ToString());
         complain = true;
     } else if (member->idx != myIdx && ShouldSimulateError("complain-lie")) {
@@ -464,11 +464,11 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions() const
 
     std::unordered_map<uint256, int, StaticSaltedHasher> protoMap;
     dkgManager.connman.ForEachNode([&](const CNode* pnode) {
-        LOCK(pnode->cs_mnauth);
-        if (pnode->verifiedProRegTxHash.IsNull()) {
+        auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+        if (verifiedProRegTxHash.IsNull()) {
             return;
         }
-        protoMap.try_emplace(pnode->verifiedProRegTxHash, pnode->nVersion);
+        protoMap.try_emplace(verifiedProRegTxHash, pnode->nVersion);
     });
 
     bool fShouldAllMembersBeConnected = CLLMQUtils::IsAllMembersConnectedEnabled(params.type);
@@ -524,7 +524,7 @@ void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
 
     logger.Batch("sending complaint. badCount=%d, complaintCount=%d", badCount, complaintCount);
 
-    qc.sig = activeMasternodeInfo.blsKeyOperator->Sign(qc.GetSignHash());
+    qc.sig = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.blsKeyOperator->Sign(qc.GetSignHash()));
 
     logger.Flush();
 
@@ -723,7 +723,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
         return;
     }
 
-    qj.sig = activeMasternodeInfo.blsKeyOperator->Sign(qj.GetSignHash());
+    qj.sig = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.blsKeyOperator->Sign(qj.GetSignHash()));
 
     logger.Flush();
 
@@ -1024,7 +1024,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
         (*commitmentHash.begin())++;
     }
 
-    qc.sig = activeMasternodeInfo.blsKeyOperator->Sign(commitmentHash);
+    qc.sig = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.blsKeyOperator->Sign(commitmentHash));
     qc.quorumSig = skShare.Sign(commitmentHash);
 
     if (lieType == 3) {
@@ -1326,13 +1326,11 @@ void CDKGSession::RelayOtherInvToParticipants(const CInv& inv) const
     LOCK(invCs);
     dkgManager.connman.ForEachNode([&](CNode* pnode) {
         bool relay = false;
-        {
-            LOCK(pnode->cs_mnauth);
-            if (pnode->qwatch) {
-                relay = true;
-            } else if (!pnode->verifiedProRegTxHash.IsNull() && relayMembers.count(pnode->verifiedProRegTxHash)) {
-                relay = true;
-            }
+        auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+        if (pnode->qwatch) {
+            relay = true;
+        } else if (!verifiedProRegTxHash.IsNull() && relayMembers.count(verifiedProRegTxHash)) {
+            relay = true;
         }
         if (relay) {
             pnode->PushOtherInventory(inv);
