@@ -1067,147 +1067,148 @@ static RPCHelpMan submitNFT()
 
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
 
-            std::string command = request.params[0].get_str();
-            std::string nftdata = request.params[1].get_str();
-            std::string owner = request.params[2].get_str();
-            std::string txid = request.params[3].get_str();
-            std::string nftAssetClassID = request.params[4].get_str();
-
             std::string result = "internal-error";
 
-            //calc nft asset class id hash
-            //1 - hash of binary data submitted + owner bech32 in ascii = hash1
-            //2 - hash1 (binary) + txid (in binary) = NFTID
+            if (gArgs.GetArg("-nftnode", "") == "true") {
+                std::string command = request.params[0].get_str();
+                std::string nftdata = request.params[1].get_str();
+                std::string owner = request.params[2].get_str();
+                std::string txid = request.params[3].get_str();
+                std::string nftAssetClassID = request.params[4].get_str();
 
-            //calc nft asset id hash
-            //1 - hash of binary data submitted + owner bech32 in ascii + nft asset class id = hash1
-            //2 - hash1 (binary) + txid (in binary) = NFTID
+
+                //calc nft asset class id hash
+                //1 - hash of binary data submitted + owner bech32 in ascii = hash1
+                //2 - hash1 (binary) + txid (in binary) = NFTID
+
+                //calc nft asset id hash
+                //1 - hash of binary data submitted + owner bech32 in ascii + nft asset class id = hash1
+                //2 - hash1 (binary) + txid (in binary) = NFTID
 
 
-            //TODO - check length of metadata
-            std::vector<unsigned char> nftBinary = ParseHex(nftdata.c_str());    
-            CSHA256 hasher;
-            unsigned char* cNFTdata = (unsigned char*)malloc(nftBinary.size());
-            unsigned char nftHash[32];
-            for (int i = 0; i < nftBinary.size(); i++)
-                cNFTdata[i] = nftBinary[i];
-            hasher.Write(cNFTdata, nftBinary.size());
-            hasher.Write((const unsigned char*)owner.c_str(), owner.length());
-            hasher.Finalize(nftHash);
-            free(cNFTdata);
+                //TODO - check length of metadata
+                std::vector<unsigned char> nftBinary = ParseHex(nftdata.c_str());
+                CSHA256 hasher;
+                unsigned char* cNFTdata = (unsigned char*)malloc(nftBinary.size());
+                unsigned char nftHash[32];
+                for (int i = 0; i < nftBinary.size(); i++)
+                    cNFTdata[i] = nftBinary[i];
+                hasher.Write(cNFTdata, nftBinary.size());
+                hasher.Write((const unsigned char*)owner.c_str(), owner.length());
+                hasher.Finalize(nftHash);
+                free(cNFTdata);
 
-            hasher.Reset();
-            hasher.Write(nftHash, 32);
-
-            std::vector<unsigned char> txIDBinary = ParseHex(txid.c_str());
-            unsigned char* txidData = (unsigned char*)malloc(txIDBinary.size());
-            for (int i = 0; i < txIDBinary.size(); i++)
-                txidData[i] = txIDBinary[i];
-            hasher.Write(txidData, txIDBinary.size());
-
-            unsigned char nftID[32];
-            hasher.Finalize(nftID);
-            free(txidData);
-
-            if (command == "add-asset") {       //for assets we hash in the nft class ID as well
                 hasher.Reset();
-                hasher.Write(nftID, 32);
+                hasher.Write(nftHash, 32);
 
-                std::vector<unsigned char> classIDBinary = ParseHex(nftAssetClassID.c_str());
-                unsigned char* classIDData = (unsigned char*)malloc(classIDBinary.size());
-                for (int i = 0; i < classIDBinary.size(); i++)
-                    classIDData[i] = classIDBinary[i];
-                hasher.Write(classIDData, classIDBinary.size());
+                std::vector<unsigned char> txIDBinary = ParseHex(txid.c_str());
+                unsigned char* txidData = (unsigned char*)malloc(txIDBinary.size());
+                for (int i = 0; i < txIDBinary.size(); i++)
+                    txidData[i] = txIDBinary[i];
+                hasher.Write(txidData, txIDBinary.size());
+
+                unsigned char nftID[32];
                 hasher.Finalize(nftID);
-            }
+                free(txidData);
 
-            if (command == "add-class") {
+                if (command == "add-asset") { //for assets we hash in the nft class ID as well
+                    hasher.Reset();
+                    hasher.Write(nftID, 32);
 
-                CNFTAssetClass* newAsset = new CNFTAssetClass();
+                    std::vector<unsigned char> classIDBinary = ParseHex(nftAssetClassID.c_str());
+                    unsigned char* classIDData = (unsigned char*)malloc(classIDBinary.size());
+                    for (int i = 0; i < classIDBinary.size(); i++)
+                        classIDData[i] = classIDBinary[i];
+                    hasher.Write(classIDData, classIDBinary.size());
+                    hasher.Finalize(nftID);
+                }
 
-                newAsset->hash = HexStr(nftID);
+                if (command == "add-class") {
+                    CNFTAssetClass* newAsset = new CNFTAssetClass();
 
-                newAsset->owner = owner;
+                    newAsset->hash = HexStr(nftID);
 
-                std::vector<unsigned char> vMetaData = ParseHex(nftdata.substr(2, nftdata.size() - 18).c_str()); //remove first 2 bytes of len and last 16 bytes of max count
-                for (int i = 0; i < vMetaData.size(); i++)
-                    newAsset->metaData.push_back(vMetaData[i]);
+                    newAsset->owner = owner;
 
-                std::vector<unsigned char> vMaxCount = ParseHex(nftdata.substr(nftdata.size() - 16, 16).c_str());
-                newAsset->maxCount = ((uint64_t)vMaxCount[0]) << 56;
-                newAsset->maxCount += ((uint64_t)vMaxCount[1]) << 48;
-                newAsset->maxCount += ((uint64_t)vMaxCount[2]) << 40;
-                newAsset->maxCount += ((uint64_t)vMaxCount[3]) << 32;
-                newAsset->maxCount += ((uint64_t)vMaxCount[4]) << 24;
-                newAsset->maxCount += ((uint64_t)vMaxCount[5]) << 16;
-                newAsset->maxCount += ((uint64_t)vMaxCount[6]) << 8;
-                newAsset->maxCount += ((uint64_t)vMaxCount[7]);
+                    std::vector<unsigned char> vMetaData = ParseHex(nftdata.substr(2, nftdata.size() - 18).c_str()); //remove first 2 bytes of len and last 16 bytes of max count
+                    for (int i = 0; i < vMetaData.size(); i++)
+                        newAsset->metaData.push_back(vMetaData[i]);
 
-                newAsset->txnID = txid;
+                    std::vector<unsigned char> vMaxCount = ParseHex(nftdata.substr(nftdata.size() - 16, 16).c_str());
+                    newAsset->maxCount = ((uint64_t)vMaxCount[0]) << 56;
+                    newAsset->maxCount += ((uint64_t)vMaxCount[1]) << 48;
+                    newAsset->maxCount += ((uint64_t)vMaxCount[2]) << 40;
+                    newAsset->maxCount += ((uint64_t)vMaxCount[3]) << 32;
+                    newAsset->maxCount += ((uint64_t)vMaxCount[4]) << 24;
+                    newAsset->maxCount += ((uint64_t)vMaxCount[5]) << 16;
+                    newAsset->maxCount += ((uint64_t)vMaxCount[6]) << 8;
+                    newAsset->maxCount += ((uint64_t)vMaxCount[7]);
 
-                g_nftMgr->addNFTAssetClass(newAsset);
+                    newAsset->txnID = txid;
 
-                delete newAsset;
+                    g_nftMgr->addNFTAssetClass(newAsset);
 
-                result = HexStr(nftID);
+                    delete newAsset;
 
-            } else if (command == "add-asset") {
+                    result = HexStr(nftID);
 
-                /*    
+                } else if (command == "add-asset") {
+                    /*    
     std::string metaData;
     std::string binaryData;
     
     
 ;*/
 
-                CNFTAsset* newAsset = new CNFTAsset();
+                    CNFTAsset* newAsset = new CNFTAsset();
 
-                newAsset->hash = HexStr(nftID);
+                    newAsset->hash = HexStr(nftID);
 
-                newAsset->assetClassHash = nftAssetClassID;
+                    newAsset->assetClassHash = nftAssetClassID;
 
-                newAsset->owner = owner;
+                    newAsset->owner = owner;
 
-                std::vector<unsigned char> vMetaDataLen = ParseHex(nftdata.substr(0, 4).c_str());
-                uint32_t metaDataLen = (((uint32_t)vMetaDataLen[0]) << 8) + vMetaDataLen[1];
+                    std::vector<unsigned char> vMetaDataLen = ParseHex(nftdata.substr(0, 4).c_str());
+                    uint32_t metaDataLen = (((uint32_t)vMetaDataLen[0]) << 8) + vMetaDataLen[1];
 
-                std::vector<unsigned char> vMetaData = ParseHex(nftdata.substr(4, metaDataLen * 2).c_str()); 
-                for (int i = 0; i < vMetaData.size(); i++)
-                    newAsset->metaData.push_back(vMetaData[i]);
+                    std::vector<unsigned char> vMetaData = ParseHex(nftdata.substr(4, metaDataLen * 2).c_str());
+                    for (int i = 0; i < vMetaData.size(); i++)
+                        newAsset->metaData.push_back(vMetaData[i]);
 
-                std::vector<unsigned char> vBinaryDataLen = ParseHex(nftdata.substr(metaDataLen * 2 + 4, 6).c_str());
-                uint32_t binaryDataLen = (((uint32_t)vBinaryDataLen[0]) << 16) + (((uint32_t)vBinaryDataLen[1]) << 8) + vBinaryDataLen[2];
+                    std::vector<unsigned char> vBinaryDataLen = ParseHex(nftdata.substr(metaDataLen * 2 + 4, 6).c_str());
+                    uint32_t binaryDataLen = (((uint32_t)vBinaryDataLen[0]) << 16) + (((uint32_t)vBinaryDataLen[1]) << 8) + vBinaryDataLen[2];
 
-                int index = metaDataLen * 2 + 10;
-                int len = binaryDataLen * 2;
-                std::string x = nftdata.substr(index, len);
-                std::vector<unsigned char> v = ParseHex(x.c_str());
+                    int index = metaDataLen * 2 + 10;
+                    int len = binaryDataLen * 2;
+                    std::string x = nftdata.substr(index, len);
+                    std::vector<unsigned char> v = ParseHex(x.c_str());
 
-                std::vector<unsigned char> vBinaryData = ParseHex(nftdata.substr(metaDataLen * 2 + 10, binaryDataLen * 2).c_str());
-                for (int i = 0; i < vBinaryData.size(); i++)
-                    newAsset->binaryData.push_back(vBinaryData[i]);
+                    std::vector<unsigned char> vBinaryData = ParseHex(nftdata.substr(metaDataLen * 2 + 10, binaryDataLen * 2).c_str());
+                    for (int i = 0; i < vBinaryData.size(); i++)
+                        newAsset->binaryData.push_back(vBinaryData[i]);
 
-                std::vector<unsigned char> vSerial = ParseHex(nftdata.substr(nftdata.size() - 16, 16).c_str());
-                newAsset->serial = ((uint64_t)vSerial[0]) << 56;
-                newAsset->serial += ((uint64_t)vSerial[1]) << 48;
-                newAsset->serial += ((uint64_t)vSerial[2]) << 40;
-                newAsset->serial += ((uint64_t)vSerial[3]) << 32;
-                newAsset->serial += ((uint64_t)vSerial[4]) << 24;
-                newAsset->serial += ((uint64_t)vSerial[5]) << 16;
-                newAsset->serial += ((uint64_t)vSerial[6]) << 8;
-                newAsset->serial += ((uint64_t)vSerial[7]);
+                    std::vector<unsigned char> vSerial = ParseHex(nftdata.substr(nftdata.size() - 16, 16).c_str());
+                    newAsset->serial = ((uint64_t)vSerial[0]) << 56;
+                    newAsset->serial += ((uint64_t)vSerial[1]) << 48;
+                    newAsset->serial += ((uint64_t)vSerial[2]) << 40;
+                    newAsset->serial += ((uint64_t)vSerial[3]) << 32;
+                    newAsset->serial += ((uint64_t)vSerial[4]) << 24;
+                    newAsset->serial += ((uint64_t)vSerial[5]) << 16;
+                    newAsset->serial += ((uint64_t)vSerial[6]) << 8;
+                    newAsset->serial += ((uint64_t)vSerial[7]);
 
-                newAsset->txnID = txid;
+                    newAsset->txnID = txid;
 
-                g_nftMgr->addNFTAsset(newAsset);
+                    g_nftMgr->addNFTAsset(newAsset);
 
-                delete newAsset;
+                    delete newAsset;
 
 
-                result = HexStr(nftID);
+                    result = HexStr(nftID);
 
-            } else
-                result = "invalid-command";
+                } else
+                    result = "invalid-command";
+            }
 
             return result;
 
