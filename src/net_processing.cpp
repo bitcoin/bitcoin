@@ -230,8 +230,25 @@ struct Peer {
      *  We initialize this filter for outbound peers (other than
      *  block-relay-only connections) or when an inbound peer sends us an
      *  address related message (ADDR, ADDRV2, GETADDR).
+     *
+     *  Presence of this filter must correlate with m_addr_relay_enabled.
      **/
     std::unique_ptr<CRollingBloomFilter> m_addr_known;
+    /** Whether we are participating in address relay with this connection.
+     *
+     *  We set this bool to true for outbound peers (other than
+     *  block-relay-only connections), or when an inbound peer sends us an
+     *  address related message (ADDR, ADDRV2, GETADDR).
+     *
+     *  We use this bool to decide whether a peer is eligible for gossiping
+     *  addr messages. This avoids relaying to peers that are unlikely to
+     *  forward them, effectively blackholing self announcements. Reasons
+     *  peers might support addr relay on the link include that they connected
+     *  to us as a block-relay-only peer or they are a light client.
+     *
+     *  This field must correlate with whether m_addr_known has been
+     *  initialized.*/
+    std::atomic_bool m_addr_relay_enabled{false};
     /** Whether a getaddr request to this peer is outstanding. */
     bool m_getaddr_sent{false};
     /** Guards address sending timers. */
@@ -617,8 +634,8 @@ private:
      */
     void ProcessGetCFCheckPt(CNode& peer, CDataStream& vRecv);
 
-    /** Checks if address relay is permitted with peer. Initializes
-     * `m_addr_known` bloom filter if needed.
+    /** Checks if address relay is permitted with peer. If needed, initializes
+     * the m_addr_known bloom filter and sets m_addr_relay_enabled to true.
      *
      *  @return   True if address relay is enabled with peer
      *            False if address relay is disallowed
@@ -746,7 +763,7 @@ static CNodeState *State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
 
 static bool RelayAddrsWithPeer(const Peer& peer)
 {
-    return peer.m_addr_known != nullptr;
+    return peer.m_addr_relay_enabled;
 }
 
 /**
@@ -4449,6 +4466,7 @@ bool PeerManagerImpl::SetupAddressRelay(CNode& node, Peer& peer)
         // First addr message we have received from the peer, initialize
         // m_addr_known
         peer.m_addr_known = std::make_unique<CRollingBloomFilter>(5000, 0.001);
+        peer.m_addr_relay_enabled = true;
     }
 
     return true;
