@@ -1279,6 +1279,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
     stats.m_ping_wait = ping_wait;
     stats.m_addr_processed = peer->m_addr_processed.load();
     stats.m_addr_rate_limited = peer->m_addr_rate_limited.load();
+    stats.m_addr_relay_enabled = peer->m_addr_relay_enabled.load();
 
     return true;
 }
