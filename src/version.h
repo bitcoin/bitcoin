@@ -9,7 +9,7 @@
  * network protocol versioning
  */
 
-static const int PROTOCOL_VERSION = 70016;
+static const int PROTOCOL_VERSION = 70017;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -37,6 +37,10 @@ static const int INVALID_CB_NO_BAN_VERSION = 70015;
 
 //! "wtxidrelay" command for wtxid-based relay starts with this version
 static const int WTXID_RELAY_VERSION = 70016;
+
+
+//! "NFT" command for nft data relay starts with this version
+static const int NFT_RELAY_VERSION = 70017;
 
 // Make sure that none of the values above collide with
 // `SERIALIZE_TRANSACTION_NO_WITNESS` or `ADDRV2_FORMAT`.

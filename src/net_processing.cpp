@@ -3635,7 +3635,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         else if (g_nftMgr->assetClassInCache(assetClassHashHex)) {
             haveThisOne = true;
             CNFTAssetClass* assetClass = g_nftMgr->retrieveAssetClassFromCache(assetClassHashHex);
-            assetClass->createSerialData();
+            assetClass->createSerialData();            
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSETCLASS, assetClass->strSerialData));
         }
 
@@ -4796,9 +4796,11 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                             if (now - i->second > 10) {
                                 char hexHashData[65];
                                 memcpy(hexHashData, i->first.c_str(), 65);
-                                LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", i->first.c_str(), pnode->GetId());
-                                m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, hexHashData));   
-                                i->second = now;
+                                if (pnode->GetCommonVersion() >= NFT_RELAY_VERSION) {
+                                    LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", i->first.c_str(), pnode->GetId());
+                                    m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, hexHashData));
+                                    i->second = now;
+                                }
                             }
                             i++;
                         }
@@ -4821,9 +4823,11 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                             char hexHashData[65];
                             std::string strHexHash = HexStr(i->first);
                             memcpy(hexHashData, strHexHash.c_str(), 65);
-                            LogPrint(BCLog::NET, "requesting NFT asset  %s to peer=%d\n", hexHashData, pnode->GetId());
-                            m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSET, hexHashData));   
-                            i->second = now;
+                            if (pnode->GetCommonVersion() >= NFT_RELAY_VERSION) {
+                                LogPrint(BCLog::NET, "requesting NFT asset  %s to peer=%d\n", hexHashData, pnode->GetId());
+                                m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSET, hexHashData));
+                                i->second = now;
+                            }
                         }
                         i++;
                     }
