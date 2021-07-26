@@ -447,9 +447,8 @@ static UniValue mnauth(const JSONRPCRequest& request)
     }
 
     bool fSuccess = g_connman->ForNode(nodeId, CConnman::AllNodes, [&](CNode* pNode){
-        LOCK(pNode->cs_mnauth);
-        pNode->verifiedProRegTxHash = proTxHash;
-        pNode->verifiedPubKeyHash = publicKey.GetHash();
+        pNode->SetVerifiedProRegTxHash(proTxHash);
+        pNode->SetVerifiedPubKeyHash(publicKey.GetHash());
         return true;
     });
 

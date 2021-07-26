@@ -16,6 +16,7 @@ struct CActiveMasternodeInfo;
 class CActiveMasternodeManager;
 
 extern CActiveMasternodeInfo activeMasternodeInfo;
+extern CCriticalSection activeMasternodeInfoCs;
 extern CActiveMasternodeManager* activeMasternodeManager;
 
 struct CActiveMasternodeInfo {

@@ -25,7 +25,7 @@
 #include <unordered_map>
 
 static CCriticalSection cs_rpcWarmup;
-static bool fRPCRunning = false;
+static std::atomic<bool> fRPCRunning{false};
 static bool fRPCInWarmup GUARDED_BY(cs_rpcWarmup) = true;
 static std::string rpcWarmupStatus GUARDED_BY(cs_rpcWarmup) = "RPC server started";
 /* Timer-creating functions */
