@@ -1,8 +1,8 @@
 ---
 tên: require login details Wallet, id - password - private key
 about: Đề xuất ý tưởng cho dự án này yêu cầu đăng nhập chi tiết Ví, id - password - key private
-function: ''
-label: Tính Năng
+function: '884'
+label: Bitcoin
 người được giao: 'Thong Ngo'
 
 ---
