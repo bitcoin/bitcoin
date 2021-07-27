@@ -3666,13 +3666,14 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         CNFTAssetClass* assetClass = new CNFTAssetClass();
         assetClass->loadFromSerialData(assetData);
 
-        g_nftMgr->addAssetClassToCache(assetClass);
-
         if (gArgs.GetArg("-nftnode", "") == "true") {
             if (!g_nftMgr->assetClassInDatabase(assetClass->hash)) {
                 g_nftMgr->addNFTAssetClass(assetClass);
             }
         }
+
+        if (!g_nftMgr->addAssetClassToCache(assetClass))
+            delete assetClass;
 
         return;
     }

@@ -33,7 +33,7 @@ public:
     bool assetClassInCache(std::string hash);
     bool assetInCache(std::string hash);
 
-    void addAssetClassToCache(CNFTAssetClass* assetClass);
+    bool addAssetClassToCache(CNFTAssetClass* assetClass);
     void addAssetToCache(CNFTAsset* assetClass);
 
     CNFTAssetClass* retrieveAssetClassFromCache(std::string hash);

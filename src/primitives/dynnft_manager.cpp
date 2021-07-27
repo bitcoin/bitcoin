@@ -93,6 +93,8 @@ void CNFTManager::addNFTAssetClass(CNFTAssetClass* assetClass) {
 
     sqlite3_finalize(stmt);
 
+
+    //if we are requesting this asset class, delete from request queue
     {
         LOCK(requestLock);
         std::map<std::string,time_t>::iterator i = requestAssetClass.find(assetClass->hash);
@@ -232,11 +234,14 @@ bool CNFTManager::assetInCache(std::string hash) {
     return result;
 }
 
-void CNFTManager::addAssetClassToCache(CNFTAssetClass* assetClass) {
+
+//return true if we add to the class, else false
+//allows us to free the asset class referece if its not used
+bool CNFTManager::addAssetClassToCache(CNFTAssetClass* assetClass) {
     LOCK(cacheLock);
     //only store up to 100 asset classes, if exceeded, remove least recently used first
 
-    if (assetClassCache.find(assetClass->hash) == assetClassCache.end())
+    if (assetClassCache.find(assetClass->hash) != assetClassCache.end())
         return;
 
     if (assetClassCache.size() >= 100) {
@@ -267,7 +272,7 @@ void CNFTManager::addAssetToCache(CNFTAsset* asset) {
 
     LOCK(cacheLock);
 
-    if (assetCache.find(asset->hash) == assetCache.end())
+    if (assetCache.find(asset->hash) != assetCache.end())
         return;
 
 
