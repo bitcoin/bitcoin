@@ -9,11 +9,6 @@
     <ConfigurationType>Application</ConfigurationType>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile>
-      <AdditionalIncludeDirectories>F:\programming\berkeleydb\db-4.8.30.NC\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\bitcoin-cli.cpp" />
   </ItemGroup>

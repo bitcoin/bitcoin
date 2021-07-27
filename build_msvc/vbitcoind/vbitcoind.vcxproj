@@ -50,14 +50,6 @@
     <ConfigIniIn>..\..\test\config.ini.in</ConfigIniIn>
     <ConfigIniOut>..\..\test\config.ini</ConfigIniOut>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Link>
-      <AdditionalDependencies>F:\programming\berkeleydb\db-4.8.30.NC\build_windows\x64\Debug_static\libdb48sd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <ClCompile>
-      <AdditionalIncludeDirectories>F:\programming\berkeleydb\db-4.8.30.NC\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-  </ItemDefinitionGroup>
   <Target Name="AfterBuild">
     <Copy SourceFiles="$(ConfigIniIn)" DestinationFiles="$(ConfigIniOut)">
     </Copy>

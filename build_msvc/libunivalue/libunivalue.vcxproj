@@ -20,11 +20,6 @@
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile>
-      <AdditionalIncludeDirectories>F:\programming\berkeleydb\db-4.8.30.NC\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\univalue\lib\univalue.cpp" />
     <ClCompile Include="..\..\src\univalue\lib\univalue_get.cpp" />

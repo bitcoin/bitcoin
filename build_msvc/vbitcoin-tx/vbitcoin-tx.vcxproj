@@ -9,14 +9,6 @@
     <ConfigurationType>Application</ConfigurationType>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile>
-      <AdditionalIncludeDirectories>F:\programming\berkeleydb\db-4.8.30.NC\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>F:\programming\berkeleydb\db-4.8.30.NC\build_windows\x64\Debug_static\libdb48sd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\bitcoin-tx.cpp" />
   </ItemGroup>
