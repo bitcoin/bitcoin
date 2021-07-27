@@ -1541,6 +1541,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">İşlem imzalanamadı: %1</translation>
     </message>
     <message>
+        <source>Could not sign any more inputs.</source>
+        <translation type="unfinished">Daha fazla girdi imzalanamıyor.</translation>
+    </message>
+    <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
         <translation type="unfinished">İşlem imzalandı ve ağa duyurulmaya hazır.</translation>
     </message>
@@ -1564,7 +1568,11 @@ Cüzdan kilidini aç.</translation>
         <source>or</source>
         <translation type="unfinished">veya</translation>
     </message>
-    </context>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation type="unfinished">İşlem durumu bilinmiyor.</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1976,6 +1984,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Seçiminize dayalı talep edilecek tutar. Belli bir tutar talep etmemek için bunu boş bırakın veya sıfır değerini kullanın.</translation>
     </message>
     <message>
+        <source>&amp;Create new receiving address</source>
+        <translation type="unfinished">Yeni alıcı adresi oluştur</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation type="unfinished">Formdaki tüm alanları temizle.</translation>
     </message>
@@ -2187,6 +2199,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Choose…</source>
         <translation type="unfinished">Seç...</translation>
+    </message>
+    <message>
+        <source>Hide transaction fee settings</source>
+        <translation type="unfinished">İşlem ücreti ayarlarını gizle</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -2675,6 +2691,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Output index</source>
         <translation type="unfinished">Çıktı indeksi</translation>
+    </message>
+    <message>
+        <source> (Certificate was not verified)</source>
+        <translation type="unfinished">(Sertifika doğrulanmadı)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -3352,6 +3372,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Unable to generate initial keys</source>
         <translation type="unfinished">Başlangıç anahtarları üretilemiyor</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation type="unfinished">Anahtarlar oluşturulamıyor</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
