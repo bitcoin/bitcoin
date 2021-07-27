@@ -1104,7 +1104,6 @@ static RPCHelpMan submitNFT()
                     for (int i = 0; i < classIDBinary.size(); i++)
                         classIDData[i] = classIDBinary[i];
                     hasher.Write(classIDData, classIDBinary.size());
-                    free(classIDData);
                 }
 
                 hasher.Finalize(nftDataHash);
@@ -1133,6 +1132,9 @@ static RPCHelpMan submitNFT()
 
 
                 if (command == "add-class") {
+
+                    //TODO - use cNFTData as in add-asset instead of parsing hex again in vectors
+
                     CNFTAssetClass* newAsset = new CNFTAssetClass();
 
                     newAsset->hash = HexStr(nftID);
@@ -1175,15 +1177,15 @@ static RPCHelpMan submitNFT()
 
                     newAsset->owner = owner;
 
-                    std::vector<unsigned char> vMetaDataLen = ParseHex(nftdata.substr(0, 4).c_str());
-                    uint32_t metaDataLen = (((uint32_t)vMetaDataLen[0]) << 8) + vMetaDataLen[1];
+                    //std::vector<unsigned char> vMetaDataLen = ParseHex(nftdata.substr(0, 4).c_str());
+                    uint32_t metaDataLen = (cNFTdata[0] << 8) + cNFTdata[1];    //(((uint32_t)vMetaDataLen[0]) << 8) + vMetaDataLen[1];  ?????                        
 
-                    std::vector<unsigned char> vMetaData = ParseHex(nftdata.substr(4, metaDataLen * 2).c_str());
-                    for (int i = 0; i < vMetaData.size(); i++)
-                        newAsset->metaData.push_back(vMetaData[i]);
+                    //std::vector<unsigned char> vMetaData = ParseHex(nftdata.substr(4, metaDataLen * 2).c_str());
+                    for (int i = 0; i < metaDataLen; i++)
+                        newAsset->metaData.push_back(cNFTdata[i + 2]);
 
-                    std::vector<unsigned char> vBinaryDataLen = ParseHex(nftdata.substr(metaDataLen * 2 + 4, 6).c_str());
-                    uint32_t binaryDataLen = (((uint32_t)vBinaryDataLen[0]) << 16) + (((uint32_t)vBinaryDataLen[1]) << 8) + vBinaryDataLen[2];
+                    //std::vector<unsigned char> vBinaryDataLen = ParseHex(nftdata.substr(metaDataLen * 2 + 4, 6).c_str());
+                    uint32_t binaryDataLen = (cNFTdata[metaDataLen + 2] << 16) + (cNFTdata[metaDataLen + 3] << 8) + cNFTdata[metaDataLen + 4]; //(((uint32_t)vBinaryDataLen[0]) << 16) + (((uint32_t)vBinaryDataLen[1]) << 8) + vBinaryDataLen[2];   ????????
 
                     /*
                     int index = metaDataLen * 2 + 10;
@@ -1192,19 +1194,20 @@ static RPCHelpMan submitNFT()
                     std::vector<unsigned char> v = ParseHex(x.c_str());
                     */
 
-                    std::vector<unsigned char> vBinaryData = ParseHex(nftdata.substr(metaDataLen * 2 + 10, binaryDataLen * 2).c_str());
-                    for (int i = 0; i < vBinaryData.size(); i++)
-                        newAsset->binaryData.push_back(vBinaryData[i]);
+                    //std::vector<unsigned char> vBinaryData = ParseHex(nftdata.substr(metaDataLen * 2 + 10, binaryDataLen * 2).c_str());
+                    for (int i = 0; i < binaryDataLen; i++)
+                        newAsset->binaryData.push_back(cNFTdata[metaDataLen + 5 + i]);
 
-                    std::vector<unsigned char> vSerial = ParseHex(nftdata.substr(nftdata.size() - 16, 16).c_str());
-                    newAsset->serial = ((uint64_t)vSerial[0]) << 56;
-                    newAsset->serial += ((uint64_t)vSerial[1]) << 48;
-                    newAsset->serial += ((uint64_t)vSerial[2]) << 40;
-                    newAsset->serial += ((uint64_t)vSerial[3]) << 32;
-                    newAsset->serial += ((uint64_t)vSerial[4]) << 24;
-                    newAsset->serial += ((uint64_t)vSerial[5]) << 16;
-                    newAsset->serial += ((uint64_t)vSerial[6]) << 8;
-                    newAsset->serial += ((uint64_t)vSerial[7]);
+                    uint32_t offset = metaDataLen + 5 + binaryDataLen;
+                    //std::vector<unsigned char> vSerial = ParseHex(nftdata.substr(nftdata.size() - 16, 16).c_str());
+                    newAsset->serial = ((uint64_t)cNFTdata[offset + 0]) << 56;
+                    newAsset->serial += ((uint64_t)cNFTdata[offset + 1]) << 48;
+                    newAsset->serial += ((uint64_t)cNFTdata[offset + 2]) << 40;
+                    newAsset->serial += ((uint64_t)cNFTdata[offset + 3]) << 32;
+                    newAsset->serial += ((uint64_t)cNFTdata[offset + 4]) << 24;
+                    newAsset->serial += ((uint64_t)cNFTdata[offset + 5]) << 16;
+                    newAsset->serial += ((uint64_t)cNFTdata[offset + 6]) << 8;
+                    newAsset->serial += ((uint64_t)cNFTdata[offset + 7]);
 
                     newAsset->txnID = txid;
 
