@@ -1091,12 +1091,12 @@ static RPCHelpMan submitNFT()
                 CSHA256 hasher;
 
                 //NFT binary data first byte is opcode which we skip
-                unsigned char* cNFTdata = (unsigned char*)malloc(nftBinary.size()-1);
-                for (int i = 0; i < nftBinary.size()-1; i++)
-                    cNFTdata[i] = nftBinary[i+1];
+                unsigned char* cNFTdata = (unsigned char*)malloc(nftBinary.size());
+                for (int i = 0; i < nftBinary.size(); i++)
+                    cNFTdata[i] = nftBinary[i];
 
                 unsigned char nftDataHash[32];
-                hasher.Write(cNFTdata, nftBinary.size() - 1);
+                hasher.Write(cNFTdata, nftBinary.size());
                 hasher.Finalize(nftDataHash);
 
                 unsigned char nftHash[32];
