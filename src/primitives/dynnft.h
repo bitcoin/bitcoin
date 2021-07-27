@@ -35,7 +35,7 @@ public:
     std::string hash;
     std::string assetClassHash;
     std::string metaData;
-    std::string binaryData;
+    std::vector<unsigned char> binaryData;
     std::string owner;
     std::string txnID;
     uint64_t serial;

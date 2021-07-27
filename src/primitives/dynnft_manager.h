@@ -34,12 +34,13 @@ public:
     bool assetInCache(std::string hash);
 
     bool addAssetClassToCache(CNFTAssetClass* assetClass);
-    void addAssetToCache(CNFTAsset* assetClass);
+    bool addAssetToCache(CNFTAsset* assetClass);
 
     CNFTAssetClass* retrieveAssetClassFromCache(std::string hash);
     CNFTAsset* retrieveAssetFromCache(std::string hash);
 
     CNFTAssetClass* retrieveAssetClassFromDatabase(std::string hash);
+    CNFTAsset* retrieveAssetFromDatabase(std::string hash);
 
 
     // stores the last timestamp for each asset class hash or asset hash requested

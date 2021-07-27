@@ -138,6 +138,13 @@ void CNFTManager::addNFTAsset(CNFTAsset* asset) {
 
     sqlite3_finalize(stmt);
 
+        //if we are requesting this asset, delete from request queue
+    {
+        LOCK(requestLock);
+        std::map<std::string, time_t>::iterator i = requestAsset.find(asset->hash);
+        if (i != requestAsset.end())
+            requestAsset.erase(i);
+    }
 
 
 }
@@ -242,7 +249,7 @@ bool CNFTManager::addAssetClassToCache(CNFTAssetClass* assetClass) {
     //only store up to 100 asset classes, if exceeded, remove least recently used first
 
     if (assetClassCache.find(assetClass->hash) != assetClassCache.end())
-        return;
+        return false;
 
     if (assetClassCache.size() >= 100) {
         std::string lruHash;
@@ -265,15 +272,17 @@ bool CNFTManager::addAssetClassToCache(CNFTAssetClass* assetClass) {
     time(&now);
     lastCacheAccessAssetClass.emplace(assetClass->hash, now);
 
+    return true;
 }
 
-
-void CNFTManager::addAssetToCache(CNFTAsset* asset) {
+//return true if we add to the class, else false
+//allows us to free the asset class referece if its not used
+bool CNFTManager::addAssetToCache(CNFTAsset* asset) {
 
     LOCK(cacheLock);
 
     if (assetCache.find(asset->hash) != assetCache.end())
-        return;
+        return false;
 
 
     //only store up to 100 assets, if exceeded, remove least recently used first
@@ -298,6 +307,7 @@ void CNFTManager::addAssetToCache(CNFTAsset* asset) {
     time(&now);
     lastCacheAccessAsset.emplace(asset->hash, now);
 
+    return true;
 }
 
 
@@ -364,4 +374,42 @@ CNFTAssetClass* CNFTManager::retrieveAssetClassFromDatabase(std::string hash)
 
     return result;
    
+}
+
+
+CNFTAsset* CNFTManager::retrieveAssetFromDatabase(std::string hash)
+{
+    CNFTAsset* result = NULL;
+
+    std::string sql = "select asset_txn_id, asset_hash, asset_class_hash, asset_metadata, asset_owner, asset_binary_data, asset_serial from asset where asset_hash = @hash";
+    sqlite3_stmt* stmt = NULL;
+    sqlite3_prepare_v2(nftDB, sql.c_str(), -1, &stmt, NULL);
+    sqlite3_bind_text(stmt, 1, hash.c_str(), -1, NULL);
+    int rc = sqlite3_step(stmt);
+    if ((rc != SQLITE_DONE) && (rc != SQLITE_OK)) {
+        const char* cAssetTxnID = (const char*)sqlite3_column_text(stmt, 0);
+        const char* cAssetHash = (const char*)sqlite3_column_text(stmt, 1);
+        const char* cAssetClassHash = (const char*)sqlite3_column_text(stmt, 2);
+        const char* cAssetMetaData = (const char*)sqlite3_column_text(stmt, 3);
+        const char* cAssetOwner = (const char*)sqlite3_column_text(stmt, 4);
+        const unsigned char* cAssetBinary = (const unsigned char*)sqlite3_column_blob  (stmt, 5);
+        int iBinarySize = sqlite3_column_bytes(stmt, 5);
+        UINT64 iCount = sqlite3_column_int64(stmt, 6);
+
+        result = new CNFTAsset();
+        result->txnID = std::string(cAssetTxnID);
+        result->hash = std::string(cAssetHash);
+        result->assetClassHash = std::string(cAssetClassHash);
+        result->metaData = std::string(cAssetMetaData);
+        result->owner = std::string(cAssetOwner);
+        result->binaryData = std::vector<unsigned char>(cAssetBinary, cAssetBinary + iBinarySize);
+        result->serial = iCount;
+    }
+
+    sqlite3_finalize(stmt);
+
+    if (result != NULL)
+        addAssetToCache(result);
+
+    return result;
 }
