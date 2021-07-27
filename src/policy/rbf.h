@@ -56,4 +56,17 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx, CTxMem
 std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx, const CTxMemPool& m_pool,
                                                const CTxMemPool::setEntries& setIterConflicting)
                                                EXCLUSIVE_LOCKS_REQUIRED(m_pool.cs);
+
+/** Check the intersection between two sets of transactions (a set of mempool entries and a set of
+ * txids) to make sure they are disjoint.
+ * @param[in]   setAncestors    Set of mempool entries corresponding to ancestors of the
+ *                              replacement transactions.
+ * @param[in]   setConflicts    Set of txids corresponding to the mempool conflicts
+ *                              (candidates to be replaced).
+ * @param[in]   txid            Transaction ID, included in the error message if violation occurs.
+ * @returns error message if the sets intersect, std::nullopt if they are disjoint.
+ */
+std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries& setAncestors,
+                                                   const std::set<uint256>& setConflicts,
+                                                   const uint256& txid);
 #endif // BITCOIN_POLICY_RBF_H
