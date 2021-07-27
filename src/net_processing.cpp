@@ -3621,33 +3621,37 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     //if we are not storing the database, or if we dont have it in cache, relay request to our peers
     if (msg_type == NetMsgType::REQNFTASSETCLASS) {
 
-        char assetClassHashHex[2000];
+        char assetClassHashHex[64];
         
         vRecv >> assetClassHashHex;
 
-        LogPrint(BCLog::NET, "got request for NFT asset class %s from peer=%d\n", assetClassHashHex, pfrom.GetId());
+        std::string strHashHex;
+        for (int i = 0; i < 64; i++)
+            strHashHex += assetClassHashHex[i];
+
+        LogPrint(BCLog::NET, "got request for NFT asset class %s from peer=%d\n", strHashHex.c_str(), pfrom.GetId());
 
 
         bool haveThisOne = false;
         if (gArgs.GetArg("-nftnode", "") == "true") {
-            if (g_nftMgr->assetClassInDatabase(assetClassHashHex)) {
+            if (g_nftMgr->assetClassInDatabase(strHashHex)) {
                 haveThisOne = true;
-                CNFTAssetClass* assetClass = g_nftMgr->retrieveAssetClassFromDatabase(assetClassHashHex);
+                CNFTAssetClass* assetClass = g_nftMgr->retrieveAssetClassFromDatabase(strHashHex);
                 assetClass->createSerialData();
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSETCLASS, assetClass->strSerialData));
             }
         }
 
-        else if (g_nftMgr->assetClassInCache(assetClassHashHex)) {
+        else if (g_nftMgr->assetClassInCache(strHashHex)) {
             haveThisOne = true;
-            CNFTAssetClass* assetClass = g_nftMgr->retrieveAssetClassFromCache(assetClassHashHex);
+            CNFTAssetClass* assetClass = g_nftMgr->retrieveAssetClassFromCache(strHashHex);
             assetClass->createSerialData();            
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSETCLASS, assetClass->strSerialData));
         }
 
 
         if (!haveThisOne)
-            g_nftMgr->queueAssetClassRequest(assetClassHashHex);
+            g_nftMgr->queueAssetClassRequest(strHashHex);
 
         return;
     }
