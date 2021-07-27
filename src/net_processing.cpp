@@ -4805,7 +4805,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                                 if (!g_nftMgr->assetClassInDatabase(i->first)) {
                                     if (pnode->GetCommonVersion() >= NFT_RELAY_VERSION) {
                                         LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", i->first.c_str(), pnode->GetId());
-                                        m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, i->first));
+                                        std::vector<unsigned char> vecNFTHex;
+                                        for (int j = 0; j < i->first.length(); j++)
+                                            vecNFTHex.push_back(i->first.at(j));
+                                        m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, vecNFTHex));
                                         i->second = now;
                                     }
                                 }
