@@ -309,6 +309,7 @@ public:
         checkpointData = {
             {
                 {0, uint256S(genesisHash)},
+                {290000, uint256S("0x00000001e7fcb8a16e33f38168561ccb803110f86e9c3505358ba22f7f444fa5")},
                 /*
 
                 { 11111, uint256S("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d")},

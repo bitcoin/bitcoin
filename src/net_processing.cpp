@@ -3623,6 +3623,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         char assetClassHashHex[65];
         vRecv >> assetClassHashHex;
+        assetClassHashHex[64] = 0;
+
+        LogPrint(BCLog::NET, "got request for NFT asset class %s from peer=%d\n", assetClassHashHex, pfrom.GetId());
+
 
         bool haveThisOne = false;
         if (gArgs.GetArg("-nftnode", "") == "true") {

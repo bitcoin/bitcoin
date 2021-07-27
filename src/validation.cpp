@@ -3962,13 +3962,12 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
                     CSHA256 hasher;
                     unsigned char* cNFTdata = (unsigned char*)malloc(32);
-                    unsigned char nftHash[33];
+                    unsigned char nftHash[32];
                     for (int i = 0; i < 32; i++)
                         cNFTdata[i] = vout.scriptPubKey[start + 4 + i];
                     hasher.Write(cNFTdata, 32);
                     hasher.Write(cTXID, 32);
                     hasher.Finalize(nftHash);
-                    nftHash[32] = 0;
                     std::string strNFTHash = HexStr(nftHash);
 
                     if (gArgs.GetArg("-nftnode", "") == "true") {
