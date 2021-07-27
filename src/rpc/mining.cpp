@@ -1125,9 +1125,10 @@ static RPCHelpMan submitNFT()
                     std::vector<unsigned char> classIDBinary = ParseHex(nftAssetClassID.c_str());
                     unsigned char* classIDData = (unsigned char*)malloc(classIDBinary.size());
                     for (int i = 0; i < classIDBinary.size(); i++)
-                        classIDData[i] = classIDBinary[i];
+                        classIDData[i] = classIDBinary[i];                    
                     hasher.Write(classIDData, classIDBinary.size());
                     hasher.Finalize(nftID);
+                    free(classIDData);
                 }
 
                 if (command == "add-class") {
@@ -1160,12 +1161,10 @@ static RPCHelpMan submitNFT()
                     result = HexStr(nftID);
 
                 } else if (command == "add-asset") {
-                    /*    
-    std::string metaData;
-    std::string binaryData;
-    
-    
-;*/
+
+                    //TODO - verify asset class hash exists
+                    //TODO - verify asset serial <= asset class max count
+                    //TODO - verify asset serial doesnt already exist
 
                     CNFTAsset* newAsset = new CNFTAsset();
 
@@ -1185,10 +1184,12 @@ static RPCHelpMan submitNFT()
                     std::vector<unsigned char> vBinaryDataLen = ParseHex(nftdata.substr(metaDataLen * 2 + 4, 6).c_str());
                     uint32_t binaryDataLen = (((uint32_t)vBinaryDataLen[0]) << 16) + (((uint32_t)vBinaryDataLen[1]) << 8) + vBinaryDataLen[2];
 
+                    /*
                     int index = metaDataLen * 2 + 10;
                     int len = binaryDataLen * 2;
                     std::string x = nftdata.substr(index, len);
                     std::vector<unsigned char> v = ParseHex(x.c_str());
+                    */
 
                     std::vector<unsigned char> vBinaryData = ParseHex(nftdata.substr(metaDataLen * 2 + 10, binaryDataLen * 2).c_str());
                     for (int i = 0; i < vBinaryData.size(); i++)
@@ -1209,7 +1210,6 @@ static RPCHelpMan submitNFT()
                     g_nftMgr->addNFTAsset(newAsset);
 
                     delete newAsset;
-
 
                     result = HexStr(nftID);
 

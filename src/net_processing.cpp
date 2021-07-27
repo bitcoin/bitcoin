@@ -3679,13 +3679,58 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     }
 
     if (msg_type == NetMsgType::REQNFTASSET) {
-        printf("********************REQNFTASSET**************************\n");
-        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSET));
+        char assetHashHex[64];
+
+        vRecv >> assetHashHex;
+
+        std::string strHashHex;
+        for (int i = 0; i < 64; i++)
+            strHashHex += assetHashHex[i];
+
+        LogPrint(BCLog::NET, "got request for NFT asset %s from peer=%d\n", strHashHex.c_str(), pfrom.GetId());
+
+
+        bool haveThisOne = false;
+        if (gArgs.GetArg("-nftnode", "") == "true") {
+            if (g_nftMgr->assetInDatabase(strHashHex)) {
+                haveThisOne = true;
+                CNFTAsset* asset = g_nftMgr->retrieveAssetFromDatabase(strHashHex);
+                asset->createSerialData();
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSET, asset->strSerialData));
+            }
+        }
+
+        else if (g_nftMgr->assetInCache(strHashHex)) {
+            haveThisOne = true;
+            CNFTAsset* asset = g_nftMgr->retrieveAssetFromCache(strHashHex);
+            asset->createSerialData();
+            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SNDNFTASSET, asset->strSerialData));
+        }
+
+
+        if (!haveThisOne)
+            g_nftMgr->queueAssetRequest(strHashHex);
+
         return;
     }
 
     if (msg_type == NetMsgType::SNDNFTASSET) {
-        printf("********************SNDNFTASSET**************************\n");
+        std::vector<unsigned char> assetData;
+
+        vRecv >> assetData;
+
+        CNFTAsset* asset = new CNFTAsset();
+        asset->loadFromSerialData(assetData);
+
+        if (gArgs.GetArg("-nftnode", "") == "true") {
+            if (!g_nftMgr->assetInDatabase(asset->hash)) {
+                g_nftMgr->addNFTAsset(asset);
+            }
+        }
+
+        if (!g_nftMgr->addAssetToCache(asset))
+            delete asset;
+
         return;
     }
 
@@ -4822,7 +4867,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                                         struct CSerializedNetMsg msg;
                                         msg.m_type = NetMsgType::REQNFTASSETCLASS;
                                         msg.data = vecNFTHex;
-                                        //m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, vecNFTHex));
                                         m_connman.PushMessage(pnode, std::move(msg));
                                         i->second = now;
                                     }
@@ -4840,25 +4884,28 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             m_connman.ForEachNode([this, &msgMaker](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
                 AssertLockHeld(::cs_main);
                 {
-                    /*
                     LOCK(g_nftMgr->requestLock);
                     time_t now;
                     time(&now);
                     std::map<std::string, time_t>::iterator i = g_nftMgr->requestAsset.begin();
                     while (i != g_nftMgr->requestAsset.end()) {
-                        if (now - i->second > 10) {
-                            char hexHashData[65];
-                            std::string strHexHash = HexStr(i->first);
-                            memcpy(hexHashData, strHexHash.c_str(), 65);
-                            if (pnode->GetCommonVersion() >= NFT_RELAY_VERSION) {
-                                LogPrint(BCLog::NET, "requesting NFT asset  %s to peer=%d\n", hexHashData, pnode->GetId());
-                                m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSET, hexHashData));
-                                i->second = now;
+                        if (now - i->second > 10) { //TODO - hysterisis - could cause a DOS attack by loading lots of NFT hashes and not loading the assets
+                            if (!g_nftMgr->assetInDatabase(i->first)) {
+                                if (pnode->GetCommonVersion() >= NFT_RELAY_VERSION) {
+                                    LogPrint(BCLog::NET, "requesting NFT asset %s to peer=%d\n", i->first.c_str(), pnode->GetId());
+                                    std::vector<unsigned char> vecNFTHex;
+                                    for (int j = 0; j < i->first.length(); j++)
+                                        vecNFTHex.push_back(i->first.at(j));
+                                    struct CSerializedNetMsg msg;
+                                    msg.m_type = NetMsgType::REQNFTASSET;
+                                    msg.data = vecNFTHex;
+                                    m_connman.PushMessage(pnode, std::move(msg));
+                                    i->second = now;
+                                }
                             }
                         }
                         i++;
                     }
-                    */
                 }
             });
         }
