@@ -166,6 +166,7 @@ SYSCOIN_TESTS =\
 if ENABLE_WALLET
 SYSCOIN_TESTS += \
   wallet/test/psbt_wallet_tests.cpp \
+  wallet/test/spend_tests.cpp \
   wallet/test/wallet_tests.cpp \
   wallet/test/walletdb_tests.cpp \
   wallet/test/wallet_crypto_tests.cpp \
@@ -184,6 +185,8 @@ endif
 
 
 SYSCOIN_TEST_SUITE += \
+  wallet/test/util.cpp \
+  wallet/test/util.h \
   wallet/test/wallet_test_fixture.cpp \
   wallet/test/wallet_test_fixture.h \
   wallet/test/init_test_fixture.cpp \
