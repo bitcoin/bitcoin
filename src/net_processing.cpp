@@ -3621,9 +3621,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     //if we are not storing the database, or if we dont have it in cache, relay request to our peers
     if (msg_type == NetMsgType::REQNFTASSETCLASS) {
 
-        char assetClassHashHex[65];
+        char assetClassHashHex[64];
+        
         vRecv >> assetClassHashHex;
-        assetClassHashHex[64] = 0;
 
         LogPrint(BCLog::NET, "got request for NFT asset class %s from peer=%d\n", assetClassHashHex, pfrom.GetId());
 
