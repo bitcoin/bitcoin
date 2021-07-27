@@ -57,6 +57,10 @@
         <source>&amp;Edit</source>
         <translation type="unfinished">&amp;Muta</translation>
     </message>
+    <message>
+        <source>Export Address List</source>
+        <translation type="unfinished">Exporta Index Inscriptionum</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
@@ -90,6 +94,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Itera novam tesseram</translation>
+    </message>
+    <message>
+        <source>Show passphrase</source>
+        <translation type="unfinished">Ostende tesseram</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -154,6 +162,13 @@
     <message>
         <source>Warning: The Caps Lock key is on!</source>
         <translation type="unfinished">Monitio: Litterae ut capitales seratae sunt!</translation>
+    </message>
+</context>
+<context>
+    <name>BanTableModel</name>
+    <message>
+        <source>Banned Until</source>
+        <translation type="unfinished">Interdictum usque ad</translation>
     </message>
 </context>
 <context>
@@ -236,12 +251,20 @@
         <translation>Exi applicatione</translation>
     </message>
     <message>
+        <source>&amp;About %1</source>
+        <translation type="unfinished">&amp;De %1</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>Informatio de &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
         <translation>Monstra informationem de Qt</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">Creare novum casidillium</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -1238,6 +1261,13 @@
     <message>
         <source>to</source>
         <translation type="unfinished">ad</translation>
+    </message>
+</context>
+<context>
+    <name>WalletFrame</name>
+    <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">Creare novum casidillium</translation>
     </message>
 </context>
 <context>

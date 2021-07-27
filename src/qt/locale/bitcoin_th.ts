@@ -137,10 +137,6 @@
         <translation type="unfinished">เข้ารหัสกระเป๋าสตางค์</translation>
     </message>
     <message>
-        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished">การดำเนินการนี้ต้องการวลีรหัสผ่านกระเป๋าสตางค์ของคุณเพื่อปลดล็อคกระเป๋าสตางค์</translation>
-    </message>
-    <message>
         <source>Unlock wallet</source>
         <translation type="unfinished">ปลดล็อคกระเป๋าสตางค์</translation>
     </message>

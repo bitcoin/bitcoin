@@ -876,6 +876,10 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
         <translation type="unfinished">Copia l'importo</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Copia indirizzo</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">Copia quantità</translation>
     </message>
@@ -1036,6 +1040,14 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
         <translation type="unfinished">Descrizione del Portafoglio</translation>
     </message>
     <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation type="unfinished">Usa un dispositivo esterno di firma come un hardware wallet. Configura lo script per il firmatario esterno nelle preferenze del wallet.</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation type="unfinished">Firmatario esterno</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation type="unfinished">Crea</translation>
     </message>
@@ -1043,7 +1055,12 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
         <translation type="unfinished">Compilato senza il supporto a sqlite (richiesto per i wallet descrittori)</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Compilato senza supporto per firmatario esterno (richiesto per firmare con periferiche)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1397,6 +1414,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation type="unfinished">&amp;Spendi resti non confermati</translation>
     </message>
     <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation type="unfinished">Firmatario esterno (es. Hardware Wallet)</translation>
+    </message>
+    <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Apri automaticamente la porta del client Bitcoin sul router. Il protocollo UPnP deve essere supportato da parte del router ed attivo.</translation>
     </message>
@@ -1519,6 +1540,11 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>&amp;Cancel</source>
         <translation>&amp;Cancella</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Compilato senza support per firmatario esterno (richiesto per firmare con periferiche)</translation>
     </message>
     <message>
         <source>default</source>
@@ -2227,6 +2253,10 @@ Se ricevi questo errore, dovresti richiedere al commerciante di fornire un URI c
         <translation type="unfinished">Copia &amp;URI</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Copia indirizzo</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation type="unfinished">Impossibile sbloccare il portafoglio.</translation>
     </message>
@@ -2268,6 +2298,10 @@ Se ricevi questo errore, dovresti richiedere al commerciante di fornire un URI c
     <message>
         <source>Copy &amp;Address</source>
         <translation type="unfinished">Copia &amp;Indirizzo</translation>
+    </message>
+    <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation type="unfinished">Verifica questo indirizzo su dispositivo esterno, ad es. lo schermo di un hardware wallet</translation>
     </message>
     <message>
         <source>&amp;Save Image…</source>
@@ -2416,6 +2450,14 @@ Se ricevi questo errore, dovresti richiedere al commerciante di fornire un URI c
         <translation type="unfinished">Nascondi le impostazioni delle commissioni di transazione.</translation>
     </message>
     <message>
+        <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
+
+Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satoshis per kvB" for a transaction size of 500 virtual bytes (half of 1 kvB) would ultimately yield a fee of only 50 satoshis.</source>
+        <translation type="unfinished">Specifica una tariffa personalizzata per kB (1.000 byte) della dimensione virtuale della transazione
+
+Nota: poiché la commissione è calcolata su base per byte, una commissione di "100 satoshi per kB" per una dimensione di transazione di 500 byte (metà di 1 kB) alla fine produrrà una commissione di soli 50 satoshi.</translation>
+    </message>
+    <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
         <translation type="unfinished">Quando il volume delle transazioni è minore dello spazio nei blocchi, i minatori e in nodi di relay potrebbero imporre una commissione minima. Va benissimo pagare solo questa commissione minima, ma tieni presente che questo potrebbe risultare in una transazione che, se la richiesta di transazioni bitcoin dovesse superare la velocità con cui la rete riesce ad elaborarle, non viene mai confermata.</translation>
     </message>
@@ -2488,6 +2530,20 @@ Se ricevi questo errore, dovresti richiedere al commerciante di fornire un URI c
         <translation type="unfinished">%1 (%2 blocchi)</translation>
     </message>
     <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet</extracomment>
+        <translation type="unfinished">Firma su dispositivo</translation>
+    </message>
+    <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation type="unfinished">Connetti prima il tuo hardware wallet.</translation>
+    </message>
+    <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Imposta il percorso per lo script di firma esterna  in Opzioni -&gt; Portafoglio</translation>
+    </message>
+    <message>
         <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <translation type="unfinished">Crea una Transazione Bitcoin Parzialmente Firmata (PSBT) da utilizzare con ad es. un portafoglio %1 offline o un portafoglio hardware compatibile con PSBT.</translation>
     </message>
@@ -2516,8 +2572,17 @@ Se ricevi questo errore, dovresti richiedere al commerciante di fornire un URI c
         <translation type="unfinished">Crea non Firmata</translation>
     </message>
     <message>
+        <source>Sign and send</source>
+        <translation type="unfinished">Firma ed invia</translation>
+    </message>
+    <message>
         <source>Sign failed</source>
         <translation type="unfinished">Firma non riuscita</translation>
+    </message>
+    <message>
+        <source>External signer not found</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Firmatario esterno non trovato</translation>
     </message>
     <message>
         <source>Save Transaction Data</source>
@@ -3201,6 +3266,10 @@ Se ricevi questo errore, dovresti richiedere al commerciante di fornire un URI c
     <message>
         <source>Range…</source>
         <translation type="unfinished">Intervallo...</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Copia indirizzo</translation>
     </message>
     <message>
         <source>Export Transaction History</source>

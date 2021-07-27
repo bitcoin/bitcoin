@@ -3878,6 +3878,14 @@ A Fájl &gt; Megnyitás menüben lehet megnyitni.
         <translation type="unfinished">Az ügyfélügynök megjegyzésben nem biztonságos karakter van: (%s) </translation>
     </message>
     <message>
+        <source>Verifying blocks…</source>
+        <translation type="unfinished">Blokkhitelesítés</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)…</source>
+        <translation type="unfinished">Tárca(k) ellenőrzés(e)</translation>
+    </message>
+    <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
         <translation type="unfinished">A Tárca újraírása szükséges: Indítsa újra a %s-t.</translation>
     </message>

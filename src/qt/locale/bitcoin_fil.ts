@@ -1325,6 +1325,10 @@
         <translation type="unfinished">Hindi kilalang error sa pagproseso ng transaksyon.</translation>
     </message>
     <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation type="unfinished">%1</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation type="unfinished">Kabuuang Halaga</translation>
     </message>
