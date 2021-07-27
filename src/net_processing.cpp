@@ -3621,7 +3621,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     //if we are not storing the database, or if we dont have it in cache, relay request to our peers
     if (msg_type == NetMsgType::REQNFTASSETCLASS) {
 
-        char assetClassHashHex[64];
+        char assetClassHashHex[2000];
         
         vRecv >> assetClassHashHex;
 
@@ -4808,7 +4808,11 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                                         std::vector<unsigned char> vecNFTHex;
                                         for (int j = 0; j < i->first.length(); j++)
                                             vecNFTHex.push_back(i->first.at(j));
-                                        m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, vecNFTHex));
+                                        struct CSerializedNetMsg msg;
+                                        msg.m_type = NetMsgType::REQNFTASSETCLASS;
+                                        msg.data = vecNFTHex;
+                                        //m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, vecNFTHex));
+                                        m_connman.PushMessage(pnode, std::move(msg));
                                         i->second = now;
                                     }
                                 }
