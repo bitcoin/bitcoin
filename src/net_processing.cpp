@@ -4797,14 +4797,11 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         time(&now);
                         std::map<std::string, time_t>::iterator i = g_nftMgr->requestAssetClass.begin();
                         while (i != g_nftMgr->requestAssetClass.end()) {
-                            char hexHashData[65];
-                            memcpy(hexHashData, i->first.c_str(), 65);
-                            hexHashData[64] = 0;
                             if (now - i->second > 10) { //TODO - hysterisis - could cause a DOS attack by loading lots of NFT hashes and not loading the assets
-                                if (!g_nftMgr->assetClassInDatabase(hexHashData)) {
+                                if (!g_nftMgr->assetClassInDatabase(i->first)) {
                                     if (pnode->GetCommonVersion() >= NFT_RELAY_VERSION) {
                                         LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", i->first.c_str(), pnode->GetId());
-                                        m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, hexHashData));
+                                        m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::REQNFTASSETCLASS, i->first));
                                         i->second = now;
                                     }
                                 }
@@ -4821,6 +4818,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             m_connman.ForEachNode([this, &msgMaker](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
                 AssertLockHeld(::cs_main);
                 {
+                    /*
                     LOCK(g_nftMgr->requestLock);
                     time_t now;
                     time(&now);
@@ -4838,6 +4836,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         }
                         i++;
                     }
+                    */
                 }
             });
         }

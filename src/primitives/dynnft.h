@@ -18,6 +18,8 @@ public:
     std::vector<unsigned char> strSerialData;
     bool serialDataCreated;
 
+    void writeString(std::string data);
+    void writeVector(std::vector<unsigned char> data);
     void createSerialData();
     void loadFromSerialData(std::vector<unsigned char> data);
 

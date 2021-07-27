@@ -1,24 +1,25 @@
 #include <primitives/dynnft.h>
 
 
-void writeString(std::vector<unsigned char> vec, std::string data) {
+void CNFTAssetClass::writeString(std::string data)
+{
 
     uint32_t len = data.size();
-    vec.push_back((len & 0xFF000000) >> 24);
-    vec.push_back((len & 0x00FF0000) >> 16);
-    vec.push_back((len & 0x0000FF00) >> 8);
-    vec.push_back((len & 0x000000FF));
+    strSerialData.push_back((len & 0xFF000000) >> 24);
+    strSerialData.push_back((len & 0x00FF0000) >> 16);
+    strSerialData.push_back((len & 0x0000FF00) >> 8);
+    strSerialData.push_back((len & 0x000000FF));
     for (int i = 0; i < data.size(); i++)
-        vec.push_back(data[i]);
+        strSerialData.push_back(data[i]);
 
 }
 
 int readString(std::vector<unsigned char> vec, std::string data, int start) {
 
     uint32_t len = (uint32_t)vec[start] << 24;
-    len += (uint32_t)vec[start+1] << 16;
-    len += (uint32_t)vec[start+2] << 8;
-    len += (uint32_t)vec[start+3];
+    len += (uint32_t)vec[start + 1] << 16;
+    len += (uint32_t)vec[start + 2] << 8;
+    len += (uint32_t)vec[start + 3];
 
     data.clear();
     for (int i = 0; i < len; i++)
@@ -27,15 +28,15 @@ int readString(std::vector<unsigned char> vec, std::string data, int start) {
     return start + len + 4;
 }
 
-void writeVector(std::vector<unsigned char> vec, std::vector<unsigned char> data)
+void CNFTAssetClass::writeVector(std::vector<unsigned char> data)
 {
     uint32_t len = data.size();
-    vec.push_back((len & 0xFF000000) >> 24);
-    vec.push_back((len & 0x00FF0000) >> 16);
-    vec.push_back((len & 0x0000FF00) >> 8);
-    vec.push_back((len & 0x000000FF));
+    strSerialData.push_back((len & 0xFF000000) >> 24);
+    strSerialData.push_back((len & 0x00FF0000) >> 16);
+    strSerialData.push_back((len & 0x0000FF00) >> 8);
+    strSerialData.push_back((len & 0x000000FF));
     for (int i = 0; i < data.size(); i++)
-        vec.push_back(data[i]);
+        strSerialData.push_back(data[i]);
 }
 
 int readVector(std::vector<unsigned char> vec, std::vector<unsigned char>  data, int start)
@@ -64,10 +65,10 @@ void CNFTAssetClass::createSerialData() {
         return;
 
     strSerialData.clear();
-    writeString(strSerialData, hash);
-    writeString(strSerialData, metaData);
-    writeString(strSerialData, owner);
-    writeString(strSerialData, txnID);
+    writeString( hash );
+    writeString( metaData );
+    writeString( owner );
+    writeString( txnID );
     strSerialData.push_back(maxCount >> 56);
     strSerialData.push_back((maxCount & 0x00FF000000000000) >> 48);
     strSerialData.push_back((maxCount & 0x0000FF0000000000) >> 40);
