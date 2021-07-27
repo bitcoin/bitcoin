@@ -14,7 +14,7 @@ void CNFTAssetClass::writeString(std::string data)
 
 }
 
-int readString(std::vector<unsigned char> vec, std::string data, int start) {
+int readString(std::vector<unsigned char> vec, std::string& data, int start) {
 
     uint32_t len = (uint32_t)vec[start] << 24;
     len += (uint32_t)vec[start + 1] << 16;
@@ -39,7 +39,7 @@ void CNFTAssetClass::writeVector(std::vector<unsigned char> data)
         strSerialData.push_back(data[i]);
 }
 
-int readVector(std::vector<unsigned char> vec, std::vector<unsigned char>  data, int start)
+int readVector(std::vector<unsigned char> vec, std::vector<unsigned char>& data, int start)
 {
     uint32_t len = (uint32_t)vec[start] << 24;
     len += (uint32_t)vec[start + 1] << 16;
