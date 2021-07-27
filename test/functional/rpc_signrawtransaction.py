@@ -274,7 +274,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         getcontext().prec = 8
 
         # Make sure CSV is active
-        generate_to_height(self.nodes[0], CSV_ACTIVATION_HEIGHT)
+        generate_to_height(self, self.nodes[0], CSV_ACTIVATION_HEIGHT)
         assert self.nodes[0].getblockchaininfo()['softforks']['csv']['active']
 
         # Create a P2WSH script with CSV
@@ -310,7 +310,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         getcontext().prec = 8
 
         # Make sure CLTV is active
-        generate_to_height(self.nodes[0], CLTV_HEIGHT)
+        generate_to_height(self, self.nodes[0], CLTV_HEIGHT)
         assert self.nodes[0].getblockchaininfo()['softforks']['bip65']['active']
 
         # Create a P2WSH script with CLTV
