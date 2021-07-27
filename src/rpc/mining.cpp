@@ -1096,7 +1096,20 @@ static RPCHelpMan submitNFT()
 
                 unsigned char nftDataHash[32];
                 hasher.Write(cNFTdata, nftBinary.size());
+
+                unsigned char* classIDData = NULL;
+                if (command == "add-asset") { //for assets we append the asset class hash
+                    std::vector<unsigned char> classIDBinary = ParseHex(nftAssetClassID.c_str());
+                    classIDData = (unsigned char*)malloc(classIDBinary.size());
+                    for (int i = 0; i < classIDBinary.size(); i++)
+                        classIDData[i] = classIDBinary[i];
+                    hasher.Write(classIDData, classIDBinary.size());
+                    free(classIDData);
+                }
+
                 hasher.Finalize(nftDataHash);
+                if (classIDData != NULL)
+                    free(classIDData);
 
                 unsigned char nftHash[32];
                 hasher.Reset();
@@ -1118,18 +1131,6 @@ static RPCHelpMan submitNFT()
                 hasher.Finalize(nftID);
                 free(txidData);
 
-                if (command == "add-asset") { //for assets we hash in the nft class ID as well
-                    hasher.Reset();
-                    hasher.Write(nftID, 32);
-
-                    std::vector<unsigned char> classIDBinary = ParseHex(nftAssetClassID.c_str());
-                    unsigned char* classIDData = (unsigned char*)malloc(classIDBinary.size());
-                    for (int i = 0; i < classIDBinary.size(); i++)
-                        classIDData[i] = classIDBinary[i];                    
-                    hasher.Write(classIDData, classIDBinary.size());
-                    hasher.Finalize(nftID);
-                    free(classIDData);
-                }
 
                 if (command == "add-class") {
                     CNFTAssetClass* newAsset = new CNFTAssetClass();

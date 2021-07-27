@@ -3954,23 +3954,23 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                     //if we are storing the NFT database, see if we need to get this asset class
                     //if we are not storing the NFT database then nothing to do  (maybe add it to the cache?)
 
-                    std::vector<unsigned char>  vecTXID = ParseHex(block.vtx[i]->GetHash().GetHex());
-                    unsigned char cTXID[32];
-                    for (int i = 0; i < 32; i++)
-                        cTXID[i] = vecTXID[i];
-
-
-                    CSHA256 hasher;
-                    unsigned char* cNFTdata = (unsigned char*)malloc(32);
-                    unsigned char nftHash[32];
-                    for (int i = 0; i < 32; i++)
-                        cNFTdata[i] = vout.scriptPubKey[start + 4 + i];
-                    hasher.Write(cNFTdata, 32);
-                    hasher.Write(cTXID, 32);
-                    hasher.Finalize(nftHash);
-                    std::string strNFTHash = HexStr(nftHash);
-
                     if (gArgs.GetArg("-nftnode", "") == "true") {
+                        std::vector<unsigned char> vecTXID = ParseHex(block.vtx[i]->GetHash().GetHex());
+                        unsigned char cTXID[32];
+                        for (int i = 0; i < 32; i++)
+                            cTXID[i] = vecTXID[i];
+
+
+                        CSHA256 hasher;
+                        unsigned char* cNFTdata = (unsigned char*)malloc(32);
+                        unsigned char nftHash[32];
+                        for (int i = 0; i < 32; i++)
+                            cNFTdata[i] = vout.scriptPubKey[start + 4 + i];
+                        hasher.Write(cNFTdata, 32);
+                        hasher.Write(cTXID, 32);
+                        hasher.Finalize(nftHash);
+                        std::string strNFTHash = HexStr(nftHash);
+
                         //check if we already have this asset class in the database, if not then request it from the net
                         if (!g_nftMgr->assetClassInDatabase(strNFTHash)) {
                             g_nftMgr->queueAssetClassRequest(strNFTHash);
@@ -3984,6 +3984,29 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                                                 (vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start] == 0x31));
 
                 if (foundNFTAssetCreate) {
+                    if (gArgs.GetArg("-nftnode", "") == "true") {
+                        std::vector<unsigned char> vecTXID = ParseHex(block.vtx[i]->GetHash().GetHex());
+                        unsigned char cTXID[32];
+                        for (int i = 0; i < 32; i++)
+                            cTXID[i] = vecTXID[i];
+
+
+                        CSHA256 hasher;
+                        unsigned char* cNFTdata = (unsigned char*)malloc(32);
+                        unsigned char nftHash[32];
+                        for (int i = 0; i < 32; i++)
+                            cNFTdata[i] = vout.scriptPubKey[start + 4 + i];
+                        hasher.Write(cNFTdata, 32);
+                        hasher.Write(cTXID, 32);
+                        hasher.Finalize(nftHash);
+
+                        std::string strNFTHash = HexStr(nftHash);
+
+                        //check if we already have this asset class in the database, if not then request it from the net
+                        if (!g_nftMgr->assetInDatabase(strNFTHash)) {
+                            g_nftMgr->queueAssetRequest(strNFTHash);
+                        }
+                    }
 
                 }
 
