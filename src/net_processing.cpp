@@ -3657,7 +3657,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     }
 
 
-    //someone has sent us an NFT class, store it in the cache
+    //someone has sent us an NFT class, store it in the cache, also store to disk if we dont already have this one and are hosting the NFT database
     if (msg_type == NetMsgType::SNDNFTASSETCLASS) {
         std::vector<unsigned char> assetData;
 
@@ -3667,6 +3667,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         assetClass->loadFromSerialData(assetData);
 
         g_nftMgr->addAssetClassToCache(assetClass);
+
+        if (gArgs.GetArg("-nftnode", "") == "true") {
+            if (!g_nftMgr->assetClassInDatabase(assetClass->hash)) {
+                g_nftMgr->addNFTAssetClass(assetClass);
+            }
+        }
 
         return;
     }
