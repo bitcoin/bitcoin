@@ -18,7 +18,7 @@ def perform_pre_checks():
             sys.exit(int(mock_result[0]))
 
 def enumerate(args):
-  sys.stdout.write(json.dumps([{"fingerprint": "00000001", "type": "trezor", "model": "trezor_t"}, {"fingerprint": "00000002"}]))
+    sys.stdout.write(json.dumps([{"fingerprint": "00000001", "type": "trezor", "model": "trezor_t"}, {"fingerprint": "00000002"}]))
 
 def getdescriptors(args):
     xpub = "tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B"
@@ -93,7 +93,7 @@ parser_signtx.set_defaults(func=signtx)
 if not sys.stdin.isatty():
     buffer = sys.stdin.read()
     if buffer and buffer.rstrip() != "":
-       sys.argv.extend(buffer.rstrip().split(" "))
+        sys.argv.extend(buffer.rstrip().split(" "))
 
 args = parser.parse_args()
 
