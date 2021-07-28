@@ -170,7 +170,6 @@ BOOST_AUTO_TEST_CASE(findearliestatleast_edge_test)
     BOOST_CHECK_EQUAL(chain.FindEarliestAtLeast(-1)->nHeight, 0);
 
     BOOST_CHECK_EQUAL(chain.FindEarliestAtLeast(std::numeric_limits<int64_t>::min())->nHeight, 0);
-    BOOST_CHECK_EQUAL(chain.FindEarliestAtLeast(std::numeric_limits<unsigned int>::min())->nHeight, 0);
     BOOST_CHECK_EQUAL(chain.FindEarliestAtLeast(-int64_t(std::numeric_limits<unsigned int>::max()) - 1)->nHeight, 0);
     BOOST_CHECK(!chain.FindEarliestAtLeast(std::numeric_limits<int64_t>::max()));
     BOOST_CHECK(!chain.FindEarliestAtLeast(std::numeric_limits<unsigned int>::max()));
