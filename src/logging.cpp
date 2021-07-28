@@ -8,6 +8,8 @@
 #include <util/string.h>
 #include <util/time.h>
 
+#include <algorithm>
+#include <array>
 #include <mutex>
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
@@ -124,8 +126,7 @@ bool BCLog::Logger::DefaultShrinkDebugFile() const
     return m_categories == BCLog::NONE;
 }
 
-struct CLogCategoryDesc
-{
+struct CLogCategoryDesc {
     BCLog::LogFlags flag;
     std::string category;
 };
@@ -189,15 +190,18 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
 
 std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
 {
+    // Sort log categories by alphabetical order.
+    std::array<CLogCategoryDesc, std::size(LogCategories)> categories;
+    std::copy(std::begin(LogCategories), std::end(LogCategories), categories.begin());
+    std::sort(categories.begin(), categories.end(), [](auto a, auto b) { return a.category < b.category; });
+
     std::vector<LogCategory> ret;
-    for (const CLogCategoryDesc& category_desc : LogCategories) {
-        // Omit the special cases.
-        if (category_desc.flag != BCLog::NONE && category_desc.flag != BCLog::ALL) {
-            LogCategory catActive;
-            catActive.category = category_desc.category;
-            catActive.active = WillLogCategory(category_desc.flag);
-            ret.push_back(catActive);
-        }
+    for (const CLogCategoryDesc& category_desc : categories) {
+        if (category_desc.flag == BCLog::NONE || category_desc.flag == BCLog::ALL) continue;
+        LogCategory catActive;
+        catActive.category = category_desc.category;
+        catActive.active = WillLogCategory(category_desc.flag);
+        ret.push_back(catActive);
     }
     return ret;
 }
@@ -247,7 +251,7 @@ namespace BCLog {
         }
         return ret;
     }
-}
+} // namespace BCLog
 
 void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line)
 {
