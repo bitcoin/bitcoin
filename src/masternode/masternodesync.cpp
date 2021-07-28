@@ -132,25 +132,23 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
     }
 
     nTimeLastProcess = GetTime();
-
+    std::vector<CNode*> vNodesCopy;
+    connman.CopyNodeVector(vNodesCopy);
     // gradually request the rest of the votes after sync finished
     if(IsSynced()) {
-        std::vector<CNode*> vNodesCopy;
-        connman.CopyNodeVector(vNodesCopy);
         governance->RequestGovernanceObjectVotes(vNodesCopy, connman, peerman);
         connman.ReleaseNodeVector(vNodesCopy);
         return;
     }
-    const int nTriedCount = GetAttempt();
+
+    {
+    LOCK(cs);
     // Calculate "progress" for LOG reporting / GUI notification
-    double nSyncProgress = double(nTriedCount + (nMode - 1) * 8) / (8*4);
-    LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d nTriedPeerCount %d nSyncProgress %f\n", nTick, nMode, GetAttempt(), nSyncProgress);
+    double nSyncProgress = double(nTriedPeerCount + (nMode - 1) * 8) / (8*4);
+    LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d nTriedPeerCount %d nSyncProgress %f\n", nTick, nMode, nTriedPeerCount, nSyncProgress);
     uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
 
-    std::vector<CNode*> vNodesCopy;
-    connman.CopyNodeVector(vNodesCopy);
-
-    for (CNode* pnode : vNodesCopy)
+    for (auto& pnode : vNodesCopy)
     {
         CNetMsgMaker msgMaker(pnode->GetCommonVersion());
 
@@ -240,7 +238,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                 // check for timeout first
                 if(GetTime() - GetTimeLastBumped() > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
                     LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nMode %d -- timeout\n", nTick, nMode);
-                    if(nTriedCount == 0) {
+                    if(nTriedPeerCount == 0) {
                         LogPrintf("CMasternodeSync::ProcessTick -- WARNING: failed to sync %s\n", GetAssetName());
                         // it's kind of ok to skip this for now, hopefully we'll catch up later?
                     }
@@ -249,37 +247,10 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                     return;
                 }
 
-                // only request obj sync once from each peer, then request votes on per-obj basis
+                // only request obj sync once from each peer
                 if(netfulfilledman.HasFulfilledRequest(pnode->addr, "governance-sync")) {
-                    int nObjsLeftToAsk = governance->RequestGovernanceObjectVotes(pnode, connman, peerman);
-                    static int64_t nTimeNoObjectsLeft = 0;
-                    // check for data
-                    if(nObjsLeftToAsk == 0) {
-                        static int nLastTick = 0;
-                        static int nLastVotes = 0;
-                        if(nTimeNoObjectsLeft == 0) {
-                            // asked all objects for votes for the first time
-                            nTimeNoObjectsLeft = GetTime();
-                        }
-                        // make sure the condition below is checked only once per tick
-                        if(nLastTick == nTick) continue;
-                        if(GetTime() - nTimeNoObjectsLeft > MASTERNODE_SYNC_TIMEOUT_SECONDS &&
-                            governance->GetVoteCount() - nLastVotes < std::max(int(0.0001 * nLastVotes), MASTERNODE_SYNC_TICK_SECONDS)
-                        ) {
-                            // We already asked for all objects, waited for MASTERNODE_SYNC_TIMEOUT_SECONDS
-                            // after that and less then 0.01% or MASTERNODE_SYNC_TICK_SECONDS
-                            // (i.e. 1 per second) votes were received during the last tick.
-                            // We can be pretty sure that we are done syncing.
-                            LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nMode %d -- asked for all objects, nothing to do\n", nTick, nMode);
-                            // reset nTimeNoObjectsLeft to be able to use the same condition on resync
-                            nTimeNoObjectsLeft = 0;
-                            SwitchToNextAsset(connman);
-                            connman.ReleaseNodeVector(vNodesCopy);
-                            return;
-                        }
-                        nLastTick = nTick;
-                        nLastVotes = governance->GetVoteCount();
-                    }
+                    // will request votes on per-obj basis from each node in a separate loop below
+                    // to avoid deadlocks here
                     continue;
                 }
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "governance-sync");
@@ -290,11 +261,55 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
 
                 SendGovernanceSyncRequest(pnode, connman);
 
-                connman.ReleaseNodeVector(vNodesCopy);
-                return; //this will cause each peer to get one request each six seconds for the various assets we need
+                break; //this will cause each peer to get one request each six seconds for the various assets we need
             }
         }
     }
+    } // cs
+
+
+    if (WITH_LOCK(cs, return nCurrentAsset != MASTERNODE_SYNC_GOVERNANCE)) {
+        // looped through all nodes and not syncing governance yet/already, release them
+        connman.ReleaseNodeVector(vNodesCopy);
+        return;
+    }
+
+    // request votes on per-obj basis from each node
+    for (auto& pnode : vNodesCopy) {
+        if(!netfulfilledman.HasFulfilledRequest(pnode->addr, "governance-sync")) {
+            continue; // to early for this node
+        }
+        int nObjsLeftToAsk = governance->RequestGovernanceObjectVotes(pnode, connman, peerman);
+        static int64_t nTimeNoObjectsLeft = 0;
+        // check for data
+        if(nObjsLeftToAsk == 0) {
+            static int nLastTick = 0;
+            static int nLastVotes = 0;
+            if(nTimeNoObjectsLeft == 0) {
+                // asked all objects for votes for the first time
+                nTimeNoObjectsLeft = GetTime();
+            }
+            // make sure the condition below is checked only once per tick
+            if(nLastTick == nTick) continue;
+            if(GetTime() - nTimeNoObjectsLeft > MASTERNODE_SYNC_TIMEOUT_SECONDS &&
+                governance->GetVoteCount() - nLastVotes < std::max(int(0.0001 * nLastVotes), MASTERNODE_SYNC_TICK_SECONDS)
+            ) {
+                // We already asked for all objects, waited for MASTERNODE_SYNC_TIMEOUT_SECONDS
+                // after that and less then 0.01% or MASTERNODE_SYNC_TICK_SECONDS
+                // (i.e. 1 per second) votes were received during the last tick.
+                // We can be pretty sure that we are done syncing.
+                LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d -- asked for all objects, nothing to do\n", nTick, MASTERNODE_SYNC_GOVERNANCE);
+                // reset nTimeNoObjectsLeft to be able to use the same condition on resync
+                nTimeNoObjectsLeft = 0;
+                SwitchToNextAsset(connman);
+                connman.ReleaseNodeVector(vNodesCopy);
+                return;
+            }
+            nLastTick = nTick;
+            nLastVotes = governance->GetVoteCount();
+        }
+    }
+
     // looped through all nodes, release them
     connman.ReleaseNodeVector(vNodesCopy);
 }
