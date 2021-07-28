@@ -536,24 +536,6 @@ class CSubNet
         friend bool operator==(const CSubNet& a, const CSubNet& b);
         friend bool operator!=(const CSubNet& a, const CSubNet& b) { return !(a == b); }
         friend bool operator<(const CSubNet& a, const CSubNet& b);
-
-        SERIALIZE_METHODS(CSubNet, obj)
-        {
-            READWRITE(obj.network);
-            if (obj.network.IsIPv4()) {
-                // Before commit 102867c587f5f7954232fb8ed8e85cda78bb4d32, CSubNet used the last 4 bytes of netmask
-                // to store the relevant bytes for an IPv4 mask. For compatibility reasons, keep doing so in
-                // serialized form.
-                unsigned char dummy[12] = {0};
-                READWRITE(dummy);
-                READWRITE(MakeSpan(obj.netmask).first(4));
-            } else {
-                READWRITE(obj.netmask);
-            }
-            READWRITE(obj.valid);
-            // Mark invalid if the result doesn't pass sanity checking.
-            SER_READ(obj, if (obj.valid) obj.valid = obj.SanityCheck());
-        }
 };
 
 /** A combination of a network address (CNetAddr) and a (TCP) port */
