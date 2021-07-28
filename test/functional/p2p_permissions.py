@@ -130,7 +130,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         tx.vout[0].nValue += 1
         txid = tx.rehash()
         # Send the transaction twice. The first time, it'll be rejected by ATMP because it conflicts
-        # with a mempool transaction. The second time, it'll be in the recentRejects filter.
+        # with a mempool transaction. The second time, it'll be in the m_recent_rejects filter.
         p2p_rebroadcast_wallet.send_txs_and_test(
             [tx],
             self.nodes[1],
