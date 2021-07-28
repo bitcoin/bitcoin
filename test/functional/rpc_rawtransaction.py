@@ -75,14 +75,11 @@ class RawTransactionsTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Prepare some coins for multiple *rawtransaction commands")
         self.generate(self.nodes[2], 1)
-        self.sync_all()
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
-        self.sync_all()
         for amount in [1.5, 1.0, 5.0]:
             self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), amount)
         self.sync_all()
         self.generate(self.nodes[0], 5)
-        self.sync_all()
 
         self.getrawtransaction_tests()
         self.createrawtransaction_tests()
@@ -369,7 +366,6 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         self.log.info("Test sendrawtransaction/testmempoolaccept with tx already in the chain")
         self.generate(self.nodes[2], 1)
-        self.sync_blocks()
         for node in self.nodes:
             testres = node.testmempoolaccept([rawTxSigned['hex']])[0]
             assert_equal(testres['allowed'], False)

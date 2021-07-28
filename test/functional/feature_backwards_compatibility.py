@@ -66,8 +66,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
     def run_test(self):
         self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, self.nodes[0].getnewaddress())
 
-        self.sync_blocks()
-
         # Sanity check the test framework:
         res = self.nodes[self.num_nodes - 1].getblockchaininfo()
         assert_equal(res['blocks'], COINBASE_MATURITY + 1)
@@ -93,7 +91,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(address, 10)
         self.sync_mempools()
         self.generate(self.nodes[0], 1)
-        self.sync_blocks()
         # Create a conflicting transaction using RBF
         return_address = self.nodes[0].getnewaddress()
         tx1_id = self.nodes[1].sendtoaddress(return_address, 1)
@@ -101,7 +98,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # Confirm the transaction
         self.sync_mempools()
         self.generate(self.nodes[0], 1)
-        self.sync_blocks()
         # Create another conflicting transaction using RBF
         tx3_id = self.nodes[1].sendtoaddress(return_address, 1)
         tx4_id = self.nodes[1].bumpfee(tx3_id)["txid"]

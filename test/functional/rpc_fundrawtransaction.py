@@ -99,9 +99,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.fee_tolerance = 2 * self.min_relay_tx_fee / 1000
 
         self.generate(self.nodes[2], 1)
-        self.sync_all()
         self.generate(self.nodes[0], 121)
-        self.sync_all()
 
         self.test_change_position()
         self.test_simple()
@@ -163,7 +161,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 5.0)
 
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         wwatch.unloadwallet()
 
@@ -549,7 +546,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Send 1.2 BTC to msig addr.
         self.nodes[0].sendtoaddress(mSigObj, 1.2)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         oldBalance = self.nodes[1].getbalance()
         inputs = []
@@ -560,7 +556,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         final_psbt = w2.finalizepsbt(signed_psbt['psbt'])
         self.nodes[2].sendrawtransaction(final_psbt['hex'])
         self.generate(self.nodes[2], 1)
-        self.sync_all()
 
         # Make sure funds are received at node1.
         assert_equal(oldBalance+Decimal('1.10000000'), self.nodes[1].getbalance())
@@ -624,7 +619,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         signedTx = self.nodes[1].signrawtransactionwithwallet(fundedTx['hex'])
         self.nodes[1].sendrawtransaction(signedTx['hex'])
         self.generate(self.nodes[1], 1)
-        self.sync_all()
 
         # Make sure funds are received at node1.
         assert_equal(oldBalance+Decimal('51.10000000'), self.nodes[0].getbalance())
@@ -636,12 +630,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Empty node1, send some small coins from node0 to node1.
         self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True)
         self.generate(self.nodes[1], 1)
-        self.sync_all()
 
         for _ in range(20):
             self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # Fund a tx with ~20 small inputs.
         inputs = []
@@ -664,12 +656,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Again, empty node1, send some small coins from node0 to node1.
         self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True)
         self.generate(self.nodes[1], 1)
-        self.sync_all()
 
         for _ in range(20):
             self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # Fund a tx with ~20 small inputs.
         oldBalance = self.nodes[0].getbalance()
@@ -681,7 +671,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         fundedAndSignedTx = self.nodes[1].signrawtransactionwithwallet(fundedTx['hex'])
         self.nodes[1].sendrawtransaction(fundedAndSignedTx['hex'])
         self.generate(self.nodes[1], 1)
-        self.sync_all()
         assert_equal(oldBalance+Decimal('50.19000000'), self.nodes[0].getbalance()) #0.19+block reward
 
     def test_op_return(self):
@@ -759,7 +748,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert signedtx["complete"]
         self.nodes[0].sendrawtransaction(signedtx["hex"])
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         wwatch.unloadwallet()
 
