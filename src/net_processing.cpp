@@ -872,7 +872,7 @@ private:
      * million to make it highly unlikely for users to have issues with this
      * filter.
      *
-     * Memory used: 1.3MB
+     * Memory used: 1.3 MB
      */
     CRollingBloomFilter m_recent_rejects GUARDED_BY(::cs_main){120'000, 0.000'001};
     uint256 hashRecentRejectsChainTip GUARDED_BY(cs_main);
@@ -1620,6 +1620,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node) {
         assert(m_num_preferred_download_peers == 0);
         assert(m_peers_downloading_from == 0);
         assert(m_outbound_peers_with_protect_from_disconnect == 0);
+        assert(m_orphanage.Size() == 0);
     }
     } // cs_main
 
