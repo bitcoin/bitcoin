@@ -66,7 +66,6 @@ class KeypoolRestoreTest(BitcoinTestFramework):
             self.generate(self.nodes[0], 1)
             self.nodes[0].sendtoaddress(addr_extpool, 5)
             self.generate(self.nodes[0], 1)
-            self.sync_blocks()
 
             self.log.info("Restart node with wallet backup")
             self.stop_node(idx)

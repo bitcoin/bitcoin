@@ -57,7 +57,6 @@ class CompactFiltersTest(BitcoinTestFramework):
 
         # Nodes 0 & 1 share the same first 999 blocks in the chain.
         self.generate(self.nodes[0], 999)
-        self.sync_blocks(timeout=600)
 
         # Stale blocks by disconnecting nodes 0 & 1, mining, then reconnecting
         self.disconnect_nodes(0, 1)

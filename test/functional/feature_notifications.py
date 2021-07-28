@@ -112,7 +112,6 @@ class NotificationsTest(BitcoinTestFramework):
             self.log.info("test -walletnotify with conflicting transactions")
             self.nodes[0].rescanblockchain()
             self.generatetoaddress(self.nodes[0], 100, ADDRESS_BCRT1_UNSPENDABLE)
-            self.sync_blocks()
 
             # Generate transaction on node 0, sync mempools, and check for
             # notification on node 1.

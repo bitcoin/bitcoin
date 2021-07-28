@@ -46,7 +46,6 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         self.log.info('Generating blocks ...')
         self.generate(node0, 149)
-        self.sync_all()
 
         self.moved = 0
         for self.nkeys in [3, 5]:
@@ -117,7 +116,6 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
     def checkbalances(self):
         node0, node1, node2 = self.nodes
         self.generate(node0, COINBASE_MATURITY)
-        self.sync_all()
 
         bal0 = node0.getbalance()
         bal1 = node1.getbalance()

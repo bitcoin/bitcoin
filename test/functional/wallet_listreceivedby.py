@@ -25,7 +25,6 @@ class ReceivedByTest(BitcoinTestFramework):
     def run_test(self):
         # Generate block to get out of IBD
         self.generate(self.nodes[0], 1)
-        self.sync_blocks()
 
         # save the number of coinbase reward addresses so far
         num_cb_reward_addresses = len(self.nodes[1].listreceivedbyaddress(minconf=0, include_empty=True, include_watchonly=True))
@@ -44,7 +43,6 @@ class ReceivedByTest(BitcoinTestFramework):
                             True)
         # Bury Tx under 10 block so it will be returned by listreceivedbyaddress
         self.generate(self.nodes[1], 10)
-        self.sync_all()
         assert_array_result(self.nodes[1].listreceivedbyaddress(),
                             {"address": addr},
                             {"address": addr, "label": "", "amount": Decimal("0.1"), "confirmations": 10, "txids": [txid, ]})
@@ -79,7 +77,6 @@ class ReceivedByTest(BitcoinTestFramework):
         other_addr = self.nodes[1].getnewaddress()
         txid2 = self.nodes[0].sendtoaddress(other_addr, 0.1)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         # Same test as above should still pass
         expected = {"address": addr, "label": "", "amount": Decimal("0.1"), "confirmations": 11, "txids": [txid, ]}
         res = self.nodes[1].listreceivedbyaddress(0, True, True, addr)
@@ -116,7 +113,6 @@ class ReceivedByTest(BitcoinTestFramework):
 
         # Bury Tx under 10 block so it will be returned by the default getreceivedbyaddress
         self.generate(self.nodes[1], 10)
-        self.sync_all()
         balance = self.nodes[1].getreceivedbyaddress(addr)
         assert_equal(balance, Decimal("0.1"))
 
@@ -145,7 +141,6 @@ class ReceivedByTest(BitcoinTestFramework):
         assert_equal(balance, balance_by_label)
 
         self.generate(self.nodes[1], 10)
-        self.sync_all()
         # listreceivedbylabel should return updated received list
         assert_array_result(self.nodes[1].listreceivedbylabel(),
                             {"label": label},
