@@ -369,14 +369,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     while (m_node.chainman->ActiveChain().Tip()->nHeight < 209999) {
         CBlockIndex* prev = m_node.chainman->ActiveChain().Tip();
         CBlockIndex* next = new CBlockIndex();
-/* <<<<<<< HEAD
-        next->phashBlock = new uint256(InsecureRand256());
-        m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(next->GetBlockHash());
-======= */
         next->m_hash_block = uint256(InsecureRand256());
         m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(next->GetBlockHash());
-        //::ChainstateActive().CoinsTip().SetBestBlock(next->GetBlockHash());
-//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
         next->pprev = prev;
         next->nHeight = prev->nHeight + 1;
         next->BuildSkip();
@@ -387,14 +381,11 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     while (m_node.chainman->ActiveChain().Tip()->nHeight < 210000) {
         CBlockIndex* prev = m_node.chainman->ActiveChain().Tip();
         CBlockIndex* next = new CBlockIndex();
-/* <<<<<<< HEAD
-        next->phashBlock = new uint256(InsecureRand256());
-        m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(next->GetBlockHash());
-======= */
+
         next->m_hash_block = uint256(InsecureRand256());
-        //::ChainstateActive().CoinsTip().SetBestBlock(next->GetBlockHash());
+      
         m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(next->GetBlockHash());
-//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
+
         next->pprev = prev;
         next->nHeight = prev->nHeight + 1;
         next->BuildSkip();
@@ -421,22 +412,11 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     m_node.mempool->clear();
 
     // Delete the dummy blocks again.
-/* <<<<<<< HEAD
+
     while (m_node.chainman->ActiveChain().Tip()->nHeight > nHeight) {
         CBlockIndex* del = m_node.chainman->ActiveChain().Tip();
         m_node.chainman->ActiveChain().SetTip(del->pprev);
         m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(del->pprev->GetBlockHash());
-        delete del->phashBlock;
-=======
-    while (::ChainActive().Tip()->nHeight > nHeight) {
-        CBlockIndex* del = ::ChainActive().Tip();
-        ::ChainActive().SetTip(del->pprev); */
-        //::ChainstateActive().CoinsTip().SetBestBlock(del->pprev->GetBlockHash());
-    while (m_node.chainman->ActiveChain().Tip()->nHeight > nHeight) {
-        CBlockIndex* del = m_node.chainman->ActiveChain().Tip();
-        m_node.chainman->ActiveChain().SetTip(del->pprev);
-        m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(del->pprev->GetBlockHash());
-//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
         delete del;
     }
 

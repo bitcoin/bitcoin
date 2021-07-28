@@ -1578,17 +1578,11 @@ static RPCHelpMan getchaintips()
     std::set<const CBlockIndex*> setOrphans;
     std::set<const CBlockIndex*> setPrevs;
 
-/* <<<<<<< HEAD
-    for (const std::pair<const uint256, CBlockIndex*>& item : chainman.BlockIndex()) {
-        if (!active_chain.Contains(item.second)) {
-            setOrphans.insert(item.second);
-            setPrevs.insert(item.second->pprev);
-======= */
+
     for (CBlockIndex* pindex : chainman.BlockIndex()) {
         if (!chainman.ActiveChain().Contains(pindex)) {
             setOrphans.insert(pindex);
             setPrevs.insert(pindex->pprev);
-//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
         }
     }
 

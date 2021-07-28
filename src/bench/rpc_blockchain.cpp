@@ -28,21 +28,12 @@ struct TestBlockAndIndex {
 
         stream >> block;
 
-//<<<<<<< HEAD
-       /*  blockHash = block.GetHash();
-        blockindex.phashBlock = &blockHash;
-        blockindex.nBits = 403014710; */
          CBlockIndex blockindex;
         blockindex.m_hash_block = block.GetHash();
         blockindex.nBits = 403014710;
     }
 };
-/* =======
-    CBlockIndex blockindex;
-    blockindex.m_hash_block = block.GetHash();
-    blockindex.nBits = 403014710;
->>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
- */
+
 } // namespace
 
 static void BlockToJsonVerbose(benchmark::Bench& bench)
