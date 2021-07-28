@@ -1246,10 +1246,11 @@ void CChainState::InitCoinsCache(size_t cache_size_bytes)
 //
 bool CChainState::IsInitialBlockDownload() const
 {
+     //LogPrintf("Leaving InitialBlockDownload m_cached_finished_ibd\n");
     // Optimization: pre-test latch before taking the lock.
     if (m_cached_finished_ibd.load(std::memory_order_relaxed))
         return false;
-
+   // LogPrintf("Leaving InitialBlockDownload LOCK\n");  
     LOCK(cs_main);
     if (m_cached_finished_ibd.load(std::memory_order_relaxed))
         return false;

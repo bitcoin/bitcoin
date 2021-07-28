@@ -134,7 +134,7 @@ public:
         consensus.BIP66Height =0;// 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
         consensus.CSVHeight = 0;//419328; // 000000000000000004a1b34462cb8aeebd5799177f7a29cf28f2d1961716b5b5
         consensus.SegwitHeight =0;// 481824; // 0000000000000000001c8018d9cb3b742ef25114f27563e3fc4a1902167f9893
-        consensus.MinBIP9WarningHeight = 483840; // segwit activation height + miner confirmation window
+        consensus.MinBIP9WarningHeight = 0; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256S("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan =   60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 60;
@@ -156,7 +156,7 @@ public:
         //consensus.defaultAssumeValid = uint256S(0); // 654683
         //consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000001533efd8d716a517fe2c5008");
         //consensus.defaultAssumeValid = uint256S("0x0000000000000000000b9d2ec5a352ecba0592946514a92f14319dc2b367fc72"); // 654683
-        consensus.nMinimumChainWork =consensus.powLimit;// uint256S("0x");
+        consensus.nMinimumChainWork = uint256S("0x");//consensus.powLimit;//
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0079914cade2125a07c5b2316ec312c81089ed65cda34fa74b1cf4bc3b9c751b"); //1353397
         /**
@@ -164,11 +164,11 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        /*pchMessageStart[0] = 0xf9;
-        pchMessageStart[1] = 0xbe;
-        pchMessageStart[2] = 0xb4;
-        pchMessageStart[3] = 0xd9;
-        */
+        // pchMessageStart[0] = 0xf9;
+        // pchMessageStart[1] = 0xbe;
+        // pchMessageStart[2] = 0xb4;
+        // pchMessageStart[3] = 0xd9;
+        
         pchMessageStart[0] = 0xf2;
         pchMessageStart[1] = 0xb6;
         pchMessageStart[2] = 0xb1;

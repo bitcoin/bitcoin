@@ -447,7 +447,7 @@ static RPCHelpMan getmininginfo()
 }
 
 
-// NOTE: Unlike wallet RPC (which use BTC values), mining RPCs follow GBT (BIP 22) in using satoshi amounts
+// NOTE: Unlike wallet RPC (which use BRS values), mining RPCs follow GBT (BIP 22) in using satoshi amounts
 static RPCHelpMan prioritisetransaction()
 {
     return RPCHelpMan{"prioritisetransaction",
@@ -679,13 +679,16 @@ static RPCHelpMan getblocktemplate()
     if (!Params().IsTestChain()) {
 
          const CConnman& connman = EnsureConnman(node);
-         //if (connman.GetNodeCount(ConnectionDirection::Both) == 0) {
-         //    throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
-       // }
+         LogPrintf("connman.GetNodeCount(ConnectionDirection::Both)");
 
-        // if (active_chainstate.IsInitialBlockDownload()) {
-            // throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is in initial sync and waiting for blocks...");
-         //}
+         if (connman.GetNodeCount(ConnectionDirection::Both) == 0) {
+             throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
+        }
+        LogPrintf("active_chainstate.IsInitialBlockDownload\n");
+         if (active_chainstate.IsInitialBlockDownload()) {
+             LogPrintf("active_chainstate.IsInitialBlockDownload error \n");
+             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is in initial sync and waiting for blocks...");
+         }
     }
     //LogPrintf("getblocktemplate IsInitialBlockDownload done");
 
