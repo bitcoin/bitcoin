@@ -59,9 +59,20 @@ class P2PAddrFetch(BitcoinTestFramework):
         peer.wait_for_disconnect(timeout=5)
 
         self.log.info("Check timeout for addr-fetch peer that does not send addrs")
-        peer = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=1, connection_type="addr-fetch")
-        node.setmocktime(int(time.time()) + 301)  # Timeout: 5 minutes
+        peer_id = 1
+        peer = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=peer_id, connection_type="addr-fetch")
+
+        time_now = int(time.time())
+        self.assert_getpeerinfo(peer_ids=[peer_id])
+
+        # Expect addr-fetch peer connection to be maintained up to 5 minutes.
+        node.setmocktime(time_now + 295)
+        self.assert_getpeerinfo(peer_ids=[peer_id])
+
+        # Expect addr-fetch peer connection to be disconnected after 5 minutes.
+        node.setmocktime(time_now + 301)
         peer.wait_for_disconnect(timeout=5)
+        self.assert_getpeerinfo(peer_ids=[])
 
 
 if __name__ == '__main__':
