@@ -76,8 +76,8 @@ static RPCHelpMan getrawtransaction()
 
                 "\nBy default, this call only returns a transaction if it is in the mempool. If -txindex is enabled\n"
                 "and no blockhash argument is passed, it will return the transaction if it is in the mempool or any block.\n"
-                "If -txindex is not enabled and a blockhash argument is passed, it will return the transaction if\n"
-                "the specified block is available and the transaction is found in that block.\n"
+                "If a blockhash argument is passed, it will return the transaction if\n"
+                "the specified block is available and the transaction is in that block.\n"
                 "\nHint: Use gettransaction for wallet transactions.\n"
 
                 "\nIf verbose is 'true', returns an Object with information about 'txid'.\n"
