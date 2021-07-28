@@ -23,7 +23,42 @@ import sys
 import time
 import threading
 
-from test_framework.messages import CBlockHeader, MIN_VERSION_SUPPORTED, msg_addr, msg_addrv2, msg_block, msg_blocktxn, msg_clsig, msg_cmpctblock, msg_getaddr, msg_getblocks, msg_getblocktxn, msg_getdata, msg_getheaders, msg_getmnlistd, msg_headers, msg_inv, msg_islock, msg_mempool, msg_mnlistdiff, msg_ping, msg_pong, msg_qdata, msg_qgetdata, msg_reject, msg_sendaddrv2, msg_sendcmpct, msg_sendheaders, msg_tx, msg_verack, msg_version, MY_SUBVERSION, NODE_NETWORK, sha256
+from test_framework.messages import (
+    CBlockHeader,
+    MIN_VERSION_SUPPORTED,
+    msg_addr,
+    msg_addrv2,
+    msg_block,
+    msg_blocktxn,
+    msg_clsig,
+    msg_cmpctblock,
+    msg_getaddr,
+    msg_getblocks,
+    msg_getblocktxn,
+    msg_getdata,
+    msg_getheaders,
+    msg_getmnlistd,
+    msg_headers,
+    msg_inv,
+    msg_islock,
+    msg_mempool,
+    msg_mnlistdiff,
+    msg_notfound,
+    msg_ping,
+    msg_pong,
+    msg_qdata,
+    msg_qgetdata,
+    msg_reject,
+    msg_sendaddrv2,
+    msg_sendcmpct,
+    msg_sendheaders,
+    msg_tx,
+    msg_verack,
+    msg_version,
+    MY_SUBVERSION,
+    NODE_NETWORK,
+    sha256,
+)
 from test_framework.util import wait_until
 
 MSG_TX = 1
@@ -62,7 +97,7 @@ MESSAGEMAP = {
     b"govsync": None,
     b"islock": msg_islock,
     b"mnlistdiff": msg_mnlistdiff,
-    b"notfound": None,
+    b"notfound": msg_notfound,
     b"qfcommit": None,
     b"qsendrecsigs": None,
     b"qgetdata": msg_qgetdata,
@@ -338,6 +373,7 @@ class P2PInterface(P2PConnection):
     def on_getheaders(self, message): pass
     def on_headers(self, message): pass
     def on_mempool(self, message): pass
+    def on_notfound(self, message): pass
     def on_pong(self, message): pass
     def on_reject(self, message): pass
     def on_sendaddrv2(self, message): pass
