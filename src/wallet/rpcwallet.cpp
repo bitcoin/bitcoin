@@ -30,6 +30,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
 #include <wallet/feebumper.h>
+#include <wallet/fees.h>
 #include <wallet/load.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
@@ -533,6 +534,89 @@ static RPCHelpMan sendtoaddress()
     const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
 
     return SendMoney(*pwallet, coin_control, recipients, mapValue, verbose);
+},
+    };
+}
+
+static RPCHelpMan walletestimatefee()
+{
+    return RPCHelpMan{"walletestimatefee",
+        "\nEstimates the fee per kilobyte needed for a transaction to be generated from this wallet,\n"
+        "taking into account mempool minfee and fallback fee.\n"
+        "In contrast, estimatesmartfee estimates ignores these and returns a pure fee estimate based on prior block confirmations.\n"
+        "Confirmation within conf_target blocks if possible and return the number of blocks\n"
+        "for which the estimate is valid.\n",
+        {
+            {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks (1 - 1008)"},
+            {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"conservative"}, "The fee estimate mode.\n"
+            "                   Whether to return a more conservative estimate which also satisfies\n"
+            "                   a longer history. A conservative estimate potentially returns a\n"
+            "                   higher feerate and is more likely to be sufficient for the desired\n"
+            "                   target, but is not as responsive to short term drops in the\n"
+            "                   prevailing fee market. Must be one of (case insensitive):\n"
+            "\"" + FeeModes("\"\n\"") + "\""},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::NUM, "feerate", /* optional */ true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB (only present if no errors were encountered)"},
+                        {RPCResult::Type::STR, "reason", /* optional */ true, "the reason for the estimated fee"},
+                        {RPCResult::Type::ARR, "errors", /* optional */ true, "Errors encountered during processing (if there are any)",
+                            {
+                                {RPCResult::Type::STR, "", "error"},
+                            }},
+                        {RPCResult::Type::NUM, "blocks", "block number where estimate was found (only when reason is estimatesmartfee)\n"
+                        "The request target will be clamped between 2 and the highest target\n"
+                        "fee estimation is able to return based on how long it has been running.\n"
+                        "An error is returned if not enough transactions and blocks\n"
+                        "have been observed to make an estimate for any number of blocks."},
+                    }},
+                RPCExamples{
+                    HelpExampleCli("walletestimatefee", "6")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    LOCK(pwallet->cs_wallet);
+
+    // Wallet comments
+    CCoinControl coin_control;
+
+    //dummy variable temp representing NULL fee_rate
+    UniValue temp(UniValue::VNULL);
+
+    SetFeeEstimateMode(*pwallet, coin_control, /* conf_target */ request.params[0], /* estimate_mode */ request.params[1], /* fee_rate */temp , /* override_min_fee */ false);
+
+    UniValue result(UniValue::VOBJ);
+    UniValue errors(UniValue::VARR);
+    FeeCalculation feeCalc;
+    CFeeRate effective_feerate = GetMinimumFeeRate(*pwallet, coin_control, &feeCalc);
+
+    if (effective_feerate != CFeeRate(0)) {
+        result.pushKV("feerate", ValueFromAmount(effective_feerate.GetFeePerK()));
+        //when reason is estimatesmartfee return block number where estimate was found
+        if (feeCalc.reason!=FeeReason::MEMPOOL_MIN&&
+            feeCalc.reason!=FeeReason::REQUIRED&&
+            feeCalc.reason!=FeeReason::FALLBACK&&
+            feeCalc.reason!=FeeReason::PAYTXFEE){
+            result.pushKV("reason", "estimatesmartfee" );
+            result.pushKV("blocks", feeCalc.returnedTarget);
+        }
+        else
+        {
+            result.pushKV("reason",StringForFeeReason(feeCalc.reason) );
+        }
+    } else {
+        errors.push_back("Insufficient data or no feerate found");
+        result.pushKV("errors", errors);
+    }
+    return result;
 },
     };
 }
@@ -4688,6 +4772,7 @@ static const CRPCCommand commands[] =
     { "wallet",             &unloadwallet,                   },
     { "wallet",             &upgradewallet,                  },
     { "wallet",             &walletcreatefundedpsbt,         },
+    { "wallet",             &walletestimatefee,              },
 #ifdef ENABLE_EXTERNAL_SIGNER
     { "wallet",             &walletdisplayaddress,           },
 #endif // ENABLE_EXTERNAL_SIGNER

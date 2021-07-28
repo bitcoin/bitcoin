@@ -154,6 +154,18 @@ def check_estimates(node, fees_seen):
     check_raw_estimates(node, fees_seen)
     check_smart_estimates(node, fees_seen)
 
+def check_walletestimates(w, node):
+    mempoolMinFee = node.getmempoolinfo()['mempoolminfee']
+    for x in range (1,26):
+        walletEstimateFee = w.walletestimatefee(x)
+        estimateSmartFee = node.estimatesmartfee(x)
+        if(estimateSmartFee['feerate'] > mempoolMinFee):
+            assert_equal(walletEstimateFee['feerate'], estimateSmartFee['feerate'])
+            assert_equal(walletEstimateFee['blocks'], estimateSmartFee['blocks'])
+            assert_equal(w.walletestimatefee(x)['reason'], 'estimatesmartfee')
+        else:
+            assert_equal(walletEstimateFee['feerate'], mempoolMinFee)
+
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
@@ -253,6 +265,14 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         self.sync_all()
 
+        self.nodes[1].createwallet(wallet_name="w1",)
+        w1 = self.nodes[1].get_wallet_rpc("w1")
+
+        # check that the feerate is equal to the fallbackfee (Default for this test: 0.0002) in absence of sufficient transactions for estimation.
+        for x in range (1,26):
+            assert_equal(w1.walletestimatefee(x)['feerate'], Decimal('0.0002'))
+            assert_equal(w1.walletestimatefee(x)['reason'], 'Fallback fee')
+
         self.fees_per_kb = []
         self.memutxo = []
         self.confutxo = self.txouts  # Start with the set of confirmed txouts after splitting
@@ -263,12 +283,16 @@ class EstimateFeeTest(BitcoinTestFramework):
             # Create transactions and mine 10 small blocks with node 2, but create txs faster than we can mine
             self.transact_and_mine(10, self.nodes[2])
             check_estimates(self.nodes[1], self.fees_per_kb)
+            # check that the feerate is equal to that estimated by estimatesmartfee when mempoolminfee is low
+            check_walletestimates(w1, self.nodes[1])
 
             self.log.info("Creating transactions and mining them at a block size that is just big enough")
             # Generate transactions while mining 10 more blocks, this time with node1
             # which mines blocks with capacity just above the rate that transactions are being created
             self.transact_and_mine(10, self.nodes[1])
             check_estimates(self.nodes[1], self.fees_per_kb)
+            # check that the feerate is equal to that estimated by estimatesmartfee when mempoolminfee is low
+            check_walletestimates(w1, self.nodes[1])
 
         # Finish by mining a normal-sized block:
         while len(self.nodes[1].getrawmempool()) > 0:
@@ -277,6 +301,14 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.sync_blocks(self.nodes[0:3], wait=.1)
         self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb)
+        check_walletestimates(w1, self.nodes[1])
+
+        # check that the effective feerate is equal to the mempoolminfee when mempoolminfee is higher than the estimatesmartfee
+        self.log.info("Estimates after restarting node with high MempoolMinFee")
+        self.restart_node(1, extra_args=['-minrelaytxfee=0.0003'])
+        self.nodes[1].createwallet(wallet_name="w2")
+        w2 = self.nodes[1].get_wallet_rpc("w2")
+        check_walletestimates(w2, self.nodes[1])
 
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])
