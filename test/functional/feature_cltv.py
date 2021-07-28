@@ -9,6 +9,7 @@ Test that the CHECKLOCKTIMEVERIFY soft-fork activates at (regtest) block height
 """
 
 from test_framework.blocktools import (
+    CLTV_HEIGHT,
     create_block,
     create_coinbase,
 )
@@ -33,8 +34,6 @@ from test_framework.wallet import (
     MiniWallet,
     MiniWalletMode,
 )
-
-CLTV_HEIGHT = 1351
 
 
 # Helper function to modify a transaction by

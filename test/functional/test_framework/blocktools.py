@@ -35,6 +35,10 @@ TIME_GENESIS_BLOCK = 1417713337
 # Coinbase transaction outputs can only be spent after this number of new blocks (network rule)
 COINBASE_MATURITY = 100
 
+# Soft-fork activation heights
+CLTV_HEIGHT = 1351
+CSV_ACTIVATION_HEIGHT = 432
+
 NORMAL_GBT_REQUEST_PARAMS = {"rules": []} # type: ignore[var-annotated]
 
 def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl=None, txlist=None, dip4_activated=False, v20_activated=False):

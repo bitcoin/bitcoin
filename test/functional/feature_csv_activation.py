@@ -40,6 +40,7 @@ bip112tx_emptystack - test empty stack (= no argument) OP_CSV
 from itertools import product
 
 from test_framework.blocktools import (
+    CSV_ACTIVATION_HEIGHT,
     create_block,
     create_coinbase,
     TIME_GENESIS_BLOCK,
@@ -63,7 +64,6 @@ from test_framework.wallet import (
 TESTING_TX_COUNT = 83  # Number of testing transactions: 1 BIP113 tx, 16 BIP68 txs, 66 BIP112 txs (see comments above)
 COINBASE_BLOCK_COUNT = TESTING_TX_COUNT  # Number of coinbase blocks we need to generate as inputs for our txs
 BASE_RELATIVE_LOCKTIME = 10
-CSV_ACTIVATION_HEIGHT = 432
 SEQ_DISABLE_FLAG = 1 << 31
 SEQ_RANDOM_HIGH_BIT = 1 << 25
 SEQ_TYPE_FLAG = 1 << 22
