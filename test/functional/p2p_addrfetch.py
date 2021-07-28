@@ -21,18 +21,24 @@ ADDR.port = 18444
 
 
 class P2PAddrFetch(BitcoinTestFramework):
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
+    def assert_getpeerinfo(self, *, peer_ids):
+        num_peers = len(peer_ids)
+        info = self.nodes[0].getpeerinfo()
+        assert_equal(len(info), num_peers)
+        for n in range(0, num_peers):
+            assert_equal(info[n]['id'], peer_ids[n])
+            assert_equal(info[n]['connection_type'], 'addr-fetch')
+
     def run_test(self):
         node = self.nodes[0]
         self.log.info("Connect to an addr-fetch peer")
-        peer = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="addr-fetch")
-        info = node.getpeerinfo()
-        assert_equal(len(info), 1)
-        assert_equal(info[0]['connection_type'], 'addr-fetch')
+        peer_id = 0
+        peer = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=peer_id, connection_type="addr-fetch")
+        self.assert_getpeerinfo(peer_ids=[peer_id])
 
         self.log.info("Check that we send getaddr but don't try to sync headers with the addr-fetch peer")
         peer.sync_send_with_ping()
@@ -45,7 +51,7 @@ class P2PAddrFetch(BitcoinTestFramework):
         msg = msg_addr()
         msg.addrs = [ADDR]
         peer.send_and_ping(msg)
-        assert_equal(len(node.getpeerinfo()), 1)
+        self.assert_getpeerinfo(peer_ids=[peer_id])
 
         self.log.info("Check that answering with larger addr messages leads to disconnect")
         msg.addrs = [ADDR] * 2
