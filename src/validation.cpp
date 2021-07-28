@@ -148,8 +148,15 @@ void FlushBlockFile(bool fFinalize = false, bool finalize_undo = false);
 CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash) const
 {
     AssertLockHeld(cs_main);
+/* <<<<<<< HEAD
     BlockMap::const_iterator it = m_block_index.find(hash);
     return it == m_block_index.end() ? nullptr : it->second;
+======= */
+    //auto& idx = g_chainman.BlockIndex();
+    //BlockMap::const_iterator it = idx.find(idx.hash_function()(hash));
+    BlockMap::const_iterator it = m_block_index.find( m_block_index.hash_function()(hash));
+    return it ==  m_block_index.end() ? nullptr : *it;
+//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
 }
 
 CBlockIndex* BlockManager::FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
@@ -1295,6 +1302,40 @@ void CChainState::CheckForkWarningConditions()
     // (we assume we don't get stuck on a fork before finishing our initial sync)
     if (IsInitialBlockDownload()) {
         return;
+/* <<<<<<< HEAD
+=======
+
+    // If our best fork is no longer within 72 blocks (+/- 12 hours if no one mines it)
+    // of our head, drop it
+    if (pindexBestForkTip && ::ChainActive().Height() - pindexBestForkTip->nHeight >= 72)
+        pindexBestForkTip = nullptr;
+
+    if (pindexBestForkTip || (pindexBestInvalid && pindexBestInvalid->nChainWork > ::ChainActive().Tip()->nChainWork + (GetBlockProof(*::ChainActive().Tip()) * 6)))
+    {
+        if (!GetfLargeWorkForkFound() && pindexBestForkBase)
+        {
+            std::string warning = std::string("'Warning: Large-work fork detected, forking after block ") +
+                pindexBestForkBase->m_hash_block.ToString() + std::string("'");
+            AlertNotify(warning);
+        }
+        if (pindexBestForkTip && pindexBestForkBase)
+        {
+            LogPrintf("%s: Warning: Large valid fork found\n  forking the chain at height %d (%s)\n  lasting to height %d (%s).\nChain state database corruption likely.\n", __func__,
+                   pindexBestForkBase->nHeight, pindexBestForkBase->m_hash_block.ToString(),
+                   pindexBestForkTip->nHeight, pindexBestForkTip->m_hash_block.ToString());
+            SetfLargeWorkForkFound(true);
+        }
+        else
+        {
+            LogPrintf("%s: Warning: Found invalid chain at least ~6 blocks longer than our best chain.\nChain state database corruption likely.\n", __func__);
+            SetfLargeWorkInvalidChainFound(true);
+        }
+    }
+    else
+    {
+        SetfLargeWorkForkFound(false);
+        SetfLargeWorkInvalidChainFound(false);
+>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map */
     }
 
     if (pindexBestInvalid && pindexBestInvalid->nChainWork > m_chain.Tip()->nChainWork + (GetBlockProof(*m_chain.Tip()) * 6)) {
@@ -1648,8 +1689,8 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     // mainnet and testnet), so for simplicity, always leave P2SH
     // on except for the one violating block.
     if (consensusparams.BIP16Exception.IsNull() || // no bip16 exception on this chain
-        pindex->phashBlock == nullptr || // this is a new candidate block, eg from TestBlockValidity()
-        *pindex->phashBlock != consensusparams.BIP16Exception) // this block isn't the historical exception
+        pindex->m_hash_block.IsNull() || // this is a new candidate block, eg from TestBlockValidity()
+        pindex->m_hash_block != consensusparams.BIP16Exception) // this block isn't the historical exception
     {
         // Enforce WITNESS rules whenever P2SH is in effect
         flags |= SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS;
@@ -1702,7 +1743,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 {
     AssertLockHeld(cs_main);
     assert(pindex);
-    assert(*pindex->phashBlock == block.GetHash());
+    assert(pindex->m_hash_block == block.GetHash());
     int64_t nTimeStart = GetTimeMicros();
 
     // Check it again in case a previous version let a bad block in
@@ -1749,9 +1790,10 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         //  relative to a piece of software is an objective fact these defaults can be easily reviewed.
         // This setting doesn't force the selection of any particular chain but makes validating some faster by
         //  effectively caching the result of part of the verification.
-        BlockMap::const_iterator  it = m_blockman.m_block_index.find(hashAssumeValid);
+        //
+        BlockMap::const_iterator  it = m_blockman.m_block_index.find(m_blockman.m_block_index.hash_function()(hashAssumeValid));
         if (it != m_blockman.m_block_index.end()) {
-            if (it->second->GetAncestor(pindex->nHeight) == pindex &&
+            if ((*it)->GetAncestor(pindex->nHeight) == pindex &&
                 pindexBestHeader->GetAncestor(pindex->nHeight) == pindex &&
                 pindexBestHeader->nChainWork >= nMinimumChainWork) {
                 // This block is a member of the assumed verified chain and an ancestor of the best header.
@@ -1988,7 +2030,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         setDirtyBlockIndex.insert(pindex);
     }
 
-    assert(pindex->phashBlock);
+    assert(!pindex->m_hash_block.IsNull());
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
 
@@ -2779,8 +2821,7 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, CBlockIndex* pind
 
     {
         LOCK(cs_main);
-        for (const auto& entry : m_blockman.m_block_index) {
-            CBlockIndex *candidate = entry.second;
+        for (CBlockIndex* candidate : m_blockman.m_block_index) {
             // We don't need to put anything in our active chain into the
             // multimap, because those candidates will be found and considered
             // as we disconnect.
@@ -2879,8 +2920,8 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, CBlockIndex* pind
         // to setBlockIndexCandidates.
         BlockMap::iterator it = m_blockman.m_block_index.begin();
         while (it != m_blockman.m_block_index.end()) {
-            if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->HaveTxsDownloaded() && !setBlockIndexCandidates.value_comp()(it->second, m_chain.Tip())) {
-                setBlockIndexCandidates.insert(it->second);
+            if ((*it)->IsValid(BLOCK_VALID_TRANSACTIONS) && (*it)->HaveTxsDownloaded() && !setBlockIndexCandidates.value_comp()(*it, m_chain.Tip())) {
+                setBlockIndexCandidates.insert(*it);
             }
             it++;
         }
@@ -2903,17 +2944,18 @@ void CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {
     // Remove the invalidity flag from this block and all its descendants.
     BlockMap::iterator it = m_blockman.m_block_index.begin();
     while (it != m_blockman.m_block_index.end()) {
-        if (!it->second->IsValid() && it->second->GetAncestor(nHeight) == pindex) {
-            it->second->nStatus &= ~BLOCK_FAILED_MASK;
-            setDirtyBlockIndex.insert(it->second);
-            if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->HaveTxsDownloaded() && setBlockIndexCandidates.value_comp()(m_chain.Tip(), it->second)) {
-                setBlockIndexCandidates.insert(it->second);
+        CBlockIndex& block = **it;
+        if (!block.IsValid() && block.GetAncestor(nHeight) == pindex) {
+            block.nStatus &= ~BLOCK_FAILED_MASK;
+            setDirtyBlockIndex.insert(&block);
+            if (block.IsValid(BLOCK_VALID_TRANSACTIONS) && block.HaveTxsDownloaded() && setBlockIndexCandidates.value_comp()(m_chain.Tip(), &block)) {
+                setBlockIndexCandidates.insert(&block);
             }
-            if (it->second == pindexBestInvalid) {
+            if (&block == pindexBestInvalid) {
                 // Reset invalid block marker if it was pointing to one of those.
                 pindexBestInvalid = nullptr;
             }
-            m_blockman.m_failed_blocks.erase(it->second);
+            m_blockman.m_failed_blocks.erase(&block);
         }
         it++;
     }
@@ -2935,9 +2977,9 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
 
     // Check for duplicate
     uint256 hash = block.GetHash();
-    BlockMap::iterator it = m_block_index.find(hash);
+    BlockMap::iterator it = m_block_index.find(m_block_index.hash_function()(hash));
     if (it != m_block_index.end())
-        return it->second;
+        return *it;
 
     // Construct new block index object
     CBlockIndex* pindexNew = new CBlockIndex(block);
@@ -2945,12 +2987,12 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
     // to avoid miners withholding blocks but broadcasting headers, to get a
     // competitive advantage.
     pindexNew->nSequenceId = 0;
-    BlockMap::iterator mi = m_block_index.insert(std::make_pair(hash, pindexNew)).first;
-    pindexNew->phashBlock = &((*mi).first);
-    BlockMap::iterator miPrev = m_block_index.find(block.hashPrevBlock);
+    pindexNew->m_hash_block = hash;
+    m_block_index.insert(pindexNew);
+    BlockMap::iterator miPrev = m_block_index.find(m_block_index.hash_function()(block.hashPrevBlock));
     if (miPrev != m_block_index.end())
     {
-        pindexNew->pprev = (*miPrev).second;
+        pindexNew->pprev = *miPrev;
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
         pindexNew->BuildSkip();
     }
@@ -3292,11 +3334,20 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
     AssertLockHeld(cs_main);
     // Check for duplicate
     uint256 hash = block.GetHash();
+/* <<<<<<< HEAD
     BlockMap::iterator miSelf = m_block_index.find(hash);
     if (hash != chainparams.GetConsensus().hashGenesisBlock) {
         if (miSelf != m_block_index.end()) {
             // Block header is already known.
             CBlockIndex* pindex = miSelf->second;
+======= */
+    BlockMap::iterator miSelf = m_block_index.find(m_block_index.hash_function()(hash));
+    CBlockIndex *pindex = nullptr;
+    if (hash != chainparams.GetConsensus().hashGenesisBlock) {
+        if (miSelf != m_block_index.end()) {
+            // Block header is already known.
+            pindex = *miSelf;
+//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
             if (ppindex)
                 *ppindex = pindex;
             if (pindex->nStatus & BLOCK_FAILED_MASK) {
@@ -3313,12 +3364,12 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
 
         // Get prev block index
         CBlockIndex* pindexPrev = nullptr;
-        BlockMap::iterator mi = m_block_index.find(block.hashPrevBlock);
+        BlockMap::iterator mi = m_block_index.find(m_block_index.hash_function()(block.hashPrevBlock));
         if (mi == m_block_index.end()) {
             LogPrintf("ERROR: %s: prev block not found\n", __func__);
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "prev-blk-not-found");
         }
-        pindexPrev = (*mi).second;
+        pindexPrev = *mi;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK) {
             LogPrintf("ERROR: %s: prev block invalid\n", __func__);
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
@@ -3365,7 +3416,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
             }
         }
     }
-    CBlockIndex* pindex = AddToBlockIndex(block);
+    /* CBlockIndex* */ pindex = AddToBlockIndex(block);
 
     if (ppindex)
         *ppindex = pindex;
@@ -3538,7 +3589,7 @@ bool TestBlockValidity(BlockValidationState& state,
     CBlockIndex indexDummy(block);
     indexDummy.pprev = pindexPrev;
     indexDummy.nHeight = pindexPrev->nHeight + 1;
-    indexDummy.phashBlock = &block_hash;
+    indexDummy.m_hash_block = block_hash;
 
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, chainstate.m_blockman, chainparams, pindexPrev, GetAdjustedTime()))
@@ -3564,8 +3615,13 @@ void BlockManager::PruneOneBlockFile(const int fileNumber)
     AssertLockHeld(cs_main);
     LOCK(cs_LastBlockFile);
 
+/* <<<<<<< HEAD
     for (const auto& entry : m_block_index) {
         CBlockIndex* pindex = entry.second;
+======= */
+    //for (CBlockIndex* pindex : m_blockman.m_block_index) {
+    for (CBlockIndex* pindex : m_block_index) {
+//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
         if (pindex->nFile == fileNumber) {
             pindex->nStatus &= ~BLOCK_HAVE_DATA;
             pindex->nStatus &= ~BLOCK_HAVE_UNDO;
@@ -3693,14 +3749,14 @@ CBlockIndex * BlockManager::InsertBlockIndex(const uint256& hash)
         return nullptr;
 
     // Return existing
-    BlockMap::iterator mi = m_block_index.find(hash);
+    BlockMap::iterator mi = m_block_index.find(m_block_index.hash_function()(hash));
     if (mi != m_block_index.end())
-        return (*mi).second;
+        return *mi;
 
     // Create new
     CBlockIndex* pindexNew = new CBlockIndex();
-    mi = m_block_index.insert(std::make_pair(hash, pindexNew)).first;
-    pindexNew->phashBlock = &((*mi).first);
+    pindexNew->m_hash_block = hash;
+    mi = m_block_index.insert(pindexNew).first;
 
     return pindexNew;
 }
@@ -3716,9 +3772,8 @@ bool BlockManager::LoadBlockIndex(
     // Calculate nChainWork
     std::vector<std::pair<int, CBlockIndex*> > vSortedByHeight;
     vSortedByHeight.reserve(m_block_index.size());
-    for (const std::pair<const uint256, CBlockIndex*>& item : m_block_index)
+    for (CBlockIndex* pindex : m_block_index)
     {
-        CBlockIndex* pindex = item.second;
         vSortedByHeight.push_back(std::make_pair(pindex->nHeight, pindex));
     }
     sort(vSortedByHeight.begin(), vSortedByHeight.end());
@@ -3764,8 +3819,8 @@ void BlockManager::Unload() {
     m_failed_blocks.clear();
     m_blocks_unlinked.clear();
 
-    for (const BlockMap::value_type& entry : m_block_index) {
-        delete entry.second;
+    for (CBlockIndex* pindex : m_block_index) {
+        delete pindex;
     }
 
     m_block_index.clear();
@@ -3799,8 +3854,13 @@ bool BlockManager::LoadBlockIndexDB(std::set<CBlockIndex*, CBlockIndexWorkCompar
     // Check presence of blk files
     LogPrintf("Checking all blk files are present...\n");
     std::set<int> setBlkDataFiles;
+/* <<<<<<< HEAD
     for (const std::pair<const uint256, CBlockIndex*>& item : m_block_index) {
         CBlockIndex* pindex = item.second;
+======= */
+    //for (CBlockIndex* pindex : chainman.BlockIndex()) {
+    for (CBlockIndex* pindex : m_block_index) {
+//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
         if (pindex->nStatus & BLOCK_HAVE_DATA) {
             setBlkDataFiles.insert(pindex->nFile);
         }
@@ -4022,16 +4082,18 @@ bool CChainState::ReplayBlocks()
     const CBlockIndex* pindexNew;            // New tip during the interrupted flush.
     const CBlockIndex* pindexFork = nullptr; // Latest block common to both the old and the new tip.
 
-    if (m_blockman.m_block_index.count(hashHeads[0]) == 0) {
+    auto mi = m_blockman.m_block_index.find(m_blockman.m_block_index.hash_function()(hashHeads[0]));
+    if (mi == m_blockman.m_block_index.end()) {
         return error("ReplayBlocks(): reorganization to unknown block requested");
     }
-    pindexNew = m_blockman.m_block_index[hashHeads[0]];
+    pindexNew = *mi;
 
     if (!hashHeads[1].IsNull()) { // The old tip is allowed to be 0, indicating it's the first flush.
-        if (m_blockman.m_block_index.count(hashHeads[1]) == 0) {
+        auto mi2 = m_blockman.m_block_index.find(m_blockman.m_block_index.hash_function()(hashHeads[1]));
+        if (mi2 == m_blockman.m_block_index.end()) {
             return error("ReplayBlocks(): reorganization from unknown block requested");
         }
-        pindexOld = m_blockman.m_block_index[hashHeads[1]];
+        pindexOld = *mi2;
         pindexFork = LastCommonAncestor(pindexOld, pindexNew);
         assert(pindexFork != nullptr);
     }
@@ -4074,6 +4136,92 @@ bool CChainState::ReplayBlocks()
 bool CChainState::NeedsRedownload() const
 {
     AssertLockHeld(cs_main);
+/* <<<<<<< HEAD
+=======
+    assert(!m_chain.Contains(index)); // Make sure this block isn't active
+
+    // Reduce validity
+    index->nStatus = std::min<unsigned int>(index->nStatus & BLOCK_VALID_MASK, BLOCK_VALID_TREE) | (index->nStatus & ~BLOCK_VALID_MASK);
+    // Remove have-data flags.
+    index->nStatus &= ~(BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO);
+    // Remove storage location.
+    index->nFile = 0;
+    index->nDataPos = 0;
+    index->nUndoPos = 0;
+    // Remove various other things
+    index->nTx = 0;
+    index->nChainTx = 0;
+    index->nSequenceId = 0;
+    // Make sure it gets written.
+    setDirtyBlockIndex.insert(index);
+    // Update indexes
+    setBlockIndexCandidates.erase(index);
+    auto ret = m_blockman.m_blocks_unlinked.equal_range(index->pprev);
+    while (ret.first != ret.second) {
+        if (ret.first->second == index) {
+            m_blockman.m_blocks_unlinked.erase(ret.first++);
+        } else {
+            ++ret.first;
+        }
+    }
+    // Mark parent as eligible for main chain again
+    if (index->pprev && index->pprev->IsValid(BLOCK_VALID_TRANSACTIONS) && index->pprev->HaveTxsDownloaded()) {
+        setBlockIndexCandidates.insert(index->pprev);
+    }
+}
+
+bool CChainState::RewindBlockIndex(const CChainParams& params)
+{
+    // Note that during -reindex-chainstate we are called with an empty m_chain!
+
+    // First erase all post-segwit blocks without witness not in the main chain,
+    // as this can we done without costly DisconnectTip calls. Active
+    // blocks will be dealt with below (releasing cs_main in between).
+    {
+        LOCK(cs_main);
+        for (CBlockIndex* pindex : m_blockman.m_block_index) {
+            if (IsWitnessEnabled(pindex->pprev, params.GetConsensus()) && !(pindex->nStatus & BLOCK_OPT_WITNESS) && !m_chain.Contains(pindex)) {
+                EraseBlockData(pindex);
+            }
+        }
+    }
+
+    // Find what height we need to reorganize to.
+    CBlockIndex *tip;
+    int nHeight = 1;
+    {
+        LOCK(cs_main);
+        while (nHeight <= m_chain.Height()) {
+            // Although SCRIPT_VERIFY_WITNESS is now generally enforced on all
+            // blocks in ConnectBlock, we don't need to go back and
+            // re-download/re-verify blocks from before segwit actually activated.
+            if (IsWitnessEnabled(m_chain[nHeight - 1], params.GetConsensus()) && !(m_chain[nHeight]->nStatus & BLOCK_OPT_WITNESS)) {
+                break;
+            }
+            nHeight++;
+        }
+
+        tip = m_chain.Tip();
+    }
+    // nHeight is now the height of the first insufficiently-validated block, or tipheight + 1
+
+    BlockValidationState state;
+    // Loop until the tip is below nHeight, or we reach a pruned block.
+    while (!ShutdownRequested()) {
+        {
+            LOCK2(cs_main, ::mempool.cs);
+            // Make sure nothing changed from under us (this won't happen because RewindBlockIndex runs before importing/network are active)
+            assert(tip == m_chain.Tip());
+            if (tip == nullptr || tip->nHeight < nHeight) break;
+            if (fPruneMode && !(tip->nStatus & BLOCK_HAVE_DATA)) {
+                // If pruning, don't try rewinding past the HAVE_DATA point;
+                // since older blocks can't be served anyway, there's
+                // no need to walk further, and trying to DisconnectTip()
+                // will fail (and require a needless reindex/redownload
+                // of the blockchain).
+                break;
+            } */
+//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
 
     // At and above m_params.SegwitHeight, segwit consensus rules must be validated
     CBlockIndex* block{m_chain.Tip()};
@@ -4146,7 +4294,12 @@ bool CChainState::LoadGenesisBlock()
     // m_blockman.m_block_index. Note that we can't use m_chain here, since it is
     // set based on the coins db, not the block index db, which is the only
     // thing loaded at this point.
+/* <<<<<<< HEAD
     if (m_blockman.m_block_index.count(m_params.GenesisBlock().GetHash()))
+======= */
+    //if (m_blockman.m_block_index.count(m_blockman.m_block_index.hash_function()(chainparams.GenesisBlock().GetHash())))
+    if (m_blockman.m_block_index.count(m_blockman.m_block_index.hash_function()(m_params.GenesisBlock().GetHash())))
+//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
         return true;
 
     try {
@@ -4299,8 +4452,8 @@ void CChainState::CheckBlockIndex()
 
     // Build forward-pointing map of the entire block tree.
     std::multimap<CBlockIndex*,CBlockIndex*> forward;
-    for (const std::pair<const uint256, CBlockIndex*>& entry : m_blockman.m_block_index) {
-        forward.insert(std::make_pair(entry.second->pprev, entry.second));
+    for (CBlockIndex* pindex : m_blockman.m_block_index) {
+        forward.insert(std::make_pair(pindex->pprev, pindex));
     }
 
     assert(forward.size() == m_blockman.m_block_index.size());
@@ -4672,8 +4825,25 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pin
 
 std::optional<uint256> ChainstateManager::SnapshotBlockhash() const
 {
+//<<<<<<< HEAD
     LOCK(::cs_main);
     if (m_active_chainstate && m_active_chainstate->m_from_snapshot_blockhash) {
+/* =======
+public:
+    CMainCleanup() {}
+    ~CMainCleanup() {
+        // block headers
+        BlockMap::iterator it1 = g_chainman.BlockIndex().begin();
+        for (; it1 != g_chainman.BlockIndex().end(); it1++)
+            delete *it1;
+        g_chainman.BlockIndex().clear();
+    }
+};
+static CMainCleanup instance_of_cmaincleanup;
+
+Optional<uint256> ChainstateManager::SnapshotBlockhash() const {
+    if (m_active_chainstate != nullptr) { */
+//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
         // If a snapshot chainstate exists, it will always be our active.
         return m_active_chainstate->m_from_snapshot_blockhash;
     }

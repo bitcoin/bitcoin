@@ -19,8 +19,6 @@ FUZZ_TARGET(chain)
         return;
     }
 
-    const uint256 zero{};
-    disk_block_index->phashBlock = &zero;
     (void)disk_block_index->GetBlockHash();
     (void)disk_block_index->GetBlockPos();
     (void)disk_block_index->GetBlockTime();
@@ -59,7 +57,6 @@ FUZZ_TARGET(chain)
     }
 
     CBlockIndex block_index{block_header};
-    block_index.phashBlock = &zero;
     (void)block_index.GetBlockHash();
     (void)block_index.ToString();
 }

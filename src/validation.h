@@ -97,6 +97,33 @@ static const unsigned int DEFAULT_CHECKLEVEL = 3;
 // one 128MB block file + added 15% undo data = 147MB greater for a total of 545MB
 // Setting the target to >= 550 MiB will make it likely we can respect the target.
 static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 550 * 1024 * 1024;
+/* <<<<<<< HEAD
+======= */
+/** Minimum size of a witness commitment structure. Defined in BIP 141. **/
+//static constexpr size_t MINIMUM_WITNESS_COMMITMENT{38};
+
+struct BlockHasher
+{
+    // this used to call `GetCheapHash()` in uint256, which was later moved; the
+    // cheap hash function simply calls ReadLE64() however, so the end result is
+    // identical
+    mutable CBlockIndex mock;
+    BlockHasher() : mock() {};
+    size_t operator()(CBlockIndex* const& ptr) const { return ReadLE64(ptr->GetBlockHash().begin()); }
+    // Helper for querying by hash
+    // e.g., map.find(map.hash_function()(h))
+    CBlockIndex* operator()(const uint256& hash) {
+        mock.m_hash_block = hash;
+        return &mock;
+    }
+};
+
+
+struct BlockEqual
+{
+    bool operator()(CBlockIndex* const& ptr, CBlockIndex* const& ptr2) const { return ptr->GetBlockHash() == ptr2->GetBlockHash(); }
+};
+//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
 
 /** Current sync state passed to tip changed callbacks. */
 enum class SynchronizationState {
@@ -106,7 +133,13 @@ enum class SynchronizationState {
 };
 
 extern RecursiveMutex cs_main;
+/* <<<<<<< HEAD
 typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
+======= */
+extern CBlockPolicyEstimator feeEstimator;
+extern CTxMemPool mempool;
+typedef std::unordered_set<CBlockIndex*, BlockHasher, BlockEqual> BlockMap;
+//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
 extern Mutex g_best_block_mutex;
 extern std::condition_variable g_best_block_cv;
 extern uint256 g_best_block;

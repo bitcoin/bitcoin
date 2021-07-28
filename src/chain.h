@@ -137,8 +137,8 @@ enum BlockStatus: uint32_t {
 class CBlockIndex
 {
 public:
-    //! pointer to the hash of the block, if any. Memory is owned by this CBlockIndex
-    const uint256* phashBlock{nullptr};
+    //! hash of the block. m_hash_block.IsNull() if there is not yet a hash
+    uint256 m_hash_block;
 
     //! pointer to the index of the predecessor of this block
     CBlockIndex* pprev{nullptr};
@@ -243,9 +243,9 @@ public:
         return block;
     }
 
-    uint256 GetBlockHash() const
+    const uint256& GetBlockHash() const
     {
-        return *phashBlock;
+        return m_hash_block;
     }
 
     /**

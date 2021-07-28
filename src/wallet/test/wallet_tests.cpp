@@ -339,13 +339,13 @@ static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lock
     CBlockIndex* block = nullptr;
     if (blockTime > 0) {
         LOCK(cs_main);
-        auto inserted = chainman.BlockIndex().emplace(GetRandHash(), new CBlockIndex);
+        auto pblock = new CBlockIndex;
+        pblock->m_hash_block = GetRandHash();
+        auto inserted = chainman.BlockIndex().emplace(pblock);
         assert(inserted.second);
-        const uint256& hash = inserted.first->first;
-        block = inserted.first->second;
+        block = *inserted.first;
         block->nTime = blockTime;
-        block->phashBlock = &hash;
-        confirm = {CWalletTx::Status::CONFIRMED, block->nHeight, hash, 0};
+        confirm = {CWalletTx::Status::CONFIRMED, block->nHeight, block->GetBlockHash(), 0};
     }
 
     // If transaction is already in map, to avoid inconsistencies, unconfirmation

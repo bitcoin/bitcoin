@@ -1578,10 +1578,17 @@ static RPCHelpMan getchaintips()
     std::set<const CBlockIndex*> setOrphans;
     std::set<const CBlockIndex*> setPrevs;
 
+/* <<<<<<< HEAD
     for (const std::pair<const uint256, CBlockIndex*>& item : chainman.BlockIndex()) {
         if (!active_chain.Contains(item.second)) {
             setOrphans.insert(item.second);
             setPrevs.insert(item.second->pprev);
+======= */
+    for (CBlockIndex* pindex : chainman.BlockIndex()) {
+        if (!chainman.ActiveChain().Contains(pindex)) {
+            setOrphans.insert(pindex);
+            setPrevs.insert(pindex->pprev);
+//>>>>>>> Refactor BlockMap to use an unordered_set instead of an unordered_map
         }
     }
 
@@ -1599,7 +1606,7 @@ static RPCHelpMan getchaintips()
     for (const CBlockIndex* block : setTips) {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("height", block->nHeight);
-        obj.pushKV("hash", block->phashBlock->GetHex());
+        obj.pushKV("hash", block->m_hash_block.GetHex());
 
         const int branchLen = block->nHeight - active_chain.FindFork(block)->nHeight;
         obj.pushKV("branchlen", branchLen);
