@@ -151,7 +151,7 @@ MACHO_ALLOWED_LIBRARIES = {
 'QuartzCore', # animation
 }
 
-PE_ALLOWED_LIBRARIES = {
+PE_ALLOWED_LIBRARIES = {libname.lower() for libname in (
 'ADVAPI32.dll', # security & registry
 'IPHLPAPI.DLL', # IP helper API
 'KERNEL32.dll', # win32 base APIs
@@ -172,7 +172,7 @@ PE_ALLOWED_LIBRARIES = {
 'VERSION.dll', # version checking
 'WINMM.dll', # WinMM audio API
 'WTSAPI32.dll', # Remote Desktop
-}
+)}
 
 def check_version(max_versions, version, arch) -> bool:
     (lib, _, ver) = version.rpartition('_')
@@ -248,7 +248,7 @@ def check_MACHO_ld64(binary) -> bool:
 def check_PE_libraries(binary) -> bool:
     ok: bool = True
     for dylib in binary.libraries:
-        if dylib not in PE_ALLOWED_LIBRARIES:
+        if dylib.lower() not in PE_ALLOWED_LIBRARIES:
             print(f'{dylib} is not in ALLOWED_LIBRARIES!')
             ok = False
     return ok
