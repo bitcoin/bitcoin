@@ -4855,9 +4855,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         LOCK(g_nftMgr->requestLock);
                         time_t now;
                         time(&now);
-                        std::map<std::string, time_t>::iterator i = g_nftMgr->requestAssetClass.begin();
+                        std::map<std::string, sCacheTiming>::iterator i = g_nftMgr->requestAssetClass.begin();
                         while (i != g_nftMgr->requestAssetClass.end()) {
-                            if (now - i->second > 10) { //TODO - hysterisis - could cause a DOS attack by loading lots of NFT hashes and not loading the assets
+                            if (now - i->second.lastAttempt > i->second.checkInterval) {
+                                i->second.numRequests++;
+                                if ((i->second.numRequests % 3) == 0)
+                                    i->second.checkInterval *= 2;
                                 if (!g_nftMgr->assetClassInDatabase(i->first)) {
                                     if (pnode->GetCommonVersion() >= NFT_RELAY_VERSION) {
                                         LogPrint(BCLog::NET, "requesting NFT asset class %s to peer=%d\n", i->first.c_str(), pnode->GetId());
@@ -4868,7 +4871,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                                         msg.m_type = NetMsgType::REQNFTASSETCLASS;
                                         msg.data = vecNFTHex;
                                         m_connman.PushMessage(pnode, std::move(msg));
-                                        i->second = now;
+                                        i->second.lastAttempt = now;
                                     }
                                 }
                             }
@@ -4887,9 +4890,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     LOCK(g_nftMgr->requestLock);
                     time_t now;
                     time(&now);
-                    std::map<std::string, time_t>::iterator i = g_nftMgr->requestAsset.begin();
+                    std::map<std::string, sCacheTiming>::iterator i = g_nftMgr->requestAsset.begin();
                     while (i != g_nftMgr->requestAsset.end()) {
-                        if (now - i->second > 10) { //TODO - hysterisis - could cause a DOS attack by loading lots of NFT hashes and not loading the assets
+                        if (now - i->second.lastAttempt > i->second.checkInterval) {
+                            i->second.numRequests++;
+                            if ((i->second.numRequests % 3) == 0)
+                                i->second.checkInterval *= 2;
                             if (!g_nftMgr->assetInDatabase(i->first)) {
                                 if (pnode->GetCommonVersion() >= NFT_RELAY_VERSION) {
                                     LogPrint(BCLog::NET, "requesting NFT asset %s to peer=%d\n", i->first.c_str(), pnode->GetId());
@@ -4900,7 +4906,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                                     msg.m_type = NetMsgType::REQNFTASSET;
                                     msg.data = vecNFTHex;
                                     m_connman.PushMessage(pnode, std::move(msg));
-                                    i->second = now;
+                                    i->second.lastAttempt = now;
                                 }
                             }
                         }

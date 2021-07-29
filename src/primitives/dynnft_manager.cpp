@@ -97,9 +97,11 @@ void CNFTManager::addNFTAssetClass(CNFTAssetClass* assetClass) {
     //if we are requesting this asset class, delete from request queue
     {
         LOCK(requestLock);
-        std::map<std::string,time_t>::iterator i = requestAssetClass.find(assetClass->hash);
-        if (i != requestAssetClass.end())
+        std::map<std::string,sCacheTiming>::iterator i = requestAssetClass.find(assetClass->hash);
+        if (i != requestAssetClass.end()) {
+            free(&(i->second));
             requestAssetClass.erase(i);
+        }
     }
 
 
@@ -139,9 +141,11 @@ void CNFTManager::addNFTAsset(CNFTAsset* asset) {
         //if we are requesting this asset, delete from request queue
     {
         LOCK(requestLock);
-        std::map<std::string, time_t>::iterator i = requestAsset.find(asset->hash);
-        if (i != requestAsset.end())
+        std::map<std::string, sCacheTiming>::iterator i = requestAsset.find(asset->hash);
+        if (i != requestAsset.end()) {
+            free(&(i->second));
             requestAsset.erase(i);
+        }
     }
 
 
@@ -197,7 +201,11 @@ void CNFTManager::queueAssetClassRequest(std::string hash) {
         if (requestAssetClass.find(hash) == requestAssetClass.end()) {
             time_t now;
             time(&now);
-            requestAssetClass.emplace(hash, now);
+            sCacheTiming* t = (sCacheTiming*)malloc(sizeof(sCacheTiming));
+            t->checkInterval = 10;
+            t->numRequests = 0;
+            t->lastAttempt = now;
+            requestAssetClass.emplace(hash, *t);
         }
     }
 }
@@ -209,7 +217,11 @@ void CNFTManager::queueAssetRequest(std::string hash) {
         if (requestAsset.find(hash) == requestAsset.end()) {
             time_t now;
             time(&now);
-            requestAsset.emplace(hash, now);
+            sCacheTiming* t = (sCacheTiming*)malloc(sizeof(sCacheTiming));
+            t->checkInterval = 10;
+            t->numRequests = 0;
+            t->lastAttempt = now;
+            requestAsset.emplace(hash, *t);
         }
     }
 }

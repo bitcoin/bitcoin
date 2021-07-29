@@ -9,6 +9,15 @@
 #include <util/system.h>
 
 
+//stores items needed to implement hysterisis on requesting NFT data
+//starts at 10 second retry interval
+//after 3 requsests the retry interval doubles
+struct sCacheTiming {
+    time_t lastAttempt;
+    int numRequests;
+    int checkInterval;
+};
+
 class CNFTManager
 {
 private:
@@ -44,8 +53,8 @@ public:
 
 
     // stores the last timestamp for each asset class hash or asset hash requested
-    std::map<std::string, time_t> requestAssetClass;
-    std::map<std::string, time_t> requestAsset;
+    std::map<std::string, sCacheTiming> requestAssetClass;
+    std::map<std::string, sCacheTiming> requestAsset;
     RecursiveMutex requestLock;
 
     // if we are not storing the NFT database, keep a cache of NFT data so that we can relay to requesting peers
