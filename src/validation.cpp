@@ -3911,7 +3911,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                     int iVout = 0;
                     while ((!txoutFound) && (iVout < block.vtx[ivtx].get()->vout.size())) {
                         CTxDestination address;
-                        const CScript& scriptPubKey = block.vtx[i].get()->vout[iVout].scriptPubKey;
+                        const CScript& scriptPubKey = block.vtx[ivtx].get()->vout[iVout].scriptPubKey;
                         if ((scriptPubKey[0] == OP_RETURN) && (scriptPubKey.size() > 10)) {
                             if ((scriptPubKey[2] == 'c') && (scriptPubKey[3] == 'o')) {         //todo - finish the rest of "contract"
                                 std::vector<unsigned char> vecOrigScript;
@@ -4039,17 +4039,22 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                             newOwner += cNFTdata[i];
 
 
-                        std::vector<unsigned char> vecOrigScript;
-                        for (int s = 11; s < vout.scriptPubKey.size(); s++)
-                            vecOrigScript.push_back(scriptPubKey.data()[s]);
-                        CScript origScript (vecOrigScript.begin(), vecOrigScript.end());
-                        bool fValidAddress = ExtractDestination(origScript, address);
-
-                        CTxDestination address;
-                        bool fValidAddress = ExtractDestination(vout.scriptPubKey, address);
                         std::string strCurrentOwner;
-                        if (fValidAddress)
-                            strCurrentOwner = EncodeDestination(address);
+                        //find txout associated with the send command - the amount must be 10000 atom
+                        bool txoutFound = false;
+                        int iVout = 0;
+                        while ((!txoutFound) && (iVout < block.vtx[ivtx].get()->vout.size())) {
+                            if (block.vtx[ivtx].get()->vout[iVout].nValue == 10000) {
+                                CTxDestination address;
+                                bool fValidAddress = ExtractDestination(block.vtx[ivtx].get()->vout[iVout].scriptPubKey, address);
+                                if (fValidAddress) {
+                                    strCurrentOwner = EncodeDestination(address);
+                                    txoutFound = true;
+                                } else
+                                    iVout++;
+                            } else
+                                iVout++;
+                        }
 
                         if (transferType == 0) {
                             if (g_nftMgr->assetClassInDatabase(hash)) {
