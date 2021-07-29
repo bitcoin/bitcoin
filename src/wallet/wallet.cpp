@@ -1043,6 +1043,8 @@ bool CWallet::AccountMove(std::string strFrom, std::string strTo, CAmount nAmoun
 
 bool CWallet::GetLabelDestination(CTxDestination &dest, const std::string& label, bool bForceNew)
 {
+    AssertLockHeld(cs_wallet);
+
     WalletBatch batch(*database);
 
     CAccount account;
@@ -2474,6 +2476,8 @@ CAmount CWalletTx::GetAnonymizedCredit(const CCoinControl* coinControl) const
     if (!pwallet)
         return 0;
 
+    AssertLockHeld(pwallet->cs_wallet);
+
     // Exclude coinbase and conflicted txes
     if (IsCoinBase() || GetDepthInMainChain() < 0)
         return 0;
@@ -2513,6 +2517,8 @@ CAmount CWalletTx::GetDenominatedCredit(bool unconfirmed, bool fUseCache) const
 {
     if (pwallet == nullptr)
         return 0;
+
+    AssertLockHeld(pwallet->cs_wallet);
 
     // Must wait until coinbase is safely deep enough in the chain before valuing it
     if (IsCoinBase() && GetBlocksToMaturity() > 0)
@@ -3725,6 +3731,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                 }
 
                 auto calculateFee = [&](CAmount& nFee) -> bool {
+                    AssertLockHeld(cs_wallet);
                     nBytes = CalculateMaximumSignedTxSize(txNew, this, coin_control.fAllowWatchOnly);
                     if (nBytes < 0) {
                         strFailReason = _("Signing transaction failed");
