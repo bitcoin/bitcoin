@@ -51,6 +51,9 @@ public:
     CNFTAssetClass* retrieveAssetClassFromDatabase(std::string hash);
     CNFTAsset* retrieveAssetFromDatabase(std::string hash);
 
+    void updateAssetClassOwner(std::string hash, std::string newOwner);
+    void updateAssetOwner(std::string hash, std::string newOwner);
+
 
     // stores the last timestamp for each asset class hash or asset hash requested
     std::map<std::string, sCacheTiming> requestAssetClass;

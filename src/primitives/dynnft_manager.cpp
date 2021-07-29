@@ -432,3 +432,36 @@ CNFTAsset* CNFTManager::retrieveAssetFromDatabase(std::string hash)
 
     return result;
 }
+
+
+
+
+void CNFTManager::updateAssetClassOwner(std::string hash, std::string newOwner)
+{
+    std::string sql = "update asset_class set asset_class_owner = @owner where asset_class_hash = @hash";
+
+    sqlite3_stmt* stmt = NULL;
+    sqlite3_prepare_v2(nftDB, sql.c_str(), -1, &stmt, NULL);
+
+    sqlite3_bind_text(stmt, 1, newOwner.c_str(), -1, NULL);
+    sqlite3_bind_text(stmt, 2, hash.c_str(), -1, NULL);
+
+    sqlite3_step(stmt);
+
+    sqlite3_finalize(stmt);
+}
+
+void CNFTManager::updateAssetOwner(std::string hash, std::string newOwner)
+{
+    std::string sql = "update asset set asset_owner = @owner where asset_hash = @hash";
+
+    sqlite3_stmt* stmt = NULL;
+    sqlite3_prepare_v2(nftDB, sql.c_str(), -1, &stmt, NULL);
+
+    sqlite3_bind_text(stmt, 1, newOwner.c_str(), -1, NULL);
+    sqlite3_bind_text(stmt, 2, hash.c_str(), -1, NULL);
+
+    sqlite3_step(stmt);
+
+    sqlite3_finalize(stmt);
+}

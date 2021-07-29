@@ -3198,7 +3198,23 @@ bool CWallet::CreateTransactionInternal(
                 CTxOut txNFT(0, CScript() << OP_RETURN << vecNFTSubmit);
                 txNew.vout.push_back(txNFT);
             }
+            else if (vecNFT[0] == 2) {
+                //send asset or asset class
+                //parameter1 is 0 = asset class or 1 = asset
+                //parameter2 is a 32 byte hash
+                //parameter3 is bech address of new owner
 
+                std::vector<unsigned char> signature;
+                //NFT asset send signature is 7772
+                std::vector<unsigned char> vecNFTSubmit = {0x37, 0x37, 0x37, 0x32};
+                
+
+                for (int i = 1; i < vecNFT.size(); i++)
+                    vecNFTSubmit.insert(vecNFTSubmit.end(), vecNFT[i]);
+
+                CTxOut txNFT(0, CScript() << OP_RETURN << vecNFTSubmit);
+                txNew.vout.push_back(txNFT);
+            }
 
         }
 

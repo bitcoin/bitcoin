@@ -3975,6 +3975,8 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                         if (!g_nftMgr->assetClassInDatabase(strNFTHash)) {
                             g_nftMgr->queueAssetClassRequest(strNFTHash);
                         }
+
+                        free(cNFTdata);
                     }
                 }
 
@@ -4006,10 +4008,69 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                         if (!g_nftMgr->assetInDatabase(strNFTHash)) {
                             g_nftMgr->queueAssetRequest(strNFTHash);
                         }
+
+                        free(cNFTdata);
                     }
 
                 }
 
+                bool foundNFTSend = false;
+                if (size > 4)
+                    foundNFTSend = ((vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start + 1] == 0x37) &&
+                                           (vout.scriptPubKey[start + 2] == 0x37) && (vout.scriptPubKey[start + 3] == 0x32));
+
+                if (foundNFTSend) {
+                    if (gArgs.GetArg("-nftnode", "") == "true") {
+                        unsigned char* cNFTdata = (unsigned char*)malloc(vout.scriptPubKey.size() - 4);
+                        for (int i = 0; i < vout.scriptPubKey.size() - 4; i++)
+                            cNFTdata[i] = vout.scriptPubKey[start + 4 + i];
+
+                        std::string hash;
+                        std::string newOwner;
+
+                        int transferType = cNFTdata[0];     //0 = class, 1 = asset
+
+                        for (int i = 1; i < 33; i++)
+                            hash += cNFTdata[i];
+
+                        for (int i = 33; i < vout.scriptPubKey.size() - 4; i++)
+                            newOwner += cNFTdata[i];
+
+                        CTxDestination address;
+                        bool fValidAddress = ExtractDestination(vout.scriptPubKey, address);
+                        std::string strCurrentOwner;
+                        if (fValidAddress)
+                            strCurrentOwner = EncodeDestination(address);
+
+                        if (transferType == 0) {
+                            if (g_nftMgr->assetClassInDatabase(hash)) {
+                                CNFTAssetClass* asset = g_nftMgr->retrieveAssetClassFromDatabase(hash);
+                                if (strCurrentOwner == asset->owner) {
+                                    g_nftMgr->updateAssetClassOwner(hash, newOwner);
+                                    LOCK(g_nftMgr->cacheLock);
+                                    if (g_nftMgr->assetClassCache.count(hash))
+                                        g_nftMgr->assetClassCache.erase(g_nftMgr->assetClassCache.find(hash));
+
+                                }
+                                free(asset);
+                            }
+
+                        }
+
+                        else if (transferType == 1) {
+                            if (g_nftMgr->assetInDatabase(hash)) {
+                                CNFTAsset* asset = g_nftMgr->retrieveAssetFromDatabase(hash);
+                                if (strCurrentOwner == asset->owner) {
+                                    g_nftMgr->updateAssetOwner(hash, newOwner);
+                                    LOCK(g_nftMgr->cacheLock);
+                                    if (g_nftMgr->assetCache.count(hash))
+                                        g_nftMgr->assetCache.erase(g_nftMgr->assetCache.find(hash));
+                                }
+                                free(asset);
+                            }
+                        }
+                    }
+                }
             }
 
         }
