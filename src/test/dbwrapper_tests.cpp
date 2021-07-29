@@ -182,15 +182,15 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
         char key_res;
         uint256 val_res;
 
-        it->GetKey(key_res);
-        it->GetValue(val_res);
+        BOOST_REQUIRE(it->GetKey(key_res));
+        BOOST_REQUIRE(it->GetValue(val_res));
         BOOST_CHECK_EQUAL(key_res, key);
         BOOST_CHECK_EQUAL(val_res.ToString(), in.ToString());
 
         it->Next();
 
-        it->GetKey(key_res);
-        it->GetValue(val_res);
+        BOOST_REQUIRE(it->GetKey(key_res));
+        BOOST_REQUIRE(it->GetValue(val_res));
         BOOST_CHECK_EQUAL(key_res, key2);
         BOOST_CHECK_EQUAL(val_res.ToString(), in2.ToString());
 

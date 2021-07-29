@@ -133,7 +133,7 @@ struct TestArgsManager : public ArgsManager
             m_config_args.clear();
         }
         std::string error;
-        ReadConfigStream(streamConfig, error);
+        BOOST_REQUIRE(ReadConfigStream(streamConfig, error));
     }
     void SetNetworkOnlyArg(const std::string arg)
     {
