@@ -680,4 +680,35 @@ BOOST_AUTO_TEST_CASE(rpc_arg_helper)
     CheckRpc(params, UniValue{JSON(R"([5, "hello", 4, "test", true, 1.23, "world"])")}, check_positional);
 }
 
+BOOST_AUTO_TEST_CASE(rpc_arg_type_per_name)
+{
+    // An options object in the position of the "flag" boolean it replaced,
+    // which is still accepted there.
+    const std::vector<RPCArg> params{
+        {"req", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
+        {"options|flag", {RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Type::BOOL}, RPCArg::Optional::OMITTED, "",
+            {
+                {"flag", RPCArg::Type::BOOL, RPCArg::Default{true}, "", RPCArgOptions{.also_positional = true}},
+                {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""},
+            }},
+    };
+    RPCMethod::RPCMethodImpl no_op = [](const RPCMethod&, const JSONRPCRequest&) -> UniValue { return UniValue{}; };
+
+    // Either type is accepted by position, and any other type is rejected.
+    CheckRpc(params, JSON(R"(["a", true])"), no_op);
+    CheckRpc(params, JSON(R"(["a", {"flag": false, "label": "b"}])"), no_op);
+    BOOST_CHECK_EXCEPTION(CheckRpc(params, JSON(R"(["a", "true"])"), no_op), UniValue,
+                          HasJSON(R"({"code":-3,"message":"Wrong type passed:\n{\n    \"Position 2 (options|flag)\": \"JSON value of type string is not of expected type object\"\n}"})"));
+
+    // Each name is listed with its own type, and the options only once.
+    const RPCMethod rpc{"dummy", "description", params, RPCResult{RPCResult::Type::NONE, "", ""}, RPCExamples{""}};
+    BOOST_CHECK_EQUAL(rpc.GetArgMap().write(), R"([["dummy",0,"req",true],["dummy",1,"options",false],["dummy",1,"flag",false],["dummy",1,"label",true],["dummy",1,"flag",false]])");
+
+    // The number of types has to match the number of names.
+    test_only_CheckFailuresAreExceptionsNotAborts mock_checks{};
+    BOOST_CHECK_THROW((RPCArg{"options", {RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Type::BOOL}, RPCArg::Optional::OMITTED, ""}), NonFatalCheckError);
+    // An object of named options has to be the first type.
+    BOOST_CHECK_THROW((RPCArg{"flag|options", {RPCArg::Type::BOOL, RPCArg::Type::OBJ_NAMED_PARAMS}, RPCArg::Optional::OMITTED, ""}), NonFatalCheckError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
