@@ -17,7 +17,6 @@ signed-integer-overflow:policy/feerate.cpp
 # list is used to suppress -fsanitize=integer warnings when running our CI UBSan
 # job.
 unsigned-integer-overflow:*/include/c++/
-unsigned-integer-overflow:addrman.cpp
 unsigned-integer-overflow:arith_uint256.h
 unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
@@ -45,7 +44,6 @@ unsigned-integer-overflow:validation.cpp
 implicit-integer-sign-change:*/include/boost/
 implicit-integer-sign-change:*/include/c++/
 implicit-integer-sign-change:*/new_allocator.h
-implicit-integer-sign-change:addrman.h
 implicit-integer-sign-change:arith_uint256.cpp
 implicit-integer-sign-change:bech32.cpp
 implicit-integer-sign-change:bloom.cpp
@@ -80,8 +78,6 @@ implicit-integer-sign-change:validation.cpp
 implicit-integer-sign-change:zmq/zmqpublishnotifier.cpp
 implicit-signed-integer-truncation,implicit-integer-sign-change:chain.h
 implicit-signed-integer-truncation,implicit-integer-sign-change:test/skiplist_tests.cpp
-implicit-signed-integer-truncation:addrman.cpp
-implicit-signed-integer-truncation:addrman.h
 implicit-signed-integer-truncation:chain.h
 implicit-signed-integer-truncation:crypto/
 implicit-signed-integer-truncation:cuckoocache.h
