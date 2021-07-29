@@ -317,6 +317,12 @@ public:
 
         uint8_t compat;
         s >> compat;
+        if (compat < INCOMPATIBILITY_BASE) {
+            throw std::ios_base::failure(strprintf(
+                "Corrupt addrman database file header; its compatibility base is %u "
+                "but the minimum supported by this version of %s is %u.",
+                compat, PACKAGE_NAME, INCOMPATIBILITY_BASE));
+        }
         const uint8_t lowest_compatible = compat - INCOMPATIBILITY_BASE;
         if (lowest_compatible > FILE_FORMAT) {
             throw std::ios_base::failure(strprintf(
