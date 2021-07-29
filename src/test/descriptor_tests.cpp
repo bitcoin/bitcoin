@@ -91,6 +91,7 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
             BOOST_CHECK_EQUAL(spks.size(), ref.size());
             for (size_t n = 0; n < spks.size(); ++n) {
                 BOOST_CHECK_EQUAL(ref[n], HexStr(spks[n]));
+                BOOST_CHECK_EQUAL(IsSolvable(Merge(key_provider, script_provider), spks[n]), (flags & UNSOLVABLE) == 0);
 
                 if (flags & SIGNABLE) {
                     CMutableTransaction spend;
