@@ -1275,13 +1275,13 @@ private:
 /** Dump binary message to file, with timestamp */
 void CaptureMessageToFile(const CAddress& addr,
                           const std::string& msg_type,
-                          const Span<const unsigned char>& data,
+                          Span<const unsigned char> data,
                           bool is_incoming);
 
 /** Defaults to `CaptureMessageToFile()`, but can be overridden by unit tests. */
 extern std::function<void(const CAddress& addr,
                           const std::string& msg_type,
-                          const Span<const unsigned char>& data,
+                          Span<const unsigned char> data,
                           bool is_incoming)>
     CaptureMessage;
 
