@@ -207,8 +207,8 @@ mkdir -p "$outsigdir"
         exit 1
     fi
 
-    temp_codesigned="$(mktemp)"
-    trap 'rm -rf -- "$temp_codesigned"' EXIT
+    temp_all="$(mktemp)"
+    trap 'rm -rf -- "$temp_all"' EXIT
 
     if (( ${#codesigned_fragments[@]} )); then
         # Note: all.SHA256SUMS attests to all of $sha256sum_fragments, but is
@@ -216,20 +216,19 @@ mkdir -p "$outsigdir"
         cat "${sha256sum_fragments[@]}" \
             | sort -u \
             | sort -k2 \
-            | sed 's/$/\r/' \
             | rfc4880_normalize_document \
-                > "$temp_codesigned"
-        if [ -e codesigned.SHA256SUMS ]; then
+                > "$temp_all"
+        if [ -e all.SHA256SUMS ]; then
             # The SHA256SUMS already exists, make sure it's exactly what we
             # expect, error out if not
-            if diff -u all.SHA256SUMS "$temp_codesigned"; then
+            if diff -u all.SHA256SUMS "$temp_all"; then
                 echo "An all.SHA256SUMS file already exists for '${VERSION}' and is up-to-date."
             else
                 shasum_already_exists all.SHA256SUMS
                 exit 1
             fi
         else
-            mv "$temp_codesigned" codesigned.SHA256SUMS
+            mv "$temp_all" all.SHA256SUMS
         fi
     else
         # It is fine to have the codesigned outputs be missing (perhaps the
