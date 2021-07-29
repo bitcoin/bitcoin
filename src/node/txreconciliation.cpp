@@ -146,6 +146,14 @@ public:
     /** Same as non-snapshot set above */
     std::map<uint32_t, uint256> m_snapshot_short_id_mapping;
 
+    /**
+     * A peer could announce a transaction to us during reconciliation and after we snapshoted
+     * the initial set. We can't remove this new transaction from the snapshot, because
+     * then we won't be able to compute a valid extension (for the sketch already transmitted).
+     * Instead, we just remember those transaction, and not announce them when we announce
+     * stuff from the snapshot.
+     */
+    std::set<uint256> m_announced_during_extension;
 
     /** Keep track of the reconciliation phase with the peer. */
     Phase m_phase{Phase::NONE};
@@ -228,6 +236,25 @@ public:
     std::vector<uint256> GetAllTransactions() const
     {
         return std::vector<uint256>(m_local_set.begin(), m_local_set.end());
+    }
+
+    /**
+     * Once we are fully done with the reconciliation we initiated, prepare the state for the
+     * following reconciliations we initiate.
+     */
+    void FinalizeInitByUs(bool clear_local_set)
+    {
+        assert(m_we_initiate);
+        if (clear_local_set) {
+            m_short_id_mapping.clear();
+            m_local_set.clear();
+        }
+        m_local_set_snapshot.clear();
+        m_announced_during_extension.clear();
+        // This is currently belt-and-suspenders, as the code should work even without these calls.
+        m_capacity_snapshot = 0;
+        m_remote_sketch_snapshot.clear();
+        m_snapshot_short_id_mapping.clear();
     }
 
     /**
@@ -408,7 +435,7 @@ private:
             txs_to_announce = recon_state.GetAllTransactions();
 
             // Update local reconciliation state for the peer.
-            recon_state.m_local_set.clear();
+            recon_state.FinalizeInitByUs(true);
             recon_state.m_phase = Phase::NONE;
 
             result = false;
@@ -432,7 +459,7 @@ private:
             recon_state.GetRelevantIDsFromShortIDs(differences, txs_to_request, txs_to_announce);
 
             // Update local reconciliation state for the peer.
-            recon_state.m_local_set.clear();
+            recon_state.FinalizeInitByUs(true);
             recon_state.m_phase = Phase::NONE;
 
             result = true;
@@ -538,7 +565,12 @@ private:
         if (!IsPeerRegistered(peer_id)) return false;
         auto& recon_state = std::get<TxReconciliationState>(m_states.find(peer_id)->second);
 
-        return recon_state.m_local_set.erase(wtxid_to_remove) > 0;
+        const bool removed = recon_state.m_local_set.erase(wtxid_to_remove) > 0;
+        if (recon_state.m_local_set_snapshot.find(wtxid_to_remove) !=
+            recon_state.m_local_set_snapshot.end()) {
+                recon_state.m_announced_during_extension.insert(wtxid_to_remove);
+            }
+        return removed;
     }
 
     bool IsPeerNextToReconcileWith(NodeId peer_id, std::chrono::microseconds now) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
