@@ -99,7 +99,6 @@ void CNFTManager::addNFTAssetClass(CNFTAssetClass* assetClass) {
         LOCK(requestLock);
         std::map<std::string,sCacheTiming>::iterator i = requestAssetClass.find(assetClass->hash);
         if (i != requestAssetClass.end()) {
-            free(&(i->second));
             requestAssetClass.erase(i);
         }
     }
@@ -143,7 +142,6 @@ void CNFTManager::addNFTAsset(CNFTAsset* asset) {
         LOCK(requestLock);
         std::map<std::string, sCacheTiming>::iterator i = requestAsset.find(asset->hash);
         if (i != requestAsset.end()) {
-            free(&(i->second));
             requestAsset.erase(i);
         }
     }
