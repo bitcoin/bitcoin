@@ -367,9 +367,9 @@ public:
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
         consensus.vchSYSXERC20Manager = ParseHex("443d9a14fb6ba2A45465bEC3767186f404Ccea25");
         consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");
-        consensus.nBridgeStartBlock = 1000;
-        consensus.nUTXOAssetsBlock = 545000;
-        consensus.nNEVMStartBlock = 1348000;
+        consensus.nBridgeStartBlock = 0;
+        consensus.nNEVMStartBlock = 205;
+        consensus.nUTXOAssetsBlock = 0;
         consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 10000;
         consensus.DIP0003Height = 545000;
         consensus.DIP0003EnforcementHeight = 545000;
