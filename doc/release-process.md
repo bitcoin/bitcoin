@@ -159,6 +159,9 @@ Codesigner only: Sign the windows binaries:
     Enter the passphrase for the key when prompted
     signature-win.tar.gz will be created
 
+Code-signer only: It is advised to test that the code signature attaches properly prior to tagging by performing the `guix-codesign` step.
+However if this is done, once the release has been tagged in the bitcoin-detached-sigs repo, the `guix-codesign` step must be performed again in order for the guix attestation to be valid when compared against the attestations of non-codesigner builds.
+
 Codesigner only: Commit the detached codesign payloads:
 
 ```sh
