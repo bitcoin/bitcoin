@@ -3855,9 +3855,9 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
     // Write block to history file
 
-    for (int i = 0; i < block.vtx.size(); i++) {
-        for (int j = 0; j < block.vtx[i].get()->vout.size(); j++) {
-            CTxOut vout = block.vtx[i].get()->vout[j];
+    for (int ivtx = 0; ivtx < block.vtx.size(); ivtx++) {
+        for (int ivout = 0; ivout < block.vtx[ivtx].get()->vout.size(); ivout++) {
+            CTxOut vout = block.vtx[ivtx].get()->vout[ivout];
 
             if (vout.scriptPubKey[0] == OP_RETURN) {
                 uint32_t size = vout.scriptPubKey[1];
@@ -3909,7 +3909,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                     //find txout associated with owner (there might be change, or other txouts)
                     bool txoutFound = false;
                     int iVout = 0;
-                    while ((!txoutFound) && (iVout < block.vtx[i].get()->vout.size())) {
+                    while ((!txoutFound) && (iVout < block.vtx[ivtx].get()->vout.size())) {
                         CTxDestination address;
                         const CScript& scriptPubKey = block.vtx[i].get()->vout[iVout].scriptPubKey;
                         if ((scriptPubKey[0] == OP_RETURN) && (scriptPubKey.size() > 10)) {
@@ -3937,7 +3937,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
                     //add contract to engine and database
                     if (txoutFound) {
-                        g_dynEngine->createContract(block.vtx[i].get()->GetHash().GetHex(), block.GetBlockHeader().GetHash().GetHex(), strOwner, block.vtx[i].get()->vout[iVout].nValue, code);
+                        g_dynEngine->createContract(block.vtx[ivtx].get()->GetHash().GetHex(), block.GetBlockHeader().GetHash().GetHex(), strOwner, block.vtx[ivtx].get()->vout[iVout].nValue, code);
                     }
                     else {
                         //TODO - fail validation
@@ -3955,7 +3955,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                     //if we are not storing the NFT database then nothing to do  (maybe add it to the cache?)
 
                     if (gArgs.GetArg("-nftnode", "") == "true") {
-                        std::vector<unsigned char> vecTXID = ParseHex(block.vtx[i]->GetHash().GetHex());
+                        std::vector<unsigned char> vecTXID = ParseHex(block.vtx[ivtx]->GetHash().GetHex());
                         unsigned char cTXID[32];
                         for (int i = 0; i < 32; i++)
                             cTXID[i] = vecTXID[i];
@@ -3987,7 +3987,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
                 if (foundNFTAssetCreate) {
                     if (gArgs.GetArg("-nftnode", "") == "true") {
-                        std::vector<unsigned char> vecTXID = ParseHex(block.vtx[i]->GetHash().GetHex());
+                        std::vector<unsigned char> vecTXID = ParseHex(block.vtx[ivtx]->GetHash().GetHex());
                         unsigned char cTXID[32];
                         for (int i = 0; i < 32; i++)
                             cTXID[i] = vecTXID[i];
@@ -4021,20 +4021,29 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
                 if (foundNFTSend) {
                     if (gArgs.GetArg("-nftnode", "") == "true") {
-                        unsigned char* cNFTdata = (unsigned char*)malloc(vout.scriptPubKey.size() - 4);
-                        for (int i = 0; i < vout.scriptPubKey.size() - 4; i++)
+                        unsigned char* cNFTdata = (unsigned char*)malloc(size - 4);
+                        for (int i = 0; i < size - 4; i++)
                             cNFTdata[i] = vout.scriptPubKey[start + 4 + i];
 
+                        std::vector<unsigned char> vHash;
                         std::string hash;
                         std::string newOwner;
 
                         int transferType = cNFTdata[0];     //0 = class, 1 = asset
 
                         for (int i = 1; i < 33; i++)
-                            hash += cNFTdata[i];
+                            vHash.push_back(cNFTdata[i]);
+                        hash = HexStr(vHash);
 
-                        for (int i = 33; i < vout.scriptPubKey.size() - 4; i++)
+                        for (int i = 33; i < size - 4; i++)
                             newOwner += cNFTdata[i];
+
+
+                        std::vector<unsigned char> vecOrigScript;
+                        for (int s = 11; s < vout.scriptPubKey.size(); s++)
+                            vecOrigScript.push_back(scriptPubKey.data()[s]);
+                        CScript origScript (vecOrigScript.begin(), vecOrigScript.end());
+                        bool fValidAddress = ExtractDestination(origScript, address);
 
                         CTxDestination address;
                         bool fValidAddress = ExtractDestination(vout.scriptPubKey, address);
