@@ -58,11 +58,12 @@ public:
 
     CWalletTx& AddTxToChain(uint256 nTxHash)
     {
-        auto it = wallet->mapWallet.find(nTxHash);
-        assert(it != wallet->mapWallet.end());
+        std::map<uint256, CWalletTx>::iterator it;
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
+            it = wallet->mapWallet.find(nTxHash);
+            assert(it != wallet->mapWallet.end());
             blocktx = CMutableTransaction(*it->second.tx);
         }
         CreateAndProcessBlock({blocktx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
