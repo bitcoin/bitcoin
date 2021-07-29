@@ -2916,6 +2916,9 @@ bool CWallet::CreateTransactionInternal(
                         */
                     }
 
+
+                    /*
+                    * no need to burn NFT - amounts should be returned to us
                     //if we are loading an NFT, any amount sent is burned
                     if (vecNFT.size() > 0) {
                         std::vector<unsigned char> vecOldScript;
@@ -2927,6 +2930,7 @@ bool CWallet::CreateTransactionInternal(
                         burnScript << OP_RETURN << data << vecOldScript;
                         txout.scriptPubKey = burnScript;
                     }
+                    */
                     
 
                     if (recipient.fSubtractFeeFromAmount)
