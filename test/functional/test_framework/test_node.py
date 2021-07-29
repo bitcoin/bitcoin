@@ -261,7 +261,7 @@ class TestNode():
                     return
                 self.rpc = rpc
                 self.rpc_connected = True
-                self.url = self.rpc.url
+                self.url = self.rpc.rpc_url
                 return
             except JSONRPCException as e:  # Initialization phase
                 # -28 RPC in warmup
