@@ -3980,8 +3980,8 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
                 bool foundNFTAssetCreate = false;
                 if (size > 4)
-                    foundNFTAssetClassCreate = ((vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start] == 0x37) &&
-                                                (vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start] == 0x31));
+                    foundNFTAssetCreate = ((vout.scriptPubKey[start] == 0x37) && (vout.scriptPubKey[start + 1] == 0x37) &&
+                                                (vout.scriptPubKey[start+2] == 0x37) && (vout.scriptPubKey[start+3] == 0x31));
 
                 if (foundNFTAssetCreate) {
                     if (gArgs.GetArg("-nftnode", "") == "true") {

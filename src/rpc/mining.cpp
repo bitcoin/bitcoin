@@ -1115,7 +1115,6 @@ static RPCHelpMan submitNFT()
                 hasher.Write(nftDataHash, 32);
                 hasher.Write((const unsigned char*)owner.c_str(), owner.length());
                 hasher.Finalize(nftHash);
-                free(cNFTdata);
 
                 hasher.Reset();
                 hasher.Write(nftHash, 32);
@@ -1219,7 +1218,11 @@ static RPCHelpMan submitNFT()
 
                 } else
                     result = "invalid-command";
+
+                free(cNFTdata);
             }
+
+
 
             return result;
 
