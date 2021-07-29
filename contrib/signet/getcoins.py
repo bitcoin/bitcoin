@@ -48,4 +48,15 @@ try:
 except:
     print('Unexpected error when contacting faucet:', sys.exc_info()[0])
     exit()
-print(res.text)
+
+# Display the output as per the returned status code
+if res:
+    # When the return code is in between 200 and 400 i.e. successful
+    print(res.text)
+elif res.status_code == 404:
+    print('The specified faucet URL does not exist. Please check for any server issues/typo.')
+elif res.status_code == 429:
+    print('The script does not allow for repeated transactions as the global faucet is rate-limitied to 1 request/IP/day. You can access the faucet website to get more coins manually')
+else:
+    print(f'Returned Error Code {res.status_code}\n{res.text}\n')
+    print('Please check the provided arguments for their validity and/or any possible typo.')
