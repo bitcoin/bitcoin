@@ -1,5 +1,5 @@
 #include <primitives/dynnft_manager.h>
-#include <crypto/aes.h>
+#include <crypto/aes256.hpp>
 
 
 
@@ -110,16 +110,14 @@ void CNFTManager::addNFTAsset(CNFTAsset* asset) {
 
     std::string key = gArgs.GetArg("-nftdbkey", "");
 
-    AES256Encrypt enc((const unsigned char*)key.data());
-    std::string encryptedData;
-    encryptedData.resize(asset->binaryData.size() + 32);
-    enc.Encrypt((unsigned char*)encryptedData.data(), (const unsigned char*)asset->binaryData.data());
+    ByteArray baKey;
+    for (int i = 0; i < key.length(); i++)
+        baKey.push_back(key[i]);
 
-    /*
-    AES256Decrypt dec(key.data());
-    dec.Decrypt(buf.data(), buf.data());
-    */
+    ByteArray plainData = asset->binaryData;
+    ByteArray encryptedData;
 
+    int encryptedLen = Aes256::encrypt(baKey, plainData, encryptedData);
 
     std::string sql = "insert into asset (asset_txn_id, asset_hash, asset_class_hash, asset_metadata, asset_owner, asset_binary_data, asset_serial) values (@txn, @hash, @meta, @owner, @count, @bin, @ser)";
 
@@ -131,7 +129,7 @@ void CNFTManager::addNFTAsset(CNFTAsset* asset) {
     sqlite3_bind_text(stmt, 3, asset->assetClassHash.c_str(), -1, NULL);
     sqlite3_bind_text(stmt, 4, asset->metaData.c_str(), -1, NULL);
     sqlite3_bind_text(stmt, 5, asset->owner.c_str(), -1, NULL);
-    sqlite3_bind_blob(stmt, 6, encryptedData.c_str(), encryptedData.size(), NULL);
+    sqlite3_bind_blob(stmt, 6, encryptedData.data(), encryptedLen, NULL);
     sqlite3_bind_int64(stmt, 7, asset->serial);
 
     sqlite3_step(stmt);
@@ -381,6 +379,8 @@ CNFTAsset* CNFTManager::retrieveAssetFromDatabase(std::string hash)
 {
     CNFTAsset* result = NULL;
 
+    std::vector<unsigned char> encryptedData;
+
     std::string sql = "select asset_txn_id, asset_hash, asset_class_hash, asset_metadata, asset_owner, asset_binary_data, asset_serial from asset where asset_hash = @hash";
     sqlite3_stmt* stmt = NULL;
     sqlite3_prepare_v2(nftDB, sql.c_str(), -1, &stmt, NULL);
@@ -402,11 +402,20 @@ CNFTAsset* CNFTManager::retrieveAssetFromDatabase(std::string hash)
         result->assetClassHash = std::string(cAssetClassHash);
         result->metaData = std::string(cAssetMetaData);
         result->owner = std::string(cAssetOwner);
-        result->binaryData = std::vector<unsigned char>(cAssetBinary, cAssetBinary + iBinarySize);
+        encryptedData = std::vector<unsigned char>(cAssetBinary, cAssetBinary + iBinarySize);
         result->serial = iCount;
     }
 
     sqlite3_finalize(stmt);
+
+
+    std::string key = gArgs.GetArg("-nftdbkey", "");
+
+    ByteArray baKey;
+    for (int i = 0; i < key.length(); i++)
+        baKey.push_back(key[i]);
+
+    int encryptedLen = Aes256::decrypt(baKey, encryptedData, result->binaryData );
 
     if (result != NULL)
         addAssetToCache(result);
