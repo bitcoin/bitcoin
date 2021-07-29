@@ -210,7 +210,7 @@ public:
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 1045909988;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
-        consensus.vchSYSXERC20Manager = ParseHex("FF957eA28b537b34E0c6E6B50c6c938668DD28a0");
+        consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
         consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");
         consensus.nBridgeStartBlock = 348000;
         consensus.nNEVMStartBlock = 1348000;
@@ -354,10 +354,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000004b8e46524f7"); // 550k
+        consensus.nMinimumChainWork = uint256{};
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x0000013d53482bd69c5403f344643668619f77302910e57ffe7b1d375e73cc91"); // 550k
+        consensus.defaultAssumeValid = uint256{};
         consensus.nAuxpowStartHeight = 1;
         consensus.nAuxpowChainId = 8;
         consensus.nAuxpowOldChainId = 4096;
@@ -365,7 +365,7 @@ public:
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 1965866356;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
-        consensus.vchSYSXERC20Manager = ParseHex("443d9a14fb6ba2A45465bEC3767186f404Ccea25");
+        consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
         consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");
         consensus.nBridgeStartBlock = 0;
         consensus.nNEVMStartBlock = 205;
@@ -422,13 +422,13 @@ public:
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         m_is_mockable_chain = false;
 
-        checkpointData = {
+        /*checkpointData = {
             {
                 {360, uint256S("0x00000c04c5926f539074420b40088d4b099d748d07795df891ca391799b6e54c")},
                 {250000, uint256S("0x00000131e97a4cb713338f33b8fa6573c85f1772e4dd7d510ca2281cc0be86e2")},
                 {534114, uint256S("0x0000013d53482bd69c5403f344643668619f77302910e57ffe7b1d375e73cc91")},
             }
-        };
+        };*/
 
         m_assumeutxo_data = MapAssumeutxo{
             // TODO to be specified in a future patch.
