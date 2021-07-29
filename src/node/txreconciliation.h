@@ -97,6 +97,15 @@ public:
     uint16_t m_capacity_snapshot{0};
 
     /**
+     * A peer could announce a transaction to us during reconciliation and after we snapshotted
+     * the initial set. We can't remove this new transaction from the snapshot, because
+     * then we won't be able to compute a valid extension (for the sketch already transmitted).
+     * Instead, we just remember those transactions, and filter them out when we announce
+     * data from the snapshot.
+     */
+    std::set<Wtxid> m_announced_while_reconciling;
+
+    /**
      * In a reconciliation round initiated by us, if we asked for an extension, we want to store
      * the sketch computed/transmitted in the initial step, so that we can use it when sketch extension arrives.
      */
@@ -159,6 +168,9 @@ public:
      */
     void SnapshotLocalSet();
 
+    /** Clears the peer's reconciliation state based on the initiator and during what phase this was called. */
+    void Clear();
+
     /**
      * Be ready to respond to a extension request, to compute the extended sketch over
      * the same initial set (without transactions received during the reconciliation).
@@ -191,6 +203,21 @@ public:
 private:
     /** These values are used to salt short IDs, which is necessary for transaction reconciliations. */
     uint64_t m_k0, m_k1;
+
+    /** Clears the peer's local set. To be called once the reconciliation flow has completed. */
+    void ClearLocalSet()
+    {
+        m_local_set.clear();
+        m_short_id_mapping.clear();
+    }
+
+    /** Clears the snapshot of a peer's local set. To be called once the reconciliation flow has completed. */
+    void ClearLocalSetSnapshot()
+    {
+        m_local_set_snapshot.clear();
+        m_short_id_mapping_snapshot.clear(); // Not really needed, but better safe than sorry
+        m_announced_while_reconciling.clear();
+    }
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXRECONCILIATION_H
