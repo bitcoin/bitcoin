@@ -227,7 +227,7 @@ private:
     int64_t nLastGood GUARDED_BY(cs);
 
     // discriminate entries based on port. Should be false on mainnet/testnet and can be true on devnet/regtest
-    bool discriminatePorts;
+    bool discriminatePorts GUARDED_BY(cs);
 
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;
@@ -291,7 +291,7 @@ protected:
     void SetServices_(const CService &addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Get address info for address
-    CAddrInfo GetAddressInfo_(const CService& addr);
+    CAddrInfo GetAddressInfo_(const CService& addr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
     //! Serialization versions.
