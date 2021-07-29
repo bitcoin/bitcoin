@@ -6105,7 +6105,7 @@ bool GetDescriptorStats(const fs::path filePath, DescriptorDetails& details) {
                 const UniValue& binURLValue = find_value(binValue, "url");
                 if(binURLValue.isStr()) {
                     const UniValue& binChecksumValue = find_value(binValue, "sha256sum");
-                    const UniValue& signatureValue = find_value(binValue, "signature");
+                    const UniValue& signatureValue = find_value(binValue, fTestNet? "signatureT": "signatureM");
                     if(binChecksumValue.isStr() && signatureValue.isStr()) {
                         details.version = versionValue.get_str();
                         details.binURL = binURLValue.get_str();
