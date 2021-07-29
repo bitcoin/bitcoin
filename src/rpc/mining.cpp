@@ -40,6 +40,7 @@
 #include <stdint.h>
 
 #include "global.h"
+#include <boost/algorithm/string/case_conv.hpp>
 
 /**
  * Return average network hashes per second based on the last 'lookup' blocks,
@@ -1040,9 +1041,68 @@ static RPCHelpMan submitblock()
 }
 
 
+static RPCHelpMan getNFT() {
+    // arg0 - string - command - "get-class" or "get-asset"
+    // arg1 - string - hash of nft to get
+
+
+    return RPCHelpMan{
+        "getnft",
+        "\nget NFT from local database.\n"
+        "\n",
+        {
+            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "NFT command: get-class or get-asset"},
+            {"nfthash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hash to get"},
+        },
+        {
+            RPCResult{"Hex encoded NFT data", RPCResult::Type::NONE, "", ""},
+            RPCResult{"Otherwise", RPCResult::Type::STR, "", ""},
+        },
+        RPCExamples{
+            HelpExampleCli("getnft", "\"0123456789012345678901234567890AA\"") + HelpExampleRpc("getnft", "\"0123456789012345678901234567890AA\"")},
+
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::string result = "internal-error";
+
+            if (gArgs.GetArg("-nftnode", "") == "true") {
+                std::string command = request.params[0].get_str();
+                std::string hash = request.params[1].get_str();
+                boost::algorithm::to_lower(hash);
+
+                if (command == "get-class") {
+                    if (g_nftMgr->assetClassInDatabase(hash)) {
+                        CNFTAssetClass* asset = g_nftMgr->retrieveAssetClassFromDatabase(hash);
+                        asset->createSerialData();
+                        result = HexStr(asset->strSerialData);
+                        delete (asset);
+                    }
+
+
+                } else if (command == "get-asset") {
+                    if (g_nftMgr->assetInDatabase(hash)) {
+                        CNFTAsset* asset = g_nftMgr->retrieveAssetFromDatabase(hash);
+                        asset->createSerialData();
+                        result = HexStr(asset->strSerialData);
+                        delete (asset);
+                    }
+
+
+                } else
+                    result = "invalid-command";
+
+            }
+
+
+            return result;
+        },
+    };
+
+}
+
+
 static RPCHelpMan submitNFT()
 {
-    // arg0 - string - command - "AddClass" or "AddAsset"
+    // arg0 - string - command - "add-class" or "add-asset"
     // arg1 - string - data block in hex  (len of meta, meta, len of binary, binary, count or serial)
     // arg2 - string - owner
     // arg3 - string - txid
@@ -1472,6 +1532,8 @@ static const CRPCCommand commands[] =
     { "mining",              &gethashfunction,         },
 
     { "mining",              &submitNFT,         },
+    { "mining",              &getNFT,         },
+
 
 
     { "generating",          &generatetoaddress,       },
