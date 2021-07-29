@@ -1187,7 +1187,12 @@ std::string CSubNet::ToString() const
             if (netmask[i] == 0x00) {
                 break;
             }
-            cidr += NetmaskBits(netmask[i]);
+            const int num_bits{NetmaskBits(netmask[i])};
+            if (num_bits == -1) {
+                // Invalid subnet mask
+                break;
+            }
+            cidr += num_bits;
         }
 
         suffix = strprintf("/%u", cidr);
