@@ -1,0 +1,22 @@
+commit dbd95cdaefdea95307d004f019a1c394cf9389f0
+Author: fanquake <fanquake@gmail.com>
+Date:   Mon Aug 17 20:15:17 2020 +0800
+
+    Remove unused variable in Boost Process
+
+    This causes issues with our linters / CI.
+
+    Can be removed once depends Boost is 1.71.0 or later.
+
+diff --git a/boost/process/detail/posix/wait_group.hpp b/boost/process/detail/posix/wait_group.hpp
+index 9dc249803..2502d9772 100644
+--- a/boost/process/detail/posix/wait_group.hpp
++++ b/boost/process/detail/posix/wait_group.hpp
+@@ -137,7 +137,6 @@ inline bool wait_until(
+
+     do
+     {
+-        int ret_sig = 0;
+         int status;
+         if ((::waitpid(timeout_pid, &status, WNOHANG) != 0)
+             && (WIFEXITED(status) || WIFSIGNALED(status)))
