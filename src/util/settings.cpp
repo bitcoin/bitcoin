@@ -60,9 +60,15 @@ bool ReadSettings(const fs::path& path, std::map<std::string, SettingsValue>& va
     values.clear();
     errors.clear();
 
+    // Ok for file to not exist
+    if (!fs::exists(path)) return true;
+
     fsbridge::ifstream file;
     file.open(path);
-    if (!file.is_open()) return true; // Ok for file not to exist.
+    if (!file.is_open()) {
+      errors.emplace_back(strprintf("%s. Please check permissions.", path.string()));
+      return false;
+    }
 
     SettingsValue in;
     if (!in.read(std::string{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()})) {
