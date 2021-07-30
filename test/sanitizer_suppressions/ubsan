@@ -89,7 +89,6 @@ implicit-signed-integer-truncation:leveldb/
 implicit-signed-integer-truncation:miner.cpp
 implicit-signed-integer-truncation:net.cpp
 implicit-signed-integer-truncation:net_processing.cpp
-implicit-signed-integer-truncation:netaddress.cpp
 implicit-signed-integer-truncation:streams.h
 implicit-signed-integer-truncation:test/arith_uint256_tests.cpp
 implicit-signed-integer-truncation:test/skiplist_tests.cpp
