@@ -14,3 +14,7 @@ export RUN_FUNCTIONAL_TESTS=false
 export RUN_SECURITY_TESTS="true"
 export GOAL="deploy"
 export BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests --without-boost-process"
+
+# Compiler for MinGW-w64 causes false -Wreturn-type warning.
+# See https://sourceforge.net/p/mingw-w64/bugs/306/
+export NO_WERROR=1
