@@ -17,6 +17,7 @@ class ConfArgsTest(SyscoinTestFramework):
         self.num_nodes = 1
         self.supports_cli = False
         self.wallet_names = []
+        self.disable_autoconnect = False
 
     def test_config_file_parser(self):
         self.stop_node(0)
