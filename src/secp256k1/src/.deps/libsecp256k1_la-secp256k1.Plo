@@ -1,0 +1,196 @@
+src/libsecp256k1_la-secp256k1.lo: src/secp256k1.c \
+ /usr/include/stdc-predef.h include/secp256k1.h \
+ /usr/lib/gcc/x86_64-linux-gnu/5/include/stddef.h \
+ include/secp256k1_preallocated.h include/secp256k1.h src/assumptions.h \
+ /usr/lib/gcc/x86_64-linux-gnu/5/include-fixed/limits.h \
+ /usr/lib/gcc/x86_64-linux-gnu/5/include-fixed/syslimits.h \
+ /usr/include/limits.h /usr/include/features.h \
+ /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+ /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+ /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+ /usr/include/x86_64-linux-gnu/gnu/stubs-64.h src/util.h \
+ src/libsecp256k1-config.h /usr/include/stdlib.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib.h \
+ /usr/lib/gcc/x86_64-linux-gnu/5/include/stdint.h /usr/include/stdint.h \
+ /usr/include/x86_64-linux-gnu/bits/wchar.h /usr/include/stdio.h \
+ /usr/include/x86_64-linux-gnu/bits/types.h \
+ /usr/include/x86_64-linux-gnu/bits/typesizes.h /usr/include/libio.h \
+ /usr/include/_G_config.h /usr/include/wchar.h \
+ /usr/lib/gcc/x86_64-linux-gnu/5/include/stdarg.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/sys_errlist.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio2.h src/num_impl.h src/num.h \
+ src/field_impl.h src/field_5x52_impl.h src/field.h src/field_5x52.h \
+ src/field_5x52_asm_impl.h src/scalar_impl.h src/scalar.h \
+ src/scalar_4x64.h src/scalar_4x64_impl.h src/group_impl.h src/group.h \
+ src/ecmult_impl.h /usr/include/string.h \
+ /usr/include/x86_64-linux-gnu/bits/string.h \
+ /usr/include/x86_64-linux-gnu/bits/string2.h /usr/include/endian.h \
+ /usr/include/x86_64-linux-gnu/bits/endian.h \
+ /usr/include/x86_64-linux-gnu/bits/string3.h src/ecmult.h src/scratch.h \
+ src/ecmult_const_impl.h src/ecmult_const.h src/ecmult_gen_impl.h \
+ src/ecmult_gen.h src/hash_impl.h src/hash.h src/ecmult_static_context.h \
+ src/group.h src/ecdsa_impl.h src/ecdsa.h src/eckey_impl.h src/eckey.h \
+ src/scratch_impl.h src/selftest.h src/modules/recovery/main_impl.h \
+ include/secp256k1_recovery.h src/modules/extrakeys/main_impl.h \
+ include/secp256k1_extrakeys.h src/modules/schnorrsig/main_impl.h \
+ include/secp256k1_schnorrsig.h include/secp256k1_extrakeys.h src/hash.h
+
+/usr/include/stdc-predef.h:
+
+include/secp256k1.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/5/include/stddef.h:
+
+include/secp256k1_preallocated.h:
+
+include/secp256k1.h:
+
+src/assumptions.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed/limits.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed/syslimits.h:
+
+/usr/include/limits.h:
+
+/usr/include/features.h:
+
+/usr/include/x86_64-linux-gnu/sys/cdefs.h:
+
+/usr/include/x86_64-linux-gnu/bits/wordsize.h:
+
+/usr/include/x86_64-linux-gnu/gnu/stubs.h:
+
+/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
+
+src/util.h:
+
+src/libsecp256k1-config.h:
+
+/usr/include/stdlib.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdlib.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/5/include/stdint.h:
+
+/usr/include/stdint.h:
+
+/usr/include/x86_64-linux-gnu/bits/wchar.h:
+
+/usr/include/stdio.h:
+
+/usr/include/x86_64-linux-gnu/bits/types.h:
+
+/usr/include/x86_64-linux-gnu/bits/typesizes.h:
+
+/usr/include/libio.h:
+
+/usr/include/_G_config.h:
+
+/usr/include/wchar.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/5/include/stdarg.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
+
+/usr/include/x86_64-linux-gnu/bits/sys_errlist.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdio.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdio2.h:
+
+src/num_impl.h:
+
+src/num.h:
+
+src/field_impl.h:
+
+src/field_5x52_impl.h:
+
+src/field.h:
+
+src/field_5x52.h:
+
+src/field_5x52_asm_impl.h:
+
+src/scalar_impl.h:
+
+src/scalar.h:
+
+src/scalar_4x64.h:
+
+src/scalar_4x64_impl.h:
+
+src/group_impl.h:
+
+src/group.h:
+
+src/ecmult_impl.h:
+
+/usr/include/string.h:
+
+/usr/include/x86_64-linux-gnu/bits/string.h:
+
+/usr/include/x86_64-linux-gnu/bits/string2.h:
+
+/usr/include/endian.h:
+
+/usr/include/x86_64-linux-gnu/bits/endian.h:
+
+/usr/include/x86_64-linux-gnu/bits/string3.h:
+
+src/ecmult.h:
+
+src/scratch.h:
+
+src/ecmult_const_impl.h:
+
+src/ecmult_const.h:
+
+src/ecmult_gen_impl.h:
+
+src/ecmult_gen.h:
+
+src/hash_impl.h:
+
+src/hash.h:
+
+src/ecmult_static_context.h:
+
+src/group.h:
+
+src/ecdsa_impl.h:
+
+src/ecdsa.h:
+
+src/eckey_impl.h:
+
+src/eckey.h:
+
+src/scratch_impl.h:
+
+src/selftest.h:
+
+src/modules/recovery/main_impl.h:
+
+include/secp256k1_recovery.h:
+
+src/modules/extrakeys/main_impl.h:
+
+include/secp256k1_extrakeys.h:
+
+src/modules/schnorrsig/main_impl.h:
+
+include/secp256k1_schnorrsig.h:
+
+include/secp256k1_extrakeys.h:
+
+src/hash.h:

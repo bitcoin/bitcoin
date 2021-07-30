@@ -69,7 +69,7 @@
 #define HAVE_BOOST_THREAD /**/
 
 /* define if the Boost::Unit_Test_Framework library is available */
-#define HAVE_BOOST_UNIT_TEST_FRAMEWORK /**/
+/* #undef HAVE_BOOST_UNIT_TEST_FRAMEWORK */
 
 /* Define this symbol if you have __builtin_clzl */
 #define HAVE_BUILTIN_CLZL 1
