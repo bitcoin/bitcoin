@@ -261,7 +261,7 @@ bool CNFTManager::addAssetClassToCache(CNFTAssetClass* assetClass) {
 
     if (assetClassCache.size() >= 100) {
         std::string lruHash;
-        time_t lruTime = ULLONG_MAX;
+        time_t lruTime = LLONG_MAX;
         std::map<std::string, time_t>::iterator i = lastCacheAccessAssetClass.begin();
         while (i != lastCacheAccessAssetClass.end()) {
             if (i->second < lruTime) {
@@ -296,7 +296,7 @@ bool CNFTManager::addAssetToCache(CNFTAsset* asset) {
     //only store up to 100 assets, if exceeded, remove least recently used first
     if (assetCache.size() >= 100) {
         std::string lruHash;
-        time_t lruTime = ULLONG_MAX;
+        time_t lruTime = LLONG_MAX;
         std::map<std::string, time_t>::iterator i = lastCacheAccessAsset.begin();
         while (i != lastCacheAccessAsset.end()) {
             if (i->second < lruTime) {
