@@ -329,11 +329,12 @@ bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimeP
 
     if (pinfo) {
         // periodically update nTime
-        bool fCurrentlyOnline = (GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
+        // TODO: change CAddress::nTime from uint32 to int64 before the Year 2106.
+        bool fCurrentlyOnline = (GetAdjustedTime() - static_cast<int64_t>(addr.nTime) < 24 * 60 * 60);
         int64_t nUpdateInterval = (fCurrentlyOnline ? 60 * 60 : 24 * 60 * 60);
-        if (addr.nTime && (!pinfo->nTime || pinfo->nTime < addr.nTime - nUpdateInterval - nTimePenalty))
-            pinfo->nTime = std::max((int64_t)0, addr.nTime - nTimePenalty);
-
+        if (addr.nTime && (!pinfo->nTime || pinfo->nTime < static_cast<int64_t>(addr.nTime) - nUpdateInterval - nTimePenalty)) {
+            pinfo->nTime = std::max<uint32_t>(0, static_cast<int64_t>(addr.nTime) - nTimePenalty);
+        }
         // add services
         pinfo->nServices = ServiceFlags(pinfo->nServices | addr.nServices);
 
@@ -357,7 +358,8 @@ bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimeP
             return false;
     } else {
         pinfo = Create(addr, source, &nId);
-        pinfo->nTime = std::max((int64_t)0, (int64_t)pinfo->nTime - nTimePenalty);
+        // TODO: change CAddress::nTime from uint32 to int64 before the Year 2106.
+        pinfo->nTime = std::max<uint32_t>(0, static_cast<int64_t>(pinfo->nTime) - nTimePenalty);
         nNew++;
         fNew = true;
     }
