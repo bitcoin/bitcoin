@@ -1,0 +1,10 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: XBit Core consensus library
+Description: Library for the XBit consensus protocol.
+Version: 0.21.0
+Libs: -L${libdir} -lxbitconsensus
+Cflags: -I${includedir}
