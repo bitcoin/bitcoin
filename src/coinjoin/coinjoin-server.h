@@ -31,11 +31,11 @@ private:
     bool AddScriptSig(const CTxIn& txin);
 
     /// Charge fees to bad actors (Charge clients a fee if they're abusive)
-    void ChargeFees(CConnman& connman);
+    void ChargeFees(CConnman& connman) const;
     /// Rarely charge fees to pay miners
-    void ChargeRandomFees(CConnman& connman);
+    void ChargeRandomFees(CConnman& connman) const;
     /// Consume collateral in cases when peer misbehaved
-    void ConsumeCollateral(CConnman& connman, const CTransactionRef& txref);
+    void ConsumeCollateral(CConnman& connman, const CTransactionRef& txref) const;
 
     /// Check for process
     void CheckPool(CConnman& connman);
@@ -44,25 +44,30 @@ private:
     void CommitFinalTransaction(CConnman& connman);
 
     /// Is this nDenom and txCollateral acceptable?
-    bool IsAcceptableDSA(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet);
+    bool IsAcceptableDSA(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet) const;
     bool CreateNewSession(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet, CConnman& connman);
     bool AddUserToExistingSession(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet);
     /// Do we have enough users to take entries?
-    bool IsSessionReady();
+    bool IsSessionReady() const;
 
     /// Check that all inputs are signed. (Are all inputs signed?)
-    bool IsSignaturesComplete();
+    bool IsSignaturesComplete() const;
     /// Check to make sure a given input matches an input in the pool and its scriptSig is valid
-    bool IsInputScriptSigValid(const CTxIn& txin);
+    bool IsInputScriptSigValid(const CTxIn& txin) const;
 
     // Set the 'state' value, with some logging and capturing when the state changed
     void SetState(PoolState nStateNew);
 
     /// Relay mixing Messages
     void RelayFinalTransaction(const CTransaction& txFinal, CConnman& connman);
-    void PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, CConnman& connman);
+    void PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, CConnman& connman) const;
     void RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman& connman, PoolMessage nMessageID = MSG_NOERR);
     void RelayCompletedTransaction(PoolMessage nMessageID, CConnman& connman);
+
+    void ProcessDSACCEPT(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
+    void ProcessDSQUEUE(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
+    void ProcessDSVIN(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
+    void ProcessDSSIGNFINALTX(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
 
     void SetNull();
 
@@ -73,11 +78,11 @@ public:
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
 
-    bool HasTimedOut();
+    bool HasTimedOut() const;
     void CheckTimeout(CConnman& connman);
     void CheckForCompleteQueue(CConnman& connman);
 
-    void DoMaintenance(CConnman& connman);
+    void DoMaintenance(CConnman& connman) const;
 
     void GetJsonInfo(UniValue& obj) const;
 };

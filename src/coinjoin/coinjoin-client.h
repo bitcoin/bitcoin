@@ -8,6 +8,8 @@
 #include <coinjoin/coinjoin-util.h>
 #include <coinjoin/coinjoin.h>
 
+#include <utility>
+
 class CDeterministicMN;
 typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
 
@@ -43,15 +45,15 @@ public:
     {
     }
 
-    CPendingDsaRequest(const CService& addr_, const CCoinJoinAccept& dsa_) :
-        addr(addr_),
-        dsa(dsa_),
+    CPendingDsaRequest(CService addr_, CCoinJoinAccept dsa_) :
+        addr(std::move(addr_)),
+        dsa(std::move(dsa_)),
         nTimeCreated(GetTime())
     {
     }
 
-    CService GetAddr() { return addr; }
-    CCoinJoinAccept GetDSA() { return dsa; }
+    CService GetAddr() const { return addr; }
+    CCoinJoinAccept GetDSA() const { return dsa; }
     bool IsExpired() const { return GetTime() - nTimeCreated > TIMEOUT; }
 
     friend bool operator==(const CPendingDsaRequest& a, const CPendingDsaRequest& b)
@@ -114,12 +116,12 @@ private:
     /// As a client, check and sign the final transaction
     bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman& connman);
 
-    void RelayIn(const CCoinJoinEntry& entry, CConnman& connman);
+    void RelayIn(const CCoinJoinEntry& entry, CConnman& connman) const;
 
     void SetNull();
 
 public:
-    CCoinJoinClientSession(CWallet& pwallet) :
+    explicit CCoinJoinClientSession(CWallet& pwallet) :
         vecOutPointLocked(),
         strLastMessage(),
         strAutoDenomResult(),
@@ -137,7 +139,7 @@ public:
 
     void ResetPool();
 
-    std::string GetStatus(bool fWaitForBlock);
+    std::string GetStatus(bool fWaitForBlock) const;
 
     bool GetMixingMasternodeInfo(CDeterministicMNCPtr& ret) const;
 
@@ -169,10 +171,6 @@ public:
 class CCoinJoinClientManager
 {
 private:
-    CCoinJoinClientManager() = delete;
-    CCoinJoinClientManager(CCoinJoinClientManager const&) = delete;
-    CCoinJoinClientManager& operator=(CCoinJoinClientManager const&) = delete;
-
     // Keep track of the used Masternodes
     std::vector<COutPoint> vecMasternodesUsed;
 
@@ -183,7 +181,7 @@ private:
     bool fMixing{false};
 
     int nCachedLastSuccessBlock;
-    int nMinBlocksToWait; // how many blocks to wait after one successful mixing tx in non-multisession mode
+    int nMinBlocksToWait; // how many blocks to wait for after one successful mixing tx in non-multisession mode
     std::string strAutoDenomResult;
 
     CWallet& mixingWallet;
@@ -200,7 +198,11 @@ public:
     int nCachedNumBlocks;    // used for the overview screen
     bool fCreateAutoBackups; // builtin support for automatic backups
 
-    CCoinJoinClientManager(CWallet& wallet) :
+    CCoinJoinClientManager() = delete;
+    CCoinJoinClientManager(CCoinJoinClientManager const&) = delete;
+    CCoinJoinClientManager& operator=(CCoinJoinClientManager const&) = delete;
+
+    explicit CCoinJoinClientManager(CWallet& wallet) :
         vecMasternodesUsed(),
         deqSessions(),
         nCachedLastSuccessBlock(0),

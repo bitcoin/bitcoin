@@ -9,7 +9,6 @@
 #include <chain.h>
 #include <messagesigner.h>
 #include <netmessagemaker.h>
-#include <script/sign.h>
 #include <txmempool.h>
 #include <util/system.h>
 #include <util/moneystr.h>
@@ -119,7 +118,7 @@ bool CCoinJoinBroadcastTx::IsExpired(const CBlockIndex* pindex) const
 {
     // expire confirmed DSTXes after ~1h since confirmation or chainlocked confirmation
     if (nConfirmedHeight == -1 || pindex->nHeight < nConfirmedHeight) return false; // not mined yet
-    if (pindex->nHeight - nConfirmedHeight > 24) return true; // mined more then an hour ago
+    if (pindex->nHeight - nConfirmedHeight > 24) return true; // mined more than an hour ago
     return llmq::chainLocksHandler->HasChainLock(pindex->nHeight, *pindex->phashBlock);
 }
 
@@ -251,7 +250,7 @@ bool CCoinJoinBaseSession::IsValidInOuts(const std::vector<CTxIn>& vin, const st
             return false;
         }
         // IsPayToPublicKeyHash() above already checks for scriptPubKey size,
-        // no need to double check, hence no usage of ERR_NON_STANDARD_PUBKEY
+        // no need to double-check, hence no usage of ERR_NON_STANDARD_PUBKEY
         return true;
     };
 
@@ -292,7 +291,7 @@ bool CCoinJoinBaseSession::IsValidInOuts(const std::vector<CTxIn>& vin, const st
     }
 
     // The same size and denom for inputs and outputs ensures their total value is also the same,
-    // no need to double check. If not, we are doing something wrong, bail out.
+    // no need to double-check. If not, we are doing something wrong, bail out.
     if (nFees != 0) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinBaseSession::%s -- ERROR: non-zero fees! fees: %lld\n", __func__, nFees);
         nMessageIDRet = ERR_FEES;

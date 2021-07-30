@@ -11,6 +11,8 @@
 #include <timedata.h>
 #include <tinyformat.h>
 
+#include <utility>
+
 class CCoinJoin;
 class CConnman;
 class CBLSPublicKey;
@@ -116,9 +118,9 @@ public:
     bool fHasSig; // flag to indicate if signed
     int nRounds;
 
-    CTxDSIn(const CTxIn& txin, const CScript& script, int nRounds) :
+    CTxDSIn(const CTxIn& txin, CScript script, int nRounds) :
         CTxIn(txin),
-        prevPubKey(script),
+        prevPubKey(std::move(script)),
         fHasSig(false),
         nRounds(nRounds)
     {
@@ -143,9 +145,9 @@ public:
         nDenom(0),
         txCollateral(CMutableTransaction()){};
 
-    CCoinJoinAccept(int nDenom, const CMutableTransaction& txCollateral) :
+    CCoinJoinAccept(int nDenom, CMutableTransaction txCollateral) :
         nDenom(nDenom),
-        txCollateral(txCollateral){};
+        txCollateral(std::move(txCollateral)){};
 
     SERIALIZE_METHODS(CCoinJoinAccept, obj)
     {
@@ -176,9 +178,9 @@ public:
     {
     }
 
-    CCoinJoinEntry(const std::vector<CTxDSIn>& vecTxDSIn, const std::vector<CTxOut>& vecTxOut, const CTransaction& txCollateral) :
-            vecTxDSIn(vecTxDSIn),
-            vecTxOut(vecTxOut),
+    CCoinJoinEntry(std::vector<CTxDSIn> vecTxDSIn, std::vector<CTxOut> vecTxOut, const CTransaction& txCollateral) :
+            vecTxDSIn(std::move(vecTxDSIn)),
+            vecTxOut(std::move(vecTxOut)),
             txCollateral(MakeTransactionRef(txCollateral)),
             addr(CService())
     {
@@ -217,7 +219,7 @@ public:
     {
     }
 
-    CCoinJoinQueue(int nDenom, COutPoint outpoint, int64_t nTime, bool fReady) :
+    CCoinJoinQueue(int nDenom, const COutPoint& outpoint, int64_t nTime, bool fReady) :
         nDenom(nDenom),
         masternodeOutpoint(outpoint),
         nTime(nTime),
@@ -288,9 +290,9 @@ public:
     {
     }
 
-    CCoinJoinBroadcastTx(const CTransactionRef& _tx, COutPoint _outpoint, int64_t _sigTime) :
+    CCoinJoinBroadcastTx(CTransactionRef _tx, const COutPoint& _outpoint, int64_t _sigTime) :
         nConfirmedHeight(-1),
-        tx(_tx),
+        tx(std::move(_tx)),
         masternodeOutpoint(_outpoint),
         vchSig(),
         sigTime(_sigTime)
