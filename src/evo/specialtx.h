@@ -5,7 +5,6 @@
 #ifndef BITCOIN_EVO_SPECIALTX_H
 #define BITCOIN_EVO_SPECIALTX_H
 
-#include <primitives/transaction.h>
 #include <streams.h>
 #include <version.h>
 

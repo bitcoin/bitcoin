@@ -23,7 +23,6 @@
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
-#include <coinjoin/coinjoin.h>
 #include <governance/governance-object.h>
 
 #include <algorithm>
@@ -75,6 +74,7 @@ class CKey;
 class COutput;
 class CReserveKey;
 class CScript;
+class CTxDSIn;
 class CTxMemPool;
 class CBlockPolicyEstimator;
 class CWalletTx;

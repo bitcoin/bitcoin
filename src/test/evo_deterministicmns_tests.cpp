@@ -4,6 +4,7 @@
 
 #include <test/test_dash.h>
 
+#include <consensus/validation.h>
 #include <script/interpreter.h>
 #include <script/standard.h>
 #include <script/sign.h>

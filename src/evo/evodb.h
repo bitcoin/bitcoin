@@ -91,7 +91,7 @@ public:
         return db;
     }
 
-    size_t GetMemoryUsage()
+    size_t GetMemoryUsage() const
     {
         return rootDBTransaction.GetMemoryUsage();
     }

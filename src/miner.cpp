@@ -25,17 +25,17 @@
 #include <util/system.h>
 #include <util/moneystr.h>
 #include <util/validation.h>
-#include <masternode/masternode-payments.h>
-#include <masternode/masternode-sync.h>
 #include <validationinterface.h>
 
 #include <evo/specialtx.h>
 #include <evo/cbtx.h>
 #include <evo/simplifiedmns.h>
 #include <evo/deterministicmns.h>
-
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_utils.h>
+#include <masternode/masternode-payments.h>
+#include <masternode/masternode-sync.h>
 
 #include <algorithm>
 #include <queue>

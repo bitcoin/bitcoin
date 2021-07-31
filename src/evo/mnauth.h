@@ -39,7 +39,6 @@ public:
     uint256 proRegTxHash;
     CBLSSignature sig;
 
-public:
     SERIALIZE_METHODS(CMNAuth, obj)
     {
         READWRITE(obj.proRegTxHash, obj.sig);

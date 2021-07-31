@@ -99,13 +99,12 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
     try {
         int64_t nTime1 = GetTimeMicros();
 
-        for (int i = 0; i < (int)block.vtx.size(); i++) {
-            const CTransaction& tx = *block.vtx[i];
-            if (!CheckSpecialTx(tx, pindex->pprev, state, view)) {
+        for (const auto& ptr_tx : block.vtx) {
+            if (!CheckSpecialTx(*ptr_tx, pindex->pprev, state, view)) {
                 // pass the state returned by the function above
                 return false;
             }
-            if (!ProcessSpecialTx(tx, pindex, state)) {
+            if (!ProcessSpecialTx(*ptr_tx, pindex, state)) {
                 // pass the state returned by the function above
                 return false;
             }

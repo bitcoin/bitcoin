@@ -8,6 +8,7 @@
 #include <evo/specialtx.h>
 
 #include <chainparams.h>
+#include <consensus/validation.h>
 #include <logging.h>
 #include <validation.h>
 

@@ -5,9 +5,14 @@
 #ifndef BITCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
 #define BITCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
 
+#include <bls/bls.h>
 #include <llmq/quorums_signing.h>
 
 #include <chainparams.h>
+#include <net.h>
+#include <saltedhasher.h>
+#include <streams.h>
+#include <sync.h>
 
 #include <atomic>
 #include <unordered_set>

@@ -14,6 +14,7 @@
 #include <immer/map.hpp>
 
 #include <unordered_map>
+#include <utility>
 
 class CBlock;
 class CBlockIndex;
@@ -210,7 +211,7 @@ public:
         assert(_internalId != std::numeric_limits<uint64_t>::max());
     }
     // TODO: can be removed in a future version
-    CDeterministicMN(const CDeterministicMN& mn, uint64_t _internalId) : CDeterministicMN(mn) {
+    CDeterministicMN(CDeterministicMN mn, uint64_t _internalId) : CDeterministicMN(std::move(mn)) {
         // only non-initial values
         assert(_internalId != std::numeric_limits<uint64_t>::max());
         internalId = _internalId;
@@ -227,7 +228,6 @@ public:
     uint16_t nOperatorReward;
     CDeterministicMNStateCPtr pdmnState;
 
-public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, bool oldFormat)
     {
@@ -356,7 +356,6 @@ public:
         }
     }
 
-public:
     size_t GetAllMNsCount() const
     {
         return mnMap.size();
@@ -383,7 +382,6 @@ public:
         }
     }
 
-public:
     const uint256& GetBlockHash() const
     {
         return blockHash;
@@ -424,7 +422,7 @@ public:
     }
     CDeterministicMNCPtr GetMN(const uint256& proTxHash) const;
     CDeterministicMNCPtr GetValidMN(const uint256& proTxHash) const;
-    CDeterministicMNCPtr GetMNByOperatorKey(const CBLSPublicKey& pubKey);
+    CDeterministicMNCPtr GetMNByOperatorKey(const CBLSPublicKey& pubKey) const;
     CDeterministicMNCPtr GetMNByCollateral(const COutPoint& collateralOutpoint) const;
     CDeterministicMNCPtr GetValidMNByCollateral(const COutPoint& collateralOutpoint) const;
     CDeterministicMNCPtr GetMNByService(const CService& service) const;
@@ -576,7 +574,6 @@ public:
     std::map<uint64_t, CDeterministicMNStateDiff> updatedMNs;
     std::set<uint64_t> removedMns;
 
-public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
@@ -615,7 +612,6 @@ public:
         }
     }
 
-public:
     bool HasChanges() const
     {
         return !addedMNs.empty() || !updatedMNs.empty() || !removedMns.empty();
@@ -633,7 +629,6 @@ public:
     std::map<uint256, CDeterministicMNStateCPtr> updatedMNs;
     std::set<uint256> removedMns;
 
-public:
     template<typename Stream>
     void Unserialize(Stream& s) {
         addedMNs.clear();
@@ -693,7 +688,6 @@ public:
 
     bool IsDIP3Enforced(int nHeight = -1);
 
-public:
     // TODO these can all be removed in a future version
     void UpgradeDiff(CDBBatch& batch, const CBlockIndex* pindexNext, const CDeterministicMNList& curMNList, CDeterministicMNList& newMNList);
     bool UpgradeDBIfNeeded();

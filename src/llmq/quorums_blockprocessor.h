@@ -5,11 +5,16 @@
 #ifndef BITCOIN_LLMQ_QUORUMS_BLOCKPROCESSOR_H
 #define BITCOIN_LLMQ_QUORUMS_BLOCKPROCESSOR_H
 
-#include <llmq/quorums_utils.h>
+#include <unordered_lru_cache.h>
+
+#include <chain.h>
+#include <consensus/params.h>
+#include <primitives/block.h>
+#include <saltedhasher.h>
+#include <streams.h>
+#include <sync.h>
 
 #include <unordered_map>
-#include <unordered_lru_cache.h>
-#include <saltedhasher.h>
 
 class CNode;
 class CConnman;

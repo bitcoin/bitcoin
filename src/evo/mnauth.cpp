@@ -12,7 +12,6 @@
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
-#include <validation.h>
 
 #include <unordered_set>
 
@@ -178,7 +177,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
 
         if (!pnode->m_masternode_iqr_connection && connman.IsMasternodeQuorumRelayMember(pnode->GetVerifiedProRegTxHash())) {
             // Tell our peer that we're interested in plain LLMQ recovered signatures.
-            // Otherwise the peer would only announce/send messages resulting from QRECSIG,
+            // Otherwise, the peer would only announce/send messages resulting from QRECSIG,
             // e.g. InstantSend locks or ChainLocks. SPV and regular full nodes should not send
             // this message as they are usually only interested in the higher level messages.
             const CNetMsgMaker msgMaker(pnode->GetSendVersion());

@@ -10,6 +10,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <evo/deterministicmns.h>
+#include <governance/governance-object.h>
 #include <init.h>
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
@@ -37,6 +38,7 @@
 #include <config/dash-config.h>
 #endif
 #ifdef ENABLE_WALLET
+#include <coinjoin/coinjoin.h>
 #include <coinjoin/coinjoin-client-options.h>
 #include <wallet/fees.h>
 #include <wallet/wallet.h>

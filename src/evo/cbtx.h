@@ -19,13 +19,11 @@ class CCbTx
 public:
     static const uint16_t CURRENT_VERSION = 2;
 
-public:
     uint16_t nVersion{CURRENT_VERSION};
     int32_t nHeight{0};
     uint256 merkleRootMNList;
     uint256 merkleRootQuorums;
 
-public:
     SERIALIZE_METHODS(CCbTx, obj)
     {
         READWRITE(obj.nVersion, obj.nHeight, obj.merkleRootMNList);
@@ -42,7 +40,7 @@ public:
         obj.clear();
         obj.setObject();
         obj.pushKV("version", (int)nVersion);
-        obj.pushKV("height", (int)nHeight);
+        obj.pushKV("height", nHeight);
         obj.pushKV("merkleRootMNList", merkleRootMNList.ToString());
         if (nVersion >= 2) {
             obj.pushKV("merkleRootQuorums", merkleRootQuorums.ToString());

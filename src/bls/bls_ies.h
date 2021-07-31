@@ -17,13 +17,11 @@ public:
 
     uint256 GetIV(size_t idx) const;
 
-public:
     SERIALIZE_METHODS(CBLSIESEncryptedBlob, obj)
     {
         READWRITE(obj.ephemeralPubKey, obj.ivSeed, obj.data);
     }
 
-public:
     bool Encrypt(size_t idx, const CBLSPublicKey& peerPubKey, const void* data, size_t dataSize);
     bool Decrypt(size_t idx, const CBLSSecretKey& secretKey, CDataStream& decryptedDataRet) const;
     bool IsValid() const;
@@ -48,7 +46,7 @@ public:
             CDataStream ds(SER_NETWORK, nVersion);
             ds << obj;
             return CBLSIESEncryptedBlob::Encrypt(idx, peerPubKey, ds.data(), ds.size());
-        } catch (std::exception&) {
+        } catch (const std::exception&) {
             return false;
         }
     }
@@ -61,7 +59,7 @@ public:
         }
         try {
             ds >> objRet;
-        } catch (std::exception& e) {
+        } catch (const std::exception&) {
             return false;
         }
         return true;
@@ -74,7 +72,6 @@ public:
     typedef std::vector<unsigned char> Blob;
     typedef std::vector<Blob> BlobVector;
 
-public:
     CBLSPublicKey ephemeralPubKey;
     uint256 ivSeed;
     BlobVector blobs;
@@ -83,14 +80,12 @@ public:
     CBLSSecretKey ephemeralSecretKey;
     std::vector<uint256> ivVector;
 
-public:
     bool Encrypt(const std::vector<CBLSPublicKey>& recipients, const BlobVector& _blobs);
 
     void InitEncrypt(size_t count);
     bool Encrypt(size_t idx, const CBLSPublicKey& recipient, const Blob& blob);
     bool Decrypt(size_t idx, const CBLSSecretKey& sk, Blob& blobRet) const;
 
-public:
     SERIALIZE_METHODS(CBLSIESMultiRecipientBlobs, obj)
     {
         READWRITE(obj.ephemeralPubKey, obj.ivSeed, obj.blobs);
@@ -103,7 +98,6 @@ class CBLSIESMultiRecipientObjects : public CBLSIESMultiRecipientBlobs
 public:
     typedef std::vector<Object> ObjectVector;
 
-public:
     bool Encrypt(const std::vector<CBLSPublicKey>& recipients, const ObjectVector& _objects, int nVersion)
     {
         BlobVector blobs;
@@ -117,7 +111,7 @@ public:
                 ds << _objects[i];
                 blobs[i].assign(ds.begin(), ds.end());
             }
-        } catch (std::exception&) {
+        } catch (const std::exception&) {
             return false;
         }
 
@@ -143,7 +137,7 @@ public:
             CDataStream ds(blob, SER_NETWORK, nVersion);
             ds >> objectRet;
             return true;
-        } catch (std::exception&) {
+        } catch (const std::exception&) {
             return false;
         }
     }

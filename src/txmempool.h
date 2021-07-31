@@ -24,7 +24,6 @@
 #include <sync.h>
 #include <random.h>
 #include <netaddress.h>
-#include <bls/bls.h>
 #include <pubkey.h>
 
 #include <boost/multi_index_container.hpp>
@@ -32,6 +31,8 @@
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
 #include <boost/signals2/signal.hpp>
+
+class CBLSPublicKey;
 
 class CBlockIndex;
 extern CCriticalSection cs_main;

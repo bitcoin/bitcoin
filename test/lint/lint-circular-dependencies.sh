@@ -98,7 +98,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "llmq/quorums -> net_processing -> llmq/quorums"
     "llmq/quorums_commitment -> llmq/quorums_utils -> llmq/quorums_commitment"
     "llmq/quorums_dkgsession -> llmq/quorums_dkgsessionmgr -> llmq/quorums_dkgsession"
-    "coinjoin/coinjoin -> masternode/activemasternode -> net -> coinjoin/coinjoin"
     "evo/deterministicmns -> validationinterface -> txmempool -> evo/deterministicmns"
     "llmq/quorums -> validation -> llmq/quorums_chainlocks -> llmq/quorums"
     "llmq/quorums_chainlocks -> llmq/quorums_instantsend -> validation -> llmq/quorums_chainlocks"
@@ -111,6 +110,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "evo/deterministicmns -> evo/simplifiedmns -> llmq/quorums_blockprocessor -> net_processing -> masternode/masternode-payments -> governance/governance-classes -> governance/governance-object -> evo/deterministicmns"
     "evo/deterministicmns -> evo/simplifiedmns -> llmq/quorums_blockprocessor -> net -> evo/deterministicmns"
     "evo/deterministicmns -> evo/simplifiedmns -> llmq/quorums_blockprocessor -> net_processing -> masternode/masternode-payments -> governance/governance-classes -> governance/governance-object -> governance/governance-vote -> evo/deterministicmns"
+    "coinjoin/coinjoin -> llmq/quorums_chainlocks -> net -> coinjoin/coinjoin"
 )
 
 EXIT_CODE=0
