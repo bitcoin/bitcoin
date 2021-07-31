@@ -23,7 +23,7 @@ from .messages import (
     uint256_to_string,
 )
 from .script import CScript, CScriptNum, CScriptOp, OP_TRUE, OP_CHECKSIG
-from .util import assert_equal, hex_str_to_bytes
+from .util import assert_equal
 from io import BytesIO
 
 MAX_BLOCK_SIGOPS = 20000
@@ -207,7 +207,7 @@ def create_transaction(node, txid, to_address, *, amount):
     """
     raw_tx = create_raw_transaction(node, txid, to_address, amount=amount)
     tx = CTransaction()
-    tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx)))
+    tx.deserialize(BytesIO(bytes.fromhex(raw_tx)))
     return tx
 
 def create_raw_transaction(node, txid, to_address, *, amount):

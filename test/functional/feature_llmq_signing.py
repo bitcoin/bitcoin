@@ -13,7 +13,7 @@ Checks LLMQs signing sessions
 from test_framework.messages import CSigShare, msg_qsigshare, uint256_to_string
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync, hex_str_to_bytes, wait_until_helper
+from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync, wait_until_helper
 
 
 class LLMQSigningTest(DashTestFramework):
@@ -89,7 +89,7 @@ class LLMQSigningTest(DashTestFramework):
             sig_share.quorumMember = int(sig_share_rpc_1["quorumMember"])
             sig_share.id = int(sig_share_rpc_1["id"], 16)
             sig_share.msgHash = int(sig_share_rpc_1["msgHash"], 16)
-            sig_share.sigShare = hex_str_to_bytes(sig_share_rpc_1["signature"])
+            sig_share.sigShare = bytes.fromhex(sig_share_rpc_1["signature"])
             for mn in self.mninfo:
                 assert mn.node.getconnectioncount() == self.llmq_size
             # Get the current recovery member of the quorum

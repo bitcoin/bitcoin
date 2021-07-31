@@ -15,7 +15,7 @@ from io import BytesIO
 
 from test_framework.messages import CBlock, CCbTx
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync, hex_str_to_bytes, softfork_active
+from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync, softfork_active
 
 
 class LLMQChainLocksTest(DashTestFramework):
@@ -309,7 +309,7 @@ class LLMQChainLocksTest(DashTestFramework):
         tip0_hash = self.nodes[0].generate(1)[0]
         block_hex = self.nodes[0].getblock(tip0_hash, 0)
         mal_block = CBlock()
-        mal_block.deserialize(BytesIO(hex_str_to_bytes(block_hex)))
+        mal_block.deserialize(BytesIO(bytes.fromhex(block_hex)))
         cbtx = CCbTx()
         cbtx.deserialize(BytesIO(mal_block.vtx[0].vExtraPayload))
         assert_equal(cbtx.bestCLHeightDiff, 0)
@@ -324,7 +324,7 @@ class LLMQChainLocksTest(DashTestFramework):
         assert_equal(self.nodes[1].getbestblockhash(), tip1_hash)
 
         # Update the sig too and it should pass now
-        cbtx.bestCLSignature = hex_str_to_bytes(self.nodes[1].getblock(tip1_hash, 2)["tx"][0]["cbTx"]["bestCLSignature"])
+        cbtx.bestCLSignature = bytes.fromhex(self.nodes[1].getblock(tip1_hash, 2)["tx"][0]["cbTx"]["bestCLSignature"])
         mal_block.vtx[0].vExtraPayload = cbtx.serialize()
         mal_block.vtx[0].rehash()
         mal_block.hashMerkleRoot = mal_block.calc_merkle_root()
@@ -349,7 +349,7 @@ class LLMQChainLocksTest(DashTestFramework):
 
         # Update the sig too and it should pass now when mn_rr is not active and fail otherwise
         old_blockhash = self.nodes[1].getblockhash(self.nodes[1].getblockcount() - 1)
-        cbtx.bestCLSignature = hex_str_to_bytes(self.nodes[1].getblock(old_blockhash, 2)["tx"][0]["cbTx"]["bestCLSignature"])
+        cbtx.bestCLSignature = bytes.fromhex(self.nodes[1].getblock(old_blockhash, 2)["tx"][0]["cbTx"]["bestCLSignature"])
         mal_block.vtx[0].vExtraPayload = cbtx.serialize()
         mal_block.vtx[0].rehash()
         mal_block.hashMerkleRoot = mal_block.calc_merkle_root()

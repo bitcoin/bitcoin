@@ -16,7 +16,7 @@ from test_framework.blocktools import create_block_with_mnpayments
 from test_framework.messages import CInv, hash256, msg_clsig, msg_inv, ser_string, tx_from_hex, uint256_from_str
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 
 class TestP2PConn(P2PInterface):
@@ -92,7 +92,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         rawtx2_obj = tx_from_hex(rawtx2)
 
         rawtx1_txid = self.nodes[0].sendrawtransaction(rawtx1)
-        rawtx2_txid = hash256(hex_str_to_bytes(rawtx2))[::-1].hex()
+        rawtx2_txid = hash256(bytes.fromhex(rawtx2))[::-1].hex()
 
         # Create a chained TX on top of tx1
         inputs = []
@@ -205,8 +205,8 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         rawtx1 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
         rawtx2 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
 
-        rawtx1_txid = hash256(hex_str_to_bytes(rawtx1))[::-1].hex()
-        rawtx2_txid = hash256(hex_str_to_bytes(rawtx2))[::-1].hex()
+        rawtx1_txid = hash256(bytes.fromhex(rawtx1))[::-1].hex()
+        rawtx2_txid = hash256(bytes.fromhex(rawtx2))[::-1].hex()
 
         # Create an ISLOCK but don't broadcast it yet
         isdlock = self.create_isdlock(rawtx2)
@@ -280,7 +280,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         message_hash = block.hash
 
         recSig = self.get_recovered_sig(request_id, message_hash)
-        clsig = msg_clsig(height, block.sha256, hex_str_to_bytes(recSig['sig']))
+        clsig = msg_clsig(height, block.sha256, bytes.fromhex(recSig['sig']))
         return clsig
 
 if __name__ == '__main__':

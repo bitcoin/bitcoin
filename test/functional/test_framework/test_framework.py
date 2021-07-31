@@ -48,7 +48,6 @@ from .util import (
     force_finish_mnsync,
     get_bip9_details,
     get_datadir_path,
-    hex_str_to_bytes,
     initialize_datadir,
     p2p_port,
     set_node_times,
@@ -1596,7 +1595,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         block_count = self.mninfo[0].node.getblockcount()
         cycle_hash = int(self.mninfo[0].node.getblockhash(block_count - (block_count % 24)), 16)
-        isdlock = msg_isdlock(1, inputs, tx.sha256, cycle_hash, hex_str_to_bytes(rec_sig['sig']))
+        isdlock = msg_isdlock(1, inputs, tx.sha256, cycle_hash, bytes.fromhex(rec_sig['sig']))
 
         return isdlock
 
