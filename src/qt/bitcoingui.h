@@ -247,7 +247,7 @@ public Q_SLOTS:
     void message(const QString &title, const QString &message, unsigned int style, bool *ret = nullptr);
 
 #ifdef ENABLE_WALLET
-    bool setCurrentWallet(const QString& name);
+    bool setCurrentWallet(WalletModel* wallet_model);
     bool setCurrentWalletBySelectorIndex(int index);
     /** Set the UI status indicators based on the currently selected wallet.
     */

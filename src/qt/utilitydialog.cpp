@@ -22,6 +22,7 @@
 #include <init.h>
 #include <interfaces/node.h>
 #include <util/system.h>
+#include <util/strencodings.h>
 
 #include <stdio.h>
 
@@ -55,9 +56,9 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, He
     {
         setWindowTitle(tr("About %1").arg(tr(PACKAGE_NAME)));
 
+        std::string licenseInfo = LicenseInfo();
         /// HTML-format the license message from the core
-        QString licenseInfo = QString::fromStdString(LicenseInfo());
-        QString licenseInfoHTML = licenseInfo;
+        QString licenseInfoHTML = QString::fromStdString(licenseInfo);
 
         // Make URLs clickable
         QRegExp uri("<(.*)>", Qt::CaseSensitive, QRegExp::RegExp2);
@@ -68,7 +69,7 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, He
 
         ui->aboutMessage->setTextFormat(Qt::RichText);
         ui->scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-        text = version + "\n" + licenseInfo;
+        text = version + "\n" + QString::fromStdString(FormatParagraph(licenseInfo));
         ui->aboutMessage->setText(version + "<br><br>" + licenseInfoHTML);
         ui->aboutMessage->setWordWrap(true);
         ui->helpMessage->setVisible(false);
