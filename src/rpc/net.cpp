@@ -146,6 +146,8 @@ static RPCHelpMan getpeerinfo()
                         {RPCResult::Type::NUM, "n", "The heights of blocks we're currently asking from this peer"},
                     }},
                     {RPCResult::Type::BOOL, "addr_relay_enabled", "Whether we participate in address relay with this peer"},
+                    {RPCResult::Type::NUM, "addr_processed", "The total number of addresses processed, excluding those dropped due to rate limiting"},
+                    {RPCResult::Type::NUM, "addr_rate_limited", "The total number of addresses dropped due to rate limiting"},
                     {RPCResult::Type::BOOL, "whitelisted", "Whether the peer is whitelisted"},
                     {RPCResult::Type::ARR, "permissions", "Any special permissions that have been granted to this peer",
                     {
