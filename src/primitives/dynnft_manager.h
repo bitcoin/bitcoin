@@ -45,6 +45,8 @@ public:
     bool addAssetClassToCache(CNFTAssetClass* assetClass);
     bool addAssetToCache(CNFTAsset* assetClass);
 
+    bool assetSerialExists(std::string assetClassHash, UINT64 assetSerial);
+
     CNFTAssetClass* retrieveAssetClassFromCache(std::string hash);
     CNFTAsset* retrieveAssetFromCache(std::string hash);
 

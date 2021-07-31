@@ -148,7 +148,7 @@ void NftLoaderDialogOptions::on_createAssetButton_clicked()
         asset->hash = "";
         asset->assetClassHash = assetClassCurrent->hash;
         asset->metaData = ui->nftCreateAssetMetadata->toPlainText().toStdString();
-        asset->binaryData = ui->nftCreateAssetBinary->text().toStdString();
+        //asset->binaryData = ui->nftCreateAssetBinary->text().toStdString();
         asset->owner = "";
         asset->serial = 1;
 

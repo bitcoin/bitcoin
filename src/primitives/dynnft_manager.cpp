@@ -191,6 +191,28 @@ bool CNFTManager::assetInDatabase(std::string assetHash) {
     return (valInt > 0);
 }
 
+bool CNFTManager::assetSerialExists(std::string assetClassHash, UINT64 assetSerial)
+{
+    std::string sql = "select count(asset_hash) from asset where asset_class_hash = @1 and asset_serial = @2";
+
+    sqlite3_stmt* stmt = NULL;
+    sqlite3_prepare_v2(nftDB, sql.c_str(), -1, &stmt, NULL);
+
+    sqlite3_bind_text(stmt, 1, assetClassHash.c_str(), -1, NULL);
+    sqlite3_bind_int64(stmt, 2, assetSerial);
+
+    int rc = sqlite3_step(stmt);
+
+    int valInt = 0;
+    if ((rc != SQLITE_DONE) && (rc != SQLITE_OK)) {
+        valInt = sqlite3_column_int(stmt, 0);
+    }
+
+    sqlite3_finalize(stmt);
+
+    return (valInt > 0);
+}
+
 
 void CNFTManager::queueAssetClassRequest(std::string hash) {
 

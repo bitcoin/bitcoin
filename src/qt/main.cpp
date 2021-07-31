@@ -13,11 +13,14 @@
 #include <string>
 #include <consensus/dynengine.h>
 #include <primitives/dynnft_manager.h>
+#include <rpc/webserver.h>
 
 CDynHash* g_hashFunction;
 CDynEngine* g_dynEngine;
 CContractManager* g_contractMgr;
 CNFTManager* g_nftMgr;
+CWebServer* g_webServer;
+
 bool IS_TESTNET;
 
 /** Translate string to current locale using Qt. */
