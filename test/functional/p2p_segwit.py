@@ -81,7 +81,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     softfork_active,
-    hex_str_to_bytes,
     assert_raises_rpc_error,
 )
 
@@ -415,7 +414,7 @@ class SegWitTest(BitcoinTestFramework):
                 block = self.test_node.request_block(block_hash, 2)
                 wit_block = self.test_node.request_block(block_hash, 2 | MSG_WITNESS_FLAG)
                 assert_equal(block.serialize(), wit_block.serialize())
-                assert_equal(block.serialize(), hex_str_to_bytes(rpc_block))
+                assert_equal(block.serialize(), bytes.fromhex(rpc_block))
         else:
             # After activation, witness blocks and non-witness blocks should
             # be different.  Verify rpc getblock() returns witness blocks, while
@@ -430,7 +429,7 @@ class SegWitTest(BitcoinTestFramework):
             rpc_block = self.nodes[0].getblock(block.hash, False)
             non_wit_block = self.test_node.request_block(block.sha256, 2)
             wit_block = self.test_node.request_block(block.sha256, 2 | MSG_WITNESS_FLAG)
-            assert_equal(wit_block.serialize(), hex_str_to_bytes(rpc_block))
+            assert_equal(wit_block.serialize(), bytes.fromhex(rpc_block))
             assert_equal(wit_block.serialize(False), non_wit_block.serialize())
             assert_equal(wit_block.serialize(), block.serialize())
 
