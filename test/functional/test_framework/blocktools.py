@@ -246,8 +246,8 @@ def witness_script(use_p2wsh, pubkey):
         pkscript = key_to_p2wpkh_script(pubkey)
     else:
         # 1-of-1 multisig
-        witness_program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
-        pkscript = script_to_p2wsh_script(witness_program)
+        witness_script = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
+        pkscript = script_to_p2wsh_script(witness_script)
     return pkscript.hex()
 
 def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
