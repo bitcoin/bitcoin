@@ -28,7 +28,7 @@
 #include <rpc/blockchain.h>
 #include <util/translation.h>
 #include <node/context.h>
-
+#include <node/transaction.h>
 
 static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
 {
