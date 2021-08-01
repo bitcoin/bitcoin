@@ -55,7 +55,8 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     // leftover input amount is paid to recipient not the miner (to_reduce ==
     // -123). This overpays the recipient instead of overpaying the miner more
     // than double the neccesary fee.
-    BOOST_CHECK_EQUAL(fee, check_tx(fee + 123));
+    // SYSCOIN
+    BOOST_CHECK_EQUAL(1463, check_tx(fee + 123));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
