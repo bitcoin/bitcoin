@@ -20,14 +20,14 @@ functioning Bitcoin nodes from the public network to the best of the
 operator's understanding and capability.
 
 2. For the avoidance of doubt, the results may be randomized but must not
-single-out any group of hosts to receive different results unless due to an
+single-out any group of hosts to receive different results, unless due to an
 urgent technical necessity and disclosed.
 
 3. The results may not be served with a DNS TTL of less than one minute.
 
 4. Any logging of DNS queries should be only that which is necessary
 for the operation of the service or urgent health of the Bitcoin
-network and must not be retained longer than necessary nor disclosed
+network and must neither be retained longer than necessary nor disclosed
 to any third party.
 
 5. Information gathered as a result of the operators node-spidering
@@ -41,7 +41,7 @@ details of their operating practices.
 7. A reachable email contact address must be published for inquiries
 related to the DNS seed operation.
 
-If these expectations cannot be satisfied the operator should
+If these expectations cannot be satisfied, the operator should
 discontinue providing services and contact the active Bitcoin
 Core development team as well as posting on
 [bitcoin-dev](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev).
