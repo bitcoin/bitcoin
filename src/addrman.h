@@ -55,7 +55,7 @@ private:
     bool fInTried{false};
 
     //! position in vRandom
-    int nRandomPos{-1};
+    mutable int nRandomPos{-1};
 
     friend class CAddrMan;
 
@@ -579,7 +579,7 @@ public:
     /**
      * Choose an address to connect to.
      */
-    CAddrInfo Select(bool newOnly = false)
+    CAddrInfo Select(bool newOnly = false) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
@@ -596,7 +596,7 @@ public:
      * @param[in] max_pct        Maximum percentage of addresses to return (0 = all).
      * @param[in] network        Select only addresses of this network (nullopt = all).
      */
-    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network)
+    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
@@ -631,12 +631,12 @@ protected:
     uint256 nKey;
 
     //! Source of random numbers for randomization in inner loops
-    FastRandomContext insecure_rand;
+    mutable FastRandomContext insecure_rand GUARDED_BY(cs);
 
-private:
     //! A mutex to protect the inner data structures.
     mutable Mutex cs;
 
+private:
     //! Serialization versions.
     enum Format : uint8_t {
         V0_HISTORICAL = 0,    //!< historic format, before commit e6b343d88
@@ -669,7 +669,9 @@ private:
     std::unordered_map<CNetAddr, int, CNetAddrHash> mapAddr GUARDED_BY(cs);
 
     //! randomly-ordered vector of all nIds
-    std::vector<int> vRandom GUARDED_BY(cs);
+    //! This is mutable because it is unobservable outside the class, so any
+    //! changes to it (even in const methods) are also unobservable.
+    mutable std::vector<int> vRandom GUARDED_BY(cs);
 
     // number of "tried" entries
     int nTried GUARDED_BY(cs);
@@ -697,7 +699,7 @@ private:
     CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Swap two elements in vRandom.
-    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Move an entry from the "new" table(s) to the "tried" table
     void MakeTried(CAddrInfo& info, int nId) EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -718,7 +720,7 @@ private:
     void Attempt_(const CService &addr, bool fCountFailure, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Select an address to connect to, if newOnly is set to true, only the new table is selected from.
-    CAddrInfo Select_(bool newOnly) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    CAddrInfo Select_(bool newOnly) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! See if any to-be-evicted tried table entries have been tested and if so resolve the collisions.
     void ResolveCollisions_() EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -727,7 +729,7 @@ private:
     CAddrInfo SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Consistency check
-    void Check()
+    void Check() const
         EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
 #ifdef DEBUG_ADDRMAN
@@ -741,7 +743,7 @@ private:
 
 #ifdef DEBUG_ADDRMAN
     //! Perform consistency check. Returns an error code or zero.
-    int Check_() EXCLUSIVE_LOCKS_REQUIRED(cs);
+    int Check_() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 #endif
 
     /**
@@ -752,7 +754,7 @@ private:
      * @param[in] max_pct        Maximum percentage of addresses to return (0 = all).
      * @param[in] network        Select only addresses of this network (nullopt = all).
      */
-    void GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size_t max_pct, std::optional<Network> network) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size_t max_pct, std::optional<Network> network) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** We have successfully connected to this peer. Calling this function
      *  updates the CAddress's nTime, which is used in our IsTerrible()
