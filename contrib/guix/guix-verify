@@ -28,7 +28,11 @@ cmd_usage() {
 cat <<EOF
 Synopsis:
 
-    env GUIX_SIGS_REPO=<path/to/guix.sigs> ./contrib/guix/guix-verify
+    env GUIX_SIGS_REPO=<path/to/guix.sigs> [ SIGNER=<signer> ] ./contrib/guix/guix-verify
+
+Example overriding signer's manifest to use as base
+
+    env GUIX_SIGS_REPO=/home/dongcarl/guix.sigs SIGNER=achow101 ./contrib/guix/guix-verify
 
 EOF
 }
@@ -92,6 +96,17 @@ echo "--------------------"
 echo ""
 if (( ${#all_noncodesigned[@]} )); then
     compare_noncodesigned="${all_noncodesigned[0]}"
+    if [[ -n "$SIGNER" ]]; then
+        signer_noncodesigned="$OUTSIGDIR_BASE/$SIGNER/noncodesigned.SHA256SUMS"
+        if [[ -f "$signer_noncodesigned" ]]; then
+            echo "Using $SIGNER's manifest as the base to compare against"
+            compare_noncodesigned="$signer_noncodesigned"
+        else
+            echo "Unable to find $SIGNER's manifest, using the first one found"
+        fi
+    else
+        echo "No SIGNER provided, using the first manifest found"
+    fi
 
     for current_manifest in "${all_noncodesigned[@]}"; do
         verify "$compare_noncodesigned" "$current_manifest"
@@ -112,6 +127,17 @@ echo "--------------------"
 echo ""
 if (( ${#all_all[@]} )); then
     compare_all="${all_all[0]}"
+    if [[ -n "$SIGNER" ]]; then
+        signer_all="$OUTSIGDIR_BASE/$SIGNER/all.SHA256SUMS"
+        if [[ -f "$signer_all" ]]; then
+            echo "Using $SIGNER's manifest as the base to compare against"
+            compare_all="$signer_all"
+        else
+            echo "Unable to find $SIGNER's manifest, using the first one found"
+        fi
+    else
+        echo "No SIGNER provided, using the first manifest found"
+    fi
 
     for current_manifest in "${all_all[@]}"; do
         verify "$compare_all" "$current_manifest"

@@ -11,7 +11,7 @@ We achieve bootstrappability by using Guix as a functional package manager.
 
 # Requirements
 
-Conservatively, a x86_64 machine with:
+Conservatively, you will need an x86_64 machine with:
 
 - 16GB of free disk space on the partition that /gnu/store will reside in
 - 8GB of free disk space **per platform triple** you're planning on building
@@ -87,7 +87,7 @@ crucial differences:
 An invocation with all default options would look like:
 
 ```
-env DETACHED_SIGS_REPO=<path/to/bitcoin-detached-sigs> ./contrib/guix-codesign
+env DETACHED_SIGS_REPO=<path/to/bitcoin-detached-sigs> ./contrib/guix/guix-codesign
 ```
 
 ## Cleaning intermediate work directories
@@ -437,9 +437,8 @@ In the extraordinarily rare case where you messed up your Guix installation in
 an irreversible way, you may want to completely purge Guix from your system and
 start over.
 
-1. Uninstall Guix itself according to the way you installed it. (e.g. `sudo apt
-   purge guix` for Ubuntu packaging, `sudo make uninstall` for
-   built-from-source).
+1. Uninstall Guix itself according to the way you installed it (e.g. `sudo apt
+   purge guix` for Ubuntu packaging, `sudo make uninstall` for a build from source).
 2. Remove all build users and groups
 
    You may check for relevant users and groups using:
