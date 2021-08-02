@@ -227,6 +227,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/crypto_chacha20.cpp \
  test/fuzz/crypto_chacha20_poly1305_aead.cpp \
  test/fuzz/crypto_common.cpp \
+ test/fuzz/crypto_compare_chacha20.cpp \
  test/fuzz/crypto_hkdf_hmac_sha256_l32.cpp \
  test/fuzz/crypto_poly1305.cpp \
  test/fuzz/cuckoocache.cpp \
