@@ -346,6 +346,12 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMBloc
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-wrong-command");
         }
         if(parts[1] != "connected") {
+            // if exitwhensynced is set on geth we likely have shutdown the geth node so we should also shut syscoin down here
+            const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
+            if(std::find(cmdLine.begin(), cmdLine.end(), "--exitwhensynced") != cmdLine.end()) {
+                StartShutdown();
+                return true;
+            }
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-connect-response-invalid-data");
         }
     } else {
