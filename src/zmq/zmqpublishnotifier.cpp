@@ -26,6 +26,7 @@
 #include <governance/governanceobject.h>
 #include <core_io.h>
 #include <validationinterface.h>
+#include <shutdown.h>
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 static bool bFirstTime = true;
 static const char *MSG_HASHBLOCK = "hashblock";
@@ -348,6 +349,12 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMBloc
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-connect-response-invalid-data");
         }
     } else {
+        // if exitwhensynced is set on geth we likely have shutdown the geth node so we should also shut syscoin down here
+        const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
+        if(std::find(cmdLine.begin(), cmdLine.end(), "--exitwhensynced") != cmdLine.end()) {
+            StartShutdown();
+            return true;
+        }
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-not-found");
     }
 
