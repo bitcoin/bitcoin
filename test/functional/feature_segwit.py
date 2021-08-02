@@ -259,8 +259,8 @@ class SegWitTest(SyscoinTestFramework):
         assert_equal(int(self.nodes[0].getmempoolentry(txid1)["wtxid"], 16), tx1.calc_sha256(True))
 
         # Check that weight and vsize are properly reported in mempool entry (txid1)
-        assert_equal(self.nodes[0].getmempoolentry(txid1)["vsize"], (self.nodes[0].getmempoolentry(txid1)["weight"] + 3) // 4)
-        assert_equal(self.nodes[0].getmempoolentry(txid1)["weight"], len(tx1.serialize_without_witness())*3 + len(tx1.serialize_with_witness()))
+        assert_equal(self.nodes[0].getmempoolentry(txid1)["vsize"], tx1.get_vsize())
+        assert_equal(self.nodes[0].getmempoolentry(txid1)["weight"], tx1.get_weight())
 
         # Now create tx2, which will spend from txid1.
         tx = CTransaction()
@@ -275,8 +275,8 @@ class SegWitTest(SyscoinTestFramework):
         assert_equal(int(self.nodes[0].getmempoolentry(txid2)["wtxid"], 16), tx.calc_sha256(True))
 
         # Check that weight and vsize are properly reported in mempool entry (txid2)
-        assert_equal(self.nodes[0].getmempoolentry(txid2)["vsize"], (self.nodes[0].getmempoolentry(txid2)["weight"] + 3) // 4)
-        assert_equal(self.nodes[0].getmempoolentry(txid2)["weight"], len(tx.serialize_without_witness())*3 + len(tx.serialize_with_witness()))
+        assert_equal(self.nodes[0].getmempoolentry(txid2)["vsize"], tx.get_vsize())
+        assert_equal(self.nodes[0].getmempoolentry(txid2)["weight"], tx.get_weight())
 
         # Now create tx3, which will spend from txid2
         tx = CTransaction()
@@ -298,8 +298,8 @@ class SegWitTest(SyscoinTestFramework):
         assert_equal(int(self.nodes[0].getmempoolentry(txid3)["wtxid"], 16), tx.calc_sha256(True))
 
         # Check that weight and vsize are properly reported in mempool entry (txid3)
-        assert_equal(self.nodes[0].getmempoolentry(txid3)["vsize"], (self.nodes[0].getmempoolentry(txid3)["weight"] + 3) // 4)
-        assert_equal(self.nodes[0].getmempoolentry(txid3)["weight"], len(tx.serialize_without_witness())*3 + len(tx.serialize_with_witness()))
+        assert_equal(self.nodes[0].getmempoolentry(txid3)["vsize"], tx.get_vsize())
+        assert_equal(self.nodes[0].getmempoolentry(txid3)["weight"], tx.get_weight())
 
         # Mine a block to clear the gbt cache again.
         self.nodes[0].generate(1)

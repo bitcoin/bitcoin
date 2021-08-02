@@ -15,7 +15,7 @@ from test_framework.messages import (
     COutPoint,
     CTxIn,
     CTxOut,
-    MAX_BLOCK_BASE_SIZE,
+    MAX_BLOCK_WEIGHT,
     MAX_MONEY,
     tx_from_hex,
 )
@@ -211,7 +211,7 @@ class MempoolAcceptanceTest(SyscoinTestFramework):
 
         self.log.info('A really large transaction')
         tx = tx_from_hex(raw_tx_reference)
-        tx.vin = [tx.vin[0]] * math.ceil(MAX_BLOCK_BASE_SIZE / len(tx.vin[0].serialize()))
+        tx.vin = [tx.vin[0]] * math.ceil(MAX_BLOCK_WEIGHT // 4 / len(tx.vin[0].serialize()))
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-oversize'}],
             rawtxs=[tx.serialize().hex()],
