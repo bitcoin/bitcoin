@@ -19,7 +19,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
-    hex_str_to_bytes,
 )
 
 from test_framework.messages import BLOCK_HEADER_SIZE
@@ -147,7 +146,7 @@ class RESTTest (BitcoinTestFramework):
 
         bin_request = b'\x01\x02'
         for txid, n in [spending, spent]:
-            bin_request += hex_str_to_bytes(txid)
+            bin_request += bytes.fromhex(txid)
             bin_request += pack("i", n)
 
         bin_response = self.test_rest_request("/getutxos", http_method='POST', req_type=ReqType.BIN, body=bin_request, ret_type=RetType.BYTES)
