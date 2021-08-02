@@ -212,6 +212,11 @@ public:
 
     /** Derive a private key, if private data is available in arg. */
     virtual bool GetPrivKey(int pos, const SigningProvider& arg, CKey& key) const = 0;
+
+    /** Return the non-extended public key for this PubkeyProvider, if it has one. */
+    virtual std::optional<CPubKey> GetRootPubKey() const = 0;
+    /** Return the extended public key for this PubkeyProvider, if it has one. */
+    virtual std::optional<CExtPubKey> GetRootExtPubKey() const = 0;
 };
 
 class OriginPubkeyProvider final : public PubkeyProvider
@@ -265,6 +270,14 @@ public:
     {
         return m_provider->GetPrivKey(pos, arg, key);
     }
+    std::optional<CPubKey> GetRootPubKey() const override
+    {
+        return m_provider->GetRootPubKey();
+    }
+    std::optional<CExtPubKey> GetRootExtPubKey() const override
+    {
+        return m_provider->GetRootExtPubKey();
+    }
 };
 
 /** An object representing a parsed constant public key in a descriptor. */
@@ -309,6 +322,14 @@ public:
     bool GetPrivKey(int pos, const SigningProvider& arg, CKey& key) const override
     {
         return arg.GetKey(m_pubkey.GetID(), key);
+    }
+    std::optional<CPubKey> GetRootPubKey() const override
+    {
+        return m_pubkey;
+    }
+    std::optional<CExtPubKey> GetRootExtPubKey() const override
+    {
+        return std::nullopt;
     }
 };
 
@@ -525,6 +546,14 @@ public:
         key = extkey.key;
         return true;
     }
+    std::optional<CPubKey> GetRootPubKey() const override
+    {
+        return std::nullopt;
+    }
+    std::optional<CExtPubKey> GetRootExtPubKey() const override
+    {
+        return m_root_extkey;
+    }
 };
 
 /** Base class for all Descriptor implementations. */
@@ -720,6 +749,19 @@ public:
     std::optional<int64_t> MaxSatisfactionWeight(bool) const override { return {}; }
 
     std::optional<int64_t> MaxSatisfactionElems() const override { return {}; }
+
+    void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const override
+    {
+        for (const auto& p : m_pubkey_args) {
+            std::optional<CPubKey> pub = p->GetRootPubKey();
+            if (pub) pubkeys.insert(*pub);
+            std::optional<CExtPubKey> ext_pub = p->GetRootExtPubKey();
+            if (ext_pub) ext_pubs.insert(*ext_pub);
+        }
+        for (const auto& arg : m_subdescriptor_args) {
+            arg->GetPubKeys(pubkeys, ext_pubs);
+        }
+    }
 };
 
 /** A parsed addr(A) descriptor. */
