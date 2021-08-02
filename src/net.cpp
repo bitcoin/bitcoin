@@ -3206,7 +3206,7 @@ bool CConnman::InitBinds(const Options& options)
         fBound |= Bind(addrBind.m_service, BF_REPORT_ERROR, addrBind.m_flags);
     }
     for (const auto& addr_bind : options.onion_binds) {
-        fBound |= Bind(addr_bind, BF_DONT_ADVERTISE, NetPermissionFlags::None);
+        fBound |= Bind(addr_bind, BF_REPORT_ERROR | BF_DONT_ADVERTISE, NetPermissionFlags::None);
     }
     if (options.bind_on_any) {
         struct in_addr inaddr_any;
