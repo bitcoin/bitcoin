@@ -45,7 +45,7 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
 
     // Send slightly less than full input amount to recipient, check leftover
     // input amount is paid to recipient not the miner (to_reduce == fee - 123)
-    BOOST_CHECK_EQUAL(fee, check_tx(123));
+    BOOST_CHECK_EQUAL(1463, check_tx(123));
 
     // Send full input minus fee amount to recipient, check leftover input
     // amount is paid to recipient not the miner (to_reduce == 0)
