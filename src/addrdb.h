@@ -76,7 +76,7 @@ public:
     static bool Read(CAddrMan& addr, CDataStream& ssPeers);
 };
 
-/** Access to the banlist databases (banlist.json and banlist.dat) */
+/** Access to the banlist database (banlist.json) */
 class CBanDB
 {
 private:
@@ -95,11 +95,9 @@ public:
      * Read the banlist from disk.
      * @param[out] banSet The loaded list. Set if `true` is returned, otherwise it is left
      * in an undefined state.
-     * @param[out] dirty Indicates whether the loaded list needs flushing to disk. Set if
-     * `true` is returned, otherwise it is left in an undefined state.
      * @return true on success
      */
-    bool Read(banmap_t& banSet, bool& dirty);
+    bool Read(banmap_t& banSet);
 };
 
 /**

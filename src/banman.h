@@ -88,7 +88,7 @@ private:
 
     RecursiveMutex m_cs_banned;
     banmap_t m_banned GUARDED_BY(m_cs_banned);
-    bool m_is_dirty GUARDED_BY(m_cs_banned);
+    bool m_is_dirty GUARDED_BY(m_cs_banned){false};
     CClientUIInterface* m_client_interface = nullptr;
     CBanDB m_ban_db;
     const int64_t m_default_ban_time;
