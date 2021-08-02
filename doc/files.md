@@ -56,7 +56,6 @@ Subdirectory       | File(s)               | Description
 `indexes/coinstats/db/` | LevelDB database | Coinstats index; *optional*, used if `-coinstatsindex=1`
 `wallets/`         |                       | [Contains wallets](#multi-wallet-environment); can be specified by `-walletdir` option; if `wallets/` subdirectory does not exist, wallets reside in the [data directory](#data-directory-location)
 `./`               | `anchors.dat`         | Anchor IP address database, created on shutdown and deleted at startup. Anchors are last known outgoing block-relay-only peers that are tried to re-connect to on startup
-`./`               | `banlist.dat`         | Stores the addresses/subnets of banned nodes (deprecated). `bitcoind` or `bitcoin-qt` no longer save the banlist to this file, but read it on startup if `banlist.json` is not present.
 `./`               | `banlist.json`        | Stores the addresses/subnets of banned nodes.
 `./`               | `bitcoin.conf`        | User-defined [configuration settings](bitcoin-conf.md) for `bitcoind` or `bitcoin-qt`. File is not written to by the software and must be created manually. Path can be specified by `-conf` option
 `./`               | `bitcoind.pid`        | Stores the process ID (PID) of `bitcoind` or `bitcoin-qt` while running; created at start and deleted on shutdown; can be specified by `-pid` option
@@ -114,6 +113,7 @@ These subdirectories and files are no longer used by Bitcoin Core:
 
 Path           | Description | Repository notes
 ---------------|-------------|-----------------
+`banlist.dat`  | Stores the addresses/subnets of banned nodes; superseded by `banlist.json` in 22.0 and completely ignored in 23.0 | [PR #20966](https://github.com/bitcoin/bitcoin/pull/20966), [PR #22570](https://github.com/bitcoin/bitcoin/pull/22570)
 `blktree/`     | Blockchain index; replaced by `blocks/index/` in [0.8.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.8.0.md#improvements) | [PR #2231](https://github.com/bitcoin/bitcoin/pull/2231), [`8fdc94cc`](https://github.com/bitcoin/bitcoin/commit/8fdc94cc8f0341e96b1edb3a5b56811c0b20bd15)
 `coins/`       | Unspent transaction output database; replaced by `chainstate/` in 0.8.0 | [PR #2231](https://github.com/bitcoin/bitcoin/pull/2231), [`8fdc94cc`](https://github.com/bitcoin/bitcoin/commit/8fdc94cc8f0341e96b1edb3a5b56811c0b20bd15)
 `blkindex.dat` | Blockchain index BDB database; replaced by {`chainstate/`, `blocks/index/`, `blocks/revNNNNN.dat`<sup>[\[2\]](#note2)</sup>} in 0.8.0 | [PR #1677](https://github.com/bitcoin/bitcoin/pull/1677)
