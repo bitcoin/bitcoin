@@ -6261,8 +6261,8 @@ void KillProcess(const pid_t& pid){
     #ifndef WIN32
         LogPrintf("%s: Trying to kill with SIGINT\n", __func__);            
         int result = kill( pid, SIGINT ) ;
-        if(result == ESRCH) {
-            LogPrintf("%s: Process does not exist, skipping...\n", __func__);       
+        if(result != 0) {
+            LogPrintf("%s: Process does not exist or exited already...\n", __func__);       
             return;     
         }
         pid_t w;
@@ -6388,8 +6388,9 @@ void DoGethMaintenance() {
         StopGethNode(temp);
         LogPrintf("%s: Starting Geth because PID's were uninitialized\n", __func__);
         const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-        if(!StartGethNode(gethDescriptorURL, gethPID))
+        if(!StartGethNode(gethDescriptorURL, gethPID)) {
             LogPrintf("%s: Failed to start Geth\n", __func__); 
+        }
     } else if(fReindexGeth){
         fReindexGeth = false;
         LogPrintf("%s: Stopping Geth\n", __func__); 
