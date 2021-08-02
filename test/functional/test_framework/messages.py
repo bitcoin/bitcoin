@@ -33,7 +33,7 @@ from test_framework.siphash import siphash256
 from test_framework.util import assert_equal
 
 MAX_LOCATOR_SZ = 101
-MAX_BLOCK_BASE_SIZE = 1000000
+MAX_BLOCK_WEIGHT = 4000000
 MAX_BLOOM_FILTER_SIZE = 36000
 MAX_BLOOM_HASH_FUNCS = 50
 
@@ -608,12 +608,15 @@ class CTransaction:
                 return False
         return True
 
-    # Calculate the virtual transaction size using witness and non-witness
+    # Calculate the transaction weight using witness and non-witness
     # serialization size (does NOT use sigops).
-    def get_vsize(self):
+    def get_weight(self):
         with_witness_size = len(self.serialize_with_witness())
         without_witness_size = len(self.serialize_without_witness())
-        return math.ceil(((WITNESS_SCALE_FACTOR - 1) * without_witness_size + with_witness_size) / WITNESS_SCALE_FACTOR)
+        return (WITNESS_SCALE_FACTOR - 1) * without_witness_size + with_witness_size
+
+    def get_vsize(self):
+        return math.ceil(self.get_weight() / WITNESS_SCALE_FACTOR)
 
     def __repr__(self):
         return "CTransaction(nVersion=%i vin=%s vout=%s wit=%s nLockTime=%i)" \
@@ -760,6 +763,13 @@ class CBlock(CBlockHeader):
         while self.sha256 > target:
             self.nNonce += 1
             self.rehash()
+
+    # Calculate the block weight using witness and non-witness
+    # serialization size (does NOT use sigops).
+    def get_weight(self):
+        with_witness_size = len(self.serialize(with_witness=True))
+        without_witness_size = len(self.serialize(with_witness=False))
+        return (WITNESS_SCALE_FACTOR - 1) * without_witness_size + with_witness_size
 
     def __repr__(self):
         return "CBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x vtx=%s)" \
