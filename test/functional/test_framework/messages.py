@@ -546,6 +546,7 @@ class CTransaction:
     def get_vsize(self):
         return len(self.serialize())
 
+    # it's just a helper that return vsize to reduce conflicts during backporting
     def get_weight(self):
         return self.get_vsize()
 
@@ -680,6 +681,10 @@ class CBlock(CBlockHeader):
         while self.sha256 > target:
             self.nNonce += 1
             self.rehash()
+
+    # it's just a helper that return vsize to reduce conflicts during backporting
+    def get_weight(self):
+        return len(self.serialize())
 
     def __repr__(self):
         return "CBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x vtx=%s)" \
