@@ -20,7 +20,6 @@ from test_framework.util import (
     assert_raises_rpc_error,
     find_vout_for_address,
     generate_to_height,
-    hex_str_to_bytes,
 )
 from test_framework.messages import (
     CTxInWitness,
@@ -233,7 +232,7 @@ class SignRawTransactionsTest(SyscoinTestFramework):
         embedded_pubkey = eckey.get_pubkey().get_bytes().hex()
         witness_script = {
             'P2PKH': key_to_p2pkh_script(embedded_pubkey).hex(),
-            'P2PK': CScript([hex_str_to_bytes(embedded_pubkey), OP_CHECKSIG]).hex()
+            'P2PK': CScript([bytes.fromhex(embedded_pubkey), OP_CHECKSIG]).hex()
         }.get(tx_type, "Invalid tx_type")
         redeem_script = script_to_p2wsh_script(witness_script).hex()
         addr = script_to_p2sh(redeem_script)

@@ -41,7 +41,6 @@ from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     assert_equal,
     create_confirmed_utxos,
-    hex_str_to_bytes,
 )
 
 
@@ -204,7 +203,7 @@ class ChainstateWriteCrashTest(SyscoinTestFramework):
                 continue
 
             for _ in range(3):
-                tx.vout.append(CTxOut(output_amount, hex_str_to_bytes(utxo['scriptPubKey'])))
+                tx.vout.append(CTxOut(output_amount, bytes.fromhex(utxo['scriptPubKey'])))
 
             # Sign and send the transaction to get into the mempool
             tx_signed_hex = node.signrawtransactionwithwallet(tx.serialize().hex())['hex']

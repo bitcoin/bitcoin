@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes, bytes_to_hex_str
+from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str
 from test_framework.p2p import P2PInterface
 from test_framework.messages import hash256
 '''
@@ -41,7 +41,7 @@ class FakeMNAUTHTest(DashTestFramework):
         assert("verified_proregtx_hash" in peerinfo)
         assert("verified_pubkey_hash" in peerinfo)
         assert_equal(peerinfo["verified_proregtx_hash"], protx_hash)
-        assert_equal(peerinfo["verified_pubkey_hash"], bytes_to_hex_str(hash256(hex_str_to_bytes(public_key))[::-1]))
+        assert_equal(peerinfo["verified_pubkey_hash"], bytes_to_hex_str(hash256(bytes.fromhex(public_key))[::-1]))
         # Test some error cases
         null_hash = "0000000000000000000000000000000000000000000000000000000000000000"
         assert_raises_rpc_error(-8, "proTxHash invalid", masternode.node.mnauth,

@@ -5,7 +5,7 @@
 
 import time
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import force_finish_mnsync, assert_raises_rpc_error, assert_equal, hex_str_to_bytes, wait_until_helper
+from test_framework.util import force_finish_mnsync, assert_raises_rpc_error, assert_equal, wait_until_helper
 from test_framework.p2p import (
   P2PInterface,
 )
@@ -108,7 +108,7 @@ class LLMQSigningTest(DashTestFramework):
             sig_share.quorumMember = int(sig_share_rpc_1["quorumMember"])
             sig_share.id = int(sig_share_rpc_1["id"], 16)
             sig_share.msgHash = int(sig_share_rpc_1["msgHash"], 16)
-            sig_share.sigShare = hex_str_to_bytes(sig_share_rpc_1["signature"])
+            sig_share.sigShare = bytes.fromhex(sig_share_rpc_1["signature"])
             for i in range(len(self.mninfo)):
                 assert self.mninfo[i].node.getconnectioncount() == 5
             # Get the current recovery member of the quorum

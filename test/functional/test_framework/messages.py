@@ -30,7 +30,8 @@ import struct
 import time
 
 from test_framework.siphash import siphash256
-from test_framework.util import hex_str_to_bytes, assert_equal
+from test_framework.util import assert_equal
+# SYSCOIN
 from collections import namedtuple
 MAX_LOCATOR_SZ = 101
 MAX_BLOCK_BASE_SIZE = 1000000
@@ -241,7 +242,7 @@ def from_hex(obj, hex_string):
     Note that there is no complementary helper like e.g. `to_hex` for the
     inverse operation. To serialize a message object to a hex string, simply
     use obj.serialize().hex()"""
-    obj.deserialize(BytesIO(hex_str_to_bytes(hex_string)))
+    obj.deserialize(BytesIO(bytes.fromhex(hex_string)))
     return obj
 
 

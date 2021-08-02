@@ -20,7 +20,6 @@ from test_framework.messages import (
 from test_framework.p2p import P2PDataStore
 from test_framework.util import (
   assert_equal,
-  hex_str_to_bytes,
 )
 
 from test_framework.auxpow_testing import computeAuxpow
@@ -92,7 +91,7 @@ class AuxpowInvalidPoWTest (SyscoinTestFramework):
     target = b"%064x" % uint256_from_compact (block.nBits)
     auxpowHex = computeAuxpow (blkHash, target, ok)
     block.auxpow = CAuxPow ()
-    block.auxpow.deserialize (BytesIO (hex_str_to_bytes (auxpowHex)))
+    block.auxpow.deserialize (BytesIO (bytes.fromhex(auxpowHex)))
 
     return block
 

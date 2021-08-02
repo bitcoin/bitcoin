@@ -5,7 +5,7 @@
 """Helpful routines for regression testing."""
 
 from base64 import b64encode
-from binascii import hexlify, unhexlify
+from binascii import hexlify
 from decimal import Decimal, ROUND_DOWN
 from subprocess import CalledProcessError
 import hashlib
@@ -214,9 +214,6 @@ def EncodeDecimal(o):
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
 
-
-def hex_str_to_bytes(hex_str):
-    return unhexlify(hex_str.encode('ascii'))
 # SYSCOIN
 def bytes_to_hex_str(byte_str):
     return hexlify(byte_str).decode('ascii')
@@ -550,7 +547,7 @@ def gen_return_txouts():
     from .messages import CTxOut
     txout = CTxOut()
     txout.nValue = 0
-    txout.scriptPubKey = hex_str_to_bytes(script_pubkey)
+    txout.scriptPubKey = bytes.fromhex(script_pubkey)
     for _ in range(128):
         txouts.append(txout)
     return txouts
