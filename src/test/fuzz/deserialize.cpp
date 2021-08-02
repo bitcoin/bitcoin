@@ -26,6 +26,12 @@
 
 #include <test/fuzz/fuzz.h>
 
+void initialize()
+{
+    // Fuzzers using pubkey must hold an ECCVerifyHandle.
+    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+}
+
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
     CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
