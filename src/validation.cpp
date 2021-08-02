@@ -6363,16 +6363,12 @@ bool StopGethNode(pid_t &pid)
     }
     boost::filesystem::remove(GetGethPidFile());
     // check only on startup for any running sysgeth on OSX/Linux
+    #ifndef WIN32
     if(pid == 0) {
-        #ifndef WIN32
-        bool processRunning = ::system("ps -Ac | grep -m1 sysgeth > /dev/null");
-        if(processRunning > 0) {
-            LogPrintf("%s: Geth found running, killing...\n", __func__);
-            ::system("pkill -9 -f sysgeth");
-            UninterruptibleSleep(std::chrono::milliseconds(1000));
-        }
-        #endif
+        LogPrintf("Killing any sysgeth processes that may be already running...\n");
+        ::system("pkill -9 -f sysgeth"); 
     }
+    #endif
     pid = -1;
     return true;
 }
