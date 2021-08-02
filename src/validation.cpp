@@ -68,6 +68,9 @@
 #include <messagesigner.h>
 #include <rpc/request.h>
 #include <signal.h>
+#ifndef WIN32
+#include <sys/wait.h>
+#endif
 // SYSCOIN
 RecursiveMutex cs_geth;
 struct DescriptorDetails {
@@ -6256,36 +6259,72 @@ void KillProcess(const pid_t& pid){
         TerminateProcess(handy,0);
     #endif  
     #ifndef WIN32
-        int result = 0;
+        LogPrintf("%s: Trying to kill with SIGINT\n", __func__);            
+        kill( pid, SIGINT ) ;
+        pid_t w;
+        int status;
         for(int i =0;i<10;i++){
+            w = waitpid(pid, &status, WNOHANG);
+            if(w) {
+                if (WIFEXITED(status)) {
+                    LogPrintf("exited, status=%d\n", WEXITSTATUS(status));
+                    return;
+                } else if (WIFSIGNALED(status)) {
+                    LogPrintf("killed by signal %d\n", WTERMSIG(status));
+                    return;
+                } else if (WIFSTOPPED(status)) {
+                    LogPrintf("stopped by signal %d\n", WSTOPSIG(status));
+                    return;
+                } else if (WIFCONTINUED(status)) {
+                    LogPrintf("continued\n");
+                }
+                UninterruptibleSleep(std::chrono::milliseconds(1000));
+                continue;
+            }  
             UninterruptibleSleep(std::chrono::milliseconds(1000));
-            result = kill( pid, SIGINT ) ;
-            if(result == 0){
-                LogPrintf("%s: Killing with SIGINT %d\n", __func__, pid);
-                continue;
-            }  
-            LogPrintf("%s: Killed with SIGINT\n", __func__);
-            return;
         }
+        LogPrintf("%s: Trying to kill with SIGTERM\n", __func__);     
+        kill( pid, SIGTERM ) ;
         for(int i =0;i<10;i++){
-            UninterruptibleSleep(std::chrono::milliseconds(500));
-            result = kill( pid, SIGTERM ) ;
-            if(result == 0){
-                LogPrintf("%s: Killing with SIGTERM %d\n", __func__, pid);
+            w = waitpid(pid, &status, WNOHANG);
+            if(w) {
+                if (WIFEXITED(status)) {
+                    LogPrintf("exited, status=%d\n", WEXITSTATUS(status));
+                    return;
+                } else if (WIFSIGNALED(status)) {
+                    LogPrintf("killed by signal %d\n", WTERMSIG(status));
+                    return;
+                } else if (WIFSTOPPED(status)) {
+                    LogPrintf("stopped by signal %d\n", WSTOPSIG(status));
+                    return;
+                } else if (WIFCONTINUED(status)) {
+                    LogPrintf("continued\n");
+                }
+                UninterruptibleSleep(std::chrono::milliseconds(1000));
                 continue;
             }  
-            LogPrintf("%s: Killed with SIGTERM\n", __func__);
-            return;
+            UninterruptibleSleep(std::chrono::milliseconds(1000));
         }
+        LogPrintf("%s: Trying to kill with SIGKILL\n", __func__);     
+        kill( pid, SIGKILL) ;
         for(int i =0;i<10;i++){
-            UninterruptibleSleep(std::chrono::milliseconds(500));
-            result = kill( pid, SIGKILL ) ;
-            if(result == 0){
-                LogPrintf("%s: Killing with SIGKILL %d\n", __func__, pid);
-                continue;
+            w = waitpid(pid, &status, WNOHANG);
+            if(w) {
+                if (WIFEXITED(status)) {
+                    LogPrintf("exited, status=%d\n", WEXITSTATUS(status));
+                    return;
+                } else if (WIFSIGNALED(status)) {
+                    LogPrintf("killed by signal %d\n", WTERMSIG(status));
+                    return;
+                } else if (WIFSTOPPED(status)) {
+                    LogPrintf("stopped by signal %d\n", WSTOPSIG(status));
+                    return;
+                } else if (WIFCONTINUED(status)) {
+                    LogPrintf("continued\n");
+                }
+                UninterruptibleSleep(std::chrono::milliseconds(1000));
             }  
-            LogPrintf("%s: Killed with SIGKILL\n", __func__);
-            return;
+            UninterruptibleSleep(std::chrono::milliseconds(1000));
         }
         LogPrintf("%s: Done trying to kill with SIGINT-SIGTERM-SIGKILL\n", __func__);            
     #endif 
