@@ -696,8 +696,7 @@ private:
     //! Find an entry.
     CAddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    //! find an entry, creating it if necessary.
-    //! nTime and nServices of the found node are updated, if necessary.
+    //! Create a new entry and add it to the internal data structures mapInfo, mapAddr and vRandom.
     CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Swap two elements in vRandom.
