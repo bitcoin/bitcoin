@@ -6372,6 +6372,9 @@ void DoGethMaintenance() {
     // hasn't started yet so start
     if(!fReindexGeth && gethPID == 0) {
         gethPID = -1;
+        pid_t temp = 0;
+        LogPrintf("%s: Stopping Geth\n", __func__); 
+        StopGethNode(temp);
         LogPrintf("%s: Starting Geth because PID's were uninitialized\n", __func__);
         const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
         if(!StartGethNode(gethDescriptorURL, gethPID))
