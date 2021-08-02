@@ -50,11 +50,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     }
 
 #if BLOCK_FILTER_DESERIALIZE
-    try {
-        BlockFilter block_filter;
-        ds >> block_filter;
-    } catch (const std::ios_base::failure&) {
-    }
+    return; // unimplemented
+    // try {
+    //     BlockFilter block_filter;
+    //     ds >> block_filter;
+    // } catch (const std::ios_base::failure&) {
+    // }
 #elif ADDR_INFO_DESERIALIZE
     try {
         CAddrInfo addr_info;
@@ -122,17 +123,19 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     } catch (const std::ios_base::failure&) {
     }
 #elif FLAT_FILE_POS_DESERIALIZE
-    try {
-        FlatFilePos flat_file_pos;
-        ds >> flat_file_pos;
-    } catch (const std::ios_base::failure&) {
-    }
+    return; // unimplemented
+    // try {
+    //     FlatFilePos flat_file_pos;
+    //     ds >> flat_file_pos;
+    // } catch (const std::ios_base::failure&) {
+    // }
 #elif KEY_ORIGIN_INFO_DESERIALIZE
-    try {
-        KeyOriginInfo key_origin_info;
-        ds >> key_origin_info;
-    } catch (const std::ios_base::failure&) {
-    }
+    return; // unimplemented
+    // try {
+    //     KeyOriginInfo key_origin_info;
+    //     ds >> key_origin_info;
+    // } catch (const std::ios_base::failure&) {
+    // }
 #elif PARTIALLY_SIGNED_TRANSACTION_DESERIALIZE
     try {
         PartiallySignedTransaction partially_signed_transaction;
