@@ -350,7 +350,7 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMBloc
             const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
             if(std::find(cmdLine.begin(), cmdLine.end(), "--exitwhensynced") != cmdLine.end()) {
                 StartShutdown();
-                return true;
+                return state.Error("nevm-connect-response-invalid-data");
             }
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-connect-response-invalid-data");
         }
@@ -359,7 +359,7 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMBloc
         const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
         if(std::find(cmdLine.begin(), cmdLine.end(), "--exitwhensynced") != cmdLine.end()) {
             StartShutdown();
-            return true;
+            return state.Error("nevm-response-not-found");
         }
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-not-found");
     }
