@@ -6260,7 +6260,11 @@ void KillProcess(const pid_t& pid){
     #endif  
     #ifndef WIN32
         LogPrintf("%s: Trying to kill with SIGINT\n", __func__);            
-        kill( pid, SIGINT ) ;
+        int result = kill( pid, SIGINT ) ;
+        if(result == ESRCH) {
+            LogPrintf("%s: Process does not exist, skipping...\n", __func__);       
+            return;     
+        }
         pid_t w;
         int status;
         for(int i =0;i<10;i++){
@@ -6284,7 +6288,7 @@ void KillProcess(const pid_t& pid){
             UninterruptibleSleep(std::chrono::milliseconds(1000));
         }
         LogPrintf("%s: Trying to kill with SIGTERM\n", __func__);     
-        kill( pid, SIGTERM ) ;
+        result = kill( pid, SIGTERM ) ;
         for(int i =0;i<10;i++){
             w = waitpid(pid, &status, WNOHANG);
             if(w) {
@@ -6306,7 +6310,7 @@ void KillProcess(const pid_t& pid){
             UninterruptibleSleep(std::chrono::milliseconds(1000));
         }
         LogPrintf("%s: Trying to kill with SIGKILL\n", __func__);     
-        kill( pid, SIGKILL) ;
+        result = kill( pid, SIGKILL) ;
         for(int i =0;i<10;i++){
             w = waitpid(pid, &status, WNOHANG);
             if(w) {
