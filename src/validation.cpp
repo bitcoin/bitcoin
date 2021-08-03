@@ -531,22 +531,17 @@ private:
             m_ptx(ptx), m_hash(ptx->GetHash()),
             m_tx_limit_descendants{limit_descendants},
             m_tx_limit_descendant_size{limit_descendant_size} {}
-        std::set<uint256> m_conflicts;
-        CTxMemPool::setEntries m_all_conflicting;
         CTxMemPool::setEntries m_ancestors;
         std::unique_ptr<CTxMemPoolEntry> m_entry;
-        std::list<CTransactionRef> m_replaced_transactions;
 
-        bool m_replacement_transaction;
+        /** The set of txids corresponding to mempool entries that this transaction directly conflicts with. */
+        std::set<uint256> m_conflicts;
+
         /** Virtual size of the transaction as used by the mempool, calculated using serialized size
          * of the transaction and sigops. */
         int64_t m_vsize;
         CAmount m_base_fees;
         CAmount m_modified_fees;
-        /** Total modified fees of all transactions being replaced. */
-        CAmount m_conflicting_fees{0};
-        /** Total virtual size of all transactions being replaced. */
-        size_t m_conflicting_size{0};
 
         const CTransactionRef& m_ptx;
         const uint256& m_hash;
@@ -630,6 +625,23 @@ private:
     // descendant limits, which may be edited to account for the transaction's mempool conflicts.
     const size_t m_limit_descendants;
     const size_t m_limit_descendant_size;
+
+    // RBF-related members
+    /** Whether we are replacing any transactions by BIP125 RBF. */
+    bool m_rbf;
+    /** All conflicting mempool transactions and their descendants. */
+    CTxMemPool::setEntries m_all_conflicts;
+    /** Mempool transactions that were replaced. */
+    std::list<CTransactionRef> m_replaced_transactions;
+
+    /** Total modified fees of mempool transactions being replaced. */
+    CAmount m_conflicting_fees{0};
+    /** Total size (in virtual bytes) of mempool transactions being replaced. */
+    size_t m_conflicting_size{0};
+
+    /** In-mempool ancestors of the transaction(s) being validated. If there are multiple
+     * transactions, this is the de-duplicated union of all ancestors. */
+    CTxMemPool::setEntries m_collective_ancestors;
 };
 
 bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
@@ -881,9 +893,8 @@ bool MemPoolAccept::MempoolChecks(Workspace& ws)
     TxValidationState& state = ws.m_state;
     const CTxMemPool::setEntries setIterConflicting = m_pool.GetIterSet(ws.m_conflicts);
 
-    ws.m_replacement_transaction = ws.m_conflicts.size();
-    if (ws.m_replacement_transaction)
-    {
+    m_rbf = ws.m_conflicts.size() > 0;
+    if (m_rbf) {
         CFeeRate newFeeRate(ws.m_modified_fees, ws.m_vsize);
         // It's possible that the replacement pays more fees than its direct conflicts but not more
         // than all conflicts (i.e. the direct conflicts have high-fee descendants). However, if the
@@ -896,7 +907,7 @@ bool MemPoolAccept::MempoolChecks(Workspace& ws)
         }
 
         // Calculate all conflicting entries and enforce BIP125 Rule #5.
-        if (const auto err_string{GetEntriesForConflicts(tx, m_pool, setIterConflicting, ws.m_all_conflicting)}) {
+        if (const auto err_string{GetEntriesForConflicts(tx, m_pool, setIterConflicting, m_all_conflicts)}) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                                  "too many potential replacements", *err_string);
         }
@@ -908,11 +919,11 @@ bool MemPoolAccept::MempoolChecks(Workspace& ws)
 
         // Check if it's economically rational to mine this transaction rather than the ones it
         // replaces and pays for its own relay fees. Enforce BIP125 Rules #3 and #4.
-        for (CTxMemPool::txiter it : ws.m_all_conflicting) {
-            ws.m_conflicting_fees += it->GetModifiedFee();
-            ws.m_conflicting_size += it->GetTxSize();
+        for (CTxMemPool::txiter it : m_all_conflicts) {
+            m_conflicting_fees += it->GetModifiedFee();
+            m_conflicting_size += it->GetTxSize();
         }
-        if (const auto err_string{PaysForRBF(ws.m_conflicting_fees, ws.m_modified_fees, ws.m_vsize,
+        if (const auto err_string{PaysForRBF(m_conflicting_fees, ws.m_modified_fees, ws.m_vsize,
                                              ::incrementalRelayFee, hash)}) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
         }
@@ -1000,27 +1011,27 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
     const uint256& hash = ws.m_hash;
     TxValidationState& state = ws.m_state;
     const bool bypass_limits = args.m_bypass_limits;
-
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
 
     // Remove conflicting transactions from the mempool
-    for (CTxMemPool::txiter it : ws.m_all_conflicting)
+    for (CTxMemPool::txiter it : m_all_conflicts)
     {
         LogPrint(BCLog::MEMPOOL, "replacing tx %s with %s for %s additional fees, %d delta bytes\n",
                 it->GetTx().GetHash().ToString(),
                 hash.ToString(),
-                FormatMoney(ws.m_modified_fees - ws.m_conflicting_fees),
-                (int)entry->GetTxSize() - (int)ws.m_conflicting_size);
-        ws.m_replaced_transactions.push_back(it->GetSharedTx());
+                FormatMoney(ws.m_modified_fees - m_conflicting_fees),
+                (int)entry->GetTxSize() - (int)m_conflicting_size);
+        m_replaced_transactions.push_back(it->GetSharedTx());
     }
-    m_pool.RemoveStaged(ws.m_all_conflicting, false, MemPoolRemovalReason::REPLACED);
+    m_pool.RemoveStaged(m_all_conflicts, false, MemPoolRemovalReason::REPLACED);
+    m_all_conflicts.clear();
 
     // This transaction should only count for fee estimation if:
     // - it isn't a BIP 125 replacement transaction (may not be widely supported)
     // - it's not being re-added during a reorg which bypasses typical mempool fee limits
     // - the node is not behind
     // - the transaction is not dependent on any other transactions in the mempool
-    bool validForFeeEstimation = !ws.m_replacement_transaction && !bypass_limits && IsCurrentForFeeEstimation(m_active_chainstate) && m_pool.HasNoInputsOf(tx);
+    bool validForFeeEstimation = !m_rbf && !bypass_limits && IsCurrentForFeeEstimation(m_active_chainstate) && m_pool.HasNoInputsOf(tx);
 
     // Store transaction in memory
     m_pool.addUnchecked(*entry, ws.m_ancestors, validForFeeEstimation);
@@ -1088,7 +1099,7 @@ bool MemPoolAccept::FinalizePackage(const ATMPArgs& args, std::vector<Workspace>
     for (Workspace& ws : workspaces) {
         if (m_pool.exists(GenTxid(true, ws.m_ptx->GetWitnessHash()))) {
             results.emplace(ws.m_ptx->GetWitnessHash(),
-                MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize, ws.m_base_fees));
+                MempoolAcceptResult::Success(std::move(m_replaced_transactions), ws.m_vsize, ws.m_base_fees));
             GetMainSignals().TransactionAddedToMempool(ws.m_ptx, m_pool.GetAndIncrementSequence());
         } else {
             all_submitted = false;
@@ -1121,14 +1132,14 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
 
     // Tx was accepted, but not added
     if (args.m_test_accept) {
-        return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize, ws.m_base_fees);
+        return MempoolAcceptResult::Success(std::move(m_replaced_transactions), ws.m_vsize, ws.m_base_fees);
     }
 
     if (!Finalize(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
     GetMainSignals().TransactionAddedToMempool(ptx, m_pool.GetAndIncrementSequence());
 
-    return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize, ws.m_base_fees);
+    return MempoolAcceptResult::Success(std::move(m_replaced_transactions), ws.m_vsize, ws.m_base_fees);
 }
 
 PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::vector<CTransactionRef>& txns, ATMPArgs& args)
@@ -1208,7 +1219,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
             // When test_accept=true, transactions that pass PolicyScriptChecks are valid because there are
             // no further mempool checks (passing PolicyScriptChecks implies passing ConsensusScriptChecks).
             results.emplace(ws.m_ptx->GetWitnessHash(),
-                            MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions),
+                            MempoolAcceptResult::Success(std::move(m_replaced_transactions),
                                                          ws.m_vsize, ws.m_base_fees));
         }
     }
