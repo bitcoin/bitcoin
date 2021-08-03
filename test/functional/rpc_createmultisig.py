@@ -66,7 +66,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         # decompress pk2
         pk_obj = ECPubKey()
-        pk_obj.set(binascii.unhexlify(pk2))
+        pk_obj.set(bytes.fromhex(pk2))
         pk_obj.compressed = False
         pk2 = binascii.hexlify(pk_obj.get_bytes()).decode()
 
