@@ -179,7 +179,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
 
     // If available, use Undo data to calculate the fee. Note that txundo == nullptr
     // for coinbase transactions and for transactions where undo data is unavailable.
-    const bool calculate_fee = txundo != nullptr;
+    const bool have_undo = txundo != nullptr;
     CAmount amt_total_in = 0;
     CAmount amt_total_out = 0;
 
@@ -203,7 +203,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
             }
             in.pushKV("txinwitness", txinwitness);
         }
-        if (calculate_fee) {
+        if (have_undo) {
             const Coin& prev_coin = txundo->vprevout[i];
             const CTxOut& prev_txout = prev_coin.out;
 
@@ -245,13 +245,13 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         out.pushKV("scriptPubKey", o);
         vout.push_back(out);
 
-        if (calculate_fee) {
+        if (have_undo) {
             amt_total_out += txout.nValue;
         }
     }
     entry.pushKV("vout", vout);
 
-    if (calculate_fee) {
+    if (have_undo) {
         const CAmount fee = amt_total_in - amt_total_out;
         CHECK_NONFATAL(MoneyRange(fee));
         entry.pushKV("fee", ValueFromAmount(fee));
