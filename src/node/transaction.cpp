@@ -125,8 +125,6 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
 
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock)
 {
-    LOCK(cs_main);
-
     if (mempool && !block_index) {
         CTransactionRef ptx = mempool->get(hash);
         if (ptx) return ptx;
