@@ -118,7 +118,6 @@ static RPCHelpMan getpeerinfo()
                             {RPCResult::Type::STR, "addr", "(host:port) The IP address and port of the peer"},
                             {RPCResult::Type::STR, "addrbind", "(ip:port) Bind address of the connection to the peer"},
                             {RPCResult::Type::STR, "addrlocal", "(ip:port) Local address as reported by the peer"},
-                            {RPCResult::Type::BOOL, "addr_relay_enabled", "Whether we participate in address relay with this peer"},
                             {RPCResult::Type::STR, "network", "Network (" + Join(GetNetworkNames(/* append_unroutable */ true), ", ") + ")"},
                             {RPCResult::Type::NUM, "mapped_as", "The AS in the BGP route to the peer used for diversifying\n"
                                                                 "peer selection (only available if the asmap config flag is set)"},
@@ -151,6 +150,7 @@ static RPCHelpMan getpeerinfo()
                             {
                                 {RPCResult::Type::NUM, "n", "The heights of blocks we're currently asking from this peer"},
                             }},
+                            {RPCResult::Type::BOOL, "addr_relay_enabled", "Whether we participate in address relay with this peer"},
                             {RPCResult::Type::ARR, "permissions", "Any special permissions that have been granted to this peer",
                             {
                                 {RPCResult::Type::STR, "permission_type", Join(NET_PERMISSIONS_DOC, ",\n") + ".\n"},
@@ -202,7 +202,6 @@ static RPCHelpMan getpeerinfo()
         if (!(stats.addrLocal.empty())) {
             obj.pushKV("addrlocal", stats.addrLocal);
         }
-        obj.pushKV("addr_relay_enabled", statestats.m_addr_relay_enabled);
         obj.pushKV("network", GetNetworkName(stats.m_network));
         if (stats.m_mapped_as != 0) {
             obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
@@ -244,6 +243,7 @@ static RPCHelpMan getpeerinfo()
                 heights.push_back(height);
             }
             obj.pushKV("inflight", heights);
+            obj.pushKV("addr_relay_enabled", statestats.m_addr_relay_enabled);
             obj.pushKV("addr_processed", statestats.m_addr_processed);
             obj.pushKV("addr_rate_limited", statestats.m_addr_rate_limited);
         }
