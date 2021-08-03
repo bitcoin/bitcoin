@@ -12,6 +12,7 @@ from typing import Optional
 from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.key import ECKey
 from test_framework.messages import (
+    BIP125_SEQUENCE_NUMBER,
     COIN,
     COutPoint,
     CTransaction,
@@ -190,7 +191,7 @@ def make_chain(node, address, privkeys, parent_txid, parent_value, n=0, parent_l
     amount = parent_value with a fee deducted.
     Return tuple (CTransaction object, raw hex, nValue, scriptPubKey of the output created).
     """
-    inputs = [{"txid": parent_txid, "vout": n}]
+    inputs = [{"txid": parent_txid, "vout": n, "sequence": BIP125_SEQUENCE_NUMBER}]
     my_value = parent_value - fee
     outputs = {address : my_value}
     rawtx = node.createrawtransaction(inputs, outputs)
