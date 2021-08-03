@@ -499,6 +499,12 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     // connect(ui->btn_salvagewallet, SIGNAL(clicked()), this, SLOT(walletSalvage()));
     // Disable salvage option in GUI, it's way too powerful and can lead to funds loss
     ui->btn_salvagewallet->setEnabled(false);
+    // Disable wallet repair options that require a wallet (enable them later when a wallet is added)
+    ui->btn_rescan1->setEnabled(false);
+    ui->btn_rescan2->setEnabled(false);
+    ui->btn_zapwallettxes1->setEnabled(false);
+    ui->btn_zapwallettxes2->setEnabled(false);
+    ui->btn_upgradewallet->setEnabled(false);
     connect(ui->btn_rescan1, SIGNAL(clicked()), this, SLOT(walletRescan1()));
     connect(ui->btn_rescan2, SIGNAL(clicked()), this, SLOT(walletRescan2()));
     connect(ui->btn_zapwallettxes1, SIGNAL(clicked()), this, SLOT(walletZaptxes1()));
@@ -749,6 +755,11 @@ void RPCConsole::addWallet(WalletModel * const walletModel)
         ui->WalletSelector->setVisible(true);
         ui->WalletSelectorLabel->setVisible(true);
     }
+    ui->btn_rescan1->setEnabled(true);
+    ui->btn_rescan2->setEnabled(true);
+    ui->btn_zapwallettxes1->setEnabled(true);
+    ui->btn_zapwallettxes2->setEnabled(true);
+    ui->btn_upgradewallet->setEnabled(true);
 }
 
 void RPCConsole::removeWallet(WalletModel * const walletModel)
@@ -757,6 +768,13 @@ void RPCConsole::removeWallet(WalletModel * const walletModel)
     if (ui->WalletSelector->count() == 2) {
         ui->WalletSelector->setVisible(false);
         ui->WalletSelectorLabel->setVisible(false);
+    }
+    if (ui->WalletSelector->count() == 1) {
+        ui->btn_rescan1->setEnabled(false);
+        ui->btn_rescan2->setEnabled(false);
+        ui->btn_zapwallettxes1->setEnabled(false);
+        ui->btn_zapwallettxes2->setEnabled(false);
+        ui->btn_upgradewallet->setEnabled(false);
     }
 }
 #endif
