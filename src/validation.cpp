@@ -594,18 +594,11 @@ private:
         std::set<Txid> m_conflicts;
         /** Iterators to mempool entries that this transaction directly conflicts with. */
         CTxMemPool::setEntries m_iters_conflicting;
-        /** Iterators to all mempool entries that would be replaced by this transaction, including
-         * those it directly conflicts with and their descendants. */
-        CTxMemPool::setEntries m_all_conflicting;
         /** All mempool ancestors of this transaction. */
         CTxMemPool::setEntries m_ancestors;
         /** Mempool entry constructed for this transaction. Constructed in PreChecks() but not
          * inserted into the mempool until Finalize(). */
         std::unique_ptr<CTxMemPoolEntry> m_entry;
-        /** Pointers to the transactions that have been removed from the mempool and replaced by
-         * this transaction, used to return to the MemPoolAccept caller. Only populated if
-         * validation is successful and the original transactions are removed. */
-        std::list<CTransactionRef> m_replaced_transactions;
 
         /** Virtual size of the transaction as used by the mempool, calculated using serialized size
          * of the transaction and sigops. */
@@ -614,10 +607,6 @@ private:
         CAmount m_base_fees;
         /** Base fees + any fee delta set by the user with prioritisetransaction. */
         CAmount m_modified_fees;
-        /** Total modified fees of all transactions being replaced. */
-        CAmount m_conflicting_fees{0};
-        /** Total virtual size of all transactions being replaced. */
-        size_t m_conflicting_size{0};
 
         /** If we're doing package validation (i.e. m_package_feerates=true), the "effective"
          * package feerate of this transaction is the total fees divided by the total size of
@@ -695,8 +684,41 @@ private:
 
     Chainstate& m_active_chainstate;
 
+    // Fields below are per *sub*package state and must be reset prior to subsequent
+    // AcceptSingleTransaction and AcceptMultipleTransactions invocations
+
+    /** Aggregated modified fees of all transactions, used to calculate package feerate. */
+    CAmount m_total_modified_fees;
+    /** Aggregated virtual size of all transactions, used to calculate package feerate. */
+    int64_t m_total_vsize;
+
+    // RBF-related members
     /** Whether the transaction(s) would replace any mempool transactions. If so, RBF rules apply. */
     bool m_rbf{false};
+    /** All conflicting mempool transactions and their descendants. */
+    CTxMemPool::setEntries m_all_conflicts;
+    /** Mempool transactions that were replaced. */
+    std::list<CTransactionRef> m_replaced_transactions;
+
+    /** Total modified fees of mempool transactions being replaced. */
+    CAmount m_conflicting_fees{0};
+    /** Total size (in virtual bytes) of mempool transactions being replaced. */
+    size_t m_conflicting_size{0};
+
+    /** Re-set sub-package state to not leak between evaluations */
+    void ClearSubPackageState() EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs)
+    {
+        m_total_modified_fees = 0;
+        m_total_vsize = 0;
+        m_rbf = false;
+        m_all_conflicts.clear();
+        m_replaced_transactions.clear();
+        m_conflicting_fees = 0;
+        m_conflicting_size = 0;
+
+        // And clean coins while at it
+        CleanupTemporaryCoins();
+    }
 };
 
 bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
@@ -986,7 +1008,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-spends-conflicting-tx", *err_string);
     }
 
-    m_rbf = !ws.m_conflicts.empty();
+    m_rbf |= !ws.m_conflicts.empty();
     return true;
 }
 
@@ -1017,22 +1039,23 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     }
 
     // Calculate all conflicting entries and enforce Rule #5.
-    if (const auto err_string{GetEntriesForConflicts(tx, m_pool, ws.m_iters_conflicting, ws.m_all_conflicting)}) {
+    if (const auto err_string{GetEntriesForConflicts(tx, m_pool, ws.m_iters_conflicting, m_all_conflicts)}) {
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                              "too many potential replacements", *err_string);
     }
     // Enforce Rule #2.
-    if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, ws.m_iters_conflicting)}) {
+    if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, m_all_conflicts)}) {
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                              "replacement-adds-unconfirmed", *err_string);
     }
+
     // Check if it's economically rational to mine this transaction rather than the ones it
     // replaces and pays for its own relay fees. Enforce Rules #3 and #4.
-    for (CTxMemPool::txiter it : ws.m_all_conflicting) {
-        ws.m_conflicting_fees += it->GetModifiedFee();
-        ws.m_conflicting_size += it->GetTxSize();
+    for (CTxMemPool::txiter it : m_all_conflicts) {
+        m_conflicting_fees += it->GetModifiedFee();
+        m_conflicting_size += it->GetTxSize();
     }
-    if (const auto err_string{PaysForRBF(ws.m_conflicting_fees, ws.m_modified_fees, ws.m_vsize,
+    if (const auto err_string{PaysForRBF(m_conflicting_fees, ws.m_modified_fees, ws.m_vsize,
                                          m_pool.m_incremental_relay_feerate, hash)}) {
         // Even though this is a fee-related failure, this result is TX_MEMPOOL_POLICY, not
         // TX_RECONSIDERABLE, because it cannot be bypassed using package validation.
@@ -1130,19 +1153,18 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
     const uint256& hash = ws.m_hash;
     TxValidationState& state = ws.m_state;
     const bool bypass_limits = args.m_bypass_limits;
-
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
 
     // Remove conflicting transactions from the mempool
-    for (CTxMemPool::txiter it : ws.m_all_conflicting)
+    for (CTxMemPool::txiter it : m_all_conflicts)
     {
         LogPrint(BCLog::MEMPOOL, "replacing tx %s (wtxid=%s) with %s (wtxid=%s) for %s additional fees, %d delta bytes\n",
                 it->GetTx().GetHash().ToString(),
                 it->GetTx().GetWitnessHash().ToString(),
                 hash.ToString(),
                 tx.GetWitnessHash().ToString(),
-                FormatMoney(ws.m_modified_fees - ws.m_conflicting_fees),
-                (int)entry->GetTxSize() - (int)ws.m_conflicting_size);
+                FormatMoney(ws.m_modified_fees - m_conflicting_fees),
+                (int)entry->GetTxSize() - (int)m_conflicting_size);
         TRACE7(mempool, replaced,
                 it->GetTx().GetHash().data(),
                 it->GetTxSize(),
@@ -1152,9 +1174,10 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
                 entry->GetTxSize(),
                 entry->GetFee()
         );
-        ws.m_replaced_transactions.push_back(it->GetSharedTx());
+        m_replaced_transactions.push_back(it->GetSharedTx());
     }
-    m_pool.RemoveStaged(ws.m_all_conflicting, false, MemPoolRemovalReason::REPLACED);
+    m_pool.RemoveStaged(m_all_conflicts, false, MemPoolRemovalReason::REPLACED);
+    m_all_conflicts.clear();
     // Store transaction in memory
     m_pool.addUnchecked(*entry, ws.m_ancestors);
 
@@ -1240,7 +1263,7 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
         const auto effective_feerate_wtxids = args.m_package_feerates ? all_package_wtxids :
             std::vector<Wtxid>{ws.m_ptx->GetWitnessHash()};
         results.emplace(ws.m_ptx->GetWitnessHash(),
-                        MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize,
+                        MempoolAcceptResult::Success(std::move(m_replaced_transactions), ws.m_vsize,
                                          ws.m_base_fees, effective_feerate, effective_feerate_wtxids));
         const CTransaction& tx = *ws.m_ptx;
         const auto tx_info = NewMempoolTransactionInfo(ws.m_ptx, ws.m_base_fees,
@@ -1280,7 +1303,7 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     const CFeeRate effective_feerate{ws.m_modified_fees, static_cast<uint32_t>(ws.m_vsize)};
     // Tx was accepted, but not added
     if (args.m_test_accept) {
-        return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize,
+        return MempoolAcceptResult::Success(std::move(m_replaced_transactions), ws.m_vsize,
                                             ws.m_base_fees, effective_feerate, single_wtxid);
     }
 
@@ -1299,7 +1322,7 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
                                                    m_pool.HasNoInputsOf(tx));
     GetMainSignals().TransactionAddedToMempool(tx_info, m_pool.GetAndIncrementSequence());
 
-    return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize, ws.m_base_fees,
+    return MempoolAcceptResult::Success(std::move(m_replaced_transactions), ws.m_vsize, ws.m_base_fees,
                                         effective_feerate, single_wtxid);
 }
 
@@ -1357,6 +1380,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
         // replacements, we don't need to track the coins spent. Note that this logic will need to be
         // updated if package replace-by-fee is allowed in the future.
         assert(!args.m_allow_replacement);
+        assert(!m_rbf);
         m_viewmempool.PackageAddTransaction(ws.m_ptx);
     }
 
@@ -1369,9 +1393,9 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
     // a child that is below mempool minimum feerate. To avoid these behaviors, callers of
     // AcceptMultipleTransactions need to restrict txns topology (e.g. to ancestor sets) and check
     // the feerates of individuals and subsets.
-    const auto m_total_vsize = std::accumulate(workspaces.cbegin(), workspaces.cend(), int64_t{0},
+    m_total_vsize = std::accumulate(workspaces.cbegin(), workspaces.cend(), int64_t{0},
         [](int64_t sum, auto& ws) { return sum + ws.m_vsize; });
-    const auto m_total_modified_fees = std::accumulate(workspaces.cbegin(), workspaces.cend(), CAmount{0},
+    m_total_modified_fees = std::accumulate(workspaces.cbegin(), workspaces.cend(), CAmount{0},
         [](CAmount sum, auto& ws) { return sum + ws.m_modified_fees; });
     const CFeeRate package_feerate(m_total_modified_fees, m_total_vsize);
     std::vector<Wtxid> all_package_wtxids;
@@ -1405,7 +1429,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
             const auto effective_feerate_wtxids = args.m_package_feerates ? all_package_wtxids :
                 std::vector<Wtxid>{ws.m_ptx->GetWitnessHash()};
             results.emplace(ws.m_ptx->GetWitnessHash(),
-                            MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions),
+                            MempoolAcceptResult::Success(std::move(m_replaced_transactions),
                                                          ws.m_vsize, ws.m_base_fees, effective_feerate,
                                                          effective_feerate_wtxids));
         }
@@ -1470,7 +1494,8 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptSubPackage(const std::vector<CTr
 
     // Clean up m_view and m_viewmempool so that other subpackage evaluations don't have access to
     // coins they shouldn't. Keep some coins in order to minimize re-fetching coins from the UTXO set.
-    CleanupTemporaryCoins();
+    // Clean up package feerate and rbf calculations
+    ClearSubPackageState();
 
     return result;
 }
