@@ -10,7 +10,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <time.h>
 
 #undef USE_ECMULT_STATIC_PRECOMPUTATION
@@ -20,10 +19,10 @@
 #define EXHAUSTIVE_TEST_ORDER 13
 #endif
 
-#include "include/secp256k1.h"
+#include "secp256k1.c"
+#include "../include/secp256k1.h"
 #include "assumptions.h"
 #include "group.h"
-#include "secp256k1.c"
 #include "testrand_impl.h"
 
 static int count = 2;
@@ -303,6 +302,7 @@ void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_ge *grou
             if (skip_section(&iter)) continue;
             for (k = 1; k < EXHAUSTIVE_TEST_ORDER; k++) {  /* nonce */
                 const int starting_k = k;
+                int ret;
                 secp256k1_ecdsa_signature sig;
                 secp256k1_scalar sk, msg, r, s, expected_r;
                 unsigned char sk32[32], msg32[32];
@@ -311,7 +311,8 @@ void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_ge *grou
                 secp256k1_scalar_get_b32(sk32, &sk);
                 secp256k1_scalar_get_b32(msg32, &msg);
 
-                secp256k1_ecdsa_sign(ctx, &sig, msg32, sk32, secp256k1_nonce_function_smallint, &k);
+                ret = secp256k1_ecdsa_sign(ctx, &sig, msg32, sk32, secp256k1_nonce_function_smallint, &k);
+                CHECK(ret == 1);
 
                 secp256k1_ecdsa_signature_load(ctx, &r, &s, &sig);
                 /* Note that we compute expected_r *after* signing -- this is important

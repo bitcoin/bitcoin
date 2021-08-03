@@ -82,3 +82,19 @@ if test x"$has_valgrind" != x"yes"; then
   AC_CHECK_HEADER([valgrind/memcheck.h], [has_valgrind=yes; AC_DEFINE(HAVE_VALGRIND,1,[Define this symbol if valgrind is installed])])
 fi
 ])
+
+dnl SECP_TRY_APPEND_CFLAGS(flags, VAR)
+dnl Append flags to VAR if CC accepts them.
+AC_DEFUN([SECP_TRY_APPEND_CFLAGS], [
+  AC_MSG_CHECKING([if ${CC} supports $1])
+  SECP_TRY_APPEND_CFLAGS_saved_CFLAGS="$CFLAGS"
+  CFLAGS="$1 $CFLAGS"
+  AC_COMPILE_IFELSE([AC_LANG_SOURCE([[char foo;]])], [flag_works=yes], [flag_works=no])
+  AC_MSG_RESULT($flag_works)
+  CFLAGS="$SECP_TRY_APPEND_CFLAGS_saved_CFLAGS"
+  if test x"$flag_works" = x"yes"; then
+    $2="$$2 $1"
+  fi
+  unset flag_works
+  AC_SUBST($2)
+])

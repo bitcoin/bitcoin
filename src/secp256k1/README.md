@@ -17,6 +17,7 @@ Features:
 * Suitable for embedded systems.
 * Optional module for public key recovery.
 * Optional module for ECDH key exchange.
+* Optional module for Schnorr signatures according to [BIP-340](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki) (experimental).
 
 Experimental features have not received enough scrutiny to satisfy the standard of quality of this library but are made available for testing and review by the community. The APIs of these features should not be considered stable.
 
@@ -96,7 +97,8 @@ To create a report, `gcovr` is recommended, as it includes branch coverage repor
 
 To create a HTML report with coloured and annotated source code:
 
-    $ gcovr --exclude 'src/bench*' --html --html-details -o coverage.html
+    $ mkdir -p coverage
+    $ gcovr --exclude 'src/bench*' --html --html-details -o coverage/coverage.html
 
 Reporting a vulnerability
 ------------
