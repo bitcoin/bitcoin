@@ -4397,7 +4397,9 @@ void PeerManagerImpl::ProcessMessage(
             return;
         }
 
-        SetupAddressRelay(pfrom, *peer);
+        // Since this must be an inbound connection, SetupAddressRelay will
+        // never fail.
+        Assume(SetupAddressRelay(pfrom, *peer));
 
         // Only send one GetAddr response per connection to reduce resource waste
         // and discourage addr stamping of INV announcements.
