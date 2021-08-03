@@ -374,7 +374,9 @@ class FullBlockTest(SyscoinTestFramework):
         # b30 has a max-sized coinbase scriptSig.
         self.move_tip(23)
         b30 = self.next_block(30)
-        b30.vtx[0].vin[0].scriptSig = b'\x00' * 100
+        b30.vtx[0].vin[0].scriptSig = bytes(b30.vtx[0].vin[0].scriptSig)  # Convert CScript to raw bytes
+        b30.vtx[0].vin[0].scriptSig += b'\x00' * (100 - len(b30.vtx[0].vin[0].scriptSig))  # Fill with 0s
+        assert_equal(len(b30.vtx[0].vin[0].scriptSig), 100)
         b30.vtx[0].rehash()
         b30 = self.update_block(30, [])
         self.send_blocks([b30], True)
@@ -837,6 +839,7 @@ class FullBlockTest(SyscoinTestFramework):
         b61.vtx[0].rehash()
         b61 = self.update_block(61, [])
         assert_equal(duplicate_tx.serialize(), b61.vtx[0].serialize())
+        # BIP30 is always checked on regtest, regardless of the BIP34 activation height
         self.send_blocks([b61], success=False, reject_reason='bad-txns-BIP30', reconnect=True)
 
         # Test BIP30 (allow duplicate if spent)
