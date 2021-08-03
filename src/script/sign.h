@@ -231,7 +231,8 @@ struct PSBTInput
         // Write the utxo
         if (non_witness_utxo) {
             SerializeToVector(s, PSBT_IN_NON_WITNESS_UTXO);
-            SerializeToVector(s, non_witness_utxo);
+            OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion());
+            SerializeToVector(os, non_witness_utxo);
         }
 
         if (final_script_sig.empty()) {
@@ -295,13 +296,17 @@ struct PSBTInput
             // Do stuff based on type
             switch(type) {
                 case PSBT_IN_NON_WITNESS_UTXO:
+                {
                     if (non_witness_utxo) {
                         throw std::ios_base::failure("Duplicate Key, input non-witness utxo already provided");
                     } else if (key.size() != 1) {
                         throw std::ios_base::failure("Non-witness utxo key is more than one byte type");
                     }
-                    UnserializeFromVector(s, non_witness_utxo);
+                    // Set the stream to unserialize with witness since this is always a valid network transaction
+                    OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion());
+                    UnserializeFromVector(os, non_witness_utxo);
                     break;
+                }
                 case PSBT_IN_PARTIAL_SIG:
                 {
                     // Make sure that the key is the size of pubkey + 1
@@ -512,7 +517,8 @@ struct PartiallySignedTransaction
         SerializeToVector(s, PSBT_GLOBAL_UNSIGNED_TX);
 
         // Write serialized tx to a stream
-        SerializeToVector(s, *tx);
+        OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion());
+        SerializeToVector(os, *tx);
 
         // Write the unknown things
         for (auto& entry : unknown) {
@@ -570,7 +576,9 @@ struct PartiallySignedTransaction
                         throw std::ios_base::failure("Global unsigned tx key is more than one byte type");
                     }
                     CMutableTransaction mtx;
-                    UnserializeFromVector(s, mtx);
+                    // Set the stream to serialize with non-witness since this should always be non-witness
+                    OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion());
+                    UnserializeFromVector(os, mtx);
                     tx = std::move(mtx);
                     // Make sure that all scriptSigs are empty
                     for (const CTxIn& txin : tx->vin) {
