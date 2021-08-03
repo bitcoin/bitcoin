@@ -4,9 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
 Test mempool acceptance in case of an already known transaction
-with identical non-witness data different witness.
+with identical non-witness data but different witness.
 """
 
+from copy import deepcopy
 from test_framework.messages import (
     COIN,
     COutPoint,
@@ -79,10 +80,7 @@ class MempoolWtxidTest(SyscoinTestFramework):
         child_one_txid = child_one.rehash()
 
         # Create another identical transaction with witness solving second branch
-        child_two = CTransaction()
-        child_two.vin.append(CTxIn(COutPoint(int(parent_txid, 16), 0), b""))
-        child_two.vout.append(CTxOut(int(9.99996 * COIN), child_script_pubkey))
-        child_two.wit.vtxinwit.append(CTxInWitness())
+        child_two = deepcopy(child_one)
         child_two.wit.vtxinwit[0].scriptWitness.stack = [b'', witness_script]
         child_two_wtxid = child_two.getwtxid()
         child_two_txid = child_two.rehash()
@@ -104,8 +102,7 @@ class MempoolWtxidTest(SyscoinTestFramework):
             "allowed": False,
             "reject-reason": "txn-already-in-mempool"
         }])
-        testres_child_two = node.testmempoolaccept([child_two.serialize().hex()])[0]
-        assert_equal(testres_child_two, {
+        assert_equal(node.testmempoolaccept([child_two.serialize().hex()])[0], {
             "txid": child_two_txid,
             "wtxid": child_two_wtxid,
             "allowed": False,
