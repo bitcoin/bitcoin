@@ -143,7 +143,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['prune_target_size'], 576716800)
         assert_greater_than(res['size_on_disk'], 0)
         assert_equal(res['softforks'], {
-            'bip34': {'type': 'buried', 'active': False, 'height': 500},
+            'bip34': {'type': 'buried', 'active': True, 'height': 2},
             'bip66': {'type': 'buried', 'active': True, 'height': DERSIG_HEIGHT},
             'bip65': {'type': 'buried', 'active': False, 'height': 1351},
             'bip147': { 'type': 'buried', 'active': False, 'height': 432},
