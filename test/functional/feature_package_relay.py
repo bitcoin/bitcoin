@@ -171,6 +171,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.test_package_rbf_rule4()
         self.test_package_rbf_rule5()
         self.test_package_rbf_conflicting_conflicts()
+        self.test_cpfp()
 
     def test_package_rbf_basic(self):
         self.log.info("Test that packages can RBF")
@@ -321,6 +322,29 @@ class PackageRelayTest(BitcoinTestFramework):
         self.assert_mempool_contents(expected=package_txns2, unexpected=package_txns1)
         node.submitrawpackage(package_hex3)
         self.assert_mempool_contents(expected=package_txns3, unexpected=package_txns2)
+
+    def test_cpfp(self):
+        node = self.nodes[0]
+        self.log.info("Check that a 0 fee parent can be CPFPed within a package")
+        parent_coin = self.coins.pop()
+        (package_hex, package_txns) = self.create_simple_package([parent_coin])
+        # Check that the parent doesn't pass by itself
+        assert_raises_rpc_error(-26, "min relay fee not met", node.sendrawtransaction, package_hex[0])
+        node.submitrawpackage(package_hex)
+
+        self.log.info("Check that we can RBF using a high-fee child even when parent doesn't meet min fee")
+        # Reuse the same coins so that the transactions conflict with one another.
+        num_parents = 2
+        parent_coins = self.coins[:num_parents]
+        del self.coins[:num_parents]
+        (package_hex1, package_txns1) = self.create_simple_package(parent_coins, Decimal("0.00003"))
+        (package_hex2, package_txns2) = self.create_simple_package(parent_coins, parent_fee=0, child_fee=Decimal("0.001"))
+
+        node.submitrawpackage(package_hex1)
+        self.assert_mempool_contents(expected=package_txns1, unexpected=package_txns2)
+        node.submitrawpackage(package_hex2)
+        self.assert_mempool_contents(expected=package_txns2, unexpected=package_txns1)
+
 
 if __name__ == "__main__":
     PackageRelayTest().main()
