@@ -75,3 +75,40 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
     return std::nullopt;
 }
 
+std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx,
+                                               const CTxMemPool& m_pool,
+                                               const CTxMemPool::setEntries& setIterConflicting)
+{
+    AssertLockHeld(m_pool.cs);
+    std::set<uint256> setConflictsParents;
+    for (const auto& mi : setIterConflicting) {
+        for (const CTxIn &txin : mi->GetTx().vin)
+        {
+            setConflictsParents.insert(txin.prevout.hash);
+        }
+    }
+
+    for (unsigned int j = 0; j < tx.vin.size(); j++)
+    {
+        // We don't want to accept replacements that require low
+        // feerate junk to be mined first. Ideally we'd keep track of
+        // the ancestor feerates and make the decision based on that,
+        // but for now requiring all new inputs to be confirmed works.
+        //
+        // Note that if you relax this to make RBF a little more useful,
+        // this may break the CalculateMempoolAncestors RBF relaxation,
+        // above. See the comment above the first CalculateMempoolAncestors
+        // call for more info.
+        if (!setConflictsParents.count(tx.vin[j].prevout.hash))
+        {
+            // Rather than check the UTXO set - potentially expensive -
+            // it's cheaper to just check if the new input refers to a
+            // tx that's in the mempool.
+            if (m_pool.exists(tx.vin[j].prevout.hash)) {
+                return strprintf("replacement %s adds unconfirmed input, idx %d",
+                                 tx.GetHash().ToString(), j);
+            }
+        }
+    }
+    return std::nullopt;
+}

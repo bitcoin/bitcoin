@@ -49,4 +49,11 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx, CTxMem
                                                   const CTxMemPool::setEntries& setIterConflicting,
                                                   CTxMemPool::setEntries& allConflicting)
                                                   EXCLUSIVE_LOCKS_REQUIRED(m_pool.cs);
+
+/** BIP125 Rule #2: "The replacement transaction may only include an unconfirmed input if that input
+ * was included in one of the original transactions."
+ * @returns error message if Rule #2 is broken, otherwise std::nullopt. */
+std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx, const CTxMemPool& m_pool,
+                                               const CTxMemPool::setEntries& setIterConflicting)
+                                               EXCLUSIVE_LOCKS_REQUIRED(m_pool.cs);
 #endif // BITCOIN_POLICY_RBF_H

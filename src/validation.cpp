@@ -821,44 +821,17 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                                  "too many potential replacements", *err_string);
         }
+        // Enforce Rule #2.
+        if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, setIterConflicting)}) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
+                                 "replacement-adds-unconfirmed", *err_string);
+        }
 
         // Check if it's economically rational to mine this transaction rather
         // than the ones it replaces.
         for (CTxMemPool::txiter it : allConflicting) {
             nConflictingFees += it->GetModifiedFee();
             nConflictingSize += it->GetTxSize();
-        }
-
-        std::set<uint256> setConflictsParents;
-        for (const auto& mi : setIterConflicting) {
-            for (const CTxIn &txin : mi->GetTx().vin)
-            {
-                setConflictsParents.insert(txin.prevout.hash);
-            }
-        }
-
-        for (unsigned int j = 0; j < tx.vin.size(); j++)
-        {
-            // We don't want to accept replacements that require low
-            // feerate junk to be mined first. Ideally we'd keep track of
-            // the ancestor feerates and make the decision based on that,
-            // but for now requiring all new inputs to be confirmed works.
-            //
-            // Note that if you relax this to make RBF a little more useful,
-            // this may break the CalculateMempoolAncestors RBF relaxation,
-            // above. See the comment above the first CalculateMempoolAncestors
-            // call for more info.
-            if (!setConflictsParents.count(tx.vin[j].prevout.hash))
-            {
-                // Rather than check the UTXO set - potentially expensive -
-                // it's cheaper to just check if the new input refers to a
-                // tx that's in the mempool.
-                if (m_pool.exists(tx.vin[j].prevout.hash)) {
-                    return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "replacement-adds-unconfirmed",
-                            strprintf("replacement %s adds unconfirmed input, idx %d",
-                                hash.ToString(), j));
-                }
-            }
         }
 
         // The replacement must pay greater fees than the transactions it
