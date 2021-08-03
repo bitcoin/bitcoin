@@ -235,15 +235,27 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPoo
 * 2. The package's total virtual size cannot exceed 101KvB.
 * 3. If dependencies exist, parents must appear anywhere in the lsit before their children.
 * 4. The package transactions cannot conflict with each other, i.e., spend the same inputs.
-* 5. The package transactions cannot conflict with any mempool transactions. BIP125 replacements are
-*    not allowed.
-* 6. For all fee requirements, the package feerate (defined as the aggregated modified fees divided
+* 5. For all fee requirements, the package feerate (defined as the aggregated modified fees divided
 *    by the aggregated virtual size of all package transactions) is used. Individual transaction
 *    fee checks may be bypassed.
 *
 * When test_accept = false, the package must also meet the following requirements:
 * 1. The package must consist of exactly 1 child and all of its parents (this also means it
 *    must contain at least 2 transactions).
+* 2. The child transaction must not conflict with any mempool transaction.
+* 3. One or more parents in the package may replace mempool transactions by RBF if the following are
+*    true (analogous but not identical to BIP125 RBF):
+*    - No package transaction replaces the dependency of another package transaction.
+*    - All original transactions signal replaceability.
+*    - None of the transactions in the package have any unconfirmed inputs.
+*    - The package total modified fees >= the modified fees of the original transactions.
+*    - The package pays for its own bandwidth: its feerate is >= incrementalRelayFee higher than the
+*      original transactions.
+*    - No more than 100 mempool transactions would be replaced.
+*
+* When test_accept = true, the package must also meet the following requirements:
+* 1. The package transactions cannot conflict with any mempool transactions. BIP125 replacements are
+*    not allowed.
 *
 * @returns a PackageMempoolAcceptResult which includes a MempoolAcceptResult for each transaction
 * that was fully validated. If a transaction fails, validation will exit early and some results may

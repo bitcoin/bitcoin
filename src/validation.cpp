@@ -496,7 +496,7 @@ public:
                             /* m_bypass_limits */ false,
                             /* m_coins_to_uncache */ coins_to_uncache,
                             /* m_test_accept */ false,
-                            /* m_allow_bip125_replacement */ false,
+                            /* m_allow_bip125_replacement */ true,
                             /* m_package_submission */ true,
                             /* m_package_feerates */ true,
             };
@@ -938,13 +938,90 @@ bool MemPoolAccept::PackageMempoolChecks(const std::vector<CTransactionRef>& txn
     AssertLockHeld(cs_main);
     AssertLockHeld(m_pool.cs);
 
+    for (const auto& ws : workspaces) {
+        for (const auto& it : ws.m_ancestors) m_collective_ancestors.insert(it);
+    }
+
     std::string err_string;
     if (!m_pool.CheckPackageLimits(txns, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants,
                                    m_limit_descendant_size, err_string)) {
+        // TODO: When replacements exist, to avoid overestimating descendant counts, deduct the
+        // to-be-replaced mempool entries when counting descendants. Note that this is not
+        // necessarily as simple as subtracting the count/size from descendant limits, because
+        // multiple transactions may conflict with the same entries, causing us to double-count them
+        // and their descendants.
         // This is a package-wide error, separate from an individual transaction error.
         return package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-mempool-limits", err_string);
     }
-   return true;
+
+    // Further checks are all RBF-only.
+    m_rbf = std::any_of(workspaces.cbegin(), workspaces.cend(), [](const auto& ws){return !ws.m_conflicts.empty();});
+    if (!m_rbf) return true;
+
+    CTxMemPool::setEntries direct_conflict_iters;
+    for (Workspace& ws : workspaces) {
+        // Aggregate all conflicts into one set.
+        direct_conflict_iters.merge(m_pool.GetIterSet(ws.m_conflicts));
+    }
+
+    // Use the child as the transaction for attributing errors to.
+    const auto hash = workspaces[workspaces.size() - 1].m_ptx->GetHash();
+    const CFeeRate package_feerate(m_total_modified_fees, m_total_vsize);
+
+    if (const auto err_string{PaysMoreThanConflicts(direct_conflict_iters, package_feerate, hash)}) {
+        return package_state.Invalid(PackageValidationResult::PCKG_POLICY,
+                                     "package RBF failed: insufficient fees", *err_string);
+    }
+
+    // Calculate all conflicting entries and enforce Rules 2 and 5.
+    for (Workspace& ws : workspaces) {
+        // The aggregated set of conflicts cannot exceed 100.
+        if (const auto err_string{GetEntriesForConflicts(*ws.m_ptx, m_pool, direct_conflict_iters,
+                                                         m_all_conflicts)}) {
+            return package_state.Invalid(PackageValidationResult::PCKG_POLICY,
+                                         "package RBF failed: too many potential replacements", *err_string);
+        }
+        // None of the package transactions are allowed to spend additional unconfirmed inputs, even
+        // if they aren't one of the transactions that conflicts with mempool.  (Note that this rule
+        // doesn't apply to the child in the package).  Rationale: This rule is intended to prevent
+        // us from overestimating a replacement transaction's ancestor score. For example, the
+        // replacement transactions themselves may have a high feerate, but depend on some low-fee
+        // mempool transactions that actually don't make them better candidates for mining than the
+        // ones they would replace. For now, if any of the package transactions had ancestors, we
+        // can't trust the package feerate, so don't allow any new unconfirmed inputs.
+        // TODO: Remove this requirement by using the child's ancestor fees and feerate (including
+        // mempool and package transactions) instead.
+        if (const auto err_string{HasNoNewUnconfirmed(*ws.m_ptx, m_pool, direct_conflict_iters)}) {
+            return package_state.Invalid(PackageValidationResult::PCKG_POLICY,
+                                         "package RBF failed: replacement adds unconfirmed", *err_string);
+        }
+    }
+
+    // Check that the union of all collective conflicts and ancestors is disjoint.
+    std::set<uint256> all_conflicting_txids;
+    std::transform(m_all_conflicts.cbegin(), m_all_conflicts.cend(),
+                   std::inserter(all_conflicting_txids, all_conflicting_txids.end()),
+                   [](const auto& entry) { return entry->GetTx().GetHash(); });
+    if (const auto err_string{EntriesAndTxidsDisjoint(m_collective_ancestors, all_conflicting_txids, hash)}) {
+        // Note that we handle this differently in individual transaction validation (a transaction
+        // that conflicts with its own dependency is inconsistent, but this could just be
+        // conflicting transactions in a package).
+        return package_state.Invalid(PackageValidationResult::PCKG_POLICY,
+                                     "package RBF failed: package conflicts with dependency", *err_string);
+    }
+
+    // Check if it's economically rational to mine this package rather than the ones it replaces.
+    for (CTxMemPool::txiter it : m_all_conflicts) {
+        m_conflicting_fees += it->GetModifiedFee();
+        m_conflicting_size += it->GetTxSize();
+    }
+    if (const auto err_string{PaysForRBF(m_conflicting_fees, m_total_modified_fees, m_total_vsize,
+                                         ::incrementalRelayFee, hash)}) {
+        return package_state.Invalid(PackageValidationResult::PCKG_POLICY,
+                                     "package RBF failed: insufficient fees", *err_string);
+    }
+
+    return true;
 }
 
 bool MemPoolAccept::PolicyScriptChecks(const ATMPArgs& args, Workspace& ws)
@@ -1054,6 +1131,7 @@ bool MemPoolAccept::FinalizePackage(const ATMPArgs& args, std::vector<Workspace>
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(m_pool.cs);
+
     // ConsensusScriptChecks adds to the script cache and is therefore consensus-critical;
     // CheckInputsFromMempoolAndCache asserts that transactions only spend coins available from the
     // mempool or UTXO set. Submit each transaction to the mempool immediately after calling
@@ -1175,10 +1253,14 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
             return PackageMempoolAcceptResult(package_state, std::move(results));
         }
         // Make the coins created by this transaction available for subsequent transactions in the
-        // package to spend. Since we already checked conflicts in the package and we don't allow
-        // replacements, we don't need to track the coins spent. Note that this logic will need to be
-        // updated if package replace-by-fee is allowed in the future.
-        assert(!args.m_allow_bip125_replacement);
+        // package to spend. Since we already checked conflicts, no transaction can spend the parent
+        // of another transaction in the package. We also need to make sure that no package tx
+        // replaces (or replaces the ancestor of) the parent of another package tx. As long as we
+        // do these two things, we don't need to track the coins spent.
+        // If we allow the child to replace transactions in the future, note that it's possible for
+        // a child's "conflict" to be negated by one of its parents replacing the conflicting
+        // mempool transaction. If this is enabled, be sure to track the coins added and spent by
+        // to-be-replaced transactions in m_view.
         m_viewmempool.PackageAddTransaction(ws.m_ptx);
     }
 
