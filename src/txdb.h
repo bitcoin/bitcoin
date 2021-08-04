@@ -8,10 +8,9 @@
 
 #include <coins.h>
 #include <dbwrapper.h>
-#include <chain.h>
-#include <primitives/block.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -22,6 +21,7 @@ class uint256;
 namespace Consensus {
 struct Params;
 };
+struct bilingual_str;
 
 //! -dbcache default (MiB)
 static const int64_t nDefaultDbCache = 450;
@@ -88,5 +88,7 @@ public:
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex);
 };
+
+std::optional<bilingual_str> CheckLegacyTxindex(CBlockTreeDB& block_tree_db);
 
 #endif // BITCOIN_TXDB_H
