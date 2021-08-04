@@ -306,7 +306,8 @@ BITCOIN_CORE_H = \
   zmq/zmqutil.h
 
 
-obj/build.h: FORCE
+.INTERMEDIATE: obj/build.h
+obj/build.h:
 	@$(MKDIR_P) $(builddir)/obj
 	@$(top_srcdir)/share/genbuild.sh "$(abs_top_builddir)/src/obj/build.h" \
 	  "$(abs_top_srcdir)"
@@ -787,7 +788,6 @@ CLEANFILES += util/*.gcda util/*.gcno
 CLEANFILES += wallet/*.gcda wallet/*.gcno
 CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
-CLEANFILES += obj/build.h
 
 EXTRA_DIST = $(CTAES_DIST)
 
