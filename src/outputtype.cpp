@@ -13,6 +13,7 @@
 #include <util/vector.h>
 
 #include <assert.h>
+#include <optional>
 #include <string>
 
 static const std::string OUTPUT_TYPE_STRING_LEGACY = "legacy";
@@ -20,22 +21,18 @@ static const std::string OUTPUT_TYPE_STRING_P2SH_SEGWIT = "p2sh-segwit";
 static const std::string OUTPUT_TYPE_STRING_BECH32 = "bech32";
 static const std::string OUTPUT_TYPE_STRING_BECH32M = "bech32m";
 
-bool ParseOutputType(const std::string& type, OutputType& output_type)
+std::optional<OutputType> ParseOutputType(const std::string& type)
 {
     if (type == OUTPUT_TYPE_STRING_LEGACY) {
-        output_type = OutputType::LEGACY;
-        return true;
+        return OutputType::LEGACY;
     } else if (type == OUTPUT_TYPE_STRING_P2SH_SEGWIT) {
-        output_type = OutputType::P2SH_SEGWIT;
-        return true;
+        return OutputType::P2SH_SEGWIT;
     } else if (type == OUTPUT_TYPE_STRING_BECH32) {
-        output_type = OutputType::BECH32;
-        return true;
+        return OutputType::BECH32;
     } else if (type == OUTPUT_TYPE_STRING_BECH32M) {
-        output_type = OutputType::BECH32M;
-        return true;
+        return OutputType::BECH32M;
     }
-    return false;
+    return std::nullopt;
 }
 
 const std::string& FormatOutputType(OutputType type)
