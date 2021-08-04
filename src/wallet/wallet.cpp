@@ -2586,19 +2586,21 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain* chain, const std::st
     }
 
     if (!gArgs.GetArg("-addresstype", "").empty()) {
-        if (!ParseOutputType(gArgs.GetArg("-addresstype", ""), walletInstance->m_default_address_type)) {
+        std::optional<OutputType> parsed = ParseOutputType(gArgs.GetArg("-addresstype", ""));
+        if (!parsed) {
             error = strprintf(_("Unknown address type '%s'"), gArgs.GetArg("-addresstype", ""));
             return nullptr;
         }
+        walletInstance->m_default_address_type = parsed.value();
     }
 
     if (!gArgs.GetArg("-changetype", "").empty()) {
-        OutputType out_type;
-        if (!ParseOutputType(gArgs.GetArg("-changetype", ""), out_type)) {
+        std::optional<OutputType> parsed = ParseOutputType(gArgs.GetArg("-changetype", ""));
+        if (!parsed) {
             error = strprintf(_("Unknown change type '%s'"), gArgs.GetArg("-changetype", ""));
             return nullptr;
         }
-        walletInstance->m_default_change_type = out_type;
+        walletInstance->m_default_change_type = parsed.value();
     }
 
     if (gArgs.IsArgSet("-mintxfee")) {

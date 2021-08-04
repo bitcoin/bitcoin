@@ -13,6 +13,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 namespace {
@@ -46,11 +47,10 @@ FUZZ_TARGET(kitchen_sink)
 
     const OutputType output_type = fuzzed_data_provider.PickValueInArray(OUTPUT_TYPES);
     const std::string& output_type_string = FormatOutputType(output_type);
-    OutputType output_type_parsed;
-    const bool parsed = ParseOutputType(output_type_string, output_type_parsed);
+    const std::optional<OutputType> parsed = ParseOutputType(output_type_string);
     assert(parsed);
-    assert(output_type == output_type_parsed);
-    (void)ParseOutputType(fuzzed_data_provider.ConsumeRandomLengthString(64), output_type_parsed);
+    assert(output_type == parsed.value());
+    (void)ParseOutputType(fuzzed_data_provider.ConsumeRandomLengthString(64));
 
     const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
     const std::vector<bool> bits = BytesToBits(bytes);
