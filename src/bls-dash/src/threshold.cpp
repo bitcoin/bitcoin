@@ -6,7 +6,7 @@
 
 #include "schemes.hpp"
 
-static std::unique_ptr<bls::CoreMPL> pThresholdScheme(new bls::LegacySchemeMPL);
+static const std::unique_ptr<bls::CoreMPL> pThresholdScheme(new bls::LegacySchemeMPL);
 
 /**
  * Inverts a prime field element using the Euclidean Extended Algorithm,

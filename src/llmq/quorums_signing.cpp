@@ -190,7 +190,7 @@ bool CRecoveredSigsDb::ReadRecoveredSig(uint8_t llmqType, const uint256& id, CRe
     try {
         ret.Unserialize(ds);
         return true;
-    } catch (std::exception&) {
+    } catch (const std::exception&) {
         return false;
     }
 }

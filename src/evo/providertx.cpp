@@ -17,7 +17,7 @@
 #include <validation.h>
 
 template <typename ProTx>
-static bool CheckService(const uint256& proTxHash, const ProTx& proTx, TxValidationState& state, bool fJustCheck)
+static bool CheckService(const ProTx& proTx, TxValidationState& state, bool fJustCheck)
 {
     if (!proTx.addr.IsValid()) {
         return FormatSyscoinErrorMessage(state, "bad-protx-ipaddr", fJustCheck);
@@ -118,7 +118,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
 
     // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be issues later
     // If any of both is set, it must be valid however
-    if (ptx.addr != CService() && !CheckService(tx.GetHash(), ptx, state, fJustCheck)) {
+    if (ptx.addr != CService() && !CheckService(ptx, state, fJustCheck)) {
         // pass the state returned by the function above
         return false;
     }
@@ -227,7 +227,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxV
         return FormatSyscoinErrorMessage(state, "bad-protx-version", fJustCheck);
     }
 
-    if (!CheckService(ptx.proTxHash, ptx, state, fJustCheck)) {
+    if (!CheckService(ptx, state, fJustCheck)) {
         // pass the state returned by the function above
         return false;
     }

@@ -15,10 +15,10 @@
 #include <cassert>
 #include <cstring>
 
-static std::unique_ptr<bls::CoreMPL> pSchemeLegacy(new bls::LegacySchemeMPL);
-static std::unique_ptr<bls::CoreMPL> pScheme(new bls::BasicSchemeMPL);
+static const std::unique_ptr<bls::CoreMPL> pSchemeLegacy(new bls::LegacySchemeMPL);
+static const std::unique_ptr<bls::CoreMPL> pScheme(new bls::BasicSchemeMPL);
 
-static std::unique_ptr<bls::CoreMPL>& Scheme(const bool fLegacy)
+static const std::unique_ptr<bls::CoreMPL>& Scheme(const bool fLegacy)
 {
     return fLegacy ? pSchemeLegacy : pScheme;
 }

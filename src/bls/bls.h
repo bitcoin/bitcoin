@@ -61,7 +61,6 @@ public:
     {
         SetByteVector(vecBytes);
     }
-    virtual ~CBLSWrapper() {}
 
     CBLSWrapper(const CBLSWrapper& ref) = default;
     CBLSWrapper& operator=(const CBLSWrapper& ref) = default;
@@ -81,7 +80,7 @@ public:
         return *this;
     }
 
-    virtual ~CBLSWrapper() {}
+    virtual ~CBLSWrapper() = default;
 
     bool operator==(const C& r) const
     {
@@ -323,7 +322,7 @@ public:
     {
         *this = r;
     }
-    virtual ~CBLSLazyWrapper() {}
+    virtual ~CBLSLazyWrapper() = default;
 
     CBLSLazyWrapper& operator=(const CBLSLazyWrapper& r)
     {

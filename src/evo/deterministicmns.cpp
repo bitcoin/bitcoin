@@ -149,7 +149,7 @@ CDeterministicMNCPtr CDeterministicMNList::GetValidMN(const uint256& proTxHash) 
     return dmn;
 }
 
-CDeterministicMNCPtr CDeterministicMNList::GetMNByOperatorKey(const CBLSPublicKey& pubKey)
+CDeterministicMNCPtr CDeterministicMNList::GetMNByOperatorKey(const CBLSPublicKey& pubKey) const
 {
     for (const auto& p : mnMap) {
         if (p.second->pdmnState->pubKeyOperator.Get() == pubKey) {
@@ -255,9 +255,9 @@ void CDeterministicMNList::CalculateQuorum(size_t maxSize, const uint256& modifi
     CalculateScores(modifier, scores);
 
     // sort is descending order
-    std::sort(scores.rbegin(), scores.rend(), [](const std::pair<arith_uint256, CDeterministicMNCPtr>& a, std::pair<arith_uint256, CDeterministicMNCPtr>& b) {
+    std::sort(scores.rbegin(), scores.rend(), [](const std::pair<arith_uint256, CDeterministicMNCPtr>& a, const std::pair<arith_uint256, CDeterministicMNCPtr>& b) {
         if (a.first == b.first) {
-            // this should actually never happen, but we should stay compatible with how the non deterministic MNs did the sorting
+            // this should actually never happen, but we should stay compatible with how the non-deterministic MNs did the sorting
             return a.second->collateralOutpoint < b.second->collateralOutpoint;
         }
         return a.first < b.first;
@@ -718,7 +718,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 uint32_t quorumHeight = qc.cbTx.nHeight - (qc.cbTx.nHeight % params.dkgInterval);
                 auto quorumIndex = pindexPrev->GetAncestor(quorumHeight);
                 if (!quorumIndex || quorumIndex->GetBlockHash() != commitment.quorumHash) {
-                    // we should actually never get into this case as validation should have caught it...but lets be sure
+                    // we should actually never get into this case as validation should have caught it...but let's be sure
                     return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-quorum-hash");
                 }
 
@@ -905,7 +905,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         }
     }
 
-    // The payee for the current block was determined by the previous block's list but it might have disappeared in the
+    // The payee for the current block was determined by the previous block's list, but it might have disappeared in the
     // current block. We still pay that MN one last time however.
     if (payee && newList.HasMN(payee->proTxHash)) {
         auto newState = std::make_shared<CDeterministicMNState>(*newList.GetMN(payee->proTxHash)->pdmnState);
@@ -920,7 +920,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
 void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs)
 {
-    // The commitment has already been validated at this point so it's safe to use members of it
+    // The commitment has already been validated at this point, so it's safe to use members of it
     std::vector<CDeterministicMNCPtr> members;
     llmq::CLLMQUtils::GetAllQuorumMembers(qc.llmqType, pindexQuorum, members);
 

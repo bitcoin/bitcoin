@@ -48,7 +48,7 @@ public:
             CDataStream ds(SER_NETWORK, nVersion);
             ds << obj;
             return CBLSIESEncryptedBlob::Encrypt(idx, peerPubKey, ds.data(), ds.size());
-        } catch (std::exception&) {
+        } catch (const std::exception&) {
             return false;
         }
     }
@@ -116,7 +116,7 @@ public:
                 ds << _objects[i];
                 blobs[i].assign(ds.begin(), ds.end());
             }
-        } catch (std::exception&) {
+        } catch (const std::exception&) {
             return false;
         }
 
@@ -142,7 +142,7 @@ public:
             CDataStream ds(blob, SER_NETWORK, nVersion);
             ds >> objectRet;
             return true;
-        } catch (std::exception&) {
+        } catch (const std::exception&) {
             return false;
         }
     }

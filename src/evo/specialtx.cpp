@@ -71,10 +71,9 @@ bool ProcessSpecialTxsInBlock(BlockManager &blockman, const CBlock& block, const
     try {
         int64_t nTime1 = GetTimeMicros();
 
-        for (size_t i = 0; i < block.vtx.size(); i++) {
-            const CTransaction& tx = *block.vtx[i];
+        for (const auto& ptr_tx : block.vtx) {
             TxValidationState txstate;
-            if (!CheckSpecialTx(blockman, tx, pindex->pprev, txstate, view, false)) {
+            if (!CheckSpecialTx(blockman, *ptr_tx, pindex->pprev, txstate, view, false)) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, txstate.GetRejectReason());
             }
         }

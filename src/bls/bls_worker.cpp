@@ -74,7 +74,7 @@ void CBLSWorker::Stop()
 
 bool CBLSWorker::GenerateContributions(size_t quorumThreshold, const BLSIdVector& ids, BLSVerificationVectorPtr& vvecRet, BLSSecretKeyVector& skSharesRet)
 {
-    BLSSecretKeyVectorPtr svec = std::make_shared<BLSSecretKeyVector>((size_t)quorumThreshold);
+    auto svec = std::make_shared<BLSSecretKeyVector>((size_t)quorumThreshold);
     vvecRet = std::make_shared<BLSVerificationVector>((size_t)quorumThreshold);
     skSharesRet.resize(ids.size());
 
@@ -684,12 +684,6 @@ std::future<CBLSPublicKey> CBLSWorker::AsyncAggregatePublicKeys(const BLSPublicK
     return std::move(p.second);
 }
 
-__attribute__((unused)) CBLSPublicKey CBLSWorker::AggregatePublicKeys(const BLSPublicKeyVector& pubKeys,
-                                              size_t start, size_t count, bool parallel)
-{
-    return AsyncAggregatePublicKeys(pubKeys, start, count, parallel).get();
-}
-
 void CBLSWorker::AsyncAggregateSigs(const BLSSignatureVector& sigs,
                                     size_t start, size_t count, bool parallel,
                                     std::function<void(const CBLSSignature&)> doneCallback)
@@ -703,12 +697,6 @@ std::future<CBLSSignature> CBLSWorker::AsyncAggregateSigs(const BLSSignatureVect
     auto p = BuildFutureDoneCallback<CBLSSignature>();
     AsyncAggregateSigs(sigs, start, count, parallel, std::move(p.first));
     return std::move(p.second);
-}
-
-__attribute__((unused)) CBLSSignature CBLSWorker::AggregateSigs(const BLSSignatureVector& sigs,
-                                        size_t start, size_t count, bool parallel)
-{
-    return AsyncAggregateSigs(sigs, start, count, parallel).get();
 }
 
 
@@ -769,18 +757,6 @@ std::future<bool> CBLSWorker::AsyncVerifyContributionShare(const CBLSId& forId,
     return workerPool.push(f);
 }
 
-__attribute__((unused)) bool CBLSWorker::VerifyContributionShare(const CBLSId& forId, const BLSVerificationVectorPtr& vvec,
-                                         const CBLSSecretKey& skContribution)
-{
-    CBLSPublicKey pk1;
-    if (!pk1.PublicKeyShare(*vvec, forId)) {
-        return false;
-    }
-
-    CBLSPublicKey pk2 = skContribution.GetPublicKey();
-    return pk1 == pk2;
-}
-
 bool CBLSWorker::VerifyVerificationVector(const BLSVerificationVector& vvec, size_t start, size_t count)
 {
     return VerifyVectorHelper(vvec, start, count);
@@ -816,28 +792,11 @@ bool CBLSWorker::VerifyVerificationVectors(const std::vector<BLSVerificationVect
     return true;
 }
 
-__attribute__((unused)) bool CBLSWorker::VerifySecretKeyVector(const BLSSecretKeyVector& secKeys, size_t start, size_t count)
-{
-    return VerifyVectorHelper(secKeys, start, count);
-}
-
-__attribute__((unused)) bool CBLSWorker::VerifySignatureVector(const BLSSignatureVector& sigs, size_t start, size_t count)
-{
-    return VerifyVectorHelper(sigs, start, count);
-}
-
 void CBLSWorker::AsyncSign(const CBLSSecretKey& secKey, const uint256& msgHash, const CBLSWorker::SignDoneCallback& doneCallback)
 {
     workerPool.push([secKey, msgHash, doneCallback](int threadId) {
         doneCallback(secKey.Sign(msgHash));
     });
-}
-
-__attribute__((unused)) std::future<CBLSSignature> CBLSWorker::AsyncSign(const CBLSSecretKey& secKey, const uint256& msgHash)
-{
-    auto p = BuildFutureDoneCallback<CBLSSignature>();
-    AsyncSign(secKey, msgHash, p.first);
-    return std::move(p.second);
 }
 
 void CBLSWorker::AsyncVerifySig(const CBLSSignature& sig, const CBLSPublicKey& pubKey, const uint256& msgHash,
@@ -851,7 +810,7 @@ void CBLSWorker::AsyncVerifySig(const CBLSSignature& sig, const CBLSPublicKey& p
     LOCK(sigVerifyMutex);
 
     bool foundDuplicate = false;
-    for (auto& s : sigVerifyQueue) {
+    for (const auto& s : sigVerifyQueue) {
         if (s.msgHash == msgHash) {
             foundDuplicate = true;
             break;
@@ -889,7 +848,7 @@ void CBLSWorker::PushSigVerifyBatch()
     auto f = [this](int threadId, const std::shared_ptr<std::vector<SigVerifyJob> >& _jobs) {
         auto& jobs = *_jobs;
         if (jobs.size() == 1) {
-            auto& job = jobs[0];
+            const auto& job = jobs[0];
             if (!job.cancelCond()) {
                 bool valid = job.sig.VerifyInsecure(job.pubKey, job.msgHash);
                 job.doneCallback(valid);
@@ -934,7 +893,7 @@ void CBLSWorker::PushSigVerifyBatch()
                 // one or more sigs were not valid, revert to per-sig verification
                 // TODO this could be improved if we would cache pairing results in some way as the previous aggregated verification already calculated all the pairings for the hashes
                 for (size_t i = 0; i < pubKeys.size(); i++) {
-                    auto& job = jobs[indexes[i]];
+                    const auto& job = jobs[indexes[i]];
                     bool valid = job.sig.VerifyInsecure(job.pubKey, job.msgHash);
                     job.doneCallback(valid);
                 }
