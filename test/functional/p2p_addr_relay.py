@@ -110,7 +110,8 @@ class AddrTest(SyscoinTestFramework):
         addrs = []
         for i in range(num):
             addr = CAddress()
-            addr.time = self.mocktime + i
+            # SYSCOIN
+            addr.time = self.mock_time + i
             addr.nServices = NODE_NETWORK | NODE_WITNESS
             addr.ip = f"{random.randrange(128,169)}.{random.randrange(1,255)}.{random.randrange(1,255)}.{random.randrange(1,255)}"
             addr.port = 8333
@@ -218,8 +219,9 @@ class AddrTest(SyscoinTestFramework):
         # addr_source sends 2 addresses to node0
         msg = self.setup_addr_msg(2)
         addr_source.send_and_ping(msg)
-        self.mocktime += 30 * 60
-        self.nodes[0].setmocktime(self.mocktime)
+        # SYSCOIN
+        self.mock_time += 30 * 60
+        self.nodes[0].setmocktime(self.mock_time)
         receiver_peer.sync_with_ping()
         blackhole_peer.sync_with_ping()
 
@@ -335,9 +337,9 @@ class AddrTest(SyscoinTestFramework):
 
     def rate_limit_tests(self):
 
-        self.mocktime = int(time.time())
+        self.mock_time = int(time.time())
         self.restart_node(0, [])
-        self.nodes[0].setmocktime(self.mocktime)
+        self.nodes[0].setmocktime(self.mock_time)
 
         for contype, no_relay in [("outbound-full-relay", False), ("block-relay-only", True), ("inbound", False)]:
             self.log.info(f'Test rate limiting of addr processing for {contype} peers')
@@ -358,16 +360,16 @@ class AddrTest(SyscoinTestFramework):
 
             # Advance the time by 100 seconds, permitting the processing of 10 more addresses.
             # Send 200 and verify that 10 are processed.
-            self.mocktime += 100
-            self.nodes[0].setmocktime(self.mocktime)
+            self.mock_time += 100
+            self.nodes[0].setmocktime(self.mock_time)
             peer.increment_tokens(10)
 
             self.send_addrs_and_test_rate_limiting(peer, no_relay, 200, 1410)
 
             # Advance the time by 1000 seconds, permitting the processing of 100 more addresses.
             # Send 200 and verify that 100 are processed.
-            self.mocktime += 1000
-            self.nodes[0].setmocktime(self.mocktime)
+            self.mock_time += 1000
+            self.nodes[0].setmocktime(self.mock_time)
             peer.increment_tokens(100)
 
             self.send_addrs_and_test_rate_limiting(peer, no_relay, 200, 1610)
