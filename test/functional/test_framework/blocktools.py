@@ -89,7 +89,7 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
         tmpl = {}
     # block.nVersion = version or tmpl.get('version') or VERSIONBITS_LAST_OLD_BLOCK_VERSION
     # SYSCOIN
-    block.set_base_version(version or 1)
+    block.set_base_version(version or VERSIONBITS_LAST_OLD_BLOCK_VERSION)
     if tmpl.get('version') is not None:
         block.nVersion = tmpl.get('version') or VERSIONBITS_LAST_OLD_BLOCK_VERSION
     block.nTime = ntime or tmpl.get('curtime') or int(time.time() + 60)
