@@ -323,7 +323,7 @@ class PeerManagerImpl final : public PeerManager
 {
 public:
     PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
-                    BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
+                    BanMan* banman, ChainstateManager& chainman,
                     CTxMemPool& pool, bool ignore_incoming_txs);
 
     /** Overridden from CValidationInterface. */
@@ -340,6 +340,7 @@ public:
     bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
 
     /** Implement PeerManager */
+    void StartScheduledTasks(CScheduler& scheduler) override;
     void CheckForStaleTipAndEvictPeers() override;
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override;
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
@@ -1508,14 +1509,14 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
 }
 
 std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
-                                               BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
+                                               BanMan* banman, ChainstateManager& chainman,
                                                CTxMemPool& pool, bool ignore_incoming_txs)
 {
-    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, scheduler, chainman, pool, ignore_incoming_txs);
+    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, chainman, pool, ignore_incoming_txs);
 }
 
 PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
-                                 BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
+                                 BanMan* banman, ChainstateManager& chainman,
                                  CTxMemPool& pool, bool ignore_incoming_txs)
     : m_chainparams(chainparams),
       m_connman(connman),
@@ -1524,6 +1525,10 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
       m_chainman(chainman),
       m_mempool(pool),
       m_ignore_incoming_txs(ignore_incoming_txs)
+{
+}
+
+void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
 {
     // Stale tip checking and peer eviction are on two different timers, but we
     // don't want them to get out of sync due to drift in the scheduler, so we
