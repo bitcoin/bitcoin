@@ -1418,11 +1418,8 @@ dnl Check for libminiupnpc (optional)
 if test "$use_upnp" != "no"; then
   TEMP_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $MINIUPNPC_CPPFLAGS"
-  AC_CHECK_HEADERS(
-    [miniupnpc/miniupnpc.h miniupnpc/upnpcommands.h miniupnpc/upnperrors.h],
-    [AC_CHECK_LIB([miniupnpc], [upnpDiscover], [MINIUPNPC_LIBS="$MINIUPNPC_LIBS -lminiupnpc"], [have_miniupnpc=no], [$MINIUPNPC_LIBS])],
-    [have_miniupnpc=no]
-  )
+
+  PKG_CHECK_MODULES([MINIUPNPC], [miniupnpc >= 2.1], [have_miniupnpc=yes], [have_miniupnpc=no])
 
   dnl The minimum supported miniUPnPc API version is set to 17. This excludes
   dnl versions with known vulnerabilities.
