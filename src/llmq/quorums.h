@@ -57,7 +57,7 @@ private:
     // the public key shares are ready when needed later
     mutable CBLSWorkerCache blsCache;
 
-    mutable Mutex cs;
+    mutable RecursiveMutex cs;
     // These are only valid when we either participated in the DKG or fully watched it
     BLSVerificationVectorPtr quorumVvec GUARDED_BY(cs);
     CBLSSecretKey skShare GUARDED_BY(cs);
