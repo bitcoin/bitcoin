@@ -3,6 +3,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listtransactions API."""
+
+import shutil
+import os
+
 from decimal import Decimal
 
 from test_framework.messages import (
@@ -17,14 +21,80 @@ from test_framework.util import (
 
 class ListTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 2
+        self.num_nodes = 3
+
+        self.extra_args = [["-whitelist=noban@127.0.0.1"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.nodes[0].generate(1)  # Get out of IBD
+        # self.nodes[0].generate(1)  # Get out of IBD
+        # self.sync_all()
+
+        self.nodes[0].keypoolrefill(1000)
+        # print(self.nodes[0].getwalletinfo())
+        self.stop_nodes()
+        wallet0 = os.path.join(self.nodes[0].datadir, self.chain, self.default_wallet_name, "wallet.dat")
+        wallet2 = os.path.join(self.nodes[2].datadir, self.chain, self.default_wallet_name, "wallet.dat")
+        shutil.copyfile(wallet0, wallet2)
+        self.start_nodes()
+        self.connect_nodes(0, 1)
+        self.connect_nodes(0, 2)
+        self.connect_nodes(1, 2)
+
+        addr1 = self.nodes[0].getnewaddress("pizza1", 'legacy')
+        addr2 = self.nodes[0].getnewaddress("pizza2", 'p2sh-segwit')
+        addr3 = self.nodes[0].getnewaddress("pizza3", 'bech32')
+
+        self.log.info("Send to externally generated address")
+        txid = self.nodes[1].sendtoaddress(addr3, "0.001")
+        self.nodes[1].generate(1)
         self.sync_all()
+
+        self.log.info("the tx in question from node0")
+        for tx in self.nodes[0].listtransactions():
+            if tx['address'] == addr3:
+                print(tx)
+
+        self.log.info("the tx in question from node2")
+        for tx in self.nodes[2].listtransactions():
+            if tx['address'] == addr3:
+                print(tx)
+
+        # self.log.info("nodes[2].gettransaction(txid)")
+        # tx = self.nodes[2].gettransaction(txid)
+        # print(tx)
+
+        self.log.info("Send to p2sh-segwit")
+        self.nodes[1].sendtoaddress(addr2, "0.001")
+        self.nodes[1].generate(1)
+        self.sync_all()
+
+        self.log.info("Send to self")
+        self.nodes[0].sendtoaddress(addr1, "0.001")
+        self.nodes[0].generate(1)
+        self.sync_all()
+
+        self.log.info("Compare listtransactions is the same on node0 and node2 (except labels)")
+        def getTxId(e):
+            return e['txid']
+
+        transactions0 = self.nodes[0].listtransactions()
+        [x.pop('label', None) for x in transactions0]
+        transactions0.sort(key=getTxId)
+        transactions2 = self.nodes[2].listtransactions()
+        [x.pop('label', None) for x in transactions2]
+        transactions2.sort(key=getTxId)
+        assert_equal(transactions0, transactions2)
+
+        self.log.info("verify labels: ")
+        assert_equal(['pizza1'], self.nodes[0].getaddressinfo(addr1)['labels'])
+        assert_equal(['pizza2'], self.nodes[0].getaddressinfo(addr2)['labels'])
+        assert_equal(['pizza3'], self.nodes[0].getaddressinfo(addr3)['labels'])
+
+        return
+
         # Simple send, 0 to 1:
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
         self.sync_all()

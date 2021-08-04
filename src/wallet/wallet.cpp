@@ -906,7 +906,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         wtx.nOrderPos = IncOrderPosNext(&batch);
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
         wtx.nTimeSmart = ComputeTimeSmart(wtx);
-        AddToSpends(hash);
+        if (IsFromMe(*tx.get())) {
+            AddToSpends(hash);
+        }
     }
 
     if (!fInsertedNew)
@@ -1053,8 +1055,26 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Co
 
             // loop though all outputs
             for (const CTxOut& txout: tx.vout) {
+                // TODO: use GetScriptPubKeyMan(CScript)
                 for (const auto& spk_man_pair : m_spk_managers) {
-                    spk_man_pair.second->MarkUnusedAddresses(txout.scriptPubKey);
+                    const auto& destinations = spk_man_pair.second->MarkUnusedAddresses(txout.scriptPubKey);
+                    for (const auto& dest : destinations) {
+                        auto internal = dest.second;
+                        auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man_pair.second.get());
+                        if (desc_spk_man) {
+                            LOCK(desc_spk_man->cs_desc_man);
+                            const auto& type = desc_spk_man->GetWalletDescriptor().descriptor->GetOutputType();
+                            // e.g. combo descriptors don't have output type and are never active
+                            if (type.has_value()) {
+                                const auto &active_internal = GetScriptPubKeyMan(type.value(), /* internal= */true);
+                                internal = desc_spk_man == active_internal;
+                            }
+                        }
+
+                        if (internal.has_value() && !internal.value() && !FindAddressBookEntry(dest.first, /* allow_change= */ false)) {
+                            SetAddressBook(dest.first, "", "receive");
+                        }
+                    }
                 }
             }
 
