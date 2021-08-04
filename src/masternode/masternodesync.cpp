@@ -254,10 +254,8 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                     continue;
                 }
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "governance-sync");
-                {
-                    LOCK(cs);
-                    nTriedPeerCount++;
-                }
+
+                nTriedPeerCount++;
 
                 SendGovernanceSyncRequest(pnode, connman);
 

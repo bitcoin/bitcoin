@@ -128,7 +128,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
                 return;
             }
         }
-
+        uint256 proTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
         connman.ForEachNode([&](CNode* pnode2) {
             if (pnode->fDisconnect) {
                 // we've already disconnected the new peer
@@ -137,10 +137,10 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
 
             if (pnode2->GetVerifiedProRegTxHash() == mnauth.proRegTxHash) {
                 if (fMasternodeMode) {
-                    auto deterministicOutbound = WITH_LOCK(activeMasternodeInfoCs, return llmq::CLLMQUtils::DeterministicOutboundConnection(activeMasternodeInfo.proTxHash, mnauth.proRegTxHash));
+                    auto deterministicOutbound = llmq::CLLMQUtils::DeterministicOutboundConnection(proTxHash, mnauth.proRegTxHash);
                     LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, deterministicOutbound=%s. peer=%d\n",
                              mnauth.proRegTxHash.ToString(), pnode2->GetId(), deterministicOutbound.ToString(), pnode->GetId());
-                    if (WITH_LOCK(activeMasternodeInfoCs, return deterministicOutbound == activeMasternodeInfo.proTxHash)) {
+                    if (deterministicOutbound == proTxHash) {
                         if (pnode2->IsInboundConn()) {
                             LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- dropping old inbound, peer=%d\n", pnode2->GetId());
                             pnode2->fDisconnect = true;
