@@ -948,6 +948,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.quorum_data_thread_request_timeout_seconds = 10
         # This is EXPIRATION_TIMEOUT in CQuorumDataRequest
         self.quorum_data_request_expiration_timeout = 300
+        self.disable_autoconnect = False
 
     def confirm_mns(self):
         while True:
