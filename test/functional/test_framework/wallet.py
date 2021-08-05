@@ -4,8 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """A limited-functionality wallet, which may replace a real wallet in tests"""
 
+from copy import deepcopy
 from decimal import Decimal
 from enum import Enum
+from random import choice
 from typing import Optional
 from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.key import ECKey
@@ -28,6 +30,7 @@ from test_framework.script import (
 )
 from test_framework.util import (
     assert_equal,
+    assert_greater_than_or_equal,
     satoshi_round,
 )
 
@@ -229,3 +232,23 @@ def create_raw_chain(node, first_coin, address, privkeys, chain_length=25):
         chain_txns.append(tx)
 
     return (chain_hex, chain_txns)
+
+def bulk_transaction(tx, node, target_weight, privkeys, prevtxs=None):
+    """Pad a transaction with extra outputs until it reaches a target weight (or higher).
+    returns CTransaction object
+    """
+    tx_heavy = deepcopy(tx)
+    assert_greater_than_or_equal(target_weight, tx_heavy.get_weight())
+    while tx_heavy.get_weight() < target_weight:
+        random_spk = "6a4d0200"  # OP_RETURN OP_PUSH2 512 bytes
+        for _ in range(512*2):
+            random_spk += choice("0123456789ABCDEF")
+        tx_heavy.vout.append(CTxOut(0, bytes.fromhex(random_spk)))
+    # Re-sign the transaction
+    if privkeys:
+        signed = node.signrawtransactionwithkey(tx_heavy.serialize().hex(), privkeys, prevtxs)
+        return tx_from_hex(signed["hex"])
+    # OP_TRUE
+    tx_heavy.wit.vtxinwit = [CTxInWitness()]
+    tx_heavy.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+    return tx_heavy
