@@ -1083,13 +1083,12 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     BOOST_CHECK(addrman1.size() == 1);
     BOOST_CHECK(exceptionThrown);
 
-    // Test that CAddrDB::Read leaves addrman in a clean state if de-serialization fails.
+    // Test that CAddrDB::Read fails if peers.dat is corrupt
     CDataStream ssPeers2 = AddrmanToStream(addrmanCorrupted);
 
     CAddrMan addrman2(/* deterministic */ false, /* consistency_check_ratio */ 100);
     BOOST_CHECK(addrman2.size() == 0);
     BOOST_CHECK(!CAddrDB::Read(addrman2, ssPeers2));
-    BOOST_CHECK(addrman2.size() == 0);
 }
 
 
