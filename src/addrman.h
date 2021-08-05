@@ -58,6 +58,7 @@ private:
     mutable int nRandomPos{-1};
 
     friend class CAddrMan;
+    friend class CAddrManDeterministic;
 
 public:
 
@@ -808,6 +809,7 @@ private:
     void ResetI2PPorts() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     friend class CAddrManTest;
+    friend class CAddrManDeterministic;
 };
 
 #endif // BITCOIN_ADDRMAN_H
