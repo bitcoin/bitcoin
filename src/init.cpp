@@ -1167,6 +1167,19 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.addrman);
     auto check_addrman = std::clamp<int32_t>(args.GetArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
     node.addrman = std::make_unique<CAddrMan>(/* deterministic */ false, /* consistency_check_ratio */ check_addrman);
+    {
+        // Load addresses from peers.dat
+        uiInterface.InitMessage(_("Loading P2P addresses…").translated);
+        int64_t nStart = GetTimeMillis();
+        CAddrDB adb;
+        if (adb.Read(*node.addrman)) {
+            LogPrintf("Loaded %i addresses from peers.dat  %dms\n", node.addrman->size(), GetTimeMillis() - nStart);
+        } else {
+            node.addrman->Clear(); // Addrman can be in an inconsistent state after failure, reset it
+            LogPrintf("Recreating peers.dat\n");
+            adb.Write(*node.addrman);
+        }
+    }
     assert(!node.banman);
     node.banman = std::make_unique<BanMan>(gArgs.GetDataDirNet() / "banlist", &uiInterface, args.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);
