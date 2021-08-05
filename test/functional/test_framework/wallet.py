@@ -34,6 +34,7 @@ from test_framework.util import (
     satoshi_round,
 )
 
+DEFAULT_FEE = Decimal("0.0001")
 
 class MiniWalletMode(Enum):
     """Determines the transaction type the MiniWallet is creating and spending.
@@ -181,13 +182,13 @@ class MiniWallet:
         from_node.sendrawtransaction(tx_hex)
         self.scan_tx(from_node.decoderawtransaction(tx_hex))
 
-def make_chain(node, address, privkeys, parent_txid, parent_value, n=0, parent_locking_script=None):
+def make_chain(node, address, privkeys, parent_txid, parent_value, n=0, parent_locking_script=None, fee=DEFAULT_FEE):
     """Build a transaction that spends parent_txid.vout[n] and produces one output with
     amount = parent_value with a fee deducted.
     Return tuple (CTransaction object, raw hex, nValue, scriptPubKey of the output created).
     """
     inputs = [{"txid": parent_txid, "vout": n}]
-    my_value = parent_value - Decimal("0.0001")
+    my_value = parent_value - fee
     outputs = {address : my_value}
     rawtx = node.createrawtransaction(inputs, outputs)
     prevtxs = [{
@@ -201,12 +202,12 @@ def make_chain(node, address, privkeys, parent_txid, parent_value, n=0, parent_l
     tx = tx_from_hex(signedtx["hex"])
     return (tx, signedtx["hex"], my_value, tx.vout[0].scriptPubKey.hex())
 
-def create_child_with_parents(node, address, privkeys, parents_tx, values, locking_scripts):
+def create_child_with_parents(node, address, privkeys, parents_tx, values, locking_scripts, fee=DEFAULT_FEE):
     """Creates a transaction that spends the first output of each parent in parents_tx."""
     num_parents = len(parents_tx)
     total_value = sum(values)
     inputs = [{"txid": tx.rehash(), "vout": 0} for tx in parents_tx]
-    outputs = {address : total_value - num_parents * Decimal("0.0001")}
+    outputs = {address : total_value - fee}
     rawtx_child = node.createrawtransaction(inputs, outputs)
     prevtxs = []
     for i in range(num_parents):
