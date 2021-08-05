@@ -191,7 +191,7 @@ bool CNFTManager::assetInDatabase(std::string assetHash) {
     return (valInt > 0);
 }
 
-bool CNFTManager::assetSerialExists(std::string assetClassHash, UINT64 assetSerial)
+bool CNFTManager::assetSerialExists(std::string assetClassHash, uint64_t assetSerial)
 {
     std::string sql = "select count(asset_hash) from asset where asset_class_hash = @1 and asset_serial = @2";
 
@@ -387,7 +387,7 @@ CNFTAssetClass* CNFTManager::retrieveAssetClassFromDatabase(std::string hash)
         const char* cAssetClassHash = (const char*)sqlite3_column_text(stmt, 1);
         const char* cAssetClassMetaData = (const char*)sqlite3_column_text(stmt, 2);
         const char* cAssetClassOwner = (const char*)sqlite3_column_text(stmt, 3);
-        UINT64 iCount = sqlite3_column_int64(stmt, 4);
+        uint64_t iCount = sqlite3_column_int64(stmt, 4);
 
         result = new CNFTAssetClass();
         result->txnID = std::string(cAssetClassTxnID);
@@ -426,7 +426,7 @@ CNFTAsset* CNFTManager::retrieveAssetFromDatabase(std::string hash)
         const char* cAssetOwner = (const char*)sqlite3_column_text(stmt, 4);
         const unsigned char* cAssetBinary = (const unsigned char*)sqlite3_column_blob  (stmt, 5);
         int iBinarySize = sqlite3_column_bytes(stmt, 5);
-        UINT64 iCount = sqlite3_column_int64(stmt, 6);
+        uint64_t iCount = sqlite3_column_int64(stmt, 6);
 
         result = new CNFTAsset();
         result->txnID = std::string(cAssetTxnID);
