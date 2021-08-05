@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
  * Verifies script execution of the zeroth scriptPubKey of tx output and
  * zeroth scriptSig and witness of tx input.
  */
-static ScriptError VerifyWithFlag(const CTransaction& output, const CMutableTransaction& input, int flags)
+static ScriptError VerifyWithFlag(const CTransaction& output, const CMutableTransaction& input, uint32_t flags)
 {
     ScriptError error;
     CTransaction inputi(input);
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
     key.MakeNewKey(true);
     CPubKey pubkey = key.GetPubKey();
     // Default flags
-    int flags = SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH;
+    const uint32_t flags{SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH};
 
     // Multisig script (legacy counting)
     {

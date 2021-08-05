@@ -74,12 +74,10 @@ static RPCHelpMan getrawtransaction()
                 "getrawtransaction",
                 "\nReturn the raw transaction data.\n"
 
-                "\nBy default this function only works for mempool transactions. When called with a blockhash\n"
-                "argument, getrawtransaction will return the transaction if the specified block is available and\n"
-                "the transaction is found in that block. When called without a blockhash argument, getrawtransaction\n"
-                "will return the transaction if it is in the mempool, or if -txindex is enabled and the transaction\n"
-                "is in a block in the blockchain.\n"
-
+                "\nBy default, this call only returns a transaction if it is in the mempool. If -txindex is enabled\n"
+                "and no blockhash argument is passed, it will return the transaction if it is in the mempool or any block.\n"
+                "If a blockhash argument is passed, it will return the transaction if\n"
+                "the specified block is available and the transaction is in that block.\n"
                 "\nHint: Use gettransaction for wallet transactions.\n"
 
                 "\nIf verbose is 'true', returns an Object with information about 'txid'.\n"

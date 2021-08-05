@@ -264,7 +264,6 @@ void Shutdown(NodeContext& node)
                 chainstate->ResetCoinsViews();
             }
         }
-        pblocktree.reset();
     }
     for (const auto& client : node.chain_clients) {
         client->stop();
@@ -427,7 +426,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-dnsseed", strprintf("Query for peer addresses via DNS lookup, if low on addresses (default: %u unless -connect used)", DEFAULT_DNSSEED), ArgsManager::ALLOW_BOOL, OptionsCategory::CONNECTION);
     argsman.AddArg("-externalip=<ip>", "Specify your own public address", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-fixedseeds", strprintf("Allow fixed seeds if DNS seeds don't provide peers (default: %u)", DEFAULT_FIXEDSEEDS), ArgsManager::ALLOW_BOOL, OptionsCategory::CONNECTION);
-    argsman.AddArg("-forcednsseed", strprintf("Always query for peer addresses via DNS lookup (default: %u)", DEFAULT_FORCEDNSSEED), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-forcednsseed", strprintf("Always query for peer addresses via DNS lookup (default: %u)", DEFAULT_FORCEDNSSEED), ArgsManager::ALLOW_BOOL, OptionsCategory::CONNECTION);
     argsman.AddArg("-listen", "Accept connections from outside (default: 1 if no -proxy or -connect)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-listenonion", strprintf("Automatically create Tor onion service (default: %d)", DEFAULT_LISTEN_ONION), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-maxconnections=<n>", strprintf("Maintain at most <n> connections to peers (default: %u). This limit does not apply to connections manually added via -addnode or the addnode RPC, which have a separate limit of %u.", DEFAULT_MAX_PEER_CONNECTIONS, MAX_ADDNODE_CONNECTIONS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -716,7 +715,7 @@ namespace { // Variables internal to initialization process only
 int nMaxConnections;
 int nUserMaxConnections;
 int nFD;
-ServiceFlags nLocalServices = ServiceFlags(NODE_NETWORK | NODE_NETWORK_LIMITED);
+ServiceFlags nLocalServices = ServiceFlags(NODE_NETWORK | NODE_NETWORK_LIMITED | NODE_WITNESS);
 int64_t peer_connect_timeout;
 std::set<BlockFilterType> g_enabled_filter_types;
 
@@ -847,6 +846,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
             return InitError(_("Prune mode is incompatible with -txindex."));
         if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX))
             return InitError(_("Prune mode is incompatible with -coinstatsindex."));
+    }
+
+    // If -forcednsseed is set to true, ensure -dnsseed has not been set to false
+    if (args.GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED) && !args.GetBoolArg("-dnsseed", DEFAULT_DNSSEED)){
+        return InitError(_("Cannot set -forcednsseed to true when setting -dnsseed to false."));
     }
 
     // -bind and -whitebind can't be set when not listening
@@ -1181,7 +1185,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
-                                     *node.scheduler, chainman, *node.mempool, ignores_incoming_txs);
+                                     chainman, *node.mempool, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
@@ -1355,6 +1359,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
                 UnloadBlockIndex(node.mempool.get(), chainman);
 
+                auto& pblocktree{chainman.m_blockman.m_block_tree_db};
                 // new CBlockTreeDB tries to delete the existing file, which
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();
@@ -1588,12 +1593,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
-    if (DeploymentEnabled(chainparams.GetConsensus(), Consensus::DEPLOYMENT_SEGWIT)) {
-        // Advertise witness capabilities.
-        // The option to not set NODE_WITNESS is only used in the tests and should be removed.
-        nLocalServices = ServiceFlags(nLocalServices | NODE_WITNESS);
-    }
-
     // ********************************************************* Step 11: import blocks
 
     if (!CheckDiskSpace(gArgs.GetDataDirNet())) {
@@ -1794,6 +1793,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.scheduler->scheduleEvery([banman]{
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL);
+
+    if (node.peerman) node.peerman->StartScheduledTasks(*node.scheduler);
 
 #if HAVE_SYSTEM
     StartupNotify(args);

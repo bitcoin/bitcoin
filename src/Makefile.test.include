@@ -152,6 +152,7 @@ BITCOIN_TESTS =\
 if ENABLE_WALLET
 BITCOIN_TESTS += \
   wallet/test/psbt_wallet_tests.cpp \
+  wallet/test/spend_tests.cpp \
   wallet/test/wallet_tests.cpp \
   wallet/test/walletdb_tests.cpp \
   wallet/test/wallet_crypto_tests.cpp \
@@ -170,6 +171,8 @@ endif
 
 
 BITCOIN_TEST_SUITE += \
+  wallet/test/util.cpp \
+  wallet/test/util.h \
   wallet/test/wallet_test_fixture.cpp \
   wallet/test/wallet_test_fixture.h \
   wallet/test/init_test_fixture.cpp \
@@ -201,7 +204,7 @@ if ENABLE_FUZZ_BINARY
 test_fuzz_fuzz_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_fuzz_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_fuzz_LDADD = $(FUZZ_SUITE_LD_COMMON)
-test_fuzz_fuzz_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
+test_fuzz_fuzz_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON) $(RUNTIME_LDFLAGS)
 test_fuzz_fuzz_SOURCES = \
  test/fuzz/addition_overflow.cpp \
  test/fuzz/addrdb.cpp \

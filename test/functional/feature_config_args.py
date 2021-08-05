@@ -17,6 +17,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.supports_cli = False
         self.wallet_names = []
+        self.disable_autoconnect = False
 
     def test_config_file_parser(self):
         self.stop_node(0)
@@ -158,8 +159,9 @@ class ConfArgsTest(BitcoinTestFramework):
         self.stop_node(0)
 
         # No peers.dat exists and -dnsseed=1
-        # We expect the node will use DNS Seeds, but Regtest mode has 0 DNS seeds
-        # So after 60 seconds, the node should fallback to fixed seeds (this is a slow test)
+        # We expect the node will use DNS Seeds, but Regtest mode does not have
+        # any valid DNS seeds. So after 60 seconds, the node should fallback to
+        # fixed seeds
         assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
         start = int(time.time())
         with self.nodes[0].assert_debug_log(expected_msgs=[

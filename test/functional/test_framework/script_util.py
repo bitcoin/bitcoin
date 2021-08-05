@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Useful Script constants and utils."""
 from test_framework.script import CScript, hash160, sha256, OP_0, OP_DUP, OP_HASH160, OP_CHECKSIG, OP_EQUAL, OP_EQUALVERIFY
-from test_framework.util import hex_str_to_bytes
 
 # To prevent a "tx-size-small" policy rule error, a transaction has to have a
 # non-witness size of at least 82 bytes (MIN_STANDARD_TX_NONWITNESS_SIZE in
@@ -49,7 +48,7 @@ def key_to_p2sh_p2wpkh_script(key, main = False):
 
 def program_to_witness_script(version, program, main = False):
     if isinstance(program, str):
-        program = hex_str_to_bytes(program)
+        program = bytes.fromhex(program)
     assert 0 <= version <= 16
     assert 2 <= len(program) <= 40
     assert version > 0 or len(program) in [20, 32]
@@ -70,14 +69,14 @@ def script_to_p2sh_p2wsh_script(script, main = False):
 
 def check_key(key):
     if isinstance(key, str):
-        key = hex_str_to_bytes(key) # Assuming this is hex string
+        key = bytes.fromhex(key) # Assuming this is hex string
     if isinstance(key, bytes) and (len(key) == 33 or len(key) == 65):
         return key
     assert False
 
 def check_script(script):
     if isinstance(script, str):
-        script = hex_str_to_bytes(script) # Assuming this is hex string
+        script = bytes.fromhex(script) # Assuming this is hex string
     if isinstance(script, bytes) or isinstance(script, CScript):
         return script
     assert False

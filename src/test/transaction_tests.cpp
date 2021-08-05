@@ -446,7 +446,7 @@ static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const 
     assert(input.vin[0].scriptWitness.stack == inputm.vin[0].scriptWitness.stack);
 }
 
-static void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, int flags, bool success)
+static void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, uint32_t flags, bool success)
 {
     ScriptError error;
     CTransaction inputi(input);

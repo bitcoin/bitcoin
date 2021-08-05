@@ -18,7 +18,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
 # Required non-builtin commands should be invocable
 ################
 
-check_tools cat mkdir make git guix
+check_tools cat mkdir make getent curl git guix
 
 ################
 # GUIX_BUILD_OPTIONS should be empty
@@ -186,6 +186,29 @@ fi
 #
 # However, the internal API is likely to change more than the CLI invocation
 
+################
+# Services database must have basic entries
+################
+
+if ! getent services http https ftp > /dev/null 2>&1; then
+cat << EOF
+ERR: Your system's C library can not find service database entries for at least
+     one of the following services: http, https, ftp.
+
+Hint: Most likely, /etc/services does not exist yet (common for docker images
+      and minimal distros), or you don't have permissions to access it.
+
+      If /etc/services does not exist yet, you may want to install the
+      appropriate package for your distro which provides it.
+
+          On Debian/Ubuntu: netbase
+          On Arch Linux: iana-etc
+
+      For more information, see: getent(1), services(5)
+
+EOF
+
+fi
 
 #########
 # SETUP #
@@ -209,14 +232,14 @@ host_to_commonname() {
 }
 
 # Determine the reference time used for determinism (overridable by environment)
-SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
+SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -c log.showSignature=false log --format=%at -1)}"
 
 # Execute "$@" in a pinned, possibly older version of Guix, for reproducibility
 # across time.
 time-machine() {
     # shellcheck disable=SC2086
-    guix time-machine --url=https://github.com/dongcarl/guix.git \
-                      --commit=490e39ff303f4f6873a04bfb8253755bdae1b29c \
+    guix time-machine --url=https://git.savannah.gnu.org/git/guix.git \
+                      --commit=aa34d4d28dfe25ba47d5800d05000fb7221788c0 \
                       --cores="$JOBS" \
                       --keep-failed \
                       --fallback \

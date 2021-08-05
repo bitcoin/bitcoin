@@ -9,83 +9,171 @@ downloads.
 
 We achieve bootstrappability by using Guix as a functional package manager.
 
-## Requirements
+# Requirements
 
-Conservatively, a x86_64 machine with:
+Conservatively, you will need an x86_64 machine with:
 
 - 16GB of free disk space on the partition that /gnu/store will reside in
-- 8GB of free disk space per platform triple you're planning on building (see
-  the `HOSTS` environment variable description)
+- 8GB of free disk space **per platform triple** you're planning on building
+  (see the `HOSTS` [environment variable description][env-vars-list])
 
-## Setup
+# Installation and Setup
 
-### Installing Guix
+If you don't have Guix installed and set up, please follow the instructions in
+[INSTALL.md](./INSTALL.md)
 
-If you're just testing this out, you can use the
-[Dockerfile][fanquake/guix-docker] for convenience. It automatically speeds up
-your builds by [using substitutes](#speeding-up-builds-with-substitute-servers).
-If you don't want this behaviour, refer to the [next
-section](#choosing-your-security-model).
+# Usage
 
-Otherwise, follow the [Guix installation guide][guix/bin-install].
+If you haven't considered your security model yet, please read [the relevant
+section](#choosing-your-security-model) before proceeding to perform a build.
 
-> Note: For those who like to keep their filesystems clean, Guix is designed to
-> be very standalone and _will not_ conflict with your system's package
-> manager/existing setup. It _only_ touches `/var/guix`, `/gnu`, and
-> `~/.config/guix`.
+## Making the Xcode SDK available for macOS cross-compilation
 
-### Choosing your security model
+In order to perform a build for macOS (which is included in the default set of
+platform triples to build), you'll need to extract the macOS SDK tarball using
+tools found in the [`macdeploy` directory](../macdeploy/README.md).
 
-Guix allows us to achieve better binary security by using our CPU time to build
-everything from scratch. However, it doesn't sacrifice user choice in pursuit of
-this: users can decide whether or not to bootstrap and to use substitutes
-(pre-built packages).
-
-After installation, you may want to consider [adding substitute
-servers](#speeding-up-builds-with-substitute-servers) from which to download
-pre-built packages to speed up your build if that fits your security model (say,
-if you're just testing that this works). Substitute servers are set up by
-default if you're using the [Dockerfile][fanquake/guix-docker].
-
-If you prefer not to use any substitutes, make sure to supply `--no-substitutes`
-like in the following snippet. The first build will take a while, but the
-resulting packages will be cached for future builds.
+You can then either point to the SDK using the `SDK_PATH` environment variable:
 
 ```sh
-export ADDITIONAL_GUIX_COMMON_FLAGS='--no-substitutes'
+# Extract the SDK tarball to /path/to/parent/dir/of/extracted/SDK/Xcode-<foo>-<bar>-extracted-SDK-with-libcxx-headers
+tar -C /path/to/parent/dir/of/extracted/SDK -xaf /path/to/Xcode-<foo>-<bar>-extracted-SDK-with-libcxx-headers.tar.gz
+
+# Indicate where to locate the SDK tarball
+export SDK_PATH=/path/to/parent/dir/of/extracted/SDK
 ```
 
-Likewise, to perform a bootstrapped build (takes even longer):
+or extract it into `depends/SDKs`:
 
 ```sh
-export ADDITIONAL_GUIX_COMMON_FLAGS='--no-substitutes' ADDITIONAL_GUIX_ENVIRONMENT_FLAGS='--bootstrap'
+mkdir -p depends/SDKs
+tar -C depends/SDKs -xaf /path/to/SDK/tarball
 ```
 
-### Using a version of Guix with `guix time-machine` capabilities
+## Building
 
-> Note: This entire section can be skipped if you are already using a version of
-> Guix that has [the `guix time-machine` command][guix/time-machine].
+*The author highly recommends at least reading over the [common usage patterns
+and examples](#common-guix-build-invocation-patterns-and-examples) section below
+before starting a build. For a full list of customization options, see the
+[recognized environment variables][env-vars-list] section.*
 
-Once Guix is installed, if it doesn't have the `guix time-machine` command, pull
-the latest `guix`.
+To build Bitcoin Core reproducibly with all default options, invoke the
+following from the top of a clean repository:
 
 ```sh
-guix pull --max-jobs=4 # change number of jobs accordingly
+./contrib/guix/guix-build
 ```
 
-Make sure that you are using your current profile. (You are prompted to do this
-at the end of the `guix pull`)
+## Codesigning build outputs
 
-```bash
-export PATH="${HOME}/.config/guix/current/bin${PATH:+:}$PATH"
+The `guix-codesign` command attaches codesignatures (produced by codesigners) to
+existing non-codesigned outputs. Please see the [release process
+documentation](/doc/release-process.md) for more context.
+
+It respects many of the same environment variable flags as `guix-build`, with 2
+crucial differences:
+
+1. Since only Windows and macOS build outputs require codesigning, the `HOSTS`
+   environment variable will have a sane default value of `x86_64-w64-mingw32
+   x86_64-apple-darwin18` instead of all the platforms.
+2. The `guix-codesign` command ***requires*** a `DETACHED_SIGS_REPO` flag.
+    * _**DETACHED_SIGS_REPO**_
+
+      Set the directory where detached codesignatures can be found for the current
+      Bitcoin Core version being built.
+
+      _REQUIRED environment variable_
+
+An invocation with all default options would look like:
+
 ```
+env DETACHED_SIGS_REPO=<path/to/bitcoin-detached-sigs> ./contrib/guix/guix-codesign
+```
+
+## Cleaning intermediate work directories
+
+By default, `guix-build` leaves all intermediate files or "work directories"
+(e.g. `depends/work`, `guix-build-*/distsrc-*`) intact at the end of a build so
+that they are available to the user (to aid in debugging, etc.). However, these
+directories usually take up a large amount of disk space. Therefore, a
+`guix-clean` convenience script is provided which cleans the current `git`
+worktree to save disk space:
+
+```
+./contrib/guix/guix-clean
+```
+
+
+## Attesting to build outputs
+
+Much like how Gitian build outputs are attested to in a `gitian.sigs`
+repository, Guix build outputs are attested to in the [`guix.sigs`
+repository](https://github.com/bitcoin-core/guix.sigs).
+
+After you've cloned the `guix.sigs` repository, to attest to the current
+worktree's commit/tag:
+
+```
+env GUIX_SIGS_REPO=<path/to/guix.sigs> SIGNER=<gpg-key-name> ./contrib/guix/guix-attest
+```
+
+See `./contrib/guix/guix-attest --help` for more information on the various ways
+`guix-attest` can be invoked.
+
+## Verifying build output attestations
+
+After at least one other signer has uploaded their signatures to the `guix.sigs`
+repository:
+
+```
+git -C <path/to/guix.sigs> pull
+env GUIX_SIGS_REPO=<path/to/guix.sigs> ./contrib/guix/guix-verify
+```
+
+
+## Common `guix-build` invocation patterns and examples
+
+### Keeping caches and SDKs outside of the worktree
+
+If you perform a lot of builds and have a bunch of worktrees, you may find it
+more efficient to keep the depends tree's download cache, build cache, and SDKs
+outside of the worktrees to avoid duplicate downloads and unnecessary builds. To
+help with this situation, the `guix-build` script honours the `SOURCES_PATH`,
+`BASE_CACHE`, and `SDK_PATH` environment variables and will pass them on to the
+depends tree so that you can do something like:
+
+```sh
+env SOURCES_PATH="$HOME/depends-SOURCES_PATH" BASE_CACHE="$HOME/depends-BASE_CACHE" SDK_PATH="$HOME/macOS-SDKs" ./contrib/guix/guix-build
+```
+
+Note that the paths that these environment variables point to **must be
+directories**, and **NOT symlinks to directories**.
+
+See the [recognized environment variables][env-vars-list] section for more
+details.
+
+### Building a subset of platform triples
+
+Sometimes you only want to build a subset of the supported platform triples, in
+which case you can override the default list by setting the space-separated
+`HOSTS` environment variable:
+
+```sh
+env HOSTS='x86_64-w64-mingw32 x86_64-apple-darwin18' ./contrib/guix/guix-build
+```
+
+See the [recognized environment variables][env-vars-list] section for more
+details.
 
 ### Controlling the number of threads used by `guix` build commands
 
+Depending on your system's RAM capacity, you may want to decrease the number of
+threads used to decrease RAM usage or vice versa.
+
 By default, the scripts under `./contrib/guix` will invoke all `guix` build
 commands with `--cores="$JOBS"`. Note that `$JOBS` defaults to `$(nproc)` if not
-specified. However, astute manual readers will also notice that there is a
-`--max-jobs=` flag (which defaults to 1 if unspecified).
+specified. However, astute manual readers will also notice that `guix` build
+commands also accept a `--max-jobs=` flag (which defaults to 1 if unspecified).
 
 Here is the difference between `--cores=` and `--max-jobs=`:
 
@@ -124,30 +212,18 @@ packages when the dependency graph allows for it, you may want to try:
 export JOBS=1 ADDITIONAL_GUIX_COMMON_FLAGS='--max-jobs=8'
 ```
 
-## Usage
+See the [recognized environment variables][env-vars-list] section for more
+details.
 
-### As a Tool for Deterministic Builds
-
-From the top of a clean Bitcoin Core repository:
-
-```sh
-./contrib/guix/guix-build
-```
-
-After the build finishes successfully (check the status code please), compare
-hashes:
-
-```sh
-find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
-```
-
-#### Recognized environment variables
+## Recognized environment variables
 
 * _**HOSTS**_
 
   Override the space-separated list of platform triples for which to perform a
-  bootstrappable build. _(defaults to "x86\_64-linux-gnu arm-linux-gnueabihf
-  aarch64-linux-gnu riscv64-linux-gnu powerpc64-linux-gnu powerpc64le-linux-gnu
+  bootstrappable build.
+
+  _(defaults to "x86\_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu
+  riscv64-linux-gnu powerpc64-linux-gnu powerpc64le-linux-gnu
   x86\_64-w64-mingw32 x86\_64-apple-darwin18")_
 
 * _**SOURCES_PATH**_
@@ -156,18 +232,27 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
   depends tree. Setting this to the same directory across multiple builds of the
   depends tree can eliminate unnecessary redownloading of package sources.
 
+  The path that this environment variable points to **must be a directory**, and
+  **NOT a symlink to a directory**.
+
 * _**BASE_CACHE**_
 
   Set the depends tree cache for built packages. This is passed through to the
   depends tree. Setting this to the same directory across multiple builds of the
   depends tree can eliminate unnecessary building of packages.
 
+  The path that this environment variable points to **must be a directory**, and
+  **NOT a symlink to a directory**.
+
 * _**SDK_PATH**_
 
   Set the path where _extracted_ SDKs can be found. This is passed through to
   the depends tree. Note that this is should be set to the _parent_ directory of
-  the actual SDK (e.g. SDK_PATH=$HOME/Downloads/macOS-SDKs instead of
-  $HOME/Downloads/macOS-SDKs/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers).
+  the actual SDK (e.g. `SDK_PATH=$HOME/Downloads/macOS-SDKs` instead of
+  `$HOME/Downloads/macOS-SDKs/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers`).
+
+  The path that this environment variable points to **must be a directory**, and
+  **NOT a symlink to a directory**.
 
 * _**JOBS**_
 
@@ -178,13 +263,17 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
   - `make` as in `make --jobs="$JOBS"`
   - `xargs` as in `xargs -P"$JOBS"`
 
+  See [here](#controlling-the-number-of-threads-used-by-guix-build-commands) for
+  more details.
+
   _(defaults to the value of `nproc` outside the container)_
 
 * _**SOURCE_DATE_EPOCH**_
 
   Override the reference UNIX timestamp used for bit-for-bit reproducibility,
-  the variable name conforms to [standard][r12e/source-date-epoch]. _(defaults
-  to the output of `$(git log --format=%at -1)`)_
+  the variable name conforms to [standard][r12e/source-date-epoch].
+
+  _(defaults to the output of `$(git log --format=%at -1)`)_
 
 * _**V**_
 
@@ -200,8 +289,7 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
 
   A whitespace-delimited list of URLs from which to download pre-built packages.
   A URL is only used if its signing key is authorized (refer to the [substitute
-  servers section](#speeding-up-builds-with-substitute-servers) for more
-  details).
+  servers section](#option-1-building-with-substitutes) for more details).
 
 * _**ADDITIONAL_GUIX_COMMON_FLAGS**_
 
@@ -216,28 +304,65 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
   Additional flags to be passed to the invocation of `guix environment` inside
   `guix time-machine`.
 
-## Tips and Tricks
+# Choosing your security model
 
-### Speeding up builds with substitute servers
+No matter how you installed Guix, you need to decide on your security model for
+building packages with Guix.
 
-_This whole section is automatically done in the convenience
-[Dockerfiles][fanquake/guix-docker]_
+Guix allows us to achieve better binary security by using our CPU time to build
+everything from scratch. However, it doesn't sacrifice user choice in pursuit of
+this: users can decide whether or not to use **substitutes** (pre-built
+packages).
 
-For those who are used to life in the fast _(and trustful)_ lane, you can
-specify [substitute servers][guix/substitutes] from which to download pre-built
-packages.
+## Option 1: Building with substitutes
 
-> For those who only want to use substitutes from the official Guix build farm
-> and have authorized the build farm's signing key during Guix's installation,
-> you don't need to do anything.
+### Step 1: Authorize the signing keys
 
-#### Step 1: Authorize the signing keys
+Depending on the installation procedure you followed, you may have already
+authorized the Guix build farm key. In particular, the official shell installer
+script asks you if you want the key installed, and the debian distribution
+package authorized the key during installation.
 
-For the official Guix build farm at https://ci.guix.gnu.org, run as root:
+You can check the current list of authorized keys at `/etc/guix/acl`.
+
+At the time of writing, a `/etc/guix/acl` with just the Guix build farm key
+authorized looks something like:
+
+```lisp
+(acl
+ (entry
+  (public-key
+   (ecc
+    (curve Ed25519)
+    (q #8D156F295D24B0D9A86FA5741A840FF2D24F60F7B6C4134814AD55625971B394#)
+    )
+   )
+  (tag
+   (guix import)
+   )
+  )
+ )
+```
+
+If you've determined that the official Guix build farm key hasn't been
+authorized, and you would like to authorize it, run the following as root:
 
 ```
-guix archive --authorize < ~root/.config/guix/current/share/guix/ci.guix.gnu.org.pub
+guix archive --authorize < /var/guix/profiles/per-user/root/current-guix/share/guix/ci.guix.gnu.org.pub
 ```
+
+If
+`/var/guix/profiles/per-user/root/current-guix/share/guix/ci.guix.gnu.org.pub`
+doesn't exist, try:
+
+```sh
+guix archive --authorize < <PREFIX>/share/guix/ci.guix.gnu.org.pub
+```
+
+Where `<PREFIX>` is likely:
+- `/usr` if you installed from a distribution package
+- `/usr/local` if you installed Guix from source and didn't supply any
+  prefix-modifying flags to Guix's `./configure`
 
 For dongcarl's substitute server at https://guix.carldong.io, run as root:
 
@@ -245,90 +370,102 @@ For dongcarl's substitute server at https://guix.carldong.io, run as root:
 wget -qO- 'https://guix.carldong.io/signing-key.pub' | guix archive --authorize
 ```
 
-#### Step 2: Specify the substitute servers
+#### Removing authorized keys
 
-The official Guix build farm at https://ci.guix.gnu.org is automatically used
-unless the `--no-substitutes` flag is supplied.
+To remove previously authorized keys, simply edit `/etc/guix/acl` and remove the
+`(entry (public-key ...))` entry.
 
-This can be overridden for all `guix` invocations by passing the
-`--substitute-urls` option to your invocation of `guix-daemon`. This can also be
-overridden on a call-by-call basis by passing the same `--substitute-urls`
-option to client tools such at `guix environment`.
+### Step 2: Specify the substitute servers
 
-To use dongcarl's substitute server for Bitcoin Core builds after having
-[authorized his signing key](#authorize-the-signing-keys):
+Once its key is authorized, the official Guix build farm at
+https://ci.guix.gnu.org is automatically used unless the `--no-substitutes` flag
+is supplied. This default list of substitute servers is overridable both on a
+`guix-daemon` level and when you invoke `guix` commands. See examples below for
+the various ways of adding dongcarl's substitute server after having [authorized
+his signing key](#authorize-the-signing-keys).
 
+Change the **default list** of substitute servers by starting `guix-daemon` with
+the `--substitute-urls` option (you will likely need to edit your init script):
+
+```sh
+guix-daemon <cmd> --substitute-urls='https://guix.carldong.io https://ci.guix.gnu.org'
 ```
+
+Override the default list of substitute servers by passing the
+`--substitute-urls` option for invocations of `guix` commands:
+
+```sh
+guix <cmd> --substitute-urls='https://guix.carldong.io https://ci.guix.gnu.org'
+```
+
+For scripts under `./contrib/guix`, set the `SUBSTITUTE_URLS` environment
+variable:
+
+```sh
 export SUBSTITUTE_URLS='https://guix.carldong.io https://ci.guix.gnu.org'
 ```
 
-## Troubleshooting
+## Option 2: Disabling substitutes on an ad-hoc basis
 
-### Derivation failed to build
+If you prefer not to use any substitutes, make sure to supply `--no-substitutes`
+like in the following snippet. The first build will take a while, but the
+resulting packages will be cached for future builds.
 
-When you see a build failure like below:
-
-```
-building /gnu/store/...-foo-3.6.12.drv...
-/ 'check' phasenote: keeping build directory `/tmp/guix-build-foo-3.6.12.drv-0'
-builder for `/gnu/store/...-foo-3.6.12.drv' failed with exit code 1
-build of /gnu/store/...-foo-3.6.12.drv failed
-View build log at '/var/log/guix/drvs/../...-foo-3.6.12.drv.bz2'.
-cannot build derivation `/gnu/store/...-qux-7.69.1.drv': 1 dependencies couldn't be built
-cannot build derivation `/gnu/store/...-bar-3.16.5.drv': 1 dependencies couldn't be built
-cannot build derivation `/gnu/store/...-baz-2.0.5.drv': 1 dependencies couldn't be built
-guix time-machine: error: build of `/gnu/store/...-baz-2.0.5.drv' failed
-```
-
-It means that `guix` failed to build a package named `foo`, which was a
-dependency of `qux`, `bar`, and `baz`. Importantly, note that the last "failed"
-line is not necessarily the root cause, the first "failed" line is.
-
-Most of the time, the build failure is due to a spurious test failure or the
-package's build system/test suite breaking when running multi-threaded. To
-rebuild _just_ this derivation in a single-threaded fashion:
-
+For direct invocations of `guix`:
 ```sh
-$ guix build --cores=1 /gnu/store/...-foo-3.6.12.drv
+guix <cmd> --no-substitutes
 ```
 
-If the single-threaded rebuild did not succeed, you may need to dig deeper.
-You may view `foo`'s build logs in `less` like so (please replace paths with the
-path you see in the build failure output):
-
+For the scripts under `./contrib/guix/`:
 ```sh
-$ bzcat /var/log/guix/drvs/../...-foo-3.6.12.drv.bz2 | less
+export ADDITIONAL_GUIX_COMMON_FLAGS='--no-substitutes'
 ```
 
-`foo`'s build directory is also preserved and available at
-`/tmp/guix-build-foo-3.6.12.drv-0`. However, if you fail to build `foo` multiple
-times, it may be `/tmp/...drv-1` or `/tmp/...drv-2`. Always consult the build
-failure output for the most accurate, up-to-date information.
+## Option 3: Disabling substitutes by default
 
-#### python(-minimal): [Errno 84] Invalid or incomplete multibyte or wide character
+`guix-daemon` accepts a `--no-substitutes` flag, which will make sure that,
+unless otherwise overridden by a command line invocation, no substitutes will be
+used.
 
-This error occurs when your `$TMPDIR` (default: /tmp) exists on a filesystem
-which rejects characters not present in the UTF-8 character code set. An example
-is ZFS with the utf8only=on option set.
+If you start `guix-daemon` using an init script, you can edit said script to
+supply this flag.
 
-More information: https://bugs.python.org/issue37584
 
-## FAQ
+# Purging/Uninstalling Guix
 
-### How can I trust the binary installation?
+In the extraordinarily rare case where you messed up your Guix installation in
+an irreversible way, you may want to completely purge Guix from your system and
+start over.
 
-As mentioned at the bottom of [this manual page][guix/bin-install]:
+1. Uninstall Guix itself according to the way you installed it (e.g. `sudo apt
+   purge guix` for Ubuntu packaging, `sudo make uninstall` for a build from source).
+2. Remove all build users and groups
 
-> The binary installation tarballs can be (re)produced and verified simply by
-> running the following command in the Guix source tree:
->
->     make guix-binary.x86_64-linux.tar.xz
+   You may check for relevant users and groups using:
 
-### Is Guix packaged in my operating system?
+   ```
+   getent passwd | grep guix
+   getent group | grep guix
+   ```
 
-Guix is shipped starting with [Debian Bullseye][debian/guix-bullseye] and
-[Ubuntu 21.04 "Hirsute Hippo"][ubuntu/guix-hirsute]. Other operating systems
-are working on packaging Guix as well.
+   Then, you may remove users and groups using:
+
+   ```
+   sudo userdel <user>
+   sudo groupdel <group>
+   ```
+
+3. Remove all possible Guix-related directories
+    - `/var/guix/`
+    - `/var/log/guix/`
+    - `/gnu/`
+    - `/etc/guix/`
+    - `/home/*/.config/guix/`
+    - `/home/*/.cache/guix/`
+    - `/home/*/.guix-profile/`
+    - `/root/.config/guix/`
+    - `/root/.cache/guix/`
+    - `/root/.guix-profile/`
 
 [b17e]: http://bootstrappable.org/
 [r12e/source-date-epoch]: https://reproducible-builds.org/docs/source-date-epoch/
@@ -343,3 +480,5 @@ are working on packaging Guix as well.
 [debian/guix-bullseye]: https://packages.debian.org/bullseye/guix
 [ubuntu/guix-hirsute]: https://packages.ubuntu.com/hirsute/guix
 [fanquake/guix-docker]: https://github.com/fanquake/core-review/tree/master/guix
+
+[env-vars-list]: #recognized-environment-variables

@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Utilities for manipulating blocks and transactions."""
 
-from binascii import a2b_hex
 import struct
 import time
 import unittest
@@ -24,7 +23,6 @@ from .messages import (
     CTxInWitness,
     CTxOut,
     hash256,
-    hex_str_to_bytes,
     ser_uint256,
     tx_from_hex,
     uint256_from_str,
@@ -55,10 +53,15 @@ TIME_GENESIS_BLOCK = 1296688602
 # Coinbase transaction outputs can only be spent after this number of new blocks (network rule)
 COINBASE_MATURITY = 100
 
+# Soft-fork activation heights
+CLTV_HEIGHT = 1351
+CSV_ACTIVATION_HEIGHT = 432
+
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
 NORMAL_GBT_REQUEST_PARAMS = {"rules": ["segwit"]}
+VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4
 
 
 def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl=None, txlist=None):
@@ -66,11 +69,11 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     block = CBlock()
     if tmpl is None:
         tmpl = {}
-    block.nVersion = version or tmpl.get('version') or 1
+    block.nVersion = version or tmpl.get('version') or VERSIONBITS_LAST_OLD_BLOCK_VERSION
     block.nTime = ntime or tmpl.get('curtime') or int(time.time() + 600)
     block.hashPrevBlock = hashprev or int(tmpl['previousblockhash'], 0x10)
     if tmpl and not tmpl.get('bits') is None:
-        block.nBits = struct.unpack('>I', a2b_hex(tmpl['bits']))[0]
+        block.nBits = struct.unpack('>I', bytes.fromhex(tmpl['bits']))[0]
     else:
         block.nBits = 0x207fffff  # difficulty retargeting is disabled in REGTEST chainparams
     if coinbase is None:
@@ -210,8 +213,8 @@ def witness_script(use_p2wsh, pubkey):
         pkscript = key_to_p2wpkh_script(pubkey)
     else:
         # 1-of-1 multisig
-        witness_program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
-        pkscript = script_to_p2wsh_script(witness_program)
+        witness_script = CScript([OP_1, bytes.fromhex(pubkey), OP_1, OP_CHECKMULTISIG])
+        pkscript = script_to_p2wsh_script(witness_script)
     return pkscript.hex()
 
 def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
@@ -219,7 +222,7 @@ def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
 
     Optionally wrap the segwit output using P2SH."""
     if use_p2wsh:
-        program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
+        program = CScript([OP_1, bytes.fromhex(pubkey), OP_1, OP_CHECKMULTISIG])
         addr = script_to_p2sh_p2wsh(program) if encode_p2sh else script_to_p2wsh(program)
     else:
         addr = key_to_p2sh_p2wpkh(pubkey) if encode_p2sh else key_to_p2wpkh(pubkey)
@@ -242,7 +245,7 @@ def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=Tru
     else:
         if (insert_redeem_script):
             tx = tx_from_hex(tx_to_witness)
-            tx.vin[0].scriptSig += CScript([hex_str_to_bytes(insert_redeem_script)])
+            tx.vin[0].scriptSig += CScript([bytes.fromhex(insert_redeem_script)])
             tx_to_witness = tx.serialize().hex()
 
     return node.sendrawtransaction(tx_to_witness)

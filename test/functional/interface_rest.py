@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the REST API."""
 
-import binascii
 from decimal import Decimal
 from enum import Enum
 from io import BytesIO
@@ -19,7 +18,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
-    hex_str_to_bytes,
 )
 
 from test_framework.messages import BLOCK_HEADER_SIZE
@@ -147,7 +145,7 @@ class RESTTest (BitcoinTestFramework):
 
         bin_request = b'\x01\x02'
         for txid, n in [spending, spent]:
-            bin_request += hex_str_to_bytes(txid)
+            bin_request += bytes.fromhex(txid)
             bin_request += pack("i", n)
 
         bin_response = self.test_rest_request("/getutxos", http_method='POST', req_type=ReqType.BIN, body=bin_request, ret_type=RetType.BYTES)
@@ -236,13 +234,13 @@ class RESTTest (BitcoinTestFramework):
         response_hex = self.test_rest_request("/block/{}".format(bb_hash), req_type=ReqType.HEX, ret_type=RetType.OBJ)
         assert_greater_than(int(response_hex.getheader('content-length')), BLOCK_HEADER_SIZE*2)
         response_hex_bytes = response_hex.read().strip(b'\n')
-        assert_equal(binascii.hexlify(response_bytes), response_hex_bytes)
+        assert_equal(response_bytes.hex().encode(), response_hex_bytes)
 
         # Compare with hex block header
         response_header_hex = self.test_rest_request("/headers/1/{}".format(bb_hash), req_type=ReqType.HEX, ret_type=RetType.OBJ)
         assert_greater_than(int(response_header_hex.getheader('content-length')), BLOCK_HEADER_SIZE*2)
         response_header_hex_bytes = response_header_hex.read(BLOCK_HEADER_SIZE*2)
-        assert_equal(binascii.hexlify(response_bytes[:BLOCK_HEADER_SIZE]), response_header_hex_bytes)
+        assert_equal(response_bytes[:BLOCK_HEADER_SIZE].hex().encode(), response_header_hex_bytes)
 
         # Check json format
         block_json_obj = self.test_rest_request("/block/{}".format(bb_hash))

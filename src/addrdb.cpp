@@ -197,16 +197,15 @@ bool CBanDB::Write(const banmap_t& banSet)
     return false;
 }
 
-bool CBanDB::Read(banmap_t& banSet, bool& dirty)
+bool CBanDB::Read(banmap_t& banSet)
 {
-    // If the JSON banlist does not exist, then try to read the non-upgraded banlist.dat.
-    if (!fs::exists(m_banlist_json)) {
-        // If this succeeds then we need to flush to disk in order to create the JSON banlist.
-        dirty = true;
-        return DeserializeFileDB(m_banlist_dat, banSet, CLIENT_VERSION);
+    if (fs::exists(m_banlist_dat)) {
+        LogPrintf("banlist.dat ignored because it can only be read by " PACKAGE_NAME " version 22.x. Remove %s to silence this warning.\n", m_banlist_dat);
     }
-
-    dirty = false;
+    // If the JSON banlist does not exist, then recreate it
+    if (!fs::exists(m_banlist_json)) {
+        return false;
+    }
 
     std::map<std::string, util::SettingsValue> settings;
     std::vector<std::string> errors;
