@@ -59,39 +59,27 @@ BlockAssembler MinerTestingSetup::AssemblerForTest(const CChainParams& params)
 constexpr static struct {
     unsigned char extranonce;
     unsigned int nonce;
-} blockinfo[] = {
-    {0, 0x0017f257}, {0, 0x000d4581}, {0, 0x0048042c}, {0, 0x0025bff0},
-    {0, 0x2002d3f8}, {0, 0x6001161f}, {0, 0xe000c5e5}, {0, 0x2000cce2},
-    {0, 0x40004753}, {0, 0x80025297}, {0, 0x600009de}, {0, 0x6005780c},
-    {0, 0x40025ae9}, {0, 0xc000341c}, {0, 0xc0053062}, {0, 0x40002f90},
-    {0, 0xc00047ae}, {0, 0xa0015716}, {0, 0x2000d499}, {0, 0x80009b45},
-    {0, 0xc000a7c9}, {0, 0x8001f8ba}, {0, 0xc000d147}, {0, 0x60018ac3},
-    {0, 0xc000a9ac}, {0, 0xa003f6e6}, {0, 0x2007436e}, {0, 0xc0013f28},
-    {0, 0x00010892}, {0, 0xa0000027}, {0, 0x40008de9}, {0, 0x400019f3},
-    {0, 0x00025b86}, {0, 0x80002799}, {0, 0xc001eb0e}, {0, 0xe003e950},
-    {0, 0xe001ff87}, {0, 0x000158b0}, {0, 0x600189da}, {0, 0x0000028c},
-    {0, 0x600014ca}, {0, 0x60000e4d}, {0, 0xc0000820}, {0, 0xa005184e},
-    {0, 0x40012b22}, {0, 0xe0028f6b}, {0, 0xe0027bce}, {0, 0xa0007b51},
-    {0, 0x8002496d}, {0, 0xc001f211}, {0, 0x00032bf0}, {0, 0x4002d767},
-    {0, 0x6008410a}, {0, 0x800361c3}, {0, 0xe000f80d}, {0, 0xe009ac97},
-    {0, 0x80002103}, {0, 0x6001fab4}, {0, 0x4002843b}, {0, 0x6002b67c},
-    {0, 0xa000faf3}, {0, 0x6000949e}, {0, 0x80000f1f}, {0, 0x6000c946},
-    {0, 0xe00314b3}, {0, 0x20012bbf}, {0, 0x00009c7e}, {0, 0x2003e63a},
-    {0, 0x20025157}, {0, 0x80041ff5}, {0, 0x60012a6c}, {0, 0x4000119b},
-    {0, 0xc000a454}, {0, 0x20042c4b}, {0, 0x0003003c}, {0, 0x000558b2},
-    {0, 0x2000198c}, {0, 0x200b0b3e}, {0, 0x4001c1e4}, {0, 0x80000034},
-    {0, 0xe00039d1}, {0, 0xc001ded3}, {0, 0x80006740}, {0, 0xc0014546},
-    {0, 0x00036a1a}, {0, 0xa001ae9c}, {0, 0x6000a148}, {0, 0xe001fd73},
-    {0, 0xa001cebb}, {0, 0xa000d4b8}, {0, 0xe00154b3}, {0, 0x40004bec},
-    {0, 0xc003f230}, {0, 0xe0069a26}, {0, 0xa00072b4}, {0, 0xc002e1b2},
-    {0, 0x20009a02}, {0, 0xc0004a10}, {0, 0xe0045a11}, {0, 0x60034d09},
-    {0, 0x000073ff}, {0, 0x00003f1c}, {0, 0x4002c4fd}, {0, 0x2000bb60},
-    {0, 0x4000b6b6}, {0, 0x6000ea25}, {0, 0x400989d9}, {0, 0xc000877f},
-    {0, 0x6000d17c}, {0, 0xc0009228}, {0, 0x4002827f}, {0, 0x80056a85},
-    {0, 0x40045af7}, {0, 0x6000df7a}, {0, 0xe00131a1}, {0, 0x40021386},
-    {0, 0xa00891b5}, {0, 0x60007854}, {0, 0x602cee70}
-};
-constexpr static size_t blockinfo_size = sizeof(blockinfo) / sizeof(blockinfo[0]);
+} BLOCKINFO[]{{0, 1123860}, {0, 1148713}, {0, 2157897}, {0, 6137383}, {0, 1440467}, {0, 1248137},
+              {0, 974559},  {0, 3450180}, {0, 2050647}, {0, 1174391}, {0, 3336468}, {0, 464427},
+              {0, 470596},  {0, 182567},  {0, 2534464}, {0, 1926037}, {0, 3526872}, {0, 2481471},
+              {0, 1294544}, {0, 367787},  {0, 3164800}, {0, 917651},  {0, 654264},  {0, 3621441},
+              {0, 4300293}, {0, 3692002}, {0, 3171815}, {0, 2334617}, {0, 2655536}, {0, 4862462},
+              {0, 3306418}, {0, 720711},  {0, 3443522}, {0, 1435662}, {0, 833747},  {0, 2754854},
+              {0, 1788881}, {0, 1006158}, {0, 3889636}, {0, 1065940}, {0, 2637337}, {0, 1540467},
+              {0, 809898},  {0, 414399},  {0, 5978379}, {0, 2301882}, {0, 3224887}, {0, 2557012},
+              {0, 8076465}, {0, 73633},   {0, 1285282}, {0, 3114919}, {0, 1762402}, {0, 3343293},
+              {0, 3822496}, {0, 2957067}, {0, 1943866}, {0, 5933446}, {0, 886955},  {0, 975375},
+              {0, 1626364}, {0, 4337875}, {0, 522971},  {0, 979749},  {0, 2343272}, {0, 2530995},
+              {0, 1060534}, {0, 2522523}, {0, 1315215}, {0, 1730093}, {0, 2547908}, {0, 2889564},
+              {0, 5456339}, {0, 3881378}, {0, 4533810}, {0, 1700063}, {0, 1086006}, {0, 2797169},
+              {0, 2019861}, {0, 883169},  {0, 1750363}, {0, 1721942}, {0, 5058071}, {0, 3225093},
+              {0, 307451},  {0, 1653602}, {0, 2281488}, {0, 1947311}, {0, 4993782}, {0, 325324},
+              {0, 6304803}, {0, 4880118}, {0, 1401148}, {0, 4640270}, {0, 2548166}, {0, 3369900},
+              {0, 2800169}, {0, 3305191}, {0, 2122926}, {0, 336011},  {0, 1722772}, {0, 1044908},
+              {0, 642154},  {0, 5835730}, {0, 164952},  {0, 1584353}, {0, 666367},  {0, 854797},
+              {0, 2407599}, {0, 3328128}, {0, 245451},  {0, 2154593}, {0, 4043042}, {0, 2939387},
+              {0, 3509685}, {0, 635871},  {0, 2645814}, {0, 1788871}, {0, 2263667}};
+constexpr static size_t blockinfo_size = sizeof(BLOCKINFO) / sizeof(BLOCKINFO[0]);
 
 static CBlockIndex CreateBlockIndex(int nHeight, CBlockIndex* active_chain_tip) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
@@ -241,13 +229,11 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         CBlock *pblock = &pemptyblocktemplate->block; // pointer for convenience
         {
             LOCK(cs_main);
-            pblock->nVersion = 2;
+            pblock->nVersion = VERSIONBITS_TOP_BITS;
             pblock->nTime = m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()+1;
             CMutableTransaction txCoinbase(*pblock->vtx[0]);
             txCoinbase.nVersion = 1;
-            txCoinbase.vin[0].scriptSig = CScript() << (m_node.chainman->ActiveChain().Height() + 1);
-            txCoinbase.vin[0].scriptSig.push_back(blockinfo[i].extranonce);
-            txCoinbase.vin[0].scriptSig.push_back(m_node.chainman->ActiveChain().Height());
+            txCoinbase.vin[0].scriptSig = CScript{} << (m_node.chainman->ActiveChain().Height() + 1) << BLOCKINFO[i].extranonce;
             txCoinbase.vout[0].scriptPubKey = CScript();
             pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
             if (txFirst.size() == 0)
@@ -255,10 +241,10 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             if (txFirst.size() < 4)
                 txFirst.push_back(pblock->vtx[0]);
             pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
-            pblock->nNonce = blockinfo[i].nonce;
+            pblock->nNonce = BLOCKINFO[i].nonce;
 
-            // This will usually succeed in the first round as we take the nonce from blockinfo
-            // It's however useful when adding new blocks with unknown nonces (you should add the found block to blockinfo)
+            // This will usually succeed in the first round as we take the nonce from BLOCKINFO
+            // It's however useful when adding new blocks with unknown nonces (you should add the found block to BLOCKINFO)
             while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, chainparams.GetConsensus())) {
                 pblock->nNonce++;
             }
@@ -268,7 +254,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         pblock->hashPrevBlock = pblock->GetHash();
     };
 
-    for ([[maybe_unused]] const auto& _ : blockinfo) {
+    for ([[maybe_unused]] const auto& _ : BLOCKINFO) {
         createAndProcessEmptyBlock();
     }
 
