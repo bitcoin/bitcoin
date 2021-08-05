@@ -48,7 +48,7 @@ public:
         unsigned char nVersion = 1;
         s << nVersion;
         s << ((unsigned char)32);
-        s << nKey;
+        s << uint256::ONE;
         s << 10; // nNew
         s << 10; // nTried
 

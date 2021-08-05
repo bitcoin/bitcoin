@@ -471,40 +471,7 @@ public:
         Check();
     }
 
-private:
-    void Clear()
-        EXCLUSIVE_LOCKS_REQUIRED(!cs)
-    {
-        LOCK(cs);
-        std::vector<int>().swap(vRandom);
-        nKey = insecure_rand.rand256();
-        for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
-            for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; entry++) {
-                vvNew[bucket][entry] = -1;
-            }
-        }
-        for (size_t bucket = 0; bucket < ADDRMAN_TRIED_BUCKET_COUNT; bucket++) {
-            for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; entry++) {
-                vvTried[bucket][entry] = -1;
-            }
-        }
-
-        nIdCount = 0;
-        nTried = 0;
-        nNew = 0;
-        nLastGood = 1; //Initially at 1 so that "never" is strictly worse.
-        mapInfo.clear();
-        mapAddr.clear();
-    }
-
-public:
-    explicit CAddrMan(bool deterministic, int32_t consistency_check_ratio)
-        : insecure_rand{deterministic},
-          m_consistency_check_ratio{consistency_check_ratio}
-    {
-        Clear();
-        if (deterministic) nKey = uint256{1};
-    }
+    explicit CAddrMan(bool deterministic, int32_t consistency_check_ratio);
 
     ~CAddrMan()
     {
@@ -626,16 +593,15 @@ public:
         Check();
     }
 
-protected:
-    //! secret key to randomize bucket select with
-    uint256 nKey;
-
+private:
     //! A mutex to protect the inner data structures.
     mutable Mutex cs;
 
-private:
     //! Source of random numbers for randomization in inner loops
     mutable FastRandomContext insecure_rand GUARDED_BY(cs);
+
+    //! secret key to randomize bucket select with
+    uint256 nKey;
 
     //! Serialization versions.
     enum Format : uint8_t {
