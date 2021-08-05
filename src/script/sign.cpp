@@ -83,6 +83,8 @@ static bool CreateSig(const BaseSignatureCreator& creator, SignatureData& sigdat
         assert(i.second);
         return true;
     }
+    // Could not make signature or signature not found, add keyid to missing
+    sigdata.missing_sigs.push_back(keyid);
     return false;
 }
 
@@ -116,17 +118,24 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
     case TX_PUBKEYHASH: {
         CKeyID keyID = CKeyID(uint160(vSolutions[0]));
         CPubKey pubkey;
-        if (!GetPubKey(provider, sigdata, keyID, pubkey)) return false;
+        if (!GetPubKey(provider, sigdata, keyID, pubkey)) {
+            // Pubkey could not be found, add to missing
+            sigdata.missing_pubkeys.push_back(keyID);
+            return false;
+        }
         if (!CreateSig(creator, sigdata, provider, sig, pubkey, scriptPubKey, sigversion)) return false;
         ret.push_back(std::move(sig));
         ret.push_back(ToByteVector(pubkey));
         return true;
     }
     case TX_SCRIPTHASH:
-        if (GetCScript(provider, sigdata, uint160(vSolutions[0]), scriptRet)) {
+        h160 = uint160(vSolutions[0]);
+        if (GetCScript(provider, sigdata, h160, scriptRet)) {
             ret.push_back(std::vector<unsigned char>(scriptRet.begin(), scriptRet.end()));
             return true;
         }
+        // Could not find redeemScript, add to missing
+        sigdata.missing_redeem_script = h160;
         return false;
 
     case TX_MULTISIG: {
@@ -444,6 +453,37 @@ bool PartiallySignedTransaction::IsSane() const
 {
     for (PSBTInput input : inputs) {
         if (!input.IsSane()) return false;
+    }
+    return true;
+}
+
+bool PartiallySignedTransaction::AddInput(const CTxIn& txin, PSBTInput& psbtin)
+{
+    if (std::find(tx->vin.begin(), tx->vin.end(), txin) != tx->vin.end()) {
+        return false;
+    }
+    tx->vin.push_back(txin);
+    psbtin.partial_sigs.clear();
+    psbtin.final_script_sig.clear();
+    inputs.push_back(psbtin);
+    return true;
+}
+
+bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSBTOutput& psbtout)
+{
+    tx->vout.push_back(txout);
+    outputs.push_back(psbtout);
+    return true;
+}
+
+bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) const
+{
+    PSBTInput input = inputs[input_index];
+    int prevout_index = tx->vin[input_index].prevout.n;
+    if (input.non_witness_utxo) {
+        utxo = input.non_witness_utxo->vout[prevout_index];
+    } else {
+        return false;
     }
     return true;
 }

@@ -107,6 +107,9 @@ struct SignatureData {
     CScript redeem_script; ///< The redeemScript (if any) for the input
     std::map<CKeyID, SigPair> signatures; ///< BIP 174 style partial signatures for the input. May contain all signatures necessary for producing a final scriptSig.
     std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>> misc_pubkeys;
+    std::vector<CKeyID> missing_pubkeys; ///< KeyIDs of pubkeys which could not be found
+    std::vector<CKeyID> missing_sigs; ///< KeyIDs of pubkeys for signatures which could not be found
+    uint160 missing_redeem_script; ///< ScriptID of the missing redeemScript (if any)
 
     SignatureData() {}
     explicit SignatureData(const CScript& script) : scriptSig(script) {}
@@ -494,6 +497,8 @@ struct PartiallySignedTransaction
     bool IsNull() const;
     void Merge(const PartiallySignedTransaction& psbt);
     bool IsSane() const;
+    bool AddInput(const CTxIn& txin, PSBTInput& psbtin);
+    bool AddOutput(const CTxOut& txout, const PSBTOutput& psbtout);
     PartiallySignedTransaction() {}
     PartiallySignedTransaction(const PartiallySignedTransaction& psbt_in) : tx(psbt_in.tx), inputs(psbt_in.inputs), outputs(psbt_in.outputs), unknown(psbt_in.unknown) {}
 
@@ -506,6 +511,15 @@ struct PartiallySignedTransaction
     {
         return !(a == b);
     }
+
+    /**
+     * Finds the UTXO for a given input index
+     *
+     * @param[out] utxo The UTXO of the input if found
+     * @param[in] input_index Index of the input to retrieve the UTXO of
+     * @return Whether the UTXO for the specified input was found
+     */
+    bool GetInputUTXO(CTxOut& utxo, int input_index) const;
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
