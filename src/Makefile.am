@@ -407,6 +407,10 @@ libdash_server_a_SOURCES = \
   versionbits.cpp \
   $(BITCOIN_CORE_H)
 
+if !ENABLE_WALLET
+libdash_server_a_SOURCES += dummywallet.cpp
+endif
+
 if ENABLE_ZMQ
 libdash_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
 libdash_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
