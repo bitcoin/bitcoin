@@ -525,6 +525,7 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/dynengine.h \
   consensus/dynvm.cpp \
   consensus/dynvm.h \
+  crypto/aes256.cpp \
   global.h
 
 # common: shared between bitcoind, and bitcoin-qt and non-server tools
