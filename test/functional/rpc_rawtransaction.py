@@ -42,6 +42,8 @@ class RawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
+        # TODO: remove -txindex. Currently required for getrawtransaction call.
+        self.extra_args = [["-txindex"], ["-txindex"], ["-txindex"]]
 
     def setup_network(self, split=False):
         super().setup_network()

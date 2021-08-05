@@ -16,6 +16,8 @@ class PSBTTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 3
+       # TODO: remove -txindex. Currently required for getrawtransaction call.
+        self.extra_args = [[], ["-txindex"], ["-txindex"]]
 
     def run_test(self):
         # Create and fund a raw tx for sending 10 BTC
