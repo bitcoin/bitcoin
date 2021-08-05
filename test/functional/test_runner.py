@@ -110,7 +110,6 @@ BASE_SCRIPTS = [
     'p2p_tx_download.py',
     'mempool_updatefromblock.py',
     'wallet_dump.py --legacy-wallet',
-    'feature_taproot.py --previous_release',
     'feature_taproot.py',
     'feature_llmqsigning.py',
     'feature_llmqsigning.py --spork21',
