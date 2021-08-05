@@ -79,28 +79,19 @@ double CAddrInfo::GetChance(int64_t nNow) const
 
 CAddrMan::CAddrMan(bool deterministic, int32_t consistency_check_ratio)
     : insecure_rand{deterministic}
+    , nKey{deterministic ? uint256{1} : insecure_rand.rand256()}
     , m_consistency_check_ratio{consistency_check_ratio}
 {
-    std::vector<int>().swap(vRandom);
-    nKey = insecure_rand.rand256();
-    for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
-        for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; entry++) {
-            vvNew[bucket][entry] = -1;
+    for (auto& bucket : vvNew) {
+        for (auto& entry : bucket) {
+            entry = -1;
         }
     }
-    for (size_t bucket = 0; bucket < ADDRMAN_TRIED_BUCKET_COUNT; bucket++) {
-        for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; entry++) {
-            vvTried[bucket][entry] = -1;
+    for (auto& bucket : vvTried) {
+        for (auto& entry : bucket) {
+            entry = -1;
         }
     }
-
-    nIdCount = 0;
-    nTried = 0;
-    nNew = 0;
-    nLastGood = 1; //Initially at 1 so that "never" is strictly worse.
-    mapInfo.clear();
-    mapAddr.clear();
-    if (deterministic) nKey = uint256{1};
 }
 
 CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId)

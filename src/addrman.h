@@ -626,7 +626,7 @@ private:
     static constexpr uint8_t INCOMPATIBILITY_BASE = 32;
 
     //! last used nId
-    int nIdCount GUARDED_BY(cs);
+    int nIdCount GUARDED_BY(cs){0};
 
     //! table with information about all nIds
     std::unordered_map<int, CAddrInfo> mapInfo GUARDED_BY(cs);
@@ -640,19 +640,19 @@ private:
     mutable std::vector<int> vRandom GUARDED_BY(cs);
 
     // number of "tried" entries
-    int nTried GUARDED_BY(cs);
+    int nTried GUARDED_BY(cs){0};
 
     //! list of "tried" buckets
     int vvTried[ADDRMAN_TRIED_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
 
     //! number of (unique) "new" entries
-    int nNew GUARDED_BY(cs);
+    int nNew GUARDED_BY(cs){0};
 
     //! list of "new" buckets
     int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
 
-    //! last time Good was called (memory only)
-    int64_t nLastGood GUARDED_BY(cs);
+    //! last time Good was called (memory only). Initially set to 1 so that "never" is strictly worse.
+    int64_t nLastGood GUARDED_BY(cs){1};
 
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;
