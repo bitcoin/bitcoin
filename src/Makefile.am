@@ -407,6 +407,9 @@ libdash_server_a_SOURCES = \
   versionbits.cpp \
   $(BITCOIN_CORE_H)
 
+if ENABLE_WALLET
+libdash_server_a_SOURCES += wallet/init.cpp
+endif
 if !ENABLE_WALLET
 libdash_server_a_SOURCES += dummywallet.cpp
 endif
