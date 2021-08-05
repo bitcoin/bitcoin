@@ -722,8 +722,6 @@ void SyscoinGUI::addWallet(WalletModel* walletModel)
         m_wallet_selector_label_action->setVisible(true);
         m_wallet_selector_action->setVisible(true);
     }
-    const QString display_name = walletModel->getDisplayName();
-    m_wallet_selector->addItem(display_name, QVariant::fromValue(walletModel));
 
     connect(wallet_view, &WalletView::outOfSyncWarningClicked, this, &SyscoinGUI::showModalOverlay);
     connect(wallet_view, &WalletView::transactionClicked, this, &SyscoinGUI::gotoHistoryPage);
@@ -736,6 +734,8 @@ void SyscoinGUI::addWallet(WalletModel* walletModel)
     connect(wallet_view, &WalletView::hdEnabledStatusChanged, this, &SyscoinGUI::updateWalletStatus);
     connect(this, &SyscoinGUI::setPrivacy, wallet_view, &WalletView::setPrivacy);
     wallet_view->setPrivacy(isPrivacyModeActivated());
+    const QString display_name = walletModel->getDisplayName();
+    m_wallet_selector->addItem(display_name, QVariant::fromValue(walletModel));
 }
 
 void SyscoinGUI::removeWallet(WalletModel* walletModel)
