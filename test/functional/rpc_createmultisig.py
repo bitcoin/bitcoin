@@ -3,7 +3,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multisig RPCs"""
-import binascii
 import decimal
 import itertools
 import json
@@ -66,9 +65,9 @@ class RpcCreateMultiSigTest(SyscoinTestFramework):
 
         # decompress pk2
         pk_obj = ECPubKey()
-        pk_obj.set(binascii.unhexlify(pk2))
+        pk_obj.set(bytes.fromhex(pk2))
         pk_obj.compressed = False
-        pk2 = binascii.hexlify(pk_obj.get_bytes()).decode()
+        pk2 = pk_obj.get_bytes().hex()
 
         node0.createwallet(wallet_name='wmulti0', disable_private_keys=True)
         wmulti0 = node0.get_wallet_rpc('wmulti0')
