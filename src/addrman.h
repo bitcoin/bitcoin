@@ -471,6 +471,7 @@ public:
         Check();
     }
 
+private:
     void Clear()
         EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
@@ -496,6 +497,7 @@ public:
         mapAddr.clear();
     }
 
+public:
     explicit CAddrMan(bool deterministic, int32_t consistency_check_ratio)
         : insecure_rand{deterministic},
           m_consistency_check_ratio{consistency_check_ratio}
