@@ -1175,7 +1175,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (adb.Read(*node.addrman)) {
             LogPrintf("Loaded %i addresses from peers.dat  %dms\n", node.addrman->size(), GetTimeMillis() - nStart);
         } else {
-            node.addrman->Clear(); // Addrman can be in an inconsistent state after failure, reset it
+            // Addrman can be in an inconsistent state after failure, reset it
+            node.addrman = std::make_unique<CAddrMan>(/* deterministic */ false, /* consistency_check_ratio */ check_addrman);
             LogPrintf("Recreating peers.dat\n");
             adb.Write(*node.addrman);
         }
