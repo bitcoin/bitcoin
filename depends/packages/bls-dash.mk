@@ -1,18 +1,18 @@
 package=bls-dash
-$(package)_version=1.1.4
+$(package)_version=1.1.5
 $(package)_download_path=https://github.com/syscoin/bls-signatures/archive
 $(package)_download_file=$($(package)_version).tar.gz
 $(package)_file_name=$(package)-$($(package)_download_file)
 $(package)_build_subdir=build
-$(package)_sha256_hash=5aa9dcd8b90533f4a2a3cf0590ba0a3cbe9d4a69d8ff54058208f98fdbf23295
+$(package)_sha256_hash=b23a79f53a15af0a7347e4f37d50fc2e651865bfb425392ef44d473668bab498
 $(package)_dependencies=gmp cmake
 
-$(package)_relic_version=3dd26f5ae28234e02fa4da375422ba954b7b1e53
+$(package)_relic_version=3a23142be0a5510a3aa93cd6c76fc59d3fc732a5
 $(package)_relic_download_path=https://github.com/relic-toolkit/relic/archive
 $(package)_relic_download_file=$($(package)_relic_version).tar.gz
 $(package)_relic_file_name=relic-toolkit-$($(package)_relic_download_file)
 $(package)_relic_build_subdir=relic
-$(package)_relic_sha256_hash=701d65ab08228c6db39f08c8b2aa4f5e4d6da3bd024eb88f1b4b1ee33e07e655
+$(package)_relic_sha256_hash=ddad83b1406985a1e4703bd03bdbab89453aa700c0c99567cf8de51c205e5dde
 
 $(package)_extra_sources=$($(package)_relic_file_name)
 
