@@ -7,14 +7,14 @@
 
 #include <ios>
 
-#include <relic_conf.h>
+#include "relic_conf.h"
 
 #if defined GMP && ARITH == GMP
 #include <gmp.h>
 #endif
 
 extern "C" {
-#include <relic.h>
+#include "relic.h"
 }
 
 /**

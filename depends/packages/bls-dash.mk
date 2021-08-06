@@ -1,10 +1,10 @@
 package=bls-dash
-$(package)_version=1.0.0
-$(package)_download_path=https://github.com/dashpay/bls-signatures/archive
+$(package)_version=1.1.1
+$(package)_download_path=https://github.com/syscoin/bls-signatures/archive
 $(package)_download_file=$($(package)_version).tar.gz
 $(package)_file_name=$(package)-$($(package)_download_file)
 $(package)_build_subdir=build
-$(package)_sha256_hash=ecbc51457dd3de153af27333038f149ba585e16fe46351b763938cb6ef0f2d9a
+$(package)_sha256_hash=24a0dcc150a31de2b27325542f9ff0ddb79d1c0299766ac9b68b86a21cd1272b
 $(package)_dependencies=gmp cmake
 
 $(package)_relic_version=186a15da6d07ef436dd8f00a4345838310a0aad3
@@ -59,7 +59,7 @@ define $(package)_config_cmds
   export CC="$($(package)_cc)" && \
   export CXX="$($(package)_cxx)" && \
   export CFLAGS="$($(package)_cflags) $($(package)_cppflags)" && \
-  export CXXFLAGS="$($(package)_cxxflags) $($(package)_cppflags)" && \
+  export CXXFLAGS="$($(package)_cxxflags) $($(package)_cppflags) -std=c++11" && \
   export LDFLAGS="$($(package)_ldflags)" && \
   $(host_prefix)/bin/cmake ../ $($(package)_config_opts)
 endef
