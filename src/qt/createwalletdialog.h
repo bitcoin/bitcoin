@@ -35,6 +35,7 @@ public:
 
 private:
     Ui::CreateWalletDialog *ui;
+    bool m_has_signers = false;
 };
 
 #endif // SYSCOIN_QT_CREATEWALLETDIALOG_H
