@@ -1055,7 +1055,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
     std::unordered_map<std::pair<uint8_t, uint256>, std::unordered_set<NodeId>, StaticSaltedHasher> quorumNodesMap;
 
     sigSharesQueuedToAnnounce.ForEach([&](const SigShareKey& sigShareKey, bool) {
-        auto& signHash = sigShareKey.first;
+        const auto& signHash = sigShareKey.first;
         auto quorumMember = sigShareKey.second;
         LOCK(cs);
         const CSigShare* sigShare = sigShares.Get(sigShareKey);
@@ -1287,7 +1287,7 @@ bool CSigSharesManager::GetSessionInfoByRecvId(NodeId nodeId, uint32_t sessionId
 CSigShare CSigSharesManager::RebuildSigShare(const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, size_t idx)
 {
     assert(idx < batchedSigShares.sigShares.size());
-    auto& s = batchedSigShares.sigShares[idx];
+    const auto& s = batchedSigShares.sigShares[idx];
     CSigShare sigShare;
     sigShare.llmqType = session.llmqType;
     sigShare.quorumHash = session.quorumHash;

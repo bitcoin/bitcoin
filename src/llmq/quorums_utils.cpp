@@ -186,10 +186,8 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(uint8_t llmqType,
     static RecursiveMutex qwatchConnectionSeedCs;
     if (!qwatchConnectionSeedGenerated) {
         LOCK(qwatchConnectionSeedCs);
-        if (!qwatchConnectionSeedGenerated) {
-            qwatchConnectionSeed = GetRandHash();
-            qwatchConnectionSeedGenerated = true;
-        }
+        qwatchConnectionSeed = GetRandHash();
+        qwatchConnectionSeedGenerated = true;
     }
 
     std::set<size_t> result;
