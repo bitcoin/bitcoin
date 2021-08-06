@@ -47,7 +47,7 @@ define $(package)_set_vars
     $(package)_config_opts_darwin+= -DCMAKE_AR="$($(package)_ar)"
     $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$($(package)_ranlib)"
   endif
-  $(package)_cppflags+=-UBLSALLOC_SODIUM
+  $(package)_cppflags+=-UBLSALLOC_SODIUM -O3 -funroll-loops -fomit-frame-pointer -std=c++11
 endef
 
 define $(package)_preprocess_cmds
@@ -59,7 +59,7 @@ define $(package)_config_cmds
   export CC="$($(package)_cc)" && \
   export CXX="$($(package)_cxx)" && \
   export CFLAGS="$($(package)_cflags) $($(package)_cppflags)" && \
-  export CXXFLAGS="$($(package)_cxxflags) $($(package)_cppflags) -std=c++11" && \
+  export CXXFLAGS="$($(package)_cxxflags) $($(package)_cppflags)" && \
   export LDFLAGS="$($(package)_ldflags)" && \
   $(host_prefix)/bin/cmake ../ $($(package)_config_opts)
 endef
