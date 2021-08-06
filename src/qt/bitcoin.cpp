@@ -144,7 +144,7 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
         QApplication::installTranslator(&translator);
 }
 
-static std::string JoinErrors(const std::vector<std::string>& errors)
+static std::string MakeUnorderedList(const std::vector<std::string>& errors)
 {
     return Join(errors, "\n", [](const std::string& error) { return "- " + error; });
 }
@@ -158,13 +158,13 @@ static bool InitSettings()
     std::vector<std::string> errors;
     if (!gArgs.ReadSettingsFile(&errors)) {
         bilingual_str error = _("Settings file could not be read");
-        InitError(Untranslated(strprintf("%s:\n%s\n", error.original, JoinErrors(errors))));
+        InitError(Untranslated(strprintf("%s:\n%s\n", error.original, MakeUnorderedList(errors))));
 
         QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error.translated)), QMessageBox::Reset | QMessageBox::Abort);
         /*: Explanatory text shown on startup when the settings file cannot be read.
             Prompts user to make a choice between resetting or aborting. */
         messagebox.setInformativeText(QObject::tr("Do you want to reset settings to default values, or to abort without making changes?"));
-        messagebox.setDetailedText(QString::fromStdString(JoinErrors(errors)));
+        messagebox.setDetailedText(QString::fromStdString(MakeUnorderedList(errors)));
         messagebox.setTextFormat(Qt::PlainText);
         messagebox.setDefaultButton(QMessageBox::Reset);
         switch (messagebox.exec()) {
@@ -180,14 +180,14 @@ static bool InitSettings()
     errors.clear();
     if (!gArgs.WriteSettingsFile(&errors)) {
         bilingual_str error = _("Settings file could not be written");
-        InitError(Untranslated(strprintf("%s:\n%s\n", error.original, JoinErrors(errors))));
+        InitError(Untranslated(strprintf("%s:\n%s\n", error.original, MakeUnorderedList(errors))));
 
         QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error.translated)), QMessageBox::Ok);
         /*: Explanatory text shown on startup when the settings file could not be written.
             Prompts user to check that we have the ability to write to the file.
             Explains that the user has the option of running without a settings file.*/
         messagebox.setInformativeText(QObject::tr("A fatal error occured. Check that settings file is writable, or try running with -nosettings."));
-        messagebox.setDetailedText(QString::fromStdString(JoinErrors(errors)));
+        messagebox.setDetailedText(QString::fromStdString(MakeUnorderedList(errors)));
         messagebox.setTextFormat(Qt::PlainText);
         messagebox.setDefaultButton(QMessageBox::Ok);
         messagebox.exec();
