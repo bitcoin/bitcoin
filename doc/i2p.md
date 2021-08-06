@@ -10,11 +10,22 @@ started with I2P terminology.
 ## Run Bitcoin Core with an I2P router (proxy)
 
 A running I2P router (proxy) with [SAM](https://geti2p.net/en/docs/api/samv3)
-enabled is required (there is an [official one](https://geti2p.net) and
-[a few alternatives](https://en.wikipedia.org/wiki/I2P#Routers)). Notice the IP
-address and port the SAM proxy is listening to; usually, it is
-`127.0.0.1:7656`. Once it is up and running with SAM enabled, use the following
-Bitcoin Core options:
+enabled is required. Options include:
+
+- [i2prouter (I2P Router)](https://geti2p.net), the official implementation in
+  Java
+- [i2pd (I2P Daemon)](https://github.com/PurpleI2P/i2pd)
+  ([documentation](https://i2pd.readthedocs.io/en/latest)), a lighter
+  alternative in C++ (successfully tested with version 2.23 and up; version 2.36
+  or later recommended)
+- [i2p-zero](https://github.com/i2p-zero/i2p-zero)
+- [other alternatives](https://en.wikipedia.org/wiki/I2P#Routers)
+
+Note the IP address and port the SAM proxy is listening to; usually, it is
+`127.0.0.1:7656`.
+
+Once an I2P router with SAM enabled is up and running, use the following Bitcoin
+Core configuration options:
 
 ```
 -i2psam=<ip:port>
