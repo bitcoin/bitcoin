@@ -1,10 +1,10 @@
 package=bls-dash
-$(package)_version=1.1.6
+$(package)_version=1.1.8
 $(package)_download_path=https://github.com/syscoin/bls-signatures/archive
 $(package)_download_file=$($(package)_version).tar.gz
 $(package)_file_name=$(package)-$($(package)_download_file)
 $(package)_build_subdir=build
-$(package)_sha256_hash=61b671faa6af796b80624edc01071abc27d0ef732349b28e76c7ea1e161e2e37
+$(package)_sha256_hash=4746315b0528669a33af200d11a142a732fb9c314d580c8bfbc51db05e6336b4
 $(package)_dependencies=gmp cmake
 
 $(package)_relic_version=3a23142be0a5510a3aa93cd6c76fc59d3fc732a5
