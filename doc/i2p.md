@@ -42,15 +42,30 @@ named `i2p_private_key` in the Bitcoin Core data directory.
 
 ## Additional configuration options related to I2P
 
-You may set the `debug=i2p` config logging option to have additional
-information in the debug log about your I2P configuration and connections. Run
-`bitcoin-cli help logging` for more information.
+```
+-debug=i2p
+```
 
-It is possible to restrict outgoing connections in the usual way with
-`onlynet=i2p`. I2P support was added to Bitcoin Core in version 22.0 (mid-2021)
-and there may be fewer I2P peers than Tor or IP ones. Therefore, using
-`onlynet=i2p` alone (without other `onlynet=`) may make a node more susceptible
-to [Sybil attacks](https://en.bitcoin.it/wiki/Weaknesses#Sybil_attack). Use
+Set the `debug=i2p` config logging option to see additional information in the
+debug log about your I2P configuration and connections. Run `bitcoin-cli help
+logging` for more information.
+
+```
+-onlynet=i2p
+```
+
+Make outgoing connections only to I2P addresses. Incoming connections are not
+affected by this option. It can be specified multiple times to allow multiple
+network types, e.g. onlynet=ipv4, onlynet=ipv6, onlynet=onion, onlynet=i2p.
+
+Warning: if you use -onlynet with values other than onion, and the -onion or
+-proxy option is set, then outgoing onion connections will still be made; use
+-noonion or -onion=0 to disable outbound onion connections in this case.
+
+I2P support was added to Bitcoin Core in version 22.0 and there may be fewer I2P
+peers than Tor or IP ones. Therefore, using I2P alone without other networks may
+make a node more susceptible to [Sybil
+attacks](https://en.bitcoin.it/wiki/Weaknesses#Sybil_attack). You can use
 `bitcoin-cli -addrinfo` to see the number of I2P addresses known to your node.
 
 Another consideration with `onlynet=i2p` is that the initial blocks download
