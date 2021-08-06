@@ -764,37 +764,42 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
 
 BOOST_AUTO_TEST_CASE(LimitedAndReachable_Network)
 {
-    BOOST_CHECK_EQUAL(IsReachable(NET_IPV4), true);
-    BOOST_CHECK_EQUAL(IsReachable(NET_IPV6), true);
-    BOOST_CHECK_EQUAL(IsReachable(NET_ONION), true);
+    BOOST_CHECK(IsReachable(NET_IPV4));
+    BOOST_CHECK(IsReachable(NET_IPV6));
+    BOOST_CHECK(IsReachable(NET_ONION));
+    BOOST_CHECK(IsReachable(NET_I2P));
 
     SetReachable(NET_IPV4, false);
     SetReachable(NET_IPV6, false);
     SetReachable(NET_ONION, false);
+    SetReachable(NET_I2P, false);
 
-    BOOST_CHECK_EQUAL(IsReachable(NET_IPV4), false);
-    BOOST_CHECK_EQUAL(IsReachable(NET_IPV6), false);
-    BOOST_CHECK_EQUAL(IsReachable(NET_ONION), false);
+    BOOST_CHECK(!IsReachable(NET_IPV4));
+    BOOST_CHECK(!IsReachable(NET_IPV6));
+    BOOST_CHECK(!IsReachable(NET_ONION));
+    BOOST_CHECK(!IsReachable(NET_I2P));
 
     SetReachable(NET_IPV4, true);
     SetReachable(NET_IPV6, true);
     SetReachable(NET_ONION, true);
+    SetReachable(NET_I2P, true);
 
-    BOOST_CHECK_EQUAL(IsReachable(NET_IPV4), true);
-    BOOST_CHECK_EQUAL(IsReachable(NET_IPV6), true);
-    BOOST_CHECK_EQUAL(IsReachable(NET_ONION), true);
+    BOOST_CHECK(IsReachable(NET_IPV4));
+    BOOST_CHECK(IsReachable(NET_IPV6));
+    BOOST_CHECK(IsReachable(NET_ONION));
+    BOOST_CHECK(IsReachable(NET_I2P));
 }
 
 BOOST_AUTO_TEST_CASE(LimitedAndReachable_NetworkCaseUnroutableAndInternal)
 {
-    BOOST_CHECK_EQUAL(IsReachable(NET_UNROUTABLE), true);
-    BOOST_CHECK_EQUAL(IsReachable(NET_INTERNAL), true);
+    BOOST_CHECK(IsReachable(NET_UNROUTABLE));
+    BOOST_CHECK(IsReachable(NET_INTERNAL));
 
     SetReachable(NET_UNROUTABLE, false);
     SetReachable(NET_INTERNAL, false);
 
-    BOOST_CHECK_EQUAL(IsReachable(NET_UNROUTABLE), true); // Ignored for both networks
-    BOOST_CHECK_EQUAL(IsReachable(NET_INTERNAL), true);
+    BOOST_CHECK(IsReachable(NET_UNROUTABLE)); // Ignored for both networks
+    BOOST_CHECK(IsReachable(NET_INTERNAL));
 }
 
 CNetAddr UtilBuildAddress(unsigned char p1, unsigned char p2, unsigned char p3, unsigned char p4)
@@ -813,10 +818,10 @@ BOOST_AUTO_TEST_CASE(LimitedAndReachable_CNetAddr)
     CNetAddr addr = UtilBuildAddress(0x001, 0x001, 0x001, 0x001); // 1.1.1.1
 
     SetReachable(NET_IPV4, true);
-    BOOST_CHECK_EQUAL(IsReachable(addr), true);
+    BOOST_CHECK(IsReachable(addr));
 
     SetReachable(NET_IPV4, false);
-    BOOST_CHECK_EQUAL(IsReachable(addr), false);
+    BOOST_CHECK(!IsReachable(addr));
 
     SetReachable(NET_IPV4, true); // have to reset this, because this is stateful.
 }
@@ -828,12 +833,12 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
 
     SetReachable(NET_IPV4, true);
 
-    BOOST_CHECK_EQUAL(IsLocal(addr), false);
-    BOOST_CHECK_EQUAL(AddLocal(addr, 1000), true);
-    BOOST_CHECK_EQUAL(IsLocal(addr), true);
+    BOOST_CHECK(!IsLocal(addr));
+    BOOST_CHECK(AddLocal(addr, 1000));
+    BOOST_CHECK(IsLocal(addr));
 
     RemoveLocal(addr);
-    BOOST_CHECK_EQUAL(IsLocal(addr), false);
+    BOOST_CHECK(!IsLocal(addr));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
