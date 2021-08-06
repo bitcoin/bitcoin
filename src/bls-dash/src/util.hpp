@@ -142,7 +142,10 @@ class Util {
         }
         return sum;
     }
-
+    static bool HasOnlyZeros(const Bytes& bytes) {
+        return std::all_of(bytes.begin(), bytes.end(), [](uint8_t byte){ return byte == 0x00; });
+    }
+    
  private:
     friend class BLS;
     static SecureAllocCallback secureAllocCallback;

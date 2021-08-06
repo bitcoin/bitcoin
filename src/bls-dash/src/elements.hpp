@@ -16,9 +16,9 @@
 #define SRC_BLSELEMENTS_HPP_
 
 extern "C" {
-#include "relic.h"
+#include <relic.h>
 }
-#include "relic_conf.h"
+#include <relic_conf.h>
 #include "util.hpp"
 
 #if defined GMP && ARITH == GMP
@@ -30,6 +30,7 @@ extern "C" {
 namespace bls {
 class G1Element;
 class G2Element;
+class GTElement;
 
 class G1Element {
 public:
@@ -54,6 +55,7 @@ public:
     void CheckValid() const;
     void ToNative(g1_t output) const;
     G1Element Negate() const;
+    GTElement Pair(const G2Element &b) const;
     uint32_t GetFingerprint() const;
     std::vector<uint8_t> Serialize(bool fLegacy = false) const;
 
@@ -64,6 +66,7 @@ public:
     friend G1Element operator+(const G1Element &a, const G1Element &b);
     friend G1Element operator*(const G1Element &a, const bn_t &k);
     friend G1Element operator*(const bn_t &k, const G1Element &a);
+    friend GTElement operator&(const G1Element &a, const G2Element &b);
 
 private:
     g1_t p;
@@ -94,6 +97,7 @@ public:
     void CheckValid() const;
     void ToNative(g2_t output) const;
     G2Element Negate() const;
+    GTElement Pair(const G1Element &a) const;
     std::vector<uint8_t> Serialize(bool fLegacy = false) const;
 
     friend bool operator==(G2Element const &a, G2Element const &b);
@@ -106,6 +110,27 @@ public:
 
 private:
     g2_t q;
+};
+class GTElement {
+public:
+    static const size_t SIZE = 384;
+    static GTElement FromBytes(const Bytes& bytes);
+    static GTElement FromByteVector(const std::vector<uint8_t> &bytevec);
+    static GTElement FromNative(const gt_t *element);
+    static GTElement Unity();  // unity
+
+    void Serialize(uint8_t *buffer) const;
+    std::vector<uint8_t> Serialize() const;
+
+    friend bool operator==(GTElement const &a, GTElement const &b);
+    friend bool operator!=(GTElement const &a, GTElement const &b);
+    friend std::ostream &operator<<(std::ostream &os, const GTElement &s);
+    friend GTElement operator*(GTElement &a, GTElement &b);
+    GTElement &operator=(const GTElement &rhs);
+
+private:
+    gt_t r;
+    GTElement() {}
 };
 
 }  // end namespace bls
