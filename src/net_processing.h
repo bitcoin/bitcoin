@@ -32,6 +32,7 @@ static const bool DEFAULT_PEERBLOCKFILTERS = false;
 /** Threshold for marking a node to be discouraged, e.g. disconnected and added to the discouragement filter. */
 static const int DISCOURAGEMENT_THRESHOLD{100};
 
+
 class PeerManager final : public CValidationInterface, public NetEventsInterface {
 public:
     PeerManager(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
@@ -150,6 +151,8 @@ struct CNodeStateStats {
     int nSyncHeight = -1;
     int nCommonHeight = -1;
     std::vector<int> vHeightInFlight;
+    uint64_t m_addr_processed = 0;
+    uint64_t m_addr_rate_limited = 0;
 };
 
 /** Get statistics from node state */
