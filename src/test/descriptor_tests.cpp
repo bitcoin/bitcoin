@@ -59,7 +59,7 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
 
     // Check that both versions serialize back to the public version.
     std::string pub1 = parse_priv->ToString();
-    std::string pub2 = parse_priv->ToString();
+    std::string pub2 = parse_pub->ToString();
     BOOST_CHECK_EQUAL(pub, pub1);
     BOOST_CHECK_EQUAL(pub, pub2);
 

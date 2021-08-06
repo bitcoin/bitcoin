@@ -90,7 +90,7 @@ the command line in case `bitcoin-cli` is used.
 Setup:
 - All three call `getnewaddress` to create a new address; call these addresses
   *Aalice*, *Abob*, and *Acarol*.
-- All three call `getaddressinfo X`, with *X* their respective address, and
+- All three call `getaddressinfo "X"`, with *X* their respective address, and
   remember the corresponding public keys. Call these public keys *Kalice*,
   *Kbob*, and *Kcarol*.
 - All three now run `addmultisigaddress 2 ["Kalice","Kbob","Kcarol"]` to teach
@@ -105,28 +105,28 @@ Setup:
   output. Again, it may be necessary to explicitly specify the addresstype
   in order to get a result that matches. This command won't enable them to
   initiate transactions later, however.
-- They can now give out *D* as address others can pay to.
+- They can now give out *Amulti* as address others can pay to.
 
 Later, when *V* BTC has been received on *Amulti*, and Bob and Carol want to
 move the coins in their entirety to address *Asend*, with no change. Alice
 does not need to be involved.
 - One of them - let's assume Carol here - initiates the creation. She runs
-  `walletcreatefundedpsbt [] {"Asend":V} 0 false {"subtractFeeFromOutputs":[0], "includeWatching":true}`.
-  We call the resulting PSBT *P*. P does not contain any signatures.
+  `walletcreatefundedpsbt [] {"Asend":V} 0 {"subtractFeeFromOutputs":[0], "includeWatching":true}`.
+  We call the resulting PSBT *P*. *P* does not contain any signatures.
 - Carol needs to sign the transaction herself. In order to do so, she runs
-  `walletprocesspsbt P`, and gives the resulting PSBT *P2* to Bob.
+  `walletprocesspsbt "P"`, and gives the resulting PSBT *P2* to Bob.
 - Bob inspects the PSBT using `decodepsbt "P2"` to determine if the transaction
   has indeed just the expected input, and an output to *Asend*, and the fee is
   reasonable. If he agrees, he calls `walletprocesspsbt "P2"` to sign. The
   resulting PSBT *P3* contains both Carol's and Bob's signature.
-- Now anyone can call `finalizepsbt "P2"` to extract a fully signed transaction
+- Now anyone can call `finalizepsbt "P3"` to extract a fully signed transaction
   *T*.
 - Finally anyone can broadcast the transaction using `sendrawtransaction "T"`.
 
 In case there are more signers, it may be advantageous to let them all sign in
-parallel, rather passing the PSBT from one signer to the next one. In the
+parallel, rather than passing the PSBT from one signer to the next one. In the
 above example this would translate to Carol handing a copy of *P* to each signer
-separately. They can then all invoke `walletprocesspsbt P`, and end up with
+separately. They can then all invoke `walletprocesspsbt "P"`, and end up with
 their individually-signed PSBT structures. They then all send those back to
 Carol (or anyone) who can combine them using `combinepsbt`. The last two steps
 (`finalizepsbt` and `sendrawtransaction`) remain unchanged.
