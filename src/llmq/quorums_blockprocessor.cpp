@@ -45,10 +45,9 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         CFinalCommitment qc;
         vRecv >> qc;
 
-        auto hash = ::SerializeHash(qc);
         {
             LOCK(cs_main);
-            EraseObjectRequest(pfrom->GetId(), CInv(MSG_QUORUM_FINAL_COMMITMENT, hash));
+            EraseObjectRequest(pfrom->GetId(), CInv(MSG_QUORUM_FINAL_COMMITMENT, ::SerializeHash(qc)));
         }
 
         if (qc.IsNull()) {
@@ -337,7 +336,7 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
 {
     AssertLockHeld(cs_main);
 
-    auto& consensus = Params().GetConsensus();
+    const auto& consensus = Params().GetConsensus();
     bool fDIP0003Active = pindex->nHeight >= consensus.DIP0003Height;
 
     ret.clear();
@@ -485,9 +484,7 @@ std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> CQuorumBlockProce
         auto& v = ret[p.second.type];
         v.reserve(p.second.signingActiveQuorumCount);
         auto commitments = GetMinedCommitmentsUntilBlock(p.second.type, pindex, p.second.signingActiveQuorumCount);
-        for (auto& c : commitments) {
-            v.emplace_back(c);
-        }
+        std::copy(commitments.begin(), commitments.end(), std::back_inserter(v));
     }
 
     return ret;

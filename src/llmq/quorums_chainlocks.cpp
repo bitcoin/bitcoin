@@ -100,9 +100,7 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
         CChainLockSig clsig;
         vRecv >> clsig;
 
-        auto hash = ::SerializeHash(clsig);
-
-        ProcessNewChainLock(pfrom->GetId(), clsig, hash);
+        ProcessNewChainLock(pfrom->GetId(), clsig, ::SerializeHash(clsig));
     }
 }
 

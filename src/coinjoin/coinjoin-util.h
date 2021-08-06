@@ -16,7 +16,7 @@ private:
     CPubKey pubKey;
 
 public:
-    CKeyHolder(CWallet* pwalletIn);
+    explicit CKeyHolder(CWallet* pwalletIn);
     CKeyHolder(CKeyHolder&&) = delete;
     CKeyHolder& operator=(CKeyHolder&&) = delete;
     void KeepKey();

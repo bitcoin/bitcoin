@@ -287,9 +287,9 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
             continue; // to early for this node
         }
         int nObjsLeftToAsk = governance.RequestGovernanceObjectVotes(pnode, connman);
-        static int64_t nTimeNoObjectsLeft = 0;
         // check for data
         if(nObjsLeftToAsk == 0) {
+            static int64_t nTimeNoObjectsLeft = 0;
             static int nLastTick = 0;
             static int nLastVotes = 0;
             if(nTimeNoObjectsLeft == 0) {

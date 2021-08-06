@@ -918,7 +918,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     return true;
 }
 
-void CDeterministicMNManager::HandleQuorumCommitment(llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs)
+void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs)
 {
     // The commitment has already been validated at this point, so it's safe to use members of it
 

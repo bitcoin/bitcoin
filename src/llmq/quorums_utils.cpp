@@ -187,10 +187,8 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(Consensus::LLMQTy
     static CCriticalSection qwatchConnectionSeedCs;
     if (!qwatchConnectionSeedGenerated) {
         LOCK(qwatchConnectionSeedCs);
-        if (!qwatchConnectionSeedGenerated) {
-            qwatchConnectionSeed = GetRandHash();
-            qwatchConnectionSeedGenerated = true;
-        }
+        qwatchConnectionSeed = GetRandHash();
+        qwatchConnectionSeedGenerated = true;
     }
 
     std::set<size_t> result;

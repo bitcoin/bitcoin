@@ -98,7 +98,7 @@ public:
 
     void Reset()
     {
-        *((C*)this) = C(fLegacy);
+        *(static_cast<C*>(this)) = C(fLegacy);
     }
 
     void SetByteVector(const std::vector<uint8_t>& vecBytes)

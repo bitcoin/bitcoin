@@ -381,11 +381,15 @@ bool CQuorumManager::HasQuorum(Consensus::LLMQType llmqType, const uint256& quor
 
 bool CQuorumManager::RequestQuorumData(CNode* pFrom, Consensus::LLMQType llmqType, const CBlockIndex* pQuorumIndex, uint16_t nDataMask, const uint256& proTxHash) const
 {
+    if (pFrom == nullptr) {
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Invalid pFrom: nullptr\n", __func__);
+        return false;
+    }
     if (pFrom->nVersion < LLMQ_DATA_MESSAGES_VERSION) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Version must be %d or greater.\n", __func__, LLMQ_DATA_MESSAGES_VERSION);
         return false;
     }
-    if (pFrom == nullptr || (pFrom->GetVerifiedProRegTxHash().IsNull() && !pFrom->qwatch)) {
+    if (pFrom->GetVerifiedProRegTxHash().IsNull() && !pFrom->qwatch) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- pFrom is neither a verified masternode nor a qwatch connection\n", __func__);
         return false;
     }
@@ -448,7 +452,8 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
             }
             // If we have more cached than requested return only a subvector
             if (vecResultQuorums.size() > nCountRequested) {
-                return {vecResultQuorums.begin(), vecResultQuorums.begin() + nCountRequested};
+                const std::vector<CQuorumCPtr>& ret = {vecResultQuorums.begin(), vecResultQuorums.begin() + nCountRequested};
+                return ret;
             }
             // If we have cached quorums but not enough, subtract what we have from the count and the set correct index where to start
             // scanning for the rests
@@ -462,7 +467,7 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
         }
     }
     // Get the block indexes of the mined commitments to build the required quorums from
-    auto quorumIndexes = quorumBlockProcessor->GetMinedCommitmentsUntilBlock(llmqType, (const CBlockIndex*)pIndexScanCommitments, nScanCommitments);
+    auto quorumIndexes = quorumBlockProcessor->GetMinedCommitmentsUntilBlock(llmqType, static_cast<const CBlockIndex*>(pIndexScanCommitments), nScanCommitments);
     vecResultQuorums.reserve(vecResultQuorums.size() + quorumIndexes.size());
 
     for (auto& quorumIndex : quorumIndexes) {
@@ -482,7 +487,8 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
     }
     // Don't return more than nCountRequested elements
     size_t nResultEndIndex = std::min(nCountResult, nCountRequested);
-    return {vecResultQuorums.begin(), vecResultQuorums.begin() + nResultEndIndex};
+    const std::vector<CQuorumCPtr>& ret = {vecResultQuorums.begin(), vecResultQuorums.begin() + nResultEndIndex};
+    return ret;
 }
 
 CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash) const

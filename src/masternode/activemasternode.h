@@ -49,7 +49,7 @@ private:
     std::string strError;
 
 public:
-    virtual void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload);
+    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
 
     void Init(const CBlockIndex* pindex);
 

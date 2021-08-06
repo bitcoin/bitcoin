@@ -379,7 +379,7 @@ public:
     CSigShare CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash) const;
     void ForceReAnnouncement(const CQuorumCPtr& quorum, Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
 
-    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
+    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
 
     static CDeterministicMNCPtr SelectMemberForRecovery(const CQuorumCPtr& quorum, const uint256& id, int attempt);
 
@@ -397,13 +397,13 @@ private:
     void CollectPendingSigSharesToVerify(size_t maxUniqueSessions,
             std::unordered_map<NodeId, std::vector<CSigShare>>& retSigShares,
             std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums);
-    bool ProcessPendingSigShares(CConnman& connman);
+    bool ProcessPendingSigShares(const CConnman& connman);
 
     void ProcessPendingSigShares(const std::vector<CSigShare>& sigShares,
             const std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& quorums,
-            CConnman& connman);
+            const CConnman& connman);
 
-    void ProcessSigShare(const CSigShare& sigShare, CConnman& connman, const CQuorumCPtr& quorum);
+    void ProcessSigShare(const CSigShare& sigShare, const CConnman& connman, const CQuorumCPtr& quorum);
     void TryRecoverSig(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
 
 private:

@@ -101,7 +101,7 @@ public:
     void CheckActiveState();
     void TrySignChainTip();
     void EnforceBestChainLock();
-    virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
+    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
 
     bool HasChainLock(int nHeight, const uint256& blockHash);
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash);

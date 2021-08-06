@@ -600,8 +600,8 @@ bool CCoinJoinServer::AddEntry(CConnman& connman, const CCoinJoinEntry& entry, P
     for (const auto& txin : entry.vecTxDSIn) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- txin=%s\n", __func__, txin.ToString());
 
-        for (const auto& entry : vecEntries) {
-            for (const auto& txdsin : entry.vecTxDSIn) {
+        for (const auto& inner_entry : vecEntries) {
+            for (const auto& txdsin : inner_entry.vecTxDSIn) {
                 if (txdsin.prevout == txin.prevout) {
                     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- ERROR: already have this txin in entries\n", __func__);
                     nMessageIDRet = ERR_ALREADY_HAVE;

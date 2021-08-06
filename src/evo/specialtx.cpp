@@ -91,12 +91,12 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
 
 bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, const CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots)
 {
-    static int64_t nTimeLoop = 0;
-    static int64_t nTimeQuorum = 0;
-    static int64_t nTimeDMN = 0;
-    static int64_t nTimeMerkle = 0;
-
     try {
+        static int64_t nTimeLoop = 0;
+        static int64_t nTimeQuorum = 0;
+        static int64_t nTimeDMN = 0;
+        static int64_t nTimeMerkle = 0;
+
         int64_t nTime1 = GetTimeMicros();
 
         for (const auto& ptr_tx : block.vtx) {

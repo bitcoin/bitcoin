@@ -72,7 +72,7 @@ public:
           mapIndex()
     {}
 
-    CacheMap(const CacheMap<K,V>& other)
+    explicit CacheMap(const CacheMap<K,V>& other)
         : nMaxSize(other.nMaxSize),
           listItems(other.listItems),
           mapIndex()
