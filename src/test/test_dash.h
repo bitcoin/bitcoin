@@ -19,7 +19,7 @@
 
 #include <boost/thread.hpp>
 
-extern FastRandomContext insecure_rand_ctx;
+thread_local extern FastRandomContext g_insecure_rand_ctx;
 
 /**
  * Flag to make GetRand in random.h return the same number
@@ -28,14 +28,14 @@ extern bool g_mock_deterministic_tests;
 
 static inline void SeedInsecureRand(bool deterministic = false)
 {
-    insecure_rand_ctx = FastRandomContext(deterministic);
+    g_insecure_rand_ctx = FastRandomContext(deterministic);
 }
 
-static inline uint32_t InsecureRand32() { return insecure_rand_ctx.rand32(); }
-static inline uint256 InsecureRand256() { return insecure_rand_ctx.rand256(); }
-static inline uint64_t InsecureRandBits(int bits) { return insecure_rand_ctx.randbits(bits); }
-static inline uint64_t InsecureRandRange(uint64_t range) { return insecure_rand_ctx.randrange(range); }
-static inline bool InsecureRandBool() { return insecure_rand_ctx.randbool(); }
+static inline uint32_t InsecureRand32() { return g_insecure_rand_ctx.rand32(); }
+static inline uint256 InsecureRand256() { return g_insecure_rand_ctx.rand256(); }
+static inline uint64_t InsecureRandBits(int bits) { return g_insecure_rand_ctx.randbits(bits); }
+static inline uint64_t InsecureRandRange(uint64_t range) { return g_insecure_rand_ctx.randrange(range); }
+static inline bool InsecureRandBool() { return g_insecure_rand_ctx.randbool(); }
 
 static constexpr CAmount CENT{1000000};
 
@@ -61,7 +61,7 @@ class CConnman;
 class CNode;
 
 class PeerLogicValidation;
-struct TestingSetup: public BasicTestingSetup {
+struct TestingSetup : public BasicTestingSetup {
     boost::thread_group threadGroup;
     CScheduler scheduler;
 
