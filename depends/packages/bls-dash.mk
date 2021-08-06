@@ -35,8 +35,8 @@ define $(package)_set_vars
   $(package)_config_opts+= -DCMAKE_PREFIX_PATH=$(host_prefix)
   $(package)_config_opts+= -DSTLIB=ON -DSHLIB=OFF -DSTBIN=ON
   $(package)_config_opts+= -DBUILD_BLS_PYTHON_BINDINGS=0 -DBUILD_BLS_TESTS=0 -DBUILD_BLS_BENCHMARKS=0 -DCMAKE_BUILD_TYPE=Release
-  $(package)_config_opts_linux=-DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux
-  $(package)_config_opts_darwin=-DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin
+  $(package)_config_opts_linux=-DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux -DMULTI=PTHREAD
+  $(package)_config_opts_darwin=-DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin -DMULTI=PTHREAD
   $(package)_config_opts_mingw32=-DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS=""
   $(package)_config_opts_i686+= -DWSIZE=32
   $(package)_config_opts_x86_64+= -DWSIZE=64
@@ -47,7 +47,13 @@ define $(package)_set_vars
     $(package)_config_opts_darwin+= -DCMAKE_AR="$($(package)_ar)"
     $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$($(package)_ranlib)"
   endif
-  $(package)_cppflags+=-UBLSALLOC_SODIUM -O3 -funroll-loops -fomit-frame-pointer -std=c++11
+  $(package)_cppflags += -UBLSALLOC_SODIUM -std=c++11
+  $(package)_cppflags_linux += -O3 -funroll-loops -fomit-frame-pointer
+  $(package)_cppflags_darwin += -O3 -funroll-loops -fomit-frame-pointer
+  $(package)_cppflags_arm += -O3 -funroll-loops -fomit-frame-pointer
+  $(package)_cppflags_armv7l += -O3 -funroll-loops -fomit-frame-pointer
+  $(package)_cppflags_x86_64 += -O3 -funroll-loops -fomit-frame-pointer
+  $(package)_cppflags_mingw32 += /O2
 endef
 
 define $(package)_preprocess_cmds
