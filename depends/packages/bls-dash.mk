@@ -1,10 +1,10 @@
 package=bls-dash
-$(package)_version=1.1.5
+$(package)_version=1.1.6
 $(package)_download_path=https://github.com/syscoin/bls-signatures/archive
 $(package)_download_file=$($(package)_version).tar.gz
 $(package)_file_name=$(package)-$($(package)_download_file)
 $(package)_build_subdir=build
-$(package)_sha256_hash=b23a79f53a15af0a7347e4f37d50fc2e651865bfb425392ef44d473668bab498
+$(package)_sha256_hash=61b671faa6af796b80624edc01071abc27d0ef732349b28e76c7ea1e161e2e37
 $(package)_dependencies=gmp cmake
 
 $(package)_relic_version=3a23142be0a5510a3aa93cd6c76fc59d3fc732a5
@@ -51,8 +51,6 @@ define $(package)_set_vars
 endef
 
 define $(package)_preprocess_cmds
-  mkdir -p build && \
-  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub . && \
   sed -i.old "s|GIT_REPOSITORY https://github.com/relic-toolkit/relic.git|URL \"../../relic-toolkit-$($(package)_relic_version).tar.gz\"|" src/CMakeLists.txt && \
   sed -i.old "s|GIT_TAG        .*RELIC_GIT_TAG.*|URL_HASH SHA256=$($(package)_relic_sha256_hash)|" src/CMakeLists.txt
 endef
