@@ -28,6 +28,7 @@
 #include <qt/utilitydialog.h>
 #include <qt/winshutdownmonitor.h>
 #include <uint256.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
@@ -144,11 +145,6 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
         QApplication::installTranslator(&translator);
 }
 
-static std::string MakeUnorderedList(const std::vector<std::string>& errors)
-{
-    return Join(errors, "\n", [](const std::string& error) { return "- " + error; });
-}
-
 static bool InitSettings()
 {
     if (!gArgs.GetSettingsPath()) {
@@ -186,7 +182,7 @@ static bool InitSettings()
         /*: Explanatory text shown on startup when the settings file could not be written.
             Prompts user to check that we have the ability to write to the file.
             Explains that the user has the option of running without a settings file.*/
-        messagebox.setInformativeText(QObject::tr("A fatal error occured. Check that settings file is writable, or try running with -nosettings."));
+        messagebox.setInformativeText(QObject::tr("A fatal error occurred. Check that settings file is writable, or try running with -nosettings."));
         messagebox.setDetailedText(QString::fromStdString(MakeUnorderedList(errors)));
         messagebox.setTextFormat(Qt::PlainText);
         messagebox.setDefaultButton(QMessageBox::Ok);
