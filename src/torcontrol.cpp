@@ -18,6 +18,7 @@
 #include <util/thread.h>
 #include <util/time.h>
 
+#include <algorithm>
 #include <deque>
 #include <functional>
 #include <set>
@@ -368,14 +369,24 @@ void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlRe
     }
 }
 
+static bool AllowOutboundOnion()
+{
+    if (!gArgs.IsArgSet("-onlynet")) {
+        return true;
+    }
+    const auto onlynets = gArgs.GetArgs("-onlynet");
+    return std::any_of(onlynets.begin(), onlynets.end(), [](const auto& net) {
+        return ParseNetwork(net) == NET_ONION;
+    });
+}
+
 void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& reply)
 {
     if (reply.code == 250) {
         LogPrint(BCLog::TOR, "tor: Authentication successful\n");
 
-        // Now that we know Tor is running setup the proxy for onion addresses
-        // if -onion isn't set to something else.
-        if (gArgs.GetArg("-onion", "") == "") {
+        // Now that we know Tor is running, possibly set the proxy for onion addresses.
+        if (gArgs.GetArg("-onion", "") == "" && AllowOutboundOnion()) {
             CService resolved(LookupNumeric("127.0.0.1", 9050));
             proxyType addrOnion = proxyType(resolved, true);
             SetProxy(NET_ONION, addrOnion);
