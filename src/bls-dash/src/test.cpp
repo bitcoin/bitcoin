@@ -19,7 +19,7 @@
 #include "bls.hpp"
 #include "catch.hpp"
 extern "C" {
-#include <relic.h>
+#include "relic.h"
 }
 #include "test-utils.hpp"
 using std::cout;
@@ -37,7 +37,7 @@ void TestHKDF(string ikm_hex, string salt_hex, string info_hex, string prk_expec
     vector<uint8_t> okm_expected = Util::HexToBytes(okm_expected_hex);
     uint8_t prk[32];
     HKDF256::Extract(prk, salt.data(), salt.size(), ikm.data(), ikm.size());
-    uint8_t* okm = new uint8_t[L];
+    uint8_t okm[L];
     HKDF256::Expand(okm, L, prk, info.data(), info.size());
 
     REQUIRE(32 == prk_expected.size());
@@ -49,8 +49,6 @@ void TestHKDF(string ikm_hex, string salt_hex, string info_hex, string prk_expec
     for (size_t i=0; i < L; i++) {
         REQUIRE(okm[i] == okm_expected[i]);
     }
-
-    delete[] okm;
 }
 
 TEST_CASE("class PrivateKey") {
@@ -468,17 +466,10 @@ TEST_CASE("Error handling")
     SECTION("Should throw on a bad public key")
     {
         vector<uint8_t> buf(G1Element::SIZE, 0);
-        // This are all the "first byte values" which are tested to be valid G1 elements if the remaining bytes are zero.
-        std::vector<uint8_t> vecValid{0x85, 0x86, 0x87, 0x88, 0x89, 0x8C, 0x8F, 0x91, 0x93, 0x94, 0x96, 0x98, 0x99, 0x9A,
-                                      0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xAC, 0xAF, 0xB1, 0xB3, 0xB4, 0xB6, 0xB8, 0xB9, 0xBA,
-                                      0xC0};
-        for (int i = 0; i < 0xFF; i++) {
+
+        for (int i = 0; i < 10; i++) {
             buf[0] = (uint8_t)i;
-            if (std::find(vecValid.begin(), vecValid.end(), i) != vecValid.end()) {
-                REQUIRE_NOTHROW(G1Element::FromByteVector(buf));
-            } else {
-                REQUIRE_THROWS(G1Element::FromByteVector(buf));
-            }
+            REQUIRE_THROWS(G1Element::FromByteVector(buf));
         }
     }
 
@@ -486,17 +477,10 @@ TEST_CASE("Error handling")
     {
         vector<uint8_t> buf(G2Element::SIZE, 0);
 
-        for (int i = 0; i < 0xFF; i++) {
+        for (int i = 0; i < 10; i++) {
             buf[0] = (uint8_t)i;
-            if (i == 0xc0) { // Infinity prefix shouldn't throw here as we have only zero values
-                REQUIRE_NOTHROW(G2Element::FromByteVector(buf));
-            } else {
-                REQUIRE_THROWS(G2Element::FromByteVector(buf));
-            }
+            REQUIRE_THROWS(G2Element::FromByteVector(buf));
         }
-        // Trigger "G2 element must always have 48th byte start with 0b000" error case
-        buf[48] = 0xFF;
-        REQUIRE_THROWS(G2Element::FromByteVector(buf));
     }
 
     SECTION("Error handling should be thread safe")
