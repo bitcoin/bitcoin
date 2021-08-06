@@ -73,20 +73,21 @@ class TestSymbolChecks(unittest.TestCase):
                 (1, executable + ': NEEDED library libutil.so.1 is not allowed\n' +
                     executable + ': failed LIBRARY_DEPENDENCIES'))
 
-        # finally, check a conforming file that simply uses a math function
+        # finally, check a simple conforming binary
         source = 'test3.c'
         executable = 'test3'
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
-                #include <math.h>
+                #include <stdio.h>
 
                 int main()
                 {
-                    return (int)pow(2.0, 4.0);
+                    printf("42");
+                    return 0;
                 }
         ''')
 
-        self.assertEqual(call_symbol_check(cc, source, executable, ['-lm']),
+        self.assertEqual(call_symbol_check(cc, source, executable, []),
                 (0, ''))
 
     def test_MACHO(self):
