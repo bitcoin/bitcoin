@@ -1075,6 +1075,9 @@ static RPCHelpMan getNFT() {
                         asset->createSerialData();
                         result = HexStr(asset->strSerialData);
                         delete (asset);
+                    } else {
+                        g_nftMgr->queueAssetClassRequest(hash);
+                        std::string result = "error-pending-request";
                     }
 
 
@@ -1084,6 +1087,9 @@ static RPCHelpMan getNFT() {
                         asset->createSerialData();
                         result = HexStr(asset->strSerialData);
                         delete (asset);
+                    } else {
+                        g_nftMgr->queueAssetRequest(hash);
+                        std::string result = "error-pending-request";
                     }
 
 
