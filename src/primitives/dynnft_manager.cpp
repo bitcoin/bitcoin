@@ -11,7 +11,12 @@ CNFTManager::CNFTManager() {
 void CNFTManager::CreateOrOpenDatabase(std::string dataDirectory) {
     sqlite3_initialize();
 
-    std::string dbName = (dataDirectory + std::string("\\nft.db"));
+#ifdef WIN32
+        std::string dbName = (dataDirectory + std::string("\\nft.db"));
+#else
+        std::string dbName = (dataDirectory + std::string("/nft.db"));
+#endif
+
     sqlite3_open_v2(dbName.c_str(), &nftDB, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
 
     uint32_t tableExists = execScalar("select count(name) from sqlite_master where type = 'table' and name = 'asset_class'");

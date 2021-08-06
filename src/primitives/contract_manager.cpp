@@ -15,7 +15,12 @@ void CContractManager::CreateOrOpenDatabase(std::string dataDirectory)
 
     sqlite3_initialize();
 
+#ifdef WIN32
     std::string dbName = (dataDirectory + std::string("\\contract.db"));
+#else
+    std::string dbName = (dataDirectory + std::string("/contract.db"));
+#endif
+
     sqlite3_open_v2(dbName.c_str(), &contractDB, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
 
     uint32_t tableExists = execScalar("select count(name) from sqlite_master where type = 'table' and name = 'contract'");

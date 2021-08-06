@@ -1077,7 +1077,7 @@ static RPCHelpMan getNFT() {
                         delete (asset);
                     } else {
                         g_nftMgr->queueAssetClassRequest(hash);
-                        std::string result = "error-pending-request";
+                        result = "error-pending-request";
                     }
 
 
@@ -1089,7 +1089,7 @@ static RPCHelpMan getNFT() {
                         delete (asset);
                     } else {
                         g_nftMgr->queueAssetRequest(hash);
-                        std::string result = "error-pending-request";
+                        result = "error-pending-request";
                     }
 
 
