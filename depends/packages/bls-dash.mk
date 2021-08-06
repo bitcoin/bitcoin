@@ -7,12 +7,12 @@ $(package)_build_subdir=build
 $(package)_sha256_hash=24a0dcc150a31de2b27325542f9ff0ddb79d1c0299766ac9b68b86a21cd1272b
 $(package)_dependencies=gmp cmake
 
-$(package)_relic_version=186a15da6d07ef436dd8f00a4345838310a0aad3
+$(package)_relic_version=3dd26f5ae28234e02fa4da375422ba954b7b1e53
 $(package)_relic_download_path=https://github.com/relic-toolkit/relic/archive
 $(package)_relic_download_file=$($(package)_relic_version).tar.gz
 $(package)_relic_file_name=relic-toolkit-$($(package)_relic_download_file)
 $(package)_relic_build_subdir=relic
-$(package)_relic_sha256_hash=70fb36acfd206f2128f6da38bda9f9ef070062d50adb97b053d98477bf0112fc
+$(package)_relic_sha256_hash=701d65ab08228c6db39f08c8b2aa4f5e4d6da3bd024eb88f1b4b1ee33e07e655
 
 $(package)_extra_sources=$($(package)_relic_file_name)
 
