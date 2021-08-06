@@ -19,7 +19,7 @@
 #include "bls.hpp"
 #include "catch.hpp"
 extern "C" {
-#include "relic.h"
+#include <relic.h>
 }
 #include "test-utils.hpp"
 using std::cout;

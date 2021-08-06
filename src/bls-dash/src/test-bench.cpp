@@ -17,7 +17,7 @@
 #include "test-utils.hpp"
 
 extern "C" {
-#include "relic.h"
+#include <relic.h>
 }
 
 using std::string;

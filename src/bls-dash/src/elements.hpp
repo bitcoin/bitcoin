@@ -16,9 +16,9 @@
 #define SRC_BLSELEMENTS_HPP_
 
 extern "C" {
-#include "relic.h"
+#include <relic.h>
 }
-#include "relic_conf.h"
+#include <relic_conf.h>
 #include "util.hpp"
 
 #if defined GMP && ARITH == GMP
