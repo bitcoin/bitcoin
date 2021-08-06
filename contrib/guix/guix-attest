@@ -162,6 +162,18 @@ EOF
 echo "Attesting to build outputs for version: '${VERSION}'"
 echo ""
 
+# Given a SHA256SUMS file as stdin that has lines like:
+#     0ba536819b221a91d3d42e978be016aac918f40984754d74058aa0c921cd3ea6  a/b/d/c/d/s/bitcoin-22.0rc2-riscv64-linux-gnu.tar.gz
+#     ...
+#
+# Replace each line's file name with its basename:
+#     0ba536819b221a91d3d42e978be016aac918f40984754d74058aa0c921cd3ea6  bitcoin-22.0rc2-riscv64-linux-gnu.tar.gz
+#     ...
+#
+basenameify_SHA256SUMS() {
+    sed -E 's@(^[[:xdigit:]]{64}[[:space:]]+).+/([^/]+$)@\1\2@'
+}
+
 outsigdir="$GUIX_SIGS_REPO/$VERSION/$signer_name"
 mkdir -p "$outsigdir"
 (
@@ -174,6 +186,7 @@ mkdir -p "$outsigdir"
         cat "${noncodesigned_fragments[@]}" \
             | sort -u \
             | sort -k2 \
+            | basenameify_SHA256SUMS \
                 > "$temp_noncodesigned"
         if [ -e noncodesigned.SHA256SUMS ]; then
             # The SHA256SUMS already exists, make sure it's exactly what we
@@ -201,6 +214,7 @@ mkdir -p "$outsigdir"
         cat "${sha256sum_fragments[@]}" \
             | sort -u \
             | sort -k2 \
+            | basenameify_SHA256SUMS \
                 > "$temp_all"
         if [ -e all.SHA256SUMS ]; then
             # The SHA256SUMS already exists, make sure it's exactly what we
