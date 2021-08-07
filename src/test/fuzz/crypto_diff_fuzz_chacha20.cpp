@@ -1,3 +1,15 @@
+// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <crypto/chacha20.h>
+#include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
+#include <test/fuzz/util.h>
+
+#include <cstdint>
+#include <vector>
+
 /*
 From https://cr.yp.to/chacha.html
 chacha-merged.c version 20080118
@@ -253,3 +265,66 @@ void ECRYPT_keystream_bytes(ECRYPT_ctx* x, u8* stream, u32 bytes)
     ECRYPT_encrypt_bytes(x, stream, stream, bytes);
 }
 
+FUZZ_TARGET(crypto_diff_fuzz_chacha20)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+
+    ChaCha20 chacha20;
+    ECRYPT_ctx ctx;
+    // D. J. Bernstein doesn't initialise ctx to 0 while Bitcoin Core initialises chacha20 to 0 in the constructor
+    for (int i = 0; i < 16; i++) {
+        ctx.input[i] = 0;
+    }
+
+    if (fuzzed_data_provider.ConsumeBool()) {
+        const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(16, 32));
+        chacha20 = ChaCha20{key.data(), key.size()};
+        ECRYPT_keysetup(&ctx, key.data(), key.size() * 8, 0);
+        // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey() does
+        uint8_t iv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+        ECRYPT_ivsetup(&ctx, iv);
+    }
+
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 3000) {
+        CallOneOf(
+            fuzzed_data_provider,
+            [&] {
+                const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(16, 32));
+                chacha20.SetKey(key.data(), key.size());
+                ECRYPT_keysetup(&ctx, key.data(), key.size() * 8, 0);
+                // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey() does
+                uint8_t iv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+                ECRYPT_ivsetup(&ctx, iv);
+            },
+            [&] {
+                uint64_t iv = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
+                chacha20.SetIV(iv);
+                ctx.input[14] = iv;
+                ctx.input[15] = iv >> 32;
+            },
+            [&] {
+                uint64_t counter = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
+                chacha20.Seek(counter);
+                ctx.input[12] = counter;
+                ctx.input[13] = counter >> 32;
+            },
+            [&] {
+                uint32_t integralInRange = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
+                std::vector<uint8_t> output(integralInRange);
+                chacha20.Keystream(output.data(), output.size());
+                std::vector<uint8_t> djb_output(integralInRange);
+                ECRYPT_keystream_bytes(&ctx, djb_output.data(), djb_output.size());
+                if (output.data() != NULL && djb_output.data() != NULL) {
+                    assert(memcmp(output.data(), djb_output.data(), integralInRange) == 0);
+                }
+            },
+            [&] {
+                uint32_t integralInRange = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
+                std::vector<uint8_t> output(integralInRange);
+                const std::vector<uint8_t> input = ConsumeFixedLengthByteVector(fuzzed_data_provider, output.size());
+                chacha20.Crypt(input.data(), output.data(), input.size());
+                std::vector<uint8_t> djb_output(integralInRange);
+                ECRYPT_encrypt_bytes(&ctx, input.data(), djb_output.data(), input.size());
+            });
+    }
+}
