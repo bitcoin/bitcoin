@@ -53,7 +53,6 @@ define $(package)_set_vars
   $(package)_cppflags_arm += -O3 -funroll-loops -fomit-frame-pointer
   $(package)_cppflags_armv7l += -O3 -funroll-loops -fomit-frame-pointer
   $(package)_cppflags_x86_64 += -O3 -funroll-loops -fomit-frame-pointer
-  $(package)_cppflags_mingw32 += /O2
 endef
 
 define $(package)_preprocess_cmds
