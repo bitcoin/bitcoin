@@ -31,6 +31,10 @@ def bitcoin_cli(rpc_command_and_params):
     except FileNotFoundError:
         print('The binary', args.cmd, 'could not be found.')
         exit()
+    except subprocess.CalledProcessError:
+        cmdline = ' '.join(argv)
+        print(f'-----\nError while calling "{cmdline}" (see output above).')
+        exit()
 
 
 if args.faucet.lower() == DEFAULT_GLOBAL_FAUCET:
