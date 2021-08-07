@@ -1,10 +1,10 @@
 package=bls-dash
-$(package)_version=1.1.8
-$(package)_download_path=https://github.com/syscoin/bls-signatures/archive
+$(package)_version=1.1.0
+$(package)_download_path=https://github.com/dashpay/bls-signatures/archive
 $(package)_download_file=$($(package)_version).tar.gz
 $(package)_file_name=$(package)-$($(package)_download_file)
 $(package)_build_subdir=build
-$(package)_sha256_hash=4746315b0528669a33af200d11a142a732fb9c314d580c8bfbc51db05e6336b4
+$(package)_sha256_hash=276c8573104e5f18bb5b9fd3ffd49585dda5ba5f6de2de74759dda8ca5a9deac
 $(package)_dependencies=gmp cmake
 
 $(package)_relic_version=3a23142be0a5510a3aa93cd6c76fc59d3fc732a5
@@ -32,11 +32,11 @@ endef
 
 define $(package)_set_vars
   $(package)_config_opts=-DCMAKE_INSTALL_PREFIX=$($(package)_staging_dir)/$(host_prefix)
-  $(package)_config_opts+= -DCMAKE_PREFIX_PATH=$($(package)_staging_dir)/$(host_prefix)
+  $(package)_config_opts+= -DCMAKE_PREFIX_PATH=$(host_prefix)
   $(package)_config_opts+= -DSTLIB=ON -DSHLIB=OFF -DSTBIN=ON
-  $(package)_config_opts+= -DBUILD_BLS_PYTHON_BINDINGS=0 -DBUILD_BLS_TESTS=0 -DBUILD_BLS_BENCHMARKS=0 -DCMAKE_BUILD_TYPE=Release
-  $(package)_config_opts_linux=-DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux -DMULTI=PTHREAD
-  $(package)_config_opts_darwin=-DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin -DMULTI=PTHREAD
+  $(package)_config_opts+= -DBUILD_BLS_PYTHON_BINDINGS=0 -DBUILD_BLS_TESTS=0 -DBUILD_BLS_BENCHMARKS=0
+  $(package)_config_opts_linux=-DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux
+  $(package)_config_opts_darwin=-DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin
   $(package)_config_opts_mingw32=-DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS=""
   $(package)_config_opts_i686+= -DWSIZE=32
   $(package)_config_opts_x86_64+= -DWSIZE=64
@@ -45,15 +45,11 @@ define $(package)_set_vars
   $(package)_config_opts_debug=-DDEBUG=ON -DCMAKE_BUILD_TYPE=Debug
 
   ifneq ($(darwin_native_toolchain),)
-    $(package)_config_opts_darwin+= -DCMAKE_AR="$($(package)_ar)"
-    $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$($(package)_ranlib)"
+    $(package)_config_opts_darwin+= -DCMAKE_AR="$(host_prefix)/native/bin/$($(package)_ar)"
+    $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$(host_prefix)/native/bin/$($(package)_ranlib)"
   endif
-  $(package)_cppflags += -UBLSALLOC_SODIUM -std=c++11
-  $(package)_cppflags_linux += -O3 -funroll-loops -fomit-frame-pointer
-  $(package)_cppflags_darwin += -O3 -funroll-loops -fomit-frame-pointer
-  $(package)_cppflags_arm += -O3 -funroll-loops -fomit-frame-pointer
-  $(package)_cppflags_armv7l += -O3 -funroll-loops -fomit-frame-pointer
-  $(package)_cppflags_x86_64 += -O3 -funroll-loops -fomit-frame-pointer
+
+  $(package)_cppflags+=-UBLSALLOC_SODIUM
 endef
 
 define $(package)_preprocess_cmds
