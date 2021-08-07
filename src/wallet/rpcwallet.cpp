@@ -1738,14 +1738,9 @@ static void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const
     bool fAllAccounts = (strAccount == std::string("*"));
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 
-    bool list_sent = fAllAccounts;
-
-    if (IsDeprecatedRPCEnabled("accounts")) {
-        list_sent |= strAccount == strSentAccount;
-    }
-
     // Sent
-    if (list_sent) {
+    if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
+    {
         for (const COutputEntry& s : listSent)
         {
             UniValue entry(UniValue::VOBJ);
@@ -1840,14 +1835,12 @@ static UniValue listtransactions(const JSONRPCRequest& request)
 
     std::string help_text {};
     if (!IsDeprecatedRPCEnabled("accounts")) {
-        help_text = "listtransactions (label count skip include_watchonly)\n"
-            "\nIf a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
-            "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions.\n"
+        help_text = "listtransactions ( dummy count skip include_watchonly)\n"
+            "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
             "Note that the \"account\" argument and \"otheraccount\" return value have been removed in V0.17. To use this RPC with an \"account\" argument, restart\n"
             "dashd with -deprecatedrpc=accounts\n"
             "\nArguments:\n"
-            "1. \"label\"    (string, optional) If set, should be a valid label name to return only incoming transactions\n"
-            "              with the specified label, or \"*\" to disable filtering and return all transactions.\n"
+            "1. \"dummy\"    (string, optional) If set, should be \"*\" for backwards compatibility.\n"
             "2. count          (numeric, optional, default=10) The number of transactions to return\n"
             "3. skip           (numeric, optional, default=0) The number of transactions to skip\n"
             "4. include_watchonly (bool, optional, default=false) Include transactions to watch-only addresses (see 'importaddress')\n"
@@ -1964,8 +1957,8 @@ static UniValue listtransactions(const JSONRPCRequest& request)
     std::string strAccount = "*";
     if (!request.params[0].isNull()) {
         strAccount = request.params[0].get_str();
-        if (!IsDeprecatedRPCEnabled("accounts") && strAccount.empty()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Label argument must be a valid label name or \"*\".");
+        if (!IsDeprecatedRPCEnabled("accounts") && strAccount != "*") {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Dummy value must be set to \"*\"");
         }
     }
     int nCount = 10;
@@ -4733,7 +4726,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listlockunspent",                  &listlockunspent,               {} },
     { "wallet",             "listreceivedbyaddress",            &listreceivedbyaddress,         {"minconf","addlocked","include_empty","include_watchonly","address_filter"} },
     { "wallet",             "listsinceblock",           &listsinceblock,           {"blockhash","target_confirmations","include_watchonly","include_removed"} },
-    { "wallet",             "listtransactions",         &listtransactions,         {"account|label|dummy","count","skip","include_watchonly"} },
+    { "wallet",             "listtransactions",         &listtransactions,         {"account|dummy","count","skip","include_watchonly"} },
     { "wallet",             "listunspent",              &listunspent,              {"minconf","maxconf","addresses","include_unsafe","query_options"} },
     { "wallet",             "listwalletdir",                    &listwalletdir,                 {} },
     { "wallet",             "listwallets",              &listwallets,              {} },
