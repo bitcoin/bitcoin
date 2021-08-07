@@ -30,11 +30,11 @@ def bitcoin_cli(rpc_command_and_params):
         return subprocess.check_output(argv).strip().decode()
     except FileNotFoundError:
         print('The binary', args.cmd, 'could not be found.')
-        exit()
+        exit(1)
     except subprocess.CalledProcessError:
         cmdline = ' '.join(argv)
         print(f'-----\nError while calling "{cmdline}" (see output above).')
-        exit()
+        exit(1)
 
 
 if args.faucet.lower() == DEFAULT_GLOBAL_FAUCET:
@@ -42,7 +42,7 @@ if args.faucet.lower() == DEFAULT_GLOBAL_FAUCET:
     curr_signet_hash = bitcoin_cli(['getblockhash', '1'])
     if curr_signet_hash != GLOBAL_FIRST_BLOCK_HASH:
         print('The global faucet cannot be used with a custom Signet network. Please use the global signet or setup your custom faucet to use this functionality.\n')
-        exit()
+        exit(1)
 
 if args.addr == '':
     # get address for receiving coins
@@ -53,7 +53,7 @@ try:
     res = requests.post(args.faucet, data=data)
 except:
     print('Unexpected error when contacting faucet:', sys.exc_info()[0])
-    exit()
+    exit(1)
 
 # Display the output as per the returned status code
 if res:
