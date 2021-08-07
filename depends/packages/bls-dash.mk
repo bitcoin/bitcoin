@@ -42,7 +42,6 @@ define $(package)_set_vars
   $(package)_config_opts_x86_64+= -DWSIZE=64
   $(package)_config_opts_arm+= -DWSIZE=32
   $(package)_config_opts_armv7l+= -DWSIZE=32
-  $(package)_config_opts_debug=-DDEBUG=ON -DCMAKE_BUILD_TYPE=Debug
 
   ifneq ($(darwin_native_toolchain),)
     $(package)_config_opts_darwin+= -DCMAKE_AR="$($(package)_ar)"
