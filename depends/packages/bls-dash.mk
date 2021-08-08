@@ -47,10 +47,10 @@ define $(package)_set_vars
     $(package)_config_opts_darwin+= -DCMAKE_AR="$($(package)_ar)"
     $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$($(package)_ranlib)"
   endif
-  $(package)_cflags_linux+= -pipe -std=c99 -O2 -funroll-loops -fomit-frame-pointer
-  $(package)_cflags_darwin+= -pipe -std=c99 -O2 -funroll-loops -fomit-frame-pointer
-  $(package)_cflags_arm+= -pipe -std=c99 -O2 -funroll-loops -fomit-frame-pointer
-  $(package)_cflags_armv7l+= -pipe -std=c99 -O2 -funroll-loops -fomit-frame-pointer
+  $(package)_cflags_linux+= -std=c99 -funroll-loops -fomit-frame-pointer
+  $(package)_cflags_darwin+= -std=c99 -funroll-loops -fomit-frame-pointer
+  $(package)_cflags_arm+= -std=c99 -funroll-loops -fomit-frame-pointer
+  $(package)_cflags_armv7l+= -std=c99 -funroll-loops -fomit-frame-pointer
   $(package)_cppflags+= -UBLSALLOC_SODIUM -std=c++11
   $(package)_cxxflags_linux=-fPIC
   $(package)_cxxflags_android=-fPIC
