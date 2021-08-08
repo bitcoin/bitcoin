@@ -38,10 +38,10 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
     def run_test(self):
         """
-        0. Send a bunch of large (4MB) messages of an unrecognized type. Check to see
+        0. Send a bunch of large (3MB) messages of an unrecognized type. Check to see
            that it isn't an effective DoS against the node.
 
-        1. Send an oversized (4MB+) message and check that we're disconnected.
+        1. Send an oversized (3MB+) message and check that we're disconnected.
 
         2. Send a few messages with an incorrect data size in the header, ensure the
            messages are ignored.
@@ -54,7 +54,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         node.add_p2p_connection(P2PDataStore())
         conn2 = node.add_p2p_connection(P2PDataStore())
 
-        msg_limit = 4 * 1000 * 1000  # 4MB, per MAX_PROTOCOL_MESSAGE_LENGTH
+        msg_limit = 3 * 1024 * 1024  # 3MB, per MAX_PROTOCOL_MESSAGE_LENGTH
         valid_data_limit = msg_limit - 5  # Account for the 4-byte length prefix
 
         #
