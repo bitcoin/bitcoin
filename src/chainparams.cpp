@@ -161,10 +161,10 @@ public:
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 210240; 
-        // 35% increase after 525600 blocks, 100% increase after sr level 2
-        consensus.nSeniorityHeight1 = 525600; 
+        // 35% increase after ~1 year, 100% increase after sr level 2 (~2.5 years)
+        consensus.nSeniorityHeight1 = 210240; 
         consensus.nSeniorityLevel1 = 0.35;
-        consensus.nSeniorityHeight2 = 525600 * 2.5; 
+        consensus.nSeniorityHeight2 = consensus.nSeniorityHeight1*2.5; 
         consensus.nSeniorityLevel2 = 1.0;        
         consensus.nSuperblockStartBlock = 1;
         consensus.nSuperblockCycle = 17520;
@@ -317,10 +317,10 @@ public:
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 210240;
-        // 35% increase after 60 blocks, 100% increase after 150 blocks
         consensus.nSeniorityHeight1 = 60;
+        consensus.bTestnet = true;
         consensus.nSeniorityLevel1 = 0.35;
-        consensus.nSeniorityHeight2 = 60*2.5;
+        consensus.nSeniorityHeight2 = consensus.nSeniorityHeight1*2.5;
         consensus.nSeniorityLevel2 = 1.0;         
         consensus.nSuperblockStartBlock = 1;
         consensus.nSuperblockCycle = 60;
@@ -493,10 +493,9 @@ public:
 
         strNetworkID = CBaseChainParams::SIGNET;
         consensus.signet_blocks = true;
-        // 35% increase after 1 hr, 100% increase after 2.5 hr
         consensus.nSeniorityHeight1 = 60;
         consensus.nSeniorityLevel1 = 0.35;
-        consensus.nSeniorityHeight2 = 60*2.5;
+        consensus.nSeniorityHeight2 = consensus.nSeniorityHeight1*2.5;
         consensus.nSeniorityLevel2 = 1.0;         
         consensus.nSuperblockStartBlock = 1;
         consensus.nSuperblockCycle = 60;
@@ -604,10 +603,9 @@ public:
         consensus.SegwitHeight = 0; // SEGWIT is always activated on regtest unless overridden
         consensus.MinBIP9WarningHeight = 0;
         consensus.nSubsidyHalvingInterval = 150;
-        // 35% increase after 1 hr, 100% increase after 2.5 hr
         consensus.nSeniorityHeight1 = 60;
         consensus.nSeniorityLevel1 = 0.35;
-        consensus.nSeniorityHeight2 = 60*2.5;
+        consensus.nSeniorityHeight2 = consensus.nSeniorityHeight1*2.5;
         consensus.nSeniorityLevel2 = 1.0;      
         consensus.nSuperblockStartBlock = 1;
         consensus.nSuperblockCycle = 10;

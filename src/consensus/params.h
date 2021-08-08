@@ -141,6 +141,7 @@ struct Params {
     double nSeniorityLevel1;
     unsigned int nSeniorityHeight2;
     double nSeniorityLevel2;
+    bool bTestnet;
     int nBridgeStartBlock;
     int nNEVMStartBlock;
     int nUTXOAssetsBlock;
@@ -192,6 +193,26 @@ struct Params {
         } else {
             return nSuperblockCycle*2.5;
         }
+    }
+    double Seniority(int nHeight, int nDifferenceInBlocks) const { 
+        unsigned int nSeniorityAge1 = nSeniorityHeight1;
+        unsigned int nSeniorityAge2 = nSeniorityHeight2;
+        if(bTestnet) {
+            if(nDifferenceInBlocks >= nSeniorityAge2)
+                return nSeniorityLevel2;
+            else if(nDifferenceInBlocks >= nSeniorityAge1)
+                return nSeniorityLevel1;
+            return 0;
+        }
+        if (nHeight < nNEVMStartBlock) {
+            nSeniorityAge1 *= 2.5;
+            nSeniorityAge2 *= 2.5;
+        }
+        if(nDifferenceInBlocks >= nSeniorityAge2)
+            return nSeniorityLevel2;
+        else if(nDifferenceInBlocks >= nSeniorityAge1)
+            return nSeniorityLevel1;
+        return 0;    
     }
     int SubsidyHalvingInterval(int nHeight) const { 
         if (nHeight >= nNEVMStartBlock) {
