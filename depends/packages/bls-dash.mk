@@ -61,7 +61,7 @@ endef
 define $(package)_config_cmds
   export CC="$($(package)_cc)" && \
   export CXX="$($(package)_cxx)" && \
-  export CFLAGS="$($(package)_cflags) $($(package)_cppflags)" && \
+  export CFLAGS="$($(package)_cflags)" && \
   export CXXFLAGS="$($(package)_cxxflags) $($(package)_cppflags)" && \
   export LDFLAGS="$($(package)_ldflags)" && \
   $(host_prefix)/bin/cmake ../ $($(package)_config_opts)
