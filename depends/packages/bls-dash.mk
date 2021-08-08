@@ -48,8 +48,7 @@ define $(package)_set_vars
     $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$($(package)_ranlib)"
   endif
 
-  $(package)_cflags+= -O3 -funroll-loops -fomit-frame-pointer
-  $(package)_cppflags+= -Wl,-no_pie -UBLSALLOC_SODIUM -std=c++11
+  $(package)_cppflags= -Wl,-no_pie -UBLSALLOC_SODIUM -std=c++11
   $(package)_cxxflags_linux=-fPIC
   $(package)_cxxflags_android=-fPIC
 endef
@@ -62,7 +61,6 @@ endef
 define $(package)_config_cmds
   export CC="$($(package)_cc)" && \
   export CXX="$($(package)_cxx)" && \
-  export CFLAGS="$($(package)_cflags)" && \
   export CXXFLAGS="$($(package)_cxxflags) $($(package)_cppflags)" && \
   export LDFLAGS="$($(package)_ldflags)" && \
   $(host_prefix)/bin/cmake ../ $($(package)_config_opts)
