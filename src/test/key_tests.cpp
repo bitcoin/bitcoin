@@ -188,4 +188,36 @@ BOOST_AUTO_TEST_CASE(key_signature_tests)
     BOOST_CHECK(found_small);
 }
 
+BOOST_AUTO_TEST_CASE(key_key_negation)
+{
+    // create a dummy hash for signature comparison
+    unsigned char rnd[8];
+    std::string str = "Bitcoin key verification\n";
+    GetRandBytes(rnd, sizeof(rnd));
+    uint256 hash;
+    CHash256().Write(MakeUCharSpan(str)).Write(rnd).Finalize(hash);
+
+    // import the static test key
+    CKey key = DecodeSecret(strSecret1C);
+
+    // create a signature
+    std::vector<unsigned char> vch_sig;
+    std::vector<unsigned char> vch_sig_cmp;
+    key.Sign(hash, vch_sig);
+
+    // negate the key twice
+    BOOST_CHECK(key.GetPubKey().data()[0] == 0x03);
+    key.Negate();
+    // after the first negation, the signature must be different
+    key.Sign(hash, vch_sig_cmp);
+    BOOST_CHECK(vch_sig_cmp != vch_sig);
+    BOOST_CHECK(key.GetPubKey().data()[0] == 0x02);
+    key.Negate();
+    // after the second negation, we should have the original key and thus the
+    // same signature
+    key.Sign(hash, vch_sig_cmp);
+    BOOST_CHECK(vch_sig_cmp == vch_sig);
+    BOOST_CHECK(key.GetPubKey().data()[0] == 0x03);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
