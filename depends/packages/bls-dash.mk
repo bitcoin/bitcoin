@@ -51,7 +51,6 @@ define $(package)_set_vars
   $(package)_cflags_darwin+= -pipe -std=c99 -O2 -funroll-loops -fomit-frame-pointer
   $(package)_cflags_arm+= -pipe -std=c99 -O2 -funroll-loops -fomit-frame-pointer
   $(package)_cflags_armv7l+= -pipe -std=c99 -O2 -funroll-loops -fomit-frame-pointer
-  $(package)_ldflags+= -Wl,-no_pie
   $(package)_cppflags+= -UBLSALLOC_SODIUM -std=c++11
   $(package)_cxxflags_linux=-fPIC
   $(package)_cxxflags_android=-fPIC
