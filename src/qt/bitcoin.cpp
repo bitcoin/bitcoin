@@ -186,7 +186,7 @@ static bool InitSettings()
         /*: Explanatory text shown on startup when the settings file could not be written.
             Prompts user to check that we have the ability to write to the file.
             Explains that the user has the option of running without a settings file.*/
-        messagebox.setInformativeText(QObject::tr("A fatal error occured. Check that settings file is writable, or try running with -nosettings."));
+        messagebox.setInformativeText(QObject::tr("A fatal error occurred. Check that settings file is writable, or try running with -nosettings."));
         messagebox.setDetailedText(QString::fromStdString(JoinErrors(errors)));
         messagebox.setTextFormat(Qt::PlainText);
         messagebox.setDefaultButton(QMessageBox::Ok);

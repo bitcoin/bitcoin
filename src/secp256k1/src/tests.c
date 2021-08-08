@@ -3235,7 +3235,7 @@ void test_intialized_inf(void) {
     secp256k1_gej pj, npj, infj1, infj2, infj3;
     secp256k1_fe zinv;
 
-    /* Test that adding P+(-P) results in a fully initalized infinity*/
+    /* Test that adding P+(-P) results in a fully initialized infinity*/
     random_group_element_test(&p);
     secp256k1_gej_set_ge(&pj, &p);
     secp256k1_gej_neg(&npj, &pj);
