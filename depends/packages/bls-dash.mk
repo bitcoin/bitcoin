@@ -47,8 +47,8 @@ define $(package)_set_vars
     $(package)_config_opts_darwin+= -DCMAKE_AR="$($(package)_ar)"
     $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$($(package)_ranlib)"
   endif
-
-  $(package)_cppflags= -Wl,-no_pie -UBLSALLOC_SODIUM -std=c++11
+  $(package)_ldflags=-Wl,-no_pie
+  $(package)_cppflags=-UBLSALLOC_SODIUM -std=c++11
   $(package)_cxxflags_linux=-fPIC
   $(package)_cxxflags_android=-fPIC
 endef
