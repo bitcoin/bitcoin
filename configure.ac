@@ -1914,10 +1914,10 @@ PKGCONFIG_LIBDIR_TEMP="$PKG_CONFIG_LIBDIR"
 unset PKG_CONFIG_LIBDIR
 PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
 
-AC_CHECK_HEADER(gmp.h,[AC_CHECK_LIB(gmp, __gmpz_init,[has_gmp=yes;])])
-if test x$has_gmp != xyes; then
-    AC_MSG_ERROR([[libgmp3-dev not installed]])
-fi
+dnl gmp check
+AM_PATH_GMP([], [],[],[AC_MSG_ERROR([Libgmp3-dev is not available!])])
+AC_SUBST(GMP_CFLAGS)
+AC_SUBST(GMP_LIBS)
 
 if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
