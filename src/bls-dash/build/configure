@@ -27,7 +27,7 @@ if [ "${CMAKE_CMD}" = "" ]; then
     CMAKE_CMD="cmake"
 fi
 
-BUILD_TYPE="Debug"
+BUILD_TYPE="Release"
 PREFIX=/usr/local
 LIBDIR=
 BINDIR=
@@ -429,5 +429,9 @@ fi
 if [[ ! -e "$PATH_TO_FILE" ]]; then
    PATH_TO_FILE=/usr/local/bin/${CMAKE_CMD}
 fi
+if [[ ! -e "$PATH_TO_FILE" ]]; then
+   PATH_TO_FILE=${CMAKE_CMD}
+fi
 
-eval "${PATH_TO_FILE}" "${TOP_SRCDIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_INSTALL_LIBDIR="${LIBDIR}" ${CMAKE_ARGS} "${TOP_SRCDIR}/../"
+
+eval "${PATH_TO_FILE}" "${TOP_SRCDIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" ${CMAKE_ARGS} "${TOP_SRCDIR}/../"
