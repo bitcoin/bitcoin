@@ -70,7 +70,7 @@ BOOST_FIXTURE_TEST_CASE(getpopdata_test, E2eFixture)
     authedContext.toVbkEncoding(w);
 
     UniValue result;
-    BOOST_CHECK_NO_THROW(result = CallRPC("getpopdatabyheight " + std::to_string(blockHeight)));
+    BOOST_CHECK_NO_THROW(result = CallRPC(std::string("getpopdatabyheight ") + std::to_string(blockHeight)));
 
     auto blockContext = find_value(result.get_obj(), "authenticated_context").get_obj();
 
