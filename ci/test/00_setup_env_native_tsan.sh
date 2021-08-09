@@ -8,7 +8,7 @@ export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_tsan
 export DOCKER_NAME_TAG=ubuntu:hirsute
-export PACKAGES="clang llvm libc++abi-dev libc++-dev python3-zmq libcurl4-gnutls-dev"
+export PACKAGES="clang llvm libc++abi-dev libc++-dev python3-zmq"
 export DEP_OPTS="CC=clang CXX='clang++ -stdlib=libc++'"
 export GOAL="install"
 export TEST_RUNNER_EXTRA="--exclude feature_llmqconnections,feature_llmqsimplepose"
