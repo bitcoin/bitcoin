@@ -196,7 +196,12 @@ while [ $# != 0 ]; do
                 *android*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
                 *linux*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;                
+            esac
+            case $HOST in
+                *i686*)
+                *arm*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";;   
             esac
             ;;
         "--prefix="*)
@@ -211,6 +216,11 @@ while [ $# != 0 ]; do
                 *linux*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
             esac
+            case $PREFIX in
+                *i686*)
+                *arm*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";;  
+            esac
             ;;
         "--target="*)
             TARGET="${1#*=}"
@@ -223,6 +233,11 @@ while [ $# != 0 ]; do
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
                 *linux*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
+            esac
+            case $TARGET in
+                *i686*)
+                *arm*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";;  
             esac
             ;;            
         "--prefix")
@@ -404,4 +419,9 @@ if [ "x${CXXFLAGS}" != "x" ]; then
     CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_CXX_FLAGS=$(quote "$CXXFLAGS")"
 fi
 
-eval "${PREFIX}/bin/${CMAKE_CMD}" "${TOP_SRCDIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_INSTALL_LIBDIR="${LIBDIR}" ${CMAKE_ARGS} "${TOP_SRCDIR}/../"
+PATH_TO_FILE=${PREFIX}/bin/${CMAKE_CMD}    
+if [ $PATH_TO_FILE does not exist ]; then
+   PATH_TO_FILE=/usr/local/bin/${CMAKE_CMD}
+fi
+
+eval "${PATH_TO_FILE}" "${TOP_SRCDIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_INSTALL_LIBDIR="${LIBDIR}" ${CMAKE_ARGS} "${TOP_SRCDIR}/../"
