@@ -151,6 +151,7 @@ Miscellaneous:
 - `git`
 - `gnupg`
 - `python3`
+- `libcurl4-gnutls-dev`
 
 ### Building and Installing Guix's dependencies
 
