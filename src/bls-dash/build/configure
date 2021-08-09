@@ -200,6 +200,7 @@ while [ $# != 0 ]; do
             esac
             case $HOST in
                 *i686*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";;
                 *arm*)
                     CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";;   
             esac
@@ -218,8 +219,9 @@ while [ $# != 0 ]; do
             esac
             case $PREFIX in
                 *i686*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";;
                 *arm*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";;  
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";; 
             esac
             ;;
         "--target="*)
@@ -236,8 +238,9 @@ while [ $# != 0 ]; do
             esac
             case $TARGET in
                 *i686*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";;
                 *arm*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";;  
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";; 
             esac
             ;;            
         "--prefix")
