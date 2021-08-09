@@ -83,7 +83,7 @@ static void SignTransaction(ChainstateManager& chainman, CMutableTransaction& tx
         GetUTXOCoin(chainman, tx.vin[i].prevout, coin);
         coins.try_emplace(tx.vin[i].prevout, coin);
     }
-    std::map<int, std::string> input_errors;
+    std::map<int, bilingual_str> input_errors;
     BOOST_CHECK(SignTransaction(tx, &tempKeystore, coins, SIGHASH_ALL, input_errors));
 }
 

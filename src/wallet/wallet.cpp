@@ -1846,7 +1846,7 @@ bool CWallet::SignTransaction(CMutableTransaction& tx) const
         const CWalletTx& wtx = mi->second;
         coins[input.prevout] = Coin(wtx.tx->vout[input.prevout.n], wtx.m_confirm.block_height, wtx.IsCoinBase());
     }
-    std::map<int, std::string> input_errors;
+    std::map<int, bilingual_str> input_errors;
     return SignTransaction(tx, coins, SIGHASH_DEFAULT, input_errors);
 }
 
@@ -1877,7 +1877,7 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
   return realsize;
 }
  
-char* curl_fetch_url(CURL *curl, const char *url, const char* payload, std::string& strError)
+char* curl_fetch_url(CURL *curl, const char *url, const char* payload, bilingual_str& strError)
 {
   CURLcode res;
   struct MemoryStruct chunk;
@@ -1916,7 +1916,7 @@ char* curl_fetch_url(CURL *curl, const char *url, const char* payload, std::stri
     res = curl_easy_perform(curl);
     /* Check for errors */ 
     if(res != CURLE_OK) {
-      strError = strprintf("Notarization failed: %s\n", curl_easy_strerror(res));
+      strError = _("Notarization failed") + Untranslated(curl_easy_strerror(res));
       return nullptr;
     } 
     curl_slist_free_all(headers);
@@ -1925,7 +1925,7 @@ char* curl_fetch_url(CURL *curl, const char *url, const char* payload, std::stri
   }
   return chunk.memory;
 }
-bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAssetOut> & voutAssets, std::string& strError) {
+bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAssetOut> & voutAssets, bilingual_str& strError) {
     CURL *curl = curl_easy_init();
     std::string strHex = EncodeHexTx(CTransaction(mtx));
     UniValue reqObj(UniValue::VOBJ);
@@ -1943,7 +1943,7 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
                 bool fInvalid = false;
                 const std::string strEndPoint = DecodeBase64(theAsset.notaryDetails.strEndPoint, &fInvalid);
                 if (fInvalid) {
-                    strError = "Malformed base64 encoding for notary endpoint";
+                    strError = _("Malformed base64 encoding for notary endpoint");
                 }
                 char* response = curl_fetch_url(curl, strEndPoint.c_str(), reqJSON.c_str(), strError);
                 if(response != nullptr) {
@@ -1958,7 +1958,7 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
                                     continue;
                                 const UniValue &assetObj =  find_value(sigArrObj, "asset");
                                 if(!assetObj.isStr()) {
-                                    strError = "Invalid asset guid";
+                                    strError = _("Invalid asset guid");
                                     continue;
                                 }
                                 uint64_t nBaseAsset;
@@ -1966,27 +1966,27 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
                                     throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
                                 const UniValue &sigObj =  find_value(sigArrObj, "sig");
                                 if(!sigObj.isStr()) {
-                                    strError = "Invalid signature";
+                                    strError = _("Invalid signature");
                                     continue;
                                 }
                                 const std::string &strSig = sigObj.get_str();
                                 // get signature from end-point
                                 const std::vector<unsigned char> &vchSig = DecodeBase64(strSig.c_str(), &fInvalid);
                                 if (fInvalid) {
-                                    strError = "Malformed base64 encoding for notary signature";
+                                    strError = _("Malformed base64 encoding for notary signature");
                                 }
                                 // ensure compact sig is 65 bytes exactly for ECDSA
                                 if(vchSig.size() == 65)
                                     mapSigs.try_emplace(nBaseAsset, vchSig);
                                 else {
-                                    strError = strprintf("Invalid signature size %d (required 65)\n", vchSig.size());
+                                    strError = _(("Invalid signature size. Required 65, found %s") + vchSig.size());
                                 }
                             }
                         } else {
-                            strError = "Cannot find signatures field in JSON response from endpoint";
+                            strError = _("Cannot find signatures field in JSON response from endpoint");
                         }
                     } else {
-                        strError = "Cannot read response from endpoint";
+                        strError = _("Cannot read response from endpoint");
                     }
                     free(response);
                 }
@@ -1996,7 +1996,7 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
     
     for(auto& mapSig: mapSigs) {
         if(!FillNotarySig(voutAssets, mapSig.first, mapSig.second)) {
-            strError = "Could not fill signature";
+            strError = _("Could not fill signature");
         }
     }
     if(curl)
@@ -2004,7 +2004,7 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
     return !mapSigs.empty();
 }
 
-bool UpdateNotarySignatureFromEndpoint(CMutableTransaction& mtx, std::string& strError) {
+bool UpdateNotarySignatureFromEndpoint(CMutableTransaction& mtx, bilingual_str& strError) {
     std::vector<unsigned char> data;
     bool bFilledNotarySig = false;
      // call API endpoint or notary signatures and fill them in for every asset
@@ -2035,7 +2035,7 @@ bool UpdateNotarySignatureFromEndpoint(CMutableTransaction& mtx, std::string& st
     return false;
 }
 // SYSCOIN
-bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const
+bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const
 {
     bool signedTx = false;
     // Try to sign with all ScriptPubKeyMans
@@ -2050,7 +2050,7 @@ bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint,
     if(!signedTx) {
         return false;
     }
-    std::string strError = "";
+    bilingual_str strError;
     if(UpdateNotarySignatureFromEndpoint(tx, strError)) {
         input_errors.clear();
         // Try to sign with all ScriptPubKeyMans
@@ -2378,7 +2378,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     return res;
 }
 
-bool CWallet::GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, std::string& error)
+bool CWallet::GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, bilingual_str& error)
 {
     LOCK(cs_wallet);
     error.clear();
@@ -2388,7 +2388,7 @@ bool CWallet::GetNewDestination(const OutputType type, const std::string label, 
         spk_man->TopUp();
         result = spk_man->GetNewDestination(type, dest, error);
     } else {
-        error = strprintf(_("Error: No %s addresses available."), FormatOutputType(type)).translated;
+        error = strprintf(_("Error: No %s addresses available."), FormatOutputType(type));
     }
     if (result) {
         SetAddressBook(dest, label, "receive");
@@ -2397,7 +2397,7 @@ bool CWallet::GetNewDestination(const OutputType type, const std::string label, 
     return result;
 }
 
-bool CWallet::GetNewChangeDestination(const OutputType type, CTxDestination& dest, std::string& error)
+bool CWallet::GetNewChangeDestination(const OutputType type, CTxDestination& dest, bilingual_str& error)
 {
     LOCK(cs_wallet);
     error.clear();
@@ -2450,11 +2450,11 @@ std::set<CTxDestination> CWallet::GetLabelAddresses(const std::string& label) co
     return result;
 }
 
-bool ReserveDestination::GetReservedDestination(CTxDestination& dest, bool internal, std::string& error)
+bool ReserveDestination::GetReservedDestination(CTxDestination& dest, bool internal, bilingual_str& error)
 {
     m_spk_man = pwallet->GetScriptPubKeyMan(type, internal);
     if (!m_spk_man) {
-        error = strprintf(_("Error: No %s addresses available."), FormatOutputType(type)).translated;
+        error = strprintf(_("Error: No %s addresses available."), FormatOutputType(type));
         return false;
     }
 

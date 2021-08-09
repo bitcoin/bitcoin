@@ -918,9 +918,9 @@ bool CWallet::CreateTransactionInternal(
                 // Reserve a new key pair from key pool. If it fails, provide a dummy
                 // destination in case we don't need change.
                 CTxDestination dest;
-                std::string dest_err;
+                bilingual_str dest_err;
                 if (!reservedest.GetReservedDestination(dest, true, dest_err)) {
-                    error = strprintf(_("Transaction needs a change address, but we can't generate it. %s"), dest_err);
+                    error = _("Transaction needs a change address, but we can't generate it.") + Untranslated(" ") + dest_err;
                 }
                 scriptChange = GetScriptForDestination(dest);
                 // A valid destination implies a change script (and
@@ -942,7 +942,7 @@ bool CWallet::CreateTransactionInternal(
             // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
             // provided one
             if (coin_control.m_feerate && coin_selection_params.m_effective_feerate > *coin_control.m_feerate) {
-                error = strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(FeeEstimateMode::SAT_VB), coin_selection_params.m_effective_feerate.ToString(FeeEstimateMode::SAT_VB));
+                error = _("Fee rate is lower than the minimum fee rate setting");
                 return false;
             }
             if (feeCalc.reason == FeeReason::FALLBACK && !m_allow_fallback_fee) {

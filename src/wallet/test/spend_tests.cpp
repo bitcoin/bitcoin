@@ -33,7 +33,7 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
         coin_control.fOverrideFeeRate = true;
         FeeCalculation fee_calc;
         BOOST_CHECK(wallet->CreateTransaction({recipient}, tx, fee, change_pos, error, coin_control, fee_calc));
-        BOOST_CHECK_EQUAL(tx->vout.size(), 1);
+        BOOST_CHECK_EQUAL(tx->vout.size(), 1U);
         BOOST_CHECK_EQUAL(tx->vout[0].nValue, recipient.nAmount + leftover_input_amount - fee);
         BOOST_CHECK_GT(fee, 0);
         return fee;

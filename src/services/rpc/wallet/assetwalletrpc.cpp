@@ -344,9 +344,9 @@ static RPCHelpMan syscoinburntoassetallocation()
     }
 
     CTxDestination dest;
-    std::string errorStr;
+    bilingual_str errorStr;
     if (fChangeAddress.empty() && !pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr.original);
     }
 
     const CScript& scriptPubKey = GetScriptForDestination(dest);
@@ -396,7 +396,7 @@ static RPCHelpMan syscoinburntoassetallocation()
     }
     CMutableTransaction mtx(*tx);
     // Script verification errors
-    std::map<int, std::string> input_errors;
+    std::map<int, bilingual_str> input_errors;
     // Fetch previous transactions (inputs):
     std::map<COutPoint, Coin> coins;
     for (const CTxIn& txin : mtx.vin) {
@@ -596,9 +596,9 @@ RPCHelpMan assetnew()
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
     }
     CTxDestination dest;
-    std::string errorStr;
+    bilingual_str errorStr;
     if (fChangeAddress.empty() && !pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr.original);
     }
     if(!fChangeAddress.empty())
         dest = DecodeDestination(fChangeAddress);
@@ -658,7 +658,7 @@ RPCHelpMan assetnew()
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     // Script verification errors
-    std::map<int, std::string> input_errors;
+    std::map<int, bilingual_str> input_errors;
     // Fetch previous transactions (inputs):
     std::map<COutPoint, Coin> coins;
     for (const CTxIn& txin : mtx.vin) {
@@ -802,9 +802,9 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     }
 
     if(!recpIn || nGas > (MIN_CHANGE + pwallet.m_default_max_tx_fee)) {
-        std::string errorStr;
+        bilingual_str errorStr;
         if (fChangeAddress.empty() && !pwallet.GetNewChangeDestination(pwallet.m_default_address_type, dest, errorStr)) {
-            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr.original);
         }      
         recp = { GetScriptForDestination(dest), nGas, false};  
     }
@@ -841,7 +841,7 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     
     CMutableTransaction mtx(*tx);
     // Script verification errors
-    std::map<int, std::string> input_errors;
+    std::map<int, bilingual_str> input_errors;
     // Fetch previous transactions (inputs):
     std::map<COutPoint, Coin> coins;
     for (const CTxIn& txin : tx->vin) {
@@ -1558,7 +1558,7 @@ static RPCHelpMan assetallocationsendmany()
         }
     }
     // Script verification errors
-    std::map<int, std::string> input_errors;
+    std::map<int, bilingual_str> input_errors;
     // Fetch previous transactions (inputs):
     std::map<COutPoint, Coin> coins;
     for (const CTxIn& txin : mtx.vin) {
@@ -1699,9 +1699,9 @@ static RPCHelpMan assetallocationburn()
     }
     
     CTxDestination dest;
-    std::string errorStr;
+    bilingual_str errorStr;
     if (fChangeAddress.empty() && !pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr.original);
     }
 
     const CScript& scriptPubKey = GetScriptForDestination(dest);
@@ -1739,7 +1739,7 @@ static RPCHelpMan assetallocationburn()
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     // Script verification errors
-    std::map<int, std::string> input_errors;
+    std::map<int, bilingual_str> input_errors;
     // Fetch previous transactions (inputs):
     std::map<COutPoint, Coin> coins;
     for (const CTxIn& txin : mtx.vin) {
@@ -1918,7 +1918,7 @@ static RPCHelpMan assetallocationmint()
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     // Script verification errors
-    std::map<int, std::string> input_errors;
+    std::map<int, bilingual_str> input_errors;
     // Fetch previous transactions (inputs):
     std::map<COutPoint, Coin> coins;
     for (const CTxIn& txin : mtx.vin) {
@@ -2515,7 +2515,7 @@ public:
 
     ReserveDestination rdest(pwallet, pwallet->m_default_address_type);
     CTxDestination dest;
-    std::string dest_err;
+    bilingual_str dest_err;
     if (!rdest.GetReservedDestination (dest, false, dest_err))
       throw JSONRPCError (RPC_WALLET_KEYPOOL_RAN_OUT,
                           "Error: Keypool ran out,"
