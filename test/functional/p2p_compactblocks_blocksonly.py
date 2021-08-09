@@ -23,8 +23,8 @@ from test_framework.util import assert_equal
 
 class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
     def set_test_params(self):
-        self.extra_args = [["-blocksonly"], [], []]
-        self.num_nodes = 3
+        self.extra_args = [["-blocksonly"], [], [], []]
+        self.num_nodes = 4
 
     def setup_network(self):
         self.setup_nodes()
@@ -45,7 +45,8 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
 
         p2p_conn_blocksonly = self.nodes[0].add_p2p_connection(P2PInterface())
         p2p_conn_high_bw = self.nodes[1].add_p2p_connection(P2PInterface())
-        for conn in [p2p_conn_blocksonly, p2p_conn_high_bw]:
+        p2p_conn_low_bw = self.nodes[3].add_p2p_connection(P2PInterface())
+        for conn in [p2p_conn_blocksonly, p2p_conn_high_bw, p2p_conn_low_bw]:
             assert_equal(conn.message_count['sendcmpct'], 2)
             conn.send_and_ping(msg_sendcmpct(announce=False, version=2))
 
@@ -53,10 +54,12 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
         #   0 -> blocksonly
         #   1 -> high bandwidth
         #   2 -> miner
+        #   3 -> low bandwidth
         #
         # Topology:
         #   p2p_conn_blocksonly ---> node0
         #   p2p_conn_high_bw    ---> node1
+        #   p2p_conn_low_bw     ---> node3
         #   node2 (no connections)
         #
         # node2 produces blocks that are passed to the rest of the nodes
@@ -80,6 +83,10 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
         p2p_conn_high_bw.wait_until(lambda: p2p_conn_high_bw.message_count['sendcmpct'] == 3)
         assert_equal(p2p_conn_high_bw.last_message['sendcmpct'].announce, True)
 
+        # Don't send a block from the p2p_conn_low_bw so the low bandwidth node
+        # doesn't select it for BIP152 high bandwidth relay.
+        self.nodes[3].submitblock(block0.serialize().hex())
+
         self.log.info("Test that -blocksonly nodes send getdata(BLOCK) instead"
                       " of getdata(CMPCT) in BIP152 low bandwidth mode")
 
@@ -92,6 +99,13 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
         p2p_conn_high_bw.send_message(msg_headers(headers=[CBlockHeader(block1)]))
         p2p_conn_high_bw.sync_send_with_ping()
         assert_equal(p2p_conn_high_bw.last_message['getdata'].inv, [CInv(MSG_CMPCT_BLOCK, block1.sha256)])
+
+        self.log.info("Test that getdata(CMPCT) is still sent on BIP152 low bandwidth connections"
+                      " when no -blocksonly nodes are involved")
+
+        p2p_conn_low_bw.send_and_ping(msg_headers(headers=[CBlockHeader(block1)]))
+        p2p_conn_low_bw.sync_with_ping()
+        assert_equal(p2p_conn_low_bw.last_message['getdata'].inv, [CInv(MSG_CMPCT_BLOCK, block1.sha256)])
 
 if __name__ == '__main__':
     P2PCompactBlocksBlocksOnly().main()
