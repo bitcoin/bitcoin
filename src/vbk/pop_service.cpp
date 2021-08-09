@@ -153,7 +153,11 @@ PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const CChainParams& para
     (void)ret;
     assert(ret);
 
-    auto rewards = pop.getPopPayout(prevHash);
+    altintegration::PopPayouts rewards;
+    ret = pop.getPopPayout(prevHash, rewards, state);
+    (void)ret;
+    assert(ret);
+
     int halvings = (pindexPrev.nHeight + 1) / params.GetConsensus().nSubsidyHalvingInterval;
     PoPRewards result{};
     // erase rewards, that pay 0 satoshis, then halve rewards
