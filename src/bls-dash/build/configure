@@ -424,6 +424,9 @@ fi
 
 PATH_TO_FILE=${PREFIX}/bin/${CMAKE_CMD} 
 if [[ ! -e "$PATH_TO_FILE" ]]; then
+   PATH_TO_FILE=${BINDIR}/${CMAKE_CMD}
+fi
+if [[ ! -e "$PATH_TO_FILE" ]]; then
    PATH_TO_FILE=/usr/local/bin/${CMAKE_CMD}
 fi
 
