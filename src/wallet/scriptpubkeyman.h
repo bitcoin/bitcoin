@@ -621,7 +621,7 @@ public:
     const WalletDescriptor GetWalletDescriptor() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
     const std::vector<CScript> GetScriptPubKeys() const;
 
-    bool GetDescriptorString(std::string& out) const;
+    bool GetDescriptorString(std::string& out, const bool priv) const;
 
     void UpgradeDescriptorCache();
 };
