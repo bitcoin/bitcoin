@@ -422,8 +422,8 @@ if [ "x${CXXFLAGS}" != "x" ]; then
     CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_CXX_FLAGS=$(quote "$CXXFLAGS")"
 fi
 
-PATH_TO_FILE=${PREFIX}/bin/${CMAKE_CMD}    
-if [ $PATH_TO_FILE does not exist ]; then
+PATH_TO_FILE=${PREFIX}/bin/${CMAKE_CMD} 
+if [[ ! -e "$PATH_TO_FILE" ]]; then
    PATH_TO_FILE=/usr/local/bin/${CMAKE_CMD}
 fi
 
