@@ -35,12 +35,12 @@ static const CFeeRate DEFAULT_MAX_RAW_TX_FEE_RATE{COIN / 10};
  *
  * @param[in]  node reference to node context
  * @param[in]  tx the transaction to broadcast
- * @param[out] err_string reference to std::string to fill with error string if available
+ * @param[out] err_string reference to bilingual_str to fill with error string if available
  * @param[in]  relay flag if both mempool insertion and p2p relay are requested
  * @param[in]  wait_callback wait until callbacks have been processed to avoid stale result due to a sequentially RPC.
  * return error
  */
-[[nodiscard]] TransactionError BroadcastTransaction(NodeContext& node, CTransactionRef tx, std::string& err_string, const CAmount& highfee, bool relay, bool wait_callback, bool bypass_limits = false);
+[[nodiscard]] TransactionError BroadcastTransaction(NodeContext& node, CTransactionRef tx, bilingual_str& err_string, const CAmount& highfee, bool relay, bool wait_callback, bool bypass_limits = false);
 
 /**
  * Return transaction with a given hash.

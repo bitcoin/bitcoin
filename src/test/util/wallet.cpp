@@ -8,6 +8,7 @@
 #include <outputtype.h>
 #include <script/standard.h>
 #ifdef ENABLE_WALLET
+#include <util/translation.h>
 #include <wallet/wallet.h>
 #endif
 
@@ -18,7 +19,7 @@ const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqq
 std::string getnewaddress(CWallet& w)
 {
     CTxDestination dest;
-    std::string error;
+    bilingual_str error;
     if (!w.GetNewDestination("", dest, error)) assert(false);
 
     return EncodeDestination(dest);

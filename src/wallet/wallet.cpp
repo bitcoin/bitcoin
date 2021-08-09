@@ -1194,7 +1194,7 @@ bool CWallet::ResendTransaction(const uint256& hashTx)
     assert(it != mapWallet.end());
     CWalletTx& wtx = it->second;
 
-    std::string unused_err_string;
+    bilingual_str unused_err_string;
     return wtx.SubmitMemoryPoolAndRelay(unused_err_string, true);
 }
 
@@ -2148,7 +2148,7 @@ void CWallet::ReacceptWalletTransactions()
     // Try to add wallet transactions to memory pool
     for (const std::pair<const int64_t, CWalletTx*>& item : mapSorted) {
         CWalletTx& wtx = *(item.second);
-        std::string unused_err_string;
+        bilingual_str unused_err_string;
         wtx.SubmitMemoryPoolAndRelay(unused_err_string, false);
     }
 }
@@ -2169,7 +2169,7 @@ bool CWalletTx::CanBeResent() const
         !IsLockedByInstantSend();
 }
 
-bool CWalletTx::SubmitMemoryPoolAndRelay(std::string& err_string, bool relay)
+bool CWalletTx::SubmitMemoryPoolAndRelay(bilingual_str& err_string, bool relay)
 {
     if (!CanBeResent()) return false;
 
@@ -2485,7 +2485,7 @@ void CWallet::ResendWalletTransactions()
             // the last block. SubmitMemoryPoolAndRelay() will not rebroadcast
             // any confirmed or conflicting txs.
             if (wtx.nTimeReceived > m_best_block_time - 5 * 60) continue;
-            std::string unused_err_string;
+            bilingual_str unused_err_string;
             if (wtx.SubmitMemoryPoolAndRelay(unused_err_string, true)) ++submitted_tx_count;
         }
     } // cs_wallet
@@ -3070,11 +3070,11 @@ bool CWallet::SignTransaction(CMutableTransaction& tx) const
         const CWalletTx& wtx = mi->second;
         coins[input.prevout] = Coin(wtx.tx->vout[input.prevout.n], wtx.m_confirm.block_height, wtx.IsCoinBase());
     }
-    std::map<int, std::string> input_errors;
+    std::map<int, bilingual_str> input_errors;
     return SignTransaction(tx, coins, SIGHASH_ALL, input_errors);
 }
 
-bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const
+bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const
 {
     // Try to sign with all ScriptPubKeyMans
     for (ScriptPubKeyMan* spk_man : GetAllScriptPubKeyMans()) {
@@ -3972,9 +3972,9 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
         return;
     }
 
-    std::string err_string;
+    bilingual_str err_string;
     if (!wtx.SubmitMemoryPoolAndRelay(err_string, true)) {
-        WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", err_string);
+        WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", err_string.original);
         // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
     }
 }
@@ -4169,7 +4169,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     return res;
 }
 
-bool CWallet::GetNewDestination(const std::string label, CTxDestination& dest, std::string& error)
+bool CWallet::GetNewDestination(const std::string label, CTxDestination& dest, bilingual_str& error)
 {
     error.clear();
     bool result = false;
@@ -4180,7 +4180,7 @@ bool CWallet::GetNewDestination(const std::string label, CTxDestination& dest, s
         spk_man->TopUp();
         result = spk_man->GetNewDestination(dest, error);
     } else {
-        error = strprintf("Error: No addresses available.");
+        error = strprintf(_("Error: No addresses available."));
     }
     if (result) {
         SetAddressBook(dest, label, "receive");
@@ -4189,14 +4189,14 @@ bool CWallet::GetNewDestination(const std::string label, CTxDestination& dest, s
     return result;
 }
 
-bool CWallet::GetNewChangeDestination(CTxDestination& dest, std::string& error)
+bool CWallet::GetNewChangeDestination(CTxDestination& dest,  bilingual_str& error)
 {
     LOCK(cs_wallet);
     error.clear();
 
     ReserveDestination reservedest(this);
     if (!reservedest.GetReservedDestination(dest, true)) {
-        error = _("Error: Keypool ran out, please call keypoolrefill first").translated;
+        error = _("Error: Keypool ran out, please call keypoolrefill first");
         return false;
     }
 
