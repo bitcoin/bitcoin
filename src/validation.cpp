@@ -1198,6 +1198,19 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
         m_viewmempool.PackageAddTransaction(ws.m_ptx);
     }
 
+    // Apply package mempool ancestor/descendant limits. Skip if there is only one transaction,
+    // because it's unnecessary. Also, CPFP carve out can increase the limit for individual
+    // transactions, but this exemption is not extended to packages in CheckPackageLimits().
+    std::string err_string;
+    if (txns.size() > 1 &&
+        !m_pool.CheckPackageLimits(txns, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants,
+                                   m_limit_descendant_size, err_string)) {
+        // All transactions must have individually passed mempool ancestor and descendant limits
+        // inside of PreChecks(), so this is separate from an individual transaction error.
+        package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-mempool-limits", err_string);
+        return PackageMempoolAcceptResult(package_state, std::move(results));
+    }
+
     for (Workspace& ws : workspaces) {
         PrecomputedTransactionData txdata;
         if (!PolicyScriptChecks(args, ws, txdata)) {

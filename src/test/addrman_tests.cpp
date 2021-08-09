@@ -823,7 +823,7 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
 
     addrman.Clear();
     stream >> addrman;
-    BOOST_CHECK_EQUAL(addrman.size(), 2);
+    BOOST_CHECK_EQUAL(addrman.size(), 2U);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
