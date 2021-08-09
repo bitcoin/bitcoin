@@ -541,6 +541,14 @@ private:
     // only tests that are fast should be done here (to avoid CPU DoS).
     bool PreChecks(ATMPArgs& args, Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
+    // Run checks for mempool replace-by-fee.
+    bool ReplacementChecks(Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
+
+    // Enforce package mempool ancestor/descendant limits (distinct from individual
+    // ancestor/descendant limits done in PreChecks).
+    bool PackageMempoolChecks(const std::vector<CTransactionRef>& txns,
+                              PackageValidationState& package_state) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
+
     // Run the script checks using our policy flags. As this can be slow, we should
     // only invoke this on transactions that have otherwise passed policy checks.
     bool PolicyScriptChecks(const ATMPArgs& args, Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
@@ -823,41 +831,65 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
     m_rbf = !ws.m_conflicts.empty();
-    if (m_rbf) {
-        CFeeRate newFeeRate(ws.m_modified_fees, ws.m_vsize);
-        // It's possible that the replacement pays more fees than its direct conflicts but not more
-        // than all conflicts (i.e. the direct conflicts have high-fee descendants). However, if the
-        // replacement doesn't pay more fees than its direct conflicts, then we can be sure it's not
-        // more economically rational to mine. Before we go digging through the mempool for all
-        // transactions that would need to be removed (direct conflicts and all descendants), check
-        // that the replacement transaction pays more than its direct conflicts.
-        if (const auto err_string{PaysMoreThanConflicts(ws.m_iters_conflicting, newFeeRate, hash)}) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
-        }
+    return true;
+}
 
-        // Calculate all conflicting entries and enforce BIP125 Rule #5.
-        if (const auto err_string{GetEntriesForConflicts(tx, m_pool, ws.m_iters_conflicting, ws.m_all_conflicting)}) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
-                                 "too many potential replacements", *err_string);
-        }
-        // Enforce BIP125 Rule #2.
-        if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, ws.m_iters_conflicting)}) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
-                                 "replacement-adds-unconfirmed", *err_string);
-        }
+bool MemPoolAccept::ReplacementChecks(Workspace& ws)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(m_pool.cs);
 
-        // Check if it's economically rational to mine this transaction rather than the ones it
-        // replaces and pays for its own relay fees. Enforce BIP125 Rules #3 and #4.
-        for (CTxMemPool::txiter it : ws.m_all_conflicting) {
-            ws.m_conflicting_fees += it->GetModifiedFee();
-            ws.m_conflicting_size += it->GetTxSize();
-        }
-        if (const auto err_string{PaysForRBF(ws.m_conflicting_fees, ws.m_modified_fees, ws.m_vsize,
-                                             ::incrementalRelayFee, hash)}) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
-        }
+    const CTransaction& tx = *ws.m_ptx;
+    const uint256& hash = ws.m_hash;
+    TxValidationState& state = ws.m_state;
+
+    CFeeRate newFeeRate(ws.m_modified_fees, ws.m_vsize);
+    // It's possible that the replacement pays more fees than its direct conflicts but not more
+    // than all conflicts (i.e. the direct conflicts have high-fee descendants). However, if the
+    // replacement doesn't pay more fees than its direct conflicts, then we can be sure it's not
+    // more economically rational to mine. Before we go digging through the mempool for all
+    // transactions that would need to be removed (direct conflicts and all descendants), check
+    // that the replacement transaction pays more than its direct conflicts.
+    if (const auto err_string{PaysMoreThanConflicts(ws.m_iters_conflicting, newFeeRate, hash)}) {
+        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
+    }
+
+    // Calculate all conflicting entries and enforce BIP125 Rule #5.
+    if (const auto err_string{GetEntriesForConflicts(tx, m_pool, ws.m_iters_conflicting, ws.m_all_conflicting)}) {
+        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
+                             "too many potential replacements", *err_string);
+    }
+    // Enforce BIP125 Rule #2.
+    if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, ws.m_iters_conflicting)}) {
+        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
+                             "replacement-adds-unconfirmed", *err_string);
+    }
+    // Check if it's economically rational to mine this transaction rather than the ones it
+    // replaces and pays for its own relay fees. Enforce BIP125 Rules #3 and #4.
+    for (CTxMemPool::txiter it : ws.m_all_conflicting) {
+        ws.m_conflicting_fees += it->GetModifiedFee();
+        ws.m_conflicting_size += it->GetTxSize();
+    }
+    if (const auto err_string{PaysForRBF(ws.m_conflicting_fees, ws.m_modified_fees, ws.m_vsize,
+                                         ::incrementalRelayFee, hash)}) {
+        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
     }
     return true;
+}
+
+bool MemPoolAccept::PackageMempoolChecks(const std::vector<CTransactionRef>& txns,
+                                         PackageValidationState& package_state)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(m_pool.cs);
+
+    std::string err_string;
+    if (!m_pool.CheckPackageLimits(txns, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants,
+                                   m_limit_descendant_size, err_string)) {
+        // This is a package-wide error, separate from an individual transaction error.
+        return package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-mempool-limits", err_string);
+    }
+   return true;
 }
 
 bool MemPoolAccept::PolicyScriptChecks(const ATMPArgs& args, Workspace& ws)
@@ -966,6 +998,8 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
 
     if (!PreChecks(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
+    if (m_rbf && !ReplacementChecks(ws)) return MempoolAcceptResult::Failure(ws.m_state);
+
     // Perform the inexpensive checks first and avoid hashing and signature verification unless
     // those checks pass, to mitigate CPU exhaustion denial-of-service attacks.
     if (!PolicyScriptChecks(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
@@ -1020,12 +1054,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
     // because it's unnecessary. Also, CPFP carve out can increase the limit for individual
     // transactions, but this exemption is not extended to packages in CheckPackageLimits().
     std::string err_string;
-    if (txns.size() > 1 &&
-        !m_pool.CheckPackageLimits(txns, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants,
-                                   m_limit_descendant_size, err_string)) {
-        // All transactions must have individually passed mempool ancestor and descendant limits
-        // inside of PreChecks(), so this is separate from an individual transaction error.
-        package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-mempool-limits", err_string);
+    if (txns.size() > 1 && !PackageMempoolChecks(txns, package_state)) {
         return PackageMempoolAcceptResult(package_state, std::move(results));
     }
 
