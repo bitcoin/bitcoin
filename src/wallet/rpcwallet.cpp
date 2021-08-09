@@ -276,9 +276,9 @@ static RPCHelpMan getnewaddress()
     }
 
     CTxDestination dest;
-    std::string error;
+    bilingual_str error;
     if (!pwallet->GetNewDestination(output_type, label, dest, error)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error.original);
     }
 
     return EncodeDestination(dest);
@@ -324,9 +324,9 @@ static RPCHelpMan getrawchangeaddress()
     }
 
     CTxDestination dest;
-    std::string error;
+    bilingual_str error;
     if (!pwallet->GetNewChangeDestination(output_type, dest, error)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error.original);
     }
     return EncodeDestination(dest);
 },
@@ -3392,7 +3392,7 @@ RPCHelpMan signrawtransactionwithwallet()
     int nHashType = ParseSighashString(request.params[2]);
 
     // Script verification errors
-    std::map<int, std::string> input_errors;
+    std::map<int, bilingual_str> input_errors;
 
     bool complete = pwallet->SignTransaction(mtx, coins, nHashType, input_errors);
     UniValue result(UniValue::VOBJ);

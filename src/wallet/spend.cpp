@@ -618,9 +618,9 @@ bool CWallet::CreateTransactionInternal(
         // Reserve a new key pair from key pool. If it fails, provide a dummy
         // destination in case we don't need change.
         CTxDestination dest;
-        std::string dest_err;
+        bilingual_str dest_err;
         if (!reservedest.GetReservedDestination(dest, true, dest_err)) {
-            error = strprintf(_("Transaction needs a change address, but we can't generate it. %s"), dest_err);
+            error = _("Transaction needs a change address, but we can't generate it.") + Untranslated(" ") + dest_err;
         }
         scriptChange = GetScriptForDestination(dest);
         // A valid destination implies a change script (and
