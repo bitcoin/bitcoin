@@ -48,13 +48,17 @@ else()
   set(ARITH "easy" CACHE STRING "")
 endif()
 
+if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+  set(WSIZE "32" CACHE STRING "Relic - Processor word size")
+else()
+  set(WSIZE "64" CACHE STRING "Relic - Processor word size")
+endif()
+
 if(EMSCRIPTEN)
   # emscripten needs arch set to be none since it can't compile assembly
   set(ARCH "" CACHE STRING "")
   # emscripten is a 32 bit compiler
-  set(WSIZE 32 CACHE INTEGER "")
-else()
-  set(WSIZE 64 CACHE INTEGER "")
+  set(WSIZE "32" CACHE STRING "Relic - Processor word size")
 endif()
 
 set(TIMER "CYCLE" CACHE STRING "")
