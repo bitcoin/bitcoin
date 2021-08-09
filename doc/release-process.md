@@ -156,24 +156,10 @@ popd
 
 ### After 3 or more people have guix-built and their results match:
 
-Combine `all.SHA256SUMS` and `all.SHA256SUMS.asc` into a clear-signed
-`SHA256SUMS.asc` message:
-
-```sh
-echo -e "-----BEGIN PGP SIGNED MESSAGE-----\nHash: SHA256\n\n$(cat all.SHA256SUMS)\n$(cat filename.txt.asc)" > SHA256SUMS.asc
-```
-
-Here's an equivalent, more readable command if you're confident that you won't
-mess up whitespaces when copy-pasting:
+Combine the `all.SHA256SUMS.asc` file from all signers into `SHA256SUMS.asc`:
 
 ```bash
-cat << EOF > SHA256SUMS.asc
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
-
-$(cat all.SHA256SUMS)
-$(cat all.SHA256SUMS.asc)
-EOF
+cat "$VERSION"/*/all.SHA256SUMS.asc > SHA256SUMS.asc
 ```
 
 - Upload to the dash.org server:
@@ -185,7 +171,10 @@ EOF
        interested in debugging can run guix to generate the files for
        themselves. To avoid end-user confusion about which file to pick, as well
        as save storage space *do not upload these to the dash.org server*.
-    2. The combined clear-signed message you just created `SHA256SUMS.asc`
+
+    2. The `SHA256SUMS` file
+
+    3. The `SHA256SUMS.asc` combined signature file you just created
 
 - Announce the release:
 
