@@ -30,6 +30,7 @@ fi
 BUILD_TYPE="Debug"
 PREFIX=/usr/local
 LIBDIR=
+BINDIR=
 CMAKE_ARGS=
 CFLAGS=
 CPPFLAGS=
@@ -227,8 +228,10 @@ while [ $# != 0 ]; do
         "--prefix")
             PREFIX="${2}"; shift;;
         "--bindir="*)
+            BINDIR="${1#*=}"
             CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_INSTALL_BINDIR=$(quote "${1#*=}")";;
         "--bindir")
+            BINDIR="${2}"
             CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_INSTALL_BINDIR=$(quote "$2")"; shift;;
         "--sbindir="*)
             CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_INSTALL_SBINDIR=$(quote "${1#*=}")";;
@@ -400,5 +403,7 @@ fi
 if [ "x${CXXFLAGS}" != "x" ]; then
     CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_CXX_FLAGS=$(quote "$CXXFLAGS")"
 fi
-
-eval "${PREFIX}/bin/${CMAKE_CMD}" "${TOP_SRCDIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_INSTALL_LIBDIR="${LIBDIR}" ${CMAKE_ARGS} "${TOP_SRCDIR}/../"
+if [ "x${BINDIR}" != "x" ]; then
+    CMAKE_CMD="${BINDIR}/${CMAKE_CMD}"
+fi
+eval ${CMAKE_CMD} "${TOP_SRCDIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_INSTALL_LIBDIR="${LIBDIR}" ${CMAKE_ARGS} "${TOP_SRCDIR}/../"
