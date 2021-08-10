@@ -1908,11 +1908,9 @@ unset PKG_CONFIG_LIBDIR
 PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
 
 dnl gmp check
-cu_GMP
-if test $HAVE_GMP != 1; then
-  AC_MSG_ERROR([Libgmp3-dev is not available!])
-fi
-AC_SUBST(LIB_GMP)
+AM_PATH_GMP([], [],[],[AC_MSG_ERROR([Libgmp3-dev is not available!])])
+AC_SUBST(GMP_CFLAGS)
+AC_SUBST(GMP_LIBS)
 
 if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
