@@ -309,12 +309,12 @@ while [ $# != 0 ]; do
             CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_INSTALL_DOCDIR=$(quote "$2")"; shift;;
 
         "NM="*)
-            CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_NM=/usr/bin/${1#*=}";;
+            CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_NM=${1#*=}";;
         "AR="*)
             case $HOST in
                 *mingw*);;
                 *darwin*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_AR=/usr/bin/${1#*=}";;
+                    CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_AR=${1#*=}";;
                 *android*);;
                 *linux*);;
             esac
@@ -323,7 +323,7 @@ while [ $# != 0 ]; do
             case $HOST in
                 *mingw*);;
                 *darwin*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_RANLIB=/usr/bin/${1#*=}";;
+                    CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_RANLIB=${1#*=}";;
                 *android*);;
                 *linux*);;
             esac
@@ -338,9 +338,9 @@ while [ $# != 0 ]; do
             esac
             ;;
         "CC="*)
-            CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_C_COMPILER=/usr/bin/${1#*=}";;
+            CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_C_COMPILER=${1#*=}";;
         "CXX="*)
-            CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_CXX_COMPILER=/usr/bin/${1#*=}";;
+            CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_CXX_COMPILER=${1#*=}";;
         "CFLAGS="*)
             CFLAGS="${1#*=}";;
         "CXXFLAGS="*)
@@ -434,4 +434,4 @@ if [[ ! -e "$PATH_TO_FILE" ]]; then
 fi
 
 
-eval "${PATH_TO_FILE}" "${TOP_SRCDIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" ${CMAKE_ARGS} "${TOP_SRCDIR}/../"
+eval "${PATH_TO_FILE}" "${TOP_SRCDIR}" -DCMAKE_PREFIX_PATH="${PREFIX}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" ${CMAKE_ARGS} "${TOP_SRCDIR}/../"
