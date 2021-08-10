@@ -27,6 +27,7 @@ import subprocess
 
 from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.blocktools import (
+    DERSIG_HEIGHT,
     create_block,
     create_coinbase,
     TIME_GENESIS_BLOCK,
@@ -141,7 +142,7 @@ class BlockchainTest(BitcoinTestFramework):
 
         assert_equal(res['softforks'], {
             'bip34': {'type': 'buried', 'active': True, 'height': 2},
-            'bip66': {'type': 'buried', 'active': False, 'height': 1251},
+            'bip66': {'type': 'buried', 'active': True, 'height': DERSIG_HEIGHT},
             'bip65': {'type': 'buried', 'active': False, 'height': 1351},
             'csv': {'type': 'buried', 'active': False, 'height': 432},
             'segwit': {'type': 'buried', 'active': True, 'height': 0},
