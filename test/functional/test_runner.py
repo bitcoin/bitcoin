@@ -300,6 +300,7 @@ BASE_SCRIPTS = [
     'feature_config_args.py',
     'feature_presegwit_node_upgrade.py',
     'feature_settings.py',
+    'feature_onlynet.py',
     'rpc_getdescriptorinfo.py',
     'rpc_addresses_deprecation.py',
     'rpc_help.py',
