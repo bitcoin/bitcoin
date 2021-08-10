@@ -1310,6 +1310,13 @@ dnl univalue check
 
 need_bundled_univalue=yes
 
+dnl check if libgmp is present
+AC_CHECK_HEADER([gmp.h],, AC_MSG_ERROR(libgmp headers missing))
+AC_CHECK_LIB([gmp],  [__gmpz_init],GMP_LIBS=-lgmp, AC_MSG_ERROR(libgmp missing))
+
+dnl check if immer headers-only library is present
+AC_CHECK_HEADER([immer/map.hpp],, AC_MSG_ERROR(immer map headers missing))
+
 if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononono; then
   need_bundled_univalue=no
 else
@@ -1577,6 +1584,7 @@ AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
 AC_SUBST(CRYPTO_LIBS)
 AC_SUBST(SSL_LIBS)
+AC_SUBST(GMP_LIBS)
 AC_SUBST(EVENT_LIBS)
 AC_SUBST(EVENT_PTHREADS_LIBS)
 AC_SUBST(ZMQ_LIBS)
