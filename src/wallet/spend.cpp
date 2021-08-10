@@ -942,7 +942,7 @@ bool CWallet::CreateTransactionInternal(
             // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
             // provided one
             if (coin_control.m_feerate && coin_selection_params.m_effective_feerate > *coin_control.m_feerate) {
-                error = _("Fee rate is lower than the minimum fee rate setting");
+                error = strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(FeeEstimateMode::SAT_VB), coin_selection_params.m_effective_feerate.ToString(FeeEstimateMode::SAT_VB));
                 return false;
             }
             if (feeCalc.reason == FeeReason::FALLBACK && !m_allow_fallback_fee) {
