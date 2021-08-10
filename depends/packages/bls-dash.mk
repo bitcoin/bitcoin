@@ -35,7 +35,7 @@ define $(package)_set_vars
   $(package)_config_opts+= -DBUILD_BLS_PYTHON_BINDINGS=0 -DBUILD_BLS_TESTS=0 -DBUILD_BLS_BENCHMARKS=0 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_C_STANDARD=99
   $(package)_config_opts_linux=-DOPSYS=LINUX -DMULTI=PTHREAD
   $(package)_config_opts_darwin=-DOPSYS=MACOSX -DMULTI=PTHREAD
-  $(package)_config_opts_mingw32=-DOPSYS=WINDOWS -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS=""
+  $(package)_config_opts_mingw32=-DOPSYS=WINDOWS -DMULTI=PTHREAD -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS=""
   $(package)_config_opts_i686+= -DWSIZE=32
   $(package)_config_opts_x86_64+= -DWSIZE=64
   $(package)_config_opts_arm+= -DWSIZE=32
