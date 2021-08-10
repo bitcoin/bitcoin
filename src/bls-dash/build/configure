@@ -27,7 +27,7 @@ if [ "${CMAKE_CMD}" = "" ]; then
     CMAKE_CMD="cmake"
 fi
 
-BUILD_TYPE="Debug"
+BUILD_TYPE="Release"
 PREFIX=/usr/local
 LIBDIR=
 CMAKE_ARGS=
