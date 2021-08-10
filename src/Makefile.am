@@ -32,10 +32,14 @@ SYSCOIN_INCLUDES += $(LIBCURL_CPPFLAGS) $(GMP_CFLAGS)
 
 
 
+if EMBEDDED_CHIABLS
 LIBCHIA = bls-dash/build/libbls-dash.a
 LIBCHIABLS =$(LIBCURL) $(LIBCHIA) $(GMP_LIBS)
 $(LIBCHIA):
 	cd $(srcdir)/bls-dash/build && $(MAKE) $(AM_MAKEFLAGS)
+else
+LIBCHIABLS =$(LIBCURL) $(LIBCHIABLS_LIBS) $(GMP_LIBS)
+endif
 
 LIBSYSCOIN_SERVER=libsyscoin_server.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a

@@ -1530,9 +1530,16 @@ AC_SUBST(UNIVALUE_CFLAGS)
 AC_SUBST(UNIVALUE_LIBS)
 
 dnl chiabls check
+
+AC_CHECK_LIB([bls-dash],[main],[need_bundled_chiabls=no;],[need_bundled_chiabls=yes;])
+AM_CONDITIONAL([EMBEDDED_CHIABLS],[test x$need_bundled_chiabls = xyes])
 LIBCHIABLS_CFLAGS='-I$(srcdir)/bls-dash/build/_deps/relic-build/include -I$(srcdir)/bls-dash/build/_deps/relic-src/include'
-LIBCHIABLS_LIBS=bls-dash/build/libbls-dash.a
-      
+LIBCHIABLS_CFLAGS="$LIBCHIABLS_CFLAGS -I$depends_prefix/include/bls-dash"
+if test x$need_bundled_chiabls = xyes; then
+  LIBCHIABLS_LIBS=bls-dash/build/libbls-dash.a
+elif test "x$need_bundled_chiabls" = xno; then
+  LIBCHIABLS_LIBS=-lbls-dash
+fi        
 AC_SUBST(LIBCHIABLS_CFLAGS)
 AC_SUBST(LIBCHIABLS_LIBS)  
 
@@ -1916,7 +1923,9 @@ if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
 fi
 
-AC_CONFIG_SUBDIRS([src/bls-dash/build])
+if test x$need_bundled_chiabls = xyes; then
+  AC_CONFIG_SUBDIRS([src/bls-dash/build])
+fi
 
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --enable-module-schnorrsig --enable-experimental"
 AC_CONFIG_SUBDIRS([src/secp256k1])
