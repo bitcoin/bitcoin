@@ -7,7 +7,7 @@
 export LC_ALL=C.UTF-8
 
 export HOST=aarch64-linux-android
-export PACKAGES="clang llvm unzip openjdk-8-jdk gradle libcurl4-gnutls-dev"
+export PACKAGES="clang llvm unzip openjdk-8-jdk gradle"
 export CONTAINER_NAME=ci_android
 export DOCKER_NAME_TAG="ubuntu:focal"
 

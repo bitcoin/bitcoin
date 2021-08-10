@@ -8,7 +8,7 @@ export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_multiprocess
 export DOCKER_NAME_TAG=ubuntu:20.04
-export PACKAGES="cmake python3 python3-pip llvm clang libcurl4-gnutls-dev"
+export PACKAGES="cmake python3 python3-pip llvm clang"
 export DEP_OPTS="DEBUG=1 MULTIPROCESS=1"
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-debug CC=clang CXX=clang++"  # Use clang to avoid OOM

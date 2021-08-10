@@ -10,7 +10,7 @@ export HOST=s390x-linux-gnu
 # The host arch is unknown, so we run the tests through qemu.
 # If the host is s390x and wants to run the tests natively, it can set QEMU_USER_CMD to the empty string.
 if [ -z ${QEMU_USER_CMD+x} ]; then export QEMU_USER_CMD="${QEMU_USER_CMD:-"qemu-s390x"}"; fi
-export PACKAGES="python3-zmq libcurl4-gnutls-dev"
+export PACKAGES="python3-zmq"
 if [ -n "$QEMU_USER_CMD" ]; then
   # Likely cross-compiling, so install the needed gcc and qemu-user
   export DPKG_ADD_ARCH="s390x"
