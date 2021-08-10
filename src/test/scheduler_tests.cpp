@@ -4,6 +4,7 @@
 
 #include <random.h>
 #include <scheduler.h>
+#include <util/time.h>
 
 #include <test/test_dash.h>
 
@@ -24,18 +25,6 @@ static void microTask(CScheduler& s, boost::mutex& mutex, int& counter, int delt
         CScheduler::Function f = boost::bind(&microTask, boost::ref(s), boost::ref(mutex), boost::ref(counter), -delta + 1, noTime);
         s.schedule(f, rescheduleTime);
     }
-}
-
-static void MicroSleep(uint64_t n)
-{
-#if defined(HAVE_WORKING_BOOST_SLEEP_FOR)
-    boost::this_thread::sleep_for(boost::chrono::microseconds(n));
-#elif defined(HAVE_WORKING_BOOST_SLEEP)
-    boost::this_thread::sleep(boost::posix_time::microseconds(n));
-#else
-    //should never get here
-    #error missing boost sleep implementation
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(manythreads)
@@ -84,7 +73,7 @@ BOOST_AUTO_TEST_CASE(manythreads)
     for (int i = 0; i < 5; i++)
         microThreads.create_thread(boost::bind(&CScheduler::serviceQueue, &microTasks));
 
-    MicroSleep(600);
+    UninterruptibleSleep(std::chrono::microseconds{600});
     now = boost::chrono::system_clock::now();
 
     // More threads and more tasks:

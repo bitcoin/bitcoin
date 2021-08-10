@@ -220,12 +220,14 @@ BITCOIN_CORE_H = \
   netfulfilledman.h \
   netmessagemaker.h \
   node/coinstats.h \
+  node/transaction.h \
   noui.h \
   policy/feerate.h \
   policy/fees.h \
   policy/policy.h \
   pow.h \
   protocol.h \
+  psbt.h \
   random.h \
   reverse_iterator.h \
   reverselock.h \
@@ -271,6 +273,7 @@ BITCOIN_CORE_H = \
   util/fees.h \
   util/system.h \
   util/asmap.h \
+  util/getuniquepath.h \
   util/macros.h \
   util/memory.h \
   util/moneystr.h \
@@ -289,6 +292,7 @@ BITCOIN_CORE_H = \
   wallet/crypter.h \
   wallet/db.h \
   wallet/fees.h \
+  wallet/psbtwallet.h \
   wallet/rpcwallet.h \
   wallet/wallet.h \
   wallet/walletdb.h \
@@ -371,6 +375,7 @@ libdash_server_a_SOURCES = \
   netfulfilledman.cpp \
   net_processing.cpp \
   node/coinstats.cpp \
+  node/transaction.cpp \
   noui.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
@@ -428,6 +433,7 @@ libdash_wallet_a_SOURCES = \
   wallet/db.cpp \
   wallet/fees.cpp \
   wallet/init.cpp \
+  wallet/psbtwallet.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
   wallet/wallet.cpp \
@@ -574,6 +580,7 @@ libdash_common_a_SOURCES = \
   netbase.cpp \
   net_permissions.cpp \
   policy/feerate.cpp \
+  psbt.cpp \
   protocol.cpp \
   saltedhasher.cpp \
   scheduler.cpp \
@@ -612,6 +619,7 @@ libdash_util_a_SOURCES = \
   util/bytevectorhash.cpp \
   util/error.cpp \
   util/fees.cpp \
+  util/getuniquepath.cpp \
   util/system.cpp \
   util/asmap.cpp \
   util/moneystr.cpp \

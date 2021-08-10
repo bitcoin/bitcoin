@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
                     CCheckQueueControl<FakeCheck> control(queue.get());
                     // While sleeping, no other thread should execute to this point
                     auto observed = ++nThreads;
-                    MilliSleep(10);
+                    UninterruptibleSleep(std::chrono::milliseconds{10});
                     fails += observed  != nThreads;
                     });
         }

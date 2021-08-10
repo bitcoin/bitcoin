@@ -36,8 +36,12 @@ std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDeco
  */
 bool ParseHashStr(const std::string& strHex, uint256& result);
 std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName);
-bool DecodePSBT(PartiallySignedTransaction& psbt, const std::string& base64_tx, std::string& error);
 int ParseSighashString(const UniValue& sighash);
+
+//! Decode a base64ed PSBT into a PartiallySignedTransaction
+[[nodiscard]] bool DecodeBase64PSBT(PartiallySignedTransaction& decoded_psbt, const std::string& base64_psbt, std::string& error);
+//! Decode a raw (binary blob) PSBT into a PartiallySignedTransaction
+[[nodiscard]] bool DecodeRawPSBT(PartiallySignedTransaction& decoded_psbt, const std::string& raw_psbt, std::string& error);
 
 // core_write.cpp
 UniValue ValueFromAmount(const CAmount& amount);

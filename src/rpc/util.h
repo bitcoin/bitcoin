@@ -5,10 +5,12 @@
 #ifndef BITCOIN_RPC_UTIL_H
 #define BITCOIN_RPC_UTIL_H
 
+#include <node/transaction.h>
 #include <pubkey.h>
 #include <script/standard.h>
 #include <univalue.h>
 #include <util/strencodings.h>
+#include <rpc/protocol.h>
 
 #include <boost/variant/static_visitor.hpp>
 
@@ -24,5 +26,8 @@ CPubKey AddrToPubKey(CKeyStore* const keystore, const std::string& addr_in);
 CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey>& pubkeys);
 
 UniValue DescribeAddress(const CTxDestination& dest);
+
+RPCErrorCode RPCErrorFromTransactionError(TransactionError terr);
+UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string = "");
 
 #endif // BITCOIN_RPC_UTIL_H

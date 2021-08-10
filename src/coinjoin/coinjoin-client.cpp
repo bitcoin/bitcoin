@@ -293,7 +293,7 @@ void CCoinJoinClientSession::UnlockCoins()
     while (true) {
         TRY_LOCK(mixingWallet.cs_wallet, lockWallet);
         if (!lockWallet) {
-            MilliSleep(50);
+            UninterruptibleSleep(std::chrono::milliseconds{50});
             continue;
         }
         for (const auto& outpoint : vecOutPointLocked)
