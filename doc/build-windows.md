@@ -59,7 +59,7 @@ First, install the general dependencies:
 
     sudo apt update
     sudo apt upgrade
-    sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils libgmp3-dev:i386 libcurl4-gnutls-dev:i386 git
+    sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils libcurl4-gnutls-dev:i386 git
 
 A host toolchain (`build-essential`) is necessary because some dependency
 packages need to build host utilities that are used in the build process.
