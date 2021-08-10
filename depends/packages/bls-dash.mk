@@ -31,13 +31,11 @@ define $(package)_extract_cmds
 endef
 
 define $(package)_set_vars
-  $(package)_config_opts=-DCMAKE_INSTALL_PREFIX=$($(package)_staging_dir)/$(host_prefix)
-  $(package)_config_opts+= -DCMAKE_PREFIX_PATH=$(host_prefix)
-  $(package)_config_opts+= -DSTLIB=ON -DSHLIB=OFF -DSTBIN=ON
+  $(package)_config_opts=-DSTLIB=ON -DSHLIB=OFF -DSTBIN=ON
   $(package)_config_opts+= -DBUILD_BLS_PYTHON_BINDINGS=0 -DBUILD_BLS_TESTS=0 -DBUILD_BLS_BENCHMARKS=0 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_C_STANDARD=99
-  $(package)_config_opts_linux=-DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux -DMULTI=PTHREAD
-  $(package)_config_opts_darwin=-DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin -DMULTI=PTHREAD
-  $(package)_config_opts_mingw32=-DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS=""
+  $(package)_config_opts_linux=-DOPSYS=LINUX -DMULTI=PTHREAD
+  $(package)_config_opts_darwin=-DOPSYS=MACOSX -DMULTI=PTHREAD
+  $(package)_config_opts_mingw32=-DOPSYS=WINDOWS -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS=""
   $(package)_config_opts_i686+= -DWSIZE=32
   $(package)_config_opts_x86_64+= -DWSIZE=64
   $(package)_config_opts_arm+= -DWSIZE=32
@@ -51,7 +49,7 @@ define $(package)_set_vars
   $(package)_cflags_darwin+= -std=c99 -funroll-loops -fomit-frame-pointer
   $(package)_cflags_arm+= -std=c99 -funroll-loops -fomit-frame-pointer
   $(package)_cflags_armv7l+= -std=c99 -funroll-loops -fomit-frame-pointer
-  $(package)_cppflags+= -UBLSALLOC_SODIUM -std=c++11
+  $(package)_cppflags+= -UBLSALLOC_SODIUM
   $(package)_cxxflags_linux=-fPIC
   $(package)_cxxflags_android=-fPIC
 endef
@@ -62,12 +60,7 @@ define $(package)_preprocess_cmds
 endef
 
 define $(package)_config_cmds
-  export CC="$($(package)_cc)" && \
-  export CXX="$($(package)_cxx)" && \
-  export CFLAGS="$($(package)_cflags)" && \
-  export CXXFLAGS="$($(package)_cxxflags) $($(package)_cppflags)" && \
-  export LDFLAGS="$($(package)_ldflags)" && \
-  $(host_prefix)/bin/cmake ../ $($(package)_config_opts)
+  $($(package)_cmake) ../ $($(package)_config_opts)
 endef
 
 define $(package)_build_cmds
@@ -75,5 +68,5 @@ define $(package)_build_cmds
 endef
 
 define $(package)_stage_cmds
-  $(MAKE) install
+  $(MAKE) DESTDIR=$($(package)_staging_dir) install
 endef
