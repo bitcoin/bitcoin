@@ -236,10 +236,11 @@ mkdir -p "$OUTDIR"
 # Binary Tarball Building #
 ###########################
 
-# CONFIGFLAGS
+# SYSCOIN CONFIGFLAGS
 CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
 case "$HOST" in
-    *linux*) CONFIGFLAGS+=" --disable-threadlocal" ;;
+    *darwin*) CONFIGFLAGS+=" --disable-threadlocal" ;;
+    *linux*)  CONFIGFLAGS+=" --enable-glibc-back-compat" ;;
 esac
 
 # CFLAGS
