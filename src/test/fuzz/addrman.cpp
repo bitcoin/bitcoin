@@ -103,7 +103,7 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
             [&] {
                 const std::optional<CService> opt_service = ConsumeDeserializable<CService>(fuzzed_data_provider);
                 if (opt_service) {
-                    addr_man.Connected(*opt_service, ConsumeTime(fuzzed_data_provider));
+                    addr_man.Connected(*opt_service);
                 }
             },
             [&] {

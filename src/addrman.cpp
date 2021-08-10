@@ -573,7 +573,7 @@ void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size
     }
 }
 
-void CAddrMan::Connected_(const CService& addr, int64_t nTime)
+void CAddrMan::Connected_(const CService& addr)
 {
     AssertLockHeld(cs);
 
@@ -590,9 +590,11 @@ void CAddrMan::Connected_(const CService& addr, int64_t nTime)
         return;
 
     // update info
-    int64_t nUpdateInterval = 20 * 60;
-    if (nTime - info.nTime > nUpdateInterval)
-        info.nTime = nTime;
+    const int64_t nUpdateInterval{20 * 60};
+    const int64_t now{GetAdjustedTime()};
+    if (now - info.nTime > nUpdateInterval) {
+        info.nTime = now;
+    }
 }
 
 void CAddrMan::SetServices_(const CService& addr, ServiceFlags nServices)

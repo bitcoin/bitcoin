@@ -608,12 +608,12 @@ public:
     }
 
     //! Outer function for Connected_()
-    void Connected(const CService &addr, int64_t nTime = GetAdjustedTime())
+    void Connected(const CService &addr)
         EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         Check();
-        Connected_(addr, nTime);
+        Connected_(addr);
         Check();
     }
 
@@ -763,9 +763,8 @@ private:
      *  not leak information about currently connected peers.
      *
      * @param[in]   addr     The address of the peer we were connected to
-     * @param[in]   nTime    The time that we were last connected to this peer
      */
-    void Connected_(const CService& addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void Connected_(const CService& addr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Update an entry's service bits.
     void SetServices_(const CService &addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
