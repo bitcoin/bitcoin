@@ -800,7 +800,7 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
     addrman.Add({new1, tried1, new2, tried2}, CNetAddr{});
     addrman.Good(tried1);
     addrman.Good(tried2);
-    BOOST_REQUIRE_EQUAL(addrman.size(), 4);
+    BOOST_REQUIRE_EQUAL(addrman.size(), 4U);
 
     stream << addrman;
 
