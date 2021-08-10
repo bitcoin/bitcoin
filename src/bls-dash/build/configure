@@ -180,6 +180,7 @@ EOF
 
     exit 0
 }
+
 while [ $# != 0 ]; do
     case "$1" in
 	    "--cache-file="*);;
@@ -189,75 +190,57 @@ while [ $# != 0 ]; do
             HOST="${1#*=}"
             case $HOST in
                 *mingw*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X64 -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
                 *darwin*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin";;
-                *armv7a-linux-android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=ARM -DWSIZE=32 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
-                *aarch64-linux-android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=ARM -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
-                *i686-linux-android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X86 -DWSIZE=32 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
-                *x86_64-linux-android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X64 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
-                *x86_64-pc-linux-gnu*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X64 -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;   
-                *i686-pc-linux-gnu*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X86 -DWSIZE=32 -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;  
-                *arm-linux-gnueabihf*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=ARM -DWSIZE=32 -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;   
-                *aarch64-linux-gnu*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=ARM -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;       
+                *android*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
+                *linux*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;                
+            esac
+            case $HOST in
+                *i686*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";;
+                *arm*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";;   
             esac
             ;;
         "--prefix="*)
             PREFIX="${1#*=}"
             case $PREFIX in
                 *mingw*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X64 -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
                 *darwin*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin";;
-                *armv7a-linux-android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=ARM -DWSIZE=32 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
-                *aarch64-linux-android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=ARM -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
-                *i686-linux-android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X86 -DWSIZE=32 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
-                *x86_64-linux-android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X64 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
-                *x86_64-pc-linux-gnu*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X64 -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;   
-                *i686-pc-linux-gnu*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X86 -DWSIZE=32 -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;  
-                *arm-linux-gnueabihf*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=ARM -DWSIZE=32 -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;  
-                *aarch64-linux-gnu*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=ARM -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;       
+                *android*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
+                *linux*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
+            esac
+            case $PREFIX in
+                *i686*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";;
+                *arm*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";; 
             esac
             ;;
         "--target="*)
             TARGET="${1#*=}"
             case $TARGET in
                 *mingw*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X64 -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
                 *darwin*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin";;
-                *armv7a-linux-android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=ARM -DWSIZE=32 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
-                *aarch64-linux-android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=ARM -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
-                *i686-linux-android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X86 -DWSIZE=32 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
-                *x86_64-linux-android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X64 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
-                *x86_64-pc-linux-gnu*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X64 -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;   
-                *i686-pc-linux-gnu*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=X86 -DWSIZE=32 -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;  
-                *arm-linux-gnueabihf*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=ARM -DWSIZE=32 -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;  
-                *aarch64-linux-gnu*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DARCH=ARM -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;      
+                *android*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
+                *linux*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
+            esac
+            case $TARGET in
+                *i686*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";;
+                *arm*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32";; 
             esac
             ;;            
         "--prefix")
