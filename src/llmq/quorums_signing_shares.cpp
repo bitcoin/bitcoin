@@ -609,24 +609,20 @@ void CSigSharesManager::CollectPendingSigSharesToVerify(
         }
     }
 
-    {
-        LOCK(cs_main);
+    // For the convenience of the caller, also build a map of quorumHash -> quorum
 
-        // For the convenience of the caller, also build a map of quorumHash -> quorum
+    for (auto& p : retSigShares) {
+        for (auto& sigShare : p.second) {
+            auto llmqType = sigShare.llmqType;
 
-        for (auto& p : retSigShares) {
-            for (auto& sigShare : p.second) {
-                auto llmqType = sigShare.llmqType;
-
-                auto k = std::make_pair(llmqType, sigShare.quorumHash);
-                if (retQuorums.count(k)) {
-                    continue;
-                }
-
-                CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, sigShare.quorumHash);
-                assert(quorum != nullptr);
-                retQuorums.emplace(k, quorum);
+            auto k = std::make_pair(llmqType, sigShare.quorumHash);
+            if (retQuorums.count(k)) {
+                continue;
             }
+
+            CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, sigShare.quorumHash);
+            assert(quorum != nullptr);
+            retQuorums.emplace(k, quorum);
         }
     }
 }

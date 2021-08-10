@@ -663,8 +663,8 @@ bool CSigningManager::ProcessPendingRecoveredSigs()
         const auto& v = p.second;
 
         if (batchVerifier.badSources.count(nodeId)) {
-            LOCK(cs_main);
             LogPrint(BCLog::LLMQ, "CSigningManager::%s -- invalid recSig from other node, banning peer=%d\n", __func__, nodeId);
+            LOCK(cs_main);
             Misbehaving(nodeId, 100);
             continue;
         }
