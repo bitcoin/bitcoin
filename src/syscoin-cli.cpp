@@ -885,6 +885,29 @@ static void GetWalletBalances(UniValue& result)
 }
 
 /**
+ * GetProgressBar contructs a progress bar with 5% intervals.
+ *
+ * @param[in]   progress      The proportion of the progress bar to be filled between 0 and 1.
+ * @param[out]  progress_bar  String representation of the progress bar.
+ */
+static void GetProgressBar(double progress, std::string& progress_bar)
+{
+    if (progress < 0 || progress > 1) return;
+
+    static constexpr double INCREMENT{0.05};
+    static const std::string COMPLETE_BAR{"\u2592"};
+    static const std::string INCOMPLETE_BAR{"\u2591"};
+
+    for (int i = 0; i < progress / INCREMENT; ++i) {
+        progress_bar += COMPLETE_BAR;
+    }
+
+    for (int i = 0; i < (1 - progress) / INCREMENT; ++i) {
+        progress_bar += INCOMPLETE_BAR;
+    }
+}
+
+/**
  * ParseGetInfoResult takes in -getinfo result in UniValue object and parses it
  * into a user friendly UniValue string to be printed on the console.
  * @param[out] result  Reference to UniValue result containing the -getinfo output.
@@ -926,7 +949,17 @@ static void ParseGetInfoResult(UniValue& result)
     std::string result_string = strprintf("%sChain: %s%s\n", BLUE, result["chain"].getValStr(), RESET);
     result_string += strprintf("Blocks: %s\n", result["blocks"].getValStr());
     result_string += strprintf("Headers: %s\n", result["headers"].getValStr());
-    result_string += strprintf("Verification progress: %.4f%%\n", result["verificationprogress"].get_real() * 100);
+
+    const double ibd_progress{result["verificationprogress"].get_real()};
+    std::string ibd_progress_bar;
+    // Display the progress bar only if IBD progress is less than 99%
+    if (ibd_progress < 0.99) {
+      GetProgressBar(ibd_progress, ibd_progress_bar);
+      // Add padding between progress bar and IBD progress
+      ibd_progress_bar += " ";
+    }
+
+    result_string += strprintf("Verification progress: %s%.4f%%\n", ibd_progress_bar, ibd_progress * 100);
     result_string += strprintf("Difficulty: %s\n\n", result["difficulty"].getValStr());
 
     result_string += strprintf(
