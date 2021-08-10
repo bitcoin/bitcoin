@@ -703,8 +703,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
     // Check for conflicts with in-memory transactions
     for (const CTxIn &txin : tx.vin)
     {
-        auto itConflicting = pool.mapNextTx.find(txin.prevout);
-        if (itConflicting != pool.mapNextTx.end())
+        const CTransaction* ptxConflicting = pool.GetConflictTx(txin.prevout);
+        if (ptxConflicting )
         {
             // Transaction conflicts with mempool and RBF doesn't exist in Dash
             return state.Invalid(false, REJECT_DUPLICATE, "txn-mempool-conflict");
