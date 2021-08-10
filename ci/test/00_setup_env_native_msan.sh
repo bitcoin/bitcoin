@@ -14,7 +14,7 @@ export MSAN_AND_LIBCXX_FLAGS="${MSAN_FLAGS} ${LIBCXX_FLAGS}"
 export BDB_PREFIX="${BASE_ROOT_DIR}/db4"
 
 export CONTAINER_NAME="ci_native_msan"
-export PACKAGES="clang-9 llvm-9 cmake"
+export PACKAGES="clang-9 llvm-9 cmake libcurl4-gnutls-dev"
 export DEP_OPTS="NO_BDB=1 NO_QT=1 CC='clang' CXX='clang++' CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}' boost_cxxflags='-std=c++17 -fvisibility=hidden -fPIC ${MSAN_AND_LIBCXX_FLAGS}' libevent_cflags='${MSAN_FLAGS}' zeromq_cxxflags='-std=c++17 ${MSAN_AND_LIBCXX_FLAGS}'"
 export GOAL="install"
 export SYSCOIN_CONFIG="--enable-wallet --with-sanitizers=memory --with-asm=no --prefix=${DEPENDS_DIR}/x86_64-pc-linux-gnu/ CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}' BDB_LIBS='-L${BDB_PREFIX}/lib -ldb_cxx-4.8' BDB_CFLAGS='-I${BDB_PREFIX}/include'"

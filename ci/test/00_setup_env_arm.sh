@@ -11,7 +11,7 @@ export HOST=arm-linux-gnueabihf
 # If the host is arm and wants to run the tests natively, it can set QEMU_USER_CMD to the empty string.
 if [ -z ${QEMU_USER_CMD+x} ]; then export QEMU_USER_CMD="${QEMU_USER_CMD:-"qemu-arm -L /usr/arm-linux-gnueabihf/"}"; fi
 export DPKG_ADD_ARCH="armhf"
-export PACKAGES="python3-zmq g++-arm-linux-gnueabihf busybox libc6:armhf libstdc++6:armhf libfontconfig1:armhf libxcb1:armhf"
+export PACKAGES="python3-zmq g++-arm-linux-gnueabihf busybox libc6:armhf libstdc++6:armhf libfontconfig1:armhf libxcb1:armhf libcurl4-gnutls-dev:armhf"
 if [ -n "$QEMU_USER_CMD" ]; then
   # Likely cross-compiling, so install the needed gcc and qemu-user
   export PACKAGES="$PACKAGES qemu-user"
