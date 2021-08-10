@@ -276,6 +276,14 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
     }
 }
 
+static void NotifyChainLock(ClientModel *clientmodel, const std::string& bestChainLockHash, int bestChainLockHeight)
+{
+    // emits signal "chainlockChanged"
+    QMetaObject::invokeMethod(clientmodel, "chainLockChanged", Qt::QueuedConnection,
+                              Q_ARG(QString, QString::fromStdString(bestChainLockHash)),
+                              Q_ARG(int, bestChainLockHeight));
+}
+
 static void NotifyMasternodeListChanged(ClientModel *clientmodel, const CDeterministicMNList& newList)
 {
     clientmodel->setMasternodeList(newList);
@@ -296,6 +304,7 @@ void ClientModel::subscribeToCoreSignals()
     m_handler_notify_alert_changed = m_node.handleNotifyAlertChanged(boost::bind(NotifyAlertChanged, this));
     m_handler_banned_list_changed = m_node.handleBannedListChanged(boost::bind(BannedListChanged, this));
     m_handler_notify_block_tip = m_node.handleNotifyBlockTip(boost::bind(BlockTipChanged, this, _1, _2,_3, _4, _5, false));
+    m_handler_notify_chainlock = m_node.handleNotifyChainLock(boost::bind(NotifyChainLock, this, _1, _2));
     m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(boost::bind(BlockTipChanged, this, _1, _2, _3, _4, _5, true));
     m_handler_notify_masternodelist_changed = m_node.handleNotifyMasternodeListChanged(boost::bind(NotifyMasternodeListChanged, this, _1));
     m_handler_notify_additional_data_sync_progess_changed = m_node.handleNotifyAdditionalDataSyncProgressChanged(boost::bind(NotifyAdditionalDataSyncProgressChanged, this, _1));
@@ -310,6 +319,7 @@ void ClientModel::unsubscribeFromCoreSignals()
     m_handler_notify_alert_changed->disconnect();
     m_handler_banned_list_changed->disconnect();
     m_handler_notify_block_tip->disconnect();
+    m_handler_notify_chainlock->disconnect();
     m_handler_notify_header_tip->disconnect();
     m_handler_notify_masternodelist_changed->disconnect();
     m_handler_notify_additional_data_sync_progess_changed->disconnect();

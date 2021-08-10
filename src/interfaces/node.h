@@ -300,6 +300,11 @@ public:
         std::function<void(bool initial_download, int height, int64_t block_time, const std::string& block_hash, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyBlockTip(NotifyBlockTipFn fn) = 0;
 
+    //! Register handler for chainlock messages.
+    using NotifyChainLockFn =
+    std::function<void(const std::string& bestChainLockedHash, int32_t bestChainLockedHeight)>;
+    virtual std::unique_ptr<Handler> handleNotifyChainLock(NotifyChainLockFn fn) = 0;
+
     //! Register handler for header tip messages.
     using NotifyHeaderTipFn =
         std::function<void(bool initial_download, int height, int64_t block_time, const std::string& block_hash, double verification_progress)>;
