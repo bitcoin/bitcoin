@@ -14,7 +14,7 @@ export PACKAGES="python3-zmq"
 if [ -n "$QEMU_USER_CMD" ]; then
   # Likely cross-compiling, so install the needed gcc and qemu-user
   export DPKG_ADD_ARCH="s390x"
-  export PACKAGES="$PACKAGES g++-s390x-linux-gnu qemu-user libc6:s390x libstdc++6:s390x libfontconfig1:s390x libxcb1:s390x libcurl4-gnutls-dev:s390x"
+  export PACKAGES="$PACKAGES g++-s390x-linux-gnu qemu-user libc6:s390x libstdc++6:s390x libfontconfig1:s390x libxcb1:s390x"
 fi
 # Use debian to avoid 404 apt errors
 export CONTAINER_NAME=ci_s390x
