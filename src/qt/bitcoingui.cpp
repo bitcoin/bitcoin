@@ -583,6 +583,7 @@ void BitcoinGUI::createToolBars()
             masternodeButton->setStatusTip(tr("Browse masternodes"));
             tabGroup->addButton(masternodeButton);
             connect(masternodeButton, SIGNAL(clicked()), this, SLOT(gotoMasternodePage()));
+            masternodeButton->setEnabled(true);
         }
 
         connect(overviewButton, SIGNAL(clicked()), this, SLOT(gotoOverviewPage()));
@@ -805,10 +806,6 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
         coinJoinCoinsButton->setEnabled(enabled && clientModel->coinJoinOptions().isEnabled());
         receiveCoinsButton->setEnabled(enabled);
         historyButton->setEnabled(enabled);
-        if (masternodeButton != nullptr) {
-            QSettings settings;
-            masternodeButton->setEnabled(enabled && settings.value("fShowMasternodesTab").toBool());
-        }
     }
 #endif // ENABLE_WALLET
 

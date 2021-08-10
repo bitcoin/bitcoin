@@ -13,6 +13,7 @@ class ClientModel;
 class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
+class MasternodeList;
 
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
@@ -53,6 +54,7 @@ private:
     BitcoinGUI *gui;
     ClientModel *clientModel;
     QMap<WalletModel*, WalletView*> mapWalletViews;
+    MasternodeList* masternodeListPage;
 
     bool bOutOfSync;
 
