@@ -333,7 +333,7 @@ installing the toolchain will be different.
 Make sure you install the build requirements mentioned above.
 Then, install the toolchain and curl:
 
-    sudo apt-get install g++-arm-linux-gnueabihf libcurl4-gnutls-dev:armhf
+    sudo apt-get install g++-arm-linux-gnueabihf curl
 
 To build executables for ARM:
 
