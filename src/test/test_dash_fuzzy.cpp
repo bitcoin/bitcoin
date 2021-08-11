@@ -1,10 +1,6 @@
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
-#endif
 
 #include <addrman.h>
 #include <blockencodings.h>
@@ -28,304 +24,144 @@
 #include <memory>
 #include <vector>
 
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+#include <test/fuzz/fuzz.h>
 
-enum TEST_ID {
-    CBLOCK_DESERIALIZE=0,
-    CTRANSACTION_DESERIALIZE,
-    CBLOCKLOCATOR_DESERIALIZE,
-    CBLOCKMERKLEROOT,
-    CADDRMAN_DESERIALIZE,
-    CBLOCKHEADER_DESERIALIZE,
-    CBANENTRY_DESERIALIZE,
-    CTXUNDO_DESERIALIZE,
-    CBLOCKUNDO_DESERIALIZE,
-    CCOINS_DESERIALIZE,
-    CNETADDR_DESERIALIZE,
-    CSERVICE_DESERIALIZE,
-    CMESSAGEHEADER_DESERIALIZE,
-    CADDRESS_DESERIALIZE,
-    CINV_DESERIALIZE,
-    CBLOOMFILTER_DESERIALIZE,
-    CDISKBLOCKINDEX_DESERIALIZE,
-    CTXOUTCOMPRESSOR_DESERIALIZE,
-    BLOCKTRANSACTIONS_DESERIALIZE,
-    BLOCKTRANSACTIONSREQUEST_DESERIALIZE,
-    TEST_ID_END
-};
-
-static bool read_stdin(std::vector<uint8_t> &data) {
-    uint8_t buffer[1024];
-    ssize_t length=0;
-    while((length = read(STDIN_FILENO, buffer, 1024)) > 0) {
-        data.insert(data.end(), buffer, buffer+length);
-
-        if (data.size() > (1<<20)) return false;
-    }
-    return length==0;
-}
-
-static int test_one_input(std::vector<uint8_t> buffer) {
-    if (buffer.size() < sizeof(uint32_t)) return 0;
-
-    uint32_t test_id = 0xffffffff;
-    memcpy(&test_id, buffer.data(), sizeof(uint32_t));
-    buffer.erase(buffer.begin(), buffer.begin() + sizeof(uint32_t));
-
-    if (test_id >= TEST_ID_END) return 0;
-
+void test_one_input(std::vector<uint8_t> buffer)
+{
     CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
     try {
         int nVersion;
         ds >> nVersion;
         ds.SetVersion(nVersion);
     } catch (const std::ios_base::failure& e) {
-        return 0;
+        return;
     }
 
-    switch(test_id) {
-        case CBLOCK_DESERIALIZE:
-        {
+#if BLOCK_DESERIALIZE
             try
             {
                 CBlock block;
                 ds >> block;
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CTRANSACTION_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif TRANSACTION_DESERIALIZE
             try
             {
                 CTransaction tx(deserialize, ds);
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CBLOCKLOCATOR_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif BLOCKLOCATOR_DESERIALIZE
             try
             {
                 CBlockLocator bl;
                 ds >> bl;
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CBLOCKMERKLEROOT:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif BLOCKMERKLEROOT
             try
             {
                 CBlock block;
                 ds >> block;
                 bool mutated;
                 BlockMerkleRoot(block, &mutated);
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CADDRMAN_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif ADDRMAN_DESERIALIZE
             try
             {
                 CAddrMan am;
                 ds >> am;
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CBLOCKHEADER_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif BLOCKHEADER_DESERIALIZE
             try
             {
                 CBlockHeader bh;
                 ds >> bh;
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CBANENTRY_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif BANENTRY_DESERIALIZE
             try
             {
                 CBanEntry be;
                 ds >> be;
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CTXUNDO_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif TXUNDO_DESERIALIZE
             try
             {
                 CTxUndo tu;
                 ds >> tu;
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CBLOCKUNDO_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif BLOCKUNDO_DESERIALIZE
             try
             {
                 CBlockUndo bu;
                 ds >> bu;
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CCOINS_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif COINS_DESERIALIZE
             try
             {
-                Coin block;
-                ds >> block;
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CNETADDR_DESERIALIZE:
-        {
+                Coin coin;
+                ds >> coin;
+            } catch (const std::ios_base::failure& e) {return;}
+#elif NETADDR_DESERIALIZE
             try
             {
                 CNetAddr na;
                 ds >> na;
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CSERVICE_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif SERVICE_DESERIALIZE
             try
             {
                 CService s;
                 ds >> s;
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CMESSAGEHEADER_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif MESSAGEHEADER_DESERIALIZE
             CMessageHeader::MessageStartChars pchMessageStart = {0x00, 0x00, 0x00, 0x00};
             try
             {
                 CMessageHeader mh(pchMessageStart);
                 ds >> mh;
-                if (!mh.IsValid(pchMessageStart)) {return 0;}
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CADDRESS_DESERIALIZE:
-        {
+                if (!mh.IsValid(pchMessageStart)) {return;}
+            } catch (const std::ios_base::failure& e) {return;}
+#elif ADDRESS_DESERIALIZE
             try
             {
                 CAddress a;
                 ds >> a;
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CINV_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif INV_DESERIALIZE
             try
             {
                 CInv i;
                 ds >> i;
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CBLOOMFILTER_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif BLOOMFILTER_DESERIALIZE
             try
             {
                 CBloomFilter bf;
                 ds >> bf;
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CDISKBLOCKINDEX_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif DISKBLOCKINDEX_DESERIALIZE
             try
             {
                 CDiskBlockIndex dbi;
                 ds >> dbi;
-            } catch (const std::ios_base::failure& e) {return 0;}
-            break;
-        }
-        case CTXOUTCOMPRESSOR_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif TXOUTCOMPRESSOR_DESERIALIZE
             CTxOut to;
             auto toc = Using<TxOutCompression>(to);
             try
             {
                 ds >> toc;
-            } catch (const std::ios_base::failure& e) {return 0;}
-
-            break;
-        }
-        case BLOCKTRANSACTIONS_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif BLOCKTRANSACTIONS_DESERIALIZE
             try
             {
                 BlockTransactions bt;
                 ds >> bt;
-            } catch (const std::ios_base::failure& e) {return 0;}
-
-            break;
-        }
-        case BLOCKTRANSACTIONSREQUEST_DESERIALIZE:
-        {
+            } catch (const std::ios_base::failure& e) {return;}
+#elif BLOCKTRANSACTIONSREQUEST_DESERIALIZE
             try
             {
                 BlockTransactionsRequest btr;
                 ds >> btr;
-            } catch (const std::ios_base::failure& e) {return 0;}
-
-            break;
-        }
-        default:
-            return 0;
-    }
-    return 0;
-}
-
-static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
-void initialize() {
-    globalVerifyHandle = MakeUnique<ECCVerifyHandle>();
-}
-
-// This function is used by libFuzzer
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-    test_one_input(std::vector<uint8_t>(data, data + size));
-    return 0;
-}
-
-// This function is used by libFuzzer
-extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
-    initialize();
-    return 0;
-}
-
-// Disabled under WIN32 due to clash with Cygwin's WinMain.
-#ifndef WIN32
-// Declare main(...) "weak" to allow for libFuzzer linking. libFuzzer provides
-// the main(...) function.
-__attribute__((weak))
-#endif
-int main(int argc, char **argv)
-{
-    initialize();
-#ifdef __AFL_INIT
-    // Enable AFL deferred forkserver mode. Requires compilation using
-    // afl-clang-fast++. See fuzzing.md for details.
-    __AFL_INIT();
-#endif
-
-#ifdef __AFL_LOOP
-    // Enable AFL persistent mode. Requires compilation using afl-clang-fast++.
-    // See fuzzing.md for details.
-    int ret = 0;
-    while (__AFL_LOOP(1000)) {
-        std::vector<uint8_t> buffer;
-        if (!read_stdin(buffer)) {
-            continue;
-        }
-        ret = test_one_input(buffer);
-    }
-    return ret;
+            } catch (const std::ios_base::failure& e) {return;}
 #else
-    std::vector<uint8_t> buffer;
-    if (!read_stdin(buffer)) {
-        return 0;
-    }
-    return test_one_input(buffer);
+#error Need at least one fuzz target to compile
 #endif
 }

@@ -1,9 +1,9 @@
 Fuzz-testing Dash Core
 ==========================
 
-A special test harness `test_dash_fuzzy` is provided to provide an easy
-entry point for fuzzers and the like. In this document we'll describe how to
-use it with AFL and libFuzzer.
+A special test harness in `src/test/fuzz/` is provided for each fuzz target to
+provide an easy entry point for fuzzers and the like. In this document we'll
+describe how to use it with AFL and libFuzzer.
 
 ## AFL
 
@@ -23,10 +23,10 @@ export AFLPATH=$PWD
 To build Dash Core using AFL instrumentation (this assumes that the
 `AFLPATH` was set as above):
 ```
-./configure --disable-ccache --disable-shared --enable-tests CC=${AFLPATH}/afl-gcc CXX=${AFLPATH}/afl-g++
+./configure --disable-ccache --disable-shared --enable-tests --enable-fuzz CC=${AFLPATH}/afl-gcc CXX=${AFLPATH}/afl-g++
 export AFL_HARDEN=1
 cd src/
-make test/test_dash_fuzzy
+make
 ```
 We disable ccache because we don't want to pollute the ccache with instrumented
 objects, and similarly don't want to use non-instrumented cached objects linked
@@ -35,7 +35,7 @@ in.
 The fuzzing can be sped up significantly (~200x) by using `afl-clang-fast` and
 `afl-clang-fast++` in place of `afl-gcc` and `afl-g++` when compiling. When
 compiling using `afl-clang-fast`/`afl-clang-fast++` the resulting
-`test_dash_fuzzy` binary will be instrumented in such a way that the AFL
+binary will be instrumented in such a way that the AFL
 features "persistent mode" and "deferred forkserver" can be used. See
 https://github.com/mcarpenter/afl/tree/master/llvm_mode for details.
 
@@ -63,7 +63,7 @@ Extract these (or other starting inputs) into the `inputs` directory before star
 
 To start the actual fuzzing use:
 ```
-$AFLPATH/afl-fuzz -i ${AFLIN} -o ${AFLOUT} -m52 -- test/test_dash_fuzzy
+$AFLPATH/afl-fuzz -i ${AFLIN} -o ${AFLOUT} -m52 -- test/fuzz/fuzz_target_foo
 ```
 
 You may have to change a few kernel parameters to test optimally - `afl-fuzz`
@@ -77,7 +77,7 @@ found in the `compiler-rt` runtime libraries package).
 To build the `test/test_dash_fuzzy` executable run
 
 ```
-./configure --disable-ccache --with-sanitizers=fuzzer,address CC=clang CXX=clang++
+./configure --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address CC=clang CXX=clang++
 make
 ```
 
