@@ -239,7 +239,6 @@ mkdir -p "$OUTDIR"
 # SYSCOIN CONFIGFLAGS
 CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
 case "$HOST" in
-    *darwin*) CONFIGFLAGS+=" --disable-threadlocal" ;;
     *linux*)  CONFIGFLAGS+=" --enable-glibc-back-compat" ;;
 esac
 
