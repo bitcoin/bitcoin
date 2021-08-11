@@ -57,10 +57,6 @@ private:
 /** Testing setup that configures a complete environment.
  * Included are data directory, coins database, script check threads setup.
  */
-class CConnman;
-class CNode;
-
-class PeerLogicValidation;
 struct TestingSetup : public BasicTestingSetup {
     boost::thread_group threadGroup;
     CScheduler scheduler;
