@@ -51,20 +51,20 @@
         </spacer>
        </item>
        <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_Main_Prune">
-        <item>
-         <widget class="QCheckBox" name="prune">
-          <property name="toolTip">
-           <string>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</string>
-          </property>
-          <property name="text">
-           <string>Prune &amp;block storage to</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSpinBox" name="pruneSize"/>
-        </item>
+        <layout class="QHBoxLayout" name="horizontalLayout_Main_Prune">
+         <item>
+          <widget class="QCheckBox" name="prune">
+           <property name="toolTip">
+            <string>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</string>
+           </property>
+           <property name="text">
+            <string>Prune &amp;block storage to</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="pruneSize"/>
+         </item>
          <item>
           <widget class="QLabel" name="pruneSizeUnitLabel">
            <property name="text">
@@ -211,6 +211,16 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_Wallet">
        <item>
+        <widget class="QCheckBox" name="subFeeFromAmount">
+         <property name="toolTip">
+          <string extracomment="Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.">Whether to set subtract fee from amount as default or not.</string>
+         </property>
+         <property name="text">
+          <string extracomment="An Options window setting to set subtracting the fee from a sending amount as default.">Subtract &amp;fee from amount by default</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
           <string>Expert</string>
@@ -245,27 +255,27 @@
           <string>External Signer (e.g. hardware wallet)</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayoutHww">
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayoutHww">
-             <item>
-              <widget class="QLabel" name="externalSignerPathLabel">
-               <property name="text">
-                <string>&amp;External signer script path</string>
-               </property>
-               <property name="buddy">
-                <cstring>externalSignerPath</cstring>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="externalSignerPath">
-                <property name="toolTip">
-                  <string>Full path to a Syscoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</string>
-                </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayoutHww">
+            <item>
+             <widget class="QLabel" name="externalSignerPathLabel">
+              <property name="text">
+               <string>&amp;External signer script path</string>
+              </property>
+              <property name="buddy">
+               <cstring>externalSignerPath</cstring>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="externalSignerPath">
+              <property name="toolTip">
+               <string>Full path to a Syscoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
          </layout>
         </widget>
        </item>
