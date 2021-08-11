@@ -7,14 +7,16 @@ extern "C" {
 
 #include <stddef.h>
 
-/* These rules specify the order of arguments in API calls:
+/* Unless explicitly stated all pointer arguments must not be NULL.
+ *
+ * The following rules specify the order of arguments in API calls:
  *
  * 1. Context pointers go first, followed by output arguments, combined
  *    output/input arguments, and finally input-only arguments.
- * 2. Array lengths always immediately the follow the argument whose length
+ * 2. Array lengths always immediately follow the argument whose length
  *    they describe, even if this violates rule 1.
  * 3. Within the OUT/OUTIN/IN groups, pointers to data that is typically generated
- *    later go first. This means: signatures, public nonces, private nonces,
+ *    later go first. This means: signatures, public nonces, secret nonces,
  *    messages, public keys, secret keys, tweaks.
  * 4. Arguments that are not data pointers go last, from more complex to less
  *    complex: function pointers, algorithm names, messages, void pointers,
@@ -33,9 +35,10 @@ extern "C" {
  *  verification).
  *
  *  A constructed context can safely be used from multiple threads
- *  simultaneously, but API call that take a non-const pointer to a context
+ *  simultaneously, but API calls that take a non-const pointer to a context
  *  need exclusive access to it. In particular this is the case for
- *  secp256k1_context_destroy and secp256k1_context_randomize.
+ *  secp256k1_context_destroy, secp256k1_context_preallocated_destroy,
+ *  and secp256k1_context_randomize.
  *
  *  Regarding randomization, either do it once at creation time (in which case
  *  you do not need any locking for the other calls), or use a read-write lock.
@@ -60,8 +63,9 @@ typedef struct secp256k1_scratch_space_struct secp256k1_scratch_space;
  *  The exact representation of data inside is implementation defined and not
  *  guaranteed to be portable between different platforms or versions. It is
  *  however guaranteed to be 64 bytes in size, and can be safely copied/moved.
- *  If you need to convert to a format suitable for storage, transmission, or
- *  comparison, use secp256k1_ec_pubkey_serialize and secp256k1_ec_pubkey_parse.
+ *  If you need to convert to a format suitable for storage or transmission,
+ *  use secp256k1_ec_pubkey_serialize and secp256k1_ec_pubkey_parse. To
+ *  compare keys, use secp256k1_ec_pubkey_cmp.
  */
 typedef struct {
     unsigned char data[64];
@@ -126,6 +130,17 @@ typedef int (*secp256k1_nonce_function)(
 #  define SECP256K1_INLINE inline
 # endif
 
+/** When this header is used at build-time the SECP256K1_BUILD define needs to be set
+ *  to correctly setup export attributes and nullness checks.  This is normally done
+ *  by secp256k1.c but to guard against this header being included before secp256k1.c
+ *  has had a chance to set the define (e.g. via test harnesses that just includes
+ *  secp256k1.c) we set SECP256K1_NO_BUILD when this header is processed without the
+ *  BUILD define so this condition can be caught.
+ */
+#ifndef SECP256K1_BUILD
+# define SECP256K1_NO_BUILD
+#endif
+
 #ifndef SECP256K1_API
 # if defined(_WIN32)
 #  ifdef SECP256K1_BUILD
@@ -133,7 +148,7 @@ typedef int (*secp256k1_nonce_function)(
 #  else
 #   define SECP256K1_API
 #  endif
-# elif defined(__GNUC__) && defined(SECP256K1_BUILD)
+# elif defined(__GNUC__) && (__GNUC__ >= 4) && defined(SECP256K1_BUILD)
 #  define SECP256K1_API __attribute__ ((visibility ("default")))
 # else
 #  define SECP256K1_API
@@ -161,14 +176,17 @@ typedef int (*secp256k1_nonce_function)(
 /** The higher bits contain the actual data. Do not use directly. */
 #define SECP256K1_FLAGS_BIT_CONTEXT_VERIFY (1 << 8)
 #define SECP256K1_FLAGS_BIT_CONTEXT_SIGN (1 << 9)
+#define SECP256K1_FLAGS_BIT_CONTEXT_DECLASSIFY (1 << 10)
 #define SECP256K1_FLAGS_BIT_COMPRESSION (1 << 8)
 
-/** Flags to pass to secp256k1_context_create. */
+/** Flags to pass to secp256k1_context_create, secp256k1_context_preallocated_size, and
+ *  secp256k1_context_preallocated_create. */
 #define SECP256K1_CONTEXT_VERIFY (SECP256K1_FLAGS_TYPE_CONTEXT | SECP256K1_FLAGS_BIT_CONTEXT_VERIFY)
 #define SECP256K1_CONTEXT_SIGN (SECP256K1_FLAGS_TYPE_CONTEXT | SECP256K1_FLAGS_BIT_CONTEXT_SIGN)
+#define SECP256K1_CONTEXT_DECLASSIFY (SECP256K1_FLAGS_TYPE_CONTEXT | SECP256K1_FLAGS_BIT_CONTEXT_DECLASSIFY)
 #define SECP256K1_CONTEXT_NONE (SECP256K1_FLAGS_TYPE_CONTEXT)
 
-/** Flag to pass to secp256k1_ec_pubkey_serialize and secp256k1_ec_privkey_export. */
+/** Flag to pass to secp256k1_ec_pubkey_serialize. */
 #define SECP256K1_EC_COMPRESSED (SECP256K1_FLAGS_TYPE_COMPRESSION | SECP256K1_FLAGS_BIT_COMPRESSION)
 #define SECP256K1_EC_UNCOMPRESSED (SECP256K1_FLAGS_TYPE_COMPRESSION)
 
@@ -186,7 +204,11 @@ typedef int (*secp256k1_nonce_function)(
  */
 SECP256K1_API extern const secp256k1_context *secp256k1_context_no_precomp;
 
-/** Create a secp256k1 context object.
+/** Create a secp256k1 context object (in dynamically allocated memory).
+ *
+ *  This function uses malloc to allocate memory. It is guaranteed that malloc is
+ *  called at most once for every call of this function. If you need to avoid dynamic
+ *  memory allocation entirely, see the functions in secp256k1_preallocated.h.
  *
  *  Returns: a newly created context object.
  *  In:      flags: which parts of the context to initialize.
@@ -197,7 +219,11 @@ SECP256K1_API secp256k1_context* secp256k1_context_create(
     unsigned int flags
 ) SECP256K1_WARN_UNUSED_RESULT;
 
-/** Copies a secp256k1 context object.
+/** Copy a secp256k1 context object (into dynamically allocated memory).
+ *
+ *  This function uses malloc to allocate memory. It is guaranteed that malloc is
+ *  called at most once for every call of this function. If you need to avoid dynamic
+ *  memory allocation entirely, see the functions in secp256k1_preallocated.h.
  *
  *  Returns: a newly created context object.
  *  Args:    ctx: an existing context to copy (cannot be NULL)
@@ -206,10 +232,18 @@ SECP256K1_API secp256k1_context* secp256k1_context_clone(
     const secp256k1_context* ctx
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_WARN_UNUSED_RESULT;
 
-/** Destroy a secp256k1 context object.
+/** Destroy a secp256k1 context object (created in dynamically allocated memory).
  *
  *  The context pointer may not be used afterwards.
- *  Args:   ctx: an existing context to destroy (cannot be NULL)
+ *
+ *  The context to destroy must have been created using secp256k1_context_create
+ *  or secp256k1_context_clone. If the context has instead been created using
+ *  secp256k1_context_preallocated_create or secp256k1_context_preallocated_clone, the
+ *  behaviour is undefined. In that case, secp256k1_context_preallocated_destroy must
+ *  be used instead.
+ *
+ *  Args:   ctx: an existing context to destroy, constructed using
+ *               secp256k1_context_create or secp256k1_context_clone
  */
 SECP256K1_API void secp256k1_context_destroy(
     secp256k1_context* ctx
@@ -229,11 +263,28 @@ SECP256K1_API void secp256k1_context_destroy(
  *  to cause a crash, though its return value and output arguments are
  *  undefined.
  *
+ *  When this function has not been called (or called with fn==NULL), then the
+ *  default handler will be used. The library provides a default handler which
+ *  writes the message to stderr and calls abort. This default handler can be
+ *  replaced at link time if the preprocessor macro
+ *  USE_EXTERNAL_DEFAULT_CALLBACKS is defined, which is the case if the build
+ *  has been configured with --enable-external-default-callbacks. Then the
+ *  following two symbols must be provided to link against:
+ *   - void secp256k1_default_illegal_callback_fn(const char* message, void* data);
+ *   - void secp256k1_default_error_callback_fn(const char* message, void* data);
+ *  The library can call these default handlers even before a proper callback data
+ *  pointer could have been set using secp256k1_context_set_illegal_callback or
+ *  secp256k1_context_set_error_callback, e.g., when the creation of a context
+ *  fails. In this case, the corresponding default handler will be called with
+ *  the data pointer argument set to NULL.
+ *
  *  Args: ctx:  an existing context object (cannot be NULL)
  *  In:   fun:  a pointer to a function to call when an illegal argument is
- *              passed to the API, taking a message and an opaque pointer
- *              (NULL restores a default handler that calls abort).
+ *              passed to the API, taking a message and an opaque pointer.
+ *              (NULL restores the default handler.)
  *        data: the opaque pointer to pass to fun above.
+ *
+ *  See also secp256k1_context_set_error_callback.
  */
 SECP256K1_API void secp256k1_context_set_illegal_callback(
     secp256k1_context* ctx,
@@ -253,9 +304,12 @@ SECP256K1_API void secp256k1_context_set_illegal_callback(
  *
  *  Args: ctx:  an existing context object (cannot be NULL)
  *  In:   fun:  a pointer to a function to call when an internal error occurs,
- *              taking a message and an opaque pointer (NULL restores a default
- *              handler that calls abort).
+ *              taking a message and an opaque pointer (NULL restores the
+ *              default handler, see secp256k1_context_set_illegal_callback
+ *              for details).
  *        data: the opaque pointer to pass to fun above.
+ *
+ *  See also secp256k1_context_set_illegal_callback.
  */
 SECP256K1_API void secp256k1_context_set_error_callback(
     secp256k1_context* ctx,
@@ -267,21 +321,24 @@ SECP256K1_API void secp256k1_context_set_error_callback(
  *
  *  Returns: a newly created scratch space.
  *  Args: ctx:  an existing context object (cannot be NULL)
- *  In:   max_size: maximum amount of memory to allocate
+ *  In:   size: amount of memory to be available as scratch space. Some extra
+ *              (<100 bytes) will be allocated for extra accounting.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT secp256k1_scratch_space* secp256k1_scratch_space_create(
     const secp256k1_context* ctx,
-    size_t max_size
+    size_t size
 ) SECP256K1_ARG_NONNULL(1);
 
 /** Destroy a secp256k1 scratch space.
  *
  *  The pointer may not be used afterwards.
- *  Args:   scratch: space to destroy
+ *  Args:       ctx: a secp256k1 context object.
+ *          scratch: space to destroy
  */
 SECP256K1_API void secp256k1_scratch_space_destroy(
+    const secp256k1_context* ctx,
     secp256k1_scratch_space* scratch
-);
+) SECP256K1_ARG_NONNULL(1);
 
 /** Parse a variable-length public key into the pubkey object.
  *
@@ -326,6 +383,21 @@ SECP256K1_API int secp256k1_ec_pubkey_serialize(
     const secp256k1_pubkey* pubkey,
     unsigned int flags
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
+
+/** Compare two public keys using lexicographic (of compressed serialization) order
+ *
+ *  Returns: <0 if the first public key is less than the second
+ *           >0 if the first public key is greater than the second
+ *           0 if the two public keys are equal
+ *  Args: ctx:      a secp256k1 context object.
+ *  In:   pubkey1:  first public key to compare
+ *        pubkey2:  second public key to compare
+ */
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_cmp(
+    const secp256k1_context* ctx,
+    const secp256k1_pubkey* pubkey1,
+    const secp256k1_pubkey* pubkey2
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Parse an ECDSA signature in compact (64 bytes) format.
  *
@@ -409,7 +481,14 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_compact(
  *           0: incorrect or unparseable signature
  *  Args:    ctx:       a secp256k1 context object, initialized for verification.
  *  In:      sig:       the signature being verified (cannot be NULL)
- *           msg32:     the 32-byte message hash being verified (cannot be NULL)
+ *           msghash32: the 32-byte message hash being verified (cannot be NULL).
+ *                      The verifier must make sure to apply a cryptographic
+ *                      hash function to the message by itself and not accept an
+ *                      msghash32 value directly. Otherwise, it would be easy to
+ *                      create a "valid" signature without knowledge of the
+ *                      secret key. See also
+ *                      https://bitcoin.stackexchange.com/a/81116/35586 for more
+ *                      background on this topic.
  *           pubkey:    pointer to an initialized public key to verify with (cannot be NULL)
  *
  * To avoid accepting malleable signatures, only ECDSA signatures in lower-S
@@ -424,7 +503,7 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_compact(
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
     const secp256k1_context* ctx,
     const secp256k1_ecdsa_signature *sig,
-    const unsigned char *msg32,
+    const unsigned char *msghash32,
     const secp256k1_pubkey *pubkey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
@@ -488,13 +567,13 @@ SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_def
 /** Create an ECDSA signature.
  *
  *  Returns: 1: signature created
- *           0: the nonce generation function failed, or the private key was invalid.
- *  Args:    ctx:    pointer to a context object, initialized for signing (cannot be NULL)
- *  Out:     sig:    pointer to an array where the signature will be placed (cannot be NULL)
- *  In:      msg32:  the 32-byte message hash being signed (cannot be NULL)
- *           seckey: pointer to a 32-byte secret key (cannot be NULL)
- *           noncefp:pointer to a nonce generation function. If NULL, secp256k1_nonce_function_default is used
- *           ndata:  pointer to arbitrary data used by the nonce generation function (can be NULL)
+ *           0: the nonce generation function failed, or the secret key was invalid.
+ *  Args:    ctx:       pointer to a context object, initialized for signing (cannot be NULL)
+ *  Out:     sig:       pointer to an array where the signature will be placed (cannot be NULL)
+ *  In:      msghash32: the 32-byte message hash being signed (cannot be NULL)
+ *           seckey:    pointer to a 32-byte secret key (cannot be NULL)
+ *           noncefp:   pointer to a nonce generation function. If NULL, secp256k1_nonce_function_default is used
+ *           ndata:     pointer to arbitrary data used by the nonce generation function (can be NULL)
  *
  * The created signature is always in lower-S form. See
  * secp256k1_ecdsa_signature_normalize for more details.
@@ -502,13 +581,18 @@ SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_def
 SECP256K1_API int secp256k1_ecdsa_sign(
     const secp256k1_context* ctx,
     secp256k1_ecdsa_signature *sig,
-    const unsigned char *msg32,
+    const unsigned char *msghash32,
     const unsigned char *seckey,
     secp256k1_nonce_function noncefp,
     const void *ndata
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Verify an ECDSA secret key.
+ *
+ *  A secret key is valid if it is not 0 and less than the secp256k1 curve order
+ *  when interpreted as an integer (most significant byte first). The
+ *  probability of choosing a 32-byte string uniformly at random which is an
+ *  invalid secret key is negligible.
  *
  *  Returns: 1: secret key is valid
  *           0: secret key is invalid
@@ -526,7 +610,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_verify(
  *           0: secret was invalid, try again
  *  Args:   ctx:        pointer to a context object, initialized for signing (cannot be NULL)
  *  Out:    pubkey:     pointer to the created public key (cannot be NULL)
- *  In:     seckey:     pointer to a 32-byte private key (cannot be NULL)
+ *  In:     seckey:     pointer to a 32-byte secret key (cannot be NULL)
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
     const secp256k1_context* ctx,
@@ -534,12 +618,24 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
     const unsigned char *seckey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
-/** Negates a private key in place.
+/** Negates a secret key in place.
  *
- *  Returns: 1 always
- *  Args:   ctx:        pointer to a context object
- *  In/Out: seckey:     pointer to the 32-byte private key to be negated (cannot be NULL)
+ *  Returns: 0 if the given secret key is invalid according to
+ *           secp256k1_ec_seckey_verify. 1 otherwise
+ *  Args:   ctx:    pointer to a context object
+ *  In/Out: seckey: pointer to the 32-byte secret key to be negated. If the
+ *                  secret key is invalid according to
+ *                  secp256k1_ec_seckey_verify, this function returns 0 and
+ *                  seckey will be set to some unspecified value. (cannot be
+ *                  NULL)
  */
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_negate(
+    const secp256k1_context* ctx,
+    unsigned char *seckey
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
+
+/** Same as secp256k1_ec_seckey_negate, but DEPRECATED. Will be removed in
+ *  future versions. */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_negate(
     const secp256k1_context* ctx,
     unsigned char *seckey
@@ -556,62 +652,98 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_negate(
     secp256k1_pubkey *pubkey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
 
-/** Tweak a private key by adding tweak to it.
- * Returns: 0 if the tweak was out of range (chance of around 1 in 2^128 for
- *          uniformly random 32-byte arrays, or if the resulting private key
- *          would be invalid (only when the tweak is the complement of the
- *          private key). 1 otherwise.
- * Args:    ctx:    pointer to a context object (cannot be NULL).
- * In/Out:  seckey: pointer to a 32-byte private key.
- * In:      tweak:  pointer to a 32-byte tweak.
+/** Tweak a secret key by adding tweak to it.
+ *
+ *  Returns: 0 if the arguments are invalid or the resulting secret key would be
+ *           invalid (only when the tweak is the negation of the secret key). 1
+ *           otherwise.
+ *  Args:    ctx:   pointer to a context object (cannot be NULL).
+ *  In/Out: seckey: pointer to a 32-byte secret key. If the secret key is
+ *                  invalid according to secp256k1_ec_seckey_verify, this
+ *                  function returns 0. seckey will be set to some unspecified
+ *                  value if this function returns 0. (cannot be NULL)
+ *  In:    tweak32: pointer to a 32-byte tweak. If the tweak is invalid according to
+ *                  secp256k1_ec_seckey_verify, this function returns 0. For
+ *                  uniformly random 32-byte arrays the chance of being invalid
+ *                  is negligible (around 1 in 2^128) (cannot be NULL).
  */
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_tweak_add(
+    const secp256k1_context* ctx,
+    unsigned char *seckey,
+    const unsigned char *tweak32
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
+
+/** Same as secp256k1_ec_seckey_tweak_add, but DEPRECATED. Will be removed in
+ *  future versions. */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_add(
     const secp256k1_context* ctx,
     unsigned char *seckey,
-    const unsigned char *tweak
+    const unsigned char *tweak32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Tweak a public key by adding tweak times the generator to it.
- * Returns: 0 if the tweak was out of range (chance of around 1 in 2^128 for
- *          uniformly random 32-byte arrays, or if the resulting public key
- *          would be invalid (only when the tweak is the complement of the
- *          corresponding private key). 1 otherwise.
- * Args:    ctx:    pointer to a context object initialized for validation
+ *
+ *  Returns: 0 if the arguments are invalid or the resulting public key would be
+ *           invalid (only when the tweak is the negation of the corresponding
+ *           secret key). 1 otherwise.
+ *  Args:    ctx:   pointer to a context object initialized for validation
  *                  (cannot be NULL).
- * In/Out:  pubkey: pointer to a public key object.
- * In:      tweak:  pointer to a 32-byte tweak.
+ *  In/Out: pubkey: pointer to a public key object. pubkey will be set to an
+ *                  invalid value if this function returns 0 (cannot be NULL).
+ *  In:    tweak32: pointer to a 32-byte tweak. If the tweak is invalid according to
+ *                  secp256k1_ec_seckey_verify, this function returns 0. For
+ *                  uniformly random 32-byte arrays the chance of being invalid
+ *                  is negligible (around 1 in 2^128) (cannot be NULL).
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_add(
     const secp256k1_context* ctx,
     secp256k1_pubkey *pubkey,
-    const unsigned char *tweak
+    const unsigned char *tweak32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
-/** Tweak a private key by multiplying it by a tweak.
- * Returns: 0 if the tweak was out of range (chance of around 1 in 2^128 for
- *          uniformly random 32-byte arrays, or equal to zero. 1 otherwise.
- * Args:   ctx:    pointer to a context object (cannot be NULL).
- * In/Out: seckey: pointer to a 32-byte private key.
- * In:     tweak:  pointer to a 32-byte tweak.
+/** Tweak a secret key by multiplying it by a tweak.
+ *
+ *  Returns: 0 if the arguments are invalid. 1 otherwise.
+ *  Args:   ctx:    pointer to a context object (cannot be NULL).
+ *  In/Out: seckey: pointer to a 32-byte secret key. If the secret key is
+ *                  invalid according to secp256k1_ec_seckey_verify, this
+ *                  function returns 0. seckey will be set to some unspecified
+ *                  value if this function returns 0. (cannot be NULL)
+ *  In:    tweak32: pointer to a 32-byte tweak. If the tweak is invalid according to
+ *                  secp256k1_ec_seckey_verify, this function returns 0. For
+ *                  uniformly random 32-byte arrays the chance of being invalid
+ *                  is negligible (around 1 in 2^128) (cannot be NULL).
  */
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_tweak_mul(
+    const secp256k1_context* ctx,
+    unsigned char *seckey,
+    const unsigned char *tweak32
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
+
+/** Same as secp256k1_ec_seckey_tweak_mul, but DEPRECATED. Will be removed in
+ *  future versions. */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_mul(
     const secp256k1_context* ctx,
     unsigned char *seckey,
-    const unsigned char *tweak
+    const unsigned char *tweak32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Tweak a public key by multiplying it by a tweak value.
- * Returns: 0 if the tweak was out of range (chance of around 1 in 2^128 for
- *          uniformly random 32-byte arrays, or equal to zero. 1 otherwise.
- * Args:    ctx:    pointer to a context object initialized for validation
- *                 (cannot be NULL).
- * In/Out:  pubkey: pointer to a public key obkect.
- * In:      tweak:  pointer to a 32-byte tweak.
+ *
+ *  Returns: 0 if the arguments are invalid. 1 otherwise.
+ *  Args:    ctx:   pointer to a context object initialized for validation
+ *                  (cannot be NULL).
+ *  In/Out: pubkey: pointer to a public key object. pubkey will be set to an
+ *                  invalid value if this function returns 0 (cannot be NULL).
+ *  In:    tweak32: pointer to a 32-byte tweak. If the tweak is invalid according to
+ *                  secp256k1_ec_seckey_verify, this function returns 0. For
+ *                  uniformly random 32-byte arrays the chance of being invalid
+ *                  is negligible (around 1 in 2^128) (cannot be NULL).
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(
     const secp256k1_context* ctx,
     secp256k1_pubkey *pubkey,
-    const unsigned char *tweak
+    const unsigned char *tweak32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Updates the context randomization to protect against side-channel leakage.
@@ -636,7 +768,8 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(
  * contexts not initialized for signing; then it will have no effect and return 1.
  *
  * You should call this after secp256k1_context_create or
- * secp256k1_context_clone, and may call this repeatedly afterwards.
+ * secp256k1_context_clone (and secp256k1_context_preallocated_create or
+ * secp256k1_context_clone, resp.), and you may call this repeatedly afterwards.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_context_randomize(
     secp256k1_context* ctx,
@@ -644,6 +777,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_context_randomize(
 ) SECP256K1_ARG_NONNULL(1);
 
 /** Add a number of public keys together.
+ *
  *  Returns: 1: the sum of the public keys is valid.
  *           0: the sum of the public keys is not valid.
  *  Args:   ctx:        pointer to a context object
@@ -658,6 +792,31 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_combine(
     const secp256k1_pubkey * const * ins,
     size_t n
 ) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
+
+/** Compute a tagged hash as defined in BIP-340.
+ *
+ *  This is useful for creating a message hash and achieving domain separation
+ *  through an application-specific tag. This function returns
+ *  SHA256(SHA256(tag)||SHA256(tag)||msg). Therefore, tagged hash
+ *  implementations optimized for a specific tag can precompute the SHA256 state
+ *  after hashing the tag hashes.
+ *
+ *  Returns 0 if the arguments are invalid and 1 otherwise.
+ *  Args:    ctx: pointer to a context object
+ *  Out:  hash32: pointer to a 32-byte array to store the resulting hash
+ *  In:      tag: pointer to an array containing the tag
+ *        taglen: length of the tag array
+ *           msg: pointer to an array containing the message
+ *        msglen: length of the message array
+ */
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_tagged_sha256(
+    const secp256k1_context* ctx,
+    unsigned char *hash32,
+    const unsigned char *tag,
+    size_t taglen,
+    const unsigned char *msg,
+    size_t msglen
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(5);
 
 #ifdef __cplusplus
 }

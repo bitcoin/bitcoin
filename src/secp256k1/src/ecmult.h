@@ -1,13 +1,12 @@
-/**********************************************************************
- * Copyright (c) 2013, 2014, 2017 Pieter Wuille, Andrew Poelstra      *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2013, 2014, 2017 Pieter Wuille, Andrew Poelstra       *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 #ifndef SECP256K1_ECMULT_H
 #define SECP256K1_ECMULT_H
 
-#include "num.h"
 #include "group.h"
 #include "scalar.h"
 #include "scratch.h"
@@ -15,15 +14,12 @@
 typedef struct {
     /* For accelerating the computation of a*P + b*G: */
     secp256k1_ge_storage (*pre_g)[];    /* odd multiples of the generator */
-#ifdef USE_ENDOMORPHISM
     secp256k1_ge_storage (*pre_g_128)[]; /* odd multiples of 2^128*generator */
-#endif
 } secp256k1_ecmult_context;
 
 static void secp256k1_ecmult_context_init(secp256k1_ecmult_context *ctx);
-static void secp256k1_ecmult_context_build(secp256k1_ecmult_context *ctx, const secp256k1_callback *cb);
-static void secp256k1_ecmult_context_clone(secp256k1_ecmult_context *dst,
-                                           const secp256k1_ecmult_context *src, const secp256k1_callback *cb);
+static void secp256k1_ecmult_context_build(secp256k1_ecmult_context *ctx, void **prealloc);
+static void secp256k1_ecmult_context_finalize_memcpy(secp256k1_ecmult_context *dst, const secp256k1_ecmult_context *src);
 static void secp256k1_ecmult_context_clear(secp256k1_ecmult_context *ctx);
 static int secp256k1_ecmult_context_is_built(const secp256k1_ecmult_context *ctx);
 
@@ -43,6 +39,6 @@ typedef int (secp256k1_ecmult_multi_callback)(secp256k1_scalar *sc, secp256k1_ge
  *          0 if there is not enough scratch space for a single point or
  *          callback returns 0
  */
-static int secp256k1_ecmult_multi_var(const secp256k1_ecmult_context *ctx, secp256k1_scratch *scratch, secp256k1_gej *r, const secp256k1_scalar *inp_g_sc, secp256k1_ecmult_multi_callback cb, void *cbdata, size_t n);
+static int secp256k1_ecmult_multi_var(const secp256k1_callback* error_callback, const secp256k1_ecmult_context *ctx, secp256k1_scratch *scratch, secp256k1_gej *r, const secp256k1_scalar *inp_g_sc, secp256k1_ecmult_multi_callback cb, void *cbdata, size_t n);
 
 #endif /* SECP256K1_ECMULT_H */

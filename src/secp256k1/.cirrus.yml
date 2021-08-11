@@ -1,0 +1,342 @@
+env:
+  ### compiler options
+  HOST:
+  # Specific warnings can be disabled with -Wno-error=foo.
+  # -pedantic-errors is not equivalent to -Werror=pedantic and thus not implied by -Werror according to the GCC manual.
+  WERROR_CFLAGS: -Werror -pedantic-errors
+  MAKEFLAGS: -j2
+  BUILD: check
+  ### secp256k1 config
+  STATICPRECOMPUTATION: yes
+  ECMULTGENPRECISION: auto
+  ASM: no
+  WIDEMUL: auto
+  WITH_VALGRIND: yes
+  EXTRAFLAGS:
+  ### secp256k1 modules
+  EXPERIMENTAL: no
+  ECDH: no
+  RECOVERY: no
+  SCHNORRSIG: no
+  ### test options
+  TEST_ITERS:
+  BENCH: yes
+  BENCH_ITERS: 2
+  CTIMETEST: yes
+
+cat_logs_snippet: &CAT_LOGS
+  always:
+    cat_tests_log_script:
+      - cat tests.log || true
+    cat_exhaustive_tests_log_script:
+      - cat exhaustive_tests.log || true
+    cat_valgrind_ctime_test_log_script:
+      - cat valgrind_ctime_test.log || true
+    cat_bench_log_script:
+      - cat bench.log || true
+  on_failure:
+    cat_config_log_script:
+      - cat config.log || true
+    cat_test_env_script:
+      - cat test_env.log || true
+    cat_ci_env_script:
+      - env
+
+merge_base_script_snippet: &MERGE_BASE
+  merge_base_script:
+    - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
+    - git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_BRANCH
+    - git config --global user.email "ci@ci.ci"
+    - git config --global user.name "ci"
+    - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
+
+task:
+  name: "x86_64: Linux (Debian stable)"
+  container:
+    dockerfile: ci/linux-debian.Dockerfile
+    # Reduce number of CPUs to be able to do more builds in parallel.
+    cpu: 1
+    # More than enough for our scripts.
+    memory: 1G
+  matrix: &ENV_MATRIX
+    - env: {WIDEMUL:  int64,  RECOVERY: yes}
+    - env: {WIDEMUL:  int64,                 ECDH: yes, EXPERIMENTAL: yes, SCHNORRSIG: yes}
+    - env: {WIDEMUL: int128}
+    - env: {WIDEMUL: int128,  RECOVERY: yes,            EXPERIMENTAL: yes, SCHNORRSIG: yes}
+    - env: {WIDEMUL: int128,                 ECDH: yes, EXPERIMENTAL: yes, SCHNORRSIG: yes}
+    - env: {WIDEMUL: int128,  ASM: x86_64}
+    - env: {                  RECOVERY: yes,            EXPERIMENTAL: yes, SCHNORRSIG: yes}
+    - env: {                  STATICPRECOMPUTATION: no}
+    - env: {BUILD: distcheck, WITH_VALGRIND: no, CTIMETEST: no, BENCH: no}
+    - env: {CPPFLAGS: -DDETERMINISTIC}
+    - env: {CFLAGS: -O0, CTIMETEST: no}
+    - env: { ECMULTGENPRECISION: 2 }
+    - env: { ECMULTGENPRECISION: 8 }
+  matrix:
+    - env:
+        CC: gcc
+    - env:
+        CC: clang
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "i686: Linux (Debian stable)"
+  container:
+    dockerfile: ci/linux-debian.Dockerfile
+    cpu: 1
+    memory: 1G
+  env:
+    HOST: i686-linux-gnu
+    ECDH: yes
+    RECOVERY: yes
+    EXPERIMENTAL: yes
+    SCHNORRSIG: yes
+  matrix:
+    - env:
+        CC: i686-linux-gnu-gcc
+    - env:
+        CC: clang --target=i686-pc-linux-gnu -isystem /usr/i686-linux-gnu/include
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "x86_64: macOS Catalina"
+  macos_instance:
+    image: catalina-base
+  env:
+    HOMEBREW_NO_AUTO_UPDATE: 1
+    HOMEBREW_NO_INSTALL_CLEANUP: 1
+    # Cirrus gives us a fixed number of 12 virtual CPUs. Not that we even have that many jobs at the moment...
+    MAKEFLAGS: -j13
+  matrix:
+    << : *ENV_MATRIX
+  matrix:
+    - env:
+        CC: gcc-9
+    - env:
+        CC: clang
+  # Update Command Line Tools
+  # Uncomment this if the Command Line Tools on the CirrusCI macOS image are too old to brew valgrind.
+  # See https://apple.stackexchange.com/a/195963 for the implementation.
+  ## update_clt_script:
+  ##   - system_profiler SPSoftwareDataType
+  ##   - touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+  ##   - |-
+  ##     PROD=$(softwareupdate -l | grep "*.*Command Line" | tail -n 1 | awk -F"*" '{print $2}' | sed -e 's/^ *//' | sed 's/Label: //g' | tr -d '\n')
+  ##   # For debugging
+  ##   - softwareupdate -l && echo "PROD: $PROD"
+  ##   - softwareupdate -i "$PROD" --verbose
+  ##   - rm /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+  ##
+  brew_valgrind_pre_script:
+    - brew config
+    - brew tap --shallow LouisBrunner/valgrind
+    # Fetch valgrind source but don't build it yet.
+    - brew fetch --HEAD LouisBrunner/valgrind/valgrind
+  brew_valgrind_cache:
+    # This is $(brew --cellar valgrind) but command substition does not work here.
+    folder: /usr/local/Cellar/valgrind
+    # Rebuild cache if ...
+    fingerprint_script:
+      # ... macOS version changes:
+      - sw_vers
+      # ... brew changes:
+      - brew config
+      # ... valgrind changes:
+      - git -C "$(brew --cache)/valgrind--git" rev-parse HEAD
+    populate_script:
+      # If there's no hit in the cache, build and install valgrind.
+      - brew install --HEAD LouisBrunner/valgrind/valgrind
+  brew_valgrind_post_script:
+    # If we have restored valgrind from the cache, tell brew to create symlink to the PATH.
+    # If we haven't restored from cached (and just run brew install), this is a no-op.
+    - brew link valgrind
+  brew_script:
+    - brew install automake libtool gcc@9
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "s390x (big-endian): Linux (Debian stable, QEMU)"
+  container:
+    dockerfile: ci/linux-debian.Dockerfile
+    cpu: 1
+    memory: 1G
+  env:
+    WRAPPER_CMD: qemu-s390x
+    TEST_ITERS: 16
+    HOST: s390x-linux-gnu
+    WITH_VALGRIND: no
+    ECDH: yes
+    RECOVERY: yes
+    EXPERIMENTAL: yes
+    SCHNORRSIG: yes
+    CTIMETEST: no
+  << : *MERGE_BASE
+  test_script:
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=27008
+    - rm /etc/ld.so.cache
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "ARM32: Linux (Debian stable, QEMU)"
+  container:
+    dockerfile: ci/linux-debian.Dockerfile
+    cpu: 1
+    memory: 1G
+  env:
+    WRAPPER_CMD: qemu-arm
+    TEST_ITERS: 16
+    HOST: arm-linux-gnueabihf
+    WITH_VALGRIND: no
+    ECDH: yes
+    RECOVERY: yes
+    EXPERIMENTAL: yes
+    SCHNORRSIG: yes
+    CTIMETEST: no
+  matrix:
+    - env: {}
+    - env: {ASM: arm}
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "ARM64: Linux (Debian stable, QEMU)"
+  container:
+    dockerfile: ci/linux-debian.Dockerfile
+    cpu: 1
+    memory: 1G
+  env:
+    WRAPPER_CMD: qemu-aarch64
+    TEST_ITERS: 16
+    HOST: aarch64-linux-gnu
+    WITH_VALGRIND: no
+    ECDH: yes
+    RECOVERY: yes
+    EXPERIMENTAL: yes
+    SCHNORRSIG: yes
+    CTIMETEST: no
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "ppc64le: Linux (Debian stable, QEMU)"
+  container:
+    dockerfile: ci/linux-debian.Dockerfile
+    cpu: 1
+    memory: 1G
+  env:
+    WRAPPER_CMD: qemu-ppc64le
+    TEST_ITERS: 16
+    HOST: powerpc64le-linux-gnu
+    WITH_VALGRIND: no
+    ECDH: yes
+    RECOVERY: yes
+    EXPERIMENTAL: yes
+    SCHNORRSIG: yes
+    CTIMETEST: no
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "x86_64 (mingw32-w64): Windows (Debian stable, Wine)"
+  container:
+    dockerfile: ci/linux-debian.Dockerfile
+    cpu: 1
+    memory: 1G
+  env:
+    WRAPPER_CMD: wine64-stable
+    TEST_ITERS: 16
+    HOST: x86_64-w64-mingw32
+    WITH_VALGRIND: no
+    ECDH: yes
+    RECOVERY: yes
+    EXPERIMENTAL: yes
+    SCHNORRSIG: yes
+    CTIMETEST: no
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+# Sanitizers
+task:
+  container:
+    dockerfile: ci/linux-debian.Dockerfile
+    cpu: 1
+    memory: 1G
+  env:
+    ECDH: yes
+    RECOVERY: yes
+    EXPERIMENTAL: yes
+    SCHNORRSIG: yes
+    CTIMETEST: no
+    EXTRAFLAGS: "--disable-openssl-tests"
+  matrix:
+    - name: "Valgrind (memcheck)"
+      env:
+        # The `--error-exitcode` is required to make the test fail if valgrind found errors, otherwise it'll return 0 (https://www.valgrind.org/docs/manual/manual-core.html)
+        WRAPPER_CMD: "valgrind --error-exitcode=42"
+        TEST_ITERS: 16
+    - name: "UBSan, ASan, LSan"
+      env:
+        CFLAGS: "-fsanitize=undefined,address"
+        CFLAGS_FOR_BUILD: "-fsanitize=undefined,address"
+        UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
+        ASAN_OPTIONS: "strict_string_checks=1:detect_stack_use_after_return=1:detect_leaks=1"
+        LSAN_OPTIONS: "use_unaligned=1"
+        TEST_ITERS: 32
+  # Try to cover many configurations with just a tiny matrix.
+  matrix:
+    - env:
+        ASM: auto
+        STATICPRECOMPUTATION: yes
+    - env:
+        ASM: no
+        STATICPRECOMPUTATION: no
+        ECMULTGENPRECISION: 2
+  matrix:
+    - env:
+        CC: clang
+    - env:
+        HOST: i686-linux-gnu
+        CC: i686-linux-gnu-gcc
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "C++ -fpermissive"
+  container:
+    dockerfile: ci/linux-debian.Dockerfile
+    cpu: 1
+    memory: 1G
+  env:
+    # ./configure correctly errors out when given CC=g++.
+    # We hack around this by passing CC=g++ only to make.
+    CC: gcc
+    MAKEFLAGS: -j2 CC=g++ CFLAGS=-fpermissive
+    WERROR_CFLAGS:
+    EXPERIMENTAL: yes
+    ECDH: yes
+    RECOVERY: yes
+    SCHNORRSIG: yes
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS

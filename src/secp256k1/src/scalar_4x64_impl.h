@@ -1,11 +1,13 @@
-/**********************************************************************
- * Copyright (c) 2013, 2014 Pieter Wuille                             *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                              *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 #ifndef SECP256K1_SCALAR_REPR_IMPL_H
 #define SECP256K1_SCALAR_REPR_IMPL_H
+
+#include "modinv64_impl.h"
 
 /* Limbs of the secp256k1 order. */
 #define SECP256K1_N_0 ((uint64_t)0xBFD25E8CD0364141ULL)
@@ -192,9 +194,9 @@ static int secp256k1_scalar_cond_negate(secp256k1_scalar *r, int flag) {
         tl = t; \
     } \
     c0 += tl;                 /* overflow is handled on the next line */ \
-    th += (c0 < tl) ? 1 : 0;  /* at most 0xFFFFFFFFFFFFFFFF */ \
+    th += (c0 < tl);          /* at most 0xFFFFFFFFFFFFFFFF */ \
     c1 += th;                 /* overflow is handled on the next line */ \
-    c2 += (c1 < th) ? 1 : 0;  /* never overflows by contract (verified in the next line) */ \
+    c2 += (c1 < th);          /* never overflows by contract (verified in the next line) */ \
     VERIFY_CHECK((c1 >= th) || (c2 != 0)); \
 }
 
@@ -207,46 +209,24 @@ static int secp256k1_scalar_cond_negate(secp256k1_scalar *r, int flag) {
         tl = t; \
     } \
     c0 += tl;                 /* overflow is handled on the next line */ \
-    th += (c0 < tl) ? 1 : 0;  /* at most 0xFFFFFFFFFFFFFFFF */ \
+    th += (c0 < tl);          /* at most 0xFFFFFFFFFFFFFFFF */ \
     c1 += th;                 /* never overflows by contract (verified in the next line) */ \
     VERIFY_CHECK(c1 >= th); \
-}
-
-/** Add 2*a*b to the number defined by (c0,c1,c2). c2 must never overflow. */
-#define muladd2(a,b) { \
-    uint64_t tl, th, th2, tl2; \
-    { \
-        uint128_t t = (uint128_t)a * b; \
-        th = t >> 64;               /* at most 0xFFFFFFFFFFFFFFFE */ \
-        tl = t; \
-    } \
-    th2 = th + th;                  /* at most 0xFFFFFFFFFFFFFFFE (in case th was 0x7FFFFFFFFFFFFFFF) */ \
-    c2 += (th2 < th) ? 1 : 0;       /* never overflows by contract (verified the next line) */ \
-    VERIFY_CHECK((th2 >= th) || (c2 != 0)); \
-    tl2 = tl + tl;                  /* at most 0xFFFFFFFFFFFFFFFE (in case the lowest 63 bits of tl were 0x7FFFFFFFFFFFFFFF) */ \
-    th2 += (tl2 < tl) ? 1 : 0;      /* at most 0xFFFFFFFFFFFFFFFF */ \
-    c0 += tl2;                      /* overflow is handled on the next line */ \
-    th2 += (c0 < tl2) ? 1 : 0;      /* second overflow is handled on the next line */ \
-    c2 += (c0 < tl2) & (th2 == 0);  /* never overflows by contract (verified the next line) */ \
-    VERIFY_CHECK((c0 >= tl2) || (th2 != 0) || (c2 != 0)); \
-    c1 += th2;                      /* overflow is handled on the next line */ \
-    c2 += (c1 < th2) ? 1 : 0;       /* never overflows by contract (verified the next line) */ \
-    VERIFY_CHECK((c1 >= th2) || (c2 != 0)); \
 }
 
 /** Add a to the number defined by (c0,c1,c2). c2 must never overflow. */
 #define sumadd(a) { \
     unsigned int over; \
     c0 += (a);                  /* overflow is handled on the next line */ \
-    over = (c0 < (a)) ? 1 : 0; \
+    over = (c0 < (a));         \
     c1 += over;                 /* overflow is handled on the next line */ \
-    c2 += (c1 < over) ? 1 : 0;  /* never overflows by contract */ \
+    c2 += (c1 < over);          /* never overflows by contract */ \
 }
 
 /** Add a to the number defined by (c0,c1). c1 must never overflow, c2 must be zero. */
 #define sumadd_fast(a) { \
     c0 += (a);                 /* overflow is handled on the next line */ \
-    c1 += (c0 < (a)) ? 1 : 0;  /* never overflows by contract (verified the next line) */ \
+    c1 += (c0 < (a));          /* never overflows by contract (verified the next line) */ \
     VERIFY_CHECK((c1 != 0) | (c0 >= (a))); \
     VERIFY_CHECK(c2 == 0); \
 }
@@ -743,148 +723,10 @@ static void secp256k1_scalar_mul_512(uint64_t l[8], const secp256k1_scalar *a, c
 #endif
 }
 
-static void secp256k1_scalar_sqr_512(uint64_t l[8], const secp256k1_scalar *a) {
-#ifdef USE_ASM_X86_64
-    __asm__ __volatile__(
-    /* Preload */
-    "movq 0(%%rdi), %%r11\n"
-    "movq 8(%%rdi), %%r12\n"
-    "movq 16(%%rdi), %%r13\n"
-    "movq 24(%%rdi), %%r14\n"
-    /* (rax,rdx) = a0 * a0 */
-    "movq %%r11, %%rax\n"
-    "mulq %%r11\n"
-    /* Extract l0 */
-    "movq %%rax, 0(%%rsi)\n"
-    /* (r8,r9,r10) = (rdx,0) */
-    "movq %%rdx, %%r8\n"
-    "xorq %%r9, %%r9\n"
-    "xorq %%r10, %%r10\n"
-    /* (r8,r9,r10) += 2 * a0 * a1 */
-    "movq %%r11, %%rax\n"
-    "mulq %%r12\n"
-    "addq %%rax, %%r8\n"
-    "adcq %%rdx, %%r9\n"
-    "adcq $0, %%r10\n"
-    "addq %%rax, %%r8\n"
-    "adcq %%rdx, %%r9\n"
-    "adcq $0, %%r10\n"
-    /* Extract l1 */
-    "movq %%r8, 8(%%rsi)\n"
-    "xorq %%r8, %%r8\n"
-    /* (r9,r10,r8) += 2 * a0 * a2 */
-    "movq %%r11, %%rax\n"
-    "mulq %%r13\n"
-    "addq %%rax, %%r9\n"
-    "adcq %%rdx, %%r10\n"
-    "adcq $0, %%r8\n"
-    "addq %%rax, %%r9\n"
-    "adcq %%rdx, %%r10\n"
-    "adcq $0, %%r8\n"
-    /* (r9,r10,r8) += a1 * a1 */
-    "movq %%r12, %%rax\n"
-    "mulq %%r12\n"
-    "addq %%rax, %%r9\n"
-    "adcq %%rdx, %%r10\n"
-    "adcq $0, %%r8\n"
-    /* Extract l2 */
-    "movq %%r9, 16(%%rsi)\n"
-    "xorq %%r9, %%r9\n"
-    /* (r10,r8,r9) += 2 * a0 * a3 */
-    "movq %%r11, %%rax\n"
-    "mulq %%r14\n"
-    "addq %%rax, %%r10\n"
-    "adcq %%rdx, %%r8\n"
-    "adcq $0, %%r9\n"
-    "addq %%rax, %%r10\n"
-    "adcq %%rdx, %%r8\n"
-    "adcq $0, %%r9\n"
-    /* (r10,r8,r9) += 2 * a1 * a2 */
-    "movq %%r12, %%rax\n"
-    "mulq %%r13\n"
-    "addq %%rax, %%r10\n"
-    "adcq %%rdx, %%r8\n"
-    "adcq $0, %%r9\n"
-    "addq %%rax, %%r10\n"
-    "adcq %%rdx, %%r8\n"
-    "adcq $0, %%r9\n"
-    /* Extract l3 */
-    "movq %%r10, 24(%%rsi)\n"
-    "xorq %%r10, %%r10\n"
-    /* (r8,r9,r10) += 2 * a1 * a3 */
-    "movq %%r12, %%rax\n"
-    "mulq %%r14\n"
-    "addq %%rax, %%r8\n"
-    "adcq %%rdx, %%r9\n"
-    "adcq $0, %%r10\n"
-    "addq %%rax, %%r8\n"
-    "adcq %%rdx, %%r9\n"
-    "adcq $0, %%r10\n"
-    /* (r8,r9,r10) += a2 * a2 */
-    "movq %%r13, %%rax\n"
-    "mulq %%r13\n"
-    "addq %%rax, %%r8\n"
-    "adcq %%rdx, %%r9\n"
-    "adcq $0, %%r10\n"
-    /* Extract l4 */
-    "movq %%r8, 32(%%rsi)\n"
-    "xorq %%r8, %%r8\n"
-    /* (r9,r10,r8) += 2 * a2 * a3 */
-    "movq %%r13, %%rax\n"
-    "mulq %%r14\n"
-    "addq %%rax, %%r9\n"
-    "adcq %%rdx, %%r10\n"
-    "adcq $0, %%r8\n"
-    "addq %%rax, %%r9\n"
-    "adcq %%rdx, %%r10\n"
-    "adcq $0, %%r8\n"
-    /* Extract l5 */
-    "movq %%r9, 40(%%rsi)\n"
-    /* (r10,r8) += a3 * a3 */
-    "movq %%r14, %%rax\n"
-    "mulq %%r14\n"
-    "addq %%rax, %%r10\n"
-    "adcq %%rdx, %%r8\n"
-    /* Extract l6 */
-    "movq %%r10, 48(%%rsi)\n"
-    /* Extract l7 */
-    "movq %%r8, 56(%%rsi)\n"
-    :
-    : "S"(l), "D"(a->d)
-    : "rax", "rdx", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "cc", "memory");
-#else
-    /* 160 bit accumulator. */
-    uint64_t c0 = 0, c1 = 0;
-    uint32_t c2 = 0;
-
-    /* l[0..7] = a[0..3] * b[0..3]. */
-    muladd_fast(a->d[0], a->d[0]);
-    extract_fast(l[0]);
-    muladd2(a->d[0], a->d[1]);
-    extract(l[1]);
-    muladd2(a->d[0], a->d[2]);
-    muladd(a->d[1], a->d[1]);
-    extract(l[2]);
-    muladd2(a->d[0], a->d[3]);
-    muladd2(a->d[1], a->d[2]);
-    extract(l[3]);
-    muladd2(a->d[1], a->d[3]);
-    muladd(a->d[2], a->d[2]);
-    extract(l[4]);
-    muladd2(a->d[2], a->d[3]);
-    extract(l[5]);
-    muladd_fast(a->d[3], a->d[3]);
-    extract_fast(l[6]);
-    VERIFY_CHECK(c1 == 0);
-    l[7] = c0;
-#endif
-}
-
 #undef sumadd
 #undef sumadd_fast
 #undef muladd
 #undef muladd_fast
-#undef muladd2
 #undef extract
 #undef extract_fast
 
@@ -906,24 +748,16 @@ static int secp256k1_scalar_shr_int(secp256k1_scalar *r, int n) {
     return ret;
 }
 
-static void secp256k1_scalar_sqr(secp256k1_scalar *r, const secp256k1_scalar *a) {
-    uint64_t l[8];
-    secp256k1_scalar_sqr_512(l, a);
-    secp256k1_scalar_reduce_512(r, l);
-}
-
-#ifdef USE_ENDOMORPHISM
-static void secp256k1_scalar_split_128(secp256k1_scalar *r1, secp256k1_scalar *r2, const secp256k1_scalar *a) {
-    r1->d[0] = a->d[0];
-    r1->d[1] = a->d[1];
+static void secp256k1_scalar_split_128(secp256k1_scalar *r1, secp256k1_scalar *r2, const secp256k1_scalar *k) {
+    r1->d[0] = k->d[0];
+    r1->d[1] = k->d[1];
     r1->d[2] = 0;
     r1->d[3] = 0;
-    r2->d[0] = a->d[2];
-    r2->d[1] = a->d[3];
+    r2->d[0] = k->d[2];
+    r2->d[1] = k->d[3];
     r2->d[2] = 0;
     r2->d[3] = 0;
 }
-#endif
 
 SECP256K1_INLINE static int secp256k1_scalar_eq(const secp256k1_scalar *a, const secp256k1_scalar *b) {
     return ((a->d[0] ^ b->d[0]) | (a->d[1] ^ b->d[1]) | (a->d[2] ^ b->d[2]) | (a->d[3] ^ b->d[3])) == 0;
@@ -944,6 +778,91 @@ SECP256K1_INLINE static void secp256k1_scalar_mul_shift_var(secp256k1_scalar *r,
     r->d[2] = shift < 384 ? (l[2 + shiftlimbs] >> shiftlow | (shift < 320 && shiftlow ? (l[3 + shiftlimbs] << shifthigh) : 0)) : 0;
     r->d[3] = shift < 320 ? (l[3 + shiftlimbs] >> shiftlow) : 0;
     secp256k1_scalar_cadd_bit(r, 0, (l[(shift - 1) >> 6] >> ((shift - 1) & 0x3f)) & 1);
+}
+
+static SECP256K1_INLINE void secp256k1_scalar_cmov(secp256k1_scalar *r, const secp256k1_scalar *a, int flag) {
+    uint64_t mask0, mask1;
+    VG_CHECK_VERIFY(r->d, sizeof(r->d));
+    mask0 = flag + ~((uint64_t)0);
+    mask1 = ~mask0;
+    r->d[0] = (r->d[0] & mask0) | (a->d[0] & mask1);
+    r->d[1] = (r->d[1] & mask0) | (a->d[1] & mask1);
+    r->d[2] = (r->d[2] & mask0) | (a->d[2] & mask1);
+    r->d[3] = (r->d[3] & mask0) | (a->d[3] & mask1);
+}
+
+static void secp256k1_scalar_from_signed62(secp256k1_scalar *r, const secp256k1_modinv64_signed62 *a) {
+    const uint64_t a0 = a->v[0], a1 = a->v[1], a2 = a->v[2], a3 = a->v[3], a4 = a->v[4];
+
+    /* The output from secp256k1_modinv64{_var} should be normalized to range [0,modulus), and
+     * have limbs in [0,2^62). The modulus is < 2^256, so the top limb must be below 2^(256-62*4).
+     */
+    VERIFY_CHECK(a0 >> 62 == 0);
+    VERIFY_CHECK(a1 >> 62 == 0);
+    VERIFY_CHECK(a2 >> 62 == 0);
+    VERIFY_CHECK(a3 >> 62 == 0);
+    VERIFY_CHECK(a4 >> 8 == 0);
+
+    r->d[0] = a0      | a1 << 62;
+    r->d[1] = a1 >> 2 | a2 << 60;
+    r->d[2] = a2 >> 4 | a3 << 58;
+    r->d[3] = a3 >> 6 | a4 << 56;
+
+#ifdef VERIFY
+    VERIFY_CHECK(secp256k1_scalar_check_overflow(r) == 0);
+#endif
+}
+
+static void secp256k1_scalar_to_signed62(secp256k1_modinv64_signed62 *r, const secp256k1_scalar *a) {
+    const uint64_t M62 = UINT64_MAX >> 2;
+    const uint64_t a0 = a->d[0], a1 = a->d[1], a2 = a->d[2], a3 = a->d[3];
+
+#ifdef VERIFY
+    VERIFY_CHECK(secp256k1_scalar_check_overflow(a) == 0);
+#endif
+
+    r->v[0] =  a0                   & M62;
+    r->v[1] = (a0 >> 62 | a1 <<  2) & M62;
+    r->v[2] = (a1 >> 60 | a2 <<  4) & M62;
+    r->v[3] = (a2 >> 58 | a3 <<  6) & M62;
+    r->v[4] =  a3 >> 56;
+}
+
+static const secp256k1_modinv64_modinfo secp256k1_const_modinfo_scalar = {
+    {{0x3FD25E8CD0364141LL, 0x2ABB739ABD2280EELL, -0x15LL, 0, 256}},
+    0x34F20099AA774EC1LL
+};
+
+static void secp256k1_scalar_inverse(secp256k1_scalar *r, const secp256k1_scalar *x) {
+    secp256k1_modinv64_signed62 s;
+#ifdef VERIFY
+    int zero_in = secp256k1_scalar_is_zero(x);
+#endif
+    secp256k1_scalar_to_signed62(&s, x);
+    secp256k1_modinv64(&s, &secp256k1_const_modinfo_scalar);
+    secp256k1_scalar_from_signed62(r, &s);
+
+#ifdef VERIFY
+    VERIFY_CHECK(secp256k1_scalar_is_zero(r) == zero_in);
+#endif
+}
+
+static void secp256k1_scalar_inverse_var(secp256k1_scalar *r, const secp256k1_scalar *x) {
+    secp256k1_modinv64_signed62 s;
+#ifdef VERIFY
+    int zero_in = secp256k1_scalar_is_zero(x);
+#endif
+    secp256k1_scalar_to_signed62(&s, x);
+    secp256k1_modinv64_var(&s, &secp256k1_const_modinfo_scalar);
+    secp256k1_scalar_from_signed62(r, &s);
+
+#ifdef VERIFY
+    VERIFY_CHECK(secp256k1_scalar_is_zero(r) == zero_in);
+#endif
+}
+
+SECP256K1_INLINE static int secp256k1_scalar_is_even(const secp256k1_scalar *a) {
+    return !(a->d[0] & 1);
 }
 
 #endif /* SECP256K1_SCALAR_REPR_IMPL_H */

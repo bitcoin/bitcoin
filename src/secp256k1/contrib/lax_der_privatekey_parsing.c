@@ -1,11 +1,10 @@
-/**********************************************************************
- * Copyright (c) 2014, 2015 Pieter Wuille                             *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2014, 2015 Pieter Wuille                              *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 #include <string.h>
-#include <secp256k1.h>
 
 #include "lax_der_privatekey_parsing.h"
 
@@ -45,7 +44,7 @@ int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *out32, co
     if (end < privkey+2 || privkey[0] != 0x04 || privkey[1] > 0x20 || end < privkey+2+privkey[1]) {
         return 0;
     }
-    memcpy(out32 + 32 - privkey[1], privkey + 2, privkey[1]);
+    if (privkey[1]) memcpy(out32 + 32 - privkey[1], privkey + 2, privkey[1]);
     if (!secp256k1_ec_seckey_verify(ctx, out32)) {
         memset(out32, 0, 32);
         return 0;

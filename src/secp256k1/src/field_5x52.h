@@ -1,8 +1,8 @@
-/**********************************************************************
- * Copyright (c) 2013, 2014 Pieter Wuille                             *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                              *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 #ifndef SECP256K1_FIELD_REPR_H
 #define SECP256K1_FIELD_REPR_H
@@ -45,5 +45,11 @@ typedef struct {
     (d4) | (((uint64_t)(d5)) << 32), \
     (d6) | (((uint64_t)(d7)) << 32) \
 }}
+
+#define SECP256K1_FE_STORAGE_CONST_GET(d) \
+    (uint32_t)(d.n[3] >> 32), (uint32_t)d.n[3], \
+    (uint32_t)(d.n[2] >> 32), (uint32_t)d.n[2], \
+    (uint32_t)(d.n[1] >> 32), (uint32_t)d.n[1], \
+    (uint32_t)(d.n[0] >> 32), (uint32_t)d.n[0]
 
 #endif /* SECP256K1_FIELD_REPR_H */
