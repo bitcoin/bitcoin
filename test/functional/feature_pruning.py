@@ -127,6 +127,24 @@ class PruneTest(BitcoinTestFramework):
 
         self.sync_blocks(self.nodes[0:5])
 
+    def test_invalid_command_line_options(self):
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg='Error: Prune cannot be configured with a negative value.',
+            extra_args=['-prune=-1'],
+        )
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg='Error: Prune configured below the minimum of 550 MiB.  Please use a higher number.',
+            extra_args=['-prune=549'],
+        )
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg='Error: Prune mode is incompatible with -txindex.',
+            extra_args=['-prune=550', '-txindex'],
+        )
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg='Error: Prune mode is incompatible with -coinstatsindex.',
+            extra_args=['-prune=550', '-coinstatsindex'],
+        )
+
     def test_height_min(self):
         assert os.path.isfile(os.path.join(self.prunedir, "blk00000.dat")), "blk00000.dat is missing, pruning too early"
         self.log.info("Success")
@@ -452,6 +470,9 @@ class PruneTest(BitcoinTestFramework):
 
         self.log.info("Test wallet re-scan")
         self.wallet_test()
+
+        self.log.info("Test invalid pruning command line options")
+        self.test_invalid_command_line_options()
 
         self.log.info("Done")
 
