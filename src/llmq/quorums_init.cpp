@@ -20,19 +20,17 @@ namespace llmq
 
 CBLSWorker* blsWorker;
 
-CDBWrapper* llmqDb;
 
 void InitLLMQSystem(bool unitTests, CConnman& connman, BanMan& banman, PeerManager& peerman, ChainstateManager& chainman, bool fWipe)
 {
-    llmqDb = new CDBWrapper(unitTests ? "" : (gArgs.GetDataDirNet() / "llmq"), 8 << 20, unitTests, fWipe);
     blsWorker = new CBLSWorker();
 
     quorumDKGDebugManager = new CDKGDebugManager();
     quorumBlockProcessor = new CQuorumBlockProcessor(connman, chainman);
-    quorumDKGSessionManager = new CDKGSessionManager(*llmqDb, *blsWorker, connman, peerman, chainman);
+    quorumDKGSessionManager = new CDKGSessionManager(*blsWorker, connman, peerman, chainman, unitTests, fWipe);
     quorumManager = new CQuorumManager(*blsWorker, *quorumDKGSessionManager, chainman);
     quorumSigSharesManager = new CSigSharesManager(connman, banman, peerman);
-    quorumSigningManager = new CSigningManager(*llmqDb, unitTests, connman, peerman, chainman);
+    quorumSigningManager = new CSigningManager(unitTests, connman, peerman, chainman, fWipe);
     chainLocksHandler = new CChainLocksHandler(connman, peerman, chainman);
 }
 
@@ -54,8 +52,6 @@ void DestroyLLMQSystem()
     quorumDKGDebugManager = nullptr;
     delete blsWorker;
     blsWorker = nullptr;
-    delete llmqDb;
-    llmqDb = nullptr;
 }
 
 void StartLLMQSystem()

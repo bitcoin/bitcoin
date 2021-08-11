@@ -80,7 +80,7 @@ public:
 class CRecoveredSigsDb
 {
 private:
-    CDBWrapper& db;
+    std::unique_ptr<CDBWrapper> db{nullptr};
 
     mutable RecursiveMutex cs;
     unordered_lru_cache<std::pair<uint8_t, uint256>, bool, StaticSaltedHasher, 30000> hasSigForIdCache GUARDED_BY(cs);
@@ -88,10 +88,7 @@ private:
     unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForHashCache GUARDED_BY(cs);
 
 public:
-    explicit CRecoveredSigsDb(CDBWrapper& _db);
-
-    void ConvertInvalidTimeKeys();
-    void AddVoteTimeKeys();
+    explicit CRecoveredSigsDb(bool fMemory, bool fWipe);
 
     bool HasRecoveredSig(uint8_t llmqType, const uint256& id, const uint256& msgHash) const;
     bool HasRecoveredSigForId(uint8_t llmqType, const uint256& id);
@@ -113,8 +110,10 @@ public:
     void CleanupOldVotes(int64_t maxAge);
 
 private:
+    void MigrateRecoveredSigs();
+
     bool ReadRecoveredSig(uint8_t llmqType, const uint256& id, CRecoveredSig& ret) const;
-    void RemoveRecoveredSig(CDBBatch& batch, uint8_t llmqType, const uint256& id, bool deleteHashKey, bool deleteTimeKey)  EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void RemoveRecoveredSig(CDBBatch& batch, uint8_t llmqType, const uint256& id, bool deleteHashKey, bool deleteTimeKey) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
 class CRecoveredSigsListener
@@ -152,7 +151,7 @@ public:
     // starting height for scanning. This is because otherwise the resulting signatures would not be verifiable by nodes
     // which are not 100% at the chain tip.
     static const int SIGN_HEIGHT_OFFSET = 8;
-    CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _connman, PeerManager& _peerman, ChainstateManager& _chainman);
+    CSigningManager(bool fMemory, CConnman& _connman, PeerManager& _peerman, ChainstateManager& _chainman, bool fWipe);
 
     bool AlreadyHave(const uint256& hash);
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret);
