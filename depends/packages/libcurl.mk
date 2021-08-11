@@ -9,7 +9,8 @@ $(package)_sha256_hash=ba98332752257b47b9dea6d8c0ad25ec1745c20424f1dd3ff2c99ab59
 $(package)_cflags_darwin="-mmacosx-version-min=$(OSX_MIN_VERSION)"
 $(package)_config_opts=--with-zlib="$(host_prefix)" --disable-shared --enable-static --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --enable-proxy --without-ssl --with-gnutls="$(host_prefix)" --without-ca-path --without-ca-bundle --with-ca-fallback --disable-telnet
 $(package)_config_opts_linux=LIBS="-lnettle -lhogweed -lgmp" --without-ssl --enable-threaded-resolver
-
+$(package)_config_opts_linux+= --with-pic
+$(package)_config_opts_android+= --with-pic
 # mingw specific settings
 $(package)_config_opts_mingw32=LIBS="-lcrypt32 -lnettle -lhogweed -lgmp" --without-ssl
 
