@@ -69,4 +69,13 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx, const CTx
 std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries& setAncestors,
                                                    const std::set<uint256>& setConflicts,
                                                    const uint256& txid);
+
+/** Check that the feerate of the replacement transaction(s) is higher than the feerate of each
+ * of the transactions in setIterConflicting.
+ * @param[in]   setIterConflicting  The set of mempool entries.
+ * @returns error message if fees insufficient, otherwise std::nullopt.
+ */
+std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& setIterConflicting,
+                                                 CFeeRate newFeeRate, const uint256& hash);
+
 #endif // BITCOIN_POLICY_RBF_H
