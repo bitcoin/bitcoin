@@ -236,6 +236,16 @@ mkdir -p "$OUTDIR"
 # Binary Tarball Building #
 ###########################
 
+# The build will use the extracted git archive in a build directory not under the git work tree.
+# This will result in genbuild.sh being unable to determine the actual git tag for the version
+# string reported by the binary. By exporting GIT_TAG and GIT_COMMIT now, genbuild.sh will know
+# what tag and commit to use.
+# We want "git describe" to not cause an exit on failure and just be set to ""
+# shellcheck disable=SC2155
+export GIT_TAG=$(git describe --exact-match 2> /dev/null)
+git_commit=$(git rev-parse --short=12 HEAD)
+export GIT_COMMIT=${git_commit}
+
 # CONFIGFLAGS
 CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
 case "$HOST" in
