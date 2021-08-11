@@ -118,10 +118,6 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
 
         // Handle changes in encryption status
         connect(_walletModel, &WalletModel::encryptionStatusChanged, this, &WalletView::encryptionStatusChanged);
-        Q_EMIT encryptionStatusChanged();
-
-        // update HD status
-        Q_EMIT hdEnabledStatusChanged();
 
         // Balloon pop-up for new transaction
         connect(_walletModel->getTransactionTableModel(), &TransactionTableModel::rowsInserted, this, &WalletView::processNewTransaction);

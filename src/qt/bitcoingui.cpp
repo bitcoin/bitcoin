@@ -695,7 +695,6 @@ void BitcoinGUI::addWallet(WalletModel* walletModel)
     });
     connect(wallet_view, &WalletView::encryptionStatusChanged, this, &BitcoinGUI::updateWalletStatus);
     connect(wallet_view, &WalletView::incomingTransaction, this, &BitcoinGUI::incomingTransaction);
-    connect(wallet_view, &WalletView::hdEnabledStatusChanged, this, &BitcoinGUI::updateWalletStatus);
     connect(this, &BitcoinGUI::setPrivacy, wallet_view, &WalletView::setPrivacy);
     wallet_view->setPrivacy(isPrivacyModeActivated());
     const QString display_name = walletModel->getDisplayName();
