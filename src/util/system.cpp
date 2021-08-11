@@ -502,11 +502,11 @@ bool ArgsManager::InitSettings(std::string& error)
 
     std::vector<std::string> errors;
     if (!ReadSettingsFile(&errors)) {
-        error = strprintf("Failed loading settings file:\n- %s\n", Join(errors, "\n- "));
+        error = strprintf("Failed loading settings file:\n%s\n", MakeUnorderedList(errors));
         return false;
     }
     if (!WriteSettingsFile(&errors)) {
-        error = strprintf("Failed saving settings file:\n- %s\n", Join(errors, "\n- "));
+        error = strprintf("Failed saving settings file:\n%s\n", MakeUnorderedList(errors));
         return false;
     }
     return true;
