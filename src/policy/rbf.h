@@ -78,4 +78,18 @@ std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries&
 std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& setIterConflicting,
                                                  CFeeRate newFeeRate, const uint256& hash);
 
+/** Enforce BIP125 Rule #3 "The replacement transaction pays an absolute fee of at least the sum
+ * paid by the original transactions." Enforce BIP125 Rule #4 "The replacement transaction must also
+ * pay for its own bandwidth at or above the rate set by the node's minimum relay fee setting."
+ * @param[in]   nConflictingFees    Total modified fees of original transaction(s).
+ * @param[in]   nModifiedFees       Total modified fees of replacement transaction(s).
+ * @param[in]   nSize               Total virtual size of replacement transaction(s).
+ * @param[in]   hash                Transaction ID, included in the error message if violation occurs.
+ * @returns error string if fees are insufficient, otherwise std::nullopt.
+ */
+std::optional<std::string> PaysForRBF(CAmount nConflictingFees,
+                                      CAmount nModifiedFees,
+                                      size_t nSize,
+                                      const uint256& hash);
+
 #endif // BITCOIN_POLICY_RBF_H

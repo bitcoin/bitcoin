@@ -161,3 +161,29 @@ std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& s
     return std::nullopt;
 }
 
+std::optional<std::string> PaysForRBF(CAmount nConflictingFees,
+                                      CAmount nModifiedFees,
+                                      size_t nSize,
+                                      const uint256& hash)
+{
+    // The replacement must pay greater fees than the transactions it
+    // replaces - if we did the bandwidth used by those conflicting
+    // transactions would not be paid for.
+    if (nModifiedFees < nConflictingFees)
+    {
+        return strprintf("rejecting replacement %s, less fees than conflicting txs; %s < %s",
+                         hash.ToString(), FormatMoney(nModifiedFees), FormatMoney(nConflictingFees));
+    }
+
+    // Finally in addition to paying more fees than the conflicts the
+    // new transaction must pay for its own bandwidth.
+    CAmount nDeltaFees = nModifiedFees - nConflictingFees;
+    if (nDeltaFees < ::incrementalRelayFee.GetFee(nSize))
+    {
+        return strprintf("rejecting replacement %s, not enough additional fees to relay; %s < %s",
+                         hash.ToString(),
+                         FormatMoney(nDeltaFees),
+                         FormatMoney(::incrementalRelayFee.GetFee(nSize)));
+    }
+    return std::nullopt;
+}
