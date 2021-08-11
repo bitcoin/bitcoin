@@ -55,7 +55,7 @@
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>தே&amp;ர்வுசெய் </translation>
+        <translation>தே&amp;ர்வுசெய்</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -68,6 +68,12 @@
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>இவை பணம் அனுப்புவதற்கு உங்களின் பிட்காயின் முகவரிகள். பிட்காயின்களை அனுப்புவதற்கு முன் எப்பொழுதும் தொகையும் பெறுதலையும் சரிபார்க்கவும்.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>பிட்காயின் பெறுவதற்காக உங்கள் முகவரி இவை. புதிய முகவரிகளை உருவாக்க 'புதிய முகவரியை உருவாக்கு' என்ற பட்டனை கிளிக் செய்யவும்.
+கையொப்பமிடுவது 'மரபு' வகையின் முகவரிகளால் மட்டுமே சாத்தியமாகும்.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -487,6 +493,10 @@
 </translation>
     </message>
     <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>கிளிப்போர்டிலிருந்து PSBT ஐ ஏற்றவும் ...</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation>நோட் விண்டோ</translation>
     </message>
@@ -523,8 +533,24 @@
         <translation>வாலட்டை மூடு</translation>
     </message>
     <message>
+        <source>Close All Wallets...</source>
+        <translation>அனைத்து பணப்பைகள் மூடு...</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>அனைத்து பணப்பைகள் மூடு</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>சாத்தியமான Bitcoin கட்டளை-வரி விருப்பங்களைக் கொண்ட பட்டியலைப் பெற %1 உதவிச் செய்தியைக் காட்டு</translation>
+    </message>
+    <message>
+        <source>&amp;Mask values</source>
+        <translation>&amp;மதிப்புகளை மறைக்கவும்</translation>
+    </message>
+    <message>
+        <source>Mask the values in the Overview tab</source>
+        <translation>கண்ணோட்டம் தாவலில் மதிப்புகளை மறைக்கவும்</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -806,6 +832,10 @@
     <message>
         <source>Create Wallet</source>
         <translation>வாலட்டை உருவாக்கு</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>பணப்பை</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -3049,6 +3079,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>வாலட்டை அதிக நேரம் மூடுவதாலும் ப்ரூனிங் இயக்கப்பட்டாலோ முழு செயினை ரீசிங்க் செய்வதற்கு இது வழிவகுக்கும்.</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>அனைத்து பணப்பைகள் மூடு</translation>
     </message>
     </context>
 <context>

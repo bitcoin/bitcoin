@@ -19,7 +19,7 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp; പകർത്തുക</translation>
+        <translation>&amp;പകർത്തുക</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -906,7 +906,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>name</source>
         <translation>നാമധേയം / പേര് </translation>
     </message>
-    </context>
+    <message>
+        <source>Path already exists, and is not a directory.</source>
+        <translation>പാത്ത് ഇതിനകം നിലവിലുണ്ട്, അത് ഒരു ഡയറക്ടറിയല്ല.</translation>
+    </message>
+    <message>
+        <source>Cannot create data directory here.</source>
+        <translation>ഡാറ്റ ഡയറക്ടറി ഇവിടെ സൃഷ്ടിക്കാൻ കഴിയില്ല.</translation>
+    </message>
+</context>
 <context>
     <name>HelpMessageDialog</name>
     <message>

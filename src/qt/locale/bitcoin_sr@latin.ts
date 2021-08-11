@@ -489,6 +489,10 @@
 <context>
     <name>CreateWalletDialog</name>
     <message>
+        <source>Wallet</source>
+        <translation>Novčanik</translation>
+    </message>
+    <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
         <translation>Onemogućite privatne ključeve za ovaj novčanik. Novčanici sa isključenim privatnim ključevima neće imati privatne ključeve i ne mogu imati HD seme ili uvezene privatne ključeve. Ovo je idealno za novčanike samo za gledanje.</translation>
     </message>

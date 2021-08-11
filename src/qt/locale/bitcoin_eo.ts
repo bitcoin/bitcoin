@@ -724,6 +724,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Krei Monujon</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Monujo</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Monujo-Nomo</translation>
     </message>

@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Fai clic con il tasto destro del mouse per modificare l'indirizzo oppure l'etichetta</translation>
+        <translation>Clicca con il tasto destro del mouse per modificare l'indirizzo oppure l'etichetta</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -845,6 +845,10 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
         <translation>Crea Portafoglio.</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Portafoglio</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Nome Portafoglio</translation>
     </message>
@@ -855,6 +859,10 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
     <message>
         <source>Encrypt Wallet</source>
         <translation>Cripta Portafoglio</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Opzioni avanzate</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>

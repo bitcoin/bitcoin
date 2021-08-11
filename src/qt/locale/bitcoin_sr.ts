@@ -635,6 +635,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Новчаник јс &lt;b&gt;шифрован&lt;/b&gt; и тренутно &lt;b&gt;закључан&lt;/b&gt;</translation>
     </message>
+    <message>
+        <source>Original message:</source>
+        <translation>Оригинална порука:</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -807,6 +811,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create Wallet</source>
         <translation>Направи новчаник</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Новчаник</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1486,7 +1494,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>or</source>
         <translation>или</translation>
     </message>
-    </context>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>Статус трансакције је непознат.</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>

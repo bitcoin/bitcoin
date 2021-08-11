@@ -828,6 +828,10 @@ Försök igen.</translation>
         <translation>Skapa plånbok</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Plånbok</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Namn på plånboken</translation>
     </message>

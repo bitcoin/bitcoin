@@ -845,6 +845,10 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation>Create Wallet</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Porte-monnaie</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Wallet Name</translation>
     </message>
@@ -855,6 +859,10 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <message>
         <source>Encrypt Wallet</source>
         <translation>Encrypt Wallet</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Options avancées</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>

@@ -382,6 +382,10 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet</source>
+        <translation>Wallet</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>

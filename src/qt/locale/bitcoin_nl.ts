@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>rechts klikken op adres of label te wijzigen</translation>
+        <translation>Rechtermuisklik om adres of label te wijzigen</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -845,6 +845,10 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <translation>Creëer wallet</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Portemonnee</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Wallet Naam</translation>
     </message>
@@ -855,6 +859,10 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <message>
         <source>Encrypt Wallet</source>
         <translation>Versleutel portemonnee</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Geavanceerde Opties</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>

@@ -832,6 +832,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>新增錢包</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>錢包</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>錢包名稱</translation>
     </message>
@@ -842,6 +846,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Encrypt Wallet</source>
         <translation>加密錢包</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>進階選項</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>

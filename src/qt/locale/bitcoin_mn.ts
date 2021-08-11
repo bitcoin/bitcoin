@@ -330,6 +330,10 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet</source>
+        <translation>Түрүйвч</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>

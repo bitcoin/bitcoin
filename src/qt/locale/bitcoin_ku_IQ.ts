@@ -88,6 +88,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>&amp;دەسکاریکردن</translation>
     </message>
     <message>
+        <source>Export Address List</source>
+        <translation>لیستی ناونیشان هاوردە بکە</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>فایلی جیاکراوە بە کۆما (*.csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>هەناردەکردن سەرکەوتوو نەبوو</translation>
+    </message>
+    <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <translation>هەڵەیەک ڕوویدا لە هەوڵی خەزنکردنی لیستی ناونیشانەکە بۆ %1. تکایە دووبارە هەوڵ دەوە.</translation>
     </message>
@@ -95,12 +107,38 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>AddressTableModel</name>
     <message>
+        <source>Label</source>
+        <translation>پێناسەکردن</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>ناوونیشان</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(بێ ناونیشان)
+
+</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
+    <message>
+        <source>Passphrase Dialog</source>
+        <translation>دیالۆگی دەستەواژەی تێپەڕبوون</translation>
+    </message>
+    <message>
+        <source>Enter passphrase</source>
+        <translation>دەستەواژەی تێپەڕبوون بنووسە</translation>
+    </message>
+    <message>
+        <source>New passphrase</source>
+        <translation>دەستەواژەی تێپەڕی نوێ</translation>
+    </message>
+    <message>
+        <source>Repeat new passphrase</source>
+        <translation>دووبارەکردنەوەی دەستەواژەی تێپەڕی نوێ</translation>
+    </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>دەستەواژەی تێپەڕەوی نوێ تێبنووسە بۆ جزدان.1 تکایە دەستەواژەی تێپەڕێک بەکاربێنە لە 2ten یان زیاتر لە هێما هەڕەمەکیەکان2، یان 38 یان زیاتر ووشەکان3.</translation>
@@ -221,6 +259,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>no</source>
         <translation>نەخێر</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(بێ ناونیشان)
+
+</translation>
     </message>
     </context>
 <context>
@@ -531,8 +575,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>رێکەت</translation>
     </message>
     <message>
+        <source>Label</source>
+        <translation>پێناسەکردن</translation>
+    </message>
+    <message>
         <source>Message</source>
         <translation>پەیام</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(بێ ناونیشان)
+
+</translation>
     </message>
     </context>
 <context>
@@ -601,7 +655,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>ناونیشانی وەرگرتنەکە دروست نییە. تکایە دووبارە پشکنین بکەوە.</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(بێ ناونیشان)
+
+</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -691,8 +751,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>جۆر</translation>
     </message>
     <message>
+        <source>Label</source>
+        <translation>پێناسەکردن</translation>
+    </message>
+    <message>
         <source>Sent to</source>
         <translation>ناردن بۆ</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(بێ ناونیشان)
+
+</translation>
     </message>
     </context>
 <context>
@@ -730,6 +800,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Copy full transaction details</translation>
     </message>
     <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>فایلی جیاکراوە بە کۆما (*.csv)</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>رێکەت</translation>
     </message>
@@ -738,8 +812,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>جۆر</translation>
     </message>
     <message>
+        <source>Label</source>
+        <translation>پێناسەکردن</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>ناوونیشان</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>هەناردەکردن سەرکەوتوو نەبوو</translation>
     </message>
     <message>
         <source>to</source>

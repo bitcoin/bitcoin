@@ -845,6 +845,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>ウォレットを作成する</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>ウォレット</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>ウォレット名</translation>
     </message>
@@ -855,6 +859,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Encrypt Wallet</source>
         <translation>ウォレットを暗号化する</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>高度なオプション</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -2260,6 +2268,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Request payment to ...</source>
+        <translation>支払いをリクエスト...</translation>
+    </message>
+    <message>
         <source>Address:</source>
         <translation>アドレス：</translation>
     </message>
@@ -2568,6 +2580,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation>手数料は後から上乗せ可能です(Replace-By-Fee(手数料の上乗せ: BIP-125)機能が有効)。</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>トランザクション提案を確認してください。これにより、部分的に署名されたビットコイン・トランザクション（PSBT）が作成されます。これを保存するかコピーして例えばオフラインの %1 ウォレットやPSBTを扱えるハードウェアウォレットで残りの署名が出来ます。</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -3568,12 +3584,24 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>%s の読み込み中にエラーが発生しました！ 全ての鍵は正しく読み込めましたが、取引データやアドレス帳の項目が失われたか、正しくない可能性があります。</translation>
     </message>
     <message>
+        <source>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</source>
+        <translation>2つ以上のonionアドレスが与えられました。%sを自動的に作成されたTorのonionサービスとして使用します。</translation>
+    </message>
+    <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>お使いのコンピューターの日付と時刻が正しいことを確認してください！ PCの時計が正しくない場合 %s は正確に動作しません。</translation>
     </message>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>%s が有用だと感じられた方はぜひプロジェクトへの貢献をお願いします。ソフトウェアのより詳細な情報については %s をご覧ください。</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare the statement to fetch sqlite wallet schema version: %s</source>
+        <translation>SQLiteDatabase: sqliteウォレットのスキーマバージョンを取得するプリペアドステートメントの作成に失敗しました: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare the statement to fetch the application id: %s</source>
+        <translation>SQLiteDatabase: アプリケーションIDを取得するプリペアドステートメントの作成に失敗しました: %s</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
@@ -3688,6 +3716,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>データベースの検証に失敗しました</translation>
     </message>
     <message>
+        <source>Ignoring duplicate -wallet %s.</source>
+        <translation>重複するウォレット%sを無視します。</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>インポート中...</translation>
     </message>
@@ -3714,6 +3746,30 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>-fallbackfee=&lt;amount&gt; オプションに対する不正な amount: '%s'</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
+        <translation>SQLiteDatabase: データベースを検証するステートメントの実行に失敗しました: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to fetch sqlite wallet schema version: %s</source>
+        <translation>SQLiteDatabase: sqliteのウォレットスキーマバージョンの取得に失敗しました: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to fetch the application id: %s</source>
+        <translation>SQLiteDatabase: アプリケーションIDを取得できませんでした: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
+        <translation>SQLiteDatabase: データベースを検証するプリペアドステートメントの作成に失敗しました: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to read database verification error: %s</source>
+        <translation>SQLiteDatabase: データベース検証エラーの読み込みに失敗しました: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
+        <translation>SQLiteDatabase: 予期しないアプリケーションIDです。期待したものは%uで、%uを受け取りました。</translation>
     </message>
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
@@ -3800,6 +3856,14 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>エラー: 内向きの接続をリッスンするのに失敗しました（%s エラーが返却されました）</translation>
     </message>
     <message>
+        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
+        <translation>%sが破損しています。ウォレットのツールbitcoin-walletを使って復旧するか、バックアップから復元してみてください。</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.</source>
+        <translation>事前分割キープールをサポートするようにアップグレードしないと、非HD分割ウォレットをアップグレードすることはできません。バージョン169900 を使うか、バージョンを指定しないでください。</translation>
+    </message>
+    <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>-maxtxfee=&lt;amount&gt; オプションに対する不正な amount: '%s'（トランザクション詰まり防止のため、最小中継手数料の %s より大きくする必要があります）</translation>
     </message>
@@ -3808,8 +3872,28 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>取引の手数料差引後金額が小さすぎるため、送金できません。</translation>
     </message>
     <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation>このエラーはこのウォレットが正常にシャットダウンされず、前回ウォレットが読み込まれたときに新しいバージョンのBerkeley DBを使ったソフトウェアを利用していた場合に起こる可能性があります。もしそうであれば、このウォレットを前回読み込んだソフトウェアを使ってください</translation>
+    </message>
+    <message>
+        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
+        <translation>これは、通常のコイン選択よりも部分支払いの回避を優先するコイン選択を行う際に(通常の手数料に加えて)支払う最大のトランザクション手数料です。</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>
+        <translation>トランザクションはお釣りアドレスが必要ですが、アドレスを生成することができません。まず最初にkeypoolrefillを実行してください。</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>非剪定モードに戻るためには -reindex オプションを指定してデータベースを再構築する必要があります。 ブロックチェーン全体の再ダウンロードが必要となります。</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>致命的な内部エラーが発生しました。詳細はデバッグ用のログファイル debug.log を参照してください</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation>-blockfilterindex のオプション無しでは  -peerblockfilters を設定できません。</translation>
     </message>
     <message>
         <source>Disk space is too low!</source>
@@ -3826,6 +3910,14 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Error: Disk space is low for %s</source>
         <translation>エラー: %s 用のディスク容量が不足しています</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>エラー: 鍵プールが枯渇しました。まずはじめに keypoolrefill を呼び出してください</translation>
+    </message>
+    <message>
+        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
+        <translation>手数料率(%s)が最低手数料率の設定(%s)を下回っています</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>

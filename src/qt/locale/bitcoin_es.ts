@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Haz click con el botón derecho para editar una dirección o etiqueta</translation>
+        <translation>haz click derecho para editar dirección o etiqueta</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Crear una dirección nueva</translation>
+        <translation>crear un nueva direccion</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -43,7 +43,7 @@
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Borrar</translation>
+        <translation>Borrar</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -845,6 +845,10 @@ Firmar solo es posible con correos del tipo Legacy.</translation>
         <translation>Crear monedero</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Monedero</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Nombre de monedero</translation>
     </message>
@@ -855,6 +859,10 @@ Firmar solo es posible con correos del tipo Legacy.</translation>
     <message>
         <source>Encrypt Wallet</source>
         <translation>Cifrar monedero</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Opciones avanzadas</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>

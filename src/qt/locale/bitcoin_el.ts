@@ -70,6 +70,12 @@
         <translation>Αυτές είναι οι Bitcoin διευθύνσεις σας για να στέλνετε πληρωμές. Να ελέγχετε πάντα το ποσό, καθώς και τη διεύθυνση παραλήπτη πριν στείλετε νομίσματα.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>Αυτές είναι οι Bitcoin διευθύνσεις για την λήψη πληρωμών. Χρησιμοποιήστε το κουμπί  'Δημιουργία νέας διεύθυνσης λήψεων' στο παράθυρο λήψεων για την δημιουργία νέας διεύθυνσης.
+Η υπογραφή είναι διαθέσιμη μόνο σε διευθύνσεις 'παλαιού τύπου'.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Αντιγραφή Διεύθυνσης</translation>
     </message>
@@ -478,6 +484,22 @@
         <translation>Ενημερωμένο</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>&amp;Φόρτωση PSBT από αρχείο...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation>Φόρτωση συναλλαγής Partially Signed Bitcoin</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>Φόρτωση PSBT από το πρόχειρο...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation>Φόρτωση συναλλαγής Partially Signed Bitcoin από το πρόχειρο</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation>Κόμβος παράθυρο</translation>
     </message>
@@ -524,6 +546,14 @@
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Εμφάνισε το %1 βοηθητικό μήνυμα για λήψη μιας λίστας με διαθέσιμες επιλογές για Bitcoin εντολές </translation>
+    </message>
+    <message>
+        <source>&amp;Mask values</source>
+        <translation>&amp;Απόκρυψη τιμών</translation>
+    </message>
+    <message>
+        <source>Mask the values in the Overview tab</source>
+        <translation>Απόκρυψη τιμών στην καρτέλα Επισκόπησης</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -815,6 +845,10 @@
         <translation>Δημιουργία Πορτοφολιού</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Πορτοφόλι</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Όνομα Πορτοφολιού</translation>
     </message>
@@ -825,6 +859,10 @@
     <message>
         <source>Encrypt Wallet</source>
         <translation>Κρυπτογράφηση Πορτοφολιού</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Προχωρημένες ρυθμίσεις</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -841,6 +879,14 @@
     <message>
         <source>Make Blank Wallet</source>
         <translation>Δημιουργία Άδειου Πορτοφολιού</translation>
+    </message>
+    <message>
+        <source>Use descriptors for scriptPubKey management</source>
+        <translation>χρήση περιγραφέων για την διαχείριση του scriptPubKey</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>Πορτοφόλι Περιγραφέα </translation>
     </message>
     <message>
         <source>Create</source>
@@ -1311,6 +1357,14 @@
         <translation>Επιλογή κατά πόσο να αναδείχνονται οι δυνατότητες ελέγχου κερμάτων.</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation>Συνδεθείτε στο δίκτυο Bitcoin μέσω ενός ξεχωριστού διακομιστή μεσολάβησης SOCKS5 για τις onion υπηρεσίες του Tor.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
+        <translation>Χρησιμοποιήστε ξεχωριστό διακομιστή μεσολάβησης SOCKS&amp;5 για σύνδεση με αποδέκτες μέσω των υπηρεσιών onion του Tor:</translation>
+    </message>
+    <message>
         <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
         <translation>Οι επιλογές που έχουν οριστεί σε αυτό το παράθυρο διαλόγου παραβλέπονται από τη γραμμή εντολών ή από το αρχείο διαμόρφωσης:</translation>
     </message>
@@ -1442,12 +1496,24 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Το τρέχον συνολικό υπόλοιπο σε διευθύνσεις παρακολούθησης μόνο</translation>
     </message>
-    </context>
+    <message>
+        <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
+        <translation>Ενεργοποιήθηκε η κατάσταση ιδιωτικότητας στην καρτέλα Επισκόπησης. Για εμφάνιση των τιμών αποεπιλέξτε το Ρυθμίσεις-&gt;Απόκρυψη τιμών.</translation>
+    </message>
+</context>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
         <source>Dialog</source>
         <translation>Διάλογος</translation>
+    </message>
+    <message>
+        <source>Sign Tx</source>
+        <translation>Υπόγραψε Tx</translation>
+    </message>
+    <message>
+        <source>Broadcast Tx</source>
+        <translation>Αναμετάδωση Tx</translation>
     </message>
     <message>
         <source>Copy to Clipboard</source>
@@ -1503,6 +1569,10 @@ ID Συναλλαγής: %1</translation>
         <translation>* Στέλνει %1 προς  %2</translation>
     </message>
     <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation>Δεν είναι δυνατός ο υπολογισμός των κρατήσεων ή του συνολικού ποσού συναλλαγής.</translation>
+    </message>
+    <message>
         <source>Pays transaction fee: </source>
         <translation>Πληρωμή τέλους συναλλαγής:</translation>
     </message>
@@ -1513,6 +1583,18 @@ ID Συναλλαγής: %1</translation>
     <message>
         <source>or</source>
         <translation>ή</translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>(Αλλά αυτό το πορτοφόλι δεν μπορεί να υπογράψει συναλλαγές.)</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation>(Αλλά αυτό το πορτοφόλι δεν έχει τα σωστά κλειδιά.)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation>Η συναλλαγή είναι πλήρως υπογεγραμμένη και έτοιμη για αναμετάδωση.</translation>
     </message>
     <message>
         <source>Transaction status is unknown.</source>
@@ -1682,6 +1764,10 @@ ID Συναλλαγής: %1</translation>
     <message>
         <source>Error: %1</source>
         <translation>Σφάλμα: %1</translation>
+    </message>
+    <message>
+        <source>Error initializing settings: %1</source>
+        <translation>Σφάλμα έναρξης ρυθμίσεω: %1</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
@@ -2133,7 +2219,11 @@ ID Συναλλαγής: %1</translation>
         <source>Could not unlock wallet.</source>
         <translation>Δεν είναι δυνατό το ξεκλείδωμα του πορτοφολιού.</translation>
     </message>
-    </context>
+    <message>
+        <source>Could not generate new %1 address</source>
+        <translation>Δεν πραγματοποιήθηκε παραγωγή νέας %1 διεύθυνσης </translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -2147,6 +2237,10 @@ ID Συναλλαγής: %1</translation>
     <message>
         <source>Amount:</source>
         <translation>Ποσό:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Ετικέτα:</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -2420,8 +2514,16 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Είστε βέβαιοι ότι θέλετε να στείλετε;</translation>
     </message>
     <message>
+        <source>Create Unsigned</source>
+        <translation>Δημιουργία Ανυπόγραφου</translation>
+    </message>
+    <message>
         <source>Save Transaction Data</source>
         <translation>Αποθήκευση Δεδομένων Συναλλαγής</translation>
+    </message>
+    <message>
+        <source>PSBT saved</source>
+        <translation>Το PSBT αποθηκεύτηκε</translation>
     </message>
     <message>
         <source>or</source>
@@ -2430,6 +2532,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation> Μπορείτε να αυξήσετε αργότερα την αμοιβή (σήματα Αντικατάσταση-By-Fee, BIP-125).</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Παρακαλούμε, ελέγξτε την πρόταση συναλλαγής. Θα παραχθεί μια συναλλαγή Bitcoin με μερική υπογραφή (PSBT), την οποία μπορείτε να αντιγράψετε και στη συνέχεια να υπογράψετε με π.χ. ένα πορτοφόλι %1 εκτός σύνδεσης ή ένα πορτοφόλι υλικού συμβατό με το PSBT.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -3246,9 +3352,21 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Close all wallets</source>
         <translation>Κλείσιμο όλων των πορτοφολιών</translation>
     </message>
-    </context>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation>Είσαι σίγουροι ότι επιθυμείτε το κλείσιμο όλων των πορτοφολιών;</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
+    <message>
+        <source>No wallet has been loaded.
+Go to File &gt; Open Wallet to load a wallet.
+- OR -</source>
+        <translation>Δεν έχει φορτωθεί κανένα πορτοφόλι.
+Μεταβείτε στο Αρχείο&gt;Άνοιγμα πορτοφολιού για φόρτωση.
+-Η-</translation>
+    </message>
     <message>
         <source>Create a new wallet</source>
         <translation>Δημιουργία νέου Πορτοφολιού</translation>
@@ -3509,6 +3627,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation>Αποτυχία επανεγγραφής του πορτοφολιού κατά την αρχικοποίηση</translation>
+    </message>
+    <message>
+        <source>Failed to verify database</source>
+        <translation>Η επιβεβαίωση της βάσης δεδομένων απέτυχε</translation>
     </message>
     <message>
         <source>Importing...</source>

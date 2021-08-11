@@ -791,6 +791,10 @@
         <translation>Gumawa ng Pitaka</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Walet</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Pangalan ng Pitaka</translation>
     </message>
@@ -1475,6 +1479,10 @@
     <message>
         <source>Unknown error processing transaction.</source>
         <translation>Hindi kilalang error sa pagproseso ng transaksyon.</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation>%1</translation>
     </message>
     <message>
         <source>Total Amount</source>

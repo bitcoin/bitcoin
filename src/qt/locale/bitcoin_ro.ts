@@ -70,6 +70,12 @@
         <translation>Acestea sunt adresele tale Bitcoin pentru efectuarea platilor. Intotdeauna verifica atent suma de plata si adresa beneficiarului inainte de a trimite monede.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>Acestea sunt adresele Bitcoin pentru primirea plăților. Folosiți butonul " Creați o nouă adresă de primire" din fila de primire pentru a crea noi adrese.
+Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Copiază Adresa</translation>
     </message>
@@ -479,6 +485,22 @@
         <translation>Actualizat</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>&amp;Încarcă PSBT din fișier...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation>Încărcați Tranzacția Bitcoin Parțial Semnată</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>Încărcați PSBT din clipboard...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation>Încărcați Tranzacția Bitcoin Parțial Semnată din clipboard</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation>Fereastra nodului</translation>
     </message>
@@ -515,8 +537,24 @@
         <translation>Inchide portofel</translation>
     </message>
     <message>
+        <source>Close All Wallets...</source>
+        <translation>Inchide Portofelele</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Închideți toate portofelele</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Arată mesajul de ajutor %1 pentru a obţine o listă cu opţiunile posibile de linii de comandă Bitcoin</translation>
+    </message>
+    <message>
+        <source>&amp;Mask values</source>
+        <translation>&amp;Valorile măștii</translation>
+    </message>
+    <message>
+        <source>Mask the values in the Overview tab</source>
+        <translation>Mascați valorile din fila Prezentare generală</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -626,7 +664,15 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Portofelul este &lt;b&gt;criptat&lt;/b&gt; iar în momentul de faţă este &lt;b&gt;blocat&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>Original message:</source>
+        <translation>Mesajul original:</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation>A apărut o eroare fatală.%1 nu mai poate continua în siguranță și va ieși din program. </translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -800,6 +846,10 @@
         <translation>Crează portofel</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Portofel</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Numele portofelului</translation>
     </message>
@@ -810,6 +860,10 @@
     <message>
         <source>Encrypt Wallet</source>
         <translation>Criptează portofelul.</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Optiuni Avansate</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -828,10 +882,22 @@
         <translation>Faceți Portofel gol</translation>
     </message>
     <message>
+        <source>Use descriptors for scriptPubKey management</source>
+        <translation>Utilizați descriptori pentru gestionarea scriptPubKey</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation> Descriptor Portofel</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation>Creează</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>Compilat fără suport sqlite (necesar pentru portofele descriptor)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -944,6 +1010,10 @@
         <translation>Cand apasati OK, %1 va incepe descarcarea si procesarea intregului %4 blockchain (%2GB) incepand cu cele mai vechi tranzactii din %3 de la lansarea initiala a %4.</translation>
     </message>
     <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>Revenirea la această setare necesită re-descărcarea întregului blockchain. Este mai rapid să descărcați mai întâi rețeaua complet și să o fragmentați  mai târziu. Dezactivează unele funcții avansate.</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>Sincronizarea initiala necesita foarte multe resurse, si poate releva probleme de hardware ale computerului care anterior au trecut neobservate. De fiecare data cand rulati %1, descarcarea va continua de unde a fost intrerupta.</translation>
     </message>
@@ -1041,6 +1111,10 @@
     <message>
         <source>Hide</source>
         <translation>Ascunde</translation>
+    </message>
+    <message>
+        <source>Esc</source>
+        <translation>Iesire</translation>
     </message>
     </context>
 <context>
@@ -1402,6 +1476,14 @@
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
+        <source>Save...</source>
+        <translation>Salveaza</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Inchide</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation>Suma totală</translation>
     </message>
@@ -1561,6 +1643,10 @@
     <message>
         <source>Error: %1</source>
         <translation>Eroare: %1</translation>
+    </message>
+    <message>
+        <source>Error initializing settings: %1</source>
+        <translation>Eroare de inițializare a setărilor: %1</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
@@ -3005,6 +3091,10 @@ Nota: Cum taxa este calculata per byte, o taxa de "100 satoshi per kB" pentru o 
     <message>
         <source>Close wallet</source>
         <translation>Inchide portofel</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Închideți toate portofelele</translation>
     </message>
     </context>
 <context>

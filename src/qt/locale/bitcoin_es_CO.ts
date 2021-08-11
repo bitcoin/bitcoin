@@ -70,6 +70,12 @@
         <translation>Estas son tus direcciones de Bitcoin para recibir pagos. Siempre revise el monto y la dirección de envío antes de enviar criptomonedas.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>Estas son tus direcciones Bitcoin para recibir pagos. Usa el botón 'Crear una nueva dirección para recibir' en la pestaña 'Recibir' para crear nuevas direcciones.
+Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Copiar dirección</translation>
     </message>
@@ -132,6 +138,10 @@
         <translation>Repite nueva contraseña</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Mostrar la frase de contraseña</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Codificar billetera</translation>
     </message>
@@ -170,6 +180,14 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Billetera codificada</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Introduce la contraseña nueva para la billetera. &lt;br/&gt;Por favor utiliza una contraseña de &lt;b&gt;diez o más caracteres aleatorios&lt;/b&gt;, u &lt;b&gt;ocho o más palabras&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Ingresa la antigua frase de contraseña y la nueva frase de contraseña para la billetera.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -695,6 +713,10 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet</source>
+        <translation>Cartera</translation>
+    </message>
     <message>
         <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
         <translation>Crea una billetera en blanco. Las billeteras en blanco inicialmente no tienen llaves privadas o texto. Las llaves privadas y las direcciones pueden ser importadas, o se puede establecer una semilla HD, más tarde.</translation>

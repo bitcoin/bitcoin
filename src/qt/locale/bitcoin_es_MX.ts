@@ -844,6 +844,10 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
         <translation>Crear una cartera </translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Cartera</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Nombre de la cartera </translation>
     </message>
@@ -854,6 +858,10 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
     <message>
         <source>Encrypt Wallet</source>
         <translation>Encripta la cartera</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Opciones avanzadas</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>

@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>יצירת כתובת חדשה</translation>
+        <translation>יצר כתובת חדשה</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -47,7 +47,7 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>נא לבחור את הכתובת לשליחת המטבעות</translation>
+        <translation>בחר את הכתובת לשליחת המטבעות</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
@@ -842,6 +842,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>יצירת ארנק</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>ארנק</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>שם הארנק</translation>
     </message>
@@ -852,6 +856,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Encrypt Wallet</source>
         <translation>הצפנת ארנק</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>אפשרויות מתקדמות</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -881,7 +889,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Create</source>
         <translation>יצירה</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>מהודר ללא תמיכת sqlite (נחוץ לארנקי דסקריפטור)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>

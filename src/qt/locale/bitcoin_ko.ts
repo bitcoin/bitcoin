@@ -845,6 +845,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>지갑 생성하기</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>지갑</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>지갑 이름</translation>
     </message>
@@ -855,6 +859,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Encrypt Wallet</source>
         <translation>지갑 암호화</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>고급 옵션</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>

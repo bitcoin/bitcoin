@@ -845,6 +845,10 @@ Assinar só é possível com endereços do tipo "legado".</translation>
         <translation>Criar Carteira</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Carteira</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Nome da Carteira</translation>
     </message>
@@ -855,6 +859,10 @@ Assinar só é possível com endereços do tipo "legado".</translation>
     <message>
         <source>Encrypt Wallet</source>
         <translation>Encriptar Carteira</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Opções avançadas</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>

@@ -724,6 +724,10 @@
         <source>Create Wallet</source>
         <translation>Създайте портфейл</translation>
     </message>
+    <message>
+        <source>Wallet</source>
+        <translation>портфейл</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>

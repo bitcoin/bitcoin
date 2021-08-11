@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Stwórz nowy portfel</translation>
+        <translation>Stwórz nowy adres</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -845,6 +845,10 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
         <translation>Stwórz portfel</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Portfel</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Nazwa portfela</translation>
     </message>
@@ -855,6 +859,10 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
     <message>
         <source>Encrypt Wallet</source>
         <translation>Zaszyfruj portfel</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Opcje Zaawansowane</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -3582,6 +3590,14 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
         <translation>Wspomóż proszę, jeśli uznasz %s za użyteczne. Odwiedź  %s, aby uzyskać więcej informacji o tym oprogramowaniu.</translation>
     </message>
     <message>
+        <source>SQLiteDatabase: Failed to prepare the statement to fetch the application id: %s</source>
+        <translation>SQLiteDatabase: Nie udało się przygotować zapytania do pobrania identyfikatora aplikacji: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
+        <translation>SQLiteDatabase: Nieznany schemat portfela sqlite wersji %d. Obsługiwana jest tylko wersja %d</translation>
+    </message>
+    <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
         <translation>Baza bloków zawiera blok, który wydaje się pochodzić z przyszłości. Może to wynikać z nieprawidłowego ustawienia daty i godziny Twojego komputera. Bazę danych bloków dobuduj tylko, jeśli masz pewność, że data i godzina twojego komputera są poprawne</translation>
     </message>
@@ -3831,6 +3847,14 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
         <translation>Błąd: Nasłuchiwanie połączeń przychodzących nie powiodło się (nasłuch zwrócił błąd %s)</translation>
     </message>
     <message>
+        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
+        <translation>%s jest uszkodzony. Spróbuj użyć narzędzia bitcoin-portfel, aby uratować portfel lub przywrócić kopię zapasową.</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.</source>
+        <translation>Nie można zaktualizować portfela rozdzielnego bez HD, bez aktualizacji obsługi podzielonej bazy kluczy. Użyj wersji 169900 lub jej nie określaj.</translation>
+    </message>
+    <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>Niewłaściwa ilość dla -maxtxfee=&lt;ilość&gt;: '%s' (musi wynosić przynajmniej minimalną wielkość %s aby zapobiec utknięciu transakcji)</translation>
     </message>
@@ -3841,6 +3865,10 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
     <message>
         <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
         <translation>Ten błąd mógł wystąpić jeżeli portfel nie został poprawnie zamknięty oraz był ostatnio załadowany przy użyciu buildu z nowszą wersją Berkley DB. Jeżeli tak, proszę użyć oprogramowania które ostatnio załadowało ten portfel</translation>
+    </message>
+    <message>
+        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
+        <translation>Jest to maksymalna opłata transakcyjna, którą płacisz (oprócz normalnej opłaty) za priorytetowe traktowanie unikania częściowych wydatków w stosunku do regularnego wyboru monet.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>

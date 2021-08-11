@@ -845,6 +845,10 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
         <translation>Luo lompakko</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Lompakko</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Lompakon nimi</translation>
     </message>
@@ -855,6 +859,10 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
     <message>
         <source>Encrypt Wallet</source>
         <translation>Salaa lompakko</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Lisäasetukset</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>

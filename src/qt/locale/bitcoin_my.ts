@@ -26,6 +26,10 @@
         <translation>လက်ရှိရွေးထားတဲ့ လိပ်စာကို ဖျက်မယ်။</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>လိပ်စာရိုက်ထည့်ပါ</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>လက်ရှိ tab မှာရှိတဲ့ဒေတာတွေကို ဖိုင်လ်မှာသိမ်းမယ်။</translation>
     </message>
@@ -37,9 +41,33 @@
         <source>&amp;Delete</source>
         <translation>&amp;ဖျက်</translation>
     </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>လိပ်စာကိုပေးပို့ဖို့လိပ်စာရွေးချယ်ပါ</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>လိပ်စာပေးပို့နေသည်</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>လိပ်စာလက်ခံရရှိသည်</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>တင်ပို့မှုမအောင်မြင်ပါ</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>တံဆိပ်</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>လိပ်စာ</translation>
+    </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -61,9 +89,29 @@
         <source>Information</source>
         <translation>အချက်အလက်</translation>
     </message>
+    <message>
+        <source>Up to date</source>
+        <translation>နောက်ဆုံးပေါ်</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>ချဲ့</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>Date</source>
+        <translation>နေ့စွဲ</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>ဟုတ်တယ်</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>မဟုတ်ဘူး</translation>
+    </message>
     </context>
 <context>
     <name>CreateWalletActivity</name>
@@ -132,6 +180,14 @@
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>နေ့စွဲ</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>တံဆိပ်</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -150,15 +206,43 @@
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>နေ့စွဲ</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>နေ့စွဲ</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>တံဆိပ်</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Date</source>
+        <translation>နေ့စွဲ</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>တံဆိပ်</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>လိပ်စာ</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>တင်ပို့မှုမအောင်မြင်ပါ</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
