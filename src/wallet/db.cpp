@@ -82,6 +82,14 @@ bool IsWalletLoaded(const fs::path& wallet_path)
     return database && database->IsDatabaseLoaded(database_filename);
 }
 
+fs::path WalletDataFilePath(const fs::path& wallet_path)
+{
+    fs::path env_directory;
+    std::string database_filename;
+    SplitWalletPath(wallet_path, env_directory, database_filename);
+    return env_directory / database_filename;
+}
+
 /**
  * @param[in] wallet_path Path to wallet directory. Or (for backwards compatibility only) a path to a berkeley btree data file inside a wallet directory.
  * @param[out] database_filename Filename of berkeley btree data file inside the wallet directory.
