@@ -103,9 +103,6 @@ public Q_SLOTS:
     /** Show used receiving addresses */
     void usedReceivingAddresses();
 
-    /** Re-emit encryption status signal */
-    void updateEncryptionStatus();
-
     /** Show progress dialog e.g. for rescan */
     void showProgress(const QString &title, int nProgress);
 
