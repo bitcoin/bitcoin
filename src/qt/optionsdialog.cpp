@@ -28,6 +28,7 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <QShowEvent>
+#include <QSystemTrayIcon>
 #include <QTimer>
 
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
@@ -176,6 +177,13 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
         updateWidth();
         Q_EMIT appearanceChanged();
     });
+
+    if (!QSystemTrayIcon::isSystemTrayAvailable()) {
+        ui->hideTrayIcon->setChecked(true);
+        ui->hideTrayIcon->setEnabled(false);
+        ui->minimizeToTray->setChecked(false);
+        ui->minimizeToTray->setEnabled(false);
+    }
 }
 
 OptionsDialog::~OptionsDialog()
@@ -269,8 +277,10 @@ void OptionsDialog::setMapper()
     /* Main */
     mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
 #ifndef Q_OS_MAC
-    mapper->addMapping(ui->hideTrayIcon, OptionsModel::HideTrayIcon);
-    mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
+    if (QSystemTrayIcon::isSystemTrayAvailable()) {
+        mapper->addMapping(ui->hideTrayIcon, OptionsModel::HideTrayIcon);
+        mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
+    }
     mapper->addMapping(ui->minimizeOnClose, OptionsModel::MinimizeOnClose);
 #endif
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);

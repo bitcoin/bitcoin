@@ -73,7 +73,6 @@
 #include <malloc.h>
 #endif
 
-#include <boost/thread.hpp>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <openssl/conf.h>

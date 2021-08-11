@@ -926,7 +926,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
             "2. minconf           (numeric, optional) Only include transactions confirmed at least this many times.\n"
             "                     The default is 1 if an account is provided or 0 if no account is provided\n")
             : std::string(
-            "getbalance ( \"(dummy)\" minconf addlocked include_watchonly )\n"
+            "getbalance ( \"dummy\" minconf addlocked include_watchonly )\n"
             "\nReturns the total available balance.\n"
             "The available balance is what the wallet considers currently spendable, and is\n"
             "thus affected by options which limit spendability such as -spendzeroconfchange.\n"

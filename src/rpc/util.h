@@ -12,8 +12,6 @@
 #include <util/strencodings.h>
 #include <rpc/protocol.h>
 
-#include <boost/variant/static_visitor.hpp>
-
 #include <string>
 #include <vector>
 
