@@ -113,6 +113,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
         connect(walletFrame, &WalletFrame::message, [this](const QString& title, const QString& message, unsigned int style) {
             this->message(title, message, style);
         });
+        connect(walletFrame, &WalletFrame::currentWalletSet, [this] { updateWalletStatus(); });
         setCentralWidget(walletFrame);
     } else
 #endif // ENABLE_WALLET
