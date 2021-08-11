@@ -1439,15 +1439,12 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
 
 struct tallyitem
 {
-    CAmount nAmount;
-    int nConf;
+    CAmount nAmount{0};
+    int nConf{std::numeric_limits<int>::max()};
     std::vector<uint256> txids;
-    bool fIsWatchonly;
+    bool fIsWatchonly{false};
     tallyitem()
     {
-        nAmount = 0;
-        nConf = std::numeric_limits<int>::max();
-        fIsWatchonly = false;
     }
 };
 

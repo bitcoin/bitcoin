@@ -29,33 +29,31 @@
  */
 class CAddrInfo : public CAddress
 {
-
-
 public:
     //! last try whatsoever by us (memory only)
-    int64_t nLastTry;
+    int64_t nLastTry{0};
 
     //! last counted attempt (memory only)
-    int64_t nLastCountAttempt;
+    int64_t nLastCountAttempt{0};
 
 private:
     //! where knowledge about this address first came from
     CNetAddr source;
 
     //! last successful connection by us
-    int64_t nLastSuccess;
+    int64_t nLastSuccess{0};
 
     //! connection attempts since last successful attempt
-    int nAttempts;
+    int nAttempts{0};
 
     //! reference count in new sets (memory only)
-    int nRefCount;
+    int nRefCount{0};
 
     //! in tried set? (memory only)
-    bool fInTried;
+    bool fInTried{false};
 
     //! position in vRandom
-    int nRandomPos;
+    int nRandomPos{-1};
 
     friend class CAddrMan;
 
@@ -67,25 +65,12 @@ public:
         READWRITE(obj.source, obj.nLastSuccess, obj.nAttempts);
     }
 
-    void Init()
-    {
-        nLastSuccess = 0;
-        nLastTry = 0;
-        nLastCountAttempt = 0;
-        nAttempts = 0;
-        nRefCount = 0;
-        fInTried = false;
-        nRandomPos = -1;
-    }
-
     CAddrInfo(const CAddress &addrIn, const CNetAddr &addrSource) : CAddress(addrIn), source(addrSource)
     {
-        Init();
     }
 
     CAddrInfo() : CAddress(), source()
     {
-        Init();
     }
 
     //! Calculate in which "tried" bucket this entry belongs
@@ -108,7 +93,6 @@ public:
 
     //! Calculate the relative chance this entry should be given when selecting nodes to connect to
     double GetChance(int64_t nNow = GetAdjustedTime()) const;
-
 };
 
 /** Stochastic address manager

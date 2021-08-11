@@ -51,8 +51,8 @@ class PeerTablePriv
 public:
     /** Local cache of peer information */
     QList<CNodeCombinedStats> cachedNodeStats;
-    /** Column to sort nodes by */
-    int sortColumn;
+    /** Column to sort nodes by (default to unsorted) */
+    int sortColumn{-1};
     /** Order (ascending or descending) to sort nodes by */
     Qt::SortOrder sortOrder;
     /** Index of rows by node ID */
@@ -111,8 +111,6 @@ PeerTableModel::PeerTableModel(interfaces::Node& node, ClientModel *parent) :
 {
     columns << tr("NodeId") << tr("Node/Service") << tr("Ping") << tr("Sent") << tr("Received") << tr("User Agent");
     priv.reset(new PeerTablePriv());
-    // default to unsorted
-    priv->sortColumn = -1;
 
     // set up timer for auto refresh
     timer = new QTimer(this);
