@@ -23,21 +23,22 @@ namespace llmq
 
 CBLSWorker* blsWorker;
 
-CDBWrapper* llmqDb;
-
 void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe)
 {
-    llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 8 << 20, unitTests, fWipe);
     blsWorker = new CBLSWorker();
 
     quorumDKGDebugManager = new CDKGDebugManager();
     quorumBlockProcessor = new CQuorumBlockProcessor(evoDb);
-    quorumDKGSessionManager = new CDKGSessionManager(*llmqDb, *blsWorker);
+    quorumDKGSessionManager = new CDKGSessionManager(*blsWorker, unitTests, fWipe);
     quorumManager = new CQuorumManager(evoDb, *blsWorker, *quorumDKGSessionManager);
     quorumSigSharesManager = new CSigSharesManager();
-    quorumSigningManager = new CSigningManager(*llmqDb, unitTests);
+    quorumSigningManager = new CSigningManager(unitTests, fWipe);
     chainLocksHandler = new CChainLocksHandler();
-    quorumInstantSendManager = new CInstantSendManager(*llmqDb);
+    quorumInstantSendManager = new CInstantSendManager(unitTests, fWipe);
+
+    // NOTE: we use this only to wipe the old db, do NOT use it for anything else
+    // TODO: remove it in some future version
+    auto llmqDbTmp = std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests, true);
 }
 
 void DestroyLLMQSystem()
@@ -60,8 +61,6 @@ void DestroyLLMQSystem()
     quorumDKGDebugManager = nullptr;
     delete blsWorker;
     blsWorker = nullptr;
-    delete llmqDb;
-    llmqDb = nullptr;
     LOCK(cs_llmq_vbc);
     llmq_versionbitscache.Clear();
 }

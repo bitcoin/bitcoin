@@ -66,7 +66,7 @@ public:
 class CRecoveredSigsDb
 {
 private:
-    CDBWrapper& db;
+    std::unique_ptr<CDBWrapper> db{nullptr};
 
     CCriticalSection cs;
     unordered_lru_cache<std::pair<Consensus::LLMQType, uint256>, bool, StaticSaltedHasher, 30000> hasSigForIdCache GUARDED_BY(cs);
@@ -74,10 +74,7 @@ private:
     unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForHashCache GUARDED_BY(cs);
 
 public:
-    explicit CRecoveredSigsDb(CDBWrapper& _db);
-
-    void ConvertInvalidTimeKeys();
-    void AddVoteTimeKeys();
+    explicit CRecoveredSigsDb(bool fMemory, bool fWipe);
 
     bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash) const;
     bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id);
@@ -99,6 +96,8 @@ public:
     void CleanupOldVotes(int64_t maxAge);
 
 private:
+    void MigrateRecoveredSigs();
+
     bool ReadRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret) const;
     void RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType llmqType, const uint256& id, bool deleteHashKey, bool deleteTimeKey);
 };
@@ -136,7 +135,7 @@ private:
     std::vector<CRecoveredSigsListener*> recoveredSigsListeners GUARDED_BY(cs);
 
 public:
-    CSigningManager(CDBWrapper& llmqDb, bool fMemory);
+    CSigningManager(bool fMemory, bool fWipe);
 
     bool AlreadyHave(const CInv& inv);
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret);
