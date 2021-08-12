@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <optional>
+#include <variant>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -621,6 +622,42 @@ void CWallet::InitialiseAddressBookUsed()
         const CWalletTx& wtx = entry.second;
         UpdateAddressBookUsed(wtx);
     }
+}
+
+bool CWallet::FindScriptPubKeyUsed(const std::set<CScript>& keys, const std::variant<std::monostate, std::function<void(const CWalletTx&)>, std::function<void(const CWalletTx&, uint32_t)>>& callback) const
+{
+    bool found_any = false;
+    for (const auto& key : keys) {
+        CTxDestination dest;
+        if (!ExtractDestination(key, dest)) continue;
+        const auto& address_book_it = m_address_book.find(dest);
+        if (address_book_it == m_address_book.end()) continue;
+        if (address_book_it->second.m_used) {
+            found_any = true;
+            break;
+        }
+    }
+    if (!found_any) return false;
+    if (std::holds_alternative<std::monostate>(callback)) return true;
+
+    found_any = false;
+    for (const auto& entry : mapWallet) {
+        const CWalletTx& wtx = entry.second;
+        for (uint32_t i = 0; i < wtx.tx->vout.size(); ++i) {
+            const auto& output = wtx.tx->vout[i];
+            if (keys.count(output.scriptPubKey)) {
+                found_any = true;
+                const auto callback_type = callback.index();
+                if (callback_type == 1) {
+                    std::get<std::function<void(const CWalletTx&)>>(callback)(wtx);
+                    break;
+                }
+                std::get<std::function<void(const CWalletTx&, uint32_t)>>(callback)(wtx, i);
+            }
+        }
+    }
+
+    return found_any;
 }
 
 bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
