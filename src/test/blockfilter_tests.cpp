@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(gcsfilter_default_constructor)
 
 BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
 {
-    CScript included_scripts[5], excluded_scripts[3];
+    CScript included_scripts[5], excluded_scripts[4];
 
     // First two are outputs on a single transaction.
     included_scripts[0] << std::vector<unsigned char>(0, 65) << OP_CHECKSIG;
@@ -73,14 +73,19 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     // This script is not related to the block at all.
     excluded_scripts[1] << std::vector<unsigned char>(5, 33) << OP_CHECKSIG;
 
+    // OP_RETURN is non-standard since it's not followed by a data push, but is still excluded from
+    // filter.
+    excluded_scripts[2] << OP_RETURN << OP_4 << OP_ADD << OP_8 << OP_EQUAL;
+
     CMutableTransaction tx_1;
     tx_1.vout.emplace_back(100, included_scripts[0]);
     tx_1.vout.emplace_back(200, included_scripts[1]);
+    tx_1.vout.emplace_back(0, excluded_scripts[0]);
 
     CMutableTransaction tx_2;
     tx_2.vout.emplace_back(300, included_scripts[2]);
-    tx_2.vout.emplace_back(0, excluded_scripts[0]);
-    tx_2.vout.emplace_back(400, excluded_scripts[2]); // Script is empty
+    tx_2.vout.emplace_back(0, excluded_scripts[2]);
+    tx_2.vout.emplace_back(400, excluded_scripts[3]); // Script is empty
 
     CBlock block;
     block.vtx.push_back(MakeTransactionRef(tx_1));
@@ -90,7 +95,7 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     block_undo.vtxundo.emplace_back();
     block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(500, included_scripts[3]), 1000, true);
     block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(600, included_scripts[4]), 10000, false);
-    block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(700, excluded_scripts[2]), 100000, false);
+    block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(700, excluded_scripts[3]), 100000, false);
 
     BlockFilter block_filter(BlockFilterType::BASIC_FILTER, block, block_undo);
     const GCSFilter& filter = block_filter.GetFilter();
@@ -166,6 +171,18 @@ BOOST_AUTO_TEST_CASE(blockfilters_json_test)
         uint256 computed_header_basic = computed_filter_basic.ComputeHeader(prev_filter_header_basic);
         BOOST_CHECK(computed_header_basic == filter_header_basic);
     }
+}
+
+BOOST_AUTO_TEST_CASE(blockfilter_type_names)
+{
+    BOOST_CHECK_EQUAL(BlockFilterTypeName(BlockFilterType::BASIC_FILTER), "basic");
+    BOOST_CHECK_EQUAL(BlockFilterTypeName(static_cast<BlockFilterType>(255)), "");
+
+    BlockFilterType filter_type;
+    BOOST_CHECK(BlockFilterTypeByName("basic", filter_type));
+    BOOST_CHECK_EQUAL(filter_type, BlockFilterType::BASIC_FILTER);
+
+    BOOST_CHECK(!BlockFilterTypeByName("unknown", filter_type));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
