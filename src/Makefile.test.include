@@ -137,6 +137,7 @@ BITCOIN_TESTS =\
   test/descriptor_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
+  test/flatfile_tests.cpp \
   test/fs_tests.cpp \
   test/getarg_tests.cpp \
   test/governance_validators_tests.cpp \

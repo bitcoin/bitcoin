@@ -814,8 +814,8 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
     if (fReindex) {
         int nFile = 0;
         while (true) {
-            CDiskBlockPos pos(nFile, 0);
-            if (!fs::exists(GetBlockPosFilename(pos, "blk")))
+            FlatFilePos pos(nFile, 0);
+            if (!fs::exists(GetBlockPosFilename(pos)))
                 break; // No block files left to reindex
             FILE *file = OpenBlockFile(pos, true);
             if (!file)
@@ -2405,11 +2405,11 @@ bool AppInitMain()
 
     // ********************************************************* Step 11: import blocks
 
-    if (!CheckDiskSpace(/* additional_bytes */ 0, /* blocks_dir */ false)) {
+    if (!CheckDiskSpace(GetDataDir())) {
         InitError(strprintf(_("Error: Disk space is low for %s"), GetDataDir()));
         return false;
     }
-    if (!CheckDiskSpace(/* additional_bytes */ 0, /* blocks_dir */ true)) {
+    if (!CheckDiskSpace(GetBlocksDir())) {
         InitError(strprintf(_("Error: Disk space is low for %s"), GetBlocksDir()));
         return false;
     }

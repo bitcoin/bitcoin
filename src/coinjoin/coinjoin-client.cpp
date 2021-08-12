@@ -35,7 +35,7 @@ void CCoinJoinClientQueueManager::ProcessMessage(CNode* pfrom, const std::string
     if (!CCoinJoinClientOptions::IsEnabled()) return;
     if (!masternodeSync.IsBlockchainSynced()) return;
 
-    if (!CheckDiskSpace()) {
+    if (!CheckDiskSpace(GetDataDir())) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientQueueManager::ProcessMessage -- Not enough disk space, disabling CoinJoin.\n");
         return;
     }
@@ -128,7 +128,7 @@ void CCoinJoinClientManager::ProcessMessage(CNode* pfrom, const std::string& str
     if (!CCoinJoinClientOptions::IsEnabled()) return;
     if (!masternodeSync.IsBlockchainSynced()) return;
 
-    if (!CheckDiskSpace()) {
+    if (!CheckDiskSpace(GetDataDir())) {
         ResetPool();
         StopMixing();
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::ProcessMessage -- Not enough disk space, disabling CoinJoin.\n");
@@ -463,7 +463,7 @@ bool CCoinJoinClientSession::SendDenominate(const std::vector<std::pair<CTxDSIn,
         return false;
     }
 
-    if (!CheckDiskSpace()) {
+    if (!CheckDiskSpace(GetDataDir())) {
         UnlockCoins();
         keyHolderStorage.ReturnAll();
         SetNull();

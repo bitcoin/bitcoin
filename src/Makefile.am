@@ -172,6 +172,7 @@ BITCOIN_CORE_H = \
   governance/governance-votedb.h \
   flat-database.h \
   hdchain.h \
+  flatfile.h \
   fs.h \
   httprpc.h \
   httpserver.h \
@@ -336,6 +337,7 @@ libdash_server_a_SOURCES = \
   evo/providertx.cpp \
   evo/simplifiedmns.cpp \
   evo/specialtx.cpp \
+  flatfile.cpp \
   httprpc.cpp \
   httpserver.cpp \
   index/base.cpp \
