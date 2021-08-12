@@ -52,12 +52,17 @@ static bool IsBerkeleyBtree(const fs::path& path)
 std::vector<fs::path> ListWalletDir()
 {
     const fs::path wallet_dir = GetWalletDir();
+    const size_t offset = wallet_dir.string().size() + 1;
     std::vector<fs::path> paths;
 
-    for (auto it = fs::recursive_directory_iterator(wallet_dir); it != end(it); ++it) {
+    for (auto it = fs::recursive_directory_iterator(wallet_dir); it != fs::recursive_directory_iterator(); ++it) {
+        // Get wallet path relative to walletdir by removing walletdir from the wallet path.
+        // This can be replaced by boost::filesystem::lexically_relative once boost is bumped to 1.60.
+        const fs::path path = it->path().string().substr(offset);
+
         if (it->status().type() == fs::directory_file && IsBerkeleyBtree(it->path() / "wallet.dat")) {
             // Found a directory which contains wallet.dat btree file, add it as a wallet.
-            paths.emplace_back(fs::relative(it->path(), wallet_dir));
+            paths.emplace_back(path);
         } else if (it.level() == 0 && it->symlink_status().type() == fs::regular_file && IsBerkeleyBtree(it->path())) {
             if (it->path().filename() == "wallet.dat") {
                 // Found top-level wallet.dat btree file, add top level directory ""
@@ -68,7 +73,7 @@ std::vector<fs::path> ListWalletDir()
                 // software will never create these files but will allow them to be
                 // opened in a shared database environment for backwards compatibility.
                 // Add it to the list of available wallets.
-                paths.emplace_back(fs::relative(it->path(), wallet_dir));
+                paths.emplace_back(path);
             }
         }
     }
