@@ -1038,6 +1038,10 @@ SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QStri
     setText(text);
     setInformativeText(informative_text);
     setDetailedText(detailed_text);
+}
+
+int SendConfirmationDialog::exec()
+{
     setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
     setDefaultButton(QMessageBox::Cancel);
     yesButton = button(QMessageBox::Yes);
@@ -1045,13 +1049,10 @@ SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QStri
         confirmButtonText = yesButton->text();
     }
     updateYesButton();
-    connect(&countDownTimer, &QTimer::timeout, this, &SendConfirmationDialog::countDown);
-}
 
-int SendConfirmationDialog::exec()
-{
-    updateYesButton();
+    connect(&countDownTimer, &QTimer::timeout, this, &SendConfirmationDialog::countDown);
     countDownTimer.start(1000);
+
     return QMessageBox::exec();
 }
 
