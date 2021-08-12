@@ -606,6 +606,23 @@ void CWallet::AddToSpends(const uint256& wtxid)
         AddToSpends(txin.prevout, wtxid);
 }
 
+void CWallet::UpdateAddressBookUsed(const CWalletTx& wtx)
+{
+    for (const auto& output : wtx.tx->vout) {
+        CTxDestination dest;
+        if (!ExtractDestination(output.scriptPubKey, dest)) continue;
+        m_address_book[dest].m_used = true;
+    }
+}
+
+void CWallet::InitialiseAddressBookUsed()
+{
+    for (const auto& entry : mapWallet) {
+        const CWalletTx& wtx = entry.second;
+        UpdateAddressBookUsed(wtx);
+    }
+}
+
 bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 {
     if (IsCrypted())
@@ -907,6 +924,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
         wtx.nTimeSmart = ComputeTimeSmart(wtx);
         AddToSpends(hash);
+        UpdateAddressBookUsed(wtx);
     }
 
     if (!fInsertedNew)
@@ -2000,6 +2018,8 @@ DBErrors CWallet::LoadWallet()
 
     if (nLoadWalletRet != DBErrors::LOAD_OK)
         return nLoadWalletRet;
+
+    InitialiseAddressBookUsed();
 
     return DBErrors::LOAD_OK;
 }
