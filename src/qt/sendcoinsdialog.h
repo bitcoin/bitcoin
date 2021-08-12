@@ -144,6 +144,7 @@ private:
     QTimer countDownTimer;
     int secDelay;
     QString confirmButtonText{tr("Send")};
+    bool m_enable_save;
     bool m_enable_send;
     QString m_psbt_button_text{tr("Create Unsigned")};
 };

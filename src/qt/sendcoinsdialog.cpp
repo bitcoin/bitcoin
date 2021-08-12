@@ -1055,15 +1055,19 @@ void SendCoinsDialog::coinControlUpdateLabels()
 }
 
 SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text, const QString& detailed_text, int _secDelay, bool enable_send, bool always_show_unsigned, QWidget* parent)
-    : QMessageBox(parent), secDelay(_secDelay), m_enable_send(enable_send)
+    : QMessageBox(parent), secDelay(_secDelay), m_enable_save(always_show_unsigned || !enable_send), m_enable_send(enable_send)
 {
     setIcon(QMessageBox::Question);
     setWindowTitle(title); // On macOS, the window title is ignored (as required by the macOS Guidelines).
     setText(text);
     setInformativeText(informative_text);
     setDetailedText(detailed_text);
+}
+
+int SendConfirmationDialog::exec()
+{
     setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
-    if (always_show_unsigned || !enable_send) addButton(QMessageBox::Save);
+    if (m_enable_save) addButton(QMessageBox::Save);
     setDefaultButton(QMessageBox::Cancel);
     yesButton = button(QMessageBox::Yes);
     if (confirmButtonText.isEmpty()) {
@@ -1071,13 +1075,10 @@ SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QStri
     }
     m_psbt_button = button(QMessageBox::Save);
     updateButtons();
-    connect(&countDownTimer, &QTimer::timeout, this, &SendConfirmationDialog::countDown);
-}
 
-int SendConfirmationDialog::exec()
-{
-    updateButtons();
+    connect(&countDownTimer, &QTimer::timeout, this, &SendConfirmationDialog::countDown);
     countDownTimer.start(1s);
+
     return QMessageBox::exec();
 }
 
