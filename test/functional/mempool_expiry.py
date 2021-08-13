@@ -27,8 +27,9 @@ class MempoolExpiryTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
+    # TODO: enable when skip_if_no_wallet is backported
+    # def skip_test_if_missing_module(self):
+    #     self.skip_if_no_wallet()
 
     def test_transaction_expiry(self, timeout):
         """Tests that a transaction expires after the expiry timeout and its

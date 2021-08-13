@@ -86,9 +86,6 @@ ssl.EC_KEY_new_by_curve_name.errcheck = _check_result
 class CECKey():
     """Wrapper around OpenSSL's EC_KEY"""
 
-    POINT_CONVERSION_COMPRESSED = 2
-    POINT_CONVERSION_UNCOMPRESSED = 4
-
     def __init__(self):
         self.k = ssl.EC_KEY_new_by_curve_name(NID_secp256k1)
 
@@ -180,13 +177,6 @@ class CECKey():
     def verify(self, hash, sig):
         """Verify a DER signature"""
         return ssl.ECDSA_verify(0, hash, len(hash), sig, len(sig), self.k) == 1
-
-    def set_compressed(self, compressed):
-        if compressed:
-            form = self.POINT_CONVERSION_COMPRESSED
-        else:
-            form = self.POINT_CONVERSION_UNCOMPRESSED
-        ssl.EC_KEY_set_conv_form(self.k, form)
 
 
 class CPubKey(bytes):

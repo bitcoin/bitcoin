@@ -9,11 +9,12 @@
 #include <fs.h>
 #include <key_io.h>
 #include <random.h>
+#include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>
 #include <ui_interface.h>
-#include <util/system.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 
 #include <boost/bind.hpp>
 #include <boost/signals2/signal.hpp>

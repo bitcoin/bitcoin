@@ -4,20 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listtransactions API."""
 from decimal import Decimal
-from io import BytesIO
 
-from test_framework.messages import CTransaction
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    assert_array_result,
-    hex_str_to_bytes,
-)
-
-def tx_from_hex(hexstring):
-    tx = CTransaction()
-    f = BytesIO(hex_str_to_bytes(hexstring))
-    tx.deserialize(f)
-    return tx
+from test_framework.util import assert_array_result
 
 class ListTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):

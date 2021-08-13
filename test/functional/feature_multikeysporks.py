@@ -23,7 +23,6 @@ class MultiKeySporkTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 5
         self.setup_clean_chain = True
-        self.is_network_split = False
 
     def setup_network(self):
         # secret(base58): 931wyuRNVYvhg18Uu9bky5Qg1z4QbxaJ7fefNBzjBPiLRqcd33F

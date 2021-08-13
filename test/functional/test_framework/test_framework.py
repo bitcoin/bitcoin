@@ -575,7 +575,6 @@ class DashTestFramework(BitcoinTestFramework):
         self.num_nodes = num_nodes
         self.mninfo = []
         self.setup_clean_chain = True
-        self.is_network_split = False
         # additional args
         if extra_args is None:
             extra_args = [[]] * num_nodes
