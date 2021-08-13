@@ -250,10 +250,8 @@ public:
     //! Return interface for accessing masternode related handler.
     virtual Masternode::Sync& masternodeSync() = 0;
 
-    //! Return interface for accessing masternode related handler.
-#ifdef ENABLE_WALLET
+    //! Return interface for accessing coinjoin related handler.
     virtual CoinJoin::Options& coinJoinOptions() = 0;
-#endif
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;
