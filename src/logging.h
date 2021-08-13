@@ -24,6 +24,8 @@ static const bool DEFAULT_LOGTIMESTAMPS = true;
 static const bool DEFAULT_LOGTHREADNAMES = false;
 static const bool DEFAULT_LOGSOURCELOCATIONS = false;
 extern const char * const DEFAULT_DEBUGLOGFILE;
+static const int DEFAULT_DEBUGLOG_ROTATE_KEEP = 0; // log file rotation must be explicitly enabled
+static const int DEFAULT_DEBUGLOG_SIZE_LIMIT_MB = 10;
 
 extern bool fLogIPs;
 
@@ -96,6 +98,10 @@ namespace BCLog {
         bool m_log_sourcelocations = DEFAULT_LOGSOURCELOCATIONS;
 
         fs::path m_file_path;
+        /** debug.log file size before being rotated (units are MB) */
+        int m_file_size_limit;
+        /** The number of old (rotated) debug.log files to retain */
+        int m_rotate_keep;
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
