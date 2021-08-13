@@ -126,9 +126,11 @@ bool StartLogging(const ArgsManager& args)
             LogInstance().ShrinkDebugFile();
         }
     }
-    if (!LogInstance().StartLogging()) {
-            return InitError(strprintf(Untranslated("Could not open debug log file %s"),
-                LogInstance().m_file_path.string()));
+    {
+        const std::string err_msg = LogInstance().StartLogging();
+        if (!err_msg.empty()) {
+            return InitError(Untranslated(err_msg));
+        }
     }
 
     if (!LogInstance().m_log_timestamps)

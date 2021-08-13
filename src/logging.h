@@ -123,8 +123,8 @@ namespace BCLog {
             m_print_callbacks.erase(it);
         }
 
-        /** Start logging (and flush all buffered messages) */
-        bool StartLogging();
+        /** Start logging (and flush all buffered messages), return error string (empty if none) */
+        std::string StartLogging();
         /** Only for testing */
         void DisconnectTestLogger();
 

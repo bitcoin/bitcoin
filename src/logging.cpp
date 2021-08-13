@@ -40,7 +40,7 @@ static int FileWriteStr(const std::string &str, FILE *fp)
     return fwrite(str.data(), 1, str.size(), fp);
 }
 
-bool BCLog::Logger::StartLogging()
+std::string BCLog::Logger::StartLogging()
 {
     StdLockGuard scoped_lock(m_cs);
 
@@ -51,7 +51,7 @@ bool BCLog::Logger::StartLogging()
         assert(!m_file_path.empty());
         m_fileout = fsbridge::fopen(m_file_path, "a");
         if (!m_fileout) {
-            return false;
+            return strprintf("Could not open debug log file %s", m_file_path.string());
         }
 
         setbuf(m_fileout, nullptr); // unbuffered
@@ -76,7 +76,7 @@ bool BCLog::Logger::StartLogging()
     }
     if (m_print_to_console) fflush(stdout);
 
-    return true;
+    return {};
 }
 
 void BCLog::Logger::DisconnectTestLogger()
