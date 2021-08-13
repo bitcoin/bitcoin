@@ -10,8 +10,6 @@ export LC_ALL=C
 
 # Disabled warnings:
 disabled=(
-    SC2046 # Quote this to prevent word splitting.
-    SC2086 # Double quote to prevent globbing and word splitting.
     SC2162 # read without -r will mangle backslashes.
 )
 disabled_gitian=(
