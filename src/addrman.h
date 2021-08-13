@@ -26,6 +26,9 @@
 #include <unordered_map>
 #include <vector>
 
+/** Default for -checkaddrman */
+static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{0};
+
 /**
  * Extended statistics about a CAddress
  */
@@ -124,8 +127,8 @@ public:
  *        attempt was unsuccessful.
  *    * Bucket selection is based on cryptographic hashing, using a randomly-generated 256-bit key, which should not
  *      be observable by adversaries.
- *    * Several indexes are kept for high performance. Defining DEBUG_ADDRMAN will introduce frequent (and expensive)
- *      consistency checks for the entire data structure.
+ *    * Several indexes are kept for high performance. Setting m_consistency_check_ratio with the -checkaddrman
+ *      configuration option will introduce (expensive) consistency checks for the entire data structure.
  */
 
 //! total number of buckets for tried addresses
@@ -493,9 +496,12 @@ public:
         mapAddr.clear();
     }
 
-    CAddrMan()
+    explicit CAddrMan(bool deterministic, int32_t consistency_check_ratio)
+        : insecure_rand{deterministic},
+          m_consistency_check_ratio{consistency_check_ratio}
     {
         Clear();
+        if (deterministic) nKey = uint256{1};
     }
 
     ~CAddrMan()
@@ -637,13 +643,13 @@ protected:
     //! secret key to randomize bucket select with
     uint256 nKey;
 
-    //! Source of random numbers for randomization in inner loops
-    mutable FastRandomContext insecure_rand GUARDED_BY(cs);
-
     //! A mutex to protect the inner data structures.
     mutable Mutex cs;
 
 private:
+    //! Source of random numbers for randomization in inner loops
+    mutable FastRandomContext insecure_rand GUARDED_BY(cs);
+
     //! Serialization versions.
     enum Format : uint8_t {
         V0_HISTORICAL = 0,    //!< historic format, before commit e6b343d88
@@ -698,6 +704,9 @@ private:
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;
 
+    /** Perform consistency checks every m_consistency_check_ratio operations (if non-zero). */
+    const int32_t m_consistency_check_ratio;
+
     //! Find an entry.
     CAddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -735,22 +744,19 @@ private:
     CAddrInfo SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Consistency check
-    void Check() const
-        EXCLUSIVE_LOCKS_REQUIRED(cs)
+    void Check() const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
-#ifdef DEBUG_ADDRMAN
         AssertLockHeld(cs);
+
         const int err = Check_();
         if (err) {
             LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
+            assert(false);
         }
-#endif
     }
 
-#ifdef DEBUG_ADDRMAN
     //! Perform consistency check. Returns an error code or zero.
     int Check_() const EXCLUSIVE_LOCKS_REQUIRED(cs);
-#endif
 
     /**
      * Return all or many randomly selected addresses, optionally by network.
