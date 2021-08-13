@@ -188,7 +188,7 @@ FUZZ_TARGET_DESERIALIZE(blockmerkleroot, {
     BlockMerkleRoot(block, &mutated);
 })
 FUZZ_TARGET_DESERIALIZE(addrman_deserialize, {
-    CAddrMan am;
+    CAddrMan am(/* deterministic */ false, /* consistency_check_ratio */ 0);
     DeserializeFromFuzzingInput(buffer, am);
 })
 FUZZ_TARGET_DESERIALIZE(blockheader_deserialize, {
