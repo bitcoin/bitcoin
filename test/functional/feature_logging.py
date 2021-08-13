@@ -8,6 +8,7 @@ import os
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
+from test_framework.util import assert_equal
 
 
 class LoggingTest(BitcoinTestFramework):
@@ -68,6 +69,30 @@ class LoggingTest(BitcoinTestFramework):
 
         # just sanity check no crash here
         self.restart_node(0, ["-debuglogfile=%s" % os.devnull])
+
+        # debug log file rotation
+        self.log.info("Log file rotation")
+        self.stop_node(0)
+        self.start_node(0, ["-debuglogfile=altname-debug.log", "-debuglogrotatekeep=2", "-debugloglimit=1"])
+        self.log.info("Generating many log messages")
+        # Each getblockcount RPC logs 251 bytes, so 13k of them generates
+        # more than 3 MB of logging, which will test that one of the
+        # rotated log files gets deleted.
+        for _ in range(13000):
+            self.nodes[0].getblockcount()
+        n_debugfiles = 0
+        with os.scandir(os.path.join(self.nodes[0].datadir, 'regtest', 'debug-rotated')) as it:
+            for entry in it:
+                # rotated log files' names should be like 2021-07-09T014959Z
+                assert len(entry.name) == len("2021-07-09T014959Z")
+                assert_equal(entry.name[10], 'T')
+                assert_equal(entry.name[17], 'Z')
+                # rotated files should have sizes slightly more than 1 MB
+                assert entry.stat().st_size > 1000000
+                assert entry.stat().st_size < int(1000000 * 1.01)
+                n_debugfiles += 1
+        # There should be and two rotated files
+        assert_equal(n_debugfiles, 2)
 
 
 if __name__ == '__main__':

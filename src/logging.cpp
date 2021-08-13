@@ -12,6 +12,9 @@
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 
+/** This directory will be in the same directory as the debug.log file. */
+constexpr char DEBUG_ROTATED_DIR[] = "debug-rotated";
+
 BCLog::Logger& LogInstance()
 {
 /**
@@ -54,6 +57,29 @@ std::string BCLog::Logger::StartLogging()
             return strprintf("Could not open debug log file %s", m_file_path.string());
         }
 
+        // Special files (e.g. device nodes) may not have a size.
+        m_file_size = 0;
+        try {
+            m_file_size = fs::file_size(m_file_path);
+        } catch (const fs::filesystem_error& e) {
+            // We can't do log rotation if it's not a regular file.
+            if (m_rotate_keep > 0) {
+                return strprintf(
+                    "The debug log file %s does not appear to be a regular file; "
+                    "this prevents log rotation, error: %s",
+                    m_file_path.string(), e.what());
+            }
+        }
+        if (m_rotate_keep > 0) {
+            if (m_file_size_limit <= 0) {
+                return strprintf(
+                    "The debug log file %s size limit in MB must be greater than zero.",
+                    m_file_path.string());
+            }
+            std::string err = StartRotate();
+            if (!err.empty()) return err;
+        }
+
         setbuf(m_fileout, nullptr); // unbuffered
 
         // Add newlines to the logfile to distinguish this execution from the
@@ -77,6 +103,36 @@ std::string BCLog::Logger::StartLogging()
     if (m_print_to_console) fflush(stdout);
 
     return {};
+}
+
+std::string BCLog::Logger::StartRotate()
+{
+    m_rotated_dir = m_file_path.parent_path() / DEBUG_ROTATED_DIR;
+    try {
+        fs::create_directories(m_rotated_dir);
+    } catch (const fs::filesystem_error& e) {
+        return strprintf("Could not create rotated debug file directory %s: %s", m_rotated_dir.string(), e.what());
+    }
+    for (fs::directory_iterator it(m_rotated_dir); it != fs::directory_iterator(); ++it) {
+        m_rotated_files.push_back(it->path());
+    }
+    std::sort(m_rotated_files.begin(), m_rotated_files.end());
+
+    // There may be extra rotation files if the m_rotate_keep config decreased.
+    RemoveRotated();
+    return {};
+}
+
+// Remove the oldest rotated files if there are too many.
+void BCLog::Logger::RemoveRotated()
+{
+    while (static_cast<int>(m_rotated_files.size()) > m_rotate_keep) {
+        try {
+            fs::remove(m_rotated_files.front());
+        } catch (const fs::filesystem_error&) {
+        }
+        m_rotated_files.pop_front();
+    }
 }
 
 void BCLog::Logger::DisconnectTestLogger()
@@ -270,9 +326,7 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
     for (const auto& cb : m_print_callbacks) {
         cb(str_prefixed);
     }
-    if (m_print_to_file) {
-        assert(m_fileout != nullptr);
-
+    if (m_print_to_file && m_fileout) {
         // reopen the log file, if requested
         if (m_reopen_file) {
             m_reopen_file = false;
@@ -284,11 +338,46 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
             }
         }
         FileWriteStr(str_prefixed, m_fileout);
+        m_file_size += str_prefixed.size();
+
+        // If debug.log is large, rotate it (rename and recreate).
+        if (m_rotate_keep > 0 && m_file_size > m_file_size_limit * 1e6 && m_started_new_line) {
+            // Rename debug.log to a name like debug-2021-06-25T22:57:54.log
+            int64_t now = GetTimeSeconds();
+            // Don't rotate within the same second to avoid name conflict.
+            if (m_last_rotate_time < now) {
+                m_last_rotate_time = now;
+
+                // Close the existing debug.log (rename may require this)
+                fclose(m_fileout);
+                m_fileout = nullptr;
+
+                // Rename debug.log to debug-rotated/<date-time>
+                fs::path rotated_file_path = m_rotated_dir / FormatISO8601DateTimeBasic(now);
+                try {
+                    fs::rename(m_file_path, rotated_file_path);
+                } catch (const fs::filesystem_error&) {
+                }
+                m_rotated_files.push_back(rotated_file_path);
+                RemoveRotated();
+
+                // Create a new debug.log file
+                FILE* new_fileout = fsbridge::fopen(m_file_path, "a");
+                if (new_fileout) {
+                    setbuf(new_fileout, nullptr); // unbuffered
+                    m_fileout = new_fileout;
+                }
+                m_file_size = 0;
+            }
+        }
     }
 }
 
 void BCLog::Logger::ShrinkDebugFile()
 {
+    // File rotation makes this unnecessary.
+    if (m_rotate_keep > 0) return;
+
     // Amount of debug.log to save at end when shrinking (must fit in memory)
     constexpr size_t RECENT_DEBUG_HISTORY_SIZE = 10 * 1000000;
 

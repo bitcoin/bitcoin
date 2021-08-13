@@ -13,6 +13,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <deque>
 #include <list>
 #include <mutex>
 #include <string>
@@ -73,6 +74,15 @@ namespace BCLog {
         std::list<std::string> m_msgs_before_open GUARDED_BY(m_cs);
         bool m_buffering GUARDED_BY(m_cs) = true; //!< Buffer messages before logging can be started.
 
+        /** Current debug.log file size (bytes) */
+        size_t m_file_size GUARDED_BY(m_cs);
+        /** The list of rotated debug.log files, oldest at the front */
+        std::deque<fs::path> m_rotated_files GUARDED_BY(m_cs);
+        /** The time (seconds) of the most recent log rotation */
+        int64_t m_last_rotate_time GUARDED_BY(m_cs){0};
+        /** The directory path where rotated log files are stored */
+        fs::path m_rotated_dir;
+
         /**
          * m_started_new_line is a state variable that will suppress printing of
          * the timestamp when multiple calls are made that don't end in a
@@ -131,6 +141,11 @@ namespace BCLog {
 
         /** Start logging (and flush all buffered messages), return error string (empty if none) */
         std::string StartLogging();
+        /** Initialize debug.log rotation */
+        std::string StartRotate() EXCLUSIVE_LOCKS_REQUIRED(m_cs);
+        /** Remove (delete) excess debug.log rotation files */
+        void RemoveRotated() EXCLUSIVE_LOCKS_REQUIRED(m_cs);
+
         /** Only for testing */
         void DisconnectTestLogger();
 
