@@ -73,6 +73,7 @@ T GetTime();
  * helper functions if possible.
  */
 std::string FormatISO8601DateTime(int64_t nTime);
+std::string FormatISO8601DateTimeBasic(int64_t nTime);
 std::string FormatISO8601Date(int64_t nTime);
 int64_t ParseISO8601DateTime(const std::string& str);
 
