@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(gcsfilter_test)
         excluded_elements.insert(std::move(element2));
     }
 
-    GCSFilter filter(0, 0, 10, 1 << 10, included_elements);
+    GCSFilter filter({0, 0, 10, 1 << 10}, included_elements);
     for (const auto& element : included_elements) {
         BOOST_CHECK(filter.Match(element));
 
@@ -39,9 +39,22 @@ BOOST_AUTO_TEST_CASE(gcsfilter_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(gcsfilter_default_constructor)
+{
+    GCSFilter filter;
+    BOOST_CHECK_EQUAL(filter.GetN(), 0);
+    BOOST_CHECK_EQUAL(filter.GetEncoded().size(), 1);
+
+    const GCSFilter::Params& params = filter.GetParams();
+    BOOST_CHECK_EQUAL(params.m_siphash_k0, 0);
+    BOOST_CHECK_EQUAL(params.m_siphash_k1, 0);
+    BOOST_CHECK_EQUAL(params.m_P, 0);
+    BOOST_CHECK_EQUAL(params.m_M, 1);
+}
+
 BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
 {
-    CScript included_scripts[5], excluded_scripts[3];
+    CScript included_scripts[5], excluded_scripts[4];
 
     // First two are outputs on a single transaction.
     included_scripts[0] << std::vector<unsigned char>(0, 65) << OP_CHECKSIG;
@@ -60,14 +73,19 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     // This script is not related to the block at all.
     excluded_scripts[1] << std::vector<unsigned char>(5, 33) << OP_CHECKSIG;
 
+    // OP_RETURN is non-standard since it's not followed by a data push, but is still excluded from
+    // filter.
+    excluded_scripts[2] << OP_RETURN << OP_4 << OP_ADD << OP_8 << OP_EQUAL;
+
     CMutableTransaction tx_1;
     tx_1.vout.emplace_back(100, included_scripts[0]);
     tx_1.vout.emplace_back(200, included_scripts[1]);
+    tx_1.vout.emplace_back(0, excluded_scripts[0]);
 
     CMutableTransaction tx_2;
     tx_2.vout.emplace_back(300, included_scripts[2]);
-    tx_2.vout.emplace_back(0, excluded_scripts[0]);
-    tx_2.vout.emplace_back(400, excluded_scripts[2]); // Script is empty
+    tx_2.vout.emplace_back(0, excluded_scripts[2]);
+    tx_2.vout.emplace_back(400, excluded_scripts[3]); // Script is empty
 
     CBlock block;
     block.vtx.push_back(MakeTransactionRef(tx_1));
@@ -77,7 +95,7 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     block_undo.vtxundo.emplace_back();
     block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(500, included_scripts[3]), 1000, true);
     block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(600, included_scripts[4]), 10000, false);
-    block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(700, excluded_scripts[2]), 100000, false);
+    block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(700, excluded_scripts[3]), 100000, false);
 
     BlockFilter block_filter(BlockFilterType::BASIC_FILTER, block, block_undo);
     const GCSFilter& filter = block_filter.GetFilter();
@@ -88,6 +106,17 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     for (const CScript& script : excluded_scripts) {
         BOOST_CHECK(!filter.Match(GCSFilter::Element(script.begin(), script.end())));
     }
+
+    // Test serialization/unserialization.
+    BlockFilter block_filter2;
+
+    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    stream << block_filter;
+    stream >> block_filter2;
+
+    BOOST_CHECK_EQUAL(block_filter.GetFilterType(), block_filter2.GetFilterType());
+    BOOST_CHECK_EQUAL(block_filter.GetBlockHash(), block_filter2.GetBlockHash());
+    BOOST_CHECK(block_filter.GetEncodedFilter() == block_filter2.GetEncodedFilter());
 }
 
 BOOST_AUTO_TEST_CASE(blockfilters_json_test)
@@ -142,6 +171,18 @@ BOOST_AUTO_TEST_CASE(blockfilters_json_test)
         uint256 computed_header_basic = computed_filter_basic.ComputeHeader(prev_filter_header_basic);
         BOOST_CHECK(computed_header_basic == filter_header_basic);
     }
+}
+
+BOOST_AUTO_TEST_CASE(blockfilter_type_names)
+{
+    BOOST_CHECK_EQUAL(BlockFilterTypeName(BlockFilterType::BASIC_FILTER), "basic");
+    BOOST_CHECK_EQUAL(BlockFilterTypeName(static_cast<BlockFilterType>(255)), "");
+
+    BlockFilterType filter_type;
+    BOOST_CHECK(BlockFilterTypeByName("basic", filter_type));
+    BOOST_CHECK_EQUAL(filter_type, BlockFilterType::BASIC_FILTER);
+
+    BOOST_CHECK(!BlockFilterTypeByName("unknown", filter_type));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

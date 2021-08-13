@@ -16,17 +16,17 @@ constexpr char DB_TXINDEX_BLOCK = 'T';
 
 std::unique_ptr<TxIndex> g_txindex;
 
-struct CDiskTxPos : public CDiskBlockPos
+struct CDiskTxPos : public FlatFilePos
 {
     unsigned int nTxOffset; // after header
 
     SERIALIZE_METHODS(CDiskTxPos, obj)
     {
-        READWRITEAS(CDiskBlockPos, obj);
+        READWRITEAS(FlatFilePos, obj);
         READWRITE(VARINT(obj.nTxOffset));
     }
 
-    CDiskTxPos(const CDiskBlockPos &blockIn, unsigned int nTxOffsetIn) : CDiskBlockPos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
+    CDiskTxPos(const FlatFilePos &blockIn, unsigned int nTxOffsetIn) : FlatFilePos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
     }
 
     CDiskTxPos() {
@@ -34,7 +34,7 @@ struct CDiskTxPos : public CDiskBlockPos
     }
 
     void SetNull() {
-        CDiskBlockPos::SetNull();
+        FlatFilePos::SetNull();
         nTxOffset = 0;
     }
 };

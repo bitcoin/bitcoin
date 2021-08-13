@@ -121,6 +121,7 @@ BITCOIN_TESTS =\
   test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
   test/blockfilter_tests.cpp \
+  test/blockfilter_index_tests.cpp \
   test/bloom_tests.cpp \
   test/bls_tests.cpp \
   test/bswap_tests.cpp \
@@ -137,6 +138,7 @@ BITCOIN_TESTS =\
   test/descriptor_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
+  test/flatfile_tests.cpp \
   test/fs_tests.cpp \
   test/getarg_tests.cpp \
   test/governance_validators_tests.cpp \
