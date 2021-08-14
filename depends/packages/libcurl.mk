@@ -11,6 +11,7 @@ $(package)_config_opts=--with-zlib="$(host_prefix)" --disable-shared --enable-st
 $(package)_config_opts_linux=LIBS="-lnettle -lhogweed -lgmp" --without-ssl --enable-threaded-resolver
 $(package)_config_opts_linux+= --with-pic
 $(package)_config_opts_android+= --with-pic
+
 # mingw specific settings
 $(package)_config_opts_mingw32=LIBS="-lcrypt32 -lnettle -lhogweed -lgmp" --without-ssl
 

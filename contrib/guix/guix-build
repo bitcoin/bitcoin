@@ -251,7 +251,7 @@ time-machine() {
 
 # Precious directories are those which should not be cleaned between successive
 # guix builds
-depends_precious_dir_names='SOURCES_PATH BASE_CACHE SDK_PATH'
+depends_precious_dir_names='SOURCES_PATH BASE_CACHE SDK_PATH SDKs'
 precious_dir_names="${depends_precious_dir_names} OUTDIR_BASE PROFILES_BASE"
 
 # Usage: contains IFS-SEPARATED-LIST ITEM
