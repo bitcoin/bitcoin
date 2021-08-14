@@ -190,7 +190,7 @@ static constexpr size_t MAX_ADDR_TO_SEND{1000};
 static constexpr double MAX_ADDR_RATE_PER_SECOND{0.1};
 /** The soft limit of the address processing token bucket (the regular MAX_ADDR_RATE_PER_SECOND
  *  based increments won't go above this, but the MAX_ADDR_TO_SEND increment following GETADDR
- *  is exempt from this limit. */
+ *  is exempt from this limit). */
 static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET{MAX_ADDR_TO_SEND};
 
 // Internal stuff
@@ -292,14 +292,14 @@ struct Peer {
     std::atomic_bool m_wants_addrv2{false};
     /** Whether this peer has already sent us a getaddr message. */
     bool m_getaddr_recvd{false};
-    /** Number of addr messages that can be processed from this peer. Start at 1 to
+    /** Number of addresses that can be processed from this peer. Start at 1 to
      *  permit self-announcement. */
     double m_addr_token_bucket{1.0};
     /** When m_addr_token_bucket was last updated */
     std::chrono::microseconds m_addr_token_timestamp{GetTime<std::chrono::microseconds>()};
     /** Total number of addresses that were dropped due to rate limiting. */
     std::atomic<uint64_t> m_addr_rate_limited{0};
-    /** Total number of addresses that were processed (excludes rate limited ones). */
+    /** Total number of addresses that were processed (excludes rate-limited ones). */
     std::atomic<uint64_t> m_addr_processed{0};
 
     /** Set of txids to reconsider once their parent transactions have been accepted **/
@@ -3141,11 +3141,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 return;
 
             // Apply rate limiting.
-            if (rate_limited) {
-                if (peer->m_addr_token_bucket < 1.0) {
+            if (peer->m_addr_token_bucket < 1.0) {
+                if (rate_limited) {
                     ++num_rate_limit;
                     continue;
                 }
+            } else {
                 peer->m_addr_token_bucket -= 1.0;
             }
             // We only bother storing full nodes, though this may include
@@ -3173,12 +3174,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
         peer->m_addr_processed += num_proc;
         peer->m_addr_rate_limited += num_rate_limit;
-        LogPrint(BCLog::NET, "Received addr: %u addresses (%u processed, %u rate-limited) from peer=%d%s\n",
-                 vAddr.size(),
-                 num_proc,
-                 num_rate_limit,
-                 pfrom.GetId(),
-                 fLogIPs ? ", peeraddr=" + pfrom.addr.ToString() : "");
+        LogPrint(BCLog::NET, "Received addr: %u addresses (%u processed, %u rate-limited) from peer=%d\n",
+                 vAddr.size(), num_proc, num_rate_limit, pfrom.GetId());
 
         m_addrman.Add(vAddrOk, pfrom.addr, 2 * 60 * 60);
         if (vAddr.size() < 1000) peer->m_getaddr_sent = false;
