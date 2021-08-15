@@ -105,6 +105,9 @@ public:
         }
         CScriptCompressor cscript(REF(txout.scriptPubKey));
         READWRITE(cscript);
+
+        CScriptCompressor cpayload(REF(txout.payload));
+        READWRITE(cpayload);
     }
 };
 

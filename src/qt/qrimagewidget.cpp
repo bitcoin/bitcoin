@@ -46,7 +46,7 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
         return false;
     }
 
-    QString shortURI = (data.contains('?') || data.contains('&')) ? data : data.mid(QString("btchd:").length()); // remove "btchd:" for qrcode
+    QString shortURI = (data.contains('?') || data.contains('&')) ? data : data.mid(QString("qitcoin:").length()); // remove "qitcoin:" for qrcode
     QRcode *code = QRcode_encodeString(shortURI.toUtf8().constData(), 0, QR_ECLEVEL_L, QR_MODE_8, 1);
 
     if (!code) {

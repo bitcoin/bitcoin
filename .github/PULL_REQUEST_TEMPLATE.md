@@ -7,7 +7,7 @@ immediately.
 
 <!--
 Please provide clear motivation for your patch and explain how it improves
-BitcoinHD Core user experience or BitcoinHD Core developer experience
+Qitcoin Core user experience or Qitcoin Core developer experience
 significantly:
 
 * Any test improvements or new tests that improve coverage are always welcome.
@@ -20,7 +20,7 @@ significantly:
   was fixed.
 * Features are welcome, but might be rejected due to design or scope issues.
   If a feature is based on a lot of dependencies, contributors should first
-  consider building the system outside of BitcoinHD Core, if possible.
+  consider building the system outside of Qitcoin Core, if possible.
 * Refactoring changes are only accepted if they are required for a feature or
   bug fix or otherwise improve developer experience significantly. For example,
   most "code style" refactoring changes require a thorough explanation why they
@@ -32,7 +32,7 @@ significantly:
 -->
 
 <!--
-BitcoinHD Core has a thorough review process and even the most trivial change
+Qitcoin Core has a thorough review process and even the most trivial change
 needs to pass a lot of eyes and requires non-zero or even substantial time
 effort to review. There is a huge lack of active reviewers on the project, so
 patches often sit for a long time.

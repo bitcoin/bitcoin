@@ -16,14 +16,14 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "BitcoinHD"
-            VALUE "FileDescription",    "btchd-cli (JSON-RPC client for " PACKAGE_NAME ")"
+            VALUE "CompanyName",        "Qitcoin"
+            VALUE "FileDescription",    "qitcoin-cli (JSON-RPC client for " PACKAGE_NAME ")"
             VALUE "FileVersion",        VER_FILEVERSION_STR
-            VALUE "InternalName",       "btchd-cli"
+            VALUE "InternalName",       "qitcoin-cli"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
-            VALUE "OriginalFilename",   "btchd-cli.exe"
-            VALUE "ProductName",        "btchd-cli"
+            VALUE "OriginalFilename",   "qitcoin-cli.exe"
+            VALUE "ProductName",        "qitcoin-cli"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END

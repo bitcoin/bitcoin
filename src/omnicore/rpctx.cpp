@@ -304,7 +304,7 @@ static UniValue omni_senddexsell(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 7)
         throw runtime_error(
             RPCHelpMan{"omni_senddexsell",
-               "\nPlace, update or cancel a sell offer on the distributed token/BHD exchange.\n",
+               "\nPlace, update or cancel a sell offer on the distributed token/QTC exchange.\n",
                {
                    {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
                    {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to list for sale\n"},
@@ -467,7 +467,7 @@ static UniValue omni_sendnewdexorder(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 6)
         throw runtime_error(
             RPCHelpMan{"omni_sendnewdexorder",
-               "\nCreates a new sell offer on the distributed token/BHD exchange.\n",
+               "\nCreates a new sell offer on the distributed token/QTC exchange.\n",
                {
                    {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
                    {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to list for sale\n"},
@@ -535,7 +535,7 @@ static UniValue omni_sendupdatedexorder(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 6)
         throw runtime_error(
             RPCHelpMan{"omni_sendupdatedexorder",
-               "\nUpdates an existing sell offer on the distributed token/BHD exchange.\n",
+               "\nUpdates an existing sell offer on the distributed token/QTC exchange.\n",
                {
                    {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
                    {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to update\n"},
@@ -603,7 +603,7 @@ static UniValue omni_sendcanceldexorder(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
             RPCHelpMan{"omni_sendcanceldexorder",
-               "\nCancels existing sell offer on the distributed token/BHD exchange.\n",
+               "\nCancels existing sell offer on the distributed token/QTC exchange.\n",
                {
                    {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
                    {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to cancel\n"},
@@ -718,11 +718,11 @@ static UniValue omni_senddexpay(const JSONRPCRequest& request)
         const CAmount amountToPayInBTC = calculateDesiredBTC(acceptOffer->getOfferAmountOriginal(), acceptOffer->getBTCDesiredOriginal(), amountAccepted);
 
         if (nAmount > amountToPayInBTC) {
-            throw JSONRPCError(RPC_MISC_ERROR, strprintf("Paying more than required: %lld BHD to pay for %lld tokens", FormatMoney(amountToPayInBTC), FormatMP(propertyId, amountAccepted)));
+            throw JSONRPCError(RPC_MISC_ERROR, strprintf("Paying more than required: %lld QTC to pay for %lld tokens", FormatMoney(amountToPayInBTC), FormatMP(propertyId, amountAccepted)));
         }
 
         if (!isPropertyDivisible(propertyId) && nAmount < amountToPayInBTC) {
-            throw JSONRPCError(RPC_MISC_ERROR, strprintf("Paying less than required: %lld BHD to pay for %lld tokens", FormatMoney(amountToPayInBTC), FormatMP(propertyId, amountAccepted)));
+            throw JSONRPCError(RPC_MISC_ERROR, strprintf("Paying less than required: %lld QTC to pay for %lld tokens", FormatMoney(amountToPayInBTC), FormatMP(propertyId, amountAccepted)));
         }
     }
 

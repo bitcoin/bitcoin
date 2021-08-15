@@ -42,12 +42,12 @@ static bool WalletAppInit(int argc, char* argv[])
         return false;
     }
     if (argc < 2 || HelpRequested(gArgs)) {
-        std::string usage = strprintf("%s btchd-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n\n" +
-                                      "wallet-tool is an offline tool for creating and interacting with BitcoinHD Core wallet files.\n" +
+        std::string usage = strprintf("%s qitcoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n\n" +
+                                      "wallet-tool is an offline tool for creating and interacting with Qitcoin Core wallet files.\n" +
                                       "By default wallet-tool will act on wallets in the default mainnet wallet directory in the datadir.\n" +
                                       "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n" +
                                       "Usage:\n" +
-                                     "  btchd-wallet [options] <command>\n\n" +
+                                     "  qitcoin-wallet [options] <command>\n\n" +
                                      gArgs.GetHelpMessage();
 
         tfm::format(std::cout, "%s", usage.c_str());
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     }
 
     if (method.empty()) {
-        tfm::format(std::cerr, "No method provided. Run `btchd-wallet -help` for valid methods.\n");
+        tfm::format(std::cerr, "No method provided. Run `qitcoin-wallet -help` for valid methods.\n");
         return EXIT_FAILURE;
     }
 

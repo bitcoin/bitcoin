@@ -74,7 +74,7 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("strThirdPartyTxUrls"))
         settings.setValue("strThirdPartyTxUrls", "");
     strThirdPartyTxUrls = settings.value("strThirdPartyTxUrls", "").toString();
-    if (strThirdPartyTxUrls.isEmpty()) strThirdPartyTxUrls = "https://btchd.org/explorer/tx/%s";
+    if (strThirdPartyTxUrls.isEmpty()) strThirdPartyTxUrls = "https://qitchain.org/explorer/tx/%s";
 
     if (!settings.contains("fCoinControlFeatures"))
         settings.setValue("fCoinControlFeatures", false);

@@ -22,29 +22,14 @@ class CValidationState;
 namespace Consensus {
 struct Params;
 
-// CheckTxInputs run level
-enum class CheckTxLevel {
-    // Call from CTxMemPool::check
-    CheckMempool,
-
-    // Accept to memory pool
-    AcceptToMempool,
-
-    // From consensus
-    ConsensusPackaging,
-    Consensus,
-};
-
 /**
  * Check whether all inputs of this transaction are valid (no double spends and amounts)
  * This does not modify the UTXO set. This does not check scripts and sigs.
  * @param[out] txfee Set to the transaction fee if successful.
  * Preconditions: tx.IsCoinBase() is false.
  */
-bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const CCoinsViewCache& prevInputs,
-    int nSpendHeight, CAmount& txfee, const CAccountID& generatorAccountID, CheckTxLevel level, const Params& params);
-bool CheckTxInputs(const CTransaction& tx, const CCoinsViewCache& inputs, const CCoinsViewCache& prevInputs,
-    int nSpendHeight, const CAccountID& generatorAccountID, CheckTxLevel level, const Params& params);
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const CCoinsViewCache& prevInputs, 
+    int nSpendHeight, CAmount& txfee, const Params& params);
 
 /** Get bind/unbind plotter transaction lock height. */
 int GetBindPlotterLimitHeight(int nBindHeight, const CBindPlotterInfo& lastBindInfo, const Params& params);
@@ -55,8 +40,8 @@ int GetUnbindPlotterLimitHeight(const CBindPlotterInfo& bindInfo, const CCoinsVi
  * 
  * Change bind require high transaction fee. Diff reward between full-balance and low-balance.
  * Example:
- *   23.75BHD - 7.5BHD = 16.25BHD
- *   16.25BHD pay to black hole
+ *   105QTC - 45QTC = 60QTC
+ *   60QTC pay to black hole
  * */
 CAmount GetBindPlotterPunishmentAmount(int nBindHeight, const Params& params);
 

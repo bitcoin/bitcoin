@@ -1277,8 +1277,8 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
         ss << txTo.nLockTime;
         // Sighash type
         ss << nHashType;
-        // BitcoinHD salt
-        ss << std::string("btchd");
+        // Qitcoin salt
+        ss << std::string("qitcoin");
 
         return ss.GetHash();
     }
@@ -1299,8 +1299,8 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
     // Serialize and hash
     CHashWriter ss(SER_GETHASH, 0);
     ss << txTmp << nHashType;
-    // BitcoinHD salt
-    ss << std::string("btchd");
+    // Qitcoin salt
+    ss << std::string("qitcoin");
     return ss.GetHash();
 }
 

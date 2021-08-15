@@ -15,7 +15,7 @@ OpenURIDialog::OpenURIDialog(QWidget *parent) :
     ui(new Ui::OpenURIDialog)
 {
     ui->setupUi(this);
-    ui->uriEdit->setPlaceholderText("btchd:");
+    ui->uriEdit->setPlaceholderText("qitcoin:");
 }
 
 OpenURIDialog::~OpenURIDialog()
@@ -46,5 +46,5 @@ void OpenURIDialog::on_selectFileButton_clicked()
     if(filename.isEmpty())
         return;
     QUrl fileUri = QUrl::fromLocalFile(filename);
-    ui->uriEdit->setText("btchd:?r=" + QUrl::toPercentEncoding(fileUri.toString()));
+    ui->uriEdit->setText("qitcoin:?r=" + QUrl::toPercentEncoding(fileUri.toString()));
 }

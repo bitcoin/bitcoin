@@ -63,7 +63,6 @@ BlockAssembler::BlockAssembler(const CChainParams& params) : BlockAssembler(para
 void BlockAssembler::resetBlock()
 {
     inBlock.clear();
-    generatorAccountID.SetNull();
 
     // Reserve space for coinbase tx
     nBlockWeight = 4000;
@@ -91,8 +90,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         return nullptr;
     pblock = &pblocktemplate->block; // pointer for convenience
 
-    generatorAccountID = ExtractAccountID(scriptPubKeyIn);
-    assert (!generatorAccountID.IsNull());
+    const CAccountID generatorID = ExtractAccountID(scriptPubKeyIn);
+    assert (!generatorID.IsNull());
 
     // Add dummy coinbase tx as first transaction
     pblock->vtx.emplace_back();
@@ -111,6 +110,16 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         pblock->nVersion = gArgs.GetArg("-blockversion", pblock->nVersion);
 
     pblock->nTime = static_cast<uint32_t>(pindexPrev->GetBlockTime() + static_cast<int64_t>(deadline) + 1);
+    if (nHeight <= 1) {
+        pblock->nTime = pindexPrev->GetBlockTime() + 1;
+        plotterId = 0;
+        nonce = 0;
+    } else if (nHeight == 2) {
+        if (chainparams.GetConsensus().nBeginMiningTime != 0) {
+            pblock->nTime = static_cast<uint32_t>(chainparams.GetConsensus().nBeginMiningTime);
+        }
+        nonce = 0;
+    }
     const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
 
     nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
@@ -143,32 +152,14 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(static_cast<int64_t>(nonce)) << CScriptNum(static_cast<int64_t>(plotterId))) + COINBASE_FLAGS;
     assert(coinbaseTx.vin[0].scriptSig.size() <= 100);
-    // Reward
-    BlockReward blockReward = GetBlockReward(pindexPrev, nFees, generatorAccountID, plotterId, ::ChainstateActive().CoinsTip(), chainparams.GetConsensus());
-    assert(blockReward.miner + blockReward.accumulate >= 0);
-    unsigned int fundOutIndex = std::numeric_limits<unsigned int>::max();
-    if (blockReward.miner0 != 0) {
-        // Let old wallet can verify
-        if (blockReward.fund != 0) {
-            fundOutIndex = 2;
-            coinbaseTx.vout.resize(3);
+    for (const CTxOut &txOut : GetBlockReward(pindexPrev, nFees, generatorID, plotterId, ::ChainstateActive().CoinsTip(), chainparams.GetConsensus())) {
+        assert(txOut.nValue > 0);
+        if (txOut.scriptPubKey.empty()) {
+            // [0]
+            coinbaseTx.vout.push_back(CTxOut(txOut.nValue, scriptPubKeyIn));
         } else {
-            coinbaseTx.vout.resize(2);
+            coinbaseTx.vout.push_back(txOut);
         }
-        // Old consensus will check [1] amount
-        coinbaseTx.vout[1].scriptPubKey = scriptPubKeyIn;
-        coinbaseTx.vout[1].nValue = blockReward.miner0;
-    } else if (blockReward.fund != 0) {
-        fundOutIndex = 1;
-        coinbaseTx.vout.resize(2);
-    } else {
-        coinbaseTx.vout.resize(1);
-    }
-    coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
-    coinbaseTx.vout[0].nValue = blockReward.miner + blockReward.accumulate;
-    if (fundOutIndex < coinbaseTx.vout.size()) {
-        coinbaseTx.vout[fundOutIndex].scriptPubKey = GetScriptForDestination(DecodeDestination(chainparams.GetConsensus().BHDFundAddress));
-        coinbaseTx.vout[fundOutIndex].nValue = blockReward.fund;
     }
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
@@ -188,7 +179,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     if (plotterId != 0) {
         // Signature
-        if (nHeight >= chainparams.GetConsensus().BHDIP007Height && (!privKey || !privKey->IsValid() || !sign(*pblock, *privKey))) {
+        if (nHeight > 1 && (!privKey || !privKey->IsValid() || !sign(*pblock, *privKey))) {
             throw std::runtime_error(strprintf("%s: Signature block error", __func__));
         }
 
@@ -448,8 +439,9 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
         for (size_t i=0; i<sortedEntries.size(); ++i) {
             // Check transaction inputs and type
-            if (!Consensus::CheckTxInputs(sortedEntries[i]->GetTx(), view, ::ChainstateActive().CoinsTip(), nHeight, generatorAccountID,
-                    Consensus::CheckTxLevel::ConsensusPackaging, chainparams.GetConsensus())) {
+            CValidationState state;
+            CAmount nFees;
+            if (!Consensus::CheckTxInputs(sortedEntries[i]->GetTx(), state, view, ::ChainstateActive().CoinsTip(), nHeight, nFees, chainparams.GetConsensus())) {
                 // All descendants move to failed
                 for (size_t j = i; j < sortedEntries.size(); ++j) {
                     failedTx.insert(sortedEntries[j]);

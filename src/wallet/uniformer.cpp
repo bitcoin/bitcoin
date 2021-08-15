@@ -22,9 +22,9 @@
 
 //! Check whether transaction has descendant in wallet, or has been
 //! mined, or conflicts with a mined transaction. Return a uniformer::Result.
-static uniformer::Result PreconditionChecks(interfaces::Chain::Lock& locked_chain, const CWallet* wallet, const CWalletTx& wtx, std::vector<std::string>& errors) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet)
+static uniformer::Result PreconditionChecks(interfaces::Chain::Lock& locked_chain, const CWallet* wallet, const COutPoint& outpoint, const CWalletTx& wtx, std::vector<std::string>& errors) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet)
 {
-    if (wtx.IsUnfrozen(locked_chain)) {
+    if (wtx.IsUnfrozen(locked_chain, outpoint.n)) {
         errors.push_back("Transaction has unfrozen");
         return uniformer::Result::INVALID_PARAMETER;
     }
@@ -54,16 +54,13 @@ namespace uniformer {
 
 bool CoinCanBeUnfreeze(const CWallet* wallet, const COutPoint& outpoint)
 {
-    if (outpoint.n != 0)
-        return false;
-
     auto locked_chain = wallet->chain().lock();
     LOCK(wallet->cs_wallet);
     const CWalletTx* wtx = wallet->GetWalletTx(outpoint.hash);
     if (wtx == nullptr) return false;
 
     std::vector<std::string> errors_dummy;
-    Result res = PreconditionChecks(*locked_chain, wallet, *wtx, errors_dummy);
+    Result res = PreconditionChecks(*locked_chain, wallet, outpoint, *wtx, errors_dummy);
     return res == Result::OK;
 }
 
@@ -88,8 +85,8 @@ Result CreateBindPlotterTransaction(CWallet* wallet, const CTxDestination &dest,
 
     const Consensus::Params& params = Params().GetConsensus();
     int nSpendHeight = locked_chain->getHeight().get_value_or(0) + 1;
-    if (nSpendHeight < params.BHDIP006Height) { // Check active status
-        errors.push_back(strprintf("The bind plotter inactive (Will active on %d)", params.BHDIP006Height));
+    if (nSpendHeight <= 1) { // Check active status
+        errors.push_back(strprintf("The bind plotter inactive (Will active on %d)", 2));
         return Result::INVALID_REQUEST;
     }
 
@@ -101,46 +98,25 @@ Result CreateBindPlotterTransaction(CWallet* wallet, const CTxDestination &dest,
 
     // Create special coin control for bind plotter
     CCoinControl realCoinControl = coin_control;
-    realCoinControl.m_signal_bip125_rbf = false;
-    realCoinControl.m_coin_pick_policy = CoinPickPolicy::IncludeIfSet;
-    realCoinControl.m_pick_dest = dest;
     realCoinControl.destChange = dest;
-    if (nSpendHeight >= params.BHDIP006CheckRelayHeight) { // Limit bind plotter minimal fee
-        realCoinControl.m_min_txfee = PROTOCOL_BINDPLOTTER_MINFEE;
-    }
     // Calculate bind transaction fee
     if (CAmount punishmentReward = wallet->chain().getBindPlotterPunishment(nSpendHeight, plotterId).first) { // Calculate bind transaction fee
-        realCoinControl.m_min_txfee = std::max(realCoinControl.m_min_txfee, punishmentReward + PROTOCOL_BINDPLOTTER_MINFEE);
+        realCoinControl.m_min_txfee = std::max(realCoinControl.m_min_txfee, punishmentReward);
         if (!fAllowHighFee) {
-            errors.push_back(strprintf("This binding operation triggers a pledge anti-cheating mechanism and therefore requires a large bind plotter fee %s BHD", FormatMoney(realCoinControl.m_min_txfee)));
+            errors.push_back(strprintf("This binding operation triggers a pledge anti-cheating mechanism and therefore requires a large bind plotter fee %s QTC", FormatMoney(realCoinControl.m_min_txfee)));
             return Result::BIND_HIGHFEE_ERROR;
         }
     }
 
     // Create bind plotter transaction
     std::string strError;
-    std::vector<CRecipient> vecSend = { {GetScriptForDestination(dest), PROTOCOL_BINDPLOTTER_LOCKAMOUNT, false}, {bindScriptData, 0, false} };
+    std::vector<CRecipient> vecSend = { {GetScriptForDestination(dest), PROTOCOL_BINDPLOTTER_LOCKAMOUNT, false, bindScriptData} };
     int nChangePosRet = 1;
     CTransactionRef tx;
-    if (!wallet->CreateTransaction(*locked_chain, vecSend, tx, txfee, nChangePosRet, strError, realCoinControl, false, CTransaction::UNIFORM_VERSION)) {
+    if (!wallet->CreateTransaction(*locked_chain, vecSend, tx, txfee, nChangePosRet, strError, realCoinControl, false)) {
         errors.push_back(strError);
         return Result::WALLET_ERROR;
     }
-
-    // Check
-    bool fReject = false;
-    int lastActiveHeight = 0;
-    CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(*tx, nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER}, fReject, lastActiveHeight);
-    if (!payload) {
-        if (fReject)
-            errors.push_back("Not for current address");
-        else if (lastActiveHeight != 0 && lastActiveHeight < nSpendHeight)
-            errors.push_back(strprintf("Invalid active height. Last active height is %d", lastActiveHeight));
-        else
-            errors.push_back("Invalid bind hex data");
-        return Result::INVALID_PARAMETER;
-    }
-    assert(payload->type == DATACARRIER_TYPE_BINDPLOTTER);
 
     // return
     mtx = CMutableTransaction(*tx);
@@ -148,7 +124,7 @@ Result CreateBindPlotterTransaction(CWallet* wallet, const CTxDestination &dest,
 }
 
 //! Create point transaction.
-Result CreatePointTransaction(CWallet* wallet, const CTxDestination &senderDest, const CTxDestination &receiverDest, CAmount nAmount, bool fSubtractFeeFromAmount,
+Result CreatePointTransaction(CWallet* wallet, const CTxDestination &senderDest, const CTxDestination &receiverDest, CAmount nAmount, int nLockBlocks, bool fSubtractFeeFromAmount,
                               const CCoinControl& coin_control, std::vector<std::string>& errors, CAmount& txfee, CMutableTransaction& mtx)
 {
     auto locked_chain = wallet->chain().lock();
@@ -159,34 +135,58 @@ Result CreatePointTransaction(CWallet* wallet, const CTxDestination &senderDest,
         errors.push_back("Invalid amount");
         return Result::INVALID_PARAMETER;
     } if (nAmount < PROTOCOL_POINT_AMOUNT_MIN) {
-        errors.push_back(strprintf("Point amount too minimal, require more than %s BHD", FormatMoney(PROTOCOL_POINT_AMOUNT_MIN)));
+        errors.push_back(strprintf("Point amount too minimal, require more than %s QTC", FormatMoney(PROTOCOL_POINT_AMOUNT_MIN)));
         return Result::INVALID_PARAMETER;
     }
 
     // Create special coin control for point
     CCoinControl realCoinControl = coin_control;
-    realCoinControl.m_signal_bip125_rbf = false;
-    realCoinControl.m_coin_pick_policy = CoinPickPolicy::IncludeIfSet;
-    realCoinControl.m_pick_dest = senderDest;
     realCoinControl.destChange = senderDest;
 
     // Create point transaction
     std::string strError;
-    std::vector<CRecipient> vecSend = { {GetScriptForDestination(senderDest), nAmount, fSubtractFeeFromAmount}, {GetPointScriptForDestination(receiverDest), 0, false} };
+    std::vector<CRecipient> vecSend = { {GetScriptForDestination(senderDest), nAmount, fSubtractFeeFromAmount, GetPointScriptForDestination(receiverDest, nLockBlocks)} };
     int nChangePosRet = 1;
     CTransactionRef tx;
-    if (!wallet->CreateTransaction(*locked_chain, vecSend, tx, txfee, nChangePosRet, strError, realCoinControl, false, CTransaction::UNIFORM_VERSION)) {
+    if (!wallet->CreateTransaction(*locked_chain, vecSend, tx, txfee, nChangePosRet, strError, realCoinControl, false)) {
         errors.push_back(strError);
         return Result::WALLET_ERROR;
     }
 
-    // Check
-    CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(*tx, locked_chain->getHeight().get_value_or(0) + 1, DatacarrierTypes{DATACARRIER_TYPE_POINT});
-    if (!payload) {
-        errors.push_back("Error on create point transaction");
+    // Return
+    mtx = CMutableTransaction(*tx);
+    return Result::OK;
+}
+
+//! Create staking transaction.
+Result CreateStakingTransaction(CWallet* wallet, const CTxDestination &senderDest, const CTxDestination &receiverDest, CAmount nAmount, int nLockBlocks, bool fSubtractFeeFromAmount,
+                              const CCoinControl& coin_control, std::vector<std::string>& errors, CAmount& txfee, CMutableTransaction& mtx)
+{
+    auto locked_chain = wallet->chain().lock();
+    LOCK(wallet->cs_wallet);
+    errors.clear();
+
+    if (nAmount <= 0) {
+        errors.push_back("Invalid amount");
+        return Result::INVALID_PARAMETER;
+    } if (nAmount < PROTOCOL_STAKING_AMOUNT_MIN) {
+        errors.push_back(strprintf("Staking amount too minimal, require more than %s QTC", FormatMoney(PROTOCOL_POINT_AMOUNT_MIN)));
+        return Result::INVALID_PARAMETER;
+    }
+
+    // Create special coin control for point
+    CCoinControl realCoinControl = coin_control;
+    realCoinControl.destChange = senderDest;
+
+    // Create point transaction
+    std::string strError;
+    std::vector<CRecipient> vecSend = { {GetScriptForDestination(senderDest), nAmount, fSubtractFeeFromAmount, GetStakingScriptForDestination(receiverDest, nLockBlocks)} };
+    int nChangePosRet = 1;
+    CTransactionRef tx;
+    if (!wallet->CreateTransaction(*locked_chain, vecSend, tx, txfee, nChangePosRet, strError, realCoinControl, false)) {
+        errors.push_back(strError);
         return Result::WALLET_ERROR;
     }
-    assert(payload->type == DATACARRIER_TYPE_POINT);
 
     // Return
     mtx = CMutableTransaction(*tx);
@@ -204,14 +204,14 @@ Result CreateUnfreezeTransaction(CWallet* wallet, const COutPoint& outpoint,
         return Result::INVALID_REQUEST;
     }
 
-    Result res = PreconditionChecks(*locked_chain, wallet, *wtx, errors);
+    Result res = PreconditionChecks(*locked_chain, wallet, outpoint, *wtx, errors);
     if (res != Result::OK) {
         return res;
     }
 
     // Check UTXO
     const Coin &coin = wallet->chain().accessCoin(outpoint);
-    if (coin.IsSpent() || coin.GetExtraDataType() == DATACARRIER_TYPE_UNKNOWN) {
+    if (coin.IsSpent() || coin.GetExtraDataType() == TXOUT_TYPE_UNKNOWN) {
         errors.push_back("Can't unfreeze");
         return Result::INVALID_REQUEST;
     }
@@ -224,7 +224,7 @@ Result CreateUnfreezeTransaction(CWallet* wallet, const COutPoint& outpoint,
             errors.push_back(strprintf("Unbind plotter active on %d block height (%d blocks after, about %d minute)",
                     nActiveHeight,
                     nActiveHeight - nSpendHeight,
-                    (nActiveHeight - nSpendHeight) * Consensus::GetTargetSpacing(nSpendHeight, Params().GetConsensus()) / 60));
+                    (nActiveHeight - nSpendHeight) * Params().GetConsensus().nPowTargetSpacing / 60));
             return Result::WALLET_ERROR;
         }
     }
@@ -232,7 +232,6 @@ Result CreateUnfreezeTransaction(CWallet* wallet, const COutPoint& outpoint,
     // Create transaction
     CMutableTransaction txNew;
     txNew.nLockTime = locked_chain->getHeight().get_value_or(0);
-    txNew.nVersion = CTransaction::UNIFORM_VERSION;
     txNew.vin = { CTxIn(outpoint, CScript(), CTxIn::SEQUENCE_FINAL - 1) };
     txNew.vout = { CTxOut(coin.out.nValue, coin.out.scriptPubKey) };
     int64_t nBytes = CalculateMaximumSignedTxSize(CTransaction(txNew), wallet, coin_control.fAllowWatchOnly);

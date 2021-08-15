@@ -48,11 +48,24 @@ Result CreatePointTransaction(CWallet* wallet,
                               const CTxDestination &senderDest,
                               const CTxDestination &receiverDest,
                               CAmount nAmount,
+                              int nLockBlocks,
                               bool fSubtractFeeFromAmount,
                               const CCoinControl& coin_control,
                               std::vector<std::string>& errors,
                               CAmount& txfee,
                               CMutableTransaction& mtx);
+
+//! Create staking transaction.
+Result CreateStakingTransaction(CWallet* wallet,
+                                const CTxDestination &senderDest,
+                                const CTxDestination &receiverDest,
+                                CAmount nAmount,
+                                int nLockBlocks,
+                                bool fSubtractFeeFromAmount,
+                                const CCoinControl& coin_control,
+                                std::vector<std::string>& errors,
+                                CAmount& txfee,
+                                CMutableTransaction& mtx);
 
 //! Create unfreeze transaction.
 Result CreateUnfreezeTransaction(CWallet* wallet,

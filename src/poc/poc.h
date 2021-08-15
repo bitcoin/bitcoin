@@ -32,9 +32,9 @@ namespace poc {
 static const arith_uint256 TWO64 = arith_uint256(std::numeric_limits<uint64_t>::max()) + 1;
 
 /**
- * BHD base target when target spacing is 1 seconds
+ * QTC base target when target spacing is 1 seconds
  * 
- * See https://btchd.org/wiki/The_Proof_of_Capacity#Base_Target
+ * See https://qitchain.org/wiki/The_Proof_of_Capacity#Base_Target
  *
  * net capacity(t) = 4398046511104 / t / baseTarget(t)
  *
@@ -45,20 +45,10 @@ static const arith_uint256 TWO64 = arith_uint256(std::numeric_limits<uint64_t>::
  * The expected minimum deadline of such a distribution is* E(X)=(b + a * n) / (n + 1),
  * where (a,b) is the range of possible values for a deadline (0..2^64-1), n is the number
  * of deadlines being scanned.
+ *
+ * 4398046511104 / 180 = 24433591728
  */
-static const uint64_t BHD_BASE_TARGET_1 = 4398046511104ULL;
-
-/**
- * Get basetarget for give target spacing
- */
-inline uint64_t GetBaseTarget(int targetSpacing) {
-    return BHD_BASE_TARGET_1 / targetSpacing;
-}
-
-/**
- * Get basetarget for give height
- */
-uint64_t GetBaseTarget(int nHeight, const Consensus::Params& params);
+static const uint64_t INITIAL_BASE_TARGET = 24433591728ull;
 
 // Max target deadline
 static const int64_t MAX_TARGET_DEADLINE = std::numeric_limits<uint32_t>::max();
@@ -120,28 +110,6 @@ typedef std::vector< std::reference_wrapper<const CBlockIndex> > CBlockList;
 CBlockList GetEvalBlocks(int nHeight, bool fAscent, const Consensus::Params& params);
 
 /**
- * Eval mining ratio by capacity
- *
- * @param nMiningHeight     The height for mining
- * @param nNetCapacityTB    Network capacity of TB
- * @param params            Consensus params
- * @param pRatioStage       The stage of current ratio
- */
-CAmount EvalMiningRatio(int nMiningHeight, int64_t nNetCapacityTB, const Consensus::Params& params, int* pRatioStage = nullptr);
-
-/**
- * Get net capacity for ratio
- *
- * @param nHeight               The height of net capacity
- * @param nNetCapacityTB        Network capacity of TB
- * @param nPrevNetCapacityTB    Previous eval net capacity for ratio
- * @param params                Consensus params
- *
- * @return Return adjuested net capacity of TB for ratio
- */
-int64_t GetRatioNetCapacity(int64_t nNetCapacityTB, int64_t nPrevNetCapacityTB, const Consensus::Params& params);
-
-/**
  * Get net capacity
  *
  * @param nHeight           The height of net capacity
@@ -163,28 +131,25 @@ int64_t GetNetCapacity(int nHeight, const Consensus::Params& params);
 int64_t GetNetCapacity(int nHeight, const Consensus::Params& params, std::function<void(const CBlockIndex &block)> associateBlock);
 
 /**
- * Get mining ratio
- *
- * @param nHeight           The height for mining
- * @param params            Consensus params
- * @param pRatioStage       The stage of current ratio
- * @param pRatioCapacityTB  The net capacity of current stage
- * @param pRatioBeginHeight The begin block height of current stage
- *
- * @return Return mining ratio
- */
-CAmount GetMiningRatio(int nMiningHeight, const Consensus::Params& params, int* pRatioStage = nullptr,
-    int64_t* pRatioCapacityTB = nullptr, int *pRatioBeginHeight = nullptr);
-
-/**
  * Get capacity required balance
  *
  * @param nCapacityTB       Miner capacity
- * @param miningRatio       The mining ratio
+ * @param nMiningHeight     The height of mining
+ * @param params            Consensus params
  *
  * @return Required balance
  */
-CAmount GetCapacityRequireBalance(int64_t nCapacityTB, CAmount miningRatio);
+CAmount GetCapacityRequireBalance(int64_t nCapacityTB, int nMiningHeight, const Consensus::Params& params);
+
+/**
+ * Get mining pledge ratio
+ *
+ * @param nMiningHeight             The height of mining
+ * @param params                    Consensus params
+ *
+ * @return Required pledge ratio
+ */
+CAmount GetMiningPledgeRatio(int nMiningHeight, const Consensus::Params& params);
 
 /**
  * Get mining required balance
@@ -194,13 +159,12 @@ CAmount GetCapacityRequireBalance(int64_t nCapacityTB, CAmount miningRatio);
  * @param nMiningHeight             The height of mining
  * @param view                      The coin view
  * @param pMinerCapacityTB          Miner capacity by estimate
- * @param pOldMiningRequireBalance  Only in BHDIP004. See https://btchd.org/wiki/BHDIP/004#getminingrequire
  * @param params                    Consensus params
  *
  * @return Required balance
  */
 CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const uint64_t& nPlotterId, int nMiningHeight,
-    const CCoinsViewCache& view, int64_t* pMinerCapacityTB, CAmount* pOldMiningRequireBalance,
+    const CCoinsViewCache& view, int64_t* pMinerCapacityTB,
     const Consensus::Params& params);
 
 /**

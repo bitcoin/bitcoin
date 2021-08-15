@@ -233,18 +233,15 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         UniValue o(UniValue::VOBJ);
         ScriptPubKeyToUniv(txout.scriptPubKey, o, true);
         out.pushKV("scriptPubKey", o);
+
+        UniValue p(UniValue::VOBJ);
+        if (TxoutPayloadToUniv(txout, nHeight, p)) {
+            out.pushKV("payload", p);
+        }
+
         vout.push_back(out);
     }
     entry.pushKV("vout", vout);
-
-    if (tx.IsUniform()) {
-        CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(tx, nHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_POINT});
-        if (payload) {
-            UniValue extra(UniValue::VOBJ);;
-            DatacarrierPayloadToUniv(payload, tx.vout[0], extra);
-            entry.pushKV("extra", extra);
-        }
-    }
 
     if (!hashBlock.IsNull())
         entry.pushKV("blockhash", hashBlock.GetHex());
@@ -254,18 +251,32 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     }
 }
 
-void DatacarrierPayloadToUniv(const CDatacarrierPayloadRef& payload, const CTxOut& txOut, UniValue& out)
+bool TxoutPayloadToUniv(const CTxOut& txout, int nHeight, UniValue& out)
 {
-    assert(payload != nullptr);
-    if (payload->type == DATACARRIER_TYPE_BINDPLOTTER) {
+    auto payload = ExtractTxoutPayload(txout, nHeight, {TXOUT_TYPE_BINDPLOTTER, TXOUT_TYPE_POINT, TXOUT_TYPE_STAKING});
+    if (!payload)
+        return false;
+
+    switch (payload->type) {
+    case TxOutType::TXOUT_TYPE_BINDPLOTTER:
         out.pushKV("type", "bindplotter");
-        out.pushKV("amount", ValueFromAmount(txOut.nValue));
-        out.pushKV("address", EncodeDestination(ExtractDestination(txOut.scriptPubKey)));
         out.pushKV("id", std::to_string(BindPlotterPayload::As(payload)->GetId()));
-    } else if (payload->type == DATACARRIER_TYPE_POINT) {
-        out.pushKV("type", "pledge");
-        out.pushKV("amount", ValueFromAmount(txOut.nValue));
-        out.pushKV("from", EncodeDestination(ExtractDestination(txOut.scriptPubKey)));
-        out.pushKV("to", EncodeDestination(ScriptHash(PointPayload::As(payload)->GetReceiverID())));
+        return true;
+    case TxOutType::TXOUT_TYPE_POINT:
+        out.pushKV("type", "point");
+        out.pushKV("address", EncodeDestination(ScriptHash(PointPayload::As(payload)->GetReceiverID())));
+        out.pushKV("lock_blocks", std::to_string(PointPayload::As(payload)->GetLockBlocks()));
+        out.pushKV("amount", ValueFromAmount(PointPayload::As(payload)->GetAmount()));
+        return true;
+    case TxOutType::TXOUT_TYPE_STAKING:
+        out.pushKV("type", "staking");
+        out.pushKV("address", EncodeDestination(ScriptHash(StakingPayload::As(payload)->GetReceiverID())));
+        out.pushKV("lock_blocks", std::to_string(StakingPayload::As(payload)->GetLockBlocks()));
+        out.pushKV("amount", ValueFromAmount(StakingPayload::As(payload)->GetAmount()));
+        return true;
+    default:
+        break;
     }
+
+    return false;
 }

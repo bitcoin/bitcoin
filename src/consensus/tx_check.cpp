@@ -29,6 +29,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
         nValueOut += txout.nValue;
         if (!MoneyRange(nValueOut))
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
+        if (txout.payload.size() > MAX_TXOUT_PAYLOAD_SIZE)
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-vout-payload");
     }
 
     // Check for duplicate inputs - note that this check is slow so we skip it in CheckBlock

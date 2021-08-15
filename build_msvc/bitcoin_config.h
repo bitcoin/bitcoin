@@ -23,10 +23,10 @@
 #define COPYRIGHT_HOLDERS "The %s developers"
 
 /* Copyright holder(s) */
-#define COPYRIGHT_HOLDERS_FINAL "The BitcoinHD Core developers"
+#define COPYRIGHT_HOLDERS_FINAL "The Qitcoin Core developers"
 
 /* Replacement for %s in copyright holders string */
-#define COPYRIGHT_HOLDERS_SUBSTITUTION "BitcoinHD Core"
+#define COPYRIGHT_HOLDERS_SUBSTITUTION "Qitcoin Core"
 
 /* Copyright year */
 #define COPYRIGHT_YEAR 2020
@@ -355,19 +355,19 @@
 #define OMNICORE_VERSION_PATCH 1
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "https://github.com/btchd/btchd/issues"
+#define PACKAGE_BUGREPORT "https://github.com/qitcoin/qitcoin/issues"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "BitcoinHD Core"
+#define PACKAGE_NAME "Qitcoin Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "BitcoinHD Core 1.4.0"
+#define PACKAGE_STRING "Qitcoin Core 1.4.0"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "BitcoinHD"
+#define PACKAGE_TARNAME "Qitcoin"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "https://btchd.org/"
+#define PACKAGE_URL "https://qiantongchain.com/"
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "1.4.0"

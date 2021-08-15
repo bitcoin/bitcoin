@@ -34,9 +34,15 @@ class Wallet;
 
 struct AccountBanalces {
     CAmount balance = 0;
+
+    // include point sent ,staking sent and bind plotter frozen
     CAmount frozen_balance = 0;
-    CAmount point_sent_balance = 0;
-    CAmount point_received_balance = 0;
+    
+    // sent, received
+    CAmount point_balance[2] = {0, 0};
+
+    // sent, received
+    CAmount staking_balance[2] = {0, 0};
 };
 
 //! Interface giving clients (wallet processes, maybe other analysis tools in

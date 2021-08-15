@@ -16,6 +16,9 @@
 #include <qt/platformstyle.h>
 
 #include <chainparams.h>
+#include <interfaces/chain.h>
+#include <key_io.h>
+#include <util/strencodings.h>
 
 #include <QApplication>
 #include <QClipboard>
@@ -23,9 +26,11 @@
 #include <array>
 
 static const int hour_blocks = 3600 / 180;
+static const int day_blocks = 86400 / 180;
+
 static const std::array<int, 5> bindActiveHeights = { {1*hour_blocks, 1*24*hour_blocks, 2*24*hour_blocks, 3*24*hour_blocks, PROTOCOL_BINDPLOTTER_MAXALIVE} };
-int getPlotterDataValidHeightForIndex(int index) {
-    if (index+1 > static_cast<int>(bindActiveHeights.size())) {
+static int getPlotterDataValidHeightForIndex(int index) {
+    if (index + 1 > static_cast<int>(bindActiveHeights.size())) {
         return bindActiveHeights.back();
     }
     if (index < 0) {
@@ -33,13 +38,24 @@ int getPlotterDataValidHeightForIndex(int index) {
     }
     return bindActiveHeights[index];
 }
-int getIndexForPlotterDataValidHeight(int height) {
+static int getIndexForPlotterDataValidHeight(int height) {
     for (unsigned int i = 0; i < bindActiveHeights.size(); i++) {
         if (bindActiveHeights[i] >= height) {
             return i;
         }
     }
     return bindActiveHeights.size() - 1;
+}
+
+static const std::array<int, 2> blockBlocks = { {360 * day_blocks, 540 * day_blocks} };
+static int getLockBlocksForIndex(int index) {
+    if (index+1 > static_cast<int>(blockBlocks.size())) {
+        return blockBlocks.back();
+    }
+    if (index < 0) {
+        return blockBlocks[0];
+    }
+    return blockBlocks[index];
 }
 
 SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, const PlatformStyle *_platformStyle, QWidget *parent) :
@@ -55,6 +71,8 @@ SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, const Platform
     ui->plotterPassphrase->setVisible(false);
     ui->plotterDataAliveHeightLabel->setVisible(false);
     ui->plotterDataValidHeightSelector->setVisible(false);
+    ui->lockBlocksLabel->setVisible(false);
+    ui->lockBlocksSelector->setVisible(false);
 
     ui->addressBookButton->setIcon(platformStyle->SingleColorIcon(":/icons/address-book"));
     ui->pasteButton->setIcon(platformStyle->SingleColorIcon(":/icons/editpaste"));
@@ -83,9 +101,7 @@ SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, const Platform
     connect(ui->useAvailableBalanceButton, &QPushButton::clicked, this, &SendCoinsEntry::useAvailableBalanceClicked);
 
     // Pay method
-    if (payOperateMethod == PayOperateMethod::Point) {
-        ui->payToLabel->setText(tr("Point &To:"));
-    } else if (payOperateMethod == PayOperateMethod::BindPlotter) {
+    if (payOperateMethod == PayOperateMethod::BindPlotter) {
         ui->payToLabel->setText(tr("Bind &To:"));
         ui->labellLabel->setVisible(false);
         ui->addAsLabel->setVisible(false);
@@ -105,6 +121,26 @@ SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, const Platform
                 .arg(n));
         }
         ui->plotterDataValidHeightSelector->setCurrentIndex(getIndexForPlotterDataValidHeight(PROTOCOL_BINDPLOTTER_DEFAULTMAXALIVE));
+    } else if (payOperateMethod == PayOperateMethod::Point) {
+        ui->payToLabel->setText(tr("Point &To:"));
+        ui->lockBlocksLabel->setVisible(true);
+        ui->lockBlocksSelector->setVisible(true);
+        for (const int n : blockBlocks) {
+            ui->lockBlocksSelector->addItem(tr("%1 (%2 blocks)")
+                .arg(GUIUtil::formatNiceTimeOffset(n*Params().GetConsensus().nPowTargetSpacing))
+                .arg(n));
+        }
+        ui->lockBlocksSelector->setCurrentIndex(0);
+    } else if (payOperateMethod == PayOperateMethod::Staking) {
+        ui->payToLabel->setText(tr("Staking &To:"));
+        ui->lockBlocksLabel->setVisible(true);
+        ui->lockBlocksSelector->setVisible(true);
+        for (const int n : blockBlocks) {
+            ui->lockBlocksSelector->addItem(tr("%1 (%2 blocks)")
+                .arg(GUIUtil::formatNiceTimeOffset(n*Params().GetConsensus().nPowTargetSpacing))
+                .arg(n));
+        }
+        ui->lockBlocksSelector->setCurrentIndex(0);
     }
 }
 
@@ -232,7 +268,15 @@ bool SendCoinsEntry::validate(interfaces::Node& node)
     }
 
     // Special tx amount
-    if (payOperateMethod == PayOperateMethod::Point)
+    if (payOperateMethod == PayOperateMethod::BindPlotter)
+    {
+        QString passphrase = ui->plotterPassphrase->text().trimmed();
+        if (!IsValidPassphrase(passphrase.toStdString())) {
+            ui->plotterPassphrase->setValid(false);
+            retval = false;
+        }
+    }
+    else if (payOperateMethod == PayOperateMethod::Point)
     {
         if (ui->payAmount->value() < PROTOCOL_POINT_AMOUNT_MIN ||
                 (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked && ui->payAmount->value() <= PROTOCOL_POINT_AMOUNT_MIN)) {
@@ -240,11 +284,11 @@ bool SendCoinsEntry::validate(interfaces::Node& node)
             retval = false;
         }
     }
-    else if (payOperateMethod == PayOperateMethod::BindPlotter)
+    else if (payOperateMethod == PayOperateMethod::Staking)
     {
-        QString passphrase = ui->plotterPassphrase->text().trimmed();
-        if (!IsValidPassphrase(passphrase.toStdString())) {
-            ui->plotterPassphrase->setValid(false);
+        if (ui->payAmount->value() < PROTOCOL_STAKING_AMOUNT_MIN ||
+                (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked && ui->payAmount->value() <= PROTOCOL_STAKING_AMOUNT_MIN)) {
+            ui->payAmount->setValid(false);
             retval = false;
         }
     }
@@ -263,13 +307,34 @@ SendCoinsRecipient SendCoinsEntry::getValue()
     // Normal payment
     recipient.address = ui->payTo->text();
     recipient.label = ui->addAsLabel->text();
-    if (payOperateMethod == PayOperateMethod::BindPlotter) {
-        recipient.plotterPassphrase = ui->plotterPassphrase->text().trimmed();
-        recipient.plotterDataAliveHeight = getPlotterDataValidHeightForIndex(ui->plotterDataValidHeightSelector->currentIndex());
-    }
     recipient.amount = ui->payAmount->value();
     recipient.message = ui->messageTextLabel->text();
     recipient.fSubtractFeeFromAmount = (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked);
+    if (payOperateMethod == PayOperateMethod::BindPlotter) {
+        QString plotterPassphrase = ui->plotterPassphrase->text().trimmed();
+        if (plotterPassphrase.size() == PROTOCOL_BINDPLOTTER_SCRIPTSIZE * 2 && IsHex(plotterPassphrase.toStdString())) {
+            // Hex data
+            std::vector<unsigned char> bindData(ParseHex(plotterPassphrase.toStdString()));
+           recipient.payload = CScript(bindData.cbegin(), bindData.cend());
+        } else {
+            // Passphrase
+            int nTipHeight = model->wallet().chain().lock()->getHeight().get();
+            int plotterDataAliveHeight = getPlotterDataValidHeightForIndex(ui->plotterDataValidHeightSelector->currentIndex());
+            recipient.payload = GetBindPlotterScriptForDestination(DecodeDestination(recipient.address.toStdString()), plotterPassphrase.toStdString(), nTipHeight + plotterDataAliveHeight);
+        }
+    }
+    else if (payOperateMethod == PayOperateMethod::Point) {
+        int lockBlocks = getLockBlocksForIndex(ui->lockBlocksSelector->currentIndex());
+        recipient.payload = GetPointScriptForDestination(DecodeDestination(recipient.address.toStdString()), lockBlocks);
+        recipient.address = QString::fromStdString(EncodeDestination(model->wallet().getPrimaryAddress())); // rewrite lock to primary address
+        recipient.label = "";
+    }
+    else if (payOperateMethod == PayOperateMethod::Staking) {
+        int lockBlocks = getLockBlocksForIndex(ui->lockBlocksSelector->currentIndex());
+        recipient.payload = GetStakingScriptForDestination(DecodeDestination(recipient.address.toStdString()), lockBlocks);
+        recipient.address = QString::fromStdString(EncodeDestination(model->wallet().getPrimaryAddress())); // rewrite lock to primary address
+        recipient.label = "";
+    }
 
     return recipient;
 }
@@ -320,12 +385,9 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
         ui->messageLabel->setVisible(!recipient.message.isEmpty());
 
         ui->addAsLabel->clear();
-        ui->plotterPassphrase->clear();
         ui->payTo->setText(recipient.address); // this may set a label from addressbook
         if (!recipient.label.isEmpty()) // if a label had been set from the addressbook, don't overwrite with an empty label
             ui->addAsLabel->setText(recipient.label);
-        if (!recipient.plotterPassphrase.isEmpty())
-            ui->plotterPassphrase->setText(recipient.plotterPassphrase);
         ui->payAmount->setValue(recipient.amount);
     }
 }

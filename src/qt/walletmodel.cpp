@@ -130,7 +130,7 @@ bool WalletModel::validateAddress(const QString &address)
     return IsValidDestinationString(address.toStdString());
 }
 
-WalletModel::SendCoinsReturn WalletModel::prepareTransaction(PayOperateMethod payOperateMethod, WalletModelTransaction &transaction, const CCoinControl& coinControl)
+WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl)
 {
     CAmount total = 0;
     bool fSubtractFeeFromAmount = false;
@@ -164,7 +164,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(PayOperateMethod pa
                 const unsigned char* scriptStr = (const unsigned char*)out.script().data();
                 CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
                 CAmount nAmount = out.amount();
-                CRecipient recipient = {scriptPubKey, nAmount, rcp.fSubtractFeeFromAmount};
+                CRecipient recipient = {scriptPubKey, nAmount, rcp.fSubtractFeeFromAmount, rcp.payload};
                 vecSend.push_back(recipient);
             }
             if (subtotal <= 0)
@@ -188,7 +188,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(PayOperateMethod pa
             ++nAddresses;
 
             CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
-            CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
+            CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount, rcp.payload};
             vecSend.push_back(recipient);
 
             total += rcp.amount;
@@ -210,35 +210,9 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(PayOperateMethod pa
         CAmount nFeeRequired = 0;
         int nChangePosRet = -1;
         std::string strFailReason;
-        int32_t nTxVersion = 0;
-
-        // update tx params
-        if (payOperateMethod == PayOperateMethod::Point) {
-            if (vecSend.size() != 1)
-                return TransactionCreationFailed;
-            vecSend.push_back({GetPointScriptForDestination(ExtractDestination(vecSend[0].scriptPubKey)), 0, false});
-            vecSend[0].scriptPubKey = GetScriptForDestination(coinControl.m_pick_dest);
-            nChangePosRet = 1;
-            nTxVersion = CTransaction::UNIFORM_VERSION;
-        } else if (payOperateMethod == PayOperateMethod::BindPlotter) {
-            if (vecSend.size() != 1 || recipients[0].plotterPassphrase.isEmpty())
-                return TransactionCreationFailed;
-            const SendCoinsRecipient &rcp = recipients[0];
-            if (rcp.plotterPassphrase.size() == PROTOCOL_BINDPLOTTER_SCRIPTSIZE * 2 && IsHex(rcp.plotterPassphrase.toStdString())) {
-                // Hex data
-                std::vector<unsigned char> bindData(ParseHex(rcp.plotterPassphrase.toStdString()));
-                vecSend.push_back({CScript(bindData.cbegin(), bindData.cend()), 0, false});
-            } else {
-                // Passphrase
-                int nTipHeight = m_wallet->chain().lock()->getHeight().get_value_or(0);
-                vecSend.push_back({GetBindPlotterScriptForDestination(coinControl.m_pick_dest, rcp.plotterPassphrase.toStdString(), nTipHeight + rcp.plotterDataAliveHeight), 0, false});
-            }
-            nChangePosRet = 1;
-            nTxVersion = CTransaction::UNIFORM_VERSION;
-        }
 
         auto& newTx = transaction.getWtx();
-        newTx = m_wallet->createTransaction(vecSend, coinControl, true /* sign */, nChangePosRet, nFeeRequired, strFailReason, nTxVersion);
+        newTx = m_wallet->createTransaction(vecSend, coinControl, true /* sign */, nChangePosRet, nFeeRequired, strFailReason);
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && newTx)
             transaction.reassignAmounts(nChangePosRet);
@@ -288,7 +262,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
             }
             else
 #endif
-            if (!rcp.message.isEmpty()) // Message from normal btchd:URI (btchd:123...?message=example)
+            if (!rcp.message.isEmpty()) // Message from normal qitcoin:URI (qitcoin:123...?message=example)
                 vOrderForm.emplace_back("Message", rcp.message.toStdString());
         }
 

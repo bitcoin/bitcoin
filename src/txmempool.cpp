@@ -594,8 +594,8 @@ void CTxMemPool::clear()
 static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& mempoolDuplicate, const CCoinsViewCache &prevTipView, const int64_t spendheight)
 {
     CValidationState state;
-    CAmount txfee = 0;
-    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, state, mempoolDuplicate, prevTipView, spendheight, txfee, CAccountID(), Consensus::CheckTxLevel::CheckMempool, Params().GetConsensus());
+    CAmount nFees;
+    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, state, mempoolDuplicate, prevTipView, spendheight, nFees, Params().GetConsensus());
     if (!fCheckResult)
         LogPrintf("%s: Check txmempool fail: %s\n%s\n", __func__, FormatStateMessage(state), tx.ToString());
     assert(fCheckResult);
@@ -898,18 +898,7 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
     CTransactionRef ptx = mempool.get(outpoint.hash);
     if (ptx) {
         if (outpoint.n < ptx->vout.size()) {
-            CDatacarrierPayloadRef payload;
-            if (outpoint.n == 0 && ptx->IsUniform()) {
-                // parse uniform coin
-                payload = ExtractTransactionDatacarrier(*ptx, ::ChainActive().Height() + 1, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_POINT});
-                if (!payload) {
-                    // BHDIP007 always active
-                    return false;
-                }
-            }
-
             coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
-            coin.extraData = std::move(payload);
             return true;
         } else {
             return false;

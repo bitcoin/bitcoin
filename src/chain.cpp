@@ -156,31 +156,18 @@ void CBlockIndex::Update(const Consensus::Params& params)
 {
     // Genearation signature
     static uint256 dummyGenerationSignature;
+
     generationSignature = pprev ? &pprev->nextGenerationSignature : &dummyGenerationSignature;
-    if (nHeight + 1 <= params.BHDIP001PreMiningEndHeight) {
-        //! Pre-Mining not exist generation signature
+    if (nHeight <= 1) {
         nextGenerationSignature.SetNull();
-    } else if (nHeight + 1 <= params.BHDIP007Height) {
-        //! hashMerkleRoot + nPlotterId. Unsafe
-        // Legacy consensus use little endian
-        uint64_t plotterId = htole64(nPlotterId);
-        CShabal256()
-            .Write(hashMerkleRoot.begin(), hashMerkleRoot.size())
-            .Write((const unsigned char*)&plotterId, 8)
-            .Finalize(nextGenerationSignature.begin());
     } else {
-        //! generationSignature + nPlotterId
-        assert(generationSignature != nullptr && !generationSignature->IsNull());
+        assert(generationSignature != nullptr);
         uint64_t plotterId = htobe64(nPlotterId);
         CShabal256()
             .Write(generationSignature->begin(), generationSignature->size())
             .Write((const unsigned char*)&plotterId, 8)
             .Finalize(nextGenerationSignature.begin());
     }
-
-    // Generator
-    if (!vchPubKey.empty())
-        generatorAccountID = ExtractAccountID(CPubKey(vchPubKey));
 }
 
 void CBlockIndex::BuildSkip()

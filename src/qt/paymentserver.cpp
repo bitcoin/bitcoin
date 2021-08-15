@@ -48,7 +48,7 @@
 #include <QUrlQuery>
 
 const int BITCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
-const QString BITCOIN_IPC_PREFIX("btchd:");
+const QString BITCOIN_IPC_PREFIX("qitcoin:");
 #ifdef ENABLE_BIP70
 // BIP70 payment protocol messages
 const char* BIP70_MESSAGE_PAYMENTACK = "PaymentACK";
@@ -101,11 +101,11 @@ void PaymentServer::ipcParseCommandLine(interfaces::Node& node, int argc, char* 
         if (arg.startsWith("-"))
             continue;
 
-        // If the btchd: URI contains a payment request, we are not able to detect the
+        // If the qitcoin: URI contains a payment request, we are not able to detect the
         // network as that would require fetching and parsing the payment request.
         // That means clicking such an URI which contains a testnet payment request
         // will start a mainnet instance and throw a "wrong network" error.
-        if (arg.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // btchd: URI
+        if (arg.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // qitcoin: URI
         {
             if (savedPaymentRequests.contains(arg)) continue;
             savedPaymentRequests.insert(arg);
@@ -209,7 +209,7 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
 #endif
 
     // Install global event filter to catch QFileOpenEvents
-    // on Mac: sent when you click btchd: links
+    // on Mac: sent when you click qitcoin: links
     // other OSes: helpful when dealing with payment request files
     if (parent)
         parent->installEventFilter(this);
@@ -226,7 +226,7 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
         if (!uriServer->listen(name)) {
             // constructor is called early in init, so don't use "Q_EMIT message()" here
             QMessageBox::critical(nullptr, tr("Payment request error"),
-                tr("Cannot start btchd: click-to-pay handler"));
+                tr("Cannot start qitcoin: click-to-pay handler"));
         }
         else {
             connect(uriServer, &QLocalServer::newConnection, this, &PaymentServer::handleURIConnection);
@@ -245,7 +245,7 @@ PaymentServer::~PaymentServer()
 }
 
 //
-// OSX-specific way of handling btchd: URIs and PaymentRequest mime types.
+// OSX-specific way of handling qitcoin: URIs and PaymentRequest mime types.
 // Also used by paymentservertests.cpp and when opening a payment request file
 // via "Open URI..." menu entry.
 //
@@ -286,12 +286,12 @@ void PaymentServer::handleURIOrFile(const QString& s)
         return;
     }
 
-    if (s.startsWith("btchd://", Qt::CaseInsensitive))
+    if (s.startsWith("qitcoin://", Qt::CaseInsensitive))
     {
-        Q_EMIT message(tr("URI handling"), tr("'btchd://' is not a valid URI. Use 'btchd:' instead."),
+        Q_EMIT message(tr("URI handling"), tr("'qitcoin://' is not a valid URI. Use 'qitcoin:' instead."),
             CClientUIInterface::MSG_ERROR);
     }
-    else if (s.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // btchd: URI
+    else if (s.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // qitcoin: URI
     {
         QUrlQuery uri((QUrl(s)));
 #ifdef ENABLE_BIP70
@@ -344,7 +344,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
             }
             else
                 Q_EMIT message(tr("URI handling"),
-                    tr("URI cannot be parsed! This can be caused by an invalid BitcoinHD address or malformed URI parameters."),
+                    tr("URI cannot be parsed! This can be caused by an invalid Qitcoin address or malformed URI parameters."),
                     CClientUIInterface::ICON_WARNING);
 
             return;
@@ -512,7 +512,7 @@ void PaymentServer::initNetManager()
         return;
     delete netManager;
 
-    // netManager is used to fetch paymentrequests given in btchd: URIs
+    // netManager is used to fetch paymentrequests given in qitcoin: URIs
     netManager = new QNetworkAccessManager(this);
 
     QNetworkProxy proxy;

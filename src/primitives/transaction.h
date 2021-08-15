@@ -127,6 +127,9 @@ public:
     std::string ToString() const;
 };
 
+// limit CTxOut::payload size
+static const int MAX_TXOUT_PAYLOAD_SIZE = 64000; // 64k
+
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.
  */
@@ -135,6 +138,7 @@ class CTxOut
 public:
     CAmount nValue;
     CScript scriptPubKey;
+    CScript payload;
 
     CTxOut()
     {
@@ -142,6 +146,7 @@ public:
     }
 
     CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
+    CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn, CScript payloadIn);
 
     ADD_SERIALIZE_METHODS;
 
@@ -149,12 +154,14 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(nValue);
         READWRITE(scriptPubKey);
+        READWRITE(payload);
     }
 
     void SetNull()
     {
         nValue = -1;
         scriptPubKey.clear();
+        payload.clear();
     }
 
     bool IsNull() const
@@ -165,7 +172,8 @@ public:
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
-                a.scriptPubKey == b.scriptPubKey);
+                a.scriptPubKey == b.scriptPubKey &&
+                a.payload      == b.payload);
     }
 
     friend bool operator!=(const CTxOut& a, const CTxOut& b)
@@ -273,14 +281,11 @@ public:
     // Default transaction version.
     static const int32_t CURRENT_VERSION=2;
 
-    // The transaction vin & vout is uniform destination
-    static const int32_t UNIFORM_VERSION=3;
-
     // Changing the default transaction version requires a two step process: first
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
-    static const int32_t MAX_STANDARD_VERSION=3;
+    static const int32_t MAX_STANDARD_VERSION=2;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
@@ -363,11 +368,6 @@ public:
         }
         return false;
     }
-
-    bool IsUniform() const
-    {
-        return nVersion == UNIFORM_VERSION;
-    }
 };
 
 /** A mutable version of CTransaction. */
@@ -410,11 +410,6 @@ struct CMutableTransaction
             }
         }
         return false;
-    }
-
-    bool IsUniform() const
-    {
-        return nVersion == CTransaction::UNIFORM_VERSION;
     }
 };
 
