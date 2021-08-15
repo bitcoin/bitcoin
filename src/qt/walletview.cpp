@@ -68,7 +68,7 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     // SYSCOIN
     QSettings settings;
     if (settings.value("fShowMasternodesTab").toBool()) {
-        masternodeListPage = new MasternodeList(platformStyle);
+        masternodeListPage = new MasternodeList();
         addWidget(masternodeListPage);
     }
 

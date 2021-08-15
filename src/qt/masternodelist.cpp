@@ -32,7 +32,7 @@ int GetOffsetFromUtc()
 #endif
 }
 
-MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* parent) :
+MasternodeList::MasternodeList(QWidget* parent) :
     QWidget(parent),
     nTimeFilterUpdatedDIP3(0),
     nTimeUpdatedDIP3(0),
