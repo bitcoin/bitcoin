@@ -109,7 +109,7 @@ static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 /**
  * The PID file facilities.
  */
-static const char* BITCOIN_PID_FILENAME = "btchdd.pid";
+static const char* BITCOIN_PID_FILENAME = "qitcoind.pid";
 
 static fs::path GetPidFile()
 {
@@ -560,7 +560,7 @@ void SetupServerArgs()
     gArgs.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     gArgs.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
 
-    // BitcoinHD
+    // Qitcoin
     gArgs.AddArg("-forcecheckdeadline", strprintf("Force check every block work (default: %u)", DEFAULT_CHECKWORK_ENABLED), ArgsManager::ALLOW_ANY, OptionsCategory::POC);
     gArgs.AddArg("-signprivkey", "Import private key for block signature", ArgsManager::ALLOW_ANY, OptionsCategory::POC);
 
@@ -610,8 +610,8 @@ void SetupServerArgs()
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/btchd/btchd>";
-    const std::string URL_WEBSITE = "<https://btchd.org>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/qitcoin/qitcoin>";
+    const std::string URL_WEBSITE = "<https://qitchain.org>";
 
     return CopyrightHolders(_("Copyright (C) %s").translated) + "\n" +
            "\n" +
@@ -1642,22 +1642,10 @@ bool AppInitMain(InitInterfaces& interfaces)
 
             try {
                 if (!is_coinsview_empty) {
-                    // Upgrade UTXO after reconnect block
-                    if (fCoinDBUpgraded && ::ChainActive().Height() >= chainparams.GetConsensus().BHDIP007Height) {
+                    if (fCoinDBUpgraded) {
                         LogPrintf("Upgrading UTXO database");
 
-                        CBlockIndex *pindex = WITH_LOCK(cs_main, return ::ChainActive()[chainparams.GetConsensus().BHDIP007Height]);
-                        CValidationState state;
-                        InvalidateBlock(state, chainparams, pindex);
-                        if (state.IsValid()) {
-                            LOCK(cs_main);
-                            ResetBlockFailureFlags(pindex);
-                        }
-                        if (!state.IsValid() || !ActivateBestChain(state, chainparams)) {
-                            LogPrintf("%s: %s\n", __func__, FormatStateMessage(state));
-                            strLoadError = _("Error upgrading chainstate database").translated;
-                            break;
-                        }
+                        // Doing upgrade
                     }
                 }
             } catch (const std::exception& e) {

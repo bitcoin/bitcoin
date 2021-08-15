@@ -1,6 +1,6 @@
-# `btchd.conf` Configuration File
+# `qitcoin.conf` Configuration File
 
-The configuration file is used by `btchdd`, `btchd-qt` and `btchd-cli`.
+The configuration file is used by `qitcoind`, `qitcoin-qt` and `qitcoin-cli`.
 
 All command-line options (except for `-?`, `-help`, `-version` and `-conf`) may be specified in a configuration file, and all configuration file options (except for `includeconf`) may also be specified on the command line. Command-line options override values set in the configuration file and configuration file options override values set in the GUI.
 
@@ -47,16 +47,16 @@ rpcport=4000
 
 ## Configuration File Path
 
-The configuration file is not automatically created; you can create it using your favorite text editor. By default, the configuration file name is `btchd.conf` and it is located in the Bitcoin data directory, but both the Bitcoin data directory and the configuration file path may be changed using the `-datadir` and `-conf` command-line options.
+The configuration file is not automatically created; you can create it using your favorite text editor. By default, the configuration file name is `qitcoin.conf` and it is located in the Bitcoin data directory, but both the Bitcoin data directory and the configuration file path may be changed using the `-datadir` and `-conf` command-line options.
 
-The `includeconf=<file>` option in the `btchd.conf` file can be used to include additional configuration files.
+The `includeconf=<file>` option in the `qitcoin.conf` file can be used to include additional configuration files.
 
 ### Default configuration file locations
 
 Operating System | Data Directory | Example Path
 -- | -- | --
-Windows | `%APPDATA%\btchd\` | `C:\Users\username\AppData\Roaming\btchd\btchd.conf`
-Linux | `$HOME/.btchd/` | `/home/username/.btchd/btchd.conf`
-macOS | `$HOME/Library/Application Support/btchd/` | `/Users/username/Library/Application Support/btchd/btchd.conf`
+Windows | `%APPDATA%\qitcoin\` | `C:\Users\username\AppData\Roaming\qitcoin\qitcoin.conf`
+Linux | `$HOME/.qitcoin/` | `/home/username/.qitcoin/qitcoin.conf`
+macOS | `$HOME/Library/Application Support/qitcoin/` | `/Users/username/Library/Application Support/qitcoin/qitcoin.conf`
 
-You can find an example btchd.conf file in [share/examples/btchd.conf](../share/examples/btchd.conf).
+You can find an example qitcoin.conf file in [share/examples/qitcoin.conf](../share/examples/qitcoin.conf).

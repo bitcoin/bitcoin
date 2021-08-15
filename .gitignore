@@ -2,11 +2,11 @@
 
 *.exe
 *.pdb
-src/btchd
-src/btchdd
-src/btchd-cli
-src/btchd-tx
-src/btchd-wallet
+src/qitcoin
+src/qitcoind
+src/qitcoin-cli
+src/qitcoin-tx
+src/qitcoin-wallet
 src/test/test_bitcoin
 src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt
@@ -88,8 +88,8 @@ src/qt/bitcoin-qt.includes
 *.qm
 Makefile
 !depends/Makefile
-btchd-qt
-BitcoinHD-Qt.app
+qitcoin-qt
+Qitcoin-Qt.app
 background.tiff*
 
 # Qt Creator

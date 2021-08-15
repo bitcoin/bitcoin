@@ -82,18 +82,18 @@ TESTS =
 BENCHMARKS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += btchdd
+  bin_PROGRAMS += qitcoind
 endif
 
 if BUILD_BITCOIN_CLI
-  bin_PROGRAMS += btchd-cli
+  bin_PROGRAMS += qitcoin-cli
 endif
 if BUILD_BITCOIN_TX
-  bin_PROGRAMS += btchd-tx
+  bin_PROGRAMS += qitcoin-tx
 endif
 if ENABLE_WALLET
 if BUILD_BITCOIN_WALLET
-  bin_PROGRAMS += btchd-wallet
+  bin_PROGRAMS += qitcoin-wallet
 endif
 endif
 
@@ -554,18 +554,18 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # bitcoind binary #
-btchdd_SOURCES = bitcoind.cpp
-btchdd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-btchdd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-btchdd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+qitcoind_SOURCES = bitcoind.cpp
+qitcoind_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+qitcoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+qitcoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-btchdd_SOURCES += bitcoind-res.rc
+qitcoind_SOURCES += bitcoind-res.rc
 endif
 
 # Libraries below may be listed more than once to resolve circular dependencies (see
 # https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking#circular-dependency)
-btchdd_LDADD = \
+qitcoind_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_SERVER) \
@@ -580,38 +580,38 @@ btchdd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-btchdd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+qitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
 # bitcoin-cli binary #
-btchd_cli_SOURCES = bitcoin-cli.cpp
-btchd_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-btchd_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-btchd_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+qitcoin_cli_SOURCES = bitcoin-cli.cpp
+qitcoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+qitcoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+qitcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-btchd_cli_SOURCES += bitcoin-cli-res.rc
+qitcoin_cli_SOURCES += bitcoin-cli-res.rc
 endif
 
-btchd_cli_LDADD = \
+qitcoin_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-btchd_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+qitcoin_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # bitcoin-tx binary #
-btchd_tx_SOURCES = bitcoin-tx.cpp
-btchd_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-btchd_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-btchd_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+qitcoin_tx_SOURCES = bitcoin-tx.cpp
+qitcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+qitcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+qitcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-btchd_tx_SOURCES += bitcoin-tx-res.rc
+qitcoin_tx_SOURCES += bitcoin-tx-res.rc
 endif
 
-btchd_tx_LDADD = \
+qitcoin_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -619,20 +619,20 @@ btchd_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-btchd_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+qitcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
 # bitcoin-wallet binary #
-btchd_wallet_SOURCES = bitcoin-wallet.cpp
-btchd_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-btchd_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-btchd_wallet_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+qitcoin_wallet_SOURCES = bitcoin-wallet.cpp
+qitcoin_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+qitcoin_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+qitcoin_wallet_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-btchd_wallet_SOURCES += bitcoin-wallet-res.rc
+qitcoin_wallet_SOURCES += bitcoin-wallet-res.rc
 endif
 
-btchd_wallet_LDADD = \
+qitcoin_wallet_LDADD = \
   $(LIBBITCOIN_WALLET_TOOL) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
@@ -646,7 +646,7 @@ btchd_wallet_LDADD = \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE)
 
-btchd_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
+qitcoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
 #
 
 # bitcoinconsensus library #

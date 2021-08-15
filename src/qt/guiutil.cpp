@@ -87,16 +87,16 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
     widget->setFont(fixedPitchFont());
     // We don't want translators to use own addresses in translations
     // and this is the only place, where this address is supplied.
-    widget->setPlaceholderText(QObject::tr("Enter a BitcoinHD address (e.g. %1)").arg(
-        QString::fromStdString(Params().GetConsensus().BHDFundAddress)));
+    widget->setPlaceholderText(QObject::tr("Enter a Qitcoin address (e.g. %1)").arg(
+        QString::fromStdString(Params().GetConsensus().FundAddress)));
     widget->setValidator(new BitcoinAddressEntryValidator(parent));
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
 }
 
 bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
-    // return if URI is not valid or is no btchd: URI
-    if(!uri.isValid() || uri.scheme() != QString("btchd"))
+    // return if URI is not valid or is no qitcoin: URI
+    if(!uri.isValid() || uri.scheme() != QString("qitcoin"))
         return false;
 
     SendCoinsRecipient rv;
@@ -160,7 +160,7 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
 {
     bool bech_32 = info.address.startsWith(QString::fromStdString(Params().Bech32HRP() + "1"));
 
-    QString ret = QString("btchd:%1").arg(bech_32 ? info.address.toUpper() : info.address);
+    QString ret = QString("qitcoin:%1").arg(bech_32 ? info.address.toUpper() : info.address);
     int paramCount = 0;
 
     if (info.amount)
@@ -378,7 +378,7 @@ bool openBitcoinConf()
 
     configFile.close();
 
-    /* Open btchd.conf with the associated application */
+    /* Open qitcoin.conf with the associated application */
     bool res = QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
 #ifdef Q_OS_MAC
     // Workaround for macOS-specific behavior; see #15409.
@@ -534,15 +534,15 @@ fs::path static StartupShortcutPath()
 {
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "BitcoinHD.lnk";
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Qitcoin.lnk";
     if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "BitcoinHD (testnet).lnk";
-    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("BitcoinHD (%s).lnk", chain);
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Qitcoin (testnet).lnk";
+    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Qitcoin (%s).lnk", chain);
 }
 
 bool GetStartOnSystemStartup()
 {
-    // check for BitcoinHD*.lnk
+    // check for Qitcoin*.lnk
     return fs::exists(StartupShortcutPath());
 }
 
@@ -617,8 +617,8 @@ fs::path static GetAutostartFilePath()
 {
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
-        return GetAutostartDir() / "btchd.desktop";
-    return GetAutostartDir() / strprintf("btchd-%s.lnk", chain);
+        return GetAutostartDir() / "qitcoin.desktop";
+    return GetAutostartDir() / strprintf("qitcoin-%s.lnk", chain);
 }
 
 bool GetStartOnSystemStartup()
@@ -662,9 +662,9 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
         if (chain == CBaseChainParams::MAIN)
-            optionFile << "Name=BitcoinHD\n";
+            optionFile << "Name=Qitcoin\n";
         else
-            optionFile << strprintf("Name=BitcoinHD (%s)\n", chain);
+            optionFile << strprintf("Name=Qitcoin (%s)\n", chain);
         optionFile << "Exec=" << pszExePath << strprintf(" -min -chain=%s\n", chain);
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";

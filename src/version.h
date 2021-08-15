@@ -9,7 +9,7 @@
  * network protocol versioning
  */
 
-static const int PROTOCOL_VERSION = 80025;
+static const int PROTOCOL_VERSION = 80018;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -18,7 +18,7 @@ static const int INIT_PROTO_VERSION = 209;
 static const int GETHEADERS_VERSION = 31800;
 
 //! disconnect from peers older than this proto version
-static const int MIN_PEER_PROTO_VERSION = 80024;
+static const int MIN_PEER_PROTO_VERSION = 80017;
 
 //! nTime field added to CAddress, starting with this version;
 //! if possible, avoid requesting addresses nodes older than this
@@ -42,22 +42,7 @@ static const int SHORT_IDS_BLOCKS_VERSION = 70014;
 //! not banning for invalid compact blocks starts with this version
 static const int INVALID_CB_NO_BAN_VERSION = 70015;
 
-//! test with this version
-static const int PRETEST_VERSION = 80015;
-
-//! BHDIP 006, bind plotter, point
-static const int UNIFORMTX_VERSION = 80020;
-
-//! BHDIP 006, limit unbind plotter, softfork
-static const int LIMITUNBIND_VERSION = 80021;
-
-//! BHDIP 007, signature & dynamic ratio version
-static const int SIGN_VERSION = 80023;
-
-//! BHDIP 008, 3 minutes, 2 MiB, full pledge subsidy
-static const int BLOCKINTERVAL180_VERSION = 80024;
-
-//! Omnicore protocal support
-static const int SUBCHAIN_OMNICORE_VERSION = 80025;
+//! init version
+static const int QTC_INIT_VERSION = 80017;
 
 #endif // BITCOIN_VERSION_H

@@ -20,8 +20,6 @@ static const int32_t VERSIONBITS_NUM_BITS = 29;
 /** Reserved bits */
 static const int32_t VERSIONBITS_CSV_BITS       = (1UL << 0);
 static const int32_t VERSIONBITS_SEGWIT_BITS    = (1UL << 1);
-/** BitcoinHD for versionbits */
-static const int32_t VERSIONBITS_BHDV2_BITS     = (1UL << 2);
 
 /** BIP 9 defines a finite-state-machine to deploy a softfork in multiple stages.
  *  State transitions happen during retarget period if conditions are met

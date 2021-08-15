@@ -20,7 +20,7 @@ static const std::string OUTPUT_TYPE_STRING_BECH32 = "bech32";
 
 bool ParseOutputType(const std::string& type, OutputType& output_type)
 {
-    // BitcoinHD: only support P2SH
+    // Qitcoin: only support P2SH
     if (type == OUTPUT_TYPE_STRING_P2SH_SEGWIT) {
         output_type = OutputType::P2SH_SEGWIT;
         return true;

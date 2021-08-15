@@ -110,13 +110,13 @@ std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey)
 
 std::string HelpExampleCli(const std::string& methodname, const std::string& args)
 {
-    return "> btchd-cli " + methodname + " " + args + "\n";
+    return "> qitcoin-cli " + methodname + " " + args + "\n";
 }
 
 std::string HelpExampleRpc(const std::string& methodname, const std::string& args)
 {
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
-        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8732/\n";
+        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:3332/\n";
 }
 
 // Converts a hex string to a public key if possible

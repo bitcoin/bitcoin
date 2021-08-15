@@ -53,11 +53,13 @@ static UniValue generateBlocks(const CScript& coinbase_script, const std::shared
         nHeight = ::ChainActive().Height();
         nHeightEnd = nHeight+nGenerate;
     }
-    const uint64_t nPlotterId = 9414704830574620511ULL; // from "root minute ancient won check dove second spot book thump retreat add"
+    const uint64_t nPlotterId = 18378006326320094226ULL; // from "root minute ancient won check dove second spot book thump retreat add"
     UniValue blockHashes(UniValue::VARR);
     while (nHeight < nHeightEnd && !ShutdownRequested())
     {
-        uint64_t nDeadline = static_cast<uint64_t>(Consensus::GetTargetSpacing(nHeight, Params().GetConsensus()));
+        uint64_t nDeadline = static_cast<uint64_t>(Params().GetConsensus().nPowTargetSpacing);
+        if (nHeight <= 1)
+            nDeadline = 0;
         std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbase_script, nPlotterId, nDeadline, nDeadline, private_key));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
@@ -89,33 +91,6 @@ static UniValue getmininginfo(const JSONRPCRequest& request)
                     "  \"smoothendheight\": nnn     (numeric) The smooth adjust ratio end height\n"
                     "  \"stagebeginheight\": nnn    (numeric) The stage adjust ratio begin height\n"
                     "  \"stagecapacity\": nnn       (numeric) The capacity of stage\n"
-                    "  \"currenteval\": {           (json object) Current ratio estimate\n"
-                    "    \"ratio\": xxx.xxxxx       (numeric) The ratio of pledge\n"
-                    "    \"ratiostartheight\": nnn  (numeric) The height of ratio updated\n"
-                    "    \"ratiostage\": nnn        (numeric) The ratio stage of pledge. -2: not start, -1: smooth decrease, others...\n"
-                    "    \"rationetcapacity\": nnn  (string) The net capacity of pledge\n"
-                    "  },\n"
-                    "  \"nexteval\": {              (json object) Next ratio estimate by current blockchain status\n"
-                    "    \"ratio\": xxx.xxxxx       (numeric) The ratio of pledge for next period\n"
-                    "    \"ratiostartheight\": nnn  (numeric) The height of ratio update for next period\n"
-                    "    \"ratiostage\": nnn        (numeric) The ratio stage of pledge for next period. -1: smooth decrease, others...\n"
-                    "    \"rationetcapacity\": nnn  (string) The net capacity of pledge for next period\n"
-                    "  },\n"
-                    "  \"reward\": {                (json object) Next block reward\n"
-                    "    \"subsidy\": xxx.xxxxx     (numeric) Next block subsidy\n"
-                    "    \"meet\": {                (json object) Meet the conditional capacity mining\n"
-                    "      \"miner\": xxx.xxxxx     (numeric) Miner total reward, and include accumulate reward\n"
-                    "      \"fund\": xxx.xxxxx      (numeric) Fund royalty\n"
-                    "      \"fundratio\": \"x.x%\"    (numeric) Fund royalty ratio\n"
-                    "      \"subsidy\": xxx.xxxx    (numeric) Accumulate subsidy to meet block\n"
-                    "    },\n"
-                    "    \"notmeet\": {             (json object) Not meet the conditional capacity mining\n"
-                    "      \"miner\": xxx.xxxxx     (numeric) Miner total reward\n"
-                    "      \"fund\": xxx.xxxxx      (numeric) Fund royalty\n"
-                    "      \"fundratio\": \"x.x%\"    (numeric) Fund royalty ratio\n"
-                    "      \"takeoff\": xxx.xxxxx   (numeric) Take off reward to next meet block\n"
-                    "    }\n"
-                    "  },\n"
                     "  \"chain\": \"xxxx\",           (string) current network name as defined in BIP70 (main, test, regtest)\n"
                     "  \"warnings\": \"...\"          (string) any network and blockchain warnings\n"
                     "}\n"
@@ -127,7 +102,6 @@ static UniValue getmininginfo(const JSONRPCRequest& request)
             }.Check(request);
 
     LOCK(cs_main);
-    const Consensus::Params &params = Params().GetConsensus();
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("blocks",           (int)::ChainActive().Height());
@@ -135,64 +109,8 @@ static UniValue getmininginfo(const JSONRPCRequest& request)
     if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
     obj.pushKV("difficulty",       (double)GetDifficulty(::ChainActive().Tip()));
     obj.pushKV("pooledtx",         (uint64_t)mempool.size());
-    obj.pushKV("basetarget",         (uint64_t)::ChainActive().Tip()->nBaseTarget);
-    obj.pushKV("netcapacity",        ValueFromCapacity(std::max(poc::GetBaseTarget(::ChainActive().Height(), params) / ::ChainActive().Tip()->nBaseTarget, (uint64_t) 1)));
-    obj.pushKV("smoothbeginheight",  params.BHDIP007Height);
-    obj.pushKV("smoothendheight",    params.BHDIP007SmoothEndHeight);
-    obj.pushKV("stagebeginheight",   params.BHDIP007SmoothEndHeight + 1);
-    obj.pushKV("stagecapacity",      ValueFromCapacity(params.BHDIP007MiningRatioStage));
-    // Current eval
-    int64_t nRatioNetCapacityTB = 0;
-    {
-        int nRatioStage = 0;
-        int nRatioStageBeginHeight = 0;
-
-        UniValue curEval(UniValue::VOBJ);
-        curEval.pushKV("ratio",            ValueFromAmount(poc::GetMiningRatio(::ChainActive().Height() + 1, params, &nRatioStage, &nRatioNetCapacityTB, &nRatioStageBeginHeight)));
-        curEval.pushKV("ratiostartheight", nRatioStageBeginHeight);
-        curEval.pushKV("ratiostage",       nRatioStage);
-        curEval.pushKV("rationetcapacity", ValueFromCapacity(nRatioNetCapacityTB));
-        obj.pushKV("currenteval", curEval);
-    }
-    // Next eval by current net capacity
-    if (::ChainActive().Height() + 1 > params.BHDIP007SmoothEndHeight) {
-        int nRatioStage = 0;
-        int64_t nNextEvalNetCapacityTB = poc::GetRatioNetCapacity(poc::GetNetCapacity(::ChainActive().Height(), params), nRatioNetCapacityTB, params);
-
-        UniValue nextEval(UniValue::VOBJ);
-        nextEval.pushKV("ratio",            ValueFromAmount(poc::EvalMiningRatio(::ChainActive().Height() + 1, nNextEvalNetCapacityTB, params, &nRatioStage)));
-        nextEval.pushKV("ratiostartheight", (std::max(::ChainActive().Height(), params.BHDIP007SmoothEndHeight) / params.nCapacityEvalWindow + 1) * params.nCapacityEvalWindow);
-        nextEval.pushKV("ratiostage",       nRatioStage);
-        nextEval.pushKV("rationetcapacity", ValueFromCapacity(nNextEvalNetCapacityTB));
-        obj.pushKV("nexteval", nextEval);
-    }
-    // reward
-    obj.pushKV("reward", [&params]() -> UniValue {
-        const BlockReward fullReward = GetFullMortgageBlockReward(::ChainActive().Height() + 1, params);
-        const BlockReward lowReward = GetLowMortgageBlockReward(::ChainActive().Height() + 1, params);
-        const int fullFundRatio = GetFullMortgageFundRoyaltyRatio(::ChainActive().Height() + 1, params);
-        const int lowFundRatio = GetLowMortgageFundRoyaltyRatio(::ChainActive().Height() + 1, params);
-
-        UniValue rewardObj(UniValue::VOBJ);
-        rewardObj.pushKV("subsidy", ValueFromAmount(GetBlockSubsidy(::ChainActive().Height() + 1, params)));
-        rewardObj.pushKV("meet", [&fullReward, &fullFundRatio]() -> UniValue {
-            UniValue item(UniValue::VOBJ);
-            item.pushKV("miner",     ValueFromAmount(fullReward.miner + fullReward.miner0 + fullReward.accumulate));
-            item.pushKV("fund",      ValueFromAmount(fullReward.fund));
-            item.pushKV("fundratio", strprintf("%d.%d%%", fullFundRatio/10, fullFundRatio%10));
-            item.pushKV("subsidy",   ValueFromAmount(fullReward.accumulate));
-            return item;
-        }());
-        rewardObj.pushKV("notmeet", [&lowReward, &lowFundRatio]() -> UniValue {
-            UniValue item(UniValue::VOBJ);
-            item.pushKV("miner",     ValueFromAmount(lowReward.miner + lowReward.miner0 + lowReward.accumulate));
-            item.pushKV("fund",      ValueFromAmount(lowReward.fund));
-            item.pushKV("fundratio", strprintf("%d.%d%%", lowFundRatio/10, lowFundRatio%10));
-            item.pushKV("takeoff",   ValueFromAmount(-lowReward.accumulate));
-            return item;
-        }());
-        return rewardObj;
-    }());
+    obj.pushKV("basetarget",       (uint64_t)::ChainActive().Tip()->nBaseTarget);
+    obj.pushKV("netcapacity",      ValueFromCapacity(std::max(poc::INITIAL_BASE_TARGET / ::ChainActive().Tip()->nBaseTarget, (uint64_t) 1)));
     obj.pushKV("chain",            Params().NetworkIDString());
     obj.pushKV("warnings",         GetWarnings("statusbar"));
     return obj;
@@ -942,7 +860,7 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
                 "\nMine up to nblocks blocks immediately (before the RPC call returns) to an address in the wallet.\n",
                 {
                     {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
-                    {"address", RPCArg::Type::STR, /* default */ "", "The address to send the newly generated BHD to. Default use wallet primary address. Require address private key from wallet. "},
+                    {"address", RPCArg::Type::STR, /* default */ "", "The address to send the newly generated QTC to. Default use wallet primary address. Require address private key from wallet. "},
                 },
                 RPCResult{
             "[ blockhashes ]     (array) hashes of blocks generated\n"
@@ -963,19 +881,22 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
         dest = pwallet->GetPrimaryDestination();
     }
     if (!boost::get<ScriptHash>(&dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Qitcoin address");
     }
+
+    // private ekey
+    std::shared_ptr<CKey> privateKey;
     auto keyid = GetKeyForDestination(*pwallet, dest);
-    if (keyid.IsNull()) {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
-    }
-    CKey key;
-    if (!pwallet->GetKey(keyid, key)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + EncodeDestination(dest) + " is not known");
+    if (!keyid.IsNull()) {
+        CKey key;
+        if (!pwallet->GetKey(keyid, key)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + EncodeDestination(dest) + " is not known");
+        }
+        privateKey = std::make_shared<CKey>(key);
     }
 
     CScript coinbase_script = GetScriptForDestination(dest);
-    return generateBlocks(coinbase_script, std::make_shared<CKey>(key), nGenerate);
+    return generateBlocks(coinbase_script, privateKey, nGenerate);
 }
 #endif
 
@@ -985,7 +906,7 @@ static UniValue generatetoprivkey(const JSONRPCRequest& request)
                 "\nMine blocks immediately to a specified private key P2WPKH address (before the RPC call returns)\n",
                 {
                     {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
-                    {"privkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The address (private key P2WPKH) to send the newly generated BHD to."},
+                    {"privkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The address (private key P2WPKH) to send the newly generated QTC to."},
                 },
                 RPCResult{
             "[ blockhashes ]     (array) hashes of blocks generated\n"
@@ -1000,11 +921,14 @@ static UniValue generatetoprivkey(const JSONRPCRequest& request)
 
     // privkey
     CKey key = DecodeSecret(request.params[1].get_str());
+    if (!key.IsValid()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Qitcoin private key");
+    }
     CKeyID keyid = key.GetPubKey().GetID();
     CTxDestination segwit = WitnessV0KeyHash(keyid);
     CTxDestination dest = ScriptHash(GetScriptForDestination(segwit));
     if (!boost::get<ScriptHash>(&dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Qitcoin address");
     }
 
     CScript coinbase_script = GetScriptForDestination(dest);
@@ -1020,7 +944,7 @@ static UniValue getactivebindplotteraddress(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. plotterId           (string, required) The plotter ID\n"
             "\nResult:\n"
-            "\"address\"    (string) The active binded BitcoinHD address\n"
+            "\"address\"    (string) The active binded Qitcoin address\n"
             "\nExamples:\n"
             + HelpExampleCli("getactivebindplotteraddress", "\"12345678900000000000\"")
             + HelpExampleRpc("getactivebindplotteraddress", "\"12345678900000000000\"")
@@ -1050,7 +974,7 @@ static UniValue getactivebindplotter(const JSONRPCRequest& request)
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"address\":\"address\",           (string) The BitcoinHD address of the binded.\n"
+            "    \"address\":\"address\",           (string) The Qitcoin address of the binded.\n"
             "    \"txid\":\"txid\",                 (string) The last binded transaction id.\n"
             "    \"blockhash\":\"blockhash\",       (string) The binded transaction included block hash.\n"
             "    \"blocktime\": xxx,              (numeric) The block time in seconds since epoch (1 Jan 1970 GMT).\n"
@@ -1077,7 +1001,7 @@ static UniValue getactivebindplotter(const JSONRPCRequest& request)
     LOCK(cs_main);
 
     const CBindPlotterInfo lastBindInfo = ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(plotterId);
-    if (!lastBindInfo.outpoint.IsNull() && lastBindInfo.valid) {
+    if (!lastBindInfo.outpoint.IsNull()) {
         const Coin &coin = ::ChainstateActive().CoinsTip().AccessCoin(lastBindInfo.outpoint);
         UniValue item(UniValue::VOBJ);
         item.pushKV("address", EncodeDestination(ExtractDestination(coin.out.scriptPubKey)));
@@ -1112,14 +1036,14 @@ static UniValue listbindplotterofaddress(const JSONRPCRequest& request)
             "listbindplotterofaddress \"address\" (plotterId count verbose)\n"
             "\nReturns up to binded plotter of address.\n"
             "\nArguments:\n"
-            "1. address             (string, required) The BitcoinHD address\n"
+            "1. address             (string, required) The Qitcoin address\n"
             "2. plotterId           (string, optional) The filter plotter ID. If 0 or not set then output all binded plotter ID\n"
             "3. count               (numeric, optional) The result of count binded to list. If not set then output all binded plotter ID\n"
             "4. verbose             (bool, optional, default=false) If true, return bindheightlimit, unbindheightlimit and active\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"address\":\"address\",               (string) The BitcoinHD address of the binded.\n"
+            "    \"address\":\"address\",               (string) The Qitcoin address of the binded.\n"
             "    \"plotterId\": \"plotterId\",          (string) The binded plotter ID.\n"
             "    \"txid\": \"transactionid\",           (string) The transaction id.\n"
             "    \"blockhash\": \"hashvalue\",          (string) The block hash containing the transaction.\n"
@@ -1128,14 +1052,13 @@ static UniValue listbindplotterofaddress(const JSONRPCRequest& request)
             "    \"capacity\": \"xxx TB/PB\",           (string) The plotter capacity.\n"
             "    \"bindheightlimit\": xxx             (numeric) The plotter bind small fee limit height. Other require high fee. Only for verbose mode.\n"
             "    \"unbindheightlimit\": xxx,          (numeric) The plotter unbind limit height.Only for verbose mode.\n"
-            "    \"active\": true|false,              (bool, default false) The bind active status.Only for verbose mode.\n"
             "  }\n"
             "]\n"
 
             "\nExamples:\n"
             "\nList binded plotter of address\n"
-            + HelpExampleCli("listbindplotterofaddress", std::string("\"") + Params().GetConsensus().BHDFundAddress + "\" \"0\" 10")
-            + HelpExampleRpc("listbindplotterofaddress", std::string("\"") + Params().GetConsensus().BHDFundAddress + "\", \"0\" 10")
+            + HelpExampleCli("listbindplotterofaddress", std::string("\"") + Params().GetConsensus().FundAddress + "\" \"0\" 10")
+            + HelpExampleRpc("listbindplotterofaddress", std::string("\"") + Params().GetConsensus().FundAddress + "\", \"0\" 10")
         );
 
     if (!request.params[0].isStr())
@@ -1170,9 +1093,6 @@ static UniValue listbindplotterofaddress(const JSONRPCRequest& request)
     CCoinsOrderByHeightMap mapOrderedCoins;
     {
         for (auto pair : ::ChainstateActive().CoinsTip().GetAccountBindPlotterEntries(accountID, plotterId)) {
-            if (!pair.second.valid)
-                continue;
-
             CBindPlotterCoinsMap &mapCoins = mapOrderedCoins[pair.second.nHeight];
             mapCoins[pair.first] = std::move(pair.second);
         }
@@ -1210,7 +1130,6 @@ static UniValue listbindplotterofaddress(const JSONRPCRequest& request)
             if (fVerbose) {
                 item.pushKV("bindheightlimit", GetBindPlotterLimitHeight(::ChainActive().Height() + 1, CBindPlotterInfo(*it), Params().GetConsensus()));
                 item.pushKV("unbindheightlimit", GetUnbindPlotterLimitHeight(CBindPlotterInfo(*it), ::ChainstateActive().CoinsTip(), Params().GetConsensus()));
-                item.pushKV("active", it->first == ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(it->second.plotterId).outpoint);
             }
 
             ret.push_back(item);
@@ -1230,7 +1149,7 @@ static UniValue createbindplotterdata(const JSONRPCRequest& request)
             "createbindplotterdata \"address\" \"passphrase\" (lastActiveHeight)\n"
             "\nCreate bind plotter hex data.\n"
             "\nArguments:\n"
-            "1. address             (string, required) The BitcoinHD address\n"
+            "1. address             (string, required) The Qitcoin address\n"
             "2. passphrase          (string, required) The passphrase for bind\n"
             "3. lastActiveHeight    (numeric, optional) The last active height for bind data. Max large then tip 12 blocks\n"
             ""
@@ -1238,8 +1157,8 @@ static UniValue createbindplotterdata(const JSONRPCRequest& request)
 
             "\nExamples:\n"
             "\nReturn bind plotter hex data\n"
-            + HelpExampleCli("createbindplotterdata", std::string("\"") + Params().GetConsensus().BHDFundAddress + "\" \"root minute ancient won check dove second spot book thump retreat add\"")
-            + HelpExampleRpc("createbindplotterdata", std::string("\"") + Params().GetConsensus().BHDFundAddress + "\", \"root minute ancient won check dove second spot book thump retreat add\"")
+            + HelpExampleCli("createbindplotterdata", std::string("\"") + Params().GetConsensus().FundAddress + "\" \"root minute ancient won check dove second spot book thump retreat add\"")
+            + HelpExampleRpc("createbindplotterdata", std::string("\"") + Params().GetConsensus().FundAddress + "\", \"root minute ancient won check dove second spot book thump retreat add\"")
         );
 
     if (!request.params[0].isStr())
@@ -1253,7 +1172,7 @@ static UniValue createbindplotterdata(const JSONRPCRequest& request)
     int activeHeight;
     {
         LOCK(cs_main);
-        activeHeight = std::max(::ChainActive().Height(), Params().GetConsensus().BHDIP006Height);
+        activeHeight = std::max(::ChainActive().Height(), 2);
     }
     if (lastActiveHeight == 0)
         lastActiveHeight = activeHeight + PROTOCOL_BINDPLOTTER_DEFAULTMAXALIVE;
@@ -1314,7 +1233,7 @@ static UniValue verifybindplotterdata(const JSONRPCRequest& request)
             "verifybindplotterdata \"address\" \"hexdata\"\n"
             "\nVerify plotter hex data.\n"
             "\nArguments:\n"
-            "1. address             (string, required) The BitcoinHD address\n"
+            "1. address             (string, required) The Qitcoin address\n"
             "2. hexdata             (string, required) The bind hex data\n"
             "\nResult:\n"
             "[\n"
@@ -1322,14 +1241,14 @@ static UniValue verifybindplotterdata(const JSONRPCRequest& request)
             "    \"result\":\"result\",                     (string) Verify result. 1.success; 2.reject: can't verify signature; 3.invalid: The data not bind plotter hex data\n"
             "    \"plotterId\":\"plotterId\",               (string) The binded plotter ID.\n"
             "    \"lastActiveHeight\":lastActiveHeight,   (numeric) The bind last active height for tx package.\n"
-            "    \"address\":\"address\",                   (string) The BitcoinHD address of the binded.\n"
+            "    \"address\":\"address\",                   (string) The Qitcoin address of the binded.\n"
             "  }\n"
             "]\n"
 
             "\nExamples:\n"
             "\nVerify bind plotter hex data\n"
-            + HelpExampleCli("verifybindplotterdata", std::string("\"") + Params().GetConsensus().BHDFundAddress + "\" \"6a041000000004670100002039dc2e813bb45ff063a376e316b10cd0addd7306555ca0dd2890194d3796015240a101125217d82d81779e3c047d8ca1c5ed92860d693ef216a384572d254cd20ff19945a60a7f3f0cdb935dc174d9acaaa93ce1b2b131d319ee7f43ff341bba9f\"")
-            + HelpExampleRpc("verifybindplotterdata", std::string("\"") + Params().GetConsensus().BHDFundAddress + "\", \"6a041000000004670100002039dc2e813bb45ff063a376e316b10cd0addd7306555ca0dd2890194d3796015240a101125217d82d81779e3c047d8ca1c5ed92860d693ef216a384572d254cd20ff19945a60a7f3f0cdb935dc174d9acaaa93ce1b2b131d319ee7f43ff341bba9f\"")
+            + HelpExampleCli("verifybindplotterdata", std::string("\"") + Params().GetConsensus().FundAddress + "\" \"6a041000000004670100002039dc2e813bb45ff063a376e316b10cd0addd7306555ca0dd2890194d3796015240a101125217d82d81779e3c047d8ca1c5ed92860d693ef216a384572d254cd20ff19945a60a7f3f0cdb935dc174d9acaaa93ce1b2b131d319ee7f43ff341bba9f\"")
+            + HelpExampleRpc("verifybindplotterdata", std::string("\"") + Params().GetConsensus().FundAddress + "\", \"6a041000000004670100002039dc2e813bb45ff063a376e316b10cd0addd7306555ca0dd2890194d3796015240a101125217d82d81779e3c047d8ca1c5ed92860d693ef216a384572d254cd20ff19945a60a7f3f0cdb935dc174d9acaaa93ce1b2b131d319ee7f43ff341bba9f\"")
         );
 
     CTxDestination bindToDest = DecodeDestination(request.params[0].get_str());
@@ -1339,7 +1258,6 @@ static UniValue verifybindplotterdata(const JSONRPCRequest& request)
     std::vector<unsigned char> bindData = ParseHex(request.params[1].get_str());
 
     CMutableTransaction dummyTx;
-    dummyTx.nVersion = CTransaction::UNIFORM_VERSION;
     dummyTx.vin.push_back(CTxIn());
     dummyTx.vout.push_back(CTxOut(PROTOCOL_BINDPLOTTER_LOCKAMOUNT, GetScriptForDestination(bindToDest)));
     dummyTx.vout.push_back(CTxOut(0, CScript(bindData.cbegin(), bindData.cend())));
@@ -1348,20 +1266,14 @@ static UniValue verifybindplotterdata(const JSONRPCRequest& request)
     int nHeight = 0;
     {
         LOCK(cs_main);
-        nHeight = std::max(::ChainActive().Height(), Params().GetConsensus().BHDIP006Height);
+        nHeight = std::max(::ChainActive().Height(), 2);
     }
-    bool fReject = false;
-    int lastActiveHeight = 0;
-    CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(CTransaction(dummyTx), nHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER}, fReject, lastActiveHeight);
-    if (payload && payload->type == DATACARRIER_TYPE_BINDPLOTTER) {
+    auto payload = ExtractTxoutPayload(dummyTx.vout[0], nHeight, {TXOUT_TYPE_BINDPLOTTER}, true);
+    if (payload && payload->type == TXOUT_TYPE_BINDPLOTTER) {
         // Verify pass
         result.pushKV("result", "success");
         result.pushKV("plotterId", std::to_string(BindPlotterPayload::As(payload)->GetId()));
-        result.pushKV("lastActiveHeight", lastActiveHeight);
         result.pushKV("address", EncodeDestination(bindToDest));
-    } else if (fReject) {
-        // Signature not verify
-        result.pushKV("result", "reject");
     } else {
         // Not bind plotter hex data
         result.pushKV("result", "invalid");
@@ -1435,28 +1347,30 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
     LOCK(cs_main);
     const CAccountID accountID = ExtractAccountID(DecodeDestination(address));
     if (accountID.IsNull()) {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address, must from BitcoinHD wallet (P2SH address)");
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address, must from Qitcoin wallet (P2SH address)");
     }
 
-    CAmount balance = 0, balanceBindPlotter = 0, balancePointSend = 0, balancePointReceive = 0;
-    balance = ::ChainstateActive().CoinsTip().GetAccountBalance(accountID, &balanceBindPlotter, &balancePointSend, &balancePointReceive);
+    CAmount balance = 0, balanceBindPlotter = 0, balancePoint[2] = {0, 0}, balanceStaking[2] = {0, 0};
+    balance = ::ChainstateActive().CoinsTip().GetAccountBalance(accountID, &balanceBindPlotter, balancePoint, balanceStaking);
 
     UniValue result(UniValue::VOBJ);
     //! This balance belong to your
     result.pushKV("balance", ValueFromAmount(balance));
     //! This balance spendable
-    result.pushKV("spendableBalance", ValueFromAmount(balance - balanceBindPlotter - balancePointSend));
+    result.pushKV("spendableBalance", ValueFromAmount(balance - balanceBindPlotter - balancePoint[0] - balanceStaking[0]));
     //! This balance locked in bind plotter and point
-    result.pushKV("lockedBalance", ValueFromAmount(balanceBindPlotter + balancePointSend));
+    result.pushKV("lockedBalance", ValueFromAmount(balanceBindPlotter + balancePoint[0] + balanceStaking[0]));
     //! This balance locked in point sent
-    result.pushKV("loanBalance", ValueFromAmount(balancePointSend));
-    //! This balance recevied from point received. YOUR CANNOT SPENT IT.
-    result.pushKV("borrowBalance", ValueFromAmount(balancePointReceive));
-    //! This balance include point sent and avaliable balance. For mining require balance
-    result.pushKV("availableMiningBalance", ValueFromAmount(balance - balancePointSend + balancePointReceive));
+    result.pushKV("pointSentBalance", ValueFromAmount(balancePoint[0]));
+    //! This balance recevied from point received. For mining. YOUR CANNOT SPENT IT.
+    result.pushKV("pointReceivedBalance", ValueFromAmount(balancePoint[1]));
+    //! This balance locked in staking sent
+    result.pushKV("stakingSentBalance", ValueFromAmount(balanceStaking[0]));
+    //! This balance recevied from staking received. YOUR CANNOT SPENT IT.
+    result.pushKV("stakingReceivedBalance", ValueFromAmount(balanceStaking[1]));
 
     const Consensus::Params &params = Params().GetConsensus();
-    const CAmount miningRatio = poc::GetMiningRatio(::ChainActive().Height() + 1, params);
+    const int nHeight = ::ChainActive().Height();
 
     typedef struct {
         int minedCount;
@@ -1466,49 +1380,32 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
 
     int nBlockCount = 0, nMinedBlockCount = 0;
     int64_t nNetCapacityTB = 0, nCapacityTB = 0;
-    if (::ChainActive().Height() + 1 < params.BHDIP006BindPlotterActiveHeight) {
+    std::set<uint64_t> plotters = ::ChainstateActive().CoinsTip().GetAccountBindPlotters(accountID);
+    if (!plotters.empty()) {
+        for (const uint64_t& plotterId : plotters) {
+            mapBindPlotter[plotterId] = PlotterItem{0, nullptr};
+        }
         nNetCapacityTB = poc::GetNetCapacity(::ChainActive().Height(), params,
-            [&nBlockCount, &nMinedBlockCount, &accountID, &mapBindPlotter](const CBlockIndex &block) {
+            [&nBlockCount, &nMinedBlockCount, &plotters, &mapBindPlotter](const CBlockIndex &block) {
                 nBlockCount++;
-                if (block.generatorAccountID == accountID) {
+                if (plotters.count(block.nPlotterId)) {
                     nMinedBlockCount++;
-
+                    
                     PlotterItem &item = mapBindPlotter[block.nPlotterId];
                     item.minedCount++;
                     item.pindexLast = &block;
                 }
             }
         );
+        if (nMinedBlockCount < nBlockCount)
+            nMinedBlockCount++;
         if (nBlockCount > 0)
             nCapacityTB = std::max((int64_t) ((nNetCapacityTB * nMinedBlockCount) / nBlockCount), (int64_t) 1);
-    } else {
-        std::set<uint64_t> plotters = ::ChainstateActive().CoinsTip().GetAccountBindPlotters(accountID);
-        if (!plotters.empty()) {
-            for (const uint64_t& plotterId : plotters) {
-                mapBindPlotter[plotterId] = PlotterItem{0, nullptr};
-            }
-            nNetCapacityTB = poc::GetNetCapacity(::ChainActive().Height(), params,
-                [&nBlockCount, &nMinedBlockCount, &plotters, &mapBindPlotter](const CBlockIndex &block) {
-                    nBlockCount++;
-                    if (plotters.count(block.nPlotterId)) {
-                        nMinedBlockCount++;
-                        
-                        PlotterItem &item = mapBindPlotter[block.nPlotterId];
-                        item.minedCount++;
-                        item.pindexLast = &block;
-                    }
-                }
-            );
-            if (nMinedBlockCount < nBlockCount)
-                nMinedBlockCount++;
-            if (nBlockCount > 0)
-                nCapacityTB = std::max((int64_t) ((nNetCapacityTB * nMinedBlockCount) / nBlockCount), (int64_t) 1);
-        }
     }
 
     result.pushKV("capacity", ValueFromCapacity(nCapacityTB));
-    result.pushKV("miningRequireBalance", ValueFromAmount(poc::GetCapacityRequireBalance(nCapacityTB, miningRatio)));
-    result.pushKV("height", ::ChainActive().Height());
+    result.pushKV("miningRequireBalance", ValueFromAmount(poc::GetCapacityRequireBalance(nCapacityTB, nHeight, params)));
+    result.pushKV("height", nHeight);
     result.pushKV("address", address);
 
     // Bind plotter
@@ -1519,7 +1416,7 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
 
             UniValue item(UniValue::VOBJ);
             item.pushKV("capacity", ValueFromCapacity(nCapacityTB));
-            item.pushKV("pledge", ValueFromAmount(poc::GetCapacityRequireBalance(nCapacityTB, miningRatio)));
+            item.pushKV("pledge", ValueFromAmount(poc::GetCapacityRequireBalance(nCapacityTB, nHeight, params)));
             if (it->second.pindexLast != nullptr) {
                 UniValue lastBlock(UniValue::VOBJ);
                 lastBlock.pushKV("blockhash", it->second.pindexLast->GetBlockHash().GetHex());
@@ -1559,10 +1456,10 @@ static UniValue getpledge(const JSONRPCRequest& request)
             "    \"balance\": xxx,                     (numeric) All amounts belonging to this address\n"
             "    \"lockedBalance\": xxx,               (numeric) Unspendable amount. Freeze in bind plotter and point sent\n"
             "    \"spendableBalance\": xxx,            (numeric) Spendable amount. Include immarture and exclude locked amount\n"
-            "    \"loanBalance\": xxx,                 (numeric) Point send amount\n"
-            "    \"borrowBalance\": xxx,               (numeric) Point receive amount\n"
-            "    \"availableMiningBalance\": xxx,      (numeric) Available for mining amount. balance - loanBalance + borrowBalance\n"
-            "    \"miningRequireBalance\": xxx,        (numeric) Require balance on mining next block\n"
+            "    \"pointSentBalance\": xxx,            (numeric) Point sent amount\n"
+            "    \"pointReceivedBalance\": xxx,        (numeric) Point received amount.For mining\n"
+            "    \"stakingSentBalance\": xxx,          (numeric) Staking sent amount\n"
+            "    \"stakingReceivedBalance\": xxx,      (numeric) Staking received amount\n"
             "    \"capacity\": \"xxx TB\",               (string) The address capacity. The unit of TB or PB\n"
             "    ...\n"
             "  }\n"
@@ -1597,8 +1494,8 @@ static UniValue getpledgeofaddress(const JSONRPCRequest& request)
             "getpledgeofaddress address (plotterId)\n"
             "Get pledge information of address.\n"
             "\nArguments:\n"
-            "1. address         (string, required) The BitcoinHD address.\n"
-            "2. plotterId       (string, optional) DEPRECTED after BHDIP006. Plotter ID\n"
+            "1. address         (string, required) The Qitcoin address.\n"
+            "2. plotterId       (string, optional) DEPRECTED after QTCIP006. Plotter ID\n"
             "3. verbose         (bool, optional, default=false) If true, return detail pledge\n"
             "\nResult:\n"
             "[\n"
@@ -1606,17 +1503,17 @@ static UniValue getpledgeofaddress(const JSONRPCRequest& request)
             "    \"balance\": xxx,                     (numeric) All amounts belonging to this address\n"
             "    \"lockedBalance\": xxx,               (numeric) Unspendable amount. Freeze in bind plotter and point sent\n"
             "    \"spendableBalance\": xxx,            (numeric) Spendable amount. Include immarture and exclude locked amount\n"
-            "    \"loanBalance\": xxx,                 (numeric) Point send amount\n"
-            "    \"borrowBalance\": xxx,               (numeric) Point recevice amount\n"
-            "    \"availableMiningBalance\": xxx,      (numeric) Available for mining amount. balance - loanBalance + borrowBalance\n"
-            "    \"miningRequireBalance\": xxx,        (numeric) Require balance on mining next block\n"
+            "    \"pointSentBalance\": xxx,            (numeric) Point sent amount\n"
+            "    \"pointReceivedBalance\": xxx,        (numeric) Point received amount.For mining\n"
+            "    \"stakingSentBalance\": xxx,          (numeric) Staking sent amount\n"
+            "    \"stakingReceivedBalance\": xxx,      (numeric) Staking received amount\n"
             "    \"capacity\": \"xxx TB\",               (string) The address capacity. The unit of TB or PB\n"
             "    ...\n"
             "  }\n"
             "]\n"
             "\nExample:\n"
-            + HelpExampleCli("getpledgeofaddress", std::string("\"") + Params().GetConsensus().BHDFundAddress + "\" \"0\" true")
-            + HelpExampleRpc("getpledgeofaddress", std::string("\"") + Params().GetConsensus().BHDFundAddress + "\", \"0\", true")
+            + HelpExampleCli("getpledgeofaddress", std::string("\"") + Params().GetConsensus().FundAddress + "\" \"0\" true")
+            + HelpExampleRpc("getpledgeofaddress", std::string("\"") + Params().GetConsensus().FundAddress + "\", \"0\", true")
             );
 
     LOCK(cs_main);
@@ -1666,7 +1563,7 @@ static UniValue getplottermininginfo(const JSONRPCRequest& request)
 
     LOCK(cs_main);
     const Consensus::Params& params = Params().GetConsensus();
-    const CAmount miningRatio = poc::GetMiningRatio(::ChainActive().Height() + 1, params);
+    const int nHeight = ::ChainActive().Height();
     const poc::CBlockList vBlocks = poc::GetEvalBlocks(::ChainActive().Height(), true, params);
 
     int64_t nNetCapacityTB = 0, nCapacityTB = 0;
@@ -1678,14 +1575,12 @@ static UniValue getplottermininginfo(const JSONRPCRequest& request)
             if (block.nPlotterId == nPlotterId)
                 nMinedBlockCount++;
 
-            if (::ChainActive().Height() < params.BHDIP008Height || block.nHeight >= params.BHDIP008Height) {
-                nBaseTarget += block.nBaseTarget;
-                nBlockCount++;
-            }
+            nBaseTarget += block.nBaseTarget;
+            nBlockCount++;
         }
         if (nBlockCount > 0) {
             nBaseTarget = std::max(nBaseTarget / nBlockCount, uint64_t(1));
-            nNetCapacityTB = std::max(static_cast<int64_t>(poc::GetBaseTarget(::ChainActive().Height(), params) / nBaseTarget), (int64_t) 1);
+            nNetCapacityTB = std::max(static_cast<int64_t>(poc::INITIAL_BASE_TARGET / nBaseTarget), (int64_t) 1);
             if (nMinedBlockCount < (int) vBlocks.size())
                 nMinedBlockCount++;
             nCapacityTB = std::max((int64_t) ((nNetCapacityTB * nMinedBlockCount) / vBlocks.size()), (int64_t) 1);
@@ -1695,92 +1590,45 @@ static UniValue getplottermininginfo(const JSONRPCRequest& request)
     UniValue result(UniValue::VOBJ);
     result.pushKV("plotterId", std::to_string(nPlotterId));
     result.pushKV("capacity", ValueFromCapacity(nCapacityTB));
-    result.pushKV("pledge", ValueFromAmount(poc::GetCapacityRequireBalance(nCapacityTB, miningRatio)));
+    result.pushKV("pledge", ValueFromAmount(poc::GetCapacityRequireBalance(nCapacityTB, nHeight, params)));
 
-    if (::ChainActive().Height() < params.BHDIP006BindPlotterActiveHeight) {
-        // Mined by plotter ID
-        if (nCapacityTB > 1) {
-            typedef struct {
-                int forgeCount;
-                const CBlockIndex *pindexLast;
-            } BindInfo;
-            std::map<CAccountID, BindInfo> mapBindInfo;
-            for (const CBlockIndex &block : vBlocks) {
-                if (block.nPlotterId == nPlotterId) {
-                    BindInfo &info = mapBindInfo[block.generatorAccountID];
-                    info.forgeCount++;
-                    info.pindexLast = &block;
-                }
-            }
-
-            // Binded
-            if (fVerbose) {
-                UniValue objBindAddress(UniValue::VOBJ);
-                for (auto it = mapBindInfo.cbegin(); it != mapBindInfo.cend(); it++) {
-                    // Get coinbase output address
-                    std::string address;
-                    if (it->second.pindexLast->nTx > 0) {
-                        CBlock block;
-                        if (ReadBlockFromDisk(block, it->second.pindexLast, params))
-                            address = EncodeDestination(ExtractDestination(block.vtx[0]->vout[0].scriptPubKey));
-                    }
-
-                    UniValue item(UniValue::VOBJ);
-                    nCapacityTB = std::max((int64_t) ((nNetCapacityTB * it->second.forgeCount) / vBlocks.size()), (int64_t) 1);
-                    item.pushKV("capacity", ValueFromCapacity(nCapacityTB));
-                    item.pushKV("pledge", ValueFromAmount(poc::GetCapacityRequireBalance(nCapacityTB, miningRatio)));
-                    {
-                        UniValue lastBlock(UniValue::VOBJ);
-                        lastBlock.pushKV("blockhash", it->second.pindexLast->GetBlockHash().GetHex());
-                        lastBlock.pushKV("blocktime", it->second.pindexLast->GetBlockTime());
-                        lastBlock.pushKV("blockheight", it->second.pindexLast->nHeight);
-                        item.pushKV("lastBlock", lastBlock);
-                    }
-                    objBindAddress.pushKV(address, item);
-                }
-                result.pushKV("bindAddresses", objBindAddress);
-            }
+    if (fVerbose) {
+        COutPoint outpoint;
+        const Coin &coin = ::ChainstateActive().CoinsTip().GetLastBindPlotterCoin(nPlotterId, &outpoint);
+        if (!coin.IsSpent()) {
+            UniValue item(UniValue::VOBJ);
+            item.pushKV("capacity", ValueFromCapacity(nCapacityTB));
+            item.pushKV("pledge", ValueFromAmount(poc::GetCapacityRequireBalance(nCapacityTB, nHeight, params)));
+            item.pushKV("txid", outpoint.hash.GetHex());
+            item.pushKV("vout", 0);
+            item.pushKV("blockhash", ::ChainActive()[coin.nHeight]->GetBlockHash().GetHex());
+            item.pushKV("blocktime", ::ChainActive()[coin.nHeight]->GetBlockTime());
+            item.pushKV("blockheight", (int) coin.nHeight);
+            UniValue objBindAddress(UniValue::VOBJ);
+            objBindAddress.pushKV(EncodeDestination(ExtractDestination(coin.out.scriptPubKey)), item);
+            result.pushKV("bindAddresses", objBindAddress);
         }
-    } else {
-        // Active bind
-        if (fVerbose) {
-            COutPoint outpoint;
-            const Coin &coin = ::ChainstateActive().CoinsTip().GetLastBindPlotterCoin(nPlotterId, &outpoint);
-            if (!coin.IsSpent()) {
+    }
+
+    // Mined
+    if (fVerbose) {
+        UniValue vMinedBlocks(UniValue::VARR);
+        for (auto it = vBlocks.rbegin(); it != vBlocks.rend(); it++) {
+            const CBlockIndex& blockIndex = *it;
+            if (blockIndex.nPlotterId == nPlotterId) {
                 UniValue item(UniValue::VOBJ);
-                item.pushKV("capacity", ValueFromCapacity(nCapacityTB));
-                item.pushKV("pledge", ValueFromAmount(poc::GetCapacityRequireBalance(nCapacityTB, miningRatio)));
-                item.pushKV("txid", outpoint.hash.GetHex());
-                item.pushKV("vout", 0);
-                item.pushKV("blockhash", ::ChainActive()[coin.nHeight]->GetBlockHash().GetHex());
-                item.pushKV("blocktime", ::ChainActive()[coin.nHeight]->GetBlockTime());
-                item.pushKV("blockheight", (int) coin.nHeight);
-                UniValue objBindAddress(UniValue::VOBJ);
-                objBindAddress.pushKV(EncodeDestination(ExtractDestination(coin.out.scriptPubKey)), item);
-                result.pushKV("bindAddresses", objBindAddress);
-            }
-        }
-
-        // Mined
-        if (fVerbose) {
-            UniValue vMinedBlocks(UniValue::VARR);
-            for (auto it = vBlocks.rbegin(); it != vBlocks.rend(); it++) {
-                const CBlockIndex& blockIndex = *it;
-                if (blockIndex.nPlotterId == nPlotterId) {
-                    UniValue item(UniValue::VOBJ);
-                    item.pushKV("blockhash", blockIndex.GetBlockHash().GetHex());
-                    item.pushKV("blocktime", blockIndex.GetBlockTime());
-                    item.pushKV("blockheight", blockIndex.nHeight);
-                    if (blockIndex.nTx > 0) {
-                        CBlock block;
-                        if (ReadBlockFromDisk(block, &blockIndex, params))
-                            item.pushKV("address", EncodeDestination(ExtractDestination(block.vtx[0]->vout[0].scriptPubKey)));
-                    }
-                    vMinedBlocks.push_back(item);
+                item.pushKV("blockhash", blockIndex.GetBlockHash().GetHex());
+                item.pushKV("blocktime", blockIndex.GetBlockTime());
+                item.pushKV("blockheight", blockIndex.nHeight);
+                if (blockIndex.nTx > 0) {
+                    CBlock block;
+                    if (ReadBlockFromDisk(block, &blockIndex, params))
+                        item.pushKV("address", EncodeDestination(ExtractDestination(block.vtx[0]->vout[0].scriptPubKey)));
                 }
+                vMinedBlocks.push_back(item);
             }
-            result.pushKV("blocks", vMinedBlocks);
         }
+        result.pushKV("blocks", vMinedBlocks);
     }
 
     return result;
@@ -1793,18 +1641,20 @@ static UniValue ListPoint(CCoinsViewCursorRef pcursor) {
         COutPoint key;
         Coin coin;
         if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
-            assert(key.n == 0);
             assert(!coin.IsSpent());
             assert(coin.IsPoint());
 
             UniValue item(UniValue::VOBJ);
             item.pushKV("from", EncodeDestination(ExtractDestination(coin.out.scriptPubKey)));
-            item.pushKV("to", EncodeDestination(ScriptHash(PointPayload::As(coin.extraData)->GetReceiverID())));
-            item.pushKV("amount", ValueFromAmount(coin.out.nValue));
+            item.pushKV("to", EncodeDestination(ScriptHash(PointPayload::As(coin.payload)->GetReceiverID())));
+            item.pushKV("lock_amount", ValueFromAmount(coin.out.nValue));
+            item.pushKV("effective_amount", ValueFromAmount(PointPayload::As(coin.payload)->GetAmount()));
+            item.pushKV("lock_blocks", (int)PointPayload::As(coin.payload)->GetLockBlocks());
             item.pushKV("txid", key.hash.GetHex());
             item.pushKV("blockhash", ::ChainActive()[(int)coin.nHeight]->GetBlockHash().GetHex());
             item.pushKV("blocktime", ::ChainActive()[(int)coin.nHeight]->GetBlockTime());
             item.pushKV("blockheight", (int)coin.nHeight);
+            
             ret.push_back(item);
         } else
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
@@ -1820,12 +1670,12 @@ static UniValue listpledgeloanofaddress(const JSONRPCRequest& request)
             "listpledgeloanofaddress \"address\"\n"
             "\nReturns up to point sent coins.\n"
             "\nArguments:\n"
-            "1. address             (string, required) The BitcoinHD address\n"
+            "1. address             (string, required) The Qitcoin address\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"from\":\"address\",                  (string) The BitcoinHD address of the point sender.\n"
-            "    \"to\":\"address\",                    (string) The BitcoinHD address of the point receiver\n"
+            "    \"from\":\"address\",                  (string) The Qitcoin address of the point sender.\n"
+            "    \"to\":\"address\",                    (string) The Qitcoin address of the point receiver\n"
             "    \"amount\": x.xxx,                   (numeric) The amount in " + CURRENCY_UNIT + ".\n"
             "    \"txid\": \"transactionid\",           (string) The transaction id.\n"
             "    \"blockhash\": \"hashvalue\",          (string) The block hash containing the transaction.\n"
@@ -1836,8 +1686,8 @@ static UniValue listpledgeloanofaddress(const JSONRPCRequest& request)
 
             "\nExamples:\n"
             "\nList the point sent coins from UTXOs\n"
-            + HelpExampleCli("listpledgeloanofaddress", std::string("\"") + Params().GetConsensus().BHDFundAddress + "\"")
-            + HelpExampleRpc("listpledgeloanofaddress", std::string("\"") + Params().GetConsensus().BHDFundAddress + "\"")
+            + HelpExampleCli("listpledgeloanofaddress", std::string("\"") + Params().GetConsensus().FundAddress + "\"")
+            + HelpExampleRpc("listpledgeloanofaddress", std::string("\"") + Params().GetConsensus().FundAddress + "\"")
         );
 
     if (!request.params[0].isStr())
@@ -1862,12 +1712,12 @@ static UniValue listpledgedebitofaddress(const JSONRPCRequest& request)
             "listpledgedebitofaddress \"address\"\n"
             "\nReturns up to point receive coins.\n"
             "\nArguments:\n"
-            "1. address             (string, required) The BitcoinHD address\n"
+            "1. address             (string, required) The Qitcoin address\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"from\":\"address\",                  (string) The BitcoinHD address of the point sender.\n"
-            "    \"to\":\"address\",                    (string) The BitcoinHD address of the point receiver\n"
+            "    \"from\":\"address\",                  (string) The Qitcoin address of the point sender.\n"
+            "    \"to\":\"address\",                    (string) The Qitcoin address of the point receiver\n"
             "    \"amount\": x.xxx,                   (numeric) The amount in " + CURRENCY_UNIT + ".\n"
             "    \"txid\": \"transactionid\",           (string) The transaction id.\n"
             "    \"blockhash\": \"hashvalue\",          (string) The block hash containing the transaction.\n"
@@ -1878,8 +1728,8 @@ static UniValue listpledgedebitofaddress(const JSONRPCRequest& request)
 
             "\nExamples:\n"
             "\nList the point receive coins from UTXOs\n"
-            + HelpExampleCli("listpledgedebitofaddress", std::string("\"") + Params().GetConsensus().BHDFundAddress + "\"")
-            + HelpExampleRpc("listpledgedebitofaddress", std::string("\"") + Params().GetConsensus().BHDFundAddress + "\"")
+            + HelpExampleCli("listpledgedebitofaddress", std::string("\"") + Params().GetConsensus().FundAddress + "\"")
+            + HelpExampleRpc("listpledgedebitofaddress", std::string("\"") + Params().GetConsensus().FundAddress + "\"")
         );
 
     if (!request.params[0].isStr())
@@ -1896,36 +1746,6 @@ static UniValue listpledgedebitofaddress(const JSONRPCRequest& request)
     }
     return ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID));
 }
-
-static UniValue getbalanceofheight(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw std::runtime_error(
-            "DEPRECATED.getbalanceofheight \"address\" (\"height\")\n"
-            "\nArguments:\n"
-            "1. address           (string,optional) The BitcoinHD address\n"
-            "2. height            (numeric,optional) DEPRECATED.The height of blockchain\n"
-            "\nResult:\n"
-            "Balance\n"
-            "\n"
-            "\nExample:\n"
-            + HelpExampleCli("getbalanceofheight", Params().GetConsensus().BHDFundAddress + " 9000")
-            + HelpExampleRpc("getbalanceofheight", std::string("\"") + Params().GetConsensus().BHDFundAddress + "\", 9000")
-            );
-
-    LOCK(cs_main);
-
-    if (!request.params[0].isStr())
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
-
-    const CAccountID accountID = ExtractAccountID(DecodeDestination(request.params[0].get_str()));
-    if (accountID.IsNull()) {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address, BitcoinHD address of P2SH");
-    }
-
-    return ValueFromAmount(::ChainstateActive().CoinsTip().GetAccountBalance(accountID));
-}
-
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                            actor (function)                argNames
@@ -1939,9 +1759,8 @@ static const CRPCCommand commands[] =
     { "util",               "estimatesmartfee",             &estimatesmartfee,              {"conf_target", "estimate_mode"} },
 
     { "hidden",             "estimaterawfee",               &estimaterawfee,                {"conf_target", "threshold"} },
-    { "hidden",             "getbalanceofheight",           &getbalanceofheight,            {"address", "height"} },
 
-    // for BitcoinHD
+    // for Qitcoin
 #ifdef ENABLE_WALLET
     // TODO move to rpcwalet.cpp
     { "wallet",             "generatetoaddress",            &generatetoaddress,             {"nblocks","address"} },

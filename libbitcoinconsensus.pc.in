@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: @PACKAGE_NAME@ consensus library
-Description: Library for the BitcoinHD consensus protocol.
+Description: Library for the Qitcoin consensus protocol.
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -lbitcoinconsensus
 Cflags: -I${includedir}

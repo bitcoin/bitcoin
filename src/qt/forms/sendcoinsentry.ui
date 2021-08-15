@@ -57,7 +57,7 @@
       <item>
        <widget class="QValidatedLineEdit" name="payTo">
         <property name="toolTip">
-         <string>The BitcoinHD address to send the payment to</string>
+         <string>The Qitcoin address to send the payment to</string>
         </property>
        </widget>
       </item>
@@ -180,7 +180,7 @@
       <item>
        <widget class="QCheckBox" name="checkboxSubtractFeeFromAmount">
         <property name="toolTip">
-         <string>The fee will be deducted from the amount being sent. The recipient will receive less BHDs than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</string>
+         <string>The fee will be deducted from the amount being sent. The recipient will receive less QTCs than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</string>
         </property>
         <property name="text">
          <string>S&amp;ubtract fee from amount</string>
@@ -199,7 +199,7 @@
     <item row="4" column="1">
      <widget class="QLabel" name="messageTextLabel">
       <property name="toolTip">
-       <string>A message that was attached to the btchd: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BitcoinHD network.</string>
+       <string>A message that was attached to the qitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Qitcoin network.</string>
       </property>
      </widget>
     </item>
@@ -248,6 +248,22 @@
     </item>
     <item row="3" column="1">
      <widget class="QComboBox" name="plotterDataValidHeightSelector" />
+    </item>
+    <item row="4" column="0">
+     <widget class="QLabel" name="lockBlocksLabel">
+      <property name="text">
+       <string>&amp;Lock Blocks:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+      <property name="buddy">
+       <cstring>lockBlocksSelector</cstring>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="1">
+     <widget class="QComboBox" name="lockBlocksSelector" />
     </item>
    </layout>
   </widget>

@@ -71,7 +71,7 @@ static UniValue omni_createpayload_dexsell(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 6)
         throw runtime_error(
             RPCHelpMan{"omni_createpayload_dexsell",
-               "\nCreate a payload to place, update or cancel a sell offer on the traditional distributed OMNI/BHD exchange.\n",
+               "\nCreate a payload to place, update or cancel a sell offer on the traditional distributed OMNI/QTC exchange.\n",
                {
                    {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, " the identifier of the tokens to list for sale (must be 1 for OMN or 2 for TOMN)\n"},
                    {"amountforsale", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to list for sale\n"},

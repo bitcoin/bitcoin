@@ -320,7 +320,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     strHTML += "<b>" + tr("Transaction virtual size") + ":</b> " + QString::number(GetVirtualTransactionSize(*wtx.tx)) + " bytes<br>";
     strHTML += "<b>" + tr("Output index") + ":</b> " + QString::number(rec->getOutputIndex()) + "<br>";
 
-    // Message from normal btchd:URI (btchd:123...?message=example)
+    // Message from normal qitcoin:URI (qitcoin:123...?message=example)
     for (const std::pair<std::string, std::string>& r : orderForm) {
         if (r.first == "Message")
             strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";
@@ -370,7 +370,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
                     strHTML += "<br>" + tr("Unbind plotter active on %1 block height (%2 blocks after, about %3 minute).").
                                             arg(QString::number(nActiveHeight),
                                                 QString::number(nActiveHeight - nSpendHeight),
-                                                QString::number((nActiveHeight - nSpendHeight) * Consensus::GetTargetSpacing(nSpendHeight, Params().GetConsensus()) / 60));
+                                                QString::number((nActiveHeight - nSpendHeight) * Params().GetConsensus().nPowTargetSpacing / 60));
                 }
             }
         }

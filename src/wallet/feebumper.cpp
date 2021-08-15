@@ -53,12 +53,6 @@ static feebumper::Result PreconditionChecks(interfaces::Chain::Lock& locked_chai
         return feebumper::Result::WALLET_ERROR;
     }
 
-    // uniform transaction not support BIP-125
-    if (wtx.tx->IsUniform()) {
-        errors.push_back("Uniform transaction not support BIP 125 replaceable");
-        return feebumper::Result::WALLET_ERROR;
-    }
-
     return feebumper::Result::OK;
 }
 

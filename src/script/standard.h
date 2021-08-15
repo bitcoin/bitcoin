@@ -208,104 +208,118 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
  */
 CScript GetScriptForWitness(const CScript& redeemscript);
 
+/** Generate a P2WPKH script for the given pubkey. */
+CScript GetScriptForPubKey(const CPubKey& pubkey);
+
+/** Generate a P2WPKH script for the given account ID. */
+CScript GetScriptForAccountID(const CAccountID& accountID);
+
 /** Utility function to get account ID. */
 CAccountID ExtractAccountID(const CPubKey& pubkey);
 CAccountID ExtractAccountID(const CScript& scriptPubKey);
 CAccountID ExtractAccountID(const CTxDestination& dest);
 
-/** opreturn type. See https://btchd.org/wiki/datacarrier */
-enum DatacarrierType : unsigned int {
+/**
+ * Parse a account ID for the destination address. 
+ * Currently only works for P2SH, P2WPKH, and P2WSH scripts.
+ */
+CTxDestination ExtractDestination(const CAccountID& accountID);
+
+/** opreturn type. See https://qitchain.org/wiki/outtype */
+enum TxOutType : unsigned int {
     // Range
-    DATACARRIER_TYPE_MIN = 0x0000000f,
-    DATACARRIER_TYPE_MAX = 0x10000000,
+    TXOUT_TYPE_MIN = 0x0000000f,
+    TXOUT_TYPE_MAX = 0x10000000,
 
     // Alias for unknown
-    DATACARRIER_TYPE_UNKNOWN = DATACARRIER_TYPE_MIN,
+    TXOUT_TYPE_UNKNOWN = TXOUT_TYPE_MIN,
 
     // Type of consensus relevant
-    //! See https://btchd.org/wiki/datacarrier/bind-plotter
-    DATACARRIER_TYPE_BINDPLOTTER = 0x00000010,
-    //! See https://btchd.org/wiki/datacarrier/point
-    DATACARRIER_TYPE_POINT       = 0x00000011,
-    //! See https://btchd.org/wiki/datacarrier/contract
-    DATACARRIER_TYPE_CONTRACT    = 0x00000012,
-    //! See https://btchd.org/wiki/datacarrier/text
-    DATACARRIER_TYPE_TEXT        = 0x00000013,
+    TXOUT_TYPE_BINDPLOTTER = 0x00000010,
+    TXOUT_TYPE_POINT       = 0x00000011,
+    TXOUT_TYPE_STAKING     = 0x00000012,
 };
-typedef std::set<DatacarrierType> DatacarrierTypes;
 
 /** Datacarrier payload */
-struct DatacarrierPayload
+struct TxOutPayload
 {
-    const DatacarrierType type;
+    const TxOutType type;
 
-    explicit DatacarrierPayload(DatacarrierType typeIn) : type(typeIn) {}
-    virtual ~DatacarrierPayload() {}
+    explicit TxOutPayload(TxOutType typeIn) : type(typeIn) {}
+    virtual ~TxOutPayload() {}
 };
-typedef std::shared_ptr<DatacarrierPayload> CDatacarrierPayloadRef;
+typedef std::shared_ptr<TxOutPayload> CTxOutPayloadRef;
 
 /** For bind plotter */
-struct BindPlotterPayload : public DatacarrierPayload
+struct BindPlotterPayload : public TxOutPayload
 {
     uint64_t id;
 
-    BindPlotterPayload() : DatacarrierPayload(DATACARRIER_TYPE_BINDPLOTTER), id(0) {}
+    BindPlotterPayload() : TxOutPayload(TXOUT_TYPE_BINDPLOTTER), id(0) {}
+
     const uint64_t& GetId() const { return id; }
 
-    // Checkable cast for CDatacarrierPayloadRef
-    static BindPlotterPayload * As(CDatacarrierPayloadRef &ref) {
-        assert(ref->type == DATACARRIER_TYPE_BINDPLOTTER);
+    // Checkable cast for CTxOutPayloadRef
+    static BindPlotterPayload * As(CTxOutPayloadRef &ref) {
+        assert(ref->type == TXOUT_TYPE_BINDPLOTTER);
         return (BindPlotterPayload*) ref.get();
     }
-    static const BindPlotterPayload * As(const CDatacarrierPayloadRef &ref) {
-        assert(ref->type == DATACARRIER_TYPE_BINDPLOTTER);
+    static const BindPlotterPayload * As(const CTxOutPayloadRef &ref) {
+        assert(ref->type == TXOUT_TYPE_BINDPLOTTER);
         return (const BindPlotterPayload*) ref.get();
     }
 };
 
 /** For point */
-struct PointPayload : public DatacarrierPayload
+struct PointPayload : public TxOutPayload
 {
     CAccountID receiverID;
+    uint32_t lockBlocks;
+    CAmount amount;
 
-    PointPayload() : DatacarrierPayload(DATACARRIER_TYPE_POINT) {}
+    PointPayload() : TxOutPayload(TXOUT_TYPE_POINT), lockBlocks(0), amount(0) {}
+
     const CAccountID& GetReceiverID() const { return receiverID; }
+    const uint32_t& GetLockBlocks() const { return lockBlocks; }
+    const CAmount& GetAmount() const { return amount; }
 
-    // Checkable cast for CDatacarrierPayloadRef
-    static PointPayload * As(CDatacarrierPayloadRef &ref) {
-        assert(ref->type == DATACARRIER_TYPE_POINT);
+    // Checkable cast for CTxOutPayloadRef
+    static PointPayload * As(CTxOutPayloadRef &ref) {
+        assert(ref->type == TXOUT_TYPE_POINT);
         return (PointPayload*) ref.get();
     }
-    static const PointPayload * As(const CDatacarrierPayloadRef &ref) {
-        assert(ref->type == DATACARRIER_TYPE_POINT);
+    static const PointPayload * As(const CTxOutPayloadRef &ref) {
+        assert(ref->type == TXOUT_TYPE_POINT);
         return (const PointPayload*) ref.get();
     }
 };
 
-/** For text */
-struct TextPayload : public DatacarrierPayload
+/** For staking */
+struct StakingPayload : public TxOutPayload
 {
-    std::string text;
+    CAccountID receiverID;
+    uint32_t lockBlocks;
+    CAmount amount;
 
-    TextPayload() : DatacarrierPayload(DATACARRIER_TYPE_TEXT) {}
-    const std::string& GetText() const { return text; }
+    StakingPayload() : TxOutPayload(TXOUT_TYPE_STAKING), lockBlocks(0), amount(0) {}
 
-    // Checkable cast for CDatacarrierPayloadRef
-    static TextPayload * As(CDatacarrierPayloadRef &ref) {
-        assert(ref->type == DATACARRIER_TYPE_TEXT);
-        return (TextPayload*) ref.get();
+    const CAccountID& GetReceiverID() const { return receiverID; }
+    const uint32_t& GetLockBlocks() const { return lockBlocks; }
+    const CAmount& GetAmount() const { return amount; }
+
+    // Checkable cast for CTxOutPayloadRef
+    static StakingPayload * As(CTxOutPayloadRef &ref) {
+        assert(ref->type == TXOUT_TYPE_STAKING);
+        return (StakingPayload*) ref.get();
     }
-    static const TextPayload * As(const CDatacarrierPayloadRef &ref) {
-        assert(ref->type == DATACARRIER_TYPE_TEXT);
-        return (const TextPayload*) ref.get();
+    static const StakingPayload * As(const CTxOutPayloadRef &ref) {
+        assert(ref->type == TXOUT_TYPE_STAKING);
+        return (const StakingPayload*) ref.get();
     }
 };
 
 /** The bind plotter lock amount */
 static const CAmount PROTOCOL_BINDPLOTTER_LOCKAMOUNT = COIN / 10;
-
-/** The bind plotter transaction fee */
-static const CAmount PROTOCOL_BINDPLOTTER_MINFEE = COIN / 10;
 
 /** The height for bind plotter default maximum relative tip height */
 static const int PROTOCOL_BINDPLOTTER_DEFAULTMAXALIVE = 24;
@@ -314,7 +328,7 @@ static const int PROTOCOL_BINDPLOTTER_DEFAULTMAXALIVE = 24;
 static const int PROTOCOL_BINDPLOTTER_MAXALIVE = 288 * 7;
 
 /** The bind plotter script size */
-static const int PROTOCOL_BINDPLOTTER_SCRIPTSIZE = 109;
+static const int PROTOCOL_BINDPLOTTER_SCRIPTSIZE = 108;
 
 /** Check whether a string is a valid passphrase. */
 bool IsValidPassphrase(const std::string& passphrase);
@@ -325,27 +339,40 @@ bool IsValidPlotterID(const std::string& strPlotterId, uint64_t *id = nullptr);
 /** Generate a bind plotter script. */
 CScript GetBindPlotterScriptForDestination(const CTxDestination& dest, const std::string& passphrase, int lastActiveHeight);
 
+/** Check bind plotter script. */
+bool IsBindPlotterScript(const CScript &script);
+
+/** Signature bind plotter script. */
+class CKey;
+CScript SignBindPlotterScript(const CScript &script, const CKey &key);
+
 /** Decode bind plotter script. */
 bool DecodeBindPlotterScript(const CScript &script, uint64_t& plotterId, std::string& pubkeyHex, std::string& signatureHex, int& lastActiveHeight);
 uint64_t GetBindPlotterIdFromScript(const CScript &script);
 
 /** The minimal point amount */
-static const CAmount PROTOCOL_POINT_AMOUNT_MIN = 1 * COIN;
+static const CAmount PROTOCOL_POINT_AMOUNT_MIN = 10 * COIN;
 
 /** The point script size */
-static const int PROTOCOL_POINT_SCRIPTSIZE = 27;
+static const int PROTOCOL_POINT_SCRIPTSIZE = 31;
 
 /** Generate a point script. */
-CScript GetPointScriptForDestination(const CTxDestination& dest);
+CScript GetPointScriptForDestination(const CTxDestination& dest, int lockBlocks);
+/** Get effective point amount. */
+CAmount GetPointAmount(CAmount amount, int lockBlocks);
 
-/** The text script maximum size. OP_RETURN(1) + type(5) + size(4) */
-static const int PROTOCOL_TEXT_MAXSIZE = MAX_OP_RETURN_RELAY - 10;
+/** The minimal staking amount */
+static const CAmount PROTOCOL_STAKING_AMOUNT_MIN = 100 * COIN;
 
-/** Get text script */
-CScript GetTextScript(const std::string& text);
+/** The staking script size */
+static const int PROTOCOL_STAKING_SCRIPTSIZE = 31;
 
-/** Parse a datacarrier transaction. */
-CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight = 0, const DatacarrierTypes &filters = {});
-CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight, const DatacarrierTypes &filters, bool& fReject, int& lastActiveHeight);
+/** Generate staking script. */
+CScript GetStakingScriptForDestination(const CTxDestination& dest, int lockBlocks);
+/** Get effective staking amount. */
+CAmount GetStakingAmount(CAmount amount, int lockBlocks);
+
+/** Parse transaction output payload. */
+CTxOutPayloadRef ExtractTxoutPayload(const CTxOut& txout, int nHeight = 0, const std::set<TxOutType>& filters = {}, bool for_test = false);
 
 #endif // BITCOIN_SCRIPT_STANDARD_H

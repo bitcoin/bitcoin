@@ -15,13 +15,6 @@
 const int DEFAULT_MIN_DEPTH = 0;
 const int DEFAULT_MAX_DEPTH = 9999999;
 
-/** Coin pick policy */
-enum class CoinPickPolicy {
-    IncludeIfSet = 0,   //! Pick all coin if "m_pick_dest" set. Default
-    ExcludeIfSet,       //! Pick all coin but exclude if "m_pick_dest" set
-    MoveAllTo,          //! Pick all but exclude "m_pick_dest". Only for move to
-};
-
 /** Coin Control Features. */
 class CCoinControl
 {
@@ -54,10 +47,6 @@ public:
     int m_max_depth = DEFAULT_MAX_DEPTH;
     //! Maximum transaction fee
     CAmount m_min_txfee;
-    //! Coin pick policy
-    CoinPickPolicy m_coin_pick_policy;
-    //! Custom pick destination.Unlimit select when not set 
-    CTxDestination m_pick_dest;
 
     CCoinControl()
     {

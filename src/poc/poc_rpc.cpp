@@ -33,17 +33,29 @@ static UniValue getMiningInfo(const JSONRPCRequest& request)
         );
     }
 
-    if (::ChainstateActive().IsInitialBlockDownload()) {
-        throw std::runtime_error("Is initial block downloading!");
-    }
+    UniValue result(UniValue::VOBJ);
 
     LOCK(cs_main);
-    const CBlockIndex *pindexLast = ::ChainActive().Tip();
-    if (pindexLast == nullptr) {
-        throw std::runtime_error("Block chain tip is empty!");
+    const CBlockIndex *pindexLast = ChainActive().Tip();
+    if (pindexLast == nullptr || pindexLast->nHeight < 1) {
+        result.pushKV("result", "error");
+        result.pushKV("errorCode", "400");
+        result.pushKV("errorDescription", "Block chain tip is empty!");
+        return result;
+    }
+    if (pindexLast->nHeight != 1 && ChainstateActive().IsInitialBlockDownload()) {
+        result.pushKV("result", "error");
+        result.pushKV("errorCode", "400");
+        result.pushKV("errorDescription", "Is initial block downloading!");
+        return result;
+    }
+    if (pindexLast->nHeight == 1 && Params().GetConsensus().nBeginMiningTime > GetTime()) {
+        result.pushKV("result", "error");
+        result.pushKV("errorCode", "400");
+        result.pushKV("errorDescription", "Waiting for begining!");
+        return result;
     }
 
-    UniValue result(UniValue::VOBJ);
     result.pushKV("height", pindexLast->nHeight + 1);
     result.pushKV("generationSignature", HexStr(pindexLast->GetNextGenerationSignature()));
     result.pushKV("baseTarget", std::to_string(pindexLast->nBaseTarget));
@@ -62,8 +74,8 @@ static UniValue submitNonce(const JSONRPCRequest& request)
             "1. \"nonce\"           (string, required) Nonce\n"
             "2. \"plotterId\"       (string, required) Plotter ID\n"
             "3. \"height\"          (integer, optional) Target height for mining\n"
-            "4. \"address\"         (string, optional) Target address or private key (BHDIP007) for mining\n"
-            "5. \"checkBind\"       (boolean, optional, true) Check bind for BHDIP006\n"
+            "4. \"address\"         (string, optional) Target address or private key (QTCIP007) for mining\n"
+            "5. \"checkBind\"       (boolean, optional, true) Check bind for QTCIP006\n"
             "\nResult:\n"
             "{\n"
             "  [ result ]                  (string) Submit result: 'success' or others \n"
@@ -74,8 +86,7 @@ static UniValue submitNonce(const JSONRPCRequest& request)
         );
     }
 
-    if (::ChainstateActive().IsInitialBlockDownload())
-        throw std::runtime_error("Is initial block downloading!");
+    UniValue result(UniValue::VOBJ);
 
     uint64_t nNonce = static_cast<uint64_t>(std::stoull(request.params[0].get_str()));
     uint64_t nPlotterId = static_cast<uint64_t>(std::stoull(request.params[1].get_str()));
@@ -96,11 +107,26 @@ static UniValue submitNonce(const JSONRPCRequest& request)
     }
 
     LOCK(cs_main);
-    const CBlockIndex *pindexMining = ::ChainActive()[nTargetHeight < 1 ? ::ChainActive().Height() : (nTargetHeight - 1)];
-    if (pindexMining == nullptr)
-        throw std::runtime_error("Invalid mining height");
+    const CBlockIndex *pindexMining = ChainActive()[nTargetHeight < 1 ? ChainActive().Height() : (nTargetHeight - 1)];
+    if (pindexMining == nullptr || pindexMining->nHeight < 1) {
+        result.pushKV("result", "error");
+        result.pushKV("errorCode", "400");
+        result.pushKV("errorDescription", "Invalid mining height!");
+        return result;
+    }
+    if (pindexMining->nHeight != 1 && ChainstateActive().IsInitialBlockDownload()) {
+        result.pushKV("result", "error");
+        result.pushKV("errorCode", "400");
+        result.pushKV("errorDescription", "Is initial block downloading!");
+        return result;
+    }
+    if (pindexMining->nHeight == 1 && Params().GetConsensus().nBeginMiningTime > GetTime()) {
+        result.pushKV("result", "error");
+        result.pushKV("errorCode", "400");
+        result.pushKV("errorDescription", "Waiting for begining!");
+        return result;
+    }
 
-    UniValue result(UniValue::VOBJ);
     try {
         uint64_t bestDeadline = 0;
         uint64_t deadline = poc::AddNonce(bestDeadline, *pindexMining, nNonce, nPlotterId, generateTo, fCheckBind, Params().GetConsensus());
@@ -129,7 +155,7 @@ static UniValue addSignPrivkey(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. \"privkey\"      (string, required) The string of the private key\n"
             "\nResult:\n"
-            "BitcoinHD mining address\n"
+            "Qitcoin mining address\n"
         );
     }
 
@@ -146,7 +172,7 @@ static UniValue listSignAddresses(const JSONRPCRequest& request)
             "listsignaddresses\n"
             "\nList signature addresses for signature.\n"
             "\nResult:\n"
-            "BitcoinHD address\n"
+            "Qitcoin address\n"
         );
     }
 

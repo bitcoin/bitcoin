@@ -379,7 +379,7 @@ public:
     bool haveActiveBindPlotter(const CAccountID &accountID, uint64_t plotterId) override
     {
         LOCK(::cs_main);
-        return ::ChainstateActive().CoinsTip().HaveActiveBindPlotter(accountID, plotterId);
+        return ::ChainstateActive().CoinsTip().AccountHaveActiveBindPlotter(accountID, plotterId);
     }
 
     int getUnbindPlotterLimitHeight(const CBindPlotterInfo& info) override
@@ -391,7 +391,7 @@ public:
     std::pair<CAmount,int> getBindPlotterPunishment(int bindHeight, uint64_t plotterId) override
     {
         const Consensus::Params& consensusParams = Params().GetConsensus();
-        if (bindHeight >= consensusParams.BHDIP006LimitBindPlotterHeight) {
+        if (bindHeight > consensusParams.nBindPlotterCheckHeight) {
             LOCK(::cs_main);
             const CBindPlotterInfo lastBindInfo = ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(plotterId);
             if (!lastBindInfo.outpoint.IsNull()) {
@@ -417,8 +417,9 @@ public:
     {
         LOCK(::cs_main);
         AccountBanalces balances;
-        balances.balance = ::ChainstateActive().CoinsTip().GetAccountBalance(accountID, &balances.frozen_balance, &balances.point_sent_balance, &balances.point_received_balance);
-        balances.frozen_balance += balances.point_sent_balance; // include point sent and bind plotter frozen
+        balances.balance = ::ChainstateActive().CoinsTip().GetAccountBalance(accountID, &balances.frozen_balance, balances.point_balance, balances.staking_balance);
+        balances.frozen_balance += balances.point_balance[0];
+        balances.frozen_balance += balances.staking_balance[0];
         return balances;
     }
 

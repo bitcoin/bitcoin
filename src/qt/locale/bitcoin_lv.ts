@@ -43,11 +43,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Izvēlies adresi uz kuru sūtīt BHDs</translation>
+        <translation>Izvēlies adresi uz kuru sūtīt QTCs</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Izvēlies adresi ar kuru saņemt BHDs</translation>
+        <translation>Izvēlies adresi ar kuru saņemt QTCs</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -198,8 +198,8 @@
         <translation>Bloku reindeksēšana no diska...</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD address</source>
-        <translation>Nosūtīt bitkoinus uz BitcoinHD adresi</translation>
+        <source>Send coins to a Qitcoin address</source>
+        <translation>Nosūtīt bitkoinus uz Qitcoin adresi</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -242,12 +242,12 @@
         <translation>Šifrēt privātās atslēgas kuras pieder tavam maciņam</translation>
     </message>
     <message>
-        <source>Sign messages with your BitcoinHD addresses to prove you own them</source>
-        <translation>Parakstīt ziņojumus ar savām BitcoinHD adresēm lai pierādītu ka tās pieder tev</translation>
+        <source>Sign messages with your Qitcoin addresses to prove you own them</source>
+        <translation>Parakstīt ziņojumus ar savām Qitcoin adresēm lai pierādītu ka tās pieder tev</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified BitcoinHD addresses</source>
-        <translation>Pārbaudīt ziņojumus lai pārliecinātos, ka tie tika parakstīti ar norādītajām BitcoinHD adresēm</translation>
+        <source>Verify messages to ensure they were signed with specified Qitcoin addresses</source>
+        <translation>Pārbaudīt ziņojumus lai pārliecinātos, ka tie tika parakstīti ar norādītajām Qitcoin adresēm</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -266,11 +266,11 @@
         <translation>Ciļņu rīkjosla</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and btchd: URIs)</source>
-        <translation>Pieprasīt maksājumus (izveido QR kodu un btchd: URIs)</translation>
+        <source>Request payments (generates QR codes and qitcoin: URIs)</source>
+        <translation>Pieprasīt maksājumus (izveido QR kodu un qitcoin: URIs)</translation>
     </message>
     <message>
-        <source>Open a btchd: URI or payment request</source>
+        <source>Open a qitcoin: URI or payment request</source>
         <translation>Atvērt bitcoin URI vai maksājuma pieprasījumu</translation>
     </message>
     <message>
@@ -455,8 +455,8 @@
         <translation>Izmantot pielāgotu datu mapi:</translation>
     </message>
     <message>
-        <source>BitcoinHD</source>
-        <translation>BitcoinHD</translation>
+        <source>Qitcoin</source>
+        <translation>Qitcoin</translation>
     </message>
     <message>
         <source>Error</source>
@@ -551,8 +551,8 @@
         <translation>&amp;Tērēt neapstiprinātu atlikumu</translation>
     </message>
     <message>
-        <source>Automatically open the BitcoinHD client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Uz rūtera automātiski atvērt BitcoinHD klienta portu. Tas strādā tikai tad, ja rūteris atbalsta UPnP un tas ir ieslēgts.</translation>
+        <source>Automatically open the Qitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Uz rūtera automātiski atvērt Qitcoin klienta portu. Tas strādā tikai tad, ja rūteris atbalsta UPnP un tas ir ieslēgts.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -604,7 +604,7 @@
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation>Vai rādīt BitcoinHD kontroles funkcijas vai nē.</translation>
+        <translation>Vai rādīt Qitcoin kontroles funkcijas vai nē.</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -642,8 +642,8 @@
         <translation>Forma</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD network after a connection is established, but this process has not completed yet.</source>
-        <translation>Attēlotā informācija var būt novecojusi. Jūsu maciņš pēc savienojuma izveides automātiski sinhronizējas ar BitcoinHD tīklu, taču šis process vēl nav beidzies.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Qitcoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>Attēlotā informācija var būt novecojusi. Jūsu maciņš pēc savienojuma izveides automātiski sinhronizējas ar Qitcoin tīklu, taču šis process vēl nav beidzies.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -914,7 +914,7 @@
     </message>
     <message>
         <source>Coin Control Features</source>
-        <translation>BitcoinHD Kontroles Funkcijas</translation>
+        <translation>Qitcoin Kontroles Funkcijas</translation>
     </message>
     <message>
         <source>Inputs...</source>
@@ -1097,8 +1097,8 @@
         <translation>Kopēt parakstu uz sistēmas starpliktuvi</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this BitcoinHD address</source>
-        <translation>Parakstīt ziņojumu lai pierādītu, ka esi šīs BitcoinHD adreses īpašnieks.</translation>
+        <source>Sign the message to prove you own this Qitcoin address</source>
+        <translation>Parakstīt ziņojumu lai pierādītu, ka esi šīs Qitcoin adreses īpašnieks.</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>

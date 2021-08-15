@@ -35,101 +35,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     uint256 hash = wtx.tx->GetHash();
     std::map<std::string, std::string> mapValue = wtx.value_map;
 
-    // Bind plotter and point
-    auto itType = mapValue.find("type");
-    if (itType != mapValue.end())
-    {
-        if (itType->second == "bindplotter")
-        {
-            TransactionRecord sub(hash, nTime);
-            sub.debit = -wtx.tx->vout[0].nValue + nNet;
-            sub.involvesWatchAddress = wtx.txout_is_mine[0] & ISMINE_WATCH_ONLY;
-            sub.type = TransactionRecord::BindPlotter;
-            sub.address = EncodeDestination(wtx.txout_address[0]);
-            sub.comment = mapValue["plotter_id"];
-
-            parts.append(sub);
-            return parts;
-        }
-        else if (itType->second == "unbindplotter")
-        {
-            TransactionRecord sub(hash, nTime);
-            sub.credit = wtx.tx->vout[0].nValue;
-            sub.involvesWatchAddress = wtx.txout_is_mine[0] & ISMINE_WATCH_ONLY;
-            sub.type = TransactionRecord::UnbindPlotter;
-            sub.address = EncodeDestination(wtx.txout_address[0]);
-            sub.comment = mapValue["plotter_id"];
-
-            parts.append(sub);
-            return parts;
-        }
-        else if (itType->second == "pledge")
-        {
-            isminetype senderIsmine = wtx.txout_is_mine[0];
-            isminetype receiverIsmine = wtx.tx_point_address_is_mine;
-            TransactionRecord sub(hash, nTime);
-            if ((senderIsmine & ISMINE_SPENDABLE) && (receiverIsmine & ISMINE_SPENDABLE)) {
-                // Mine -> Mine
-                sub.debit = -wtx.tx->vout[0].nValue + nNet;
-                sub.involvesWatchAddress = false;
-                sub.type = TransactionRecord::SelfPoint;
-                sub.address = EncodeDestination(wtx.tx_point_address);
-                parts.append(sub);
-            } else if (senderIsmine & ISMINE_SPENDABLE) {
-                // Mine -> Other
-                sub.debit = -wtx.tx->vout[0].nValue + nNet;
-                sub.involvesWatchAddress = false;
-                sub.type = TransactionRecord::PointSent;
-                sub.address = EncodeDestination(wtx.tx_point_address);
-                parts.append(sub);
-            } else if (receiverIsmine & ISMINE_SPENDABLE) {
-                // Other -> Mine
-                sub.credit = wtx.tx->vout[0].nValue + nNet;
-                sub.involvesWatchAddress = false;
-                sub.type = TransactionRecord::PointReceived;
-                sub.address = EncodeDestination(wtx.txout_address[0]);
-                parts.append(sub);
-            } else if ((senderIsmine & ISMINE_WATCH_ONLY) && (receiverIsmine & ISMINE_WATCH_ONLY)) {
-                // WatchOnly -> WatchOnly
-                sub.debit = -wtx.tx->vout[0].nValue + nNet;
-                sub.involvesWatchAddress = true;
-                sub.type = TransactionRecord::SelfPoint;
-                sub.address = EncodeDestination(wtx.tx_point_address);
-                parts.append(sub);
-            } else if (senderIsmine & ISMINE_WATCH_ONLY) {
-                // WatchOnly -> Other
-                sub.debit = -wtx.tx->vout[0].nValue + nNet;
-                sub.involvesWatchAddress = true;
-                sub.type = TransactionRecord::PointSent;
-                sub.address = EncodeDestination(wtx.tx_point_address);
-                parts.append(sub);
-            } else if (receiverIsmine & ISMINE_WATCH_ONLY) {
-                // Other -> WatchOnly
-                sub.credit = wtx.tx->vout[0].nValue + nNet;
-                sub.involvesWatchAddress = true;
-                sub.type = TransactionRecord::PointReceived;
-                sub.address = EncodeDestination(wtx.txout_address[0]);
-                parts.append(sub);
-            }
-
-            return parts;
-        }
-        else if (itType->second == "withdrawpledge")
-        {
-            isminetype senderIsmine = wtx.txout_is_mine[0];
-            isminetype receiverIsmine = wtx.tx_point_address_is_mine;
-            TransactionRecord sub(hash, nTime);
-            sub.credit = wtx.tx->vout[0].nValue;
-            sub.involvesWatchAddress = ((senderIsmine & ISMINE_WATCH_ONLY) || (receiverIsmine & ISMINE_WATCH_ONLY)) &&
-                (!(senderIsmine & ISMINE_SPENDABLE) && !(receiverIsmine & ISMINE_SPENDABLE));
-            sub.type = TransactionRecord::WithdrawPoint;
-            sub.address = senderIsmine ? EncodeDestination(wtx.txout_address[0]) : EncodeDestination(wtx.tx_point_address);
-
-            parts.append(sub);
-            return parts;
-        }
-    }
-
     if (nNet > 0 || wtx.is_coinbase)
     {
         //
@@ -319,22 +224,6 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int 
         else
         {
             status.status = TransactionStatus::Confirmed;
-        }
-    }
-    // Rewrite special tx status
-    if (status.status == TransactionStatus::Confirming || status.status == TransactionStatus::Confirmed)
-    {
-        if (type == TransactionRecord::BindPlotter || type == TransactionRecord::PointSent ||
-            type == TransactionRecord::PointReceived || type == TransactionRecord::SelfPoint)
-        {
-            if (wtx.is_unfrozen)
-            {
-                status.status = (TransactionStatus::Status) (status.status | TransactionStatus::Disabled);
-            }
-            else if (wtx.is_bindplotter_inactived)
-            {
-                status.status = (TransactionStatus::Status) (status.status | TransactionStatus::Inactived);
-            }
         }
     }
     status.needsUpdate = false;

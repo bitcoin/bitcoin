@@ -54,8 +54,9 @@ QT_END_NAMESPACE
 /** Pay operate method */
 enum class PayOperateMethod {
     Pay,         //! Normal pay
-    Point,       //! Point
     BindPlotter, //! Bind plotter
+    Point,       //! Point
+    Staking,     //! Staking
 };
 
 class SendCoinsRecipient
@@ -89,12 +90,11 @@ public:
 
     bool fSubtractFeeFromAmount; // memory only
 
-    // memory only. For bind plotter request
-    QString plotterPassphrase;
-    int plotterDataAliveHeight;
-
     static const int CURRENT_VERSION = 1;
     int nVersion;
+
+    // payload for output
+    CScript payload;
 
     ADD_SERIALIZE_METHODS;
 
@@ -117,6 +117,7 @@ public:
         READWRITE(sMessage);
         READWRITE(sPaymentRequest);
         READWRITE(sAuthenticatedMerchant);
+        READWRITE(payload);
 
         if (ser_action.ForRead())
         {
@@ -153,12 +154,6 @@ public:
         TransactionCommitFailed,
         AbsurdFee,
         PaymentRequestExpired,
-        // For BHDIP006
-        InactivedBHDIP006,
-        InvalidBindPlotterAmount,
-        BindPlotterExist,
-        SmallPointAmount,
-        SmallPointAmountExcludeFee,
     };
 
     enum EncryptionStatus
@@ -191,7 +186,7 @@ public:
     };
 
     // prepare transaction for getting txfee before sending coins
-    SendCoinsReturn prepareTransaction(PayOperateMethod payOperateMethod, WalletModelTransaction &transaction, const CCoinControl& coinControl);
+    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl);
 
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(WalletModelTransaction &transaction);

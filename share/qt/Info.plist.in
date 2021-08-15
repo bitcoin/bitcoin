@@ -29,16 +29,16 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-  <string>BTCHD-Qt</string>
+  <string>Qitcoin-Qt</string>
   
   <key>CFBundleName</key>
-  <string>BTCHD-Qt</string>
+  <string>Qitcoin-Qt</string>
 
   <key>LSHasLocalizedDisplayName</key>
   <true/>
 
   <key>CFBundleIdentifier</key>
-  <string>org.btchd.BTCHD-Qt</string>
+  <string>org.qitcoin.Qitcoin-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
@@ -46,10 +46,10 @@
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>CFBundleURLName</key>
-      <string>org.btchd.BTCHDPayment</string>
+      <string>org.qitcoin.QitcoinPayment</string>
       <key>CFBundleURLSchemes</key>
       <array>
-        <string>btchd</string>
+        <string>qitcoin</string>
       </array>
     </dict>
   </array>
@@ -58,9 +58,9 @@
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>org.btchd.paymentrequest</string>
+      <string>org.qitcoin.paymentrequest</string>
       <key>UTTypeDescription</key>
-      <string>BitcoinHD payment request</string>
+      <string>Qitcoin payment request</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>
@@ -68,7 +68,7 @@
       <key>UTTypeTagSpecification</key>
       <dict>
         <key>public.mime-type</key>
-        <string>application/x-btchd-payment-request</string>
+        <string>application/x-qitcoin-payment-request</string>
         <key>public.filename-extension</key>
         <array>
           <string>bitcoinpaymentrequest</string>
@@ -84,7 +84,7 @@
       <string>Editor</string>
       <key>LSItemContentTypes</key>
       <array>
-        <string>org.btchd.paymentrequest</string>
+        <string>org.qitcoin.paymentrequest</string>
       </array>
       <key>LSHandlerRank</key>
       <string>Owner</string>

@@ -61,14 +61,17 @@ public:
     CCoinsViewCursorRef Cursor(const CAccountID &accountID) const override;
     CCoinsViewCursorRef PointSendCursor(const CAccountID &accountID) const override;
     CCoinsViewCursorRef PointReceiveCursor(const CAccountID &accountID) const override;
+    CCoinsViewCursorRef StakingSendCursor(const CAccountID &accountID) const override;
+    CCoinsViewCursorRef StakingReceiveCursor(const CAccountID &accountID) const override;
 
     //! Attempt to update from an older database format. Returns whether an error occurred.
     bool Upgrade(bool &fUpgraded);
     size_t EstimateSize() const override;
 
-    CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive) const override;
+    CAmount GetAccountBalance(const CAccountID &accountID, CAmount *balanceBindPlotter, CAmount balancePoint[2], CAmount balanceStaking[2], const CCoinsMap &mapModifiedCoins = {}) const override;
     CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const uint64_t &plotterId = 0) const override;
     CBindPlotterCoinsMap GetBindPlotterEntries(const uint64_t &plotterId) const override;
+    CAccountBalanceList GetTopStakingAccounts(int n, const CCoinsMap &mapModifiedCoins = {}) const override;
 };
 
 /** Access to the block database (blocks/index/) */

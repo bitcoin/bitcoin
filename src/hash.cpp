@@ -95,14 +95,14 @@ uint64_t PocLegacy::ToPlotterId(const unsigned char publicKey[32])
 {
     uint8_t publicKeyHash[32] = {0};
     CSHA256().Write((const unsigned char*)publicKey, 32).Finalize(publicKeyHash);
-    return ((uint64_t)publicKeyHash[0]) | \
-        ((uint64_t)publicKeyHash[1]) << 8 | \
-        ((uint64_t)publicKeyHash[2]) << 16 | \
-        ((uint64_t)publicKeyHash[3]) << 24 | \
-        ((uint64_t)publicKeyHash[4]) << 32 | \
-        ((uint64_t)publicKeyHash[5]) << 40 | \
-        ((uint64_t)publicKeyHash[6]) << 48 | \
-        ((uint64_t)publicKeyHash[7]) << 56;
+    return ((uint64_t)publicKeyHash[24]) | \
+        ((uint64_t)publicKeyHash[25]) << 8 | \
+        ((uint64_t)publicKeyHash[26]) << 16 | \
+        ((uint64_t)publicKeyHash[27]) << 24 | \
+        ((uint64_t)publicKeyHash[28]) << 32 | \
+        ((uint64_t)publicKeyHash[29]) << 40 | \
+        ((uint64_t)publicKeyHash[30]) << 48 | \
+        ((uint64_t)publicKeyHash[31]) << 56;
 }
 
 bool PocLegacy::Sign(const std::string &passphrase, const unsigned char data[32], unsigned char signature[64], unsigned char publicKey[32])

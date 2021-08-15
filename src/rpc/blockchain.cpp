@@ -104,8 +104,8 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
     } else {
         result.pushKV("deadline", (uint64_t)0);
     }
-    result.pushKV("generator", HexStr(blockindex->generatorAccountID));
-    if (blockindex->nHeight >= Params().GetConsensus().BHDIP007Height) {
+    result.pushKV("generator", HexStr(ExtractAccountID(blockindex->minerRewardTxOut.scriptPubKey)));
+    if (blockindex->nHeight > 1) {
         result.pushKV("pubkey", HexStr(blockindex->vchPubKey));
         result.pushKV("signature", HexStr(blockindex->vchSignature));
     }
@@ -162,8 +162,8 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     } else {
         result.pushKV("deadline", (uint64_t)0);
     }
-    result.pushKV("generator", HexStr(blockindex->generatorAccountID));
-    if (blockindex->nHeight >= Params().GetConsensus().BHDIP007Height) {
+    result.pushKV("generator", HexStr(ExtractAccountID(blockindex->minerRewardTxOut.scriptPubKey)));
+    if (blockindex->nHeight > 1) {
         result.pushKV("pubkey", HexStr(blockindex->vchPubKey));
         result.pushKV("signature", HexStr(blockindex->vchSignature));
     }
@@ -1109,6 +1109,11 @@ UniValue gettxout(const JSONRPCRequest& request)
     ScriptPubKeyToUniv(coin.out.scriptPubKey, o, true);
     ret.pushKV("scriptPubKey", o);
     ret.pushKV("coinbase", (bool)coin.fCoinBase);
+
+    UniValue p(UniValue::VOBJ);
+    if (TxoutPayloadToUniv(coin.out, (coin.nHeight == MEMPOOL_HEIGHT ? 0 : coin.nHeight), p)) {
+        ret.pushKV("payload", p);
+    }
 
     return ret;
 }

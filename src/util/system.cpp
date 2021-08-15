@@ -69,7 +69,7 @@
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
 
-const char * const BITCOIN_CONF_FILENAME = "btchd.conf";
+const char * const BITCOIN_CONF_FILENAME = "qitcoin.conf";
 
 ArgsManager gArgs;
 
@@ -703,13 +703,13 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 
 fs::path GetDefaultDataDir()
 {
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\btchd
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\btchd
-    // Mac: ~/Library/Application Support/btchd
-    // Unix: ~/.btchd
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\qitcoin
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\qitcoin
+    // Mac: ~/Library/Application Support/qitcoin
+    // Unix: ~/.qitcoin
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "btchd";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "qitcoin";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -719,10 +719,10 @@ fs::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/btchd";
+    return pathRet / "Library/Application Support/qitcoin";
 #else
     // Unix
-    return pathRet / ".btchd";
+    return pathRet / ".qitcoin";
 #endif
 #endif
 }
@@ -1224,8 +1224,8 @@ int GetNumCores()
 std::string CopyrightHolders(const std::string& strTemplate)
 {
     std::string strCopyrightHolders;
-    // BitcoinHD Core
-    strCopyrightHolders += strprintf(strTemplate, strprintf("2017-%i ", COPYRIGHT_YEAR) + strprintf(_(COPYRIGHT_HOLDERS).translated, _(COPYRIGHT_HOLDERS_SUBSTITUTION).translated));
+    // Qitcoin Core
+    strCopyrightHolders += strprintf(strTemplate, strprintf("2020-%i ", COPYRIGHT_YEAR) + strprintf(_(COPYRIGHT_HOLDERS).translated, _(COPYRIGHT_HOLDERS_SUBSTITUTION).translated));
 #ifdef ENABLE_OMNICORE
     // Omni Core
     strCopyrightHolders += "\n" + strprintf(strTemplate, std::string("2013-2015 ") + strprintf(_("The %s developers").translated, _("Omni Core").translated));

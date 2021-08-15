@@ -104,7 +104,7 @@ int WalletTxBuilder(
     CAmount nFeeRet = 0;
     int nChangePosInOut = -1;
     std::string strFailReason;
-    auto wtxNew = iWallet->createTransaction(vecRecipients, coinControl, true /* sign */, nChangePosInOut, nFeeRet, strFailReason, 0, false, minFee);
+    auto wtxNew = iWallet->createTransaction(vecRecipients, coinControl, true /* sign */, nChangePosInOut, nFeeRet, strFailReason, false, minFee);
 
     if (!wtxNew) {
         PrintToLog("%s: ERROR: wallet transaction creation failed: %s\n", __func__, strFailReason);

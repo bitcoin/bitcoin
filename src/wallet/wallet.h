@@ -117,9 +117,9 @@ enum WalletFeature
 
     FEATURE_NO_DEFAULT_KEY = 159900, // Wallet without a default key written
 
-    FEATURE_BITCOINHD_BASE = FEATURE_NO_DEFAULT_KEY, // BitcoionHD base feature
+    FEATURE_BITCOIN_BASE = FEATURE_NO_DEFAULT_KEY, // Bitcoin base feature
 
-    FEATURE_LATEST = FEATURE_BITCOINHD_BASE
+    FEATURE_LATEST = FEATURE_BITCOIN_BASE
 };
 
 //! Default for -addresstype
@@ -326,6 +326,7 @@ struct CRecipient
     CScript scriptPubKey;
     CAmount nAmount;
     bool fSubtractFeeFromAmount;
+    CScript payload;
 };
 
 typedef std::map<std::string, std::string> mapValue_t;
@@ -443,7 +444,7 @@ public:
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
     // memory only
-    enum AmountType { DEBIT, CREDIT, IMMATURE_CREDIT, AVAILABLE_CREDIT, FREEZE_CREDIT, POINT_SEND_CREDIT, POINT_RECEIVE_CREDIT, AMOUNTTYPE_ENUM_ELEMENTS };
+    enum AmountType { DEBIT, CREDIT, IMMATURE_CREDIT, AVAILABLE_CREDIT, FREEZE_CREDIT, POINT_SEND_CREDIT, POINT_RECEIVE_CREDIT, STAKING_SEND_CREDIT, STAKING_RECEIVE_CREDIT, AMOUNTTYPE_ENUM_ELEMENTS };
     CAmount GetCachableAmount(AmountType type, const isminefilter& filter, bool recalculate = false) const;
     mutable CachableAmount m_amounts[AMOUNTTYPE_ENUM_ELEMENTS];
     mutable bool fChangeCached;
@@ -518,6 +519,7 @@ public:
         uint256 serializedHash = isAbandoned() ? ABANDON_HASH : m_confirm.hashBlock;
         int serializedIndex = isAbandoned() || isConflicted() ? -1 : m_confirm.nIndex;
         s << tx << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << mapValueCopy << vOrderForm << fTimeReceivedIsTxTime << nTimeReceived << fFromMe << dummy_bool;
+
     }
 
     template<typename Stream>
@@ -572,6 +574,8 @@ public:
         m_amounts[FREEZE_CREDIT].Reset();
         m_amounts[POINT_SEND_CREDIT].Reset();
         m_amounts[POINT_RECEIVE_CREDIT].Reset();
+        m_amounts[STAKING_SEND_CREDIT].Reset();
+        m_amounts[STAKING_RECEIVE_CREDIT].Reset();
         fChangeCached = false;
     }
 
@@ -592,11 +596,6 @@ public:
     CAmount GetAvailableCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filter=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
     CAmount GetImmatureWatchOnlyCredit(interfaces::Chain::Lock& locked_chain, const bool fUseCache=true) const;
     CAmount GetChange() const;
-
-    //! for BitcoinHD
-    CAmount GetFreezeCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filterr=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
-    CAmount GetPointSendCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filterr=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
-    CAmount GetPointReceiveCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filterr=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
 
     // Get the marginal bytes if spending the specified output from this transaction
     int GetSpendSize(unsigned int out, bool use_max_sig = false) const
@@ -666,31 +665,51 @@ public:
 
     const uint256& GetBlockHash() const { return m_confirm.hashBlock; }
 
+    // Return value by name from mapValue
+    std::string GetMapValue(const std::string name) const {
+        auto it = mapValue.find(name);
+        if (it != mapValue.end())
+            return it->second;
+
+        return "";
+    }
+
     //! Tx action
     enum TxAction {
         TX_NORMAL = 0,
         TX_BINDPLOTTER,
         TX_UNBINDPLOTTER,
         TX_POINT,
-        TX_WITHDRAWPOINT,
+        TX_POINT_WITHDRAW,
+        TX_STAKING,
+        TX_STAKING_WITHDRAW,
     };
     // Return transaction action
     TxAction GetTxAction() const;
-    // Return true if bindplotter or unbindplotter tx
-    bool IsBindPlotterTx() const
+
+    // Return true if bindplotter or unbindplotter
+    bool IsBindPlotter() const
     {
         TxAction txAction = GetTxAction();
         return txAction == TX_BINDPLOTTER || txAction == TX_UNBINDPLOTTER;
     }
-    // Return true if point or withdraw tx
-    bool IsPointTx() const
+
+    // Return true if point or withdraw point
+    bool IsPoint() const
     {
         TxAction txAction = GetTxAction();
-        return txAction == TX_POINT || txAction == TX_WITHDRAWPOINT;
+        return txAction == TX_POINT || txAction == TX_POINT_WITHDRAW;
+    }
+
+    // Return true if staking or withdraw staking
+    bool IsStaking() const
+    {
+        TxAction txAction = GetTxAction();
+        return txAction == TX_STAKING || txAction == TX_STAKING_WITHDRAW;
     }
 
     // Return true if bindplotter or point invalid
-    bool IsUnfrozen(interfaces::Chain::Lock& locked_chain) const;
+    bool IsUnfrozen(interfaces::Chain::Lock& locked_chain, int n = -1) const;
 
     // Return plotter id or 0
     uint64_t GetBindPlotterId() const;
@@ -1167,12 +1186,16 @@ public:
         CAmount m_mine_frozen{0};            //!< Freeze by bind plotter or point
         CAmount m_mine_point_sent{0};        //!< Point sent
         CAmount m_mine_point_received{0};    //!< Point received
+        CAmount m_mine_staking_sent{0};      //!< Staking sent
+        CAmount m_mine_staking_received{0};  //!< Staking received
         CAmount m_watchonly_trusted{0};
         CAmount m_watchonly_untrusted_pending{0};
         CAmount m_watchonly_immature{0};
         CAmount m_watchonly_frozen{0};
         CAmount m_watchonly_point_sent{0};
         CAmount m_watchonly_point_received{0};
+        CAmount m_watchonly_staking_sent{0};
+        CAmount m_watchonly_staking_received{0};
     };
     Balance GetBalance(int min_depth = 0, bool avoid_reuse = true) const;
     CAmount GetAvailableBalance(const CCoinControl* coinControl = nullptr) const;
@@ -1192,7 +1215,7 @@ public:
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
     bool CreateTransaction(interfaces::Chain::Lock& locked_chain, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut,
-                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, int32_t nTxVersion = 0, bool omni = false, CAmount min_fee = 0);
+                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, bool omni = false, CAmount min_fee = 0);
     bool CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, CValidationState& state);
 
     bool DummySignTx(CMutableTransaction &txNew, const std::set<CTxOut> &txouts, bool use_max_sig = false) const
@@ -1270,6 +1293,7 @@ public:
     bool GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, std::string& error);
     bool GetNewChangeDestination(const OutputType type, CTxDestination& dest, std::string& error);
 
+    isminetype IsMine(const CAccountID& accountID) const;
     isminetype IsMine(const CTxIn& txin) const;
     /**
      * Returns amount of debit if the input matches the

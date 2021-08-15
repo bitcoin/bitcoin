@@ -156,7 +156,7 @@ std::string mastercore::strMPProperty(uint32_t propertyId)
         str = strprintf("Test token: %d : 0x%08X", 0x7FFFFFFF & propertyId, propertyId);
     } else {
         switch (propertyId) {
-            case OMNI_PROPERTY_BTC: str = "BHD";
+            case OMNI_PROPERTY_BTC: str = "QTC";
                 break;
             case OMNI_PROPERTY_MSC: str = "OMN";
                 break;

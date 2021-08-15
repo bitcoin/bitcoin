@@ -40,6 +40,8 @@ namespace {
 //! Construct wallet tx struct.
 WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, const CWalletTx& wtx)
 {
+    int nTxInBlockHeight = locked_chain.getBlockHeight(wtx.m_confirm.hashBlock).get_value_or(0);
+
     WalletTx result;
     result.tx = wtx.tx;
     result.txin_is_mine.reserve(wtx.tx->vin.size());
@@ -49,12 +51,26 @@ WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, co
     result.txout_is_mine.reserve(wtx.tx->vout.size());
     result.txout_address.reserve(wtx.tx->vout.size());
     result.txout_address_is_mine.reserve(wtx.tx->vout.size());
+    result.txout_payload.reserve(wtx.tx->vout.size());
     for (const auto& txout : wtx.tx->vout) {
         result.txout_is_mine.emplace_back(wallet.IsMine(txout));
         result.txout_address.emplace_back();
         result.txout_address_is_mine.emplace_back(ExtractDestination(txout.scriptPubKey, result.txout_address.back()) ?
-                                                      IsMine(wallet, result.txout_address.back()) :
-                                                      ISMINE_NO);
+                                                    IsMine(wallet, result.txout_address.back()) :
+                                                    ISMINE_NO);
+
+        // txout payload
+        auto payload = ExtractTxoutPayload(txout, nTxInBlockHeight);
+        if (payload && payload->type == TXOUT_TYPE_BINDPLOTTER) {
+            *result.txout_is_mine.rbegin() = (isminetype) (*result.txout_is_mine.rbegin() | ISMINE_PAYLOAD_BINDPLOTTER);
+        }
+        if (payload && payload->type == TXOUT_TYPE_POINT) {
+            *result.txout_is_mine.rbegin() = (isminetype) (*result.txout_is_mine.rbegin() | ISMINE_PAYLOAD_POINT | wallet.IsMine(PointPayload::As(payload)->GetReceiverID()));
+        }
+        if (payload && payload->type == TXOUT_TYPE_STAKING) {
+            *result.txout_is_mine.rbegin() = (isminetype) (*result.txout_is_mine.rbegin() | ISMINE_PAYLOAD_STAKING | wallet.IsMine(StakingPayload::As(payload)->GetReceiverID()));
+        }
+        result.txout_payload.emplace_back(payload);
     }
     result.credit = wtx.GetCredit(locked_chain, ISMINE_ALL);
     result.debit = wtx.GetDebit(ISMINE_ALL);
@@ -62,12 +78,6 @@ WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, co
     result.time = wtx.GetTxTime();
     result.value_map = wtx.mapValue;
     result.is_coinbase = wtx.IsCoinBase();
-
-    //! for BitcoinHD point/withdraw tx
-    if (wtx.IsPointTx()) {
-        result.tx_point_address = DecodeDestination(result.value_map["to"]);
-        result.tx_point_address_is_mine = ::IsMine(wallet, result.tx_point_address);
-    }
 
     //! for Omni
     result.available_credit = wtx.GetAvailableCredit(locked_chain);
@@ -91,10 +101,6 @@ WalletTxStatus MakeWalletTxStatus(CWallet& wallet, interfaces::Chain::Lock& lock
     result.is_abandoned = wtx.isAbandoned();
     result.is_coinbase = wtx.IsCoinBase();
     result.is_in_main_chain = wtx.IsInMainChain(locked_chain);
-
-    //! for BitcoinHD
-    result.is_unfrozen = wtx.IsUnfrozen(locked_chain);
-    result.is_bindplotter_inactived = false; // TODO fill this
 
     return result;
 }
@@ -245,7 +251,6 @@ public:
         int& change_pos,
         CAmount& fee,
         std::string& fail_reason,
-        int32_t tx_version,
         bool omni,
         CAmount min_fee) override
     {
@@ -253,7 +258,7 @@ public:
         LOCK(m_wallet->cs_wallet);
         CTransactionRef tx;
         if (!m_wallet->CreateTransaction(*locked_chain, recipients, tx, fee, change_pos,
-                fail_reason, coin_control, sign, tx_version, omni, min_fee)) {
+                fail_reason, coin_control, sign, omni, min_fee)) {
             return {};
         }
         return tx;
@@ -440,7 +445,7 @@ public:
             result.unconfirmed_watch_only_balance = bal.m_watchonly_untrusted_pending;
             result.immature_watch_only_balance = bal.m_watchonly_immature;
         }
-        // for BitcoinHD
+        // for Qitcoin
         result.frozen_balance = bal.m_mine_frozen;
         result.point_sent_balance = bal.m_mine_point_sent;
         result.point_received_balance = bal.m_mine_point_received;

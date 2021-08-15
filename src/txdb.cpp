@@ -15,6 +15,7 @@
 #include <util/translation.h>
 #include <validation.h>
 
+#include <algorithm>
 #include <exception>
 #include <map>
 #include <set>
@@ -26,13 +27,9 @@
 #include <boost/thread.hpp>
 
 /** UTXO version flag */
-static const char DB_COIN_VERSION = 'V';
-static const uint32_t DB_VERSION = 0x11;
-
 static const char DB_COIN = 'C';
 static const char DB_BLOCK_FILES = 'f';
 static const char DB_BLOCK_INDEX = 'b';
-static const char DB_BLOCK_GENERATOR_INDEX = 'g';
 
 static const char DB_BEST_BLOCK = 'B';
 static const char DB_HEAD_BLOCKS = 'H';
@@ -40,10 +37,12 @@ static const char DB_FLAG = 'F';
 static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
 
-static const char DB_COIN_INDEX = 'T';
-static const char DB_COIN_BINDPLOTTER = 'P';
-static const char DB_COIN_POINT_SEND = 'E';
-static const char DB_COIN_POINT_RECEIVE = 'e'; //! DEPRECTED
+static const char DB_COIN_INDEX = 'c';
+static const char DB_COIN_BINDPLOTTER = 'r';
+static const char DB_COIN_POINT_SEND = 'P';
+static const char DB_COIN_POINT_RECEIVE = 'p';
+static const char DB_COIN_STAKING_SEND = 'S';
+static const char DB_COIN_STAKING_RECEIVE = 's';
 
 namespace {
 
@@ -122,32 +121,28 @@ struct BindPlotterEntry {
 struct BindPlotterValue {
     uint64_t* plotterId;
     uint32_t* nHeight;
-    bool *valid;
-    BindPlotterValue(const uint64_t* plotterIdIn, const uint32_t* nHeightIn, const bool* validIn) :
+    BindPlotterValue(const uint64_t* plotterIdIn, const uint32_t* nHeightIn) :
         plotterId(const_cast<uint64_t*>(plotterIdIn)),
-        nHeight(const_cast<uint32_t*>(nHeightIn)),
-        valid(const_cast<bool*>(validIn)) {}
+        nHeight(const_cast<uint32_t*>(nHeightIn)) {}
 
     template<typename Stream>
     void Serialize(Stream &s) const {
         s << VARINT(*plotterId);
         s << VARINT(*nHeight);
-        s << *valid;
     }
 
     template<typename Stream>
     void Unserialize(Stream& s) {
         s >> VARINT(*plotterId);
         s >> VARINT(*nHeight);
-        s >> *valid;
     }
 };
 
-struct PointEntry {
+struct PointSendEntry {
     COutPoint* outpoint;
     CAccountID* accountID;
     char key;
-    PointEntry(const COutPoint* outpointIn, const CAccountID* accountIDIn) :
+    PointSendEntry(const COutPoint* outpointIn, const CAccountID* accountIDIn) :
         outpoint(const_cast<COutPoint*>(outpointIn)),
         accountID(const_cast<CAccountID*>(accountIDIn)),
         key(DB_COIN_POINT_SEND) {}
@@ -166,6 +161,172 @@ struct PointEntry {
         s >> *accountID;
         s >> outpoint->hash;
         s >> VARINT(outpoint->n);
+    }
+};
+
+struct PointReceiveEntry {
+    COutPoint* outpoint;
+    CAccountID* accountID;
+    char key;
+    PointReceiveEntry(const COutPoint* outpointIn, const CAccountID* accountIDIn) :
+        outpoint(const_cast<COutPoint*>(outpointIn)),
+        accountID(const_cast<CAccountID*>(accountIDIn)),
+        key(DB_COIN_POINT_RECEIVE) {}
+
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        s << key;
+        s << *accountID;
+        s << outpoint->hash;
+        s << VARINT(outpoint->n);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s) {
+        s >> key;
+        s >> *accountID;
+        s >> outpoint->hash;
+        s >> VARINT(outpoint->n);
+    }
+};
+
+struct StakingSendEntry {
+    COutPoint* outpoint;
+    CAccountID* accountID;
+    char key;
+    StakingSendEntry(const COutPoint* outpointIn, const CAccountID* accountIDIn) :
+        outpoint(const_cast<COutPoint*>(outpointIn)),
+        accountID(const_cast<CAccountID*>(accountIDIn)),
+        key(DB_COIN_STAKING_SEND) {}
+
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        s << key;
+        s << *accountID;
+        s << outpoint->hash;
+        s << VARINT(outpoint->n);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s) {
+        s >> key;
+        s >> *accountID;
+        s >> outpoint->hash;
+        s >> VARINT(outpoint->n);
+    }
+};
+
+struct StakingReceiveEntry {
+    COutPoint* outpoint;
+    CAccountID* accountID;
+    char key;
+    StakingReceiveEntry(const COutPoint* outpointIn, const CAccountID* accountIDIn) :
+        outpoint(const_cast<COutPoint*>(outpointIn)),
+        accountID(const_cast<CAccountID*>(accountIDIn)),
+        key(DB_COIN_STAKING_RECEIVE) {}
+
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        s << key;
+        s << *accountID;
+        s << outpoint->hash;
+        s << VARINT(outpoint->n);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s) {
+        s >> key;
+        s >> *accountID;
+        s >> outpoint->hash;
+        s >> VARINT(outpoint->n);
+    }
+};
+
+struct AccountEntry {
+    char key;
+    COutPoint* outpoint;
+    CAccountID* accountID;
+    AccountEntry(char keyIn, const COutPoint* outpointIn, const CAccountID* accountIDIn) :
+        key(keyIn),
+        outpoint(const_cast<COutPoint*>(outpointIn)),
+        accountID(const_cast<CAccountID*>(accountIDIn)) {}
+
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        s << key;
+        s << *accountID;
+        s << outpoint->hash;
+        s << VARINT(outpoint->n);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s) {
+        s >> key;
+        s >> *accountID;
+        s >> outpoint->hash;
+        s >> VARINT(outpoint->n);
+    }
+};
+
+template <char DBPrefix>
+class CAccountCoinsViewDBCursor : public CCoinsViewCursor
+{
+public:
+    CAccountCoinsViewDBCursor(const CAccountID& accountIDIn, const CCoinsViewDB* pcoinviewdbIn, CDBIterator* pcursorIn, const uint256& hashBlockIn)
+            : CCoinsViewCursor(hashBlockIn), accountID(accountIDIn), pcoinviewdb(pcoinviewdbIn), pcursor(pcursorIn), outpoint(uint256(), 0) {
+        // Seek cursor
+        pcursor->Seek(AccountEntry(DBPrefix, &outpoint, &accountID));
+        TestKey();
+    }
+
+    bool GetKey(COutPoint &key) const override {
+        // Return cached key
+        if (!outpoint.IsNull()) {
+            key = outpoint;
+            return true;
+        }
+        return false;
+    }
+
+    bool GetValue(Coin &coin) const override { return pcoinviewdb->GetCoin(outpoint, coin); }
+    unsigned int GetValueSize() const override { return pcursor->GetValueSize(); }
+
+    bool Valid() const override { return !outpoint.IsNull(); }
+    void Next() override {
+        pcursor->Next();
+        TestKey();
+    }
+
+private:
+    void TestKey() {
+        CAccountID tempAccountID;
+        AccountEntry entry(DBPrefix, &outpoint, &tempAccountID);
+        if (!pcursor->Valid() || !pcursor->GetKey(entry) || entry.key != DBPrefix || tempAccountID != accountID) {
+            outpoint.SetNull();
+        }
+    }
+
+    const CAccountID accountID;
+    const CCoinsViewDB* pcoinviewdb;
+    std::unique_ptr<CDBIterator> pcursor;
+    COutPoint outpoint;
+};
+
+class CAccountIDHasher
+{
+public:
+    size_t operator()(const CAccountID& id) const noexcept {
+        return (size_t) id.GetUint64(0);
+    }
+};
+
+class COutPointHasher
+{
+public:
+    size_t operator()(const COutPoint& outpoint) const noexcept {
+        uint64_t d = outpoint.hash.GetUint64(0);
+        d ^= outpoint.n;
+        return (size_t) d;
     }
 };
 
@@ -225,53 +386,47 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
 
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
         if (it->second.flags & CCoinsCacheEntry::DIRTY) {
+            CoinEntry entry(&it->first);
             if (it->second.coin.IsSpent()) {
-                batch.Erase(CoinEntry(&it->first));
-                if (!it->second.coin.refOutAccountID.IsNull())
+                batch.Erase(entry);
+
+                // payload
+                if (!it->second.coin.refOutAccountID.IsNull()) {
                     batch.Erase(CoinIndexEntry(&it->first, &it->second.coin.refOutAccountID));
+                    if (it->second.coin.IsBindPlotter()) {
+                        batch.Erase(BindPlotterEntry(&it->first, &it->second.coin.refOutAccountID));
+                    } else if (it->second.coin.IsPoint()) {
+                        auto payload = PointPayload::As(it->second.coin.payload);
+                        batch.Erase(PointSendEntry(&it->first, &it->second.coin.refOutAccountID));
+                        batch.Erase(PointReceiveEntry(&it->first, &payload->GetReceiverID()));
+                    } else if (it->second.coin.IsStaking()) {
+                        auto payload = StakingPayload::As(it->second.coin.payload);
+                        batch.Erase(StakingSendEntry(&it->first, &it->second.coin.refOutAccountID));
+                        batch.Erase(StakingReceiveEntry(&it->first, &payload->GetReceiverID()));
+                    }
+                }
             } else {
-                batch.Write(CoinEntry(&it->first), it->second.coin);
-                if (!it->second.coin.refOutAccountID.IsNull())
+                batch.Write(entry, it->second.coin);
+
+                // payload
+                if (!it->second.coin.refOutAccountID.IsNull()) {
                     batch.Write(CoinIndexEntry(&it->first, &it->second.coin.refOutAccountID), VARINT(it->second.coin.out.nValue, VarIntMode::NONNEGATIVE_SIGNED));
+                    if (it->second.coin.IsBindPlotter()) {
+                        auto payload = BindPlotterPayload::As(it->second.coin.payload);
+                        uint32_t nHeight = it->second.coin.nHeight;
+                        batch.Write(BindPlotterEntry(&it->first, &it->second.coin.refOutAccountID), BindPlotterValue(&payload->GetId(), &nHeight));
+                    } else if (it->second.coin.IsPoint()) {
+                        auto payload = PointPayload::As(it->second.coin.payload);
+                        batch.Write(PointSendEntry(&it->first, &it->second.coin.refOutAccountID), VARINT(it->second.coin.out.nValue, VarIntMode::NONNEGATIVE_SIGNED));
+                        batch.Write(PointReceiveEntry(&it->first, &payload->GetReceiverID()), VARINT(payload->GetAmount(), VarIntMode::NONNEGATIVE_SIGNED));
+                    } else if (it->second.coin.IsStaking()) {
+                        auto payload = StakingPayload::As(it->second.coin.payload);
+                        batch.Write(StakingSendEntry(&it->first, &it->second.coin.refOutAccountID), VARINT(it->second.coin.out.nValue, VarIntMode::NONNEGATIVE_SIGNED));
+                        batch.Write(StakingReceiveEntry(&it->first, &payload->GetReceiverID()), VARINT(payload->GetAmount(), VarIntMode::NONNEGATIVE_SIGNED));
+                    }
+                }
             }
             changed++;
-
-            // Extra indexes. ONLY FOR vout[0]
-            if (it->first.n == 0 && !it->second.coin.refOutAccountID.IsNull()) {
-                bool fTryEraseBind = true, fTryErasePoint = true;
-                if (it->second.coin.IsSpent()) {
-                    if (it->second.coin.IsBindPlotter() && (it->second.flags & CCoinsCacheEntry::UNBIND)) {
-                        fTryEraseBind = false;
-
-                        const uint64_t &plotterId = BindPlotterPayload::As(it->second.coin.extraData)->id;
-                        uint32_t nHeight = it->second.coin.nHeight;
-                        bool valid = false;
-                        batch.Write(BindPlotterEntry(&it->first, &it->second.coin.refOutAccountID), BindPlotterValue(&plotterId, &nHeight, &valid));
-                    }
-                } else {
-                    if (it->second.coin.IsBindPlotter()) {
-                        fTryEraseBind = false;
-
-                        const uint64_t &plotterId = BindPlotterPayload::As(it->second.coin.extraData)->id;
-                        uint32_t nHeight = it->second.coin.nHeight;
-                        bool valid = true;
-                        batch.Write(BindPlotterEntry(&it->first, &it->second.coin.refOutAccountID), BindPlotterValue(&plotterId, &nHeight, &valid));
-                    }
-                    else if (it->second.coin.IsPoint()) {
-                        fTryErasePoint = false;
-
-                        batch.Write(PointEntry(&it->first, &it->second.coin.refOutAccountID), REF(PointPayload::As(it->second.coin.extraData)->GetReceiverID()));
-                    }
-                }
-
-                // Try erase coin
-                if (fTryEraseBind) {
-                    batch.Erase(BindPlotterEntry(&it->first, &it->second.coin.refOutAccountID));
-                }
-                if (fTryErasePoint) {
-                    batch.Erase(PointEntry(&it->first, &it->second.coin.refOutAccountID));
-                }
-            }
         }
 
         count++;
@@ -355,151 +510,23 @@ CCoinsViewCursorRef CCoinsViewDB::Cursor() const {
 }
 
 CCoinsViewCursorRef CCoinsViewDB::Cursor(const CAccountID &accountID) const {
-    class CCoinsViewDBCursor : public CCoinsViewCursor
-    {
-    public:
-        CCoinsViewDBCursor(const CAccountID& accountIDIn, const CCoinsViewDB* pcoinviewdbIn, CDBIterator* pcursorIn, const uint256& hashBlockIn)
-                : CCoinsViewCursor(hashBlockIn), accountID(accountIDIn), pcoinviewdb(pcoinviewdbIn), pcursor(pcursorIn), outpoint(uint256(), 0) {
-            // Seek cursor
-            pcursor->Seek(CoinIndexEntry(&outpoint, &accountID));
-            TestKey();
-        }
-
-        bool GetKey(COutPoint &key) const override {
-            // Return cached key
-            if (!outpoint.IsNull()) {
-                key = outpoint;
-                return true;
-            }
-            return false;
-        }
-
-        bool GetValue(Coin &coin) const override { return pcoinviewdb->GetCoin(outpoint, coin); }
-        unsigned int GetValueSize() const override { return pcursor->GetValueSize(); }
-
-        bool Valid() const override { return !outpoint.IsNull(); }
-        void Next() override {
-            pcursor->Next();
-            TestKey();
-        }
-
-    private:
-        void TestKey() {
-            CAccountID tempAccountID;
-            CoinIndexEntry entry(&outpoint, &tempAccountID);
-            if (!pcursor->Valid() || !pcursor->GetKey(entry) || entry.key != DB_COIN_INDEX || tempAccountID != accountID) {
-                outpoint.SetNull();
-            }
-        }
-
-        const CAccountID accountID;
-        const CCoinsViewDB* pcoinviewdb;
-        std::unique_ptr<CDBIterator> pcursor;
-        COutPoint outpoint;
-    };
-
-    return std::make_shared<CCoinsViewDBCursor>(accountID, this, db.NewIterator(), GetBestBlock());
+    return std::make_shared< CAccountCoinsViewDBCursor<DB_COIN_INDEX> >(accountID, this, db.NewIterator(), GetBestBlock());
 }
 
 CCoinsViewCursorRef CCoinsViewDB::PointSendCursor(const CAccountID &accountID) const {
-    class CCoinsViewDBPointSendCursor : public CCoinsViewCursor
-    {
-    public:
-        CCoinsViewDBPointSendCursor(const CAccountID& accountIDIn, const CCoinsViewDB* pcoinviewdbIn, CDBIterator* pcursorIn, const uint256& hashBlockIn)
-                : CCoinsViewCursor(hashBlockIn), senderAccountID(accountIDIn), pcoinviewdb(pcoinviewdbIn), pcursor(pcursorIn), outpoint(uint256(), 0) {
-            // Seek cursor
-            pcursor->Seek(PointEntry(&outpoint, &senderAccountID));
-            TestKey();
-        }
-
-        bool GetKey(COutPoint &key) const override {
-            // Return cached key
-            if (!outpoint.IsNull()) {
-                key = outpoint;
-                return true;
-            }
-            return false;
-        }
-
-        bool GetValue(Coin &coin) const override { return pcoinviewdb->GetCoin(outpoint, coin); }
-        unsigned int GetValueSize() const override { return pcursor->GetValueSize(); }
-
-        bool Valid() const override { return !outpoint.IsNull(); }
-        void Next() override {
-            pcursor->Next();
-            TestKey();
-        }
-
-    private:
-        void TestKey() {
-            CAccountID tempSenderAccountID;
-            PointEntry entry(&outpoint, &tempSenderAccountID);
-            if (!pcursor->Valid() || !pcursor->GetKey(entry) || entry.key != DB_COIN_POINT_SEND || tempSenderAccountID != senderAccountID) {
-                outpoint.SetNull();
-            }
-        }
-
-        const CAccountID senderAccountID;
-        const CCoinsViewDB* pcoinviewdb;
-        std::unique_ptr<CDBIterator> pcursor;
-        COutPoint outpoint;
-    };
-
-    return std::make_shared<CCoinsViewDBPointSendCursor>(accountID, this, db.NewIterator(), GetBestBlock());
+    return std::make_shared< CAccountCoinsViewDBCursor<DB_COIN_POINT_SEND> >(accountID, this, db.NewIterator(), GetBestBlock());
 }
 
 CCoinsViewCursorRef CCoinsViewDB::PointReceiveCursor(const CAccountID &accountID) const {
-    class CCoinsViewDBPointReceiveCursor : public CCoinsViewCursor
-    {
-    public:
-        CCoinsViewDBPointReceiveCursor(const CAccountID& accountIDIn, const CCoinsViewDB* pcoinviewdbIn, CDBIterator* pcursorIn, const uint256& hashBlockIn)
-                : CCoinsViewCursor(hashBlockIn), receiverAccountID(accountIDIn), pcoinviewdb(pcoinviewdbIn), pcursor(pcursorIn), outpoint(uint256(), 0), senderAccountID() {
-            // Seek cursor to first point coin
-            pcursor->Seek(DB_COIN_POINT_SEND);
-            GotoValidEntry();
-        }
+    return std::make_shared< CAccountCoinsViewDBCursor<DB_COIN_POINT_RECEIVE> >(accountID, this, db.NewIterator(), GetBestBlock());
+}
 
-        bool GetKey(COutPoint &key) const override {
-            // Return cached key
-            if (!outpoint.IsNull()) {
-                key = outpoint;
-                return true;
-            }
-            return false;
-        }
+CCoinsViewCursorRef CCoinsViewDB::StakingSendCursor(const CAccountID &accountID) const {
+    return std::make_shared< CAccountCoinsViewDBCursor<DB_COIN_STAKING_SEND> >(accountID, this, db.NewIterator(), GetBestBlock());
+}
 
-        bool GetValue(Coin &coin) const override { return pcoinviewdb->GetCoin(outpoint, coin); }
-        unsigned int GetValueSize() const override { return pcursor->GetValueSize(); }
-
-        bool Valid() const override { return !outpoint.IsNull(); }
-        void Next() override {
-            pcursor->Next();
-            GotoValidEntry();
-        }
-
-    private:
-        void GotoValidEntry() {
-            CAccountID tempReceiverAccountID;
-            PointEntry entry(&outpoint, &senderAccountID);
-            while (true) {
-                if (!pcursor->Valid() || !pcursor->GetKey(entry) || entry.key != DB_COIN_POINT_SEND || !pcursor->GetValue(tempReceiverAccountID)) {
-                    outpoint.SetNull();
-                    break;
-                }
-                if (tempReceiverAccountID == receiverAccountID)
-                    break;
-                pcursor->Next();
-            }
-        }
-
-        const CAccountID receiverAccountID;
-        const CCoinsViewDB* pcoinviewdb;
-        std::unique_ptr<CDBIterator> pcursor;
-        COutPoint outpoint;
-        CAccountID senderAccountID;
-    };
-
-    return std::make_shared<CCoinsViewDBPointReceiveCursor>(accountID, this, db.NewIterator(), GetBestBlock());
+CCoinsViewCursorRef CCoinsViewDB::StakingReceiveCursor(const CAccountID &accountID) const {
+    return std::make_shared< CAccountCoinsViewDBCursor<DB_COIN_STAKING_RECEIVE> >(accountID, this, db.NewIterator(), GetBestBlock());
 }
 
 size_t CCoinsViewDB::EstimateSize() const
@@ -507,32 +534,29 @@ size_t CCoinsViewDB::EstimateSize() const
     return db.EstimateSize(DB_COIN, (char)(DB_COIN+1));
 }
 
-CAmount CCoinsViewDB::GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive) const {
+CAmount CCoinsViewDB::GetAccountBalance(const CAccountID &accountID, CAmount *balanceBindPlotter, CAmount balancePoint[2], CAmount balanceStaking[2], const CCoinsMap &mapModifiedCoins) const {
     std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
 
     // Balance
     CAmount availableBalance = 0;
     {
+        // Read from database
         CAmount tempAmount = 0;
         COutPoint tempOutpoint(uint256(), 0);
         CAccountID tempAccountID = accountID;
         CoinIndexEntry entry(&tempOutpoint, &tempAccountID);
-
-        // Read from database
-        pcursor->Seek(entry);
-        while (pcursor->Valid()) {
-            if (pcursor->GetKey(entry) && entry.key == DB_COIN_INDEX && *entry.accountID == accountID) {
+        for (pcursor->Seek(entry); pcursor->Valid();  pcursor->Next()) {
+            if (pcursor->GetKey(entry) && entry.key == DB_COIN_INDEX && tempAccountID == accountID) {
                 if (!pcursor->GetValue(REF(VARINT(tempAmount, VarIntMode::NONNEGATIVE_SIGNED))))
                     throw std::runtime_error("Database read error");
                 availableBalance += tempAmount;
             } else {
                 break;
             }
-            pcursor->Next();
         }
 
         // Apply modified coin
-        for (CCoinsMap::const_iterator it = mapChildCoins.cbegin(); it != mapChildCoins.cend(); it++) {
+        for (CCoinsMap::const_iterator it = mapModifiedCoins.cbegin(); it != mapModifiedCoins.cend(); it++) {
             if (!(it->second.flags & CCoinsCacheEntry::DIRTY))
                 continue;
 
@@ -554,39 +578,34 @@ CAmount CCoinsViewDB::GetBalance(const CAccountID &accountID, const CCoinsMap &m
         *balanceBindPlotter = 0;
 
         // Read from database
-        std::set<COutPoint> selected;
+        std::unordered_set<COutPoint, COutPointHasher> selected;
         CAccountID tempAccountID = accountID;
         COutPoint tempOutpoint(uint256(), 0);
         uint64_t tempPlotterId = 0;
         uint32_t tempHeight = 0;
-        bool tempValid = true;
         BindPlotterEntry entry(&tempOutpoint, &tempAccountID);
-        BindPlotterValue value(&tempPlotterId, &tempHeight, &tempValid);
-        pcursor->Seek(entry);
-        while (pcursor->Valid()) {
-            if (pcursor->GetKey(entry) && entry.key == DB_COIN_BINDPLOTTER && *entry.accountID == accountID) {
+        BindPlotterValue value(&tempPlotterId, &tempHeight);
+        for (pcursor->Seek(entry); pcursor->Valid();  pcursor->Next()) {
+            if (pcursor->GetKey(entry) && entry.key == DB_COIN_BINDPLOTTER && tempAccountID == accountID) {
                 if (!pcursor->GetValue(value))
                     throw std::runtime_error("Database read error");
-                if (*value.valid) {
-                    *balanceBindPlotter += PROTOCOL_BINDPLOTTER_LOCKAMOUNT;
-                    selected.insert(*entry.outpoint);
-                }
+                *balanceBindPlotter += PROTOCOL_BINDPLOTTER_LOCKAMOUNT;
+                selected.insert(tempOutpoint);
             } else {
                 break;
             }
-            pcursor->Next();
         }
 
         // Apply modified coin
-        for (CCoinsMap::const_iterator it = mapChildCoins.cbegin(); it != mapChildCoins.cend(); it++) {
-            if (!(it->second.flags & CCoinsCacheEntry::DIRTY))
+        for (CCoinsMap::const_iterator it = mapModifiedCoins.cbegin(); it != mapModifiedCoins.cend(); it++) {
+            if (!(it->second.flags & CCoinsCacheEntry::DIRTY) || !it->second.coin.IsBindPlotter())
                 continue;
 
             if (selected.count(it->first)) {
                 if (it->second.coin.IsSpent()) {
                     *balanceBindPlotter -= PROTOCOL_BINDPLOTTER_LOCKAMOUNT;
                 }
-            } else if (it->second.coin.refOutAccountID == accountID && it->second.coin.IsBindPlotter() && !it->second.coin.IsSpent()) {
+            } else if (it->second.coin.refOutAccountID == accountID && !it->second.coin.IsSpent()) {
                 *balanceBindPlotter += PROTOCOL_BINDPLOTTER_LOCKAMOUNT;
             }
         }
@@ -594,92 +613,170 @@ CAmount CCoinsViewDB::GetBalance(const CAccountID &accountID, const CCoinsMap &m
         assert(*balanceBindPlotter >= 0);
     }
 
-    // Balance of point send
-    if (balancePointSend != nullptr) {
-        *balancePointSend = 0;
+    // Balance of point
+    if (balancePoint != nullptr) {
+        // send
+        if (balancePoint[0] != -1) {
+            balancePoint[0] = 0;
 
-        // Read from database
-        std::map<COutPoint, CAmount> selected;
-        CAccountID tempAccountID = accountID;
-        COutPoint tempOutpoint(uint256(), 0);
-        Coin coin;
-        PointEntry entry(&tempOutpoint, &tempAccountID);
-        pcursor->Seek(entry);
-        while (pcursor->Valid()) {
-            if (pcursor->GetKey(entry) && entry.key == DB_COIN_POINT_SEND && *entry.accountID == accountID) {
-                if (!db.Read(CoinEntry(entry.outpoint), coin))
-                    throw std::runtime_error("Database read error");
-                *balancePointSend += coin.out.nValue;
-                selected[*entry.outpoint] = coin.out.nValue;
-            } else {
-                break;
-            }
-            pcursor->Next();
-        }
-
-        // Apply modified coin
-        for (CCoinsMap::const_iterator it = mapChildCoins.cbegin(); it != mapChildCoins.cend(); it++) {
-            if (!(it->second.flags & CCoinsCacheEntry::DIRTY))
-                continue;
-
-            auto itSelected = selected.find(it->first);
-            if (itSelected != selected.cend()) {
-                if (it->second.coin.IsSpent()) {
-                    *balancePointSend -= itSelected->second;
-                }
-            } else if (it->second.coin.refOutAccountID == accountID && it->second.coin.IsPoint() && !it->second.coin.IsSpent()) {
-                *balancePointSend += it->second.coin.out.nValue;
-            }
-        }
-
-        assert(*balancePointSend >= 0);
-    }
-
-    // Balance of point receive
-    if (balancePointReceive != nullptr) {
-        *balancePointReceive = 0;
-
-        // Read from database
-        std::map<COutPoint, CAmount> selected;
-        CAccountID tempDebitAccountID;
-        CAccountID tempAccountID;
-        COutPoint tempOutpoint(uint256(), 0);
-        Coin coin;
-        PointEntry entry(&tempOutpoint, &tempAccountID);
-        pcursor->Seek(entry);
-        while (pcursor->Valid()) {
-            if (pcursor->GetKey(entry) && entry.key == DB_COIN_POINT_SEND) {
-                if (!pcursor->GetValue(tempDebitAccountID))
-                    throw std::runtime_error("Database read error");
-                if (tempDebitAccountID == accountID) {
+            // Read from database
+            std::unordered_map<COutPoint,CAmount,COutPointHasher> selected;
+            CAccountID tempAccountID = accountID;
+            COutPoint tempOutpoint(uint256(), 0);
+            Coin coin;
+            PointSendEntry entry(&tempOutpoint, &tempAccountID);
+            for (pcursor->Seek(entry); pcursor->Valid();  pcursor->Next()) {
+                if (pcursor->GetKey(entry) && entry.key == DB_COIN_POINT_SEND && tempAccountID == accountID) {
                     if (!db.Read(CoinEntry(entry.outpoint), coin))
                         throw std::runtime_error("Database read error");
-                    *balancePointReceive += coin.out.nValue;
-                    selected[*entry.outpoint] = coin.out.nValue;
+                    balancePoint[0] += coin.out.nValue;
+                    selected[tempOutpoint] = coin.out.nValue;
+                } else {
+                    break;
                 }
-            } else {
-                break;
             }
-            pcursor->Next();
+
+            // Apply modified coin
+            for (CCoinsMap::const_iterator it = mapModifiedCoins.cbegin(); it != mapModifiedCoins.cend(); it++) {
+                if (!(it->second.flags & CCoinsCacheEntry::DIRTY) || !it->second.coin.IsPoint())
+                    continue;
+
+                auto itSelected = selected.find(it->first);
+                if (itSelected != selected.cend()) {
+                    if (it->second.coin.IsSpent()) {
+                        balancePoint[0] -= itSelected->second;
+                    }
+                } else if (it->second.coin.refOutAccountID == accountID && !it->second.coin.IsSpent()) {
+                    balancePoint[0] += it->second.coin.out.nValue;
+                }
+            }
+
+            assert(balancePoint[0] >= 0);
         }
 
-        // Apply modified coin
-        for (CCoinsMap::const_iterator it = mapChildCoins.cbegin(); it != mapChildCoins.cend(); it++) {
-            if (!(it->second.flags & CCoinsCacheEntry::DIRTY))
-                continue;
+        // receive
+        if (balancePoint[1] != -1) {
+            balancePoint[1] = 0;
 
-            auto itSelected = selected.find(it->first);
-            if (itSelected != selected.cend()) {
-                if (it->second.coin.IsSpent()) {
-                    *balancePointReceive -= itSelected->second;
+            // Read from database
+            std::unordered_map<COutPoint,CAmount,COutPointHasher> selected;
+            CAccountID tempAccountID = accountID;
+            COutPoint tempOutpoint(uint256(), 0);
+            PointReceiveEntry entry(&tempOutpoint, &tempAccountID);
+            for (pcursor->Seek(entry); pcursor->Valid();  pcursor->Next()) {
+                if (pcursor->GetKey(entry) && entry.key == DB_COIN_POINT_RECEIVE && tempAccountID == accountID) {
+                    CAmount value = 0;
+                    if (!pcursor->GetValue(REF(VARINT(value, VarIntMode::NONNEGATIVE_SIGNED))))
+                        throw std::runtime_error("Database read error");
+                    balancePoint[1] += value;
+                    selected[tempOutpoint] = value;
+                } else {
+                    break;
                 }
-            } else if (it->second.coin.IsPoint() && PointPayload::As(it->second.coin.extraData)->GetReceiverID() == accountID && !it->second.coin.IsSpent()) {
-                *balancePointReceive += it->second.coin.out.nValue;
             }
-        }
 
-        assert(*balancePointReceive >= 0);
+            // Apply modified coin
+            for (CCoinsMap::const_iterator it = mapModifiedCoins.cbegin(); it != mapModifiedCoins.cend(); it++) {
+                if (!(it->second.flags & CCoinsCacheEntry::DIRTY) || !it->second.coin.IsPoint())
+                    continue;
+
+                auto payload = PointPayload::As(it->second.coin.payload);
+                auto itSelected = selected.find(it->first);
+                if (itSelected != selected.cend()) {
+                    if (it->second.coin.IsSpent()) {
+                        balancePoint[1] -= itSelected->second;
+                    }
+                } else if (payload->GetReceiverID() == accountID && !it->second.coin.IsSpent()) {
+                    balancePoint[1] += payload->GetAmount();
+                }
+            }
+
+            assert(balancePoint[1] >= 0);
+        }
     }
+
+    // Balance of staking
+    if (balanceStaking != nullptr) {
+        // send
+        if (balanceStaking[0] != -1) {
+            balanceStaking[0] = 0;
+
+            // Read from database
+            std::unordered_map<COutPoint,CAmount,COutPointHasher> selected;
+            CAccountID tempAccountID = accountID;
+            COutPoint tempOutpoint(uint256(), 0);
+            Coin coin;
+            StakingSendEntry entry(&tempOutpoint, &tempAccountID);
+            for (pcursor->Seek(entry); pcursor->Valid();  pcursor->Next()) {
+                if (pcursor->GetKey(entry) && entry.key == DB_COIN_STAKING_SEND && tempAccountID == accountID) {
+                    if (!db.Read(CoinEntry(entry.outpoint), coin))
+                        throw std::runtime_error("Database read error");
+                    balanceStaking[0] += coin.out.nValue;
+                    selected[tempOutpoint] = coin.out.nValue;
+                } else {
+                    break;
+                }
+            }
+
+            // Apply modified coin
+            for (CCoinsMap::const_iterator it = mapModifiedCoins.cbegin(); it != mapModifiedCoins.cend(); it++) {
+                if (!(it->second.flags & CCoinsCacheEntry::DIRTY) || !it->second.coin.IsStaking())
+                    continue;
+
+                auto itSelected = selected.find(it->first);
+                if (itSelected != selected.cend()) {
+                    if (it->second.coin.IsSpent()) {
+                        balanceStaking[0] -= itSelected->second;
+                    }
+                } else if (it->second.coin.refOutAccountID == accountID && !it->second.coin.IsSpent()) {
+                    balanceStaking[0] += it->second.coin.out.nValue;
+                }
+            }
+
+            assert(balanceStaking[0] >= 0);
+        }
+
+        // receive
+        if (balanceStaking[1] != -1) {
+            balanceStaking[1] = 0;
+
+            // Read from database
+            std::unordered_map<COutPoint,CAmount,COutPointHasher> selected;
+            CAccountID tempAccountID = accountID;
+            COutPoint tempOutpoint(uint256(), 0);
+            StakingReceiveEntry entry(&tempOutpoint, &tempAccountID);
+            for (pcursor->Seek(entry); pcursor->Valid();  pcursor->Next()) {
+                if (pcursor->GetKey(entry) && entry.key == DB_COIN_STAKING_RECEIVE && tempAccountID == accountID) {
+                    CAmount value = 0;
+                    if (!pcursor->GetValue(REF(VARINT(value, VarIntMode::NONNEGATIVE_SIGNED))))
+                        throw std::runtime_error("Database read error");
+                    balanceStaking[1] += value;
+                    selected[tempOutpoint] = value;
+                } else {
+                    break;
+                }
+            }
+
+            // Apply modified coin
+            for (CCoinsMap::const_iterator it = mapModifiedCoins.cbegin(); it != mapModifiedCoins.cend(); it++) {
+                if (!(it->second.flags & CCoinsCacheEntry::DIRTY) || !it->second.coin.IsStaking())
+                    continue;
+
+                auto payload = StakingPayload::As(it->second.coin.payload);
+                auto itSelected = selected.find(it->first);
+                if (itSelected != selected.cend()) {
+                    if (it->second.coin.IsSpent()) {
+                        balanceStaking[1] -= itSelected->second;
+                    }
+                } else if (payload->GetReceiverID() == accountID && !it->second.coin.IsSpent()) {
+                    balanceStaking[1] += payload->GetAmount();
+                }
+            }
+
+            assert(balanceStaking[1] >= 0);
+        }
+    }
+
 
     return availableBalance;
 }
@@ -692,25 +789,21 @@ CBindPlotterCoinsMap CCoinsViewDB::GetAccountBindPlotterEntries(const CAccountID
     CAccountID tempAccountID = accountID;
     uint64_t tempPlotterId = 0;
     uint32_t tempHeight = 0;
-    bool tempValid = 0;
     BindPlotterEntry entry(&tempOutpoint, &tempAccountID);
-    BindPlotterValue value(&tempPlotterId, &tempHeight, &tempValid);
-    pcursor->Seek(entry);
-    while (pcursor->Valid()) {
-        if (pcursor->GetKey(entry) && entry.key == DB_COIN_BINDPLOTTER && *entry.accountID == accountID) {
+    BindPlotterValue value(&tempPlotterId, &tempHeight);
+    for (pcursor->Seek(entry); pcursor->Valid();  pcursor->Next()) {
+        if (pcursor->GetKey(entry) && entry.key == DB_COIN_BINDPLOTTER && tempAccountID == accountID) {
             if (!pcursor->GetValue(value))
                 throw std::runtime_error("Database read error");
-            if (plotterId == 0 || *value.plotterId == plotterId) {
-                CBindPlotterCoinInfo &info = outpoints[*entry.outpoint];
-                info.nHeight = static_cast<int>(*value.nHeight);
-                info.accountID = *entry.accountID;
-                info.plotterId = *value.plotterId;
-                info.valid = *value.valid;
+            if (plotterId == 0 || tempPlotterId == plotterId) {
+                CBindPlotterCoinInfo &info = outpoints[tempOutpoint];
+                info.nHeight = static_cast<int>(tempHeight);
+                info.accountID = tempAccountID;
+                info.plotterId = tempPlotterId;
             }
         } else {
             break;
         }
-        pcursor->Next();
     }
 
     return outpoints;
@@ -724,28 +817,81 @@ CBindPlotterCoinsMap CCoinsViewDB::GetBindPlotterEntries(const uint64_t &plotter
     CAccountID tempAccountID;
     uint64_t tempPlotterId = 0;
     uint32_t tempHeight = 0;
-    bool tempValid = 0;
     BindPlotterEntry entry(&tempOutpoint, &tempAccountID);
-    BindPlotterValue value(&tempPlotterId, &tempHeight, &tempValid);
-    pcursor->Seek(entry);
-    while (pcursor->Valid()) {
+    BindPlotterValue value(&tempPlotterId, &tempHeight);
+    for (pcursor->Seek(entry); pcursor->Valid(); pcursor->Next()) {
         if (pcursor->GetKey(entry) && entry.key == DB_COIN_BINDPLOTTER) {
             if (!pcursor->GetValue(value))
                 throw std::runtime_error("Database read error");
-            if (*value.plotterId == plotterId) {
-                CBindPlotterCoinInfo &info = outpoints[*entry.outpoint];
-                info.nHeight = static_cast<int>(*value.nHeight);
-                info.accountID = *entry.accountID;
-                info.plotterId = *value.plotterId;
-                info.valid = *value.valid;
+            if (tempPlotterId == plotterId) {
+                CBindPlotterCoinInfo &info = outpoints[tempOutpoint];
+                info.nHeight = static_cast<int>(tempHeight);
+                info.accountID = tempAccountID;
+                info.plotterId = tempPlotterId;
             }
         } else {
             break;
         }
-        pcursor->Next();
     }
 
     return outpoints;
+}
+
+CAccountBalanceList CCoinsViewDB::GetTopStakingAccounts(int n, const CCoinsMap &mapModifiedCoins) const {
+    assert(n > 0);
+    std::unordered_map<CAccountID, CAmount, CAccountIDHasher> allStakings;
+    
+    // all
+    {
+        // Read from database
+        std::unordered_map<COutPoint,CAmount,COutPointHasher> selected;
+        CAccountID tempAccountID;
+        COutPoint tempOutpoint(uint256(), 0);
+        StakingReceiveEntry entry(&tempOutpoint, &tempAccountID);
+        std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
+        for (pcursor->Seek(entry); pcursor->Valid();  pcursor->Next()) {
+            if (pcursor->GetKey(entry) && entry.key == DB_COIN_STAKING_RECEIVE) {
+                CAmount value = 0;
+                if (!pcursor->GetValue(REF(VARINT(value, VarIntMode::NONNEGATIVE_SIGNED))))
+                    throw std::runtime_error("Database read error");
+                allStakings[tempAccountID] += value;
+                selected[tempOutpoint] = value;
+            } else {
+                break;
+            }
+        }
+
+        // Apply modified coin
+        for (CCoinsMap::const_iterator it = mapModifiedCoins.cbegin(); it != mapModifiedCoins.cend(); it++) {
+            if (!(it->second.flags & CCoinsCacheEntry::DIRTY) || !it->second.coin.IsStaking())
+                continue;
+
+            auto payload = StakingPayload::As(it->second.coin.payload);
+            auto itSelected = selected.find(it->first);
+            if (itSelected != selected.cend()) {
+                if (it->second.coin.IsSpent()) {
+                    auto it2 = allStakings.find(payload->GetReceiverID());
+                    assert(it2 != allStakings.end());
+                    it2->second -= itSelected->second;
+                    assert(it2->second >= 0);
+                    if (it2->second == 0)
+                        allStakings.erase(it2);
+                }
+            } else if (!it->second.coin.IsSpent()) {
+                allStakings[payload->GetReceiverID()] += payload->GetAmount();
+            }
+        }
+    }
+
+    // sort
+    CAccountBalanceList topN(std::min((size_t) n, allStakings.size()));
+    std::partial_sort_copy(allStakings.begin(), allStakings.end(), topN.begin(), topN.end(),
+        [](const CAccountBalance &l, const CAccountBalance &r) {
+            if (l.second == r.second)
+                return l.first < r.first;
+            return l.second > r.second;
+        });
+    return topN;
 }
 
 CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.IsArgSet("-blocksdir") ? GetDataDir() / "blocks" / "index" : GetBlocksDir() / "index", nCacheSize, fMemory, fWipe) {
@@ -778,8 +924,6 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
     batch.Write(DB_LAST_BLOCK, nLastFile);
     for (std::vector<const CBlockIndex*>::const_iterator it=blockinfo.begin(); it != blockinfo.end(); it++) {
         batch.Write(std::make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), CDiskBlockIndex(*it));
-        if ((*it)->vchPubKey.empty() && !(*it)->generatorAccountID.IsNull())
-            batch.Write(std::make_pair(DB_BLOCK_GENERATOR_INDEX, (*it)->GetBlockHash()), REF((*it)->generatorAccountID));
     }
     return WriteBatch(batch, true);
 }
@@ -828,35 +972,9 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nPlotterId         = diskindex.nPlotterId;
                 pindexNew->nStatus            = diskindex.nStatus;
                 pindexNew->nTx                = diskindex.nTx;
-                pindexNew->generatorAccountID = diskindex.generatorAccountID;
+                pindexNew->minerRewardTxOut   = diskindex.minerRewardTxOut;
                 pindexNew->vchPubKey          = diskindex.vchPubKey;
                 pindexNew->vchSignature       = diskindex.vchSignature;
-
-                // Load external generator
-                if ((pindexNew->nStatus & BLOCK_HAVE_DATA) && pindexNew->vchPubKey.empty() && pindexNew->nHeight > 0) {
-                    bool fRequireStore = false;
-                    CAccountID generatorAccountID;
-                    if (!Read(std::make_pair(DB_BLOCK_GENERATOR_INDEX, pindexNew->GetBlockHash()), REF(generatorAccountID))) {
-                        //! Slowly: Read from full block data
-                        CBlock block;
-                        if (!ReadBlockFromDisk(block, pindexNew, consensusParams))
-                            return error("%s: failed to read block value", __func__);
-                        generatorAccountID = ExtractAccountID(block.vtx[0]->vout[0].scriptPubKey);
-                        fRequireStore = !generatorAccountID.IsNull();
-                    }
-                    if (generatorAccountID.GetUint64(0) != pindexNew->generatorAccountID.GetUint64(0))
-                        return error("%s: failed to read external generator value", __func__);
-                    pindexNew->generatorAccountID = generatorAccountID;
-
-                    if (fRequireStore) {
-                        batch.Write(std::make_pair(DB_BLOCK_GENERATOR_INDEX, pindexNew->GetBlockHash()), REF(generatorAccountID));
-                        if (batch.SizeEstimate() > batch_size) {
-                            WriteBatch(batch);
-                            batch.Clear();
-                        }
-                    }
-                }
-
                 pcursor->Next();
             } else {
                 return error("%s: failed to read value", __func__);
@@ -872,99 +990,5 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
 /** Upgrade the database from older formats */
 bool CCoinsViewDB::Upgrade(bool &fUpgraded) {
     fUpgraded = false;
-    // Check coin database version
-    uint32_t coinDbVersion = 0;
-    if (db.Read(DB_COIN_VERSION, REF(VARINT(coinDbVersion))) && coinDbVersion == DB_VERSION)
-        return true;
-    db.Erase(DB_COIN_VERSION);
-    fUpgraded = true;
-
-    // Reindex UTXO for address
-    uiInterface.ShowProgress(_("Upgrading UTXO database").translated, 0, true);
-    LogPrintf("Upgrading UTXO database to %08x: [0%%]...", DB_VERSION);
-
-    size_t batch_size = (size_t) gArgs.GetArg("-dbbatchsize", nDefaultDbBatchSize);
-    int remove = 0, add = 0;
-    std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
-
-    // Clear old data
-    pcursor->SeekToFirst();
-    if (pcursor->Valid()) {
-        CDBBatch batch(db);
-        for (; pcursor->Valid(); pcursor->Next()) {
-            const leveldb::Slice key = pcursor->GetKey();
-            if (key.size() > 32 && (key[0] == DB_COIN_INDEX || key[0] == DB_COIN_BINDPLOTTER || key[0] == DB_COIN_POINT_SEND || key[0] == DB_COIN_POINT_RECEIVE)) {
-                batch.EraseSlice(key);
-                remove++;
-
-                if (batch.SizeEstimate() > batch_size) {
-                    db.WriteBatch(batch);
-                    batch.Clear();
-                }
-            }
-        }
-        db.WriteBatch(batch);
-    }
-
-    // Create coin index data
-    pcursor->Seek(DB_COIN);
-    if (pcursor->Valid()) {
-        int utxo_bucket = 173000 / 100;
-        int indexProgress = -1;
-        CDBBatch batch(db);
-        COutPoint outpoint;
-        CoinEntry entry(&outpoint);
-        for (; pcursor->Valid(); pcursor->Next()) {
-            if (pcursor->GetKey(entry) && entry.key == DB_COIN) {
-                Coin coin;
-                if (!pcursor->GetValue(coin))
-                    return error("%s: cannot parse coin record", __func__);
-
-                if (!coin.refOutAccountID.IsNull()) {
-                    // Coin index
-                    batch.Write(CoinIndexEntry(&outpoint, &coin.refOutAccountID), VARINT(coin.out.nValue, VarIntMode::NONNEGATIVE_SIGNED));
-                    add++;
-
-                    // Extra data
-                    if (coin.IsBindPlotter()) {
-                        const uint64_t &plotterId = BindPlotterPayload::As(coin.extraData)->id;
-                        uint32_t nHeight = coin.nHeight;
-                        bool valid = true;
-                        batch.Write(BindPlotterEntry(&outpoint, &coin.refOutAccountID), BindPlotterValue(&plotterId, &nHeight, &valid));
-                        add++;
-                    }
-                    else if (coin.IsPoint()) {
-                        batch.Write(PointEntry(&outpoint, &coin.refOutAccountID), REF(PointPayload::As(coin.extraData)->GetReceiverID()));
-                        add++;
-                    }
-
-                    if (batch.SizeEstimate() > batch_size) {
-                        db.WriteBatch(batch);
-                        batch.Clear();
-                    }
-
-                    if (add % (utxo_bucket/10) == 0) {
-                        int newProgress = std::min(90, add / utxo_bucket);
-                        if (newProgress/10 != indexProgress/10) {
-                            indexProgress = newProgress;
-                            uiInterface.ShowProgress(_("Upgrading UTXO database").translated, indexProgress, true);
-                            LogPrintf("[%d%%]...", indexProgress);
-                        }
-                    }
-                }
-            } else {
-                break;
-            }
-        }
-        db.WriteBatch(batch);
-    }
-
-    // Update coin version
-    if (!db.Write(DB_COIN_VERSION, VARINT(DB_VERSION)))
-        return error("%s: cannot write UTXO version", __func__);
-
-    uiInterface.ShowProgress("", 100, false);
-    LogPrintf("[%s]. remove utxo %d, add utxo %d\n", ShutdownRequested() ? "CANCELLED" : "DONE", remove, add);
-
-    return !ShutdownRequested();
+    return true;
 }

@@ -17,4 +17,4 @@ std::string FormatStateMessage(const CValidationState &state)
         state.GetRejectCode());
 }
 
-const std::string strMessageMagic = "BitcoinHD Signed Message:\n";
+const std::string strMessageMagic = "Qitcoin Signed Message:\n";

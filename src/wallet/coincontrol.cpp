@@ -23,7 +23,5 @@ void CCoinControl::SetNull()
     m_min_depth = DEFAULT_MIN_DEPTH;
     m_max_depth = DEFAULT_MAX_DEPTH;
     m_min_txfee = 0;
-    m_coin_pick_policy = CoinPickPolicy::IncludeIfSet;
-    m_pick_dest = CNoDestination();
 }
 

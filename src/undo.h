@@ -10,7 +10,6 @@
 #include <compressor.h>
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
-#include <pubkey.h>
 #include <serialize.h>
 #include <version.h>
 
@@ -28,23 +27,12 @@ class TxInUndoSerializer
 public:
     template<typename Stream>
     void Serialize(Stream &s) const {
-        unsigned int nCode = (txout->extraData ? 0x80000000 : 0) | (txout->nHeight * 2 + (txout->fCoinBase ? 1u : 0u));
-        ::Serialize(s, VARINT(nCode));
+        ::Serialize(s, VARINT(txout->nHeight * 2 + (txout->fCoinBase ? 1u : 0u)));
         if (txout->nHeight > 0) {
             // Required to maintain compatibility with older undo format.
             ::Serialize(s, (unsigned char)0);
         }
         ::Serialize(s, CTxOutCompressor(REF(txout->out)));
-
-        if (nCode & 0x80000000) {
-            ::Serialize(s, VARINT((unsigned int&)txout->extraData->type));
-            if (txout->extraData->type == DATACARRIER_TYPE_BINDPLOTTER) {
-                ::Serialize(s, VARINT(BindPlotterPayload::As(txout->extraData)->id));
-            } else if (txout->extraData->type == DATACARRIER_TYPE_POINT) {
-                ::Serialize(s, REF(PointPayload::As(txout->extraData)->GetReceiverID()));
-            } else
-                assert(false);
-        }
     }
 
     explicit TxInUndoSerializer(const Coin* coin) : txout(coin) {}
@@ -59,7 +47,7 @@ public:
     void Unserialize(Stream &s) {
         unsigned int nCode = 0;
         ::Unserialize(s, VARINT(nCode));
-        txout->nHeight = (nCode & 0x7fffffff) / 2;
+        txout->nHeight = nCode / 2;
         txout->fCoinBase = nCode & 1;
         if (txout->nHeight > 0) {
             // Old versions stored the version number for the last spend of
@@ -70,20 +58,8 @@ public:
         }
         ::Unserialize(s, CTxOutCompressor(REF(txout->out)));
 
-        txout->Refresh();
-        txout->extraData = nullptr;
-        if (nCode & 0x80000000) {
-            unsigned int extraDataType = 0;
-            ::Unserialize(s, VARINT(extraDataType));
-            if (extraDataType == DATACARRIER_TYPE_BINDPLOTTER) {
-                txout->extraData = std::make_shared<BindPlotterPayload>();
-                ::Unserialize(s, VARINT(BindPlotterPayload::As(txout->extraData)->id));
-            } else if (extraDataType == DATACARRIER_TYPE_POINT) {
-                txout->extraData = std::make_shared<PointPayload>();
-                ::Unserialize(s, REF(PointPayload::As(txout->extraData)->GetReceiverID()));
-            } else
-                assert(false);
-        }
+        txout->refOutAccountID = ExtractAccountID(txout->out.scriptPubKey);
+        txout->payload = ExtractTxoutPayload(txout->out, txout->nHeight);
     }
 
     explicit TxInUndoDeserializer(Coin* coin) : txout(coin) {}

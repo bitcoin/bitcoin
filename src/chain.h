@@ -129,10 +129,6 @@ enum BlockStatus: uint32_t {
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
 
     BLOCK_OPT_WITNESS        =  128, //!< block data in blk*.data was received with a witness-enforcing client
-
-    BLOCK_HAVE_SIGNATURE     =  256, //!< signature data for block
-
-    BLOCK_UNCONDITIONAL      =  512, //!< unconditional block. Only valid after BHDIP008
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -179,8 +175,8 @@ public:
     //! Verification status of this block. See enum BlockStatus
     uint32_t nStatus;
 
-    //! The miner account ID from P2SH destination
-    CAccountID generatorAccountID;
+    //! The miner reward output
+    CTxOut minerRewardTxOut;
 
     //! block header
     int32_t nVersion;
@@ -218,7 +214,7 @@ public:
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
-        generatorAccountID.SetNull();
+        minerRewardTxOut.SetNull();
         nSequenceId = 0;
         nTimeMax = 0;
         generationSignature = nullptr;
@@ -413,13 +409,14 @@ public:
         READWRITE(VARINT(nHeight, VarIntMode::NONNEGATIVE_SIGNED));
         READWRITE(VARINT(nStatus));
         READWRITE(VARINT(nTx));
-        READWRITE(VARINT(*reinterpret_cast<uint64_t*>(generatorAccountID.begin()))); //! Compatible pre-version wallet
         if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
             READWRITE(VARINT(nFile, VarIntMode::NONNEGATIVE_SIGNED));
         if (nStatus & BLOCK_HAVE_DATA)
             READWRITE(VARINT(nDataPos));
         if (nStatus & BLOCK_HAVE_UNDO)
             READWRITE(VARINT(nUndoPos));
+
+        READWRITE(minerRewardTxOut);
 
         // block header
         READWRITE(this->nVersion);
@@ -429,10 +426,8 @@ public:
         READWRITE(nBaseTarget);
         READWRITE(nNonce);
         READWRITE(nPlotterId);
-        if (nStatus & BLOCK_HAVE_SIGNATURE) {
-            READWRITE(LIMITED_VECTOR(vchPubKey, CPubKey::COMPRESSED_PUBLIC_KEY_SIZE));
-            READWRITE(LIMITED_VECTOR(vchSignature, CPubKey::SIGNATURE_SIZE));
-        }
+        READWRITE(LIMITED_VECTOR(vchPubKey, CPubKey::COMPRESSED_PUBLIC_KEY_SIZE));
+        READWRITE(LIMITED_VECTOR(vchSignature, CPubKey::SIGNATURE_SIZE));
     }
 
     uint256 GetBlockHash() const
