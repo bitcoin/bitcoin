@@ -790,7 +790,7 @@ class SegWitTest(BitcoinTestFramework):
         block_3.rehash()
         block_3.solve()
 
-        test_witness_block(self.nodes[0], self.test_node, block_3, accepted=False)
+        test_witness_block(self.nodes[0], self.test_node, block_3, accepted=False, reason='bad-witness-merkle-match')
 
         # Add a different commitment with different nonce, but in the
         # right location, and with some funds burned(!).
@@ -856,7 +856,7 @@ class SegWitTest(BitcoinTestFramework):
         # Change the nonce -- should not cause the block to be permanently
         # failed
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(1)]
-        test_witness_block(self.nodes[0], self.test_node, block, accepted=False)
+        test_witness_block(self.nodes[0], self.test_node, block, accepted=False, reason='bad-witness-merkle-match')
 
         # Changing the witness reserved value doesn't change the block hash
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(0)]
@@ -921,7 +921,7 @@ class SegWitTest(BitcoinTestFramework):
         # limit
         assert len(block.serialize()) > 2 * 1024 * 1024
 
-        test_witness_block(self.nodes[0], self.test_node, block, accepted=False)
+        test_witness_block(self.nodes[0], self.test_node, block, accepted=False, reason='bad-blk-weight')
 
         # Now resize the second transaction to make the block fit.
         cur_length = len(block.vtx[-1].wit.vtxinwit[0].scriptWitness.stack[0])
@@ -1180,7 +1180,7 @@ class SegWitTest(BitcoinTestFramework):
 
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx2])
-        test_witness_block(self.nodes[0], self.test_node, block, accepted=False)
+        test_witness_block(self.nodes[0], self.test_node, block, accepted=False, reason='bad-txnmrklroot')
 
         # Now try using a too short vtxinwit
         tx2.wit.vtxinwit.pop()
@@ -1419,7 +1419,7 @@ class SegWitTest(BitcoinTestFramework):
         self.sync_blocks()
         block2 = self.build_next_block()
         self.update_witness_block_with_transactions(block2, [spend_tx])
-        test_witness_block(self.nodes[0], self.test_node, block2, accepted=False)
+        test_witness_block(self.nodes[0], self.test_node, block2, accepted=False, reason='bad-txns-premature-spend-of-coinbase')
 
         # Advancing one more block should allow the spend.
         self.generate(self.nodes[0], 1)
@@ -1922,7 +1922,7 @@ class SegWitTest(BitcoinTestFramework):
 
         block_2 = self.build_next_block()
         self.update_witness_block_with_transactions(block_2, [tx2])
-        test_witness_block(self.nodes[0], self.test_node, block_2, accepted=False)
+        test_witness_block(self.nodes[0], self.test_node, block_2, accepted=False, reason='bad-blk-sigops')
 
         # Try dropping the last input in tx2, and add an output that has
         # too many sigops (contributing to legacy sigop count).
@@ -1935,7 +1935,7 @@ class SegWitTest(BitcoinTestFramework):
         tx2.rehash()
         block_3 = self.build_next_block()
         self.update_witness_block_with_transactions(block_3, [tx2])
-        test_witness_block(self.nodes[0], self.test_node, block_3, accepted=False)
+        test_witness_block(self.nodes[0], self.test_node, block_3, accepted=False, reason='bad-blk-sigops')
 
         # If we drop the last checksig in this output, the tx should succeed.
         block_4 = self.build_next_block()
