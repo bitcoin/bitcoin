@@ -1,0 +1,759 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+    <class>StakePage</class>
+    <widget class="QWidget" name="StakePage">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>714</width>
+                <height>450</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>Form</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+            <item>
+                <widget class="QTabWidget" name="tabWidget">
+                    <property name="currentIndex">
+                        <number>0</number>
+                    </property>
+                    <widget class="QWidget" name="tab_stake">
+                        <attribute name="title">
+                            <string>&amp;Stake</string>
+                        </attribute>
+                        <layout class="QVBoxLayout" name="verticalLayoutTab1">
+                            <item>
+                                <widget class="QFrame" name="frameStakeInfo">
+                                    <property name="frameShape">
+                                        <enum>QFrame::StyledPanel</enum>
+                                    </property>
+                                    <property name="frameShadow">
+                                        <enum>QFrame::Raised</enum>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayoutTab1_1">
+                                        <property name="spacing">
+                                            <number>15</number>
+                                        </property>
+                                        <property name="leftMargin">
+                                            <number>15</number>
+                                        </property>
+                                        <property name="topMargin">
+                                            <number>15</number>
+                                        </property>
+                                        <property name="rightMargin">
+                                            <number>15</number>
+                                        </property>
+                                        <property name="bottomMargin">
+                                            <number>15</number>
+                                        </property>
+                                        <item>
+                                            <layout class="QGridLayout" name="gridLayout_2">
+                                                <property name="spacing">
+                                                    <number>6</number>
+                                                </property>
+                                                <item row="1" column="0">
+                                                    <widget class="QLabel" name="labelAssets">
+                                                        <property name="font">
+                                                            <font>
+                                                                <pointsize>17</pointsize>
+                                                                <bold>true</bold>
+                                                            </font>
+                                                        </property>
+                                                        <property name="cursor">
+                                                            <cursorShape>IBeamCursor</cursorShape>
+                                                        </property>
+                                                        <property name="toolTip">
+                                                            <string>Your current spendable balance</string>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string notr="true">0.000 000 00 BTC</string>
+                                                        </property>
+                                                        <property name="alignment">
+                                                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                        </property>
+                                                        <property name="textInteractionFlags">
+                                                            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="2" column="0">
+                                                    <widget class="QLabel" name="labelOwnedAssets">
+                                                        <property name="font">
+                                                            <font>
+                                                                <pointsize>10</pointsize>
+                                                                <bold>true</bold>
+                                                            </font>
+                                                        </property>
+                                                        <property name="cursor">
+                                                            <cursorShape>IBeamCursor</cursorShape>
+                                                        </property>
+                                                        <property name="toolTip">
+                                                            <string>Staking assets that this wallet owns</string>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string notr="true">0.000 000 00 BTC</string>
+                                                        </property>
+                                                        <property name="alignment">
+                                                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                        </property>
+                                                        <property name="textInteractionFlags">
+                                                            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="2" column="1">
+                                                    <widget class="QLabel" name="labelDelegations">
+                                                        <property name="font">
+                                                            <font>
+                                                                <pointsize>10</pointsize>
+                                                                <bold>true</bold>
+                                                            </font>
+                                                        </property>
+                                                        <property name="cursor">
+                                                            <cursorShape>IBeamCursor</cursorShape>
+                                                        </property>
+                                                        <property name="toolTip">
+                                                            <string>Staking assets from delegations</string>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string notr="true">0.000 000 00 BTC</string>
+                                                        </property>
+                                                        <property name="alignment">
+                                                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                        </property>
+                                                        <property name="textInteractionFlags">
+                                                            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="3" column="0" colspan="2">
+                                                    <widget class="Line" name="line">
+                                                        <property name="orientation">
+                                                            <enum>Qt::Horizontal</enum>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="4" column="0">
+                                                    <widget class="QLabel" name="labelAssetsImmatureText">
+                                                        <property name="sizePolicy">
+                                                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                                                                <horstretch>0</horstretch>
+                                                                <verstretch>0</verstretch>
+                                                            </sizepolicy>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>Immature:</string>
+                                                        </property>
+                                                        <property name="alignment">
+                                                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="4" column="1">
+                                                    <widget class="QLabel" name="labelAssetsImmature">
+                                                        <property name="cursor">
+                                                            <cursorShape>IBeamCursor</cursorShape>
+                                                        </property>
+                                                        <property name="toolTip">
+                                                            <string>Your immature balance</string>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string notr="true">0.000 000 00 BTC</string>
+                                                        </property>
+                                                        <property name="alignment">
+                                                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                        </property>
+                                                        <property name="textInteractionFlags">
+                                                            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="0" column="0">
+                                                    <widget class="QLabel" name="labelAssetsText">
+                                                        <property name="font">
+                                                            <font>
+                                                                <weight>75</weight>
+                                                                <bold>true</bold>
+                                                            </font>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>Staking assets</string>
+                                                        </property>
+                                                        <property name="alignment">
+                                                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="1" column="2">
+                                                    <spacer name="horizontalSpacer_2">
+                                                        <property name="orientation">
+                                                            <enum>Qt::Horizontal</enum>
+                                                        </property>
+                                                        <property name="sizeHint" stdset="0">
+                                                            <size>
+                                                                <width>40</width>
+                                                                <height>20</height>
+                                                            </size>
+                                                        </property>
+                                                    </spacer>
+                                                </item>
+                                                <item row="5" column="0">
+                                                    <widget class="QLabel" name="labelStakeText">
+                                                        <property name="sizePolicy">
+                                                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                                                                <horstretch>0</horstretch>
+                                                                <verstretch>0</verstretch>
+                                                            </sizepolicy>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>Stake:</string>
+                                                        </property>
+                                                        <property name="alignment">
+                                                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="5" column="1">
+                                                    <widget class="QLabel" name="labelStake">
+                                                        <property name="text">
+                                                            <string>0.000 000 00 BTC</string>
+                                                        </property>
+                                                        <property name="alignment">
+                                                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                        </property>
+                                                        <property name="textInteractionFlags">
+                                                            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="1" column="4">
+                                                    <widget class="QLabel" name="labelStaking">
+                                                        <property name="text">
+                                                            <string>Staking</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="1" column="5">
+                                                    <widget class="QSwitchControl" name="checkStake">
+                                                        <property name="enabled">
+                                                            <bool>false</bool>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                            </layout>
+                                        </item>
+                                        <item>
+                                            <widget class="Line" name="hLine">
+                                                <property name="orientation">
+                                                    <enum>Qt::Horizontal</enum>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <layout class="QGridLayout" name="gridLayout">
+                                                <property name="verticalSpacing">
+                                                    <number>6</number>
+                                                </property>
+                                                <item row="0" column="0">
+                                                    <layout class="QHBoxLayout" name="horizontalLayout">
+                                                        <property name="spacing">
+                                                            <number>6</number>
+                                                        </property>
+                                                        <item>
+                                                            <widget class="QLabel" name="labelHeightText">
+                                                                <property name="sizePolicy">
+                                                                    <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                                                                        <horstretch>0</horstretch>
+                                                                        <verstretch>0</verstretch>
+                                                                    </sizepolicy>
+                                                                </property>
+                                                                <property name="text">
+                                                                    <string>Block height:</string>
+                                                                </property>
+                                                                <property name="alignment">
+                                                                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                                </property>
+                                                            </widget>
+                                                        </item>
+                                                        <item>
+                                                            <widget class="QLabel" name="labelHeight">
+                                                                <property name="text">
+                                                                    <string>0</string>
+                                                                </property>
+                                                                <property name="alignment">
+                                                                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                                </property>
+                                                                <property name="textInteractionFlags">
+                                                                    <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                                                                </property>
+                                                            </widget>
+                                                        </item>
+                                                        <item>
+                                                            <spacer name="horizontalSpacer_4">
+                                                                <property name="orientation">
+                                                                    <enum>Qt::Horizontal</enum>
+                                                                </property>
+                                                                <property name="sizeType">
+                                                                    <enum>QSizePolicy::Minimum</enum>
+                                                                </property>
+                                                                <property name="sizeHint" stdset="0">
+                                                                    <size>
+                                                                        <width>0</width>
+                                                                        <height>0</height>
+                                                                    </size>
+                                                                </property>
+                                                            </spacer>
+                                                        </item>
+                                                    </layout>
+                                                </item>
+                                                <item row="0" column="1">
+                                                    <layout class="QHBoxLayout" name="horizontalLayout_3">
+                                                        <property name="spacing">
+                                                            <number>6</number>
+                                                        </property>
+                                                        <item>
+                                                            <widget class="QLabel" name="labelRewardText">
+                                                                <property name="sizePolicy">
+                                                                    <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                                                                        <horstretch>0</horstretch>
+                                                                        <verstretch>0</verstretch>
+                                                                    </sizepolicy>
+                                                                </property>
+                                                                <property name="text">
+                                                                    <string>Block reward:</string>
+                                                                </property>
+                                                                <property name="alignment">
+                                                                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                                </property>
+                                                            </widget>
+                                                        </item>
+                                                        <item>
+                                                            <widget class="QLabel" name="labelReward">
+                                                                <property name="text">
+                                                                    <string>6.25 BTC/Block</string>
+                                                                </property>
+                                                                <property name="alignment">
+                                                                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                                </property>
+                                                                <property name="textInteractionFlags">
+                                                                    <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                                                                </property>
+                                                            </widget>
+                                                        </item>
+                                                        <item>
+                                                            <spacer name="horizontalSpacer_6">
+                                                                <property name="orientation">
+                                                                    <enum>Qt::Horizontal</enum>
+                                                                </property>
+                                                                <property name="sizeType">
+                                                                    <enum>QSizePolicy::Minimum</enum>
+                                                                </property>
+                                                                <property name="sizeHint" stdset="0">
+                                                                    <size>
+                                                                        <width>0</width>
+                                                                        <height>0</height>
+                                                                    </size>
+                                                                </property>
+                                                            </spacer>
+                                                        </item>
+                                                    </layout>
+                                                </item>
+                                                <item row="0" column="2" rowspan="2">
+                                                    <spacer name="horizontalSpacer">
+                                                        <property name="orientation">
+                                                            <enum>Qt::Horizontal</enum>
+                                                        </property>
+                                                        <property name="sizeHint" stdset="0">
+                                                            <size>
+                                                                <width>40</width>
+                                                                <height>20</height>
+                                                            </size>
+                                                        </property>
+                                                    </spacer>
+                                                </item>
+                                                <item row="1" column="0">
+                                                    <layout class="QHBoxLayout" name="horizontalLayout_2">
+                                                        <property name="spacing">
+                                                            <number>6</number>
+                                                        </property>
+                                                        <item>
+                                                            <widget class="QLabel" name="labelWeightText">
+                                                                <property name="sizePolicy">
+                                                                    <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                                                                        <horstretch>0</horstretch>
+                                                                        <verstretch>0</verstretch>
+                                                                    </sizepolicy>
+                                                                </property>
+                                                                <property name="text">
+                                                                    <string>Network weight:</string>
+                                                                </property>
+                                                                <property name="alignment">
+                                                                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                                </property>
+                                                            </widget>
+                                                        </item>
+                                                        <item>
+                                                            <widget class="QLabel" name="labelWeight">
+                                                                <property name="text">
+                                                                    <string>0</string>
+                                                                </property>
+                                                                <property name="alignment">
+                                                                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                                </property>
+                                                                <property name="textInteractionFlags">
+                                                                    <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                                                                </property>
+                                                            </widget>
+                                                        </item>
+                                                        <item>
+                                                            <spacer name="horizontalSpacer_5">
+                                                                <property name="orientation">
+                                                                    <enum>Qt::Horizontal</enum>
+                                                                </property>
+                                                                <property name="sizeType">
+                                                                    <enum>QSizePolicy::Minimum</enum>
+                                                                </property>
+                                                                <property name="sizeHint" stdset="0">
+                                                                    <size>
+                                                                        <width>0</width>
+                                                                        <height>0</height>
+                                                                    </size>
+                                                                </property>
+                                                            </spacer>
+                                                        </item>
+                                                    </layout>
+                                                </item>
+                                                <item row="1" column="1">
+                                                    <layout class="QHBoxLayout" name="horizontalLayout_4">
+                                                        <property name="spacing">
+                                                            <number>6</number>
+                                                        </property>
+                                                        <item>
+                                                            <widget class="QLabel" name="labelROIText">
+                                                                <property name="sizePolicy">
+                                                                    <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                                                                        <horstretch>0</horstretch>
+                                                                        <verstretch>0</verstretch>
+                                                                    </sizepolicy>
+                                                                </property>
+                                                                <property name="text">
+                                                                    <string>Expected annualized ROI:</string>
+                                                                </property>
+                                                                <property name="alignment">
+                                                                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                                </property>
+                                                            </widget>
+                                                        </item>
+                                                        <item>
+                                                            <widget class="QLabel" name="labelROI">
+                                                                <property name="text">
+                                                                    <string>7.9 %</string>
+                                                                </property>
+                                                                <property name="alignment">
+                                                                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                                </property>
+                                                                <property name="textInteractionFlags">
+                                                                    <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                                                                </property>
+                                                            </widget>
+                                                        </item>
+                                                        <item>
+                                                            <spacer name="horizontalSpacer_7">
+                                                                <property name="orientation">
+                                                                    <enum>Qt::Horizontal</enum>
+                                                                </property>
+                                                                <property name="sizeType">
+                                                                    <enum>QSizePolicy::Minimum</enum>
+                                                                </property>
+                                                                <property name="sizeHint" stdset="0">
+                                                                    <size>
+                                                                        <width>0</width>
+                                                                        <height>0</height>
+                                                                    </size>
+                                                                </property>
+                                                            </spacer>
+                                                        </item>
+                                                    </layout>
+                                                </item>
+                                            </layout>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                            <item>
+                                <spacer name="verticalSpacer">
+                                    <property name="orientation">
+                                        <enum>Qt::Vertical</enum>
+                                    </property>
+                                    <property name="sizeType">
+                                        <enum>QSizePolicy::Fixed</enum>
+                                    </property>
+                                    <property name="sizeHint" stdset="0">
+                                        <size>
+                                            <width>20</width>
+                                            <height>10</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                            </item>
+                            <item>
+                                <widget class="QFrame" name="frameStakeRecords">
+                                    <property name="frameShape">
+                                        <enum>QFrame::StyledPanel</enum>
+                                    </property>
+                                    <property name="frameShadow">
+                                        <enum>QFrame::Raised</enum>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayout_2">
+                                        <item>
+                                            <widget class="QLabel" name="labelRecordsText">
+                                                <property name="font">
+                                                    <font>
+                                                        <weight>75</weight>
+                                                        <bold>true</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Stake records</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                        </layout>
+                    </widget>
+                    <widget class="QWidget" name="tab_create_delegation">
+                        <attribute name="title">
+                            <string>&amp;Delegate</string>
+                        </attribute>
+                        <layout class="QVBoxLayout" name="verticalLayoutTab2">
+                            <property name="spacing">
+                                <number>0</number>
+                            </property>
+                            <property name="leftMargin">
+                                <number>0</number>
+                            </property>
+                            <property name="topMargin">
+                                <number>0</number>
+                            </property>
+                            <property name="rightMargin">
+                                <number>0</number>
+                            </property>
+                            <property name="bottomMargin">
+                                <number>0</number>
+                            </property>
+                        </layout>
+                    </widget>
+                    <widget class="QWidget" name="tab_my_delegations">
+                        <attribute name="title">
+                            <string>&amp;My Delegations</string>
+                        </attribute>
+                        <layout class="QVBoxLayout" name="verticalLayoutTab3">
+                            <item>
+                                <widget class="QFrame" name="frameDelegationsInfo">
+                                    <property name="frameShape">
+                                        <enum>QFrame::StyledPanel</enum>
+                                    </property>
+                                    <property name="frameShadow">
+                                        <enum>QFrame::Raised</enum>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayoutTab3_1">
+                                        <property name="spacing">
+                                            <number>15</number>
+                                        </property>
+                                        <property name="leftMargin">
+                                            <number>15</number>
+                                        </property>
+                                        <property name="topMargin">
+                                            <number>15</number>
+                                        </property>
+                                        <property name="rightMargin">
+                                            <number>15</number>
+                                        </property>
+                                        <property name="bottomMargin">
+                                            <number>15</number>
+                                        </property>
+                                        <item>
+                                            <layout class="QGridLayout" name="gridLayout_3">
+                                                <property name="spacing">
+                                                    <number>6</number>
+                                                </property>
+                                                <item row="0" column="0">
+                                                    <widget class="QLabel" name="labelDelegatedAssetsText">
+                                                        <property name="font">
+                                                            <font>
+                                                                <weight>75</weight>
+                                                                <bold>true</bold>
+                                                            </font>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>Delegated assets</string>
+                                                        </property>
+                                                        <property name="alignment">
+                                                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="1" column="0">
+                                                    <widget class="QLabel" name="labelDelegatedAssets">
+                                                        <property name="font">
+                                                            <font>
+                                                                <pointsize>17</pointsize>
+                                                                <bold>true</bold>
+                                                            </font>
+                                                        </property>
+                                                        <property name="cursor">
+                                                            <cursorShape>IBeamCursor</cursorShape>
+                                                        </property>
+                                                        <property name="toolTip">
+                                                            <string>Your current delegated balance</string>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string notr="true">0.000 000 00 BTC</string>
+                                                        </property>
+                                                        <property name="alignment">
+                                                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                                        </property>
+                                                        <property name="textInteractionFlags">
+                                                            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                            </layout>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                            <item>
+                                <spacer name="verticalSpacer3">
+                                    <property name="orientation">
+                                        <enum>Qt::Vertical</enum>
+                                    </property>
+                                    <property name="sizeType">
+                                        <enum>QSizePolicy::Fixed</enum>
+                                    </property>
+                                    <property name="sizeHint" stdset="0">
+                                        <size>
+                                            <width>20</width>
+                                            <height>10</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                            </item>
+                            <item>
+                                <widget class="QFrame" name="frameTabMyDelegations">
+                                    <property name="frameShape">
+                                        <enum>QFrame::StyledPanel</enum>
+                                    </property>
+                                    <property name="frameShadow">
+                                        <enum>QFrame::Raised</enum>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayout_3">
+                                        <item>
+                                            <widget class="QLabel" name="labelMyDelegationsText">
+                                                <property name="font">
+                                                    <font>
+                                                        <weight>75</weight>
+                                                        <bold>true</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>My delegations</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                        </layout>
+                    </widget>
+                    <widget class="QWidget" name="tab_received_delegations">
+                        <attribute name="title">
+                            <string>&amp;Received Delegations</string>
+                        </attribute>
+                        <layout class="QVBoxLayout" name="verticalLayoutTab4">
+                            <item>
+                                <widget class="QFrame" name="frameTabReceivedDelegations">
+                                    <property name="frameShape">
+                                        <enum>QFrame::StyledPanel</enum>
+                                    </property>
+                                    <property name="frameShadow">
+                                        <enum>QFrame::Raised</enum>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayout_4">
+                                        <item>
+                                            <layout class="QHBoxLayout" name="horizontalLayout_6">
+                                                <item>
+                                                    <widget class="QPushButton" name="newAddressButton">
+                                                        <property name="minimumSize">
+                                                            <size>
+                                                                <width>150</width>
+                                                                <height>0</height>
+                                                            </size>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>&amp;Create new staking address</string>
+                                                        </property>
+                                                        <property name="icon">
+                                                            <iconset resource="../bitcoin.qrc">
+                                                                <normaloff>:/icons/receiving_addresses</normaloff>:/icons/receiving_addresses</iconset>
+                                                        </property>
+                                                        <property name="autoDefault">
+                                                            <bool>false</bool>
+                                                        </property>
+                                                        <property name="default">
+                                                            <bool>true</bool>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item>
+                                                    <widget class="QLabel" name="newAddressLabelLabel">
+                                                        <property name="text">
+                                                            <string> with label:</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item>
+                                                    <widget class="QLineEdit" name="newAddressLabel">
+                                                        <property name="toolTip">
+                                                            <string>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                            </layout>
+                                        </item>
+                                        <item>
+                                            <widget class="QLabel" name="labelColdStakeDelegationsText">
+                                                <property name="font">
+                                                    <font>
+                                                        <weight>75</weight>
+                                                        <bold>true</bold>
+                                                    </font>
+                                                </property>
+                                                <property name="text">
+                                                    <string>ColdStake delegations</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                        </layout>
+                    </widget>
+                </widget>
+            </item>
+        </layout>
+    </widget>
+    <customwidgets>
+        <customwidget>
+            <class>QSwitchControl</class>
+            <extends>QCheckBox</extends>
+            <header>qt/qswitchcontrol.h</header>
+        </customwidget>
+    </customwidgets>
+    <resources/>
+    <connections/>
+</ui>

@@ -103,7 +103,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     //
     // From
     //
-    if (wtx.is_coinbase)
+    if (wtx.is_coinbase || wtx.is_coinstake)
     {
         strHTML += "<b>" + tr("Source") + ":</b> " + tr("Generated") + "<br>";
     }
@@ -157,7 +157,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     //
     // Amount
     //
-    if (wtx.is_coinbase && nCredit == 0)
+    if ((wtx.is_coinbase || wtx.is_coinstake) && nCredit == 0)
     {
         //
         // Coinbase
@@ -174,10 +174,27 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     }
     else if (nNet > 0)
     {
-        //
-        // Credit
-        //
-        strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nNet) + "<br>";
+        if (wtx.is_coinstake)
+        {
+            //
+            // Credit
+            //
+            strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nCredit);
+            if (status.blocks_to_maturity > 0)
+                strHTML += " (" + tr("matures in %n more block(s)", "", status.blocks_to_maturity) + ")";
+            strHTML += "<br>";
+            //
+            // Debit
+            //
+            strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -nDebit) + "<br>";
+        }
+        else
+        {
+            //
+            // Credit
+            //
+            strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nNet) + "<br>";
+        }
     }
     else
     {

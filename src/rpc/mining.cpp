@@ -36,6 +36,12 @@
 #include <versionbitsinfo.h>
 #include <warnings.h>
 
+#ifdef ENABLE_WALLET
+#include <wallet/wallet.h>
+#include <wallet/walletdb.h>
+#include <wallet/rpcwallet.h>
+#endif
+
 #include <memory>
 #include <stdint.h>
 
@@ -55,7 +61,7 @@ static UniValue GetNetworkHashPS(int lookup, int height) {
 
     // If lookup is -1, then use blocks since last difficulty change.
     if (lookup <= 0)
-        lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval() + 1;
+        lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval(pb->nHeight) + 1;
 
     // If lookup is larger than chain, then set it to chain length.
     if (lookup > pb->nHeight)
@@ -291,6 +297,7 @@ static RPCHelpMan generatetoaddress()
     };
 }
 
+
 static RPCHelpMan generateblock()
 {
     return RPCHelpMan{"generateblock",
@@ -427,12 +434,40 @@ static RPCHelpMan getmininginfo()
     const CTxMemPool& mempool = EnsureMemPool(request.context);
 
     UniValue obj(UniValue::VOBJ);
+    UniValue diff(UniValue::VOBJ);
+    UniValue weight(UniValue::VOBJ);
+
     obj.pushKV("blocks",           (int)::ChainActive().Height());
     if (BlockAssembler::m_last_block_weight) obj.pushKV("currentblockweight", *BlockAssembler::m_last_block_weight);
     if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
-    obj.pushKV("difficulty",       (double)GetDifficulty(::ChainActive().Tip()));
+
+    uint64_t nWeight = 0;
+    uint64_t lastCoinStakeSearchInterval = 0;
+#ifdef ENABLE_WALLET
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+    if (pwallet)
+    {
+        LOCK(pwallet->cs_wallet);
+        nWeight = pwallet->GetStakeWeight();
+        lastCoinStakeSearchInterval = pwallet->m_last_coin_stake_search_interval;
+    }
+#endif
+    diff.pushKV("proof-of-work",   (double)GetDifficulty(GetLastBlockIndex(::ChainActive().Tip(), false)));
+    diff.pushKV("proof-of-stake",  (double)GetDifficulty(GetLastBlockIndex(::ChainActive().Tip(), true)));
+    diff.pushKV("search-interval", (int)lastCoinStakeSearchInterval);
+    obj.pushKV("difficulty",       diff);
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+    obj.pushKV("blockvalue",    (uint64_t)GetBlockSubsidy(::ChainActive().Height(), consensusParams));
+    obj.pushKV("netmhashps",       GetPoWMHashPS());
+    obj.pushKV("netstakeweight",   GetPoSKernelPS());
+    obj.pushKV("errors",           GetWarnings("statusbar").original);
     obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));
     obj.pushKV("pooledtx",         (uint64_t)mempool.size());
+    weight.pushKV("minimum",       (uint64_t)nWeight);
+    weight.pushKV("maximum",       (uint64_t)0);
+    weight.pushKV("combined",      (uint64_t)nWeight);
+    obj.pushKV("stakeweight",      weight);
     obj.pushKV("chain",            Params().NetworkIDString());
     obj.pushKV("warnings",         GetWarnings(false).original);
     return obj;
@@ -440,6 +475,142 @@ static RPCHelpMan getmininginfo()
     };
 }
 
+static UniValue getstakinginfo(const JSONRPCRequest& request)
+{
+            RPCHelpMan{"getstakinginfo",
+                "\nReturns an object containing staking-related information.",
+                {},
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::BOOL, "enabled", "'true' if staking is enabled"},
+                        {RPCResult::Type::BOOL, "staking", "'true' if wallet is currently staking"},
+                        {RPCResult::Type::STR,  "errors", "errors"},
+                        {RPCResult::Type::NUM,  "pooledtx", "The size of the mempool"},
+                        {RPCResult::Type::NUM,  "difficulty", "The current difficulty"},
+                        {RPCResult::Type::NUM,  "search-interval", "The size of the mempool"},
+                        {RPCResult::Type::NUM,  "weight", "The size of the mempool"},
+                        {RPCResult::Type::NUM,  "netstakeweight", "The size of the mempool"},
+                        {RPCResult::Type::NUM,  "expectedtime", "The size of the mempool"},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("getstakinginfo", "")
+            + HelpExampleRpc("getstakinginfo", "")
+                },
+            }.Check(request);
+
+    LOCK(cs_main);
+    const CTxMemPool& mempool = EnsureMemPool(request.context);
+
+    uint64_t nWeight = 0;
+    uint64_t lastCoinStakeSearchInterval = 0;
+#ifdef ENABLE_WALLET
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (pwallet)
+    {
+        LOCK(pwallet->cs_wallet);
+        nWeight = pwallet->GetStakeWeight();
+        lastCoinStakeSearchInterval = pwallet->m_enabled_staking ? pwallet->m_last_coin_stake_search_interval : 0;
+    }
+#endif
+
+    uint64_t nNetworkWeight = GetPoSKernelPS();
+    bool staking = lastCoinStakeSearchInterval && nWeight;
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+    int64_t nTargetSpacing = consensusParams.nPowTargetSpacing;
+    uint64_t nExpectedTime = staking ? (nTargetSpacing * nNetworkWeight / nWeight) : 0;
+
+    UniValue obj(UniValue::VOBJ);
+
+    obj.pushKV("enabled", gArgs.GetBoolArg("-staking", true));
+    obj.pushKV("staking", staking);
+    obj.pushKV("errors", GetWarnings("statusbar").original);
+
+    if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
+    obj.pushKV("pooledtx", (uint64_t)mempool.size());
+
+    obj.pushKV("difficulty", GetDifficulty(GetLastBlockIndex(pindexBestHeader, true)));
+    obj.pushKV("search-interval", (int)lastCoinStakeSearchInterval);
+
+    obj.pushKV("weight", (uint64_t)nWeight);
+    obj.pushKV("netstakeweight", (uint64_t)nNetworkWeight);
+
+    obj.pushKV("expectedtime", nExpectedTime);
+
+    return obj;
+}
+
+static UniValue getstakingstatus(const JSONRPCRequest& request)
+{
+            RPCHelpMan{"getstakingstatus",
+                "\nReturns an object containing staking status information.",
+                {},
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::BOOL, "enabled", "'true' if staking is enabled"},
+                        {RPCResult::Type::BOOL, "staking", "'true' if wallet is currently staking"},
+                        {RPCResult::Type::BOOL, "walletstakingenabled", "'true' if wallet is has staking enabled"},
+                        {RPCResult::Type::NUM,  "stakesearchinterval", "last coin stake interval"},
+                        {RPCResult::Type::BOOL, "walletunlocked", "'true' if wallet is unlocked"},
+                        {RPCResult::Type::BOOL, "nodeconnections", "'true' if wallet is online (has connections)"},
+                        {RPCResult::Type::BOOL, "nodesynced", "'true' if wallet is synced"},
+                        {RPCResult::Type::BOOL, "stakeablecoins", "'true' if there are stakeable coins"},
+                        {RPCResult::Type::STR,  "errors", "errors"},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("getstakingstatus", "")
+            + HelpExampleRpc("getstakingstatus", "")
+                },
+            }.Check(request);
+
+    LOCK(cs_main);
+
+    NodeContext& node = EnsureNodeContext(request.context);
+    if(!node.connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    uint64_t nWeight = 0;
+    uint64_t lastCoinStakeSearchInterval = 0;
+    bool isUnlocked = false;
+    bool walletStakingEnabled = false;
+#ifdef ENABLE_WALLET
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (pwallet)
+    {
+        LOCK(pwallet->cs_wallet);
+        nWeight = pwallet->GetStakeWeight();
+        lastCoinStakeSearchInterval = pwallet->m_last_coin_stake_search_interval;
+        isUnlocked = !pwallet->IsLocked();
+        walletStakingEnabled = pwallet->m_enabled_staking;
+    }
+#endif
+
+    bool staking = walletStakingEnabled && lastCoinStakeSearchInterval && nWeight;
+    bool hasConnections = node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL) >= 4;
+    bool isSynced = !::ChainstateActive().IsInitialBlockDownload();
+    bool hasCoins = nWeight != 0;
+
+    UniValue obj(UniValue::VOBJ);
+
+    obj.pushKV("enabled", gArgs.GetBoolArg("-staking", true));
+    obj.pushKV("staking", staking);
+    obj.pushKV("walletstakingenabled", walletStakingEnabled);
+    obj.pushKV("stakesearchinterval", lastCoinStakeSearchInterval);
+    obj.pushKV("walletunlocked", isUnlocked);
+    obj.pushKV("nodeconnections", hasConnections);
+    obj.pushKV("nodesynced", isSynced);
+    obj.pushKV("stakeablecoins", hasCoins);
+    obj.pushKV("errors", GetWarnings("statusbar").original);
+
+    return obj;
+}
 
 // NOTE: Unlike wallet RPC (which use BTC values), mining RPCs follow GBT (BIP 22) in using satoshi amounts
 static RPCHelpMan prioritisetransaction()
@@ -741,7 +912,7 @@ static RPCHelpMan getblocktemplate()
 
         // Create new block
         CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = BlockAssembler(mempool, Params()).CreateNewBlock(scriptDummy);
+        pblocktemplate = BlockAssembler(mempool, Params()).CreateNewBlock(scriptDummy, ::ChainActive().Tip()->nHeight>=Params().GetConsensus().nLastPOWBlock? true : false);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
@@ -1222,6 +1393,8 @@ static const CRPCCommand commands[] =
     { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },
     { "mining",             "submitheader",           &submitheader,           {"hexdata"} },
 
+    { "mining",             "getstakinginfo",         &getstakinginfo,         {} },
+    { "mining",             "getstakingstatus",       &getstakingstatus,       {} },
 
     { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
     { "generating",         "generatetodescriptor",   &generatetodescriptor,   {"num_blocks","descriptor","maxtries"} },

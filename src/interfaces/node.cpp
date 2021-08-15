@@ -235,6 +235,35 @@ public:
     {
         return *Assert(m_context->wallet_client);
     }
+    void getSyncInfo(int& numBlocks, bool& isSyncing) override
+    {
+        LOCK(::cs_main);
+        // Get node synchronization information with minimal locks
+        numBlocks = ::ChainActive().Height();
+        int64_t blockTime = ::ChainActive().Tip() ? ::ChainActive().Tip()->GetBlockTime() :
+                                                  Params().GenesisBlock().GetBlockTime();
+        int64_t secs = GetTime() - blockTime;
+        isSyncing = secs >= 10 * Params().GetConsensus().nPowTargetSpacing ? true : false;
+    }
+    int64_t getBlockSubsidy(int nHeight) override
+    {
+        const CChainParams& chainparams = Params();
+        return GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+    }
+    uint64_t getNetworkStakeWeight() override
+    {
+        LOCK(::cs_main);
+        return GetPoSKernelPS();
+    }
+    double getEstimatedAnnualROI() override
+    {
+        LOCK(::cs_main);
+        return GetEstimatedAnnualROI();
+    }
+    int64_t getMoneySupply() override
+    {
+        return pindexBestHeader ? pindexBestHeader->nMoneySupply : 0;
+    }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
         return MakeHandler(::uiInterface.InitMessage_connect(fn));

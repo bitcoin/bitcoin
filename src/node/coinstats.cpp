@@ -28,11 +28,11 @@ static void ApplyStats(CCoinsStats& stats, CHashWriter& ss, const uint256& hash,
 {
     assert(!outputs.empty());
     ss << hash;
-    ss << VARINT(outputs.begin()->second.nHeight * 2 + outputs.begin()->second.fCoinBase ? 1u : 0u);
+    ss << VARINT((outputs.begin()->second.nHeight << 2) + (outputs.begin()->second.fCoinBase ? 1u : 0u) + (outputs.begin()->second.fCoinStake ? 2u : 0u));
     stats.nTransactions++;
     for (const auto& output : outputs) {
         ss << VARINT(output.first + 1);
-        ss << output.second.out.scriptPubKey;
+        ss << *(const CScriptBase*)(&output.second.out.scriptPubKey);
         ss << VARINT_MODE(output.second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
         stats.nTransactionOutputs++;
         stats.nTotalAmount += output.second.out.nValue;

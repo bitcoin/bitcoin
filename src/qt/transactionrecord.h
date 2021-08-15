@@ -7,6 +7,8 @@
 
 #include <amount.h>
 #include <uint256.h>
+#include <script/script.h>
+#include <wallet/wallet.h>
 
 #include <QList>
 #include <QString>
@@ -80,35 +82,55 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
+        StakeDelegated, // Received cold stake (owner)
+        SpentStakeDelegated, // Received cold stake (owner) - spent output
+        StakeHot, // Staked via a delegated P2CS.
+        P2CSDelegation, // Non-spendable P2CS, staker side.
+        P2CSDelegationSent, // Non-spendable P2CS delegated utxo. (coin-owner transferred ownership to external wallet)
+        P2CSSpentDelegationSent, // Non-spendable P2CS delegated utxo. (coin-owner transferred ownership to external wallet) - spent output
+        P2CSDelegationSentOwner, // Spendable P2CS delegated utxo. (coin-owner)
+        P2CSSpentDelegationSentOwner, // Spendable P2CS delegated utxo. (coin-owner) - spent output
+        P2CSUnlockOwner, // Coin-owner spent the delegated utxo
+        P2CSUnlockStaker // Staker watching the owner spent the delegated utxo
     };
 
     /** Number of confirmation recommended for accepting a transaction */
     static const int RecommendedNumConfirmations = 6;
 
     TransactionRecord():
-            hash(), time(0), type(Other), address(""), debit(0), credit(0), idx(0)
+            hash(), time(0), type(Other), address(""), debit(0), credit(0), delegated(0), idx(0)
     {
     }
 
     TransactionRecord(uint256 _hash, qint64 _time):
             hash(_hash), time(_time), type(Other), address(""), debit(0),
-            credit(0), idx(0)
+            credit(0), delegated(0), idx(0)
     {
     }
 
     TransactionRecord(uint256 _hash, qint64 _time,
                 Type _type, const std::string &_address,
                 const CAmount& _debit, const CAmount& _credit):
-            hash(_hash), time(_time), type(_type), address(_address), debit(_debit), credit(_credit),
+            hash(_hash), time(_time), type(_type), address(_address), debit(_debit), credit(_credit), delegated(0),
             idx(0)
     {
     }
 
     /** Decompose CWallet transaction to model transaction records.
      */
-    static bool showTransaction();
-    static QList<TransactionRecord> decomposeTransaction(const interfaces::WalletTx& wtx);
+    static bool showTransaction(const interfaces::WalletTx& wtx);
+    static QList<TransactionRecord> decomposeTransaction(const CWallet* wallet, const interfaces::WalletTx& wtx);
+
+    static bool decomposeP2CS(const CWallet* wallet, const CWalletTx* wtx, const CAmount& nCredit,
+                                const CAmount& nDebit, QList<TransactionRecord>& parts);
+
+    static void loadHotOrColdStakeOrContract(const CWallet* wallet, const CWalletTx* wtx,
+                                            TransactionRecord& record, bool isContract = false);
+
+    static void loadUnlockColdStake(const CWallet* wallet, const CWalletTx* wtx, TransactionRecord& record);
+
+    static bool ExtractAddress(const CScript& scriptPubKey, bool fColdStake, std::string& addressStr);
 
     /** @name Immutable transaction attributes
       @{*/
@@ -118,6 +140,7 @@ public:
     std::string address;
     CAmount debit;
     CAmount credit;
+    CAmount delegated;
     /**@}*/
 
     /** Subtransaction index, for sort key */

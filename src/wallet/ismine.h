@@ -21,7 +21,12 @@ enum isminetype : unsigned int
     ISMINE_WATCH_ONLY = 1 << 0,
     ISMINE_SPENDABLE  = 1 << 1,
     ISMINE_USED       = 1 << 2,
-    ISMINE_ALL        = ISMINE_WATCH_ONLY | ISMINE_SPENDABLE,
+    //! Indicates that we have the staking key of a P2CS
+    ISMINE_COLD       = 1 << 3,
+    //! Indicates that we have the spending key of a P2CS
+    ISMINE_SPENDABLE_DELEGATED = 1 << 4,
+    ISMINE_SPENDABLE_ALL = ISMINE_SPENDABLE_DELEGATED | ISMINE_SPENDABLE,
+    ISMINE_ALL        = ISMINE_WATCH_ONLY | ISMINE_SPENDABLE | ISMINE_COLD | ISMINE_SPENDABLE_DELEGATED,
     ISMINE_ALL_USED   = ISMINE_ALL | ISMINE_USED,
     ISMINE_ENUM_ELEMENTS,
 };

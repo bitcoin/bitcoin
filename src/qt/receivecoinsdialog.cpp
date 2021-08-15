@@ -8,6 +8,7 @@
 #include <qt/forms/ui_receivecoinsdialog.h>
 
 #include <qt/addresstablemodel.h>
+#include <qt/bitcoinaddresstypes.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/receiverequestdialog.h>
@@ -92,10 +93,15 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
         // Last 2 columns are set by the columnResizingFixer, when the table geometry is ready.
         columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, AMOUNT_MINIMUM_COLUMN_WIDTH, DATE_COLUMN_WIDTH, this);
 
+        ui->addressTypeSelector->setModel(new BitcoinAddressTypes(this));
+        
+        // user explicitly set the type, use it
         if (model->wallet().getDefaultAddressType() == OutputType::BECH32) {
-            ui->useBech32->setCheckState(Qt::Checked);
+            ui->addressTypeSelector->setCurrentIndex(BitcoinAddressType::NATIVE_SEGWIT);
+        } else if (model->wallet().getDefaultAddressType() == OutputType::P2SH_SEGWIT){
+            ui->addressTypeSelector->setCurrentIndex(BitcoinAddressType::NESTED_SEGWIT);
         } else {
-            ui->useBech32->setCheckState(Qt::Unchecked);
+            ui->addressTypeSelector->setCurrentIndex(BitcoinAddressType::LEGACY);
         }
 
         // Set the button to be enabled or disabled based on whether the wallet can give out new addresses.
@@ -148,13 +154,13 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     QString label = ui->reqLabel->text();
     /* Generate new receiving address */
     OutputType address_type;
-    if (ui->useBech32->isChecked()) {
+    BitcoinAddressType address_type_selected = (BitcoinAddressType)ui->addressTypeSelector->currentIndex();
+    if (BitcoinAddressType::NATIVE_SEGWIT == address_type_selected) {
         address_type = OutputType::BECH32;
+    } else if (BitcoinAddressType::NESTED_SEGWIT == address_type_selected) {
+        address_type = OutputType::P2SH_SEGWIT;
     } else {
-        address_type = model->wallet().getDefaultAddressType();
-        if (address_type == OutputType::BECH32) {
-            address_type = OutputType::P2SH_SEGWIT;
-        }
+        address_type = OutputType::LEGACY;
     }
     address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", address_type);
 

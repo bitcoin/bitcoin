@@ -175,6 +175,21 @@ public:
     //! Get wallet client.
     virtual WalletClient& walletClient() = 0;
 
+    //! Get node synchronization information.
+    virtual void getSyncInfo(int& numBlocks, bool& isSyncing) = 0;
+
+    //! Get the reward for the block at some specific height
+    virtual int64_t getBlockSubsidy(int nHeight) = 0;
+
+    //! Get the network stake weight
+    virtual uint64_t getNetworkStakeWeight() = 0;
+
+    //! Get the estimated annual roi
+    virtual double getEstimatedAnnualROI() = 0;
+
+    //! Get the money supply
+    virtual int64_t getMoneySupply() = 0;
+
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;
     virtual std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) = 0;

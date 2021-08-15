@@ -8,6 +8,7 @@
 #include <interfaces/wallet.h>
 #include <key_io.h>
 #include <wallet/ismine.h>
+#include <wallet/wallet.h>
 
 #include <stdint.h>
 
@@ -15,17 +16,20 @@
 
 /* Return positive answer if transaction should be shown in list.
  */
-bool TransactionRecord::showTransaction()
+bool TransactionRecord::showTransaction(const interfaces::WalletTx& wtx)
 {
-    // There are currently no cases where we hide transactions, but
-    // we may want to use this in the future for things like RBF.
+    // Ensures we show generated coins / mined transactions at depth 1
+    if((wtx.is_coinbase || wtx.is_coinstake) && !wtx.is_in_main_chain)
+    {
+        return false;
+    }
     return true;
 }
 
 /*
  * Decompose CWallet transaction to model transaction records.
  */
-QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interfaces::WalletTx& wtx)
+QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet* wallet, const interfaces::WalletTx& wtx)
 {
     QList<TransactionRecord> parts;
     int64_t nTime = wtx.time;
@@ -35,7 +39,15 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     uint256 hash = wtx.tx->GetHash();
     std::map<std::string, std::string> mapValue = wtx.value_map;
 
-    if (nNet > 0 || wtx.is_coinbase)
+    {
+        LOCK(wallet->cs_wallet);
+        // Decompose cold staking related transactions
+        if (decomposeP2CS(wallet, wallet->GetWalletTx(hash), nCredit, nDebit, parts)) {
+            return parts;
+        }
+    }
+
+    if (nNet > 0 || wtx.is_coinbase || wtx.is_coinstake)
     {
         //
         // Credit
@@ -47,8 +59,16 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
             if(mine)
             {
                 TransactionRecord sub(hash, nTime);
-                sub.idx = i; // vout index
-                sub.credit = txout.nValue;
+                if(wtx.is_coinstake) // Combine into single output for coinstake
+                {
+                    sub.idx = 1; // vout index
+                    sub.credit = nNet;
+                }
+                else
+                {
+                    sub.idx = i; // vout index
+                    sub.credit = txout.nValue;
+                }
                 sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
                 if (wtx.txout_address_is_mine[i])
                 {
@@ -62,13 +82,16 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                     sub.type = TransactionRecord::RecvFromOther;
                     sub.address = mapValue["from"];
                 }
-                if (wtx.is_coinbase)
+                if (wtx.is_coinbase || wtx.is_coinstake)
                 {
                     // Generated
                     sub.type = TransactionRecord::Generated;
                 }
 
                 parts.append(sub);
+
+                if(wtx.is_coinstake)
+                    break; // Single output for coinstake
             }
         }
     }
@@ -161,6 +184,131 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     return parts;
 }
 
+bool TransactionRecord::decomposeP2CS(const CWallet* wallet, const CWalletTx* wtx,
+                                           const CAmount& nCredit, const CAmount& nDebit,
+                                           QList<TransactionRecord>& parts)
+{
+    if (wtx->HasP2CSOutputs()) {
+        // Delegate tx.
+        TransactionRecord sub(wtx->GetHash(), wtx->GetTxTime());
+        sub.credit = nCredit;
+        sub.debit = -nDebit;
+        loadHotOrColdStakeOrContract(wallet, wtx, sub, !wtx->IsCoinStake());
+        parts.append(sub);
+        return true;
+    } else if (wtx->HasP2CSInputs()) {
+        // Delegation unlocked
+        TransactionRecord sub(wtx->GetHash(), wtx->GetTxTime());
+        loadUnlockColdStake(wallet, wtx, sub);
+        parts.append(sub);
+        return true;
+    }
+    return false;
+}
+
+void TransactionRecord::loadUnlockColdStake(const CWallet* wallet, const CWalletTx* wtx, TransactionRecord& record)
+{
+    record.involvesWatchAddress = false;
+
+    // Get the p2cs
+    const CScript* p2csScript = nullptr;
+    bool isSpendable = false;
+
+    for (const auto &input : wtx->tx->vin) {
+        const CWalletTx* wallettx = wallet->GetWalletTx(input.prevout.hash);
+        if (wallettx && wallettx->tx->vout[input.prevout.n].scriptPubKey.IsPayToColdStaking()) {
+            p2csScript = &wallettx->tx->vout[input.prevout.n].scriptPubKey;
+            isSpendable = wallet->IsMine(input) & ISMINE_SPENDABLE_ALL;
+            break;
+        }
+    }
+
+    if (isSpendable) {
+        // owner unlocked the cold stake
+        record.type = TransactionRecord::P2CSUnlockOwner;
+        record.debit = -(wtx->GetStakeDelegationDebit());
+        record.credit = wtx->GetCredit(ISMINE_ALL);
+    } else {
+        // hot node watching the unlock
+        record.type = TransactionRecord::P2CSUnlockStaker;
+        record.debit = -(wtx->GetColdStakingDebit());
+        record.credit = -(wtx->GetColdStakingCredit());
+    }
+
+    // Extract and set the owner address
+    if (p2csScript) {
+        ExtractAddress(*p2csScript, false, record.address);
+    }
+}
+
+void TransactionRecord::loadHotOrColdStakeOrContract(
+        const CWallet* wallet,
+        const CWalletTx* wtx,
+        TransactionRecord& record,
+        bool isContract)
+{
+    record.involvesWatchAddress = false;
+
+    // Get the p2cs
+    CTxOut p2csUtxo;
+    unsigned int p2csUtxoIndex = 0;
+    for (const auto & txout : wtx->tx->vout) {
+        if (txout.scriptPubKey.IsPayToColdStaking()) {
+            p2csUtxo = txout;
+            break;
+        }
+        p2csUtxoIndex++;
+    }
+
+    bool isSpendable = wallet->IsMine(p2csUtxo) & ISMINE_SPENDABLE_DELEGATED;
+    bool isFromMe = wtx->IsFromMe(ISMINE_ALL);
+    bool isSpent = wallet->IsSpent(wtx->GetHash(), p2csUtxoIndex);
+
+    if (isContract) {
+        if (isSpendable && isFromMe) {
+            // Wallet delegating balance
+            record.type = isSpent ? TransactionRecord::P2CSSpentDelegationSentOwner : TransactionRecord::P2CSDelegationSentOwner;
+            record.delegated = wtx->GetCredit(ISMINE_SPENDABLE_DELEGATED);
+        } else if (isFromMe){
+            // Wallet delegating balance and transfering ownership
+            record.type = isSpent ? TransactionRecord::P2CSSpentDelegationSent : TransactionRecord::P2CSDelegationSent;
+            record.delegated = wtx->GetCredit(ISMINE_SPENDABLE_DELEGATED);
+        } else {
+            // Wallet receiving a delegation
+            record.type = TransactionRecord::P2CSDelegation;
+        }
+    } else {
+        // Stake
+        if (isSpendable) {
+            // Offline wallet receiving an stake due a delegation
+            record.type = isSpent ? TransactionRecord::SpentStakeDelegated : TransactionRecord::StakeDelegated;
+            record.credit = wtx->GetCredit(ISMINE_SPENDABLE_DELEGATED);
+            record.debit = -(wtx->GetDebit(ISMINE_SPENDABLE_DELEGATED));
+            record.delegated = record.credit;
+        } else {
+            // Online wallet receiving an stake due to a received utxo delegation that won a block.
+            record.type = TransactionRecord::StakeHot;
+            record.credit = wtx->GetCredit(ISMINE_SPENDABLE);
+            record.debit = -(wtx->GetDebit(ISMINE_SPENDABLE));
+        }
+    }
+
+    // Extract and set the owner address
+    ExtractAddress(p2csUtxo.scriptPubKey, false, record.address);
+}
+
+bool TransactionRecord::ExtractAddress(const CScript& scriptPubKey, bool fColdStake, std::string& addressStr) {
+    CTxDestination address;
+    if (!ExtractDestination(scriptPubKey, address, NULL, fColdStake)) {
+        // this shouldn't happen..
+        addressStr = "No available address";
+        return false;
+    } else {
+        addressStr = EncodeDestination(address);
+        return true;
+    }
+}
+
 void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, const uint256& block_hash, int numBlocks, int64_t block_time)
 {
     // Determine transaction status
@@ -168,7 +316,7 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, cons
     // Sort order, unrecorded transactions sort to the top
     status.sortKey = strprintf("%010d-%01d-%010u-%03d",
         wtx.block_height,
-        wtx.is_coinbase ? 1 : 0,
+        (wtx.is_coinbase || wtx.is_coinstake) ? 1 : 0,
         wtx.time_received,
         idx);
     status.countsForBalance = wtx.is_trusted && !(wtx.blocks_to_maturity > 0);
@@ -188,7 +336,10 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, cons
         }
     }
     // For generated transactions, determine maturity
-    else if(type == TransactionRecord::Generated)
+    else if(type == TransactionRecord::Generated ||
+            type == TransactionRecord::StakeDelegated ||
+            type == TransactionRecord::SpentStakeDelegated ||
+            type == TransactionRecord::StakeHot)
     {
         if (wtx.blocks_to_maturity > 0)
         {

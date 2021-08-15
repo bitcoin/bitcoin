@@ -16,14 +16,38 @@
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
+#include <boost/thread.hpp>
 
 class CBlockIndex;
 class CChainParams;
 class CScript;
 
-namespace Consensus { struct Params; };
+namespace Consensus { struct Params; }
 
 static const bool DEFAULT_PRINTPRIORITY = false;
+
+//! Default for -staking
+static const bool DEFAULT_STAKE = true;
+
+//! Default for -coldstaking
+static const bool DEFAULT_COLDSTAKING = true;
+
+static const bool DEFAULT_STAKE_CACHE = true;
+
+//How many seconds to look ahead and prepare a block for staking
+//Look ahead up to 3 "timeslots" in the future, 48 seconds
+//Reduce this to reduce computational waste for stakers, increase this to increase the amount of time available to construct full blocks
+static const int32_t MAX_STAKE_LOOKAHEAD = 16 * 3;
+
+//How often to try to stake blocks in milliseconds
+//Note this is overridden for regtest mode
+static const int32_t STAKER_POLLING_PERIOD = 5000;
+
+//How much time to spend trying to process transactions when using the generate RPC call
+static const int32_t POW_MINER_MAX_TIME = 60;
+
+//When staking delegations, what percent of the reward goes to the staker
+static const int32_t COLD_STAKER_FEE = 7;
 
 struct CBlockTemplate
 {
@@ -158,7 +182,7 @@ public:
     explicit BlockAssembler(const CTxMemPool& mempool, const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
+    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, bool fProofOfStake = false, int64_t* pTotalFees = 0, int32_t nTime = 0, bool fAddTxs = true);
 
     static Optional<int64_t> m_last_block_num_txs;
     static Optional<int64_t> m_last_block_weight;
@@ -203,5 +227,10 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
 void RegenerateCommitments(CBlock& block);
+
+#ifdef ENABLE_WALLET
+/** Generate a new block, without valid proof-of-work */
+void StakeBTCs(bool fStake, CWallet *pwallet, CConnman* connman, ChainstateManager* chainman, CTxMemPool* mempool, boost::thread_group*& stakeThread);
+#endif
 
 #endif // BITCOIN_MINER_H

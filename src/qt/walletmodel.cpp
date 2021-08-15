@@ -35,6 +35,23 @@
 #include <QSet>
 #include <QTimer>
 
+class WalletWorker : public QObject
+{
+    Q_OBJECT
+public:
+    WalletModel *walletModel;
+    WalletWorker(WalletModel *_walletModel):
+        walletModel(_walletModel){}
+
+private Q_SLOTS:
+    void updateModel()
+    {
+        // Update the model with results of task that take more time to be completed
+        walletModel->checkStakeWeightChanged();
+    }
+};
+
+#include <qt/walletmodel.moc>
 
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, ClientModel& client_model, const PlatformStyle *platformStyle, QObject *parent) :
     QObject(parent),
@@ -46,12 +63,19 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, ClientModel
     transactionTableModel(nullptr),
     recentRequestsTableModel(nullptr),
     cachedEncryptionStatus(Unencrypted),
-    timer(new QTimer(this))
+    timer(new QTimer(this)),
+    worker(nullptr),
+    nWeight(0),
+    updateStakeWeight(true)
 {
     fHaveWatchOnly = m_wallet->haveWatchOnly();
     addressTableModel = new AddressTableModel(this);
     transactionTableModel = new TransactionTableModel(platformStyle, this);
     recentRequestsTableModel = new RecentRequestsTableModel(this);
+
+    worker = new WalletWorker(this);
+    worker->moveToThread(&(t));
+    t.start();
 
     subscribeToCoreSignals();
 }
@@ -59,12 +83,15 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, ClientModel
 WalletModel::~WalletModel()
 {
     unsubscribeFromCoreSignals();
+    t.quit();
+    t.wait();
 }
 
 void WalletModel::startPollBalance()
 {
     // This timer will be fired repeatedly to update the balance
     connect(timer, &QTimer::timeout, this, &WalletModel::pollBalanceChanged);
+    connect(timer, SIGNAL(timeout()), worker, SLOT(updateModel()));
     timer->start(MODEL_UPDATE_DELAY);
 }
 
@@ -99,24 +126,38 @@ void WalletModel::pollBalanceChanged()
         return;
     }
 
+    // Get node synchronization information
+    bool isSyncing = false;
+    int numBlocks = -1;
+    m_node.getSyncInfo(numBlocks, isSyncing);
+    bool cachedTipChanged = block_hash != m_cached_last_update_tip;
     if (fForceCheckBalanceChanged || block_hash != m_cached_last_update_tip) {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
         m_cached_last_update_tip = block_hash;
 
-        checkBalanceChanged(new_balances);
+        bool balanceChanged = checkBalanceChanged(new_balances);
         if(transactionTableModel)
             transactionTableModel->updateConfirmations();
+
+        // The stake weight is used for the staking icon status
+        // Get the stake weight only when not syncing because it is time consuming
+        if(!isSyncing && (balanceChanged || cachedTipChanged))
+        {
+            updateStakeWeight = true;
+        }
     }
 }
 
-void WalletModel::checkBalanceChanged(const interfaces::WalletBalances& new_balances)
+bool WalletModel::checkBalanceChanged(const interfaces::WalletBalances& new_balances)
 {
     if(new_balances.balanceChanged(m_cached_balances)) {
         m_cached_balances = new_balances;
         Q_EMIT balanceChanged(new_balances);
+        return true;
     }
+    return false;
 }
 
 void WalletModel::updateTransaction()
@@ -143,7 +184,7 @@ bool WalletModel::validateAddress(const QString &address)
     return IsValidDestinationString(address.toStdString());
 }
 
-WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl)
+WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl, const bool fIncludeDelegated)
 {
     CAmount total = 0;
     bool fSubtractFeeFromAmount = false;
@@ -175,7 +216,46 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             setAddress.insert(rcp.address);
             ++nAddresses;
 
-            CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
+            CScript scriptPubKey;
+            CTxDestination out = DecodeDestination(rcp.address.toStdString());
+
+            if (rcp.isP2CS) {
+                Destination ownerAdd;
+                if (rcp.ownerAddress.isEmpty()) {
+                    return InvalidAddress;
+                } else {
+                    ownerAdd = Destination(DecodeDestination(rcp.ownerAddress.toStdString()), false);
+                }
+
+                const PKHash* stakerId = boost::get<PKHash>(&out);
+                const PKHash* ownerId = boost::get<PKHash>(&ownerAdd.dest);
+                if (!stakerId || !ownerId) {
+                    return InvalidAddress;
+                }
+
+                LegacyScriptPubKeyMan* spk_man = m_wallet->wallet()->GetLegacyScriptPubKeyMan();
+                if (!spk_man) {
+                    spk_man = m_wallet->wallet()->GetOrCreateLegacyScriptPubKeyMan();
+                }
+
+                if (!spk_man) {
+                    return InvalidAddress;
+                }
+
+                if (spk_man->HaveKey(ToKeyID(*stakerId))) {
+                    return StakerAddressInWallet;
+                }
+
+                if (!spk_man->HaveKey(ToKeyID(*ownerId))) {
+                    return OwnerAddressNotInWallet;
+                }
+
+                scriptPubKey = GetScriptForStakeDelegation(ToKeyID(*stakerId), ToKeyID(*ownerId));
+            } else {
+                // Regular P2PK or P2PKH
+                scriptPubKey = GetScriptForDestination(out);
+            }
+
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
 
@@ -187,7 +267,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         return DuplicateAddress;
     }
 
-    CAmount nBalance = m_wallet->getAvailableBalance(coinControl);
+    CAmount nBalance = m_wallet->getAvailableBalance(coinControl, fIncludeDelegated);
 
     if(total > nBalance)
     {
@@ -261,7 +341,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
                 if (!m_wallet->getAddress(
                      dest, &name, /* is_mine= */ nullptr, /* purpose= */ nullptr))
                 {
-                    m_wallet->setAddressBook(dest, strLabel, "send");
+                    m_wallet->setAddressBook(dest, strLabel, AddressBook::AddressBookPurpose::SEND);
                 }
                 else if (name != strLabel)
                 {
@@ -432,6 +512,13 @@ void WalletModel::unsubscribeFromCoreSignals()
 WalletModel::UnlockContext WalletModel::requestUnlock()
 {
     bool was_locked = getEncryptionStatus() == Locked;
+
+    if ((!was_locked) && getWalletUnlockStakingOnly())
+    {
+       setWalletLocked(true);
+       was_locked = getEncryptionStatus() == Locked;
+    }
+
     if(was_locked)
     {
         // Request UI to unlock wallet
@@ -440,14 +527,20 @@ WalletModel::UnlockContext WalletModel::requestUnlock()
     // If wallet is still locked, unlock was failed or cancelled, mark context as invalid
     bool valid = getEncryptionStatus() != Locked;
 
-    return UnlockContext(this, valid, was_locked);
+    return UnlockContext(this, valid, was_locked && !getWalletUnlockStakingOnly());
 }
 
 WalletModel::UnlockContext::UnlockContext(WalletModel *_wallet, bool _valid, bool _relock):
         wallet(_wallet),
         valid(_valid),
-        relock(_relock)
+        relock(_relock),
+        stakingOnly(false)
 {
+    if(!relock)
+    {
+        stakingOnly = wallet->getWalletUnlockStakingOnly();
+        wallet->setWalletUnlockStakingOnly(false);
+    }
 }
 
 WalletModel::UnlockContext::~UnlockContext()
@@ -455,6 +548,12 @@ WalletModel::UnlockContext::~UnlockContext()
     if(valid && relock)
     {
         wallet->setWalletLocked(true);
+    }
+
+    if(!relock)
+    {
+        wallet->setWalletUnlockStakingOnly(stakingOnly);
+        wallet->updateStatus();
     }
 }
 
@@ -592,4 +691,27 @@ void WalletModel::refresh(bool pk_hash_only)
 uint256 WalletModel::getLastBlockProcessed() const
 {
     return m_client_model ? m_client_model->getBestBlockHash() : uint256{};
+}
+
+uint64_t WalletModel::getStakeWeight()
+{
+    return nWeight;
+}
+
+bool WalletModel::getWalletUnlockStakingOnly()
+{
+    return m_wallet->getWalletUnlockStakingOnly();
+}
+
+void WalletModel::setWalletUnlockStakingOnly(bool unlock)
+{
+    m_wallet->setWalletUnlockStakingOnly(unlock);
+}
+
+void WalletModel::checkStakeWeightChanged()
+{
+    if(updateStakeWeight && m_wallet->tryGetStakeWeight(nWeight))
+    {
+        updateStakeWeight = false;
+    }
 }

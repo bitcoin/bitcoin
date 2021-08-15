@@ -39,6 +39,10 @@ public:
     // Empty if no authentication or invalid signature/cert/etc.
     QString authenticatedMerchant;
 
+    // Cold staking.
+    bool isP2CS = false;
+    QString ownerAddress;
+
     bool fSubtractFeeFromAmount; // memory only
 
     static const int CURRENT_VERSION = 1;

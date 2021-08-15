@@ -72,10 +72,10 @@ class WorkQueue
 private:
     /** Mutex protects entire object */
     Mutex cs;
-    std::condition_variable cond;
-    std::deque<std::unique_ptr<WorkItem>> queue;
-    bool running;
-    size_t maxDepth;
+    std::condition_variable cond GUARDED_BY(cs);
+    std::deque<std::unique_ptr<WorkItem>> queue GUARDED_BY(cs);
+    bool running GUARDED_BY(cs);
+    const size_t maxDepth;
 
 public:
     explicit WorkQueue(size_t _maxDepth) : running(true),
@@ -91,7 +91,7 @@ public:
     bool Enqueue(WorkItem* item)
     {
         LOCK(cs);
-        if (queue.size() >= maxDepth) {
+        if (!running || queue.size() >= maxDepth) {
             return false;
         }
         queue.emplace_back(std::unique_ptr<WorkItem>(item));
@@ -107,7 +107,7 @@ public:
                 WAIT_LOCK(cs, lock);
                 while (running && queue.empty())
                     cond.wait(lock);
-                if (!running)
+                if (!running && queue.empty())
                     break;
                 i = std::move(queue.front());
                 queue.pop_front();
@@ -265,11 +265,11 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
     if (i != iend) {
         std::unique_ptr<HTTPWorkItem> item(new HTTPWorkItem(std::move(hreq), path, i->handler));
         assert(workQueue);
-        if (workQueue->Enqueue(item.get()))
+        if (workQueue->Enqueue(item.get())) {
             item.release(); /* if true, queue took ownership */
-        else {
+        } else {
             LogPrintf("WARNING: request rejected because http work queue depth exceeded, it can be increased with the -rpcworkqueue= setting\n");
-            item->req->WriteReply(HTTP_INTERNAL_SERVER_ERROR, "Work queue depth exceeded");
+            item->req->WriteReply(HTTP_SERVICE_UNAVAILABLE, "Work queue depth exceeded");
         }
     } else {
         hreq->WriteReply(HTTP_NOT_FOUND);
@@ -456,8 +456,7 @@ void StopHTTPServer()
             thread.join();
         }
         g_thread_http_workers.clear();
-        delete workQueue;
-        workQueue = nullptr;
+
     }
     // Unlisten sockets, these are what make the event loop running, which means
     // that after this and all connections are closed the event loop will quit.
@@ -477,6 +476,10 @@ void StopHTTPServer()
         event_base_free(eventBase);
         eventBase = nullptr;
     }
+    if (workQueue) {
+        delete workQueue;
+        workQueue = nullptr;
+    }    
     LogPrint(BCLog::HTTP, "Stopped HTTP server\n");
 }
 

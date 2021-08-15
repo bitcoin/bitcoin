@@ -186,6 +186,13 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
         } else if (whichType == TxoutType::WITNESS_V1_TAPROOT) {
             // Don't allow Taproot spends unless Taproot is active.
             if (!taproot_active) return false;
+        } else if (whichType == TxoutType::COLDSTAKE) {
+            std::vector<std::vector<unsigned char> > stack;
+            // convert the scriptSig into a stack
+            if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE))
+                return false;
+            if (stack.size() != 3)
+                return false;
         }
     }
 

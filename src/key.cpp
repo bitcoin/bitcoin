@@ -12,7 +12,24 @@
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
 
+#include <openssl/bn.h>
+#include <openssl/ecdsa.h>
+#include <openssl/rand.h>
+#include <openssl/obj_mac.h>
+#include <openssl/opensslv.h>
+
 static secp256k1_context* secp256k1_context_sign = nullptr;
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+// Compatibility Layer for older versions of Open SSL
+void ECDSA_SIG_get0(const ECDSA_SIG *sig, const BIGNUM **pr, const BIGNUM **ps)
+ {
+    if (pr != NULL)
+        *pr = sig->r;
+    if (ps != NULL)
+        *ps = sig->s;
+ }
+#endif
 
 /** These functions are taken from the libsecp256k1 distribution and are very ugly. */
 
@@ -369,4 +386,43 @@ void ECC_Stop() {
     if (ctx) {
         secp256k1_context_destroy(ctx);
     }
+}
+
+const unsigned char vchOrder[32] = {
+    0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xfe,0xba,0xae,0xdc,0xe6,0xaf,0x48,0xa0,0x3b,0xbf,0xd2,0x5e,0x8c,0xd0,0x36,0x41,0x41
+};
+
+const unsigned char vchHalfOrder[32] = {
+    0x7f,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x5d,0x57,0x6e,0x73,0x57,0xa4,0x50,0x1d,0xdf,0xe9,0x2f,0x46,0x68,0x1b,0x20,0xa0
+};
+
+bool EnsureLowS(std::vector<unsigned char>& vchSig) {
+    unsigned char *pos;
+
+    if (vchSig.empty())
+        return false;
+
+    pos = &vchSig[0];
+    ECDSA_SIG *sig = d2i_ECDSA_SIG(NULL, (const unsigned char **)&pos, vchSig.size());
+    if (sig == NULL)
+        return false;
+
+    BIGNUM *order = BN_bin2bn(vchOrder, sizeof(vchOrder), NULL);
+    BIGNUM *halforder = BN_bin2bn(vchHalfOrder, sizeof(vchHalfOrder), NULL);
+
+    BIGNUM *s = 0;
+    ECDSA_SIG_get0(sig, 0, (const BIGNUM **)&s);
+    if (BN_cmp(s, halforder) > 0) {
+        // enforce low S values, by negating the value (modulo the order) if above order/2.
+        BN_sub(s, order, s);
+    }
+
+    BN_free(halforder);
+    BN_free(order);
+
+    pos = &vchSig[0];
+    unsigned int nSize = i2d_ECDSA_SIG(sig, &pos);
+    ECDSA_SIG_free(sig);
+    vchSig.resize(nSize); // Shrink to fit actual size
+    return true;
 }

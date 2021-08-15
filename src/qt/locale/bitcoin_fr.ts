@@ -3459,7 +3459,7 @@ Accédez à Fichier &gt; Ouvrir un porte-monnaie pour en charger un.
     </message>
     <message>
         <source>PSBT copied</source>
-        <translation>La TBPS a été copiée</translation>
+        <translation>La TBTC a été copiée</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>

@@ -392,7 +392,7 @@ void CoinControlDialog::updateLabelLocked()
     else ui->labelLocked->setVisible(false);
 }
 
-void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *model, QDialog* dialog)
+void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *model, QDialog* dialog, bool forDelegation)
 {
     if (!model)
         return;
@@ -464,13 +464,23 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
                 nBytesInputs += 148; // in all error cases, simply assume 148 here
         }
         else nBytesInputs += 148;
+
+        // Additional byte for P2CS
+        if (out.txout.scriptPubKey.IsPayToColdStaking())
+            nBytesInputs++;
     }
 
     // calculation
+    const int P2PKH_OUT_SIZE = 34;
+    const int P2CS_OUT_SIZE = 61;
     if (nQuantity > 0)
     {
-        // Bytes
-        nBytes = nBytesInputs + ((CoinControlDialog::payAmounts.size() > 0 ? CoinControlDialog::payAmounts.size() + 1 : 2) * 34) + 10; // always assume +1 output for change here
+        // Bytes: nBytesInputs + (num_of_outputs * bytes_per_output)
+        nBytes = nBytesInputs + std::max(1, payAmounts.size()) * (forDelegation ? P2CS_OUT_SIZE : P2PKH_OUT_SIZE);
+        // always assume +1 (p2pkh) output for change here
+        nBytes += P2PKH_OUT_SIZE;
+        // nVersion, nLockTime and vin/vout len sizes
+        nBytes += 10;
         if (fWitness)
         {
             // there is some fudging in these numbers related to the actual virtual transaction size calculation that will keep this estimate from being exact.
@@ -483,7 +493,7 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
         // in the subtract fee from amount case, we can tell if zero change already and subtract the bytes, so that fee calculation afterwards is accurate
         if (CoinControlDialog::fSubtractFeeFromAmount)
             if (nAmount - nPayAmount == 0)
-                nBytes -= 34;
+                nBytes -= P2PKH_OUT_SIZE;
 
         // Fee
         nPayFee = model->wallet().getMinimumFee(nBytes, m_coin_control, nullptr /* returned_target */, nullptr /* reason */);
@@ -504,12 +514,12 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
                     nPayFee += nChange;
                     nChange = 0;
                     if (CoinControlDialog::fSubtractFeeFromAmount)
-                        nBytes -= 34; // we didn't detect lack of change above
+                        nBytes -= P2PKH_OUT_SIZE; // we didn't detect lack of change above
                 }
             }
 
             if (nChange == 0 && !CoinControlDialog::fSubtractFeeFromAmount)
-                nBytes -= 34;
+                nBytes -= P2PKH_OUT_SIZE;
         }
 
         // after fee
@@ -631,14 +641,37 @@ void CoinControlDialog::updateView()
 
             // address
             CTxDestination outputAddress;
+            CTxDestination outputAddressStaker;
             QString sAddress = "";
-            if(ExtractDestination(out.txout.scriptPubKey, outputAddress))
+            const bool isP2CS = out.txout.scriptPubKey.IsPayToColdStaking();
+            bool haveDest = false;
+
+            if (isP2CS)
+            {
+                TxoutType type;
+                std::vector<CTxDestination> addresses;
+                int nRequired;
+                haveDest = (ExtractDestinations(out.txout.scriptPubKey, type, addresses, nRequired)
+                            && addresses.size() == 2);
+                if (haveDest) {
+                    outputAddressStaker = addresses[0];
+                    outputAddress = addresses[1];
+                }
+            }
+            else
+            {
+                haveDest = ExtractDestination(out.txout.scriptPubKey, outputAddress);
+            }
+
+            if (haveDest)
             {
                 sAddress = QString::fromStdString(EncodeDestination(outputAddress));
 
                 // if listMode or change => show bitcoin address. In tree mode, address is not shown again for direct wallet address outputs
                 if (!treeMode || (!(sAddress == sWalletAddress)))
                     itemOutput->setText(COLUMN_ADDRESS, sAddress);
+                else
+                    itemOutput->setToolTip(COLUMN_ADDRESS, sAddress);
             }
 
             // label
@@ -674,8 +707,9 @@ void CoinControlDialog::updateView()
             // vout index
             itemOutput->setData(COLUMN_ADDRESS, VOutRole, output.n);
 
-             // disable locked coins
-            if (model->wallet().isLockedCoin(output))
+            // disable locked coins
+            const bool isLockedCoin = model->wallet().isLockedCoin(output);
+            if (isLockedCoin)
             {
                 m_coin_control.UnSelect(output); // just to be sure
                 itemOutput->setDisabled(true);
@@ -685,6 +719,17 @@ void CoinControlDialog::updateView()
             // set checkbox
             if (m_coin_control.IsSelected(output))
                 itemOutput->setCheckState(COLUMN_CHECKBOX, Qt::Checked);
+
+            // outputs delegated (for cold staking)
+            if (isP2CS) {
+                itemOutput->setData(COLUMN_CHECKBOX, Qt::UserRole, QString("Delegated"));
+                if (!isLockedCoin)
+                    itemOutput->setIcon(COLUMN_CHECKBOX, QIcon("://ic-check-cold-staking-off"));
+                if (haveDest) {
+                    sAddress = QString::fromStdString(EncodeDestination(outputAddressStaker));
+                    itemOutput->setToolTip(COLUMN_CHECKBOX, tr("delegated to %1 for cold staking").arg(sAddress));
+                }
+            }
         }
 
         // amount

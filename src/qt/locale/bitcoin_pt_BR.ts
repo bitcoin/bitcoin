@@ -1146,6 +1146,14 @@ Somente é possível assinar com endereços do tipo 'legado'.</translation>
         <translation>Abrir carteira alerta</translation>
     </message>
     <message>
+        <source>Open wallet failed</source>
+        <translation>Abrir carteira falhou</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Abrir carteira alerta</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>carteira padrão</translation>
     </message>
@@ -1652,6 +1660,14 @@ Somente é possível assinar com endereços do tipo 'legado'.</translation>
     <message>
         <source>Cannot process payment request because BIP70 is not supported.</source>
         <translation>O pagamento não pode ser processado porque a BIP70 não é suportada.</translation>
+    </message>
+    <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>Devido a falha de segurança divulgada no BIP70 é fortemente recomendado que qualquer instrução para comerciantes para mudar de carteira seja ignorado</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>Se você está recebendo este erro você deve requisitar ao comerciante oferecer uma URI compatível com o BIP21.</translation>
     </message>
     <message>
         <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>

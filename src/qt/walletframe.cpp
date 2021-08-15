@@ -174,6 +174,13 @@ void WalletFrame::gotoSendCoinsPage(QString addr)
         i.value()->gotoSendCoinsPage(addr);
 }
 
+void WalletFrame::gotoStakePage()
+{
+    QMap<WalletModel*, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoStakePage();
+}
+
 void WalletFrame::gotoSignMessageTab(QString addr)
 {
     WalletView *walletView = currentWalletView();
@@ -220,8 +227,10 @@ void WalletFrame::changePassphrase()
 void WalletFrame::unlockWallet()
 {
     WalletView *walletView = currentWalletView();
-    if (walletView)
+    if (walletView) {
         walletView->unlockWallet();
+        walletView->getWalletModel()->setWalletUnlockStakingOnly(false);
+    }
 }
 
 void WalletFrame::usedSendingAddresses()

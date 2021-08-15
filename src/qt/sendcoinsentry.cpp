@@ -19,11 +19,12 @@
 #include <QApplication>
 #include <QClipboard>
 
-SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *parent) :
+SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *parent, bool _forDelegation) :
     QStackedWidget(parent),
     ui(new Ui::SendCoinsEntry),
     model(nullptr),
-    platformStyle(_platformStyle)
+    platformStyle(_platformStyle),
+    forDelegation(_forDelegation)
 {
     ui->setupUi(this);
 
@@ -32,6 +33,16 @@ SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *par
     ui->deleteButton->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
     ui->deleteButton_is->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
     ui->deleteButton_s->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
+    ui->ownerAddressBookButton->setIcon(platformStyle->SingleColorIcon(":/icons/address-book"));
+    ui->ownerPasteButton->setIcon(platformStyle->SingleColorIcon(":/icons/editpaste"));
+
+    if (!forDelegation)
+    {
+        ui->ownerLabel->hide();
+        ui->ownerAddress->hide();
+        ui->ownerAddressBookButton->hide();
+        ui->ownerPasteButton->hide();
+    }
 
     setCurrentWidget(ui->SendCoins);
 
@@ -40,6 +51,11 @@ SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *par
 
     // normal bitcoin address field
     GUIUtil::setupAddressWidget(ui->payTo, this);
+    GUIUtil::setupAddressWidget(ui->ownerAddress, this);
+
+    if (forDelegation)
+        ui->payToLabel->setText("&Staker Address:");
+
     // just a label for displaying bitcoin address(es)
     ui->payTo_is->setFont(GUIUtil::fixedPitchFont());
 
@@ -63,6 +79,12 @@ void SendCoinsEntry::on_pasteButton_clicked()
     ui->payTo->setText(QApplication::clipboard()->text());
 }
 
+void SendCoinsEntry::on_ownerPasteButton_clicked()
+{
+    // Paste text from clipboard into recipient field
+    ui->ownerAddress->setText(QApplication::clipboard()->text());
+}
+
 void SendCoinsEntry::on_addressBookButton_clicked()
 {
     if(!model)
@@ -76,7 +98,25 @@ void SendCoinsEntry::on_addressBookButton_clicked()
     }
 }
 
+void SendCoinsEntry::on_ownerAddressBookButton_clicked()
+{
+    if(!model)
+        return;
+    AddressBookPage dlg(platformStyle, AddressBookPage::ForSelection, AddressBookPage::ReceivingTab, this);
+    dlg.setModel(model->getAddressTableModel());
+    if(dlg.exec())
+    {
+        ui->ownerAddress->setText(dlg.getReturnValue());
+        ui->payAmount->setFocus();
+    }
+}
+
 void SendCoinsEntry::on_payTo_textChanged(const QString &address)
+{
+    updateLabel(address);
+}
+
+void SendCoinsEntry::on_ownerAddress_textChanged(const QString &address)
 {
     updateLabel(address);
 }
@@ -137,10 +177,27 @@ bool SendCoinsEntry::validate(interfaces::Node& node)
     // Check input validity
     bool retval = true;
 
-    if (!model->validateAddress(ui->payTo->text()))
+    if (forDelegation)
     {
-        ui->payTo->setValid(false);
-        retval = false;
+        if (!model->validateAddress(ui->payTo->text()))
+        {
+            ui->payTo->setValid(false);
+            retval = false;
+        }
+
+        if (!model->validateAddress(ui->ownerAddress->text()))
+        {
+            ui->ownerAddress->setValid(false);
+            retval = false;
+        }
+    }
+    else
+    {
+        if (!model->validateAddress(ui->payTo->text()))
+        {
+            ui->payTo->setValid(false);
+            retval = false;
+        }
     }
 
     if (!ui->payAmount->validate())
@@ -169,6 +226,8 @@ SendCoinsRecipient SendCoinsEntry::getValue()
     recipient.address = ui->payTo->text();
     recipient.label = ui->addAsLabel->text();
     recipient.amount = ui->payAmount->value();
+    recipient.isP2CS = forDelegation;
+    recipient.ownerAddress = ui->ownerAddress->text();
     recipient.message = ui->messageTextLabel->text();
     recipient.fSubtractFeeFromAmount = (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked);
 

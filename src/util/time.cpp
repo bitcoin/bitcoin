@@ -11,12 +11,15 @@
 
 #include <atomic>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/thread.hpp>
 #include <ctime>
 #include <thread>
 
 #include <tinyformat.h>
 
 void UninterruptibleSleep(const std::chrono::microseconds& n) { std::this_thread::sleep_for(n); }
+
+void InterruptibleSleep(const std::chrono::microseconds& n) { boost::this_thread::sleep_for(boost::chrono::microseconds(n.count())); }
 
 static std::atomic<int64_t> nMockTime(0); //!< For unit testing
 

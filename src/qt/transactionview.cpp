@@ -36,8 +36,8 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
-TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *parent) :
-    QWidget(parent)
+TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *parent, bool _hideFilter, bool _showDelegated) :
+    QWidget(parent), showDelegated(_showDelegated)
 {
     // Build filter row
     setContentsMargins(0,0,0,0);
@@ -89,6 +89,13 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
                                   TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
+    typeWidget->addItem(tr("Cold stakes"), TransactionFilterProxy::TYPE(TransactionRecord::StakeDelegated) |
+                                        TransactionFilterProxy::TYPE(TransactionRecord::SpentStakeDelegated));
+    typeWidget->addItem(tr("Hot stakes"), TransactionFilterProxy::TYPE(TransactionRecord::StakeHot));
+    typeWidget->addItem(tr("Unspent Delegated"), TransactionFilterProxy::TYPE(TransactionRecord::P2CSDelegationSent) |
+                                        TransactionFilterProxy::TYPE(TransactionRecord::P2CSDelegationSentOwner) |
+                                        TransactionFilterProxy::TYPE(TransactionRecord::StakeDelegated));
+    typeWidget->addItem(tr("Delegations"), TransactionFilterProxy::TYPE(TransactionRecord::P2CSDelegation));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
 
     hlayout->addWidget(typeWidget);
@@ -127,8 +134,12 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     vlayout->setSpacing(0);
 
     QTableView *view = new QTableView(this);
-    vlayout->addLayout(hlayout);
-    vlayout->addWidget(createDateRangeWidget());
+    if (_hideFilter) {
+        createDateRangeWidget();
+    } else {
+        vlayout->addLayout(hlayout);
+        vlayout->addWidget(createDateRangeWidget());
+    }
     vlayout->addWidget(view);
     vlayout->setSpacing(0);
     int width = view->verticalScrollBar()->sizeHint().width();
@@ -202,6 +213,16 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(this, &TransactionView::bumpedFee, [this](const uint256& txid) {
       focusTransaction(txid);
     });
+
+    if(_hideFilter)
+    {
+        dateWidget->setVisible(false);
+        typeWidget->setVisible(false);
+        watchOnlyWidget->setVisible(false);
+        search_widget->setVisible(false);
+        amountWidget->setVisible(false);
+        dateRangeWidget->setVisible(false);
+    }
 }
 
 void TransactionView::setModel(WalletModel *_model)
@@ -231,6 +252,12 @@ void TransactionView::setModel(WalletModel *_model)
         transactionView->setColumnWidth(TransactionTableModel::Date, DATE_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
+        transactionView->setColumnWidth(TransactionTableModel::Delegated, DELEGATED_MINIMUM_COLUMN_WIDTH);
+
+        if (!showDelegated)
+        {
+            transactionView->setColumnHidden(TransactionTableModel::Delegated, true);
+        }
 
         columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, AMOUNT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH, this);
 
@@ -500,10 +527,9 @@ void TransactionView::editLabel()
             // Determine type of address, launch appropriate editor dialog type
             QString type = modelIdx.data(AddressTableModel::TypeRole).toString();
 
-            EditAddressDialog dlg(
-                type == AddressTableModel::Receive
-                ? EditAddressDialog::EditReceivingAddress
-                : EditAddressDialog::EditSendingAddress, this);
+            EditAddressDialog dlg(type == AddressTableModel::Receive
+                    ? EditAddressDialog::EditReceivingAddress
+                    : EditAddressDialog::EditSendingAddress, this);
             dlg.setModel(addressBook);
             dlg.loadRow(idx);
             dlg.exec();
@@ -511,8 +537,7 @@ void TransactionView::editLabel()
         else
         {
             // Add sending address
-            EditAddressDialog dlg(EditAddressDialog::NewSendingAddress,
-                this);
+            EditAddressDialog dlg(EditAddressDialog::NewSendingAddress, this);
             dlg.setModel(addressBook);
             dlg.setAddress(address);
             dlg.exec();

@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>کلیک راست برای ویرایش نشانی یا برچسب</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>Yangi manzil yaratish</translation>
     </message>
@@ -166,6 +170,14 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>صادر کردن</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>داده های موجود در برگه فعلی را به یک فایل صادر کنید</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

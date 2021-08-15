@@ -41,7 +41,7 @@ bool CAddrInfo::IsTerrible(int64_t nNow) const
     if (nLastTry && nLastTry >= nNow - 60) // never remove things tried in the last minute
         return false;
 
-    if (nTime > nNow + 10 * 60) // came in a flying DeLorean
+    if (nTime > nNow + 3 * 60) // came in a flying DeLorean
         return true;
 
     if (nTime == 0 || nNow - nTime > ADDRMAN_HORIZON_DAYS * 24 * 60 * 60) // not seen in recent history
@@ -62,7 +62,7 @@ double CAddrInfo::GetChance(int64_t nNow) const
     int64_t nSinceLastTry = std::max<int64_t>(nNow - nLastTry, 0);
 
     // deprioritize very recent attempts away
-    if (nSinceLastTry < 60 * 10)
+    if (nSinceLastTry < 3 * 60)
         fChance *= 0.01;
 
     // deprioritize 66% after each failed attempt, but at most 1/28th to avoid the search taking forever or overly penalizing outages.

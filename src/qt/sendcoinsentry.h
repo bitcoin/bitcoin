@@ -30,7 +30,7 @@ class SendCoinsEntry : public QStackedWidget
     Q_OBJECT
 
 public:
-    explicit SendCoinsEntry(const PlatformStyle *platformStyle, QWidget *parent = nullptr);
+    explicit SendCoinsEntry(const PlatformStyle *platformStyle, QWidget *parent = nullptr, bool forDelegation = false);
     ~SendCoinsEntry();
 
     void setModel(WalletModel *model);
@@ -65,8 +65,11 @@ private Q_SLOTS:
     void deleteClicked();
     void useAvailableBalanceClicked();
     void on_payTo_textChanged(const QString &address);
+    void on_ownerAddress_textChanged(const QString &address);
     void on_addressBookButton_clicked();
+    void on_ownerAddressBookButton_clicked();
     void on_pasteButton_clicked();
+    void on_ownerPasteButton_clicked();
     void updateDisplayUnit();
 
 private:
@@ -74,6 +77,7 @@ private:
     Ui::SendCoinsEntry *ui;
     WalletModel *model;
     const PlatformStyle *platformStyle;
+    bool forDelegation;
 
     bool updateLabel(const QString &address);
 };

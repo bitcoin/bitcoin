@@ -7,7 +7,7 @@
 #include <primitives/transaction.h>
 #include <consensus/validation.h>
 
-bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
+bool CheckTransaction(const CTransaction& tx, TxValidationState& state, bool fColdStakingActive)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
@@ -22,6 +22,8 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
     CAmount nValueOut = 0;
     for (const auto& txout : tx.vout)
     {
+        if (txout.IsEmpty() && !tx.IsCoinBase() && !tx.IsCoinStake())
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vout-empty");
         if (txout.nValue < 0)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vout-negative");
         if (txout.nValue > MAX_MONEY)
@@ -29,6 +31,12 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
         nValueOut += txout.nValue;
         if (!MoneyRange(nValueOut))
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-txouttotal-toolarge");
+        // check cold staking enforcement (for delegations)
+        if (txout.scriptPubKey.IsPayToColdStaking())
+        {
+            if (!fColdStakingActive)
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "cold-stake-inactive");
+        }
     }
 
     // Check for duplicate inputs (see CVE-2018-17144)

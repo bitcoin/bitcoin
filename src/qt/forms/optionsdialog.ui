@@ -207,6 +207,16 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
+           <widget class="QCheckBox" name="coldStakerControlFeatures">
+            <property name="toolTip">
+             <string>Whether to show cold staker control features or not.</string>
+            </property>
+            <property name="text">
+             <string>Enable cold s&amp;taker control features</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="coinControlFeatures">
             <property name="toolTip">
              <string>Whether to show coin control features or not.</string>
@@ -896,6 +906,11 @@
    <class>QValueComboBox</class>
    <extends>QComboBox</extends>
    <header>qt/qvaluecombobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>BitcoinAmountField</class>
+   <extends>QSpinBox</extends>
+   <header>qt/bitcoinamountfield.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

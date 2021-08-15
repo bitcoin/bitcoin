@@ -200,6 +200,9 @@ enum opcodetype
 
     // Opcode added by BIP 342 (Tapscript)
     OP_CHECKSIGADD = 0xba,
+    
+    // cold staking
+    OP_CHECKCOLDSTAKEVERIFY = 0xe1,
 
     OP_INVALIDOPCODE = 0xff,
 };
@@ -525,6 +528,7 @@ public:
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
     bool IsPayToScriptHash() const;
+    bool IsPayToColdStaking() const;
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 

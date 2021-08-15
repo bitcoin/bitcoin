@@ -46,7 +46,7 @@ public:
     ~CoinControlDialog();
 
     // static because also called from sendcoinsdialog
-    static void updateLabels(CCoinControl& m_coin_control, WalletModel*, QDialog*);
+    static void updateLabels(CCoinControl& m_coin_control, WalletModel*, QDialog*, bool forDelegation = false);
 
     static QList<CAmount> payAmounts;
     static bool fSubtractFeeFromAmount;

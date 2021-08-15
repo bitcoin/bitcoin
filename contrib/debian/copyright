@@ -66,6 +66,11 @@ Files: src/qt/res/icons/tx_mined.png
 Copyright: Jonas Schnelli
 License: Expat
 
+Files: src/qt/res/icons/tx_cold.png
+Copyright: Icon made by bqlqn from www.flaticon.com
+License: Expat
+Comment: Site: https://www.flaticon.com/authors/bqlqn
+
 Files: src/qt/res/icons/clock*.png
        src/qt/res/icons/eye_*.png
        src/qt/res/icons/tx_in*.png

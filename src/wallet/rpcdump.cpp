@@ -157,6 +157,8 @@ RPCHelpMan importprivkey()
 
         CKey key = DecodeSecret(strSecret);
         if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+        if (pwallet->m_wallet_unlock_staking_only)
+            throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Wallet is unlocked for staking only.");
 
         CPubKey pubkey = key.GetPubKey();
         CHECK_NONFATAL(key.VerifyPubKey(pubkey));
@@ -169,7 +171,7 @@ RPCHelpMan importprivkey()
             // label was passed.
             for (const auto& dest : GetAllDestinationsForKey(pubkey)) {
                 if (!request.params[1].isNull() || !pwallet->FindAddressBookEntry(dest)) {
-                    pwallet->SetAddressBook(dest, strLabel, "receive");
+                    pwallet->SetAddressBook(dest, strLabel, AddressBook::AddressBookPurpose::RECEIVE);
                 }
             }
 
@@ -631,7 +633,7 @@ RPCHelpMan importwallet()
             }
 
             if (has_label)
-                pwallet->SetAddressBook(PKHash(keyid), label, "receive");
+                pwallet->SetAddressBook(PKHash(keyid), label, AddressBook::AddressBookPurpose::RECEIVE);
 
             nTimeBegin = std::min(nTimeBegin, time);
             progress++;
@@ -698,6 +700,8 @@ RPCHelpMan dumpprivkey()
     CTxDestination dest = DecodeDestination(strAddress);
     if (!IsValidDestination(dest)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        if (pwallet->m_wallet_unlock_staking_only)
+            throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Wallet is unlocked for staking only.");
     }
     auto keyid = GetKeyForDestination(spk_man, dest);
     if (keyid.IsNull()) {

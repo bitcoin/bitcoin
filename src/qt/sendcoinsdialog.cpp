@@ -54,7 +54,7 @@ int getIndexForConfTarget(int target) {
     return confTargets.size() - 1;
 }
 
-SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
+SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *parent, bool _forDelegation) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog),
     clientModel(nullptr),
@@ -62,7 +62,8 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     m_coin_control(new CCoinControl),
     fNewRecipientAllowed(true),
     fFeeMinimized(true),
-    platformStyle(_platformStyle)
+    platformStyle(_platformStyle),
+    forDelegation(_forDelegation)
 {
     ui->setupUi(this);
 
@@ -74,6 +75,12 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
         ui->addButton->setIcon(_platformStyle->SingleColorIcon(":/icons/add"));
         ui->clearButton->setIcon(_platformStyle->SingleColorIcon(":/icons/remove"));
         ui->sendButton->setIcon(_platformStyle->SingleColorIcon(":/icons/send"));
+    }
+
+    if (forDelegation)
+    {
+        ui->sendButton->setText("&Delegate");
+        ui->addButton->hide();
     }
 
     GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
@@ -160,6 +167,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         connect(_model, &WalletModel::balanceChanged, this, &SendCoinsDialog::setBalance);
         connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCoinsDialog::updateDisplayUnit);
         updateDisplayUnit();
+        connect(ui->checkboxIncludeDelegations, &QCheckBox::stateChanged, this, &SendCoinsDialog::updateBalanceWithDelegations);
 
         // Coin Control
         connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCoinsDialog::coinControlUpdateLabels);
@@ -263,8 +271,9 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     WalletModel::SendCoinsReturn prepareStatus;
 
     updateCoinControlState(*m_coin_control);
+    const bool fIncludeDelegations = (ui->checkboxIncludeDelegations->checkState() == Qt::Checked);
 
-    prepareStatus = model->prepareTransaction(*m_current_transaction, *m_coin_control);
+    prepareStatus = model->prepareTransaction(*m_current_transaction, *m_coin_control, fIncludeDelegations);
 
     // process prepareStatus and on error generate message shown to user
     processSendCoinsReturn(prepareStatus,
@@ -372,6 +381,12 @@ void SendCoinsDialog::on_sendButton_clicked()
 {
     if(!model || !model->getOptionsModel())
         return;
+
+    if (forDelegation && model->wallet().wallet()->GetLastBlockHeight() < Params().GetConsensus().BTCColdStakeEnableHeight)
+    {
+        Q_EMIT message(tr("Cold Staking not enabled"), tr("Cold staking is enabled at block %1").arg(Params().GetConsensus().BTCColdStakeEnableHeight), CClientUIInterface::MSG_ERROR);
+        return;
+    }
 
     QString question_string, informative_text, detailed_text;
     if (!PrepareSendText(question_string, informative_text, detailed_text)) return;
@@ -491,7 +506,7 @@ void SendCoinsDialog::accept()
 
 SendCoinsEntry *SendCoinsDialog::addEntry()
 {
-    SendCoinsEntry *entry = new SendCoinsEntry(platformStyle, this);
+    SendCoinsEntry *entry = new SendCoinsEntry(platformStyle, this, forDelegation);
     entry->setModel(model);
     ui->entries->addWidget(entry);
     connect(entry, &SendCoinsEntry::removeEntry, this, &SendCoinsDialog::removeEntry);
@@ -608,6 +623,9 @@ void SendCoinsDialog::setBalance(const interfaces::WalletBalances& balances)
             balance = balances.watch_only_balance;
             ui->labelBalanceName->setText(tr("Watch-only balance:"));
         }
+        if (ui->checkboxIncludeDelegations->checkState() == Qt::Checked) {
+            balance += balances.delegated;
+        }
         ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
     }
 }
@@ -617,6 +635,11 @@ void SendCoinsDialog::updateDisplayUnit()
     setBalance(model->wallet().getBalances());
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     updateSmartFeeLabel();
+}
+
+void SendCoinsDialog::updateBalanceWithDelegations()
+{
+    setBalance(model->wallet().getBalances());
 }
 
 void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
@@ -655,6 +678,14 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
         msgParams.first = tr("Payment request expired.");
         msgParams.second = CClientUIInterface::MSG_ERROR;
         break;
+    case WalletModel::OwnerAddressNotInWallet:
+        msgParams.first = tr("The provided owner address is not present in this wallet. WARNING: Only the owner of the key to owner address will be allowed to spend these coins after the delegation.");
+        msgParams.second = CClientUIInterface::MSG_ERROR;
+        break;
+    case WalletModel::StakerAddressInWallet:
+        msgParams.first = tr("The provided staker address is present in this wallet. You can already stake the coins, there is no need to delegate them to yourself.");
+        msgParams.second = CClientUIInterface::MSG_ERROR;
+        break;
     // included to prevent a compiler warning.
     case WalletModel::OK:
     default:
@@ -689,9 +720,10 @@ void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
 {
     // Include watch-only for wallets without private key
     m_coin_control->fAllowWatchOnly = model->wallet().privateKeysDisabled();
+    const bool fIncludeDelegations = (ui->checkboxIncludeDelegations->checkState() == Qt::Checked);
 
     // Calculate available amount to send.
-    CAmount amount = model->wallet().getAvailableBalance(*m_coin_control);
+    CAmount amount = model->wallet().getAvailableBalance(*m_coin_control, fIncludeDelegations);
     for (int i = 0; i < ui->entries->count(); ++i) {
         SendCoinsEntry* e = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if (e && !e->isHidden() && e != entry) {
@@ -940,7 +972,7 @@ void SendCoinsDialog::coinControlUpdateLabels()
     if (m_coin_control->HasSelected())
     {
         // actual coin control calculation
-        CoinControlDialog::updateLabels(*m_coin_control, model, this);
+        CoinControlDialog::updateLabels(*m_coin_control, model, this, forDelegation);
 
         // show coin control stats
         ui->labelCoinControlAutomaticallySelected->hide();

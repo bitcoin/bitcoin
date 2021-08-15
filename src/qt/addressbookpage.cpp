@@ -22,12 +22,12 @@
 
 class AddressBookSortFilterProxyModel final : public QSortFilterProxyModel
 {
-    const QString m_type;
+    const QStringList m_types;
 
 public:
-    AddressBookSortFilterProxyModel(const QString& type, QObject* parent)
+    AddressBookSortFilterProxyModel(const QStringList& types, QObject* parent)
         : QSortFilterProxyModel(parent)
-        , m_type(type)
+        , m_types(types)
     {
         setDynamicSortFilter(true);
         setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -40,7 +40,8 @@ protected:
         auto model = sourceModel();
         auto label = model->index(row, AddressTableModel::Label, parent);
 
-        if (model->data(label, AddressTableModel::TypeRole).toString() != m_type) {
+        auto type = model->data(label, AddressTableModel::TypeRole).toString();
+        if (!m_types.contains(type)) {
             return false;
         }
 
@@ -151,8 +152,18 @@ void AddressBookPage::setModel(AddressTableModel *_model)
     if(!_model)
         return;
 
-    auto type = tab == ReceivingTab ? AddressTableModel::Receive : AddressTableModel::Send;
-    proxyModel = new AddressBookSortFilterProxyModel(type, this);
+    QStringList types;
+    switch(tab)
+    {
+    case ReceivingTab:
+        types = QStringList({AddressTableModel::Receive});
+        break;
+    case SendingTab:
+        types = QStringList({AddressTableModel::Send});
+        break;
+    }
+
+    proxyModel = new AddressBookSortFilterProxyModel(types, this);
     proxyModel->setSourceModel(_model);
 
     connect(ui->searchLineEdit, &QLineEdit::textChanged, proxyModel, &QSortFilterProxyModel::setFilterWildcard);
@@ -194,10 +205,19 @@ void AddressBookPage::onEditAction()
     if(indexes.isEmpty())
         return;
 
-    EditAddressDialog dlg(
-        tab == SendingTab ?
-        EditAddressDialog::EditSendingAddress :
-        EditAddressDialog::EditReceivingAddress, this);
+    EditAddressDialog::Mode editAddressMode;
+    switch(tab)
+    {
+    case SendingTab:
+        editAddressMode = EditAddressDialog::EditSendingAddress;
+        break;
+    case ReceivingTab:
+    default:
+        editAddressMode = EditAddressDialog::EditReceivingAddress;
+        break;
+    }
+
+    EditAddressDialog dlg(editAddressMode, this);
     dlg.setModel(model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
     dlg.loadRow(origIndex.row());

@@ -217,12 +217,13 @@ CTxDestination DecodeDestination(const std::string& str)
     return DecodeDestination(str, Params());
 }
 
+bool IsValidDestinationString(const std::string& str)
+{
+    return IsValidDestinationString(str, Params());
+}
+
 bool IsValidDestinationString(const std::string& str, const CChainParams& params)
 {
     return IsValidDestination(DecodeDestination(str, params));
 }
 
-bool IsValidDestinationString(const std::string& str)
-{
-    return IsValidDestinationString(str, Params());
-}

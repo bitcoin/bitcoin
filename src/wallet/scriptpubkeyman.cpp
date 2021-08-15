@@ -58,7 +58,9 @@ enum class IsMineResult
     NO = 0,         //!< Not ours
     WATCH_ONLY = 1, //!< Included in watch-only balance
     SPENDABLE = 2,  //!< Included in all balances
-    INVALID = 3,    //!< Not spendable by anyone (uncompressed pubkey in segwit, P2SH inside P2SH or witness, witness inside witness)
+    COLD = 3,       //!< Indicates that we have the staking key of a P2CS
+    SPENDABLE_DELEGATED = 4, //!< Indicates that we have the spending key of a P2CS
+    INVALID = 5,    //!< Not spendable by anyone (uncompressed pubkey in segwit, P2SH inside P2SH or witness, witness inside witness)
 };
 
 bool PermitsUncompressed(IsMineSigVersion sigversion)
@@ -191,6 +193,24 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
         }
         break;
     }
+    case TxoutType::COLDSTAKE:
+    {
+        CKeyID stakeKeyID = CKeyID(uint160(vSolutions[0]));
+        bool stakeKeyIsMine = keystore.HaveKey(stakeKeyID);
+        CKeyID ownerKeyID = CKeyID(uint160(vSolutions[1]));
+        bool spendKeyIsMine = keystore.HaveKey(ownerKeyID);
+
+        if (spendKeyIsMine) {
+            // If the wallet has both keys, SPENDABLE_DELEGATED
+            // takes precedence over COLD
+            return IsMineResult::SPENDABLE_DELEGATED;
+        } else if (stakeKeyIsMine) {
+            return IsMineResult::COLD;
+        } else {
+            // todo: Include watch only..
+        }
+        break;
+    }
     }
 
     if (ret == IsMineResult::NO && keystore.HaveWatchOnly(scriptPubKey)) {
@@ -211,6 +231,10 @@ isminetype LegacyScriptPubKeyMan::IsMine(const CScript& script) const
         return ISMINE_WATCH_ONLY;
     case IsMineResult::SPENDABLE:
         return ISMINE_SPENDABLE;
+    case IsMineResult::SPENDABLE_DELEGATED:
+        return ISMINE_SPENDABLE_DELEGATED;
+    case IsMineResult::COLD:
+        return ISMINE_COLD;
     }
     assert(false);
 }
@@ -561,7 +585,7 @@ bool LegacyScriptPubKeyMan::CanProvide(const CScript& script, SignatureData& sig
         return true;
     } else {
         // If, given the stuff in sigdata, we could make a valid sigature, then we can provide for this script
-        ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR, script, sigdata);
+        ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR, script, sigdata, ismine == IsMineResult::COLD);
         if (!sigdata.signatures.empty()) {
             // If we could make signatures, make sure we have a private key to actually make a signature
             bool has_privkeys = false;

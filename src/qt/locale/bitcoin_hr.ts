@@ -1103,6 +1103,14 @@
         <translation>Upozorenje kod otvaranja novčanika</translation>
     </message>
     <message>
+        <source>Open wallet failed</source>
+        <translation>Neuspješno otvaranje novčanika</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Upozorenje kod otvaranja novčanika</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>uobičajeni novčanik</translation>
     </message>
@@ -1485,6 +1493,14 @@
     <message>
         <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
         <translation>'bitcoin://' nije ispravan URI. Koristite 'bitcoin:' umjesto toga.</translation>
+    </message>
+    <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>Zbog rasprostranjenih sigurnosnih mana u BIP70-u, strogo se preporučuje da se ignoriraju bilo kakve naredbe o zamjeni novčanika sa strane trgovca.</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>Ako dobivate ovu grešku, trebali biste zatražiti od trgovca BIP21 kompatibilan URI.</translation>
     </message>
     <message>
         <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>

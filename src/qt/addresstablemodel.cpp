@@ -7,6 +7,7 @@
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 
+#include <addressbook.h>
 #include <key_io.h>
 #include <wallet/wallet.h>
 
@@ -57,13 +58,27 @@ static AddressTableEntry::Type translateTransactionType(const QString &strPurpos
 {
     AddressTableEntry::Type addressType = AddressTableEntry::Hidden;
     // "refund" addresses aren't shown, and change addresses aren't returned by getAddresses at all.
-    if (strPurpose == "send")
+    if (strPurpose == QString::fromStdString(AddressBook::AddressBookPurpose::SEND))
         addressType = AddressTableEntry::Sending;
-    else if (strPurpose == "receive")
+    else if (strPurpose == QString::fromStdString(AddressBook::AddressBookPurpose::RECEIVE))
         addressType = AddressTableEntry::Receiving;
-    else if (strPurpose == "unknown" || strPurpose == "") // if purpose not set, guess
+    else if (strPurpose == QString::fromStdString(AddressBook::AddressBookPurpose::UNKNOWN) || strPurpose == "") // if purpose not set, guess
         addressType = (isMine ? AddressTableEntry::Receiving : AddressTableEntry::Sending);
     return addressType;
+}
+
+static QString translateTypeToString(AddressTableEntry::Type type)
+{
+    switch (type) {
+        case AddressTableEntry::Sending:
+            return QObject::tr("Contact");
+        case AddressTableEntry::Receiving:
+            return QObject::tr("Receiving");
+        case AddressTableEntry::Hidden:
+            return QObject::tr("Hidden");
+        default:
+            return QObject::tr("Unknown");
+    }
 }
 
 // Private implementation
@@ -209,6 +224,8 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
             }
         case Address:
             return rec->address;
+        case Type:
+            return translateTypeToString(rec->type);
         }
     }
     else if (role == Qt::FontRole)
@@ -239,7 +256,18 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
     if(!index.isValid())
         return false;
     AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
-    std::string strPurpose = (rec->type == AddressTableEntry::Sending ? "send" : "receive");
+    std::string strPurpose;
+    switch(rec->type)
+    {
+    case AddressTableEntry::Sending:
+        strPurpose = AddressBook::AddressBookPurpose::SEND;
+        break;
+    case AddressTableEntry::Receiving:
+    default:
+        strPurpose = AddressBook::AddressBookPurpose::RECEIVE;
+        break;
+    }
+
     editStatus = OK;
 
     if(role == Qt::EditRole)
@@ -312,7 +340,7 @@ Qt::ItemFlags AddressTableModel::flags(const QModelIndex &index) const
     // Can edit address and label for sending addresses,
     // and only label for receiving addresses.
     if(rec->type == AddressTableEntry::Sending ||
-      (rec->type == AddressTableEntry::Receiving && index.column()==Label))
+        (rec->type == AddressTableEntry::Receiving && index.column()==Label))
     {
         retval |= Qt::ItemIsEditable;
     }
@@ -365,7 +393,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
         }
 
         // Add entry
-        walletModel->wallet().setAddressBook(DecodeDestination(strAddress), strLabel, "send");
+        walletModel->wallet().setAddressBook(DecodeDestination(strAddress), strLabel, AddressBook::AddressBookPurpose::SEND);
     }
     else if(type == Receive)
     {

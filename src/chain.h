@@ -143,6 +143,9 @@ public:
     //! pointer to the index of the predecessor of this block
     CBlockIndex* pprev{nullptr};
 
+    //! pointer to the index of the successor of this block
+    CBlockIndex* pnext;
+
     //! pointer to the index of some further predecessor of this block
     CBlockIndex* pskip{nullptr};
 
@@ -180,11 +183,48 @@ public:
     uint32_t nBits{0};
     uint32_t nNonce{0};
 
+    // Proof of stake
+    COutPoint prevoutStake;
+    // block signature - proof-of-stake protect the block by signing the block using a stake holder private key
+    std::vector<unsigned char> vchBlockSig;
+    uint256 nStakeModifier;
+    uint256 hashProof;
+    uint64_t nMoneySupply;
+
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId{0};
 
     //! (memory only) Maximum nTime in the chain up to and including this block.
     unsigned int nTimeMax{0};
+
+    void SetNull()
+    {
+        phashBlock = nullptr;
+        pprev = nullptr;
+        pnext = nullptr;
+        pskip = nullptr;
+        nHeight = 0;
+        nFile = 0;
+        nDataPos = 0;
+        nUndoPos = 0;
+        nChainWork = arith_uint256();
+        nTx = 0;
+        nChainTx = 0;
+        nStatus = 0;
+        nSequenceId = 0;
+        nTimeMax = 0;
+
+        nVersion       = 0;
+        hashMerkleRoot = uint256();
+        nTime          = 0;
+        nBits          = 0;
+        nNonce         = 0;
+        prevoutStake.SetNull();
+        vchBlockSig.clear();
+        nStakeModifier = uint256();
+        hashProof = uint256();
+        nMoneySupply = 0;
+    }
 
     CBlockIndex()
     {
@@ -197,6 +237,18 @@ public:
           nBits{block.nBits},
           nNonce{block.nNonce}
     {
+        SetNull();
+
+        nVersion       = block.nVersion;
+        hashMerkleRoot = block.hashMerkleRoot;
+        nTime          = block.nTime;
+        nBits          = block.nBits;
+        nNonce         = block.nNonce;
+        prevoutStake   = block.prevoutStake;
+        vchBlockSig    = block.vchBlockSig;
+        nStakeModifier = uint256();
+        hashProof = uint256(); 
+        nMoneySupply   = 0;
     }
 
     FlatFilePos GetBlockPos() const {
@@ -227,6 +279,8 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.vchBlockSig    = vchBlockSig;
+        block.prevoutStake   = prevoutStake;
         return block;
     }
 
@@ -268,6 +322,16 @@ public:
 
         std::sort(pbegin, pend);
         return pbegin[(pend - pbegin)/2];
+    }
+
+    bool IsProofOfWork() const
+    {
+        return !IsProofOfStake();
+    }
+
+    bool IsProofOfStake() const
+    {
+        return !prevoutStake.IsNull();
     }
 
     std::string ToString() const
@@ -349,6 +413,11 @@ public:
         READWRITE(obj.nTime);
         READWRITE(obj.nBits);
         READWRITE(obj.nNonce);
+        READWRITE(obj.prevoutStake);
+        READWRITE(obj.vchBlockSig);
+        READWRITE(obj.nStakeModifier);
+        READWRITE(obj.hashProof);
+        READWRITE(VARINT(obj.nMoneySupply));
     }
 
     uint256 GetBlockHash() const
@@ -360,6 +429,8 @@ public:
         block.nTime           = nTime;
         block.nBits           = nBits;
         block.nNonce          = nNonce;
+        block.prevoutStake    = prevoutStake;
+        block.vchBlockSig     = vchBlockSig;
         return block.GetHash();
     }
 

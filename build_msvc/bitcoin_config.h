@@ -33,7 +33,7 @@
 #define COPYRIGHT_HOLDERS_SUBSTITUTION "Bitcoin Core"
 
 /* Copyright year */
-#define COPYRIGHT_YEAR 2019
+#define COPYRIGHT_YEAR 2020
 
 /* Define to 1 to enable wallet functions */
 #define ENABLE_WALLET 1
@@ -43,6 +43,9 @@
 
 /* define if the Boost library is available */
 #define HAVE_BOOST /**/
+
+/* define if the Boost::Chrono library is available */
+#define HAVE_BOOST_CHRONO /**/
 
 /* define if the Boost::Filesystem library is available */
 #define HAVE_BOOST_FILESYSTEM /**/
