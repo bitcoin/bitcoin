@@ -498,8 +498,8 @@ public:
     // SYSCOIN
     explicit CAddrMan(bool deterministic, int32_t consistency_check_ratio, bool _discriminatePorts = false)
         : insecure_rand{deterministic},
-          m_consistency_check_ratio{consistency_check_ratio},
-          discriminatePorts(_discriminatePorts)
+          discriminatePorts{_discriminatePorts},
+          m_consistency_check_ratio{consistency_check_ratio}
     {
         Clear();
         if (deterministic) nKey = uint256{1};

@@ -935,7 +935,7 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK(addrman.Add(CAddress(addr, NODE_NONE), source));
     addrman.Good(addr);
 
-    BOOST_CHECK_EQUAL(addrman.size(), 36);
+    BOOST_CHECK_EQUAL(addrman.size(), 36U);
     CAddrInfo info = addrman.SelectTriedCollision();
     BOOST_CHECK_EQUAL(info.ToString(), "250.1.1.19:0");
 
