@@ -1,12 +1,12 @@
 Qitcoin Core integration/staging tree
 =======================================
 
-https://qiantongchain.com
+https://qitchain.org
 
 The Crypto Currency System Based on CPoC.
 
 Pay Tribute to Cryptocurrency Pioneers [Bitcoin](https://bitcoincore.org)
-and [Burst](https://www.burst-coin.org)!
+and [BitcoinHD](https://btchd.org)!
 
 About Qitcoin
 ---------------
