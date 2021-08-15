@@ -679,7 +679,7 @@ static RPCHelpMan getblocktemplate()
     if (!Params().IsTestChain()) {
 
          const CConnman& connman = EnsureConnman(node);
-         LogPrintf("connman.GetNodeCount(ConnectionDirection::Both)");
+         //LogPrintf("connman.GetNodeCount(ConnectionDirection::Both)");
 
          if (connman.GetNodeCount(ConnectionDirection::Both) == 0) {
              throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
@@ -751,7 +751,7 @@ static RPCHelpMan getblocktemplate()
 
     // GBT must be called with 'segwit' set in the rules
     if (setClientRules.count("segwit") != 1) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the segwit rule set (call with {\"rules\": [\"segwit\"]})");
+        //throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the segwit rule set (call with {\"rules\": [\"segwit\"]})");
     }
 
     // Update block
