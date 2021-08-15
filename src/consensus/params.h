@@ -195,8 +195,8 @@ struct Params {
         }
     }
     double Seniority(int nHeight, int nDifferenceInBlocks) const { 
-        unsigned int nSeniorityAge1 = nSeniorityHeight1;
-        unsigned int nSeniorityAge2 = nSeniorityHeight2;
+        int nSeniorityAge1 = nSeniorityHeight1;
+        int nSeniorityAge2 = nSeniorityHeight2;
         if(bTestnet) {
             if(nDifferenceInBlocks >= nSeniorityAge2)
                 return nSeniorityLevel2;
