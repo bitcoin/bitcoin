@@ -40,6 +40,7 @@ task_template: &TASK_TEMPLATE
     folder: "/tmp/ccache_dir"
   depends_built_cache:
     folder: "depends/built"
+    fingerprint_script: echo $CIRRUS_TASK_NAME $(git rev-list -1 HEAD ./depends)
   ci_script:
     - ./ci/test_run_all.sh
 
@@ -217,6 +218,7 @@ task:
   << : *BASE_TEMPLATE
   depends_sources_cache:
     folder: "depends/sources"
+    fingerprint_script: git rev-list -1 HEAD ./depends
   << : *TASK_TEMPLATE
   container:
     image: ubuntu:focal
