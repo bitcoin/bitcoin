@@ -185,6 +185,9 @@ public:
 
     /** Derive a private key, if private data is available in arg. */
     virtual bool GetPrivKey(int pos, const SigningProvider& arg, CKey& key) const = 0;
+
+    /** Make a deep copy of this PubkeyProvider */
+    virtual std::unique_ptr<PubkeyProvider> Clone() const = 0;
 };
 
 class OriginPubkeyProvider final : public PubkeyProvider
@@ -235,6 +238,10 @@ public:
     {
         return m_provider->GetPrivKey(pos, arg, key);
     }
+    std::unique_ptr<PubkeyProvider> Clone() const override
+    {
+        return std::make_unique<OriginPubkeyProvider>(m_expr_index, m_origin, m_provider->Clone());
+    }
 };
 
 /** An object representing a parsed constant public key in a descriptor. */
@@ -271,6 +278,10 @@ public:
     bool GetPrivKey(int pos, const SigningProvider& arg, CKey& key) const override
     {
         return arg.GetKey(m_pubkey.GetID(), key);
+    }
+    std::unique_ptr<PubkeyProvider> Clone() const override
+    {
+        return std::make_unique<ConstPubkeyProvider>(m_expr_index, m_pubkey, m_xonly);
     }
 };
 
@@ -479,6 +490,10 @@ public:
         if (m_derive == DeriveType::HARDENED) extkey.Derive(extkey, pos | 0x80000000UL);
         key = extkey.key;
         return true;
+    }
+    std::unique_ptr<PubkeyProvider> Clone() const override
+    {
+        return std::make_unique<BIP32PubkeyProvider>(m_expr_index, m_root_extkey, m_path, m_derive);
     }
 };
 
