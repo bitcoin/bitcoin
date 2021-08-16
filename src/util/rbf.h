@@ -17,7 +17,7 @@ static const uint32_t MAX_BIP125_RBF_SEQUENCE = 0xfffffffd;
 *
 * SEQUENCE_FINAL-1 is picked to still allow use of nLockTime by non-replaceable transactions. All
 * inputs rather than just one is for the sake of multi-party protocols, where we don't want a single
-* party to be able to disable replacement. */
-bool SignalsOptInRBF(const CTransaction &tx);
+* party to be able to disable replacement by opting out in their own input. */
+bool SignalsOptInRBF(const CTransaction& tx);
 
 #endif // BITCOIN_UTIL_RBF_H

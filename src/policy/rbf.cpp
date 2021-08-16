@@ -48,17 +48,19 @@ RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx)
 }
 
 std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
-                            CTxMemPool& pool,
-                            const CTxMemPool::setEntries& iters_conflicting,
-                            CTxMemPool::setEntries& all_conflicts)
+                                                  CTxMemPool& pool,
+                                                  const CTxMemPool::setEntries& iters_conflicting,
+                                                  CTxMemPool::setEntries& all_conflicts)
 {
     AssertLockHeld(pool.cs);
     const uint256 txid = tx.GetHash();
     uint64_t nConflictingCount = 0;
     for (const auto& mi : iters_conflicting) {
         nConflictingCount += mi->GetCountWithDescendants();
-        // This potentially overestimates the number of actual descendants but we just want to be
-        // conservative to avoid doing too much work.
+        // BIP125 Rule #5: don't consider replacing more than MAX_BIP125_REPLACEMENT_CANDIDATES
+        // entries from the mempool. This potentially overestimates the number of actual
+        // descendants (i.e. if multiple conflicts share a descendant, it will be counted multiple
+        // times), but we just want to be conservative to avoid doing too much work.
         if (nConflictingCount > MAX_BIP125_REPLACEMENT_CANDIDATES) {
             return strprintf("rejecting replacement %s; too many potential replacements (%d > %d)\n",
                              txid.ToString(),
@@ -66,8 +68,7 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
                              MAX_BIP125_REPLACEMENT_CANDIDATES);
         }
     }
-    // If not too many to replace, then calculate the set of
-    // transactions that would have to be evicted
+    // Calculate the set of all transactions that would have to be evicted.
     for (CTxMemPool::txiter it : iters_conflicting) {
         pool.CalculateDescendants(it, all_conflicts);
     }
@@ -81,19 +82,19 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx,
     AssertLockHeld(pool.cs);
     std::set<uint256> parents_of_conflicts;
     for (const auto& mi : iters_conflicting) {
-        for (const CTxIn &txin : mi->GetTx().vin) {
+        for (const CTxIn& txin : mi->GetTx().vin) {
             parents_of_conflicts.insert(txin.prevout.hash);
         }
     }
 
     for (unsigned int j = 0; j < tx.vin.size(); j++) {
-        // We don't want to accept replacements that require low feerate junk to be mined first.
-        // Ideally we'd keep track of the ancestor feerates and make the decision based on that, but
-        // for now requiring all new inputs to be confirmed works.
+        // BIP125 Rule #2: We don't want to accept replacements that require low feerate junk to be
+        // mined first.  Ideally we'd keep track of the ancestor feerates and make the decision
+        // based on that, but for now requiring all new inputs to be confirmed works.
         //
         // Note that if you relax this to make RBF a little more useful, this may break the
-        // CalculateMempoolAncestors RBF relaxation, above. See the comment above the first
-        // CalculateMempoolAncestors call for more info.
+        // CalculateMempoolAncestors RBF relaxation which subtracts the conflict count/size from the
+        // descendant limit.
         if (!parents_of_conflicts.count(tx.vin[j].prevout.hash)) {
             // Rather than check the UTXO set - potentially expensive - it's cheaper to just check
             // if the new input refers to a tx that's in the mempool.
@@ -111,7 +112,7 @@ std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries&
                                                    const uint256& txid)
 {
     for (CTxMemPool::txiter ancestorIt : ancestors) {
-        const uint256 &hashAncestor = ancestorIt->GetTx().GetHash();
+        const uint256& hashAncestor = ancestorIt->GetTx().GetHash();
         if (direct_conflicts.count(hashAncestor)) {
             return strprintf("%s spends conflicting transaction %s",
                              txid.ToString(),
@@ -153,16 +154,17 @@ std::optional<std::string> PaysForRBF(CAmount original_fees,
                                       CFeeRate relay_fee,
                                       const uint256& txid)
 {
-    // The replacement must pay greater fees than the transactions it
-    // replaces - if we did the bandwidth used by those conflicting
-    // transactions would not be paid for.
+    // BIP125 Rule #3: The replacement fees must be greater than or equal to fees of the
+    // transactions it replaces, otherwise the bandwidth used by those conflicting transactions
+    // would not be paid for.
     if (replacement_fees < original_fees) {
         return strprintf("rejecting replacement %s, less fees than conflicting txs; %s < %s",
                          txid.ToString(), FormatMoney(replacement_fees), FormatMoney(original_fees));
     }
 
-    // Finally in addition to paying more fees than the conflicts the
-    // new transaction must pay for its own bandwidth.
+    // BIP125 Rule #4: The new transaction must pay for its own bandwidth. Otherwise, we have a DoS
+    // vector where attackers can cause a transaction to be replaced (and relayed) repeatedly by
+    // increasing the fee by tiny amounts.
     CAmount additional_fees = replacement_fees - original_fees;
     if (additional_fees < relay_fee.GetFee(replacement_vsize)) {
         return strprintf("rejecting replacement %s, not enough additional fees to relay; %s < %s",
