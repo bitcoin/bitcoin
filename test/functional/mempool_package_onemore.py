@@ -51,7 +51,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         (second_chain, second_chain_value) = chain_transaction(self.nodes[0], [utxo[1]['txid']], [utxo[1]['vout']], utxo[1]['amount'], fee, 1)
 
         # Check mempool has MAX_ANCESTORS + 1 transactions in it
-        assert_equal(len(self.nodes[0].getrawmempool(True)), MAX_ANCESTORS + 1)
+        assert_equal(len(self.nodes[0].getrawmempool()), MAX_ANCESTORS + 1)
 
         # Adding one more transaction on to the chain should fail.
         assert_raises_rpc_error(-26, "too-long-mempool-chain, too many unconfirmed ancestors [limit: 25]", chain_transaction, self.nodes[0], [txid], [0], value, fee, 1)
@@ -74,7 +74,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         self.nodes[0].sendrawtransaction(signed_second_tx['hex'])
 
         # Finally, check that we added two transactions
-        assert_equal(len(self.nodes[0].getrawmempool(True)), MAX_ANCESTORS + 3)
+        assert_equal(len(self.nodes[0].getrawmempool()), MAX_ANCESTORS + 3)
 
 if __name__ == '__main__':
     MempoolPackagesTest().main()
