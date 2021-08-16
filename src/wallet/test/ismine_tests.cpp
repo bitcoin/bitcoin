@@ -25,13 +25,14 @@ wallet::ScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& 
 
     FlatSigningProvider keys;
     std::string error;
-    std::unique_ptr<Descriptor> parsed_desc = Parse(desc_str, keys, error, false);
-    BOOST_CHECK(success == (parsed_desc != nullptr));
+    auto parsed_descs = Parse(desc_str, keys, error, false);
+    BOOST_CHECK(success == (!parsed_descs.empty()));
     if (!success) return nullptr;
+    auto& desc = parsed_descs.at(0);
 
     const int64_t range_start = 0, range_end = 1, next_index = 0, timestamp = 1;
 
-    WalletDescriptor w_desc(std::move(parsed_desc), timestamp, range_start, range_end, next_index);
+    WalletDescriptor w_desc(std::move(desc), timestamp, range_start, range_end, next_index);
 
     LOCK(keystore.cs_wallet);
 
