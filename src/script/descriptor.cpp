@@ -1363,34 +1363,74 @@ enum class ParseScriptContext {
  * Parse a key path, being passed a split list of elements (the first element is ignored).
  *
  * @param[in] split BIP32 path string, using either ' or h for hardened derivation
- * @param[out] out the key path
+ * @param[out] out Vector of parsed key paths
  * @param[out] apostrophe only updated if hardened derivation is found
  * @param[out] error parsing error message
+ * @param[in] allow_multipath Allows the parsed path to use the multipath specifier
  * @returns false if parsing failed
  **/
-[[nodiscard]] bool ParseKeyPath(const std::vector<Span<const char>>& split, KeyPath& out, bool& apostrophe, std::string& error)
+[[nodiscard]] bool ParseKeyPath(const std::vector<Span<const char>>& split, std::vector<KeyPath>& out, bool& apostrophe, std::string& error, bool allow_multipath = false)
 {
+    using namespace spanparsing;
+
+    out.emplace_back();
+
     for (size_t i = 1; i < split.size(); ++i) {
-        Span<const char> elem = split[i];
-        bool hardened = false;
-        if (elem.size() > 0) {
-            const char last = elem[elem.size() - 1];
-            if (last == '\'' || last == 'h') {
-                elem = elem.first(elem.size() - 1);
-                hardened = true;
-                apostrophe = last == '\'';
+        std::vector<Span<const char>> to_process;
+        Span<const char> item = split[i];
+        if (item.size() > 0 && item[0] == '<' && item[item.size() - 1] == '>') {
+            if (!allow_multipath) {
+                error = strprintf("Key path value '%s' specifies multipath in a section where multipath is not allowed", std::string(item.begin(), item.end()));
+                return false;
             }
+            if (out.size() > 1) {
+                error = "Multiple multipath key path specifiers found";
+                return false;
+            }
+            to_process = Split(item.subspan(1, item.size() - 2), ';');
+            if (to_process.size() <= 1) {
+                error = "Multipath key path specifiers must have at least two items";
+                return false;
+            }
+        } else {
+            to_process.push_back(item);
         }
-        uint32_t p;
-        if (!ParseUInt32(std::string(elem.begin(), elem.end()), &p)) {
-            error = strprintf("Key path value '%s' is not a valid uint32", std::string(elem.begin(), elem.end()));
-            return false;
-        } else if (p > 0x7FFFFFFFUL) {
-            error = strprintf("Key path value %u is out of range", p);
-            return false;
+        std::vector<uint32_t> multipath_elems;
+        for (auto& elem : to_process) {
+            bool hardened = false;
+            if (elem.size() > 0) {
+                const char last = elem[elem.size() - 1];
+                if (last == '\'' || last == 'h') {
+                    elem = elem.first(elem.size() - 1);
+                    hardened = true;
+                    apostrophe = last == '\'';
+                }
+            }
+            uint32_t p;
+            if (!ParseUInt32(std::string(elem.begin(), elem.end()), &p)) {
+                error = strprintf("Key path value '%s' is not a valid uint32", std::string(elem.begin(), elem.end()));
+                return false;
+            } else if (p > 0x7FFFFFFFUL) {
+                error = strprintf("Key path value %u is out of range", p);
+                return false;
+            }
+            p |= ((uint32_t)hardened) << 31;
+            multipath_elems.push_back(p);
         }
-        out.push_back(p | (((uint32_t)hardened) << 31));
+        if (multipath_elems.size() == 1) {
+            for (auto& kp : out) {
+                kp.push_back(multipath_elems.at(0));
+            }
+            continue;
+        }
+        while (out.size() != multipath_elems.size()) {
+            out.push_back(out.at(0));
+        }
+        for (size_t j = 0; j < multipath_elems.size(); ++j) {
+            out[j].push_back(multipath_elems.at(j));
+        }
     }
+
     return true;
 }
 
@@ -1454,7 +1494,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
         error = strprintf("key '%s' is not valid", str);
         return {};
     }
-    KeyPath path;
+    std::vector<KeyPath> paths;
     DeriveType type = DeriveType::NO;
     if (split.back() == Span{"*"}.first(1)) {
         split.pop_back();
@@ -1464,12 +1504,14 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
         split.pop_back();
         type = DeriveType::HARDENED;
     }
-    if (!ParseKeyPath(split, path, apostrophe, error)) return {};
+    if (!ParseKeyPath(split, paths, apostrophe, error, true)) return {};
     if (extkey.key.IsValid()) {
         extpubkey = extkey.Neuter();
         out.keys.emplace(extpubkey.pubkey.GetID(), extkey.key);
     }
-    ret.emplace_back(std::make_unique<BIP32PubkeyProvider>(key_exp_index, extpubkey, std::move(path), type, apostrophe));
+    for (auto& path : paths) {
+        ret.emplace_back(std::make_unique<BIP32PubkeyProvider>(key_exp_index, extpubkey, std::move(path), type, apostrophe));
+    }
     return ret;
 }
 
@@ -1509,7 +1551,9 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t key_exp_index,
     static_assert(sizeof(info.fingerprint) == 4, "Fingerprint must be 4 bytes");
     assert(fpr_bytes.size() == 4);
     std::copy(fpr_bytes.begin(), fpr_bytes.end(), info.fingerprint);
-    if (!ParseKeyPath(slash_split, info.path, apostrophe, error)) return {};
+    std::vector<KeyPath> path;
+    if (!ParseKeyPath(slash_split, path, apostrophe, error)) return {};
+    info.path = path.at(0);
     auto providers = ParsePubkeyInner(key_exp_index, origin_split[1], ctx, out, apostrophe, error);
     if (providers.empty()) return {};
     ret.reserve(providers.size());
