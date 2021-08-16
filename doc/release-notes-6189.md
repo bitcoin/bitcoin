@@ -1,5 +1,7 @@
 Tests
 -----
 
-- For the `regtest` network the BIP 66 (DERSIG) activation height was changed
-  from 1251 to 102. (dash#6189)
+- For the `regtest` network the activation heights of several softforks were
+  changed. (dash#6189)
+  * BIP 34 (blockheight in coinbase) from 500 to 2
+  * BIP 66 (DERSIG) from 1251 to 102
