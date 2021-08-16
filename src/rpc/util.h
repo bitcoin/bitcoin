@@ -11,7 +11,6 @@
 #include <script/standard.h>
 #include <univalue.h>
 #include <util/strencodings.h>
-#include <rpc/protocol.h>
 
 #include <string>
 #include <vector>
