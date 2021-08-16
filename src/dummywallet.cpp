@@ -48,6 +48,16 @@ void DummyWalletInit::AddWalletOptions() const
 
 const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
 
+fs::path GetWalletDir()
+{
+    throw std::logic_error("Wallet function called in non-wallet build.");
+}
+
+std::vector<fs::path> ListWalletDir()
+{
+    throw std::logic_error("Wallet function called in non-wallet build.");
+}
+
 std::vector<std::shared_ptr<CWallet>> GetWallets()
 {
     throw std::logic_error("Wallet function called in non-wallet build.");
