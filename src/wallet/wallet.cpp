@@ -3199,7 +3199,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
                 std::string desc_str = desc_val.getValStr();
                 FlatSigningProvider keys;
                 std::string dummy_error;
-                std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, dummy_error, false);
+                std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, dummy_error, false).first;
                 if (!desc->GetOutputType()) {
                     continue;
                 }

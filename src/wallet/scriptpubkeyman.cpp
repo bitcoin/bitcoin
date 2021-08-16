@@ -1928,7 +1928,7 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     // Make the descriptor
     FlatSigningProvider keys;
     std::string error;
-    std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, error, false);
+    std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, error, false).first;
     WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
     m_wallet_descriptor = w_desc;
 

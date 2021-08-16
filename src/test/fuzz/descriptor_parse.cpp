@@ -21,10 +21,16 @@ FUZZ_TARGET_INIT(descriptor_parse, initialize_descriptor_parse)
     std::string error;
     for (const bool require_checksum : {true, false}) {
         const auto desc = Parse(descriptor, signing_provider, error, require_checksum);
-        if (desc) {
-            (void)desc->ToString();
-            (void)desc->IsRange();
-            (void)desc->IsSolvable();
+        if (desc.first) {
+            (void)desc.first->ToString();
+            (void)desc.first->IsRange();
+            (void)desc.first->IsSolvable();
+        }
+        if (desc.second) {
+            assert(desc.first);
+            (void)desc.second->ToString();
+            assert(desc.first->IsRange() == desc.second->IsRange());
+            assert(desc.first->IsSolvable() == desc.second->IsSolvable());
         }
     }
 }

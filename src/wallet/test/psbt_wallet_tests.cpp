@@ -18,7 +18,7 @@ static void import_descriptor(CWallet& wallet, const std::string& descriptor)
     LOCK(wallet.cs_wallet);
     FlatSigningProvider provider;
     std::string error;
-    std::unique_ptr<Descriptor> desc = Parse(descriptor, provider, error, /* require_checksum=*/ false);
+    std::unique_ptr<Descriptor> desc = Parse(descriptor, provider, error, /* require_checksum=*/ false).first;
     assert(desc);
     WalletDescriptor w_desc(std::move(desc), 0, 0, 10, 0);
     wallet.AddWalletDescriptor(w_desc, provider, "", false);

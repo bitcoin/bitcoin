@@ -3384,12 +3384,16 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
                 FlatSigningProvider desc_out;
                 std::string error;
                 std::vector<CScript> scripts_temp;
-                std::unique_ptr<Descriptor> desc = Parse(desc_str, desc_out, error, true);
-                if (!desc) {
+                std::pair<std::unique_ptr<Descriptor>, std::unique_ptr<Descriptor>> descs = Parse(desc_str, desc_out, error, true);
+                if (!descs.first) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unable to parse descriptor '%s': %s", desc_str, error));
                 }
-                desc->Expand(0, desc_out, scripts_temp, desc_out);
+                descs.first->Expand(0, desc_out, scripts_temp, desc_out);
                 coinControl.m_external_provider = Merge(coinControl.m_external_provider, desc_out);
+                if (descs.second) {
+                    descs.second->Expand(0, desc_out, scripts_temp, desc_out);
+                    coinControl.m_external_provider = Merge(coinControl.m_external_provider, desc_out);
+                }
             }
         }
     }

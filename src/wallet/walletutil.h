@@ -86,7 +86,7 @@ public:
     {
         std::string error;
         FlatSigningProvider keys;
-        descriptor = Parse(str, keys, error, true);
+        descriptor = Parse(str, keys, error, true).first;
         if (!descriptor) {
             throw std::ios_base::failure("Invalid descriptor: " + error);
         }

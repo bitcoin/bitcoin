@@ -21,8 +21,8 @@ void CheckUnparsable(const std::string& prv, const std::string& pub, const std::
 {
     FlatSigningProvider keys_priv, keys_pub;
     std::string error;
-    auto parse_priv = Parse(prv, keys_priv, error);
-    auto parse_pub = Parse(pub, keys_pub, error);
+    auto parse_priv = Parse(prv, keys_priv, error).first;
+    auto parse_pub = Parse(pub, keys_pub, error).first;
     BOOST_CHECK_MESSAGE(!parse_priv, prv);
     BOOST_CHECK_MESSAGE(!parse_pub, pub);
     BOOST_CHECK_EQUAL(error, expected_error);
@@ -86,14 +86,14 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
     std::unique_ptr<Descriptor> parse_pub;
     // Check that parsing succeeds.
     if (replace_apostrophe_with_h_in_prv) {
-        parse_priv = Parse(UseHInsteadOfApostrophe(prv), keys_priv, error);
+        parse_priv = Parse(UseHInsteadOfApostrophe(prv), keys_priv, error).first;
     } else {
-        parse_priv = Parse(prv, keys_priv, error);
+        parse_priv = Parse(prv, keys_priv, error).first;
     }
     if (replace_apostrophe_with_h_in_pub) {
-        parse_pub = Parse(UseHInsteadOfApostrophe(pub), keys_pub, error);
+        parse_pub = Parse(UseHInsteadOfApostrophe(pub), keys_pub, error).first;
     } else {
-        parse_pub = Parse(pub, keys_pub, error);
+        parse_pub = Parse(pub, keys_pub, error).first;
     }
 
     BOOST_CHECK(parse_priv);

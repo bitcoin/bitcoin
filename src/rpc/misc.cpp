@@ -170,6 +170,7 @@ static RPCHelpMan getdescriptorinfo()
                 RPCResult::Type::OBJ, "", "",
                 {
                     {RPCResult::Type::STR, "descriptor", "The descriptor in canonical form, without private keys"},
+                    {RPCResult::Type::STR, "descriptor_change", "The change descriptor in canonical form, without private keys. Only if the provided descriptor specifies derivation paths for both receiving and change."},
                     {RPCResult::Type::STR, "checksum", "The checksum for the input descriptor"},
                     {RPCResult::Type::BOOL, "isrange", "Whether the descriptor is ranged"},
                     {RPCResult::Type::BOOL, "issolvable", "Whether the descriptor is solvable"},
@@ -187,16 +188,21 @@ static RPCHelpMan getdescriptorinfo()
 
     FlatSigningProvider provider;
     std::string error;
-    auto desc = Parse(request.params[0].get_str(), provider, error);
-    if (!desc) {
+    auto descs = Parse(request.params[0].get_str(), provider, error);
+    auto& recv_desc = descs.first;
+    auto& change_desc = descs.second;
+    if (!recv_desc) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("descriptor", desc->ToString());
+    result.pushKV("descriptor", recv_desc->ToString());
+    if (change_desc) {
+        result.pushKV("descriptor_change", change_desc->ToString());
+    }
     result.pushKV("checksum", GetDescriptorChecksum(request.params[0].get_str()));
-    result.pushKV("isrange", desc->IsRange());
-    result.pushKV("issolvable", desc->IsSolvable());
+    result.pushKV("isrange", recv_desc->IsRange());
+    result.pushKV("issolvable", recv_desc->IsSolvable());
     result.pushKV("hasprivatekeys", provider.keys.size() > 0);
     return result;
 },
@@ -216,7 +222,8 @@ static RPCHelpMan deriveaddresses()
             "    raw(<hex script>)                    Outputs whose scriptPubKey equals the specified hex scripts\n"
             "\nIn the above, <pubkey> either refers to a fixed public key in hexadecimal notation, or to an xpub/xprv optionally followed by one\n"
             "or more path elements separated by \"/\", where \"h\" represents a hardened child key.\n"
-            "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n"},
+            "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n"
+            "Note that only descriptors that specify a single derivation path can be derived.\n"},
             {
                 {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
                 {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED_NAMED_ARG, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
@@ -246,7 +253,11 @@ static RPCHelpMan deriveaddresses()
 
     FlatSigningProvider key_provider;
     std::string error;
-    auto desc = Parse(desc_str, key_provider, error, /* require_checksum = */ true);
+    auto descs = Parse(desc_str, key_provider, error, /* require_checksum = */ true);
+    if (descs.second) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Descriptor specifying both receiving and change derivation paths are not allowed");
+    }
+    auto& desc = descs.first;
     if (!desc) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
