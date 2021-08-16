@@ -11,6 +11,9 @@
 #include <functional>
 #include <string_view>
 
+#define LIMITED_WHILE(condition, limit) \
+    for (unsigned _count{limit}; (condition) && _count; --_count)
+
 using FuzzBufferType = Span<const uint8_t>;
 
 using TypeTestOneInput = std::function<void(FuzzBufferType)>;
