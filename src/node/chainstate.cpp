@@ -18,11 +18,12 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      NodeContext& node,
                                                      bool fPruneMode,
                                                      const CChainParams& chainparams,
-                                                     const ArgsManager& args,
                                                      bool fReindexChainState,
                                                      int64_t nBlockTreeDBCache,
                                                      int64_t nCoinDBCache,
-                                                     int64_t nCoinCacheUsage)
+                                                     int64_t nCoinCacheUsage,
+                                                     unsigned int check_blocks,
+                                                     unsigned int check_level)
 {
     auto is_coinsview_empty = [&](CChainState* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         return fReset || fReindexChainState || chainstate->CoinsTip().GetBestBlock().IsNull();
@@ -140,7 +141,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
             for (CChainState* chainstate : chainman.GetAll()) {
                 if (!is_coinsview_empty(chainstate)) {
                     uiInterface.InitMessage(_("Verifying blocks…").translated);
-                    if (fHavePruned && args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
+                    if (fHavePruned && check_blocks > MIN_BLOCKS_TO_KEEP) {
                         LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
                             MIN_BLOCKS_TO_KEEP);
                     }
@@ -153,8 +154,8 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
 
                     if (!CVerifyDB().VerifyDB(
                             *chainstate, chainparams, chainstate->CoinsDB(),
-                            args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL),
-                            args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
+                            check_level,
+                            check_blocks)) {
                         return ChainstateLoadingError::ERROR_CORRUPTED_BLOCK_DB;
                     }
                 }

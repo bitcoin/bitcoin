@@ -1424,11 +1424,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                  node,
                                  fPruneMode,
                                  chainparams,
-                                 args,
                                  fReindexChainState,
                                  nBlockTreeDBCache,
                                  nCoinDBCache,
-                                 nCoinCacheUsage);
+                                 nCoinCacheUsage,
+                                 args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS),
+                                 args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL));
         if (rv.has_value()) {
             switch (rv.value()) {
             case ChainstateLoadingError::ERROR_LOADING_BLOCK_DB:
