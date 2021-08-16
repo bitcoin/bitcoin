@@ -21,7 +21,7 @@ class WalletGroupTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
         self.extra_args = [[], [], ['-avoidpartialspends']]
-        self.rpc_timewait = 120
+        self.rpc_timeout = 120
 
     def run_test (self):
         # Mine some coins

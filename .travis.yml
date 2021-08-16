@@ -2,7 +2,7 @@
 # - sudo/dist/group are set so as to get Blue Box VMs, necessary for [loopback]
 #   IPv6 support
 
-dist: bionic
+dist: xenial
 
 os: linux
 language: minimal

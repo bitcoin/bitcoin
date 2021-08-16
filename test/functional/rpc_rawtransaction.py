@@ -45,7 +45,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # TODO: remove -txindex. Currently required for getrawtransaction call.
         self.extra_args = [["-txindex"], ["-txindex"], ["-txindex"]]
 
-    def setup_network(self, split=False):
+    def setup_network(self):
         super().setup_network()
         connect_nodes_bi(self.nodes, 0, 2)
 

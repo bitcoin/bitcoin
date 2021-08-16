@@ -4,7 +4,7 @@ Upstream-Contact: Dash Core Group, Inc https://www.dash.org/team/
 Source: https://github.com/dashpay/dash
 
 Files: *
-Copyright: 2009-2017, Bitcoin Core Developers,
+Copyright: 2009-2019, Bitcoin Core Developers,
            2019-2020, Dash Core Developers
 License: Expat
 Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
