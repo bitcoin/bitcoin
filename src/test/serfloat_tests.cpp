@@ -102,11 +102,12 @@ BOOST_AUTO_TEST_CASE(double_serfloat_tests) {
 Python code to generate the below hashes:
 
     def reversed_hex(x):
-        return binascii.hexlify(''.join(reversed(x)))
+        return bytes(reversed(x)).hex()
+
     def dsha256(x):
         return hashlib.sha256(hashlib.sha256(x).digest()).digest()
 
-    reversed_hex(dsha256(''.join(struct.pack('<d', x) for x in range(0,1000)))) == '43d0c82591953c4eafe114590d392676a01585d25b25d433557f0d7878b23f96'
+    reversed_hex(dsha256(b''.join(struct.pack('<d', x) for x in range(0,1000)))) == '43d0c82591953c4eafe114590d392676a01585d25b25d433557f0d7878b23f96'
 */
 BOOST_AUTO_TEST_CASE(doubles)
 {
