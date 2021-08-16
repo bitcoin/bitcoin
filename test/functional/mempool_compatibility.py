@@ -65,8 +65,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         self.log.info("Add unbroadcasted tx to mempool on new node and shutdown")
         unbroadcasted_tx_hash = new_wallet.send_self_transfer(from_node=new_node)['txid']
         assert unbroadcasted_tx_hash in new_node.getrawmempool()
-        mempool = new_node.getrawmempool(True)
-        assert mempool[unbroadcasted_tx_hash]['unbroadcast']
+        assert new_node.getmempoolentry(unbroadcasted_tx_hash)['unbroadcast']
         self.stop_node(1)
 
         self.log.info("Move mempool.dat from new to old node")

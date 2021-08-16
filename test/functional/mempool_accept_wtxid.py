@@ -90,7 +90,7 @@ class MempoolWtxidTest(BitcoinTestFramework):
 
         self.log.info("Submit child_one to the mempool")
         txid_submitted = node.sendrawtransaction(child_one.serialize().hex())
-        assert_equal(node.getrawmempool(True)[txid_submitted]['wtxid'], child_one_wtxid)
+        assert_equal(node.getmempoolentry(txid_submitted)['wtxid'], child_one_wtxid)
 
         peer_wtxid_relay.wait_for_broadcast([child_one_wtxid])
         assert_equal(node.getmempoolinfo()["unbroadcastcount"], 0)

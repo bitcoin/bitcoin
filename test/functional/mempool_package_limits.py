@@ -74,7 +74,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             txid = tx.rehash()
             if i < mempool_count:
                 node.sendrawtransaction(txhex)
-                assert_equal(node.getrawmempool(verbose=True)[txid]["ancestorcount"], i + 1)
+                assert_equal(node.getmempoolentry(txid)["ancestorcount"], i + 1)
             else:
                 chain_hex.append(txhex)
                 chain_txns.append(tx)
