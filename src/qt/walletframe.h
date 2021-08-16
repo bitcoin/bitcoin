@@ -13,6 +13,7 @@ class PlatformStyle;
 class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
+class MasternodeList;
 
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
@@ -48,11 +49,14 @@ public:
 
 Q_SIGNALS:
     void createWalletButtonClicked();
+    void message(const QString& title, const QString& message, unsigned int style);
 
 private:
     QStackedWidget *walletStack;
     ClientModel *clientModel;
     QMap<WalletModel*, WalletView*> mapWalletViews;
+    // SYSCOIN
+    MasternodeList* masternodeListPage;
 
     bool bOutOfSync;
 

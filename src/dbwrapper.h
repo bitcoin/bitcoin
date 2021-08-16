@@ -540,7 +540,7 @@ protected:
 
     struct ValueHolder {
         size_t memoryUsage;
-        ValueHolder(size_t _memoryUsage) : memoryUsage(_memoryUsage) {}
+        explicit ValueHolder(size_t _memoryUsage) : memoryUsage(_memoryUsage) {}
         virtual ~ValueHolder() = default;
         virtual void Write(const CDataStream& ssKey, CommitTarget &parent) = 0;
     };

@@ -111,6 +111,9 @@ SyscoinGUI::SyscoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
             connect(activity, &CreateWalletActivity::finished, activity, &QObject::deleteLater);
             activity->create();
         });
+        connect(walletFrame, &WalletFrame::message, [this](const QString& title, const QString& message, unsigned int style) {
+            this->message(title, message, style);
+        });
         setCentralWidget(walletFrame);
     } else
 #endif // ENABLE_WALLET
@@ -295,6 +298,7 @@ void SyscoinGUI::createActions()
         tabGroup->addAction(masternodeAction);
         connect(masternodeAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
         connect(masternodeAction, &QAction::triggered,  [this]{ gotoMasternodePage(); });
+        masternodeAction->setEnabled(true);
     }
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
@@ -795,11 +799,6 @@ void SyscoinGUI::setWalletActionsEnabled(bool enabled)
     receiveCoinsAction->setEnabled(enabled);
     receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
-    // SYSCOIN
-    QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
-        masternodeAction->setEnabled(enabled);
-    }
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
     changePassphraseAction->setEnabled(enabled);

@@ -328,7 +328,7 @@ void CQuorumManager::ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStar
     }
     // Get the block indexes of the mined commitments to build the required quorums from
     std::vector<const CBlockIndex*> quorumIndexes;
-    quorumBlockProcessor->GetMinedCommitmentsUntilBlock(llmqType, (const CBlockIndex*)pIndexScanCommitments, nScanCommitments, quorumIndexes);
+    quorumBlockProcessor->GetMinedCommitmentsUntilBlock(llmqType, static_cast<const CBlockIndex*>(pIndexScanCommitments), nScanCommitments, quorumIndexes);
     vecResultQuorums.reserve(vecResultQuorums.size() + quorumIndexes.size());
 
     for (auto& quorumIndex : quorumIndexes) {

@@ -37,89 +37,201 @@ UniValue CRecoveredSig::ToJson() const
     return ret;
 }
 
-CRecoveredSigsDb::CRecoveredSigsDb(CDBWrapper& _db) :
-    db(_db)
+CRecoveredSigsDb::CRecoveredSigsDb(bool fMemory, bool fWipe)
 {
-
+    db = std::make_unique<CDBWrapper>(fMemory ? "" : (gArgs.GetDataDirNet() / "llmq/recsigdb"), 8 << 20, fMemory, fWipe);
+    MigrateRecoveredSigs();
 }
 
-// This converts time values in "rs_t" from host endianness to big endianness, which is required to have proper ordering of the keys
-void CRecoveredSigsDb::ConvertInvalidTimeKeys()
+void CRecoveredSigsDb::MigrateRecoveredSigs()
 {
-    LogPrintf("CRecoveredSigsDb::%s -- converting invalid rs_t keys\n", __func__);
+    if (!db->IsEmpty()) return;
 
-    std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
+    LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%d -- start\n", __func__);
 
-    auto start = std::make_tuple(std::string("rs_t"), (uint32_t)0, (uint8_t)0, uint256());
-    pcursor->Seek(start);
+    CDBBatch batch(*db);
+    auto oldDb = std::make_unique<CDBWrapper>(gArgs.GetDataDirNet() / "llmq", 8 << 20);
+    std::unique_ptr<CDBIterator> pcursor(oldDb->NewIterator());
 
-    CDBBatch batch(db);
-    size_t cnt = 0;
+    auto start_h = std::make_tuple(std::string("rs_h"), uint256());
+    pcursor->Seek(start_h);
+
     while (pcursor->Valid()) {
-        decltype(start) k;
+        decltype(start_h) k;
+        std::pair<uint8_t, uint256> v;
+
+        if (!pcursor->GetKey(k) || std::get<0>(k) != "rs_h") {
+            break;
+        }
+        if (!pcursor->GetValue(v)) {
+            break;
+        }
+
+        batch.Write(k, v);
+
+        if (batch.SizeEstimate() >= (1 << 24)) {
+            db->WriteBatch(batch);
+            batch.Clear();
+        }
+
+        pcursor->Next();
+    }
+
+    auto start_r1 = std::make_tuple(std::string("rs_r"), (uint8_t)0, uint256());
+    pcursor->Seek(start_r1);
+
+    while (pcursor->Valid()) {
+        decltype(start_r1) k;
+        CRecoveredSig v;
+
+        if (!pcursor->GetKey(k) || std::get<0>(k) != "rs_r") {
+            break;
+        }
+        if (!pcursor->GetValue(v)) {
+            break;
+        }
+
+        batch.Write(k, v);
+
+        if (batch.SizeEstimate() >= (1 << 24)) {
+            db->WriteBatch(batch);
+            batch.Clear();
+        }
+
+        pcursor->Next();
+    }
+
+    auto start_r2 = std::make_tuple(std::string("rs_r"), (uint32_t)0, uint256(), uint256());
+    pcursor->Seek(start_r2);
+
+    while (pcursor->Valid()) {
+        decltype(start_r2) k;
+        uint32_t v;
+
+        if (!pcursor->GetKey(k) || std::get<0>(k) != "rs_r") {
+            break;
+        }
+        if (!pcursor->GetValue(v)) {
+            break;
+        }
+
+        batch.Write(k, v);
+
+        if (batch.SizeEstimate() >= (1 << 24)) {
+            db->WriteBatch(batch);
+            batch.Clear();
+        }
+
+        pcursor->Next();
+    }
+
+    auto start_s = std::make_tuple(std::string("rs_s"), uint256());
+    pcursor->Seek(start_s);
+
+    while (pcursor->Valid()) {
+        decltype(start_s) k;
+        uint8_t v;
+
+        if (!pcursor->GetKey(k) || std::get<0>(k) != "rs_s") {
+            break;
+        }
+        if (!pcursor->GetValue(v)) {
+            break;
+        }
+
+        batch.Write(k, v);
+
+        if (batch.SizeEstimate() >= (1 << 24)) {
+            db->WriteBatch(batch);
+            batch.Clear();
+        }
+
+        pcursor->Next();
+    }
+
+    auto start_t = std::make_tuple(std::string("rs_t"), (uint32_t)0, (uint8_t)0, uint256());
+    pcursor->Seek(start_t);
+
+    while (pcursor->Valid()) {
+        decltype(start_t) k;
+        uint8_t v;
 
         if (!pcursor->GetKey(k) || std::get<0>(k) != "rs_t") {
             break;
         }
+        if (!pcursor->GetValue(v)) {
+            break;
+        }
 
-        batch.Erase(k);
-        std::get<1>(k) = htobe32(std::get<1>(k));
-        batch.Write(k, (uint8_t)1);
+        batch.Write(k, v);
 
-        cnt++;
+        if (batch.SizeEstimate() >= (1 << 24)) {
+            db->WriteBatch(batch);
+            batch.Clear();
+        }
 
         pcursor->Next();
     }
-    pcursor.reset();
 
-    db.WriteBatch(batch);
+    auto start_v = std::make_tuple(std::string("rs_v"), (uint8_t)0, uint256());
+    pcursor->Seek(start_v);
 
-    LogPrintf("CRecoveredSigsDb::%s -- converted %d invalid rs_t keys\n", __func__, cnt);
-}
-
-// This adds rs_vt keys for every rs_v entry to the DB. The time in the key is set to the current time.
-// This causes cleanup of all these votes a week later.
-void CRecoveredSigsDb::AddVoteTimeKeys()
-{
-    LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%s -- adding rs_vt keys with current time\n", __func__);
-
-    auto curTime = GetAdjustedTime();
-
-    std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
-
-    auto start = std::make_tuple(std::string("rs_v"), (uint8_t)0, uint256());
-    pcursor->Seek(start);
-
-    CDBBatch batch(db);
-    size_t cnt = 0;
     while (pcursor->Valid()) {
-        decltype(start) k;
+        decltype(start_v) k;
+        uint256 v;
 
         if (!pcursor->GetKey(k) || std::get<0>(k) != "rs_v") {
             break;
         }
+        if (!pcursor->GetValue(v)) {
+            break;
+        }
 
-        uint8_t llmqType = std::get<1>(k);
-        const uint256& id = std::get<2>(k);
+        batch.Write(k, v);
 
-        auto k2 = std::make_tuple(std::string("rs_vt"), (uint32_t)htobe32(curTime), llmqType, id);
-        batch.Write(k2, (uint8_t)1);
-
-        cnt++;
+        if (batch.SizeEstimate() >= (1 << 24)) {
+            db->WriteBatch(batch);
+            batch.Clear();
+        }
 
         pcursor->Next();
     }
+
+    auto start_vt = std::make_tuple(std::string("rs_vt"), (uint32_t)0, (uint8_t)0, uint256());
+    pcursor->Seek(start_vt);
+
+    while (pcursor->Valid()) {
+        decltype(start_vt) k;
+        uint8_t v;
+
+        if (!pcursor->GetKey(k) || std::get<0>(k) != "rs_vt") {
+            break;
+        }
+        if (!pcursor->GetValue(v)) {
+            break;
+        }
+
+        batch.Write(k, v);
+
+        if (batch.SizeEstimate() >= (1 << 24)) {
+            db->WriteBatch(batch);
+            batch.Clear();
+        }
+
+        pcursor->Next();
+    }
+
+    db->WriteBatch(batch);
     pcursor.reset();
+    oldDb.reset();
 
-    db.WriteBatch(batch);
-
-    LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%s -- added %d rs_vt entries\n", __func__, cnt);
+    LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%d -- done\n", __func__);
 }
 
 bool CRecoveredSigsDb::HasRecoveredSig(uint8_t llmqType, const uint256& id, const uint256& msgHash) const
 {
     auto k = std::make_tuple(std::string("rs_r"), llmqType, id, msgHash);
-    return db.Exists(k);
+    return db->Exists(k);
 }
 
 bool CRecoveredSigsDb::HasRecoveredSigForId(uint8_t llmqType, const uint256& id)
@@ -135,7 +247,7 @@ bool CRecoveredSigsDb::HasRecoveredSigForId(uint8_t llmqType, const uint256& id)
 
 
     auto k = std::make_tuple(std::string("rs_r"), llmqType, id);
-    ret = db.Exists(k);
+    ret = db->Exists(k);
 
     LOCK(cs);
     hasSigForIdCache.insert(cacheKey, ret);
@@ -153,7 +265,7 @@ bool CRecoveredSigsDb::HasRecoveredSigForSession(const uint256& signHash)
     }
 
     auto k = std::make_tuple(std::string("rs_s"), signHash);
-    ret = db.Exists(k);
+    ret = db->Exists(k);
 
     LOCK(cs);
     hasSigForSessionCache.insert(signHash, ret);
@@ -171,7 +283,7 @@ bool CRecoveredSigsDb::HasRecoveredSigForHash(const uint256& hash)
     }
 
     auto k = std::make_tuple(std::string("rs_h"), hash);
-    ret = db.Exists(k);
+    ret = db->Exists(k);
 
     LOCK(cs);
     hasSigForHashCache.insert(hash, ret);
@@ -183,7 +295,7 @@ bool CRecoveredSigsDb::ReadRecoveredSig(uint8_t llmqType, const uint256& id, CRe
     auto k = std::make_tuple(std::string("rs_r"), llmqType, id);
 
     CDataStream ds(SER_DISK, CLIENT_VERSION);
-    if (!db.ReadDataStream(k, ds)) {
+    if (!db->ReadDataStream(k, ds)) {
         return false;
     }
 
@@ -199,7 +311,7 @@ bool CRecoveredSigsDb::GetRecoveredSigByHash(const uint256& hash, CRecoveredSig&
 {
     auto k1 = std::make_tuple(std::string("rs_h"), hash);
     std::pair<uint8_t, uint256> k2;
-    if (!db.Read(k1, k2)) {
+    if (!db->Read(k1, k2)) {
         return false;
     }
 
@@ -213,7 +325,7 @@ bool CRecoveredSigsDb::GetRecoveredSigById(uint8_t llmqType, const uint256& id, 
 
 void CRecoveredSigsDb::WriteRecoveredSig(const llmq::CRecoveredSig& recSig)
 {
-    CDBBatch batch(db);
+    CDBBatch batch(*db);
 
     uint32_t curTime = GetAdjustedTime();
 
@@ -238,7 +350,7 @@ void CRecoveredSigsDb::WriteRecoveredSig(const llmq::CRecoveredSig& recSig)
     auto k5 = std::make_tuple(std::string("rs_t"), (uint32_t)htobe32(curTime), recSig.llmqType, recSig.id);
     batch.Write(k5, (uint8_t)1);
 
-    db.WriteBatch(batch);
+    db->WriteBatch(batch);
 
     {
         LOCK(cs);
@@ -273,7 +385,7 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, uint8_t llmqType, con
     if (deleteTimeKey) {
         CDataStream writeTimeDs(SER_DISK, CLIENT_VERSION);
         // TODO remove the size() == sizeof(uint32_t) in a future version (when we stop supporting upgrades from < 0.14.1)
-        if (db.ReadDataStream(k2, writeTimeDs) && writeTimeDs.size() == sizeof(uint32_t)) {
+        if (db->ReadDataStream(k2, writeTimeDs) && writeTimeDs.size() == sizeof(uint32_t)) {
             uint32_t writeTime;
             writeTimeDs >> writeTime;
             auto k5 = std::make_tuple(std::string("rs_t"), (uint32_t) htobe32(writeTime), recSig.llmqType, recSig.id);
@@ -292,9 +404,9 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, uint8_t llmqType, con
 void CRecoveredSigsDb::RemoveRecoveredSig(uint8_t llmqType, const uint256& id)
 {
     AssertLockHeld(cs);
-    CDBBatch batch(db);
+    CDBBatch batch(*db);
     RemoveRecoveredSig(batch, llmqType, id, true, true);
-    db.WriteBatch(batch);
+    db->WriteBatch(batch);
 }
 
 // Remove the recovered sig itself and all keys required to get from id -> recSig
@@ -302,14 +414,14 @@ void CRecoveredSigsDb::RemoveRecoveredSig(uint8_t llmqType, const uint256& id)
 void CRecoveredSigsDb::TruncateRecoveredSig(uint8_t llmqType, const uint256& id)
 {
     LOCK(cs);
-    CDBBatch batch(db);
+    CDBBatch batch(*db);
     RemoveRecoveredSig(batch, llmqType, id, false, false);
-    db.WriteBatch(batch);
+    db->WriteBatch(batch);
 }
 
 void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
 {
-    std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
+    std::unique_ptr<CDBIterator> pcursor(db->NewIterator());
 
     auto start = std::make_tuple(std::string("rs_t"), (uint32_t)0, (uint8_t)0, uint256());
     uint32_t endTime = (uint32_t)(GetAdjustedTime() - maxAge);
@@ -339,14 +451,14 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
         return;
     }
 
-    CDBBatch batch(db);
+    CDBBatch batch(*db);
     {
         LOCK(cs);
         for (const auto& e : toDelete) {
             RemoveRecoveredSig(batch, e.first, e.second, true, false);
 
             if (batch.SizeEstimate() >= (1 << 24)) {
-                db.WriteBatch(batch);
+                db->WriteBatch(batch);
                 batch.Clear();
             }
         }
@@ -356,7 +468,7 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
         batch.Erase(e);
     }
 
-    db.WriteBatch(batch);
+    db->WriteBatch(batch);
 
     LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%d -- deleted %d entries\n", __func__, toDelete.size());
 }
@@ -364,13 +476,13 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
 bool CRecoveredSigsDb::HasVotedOnId(uint8_t llmqType, const uint256& id) const
 {
     auto k = std::make_tuple(std::string("rs_v"), llmqType, id);
-    return db.Exists(k);
+    return db->Exists(k);
 }
 
 bool CRecoveredSigsDb::GetVoteForId(uint8_t llmqType, const uint256& id, uint256& msgHashRet) const
 {
     auto k = std::make_tuple(std::string("rs_v"), llmqType, id);
-    return db.Read(k, msgHashRet);
+    return db->Read(k, msgHashRet);
 }
 
 void CRecoveredSigsDb::WriteVoteForId(uint8_t llmqType, const uint256& id, const uint256& msgHash)
@@ -378,22 +490,22 @@ void CRecoveredSigsDb::WriteVoteForId(uint8_t llmqType, const uint256& id, const
     auto k1 = std::make_tuple(std::string("rs_v"), llmqType, id);
     auto k2 = std::make_tuple(std::string("rs_vt"), (uint32_t)htobe32(GetAdjustedTime()), llmqType, id);
 
-    CDBBatch batch(db);
+    CDBBatch batch(*db);
     batch.Write(k1, msgHash);
     batch.Write(k2, (uint8_t)1);
 
-    db.WriteBatch(batch);
+    db->WriteBatch(batch);
 }
 
 void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 {
-    std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
+    std::unique_ptr<CDBIterator> pcursor(db->NewIterator());
 
     auto start = std::make_tuple(std::string("rs_vt"), (uint32_t)0, (uint8_t)0, uint256());
     uint32_t endTime = (uint32_t)(GetAdjustedTime() - maxAge);
     pcursor->Seek(start);
 
-    CDBBatch batch(db);
+    CDBBatch batch(*db);
     size_t cnt = 0;
     while (pcursor->Valid()) {
         decltype(start) k;
@@ -421,15 +533,15 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
         return;
     }
 
-    db.WriteBatch(batch);
+    db->WriteBatch(batch);
 
     LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%d -- deleted %d entries\n", __func__, cnt);
 }
 
 //////////////////
 
-CSigningManager::CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _connman, PeerManager& _peerman, ChainstateManager& _chainman) :
-    db(llmqDb),
+CSigningManager::CSigningManager(bool fMemory, CConnman& _connman, PeerManager& _peerman, ChainstateManager& _chainman, bool fWipe) :
+    db(fMemory, fWipe),
     connman(_connman),
     peerman(_peerman),
     chainman(_chainman)

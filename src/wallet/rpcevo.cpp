@@ -980,7 +980,6 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
         if (pwallet) {
             LOCK2(pwallet->cs_wallet, cs_main);
             bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner);
-            bool hasOperatorKey = false; //CheckWalletOwnsKey(dmn->pdmnState->keyIDOperator);
             bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting);
 
             bool ownsCollateral = false;
@@ -997,7 +996,7 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
         
             UniValue walletObj(UniValue::VOBJ);
             walletObj.pushKV("hasOwnerKey", hasOwnerKey);
-            walletObj.pushKV("hasOperatorKey", hasOperatorKey);
+            walletObj.pushKV("hasOperatorKey", false);
             walletObj.pushKV("hasVotingKey", hasVotingKey);
             walletObj.pushKV("ownsCollateral", ownsCollateral);
             walletObj.pushKV("ownsPayeeScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout));

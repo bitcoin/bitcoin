@@ -449,9 +449,7 @@ void CQuorumBlockProcessor::GetMinedAndActiveCommitmentsUntilBlock(const CBlockI
         v.reserve(p.second.signingActiveQuorumCount);
         std::vector<const CBlockIndex*> commitments;
         GetMinedCommitmentsUntilBlock(p.second.type, pindex, p.second.signingActiveQuorumCount, commitments);
-        for (auto& c : commitments) {
-            v.emplace_back(c);
-        }
+        std::copy(commitments.begin(), commitments.end(), std::back_inserter(v));
     }
 
 }

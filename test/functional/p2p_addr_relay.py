@@ -318,7 +318,7 @@ class AddrTest(SyscoinTestFramework):
 
         self.nodes[0].disconnect_p2ps()
 
-    def send_addrs_and_test_rate_limiting(self, peer, no_relay, new_addrs, total_addrs):
+    def send_addrs_and_test_rate_limiting(self, peer, no_relay, *, new_addrs, total_addrs):
         """Send an addr message and check that the number of addresses processed and rate-limited is as expected"""
 
         peer.send_and_ping(self.setup_rand_addr_msg(new_addrs))
@@ -336,27 +336,26 @@ class AddrTest(SyscoinTestFramework):
             assert_equal(addrs_rate_limited, max(0, total_addrs - peer.tokens))
 
     def rate_limit_tests(self):
-
         self.mock_time = int(time.time())
         self.restart_node(0, [])
         self.nodes[0].setmocktime(self.mock_time)
 
-        for contype, no_relay in [("outbound-full-relay", False), ("block-relay-only", True), ("inbound", False)]:
-            self.log.info(f'Test rate limiting of addr processing for {contype} peers')
-            if contype == "inbound":
+        for conn_type, no_relay in [("outbound-full-relay", False), ("block-relay-only", True), ("inbound", False)]:
+            self.log.info(f'Test rate limiting of addr processing for {conn_type} peers')
+            if conn_type == "inbound":
                 peer = self.nodes[0].add_p2p_connection(AddrReceiver())
             else:
-                peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=0, connection_type=contype)
+                peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=0, connection_type=conn_type)
 
             # Send 600 addresses. For all but the block-relay-only peer this should result in addresses being processed.
-            self.send_addrs_and_test_rate_limiting(peer, no_relay, 600, 600)
+            self.send_addrs_and_test_rate_limiting(peer, no_relay, new_addrs=600, total_addrs=600)
 
             # Send 600 more addresses. For the outbound-full-relay peer (which we send a GETADDR, and thus will
             # process up to 1001 incoming addresses), this means more addresses will be processed.
-            self.send_addrs_and_test_rate_limiting(peer, no_relay, 600, 1200)
+            self.send_addrs_and_test_rate_limiting(peer, no_relay, new_addrs=600, total_addrs=1200)
 
             # Send 10 more. As we reached the processing limit for all nodes, no more addresses should be procesesd.
-            self.send_addrs_and_test_rate_limiting(peer, no_relay, 10, 1210)
+            self.send_addrs_and_test_rate_limiting(peer, no_relay, new_addrs=10, total_addrs=1210)
 
             # Advance the time by 100 seconds, permitting the processing of 10 more addresses.
             # Send 200 and verify that 10 are processed.
@@ -364,7 +363,7 @@ class AddrTest(SyscoinTestFramework):
             self.nodes[0].setmocktime(self.mock_time)
             peer.increment_tokens(10)
 
-            self.send_addrs_and_test_rate_limiting(peer, no_relay, 200, 1410)
+            self.send_addrs_and_test_rate_limiting(peer, no_relay, new_addrs=200, total_addrs=1410)
 
             # Advance the time by 1000 seconds, permitting the processing of 100 more addresses.
             # Send 200 and verify that 100 are processed.
@@ -372,9 +371,10 @@ class AddrTest(SyscoinTestFramework):
             self.nodes[0].setmocktime(self.mock_time)
             peer.increment_tokens(100)
 
-            self.send_addrs_and_test_rate_limiting(peer, no_relay, 200, 1610)
+            self.send_addrs_and_test_rate_limiting(peer, no_relay, new_addrs=200, total_addrs=1610)
 
             self.nodes[0].disconnect_p2ps()
+
 
 if __name__ == '__main__':
     AddrTest().main()

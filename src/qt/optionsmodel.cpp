@@ -122,6 +122,11 @@ void OptionsModel::Init(bool resetSettings)
     if (!gArgs.SoftSetArg("-signer", settings.value("external_signer_path").toString().toStdString())) {
         addOverriddenOption("-signer");
     }
+
+    if (!settings.contains("SubFeeFromAmount")) {
+        settings.setValue("SubFeeFromAmount", false);
+    }
+    m_sub_fee_from_amount = settings.value("SubFeeFromAmount", false).toBool();
 #endif
 
     // Network
@@ -335,6 +340,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("fShowMasternodesTab");           
         case ExternalSignerPath:
             return settings.value("external_signer_path");
+        case SubFeeFromAmount:
+            return m_sub_fee_from_amount;
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -465,6 +472,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 settings.setValue("external_signer_path", value.toString());
                 setRestartRequired(true);
             }
+            break;
+        case SubFeeFromAmount:
+            m_sub_fee_from_amount = value.toBool();
+            settings.setValue("SubFeeFromAmount", m_sub_fee_from_amount);
             break;
 #endif
         case DisplayUnit:

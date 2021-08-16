@@ -948,8 +948,6 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, const CAm
         return false;
     }
 
-    std::string strPayeesPossible = "";
-
     // CONFIGURE SUPERBLOCK OUTPUTS
 
     int nOutputs = txNew.vout.size();
