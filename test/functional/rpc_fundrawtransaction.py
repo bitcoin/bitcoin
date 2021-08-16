@@ -99,6 +99,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_subtract_fee_with_presets()
         self.test_transaction_too_large()
         self.test_include_unsafe()
+        self.test_22670()
 
     def test_change_position(self):
         """Ensure setting changePosition in fundraw with an exact match is handled properly."""
@@ -969,6 +970,62 @@ class RawTransactionsTest(BitcoinTestFramework):
         signedtx = wallet.signrawtransactionwithwallet(fundedtx['hex'])
         wallet.sendrawtransaction(signedtx['hex'])
 
+    def test_22670(self):
+        # In issue #22670, it was observed that ApproximateBestSubset may
+        # choose enough value to cover the target amount but not enough to cover the transaction fees.
+        # This leads to a transaction whose actual transaction feerate is lower than expected.
+        # However at normal feerates, the difference between the effective value and the real value
+        # that this bug is not detected because the transaction fee must be at least 0.01 BTC (the minimum change value).
+        # Otherwise the targeted minimum change value will be enough to cover the transaction fees that were not
+        # being accounted for. So the minimum relay fee is set to 0.1 BTC/kvB in this test.
+        self.log.info("Test issue 22670 ApproximateBestSubset bug")
+        # Make sure the default wallet will not be loaded when restarted with a high minrelaytxfee
+        self.nodes[0].unloadwallet(self.default_wallet_name, False)
+        feerate = Decimal("0.1")
+        self.restart_node(0, [f"-minrelaytxfee={feerate}", "-discardfee=0"]) # Set high minrelayfee, set discardfee to 0 for easier calculation
+
+        self.nodes[0].loadwallet(self.default_wallet_name, True)
+        funds = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        self.nodes[0].createwallet(wallet_name="tester")
+        tester = self.nodes[0].get_wallet_rpc("tester")
+
+        # Because this test is specifically for ApproximateBestSubset, the target value must be greater
+        # than any single input available, and require more than 1 input. So we make 3 outputs
+        for i in range(0, 3):
+            funds.sendtoaddress(tester.getnewaddress(address_type="bech32"), 1)
+        self.nodes[0].generate(1)
+
+        # Create transactions in order to calculate fees for the target bounds that can trigger this bug
+        change_tx = tester.fundrawtransaction(tester.createrawtransaction([], [{funds.getnewaddress(): 1.5}]))
+        tx = tester.createrawtransaction([], [{funds.getnewaddress(): 2}])
+        no_change_tx = tester.fundrawtransaction(tx, {"subtractFeeFromOutputs": [0]})
+
+        overhead_fees = feerate * len(tx) / 2 / 1000
+        cost_of_change = change_tx["fee"] - no_change_tx["fee"]
+        fees = no_change_tx["fee"]
+        assert_greater_than(fees, 0.01)
+
+        def do_fund_send(target):
+            create_tx = tester.createrawtransaction([], [{funds.getnewaddress(): lower_bound}])
+            funded_tx = tester.fundrawtransaction(create_tx)
+            signed_tx = tester.signrawtransactionwithwallet(funded_tx["hex"])
+            assert signed_tx["complete"]
+            decoded_tx = tester.decoderawtransaction(signed_tx["hex"])
+            assert_equal(len(decoded_tx["vin"]), 3)
+            assert tester.testmempoolaccept([signed_tx["hex"]])[0]["allowed"]
+
+        # We want to choose more value than is available in 2 inputs when considering the fee,
+        # but not enough to need 3 inputs when not considering the fee.
+        # So the target value must be at least 2.00000001 - fee.
+        lower_bound = Decimal("2.00000001") - fees
+        # The target value must be at most 2 - cost_of_change - not_input_fees - min_change (these are all
+        # included in the target before ApproximateBestSubset).
+        upper_bound = Decimal("2.0") - cost_of_change - overhead_fees - Decimal("0.01")
+        assert_greater_than_or_equal(upper_bound, lower_bound)
+        do_fund_send(lower_bound)
+        do_fund_send(upper_bound)
+
+        self.restart_node(0)
 
 if __name__ == '__main__':
     RawTransactionsTest().main()
