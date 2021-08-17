@@ -37,8 +37,8 @@ std::string CChainLockSig::ToString() const
 CChainLocksHandler::CChainLocksHandler()
 {
     scheduler = new CScheduler();
-    CScheduler::Function serviceLoop = boost::bind(&CScheduler::serviceQueue, scheduler);
-    scheduler_thread = new boost::thread(boost::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
+    CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler);
+    scheduler_thread = new boost::thread(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
 }
 
 CChainLocksHandler::~CChainLocksHandler()
