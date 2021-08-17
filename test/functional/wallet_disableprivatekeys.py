@@ -7,6 +7,7 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_equal,
     assert_raises_rpc_error,
 )
 
@@ -27,6 +28,16 @@ class DisablePrivateKeysTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4,"Error: Private keys are disabled for this wallet", w1.getnewaddress)
         assert_raises_rpc_error(-4,"Error: Private keys are disabled for this wallet", w1.getrawchangeaddress)
         w1.importpubkey(w2.getaddressinfo(w2.getnewaddress())['pubkey'])
+
+        self.log.info('Test that private keys cannot be imported')
+        addr = w2.getnewaddress('')
+        privkey = w2.dumpprivkey(addr)
+        assert_raises_rpc_error(-4, 'Cannot import private keys to a wallet with private keys disabled', w1.importprivkey, privkey)
+        result = w1.importmulti([{'scriptPubKey': {'address': addr}, 'timestamp': 'now', 'keys': [privkey]}])
+        assert(not result[0]['success'])
+        assert('warning' not in result[0])
+        assert_equal(result[0]['error']['code'], -4)
+        assert_equal(result[0]['error']['message'], 'Cannot import private keys to a wallet with private keys disabled')
 
 if __name__ == '__main__':
     DisablePrivateKeysTest().main()

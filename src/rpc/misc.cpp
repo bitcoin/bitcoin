@@ -1080,12 +1080,12 @@ static UniValue logging(const JSONRPCRequest& request)
             "     ]\n"
             "\nResult:\n"
             "{                   (json object where keys are the logging categories, and values indicates its status\n"
-            "  \"category\": 0|1,  (numeric) if being debug logged or not. 0:inactive, 1:active\n"
+            "  \"category\": true|false,  (bool) if being debug logged or not. false:inactive, true:active\n"
             "  ...\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
-            + HelpExampleRpc("logging", "[\"all\"], \"[libevent]\"")
+            + HelpExampleRpc("logging", "[\"all\"], [\"libevent\"]")
         );
     }
 
