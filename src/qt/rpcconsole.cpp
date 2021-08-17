@@ -494,7 +494,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     ui->WalletSelectorLabel->setVisible(false);
 
     // Wallet Repair Buttons
-    // connect(ui->btn_salvagewallet, SIGNAL(clicked()), this, SLOT(walletSalvage()));
+    // connect(ui->btn_salvagewallet, &QPushButton::clicked, this, &RPCConsole::walletSalvage);
     // Disable salvage option in GUI, it's way too powerful and can lead to funds loss
     ui->btn_salvagewallet->setEnabled(false);
     // Disable wallet repair options that require a wallet (enable them later when a wallet is added)
@@ -503,12 +503,12 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     ui->btn_zapwallettxes1->setEnabled(false);
     ui->btn_zapwallettxes2->setEnabled(false);
     ui->btn_upgradewallet->setEnabled(false);
-    connect(ui->btn_rescan1, SIGNAL(clicked()), this, SLOT(walletRescan1()));
-    connect(ui->btn_rescan2, SIGNAL(clicked()), this, SLOT(walletRescan2()));
-    connect(ui->btn_zapwallettxes1, SIGNAL(clicked()), this, SLOT(walletZaptxes1()));
-    connect(ui->btn_zapwallettxes2, SIGNAL(clicked()), this, SLOT(walletZaptxes2()));
-    connect(ui->btn_upgradewallet, SIGNAL(clicked()), this, SLOT(walletUpgrade()));
-    connect(ui->btn_reindex, SIGNAL(clicked()), this, SLOT(walletReindex()));
+    connect(ui->btn_rescan1, &QPushButton::clicked, this, &RPCConsole::walletRescan1);
+    connect(ui->btn_rescan2, &QPushButton::clicked, this, &RPCConsole::walletRescan2);
+    connect(ui->btn_zapwallettxes1, &QPushButton::clicked, this, &RPCConsole::walletZaptxes1);
+    connect(ui->btn_zapwallettxes2, &QPushButton::clicked, this, &RPCConsole::walletZaptxes2);
+    connect(ui->btn_upgradewallet, &QPushButton::clicked, this, &RPCConsole::walletUpgrade);
+    connect(ui->btn_reindex, &QPushButton::clicked, this, &RPCConsole::walletReindex);
 
     // set library version labels
 #ifdef ENABLE_WALLET
@@ -538,7 +538,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     pageButtons->addButton(ui->btnNetTraffic, pageButtons->buttons().size());
     pageButtons->addButton(ui->btnPeers, pageButtons->buttons().size());
     pageButtons->addButton(ui->btnRepair, pageButtons->buttons().size());
-    connect(pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
+    connect(pageButtons, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &RPCConsole::showPage);
 
     showPage(TAB_INFO);
 
@@ -613,16 +613,16 @@ void RPCConsole::setClientModel(ClientModel *model)
         setNumBlocks(node.getNumBlocks(), QDateTime::fromTime_t(node.getLastBlockTime()), QString::fromStdString(node.getLastBlockHash()), node.getVerificationProgress(), false);
         connect(model, &ClientModel::numBlocksChanged, this, &RPCConsole::setNumBlocks);
 
-        connect(model, SIGNAL(chainLockChanged(QString,int)), this, SLOT(setChainLock(QString,int)));
+        connect(model, &ClientModel::chainLockChanged, this, &RPCConsole::setChainLock);
 
         updateNetworkState();
         connect(model, &ClientModel::networkActiveChanged, this, &RPCConsole::setNetworkActive);
 
-        connect(model, SIGNAL(masternodeListChanged()), this, SLOT(updateMasternodeCount()));
+        connect(model, &ClientModel::masternodeListChanged, this, &RPCConsole::updateMasternodeCount);
         clientModel->refreshMasternodeList();
 
         connect(model, &ClientModel::mempoolSizeChanged, this, &RPCConsole::setMempoolSize);
-        connect(model, SIGNAL(islockCountChanged(size_t)), this, SLOT(setInstantSendLockCount(size_t)));
+        connect(model, &ClientModel::islockCountChanged, this, &RPCConsole::setInstantSendLockCount);
 
 
         // set up peer table

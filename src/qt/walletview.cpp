@@ -92,22 +92,21 @@ WalletView::WalletView(QWidget* parent) :
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, &OverviewPage::transactionClicked, transactionView, static_cast<void (TransactionView::*)(const QModelIndex&)>(&TransactionView::focusTransaction));
+    connect(overviewPage, &OverviewPage::outOfSyncWarningClicked, this, &WalletView::requestedSyncWarningInfo);
 
     // Highlight transaction after send
     connect(sendCoinsPage, &SendCoinsDialog::coinsSent, transactionView, static_cast<void (TransactionView::*)(const uint256&)>(&TransactionView::focusTransaction));
-    connect(coinJoinCoinsPage, SIGNAL(coinsSent(uint256)), transactionView, SLOT(focusTransaction(uint256)));
-
-    connect(overviewPage, &OverviewPage::outOfSyncWarningClicked, this, &WalletView::requestedSyncWarningInfo);
+    connect(coinJoinCoinsPage, &SendCoinsDialog::coinsSent, transactionView, static_cast<void (TransactionView::*)(const uint256&)>(&TransactionView::focusTransaction));
 
     // Update wallet with sum of selected transactions
-    connect(transactionView, SIGNAL(trxAmount(QString)), this, SLOT(trxAmount(QString)));
+    connect(transactionView, &TransactionView::trxAmount, this, &WalletView::trxAmount);
 
     // Clicking on "Export" allows to export the transaction list
     connect(exportButton, &QPushButton::clicked, transactionView, &TransactionView::exportClicked);
 
     // Pass through messages from SendCoinsDialog
     connect(sendCoinsPage, &SendCoinsDialog::message, this, &WalletView::message);
-    connect(coinJoinCoinsPage, SIGNAL(message(QString, QString, unsigned int)), this, SIGNAL(message(QString, QString, unsigned int)));
+    connect(coinJoinCoinsPage, &SendCoinsDialog::message, this, &WalletView::message);
 
     // Pass through messages from transactionView
     connect(transactionView, &TransactionView::message, this, &WalletView::message);
@@ -128,7 +127,7 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 
         // Navigate to transaction history page after send
         connect(sendCoinsPage, &SendCoinsDialog::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
-        connect(coinJoinCoinsPage, SIGNAL(coinsSent(uint256)), gui, SLOT(gotoHistoryPage()));
+        connect(coinJoinCoinsPage, &SendCoinsDialog::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
 
         // Receive and report messages
         connect(this, &WalletView::message, [gui](const QString &title, const QString &message, unsigned int style) {

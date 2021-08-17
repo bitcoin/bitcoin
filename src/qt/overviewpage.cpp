@@ -164,7 +164,7 @@ OverviewPage::OverviewPage(QWidget* parent) :
     showOutOfSyncWarning(true);
 
     timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(coinJoinStatus()));
+    connect(timer, &QTimer::timeout, [this]{ coinJoinStatus(); });
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
@@ -180,7 +180,6 @@ void OverviewPage::handleOutOfSyncWarningClicks()
 
 OverviewPage::~OverviewPage()
 {
-    if(timer) disconnect(timer, SIGNAL(timeout()), this, SLOT(coinJoinStatus()));
     delete ui;
 }
 
@@ -272,9 +271,9 @@ void OverviewPage::setWalletModel(WalletModel *model)
         // explicitly update PS frame and transaction list to reflect actual settings
         updateAdvancedCJUI(model->getOptionsModel()->getShowAdvancedCJUI());
 
-        connect(model->getOptionsModel(), SIGNAL(coinJoinRoundsChanged()), this, SLOT(updateCoinJoinProgress()));
-        connect(model->getOptionsModel(), SIGNAL(coinJoinAmountChanged()), this, SLOT(updateCoinJoinProgress()));
-        connect(model->getOptionsModel(), SIGNAL(AdvancedCJUIChanged(bool)), this, SLOT(updateAdvancedCJUI(bool)));
+        connect(model->getOptionsModel(), &OptionsModel::coinJoinRoundsChanged, this, &OverviewPage::updateCoinJoinProgress);
+        connect(model->getOptionsModel(), &OptionsModel::coinJoinAmountChanged, this, &OverviewPage::updateCoinJoinProgress);
+        connect(model->getOptionsModel(), &OptionsModel::AdvancedCJUIChanged, this, &OverviewPage::updateAdvancedCJUI);
         connect(model->getOptionsModel(), &OptionsModel::coinJoinEnabledChanged, [=]() {
             coinJoinStatus(true);
         });
@@ -283,7 +282,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         // we'll handle automatic backups and user warnings in coinJoinStatus()
         walletModel->coinJoin().disableAutobackups();
 
-        connect(ui->toggleCoinJoin, SIGNAL(clicked()), this, SLOT(toggleCoinJoin()));
+        connect(ui->toggleCoinJoin, &QPushButton::clicked, this, &OverviewPage::toggleCoinJoin);
 
         // coinjoin buttons will not react to spacebar must be clicked on
         ui->toggleCoinJoin->setFocusPolicy(Qt::NoFocus);

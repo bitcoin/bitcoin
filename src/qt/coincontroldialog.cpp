@@ -132,7 +132,7 @@ CoinControlDialog::CoinControlDialog(CCoinControl& coin_control, WalletModel* _m
     connect(ui->pushButtonSelectAll, &QPushButton::clicked, this, &CoinControlDialog::buttonSelectAllClicked);
 
     // Toggle lock state
-    connect(ui->pushButtonToggleLock, SIGNAL(clicked()), this, SLOT(buttonToggleLockClicked()));
+    connect(ui->pushButtonToggleLock, &QPushButton::clicked, this, &CoinControlDialog::buttonToggleLockClicked);
 
     ui->treeWidget->setColumnWidth(COLUMN_CHECKBOX, 94);
     ui->treeWidget->setColumnWidth(COLUMN_AMOUNT, 100);

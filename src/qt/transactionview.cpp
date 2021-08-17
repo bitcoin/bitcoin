@@ -187,7 +187,7 @@ TransactionView::TransactionView(QWidget* parent) :
     connect(prefix_typing_delay, &QTimer::timeout, this, &TransactionView::changedSearch);
 
     connect(view, &QTableView::doubleClicked, this, &TransactionView::doubleClicked);
-    connect(view, SIGNAL(clicked(QModelIndex)), this, SLOT(computeSum()));
+    connect(view, &QTableView::clicked, this, &TransactionView::computeSum);
     connect(view, &QTableView::customContextMenuRequested, this, &TransactionView::contextualMenu);
 
     connect(abandonAction, &QAction::triggered, this, &TransactionView::abandonTx);
@@ -199,7 +199,9 @@ TransactionView::TransactionView(QWidget* parent) :
     connect(copyTxPlainText, &QAction::triggered, this, &TransactionView::copyTxPlainText);
     connect(editLabelAction, &QAction::triggered, this, &TransactionView::editLabel);
     connect(showDetailsAction, &QAction::triggered, this, &TransactionView::showDetails);
-    connect(showAddressQRCodeAction, SIGNAL(triggered()), this, SLOT(showAddressQRCode()));
+    connect(showAddressQRCodeAction, &QAction::triggered, this, &TransactionView::showAddressQRCode);
+    // Double-clicking on a transaction on the transaction history page shows details
+    connect(this, &TransactionView::doubleClicked, this, &TransactionView::showDetails);
 }
 
 void TransactionView::setModel(WalletModel *_model)
@@ -232,7 +234,7 @@ void TransactionView::setModel(WalletModel *_model)
         transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
 
         // Note: it's a good idea to connect this signal AFTER the model is set
-        connect(transactionView->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this, SLOT(computeSum()));
+        connect(transactionView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TransactionView::computeSum);
 
         columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, AMOUNT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH, this);
 
@@ -254,7 +256,7 @@ void TransactionView::setModel(WalletModel *_model)
                 }
             }
 
-            connect(_model->getOptionsModel(), SIGNAL(coinJoinEnabledChanged()), this, SLOT(updateCoinJoinVisibility()));
+            connect(_model->getOptionsModel(), &OptionsModel::coinJoinEnabledChanged, this, &TransactionView::updateCoinJoinVisibility);
         }
 
         // show/hide column Watch-only

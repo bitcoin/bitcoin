@@ -202,7 +202,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     subscribeToCoreSignals();
 
     // Jump to peers tab by clicking on connections icon
-    connect(labelConnectionsIcon, SIGNAL(clicked(QPoint)), this, SLOT(showPeers()));
+    connect(labelConnectionsIcon, &GUIUtil::ClickableLabel::clicked, this, &BitcoinGUI::showPeers);
 
     modalOverlay = new ModalOverlay(this->centralWidget());
 #ifdef ENABLE_WALLET
@@ -219,7 +219,9 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
 
     incomingTransactionsTimer = new QTimer(this);
     incomingTransactionsTimer->setSingleShot(true);
-    connect(incomingTransactionsTimer, SIGNAL(timeout()), SLOT(showIncomingTransactions()));
+#ifdef ENABLE_WALLET
+    connect(incomingTransactionsTimer, &QTimer::timeout, this, &BitcoinGUI::showIncomingTransactions);
+#endif
 
     bool fDebugCustomStyleSheets = gArgs.GetBoolArg("-debug-ui", false) && GUIUtil::isStyleSheetDirectoryCustom();
     if (fDebugCustomStyleSheets) {
@@ -349,14 +351,16 @@ void BitcoinGUI::createActions()
     receiveCoinsMenuAction->setStatusTip(tr("Request payments (generates QR codes and dash: URIs)"));
     receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
 
+#ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
     connect(sendCoinsMenuAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
-    connect(sendCoinsMenuAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
-    connect(coinJoinCoinsMenuAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(coinJoinCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoCoinJoinCoinsPage()));
+    connect(coinJoinCoinsMenuAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
     connect(receiveCoinsMenuAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
+    connect(sendCoinsMenuAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
+    connect(coinJoinCoinsMenuAction, &QAction::triggered, [this]{ gotoCoinJoinCoinsPage(); });
     connect(receiveCoinsMenuAction, &QAction::triggered, this, &BitcoinGUI::gotoReceiveCoinsPage);
+#endif
 
     quitAction = new QAction(tr("E&xit"), this);
     quitAction->setStatusTip(tr("Quit application"));
@@ -435,21 +439,21 @@ void BitcoinGUI::createActions()
     connect(optionsAction, &QAction::triggered, this, &BitcoinGUI::optionsClicked);
     connect(toggleHideAction, &QAction::triggered, this, &BitcoinGUI::toggleHidden);
     connect(showHelpMessageAction, &QAction::triggered, this, &BitcoinGUI::showHelpMessageClicked);
-    connect(showCoinJoinHelpAction, SIGNAL(triggered()), this, SLOT(showCoinJoinHelpClicked()));
+    connect(showCoinJoinHelpAction, &QAction::triggered, this, &BitcoinGUI::showCoinJoinHelpClicked);
 
     // Jump directly to tabs in RPC-console
-    connect(openInfoAction, SIGNAL(triggered()), this, SLOT(showInfo()));
+    connect(openInfoAction, &QAction::triggered, this, &BitcoinGUI::showInfo);
     connect(openRPCConsoleAction, &QAction::triggered, this, &BitcoinGUI::showDebugWindow);
-    connect(openGraphAction, SIGNAL(triggered()), this, SLOT(showGraph()));
-    connect(openPeersAction, SIGNAL(triggered()), this, SLOT(showPeers()));
-    connect(openRepairAction, SIGNAL(triggered()), this, SLOT(showRepair()));
+    connect(openGraphAction, &QAction::triggered, this, &BitcoinGUI::showGraph);
+    connect(openPeersAction, &QAction::triggered, this, &BitcoinGUI::showPeers);
+    connect(openRepairAction, &QAction::triggered, this, &BitcoinGUI::showRepair);
 
     // Open configs and backup folder from menu
-    connect(openConfEditorAction, SIGNAL(triggered()), this, SLOT(showConfEditor()));
-    connect(showBackupsAction, SIGNAL(triggered()), this, SLOT(showBackups()));
+    connect(openConfEditorAction, &QAction::triggered, this, &BitcoinGUI::showConfEditor);
+    connect(showBackupsAction, &QAction::triggered, this, &BitcoinGUI::showBackups);
 
     // Get restart command-line parameters and handle restart
-    connect(rpcConsole, SIGNAL(handleRestart(QStringList)), this, SLOT(handleRestart(QStringList)));
+    connect(rpcConsole, &RPCConsole::handleRestart, this, &BitcoinGUI::handleRestart);
 
     // prevents an open debug window from becoming stuck/unusable on client shutdown
     connect(quitAction, &QAction::triggered, rpcConsole, &QWidget::hide);
@@ -460,11 +464,11 @@ void BitcoinGUI::createActions()
         connect(encryptWalletAction, &QAction::triggered, walletFrame, &WalletFrame::encryptWallet);
         connect(backupWalletAction, &QAction::triggered, walletFrame, &WalletFrame::backupWallet);
         connect(changePassphraseAction, &QAction::triggered, walletFrame, &WalletFrame::changePassphrase);
-        connect(unlockWalletAction, SIGNAL(triggered()), walletFrame, SLOT(unlockWallet()));
-        connect(lockWalletAction, SIGNAL(triggered()), walletFrame, SLOT(lockWallet()));
-        connect(signMessageAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+        connect(unlockWalletAction, &QAction::triggered, walletFrame, &WalletFrame::unlockWallet);
+        connect(lockWalletAction, &QAction::triggered, walletFrame, &WalletFrame::lockWallet);
+        connect(signMessageAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
         connect(signMessageAction, &QAction::triggered, [this]{ gotoSignMessageTab(); });
-        connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+        connect(verifyMessageAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
         connect(verifyMessageAction, &QAction::triggered, [this]{ gotoVerifyMessageTab(); });
         connect(usedSendingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedSendingAddresses);
         connect(usedReceivingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedReceivingAddresses);
@@ -472,11 +476,11 @@ void BitcoinGUI::createActions()
     }
 #endif // ENABLE_WALLET
 
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_I), this, SLOT(showInfo()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_C), this, SLOT(showConsole()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_G), this, SLOT(showGraph()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_P), this, SLOT(showPeers()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_R), this, SLOT(showRepair()));
+    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_I), this), &QShortcut::activated, this, &BitcoinGUI::showInfo);
+    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_C), this), &QShortcut::activated, this, &BitcoinGUI::showConsole);
+    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_G), this), &QShortcut::activated, this, &BitcoinGUI::showGraph);
+    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_P), this), &QShortcut::activated, this, &BitcoinGUI::showPeers);
+    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_R), this), &QShortcut::activated, this, &BitcoinGUI::showRepair);
 }
 
 void BitcoinGUI::createMenuBar()
@@ -582,18 +586,18 @@ void BitcoinGUI::createToolBars()
             masternodeButton->setText(tr("&Masternodes"));
             masternodeButton->setStatusTip(tr("Browse masternodes"));
             tabGroup->addButton(masternodeButton);
-            connect(masternodeButton, SIGNAL(clicked()), this, SLOT(gotoMasternodePage()));
+            connect(masternodeButton, &QToolButton::clicked, this, &BitcoinGUI::gotoMasternodePage);
             masternodeButton->setEnabled(true);
         }
 
-        connect(overviewButton, SIGNAL(clicked()), this, SLOT(gotoOverviewPage()));
-        connect(sendCoinsButton, SIGNAL(clicked()), this, SLOT(gotoSendCoinsPage()));
-        connect(coinJoinCoinsButton, SIGNAL(clicked()), this, SLOT(gotoCoinJoinCoinsPage()));
-        connect(receiveCoinsButton, SIGNAL(clicked()), this, SLOT(gotoReceiveCoinsPage()));
-        connect(historyButton, SIGNAL(clicked()), this, SLOT(gotoHistoryPage()));
+        connect(overviewButton, &QToolButton::clicked, this, &BitcoinGUI::gotoOverviewPage);
+        connect(sendCoinsButton, &QToolButton::clicked, [this]{ gotoSendCoinsPage(); });
+        connect(coinJoinCoinsButton, &QToolButton::clicked, [this]{ gotoCoinJoinCoinsPage(); });
+        connect(receiveCoinsButton, &QToolButton::clicked, this, &BitcoinGUI::gotoReceiveCoinsPage);
+        connect(historyButton, &QToolButton::clicked, this, &BitcoinGUI::gotoHistoryPage);
 
         // Give the selected tab button a bolder font.
-        connect(tabGroup, SIGNAL(buttonToggled(QAbstractButton *, bool)), this, SLOT(highlightTabButton(QAbstractButton *, bool)));
+        connect(tabGroup, static_cast<void (QButtonGroup::*)(QAbstractButton *, bool)>(&QButtonGroup::buttonToggled), this, &BitcoinGUI::highlightTabButton);
 
         for (auto button : tabGroup->buttons()) {
             GUIUtil::setFont({button}, GUIUtil::FontWeight::Normal, 16);
@@ -660,13 +664,12 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
 #ifndef Q_OS_MAC
             // Show main window on tray icon click
             // Note: ignore this on Mac - this is not the way tray should work there
-            connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
-                    this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
+            connect(trayIcon, &QSystemTrayIcon::activated, this, &BitcoinGUI::trayIconActivated);
 #else
             // Note: On Mac, the dock icon is also used to provide menu functionality
             // similar to one for tray icon
             MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
-            connect(dockIconHandler, SIGNAL(dockIconClicked()), this, SLOT(macosDockIconActivated()));
+            connect(dockIconHandler, &MacDockIconHandler::dockIconClicked, this, &BitcoinGUI::macosDockIconActivated);
 
             dockIconMenu = new QMenu(this);
             dockIconMenu->setAsDockMenu();
@@ -685,7 +688,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         setNumBlocks(m_node.getNumBlocks(), QDateTime::fromTime_t(m_node.getLastBlockTime()), QString::fromStdString(m_node.getLastBlockHash()), m_node.getVerificationProgress(), false);
         connect(_clientModel, &ClientModel::numBlocksChanged, this, &BitcoinGUI::setNumBlocks);
 
-        connect(_clientModel, SIGNAL(additionalDataSyncProgressChanged(double)), this, SLOT(setAdditionalDataSyncProgress(double)));
+        connect(_clientModel, &ClientModel::additionalDataSyncProgressChanged, this, &BitcoinGUI::setAdditionalDataSyncProgress);
 
         // Receive and report messages from client model
         connect(_clientModel, &ClientModel::message, [this](const QString &title, const QString &message, unsigned int style){
@@ -716,7 +719,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
             // initialize the disable state of the tray icon with the current value in the model.
             setTrayIconVisible(optionsModel->getHideTrayIcon());
 
-            connect(optionsModel, SIGNAL(coinJoinEnabledChanged()), this, SLOT(updateCoinJoinVisibility()));
+            connect(optionsModel, &OptionsModel::coinJoinEnabledChanged, this, &BitcoinGUI::updateCoinJoinVisibility);
         }
     } else {
         // Disable possibility to show main window via action

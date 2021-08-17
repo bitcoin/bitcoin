@@ -74,7 +74,7 @@ public:
         setAlignment(Qt::AlignLeft);
         amountValidator = new AmountValidator(this);
         setValidator(amountValidator);
-        connect(this, SIGNAL(textEdited(QString)), this, SIGNAL(valueChanged()));
+        connect(this, &QLineEdit::textEdited, this, &AmountLineEdit::valueChanged);
     }
 
     void fixup(const QString &input)

@@ -108,7 +108,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     pageButtons->addButton(ui->btnDisplay, pageButtons->buttons().size());
     pageButtons->addButton(ui->btnAppearance, pageButtons->buttons().size());
 
-    connect(pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
+    connect(pageButtons, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &OptionsDialog::showPage);
 
     showPage(0);
 
@@ -229,17 +229,17 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->databaseCache, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &OptionsDialog::showRestartWarning);
     connect(ui->threadsScriptVerif, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &OptionsDialog::showRestartWarning);
     /* Wallet */
-    connect(ui->showMasternodesTab, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
-    connect(ui->spendZeroConfChange, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
+    connect(ui->showMasternodesTab, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
+    connect(ui->spendZeroConfChange, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->spendZeroConfChange, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     /* Network */
     connect(ui->allowIncoming, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->connectSocks, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->connectSocksTor, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     /* Display */
-    connect(ui->digits, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
+    connect(ui->digits, static_cast<void (QValueComboBox::*)()>(&QValueComboBox::valueChanged), [this]{ showRestartWarning(); });
     connect(ui->lang, static_cast<void (QValueComboBox::*)()>(&QValueComboBox::valueChanged), [this]{ showRestartWarning(); });
-    connect(ui->thirdPartyTxUrls, &QLineEdit::textChanged, this, [this]{ showRestartWarning(); });
+    connect(ui->thirdPartyTxUrls, &QLineEdit::textChanged, [this]{ showRestartWarning(); });
 
     connect(ui->coinJoinEnabled, &QCheckBox::clicked, [=](bool fChecked) {
 #ifdef ENABLE_WALLET
