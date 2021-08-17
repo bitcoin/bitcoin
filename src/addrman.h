@@ -133,47 +133,15 @@ public:
 
 //! total number of buckets for tried addresses
 static constexpr int32_t ADDRMAN_TRIED_BUCKET_COUNT_LOG2{8};
+static constexpr int ADDRMAN_TRIED_BUCKET_COUNT{1 << ADDRMAN_TRIED_BUCKET_COUNT_LOG2};
 
 //! total number of buckets for new addresses
 static constexpr int32_t ADDRMAN_NEW_BUCKET_COUNT_LOG2{10};
+static constexpr int ADDRMAN_NEW_BUCKET_COUNT{1 << ADDRMAN_NEW_BUCKET_COUNT_LOG2};
 
 //! maximum allowed number of entries in buckets for new and tried addresses
 static constexpr int32_t ADDRMAN_BUCKET_SIZE_LOG2{6};
-
-//! over how many buckets entries with tried addresses from a single group (/16 for IPv4) are spread
-static constexpr uint32_t ADDRMAN_TRIED_BUCKETS_PER_GROUP{8};
-
-//! over how many buckets entries with new addresses originating from a single group are spread
-static constexpr uint32_t ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP{64};
-
-//! in how many buckets for entries with new addresses a single address may occur
-static constexpr int32_t ADDRMAN_NEW_BUCKETS_PER_ADDRESS{8};
-
-//! how old addresses can maximally be
-static constexpr int64_t ADDRMAN_HORIZON_DAYS{30};
-
-//! after how many failed attempts we give up on a new node
-static constexpr int32_t ADDRMAN_RETRIES{3};
-
-//! how many successive failures are allowed ...
-static constexpr int32_t ADDRMAN_MAX_FAILURES{10};
-
-//! ... in at least this many days
-static constexpr int64_t ADDRMAN_MIN_FAIL_DAYS{7};
-
-//! how recent a successful connection should be before we allow an address to be evicted from tried
-static constexpr int64_t ADDRMAN_REPLACEMENT_HOURS{4};
-
-//! Convenience
-static constexpr int ADDRMAN_TRIED_BUCKET_COUNT{1 << ADDRMAN_TRIED_BUCKET_COUNT_LOG2};
-static constexpr int ADDRMAN_NEW_BUCKET_COUNT{1 << ADDRMAN_NEW_BUCKET_COUNT_LOG2};
 static constexpr int ADDRMAN_BUCKET_SIZE{1 << ADDRMAN_BUCKET_SIZE_LOG2};
-
-//! the maximum number of tried addr collisions to store
-static constexpr size_t ADDRMAN_SET_TRIED_COLLISION_SIZE{10};
-
-//! the maximum time we'll spend trying to resolve a tried table collision, in seconds
-static constexpr int64_t ADDRMAN_TEST_WINDOW{40*60}; // 40 minutes
 
 /**
  * Stochastical (IP) address manager
