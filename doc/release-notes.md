@@ -1,9 +1,9 @@
-0.21.x Release Notes
+0.21.2rc1 Release Notes
 ====================
 
-Bitcoin Core version 0.21.x is now available from:
+Bitcoin Core version 0.21.2rc1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.21.x/>
+  <https://bitcoincore.org/bin/bitcoin-core-0.21.2/test.rc1/>
 
 This minor release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -41,21 +41,65 @@ From Bitcoin Core 0.20.0 onwards, macOS versions earlier than 10.12 are no
 longer supported. Additionally, Bitcoin Core does not yet change appearance
 when macOS "dark mode" is activated.
 
-Notable changes
-===============
 
-RPC
----
-
-
-0.21.x change log
+0.21.2rc1 change log
 =================
+
+### P2P protocol and network code
+
+- #21644 use NetPermissions::HasFlag() in CConnman::Bind() (jonatack)
+- #22569 Rate limit the processing of rumoured addresses (sipa)
+
+### Wallet
+
+- #21907 Do not iterate a directory if having an error while accessing it (hebasto)
+
+### RPC
+
+- #19361 Reset scantxoutset progress before inferring descriptors (prusnak)
+
+### Build System
+
+- #21932 depends: update Qt 5.9 source url (kittywhiskers)
+- #22017 Update Windows code signing certificate (achow101)
+- #22191 Use custom MacOS code signing tool (achow101)
+
+### Tests and QA
+
+- #20182 Build with --enable-werror by default, and document exceptions (hebasto)
+- #20535 Fix intermittent feature_taproot issue (MarcoFalke)
+- #21663 Fix macOS brew install command (hebasto)
+- #22279 add missing ECCVerifyHandle to base_encode_decode (apoelstra)
+
+### GUI
+
+- #277 Do not use QClipboard::Selection on Windows and macOS. (hebasto)
+- #280 Remove user input from URI error message (prayank23)
+- #365 Draw "eye" sign at the beginning of watch-only addresses (hebasto)
+
+### Miscellaneous
+
+- #22002 Fix crash when parsing command line with -noincludeconf=0 (MarcoFalke)
+- #22137 util: Properly handle -noincludeconf on command line (take 2) (MarcoFalke)
 
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
+
+- Andrew Chow
+- Andrew Poelstra
+- fanquake
+- Hennadii Stepanov
+- Jon Atack
+- Kittywhiskers Van Gogh
+- Luke Dashjr
+- MarcoFalke
+- Pavol Rusnak
+- Pieter Wuille
+- prayank23
+- W. J. van der Laan
 
 
 As well as to everyone that helped with translations on
