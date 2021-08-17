@@ -150,8 +150,7 @@ PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const CChainParams& para
     altintegration::ValidationState state;
     auto prevHash = pindexPrev.GetBlockHash().asVector();
     bool ret = pop.getAltBlockTree().setState(prevHash, state);
-    (void)ret;
-    assert(ret);
+    VBK_ASSERT_MSG(ret, "error: %s", state.toString());
 
     altintegration::PopPayouts rewards;
     ret = pop.getPopPayout(prevHash, rewards, state);
