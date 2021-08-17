@@ -951,7 +951,7 @@ static RPCHelpMan addpeeraddress()
         address.nTime = GetAdjustedTime();
         // The source address is set equal to the address. This is equivalent to the peer
         // announcing itself.
-        if (node.addrman->Add(address, address)) success = true;
+        if (node.addrman->Add({address}, address)) success = true;
     }
 
     obj.pushKV("success", success);

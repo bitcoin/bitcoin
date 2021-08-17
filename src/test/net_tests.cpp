@@ -112,9 +112,9 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     // Add three addresses to new table.
     CService source;
     BOOST_CHECK(Lookup("252.5.1.1", source, 8333, false));
-    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), source));
-    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), source));
-    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), source));
+    std::vector<CAddress> addresses{CAddress(addr1, NODE_NONE), CAddress(addr2, NODE_NONE), CAddress(addr3, NODE_NONE)};
+    BOOST_CHECK(addrmanUncorrupted.Add(addresses, source));
+    BOOST_CHECK(addrmanUncorrupted.size() == 3);
 
     // Test that the de-serialization does not throw an exception.
     CDataStream ssPeers1 = AddrmanToStream(addrmanUncorrupted);

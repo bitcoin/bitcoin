@@ -253,13 +253,6 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
                 (void)addr_man.SelectTriedCollision();
             },
             [&] {
-                const std::optional<CAddress> opt_address = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
-                const std::optional<CNetAddr> opt_net_addr = ConsumeDeserializable<CNetAddr>(fuzzed_data_provider);
-                if (opt_address && opt_net_addr) {
-                    addr_man.Add(*opt_address, *opt_net_addr, fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, 100000000));
-                }
-            },
-            [&] {
                 std::vector<CAddress> addresses;
                 while (fuzzed_data_provider.ConsumeBool()) {
                     const std::optional<CAddress> opt_address = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
