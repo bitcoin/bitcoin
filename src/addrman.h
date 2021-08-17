@@ -132,48 +132,48 @@ public:
  */
 
 //! total number of buckets for tried addresses
-#define ADDRMAN_TRIED_BUCKET_COUNT_LOG2 8
+static constexpr int32_t ADDRMAN_TRIED_BUCKET_COUNT_LOG2{8};
 
 //! total number of buckets for new addresses
-#define ADDRMAN_NEW_BUCKET_COUNT_LOG2 10
+static constexpr int32_t ADDRMAN_NEW_BUCKET_COUNT_LOG2{10};
 
 //! maximum allowed number of entries in buckets for new and tried addresses
-#define ADDRMAN_BUCKET_SIZE_LOG2 6
+static constexpr int32_t ADDRMAN_BUCKET_SIZE_LOG2{6};
 
 //! over how many buckets entries with tried addresses from a single group (/16 for IPv4) are spread
-#define ADDRMAN_TRIED_BUCKETS_PER_GROUP 8
+static constexpr uint32_t ADDRMAN_TRIED_BUCKETS_PER_GROUP{8};
 
 //! over how many buckets entries with new addresses originating from a single group are spread
-#define ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP 64
+static constexpr uint32_t ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP{64};
 
 //! in how many buckets for entries with new addresses a single address may occur
-#define ADDRMAN_NEW_BUCKETS_PER_ADDRESS 8
+static constexpr int32_t ADDRMAN_NEW_BUCKETS_PER_ADDRESS{8};
 
 //! how old addresses can maximally be
-#define ADDRMAN_HORIZON_DAYS 30
+static constexpr int64_t ADDRMAN_HORIZON_DAYS{30};
 
 //! after how many failed attempts we give up on a new node
-#define ADDRMAN_RETRIES 3
+static constexpr int32_t ADDRMAN_RETRIES{3};
 
 //! how many successive failures are allowed ...
-#define ADDRMAN_MAX_FAILURES 10
+static constexpr int32_t ADDRMAN_MAX_FAILURES{10};
 
 //! ... in at least this many days
-#define ADDRMAN_MIN_FAIL_DAYS 7
+static constexpr int64_t ADDRMAN_MIN_FAIL_DAYS{7};
 
 //! how recent a successful connection should be before we allow an address to be evicted from tried
-#define ADDRMAN_REPLACEMENT_HOURS 4
+static constexpr int64_t ADDRMAN_REPLACEMENT_HOURS{4};
 
 //! Convenience
-#define ADDRMAN_TRIED_BUCKET_COUNT (1 << ADDRMAN_TRIED_BUCKET_COUNT_LOG2)
-#define ADDRMAN_NEW_BUCKET_COUNT (1 << ADDRMAN_NEW_BUCKET_COUNT_LOG2)
-#define ADDRMAN_BUCKET_SIZE (1 << ADDRMAN_BUCKET_SIZE_LOG2)
+static constexpr int ADDRMAN_TRIED_BUCKET_COUNT{1 << ADDRMAN_TRIED_BUCKET_COUNT_LOG2};
+static constexpr int ADDRMAN_NEW_BUCKET_COUNT{1 << ADDRMAN_NEW_BUCKET_COUNT_LOG2};
+static constexpr int ADDRMAN_BUCKET_SIZE{1 << ADDRMAN_BUCKET_SIZE_LOG2};
 
 //! the maximum number of tried addr collisions to store
-#define ADDRMAN_SET_TRIED_COLLISION_SIZE 10
+static constexpr size_t ADDRMAN_SET_TRIED_COLLISION_SIZE{10};
 
 //! the maximum time we'll spend trying to resolve a tried table collision, in seconds
-static const int64_t ADDRMAN_TEST_WINDOW = 40*60; // 40 minutes
+static constexpr int64_t ADDRMAN_TEST_WINDOW{40*60}; // 40 minutes
 
 /**
  * Stochastical (IP) address manager

@@ -237,14 +237,14 @@ void CAddrMan::Unserialize(Stream& s_)
 
     if (nNew > ADDRMAN_NEW_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE || nNew < 0) {
         throw std::ios_base::failure(
-                strprintf("Corrupt CAddrMan serialization: nNew=%d, should be in [0, %u]",
+                strprintf("Corrupt CAddrMan serialization: nNew=%d, should be in [0, %d]",
                     nNew,
                     ADDRMAN_NEW_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE));
     }
 
     if (nTried > ADDRMAN_TRIED_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE || nTried < 0) {
         throw std::ios_base::failure(
-                strprintf("Corrupt CAddrMan serialization: nTried=%d, should be in [0, %u]",
+                strprintf("Corrupt CAddrMan serialization: nTried=%d, should be in [0, %d]",
                     nTried,
                     ADDRMAN_TRIED_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE));
     }
