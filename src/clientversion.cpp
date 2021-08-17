@@ -42,8 +42,6 @@ const std::string CLIENT_NAME("Satoshi");
     #endif
 #endif
 
-const std::string CLIENT_BUILD(BUILD_DESC BUILD_SUFFIX);
-
 static std::string FormatVersion(int nVersion)
 {
     return strprintf("%d.%d.%d", nVersion / 10000, (nVersion / 100) % 100, nVersion % 100);
@@ -51,6 +49,7 @@ static std::string FormatVersion(int nVersion)
 
 std::string FormatFullVersion()
 {
+    static const std::string CLIENT_BUILD(BUILD_DESC BUILD_SUFFIX);
     return CLIENT_BUILD;
 }
 
