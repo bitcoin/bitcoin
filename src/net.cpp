@@ -1304,8 +1304,9 @@ void CConnman::NotifyNumConnectionsChanged()
     }
     if(vNodesSize != nPrevNodeCount) {
         nPrevNodeCount = vNodesSize;
-        if(clientInterface)
+        if (clientInterface) {
             clientInterface->NotifyNumConnectionsChanged(vNodesSize);
+        }
     }
 }
 
@@ -2448,7 +2449,9 @@ void CConnman::SetNetworkActive(bool active)
 
     fNetworkActive = active;
 
-    uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
+    if (clientInterface) {
+        clientInterface->NotifyNetworkActiveChanged(fNetworkActive);
+    }
 }
 
 CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, CAddrMan& addrman_in, bool network_active)
@@ -2556,7 +2559,9 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         LogPrintf("%i block-relay-only anchors will be tried for connections.\n", m_anchors.size());
     }
 
-    uiInterface.InitMessage(_("Starting network threads…").translated);
+    if (clientInterface) {
+        clientInterface->InitMessage(_("Starting network threads…").translated);
+    }
 
     fAddressesInitialized = true;
 
