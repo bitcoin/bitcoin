@@ -747,20 +747,20 @@ void CAddrMan::Check() const
 {
     AssertLockHeld(cs);
 
-    const int err = Check_();
+    // Run consistency checks 1 in m_consistency_check_ratio times if enabled
+    if (m_consistency_check_ratio == 0) return;
+    if (insecure_rand.randrange(m_consistency_check_ratio) >= 1) return;
+
+    const int err{ForceCheckAddrman()};
     if (err) {
         LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
         assert(false);
     }
 }
 
-int CAddrMan::Check_() const
+int CAddrMan::ForceCheckAddrman() const
 {
     AssertLockHeld(cs);
-
-    // Run consistency checks 1 in m_consistency_check_ratio times if enabled
-    if (m_consistency_check_ratio == 0) return 0;
-    if (insecure_rand.randrange(m_consistency_check_ratio) >= 1) return 0;
 
     LogPrint(BCLog::ADDRMAN, "Addrman checks started: new %i, tried %i, total %u\n", nNew, nTried, vRandom.size());
 
