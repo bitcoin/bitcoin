@@ -171,6 +171,7 @@ public:
         consensus.nGovernanceMinQuorum = 10; 
         consensus.nGovernanceFilterElements = 20000;
         consensus.nMasternodeMinimumConfirmations = 15;
+        consensus.nMinMNSubsidySats = 527500000;
         
         consensus.BIP16Height = 1;
         consensus.BIP34Height = 1;
@@ -327,6 +328,8 @@ public:
         consensus.nGovernanceMinQuorum = 1;
         consensus.nGovernanceFilterElements = 500;
         consensus.nMasternodeMinimumConfirmations = 1;
+        consensus.nMinMNSubsidySats = 527500000;
+
         consensus.BIP16Height = 1;
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256();
@@ -502,6 +505,8 @@ public:
         consensus.nGovernanceMinQuorum = 1;
         consensus.nGovernanceFilterElements = 500;
         consensus.nMasternodeMinimumConfirmations = 1;
+        consensus.nMinMNSubsidySats = 527500000;
+
         consensus.nSYSXAsset = 1965866356;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
         consensus.vchSYSXERC20Manager = ParseHex("443d9a14fb6ba2A45465bEC3767186f404Ccea25");
@@ -612,6 +617,7 @@ public:
         consensus.nGovernanceMinQuorum = 1;
         consensus.nGovernanceFilterElements = 100;
         consensus.nMasternodeMinimumConfirmations = 1;
+        consensus.nMinMNSubsidySats = 527500000;
         
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 6 * 60 * 60;

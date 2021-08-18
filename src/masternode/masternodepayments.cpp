@@ -222,7 +222,7 @@ CAmount GetBlockMNSubsidy(const CAmount &nBlockReward, unsigned int nHeight, con
     CAmount nSubsidy = nBlockReward*0.75;
     
     // ensure that if subsidy is less than min amount then stick to min for long term MN full node/chainlock incentive
-    const CAmount &nMinMN = 527500000;
+    const CAmount &nMinMN = consensusParams.nMinMNSubsidySats;
     if(nSubsidy < nMinMN) {
         nMNFloorDiffRet = nMinMN-nSubsidy;
         nSubsidy = nMinMN;

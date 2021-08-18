@@ -146,6 +146,7 @@ struct Params {
     int nNEVMStartBlock;
     int nUTXOAssetsBlock;
     int nUTXOAssetsBlockProvisioning;
+    uint64_t nMinMNSubsidySats;
         
     int nSuperblockStartBlock;
     int nSuperblockCycle; // in blocks
