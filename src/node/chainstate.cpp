@@ -8,7 +8,6 @@
 #include <rpc/blockchain.h> // for RPCNotifyBlockChange
 #include <util/time.h> // for GetTime
 #include <node/blockstorage.h> // for CleanupBlockRevFiles, fHavePruned, fReindex
-#include <node/ui_interface.h> // for InitError, uiInterface, and CClientUIInterface member access
 #include <shutdown.h> // for ShutdownRequested
 #include <validation.h> // for a lot of things
 
@@ -20,7 +19,8 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      bool fReindexChainState,
                                                      int64_t nBlockTreeDBCache,
                                                      int64_t nCoinDBCache,
-                                                     int64_t nCoinCacheUsage)
+                                                     int64_t nCoinCacheUsage,
+                                                     std::function<void()> coins_error_cb)
 {
     auto is_coinsview_empty = [&](CChainState* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         return fReset || fReindexChainState || chainstate->CoinsTip().GetBestBlock().IsNull();
@@ -86,11 +86,9 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                 /* in_memory */ false,
                 /* should_wipe */ fReset || fReindexChainState);
 
-            chainstate->CoinsErrorCatcher().AddReadErrCallback([]() {
-                uiInterface.ThreadSafeMessageBox(
-                    _("Error reading from database, shutting down."),
-                    "", CClientUIInterface::MSG_ERROR);
-            });
+            if (coins_error_cb) {
+                chainstate->CoinsErrorCatcher().AddReadErrCallback(coins_error_cb);
+            }
 
             // If necessary, upgrade from older database format.
             // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
@@ -148,7 +146,6 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
 
         for (CChainState* chainstate : chainman.GetAll()) {
             if (!is_coinsview_empty(chainstate)) {
-                uiInterface.InitMessage(_("Verifying blocks…").translated);
                 if (fHavePruned && check_blocks > MIN_BLOCKS_TO_KEEP) {
                     LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
                         MIN_BLOCKS_TO_KEEP);

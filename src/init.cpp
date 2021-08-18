@@ -1427,7 +1427,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                  fReindexChainState,
                                  nBlockTreeDBCache,
                                  nCoinDBCache,
-                                 nCoinCacheUsage);
+                                 nCoinCacheUsage,
+                                 []() {
+                                     uiInterface.ThreadSafeMessageBox(
+                                         _("Error reading from database, shutting down."),
+                                         "", CClientUIInterface::MSG_ERROR);
+                                 });
         if (rv.has_value()) {
             switch (rv.value()) {
             case ChainstateLoadingError::ERROR_LOADING_BLOCK_DB:
@@ -1463,6 +1468,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 break;
             }
         } else {
+            uiInterface.InitMessage(_("Verifying blocks…").translated);
             auto rv2 = VerifyLoadedChainstate(chainman,
                                               fReset,
                                               fReindexChainState,

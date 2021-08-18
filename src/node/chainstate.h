@@ -6,6 +6,7 @@
 #define BITCOIN_NODE_CHAINSTATE_H
 
 #include <cstdint> // for int64_t
+#include <functional> // for std::function
 #include <optional> // for std::optional
 
 class CChainParams;
@@ -59,7 +60,8 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      bool fReindexChainState,
                                                      int64_t nBlockTreeDBCache,
                                                      int64_t nCoinDBCache,
-                                                     int64_t nCoinCacheUsage);
+                                                     int64_t nCoinCacheUsage,
+                                                     std::function<void()> coins_error_cb = nullptr);
 
 enum class ChainstateLoadVerifyError {
     ERROR_BLOCK_FROM_FUTURE,
