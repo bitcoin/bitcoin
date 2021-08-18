@@ -54,6 +54,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.extra_args = [[
             f'-segwitheight={COINBASE_MATURITY + 5}',
             '-addresstype=legacy',
+            '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]
 
     def skip_test_if_missing_module(self):
@@ -131,7 +132,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
             add_witness_commitment(block)
         block.rehash()
         block.solve()
-        assert_equal(None if accept else 'block-validation-failed', node.submitblock(block.serialize().hex()))
+        assert_equal(None if accept else NULLDUMMY_ERROR, node.submitblock(block.serialize().hex()))
         if accept:
             assert_equal(node.getbestblockhash(), block.hash)
             self.lastblockhash = block.hash
