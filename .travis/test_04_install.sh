@@ -7,7 +7,9 @@
 export LC_ALL=C.UTF-8
 
 travis_retry docker pull "$DOCKER_NAME_TAG"
-env | grep -E '^(CCACHE_|WINEDEBUG|LC_ALL|BOOST_TEST_RANDOM|CONFIG_SHELL)' | tee /tmp/env
+export TSAN_OPTIONS="suppressions=${TRAVIS_BUILD_DIR}/test/sanitizer_suppressions/tsan"
+export UBSAN_OPTIONS="suppressions=${TRAVIS_BUILD_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1"
+env | grep -E '^(CCACHE_|WINEDEBUG|LC_ALL|BOOST_TEST_RANDOM|CONFIG_SHELL|(TSAN|UBSAN)_OPTIONS)' | tee /tmp/env
 if [[ $HOST = *-mingw32 ]]; then
   DOCKER_ADMIN="--cap-add SYS_ADMIN"
 elif [[ $BITCOIN_CONFIG = *--with-sanitizers=*address* ]]; then # If ran with (ASan + LSan), Docker needs access to ptrace (https://github.com/google/sanitizers/issues/764)

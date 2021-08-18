@@ -1,0 +1,24 @@
+# ThreadSanitizer suppressions
+# ============================
+
+# fChecked is theoretically racy, practically only in unit tests
+race:CheckBlock
+
+# WalletBatch (unidentified deadlock)
+deadlock:WalletBatch
+
+# Intentional deadlock in tests
+deadlock:TestPotentialDeadLockDetected
+
+# Wildcard for all gui tests, should be replaced with non-wildcard suppressions
+race:src/qt/test/*
+deadlock:src/qt/test/*
+
+# WIP: Unidentified suppressions to run the functional tests
+#race:zmqpublishnotifier.cpp
+#
+#deadlock:CreateWalletFromFile
+#deadlock:importprivkey
+#deadlock:walletdb.h
+#deadlock:walletdb.cpp
+#deadlock:wallet/db.cpp
