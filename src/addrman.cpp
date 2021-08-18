@@ -15,36 +15,26 @@
 #include <unordered_map>
 #include <unordered_set>
 
-//! over how many buckets entries with tried addresses from a single group (/16 for IPv4) are spread
+/** Over how many buckets entries with tried addresses from a single group (/16 for IPv4) are spread */
 static constexpr uint32_t ADDRMAN_TRIED_BUCKETS_PER_GROUP{8};
-
-//! over how many buckets entries with new addresses originating from a single group are spread
+/** Over how many buckets entries with new addresses originating from a single group are spread */
 static constexpr uint32_t ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP{64};
-
-//! in how many buckets for entries with new addresses a single address may occur
+/** Maximum number of times an address can be added to the new table */
 static constexpr int32_t ADDRMAN_NEW_BUCKETS_PER_ADDRESS{8};
-
-//! how old addresses can maximally be
+/** How old addresses can maximally be */
 static constexpr int64_t ADDRMAN_HORIZON_DAYS{30};
-
-//! after how many failed attempts we give up on a new node
+/** After how many failed attempts we give up on a new node */
 static constexpr int32_t ADDRMAN_RETRIES{3};
-
-//! how many successive failures are allowed ...
+/** How many successive failures are allowed ... */
 static constexpr int32_t ADDRMAN_MAX_FAILURES{10};
-
-//! ... in at least this many days
+/** ... in at least this many days */
 static constexpr int64_t ADDRMAN_MIN_FAIL_DAYS{7};
-
-//! how recent a successful connection should be before we allow an address to be evicted from tried
+/** How recent a successful connection should be before we allow an address to be evicted from tried */
 static constexpr int64_t ADDRMAN_REPLACEMENT_HOURS{4};
-
-//! the maximum number of tried addr collisions to store
+/** The maximum number of tried addr collisions to store */
 static constexpr size_t ADDRMAN_SET_TRIED_COLLISION_SIZE{10};
-
-//! the maximum time we'll spend trying to resolve a tried table collision, in seconds
+/** The maximum time we'll spend trying to resolve a tried table collision, in seconds */
 static constexpr int64_t ADDRMAN_TEST_WINDOW{40*60}; // 40 minutes
-
 
 int CAddrInfo::GetTriedBucket(const uint256& nKey, const std::vector<bool> &asmap) const
 {
