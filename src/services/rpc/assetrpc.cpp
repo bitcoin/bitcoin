@@ -411,6 +411,76 @@ static RPCHelpMan syscoindecoderawtransaction()
     };
 }
 
+static RPCHelpMan getnevmblockchaininfo()
+{
+    return RPCHelpMan{"getnevmblockchaininfo",
+        "\nReturn NEVM blockchain information and status.\n",
+        {
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR_HEX, "bestblockhash", "The tip of the NEVM blockchain"},
+                {RPCResult::Type::STR_HEX, "previousblockhash", "The hash of the previous block"},
+                {RPCResult::Type::STR_HEX, "txroot", "Transaction root of the current tip"},
+                {RPCResult::Type::STR_HEX, "receiptroot", "Receipt root of the current tip"},
+                {RPCResult::Type::NUM, "blocksize", "Serialized NEVM block size. 0 means it has been pruned."},
+                {RPCResult::Type::NUM, "height", "The current NEVM blockchain height"},
+                {RPCResult::Type::STR, "commandline", "The NEVM command line parameters used to pass through to sysgeth"},
+            }},
+        RPCExamples{
+            HelpExampleCli("getnevmblockchaininfo", "")
+            + HelpExampleRpc("getnevmblockchaininfo", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    UniValue oNEVM(UniValue::VOBJ);
+    CNEVMBlock evmBlock;
+    BlockValidationState state;
+    int nHeight;
+    CBlock block;
+    {
+        LOCK(cs_main);
+        auto *tip = chainman.ActiveChain().Tip();
+        nHeight = tip->nHeight;
+        auto *pblockindex = chainman.m_blockman.LookupBlockIndex(tip->GetBlockHash());
+        if (!pblockindex) {
+            throw JSONRPCError(RPC_MISC_ERROR, tip->GetBlockHash().ToString() + " not found");
+        }
+        if (IsBlockPruned(pblockindex)) {
+            throw JSONRPCError(RPC_MISC_ERROR, tip->GetBlockHash().ToString() + " not available (pruned data)");
+        }
+        if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus(), false, &chainman.m_blockman)) {
+            throw JSONRPCError(RPC_MISC_ERROR, tip->GetBlockHash().ToString() + " not found");
+        }
+        if(!GetNEVMData(state, block, evmBlock)) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, state.ToString());
+        }
+    }
+    const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
+    std::vector<UniValue> vec;
+    for(auto& cmd: cmdLine) {
+        UniValue v;
+        v.setStr(cmd);
+        vec.push_back(v);
+    }
+    std::reverse (evmBlock.nBlockHash.begin (), evmBlock.nBlockHash.end ()); // correct endian
+    std::reverse (evmBlock.nParentBlockHash.begin (), evmBlock.nParentBlockHash.end ()); // correct endian
+    oNEVM.__pushKV("bestblockhash", "0x" + evmBlock.nBlockHash.ToString());
+    oNEVM.__pushKV("previousblockhash", "0x" + evmBlock.nParentBlockHash.ToString());
+    oNEVM.__pushKV("txroot", "0x" + HexStr(evmBlock.vchTxRoot));
+    oNEVM.__pushKV("receiptroot", "0x" + HexStr(evmBlock.vchReceiptRoot));
+    oNEVM.__pushKV("height", (nHeight - Params().GetConsensus().nNEVMStartBlock) + 1);
+    oNEVM.__pushKV("blocksize", (int)block.vchNEVMBlockData.size());
+    UniValue arrVec(UniValue::VARR);
+    arrVec.push_backV(vec);
+    oNEVM.__pushKV("commandline", arrVec);
+    return oNEVM;
+},
+    };
+}
+
 static RPCHelpMan assetinfo()
 {
     return RPCHelpMan{"assetinfo",
@@ -828,6 +898,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            &syscoincheckmint,              },
     { "syscoin",            &assettransactionnotarize,      },
     { "syscoin",            &getnotarysighash,              },
+    { "syscoin",            &getnevmblockchaininfo,         },
 };
 // clang-format on
     for (const auto& c : commands) {
