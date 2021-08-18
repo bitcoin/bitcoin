@@ -391,11 +391,11 @@ private:
     //! Return a random to-be-evicted tried table address.
     CAddrInfo SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    //! Consistency check
+    //! Consistency check, taking into account m_consistency_check_ratio.
     void Check() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    //! Perform consistency check. Returns an error code or zero.
-    int Check_() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    //! Perform consistency check, regardless of m_consistency_check_ratio. Returns an error code or zero.
+    int ForceCheckAddrman() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /**
      * Return all or many randomly selected addresses, optionally by network.
