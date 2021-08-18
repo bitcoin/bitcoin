@@ -334,6 +334,7 @@ bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<Rec
         REVERSE_LOCK(lock);
         if (!ReadBlockFromDisk(*block.m_data, index, Params().GetConsensus())) block.m_data->SetNull();
     }
+    block.found = true;
     return true;
 }
 
