@@ -133,7 +133,7 @@ class ZMQTest (BitcoinTestFramework):
                 socket.setsockopt(zmq.IPV6, 1)
             subscribers.append(ZMQSubscriber(socket, topic.encode()))
 
-        self.restart_node(0, ["-zmqpub%s=%s" % (topic, address) for topic, address in services] +
+        self.restart_node(0, [f"-zmqpub{topic}={address}" for topic, address in services] +
                              self.extra_args[0])
 
         for i, sub in enumerate(subscribers):
@@ -186,7 +186,7 @@ class ZMQTest (BitcoinTestFramework):
         rawtx = subs[3]
 
         num_blocks = 5
-        self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
+        self.log.info(f"Generate {num_blocks} blocks (and {num_blocks} coinbase txes)")
         genhashes = self.generatetoaddress(self.nodes[0], num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
 
         for x in range(num_blocks):
@@ -484,7 +484,7 @@ class ZMQTest (BitcoinTestFramework):
             if mempool_sequence is not None:
                 zmq_mem_seq = mempool_sequence
                 if zmq_mem_seq > get_raw_seq:
-                    raise Exception("We somehow jumped mempool sequence numbers! zmq_mem_seq: {} > get_raw_seq: {}".format(zmq_mem_seq, get_raw_seq))
+                    raise Exception(f"We somehow jumped mempool sequence numbers! zmq_mem_seq: {zmq_mem_seq} > get_raw_seq: {get_raw_seq}")
 
         # 4) Moving forward, we apply the delta to our local view
         #    remaining txs(5) + 1 block connect + 1 final tx

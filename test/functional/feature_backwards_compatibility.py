@@ -362,7 +362,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             wallet = node_master.get_wallet_rpc("u1_v17")
             info = wallet.getaddressinfo(address)
             # TODO enable back when HD wallets are created by default
-            #descriptor = "pkh([" + info["hdmasterfingerprint"] + hdkeypath[1:] + "]" + v17_pubkey + ")"
+            #descriptor = f"pkh([{info["hdmasterfingerprint"]}{hdkeypath[1:]}]{v17_pubkey})"
             #assert_equal(info["desc"], descsum_create(descriptor))
             assert_equal(info["pubkey"], v17_pubkey)
 
