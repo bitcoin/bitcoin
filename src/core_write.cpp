@@ -390,7 +390,10 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, bool include_add
     const bool calculate_fee = txundo != nullptr;
     CAmount amt_total_in = 0;
     CAmount amt_total_out = 0;
-
+    // SYSCOIN
+    if(calculate_fee) {
+        amt_total_out = tx.GetValueOut();
+    }
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         const CTxIn& txin = tx.vin[i];
         UniValue in(UniValue::VOBJ);
@@ -433,10 +436,6 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, bool include_add
         ScriptPubKeyToUniv(txout.scriptPubKey, o, true, include_addresses);
         out.pushKV("scriptPubKey", o);
         vout.push_back(out);
-
-        if (calculate_fee) {
-            amt_total_out += txout.nValue;
-        }
     }
     entry.pushKV("vout", vout);
     // SYSCOIN

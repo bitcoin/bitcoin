@@ -2192,7 +2192,6 @@ static RPCHelpMan getblockstats()
     CAmount maxfeerate = 0;
     CAmount minfee = MAX_MONEY;
     CAmount minfeerate = MAX_MONEY;
-    CAmount total_out = 0;
     CAmount totalfee = 0;
     int64_t inputs = 0;
     int64_t maxtxsize = 0;
@@ -2214,8 +2213,8 @@ static RPCHelpMan getblockstats()
 
         CAmount tx_total_out = 0;
         if (loop_outputs) {
+            tx_total_out = tx.GetValueOut();
             for (const CTxOut& out : tx->vout) {
-                tx_total_out += out.nValue;
                 utxo_size_inc += GetSerializeSize(out, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
             }
         }
