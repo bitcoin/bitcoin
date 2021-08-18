@@ -386,7 +386,12 @@ void CAddrMan::Unserialize(Stream& s_)
         LogPrint(BCLog::ADDRMAN, "addrman lost %i new and %i tried addresses due to collisions or invalid addresses\n", nLostUnk, nLost);
     }
 
-    Check();
+    const int check_code{ForceCheckAddrman()};
+    if (check_code != 0) {
+        throw std::ios_base::failure(strprintf(
+            "Corrupt data. Consistency check failed with code %s",
+            check_code));
+    }
 }
 
 // explicit instantiation
