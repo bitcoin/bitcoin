@@ -126,10 +126,8 @@ using RecursiveMutex = AnnotatedMixin<std::recursive_mutex>;
 /** Wrapped mutex: supports waiting but not recursive locking */
 typedef AnnotatedMixin<std::mutex> Mutex;
 
-#ifdef DEBUG_LOCKCONTENTION
 /** Prints a lock contention to the log */
 void LockContention(const char* pszName, const char* pszFile, int nLine);
-#endif
 
 /** Wrapper around std::unique_lock style lock for Mutex. */
 template <typename Mutex, typename Base = typename Mutex::UniqueLock>
@@ -139,22 +137,18 @@ private:
     void Enter(const char* pszName, const char* pszFile, int nLine)
     {
         EnterCritical(pszName, pszFile, nLine, Base::mutex());
-#ifdef DEBUG_LOCKCONTENTION
-        if (!Base::try_lock()) {
-            LockContention(pszName, pszFile, nLine); // log the contention
-#endif
-            Base::lock();
-#ifdef DEBUG_LOCKCONTENTION
-        }
-#endif
+        if (Base::try_lock()) return;
+        LockContention(pszName, pszFile, nLine); // log the contention
+        Base::lock();
     }
 
     bool TryEnter(const char* pszName, const char* pszFile, int nLine)
     {
         EnterCritical(pszName, pszFile, nLine, Base::mutex(), true);
         Base::try_lock();
-        if (!Base::owns_lock())
+        if (!Base::owns_lock()) {
             LeaveCritical();
+        }
         return Base::owns_lock();
     }
 
