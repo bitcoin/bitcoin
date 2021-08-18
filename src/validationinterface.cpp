@@ -274,8 +274,8 @@ void CMainSignals::NotifyGovernanceObject(const std::shared_ptr<const CGovernanc
 void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyMasternodeListChanged(undo, oldMNList, diff); });
 }
-void CMainSignals::NotifyNEVMComms(bool bConnect) {
-    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyNEVMComms(bConnect); });
+void CMainSignals::NotifyNEVMComms(bool bConnect, bool &bResponse) {
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyNEVMComms(bConnect, bResponse); });
 }
 void CMainSignals::NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyNEVMBlockConnect(evmBlock, state, nBlockHash); });

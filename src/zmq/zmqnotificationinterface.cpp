@@ -203,10 +203,10 @@ void TryForEach(std::list<std::unique_ptr<CZMQAbstractNotifier>>& notifiers, con
 }
 } // anonymous namespace
 // SYSCOIN
-void CZMQNotificationInterface::NotifyNEVMComms(bool bConnect)
+void CZMQNotificationInterface::NotifyNEVMComms(bool bConnect, bool &bResponse)
 {
-    TryForEach(notifiers, [&bConnect](CZMQAbstractNotifier* notifier) {
-        return notifier->NotifyNEVMComms(bConnect);
+    TryForEach(notifiers, [&bConnect, &bResponse](CZMQAbstractNotifier* notifier) {
+        return notifier->NotifyNEVMComms(bConnect, bResponse);
     });
 }
 void CZMQNotificationInterface::NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash)

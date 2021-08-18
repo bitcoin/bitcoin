@@ -191,7 +191,7 @@ protected:
     virtual void NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash) {}
     virtual void NotifyNEVMBlockDisconnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash) {}
     virtual void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state) {}
-    virtual void NotifyNEVMComms(bool bConnect) {}
+    virtual void NotifyNEVMComms(bool bConnect, bool &bResponse) {}
 };
 
 struct MainSignalsInstance;
@@ -233,7 +233,7 @@ public:
     void NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash);
     void NotifyNEVMBlockDisconnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash);
     void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state);
-    void NotifyNEVMComms(bool bConnect);
+    void NotifyNEVMComms(bool bConnect, bool &bResponse);
 };
 
 CMainSignals& GetMainSignals();

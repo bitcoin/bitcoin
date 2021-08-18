@@ -6339,7 +6339,8 @@ bool StopGethNode(pid_t &pid)
         return false;
     }
     if(fNEVMConnection && pid > 0) {
-        GetMainSignals().NotifyNEVMComms(false);
+        bool bResponse;
+        GetMainSignals().NotifyNEVMComms(false, bResponse);
     }
     if(pid){
         try{

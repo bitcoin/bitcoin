@@ -22,7 +22,7 @@ bool CZMQAbstractNotifier::NotifyGovernanceVote(const std::shared_ptr<const CGov
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyNEVMComms(bool bConnect) 
+bool CZMQAbstractNotifier::NotifyNEVMComms(bool bConnect, bool &bResponse) 
 {
     return true;
 }

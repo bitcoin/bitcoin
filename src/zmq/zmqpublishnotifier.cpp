@@ -274,7 +274,7 @@ bool CZMQAbstractPublishNotifier::ReceiveZmqMessage(std::vector<std::string>& pa
         return false;
     return true;
 }
-bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(bool bConnect)
+bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(bool bConnect, bool &bResponse)
 {
     if(psocketsub) {
         int timeout = 5000;
@@ -307,19 +307,23 @@ bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(bool bConnect)
                 LogPrintf("NotifyNEVMComms: nevm-comms-response-invalid-data\n");
                 return false;
             }
+            bResponse = true;
         } else {
             LogPrintf("NotifyNEVMComms: nevm-response-not-found\n");
             return false;
         }
     }
-
     return true;
 }
 bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nSYSBlockHash)
 {
     if(bFirstTime) {
         bFirstTime = false;
-        GetMainSignals().NotifyNEVMComms(true);
+        bool bResponse = false;
+        GetMainSignals().NotifyNEVMComms(true, bResponse);
+        if(!bResponse) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-not-connected");
+        }
     }
     if(psocketsub) {
         int timeout = 60000;
@@ -370,7 +374,11 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(const CNE
 {
     if(bFirstTime) {
         bFirstTime = false;
-        GetMainSignals().NotifyNEVMComms(true);
+        bool bResponse = false;
+        GetMainSignals().NotifyNEVMComms(true, bResponse);
+        if(!bResponse) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-not-connected");
+        }
     }
     if(psocketsub) {
         int timeout = 30000;
@@ -411,7 +419,11 @@ bool CZMQPublishNEVMBlockNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, Bloc
 {
     if(bFirstTime) {
         bFirstTime = false;
-        GetMainSignals().NotifyNEVMComms(true);
+        bool bResponse = false;
+        GetMainSignals().NotifyNEVMComms(true, bResponse);
+        if(!bResponse) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-not-connected");
+        }
     }
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block to %s, subscriber %s\n", this->address, this->addresssub);
     if(!SendZmqMessageNEVM(MSG_NEVMBLOCK, MSG_NEVMBLOCK, strlen(MSG_NEVMBLOCK))) {

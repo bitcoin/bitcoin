@@ -427,6 +427,7 @@ static RPCHelpMan getnevmblockchaininfo()
                 {RPCResult::Type::NUM, "blocksize", "Serialized NEVM block size. 0 means it has been pruned."},
                 {RPCResult::Type::NUM, "height", "The current NEVM blockchain height"},
                 {RPCResult::Type::STR, "commandline", "The NEVM command line parameters used to pass through to sysgeth"},
+                {RPCResult::Type::STR, "status", "The NEVM status, online or offline"},
             }},
         RPCExamples{
             HelpExampleCli("getnevmblockchaininfo", "")
@@ -476,6 +477,9 @@ static RPCHelpMan getnevmblockchaininfo()
     UniValue arrVec(UniValue::VARR);
     arrVec.push_backV(vec);
     oNEVM.__pushKV("commandline", arrVec);
+    bool bResponse;
+    GetMainSignals().NotifyNEVMComms(true, bResponse);
+    oNEVM.__pushKV("status", bResponse? "online": "offline");
     return oNEVM;
 },
     };
