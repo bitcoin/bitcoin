@@ -57,7 +57,7 @@ class RESTTest (BitcoinTestFramework):
             rest_uri += '.hex'
 
         conn = http.client.HTTPConnection(self.url.hostname, self.url.port)
-        self.log.debug('%s %s %s', http_method, rest_uri, body)
+        self.log.debug(f'{http_method} {rest_uri} {body}')
         if http_method == 'GET':
             conn.request('GET', rest_uri)
         elif http_method == 'POST':
@@ -92,11 +92,11 @@ class RESTTest (BitcoinTestFramework):
 
         self.log.info("Test the /tx URI")
 
-        json_obj = self.test_rest_request("/tx/{}".format(txid))
+        json_obj = self.test_rest_request(f"/tx/{txid}")
         assert_equal(json_obj['txid'], txid)
 
         # Check hex format response
-        hex_response = self.test_rest_request("/tx/{}".format(txid), req_type=ReqType.HEX, ret_type=RetType.OBJ)
+        hex_response = self.test_rest_request(f"/tx/{txid}", req_type=ReqType.HEX, ret_type=RetType.OBJ)
         assert_greater_than_or_equal(int(hex_response.getheader('content-length')),
                                      json_obj['size']*2)
 
@@ -114,7 +114,7 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(self.nodes[1].getbalance(), Decimal("0.1"))
 
         # Check chainTip response
-        json_obj = self.test_rest_request("/getutxos/{}-{}".format(*spending))
+        json_obj = self.test_rest_request(f"/getutxos/{spending[0]}-{spending[1]}")
         assert_equal(json_obj['chaintipHash'], bb_hash)
 
         # Make sure there is one utxo
@@ -123,7 +123,7 @@ class RESTTest (BitcoinTestFramework):
 
         self.log.info("Query a spent TXO using the /getutxos URI")
 
-        json_obj = self.test_rest_request("/getutxos/{}-{}".format(*spent))
+        json_obj = self.test_rest_request(f"/getutxos/{spent[0]}-{spent[1]}")
 
         # Check chainTip response
         assert_equal(json_obj['chaintipHash'], bb_hash)
@@ -136,7 +136,7 @@ class RESTTest (BitcoinTestFramework):
 
         self.log.info("Query two TXOs using the /getutxos URI")
 
-        json_obj = self.test_rest_request("/getutxos/{}-{}/{}-{}".format(*(spending + spent)))
+        json_obj = self.test_rest_request(f"/getutxos/{spending[0]}-{spending[1]}/{spent[0]}-{spent[1]}")
 
         assert_equal(len(json_obj['utxos']), 1)
         assert_equal(json_obj['bitmap'], "10")
@@ -163,32 +163,32 @@ class RESTTest (BitcoinTestFramework):
 
         # do a tx and don't sync
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
-        json_obj = self.test_rest_request("/tx/{}".format(txid))
+        json_obj = self.test_rest_request(f"/tx/{txid}")
         # get the spent output to later check for utxo (should be spent by then)
         spent = (json_obj['vin'][0]['txid'], json_obj['vin'][0]['vout'])
         # get n of 0.1 outpoint
         n, = filter_output_indices_by_value(json_obj['vout'], Decimal('0.1'))
         spending = (txid, n)
 
-        json_obj = self.test_rest_request("/getutxos/{}-{}".format(*spending))
+        json_obj = self.test_rest_request(f"/getutxos/{spending[0]}-{spending[1]}")
         assert_equal(len(json_obj['utxos']), 0)
 
-        json_obj = self.test_rest_request("/getutxos/checkmempool/{}-{}".format(*spending))
+        json_obj = self.test_rest_request(f"/getutxos/checkmempool/{spending[0]}-{spending[1]}")
         assert_equal(len(json_obj['utxos']), 1)
 
-        json_obj = self.test_rest_request("/getutxos/{}-{}".format(*spent))
+        json_obj = self.test_rest_request(f"/getutxos/{spent[0]}-{spent[1]}")
         assert_equal(len(json_obj['utxos']), 1)
 
-        json_obj = self.test_rest_request("/getutxos/checkmempool/{}-{}".format(*spent))
+        json_obj = self.test_rest_request(f"/getutxos/checkmempool/{spent[0]}-{spent[1]}")
         assert_equal(len(json_obj['utxos']), 0)
 
         self.nodes[0].generate(1)
         self.sync_all()
 
-        json_obj = self.test_rest_request("/getutxos/{}-{}".format(*spending))
+        json_obj = self.test_rest_request(f"/getutxos/{spending[0]}-{spending[1]}")
         assert_equal(len(json_obj['utxos']), 1)
 
-        json_obj = self.test_rest_request("/getutxos/checkmempool/{}-{}".format(*spending))
+        json_obj = self.test_rest_request(f"/getutxos/checkmempool/{spending[0]}-{spending[1]}")
         assert_equal(len(json_obj['utxos']), 1)
 
         # Do some invalid requests
@@ -197,11 +197,11 @@ class RESTTest (BitcoinTestFramework):
         self.test_rest_request("/getutxos/checkmempool", http_method='POST', req_type=ReqType.JSON, status=400, ret_type=RetType.OBJ)
 
         # Test limits
-        long_uri = '/'.join(["{}-{}".format(txid, n_) for n_ in range(20)])
-        self.test_rest_request("/getutxos/checkmempool/{}".format(long_uri), http_method='POST', status=400, ret_type=RetType.OBJ)
+        long_uri = '/'.join([f"{txid}-{n_}" for n_ in range(20)])
+        self.test_rest_request(f"/getutxos/checkmempool/{long_uri}", http_method='POST', status=400, ret_type=RetType.OBJ)
 
-        long_uri = '/'.join(['{}-{}'.format(txid, n_) for n_ in range(15)])
-        self.test_rest_request("/getutxos/checkmempool/{}".format(long_uri), http_method='POST', status=200)
+        long_uri = '/'.join([f'{txid}-{n_}' for n_ in range(15)])
+        self.test_rest_request(f"/getutxos/checkmempool/{long_uri}", http_method='POST', status=200)
 
         self.nodes[0].generate(1)  # generate block to not affect upcoming tests
         self.sync_all()
@@ -215,42 +215,42 @@ class RESTTest (BitcoinTestFramework):
 
         # Check result if block is not in the active chain
         self.nodes[0].invalidateblock(bb_hash)
-        assert_equal(self.test_rest_request('/headers/1/{}'.format(bb_hash)), [])
-        self.test_rest_request('/block/{}'.format(bb_hash))
+        assert_equal(self.test_rest_request(f'/headers/1/{bb_hash}'), [])
+        self.test_rest_request(f'/block/{bb_hash}')
         self.nodes[0].reconsiderblock(bb_hash)
 
         # Check binary format
-        response = self.test_rest_request("/block/{}".format(bb_hash), req_type=ReqType.BIN, ret_type=RetType.OBJ)
+        response = self.test_rest_request(f"/block/{bb_hash}", req_type=ReqType.BIN, ret_type=RetType.OBJ)
         assert_greater_than(int(response.getheader('content-length')), BLOCK_HEADER_SIZE)
         response_bytes = response.read()
 
         # Compare with block header
-        response_header = self.test_rest_request("/headers/1/{}".format(bb_hash), req_type=ReqType.BIN, ret_type=RetType.OBJ)
+        response_header = self.test_rest_request(f"/headers/1/{bb_hash}", req_type=ReqType.BIN, ret_type=RetType.OBJ)
         assert_equal(int(response_header.getheader('content-length')), BLOCK_HEADER_SIZE)
         response_header_bytes = response_header.read()
         assert_equal(response_bytes[:BLOCK_HEADER_SIZE], response_header_bytes)
 
         # Check block hex format
-        response_hex = self.test_rest_request("/block/{}".format(bb_hash), req_type=ReqType.HEX, ret_type=RetType.OBJ)
+        response_hex = self.test_rest_request(f"/block/{bb_hash}", req_type=ReqType.HEX, ret_type=RetType.OBJ)
         assert_greater_than(int(response_hex.getheader('content-length')), BLOCK_HEADER_SIZE*2)
         response_hex_bytes = response_hex.read().strip(b'\n')
         assert_equal(response_bytes.hex().encode(), response_hex_bytes)
 
         # Compare with hex block header
-        response_header_hex = self.test_rest_request("/headers/1/{}".format(bb_hash), req_type=ReqType.HEX, ret_type=RetType.OBJ)
+        response_header_hex = self.test_rest_request(f"/headers/1/{bb_hash}", req_type=ReqType.HEX, ret_type=RetType.OBJ)
         assert_greater_than(int(response_header_hex.getheader('content-length')), BLOCK_HEADER_SIZE*2)
         response_header_hex_bytes = response_header_hex.read(BLOCK_HEADER_SIZE*2)
         assert_equal(response_bytes[:BLOCK_HEADER_SIZE].hex().encode(), response_header_hex_bytes)
 
         # Check json format
-        block_json_obj = self.test_rest_request("/block/{}".format(bb_hash))
+        block_json_obj = self.test_rest_request(f"/block/{bb_hash}")
         assert_equal(block_json_obj['hash'], bb_hash)
-        assert_equal(self.test_rest_request("/blockhashbyheight/{}".format(block_json_obj['height']))['blockhash'], bb_hash)
+        assert_equal(self.test_rest_request(f"/blockhashbyheight/{block_json_obj['height']}")['blockhash'], bb_hash)
 
         # Check hex/bin format
-        resp_hex = self.test_rest_request("/blockhashbyheight/{}".format(block_json_obj['height']), req_type=ReqType.HEX, ret_type=RetType.OBJ)
+        resp_hex = self.test_rest_request(f"/blockhashbyheight/{block_json_obj['height']}", req_type=ReqType.HEX, ret_type=RetType.OBJ)
         assert_equal(resp_hex.read().decode('utf-8').rstrip(), bb_hash)
-        resp_bytes = self.test_rest_request("/blockhashbyheight/{}".format(block_json_obj['height']), req_type=ReqType.BIN, ret_type=RetType.BYTES)
+        resp_bytes = self.test_rest_request(f"/blockhashbyheight/{block_json_obj['height']}", req_type=ReqType.BIN, ret_type=RetType.BYTES)
         blockhash = resp_bytes[::-1].hex()
         assert_equal(blockhash, bb_hash)
 
@@ -264,7 +264,7 @@ class RESTTest (BitcoinTestFramework):
         self.test_rest_request("/blockhashbyheight/", ret_type=RetType.OBJ, status=400)
 
         # Compare with json block header
-        json_obj = self.test_rest_request("/headers/1/{}".format(bb_hash))
+        json_obj = self.test_rest_request(f"/headers/1/{bb_hash}")
         assert_equal(len(json_obj), 1)  # ensure that there is one header in the json response
         assert_equal(json_obj[0]['hash'], bb_hash)  # request/response hash should be the same
 
@@ -276,7 +276,7 @@ class RESTTest (BitcoinTestFramework):
         # See if we can get 5 headers in one response
         self.nodes[1].generate(5)
         self.sync_all()
-        json_obj = self.test_rest_request("/headers/5/{}".format(bb_hash))
+        json_obj = self.test_rest_request(f"/headers/5/{bb_hash}")
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
 
         self.log.info("Test tx inclusion in the /mempool and /block URIs")
@@ -306,13 +306,13 @@ class RESTTest (BitcoinTestFramework):
         self.sync_all()
 
         # Check if the 3 tx show up in the new block
-        json_obj = self.test_rest_request("/block/{}".format(newblockhash[0]))
+        json_obj = self.test_rest_request(f"/block/{newblockhash[0]}")
         non_coinbase_txs = {tx['txid'] for tx in json_obj['tx']
                             if 'coinbase' not in tx['vin'][0]}
         assert_equal(non_coinbase_txs, set(txs))
 
         # Check the same but without tx details
-        json_obj = self.test_rest_request("/block/notxdetails/{}".format(newblockhash[0]))
+        json_obj = self.test_rest_request(f"/block/notxdetails/{newblockhash[0]}")
         for tx in txs:
             assert tx in json_obj['tx']
 

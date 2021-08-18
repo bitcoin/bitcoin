@@ -87,12 +87,12 @@ class TestBitcoinCli(BitcoinTestFramework):
         user, password = get_auth_cookie(self.nodes[0].datadir, self.chain)
 
         self.log.info("Test -stdinrpcpass option")
-        assert_equal(BLOCKS, self.nodes[0].cli('-rpcuser={}'.format(user), '-stdinrpcpass', input=password).getblockcount())
-        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword', self.nodes[0].cli('-rpcuser={}'.format(user), '-stdinrpcpass', input='foo').echo)
+        assert_equal(BLOCKS, self.nodes[0].cli(f'-rpcuser={user}', '-stdinrpcpass', input=password).getblockcount())
+        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword', self.nodes[0].cli(f'-rpcuser={user}', '-stdinrpcpass', input='foo').echo)
 
         self.log.info("Test -stdin and -stdinrpcpass")
-        assert_equal(['foo', 'bar'], self.nodes[0].cli('-rpcuser={}'.format(user), '-stdin', '-stdinrpcpass', input=password + '\nfoo\nbar').echo())
-        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword', self.nodes[0].cli('-rpcuser={}'.format(user), '-stdin', '-stdinrpcpass', input='foo').echo)
+        assert_equal(['foo', 'bar'], self.nodes[0].cli(f'-rpcuser={user}', '-stdin', '-stdinrpcpass', input=f'{password}\nfoo\nbar').echo())
+        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword', self.nodes[0].cli(f'-rpcuser={user}', '-stdin', '-stdinrpcpass', input='foo').echo)
 
         self.log.info("Test connecting to a non-existing server")
         assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('-rpcport=1').echo)
@@ -150,8 +150,8 @@ class TestBitcoinCli(BitcoinTestFramework):
             w1 = self.nodes[0].get_wallet_rpc(wallets[0])
             w2 = self.nodes[0].get_wallet_rpc(wallets[1])
             w3 = self.nodes[0].get_wallet_rpc(wallets[2])
-            rpcwallet2 = '-rpcwallet={}'.format(wallets[1])
-            rpcwallet3 = '-rpcwallet={}'.format(wallets[2])
+            rpcwallet2 = f'-rpcwallet={wallets[1]}'
+            rpcwallet3 = f'-rpcwallet={wallets[2]}'
             w1.walletpassphrase(password, self.rpc_timeout)
             w2.encryptwallet(password)
             w1.sendtoaddress(w2.getnewaddress(), amounts[1])
@@ -162,7 +162,7 @@ class TestBitcoinCli(BitcoinTestFramework):
 
             self.log.info("Test -getinfo with multiple wallets and -rpcwallet returns specified wallet balance")
             for i in range(len(wallets)):
-                cli_get_info_string = self.nodes[0].cli('-getinfo', '-rpcwallet={}'.format(wallets[i])).send_cli()
+                cli_get_info_string = self.nodes[0].cli('-getinfo', f'-rpcwallet={wallets[i]}').send_cli()
                 cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
                 assert 'Balances' not in cli_get_info_string
                 assert_equal(cli_get_info["Wallet"], wallets[i])
@@ -296,7 +296,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.log.info("Test -version with node stopped")
         self.stop_node(0)
         cli_response = self.nodes[0].cli('-version').send_cli()
-        assert "{} RPC client version".format(self.config['environment']['PACKAGE_NAME']) in cli_response
+        assert f"{self.config['environment']['PACKAGE_NAME']} RPC client version" in cli_response
 
         self.log.info("Test -rpcwait option successfully waits for RPC connection")
         self.nodes[0].start()  # start node without RPC connection
