@@ -68,11 +68,11 @@ class MiningTest(SyscoinTestFramework):
         assert_equal(mining_info['currentblockweight'], 4000)
 
         self.log.info('test blockversion')
-        self.restart_node(0, extra_args=['-mocktime={}'.format(t), '-blockversion=1237'])
+        self.restart_node(0, extra_args=[f'-mocktime={t}', '-blockversion=1237'])
         self.connect_nodes(0, 1)
         # SYSCOIN
         assert_equal(1237, self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
-        self.restart_node(0, extra_args=['-mocktime={}'.format(t)])
+        self.restart_node(0, extra_args=[f'-mocktime={t}'])
         self.connect_nodes(0, 1)
         # SYSCOIN
         n = VERSIONBITS_TOP_BITS + (1 << VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT)

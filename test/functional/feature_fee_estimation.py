@@ -72,7 +72,7 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
             total_in += t["amount"]
             tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), b""))
         if total_in <= amount + fee:
-            raise RuntimeError("Insufficient funds: need %d, have %d" % (amount + fee, total_in))
+            raise RuntimeError(f"Insufficient funds: need {amount + fee}, have {total_in}")
     tx.vout.append(CTxOut(int((total_in - amount - fee) * COIN), P2SH_1))
     tx.vout.append(CTxOut(int(amount * COIN), P2SH_2))
     # These transactions don't need to be signed, but we still have to insert
@@ -124,8 +124,7 @@ def check_raw_estimates(node, fees_seen):
             assert_greater_than(feerate, 0)
 
             if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
-                raise AssertionError("Estimated fee (%f) out of range (%f,%f)"
-                                     % (feerate, min(fees_seen), max(fees_seen)))
+                raise AssertionError(f"Estimated fee ({feerate}) out of range ({min(fees_seen)},{max(fees_seen)})")
 
 def check_smart_estimates(node, fees_seen):
     """Call estimatesmartfee and verify that the estimates meet certain invariants."""
@@ -138,11 +137,9 @@ def check_smart_estimates(node, fees_seen):
         assert_greater_than(feerate, 0)
 
         if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
-            raise AssertionError("Estimated fee (%f) out of range (%f,%f)"
-                                 % (feerate, min(fees_seen), max(fees_seen)))
+            raise AssertionError(f"Estimated fee ({feerate}) out of range ({min(fees_seen)},{max(fees_seen)})")
         if feerate - delta > last_feerate:
-            raise AssertionError("Estimated fee (%f) larger than last fee (%f) for lower number of confirms"
-                                 % (feerate, last_feerate))
+            raise AssertionError(f"Estimated fee ({feerate}) larger than last fee ({last_feerate}) for lower number of confirms")
         last_feerate = feerate
 
         if i == 0:
