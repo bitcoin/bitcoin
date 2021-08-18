@@ -9,6 +9,7 @@
 #include <sync.h>
 
 #include <logging.h>
+#include <logging/timer.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/threadnames.h>
@@ -27,10 +28,9 @@
 #if !defined(HAVE_THREAD_LOCAL)
 static_assert(false, "thread_local is not supported");
 #endif
-void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
+void LockContention(const char* pszName, const char* pszFile, int nLine)
 {
-    LogPrint(BCLog::LOCK, "LOCKCONTENTION: %s\n", pszName);
-    LogPrint(BCLog::LOCK, "Locker: %s:%d\n", pszFile, nLine);
+    LOG_TIME_MICROS_WITH_CATEGORY(strprintf("%s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
 }
 #endif /* DEBUG_LOCKCONTENTION */
 
