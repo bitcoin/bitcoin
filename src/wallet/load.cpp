@@ -56,11 +56,12 @@ bool VerifyWallets(WalletContext& context)
         options.require_existing = true;
         options.verify = false;
         if (MakeWalletDatabase("", options, status, error_string)) {
-            gArgs.LockSettings([&](util::Settings& settings) {
-                util::SettingsValue wallets(util::SettingsValue::VARR);
-                wallets.push_back(""); // Default wallet name is ""
-                settings.rw_settings["wallet"] = wallets;
-            });
+            util::SettingsValue wallets(util::SettingsValue::VARR);
+            wallets.push_back(""); // Default wallet name is ""
+            // Pass write=false because no need to write file and probably
+            // better not to. If unnamed wallet needs to be added next startup
+            // and the setting is empty, this code will just run again.
+            chain.updateRwSetting("wallet", wallets, /* write= */ false);
         }
     }
 
