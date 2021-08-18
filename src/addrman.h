@@ -392,16 +392,7 @@ private:
     CAddrInfo SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Consistency check
-    void Check() const EXCLUSIVE_LOCKS_REQUIRED(cs)
-    {
-        AssertLockHeld(cs);
-
-        const int err = Check_();
-        if (err) {
-            LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
-            assert(false);
-        }
-    }
+    void Check() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Perform consistency check. Returns an error code or zero.
     int Check_() const EXCLUSIVE_LOCKS_REQUIRED(cs);

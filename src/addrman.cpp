@@ -743,6 +743,17 @@ CAddrInfo CAddrMan::Select_(bool newOnly) const
     }
 }
 
+void CAddrMan::Check() const
+{
+    AssertLockHeld(cs);
+
+    const int err = Check_();
+    if (err) {
+        LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
+        assert(false);
+    }
+}
+
 int CAddrMan::Check_() const
 {
     AssertLockHeld(cs);
