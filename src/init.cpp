@@ -1419,20 +1419,26 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         uiInterface.InitMessage(_("Loading block index…").translated);
         const int64_t load_block_index_start_time = GetTimeMillis();
-        auto rv = LoadChainstate(fReset,
-                                 chainman,
-                                 Assert(node.mempool.get()),
-                                 fPruneMode,
-                                 chainparams,
-                                 fReindexChainState,
-                                 nBlockTreeDBCache,
-                                 nCoinDBCache,
-                                 nCoinCacheUsage,
-                                 []() {
-                                     uiInterface.ThreadSafeMessageBox(
-                                         _("Error reading from database, shutting down."),
-                                         "", CClientUIInterface::MSG_ERROR);
-                                 });
+        std::optional<ChainstateLoadingError> rv;
+        try {
+            rv = LoadChainstate(fReset,
+                                chainman,
+                                Assert(node.mempool.get()),
+                                fPruneMode,
+                                chainparams,
+                                fReindexChainState,
+                                nBlockTreeDBCache,
+                                nCoinDBCache,
+                                nCoinCacheUsage,
+                                []() {
+                                    uiInterface.ThreadSafeMessageBox(
+                                                                     _("Error reading from database, shutting down."),
+                                                                     "", CClientUIInterface::MSG_ERROR);
+                                });
+        } catch (const std::exception& e) {
+            LogPrintf("%s\n", e.what());
+            rv = ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED;
+        }
         if (rv.has_value()) {
             switch (rv.value()) {
             case ChainstateLoadingError::ERROR_LOADING_BLOCK_DB:
@@ -1468,13 +1474,19 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 break;
             }
         } else {
-            uiInterface.InitMessage(_("Verifying blocks…").translated);
-            auto rv2 = VerifyLoadedChainstate(chainman,
-                                              fReset,
-                                              fReindexChainState,
-                                              chainparams,
-                                              args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS),
-                                              args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL));
+            std::optional<ChainstateLoadVerifyError> rv2;
+            try {
+                uiInterface.InitMessage(_("Verifying blocks…").translated);
+                rv2 = VerifyLoadedChainstate(chainman,
+                                             fReset,
+                                             fReindexChainState,
+                                             chainparams,
+                                             args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS),
+                                             args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL));
+            } catch (const std::exception& e) {
+                LogPrintf("%s\n", e.what());
+                rv2 = ChainstateLoadVerifyError::ERROR_GENERIC_FAILURE;
+            }
             if (rv2.has_value()) {
                 switch (rv2.value()) {
                 case ChainstateLoadVerifyError::ERROR_BLOCK_FROM_FUTURE:
