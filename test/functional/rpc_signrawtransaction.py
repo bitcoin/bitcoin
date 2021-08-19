@@ -183,7 +183,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
     def test_fully_signed_tx(self):
         self.log.info("Test signing a fully signed transaction does nothing")
         self.nodes[0].walletpassphrase("password", 9999)
-        self.nodes[0].generate(COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
         rawtx = self.nodes[0].createrawtransaction([], [{self.nodes[0].getnewaddress(): 10}])
         fundedtx = self.nodes[0].fundrawtransaction(rawtx)
         signedtx = self.nodes[0].signrawtransactionwithwallet(fundedtx["hex"])
@@ -202,9 +202,9 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         embedded_pubkey = eckey.get_pubkey().get_bytes().hex()
         p2sh_p2wsh_address = self.nodes[1].createmultisig(1, [embedded_pubkey], "p2sh-segwit")
         # send transaction to P2SH-P2WSH 1-of-1 multisig address
-        self.nodes[0].generate(COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
         self.nodes[0].sendtoaddress(p2sh_p2wsh_address["address"], 49.999)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
         # Get the UTXO info from scantxoutset
         unspent_output = self.nodes[1].scantxoutset('start', [p2sh_p2wsh_address['descriptor']])['unspents'][0]
@@ -239,7 +239,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         # Fund that address
         txid = self.nodes[0].sendtoaddress(addr, 10)
         vout = find_vout_for_address(self.nodes[0], txid, addr)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([{'txid': txid, 'vout': vout}], {self.nodes[1].getnewaddress(): Decimal("9.999")})
         spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10}])
@@ -283,7 +283,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         # Fund that address and make the spend
         txid = self.nodes[0].sendtoaddress(address, 1)
         vout = find_vout_for_address(self.nodes[0], txid, address)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         utxo = self.nodes[0].listunspent()[0]
         amt = Decimal(1) + utxo["amount"] - Decimal(0.00001)
         tx = self.nodes[0].createrawtransaction(
@@ -318,7 +318,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         # Fund that address and make the spend
         txid = self.nodes[0].sendtoaddress(address, 1)
         vout = find_vout_for_address(self.nodes[0], txid, address)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         utxo = self.nodes[0].listunspent()[0]
         amt = Decimal(1) + utxo["amount"] - Decimal(0.00001)
         tx = self.nodes[0].createrawtransaction(

@@ -29,7 +29,7 @@ class P2PIBDTxRelayTest(BitcoinTestFramework):
             self.wait_until(lambda: all(peer['minfeefilter'] == MAX_FEE_FILTER for peer in node.getpeerinfo()))
 
         # Come out of IBD by generating a block
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         self.log.info("Check that nodes reset minfilter after coming out of IBD")

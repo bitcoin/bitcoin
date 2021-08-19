@@ -23,8 +23,8 @@ class P2PBlocksOnly(BitcoinTestFramework):
     def run_test(self):
         self.miniwallet = MiniWallet(self.nodes[0])
         # Add enough mature utxos to the wallet, so that all txs spend confirmed coins
-        self.miniwallet.generate(2)
-        self.nodes[0].generate(COINBASE_MATURITY)
+        self.generate(self.miniwallet, 2)
+        self.generate(self.nodes[0], COINBASE_MATURITY)
 
         self.blocksonly_mode_tests()
         self.blocks_relay_conn_tests()
@@ -73,7 +73,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         self.log.info("Relay-permission peer's transaction is accepted and relayed")
 
         self.nodes[0].disconnect_p2ps()
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
 
     def blocks_relay_conn_tests(self):
         self.log.info('Tests with node in normal mode with block-relay-only connections')

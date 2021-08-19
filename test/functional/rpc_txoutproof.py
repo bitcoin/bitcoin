@@ -29,8 +29,8 @@ class MerkleBlockTest(BitcoinTestFramework):
     def run_test(self):
         miniwallet = MiniWallet(self.nodes[0])
         # Add enough mature utxos to the wallet, so that all txs spend confirmed coins
-        miniwallet.generate(5)
-        self.nodes[0].generate(COINBASE_MATURITY)
+        self.generate(miniwallet, 5)
+        self.generate(self.nodes[0], COINBASE_MATURITY)
         self.sync_all()
 
         chain_height = self.nodes[1].getblockcount()
@@ -41,7 +41,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         # This will raise an exception because the transaction is not yet in a block
         assert_raises_rpc_error(-5, "Transaction not yet in block", self.nodes[0].gettxoutproof, [txid1])
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         blockhash = self.nodes[0].getblockhash(chain_height + 1)
         self.sync_all()
 
@@ -57,7 +57,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         txin_spent = miniwallet.get_utxo()  # Get the change from txid2
         tx3 = miniwallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=txin_spent)
         txid3 = tx3['txid']
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         txid_spent = txin_spent["txid"]

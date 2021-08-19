@@ -28,7 +28,7 @@ class SegwitUpgradeTest(BitcoinTestFramework):
         assert not softfork_active(node, "segwit")
 
         # Generate 8 blocks without witness data
-        node.generate(8)
+        self.generate(node, 8)
         assert_equal(node.getblockcount(), 8)
 
         self.stop_node(0)
