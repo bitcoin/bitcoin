@@ -29,7 +29,7 @@ base_template: &BASE_TEMPLATE
     - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
   stateful: false  # https://cirrus-ci.org/guide/writing-tasks/#stateful-tasks
 
-task_template: &TASK_TEMPLATE
+main_template: &MAIN_TEMPLATE
   timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
   container:
     # https://cirrus-ci.org/faq/#are-there-any-limits
@@ -46,7 +46,7 @@ task_template: &TASK_TEMPLATE
 
 global_task_template: &GLOBAL_TASK_TEMPLATE
   << : *BASE_TEMPLATE
-  << : *TASK_TEMPLATE
+  << : *MAIN_TEMPLATE
 
 depends_sdk_cache_template: &DEPENDS_SDK_CACHE_TEMPLATE
   depends_sdk_cache:
@@ -219,7 +219,7 @@ task:
   depends_sources_cache:
     folder: "depends/sources"
     fingerprint_script: git rev-list -1 HEAD ./depends
-  << : *TASK_TEMPLATE
+  << : *MAIN_TEMPLATE
   container:
     image: ubuntu:focal
   env:
