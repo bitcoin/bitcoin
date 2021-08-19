@@ -77,6 +77,7 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 - [Fuzz-testing](fuzzing.md)
 - [I2P Support](i2p.md)
 - [Init Scripts (systemd/upstart/openrc)](init.md)
+- [Managing Wallets](managing-wallets.md)
 - [PSBT support](psbt.md)
 - [Reduce Memory](reduce-memory.md)
 - [Reduce Traffic](reduce-traffic.md)
