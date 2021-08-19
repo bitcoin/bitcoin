@@ -18,6 +18,12 @@
 #include <util/system.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
+#include <validationinterface.h>
+#if ENABLE_ZMQ
+#include <zmq/zmqabstractnotifier.h>
+#include <zmq/zmqnotificationinterface.h>
+#include <zmq/zmqrpc.h>
+#endif
 extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
@@ -731,6 +737,22 @@ static RPCHelpMan syscoinstartgeth()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     StopGethNode(gethPID);
+#if ENABLE_ZMQ
+    if (g_zmq_notification_interface) {
+        UnregisterValidationInterface(g_zmq_notification_interface);
+        delete g_zmq_notification_interface;
+        g_zmq_notification_interface = nullptr;
+    }
+    g_zmq_notification_interface = CZMQNotificationInterface::Create();
+    if((!fRegTest && !fSigNet && fMasternodeMode) || fNEVMConnection) {
+        if(!g_zmq_notification_interface) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Could not establish ZMQ interface connections, check your ZMQ settings and try again...");
+        }
+    }
+    if (g_zmq_notification_interface) {
+        RegisterValidationInterface(g_zmq_notification_interface);
+    }
+#endif
     const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
     if(!StartGethNode(gethDescriptorURL, gethPID))
         throw JSONRPCError(RPC_MISC_ERROR, "Could not start Geth");
