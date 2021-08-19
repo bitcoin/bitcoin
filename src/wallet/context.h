@@ -12,6 +12,13 @@
 #include <memory>
 #include <vector>
 
+#include <sync.h>
+
+#include <functional>
+#include <list>
+#include <memory>
+#include <vector>
+
 class ArgsManager;
 class CWallet;
 namespace interfaces {
@@ -20,6 +27,8 @@ class Wallet;
 } // namespace interfaces
 // SYSCOIN
 struct NodeContext;
+using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
+
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
 
 //! WalletContext struct containing references to state shared between CWallet
