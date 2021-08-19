@@ -164,10 +164,10 @@ public:
      */
     enum Flags : uint32_t {
         ALLOW_ANY = 0x01,         //!< disable validation
-        ALLOW_BOOL = 0x02,        //!< unimplemented, draft implementation in #16545
-        ALLOW_INT = 0x04,         //!< unimplemented, draft implementation in #16545
-        ALLOW_STRING = 0x08,      //!< unimplemented, draft implementation in #16545
-        ALLOW_LIST = 0x10,        //!< unimplemented, draft implementation in #16545
+        // ALLOW_BOOL = 0x02,     //!< unimplemented, draft implementation in #16545
+        // ALLOW_INT = 0x04,      //!< unimplemented, draft implementation in #16545
+        // ALLOW_STRING = 0x08,   //!< unimplemented, draft implementation in #16545
+        // ALLOW_LIST = 0x10,     //!< unimplemented, draft implementation in #16545
         DISALLOW_NEGATION = 0x20, //!< disallow -nofoo syntax
 
         DEBUG_ONLY = 0x100,

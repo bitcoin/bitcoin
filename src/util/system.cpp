@@ -652,7 +652,6 @@ void ArgsManager::AddArg(const std::string& name, const std::string& help, unsig
 
     LOCK(cs_args);
     std::map<std::string, Arg>& arg_map = m_available_args[cat];
-    if ((flags & (ALLOW_ANY | ALLOW_BOOL)) == 0) flags |= DISALLOW_NEGATION; // Temporary, removed in next scripted-diff
     auto ret = arg_map.emplace(arg_name, Arg{name.substr(eq_index, name.size() - eq_index), help, flags});
     assert(ret.second); // Make sure an insertion actually happened
 
