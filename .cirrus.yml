@@ -21,8 +21,8 @@ persistent_worker_template: &PERSISTENT_WORKER_TEMPLATE
 base_template: &BASE_TEMPLATE
   skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
   merge_base_script:
-    - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
     - bash -c "$PACKAGE_MANAGER_INSTALL git"
+    - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
     - git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_BRANCH
     - git config --global user.email "ci@ci.ci"
     - git config --global user.name "ci"
