@@ -153,6 +153,7 @@ task:
 
 task:
   name: '[no depends, sanitizers: fuzzer,address,undefined,integer] [focal]'
+  only_if: $CIRRUS_BRANCH == $CIRRUS_DEFAULT_BRANCH || $CIRRUS_BASE_BRANCH == $CIRRUS_DEFAULT_BRANCH
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
