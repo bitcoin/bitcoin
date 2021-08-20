@@ -433,8 +433,14 @@ RPCHelpMan getbalances()
 {
     return RPCHelpMan{
         "getbalances",
-        "Returns an object with all balances in " + CURRENCY_UNIT + ".\n",
-        {},
+        "Returns an object with all balances in " + CURRENCY_UNIT + ", optionally including the balance change given one or more specified transactions.\n",
+        {
+            {"rawtxs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "An array of hex strings of raw transactions.\n",
+                {
+                    {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
+                },
+            },
+        },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
@@ -451,10 +457,15 @@ RPCHelpMan getbalances()
                     {RPCResult::Type::STR_AMOUNT, "untrusted_pending", "untrusted pending balance (outputs created by others that are in the mempool)"},
                     {RPCResult::Type::STR_AMOUNT, "immature", "balance from immature coinbase outputs"},
                 }},
+                {RPCResult::Type::OBJ, "tx", "transaction info",
+                {
+                    {RPCResult::Type::STR_AMOUNT, "changes", "the change to the wallet's balance if/when this transaction was mined"},
+                }},
             }
             },
         RPCExamples{
             HelpExampleCli("getbalances", "") +
+            HelpExampleCli("getbalances", "0200000000010065cd1d000000001600148535ed13a48131b12eabb3f3804cc0c354b46f2b00000000") +
             HelpExampleRpc("getbalances", "")},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -491,6 +502,42 @@ RPCHelpMan getbalances()
         balances_watchonly.pushKV("immature", ValueFromAmount(bal.m_watchonly_immature));
         balances.pushKV("watchonly", balances_watchonly);
     }
+
+    if (!request.params[0].isNull()) {
+        CAmount changes{0};
+        std::set<COutPoint> spent;
+
+        const auto& txs = request.params[0].get_array();
+        for (size_t i = 0; i < txs.size(); ++i) {
+            CMutableTransaction mtx;
+            if (!DecodeHexTx(mtx, txs[i].get_str(), /* try_no_witness */ true, /* try_witness */ true)) {
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Transaction hex string decoding failure.");
+            }
+
+            // Fetch debit; we are *spending* these; if the transaction is signed and
+            // broadcast, we will lose everything in these
+            for (const auto& txin : mtx.vin) {
+                if (spent.count(txin.prevout)) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Transaction(s) are spending the same output more than once");
+                }
+                spent.insert(txin.prevout);
+                changes -= wallet.GetDebit(txin, ISMINE_SPENDABLE);
+            }
+
+            // Iterate over outputs; we are *receiving* these, if the wallet considers
+            // them "mine"; if the transaction is signed and broadcast, we will receive
+            // everything in these
+            for (const auto& txout : mtx.vout) {
+                if (!wallet.IsMine(txout)) continue;
+                changes += txout.nValue;
+            }
+        }
+
+        UniValue balances_transaction{UniValue::VOBJ};
+        balances_transaction.pushKV("changes", ValueFromAmount(changes));
+        balances.pushKV("tx", balances_transaction);
+    }
+
     return balances;
 },
     };
