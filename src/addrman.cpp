@@ -77,10 +77,10 @@ double CAddrInfo::GetChance(int64_t nNow) const
     return fChance;
 }
 // SYSCOIN
-CAddrMan::CAddrMan(bool deterministic, int32_t consistency_check_ratio, bool _discriminatePorts = false)
+CAddrMan::CAddrMan(bool deterministic, int32_t consistency_check_ratio, bool _discriminatePorts)
     : insecure_rand{deterministic}
     , nKey{deterministic ? uint256{1} : insecure_rand.rand256()}
-    , discriminatePorts{_discriminatePorts},
+    , discriminatePorts{_discriminatePorts}
     , m_consistency_check_ratio{consistency_check_ratio}
 {
     for (auto& bucket : vvNew) {

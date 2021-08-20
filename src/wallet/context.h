@@ -18,7 +18,7 @@ namespace interfaces {
 class Chain;
 class Wallet;
 } // namespace interfaces
-/ SYSCOIN
+// SYSCOIN
 struct NodeContext;
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
 
@@ -42,6 +42,13 @@ struct WalletContext {
     /* SYSCOIN getauxwork is a wallet RPC but actually needs the NodeContext (unlike
        any of the upstream Bitcoin wallet RPCs).  */
     NodeContext* nodeContext{nullptr};
+    WalletContext(const WalletContext& contextIn)  {
+        chain = contextIn.chain;
+        args = contextIn.args;
+        wallets = contextIn.wallets;
+        wallet_load_fns = contextIn.wallet_load_fns;
+        nodeContext = contextIn.nodeContext;
+    }    
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the WalletContext struct doesn't need to #include class
     //! definitions for smart pointer and container members.

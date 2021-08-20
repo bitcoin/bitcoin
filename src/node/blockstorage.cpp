@@ -509,7 +509,7 @@ struct CImportingNow {
     }
 };
 
-void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args, CDSNotificationInterface* pdsNotificationInterface, std::unique_ptr<CDeterministicMNManager> &deterministicMNManager, const WalletInitInterface &g_wallet_init_interface)
+void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args, CDSNotificationInterface* pdsNotificationInterface, std::unique_ptr<CDeterministicMNManager> &deterministicMNManager, const WalletInitInterface &g_wallet_init_interface, NodeContext& node)
 {
     ScheduleBatchPriority();
 
@@ -588,7 +588,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
         LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
 
         
-        g_wallet_init_interface.AutoLockMasternodeCollaterals();
+        g_wallet_init_interface.AutoLockMasternodeCollaterals(node);
         if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
             LogPrintf("Stopping after block import\n");
             StartShutdown();

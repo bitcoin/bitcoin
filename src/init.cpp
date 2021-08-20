@@ -1967,9 +1967,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         vImportFiles.push_back(strFile);
     }
 
-    chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &chainman, &args] {
+    chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &chainman, &args, &node] {
         // SYSCOIN
-        ThreadImport(chainman, vImportFiles, args, pdsNotificationInterface, deterministicMNManager, g_wallet_init_interface);
+        ThreadImport(chainman, vImportFiles, args, pdsNotificationInterface, deterministicMNManager, g_wallet_init_interface, node);
     });
     // Wait for genesis block to be processed
     {
