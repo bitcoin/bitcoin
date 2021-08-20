@@ -15,7 +15,13 @@
 
 BOOST_FIXTURE_TEST_SUITE(raii_event_tests, BasicTestingSetup)
 
+constexpr bool RUN_RAII_EVENT_TESTS{
 #ifdef EVENT_SET_MEM_FUNCTIONS_IMPLEMENTED
+    true
+#else
+    false
+#endif // EVENT_SET_MEM_FUNCTIONS_IMPLEMENTED
+};
 
 static std::map<void*, short> tags;
 static std::map<void*, uint16_t> orders;
@@ -35,7 +41,7 @@ static void tag_free(void* mem) {
     free(mem);
 }
 
-BOOST_AUTO_TEST_CASE(raii_event_creation)
+BOOST_AUTO_TEST_CASE(raii_event_creation, *boost::unit_test::enable_if<RUN_RAII_EVENT_TESTS>())
 {
     event_set_mem_functions(tag_malloc, realloc, tag_free);
 
@@ -64,7 +70,7 @@ BOOST_AUTO_TEST_CASE(raii_event_creation)
     event_set_mem_functions(malloc, realloc, free);
 }
 
-BOOST_AUTO_TEST_CASE(raii_event_order)
+BOOST_AUTO_TEST_CASE(raii_event_order, *boost::unit_test::enable_if<RUN_RAII_EVENT_TESTS>())
 {
     event_set_mem_functions(tag_malloc, realloc, tag_free);
 
@@ -85,15 +91,5 @@ BOOST_AUTO_TEST_CASE(raii_event_order)
 
     event_set_mem_functions(malloc, realloc, free);
 }
-
-#else
-
-BOOST_AUTO_TEST_CASE(raii_event_tests_SKIPPED)
-{
-    // It would probably be ideal to report skipped, but boost::test doesn't seem to make that practical (at least not in versions available with common distros)
-    BOOST_TEST_MESSAGE("Skipping raii_event_tess: libevent doesn't support event_set_mem_functions");
-}
-
-#endif  // EVENT_SET_MEM_FUNCTIONS_IMPLEMENTED
 
 BOOST_AUTO_TEST_SUITE_END()
