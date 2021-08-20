@@ -147,6 +147,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendall", 1, "conf_target" },
     { "sendall", 3, "fee_rate"},
     { "sendall", 4, "options" },
+    { "simulaterawtransaction", 0, "rawtxs" },
+    { "simulaterawtransaction", 1, "options" },
     { "importprivkey", 2, "rescan" },
     { "importaddress", 2, "rescan" },
     { "importaddress", 3, "p2sh" },
