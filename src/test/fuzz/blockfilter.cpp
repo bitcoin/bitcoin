@@ -36,9 +36,10 @@ FUZZ_TARGET(blockfilter)
         (void)gcs_filter.GetEncoded();
         (void)gcs_filter.Match(ConsumeRandomLengthByteVector(fuzzed_data_provider));
         GCSFilter::ElementSet element_set;
-        while (fuzzed_data_provider.ConsumeBool()) {
+        LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 30000)
+        {
             element_set.insert(ConsumeRandomLengthByteVector(fuzzed_data_provider));
-            gcs_filter.MatchAny(element_set);
         }
+        gcs_filter.MatchAny(element_set);
     }
 }
