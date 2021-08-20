@@ -2534,22 +2534,6 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         AddAddrFetch(strDest);
     }
 
-    if (m_client_interface) {
-        m_client_interface->InitMessage(_("Loading P2P addresses…").translated);
-    }
-    // Load addresses from peers.dat
-    int64_t nStart = GetTimeMillis();
-    {
-        CAddrDB adb;
-        if (adb.Read(addrman))
-            LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman.size(), GetTimeMillis() - nStart);
-        else {
-            addrman.Clear(); // Addrman can be in an inconsistent state after failure, reset it
-            LogPrintf("Recreating peers.dat\n");
-            DumpAddresses();
-        }
-    }
-
     if (m_use_addrman_outgoing) {
         // Load addresses from anchors.dat
         m_anchors = ReadAnchors(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME);

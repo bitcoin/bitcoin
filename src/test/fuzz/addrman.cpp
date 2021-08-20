@@ -228,24 +228,22 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    CAddrManDeterministic addr_man{fuzzed_data_provider};
+    auto addr_man_ptr = std::make_unique<CAddrManDeterministic>(fuzzed_data_provider);
     if (fuzzed_data_provider.ConsumeBool()) {
         const std::vector<uint8_t> serialized_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
         CDataStream ds(serialized_data, SER_DISK, INIT_PROTO_VERSION);
         const auto ser_version{fuzzed_data_provider.ConsumeIntegral<int32_t>()};
         ds.SetVersion(ser_version);
         try {
-            ds >> addr_man;
+            ds >> *addr_man_ptr;
         } catch (const std::ios_base::failure&) {
-            addr_man.Clear();
+            addr_man_ptr = std::make_unique<CAddrManDeterministic>(fuzzed_data_provider);
         }
     }
+    CAddrManDeterministic& addr_man = *addr_man_ptr;
     while (fuzzed_data_provider.ConsumeBool()) {
         CallOneOf(
             fuzzed_data_provider,
-            [&] {
-                addr_man.Clear();
-            },
             [&] {
                 addr_man.ResolveCollisions();
             },

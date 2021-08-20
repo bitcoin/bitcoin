@@ -48,7 +48,7 @@ public:
         unsigned char nVersion = 1;
         s << nVersion;
         s << ((unsigned char)32);
-        s << nKey;
+        s << uint256::ONE;
         s << 10; // nNew
         s << 10; // nTried
 
@@ -132,16 +132,6 @@ public:
          int64_t nLastTry = GetAdjustedTime()-61;
          Attempt(addr, count_failure, nLastTry);
      }
-
-    void Clear()
-    {
-        CAddrMan::Clear();
-        if (deterministic) {
-            LOCK(cs);
-            nKey = uint256{1};
-            insecure_rand = FastRandomContext(true);
-        }
-    }
 };
 
 static CNetAddr ResolveIP(const std::string& ip)
@@ -175,27 +165,27 @@ BOOST_FIXTURE_TEST_SUITE(addrman_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(addrman_simple)
 {
-    CAddrManTest addrman;
+    auto addrman = std::make_unique<CAddrManTest>();
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
     // Test: Does Addrman respond correctly when empty.
-    BOOST_CHECK_EQUAL(addrman.size(), 0U);
-    CAddrInfo addr_null = addrman.Select();
+    BOOST_CHECK_EQUAL(addrman->size(), 0U);
+    CAddrInfo addr_null = addrman->Select();
     BOOST_CHECK_EQUAL(addr_null.ToString(), "[::]:0");
 
     // Test: Does Addrman::Add work as expected.
     CService addr1 = ResolveService("250.1.1.1", 8333);
-    BOOST_CHECK(addrman.Add({CAddress(addr1, NODE_NONE)}, source));
-    BOOST_CHECK_EQUAL(addrman.size(), 1U);
-    CAddrInfo addr_ret1 = addrman.Select();
+    BOOST_CHECK(addrman->Add({CAddress(addr1, NODE_NONE)}, source));
+    BOOST_CHECK_EQUAL(addrman->size(), 1U);
+    CAddrInfo addr_ret1 = addrman->Select();
     BOOST_CHECK_EQUAL(addr_ret1.ToString(), "250.1.1.1:8333");
 
     // Test: Does IP address deduplication work correctly.
     //  Expected dup IP should not be added.
     CService addr1_dup = ResolveService("250.1.1.1", 8333);
-    BOOST_CHECK(!addrman.Add({CAddress(addr1_dup, NODE_NONE)}, source));
-    BOOST_CHECK_EQUAL(addrman.size(), 1U);
+    BOOST_CHECK(!addrman->Add({CAddress(addr1_dup, NODE_NONE)}, source));
+    BOOST_CHECK_EQUAL(addrman->size(), 1U);
 
 
     // Test: New table has one addr and we add a diff addr we should
@@ -205,21 +195,16 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     // success.
 
     CService addr2 = ResolveService("250.1.1.2", 8333);
-    BOOST_CHECK(addrman.Add({CAddress(addr2, NODE_NONE)}, source));
-    BOOST_CHECK(addrman.size() >= 1);
+    BOOST_CHECK(addrman->Add({CAddress(addr2, NODE_NONE)}, source));
+    BOOST_CHECK(addrman->size() >= 1);
 
-    // Test: AddrMan::Clear() should empty the new table.
-    addrman.Clear();
-    BOOST_CHECK_EQUAL(addrman.size(), 0U);
-    CAddrInfo addr_null2 = addrman.Select();
-    BOOST_CHECK_EQUAL(addr_null2.ToString(), "[::]:0");
-
-    // Test: AddrMan::Add multiple addresses works as expected
+    // Test: reset addrman and test AddrMan::Add multiple addresses works as expected
+    addrman = std::make_unique<CAddrManTest>();
     std::vector<CAddress> vAddr;
     vAddr.push_back(CAddress(ResolveService("250.1.1.3", 8333), NODE_NONE));
     vAddr.push_back(CAddress(ResolveService("250.1.1.4", 8333), NODE_NONE));
-    BOOST_CHECK(addrman.Add(vAddr, source));
-    BOOST_CHECK(addrman.size() >= 1);
+    BOOST_CHECK(addrman->Add(vAddr, source));
+    BOOST_CHECK(addrman->size() >= 1);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_ports)
@@ -774,23 +759,23 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
 {
     std::vector<bool> asmap1 = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
 
-    CAddrManTest addrman_asmap1(true, asmap1);
-    CAddrManTest addrman_asmap1_dup(true, asmap1);
-    CAddrManTest addrman_noasmap;
+    auto addrman_asmap1 = std::make_unique<CAddrManTest>(true, asmap1);
+    auto addrman_asmap1_dup = std::make_unique<CAddrManTest>(true, asmap1);
+    auto addrman_noasmap = std::make_unique<CAddrManTest>();
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
 
     CAddress addr = CAddress(ResolveService("250.1.1.1"), NODE_NONE);
     CNetAddr default_source;
 
 
-    addrman_asmap1.Add({addr}, default_source);
+    addrman_asmap1->Add({addr}, default_source);
 
-    stream << addrman_asmap1;
+    stream << *addrman_asmap1;
     // serizalizing/deserializing addrman with the same asmap
-    stream >> addrman_asmap1_dup;
+    stream >> *addrman_asmap1_dup;
 
-    std::pair<int, int> bucketAndEntry_asmap1 = addrman_asmap1.GetBucketAndEntry(addr);
-    std::pair<int, int> bucketAndEntry_asmap1_dup = addrman_asmap1_dup.GetBucketAndEntry(addr);
+    std::pair<int, int> bucketAndEntry_asmap1 = addrman_asmap1->GetBucketAndEntry(addr);
+    std::pair<int, int> bucketAndEntry_asmap1_dup = addrman_asmap1_dup->GetBucketAndEntry(addr);
     BOOST_CHECK(bucketAndEntry_asmap1.second != -1);
     BOOST_CHECK(bucketAndEntry_asmap1_dup.second != -1);
 
@@ -798,39 +783,39 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     BOOST_CHECK(bucketAndEntry_asmap1.second == bucketAndEntry_asmap1_dup.second);
 
     // deserializing asmaped peers.dat to non-asmaped addrman
-    stream << addrman_asmap1;
-    stream >> addrman_noasmap;
-    std::pair<int, int> bucketAndEntry_noasmap = addrman_noasmap.GetBucketAndEntry(addr);
+    stream << *addrman_asmap1;
+    stream >> *addrman_noasmap;
+    std::pair<int, int> bucketAndEntry_noasmap = addrman_noasmap->GetBucketAndEntry(addr);
     BOOST_CHECK(bucketAndEntry_noasmap.second != -1);
     BOOST_CHECK(bucketAndEntry_asmap1.first != bucketAndEntry_noasmap.first);
     BOOST_CHECK(bucketAndEntry_asmap1.second != bucketAndEntry_noasmap.second);
 
     // deserializing non-asmaped peers.dat to asmaped addrman
-    addrman_asmap1.Clear();
-    addrman_noasmap.Clear();
-    addrman_noasmap.Add({addr}, default_source);
-    stream << addrman_noasmap;
-    stream >> addrman_asmap1;
-    std::pair<int, int> bucketAndEntry_asmap1_deser = addrman_asmap1.GetBucketAndEntry(addr);
+    addrman_asmap1 = std::make_unique<CAddrManTest>(true, asmap1);
+    addrman_noasmap = std::make_unique<CAddrManTest>();
+    addrman_noasmap->Add({addr}, default_source);
+    stream << *addrman_noasmap;
+    stream >> *addrman_asmap1;
+    std::pair<int, int> bucketAndEntry_asmap1_deser = addrman_asmap1->GetBucketAndEntry(addr);
     BOOST_CHECK(bucketAndEntry_asmap1_deser.second != -1);
     BOOST_CHECK(bucketAndEntry_asmap1_deser.first != bucketAndEntry_noasmap.first);
     BOOST_CHECK(bucketAndEntry_asmap1_deser.first == bucketAndEntry_asmap1_dup.first);
     BOOST_CHECK(bucketAndEntry_asmap1_deser.second == bucketAndEntry_asmap1_dup.second);
 
     // used to map to different buckets, now maps to the same bucket.
-    addrman_asmap1.Clear();
-    addrman_noasmap.Clear();
+    addrman_asmap1 = std::make_unique<CAddrManTest>(true, asmap1);
+    addrman_noasmap = std::make_unique<CAddrManTest>();
     CAddress addr1 = CAddress(ResolveService("250.1.1.1"), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.2.1.1"), NODE_NONE);
-    addrman_noasmap.Add({addr, addr2}, default_source);
-    std::pair<int, int> bucketAndEntry_noasmap_addr1 = addrman_noasmap.GetBucketAndEntry(addr1);
-    std::pair<int, int> bucketAndEntry_noasmap_addr2 = addrman_noasmap.GetBucketAndEntry(addr2);
+    addrman_noasmap->Add({addr, addr2}, default_source);
+    std::pair<int, int> bucketAndEntry_noasmap_addr1 = addrman_noasmap->GetBucketAndEntry(addr1);
+    std::pair<int, int> bucketAndEntry_noasmap_addr2 = addrman_noasmap->GetBucketAndEntry(addr2);
     BOOST_CHECK(bucketAndEntry_noasmap_addr1.first != bucketAndEntry_noasmap_addr2.first);
     BOOST_CHECK(bucketAndEntry_noasmap_addr1.second != bucketAndEntry_noasmap_addr2.second);
-    stream << addrman_noasmap;
-    stream >> addrman_asmap1;
-    std::pair<int, int> bucketAndEntry_asmap1_deser_addr1 = addrman_asmap1.GetBucketAndEntry(addr1);
-    std::pair<int, int> bucketAndEntry_asmap1_deser_addr2 = addrman_asmap1.GetBucketAndEntry(addr2);
+    stream << *addrman_noasmap;
+    stream >> *addrman_asmap1;
+    std::pair<int, int> bucketAndEntry_asmap1_deser_addr1 = addrman_asmap1->GetBucketAndEntry(addr1);
+    std::pair<int, int> bucketAndEntry_asmap1_deser_addr2 = addrman_asmap1->GetBucketAndEntry(addr2);
     BOOST_CHECK(bucketAndEntry_asmap1_deser_addr1.first == bucketAndEntry_asmap1_deser_addr2.first);
     BOOST_CHECK(bucketAndEntry_asmap1_deser_addr1.second != bucketAndEntry_asmap1_deser_addr2.second);
 }
@@ -839,7 +824,7 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
 {
     // Confirm that invalid addresses are ignored in unserialization.
 
-    CAddrManTest addrman;
+    auto addrman = std::make_unique<CAddrManTest>();
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
 
     const CAddress new1{ResolveService("5.5.5.5"), NODE_NONE};
@@ -847,12 +832,12 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
     const CAddress tried1{ResolveService("7.7.7.7"), NODE_NONE};
     const CAddress tried2{ResolveService("8.8.8.8"), NODE_NONE};
 
-    addrman.Add({new1, tried1, new2, tried2}, CNetAddr{});
-    addrman.Good(tried1);
-    addrman.Good(tried2);
-    BOOST_REQUIRE_EQUAL(addrman.size(), 4);
+    addrman->Add({new1, tried1, new2, tried2}, CNetAddr{});
+    addrman->Good(tried1);
+    addrman->Good(tried2);
+    BOOST_REQUIRE_EQUAL(addrman->size(), 4);
 
-    stream << addrman;
+    stream << *addrman;
 
     const std::string str{stream.str()};
     size_t pos;
@@ -871,9 +856,9 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
     BOOST_REQUIRE(pos + sizeof(tried2_raw_replacement) <= stream.size());
     memcpy(stream.data() + pos, tried2_raw_replacement, sizeof(tried2_raw_replacement));
 
-    addrman.Clear();
-    stream >> addrman;
-    BOOST_CHECK_EQUAL(addrman.size(), 2);
+    addrman = std::make_unique<CAddrManTest>();
+    stream >> *addrman;
+    BOOST_CHECK_EQUAL(addrman->size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
@@ -1083,13 +1068,12 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     BOOST_CHECK(addrman1.size() == 1);
     BOOST_CHECK(exceptionThrown);
 
-    // Test that CAddrDB::Read leaves addrman in a clean state if de-serialization fails.
+    // Test that CAddrDB::Read fails if peers.dat is corrupt
     CDataStream ssPeers2 = AddrmanToStream(addrmanCorrupted);
 
     CAddrMan addrman2(/* deterministic */ false, /* consistency_check_ratio */ 100);
     BOOST_CHECK(addrman2.size() == 0);
     BOOST_CHECK(!CAddrDB::Read(addrman2, ssPeers2));
-    BOOST_CHECK(addrman2.size() == 0);
 }
 
 

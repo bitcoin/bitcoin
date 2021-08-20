@@ -471,38 +471,7 @@ public:
         Check();
     }
 
-    void Clear()
-        EXCLUSIVE_LOCKS_REQUIRED(!cs)
-    {
-        LOCK(cs);
-        std::vector<int>().swap(vRandom);
-        nKey = insecure_rand.rand256();
-        for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
-            for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; entry++) {
-                vvNew[bucket][entry] = -1;
-            }
-        }
-        for (size_t bucket = 0; bucket < ADDRMAN_TRIED_BUCKET_COUNT; bucket++) {
-            for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; entry++) {
-                vvTried[bucket][entry] = -1;
-            }
-        }
-
-        nIdCount = 0;
-        nTried = 0;
-        nNew = 0;
-        nLastGood = 1; //Initially at 1 so that "never" is strictly worse.
-        mapInfo.clear();
-        mapAddr.clear();
-    }
-
-    explicit CAddrMan(bool deterministic, int32_t consistency_check_ratio)
-        : insecure_rand{deterministic},
-          m_consistency_check_ratio{consistency_check_ratio}
-    {
-        Clear();
-        if (deterministic) nKey = uint256{1};
-    }
+    explicit CAddrMan(bool deterministic, int32_t consistency_check_ratio);
 
     ~CAddrMan()
     {
@@ -624,16 +593,15 @@ public:
         Check();
     }
 
-protected:
-    //! secret key to randomize bucket select with
-    uint256 nKey;
-
+private:
     //! A mutex to protect the inner data structures.
     mutable Mutex cs;
 
-private:
     //! Source of random numbers for randomization in inner loops
     mutable FastRandomContext insecure_rand GUARDED_BY(cs);
+
+    //! secret key to randomize bucket select with
+    uint256 nKey;
 
     //! Serialization versions.
     enum Format : uint8_t {
@@ -658,7 +626,7 @@ private:
     static constexpr uint8_t INCOMPATIBILITY_BASE = 32;
 
     //! last used nId
-    int nIdCount GUARDED_BY(cs);
+    int nIdCount GUARDED_BY(cs){0};
 
     //! table with information about all nIds
     std::unordered_map<int, CAddrInfo> mapInfo GUARDED_BY(cs);
@@ -672,19 +640,19 @@ private:
     mutable std::vector<int> vRandom GUARDED_BY(cs);
 
     // number of "tried" entries
-    int nTried GUARDED_BY(cs);
+    int nTried GUARDED_BY(cs){0};
 
     //! list of "tried" buckets
     int vvTried[ADDRMAN_TRIED_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
 
     //! number of (unique) "new" entries
-    int nNew GUARDED_BY(cs);
+    int nNew GUARDED_BY(cs){0};
 
     //! list of "new" buckets
     int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
 
-    //! last time Good was called (memory only)
-    int64_t nLastGood GUARDED_BY(cs);
+    //! last time Good was called (memory only). Initially set to 1 so that "never" is strictly worse.
+    int64_t nLastGood GUARDED_BY(cs){1};
 
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;

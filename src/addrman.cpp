@@ -77,6 +77,23 @@ double CAddrInfo::GetChance(int64_t nNow) const
     return fChance;
 }
 
+CAddrMan::CAddrMan(bool deterministic, int32_t consistency_check_ratio)
+    : insecure_rand{deterministic}
+    , nKey{deterministic ? uint256{1} : insecure_rand.rand256()}
+    , m_consistency_check_ratio{consistency_check_ratio}
+{
+    for (auto& bucket : vvNew) {
+        for (auto& entry : bucket) {
+            entry = -1;
+        }
+    }
+    for (auto& bucket : vvTried) {
+        for (auto& entry : bucket) {
+            entry = -1;
+        }
+    }
+}
+
 CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId)
 {
     AssertLockHeld(cs);
