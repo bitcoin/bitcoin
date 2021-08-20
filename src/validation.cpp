@@ -605,14 +605,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             }
             if (!setConflicts.count(ptxConflicting->GetHash()))
             {
-                // Allow opt-out of transaction replacement by setting
-                // nSequence > MAX_BIP125_RBF_SEQUENCE (SEQUENCE_FINAL-2) on all inputs.
-                //
-                // SEQUENCE_FINAL-1 is picked to still allow use of nLockTime by
-                // non-replaceable transactions. All inputs rather than just one
-                // is for the sake of multi-party protocols, where we don't
-                // want a single party to be able to disable replacement.
-                //
                 // Transactions that don't explicitly signal replaceability are
                 // *not* replaceable with the current logic, even if one of their
                 // unconfirmed ancestors signals replaceability. This diverges
@@ -620,16 +612,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 // Applications relying on first-seen mempool behavior should
                 // check all unconfirmed ancestors; otherwise an opt-in ancestor
                 // might be replaced, causing removal of this descendant.
-                bool fReplacementOptOut = true;
-                for (const CTxIn &_txin : ptxConflicting->vin)
-                {
-                    if (_txin.nSequence <= MAX_BIP125_RBF_SEQUENCE)
-                    {
-                        fReplacementOptOut = false;
-                        break;
-                    }
-                }
-                if (fReplacementOptOut) {
+                if (!SignalsOptInRBF(*ptxConflicting)) {
                     return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
                 }
 
