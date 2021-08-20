@@ -244,12 +244,7 @@ bool CAddrDB::Read(CAddrMan& addr)
 
 bool CAddrDB::Read(CAddrMan& addr, CDataStream& ssPeers)
 {
-    bool ret = DeserializeDB(ssPeers, addr, false);
-    if (!ret) {
-        // Ensure addrman is left in a clean state
-        addr.Clear();
-    }
-    return ret;
+    return DeserializeDB(ssPeers, addr, false);
 }
 
 void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& anchors)
