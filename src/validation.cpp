@@ -475,8 +475,10 @@ private:
         bool m_replacement_transaction;
         CAmount m_base_fees;
         CAmount m_modified_fees;
-        CAmount m_conflicting_fees;
-        size_t m_conflicting_size;
+        /** Total modified fees of all transactions being replaced. */
+        CAmount m_conflicting_fees{0};
+        /** Total virtual size of all transactions being replaced. */
+        size_t m_conflicting_size{0};
 
         const CTransactionRef& m_ptx;
         const uint256& m_hash;
@@ -799,8 +801,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // Check if it's economically rational to mine this transaction rather
     // than the ones it replaces.
-    nConflictingFees = 0;
-    nConflictingSize = 0;
     uint64_t nConflictingCount = 0;
 
     // If we don't hold the lock allConflicting might be incomplete; the
