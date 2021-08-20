@@ -64,6 +64,11 @@ P2P and network changes
 Updated RPCs
 ------------
 
+- The `bip125_replaceable` field output by mempool and wallet RPC commands was
+  misleading (see CVE-2021-31876). It was deprecated in favour of a `replaceable`
+  boolean field which does not check for the inheritance rule defined by BIP125,
+  sticking to what is currently enforced by the mempool. (#22665)
+
 New RPCs
 --------
 

@@ -424,7 +424,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, 0)
 
         # This transaction isn't shown as replaceable
-        assert_equal(self.nodes[0].getmempoolentry(tx1a_txid)['bip125-replaceable'], False)
+        assert_equal(self.nodes[0].getmempoolentry(tx1a_txid)['replaceable'], False)
 
         # Shouldn't be able to double-spend
         tx1b = CTransaction()
@@ -469,7 +469,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx3a_txid = self.nodes[0].sendrawtransaction(tx3a_hex, 0)
 
         # This transaction is shown as replaceable
-        assert_equal(self.nodes[0].getmempoolentry(tx3a_txid)['bip125-replaceable'], True)
+        assert_equal(self.nodes[0].getmempoolentry(tx3a_txid)['replaceable'], True)
 
         tx3b = CTransaction()
         tx3b.vin = [CTxIn(COutPoint(tx1a_txid, 0), nSequence=0)]
@@ -573,7 +573,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             sequence=BIP125_SEQUENCE_NUMBER,
             fee_rate=Decimal('0.01'),
         )
-        assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['bip125-replaceable'])
+        assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['replaceable'])
 
         replacement_parent_tx = self.wallet.create_self_transfer(
             from_node=self.nodes[0],
@@ -598,7 +598,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         )
 
         # Reports false due to inheritance not being implemented
-        assert_equal(False, self.nodes[0].getmempoolentry(optout_child_tx['txid'])['bip125-replaceable'])
+        assert_equal(False, self.nodes[0].getmempoolentry(optout_child_tx['txid'])['replaceable'])
 
         replacement_child_tx = self.wallet.create_self_transfer(
             from_node=self.nodes[0],
@@ -615,7 +615,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # The original transaction (`optout_child_tx`) doesn't signal RBF but its parent (`optin_parent_tx`) does.
         # The replacement transaction (`replacement_child_tx`) should be able to replace the original transaction.
         # See CVE-2021-31876 for further explanations.
-        assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['bip125-replaceable'])
+        assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['replaceable'])
         assert_raises_rpc_error(-26, 'txn-mempool-conflict', self.nodes[0].sendrawtransaction, replacement_child_tx["hex"], 0)
 
     def test_replacement_relay_fee(self):

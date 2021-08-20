@@ -477,7 +477,8 @@ static std::vector<RPCResult> MempoolEntryDescription() { return {
         {RPCResult{RPCResult::Type::STR_HEX, "transactionid", "parent transaction id"}}},
     RPCResult{RPCResult::Type::ARR, "spentby", "unconfirmed transactions spending outputs from this transaction",
         {RPCResult{RPCResult::Type::STR_HEX, "transactionid", "child transaction id"}}},
-    RPCResult{RPCResult::Type::BOOL, "bip125-replaceable", "Whether this transaction could be replaced due to BIP125 (replace-by-fee)"},
+    RPCResult{RPCResult::Type::BOOL, "bip125-replaceable", "Whether this transaction could be replaced due to replace-by-fee (DEPRECATED, returns the same value as 'replaceable'. Use this field instead. Returned only if config option 'deprecatedrpc=bip125' is set)"},
+    RPCResult{RPCResult::Type::BOOL, "replaceable", "Whether this transaction could be replaced by a conflicting one using replace-by-fee"},
     RPCResult{RPCResult::Type::BOOL, "unbroadcast", "Whether this transaction is currently unbroadcast (initial broadcast not yet acknowledged by any peers)"},
 };}
 
@@ -531,7 +532,9 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     info.pushKV("spentby", spent);
 
     // Add opt-in RBF status
-    info.pushKV("bip125-replaceable", SignalsOptInRBF(tx));
+    const bool rbf_status = SignalsOptInRBF(tx);
+    info.pushKV("replaceable", rbf_status);
+    if (IsDeprecatedRPCEnabled("bip125")) info.pushKV("bip125-replaceable", rbf_status);
     info.pushKV("unbroadcast", pool.IsUnbroadcastTx(tx.GetHash()));
 }
 
