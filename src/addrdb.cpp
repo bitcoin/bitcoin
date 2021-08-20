@@ -247,6 +247,25 @@ bool CAddrDB::Read(CAddrMan& addr, CDataStream& ssPeers)
     return DeserializeDB(ssPeers, addr, false);
 }
 
+std::unique_ptr<CAddrMan> LoadAddrman(const ArgsManager& args)
+{
+    auto check_addrman = std::clamp<int32_t>(args.GetArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
+    auto addrman = std::make_unique<CAddrMan>(/* deterministic */ false, /* consistency_check_ratio */ check_addrman);
+
+    // Load addresses from peers.dat
+    const int64_t nStart{GetTimeMillis()};
+    CAddrDB adb;
+    if (adb.Read(*addrman)) {
+        LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman->size(), GetTimeMillis() - nStart);
+    } else {
+        // Addrman can be in an inconsistent state after failure, reset it
+        addrman = std::make_unique<CAddrMan>(/* deterministic */ false, /* consistency_check_ratio */ check_addrman);
+        LogPrintf("Recreating peers.dat\n");
+        adb.Write(*addrman);
+    }
+    return addrman;
+}
+
 void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& anchors)
 {
     LOG_TIME_SECONDS(strprintf("Flush %d outbound block-relay-only peer addresses to anchors.dat", anchors.size()));

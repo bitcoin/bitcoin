@@ -14,8 +14,9 @@
 #include <string>
 #include <vector>
 
-class CAddress;
+class ArgsManager;
 class CAddrMan;
+class CAddress;
 class CDataStream;
 
 class CBanEntry
@@ -99,6 +100,8 @@ public:
      */
     bool Read(banmap_t& banSet);
 };
+
+std::unique_ptr<CAddrMan> LoadAddrman(const ArgsManager& args);
 
 /**
  * Dump the anchor IP address database (anchors.dat)
