@@ -10,7 +10,6 @@ Runs automatically during `make check`.
 Can also be run manually."""
 
 import argparse
-import binascii
 import configparser
 import difflib
 import json
@@ -167,7 +166,7 @@ def parse_output(a, fmt):
     if fmt == 'json':  # json: compare parsed data
         return json.loads(a)
     elif fmt == 'hex':  # hex: parse and compare binary data
-        return binascii.a2b_hex(a.strip())
+        return bytes.fromhex(a.strip())
     else:
         raise NotImplementedError("Don't know how to compare %s" % fmt)
 
