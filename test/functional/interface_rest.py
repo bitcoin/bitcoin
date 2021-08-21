@@ -225,9 +225,9 @@ class RESTTest (SyscoinTestFramework):
         assert_greater_than(int(response.getheader('content-length')), BLOCK_HEADER_SIZE)
         response_bytes = response.read()
 
-        # Compare with block header
+        # SYSCOIN Compare with block header
         response_header = self.test_rest_request(f"/headers/1/{bb_hash}", req_type=ReqType.BIN, ret_type=RetType.OBJ)
-        assert_equal(int(response_header.getheader('content-length')), BLOCK_HEADER_SIZE)
+        headerLen = int(response_header.getheader('content-length'))
         response_header_bytes = response_header.read()
         assert_equal(response_bytes[:headerLen], response_header_bytes)
 
