@@ -15,7 +15,6 @@ import sys
 import time
 import subprocess
 
-from binascii import unhexlify
 from io import BytesIO
 
 PATH_BASE_CONTRIB_SIGNET = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
@@ -202,7 +201,7 @@ def finish_block(block, signet_solution, grind_cmd):
 
 def generate_psbt(tmpl, reward_spk, *, blocktime=None):
     signet_spk = tmpl["signet_challenge"]
-    signet_spk_bin = unhexlify(signet_spk)
+    signet_spk_bin = bytes.fromhex(signet_spk)
 
     cbtx = create_coinbase(height=tmpl["height"], value=tmpl["coinbasevalue"], spk=reward_spk)
     cbtx.vin[0].nSequence = 2**32-2
@@ -258,7 +257,7 @@ def get_reward_addr_spk(args, height):
         return args.address, args.reward_spk
 
     reward_addr = get_reward_address(args, height)
-    reward_spk = unhexlify(json.loads(args.bcli("getaddressinfo", reward_addr))["scriptPubKey"])
+    reward_spk = bytes.fromhex(json.loads(args.bcli("getaddressinfo", reward_addr))["scriptPubKey"])
     if args.address is not None:
         # will always be the same, so cache
         args.reward_spk = reward_spk
