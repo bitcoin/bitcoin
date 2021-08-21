@@ -31,22 +31,13 @@ RUN ./configure --disable-ccache \
 RUN make
 RUN make install
 
-FROM alpine
+FROM scratch
 COPY --from=build /usr/local /usr/local
-RUN apk --no-cache add bash coreutils shadow
+COPY --from=build /bitcoin/share/examples/bitcoin.conf /.bitcoin/bitcoin.conf
 
-ARG UNAME=bitcoin
-ARG UID=1000
-ARG GID=1000
-RUN groupadd -g $GID -o $UNAME
-RUN useradd -m -u $UID -g $GID -o -s /bin/bash $UNAME
-USER $UNAME
-
-USER bitcoin
-COPY --chown=bitcoin:bitcoin --from=build /bitcoin/share/examples/bitcoin.conf /home/bitcoin/.bitcoin/bitcoin.conf
-
-VOLUME ["/home/bitcoin/.bitcoin"]
+VOLUME ["/.bitcoin"]
 
 EXPOSE 8332 8333 18332 18333 18444
 
-CMD ["bitcoind", "-datadir=/home/bitcoin/.bitcoin", "-printtoconsole"]
+CMD ["/usr/local/bin/bitcoind", "-printtoconsole"]
+
