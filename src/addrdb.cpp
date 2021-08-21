@@ -18,6 +18,7 @@
 #include <univalue.h>
 #include <util/settings.h>
 #include <util/system.h>
+#include <util/translation.h>
 
 namespace {
 template <typename Stream, typename Data>
@@ -185,6 +186,23 @@ bool ReadPeerAddresses(const ArgsManager& args, CAddrMan& addr)
 bool ReadFromStream(CAddrMan& addr, CDataStream& ssPeers)
 {
     return DeserializeDB(ssPeers, addr, false);
+}
+
+std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const ArgsManager& args, std::unique_ptr<CAddrMan>& addrman)
+{
+    auto check_addrman = std::clamp<int32_t>(args.GetArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
+    addrman = std::make_unique<CAddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
+
+    int64_t nStart = GetTimeMillis();
+    if (ReadPeerAddresses(args, *addrman)) {
+        LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman->size(), GetTimeMillis() - nStart);
+    } else {
+        // Addrman can be in an inconsistent state after failure, reset it
+        addrman = std::make_unique<CAddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
+        LogPrintf("Recreating peers.dat\n");
+        DumpPeerAddresses(args, *addrman);
+    }
+    return std::nullopt;
 }
 
 void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& anchors)
