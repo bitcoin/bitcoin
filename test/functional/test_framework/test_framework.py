@@ -145,6 +145,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                             help="Pass extra args to all dashd instances")
         parser.add_argument("--timeoutscale", dest="timeout_scale", default=1, type=int,
                             help="Scale the test timeouts by multiplying them with the here provided value (default: %(default)s)")
+        parser.add_argument("--perf", dest="perf", default=False, action="store_true",
+                            help="profile running nodes with perf for the duration of the test")
         self.add_options(parser)
         self.options = parser.parse_args()
 
@@ -227,11 +229,20 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 node.cleanup_on_exit = False
             self.log.info("Note: dashds were not stopped and may still be running")
 
-        if not self.options.nocleanup and not self.options.noshutdown and success != TestStatus.FAILED:
+        should_clean_up = (
+            not self.options.nocleanup and
+            not self.options.noshutdown and
+            success != TestStatus.FAILED and
+            not self.options.perf
+        )
+        if should_clean_up:
             self.log.info("Cleaning up {} on exit".format(self.options.tmpdir))
             cleanup_tree_on_exit = True
+        elif self.options.perf:
+            self.log.warning("Not cleaning up dir {} due to perf data".format(self.options.tmpdir))
+            cleanup_tree_on_exit = False
         else:
-            self.log.warning("Not cleaning up dir %s" % self.options.tmpdir)
+            self.log.warning("Not cleaning up dir {}".format(self.options.tmpdir))
             cleanup_tree_on_exit = False
 
         if success == TestStatus.PASSED:
@@ -321,7 +332,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         assert_equal(len(binary), num_nodes)
         for i in range(num_nodes):
             numnode = len(self.nodes)
-            self.nodes.append(TestNode(numnode, get_datadir_path(self.options.tmpdir, numnode), self.extra_args_from_options, chain=self.chain, rpchost=rpchost, timewait=self.rpc_timeout, bitcoind=binary[i], bitcoin_cli=self.options.bitcoincli, mocktime=self.mocktime, coverage_dir=self.options.coveragedir, extra_conf=extra_confs[i], extra_args=extra_args[i], use_cli=self.options.usecli))
+            self.nodes.append(TestNode(numnode, get_datadir_path(self.options.tmpdir, numnode), self.extra_args_from_options, chain=self.chain, rpchost=rpchost, timewait=self.rpc_timeout, bitcoind=binary[i], bitcoin_cli=self.options.bitcoincli, mocktime=self.mocktime, coverage_dir=self.options.coveragedir, extra_conf=extra_confs[i], extra_args=extra_args[i], use_cli=self.options.usecli, start_perf=self.options.perf))
 
     def start_node(self, i, *args, **kwargs):
         """Start a dashd"""

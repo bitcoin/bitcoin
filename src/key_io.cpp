@@ -142,7 +142,9 @@ std::string EncodeExtKey(const CExtKey& key)
     data.resize(size + BIP32_EXTKEY_SIZE);
     key.Encode(data.data() + size);
     std::string ret = EncodeBase58Check(data);
-    memory_cleanse(data.data(), data.size());
+    if (!data.empty()) {
+        memory_cleanse(data.data(), data.size());
+    }
     return ret;
 }
 
