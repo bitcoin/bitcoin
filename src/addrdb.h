@@ -21,7 +21,7 @@ struct bilingual_str;
 
 bool DumpPeerAddresses(const ArgsManager& args, const CAddrMan& addr);
 /** Only used by tests. */
-bool ReadFromStream(CAddrMan& addr, CDataStream& ssPeers);
+void ReadFromStream(CAddrMan& addr, CDataStream& ssPeers);
 
 /** Access to the banlist database (banlist.json) */
 class CBanDB
