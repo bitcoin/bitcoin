@@ -45,8 +45,6 @@ struct WalletContext {
     WalletContext(const WalletContext& contextIn)  {
         chain = contextIn.chain;
         args = contextIn.args;
-        wallets = contextIn.wallets;
-        wallet_load_fns = contextIn.wallet_load_fns;
         nodeContext = contextIn.nodeContext;
     }    
     //! Declare default constructor and destructor that are not inline, so code
