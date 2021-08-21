@@ -177,12 +177,6 @@ bool DumpPeerAddresses(const ArgsManager& args, const CAddrMan& addr)
     return SerializeFileDB("peers", pathAddr, addr, CLIENT_VERSION);
 }
 
-bool ReadPeerAddresses(const ArgsManager& args, CAddrMan& addr)
-{
-    const auto pathAddr = args.GetDataDirNet() / "peers.dat";
-    return DeserializeFileDB(pathAddr, addr, CLIENT_VERSION);
-}
-
 bool ReadFromStream(CAddrMan& addr, CDataStream& ssPeers)
 {
     return DeserializeDB(ssPeers, addr, false);
@@ -194,7 +188,8 @@ std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const A
     addrman = std::make_unique<CAddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
 
     int64_t nStart = GetTimeMillis();
-    if (ReadPeerAddresses(args, *addrman)) {
+    const auto path_addr{args.GetDataDirNet() / "peers.dat"};
+    if (DeserializeFileDB(path_addr, *addrman, CLIENT_VERSION)) {
         LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman->size(), GetTimeMillis() - nStart);
     } else {
         // Addrman can be in an inconsistent state after failure, reset it

@@ -20,7 +20,6 @@ class CDataStream;
 struct bilingual_str;
 
 bool DumpPeerAddresses(const ArgsManager& args, const CAddrMan& addr);
-bool ReadPeerAddresses(const ArgsManager& args, CAddrMan& addr);
 /** Only used by tests. */
 bool ReadFromStream(CAddrMan& addr, CDataStream& ssPeers);
 
