@@ -230,7 +230,7 @@ static std::optional<util::SettingsValue> InterpretValue(const KeyInfo& key, con
 {
     // Return negated settings as false values.
     if (key.negated) {
-        if (!(flags & ArgsManager::ALLOW_BOOL)) {
+        if (flags & ArgsManager::DISALLOW_NEGATION) {
             error = strprintf("Negating of -%s is meaningless and therefore forbidden", key.name);
             return std::nullopt;
         }
@@ -652,6 +652,7 @@ void ArgsManager::AddArg(const std::string& name, const std::string& help, unsig
 
     LOCK(cs_args);
     std::map<std::string, Arg>& arg_map = m_available_args[cat];
+    if ((flags & (ALLOW_ANY | ALLOW_BOOL)) == 0) flags |= DISALLOW_NEGATION; // Temporary, removed in next scripted-diff
     auto ret = arg_map.emplace(arg_name, Arg{name.substr(eq_index, name.size() - eq_index), help, flags});
     assert(ret.second); // Make sure an insertion actually happened
 
