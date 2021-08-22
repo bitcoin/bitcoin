@@ -301,7 +301,7 @@ void SyscoinApplication::startThread()
     connect(this, &SyscoinApplication::requestedInitialize, &m_executor.value(), &InitExecutor::initialize);
     connect(this, &SyscoinApplication::requestedShutdown, &m_executor.value(), &InitExecutor::shutdown);
     // SYSCOIN
-    connect(window, &SyscoinGUI::requestedRestart, this, &SyscoinApplication::manageRestart);
+    connect(this, &SyscoinGUI::requestedRestart, this, &SyscoinApplication::manageRestart);
 }
 
 void SyscoinApplication::parameterSetup()
