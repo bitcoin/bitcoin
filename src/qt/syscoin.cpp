@@ -298,7 +298,7 @@ void SyscoinApplication::startThread()
     connect(this, &SyscoinApplication::requestedInitialize, &m_executor.value(), &InitExecutor::initialize);
     connect(this, &SyscoinApplication::requestedShutdown, &m_executor.value(), &InitExecutor::shutdown);
     // SYSCOIN
-    connect(window, &SyscoinGUI::requestedRestart, &m_executor.value(), &InitExecutor::restart);
+    connect(this, &SyscoinApplication::requestedRestart, &m_executor.value(), &InitExecutor::restart);
 }
 
 void SyscoinApplication::parameterSetup()
@@ -348,6 +348,12 @@ void SyscoinApplication::requestShutdown()
 
     // Request shutdown from core thread
     Q_EMIT requestedShutdown();
+}
+/** Get restart command-line parameters and request restart */
+void SyscoinApplication::handleRestart(const QStringList &args)
+{
+    if (!node().shutdownRequested())
+        Q_EMIT requestedRestart(args);
 }
 
 void SyscoinApplication::initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info)
