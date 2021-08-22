@@ -298,7 +298,7 @@ void SyscoinApplication::startThread()
     connect(this, &SyscoinApplication::requestedInitialize, &m_executor.value(), &InitExecutor::initialize);
     connect(this, &SyscoinApplication::requestedShutdown, &m_executor.value(), &InitExecutor::shutdown);
     // SYSCOIN
-    connect(this, &SyscoinGUI::requestedRestart, this, &SyscoinApplication::manageRestart);
+    connect(window, &SyscoinGUI::requestedRestart, &m_executor.value(), &InitExecutor::restart);
 }
 
 void SyscoinApplication::parameterSetup()
@@ -425,10 +425,7 @@ void SyscoinApplication::handleRunawayException(const QString &message)
         QLatin1String("<br><br>") + GUIUtil::MakeHtmlLink(message, PACKAGE_BUGREPORT));
     ::exit(EXIT_FAILURE);
 }
-void SyscoinApplication::manageRestart(const QStringList &args)
-{
-    m_executor.restart(args);
-}
+
 void SyscoinApplication::handleNonFatalException(const QString& message)
 {
     assert(QThread::currentThread() == thread());
