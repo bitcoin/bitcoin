@@ -70,7 +70,6 @@
 #include <QStringList>
 #include <QApplication>
 #include <QDebug>
-#include <util/system.h>
 const std::string SyscoinGUI::DEFAULT_UIPLATFORM =
 #if defined(Q_OS_MAC)
         "macosx"
@@ -1594,9 +1593,8 @@ void SyscoinGUI::handleRestart(const QStringList &args)
             QProcess::startDetached(QApplication::applicationFilePath(), args);
             qDebug() << __func__ << ": Restart initiated...";
             QApplication::quit();
-        } catch (const std::exception* e) {
-            PrintExceptionContinue(e, "Runaway exception");
-            Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings().translated));
+        } catch (...) {
+            handleRunawayException(nullptr);
         }
     }
 }
