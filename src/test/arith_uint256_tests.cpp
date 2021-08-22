@@ -559,3 +559,4 @@ BOOST_AUTO_TEST_CASE( getmaxcoverage ) // some more tests just to get 100% cover
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+#Assign: Thong Ngo
