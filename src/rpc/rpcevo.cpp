@@ -32,8 +32,10 @@ UniValue BuildDMNListEntry(const NodeContext& node, const CDeterministicMNCPtr& 
     coins[dmn->collateralOutpoint]; 
     node.chain->findCoins(coins);
     int confirmations = 0;
-    if(coins.count(dmn->collateralOutpoint))
-        confirmations = *node.chain->getHeight() - coins.at(dmn->collateralOutpoint).nHeight;
+    const Coin &coin = coins.at(dmn->collateralOutpoint);
+    if (!coin.IsSpent()) {
+        confirmations = *node.chain->getHeight() - coin.nHeight;
+    }
     o.pushKV("confirmations", confirmations);
     auto metaInfo = mmetaman.GetMetaInfo(dmn->proTxHash);
     o.pushKV("metaInfo", metaInfo->ToJson());

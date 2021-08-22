@@ -301,11 +301,12 @@ static RPCHelpMan protx_register()
     std::map<COutPoint, Coin> coins;
     coins[ptx.collateralOutpoint]; 
     pwallet->chain().findCoins(coins);
-    if(!coins.count(ptx.collateralOutpoint)) {
+    const Coin &coin = coins.at(ptx.collateralOutpoint);
+    if(coin.IsSpent()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral not found: %s", ptx.collateralOutpoint.ToStringShort()));
     }
     CTxDestination txDest;
-    ExtractDestination(coins.at(ptx.collateralOutpoint).out.scriptPubKey, txDest);
+    ExtractDestination(coin.out.scriptPubKey, txDest);
     CKeyID keyID;
     if (auto witness_id = std::get_if<WitnessV0KeyHash>(&txDest)) {	
         keyID = ToKeyID(*witness_id);
@@ -572,11 +573,12 @@ static RPCHelpMan protx_register_prepare()
     std::map<COutPoint, Coin> coins;
     coins[ptx.collateralOutpoint]; 
     pwallet->chain().findCoins(coins);
-    if(!coins.count(ptx.collateralOutpoint)) {
+    const Coin &coin = coins.at(ptx.collateralOutpoint);
+    if(coin.IsSpent()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral not found: %s", ptx.collateralOutpoint.ToStringShort()));
     }
     CTxDestination txDest;
-    ExtractDestination(coins.at(ptx.collateralOutpoint).out.scriptPubKey, txDest);
+    ExtractDestination(coin.out.scriptPubKey, txDest);
     CKeyID keyID;
     if (auto witness_id = std::get_if<WitnessV0KeyHash>(&txDest)) {	
         keyID = ToKeyID(*witness_id);
@@ -981,8 +983,10 @@ UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, in
         coins[dmn->collateralOutpoint]; 
         pwallet->chain().findCoins(coins);
         int confirmations = 0;
-        if(coins.count(dmn->collateralOutpoint))
-            confirmations = *pwallet->chain().getHeight() - coins.at(dmn->collateralOutpoint).nHeight;
+        const Coin &coin = coins.at(dmn->collateralOutpoint);
+        if(!coin.IsSpent()) {
+            confirmations = *pwallet->chain().getHeight() - coin.nHeight;
+        }
         o.pushKV("confirmations", confirmations);
         if (pwallet) {
             LOCK2(pwallet->cs_wallet, cs_main);

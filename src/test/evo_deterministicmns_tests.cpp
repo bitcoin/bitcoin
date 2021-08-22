@@ -213,7 +213,8 @@ static bool CheckTransactionSignature(const NodeContext& node, const CMutableTra
         std::map<COutPoint, Coin> coins;
         coins[txin.prevout]; 
         node.chain->findCoins(coins);
-        if (!VerifyScript(txin.scriptSig, coins.at(txin.prevout).out.scriptPubKey, nullptr, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&tx, i, coins.at(txin.prevout).out.nValue, MissingDataBehavior::ASSERT_FAIL))) {
+        const Coin& coin = coins.at(txin.prevout);
+        if (!VerifyScript(txin.scriptSig, coin.out.scriptPubKey, nullptr, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&tx, i, coin.out.nValue, MissingDataBehavior::ASSERT_FAIL))) {
             return false;
         }
     }

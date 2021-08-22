@@ -93,9 +93,10 @@ void CDeterministicMN::ToJson(interfaces::Chain& chain, UniValue& obj) const
     std::map<COutPoint, Coin> coins;
     coins[collateralOutpoint]; 
     chain.findCoins(coins);
-    if (coins.count(collateralOutpoint)) {
+    const Coin &coin = coins.at(collateralOutpoint);
+    if (!coin.IsSpent()) {
         CTxDestination dest;
-        if (ExtractDestination(coins.at(collateralOutpoint).out.scriptPubKey, dest)) {
+        if (ExtractDestination(coin.out.scriptPubKey, dest)) {
             obj.pushKV("collateralAddress", EncodeDestination(dest));
         }
     }

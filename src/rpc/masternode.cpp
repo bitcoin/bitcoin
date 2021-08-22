@@ -504,9 +504,10 @@ RPCHelpMan masternodelist()
         std::map<COutPoint, Coin> coins;
         coins[dmn->collateralOutpoint]; 
         node.chain->findCoins(coins);
-        if (coins.count(dmn->collateralOutpoint)) {
+        const Coin &coin = coins.at(dmn->collateralOutpoint);
+        if (!coin.IsSpent()) {
             CTxDestination collateralDest;
-            if (ExtractDestination(coins.at(dmn->collateralOutpoint).out.scriptPubKey, collateralDest)) {
+            if (ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
                 collateralAddressStr = EncodeDestination(collateralDest);
             }
         }
