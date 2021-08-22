@@ -1589,12 +1589,14 @@ void SyscoinGUI::handleRestart(const QStringList &args)
             qDebug() << __func__ << ": Running Restart in thread";
             m_node.appShutdown();
             qDebug() << __func__ << ": Shutdown finished";
+            Q_EMIT shutdownResult();
             CExplicitNetCleanup::callCleanup();
             QProcess::startDetached(QApplication::applicationFilePath(), args);
             qDebug() << __func__ << ": Restart initiated...";
             QApplication::quit();
         } catch (const std::exception* e) {
             PrintExceptionContinue(e, "Runaway exception");
+            Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings().translated));
         }
     }
 }
