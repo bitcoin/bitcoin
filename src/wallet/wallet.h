@@ -48,8 +48,6 @@ class CAuxFeeDetails;
 
 struct WalletContext;
 
-struct WalletContext;
-
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
 
 struct bilingual_str;
