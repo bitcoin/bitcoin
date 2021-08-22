@@ -417,7 +417,24 @@ void SyscoinApplication::handleRunawayException(const QString &message)
 }
 void SyscoinApplication::manageRestart(const QStringList &args)
 {
-    m_executor.restart(args);
+    static bool executing_restart{false};
+
+    if(!executing_restart) { // Only restart 1x, no matter how often a user clicks on a restart-button
+        executing_restart = true;
+        try
+        {
+            qDebug() << __func__ << ": Running Restart in thread";
+            m_node.appShutdown();
+            qDebug() << __func__ << ": Shutdown finished";
+            Q_EMIT shutdownResult();
+            CExplicitNetCleanup::callCleanup();
+            QProcess::startDetached(QApplication::applicationFilePath(), args);
+            qDebug() << __func__ << ": Restart initiated...";
+            QApplication::quit();
+        } catch (...) {
+            handleRunawayException(nullptr);
+        }
+    }
 }
 void SyscoinApplication::handleNonFatalException(const QString& message)
 {
