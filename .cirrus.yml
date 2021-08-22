@@ -209,16 +209,3 @@ task:
     PACKAGE_MANAGER_INSTALL: "echo"  # Nothing to do
     FILE_ENV: "./ci/test/00_setup_env_mac_host.sh"
 
-task:
-  name: 'ARM64 Android APK [focal]'
-  << : *DEPENDS_SDK_CACHE_TEMPLATE
-  << : *BASE_TEMPLATE
-  depends_sources_cache:
-    folder: "depends/sources"
-    fingerprint_script: git rev-list -1 HEAD ./depends
-  << : *MAIN_TEMPLATE
-  container:
-    image: ubuntu:focal
-  env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_android.sh"
