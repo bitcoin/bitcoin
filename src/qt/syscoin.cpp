@@ -54,6 +54,10 @@
 #include <QThread>
 #include <QTimer>
 #include <QTranslator>
+// SYSCOIN
+#include <QProcess>
+#include <QStringList>
+#include <QApplication>
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
 #if defined(QT_QPA_PLATFORM_XCB)
@@ -296,6 +300,8 @@ void SyscoinApplication::startThread()
     connect(&m_executor.value(), &InitExecutor::runawayException, this, &SyscoinApplication::handleRunawayException);
     connect(this, &SyscoinApplication::requestedInitialize, &m_executor.value(), &InitExecutor::initialize);
     connect(this, &SyscoinApplication::requestedShutdown, &m_executor.value(), &InitExecutor::shutdown);
+    // SYSCOIN
+    connect(window, &SyscoinGUI::requestedRestart, this, &SyscoinApplication::manageRestart);
 }
 
 void SyscoinApplication::parameterSetup()
@@ -421,6 +427,27 @@ void SyscoinApplication::handleRunawayException(const QString &message)
         tr("A fatal error occurred. %1 can no longer continue safely and will quit.").arg(PACKAGE_NAME) +
         QLatin1String("<br><br>") + GUIUtil::MakeHtmlLink(message, PACKAGE_BUGREPORT));
     ::exit(EXIT_FAILURE);
+}
+void SyscoinApplication::manageRestart(const QStringList &args)
+{
+    static bool executing_restart{false};
+
+    if(!executing_restart) { // Only restart 1x, no matter how often a user clicks on a restart-button
+        executing_restart = true;
+        try
+        {
+            qDebug() << __func__ << ": Running Restart in thread";
+            m_node->appShutdown();
+            qDebug() << __func__ << ": Shutdown finished";
+            Q_EMIT shutdownResult();
+            CExplicitNetCleanup::callCleanup();
+            QProcess::startDetached(QApplication::applicationFilePath(), args);
+            qDebug() << __func__ << ": Restart initiated...";
+            QApplication::quit();
+        } catch (...) {
+            handleRunawayException(nullptr);
+        }
+    }
 }
 void SyscoinApplication::handleNonFatalException(const QString& message)
 {

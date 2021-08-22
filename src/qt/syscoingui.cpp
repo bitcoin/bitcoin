@@ -66,9 +66,7 @@
 #include <QWindow>
 // SYSCOIN
 #include <qt/masternodelist.h>
-#include <QProcess>
 #include <QStringList>
-#include <QApplication>
 const std::string SyscoinGUI::DEFAULT_UIPLATFORM =
 #if defined(Q_OS_MAC)
         "macosx"
@@ -1575,27 +1573,8 @@ static bool ThreadSafeMessageBox(SyscoinGUI* gui, const bilingual_str& message, 
 /** Get restart command-line parameters and request restart */
 void SyscoinGUI::handleRestart(const QStringList &args)
 {
-    if (m_node.shutdownRequested())
-        return;
-    
-    static bool executing_restart{false};
-
-    if(!executing_restart) { // Only restart 1x, no matter how often a user clicks on a restart-button
-        executing_restart = true;
-        try
-        {
-            qDebug() << __func__ << ": Running Restart in thread";
-            m_node.appShutdown();
-            qDebug() << __func__ << ": Shutdown finished";
-            Q_EMIT shutdownResult();
-            CExplicitNetCleanup::callCleanup();
-            QProcess::startDetached(QApplication::applicationFilePath(), args);
-            qDebug() << __func__ << ": Restart initiated...";
-            QApplication::quit();
-        } catch (...) {
-            handleRunawayException(nullptr);
-        }
-    }
+    if (!m_node.shutdownRequested())
+        Q_EMIT requestedRestart(args);
 }
 
 void SyscoinGUI::subscribeToCoreSignals()
