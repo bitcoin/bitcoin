@@ -67,7 +67,6 @@
 // SYSCOIN
 #include <qt/masternodelist.h>
 #include <QStringList>
-#include <qt/syscoin.h>
 const std::string SyscoinGUI::DEFAULT_UIPLATFORM =
 #if defined(Q_OS_MAC)
         "macosx"
