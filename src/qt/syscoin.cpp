@@ -295,10 +295,11 @@ void SyscoinApplication::startThread()
     connect(&m_executor.value(), &InitExecutor::initializeResult, this, &SyscoinApplication::initializeResult);
     connect(&m_executor.value(), &InitExecutor::shutdownResult, this, &SyscoinApplication::shutdownResult);
     connect(&m_executor.value(), &InitExecutor::runawayException, this, &SyscoinApplication::handleRunawayException);
+    connect(&m_executor.value(), &InitExecutor::runawayException, this, &SyscoinApplication::handleRunawayException);
     connect(this, &SyscoinApplication::requestedInitialize, &m_executor.value(), &InitExecutor::initialize);
     connect(this, &SyscoinApplication::requestedShutdown, &m_executor.value(), &InitExecutor::shutdown);
     // SYSCOIN
-    connect(window, &SyscoinGUI::requestedRestart, &m_executor.value(), &InitExecutor::restart);
+    connect(this, &SyscoinGUI::requestedRestart, this, &SyscoinApplication::manageRestart);
 }
 
 void SyscoinApplication::parameterSetup()
@@ -414,7 +415,10 @@ void SyscoinApplication::handleRunawayException(const QString &message)
         QLatin1String("<br><br>") + GUIUtil::MakeHtmlLink(message, PACKAGE_BUGREPORT));
     ::exit(EXIT_FAILURE);
 }
-
+void SyscoinApplication::manageRestart(const QStringList &args)
+{
+    m_executor.restart(args);
+}
 void SyscoinApplication::handleNonFatalException(const QString& message)
 {
     assert(QThread::currentThread() == thread());

@@ -17,7 +17,7 @@
 #include <optional>
 
 #include <QApplication>
-
+#include <QStringList>
 class SyscoinGUI;
 class ClientModel;
 class NetworkStyle;
@@ -106,6 +106,7 @@ private:
     interfaces::Node* m_node = nullptr;
 
     void startThread();
+    void manageRestart(const QStringList &args);
 };
 
 int GuiMain(int argc, char* argv[]);
