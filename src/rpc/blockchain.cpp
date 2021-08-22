@@ -72,12 +72,6 @@ static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
 NodeContext& EnsureAnyNodeContext(const std::any& context)
 {
-    // SYSCOIN
-    auto wallet_context = util::AnyPtr<WalletContext>(context);
-    if (wallet_context) {
-        if (wallet_context->nodeContext != nullptr)
-            return *wallet_context->nodeContext;
-    }
     auto node_context = util::AnyPtr<NodeContext>(context);
     if (!node_context) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");

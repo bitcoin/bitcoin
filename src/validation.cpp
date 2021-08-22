@@ -329,27 +329,7 @@ bool CheckSequenceLocks(CBlockIndex* tip,
     }
     return EvaluateSequenceLocks(index, lockPair);
 }
-// SYSCOIN
-bool GetUTXOCoin(ChainstateManager& chainman, const COutPoint& outpoint, Coin& coin)
-{
-    LOCK(cs_main);
-    return chainman.ActiveChainstate().CoinsTip().GetCoin(outpoint, coin);
-}
 
-int GetUTXOHeight(ChainstateManager& chainman, const COutPoint& outpoint)
-{
-    // -1 means UTXO is yet unknown or already spent
-    Coin coin;
-    return GetUTXOCoin(chainman, outpoint, coin) ? coin.nHeight : -1;
-}
-
-int GetUTXOConfirmations(ChainstateManager& chainman, const COutPoint& outpoint)
-{
-    // -1 means UTXO is yet unknown or already spent
-    LOCK(cs_main);
-    int nPrevoutHeight = GetUTXOHeight(chainman, outpoint);
-    return (nPrevoutHeight > -1 && chainman.ActiveTip()) ? chainman.ActiveHeight() - nPrevoutHeight + 1 : -1;
-}
 // Returns the script flags which should be checked for a given block
 static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& chainparams);
 

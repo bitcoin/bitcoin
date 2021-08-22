@@ -27,9 +27,13 @@ UniValue BuildDMNListEntry(const NodeContext& node, const CDeterministicMNCPtr& 
     }
     UniValue o(UniValue::VOBJ);
 
-    dmn->ToJson(*node.chainman, o);
-
-    int confirmations = GetUTXOConfirmations(*node.chainman, dmn->collateralOutpoint);
+    dmn->ToJson(*node.chain, o);
+    std::map<COutPoint, Coin> coins;
+    coins[dmn->collateralOutpoint]; 
+    node.chain->findCoins(coins);
+    int confirmations = 0;
+    if(coins.count(dmn->collateralOutpoint))
+        confirmations = *node.chain->getHeight() - coins.at(dmn->collateralOutpoint).nHeight;
     o.pushKV("confirmations", confirmations);
     auto metaInfo = mmetaman.GetMetaInfo(dmn->proTxHash);
     o.pushKV("metaInfo", metaInfo->ToJson());

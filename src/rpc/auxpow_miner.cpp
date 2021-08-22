@@ -23,7 +23,7 @@ namespace
 
 void auxMiningCheck(const JSONRPCRequest& request)
 {
-  NodeContext& node = EnsureAnyNodeContext (request.context);
+  NodeContext& node = request.nodeContext? *request.nodeContext: EnsureAnyNodeContext (request.context);
   if (!node.connman)
     throw JSONRPCError (RPC_CLIENT_P2P_DISABLED,
                         "Error: Peer-to-peer functionality missing or"
@@ -140,8 +140,8 @@ AuxpowMiner::createAuxBlock (const JSONRPCRequest& request,
   auxMiningCheck (request);
   LOCK (cs);
 
-  const auto& mempool = EnsureAnyMemPool (request.context);
-  const NodeContext& node = EnsureAnyNodeContext(request.context);
+  const auto& mempool = EnsureAnyMemPool (request.nodeContext? request.nodeContext: request.context);
+  const NodeContext& node = request.nodeContext? *request.nodeContext: EnsureAnyNodeContext(request.context);
   uint256 target;
   const CBlock* pblock = getCurrentBlock (*node.chainman, mempool, scriptPubKey, target);
 
@@ -164,7 +164,7 @@ AuxpowMiner::submitAuxBlock (const JSONRPCRequest& request,
                              const std::string& auxpowHex) const
 {
   auxMiningCheck (request);
-  auto& chainman = EnsureAnyChainman (request.context);
+  auto& chainman = EnsureAnyChainman (request.nodeContext? request.nodeContext: request.context);
 
   std::shared_ptr<CBlock> shared_block;
   {

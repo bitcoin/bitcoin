@@ -186,8 +186,11 @@ void MasternodeList::updateDIP3List()
         LOCK(cs_main);
         mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
             CTxDestination collateralDest;
-            Coin coin;
-            if (GetUTXOCoin(*clientModel->node().context()->chainman, dmn->collateralOutpoint, coin) && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
+            std::map<COutPoint, Coin> coins;
+            coins[dmn->collateralOutpoint]; 
+            clientModel->node().chain().findCoins(coins);
+
+            if (coins.count(dmn->collateralOutpoint) && ExtractDestination(coins.at(dmn->collateralOutpoint).out.scriptPubKey, collateralDest)) {
                 mapCollateralDests.try_emplace(dmn->proTxHash, collateralDest);
             }
         });
@@ -422,8 +425,10 @@ void MasternodeList::copyCollateral_clicked()
     
     QString collateralStr;
     CTxDestination collateralDest;
-    Coin coin;
-    if (GetUTXOCoin(*clientModel->node().context()->chainman, dmn->collateralOutpoint, coin) && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
+    std::map<COutPoint, Coin> coins;
+    coins[dmn->collateralOutpoint]; 
+    clientModel->node().chain().findCoins(coins);
+    if (coins.count(dmn->collateralOutpoint) && ExtractDestination(coins.at(dmn->collateralOutpoint).out.scriptPubKey, collateralDest)) {
         collateralStr = QString::fromStdString(EncodeDestination(collateralDest));
     }
     QApplication::clipboard()->setText(collateralStr);

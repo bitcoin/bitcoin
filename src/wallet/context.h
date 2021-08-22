@@ -39,10 +39,6 @@ struct WalletContext {
     std::vector<std::shared_ptr<CWallet>> wallets GUARDED_BY(wallets_mutex);
     std::list<LoadWalletFn> wallet_load_fns GUARDED_BY(wallets_mutex);
 
-    /* SYSCOIN getauxwork is a wallet RPC but actually needs the NodeContext (unlike
-       any of the upstream Bitcoin wallet RPCs).  */
-    NodeContext* nodeContext{nullptr};
-    WalletContext(const WalletContext& contextIn);  
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the WalletContext struct doesn't need to #include class
     //! definitions for smart pointer and container members.

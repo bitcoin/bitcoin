@@ -500,11 +500,13 @@ RPCHelpMan masternodelist()
 
     mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
         std::string strOutpoint = dmn->collateralOutpoint.ToStringShort();
-        Coin coin;
         std::string collateralAddressStr = "UNKNOWN";
-        if (GetUTXOCoin(*node.chainman, dmn->collateralOutpoint, coin)) {
+        std::map<COutPoint, Coin> coins;
+        coins[dmn->collateralOutpoint]; 
+        node.chain->findCoins(coins);
+        if (coins.count(dmn->collateralOutpoint)) {
             CTxDestination collateralDest;
-            if (ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
+            if (ExtractDestination(coins.at(dmn->collateralOutpoint).out.scriptPubKey, collateralDest)) {
                 collateralAddressStr = EncodeDestination(collateralDest);
             }
         }

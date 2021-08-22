@@ -23,6 +23,8 @@ class CRPCCommand;
 class CScheduler;
 class Coin;
 class uint256;
+// SYSCOIN
+class CDeterministicMNList;
 enum class MemPoolRemovalReason;
 enum class RBFTransactionState;
 struct bilingual_str;
@@ -113,6 +115,10 @@ public:
     //! which will either be the original block used to create the locator,
     //! or one of its ancestors.
     virtual std::optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
+
+    // SYSCOIN
+    //! Get masternode list for a specific block height.
+    virtual CDeterministicMNList getMNList(int height) = 0;
 
     //! Check if transaction will be final given chain height current time.
     virtual bool checkFinalTx(const CTransaction& tx) = 0;

@@ -12,7 +12,7 @@ class CBlock;
 class CScript;
 class CTxIn;
 class CWallet;
-class NodeContext;
+struct NodeContext;
 // Constants //
 
 extern const std::string ADDRESS_BCRT1_UNSPENDABLE;

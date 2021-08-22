@@ -535,51 +535,38 @@ public:
         // SYSCOIN
         for (const CRPCCommand& command : GetAssetWalletRPCCommands()) {
             m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
-                /* SYSCOIN Unlike upstream Bitcoin, we need the NodeContext for
-                   getauxblock.  Thus we construct a new context that
-                   contains both and use that.  */
-                WalletContext extendedCtx = m_context;
+                JSONRPCRequest wallet_request = request;
+                wallet_request.context = &m_context;
                 auto context = util::AnyPtr<NodeContext>(request.context);
                 if(context)
-                    extendedCtx.nodeContext = context;
-                JSONRPCRequest wallet_request = request;
-                wallet_request.context = &extendedCtx;
+                    wallet_request.nodeContext = context;
                 return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
         for (const CRPCCommand& command : GetEvoWalletRPCCommands()) {
             m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
-                WalletContext extendedCtx = m_context;
-                auto context = util::AnyPtr<NodeContext>(request.context);
-                if(context)
-                    extendedCtx.nodeContext = context;
                 JSONRPCRequest wallet_request = request;
-                wallet_request.context = &extendedCtx;
+                wallet_request.context = &m_context;
                 return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
         for (const CRPCCommand& command : GetGovernanceWalletRPCCommands()) {
             m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
-                WalletContext extendedCtx = m_context;
+                JSONRPCRequest wallet_request = request;
+                wallet_request.context = &m_context;
                 auto context = util::AnyPtr<NodeContext>(request.context);
                 if(context)
-                    extendedCtx.nodeContext = context;
-                JSONRPCRequest wallet_request = request;
-                wallet_request.context = &extendedCtx;
+                    wallet_request.nodeContext = context;
                 return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
         for (const CRPCCommand& command : GetMasternodeWalletRPCCommands()) {
             m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
-                WalletContext extendedCtx = m_context;
-                auto context = util::AnyPtr<NodeContext>(request.context);
-                if(context)
-                    extendedCtx.nodeContext = context;
                 JSONRPCRequest wallet_request = request;
-                wallet_request.context = &extendedCtx;
+                wallet_request.context = &m_context;
                 return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));

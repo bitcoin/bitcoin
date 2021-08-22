@@ -414,10 +414,10 @@ static RPCHelpMan syscoinburntoassetallocation()
     tx = (MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    NodeContext& node = EnsureAnyNodeContext(request.context);
-    const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
-    if (TransactionError::OK != err) {
-        throw JSONRPCTransactionError(err, err_string);
+    int64_t virtual_size = GetVirtualTransactionSize(*tx);
+    CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE_RATE.GetFee(virtual_size);
+    if (!pwallet->chain().broadcastTransaction(tx, max_raw_tx_fee, true, err_string)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, err_string);
     }
 
     UniValue res(UniValue::VOBJ);
@@ -676,10 +676,10 @@ RPCHelpMan assetnew()
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    NodeContext& node = EnsureAnyNodeContext(request.context);
-    const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
-    if (TransactionError::OK != err) {
-        throw JSONRPCTransactionError(err, err_string);
+    int64_t virtual_size = GetVirtualTransactionSize(*tx);
+    CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE_RATE.GetFee(virtual_size);
+    if (!pwallet->chain().broadcastTransaction(tx, max_raw_tx_fee, true, err_string)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, err_string);
     }
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
@@ -859,10 +859,10 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     tx = MakeTransactionRef(mtx);
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    NodeContext& node = EnsureAnyNodeContext(context);
-    const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
-    if (TransactionError::OK != err) {
-        throw JSONRPCTransactionError(err, err_string);
+    int64_t virtual_size = GetVirtualTransactionSize(*tx);
+    CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE_RATE.GetFee(virtual_size);
+    if (!pwallet.chain().broadcastTransaction(tx, max_raw_tx_fee, true, err_string)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, err_string);
     }
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
@@ -1576,10 +1576,10 @@ static RPCHelpMan assetallocationsendmany()
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    NodeContext& node = EnsureAnyNodeContext(request.context);
-    const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
-    if (TransactionError::OK != err) {
-        throw JSONRPCTransactionError(err, err_string);
+    int64_t virtual_size = GetVirtualTransactionSize(*tx);
+    CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE_RATE.GetFee(virtual_size);
+    if (!pwallet->chain().broadcastTransaction(tx, max_raw_tx_fee, true, err_string)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, err_string);
     }
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("txid", tx->GetHash().GetHex());
@@ -1757,10 +1757,10 @@ static RPCHelpMan assetallocationburn()
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    NodeContext& node = EnsureAnyNodeContext(request.context);
-    const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
-    if (TransactionError::OK != err) {
-        throw JSONRPCTransactionError(err, err_string);
+    int64_t virtual_size = GetVirtualTransactionSize(*tx);
+    CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE_RATE.GetFee(virtual_size);
+    if (!pwallet->chain().broadcastTransaction(tx, max_raw_tx_fee, true, err_string)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, err_string);
     }
 
     UniValue res(UniValue::VOBJ);
@@ -1936,10 +1936,10 @@ static RPCHelpMan assetallocationmint()
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    NodeContext& node = EnsureAnyNodeContext(request.context);
-    const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
-    if (TransactionError::OK != err) {
-        throw JSONRPCTransactionError(err, err_string);
+    int64_t virtual_size = GetVirtualTransactionSize(*tx);
+    CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE_RATE.GetFee(virtual_size);
+    if (!pwallet->chain().broadcastTransaction(tx, max_raw_tx_fee, true, err_string)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, err_string);
     }
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());

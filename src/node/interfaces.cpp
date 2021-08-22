@@ -525,6 +525,12 @@ public:
         }
         return std::nullopt;
     }
+    CDeterministicMNList getMNList(int height) override {
+        CDeterministicMNList mnList;
+        if(deterministicMNManager)
+            deterministicMNManager->GetListForBlock(m_node.chainman->ActiveChain()[height], mnList);
+        return mnList;
+    }
     bool findBlock(const uint256& hash, const FoundBlock& block) override
     {
         WAIT_LOCK(cs_main, lock);

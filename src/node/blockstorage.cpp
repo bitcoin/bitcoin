@@ -23,6 +23,7 @@
 #include <dsnotificationinterface.h>
 #include <walletinitinterface.h>
 #include <primitives/block.h>
+#include <node/context.h>
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
 bool fHavePruned = false;
@@ -582,8 +583,9 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
         if(deterministicMNManager)
             deterministicMNManager->GetListAtChainTip(mnList);
         mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
-            Coin coin;
-            GetUTXOCoin(chainman, dmn->collateralOutpoint, coin);
+            std::map<COutPoint, Coin> coins;
+            coins[dmn->collateralOutpoint]; 
+            node.chain->findCoins(coins);
         });
         LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
 

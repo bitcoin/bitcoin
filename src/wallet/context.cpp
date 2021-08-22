@@ -4,11 +4,5 @@
 
 #include <wallet/context.h>
 #include <wallet/wallet.h>
-WalletContext::WalletContext(const WalletContext& contextIn)  {
-    chain = contextIn.chain;
-    args = contextIn.args;
-    nodeContext = contextIn.nodeContext;
-    wallets = contextIn.wallets;
-}
 WalletContext::WalletContext() {}
 WalletContext::~WalletContext() {}

@@ -198,10 +198,6 @@ private:
         : m_result_type(ResultType::VALID),
         m_replaced_transactions(std::move(replaced_txns)), m_base_fees(fees) {}
 };
-// SYSCOIN
-bool GetUTXOCoin(ChainstateManager& chainman, const COutPoint& outpoint, Coin& coin);
-int GetUTXOHeight(ChainstateManager& chainman, const COutPoint& outpoint);
-int GetUTXOConfirmations(ChainstateManager& chainman, const COutPoint& outpoint);
 /**
 * Validation result for package mempool acceptance.
 */

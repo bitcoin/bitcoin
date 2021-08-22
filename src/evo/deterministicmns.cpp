@@ -78,7 +78,7 @@ std::string CDeterministicMN::ToString() const
     return strprintf("CDeterministicMN(proTxHash=%s, collateralOutpoint=%s, nOperatorReward=%f, state=%s", proTxHash.ToString(), collateralOutpoint.ToStringShort(), (double)nOperatorReward / 100, pdmnState->ToString());
 }
 
-void CDeterministicMN::ToJson(ChainstateManager& chainman, UniValue& obj) const
+void CDeterministicMN::ToJson(interfaces::Chain& chain, UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
@@ -90,10 +90,12 @@ void CDeterministicMN::ToJson(ChainstateManager& chainman, UniValue& obj) const
     obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
     obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
 
-    Coin coin;
-    if (GetUTXOCoin(chainman, collateralOutpoint, coin)) {
+    std::map<COutPoint, Coin> coins;
+    coins[collateralOutpoint]; 
+    chain.findCoins(coins);
+    if (coins.count(collateralOutpoint)) {
         CTxDestination dest;
-        if (ExtractDestination(coin.out.scriptPubKey, dest)) {
+        if (ExtractDestination(coins.at(collateralOutpoint).out.scriptPubKey, dest)) {
             obj.pushKV("collateralAddress", EncodeDestination(dest));
         }
     }
