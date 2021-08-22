@@ -361,7 +361,7 @@ void SyscoinApplication::requestShutdown()
     Q_EMIT requestedShutdown();
 }
 /** Get restart command-line parameters and request restart */
-void SyscoinApplication::manageRestart(const QStringList &args)
+void SyscoinApplication::handleRestart(const QStringList &args)
 {
     if (!node().shutdownRequested())
         Q_EMIT requestedRestart(args);

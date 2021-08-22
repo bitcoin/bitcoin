@@ -84,7 +84,7 @@ public Q_SLOTS:
     void handleNonFatalException(const QString& message);
     // SYSCOIN
     /** Get restart command-line parameters and request restart */
-    void manageRestart(const QStringList &args);
+    void handleRestart(const QStringList &args);
 Q_SIGNALS:
     void requestedInitialize();
     void requestedShutdown();
