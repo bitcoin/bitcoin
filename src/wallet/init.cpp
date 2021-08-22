@@ -147,7 +147,7 @@ void WalletInit::AutoLockMasternodeCollaterals(NodeContext& node) const
         LogPrintf("Wallet disabled, cannot lock masternode collateral!\n");
         return;
     }
-    auto* walletContext = node.wallet_client->context();
+    WalletContext* walletContext = node.wallet_client->context();
     if(!walletContext) {
         LogPrintf("Wallet context not found, cannot lock masternode collateral!\n");
         return;
