@@ -17,9 +17,7 @@
 #include <optional>
 
 #include <QApplication>
-QT_BEGIN_NAMESPACE
-class QStringList;
-QT_END_NAMESPACE
+#include <QStringList>
 class SyscoinGUI;
 class ClientModel;
 class NetworkStyle;

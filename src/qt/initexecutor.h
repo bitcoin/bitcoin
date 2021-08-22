@@ -14,6 +14,7 @@
 
 QT_BEGIN_NAMESPACE
 class QString;
+class QStringList;
 QT_END_NAMESPACE
 
 /** Class encapsulating Bitcoin Core startup and shutdown.

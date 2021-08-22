@@ -14,6 +14,10 @@
 #include <QObject>
 #include <QString>
 #include <QThread>
+// SYSCOIN
+#include <QProcess>
+#include <QStringList>
+#include <QApplication>
 InitExecutor::InitExecutor(interfaces::Node& node)
     : QObject(), m_node(node)
 {

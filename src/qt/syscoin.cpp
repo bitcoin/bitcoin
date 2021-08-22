@@ -54,10 +54,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QTranslator>
-// SYSCOIN
-#include <QProcess>
-#include <QStringList>
-#include <QApplication>
+
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
 #if defined(QT_QPA_PLATFORM_XCB)
@@ -437,7 +434,7 @@ void SyscoinApplication::manageRestart(const QStringList &args)
         try
         {
             qDebug() << __func__ << ": Running Restart in thread";
-            m_node->appShutdown();
+            m_node.appShutdown();
             qDebug() << __func__ << ": Shutdown finished";
             Q_EMIT shutdownResult();
             CExplicitNetCleanup::callCleanup();
