@@ -69,6 +69,7 @@
 #include <QProcess>
 #include <QStringList>
 #include <QApplication>
+#include <QDebug>
 const std::string SyscoinGUI::DEFAULT_UIPLATFORM =
 #if defined(Q_OS_MAC)
         "macosx"
