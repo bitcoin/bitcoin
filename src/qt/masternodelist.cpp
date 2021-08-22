@@ -188,7 +188,7 @@ void MasternodeList::updateDIP3List()
             CTxDestination collateralDest;
             std::map<COutPoint, Coin> coins;
             coins[dmn->collateralOutpoint]; 
-            clientModel->node().chain().findCoins(coins);
+            clientModel->node().chain->findCoins(coins);
             const Coin &coin = coins.at(dmn->collateralOutpoint);
             if (!coin.IsSpent() && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
                 mapCollateralDests.try_emplace(dmn->proTxHash, collateralDest);
@@ -364,7 +364,7 @@ void MasternodeList::extraInfoDIP3_clicked()
     }
 
     UniValue json(UniValue::VOBJ);
-    dmn->ToJson(*clientModel->node().context()->chainman, json);
+    dmn->ToJson(*clientModel->node()->chain, json);
 
     // Title of popup window
     QString strWindowtitle = tr("Additional information for DIP3 Masternode %1").arg(QString::fromStdString(dmn->proTxHash.ToString()));
@@ -427,7 +427,7 @@ void MasternodeList::copyCollateral_clicked()
     CTxDestination collateralDest;
     std::map<COutPoint, Coin> coins;
     coins[dmn->collateralOutpoint]; 
-    clientModel->node().chain().findCoins(coins);
+    clientModel->node().chain->findCoins(coins);
     const Coin &coin = coins.at(dmn->collateralOutpoint);
     if (!coin.IsSpent() && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
         collateralStr = QString::fromStdString(EncodeDestination(collateralDest));
