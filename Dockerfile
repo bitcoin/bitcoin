@@ -21,7 +21,7 @@ RUN ./configure --disable-ccache \
     --disable-maintainer-mode \
     --disable-dependency-tracking \
     --enable-reduce-exports --disable-bench \
-    --disable-tests \
+#    --disable-tests \
     --disable-gui-tests \
     --without-gui \
     --without-miniupnpc \
@@ -29,6 +29,7 @@ RUN ./configure --disable-ccache \
     CXXFLAGS="-O2 -g0 --static -static -fPIC" \
     LDFLAGS="-s -static-libgcc -static-libstdc++ -Wl,-O2"
 RUN make
+RUN make check
 RUN make install
 
 FROM scratch
