@@ -17,9 +17,6 @@
 #include <optional>
 
 #include <QApplication>
-QT_BEGIN_NAMESPACE
-class QStringList;
-QT_END_NAMESPACE
 class SyscoinGUI;
 class ClientModel;
 class NetworkStyle;
@@ -84,8 +81,6 @@ public Q_SLOTS:
      * with details about a non-fatal exception.
      */
     void handleNonFatalException(const QString& message);
-    // SYSCOIN
-    void manageRestart(const QStringList &args);
 
 Q_SIGNALS:
     void requestedInitialize();
