@@ -406,7 +406,7 @@ void SyscoinGUI::createActions()
     connect(openRepairAction, &QAction::triggered, this, &SyscoinGUI::showRepair);
 
     // Get restart command-line parameters and handle restart
-    connect(rpcConsole, &RPCConsole::handleRestart, this, &SyscoinApplication::handleRestart);
+    connect(rpcConsole, &RPCConsole::handleRestart, this, &SyscoinGUI::handleRestart);
 
 #ifdef ENABLE_WALLET
     if(walletFrame)
@@ -1568,6 +1568,13 @@ static bool ThreadSafeMessageBox(SyscoinGUI* gui, const bilingual_str& message, 
                                Q_ARG(QString, detailed_message));
     assert(invoked);
     return ret;
+}
+
+/** Get restart command-line parameters and request restart */
+void SyscoinGUI::handleRestart(const QStringList &args)
+{
+    if (!m_node.shutdownRequested())
+        Q_EMIT requestedRestart(args);
 }
 
 void SyscoinGUI::subscribeToCoreSignals()

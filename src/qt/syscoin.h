@@ -82,17 +82,13 @@ public Q_SLOTS:
      * with details about a non-fatal exception.
      */
     void handleNonFatalException(const QString& message);
-    // SYSCOIN
-    /** Get restart command-line parameters and request restart */
-    void handleRestart(const QStringList &args);
+
 Q_SIGNALS:
     void requestedInitialize();
     void requestedShutdown();
     void splashFinished();
     void windowShown(SyscoinGUI* window);
-    // SYSCOIN
-    /** Restart handling */
-    void requestedRestart(const QStringList &args);
+
 private:
     std::optional<InitExecutor> m_executor;
     OptionsModel *optionsModel;
