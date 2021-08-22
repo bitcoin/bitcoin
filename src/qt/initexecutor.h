@@ -30,6 +30,8 @@ public:
 public Q_SLOTS:
     void initialize();
     void shutdown();
+    // SYSCOIN
+    void restart(const QStringList &args);
 Q_SIGNALS:
     void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
     void shutdownResult();

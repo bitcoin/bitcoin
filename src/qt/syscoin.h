@@ -82,8 +82,6 @@ public Q_SLOTS:
      * with details about a non-fatal exception.
      */
     void handleNonFatalException(const QString& message);
-    // SYSCOIN
-    void manageRestart(const QStringList &args);
 
 Q_SIGNALS:
     void requestedInitialize();
@@ -108,6 +106,7 @@ private:
     interfaces::Node* m_node = nullptr;
 
     void startThread();
+    void manageRestart(const QStringList &args);
 };
 
 int GuiMain(int argc, char* argv[]);
