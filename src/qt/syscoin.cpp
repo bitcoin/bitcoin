@@ -234,7 +234,7 @@ void SyscoinApplication::setupPlatformStyle()
 SyscoinApplication::~SyscoinApplication()
 {
     m_executor.reset();
-
+    
     delete window;
     window = nullptr;
     delete platformStyle;
@@ -293,7 +293,6 @@ void SyscoinApplication::startThread()
     /*  communication to and from thread */
     connect(&m_executor.value(), &InitExecutor::initializeResult, this, &SyscoinApplication::initializeResult);
     connect(&m_executor.value(), &InitExecutor::shutdownResult, this, &SyscoinApplication::shutdownResult);
-    connect(&m_executor.value(), &InitExecutor::runawayException, this, &SyscoinApplication::handleRunawayException);
     connect(&m_executor.value(), &InitExecutor::runawayException, this, &SyscoinApplication::handleRunawayException);
     connect(this, &SyscoinApplication::requestedInitialize, &m_executor.value(), &InitExecutor::initialize);
     connect(this, &SyscoinApplication::requestedShutdown, &m_executor.value(), &InitExecutor::shutdown);
