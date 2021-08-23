@@ -15,6 +15,16 @@ src/test/fuzz/fuzz
 src/test/test_bitcoin
 src/qt/test/test_bitcoin-qt
 
+src/rusty/target
+src/rusty/sv2-ffi/target
+src/rusty/binary-sv2/binary-sv2/target
+src/rusty/binary-sv2/no-serde-sv2/codec/target
+src/rusty/binary-sv2/no-serde-sv2/derive_codec/target
+src/rusty/framing-sv2/target
+src/rusty/codec-sv2/target
+src/rusty/subprotocols/common-messages/target
+src/rusty/subprotocols/template-distribution/target
+
 # autoreconf
 Makefile.in
 aclocal.m4

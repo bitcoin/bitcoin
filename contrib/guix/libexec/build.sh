@@ -79,6 +79,22 @@ prepend_to_search_env_var() {
     export "${1}=${2}${!1:+:}${!1}"
 }
 
+case "$HOST" in
+    *darwin*)
+        # When targeting darwin, zlib is required by native_libdmg-hfsplus.
+        zlib_store_path=$(store_path "zlib")
+        zlib_static_store_path=$(store_path "zlib" static)
+
+        prepend_to_search_env_var LIBRARY_PATH "${zlib_static_store_path}/lib:${zlib_store_path}/lib"
+        prepend_to_search_env_var C_INCLUDE_PATH "${zlib_store_path}/include"
+        prepend_to_search_env_var CPLUS_INCLUDE_PATH "${zlib_store_path}/include"
+        prepend_to_search_env_var OBJC_INCLUDE_PATH "${zlib_store_path}/include"
+        prepend_to_search_env_var OBJCPLUS_INCLUDE_PATH "${zlib_store_path}/include"
+esac
+
+# TODO should use store_path
+SV2_FFI_DIR=/gnu/store/`ls /gnu/store/ | grep rust-sv2` 
+
 # Set environment variables to point the CROSS toolchain to the right
 # includes/libs for $HOST
 case "$HOST" in
@@ -231,6 +247,7 @@ esac
 
 # CXXFLAGS
 HOST_CXXFLAGS="$HOST_CFLAGS"
+HOST_CXXFLAGS="${HOST_CXXFLAGS} -I ${SV2_FFI_DIR} ${SV2_FFI_DIR}/libsv2_ffi.a -lpthread -ldl"
 
 case "$HOST" in
     arm-linux-gnueabihf) HOST_CXXFLAGS="${HOST_CXXFLAGS} -Wno-psabi" ;;

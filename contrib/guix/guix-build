@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+
+## Package all the rust code this step it likely wont be necessary as the rust code will be already
+## packehed in a remote src or it will be already avaible as a guix package
+./src/rusty/build-for-guix.sh
+
 export LC_ALL=C
 set -e -o pipefail
 

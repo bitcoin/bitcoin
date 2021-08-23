@@ -1,0 +1,14 @@
+[package]
+name = "serde_sv2"
+version = "0.1.0"
+authors = ["fi3 <email@email.org>"]
+edition = "2018"
+description = "Serlializer and Deserializer for Stratum V2 data format"
+license = "MIT"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "1.0.89", features = ["derive", "alloc"], default-features = false }
+buffer_sv2 = {version = "0.1.0",  path = "../../../../utils/buffer"}

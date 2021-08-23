@@ -253,24 +253,66 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
     return fRet;
 }
 
+#include <sv2.h>
+
 int main(int argc, char* argv[])
 {
-#ifdef WIN32
-    util::WinCmdLineArgs winArgs;
-    std::tie(argc, argv) = winArgs.get();
-#endif
 
-    NodeContext node;
-    int exit_status;
-    std::unique_ptr<interfaces::Init> init = interfaces::MakeNodeInit(node, argc, argv, exit_status);
-    if (!init) {
-        return exit_status;
-    }
+    EncoderWrapper * encoder = new_encoder();
 
-    SetupEnvironment();
+    const char* error = "connection can not be created";
+    uint8_t* error_ = (uint8_t*) error;
+  
+    CVec error_code = cvec_from_buffer(error_, strlen(error));
+    CSetupConnectionError message;
+    message.flags = 0;
+    message.error_code = error_code;
+  
+    CSv2Message response;
+    response.tag = CSv2Message::Tag::SetupConnectionError;
+    response.setup_connection_error._0 = message;
+  
+    CResult<CVec, Sv2Error> encoded = encode(&response, encoder);
+    switch (encoded.tag) {
+  
+    case CResult < CVec, Sv2Error > ::Tag::Ok:
+      tfm::format(std::cout, "Ok \n");
+      break;
+    case CResult < CVec, Sv2Error > ::Tag::Err:
+      tfm::format(std::cout, "Err \n");
+      break;
+    };
+
+    CSv2Message response2;
+    response.tag = CSv2Message::Tag::SetNewPrevHash;
+    response.setup_connection_error._0 = message;
+  
+    CResult<CVec, Sv2Error> encoded2 = encode(&response2, encoder);
+    switch (encoded2.tag) {
+  
+    case CResult < CVec, Sv2Error > ::Tag::Ok:
+      tfm::format(std::cout, "Ok \n");
+      break;
+    case CResult < CVec, Sv2Error > ::Tag::Err:
+      tfm::format(std::cout, "Err \n");
+      break;
+    };
+//#ifdef WIN32
+//    util::WinCmdLineArgs winArgs;
+//    std::tie(argc, argv) = winArgs.get();
+//#endif
+
+    //NodeContext node;
+    //int exit_status;
+    //std::unique_ptr<interfaces::Init> init = interfaces::MakeNodeInit(node, argc, argv, exit_status);
+    //if (!init) {
+    //    return exit_status;
+    //}
+
+    //SetupEnvironment();
 
     // Connect bitcoind signal handlers
-    noui_connect();
+    //noui_connect();
 
-    return (AppInit(node, argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);
+    //return (AppInit(node, argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);
 }
