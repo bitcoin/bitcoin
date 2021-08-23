@@ -1170,7 +1170,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, int64_t nTime)
     m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, my_services, nTime,
             your_services, addr_you, // Together the pre-version-31402 serialization of CAddress "addrYou" (without nTime)
             my_services, CService(), // Together the pre-version-31402 serialization of CAddress "addrMe" (without nTime)
-            nonce, strSubVersion, nNodeStartingHeight, tx_relay, mnauthChallenge, pnode.IsMasternodeConnection())));
+            nonce, strSubVersion, nNodeStartingHeight, tx_relay, mnauthChallenge, pnode.IsMasternodeConnection()));
 
     if (fLogIPs) {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, them=%s, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addr_you.ToString(), tx_relay, nodeid);
