@@ -247,6 +247,10 @@ class ConfArgsTest(BitcoinTestFramework):
 
         self.nodes[0].assert_start_raises_init_error(['-conf=' + conf_file], 'Error: Error reading configuration file: specified data directory "' + new_data_dir + '" does not exist.')
 
+        # Check that an explicitly specified config file that cannot be opened fails
+        none_existent_conf_file = os.path.join(default_data_dir, "none_existent_dash.conf")
+        self.nodes[0].assert_start_raises_init_error(['-conf=' + none_existent_conf_file], 'Error: Error reading configuration file: specified config file "' + none_existent_conf_file + '" could not be opened.')
+
         # Create the directory and ensure the config file now works
         os.mkdir(new_data_dir)
         # Temporarily disabled, because this test would access the user's home dir (~/.bitcoin)
