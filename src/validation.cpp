@@ -1404,6 +1404,9 @@ void CChainState::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationSt
         m_blockman.m_failed_blocks.insert(pindex);
         setDirtyBlockIndex.insert(pindex);
         setBlockIndexCandidates.erase(pindex);
+        if(pindex->pprev != nullptr) {
+            setBlockIndexCandidates.insert(pindex->pprev);
+        }
         InvalidChainFound(pindex);
     }
 }
