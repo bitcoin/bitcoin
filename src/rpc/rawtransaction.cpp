@@ -994,6 +994,8 @@ static RPCHelpMan testmempoolaccept()
             continue;
         }
         const auto& tx_result = it->second;
+        // Package testmempoolaccept doesn't allow transactions to already be in the mempool.
+        CHECK_NONFATAL(tx_result.m_result_type != MempoolAcceptResult::ResultType::MEMPOOL_ENTRY);
         if (tx_result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             const CAmount fee = tx_result.m_base_fees.value();
             // Check that fee does not exceed maximum fee
@@ -1143,8 +1145,10 @@ static RPCHelpMan submitrawpackage()
         CHECK_NONFATAL(it != package_result.m_tx_results.end());
         UniValue result_inner{UniValue::VOBJ};
         result_inner.pushKV("txid", tx->GetHash().GetHex());
+        // TODO: this would be the wrong wtxid if there was a same-txid-diff-witness situation.
         result_inner.pushKV("wtxid", tx->GetWitnessHash().GetHex());
-        CHECK_NONFATAL(it->second.m_result_type == MempoolAcceptResult::ResultType::VALID);
+        CHECK_NONFATAL(it->second.m_result_type == MempoolAcceptResult::ResultType::VALID ||
+                       it->second.m_result_type == MempoolAcceptResult::ResultType::MEMPOOL_ENTRY);
         result_inner.pushKV("vsize", (int64_t)it->second.m_vsize.value());
         UniValue fees(UniValue::VOBJ);
         fees.pushKV("base", ValueFromAmount(it->second.m_base_fees.value()));

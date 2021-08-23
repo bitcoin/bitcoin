@@ -955,6 +955,9 @@ bool MemPoolAccept::PackageMempoolChecks(const ATMPArgs& args,
     for (const auto& ws : workspaces) {
         for (const auto& it : ws.m_ancestors) m_collective_ancestors.insert(it);
     }
+    // CheckPackageLimits expects the package transactions to not already be in the mempool.
+    assert(std::all_of(txns.cbegin(), txns.cend(), [this](const auto& tx)
+                       { return !m_pool.exists(GenTxid(false, tx->GetHash()));}));
 
     std::string err_string;
     if (!m_pool.CheckPackageLimits(txns, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants,
@@ -1396,12 +1399,50 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
     // coins_to_uncache. The backend will be connected again when needed in PreChecks.
     m_view.SetBackend(m_dummy);
 
-    // TODO: Deduplicate the package.
+    std::map<const uint256, const MempoolAcceptResult> results;
+    // As node operators are free to set their mempool policies however they please, it's possible
+    // for package transaction(s) to already be in the mempool, and we don't want to reject the
+    // entire package in that case (as that could be a censorship vector).  Filter the transactions
+    // that are already in mempool and add their information to results, since we already have it.
+    std::vector<CTransactionRef> txns_new;
+    for (const auto& tx : package) {
+        const auto& wtxid = tx->GetWitnessHash();
+        const auto& txid = tx->GetHash();
+        // There are 3 possibilities: already in mempool, same-txid-diff-wtxid already in mempool,
+        // or not in mempool. An already confirmed tx is treated as one not in mempool, because all
+        // we know is that the inputs aren't available.
+        if (m_pool.exists(GenTxid(true, wtxid))) {
+            // Exact transaction already exists in the mempool.
+            auto iter = m_pool.GetIter(wtxid);
+            assert(iter != std::nullopt);
+            results.emplace(wtxid, MempoolAcceptResult::MempoolTx(iter.value()->GetTxSize(), iter.value()->GetFee()));
+        } else if (m_pool.exists(GenTxid(false, txid))) {
+            // Transaction with the same non-witness data but different witness (same txid, different
+            // wtxid) already exists in the mempool.
+            //
+            // We don't allow replacement transactions right now, so just swap the package
+            // transaction for the mempool one. Note that we are ignoring the validity of the
+            // package transaction passed in.
+            // TODO: allow witness replacement in packages.
+            auto iter = m_pool.GetIter(wtxid);
+            assert(iter != std::nullopt);
+            results.emplace(txid, MempoolAcceptResult::MempoolTx(iter.value()->GetTxSize(), iter.value()->GetFee()));
+        } else {
+            // Transaction does not already exist in the mempool.
+            txns_new.push_back(tx);
+        }
+    }
 
     // TODO: Try submitting every transaction on its own.
 
-    // Validate as a package.
-    return AcceptMultipleTransactions(package, args);
+    // Nothing to do if the entire package has already been submitted.
+    if (txns_new.empty()) return PackageMempoolAcceptResult(package_state, std::move(results));
+    // Validate the (deduplicated) transactions as a package.
+    auto submission_result = AcceptMultipleTransactions(txns_new, args);
+    for (const auto& [wtxid, mempoolaccept_res] : results) {
+        submission_result.m_tx_results.emplace(wtxid, mempoolaccept_res);
+    }
+    return submission_result;
 }
 
 } // anon namespace
