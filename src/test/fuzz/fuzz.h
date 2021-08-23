@@ -11,6 +11,10 @@
 #include <functional>
 #include <string_view>
 
+/**
+ * Can be used to limit a theoretically unbounded loop. This caps the runtime
+ * to avoid timeouts or OOMs.
+ */
 #define LIMITED_WHILE(condition, limit) \
     for (unsigned _count{limit}; (condition) && _count; --_count)
 
