@@ -1422,9 +1422,10 @@ CAmount CWallet::GetChange(const CTransaction& tx) const
 bool CWallet::IsHDEnabled() const
 {
     // All Active ScriptPubKeyMans must be HD for this to be true
-    bool result = true;
+    bool result = false;
     for (const auto& spk_man : GetActiveScriptPubKeyMans()) {
-        result &= spk_man->IsHDEnabled();
+        if (!spk_man->IsHDEnabled()) return false;
+        result = true;
     }
     return result;
 }
