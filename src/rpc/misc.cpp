@@ -209,67 +209,8 @@ static RPCHelpMan getdescriptorinfo()
     };
 }
 
-static RPCHelpMan deriveaddresses()
+static UniValue DeriveAddresses(const Descriptor* desc, int64_t range_begin, int64_t range_end, FlatSigningProvider& key_provider)
 {
-    const std::string EXAMPLE_DESCRIPTOR = "wpkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#cjjspncu";
-
-    return RPCHelpMan{"deriveaddresses",
-            {"\nDerives one or more addresses corresponding to an output descriptor.\n"
-            "Examples of output descriptors are:\n"
-            "    pkh(<pubkey>)                        P2PKH outputs for the given pubkey\n"
-            "    wpkh(<pubkey>)                       Native segwit P2PKH outputs for the given pubkey\n"
-            "    sh(multi(<n>,<pubkey>,<pubkey>,...)) P2SH-multisig outputs for the given threshold and pubkeys\n"
-            "    raw(<hex script>)                    Outputs whose scriptPubKey equals the specified hex scripts\n"
-            "\nIn the above, <pubkey> either refers to a fixed public key in hexadecimal notation, or to an xpub/xprv optionally followed by one\n"
-            "or more path elements separated by \"/\", where \"h\" represents a hardened child key.\n"
-            "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n"
-            "Note that only descriptors that specify a single derivation path can be derived.\n"},
-            {
-                {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
-                {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED_NAMED_ARG, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
-            },
-            RPCResult{
-                RPCResult::Type::ARR, "", "",
-                {
-                    {RPCResult::Type::STR, "address", "the derived addresses"},
-                }
-            },
-            RPCExamples{
-                "First three native segwit receive addresses\n" +
-                HelpExampleCli("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\" \"[0,2]\"") +
-                HelpExampleRpc("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\", \"[0,2]\"")
-            },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    RPCTypeCheck(request.params, {UniValue::VSTR, UniValueType()}); // Range argument is checked later
-    const std::string desc_str = request.params[0].get_str();
-
-    int64_t range_begin = 0;
-    int64_t range_end = 0;
-
-    if (request.params.size() >= 2 && !request.params[1].isNull()) {
-        std::tie(range_begin, range_end) = ParseDescriptorRange(request.params[1]);
-    }
-
-    FlatSigningProvider key_provider;
-    std::string error;
-    auto descs = Parse(desc_str, key_provider, error, /* require_checksum = */ true);
-    if (descs.second) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Descriptor specifying both receiving and change derivation paths are not allowed");
-    }
-    auto& desc = descs.first;
-    if (!desc) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
-    }
-
-    if (!desc->IsRange() && request.params.size() > 1) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should not be specified for an un-ranged descriptor");
-    }
-
-    if (desc->IsRange() && request.params.size() == 1) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Range must be specified for a ranged descriptor");
-    }
-
     UniValue addresses(UniValue::VARR);
 
     for (int i = range_begin; i <= range_end; ++i) {
@@ -295,6 +236,94 @@ static RPCHelpMan deriveaddresses()
     }
 
     return addresses;
+}
+
+static RPCHelpMan deriveaddresses()
+{
+    const std::string EXAMPLE_DESCRIPTOR = "wpkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#cjjspncu";
+
+    return RPCHelpMan{"deriveaddresses",
+            {"\nDerives one or more addresses corresponding to an output descriptor.\n"
+            "Examples of output descriptors are:\n"
+            "    pkh(<pubkey>)                        P2PKH outputs for the given pubkey\n"
+            "    wpkh(<pubkey>)                       Native segwit P2PKH outputs for the given pubkey\n"
+            "    sh(multi(<n>,<pubkey>,<pubkey>,...)) P2SH-multisig outputs for the given threshold and pubkeys\n"
+            "    raw(<hex script>)                    Outputs whose scriptPubKey equals the specified hex scripts\n"
+            "\nIn the above, <pubkey> either refers to a fixed public key in hexadecimal notation, or to an xpub/xprv optionally followed by one\n"
+            "or more path elements separated by \"/\", where \"h\" represents a hardened child key.\n"
+            "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n"},
+            {
+                {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
+                {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED_NAMED_ARG, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
+            },
+            {
+                RPCResult{"for single derivation descriptors",
+                    RPCResult::Type::ARR, "", "",
+                    {
+                        {RPCResult::Type::STR, "address", "the derived addresses"},
+                    }
+                },
+                RPCResult{"for multipath descriptors",
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {
+                            RPCResult::Type::ARR, "receive", "the derived receiving addresses (derived using the first path specifier in the multipath index)",
+                            {
+                                {RPCResult::Type::STR, "address", "the derived address"},
+                            },
+                        },
+                        {
+                            RPCResult::Type::ARR, "change", "the derived change addresses (derived using the second path specifier in the multipath index)",
+                            {
+                                {RPCResult::Type::STR, "address", "the derived address"},
+                            },
+                        },
+                    },
+                },
+            },
+            RPCExamples{
+                "First three native segwit receive addresses\n" +
+                HelpExampleCli("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\" \"[0,2]\"") +
+                HelpExampleRpc("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\", \"[0,2]\"")
+            },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValueType()}); // Range argument is checked later
+    const std::string desc_str = request.params[0].get_str();
+
+    int64_t range_begin = 0;
+    int64_t range_end = 0;
+
+    if (request.params.size() >= 2 && !request.params[1].isNull()) {
+        std::tie(range_begin, range_end) = ParseDescriptorRange(request.params[1]);
+    }
+
+    FlatSigningProvider key_provider;
+    std::string error;
+    auto descs = Parse(desc_str, key_provider, error, /* require_checksum = */ true);
+    auto& desc = descs.first;
+    if (!desc) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
+    }
+
+    if (!desc->IsRange() && request.params.size() > 1) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should not be specified for an un-ranged descriptor");
+    }
+
+    if (desc->IsRange() && request.params.size() == 1) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Range must be specified for a ranged descriptor");
+    }
+
+    UniValue addresses = DeriveAddresses(desc.get(), range_begin, range_end, key_provider);
+
+    if (descs.second) {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("receive", addresses);
+        obj.pushKV("change", DeriveAddresses(descs.second.get(), range_begin, range_end, key_provider));
+        return obj;
+    } else {
+        return addresses;
+    }
 },
     };
 }
