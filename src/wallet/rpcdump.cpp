@@ -1089,28 +1089,35 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
 
 static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID, CPubKey>& pubkey_map, std::map<CKeyID, CKey>& privkey_map, std::set<CScript>& script_pub_keys, bool& have_solving_data, const UniValue& data, std::vector<std::pair<CKeyID, bool>>& ordered_pubkeys)
 {
-    const bool internal = data.exists("internal") ? data["internal"].get_bool() : false;
-
     UniValue warnings(UniValue::VARR);
 
     const std::string& descriptor = data["desc"].get_str();
     FlatSigningProvider keys;
     std::string error;
-    auto parsed_desc = Parse(descriptor, keys, error, /* require_checksum = */ true).first;
-    if (!parsed_desc) {
+    auto parsed_descs = Parse(descriptor, keys, error, /* require_checksum = */ true);
+    if (!parsed_descs.first) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
-    if (parsed_desc->GetOutputType() == OutputType::BECH32M) {
+    if (parsed_descs.first->GetOutputType() == OutputType::BECH32M) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Bech32m descriptors cannot be imported into legacy wallets");
     }
 
-    have_solving_data = parsed_desc->IsSolvable();
+    std::optional<bool> internal;
+    bool multipath = parsed_descs.second != nullptr;
+    if (data.exists("internal")) {
+        if (multipath) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot have multipath descriptor while also specifying \'internal\'");
+        }
+        internal = data["internal"].get_bool();
+    }
+
+    have_solving_data = parsed_descs.first->IsSolvable();
     const bool watch_only = data.exists("watchonly") ? data["watchonly"].get_bool() : false;
 
     int64_t range_start = 0, range_end = 0;
-    if (!parsed_desc->IsRange() && data.exists("range")) {
+    if (!parsed_descs.first->IsRange() && data.exists("range")) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should not be specified for an un-ranged descriptor");
-    } else if (parsed_desc->IsRange()) {
+    } else if (parsed_descs.first->IsRange()) {
         if (!data.exists("range")) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Descriptor is ranged, please specify the range");
         }
@@ -1119,25 +1126,28 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
 
     const UniValue& priv_keys = data.exists("keys") ? data["keys"].get_array() : UniValue();
 
-    // Expand all descriptors to get public keys and scripts, and private keys if available.
-    for (int i = range_start; i <= range_end; ++i) {
-        FlatSigningProvider out_keys;
-        std::vector<CScript> scripts_temp;
-        parsed_desc->Expand(i, keys, scripts_temp, out_keys);
-        std::copy(scripts_temp.begin(), scripts_temp.end(), std::inserter(script_pub_keys, script_pub_keys.end()));
-        for (const auto& key_pair : out_keys.pubkeys) {
-            ordered_pubkeys.push_back({key_pair.first, internal});
+    for (int j = 0; j < (multipath ? 2 : 1); ++j) {
+        const auto& parsed_desc = j ? parsed_descs.second : parsed_descs.first;
+        // Expand all descriptors to get public keys and scripts, and private keys if available.
+        for (int i = range_start; i <= range_end; ++i) {
+            FlatSigningProvider out_keys;
+            std::vector<CScript> scripts_temp;
+            parsed_desc->Expand(i, keys, scripts_temp, out_keys);
+            std::copy(scripts_temp.begin(), scripts_temp.end(), std::inserter(script_pub_keys, script_pub_keys.end()));
+            for (const auto& key_pair : out_keys.pubkeys) {
+                ordered_pubkeys.push_back({key_pair.first, (internal.has_value() ? internal.value() : j)});
+            }
+
+            for (const auto& x : out_keys.scripts) {
+                import_data.import_scripts.emplace(x.second);
+            }
+
+            parsed_desc->ExpandPrivate(i, keys, out_keys);
+
+            std::copy(out_keys.pubkeys.begin(), out_keys.pubkeys.end(), std::inserter(pubkey_map, pubkey_map.end()));
+            std::copy(out_keys.keys.begin(), out_keys.keys.end(), std::inserter(privkey_map, privkey_map.end()));
+            import_data.key_origins.insert(out_keys.origins.begin(), out_keys.origins.end());
         }
-
-        for (const auto& x : out_keys.scripts) {
-            import_data.import_scripts.emplace(x.second);
-        }
-
-        parsed_desc->ExpandPrivate(i, keys, out_keys);
-
-        std::copy(out_keys.pubkeys.begin(), out_keys.pubkeys.end(), std::inserter(pubkey_map, pubkey_map.end()));
-        std::copy(out_keys.keys.begin(), out_keys.keys.end(), std::inserter(privkey_map, privkey_map.end()));
-        import_data.key_origins.insert(out_keys.origins.begin(), out_keys.origins.end());
     }
 
     for (size_t i = 0; i < priv_keys.size(); ++i) {
