@@ -61,7 +61,7 @@ bool MutableTransactionSignatureCreator::CreateSchnorrSig(const SigningProvider&
 
     CKey key;
     {
-        // For now, use the old full pubkey-based key derivation logic. As it indexed by
+        // For now, use the old full pubkey-based key derivation logic. As it is indexed by
         // Hash160(full pubkey), we need to try both a version prefixed with 0x02, and one
         // with 0x03.
         unsigned char b[33] = {0x02};
@@ -640,25 +640,22 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
 
     PrecomputedTransactionData txdata;
     std::vector<CTxOut> spent_outputs;
-    spent_outputs.resize(mtx.vin.size());
-    bool have_all_spent_outputs = true;
-    for (unsigned int i = 0; i < mtx.vin.size(); i++) {
+    for (unsigned int i = 0; i < mtx.vin.size(); ++i) {
         CTxIn& txin = mtx.vin[i];
         auto coin = coins.find(txin.prevout);
         if (coin == coins.end() || coin->second.IsSpent()) {
-            have_all_spent_outputs = false;
+            txdata.Init(txConst, /* spent_outputs */ {}, /* force */ true);
+            break;
         } else {
-            spent_outputs[i] = CTxOut(coin->second.out.nValue, coin->second.out.scriptPubKey);
+            spent_outputs.emplace_back(coin->second.out.nValue, coin->second.out.scriptPubKey);
         }
     }
-    if (have_all_spent_outputs) {
+    if (spent_outputs.size() == mtx.vin.size()) {
         txdata.Init(txConst, std::move(spent_outputs), true);
-    } else {
-        txdata.Init(txConst, {}, true);
     }
 
     // Sign what we can:
-    for (unsigned int i = 0; i < mtx.vin.size(); i++) {
+    for (unsigned int i = 0; i < mtx.vin.size(); ++i) {
         CTxIn& txin = mtx.vin[i];
         auto coin = coins.find(txin.prevout);
         if (coin == coins.end() || coin->second.IsSpent()) {
