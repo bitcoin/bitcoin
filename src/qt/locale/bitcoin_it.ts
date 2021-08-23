@@ -334,8 +334,8 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minuti</numerusform>
+            <numerusform>%n minuti</numerusform>
         </translation>
     </message>
     <message numerus="yes">

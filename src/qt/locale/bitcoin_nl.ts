@@ -339,36 +339,36 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>%n seconde</numerusform>
+            <numerusform>%n seconden</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minuut</numerusform>
+            <numerusform>%n minuten</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n uur</numerusform>
+            <numerusform>%n uren</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n dag</numerusform>
+            <numerusform>%n dagen</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n week</numerusform>
+            <numerusform>%n weken</numerusform>
         </translation>
     </message>
     <message>
@@ -378,8 +378,8 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n jaar</numerusform>
+            <numerusform>%n jaren</numerusform>
         </translation>
     </message>
     <message>
@@ -597,8 +597,8 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>%n blokken aan transactiegeschiedenis verwerkt.</numerusform>
+            <numerusform>%n blokken aan transactiegeschiedenis verwerkt.</numerusform>
         </translation>
     </message>
     <message>
@@ -713,8 +713,8 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n actieve verbinding(en) met Bitcoinnetwerk.</numerusform>
+            <numerusform>%n actieve verbinding(en) met Bitcoinnetwerk.</numerusform>
         </translation>
     </message>
     <message>
@@ -880,6 +880,30 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <translation type="unfinished">Kopieer bedrag</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Kopieer adres</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Kopieer &amp;label</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Kopieer &amp;bedrag</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID</source>
+        <translation type="unfinished">Kopieer transactie-&amp;ID</translation>
+    </message>
+    <message>
+        <source>L&amp;ock unspent</source>
+        <translation type="unfinished">Bl&amp;okeer ongebruikte</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">&amp;Deblokkeer ongebruikte</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">Kopieer aantal</translation>
     </message>
@@ -950,7 +974,11 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <source>Create wallet warning</source>
         <translation type="unfinished">Aanmaken wallet waarschuwing</translation>
     </message>
-    </context>
+    <message>
+        <source>Can't list signers</source>
+        <translation type="unfinished">Kan geen lijst maken van ondertekenaars</translation>
+    </message>
+</context>
 <context>
     <name>OpenWalletActivity</name>
     <message>
@@ -1045,6 +1073,14 @@ Dit is ideaal voor alleen-lezen portommonees.</translation>
         <translation type="unfinished">Descriptor Portemonnee</translation>
     </message>
     <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation type="unfinished">Gebruik een extern onderteken device zoals een hardware wallet. Configureer eerst het externe ondertekenaar script in wallet preferences.</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation type="unfinished">Externe ondertekenaar</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation type="unfinished">Creëer</translation>
     </message>
@@ -1052,7 +1088,12 @@ Dit is ideaal voor alleen-lezen portommonees.</translation>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
         <translation type="unfinished">Gecompileerd zonder ondersteuning van sqlite (noodzakelijk voor beschrijvende portemonees)</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Gecompileerd zonder ondersteuning voor externe ondertekenaars (vereist voor extern ondertekenen)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1153,8 +1194,8 @@ Dit is ideaal voor alleen-lezen portommonees.</translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(voldoende om back-ups van %n dag(en) oud te herstellen)</numerusform>
+            <numerusform>(voldoende om back-ups van %n dag(en) oud te herstellen)</numerusform>
         </translation>
     </message>
     <message>
@@ -1397,6 +1438,18 @@ Dit is ideaal voor alleen-lezen portommonees.</translation>
         <translation type="unfinished">&amp;Spendeer onbevestigd wisselgeld</translation>
     </message>
     <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation type="unfinished">Externe ondertekenaar (b.v. een hardware wallet)</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation type="unfinished">&amp;Extern ondertekenscript directory</translation>
+    </message>
+    <message>
+        <source>Full path to a Bitcoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation type="unfinished">Volledige pad naar een Bitcoin Core compatibel script (b.v. C:\Downloads\hwi.exe of /Users/you/Downloads/hwi.py). Let op: Malware kan je coins stelen!</translation>
+    </message>
+    <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Open de Bitcoinpoort automatisch op de router. Dit werkt alleen als de router UPnP ondersteunt en het aanstaat.</translation>
     </message>
@@ -1523,6 +1576,11 @@ Dit is ideaal voor alleen-lezen portommonees.</translation>
     <message>
         <source>&amp;Cancel</source>
         <translation>&amp;Annuleren</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Gecompileerd zonder ondersteuning voor externe ondertekenaars (vereist voor extern ondertekenen)</translation>
     </message>
     <message>
         <source>default</source>
@@ -2137,6 +2195,10 @@ Als je deze fout ziet zou je de aanbieder moeten verzoeken om een BIP21 compatib
         <translation type="unfinished">1 &amp;uur</translation>
     </message>
     <message>
+        <source>1 d&amp;ay</source>
+        <translation type="unfinished">1 d&amp;ag</translation>
+    </message>
+    <message>
         <source>1 &amp;year</source>
         <translation type="unfinished">1 &amp;jaar</translation>
     </message>
@@ -2286,6 +2348,22 @@ Voor meer informatie over het gebruik van deze console, type %6.
         <translation type="unfinished">Kopieer &amp;URI</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Kopieer adres</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Kopieer &amp;label</translation>
+    </message>
+    <message>
+        <source>Copy &amp;message</source>
+        <translation type="unfinished">Kopieer &amp;bericht</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Kopieer &amp;bedrag</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation type="unfinished">Kon de portemonnee niet openen.</translation>
     </message>
@@ -2323,6 +2401,14 @@ Voor meer informatie over het gebruik van deze console, type %6.
     <message>
         <source>Copy &amp;Address</source>
         <translation type="unfinished">Kopieer &amp;adres</translation>
+    </message>
+    <message>
+        <source>&amp;Verify</source>
+        <translation type="unfinished">&amp;Verifiëren</translation>
+    </message>
+    <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation type="unfinished">Verifieer dit adres, bijvoorbeeld op een hardware wallet scherm</translation>
     </message>
     <message>
         <source>&amp;Save Image…</source>
@@ -2539,6 +2625,20 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation type="unfinished">%1 (%2 blokken)</translation>
     </message>
     <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet</extracomment>
+        <translation type="unfinished">Inlog apparaat</translation>
+    </message>
+    <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation type="unfinished">Verbind eerst met je hardware wallet.</translation>
+    </message>
+    <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Stel een extern onderteken script pad in Opties -&gt; Wallet</translation>
+    </message>
+    <message>
         <source>Cr&amp;eate Unsigned</source>
         <translation type="unfinished">Cr&amp;eëer Ongetekend</translation>
     </message>
@@ -2575,8 +2675,22 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation type="unfinished">Creër ongetekende</translation>
     </message>
     <message>
+        <source>Sign and send</source>
+        <translation type="unfinished">Ondertekenen en verzenden</translation>
+    </message>
+    <message>
         <source>Sign failed</source>
         <translation type="unfinished">Ondertekenen mislukt</translation>
+    </message>
+    <message>
+        <source>External signer not found</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Externe ondertekenaar niet gevonden</translation>
+    </message>
+    <message>
+        <source>External signer failure</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Externe ondertekenaars fout</translation>
     </message>
     <message>
         <source>Save Transaction Data</source>
@@ -2590,6 +2704,10 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>PSBT saved</source>
         <translation type="unfinished">PSBT opgeslagen</translation>
+    </message>
+    <message>
+        <source>External balance:</source>
+        <translation type="unfinished">Extern tegoed:</translation>
     </message>
     <message>
         <source>or</source>
@@ -2667,8 +2785,8 @@ Vb. een offline %1 portemonee, of een PSBT-combatiebele hardware portemonee.</tr
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>Start van bevestiging binnen naar schatting %n blok.</numerusform>
+            <numerusform>Start van bevestiging binnen naar schatting %n blokken.</numerusform>
         </translation>
     </message>
     <message>
@@ -2907,8 +3025,8 @@ Vb. een offline %1 portemonee, of een PSBT-combatiebele hardware portemonee.</tr
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>Open voor nog %n blok(ken)</numerusform>
+            <numerusform>Open voor nog %n blok(ken)</numerusform>
         </translation>
     </message>
     <message>
@@ -2978,8 +3096,8 @@ Vb. een offline %1 portemonee, of een PSBT-combatiebele hardware portemonee.</tr
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>komt beschikbaar na %n nieuwe blok(ken)</numerusform>
+            <numerusform>komt beschikbaar na %n nieuwe blok(ken)</numerusform>
         </translation>
     </message>
     <message>
@@ -3079,8 +3197,8 @@ Vb. een offline %1 portemonee, of een PSBT-combatiebele hardware portemonee.</tr
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>Open voor nog %n blok(ken)</numerusform>
+            <numerusform>Open voor nog %n blok(ken)</numerusform>
         </translation>
     </message>
     <message>
@@ -3231,6 +3349,46 @@ Vb. een offline %1 portemonee, of een PSBT-combatiebele hardware portemonee.</tr
         <translation type="unfinished">Bereik...</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Kopieer adres</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Kopieer &amp;label</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Kopieer &amp;bedrag</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID</source>
+        <translation type="unfinished">Kopieer transactie-&amp;ID</translation>
+    </message>
+    <message>
+        <source>Copy &amp;raw transaction</source>
+        <translation type="unfinished">Kopieer &amp;ruwe transactie</translation>
+    </message>
+    <message>
+        <source>Copy full transaction &amp;details</source>
+        <translation type="unfinished">Kopieer volledige transactie&amp;details</translation>
+    </message>
+    <message>
+        <source>&amp;Show transaction details</source>
+        <translation type="unfinished">Toon tran&amp;sactiedetails</translation>
+    </message>
+    <message>
+        <source>Increase transaction &amp;fee</source>
+        <translation type="unfinished">Verhoog transactiekosten</translation>
+    </message>
+    <message>
+        <source>A&amp;bandon transaction</source>
+        <translation type="unfinished">Transactie &amp;afbreken</translation>
+    </message>
+    <message>
+        <source>&amp;Edit address label</source>
+        <translation type="unfinished">B&amp;ewerk adreslabel</translation>
+    </message>
+    <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">Exporteer transactiegeschiedenis</translation>
     </message>
@@ -3354,6 +3512,10 @@ Ga naar Bestand &gt; Open portemonee om er één te openen.
         <translation type="unfinished">Kon de transactie niet voltooien</translation>
     </message>
     <message>
+        <source>Can't display address</source>
+        <translation type="unfinished">Adres kan niet weergegeven worden</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation type="unfinished">standaard portemonnee</translation>
     </message>
@@ -3471,6 +3633,10 @@ Ga naar Bestand &gt; Open portemonee om er één te openen.
     <message>
         <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
         <translation type="unfinished">Fout: Dumpbestandsversie wordt niet ondersteund. Deze versie bitcoinportemonnee ondersteunt alleen versie 1 dumpbestanden. Dumpbestand met versie %s gekregen</translation>
+    </message>
+    <message>
+        <source>Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types</source>
+        <translation type="unfinished">Fout: Legacy wallets ondersteunen alleen "legacy", "p2sh-segwit" en "bech32" adres types</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
@@ -3726,6 +3892,10 @@ Indien dit het geval is, gelieve de software te gebruiken waarmee deze portefeui
         <translation type="unfinished">Fout: Ontbrekende checksum</translation>
     </message>
     <message>
+        <source>Error: No %s addresses available.</source>
+        <translation type="unfinished">Fout: Geen %s adressen beschikbaar</translation>
+    </message>
+    <message>
         <source>Error: Unable to parse version %u as a uint32_t</source>
         <translation type="unfinished">Fout: Kan versie %u niet als een uint32_t verwerken</translation>
     </message>
@@ -3950,6 +4120,10 @@ Indien dit het geval is, gelieve de software te gebruiken waarmee deze portefeui
         <translation type="unfinished">Transactie moet ten minste één ontvanger hebben</translation>
     </message>
     <message>
+        <source>Transaction needs a change address, but we can't generate it. %s</source>
+        <translation type="unfinished">De transactie heeft een 'change' adres nodig, maar we kunnen er geen genereren. %s</translation>
+    </message>
+    <message>
         <source>Transaction too large</source>
         <translation type="unfinished">Transactie te groot</translation>
     </message>
@@ -3996,6 +4170,10 @@ Indien dit het geval is, gelieve de software te gebruiken waarmee deze portefeui
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation type="unfinished">Onbekend netwerk gespecificeerd in -onlynet: '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown new rules activated (versionbit %i)</source>
+        <translation type="unfinished">Onbekende nieuwe regels geactiveerd (versionbit %i)</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>

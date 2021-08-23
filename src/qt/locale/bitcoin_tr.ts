@@ -1565,8 +1565,16 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">PSBT diske kaydedildi.</translation>
     </message>
     <message>
+        <source>Pays transaction fee: </source>
+        <translation type="unfinished">İşlem ücreti:&lt;br&gt;</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation type="unfinished">veya</translation>
+    </message>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation type="unfinished">İşlemin hala imza(lar)a ihtiyacı var.</translation>
     </message>
     <message>
         <source>Transaction status is unknown.</source>

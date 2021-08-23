@@ -31,7 +31,7 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Procure um endereço ou rótulo</translation>
+        <translation type="unfinished">Insira um endereço ou rótulo para buscar</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -43,7 +43,7 @@
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>E&amp;xcluir</translation>
+        <translation>&amp;Excluir</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -73,7 +73,7 @@
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Estes são seus endereços Bitcoin para receber pagamentos. Use o botão 'Criar novos endereços de recebimento' na barra receber para criar novos endereços.
-Somente é possível assinar com endereços do tipo 'legado'.</translation>
+Somente é possível acessar com endereços do tipo 'legado'.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -90,6 +90,11 @@ Somente é possível assinar com endereços do tipo 'legado'.</translation>
     <message>
         <source>Export Address List</source>
         <translation type="unfinished">Exportar lista de endereços</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation type="unfinished">Arquivo separado por vírgula</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
@@ -136,7 +141,7 @@ Somente é possível assinar com endereços do tipo 'legado'.</translation>
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation type="unfinished">Exibir senha</translation>
+        <translation type="unfinished">Exibir frase de segurança</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>

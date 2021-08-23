@@ -1223,12 +1223,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Error</source>
         <translation type="unfinished">Greška</translation>
     </message>
+    <message>
+        <source>The configuration file could not be opened.</source>
+        <translation type="unfinished">Konfiguracijski falj nije bilo moguce otvoriti.</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
         <translation>Obrazac</translation>
+    </message>
+    <message>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>Moguće je da su prikazane informacije zastarjele.Vaš novčanik se automatski sinhronizira sa Bitcoin mrežom nakon što je konekcija uspostavljena, ali proces nije još uvijek dovršen.</translation>
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation type="unfinished">Nedavne transakcije</translation>
     </message>
     </context>
 <context>

@@ -446,6 +446,10 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <translation type="unfinished">Neue Wallet erstellen</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation type="unfinished">Brieftasche:</translation>
+    </message>
+    <message>
         <source>Network activity disabled.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">Netzwerkaktivität deaktiviert.</translation>
@@ -597,13 +601,6 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     <message>
         <source>&amp;Command-line options</source>
         <translation type="unfinished">&amp;Kommandozeilenoptionen</translation>
-    </message>
-    <message numerus="yes">
-        <source>Processed %n block(s) of transaction history.</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -767,6 +764,12 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <source>Amount: %1
 </source>
         <translation type="unfinished">Betrag: %1
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation type="unfinished">Brieftasche: %1
 </translation>
     </message>
     <message>
@@ -1054,6 +1057,10 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <translation type="unfinished">Wallet-Name</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation type="unfinished">Brieftasche</translation>
+    </message>
+    <message>
         <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
         <translation type="unfinished">Verschlüssele das Wallet. Das Wallet wird mit einer Passphrase deiner Wahl verschlüsselt.</translation>
     </message>
@@ -1215,8 +1222,8 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(für Wiederherstellung ausreichende Sicherung %n Tag alt)</numerusform>
+            <numerusform>(für Wiederherstellung ausreichende Sicherung %n Tage alt)</numerusform>
         </translation>
     </message>
     <message>
@@ -1443,6 +1450,10 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <translation type="unfinished">(0 = automatisch, &lt;0 = so viele Kerne frei lassen)</translation>
     </message>
     <message>
+        <source>W&amp;allet</source>
+        <translation type="unfinished">B&amp;rieftasche</translation>
+    </message>
+    <message>
         <source>Expert</source>
         <translation type="unfinished">Experten-Optionen</translation>
     </message>
@@ -1565,6 +1576,10 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     <message>
         <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
         <translation type="unfinished">Verbinde mit dem Bitcoin-Netzwerk über einen separaten SOCKS5-Proxy für Tor-Onion-Dienste.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
+        <translation type="unfinished">Nutze separaten SOCKS&amp;5-Proxy um Gegenstellen über Tor-Onion-Dienste zu erreichen:</translation>
     </message>
     <message>
         <source>&amp;Third party transaction URLs</source>
@@ -2463,6 +2478,10 @@ Für weitere Informationen über diese Konsole, tippe %6.
         <translation type="unfinished">Nachricht:</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation type="unfinished">Brieftasche:</translation>
+    </message>
+    <message>
         <source>Copy &amp;URI</source>
         <translation type="unfinished">&amp;URI kopieren</translation>
     </message>
@@ -2802,6 +2821,10 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
         <translation type="unfinished">Sie können die Gebühr später erhöhen (zeigt Replace-By-Fee, BIP-125).</translation>
     </message>
     <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation type="unfinished">Überprüfen Sie bitte Ihr Transaktionsvorhaben. Dadurch wird eine teilweise signierte Bitcoin-Transaktion (TSBT) erstellt, die Sie speichern oder kopieren und dann z. B. mit einer Offline-Brieftasche %1 oder einer TSBT-kompatible Hardware-Brieftasche nutzen können.</translation>
+    </message>
+    <message>
         <source>Please, review your transaction.</source>
         <translation type="unfinished">Bitte überprüfen sie ihre Transaktion.</translation>
     </message>
@@ -2864,8 +2887,8 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>Voraussichtlicher Beginn der Bestätigung innerhalb von %n Block.</numerusform>
+            <numerusform>Voraussichtlicher Beginn der Bestätigung innerhalb von %n Blöcken.</numerusform>
         </translation>
     </message>
     <message>
@@ -3108,8 +3131,8 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>Für weiteren %n Block offen</numerusform>
+            <numerusform>Für weitere %n Blöcke offen</numerusform>
         </translation>
     </message>
     <message>
@@ -3187,8 +3210,8 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>reift noch %n weiteren Block.</numerusform>
+            <numerusform>reift noch %n weitere Blöcke.</numerusform>
         </translation>
     </message>
     <message>
@@ -3304,8 +3327,8 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>Für weiteren Block offen</numerusform>
+            <numerusform>Für weitere %n Blöcke offen</numerusform>
         </translation>
     </message>
     <message>

@@ -281,8 +281,8 @@
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>%nsegundos</numerusform>
+            <numerusform>%n segundos</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -1144,6 +1144,10 @@ Si recibe este error,  debe solicitar al vendedor un URI compatible con BIP21.</
 <context>
     <name>QRImageWidget</name>
     <message>
+        <source>&amp;Save Image…</source>
+        <translation type="unfinished">&amp;Guardar imagen</translation>
+    </message>
+    <message>
         <source>&amp;Copy Image</source>
         <translation type="unfinished">&amp;Copiar Imagen</translation>
     </message>
@@ -1159,7 +1163,12 @@ Si recibe este error,  debe solicitar al vendedor un URI compatible con BIP21.</
         <source>Save QR Code</source>
         <translation type="unfinished">Guardar Código QR</translation>
     </message>
-    </context>
+    <message>
+        <source>PNG Image</source>
+        <extracomment>Expanded name of the PNG file format. See https://en.wikipedia.org/wiki/Portable_Network_Graphics</extracomment>
+        <translation type="unfinished">Imagen PNG</translation>
+    </message>
+</context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -1233,6 +1242,23 @@ Si recibe este error,  debe solicitar al vendedor un URI compatible con BIP21.</
     <message>
         <source>Executing command without any wallet</source>
         <translation type="unfinished">Ejecutando el comando sin ninguna cartera</translation>
+    </message>
+    <message>
+        <source>Welcome to the %1 RPC console.
+Use up and down arrows to navigate history, and %2 to clear screen.
+Use %3 and %4 to increase or decrease the font size.
+Type %5 for an overview of available commands.
+For more information on using this console, type %6.
+
+%7WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.%8</source>
+        <extracomment>RPC console welcome message. Placeholders %7 and %8 are style tags for the warning content, and they are not space separated from the rest of the text intentionally.</extracomment>
+        <translation type="unfinished">Bienvenido a la %1 consola RPC. 
+Utilice la flecha arriba y abajo para navegar el historial y %2 para limpiar la consola.
+Utilice%3  y  %4 para aumentar o reducir el tamaño de fuente.
+Escriba %5 para una visión general de los comandos disponibles.
+Para obtener más información, escriba %6.
+
+%7ADVERTENCIA: Los estafadores, de forma activa, han estado indicando a los usuarios que escriban comandos aquí y de esta manera  roban el contenido de sus monederos. No utilice esta consola si no comprende perfectamente las ramificaciones de un comando.%8</translation>
     </message>
     <message>
         <source>Yes</source>
@@ -1347,6 +1373,10 @@ Si recibe este error,  debe solicitar al vendedor un URI compatible con BIP21.</
     <message>
         <source>Copy &amp;Address</source>
         <translation type="unfinished">&amp;Copiar dirección</translation>
+    </message>
+    <message>
+        <source>&amp;Save Image…</source>
+        <translation type="unfinished">&amp;Guardar imagen</translation>
     </message>
     </context>
 <context>
@@ -1893,6 +1923,10 @@ Si recibe este error,  debe solicitar al vendedor un URI compatible con BIP21.</
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Cannot downgrade wallet from version %i to version %i. Wallet version unchanged.</source>
+        <translation type="unfinished">No se pudo cambiar la versión %i a la versión anterior %i.  Versión del monedero sin cambios.</translation>
+    </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation type="unfinished">La cantidad de la transacción es demasiado pequeña para enviarla después de que se haya deducido la tarifa</translation>

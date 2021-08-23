@@ -193,31 +193,31 @@
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation>
-            <numerusform />
+            <numerusform>%n seconds</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation>
-            <numerusform />
+            <numerusform>%n minutes</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n hours</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n days</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n weeks</numerusform>
         </translation>
     </message>
     <message>
@@ -227,7 +227,7 @@
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n years</numerusform>
         </translation>
     </message>
     </context>
@@ -360,7 +360,7 @@
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation>
-            <numerusform />
+            <numerusform>Processed %n blocks of transaction history.</numerusform>
         </translation>
     </message>
     <message>
@@ -455,7 +455,7 @@
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
         </translation>
     </message>
     <message>
@@ -735,7 +735,7 @@
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
         </translation>
     </message>
     <message>
@@ -1147,7 +1147,7 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation>
-            <numerusform />
+            <numerusform>Estimated to begin confirmation within %n blocks.</numerusform>
         </translation>
     </message>
     <message>
@@ -1194,7 +1194,7 @@
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
         <translation>
-            <numerusform />
+            <numerusform>Open for %n more blocks</numerusform>
         </translation>
     </message>
     <message>
@@ -1216,7 +1216,7 @@
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation>
-            <numerusform />
+            <numerusform>matures in %n more blocks</numerusform>
         </translation>
     </message>
     <message>
@@ -1249,7 +1249,7 @@
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
         <translation>
-            <numerusform />
+            <numerusform>Open for %n more blocks</numerusform>
         </translation>
     </message>
     <message>

@@ -770,7 +770,11 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Portofelul este &lt;b&gt;criptat&lt;/b&gt; iar în momentul de faţă este &lt;b&gt;blocat&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>Original message:</source>
+        <translation type="unfinished">Mesajul original:</translation>
+    </message>
+</context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -969,6 +973,10 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Criptează portofelul.</translation>
     </message>
     <message>
+        <source>Advanced Options</source>
+        <translation type="unfinished">Optiuni Avansate</translation>
+    </message>
+    <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
         <translation type="unfinished">Dezactivează cheile private pentru acest portofel. Portofelele cu cheile private dezactivate nu vor avea chei private şi nu vor putea avea samanţă HD sau chei private importate. Ideal pentru portofele marcate doar pentru citire.</translation>
     </message>
@@ -981,8 +989,20 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Faceți Portofel gol</translation>
     </message>
     <message>
+        <source>Use descriptors for scriptPubKey management</source>
+        <translation type="unfinished">Utilizați descriptori pentru gestionarea scriptPubKey</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation type="unfinished"> Descriptor Portofel</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation type="unfinished">Creează</translation>
+    </message>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">Compilat fără suport sqlite (necesar pentru portofele descriptor)</translation>
     </message>
     </context>
 <context>
@@ -1113,6 +1133,10 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
         <translation type="unfinished">Cand apasati OK, %1 va incepe descarcarea si procesarea intregului %4 blockchain (%2GB) incepand cu cele mai vechi tranzactii din %3 de la lansarea initiala a %4.</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">Revenirea la această setare necesită re-descărcarea întregului blockchain. Este mai rapid să descărcați mai întâi rețeaua complet și să o fragmentați  mai târziu. Dezactivează unele funcții avansate.</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -1472,6 +1496,10 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">Inchide</translation>
+    </message>
     <message>
         <source>Total Amount</source>
         <translation type="unfinished">Suma totală</translation>
