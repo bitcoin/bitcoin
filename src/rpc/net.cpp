@@ -343,7 +343,7 @@ static RPCHelpMan addconnection()
         "\nOpen an outbound connection to a specified node. This RPC is for testing only.\n",
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address and port to attempt connecting to."},
-            {"connection_type", RPCArg::Type::STR, RPCArg::Optional::NO, "Type of connection to open (\"outbound-full-relay\", \"block-relay-only\" or \"addr-fetch\")."},
+            {"connection_type", RPCArg::Type::STR, RPCArg::Optional::NO, "Type of connection to open (\"outbound-full-relay\", \"block-relay-only\", \"addr-fetch\" or \"feeler\")."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -371,6 +371,8 @@ static RPCHelpMan addconnection()
         conn_type = ConnectionType::BLOCK_RELAY;
     } else if (conn_type_in == "addr-fetch") {
         conn_type = ConnectionType::ADDR_FETCH;
+    } else if (conn_type_in == "feeler") {
+        conn_type = ConnectionType::FEELER;
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, self.ToString());
     }

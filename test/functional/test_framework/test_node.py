@@ -558,7 +558,7 @@ class TestNode():
 
     def add_outbound_p2p_connection(self, p2p_conn, *, p2p_idx, connection_type="outbound-full-relay", **kwargs):
         """Add an outbound p2p connection from node. Must be an
-        "outbound-full-relay", "block-relay-only" or "addr-fetch" connection.
+        "outbound-full-relay", "block-relay-only", "addr-fetch" or "feeler" connection.
 
         This method adds the p2p connection to the self.p2ps list and returns
         the connection to the caller.
@@ -570,11 +570,16 @@ class TestNode():
 
         p2p_conn.peer_accept_connection(connect_cb=addconnection_callback, connect_id=p2p_idx + 1, net=self.chain, timeout_factor=self.timeout_factor, **kwargs)()
 
-        p2p_conn.wait_for_connect()
-        self.p2ps.append(p2p_conn)
+        if connection_type == "feeler":
+            # feeler connections are closed as soon as the node receives a `version` message
+            p2p_conn.wait_until(lambda: p2p_conn.message_count["version"] == 1, check_connected=False)
+            p2p_conn.wait_until(lambda: not p2p_conn.is_connected, check_connected=False)
+        else:
+            p2p_conn.wait_for_connect()
+            self.p2ps.append(p2p_conn)
 
-        p2p_conn.wait_for_verack()
-        p2p_conn.sync_with_ping()
+            p2p_conn.wait_for_verack()
+            p2p_conn.sync_with_ping()
 
         return p2p_conn
 
