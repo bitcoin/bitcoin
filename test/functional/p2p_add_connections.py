@@ -106,6 +106,8 @@ class P2PAddConnections(BitcoinTestFramework):
 
         # Verify version message received
         assert_equal(feeler_conn.message_count["version"], 1)
+        # Feeler connections do not request tx relay
+        assert_equal(feeler_conn.last_message["version"].relay, 0)
 
 if __name__ == '__main__':
     P2PAddConnections().main()
