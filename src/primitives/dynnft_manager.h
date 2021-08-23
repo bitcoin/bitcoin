@@ -56,6 +56,8 @@ public:
     void updateAssetClassOwner(std::string hash, std::string newOwner);
     void updateAssetOwner(std::string hash, std::string newOwner);
 
+    std::vector<std::string> getAssetClassByOwner(std::string owner, int offset);
+    std::vector<std::string> getAssetByOwner(std::string owner, int offset);
 
     // stores the last timestamp for each asset class hash or asset hash requested
     std::map<std::string, sCacheTiming> requestAssetClass;

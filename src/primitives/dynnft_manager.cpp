@@ -492,3 +492,67 @@ void CNFTManager::updateAssetOwner(std::string hash, std::string newOwner)
 
     sqlite3_finalize(stmt);
 }
+
+
+std::vector<std::string> CNFTManager::getAssetClassByOwner(std::string owner, int offset)
+{
+    std::vector<std::string> result;
+
+    std::string sql = "select asset_class_hash from asset_class where asset_class_owner = @owner";
+    sqlite3_stmt* stmt = NULL;
+    sqlite3_prepare_v2(nftDB, sql.c_str(), -1, &stmt, NULL);
+    sqlite3_bind_text(stmt, 1, owner.c_str(), -1, NULL);
+    int rc = sqlite3_step(stmt);
+    int row = 0;
+    int count = 0;
+    if ((rc != SQLITE_DONE) && (rc != SQLITE_OK)) {
+        bool done = false;
+        while ((!done) && (count < 10)) {
+            const char* cAssetClassHash = (const char*)sqlite3_column_text(stmt, 0);
+            if (row >= offset) {
+                result.push_back(std::string(cAssetClassHash));
+                count++;
+            }
+            row++;
+            int rc = sqlite3_step(stmt);
+            if (rc == SQLITE_DONE)
+                done = true;
+        }
+    }
+
+    sqlite3_finalize(stmt);
+
+    return result;
+}
+
+
+std::vector<std::string> CNFTManager::getAssetByOwner(std::string owner, int offset)
+{
+    std::vector<std::string> result;
+
+    std::string sql = "select asset_hash from asset where asset_owner = @owner";
+    sqlite3_stmt* stmt = NULL;
+    sqlite3_prepare_v2(nftDB, sql.c_str(), -1, &stmt, NULL);
+    sqlite3_bind_text(stmt, 1, owner.c_str(), -1, NULL);
+    int rc = sqlite3_step(stmt);
+    int row = 0;
+    int count = 0;
+    if ((rc != SQLITE_DONE) && (rc != SQLITE_OK)) {
+        bool done = false;
+        while ((!done) && (count < 10)) {
+            const char* cAssetClassHash = (const char*)sqlite3_column_text(stmt, 0);
+            if (row >= offset) {
+                result.push_back(std::string(cAssetClassHash));
+                count++;
+            }
+            row++;
+            int rc = sqlite3_step(stmt);
+            if (rc == SQLITE_DONE)
+                done = true;
+        }
+    }
+
+    sqlite3_finalize(stmt);
+
+    return result;
+}

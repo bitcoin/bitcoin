@@ -1041,6 +1041,180 @@ static RPCHelpMan submitblock()
 }
 
 
+
+
+static RPCHelpMan searchNFT()
+{
+    // arg0 - string - command - "list-class" or "list-asset"
+    // arg1 - string - bech32 address of owner
+    // arg2 - number - starting list index (e.g. number of entries to skip in list for paging)
+
+
+    return RPCHelpMan{
+        "searchnft",
+        "\nList NFTs by owner from local database.\n"
+        "\n",
+        {
+            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "NFT command: list-class or list-asset"},
+            {"owner", RPCArg::Type::STR, RPCArg::Optional::NO, "bech32 address of NFT owner"},
+            {"start", RPCArg::Type::NUM, RPCArg::Optional::NO, "list index to start at"},
+        },
+        {
+            RPCResult{"Json list of up to 10 NFT hashes", RPCResult::Type::NONE, "", ""},
+            RPCResult{"Otherwise", RPCResult::Type::STR, "", ""},
+        },
+        RPCExamples{
+            HelpExampleCli("listnft", "\"dy1234567890\" 20") + HelpExampleRpc("getnft", "\"dy123456789012345678\", 20")},
+
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::string result = "internal-error";
+
+            if (gArgs.GetArg("-nftnode", "") == "true") {
+                std::string command = request.params[0].get_str();
+                std::string owner = request.params[1].get_str();
+                int offset = request.params[2].get_int();
+
+                boost::algorithm::to_lower(owner);
+
+                /*
+                    UniValue result(UniValue::VOBJ);
+    result.pushKV("hash", blockindex->GetBlockHash().GetHex());
+    const CBlockIndex* pnext;
+    int confirmations = ComputeNextBlockAndDepth(tip, blockindex, pnext);
+    result.pushKV("confirmations", confirmations);
+    result.pushKV("height", blockindex->nHeight);
+    result.pushKV("version", blockindex->nVersion);
+    result.pushKV("versionHex", strprintf("%08x", blockindex->nVersion));
+    result.pushKV("merkleroot", blockindex->hashMerkleRoot.GetHex());
+    result.pushKV("time", (int64_t)blockindex->nTime);
+    result.pushKV("mediantime", (int64_t)blockindex->GetMedianTimePast());
+    result.pushKV("nonce", (uint64_t)blockindex->nNonce);
+    result.pushKV("bits", strprintf("%08x", blockindex->nBits));
+    result.pushKV("difficulty", GetDifficulty(blockindex));
+    result.pushKV("chainwork", blockindex->nChainWork.GetHex());
+    result.pushKV("nTx", (uint64_t)blockindex->nTx);
+
+    if (blockindex->pprev)
+        result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
+    if (pnext)
+        result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
+    return result;
+                */
+
+
+                if (command == "list-class") {
+                    std::vector<std::string> list = g_nftMgr->getAssetClassByOwner(owner, offset);
+
+
+                    UniValue uResult(UniValue::VARR);
+                    for (int i = 0; i < list.size(); i++)
+                        uResult.push_back(list[i]);
+
+                    result = uResult.write();
+
+                } else if (command == "list-asset") {
+                } else
+                    result = "invalid-command";
+            }
+
+
+            return result;
+        },
+    };
+}
+
+
+
+static RPCHelpMan listNFT()
+{
+    // arg0 - string - command - "list-class" or "list-asset"
+    // arg1 - string - bech32 address of owner
+    // arg2 - number - starting list index (e.g. number of entries to skip in list for paging)
+
+
+    return RPCHelpMan{
+        "listnft",
+        "\nList NFTs by owner from local database.\n"
+        "\n",
+        {
+            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "NFT command: list-class or list-asset"},
+            {"owner", RPCArg::Type::STR, RPCArg::Optional::NO, "bech32 address of NFT owner"},
+            {"start", RPCArg::Type::NUM, RPCArg::Optional::NO, "list index to start at"},
+        },
+        {
+            RPCResult{"Json list of up to 10 NFT hashes", RPCResult::Type::NONE, "", ""},
+            RPCResult{"Otherwise", RPCResult::Type::STR, "", ""},
+        },
+        RPCExamples{
+            HelpExampleCli("listnft", "\"dy1234567890\" 20" ) + HelpExampleRpc("getnft", "\"dy123456789012345678\", 20")},
+
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::string result = "internal-error";
+
+            if (gArgs.GetArg("-nftnode", "") == "true") {
+                std::string command = request.params[0].get_str();
+                std::string owner = request.params[1].get_str();
+                int offset = request.params[2].get_int();
+
+                boost::algorithm::to_lower(owner);
+
+                /*
+                    UniValue result(UniValue::VOBJ);
+    result.pushKV("hash", blockindex->GetBlockHash().GetHex());
+    const CBlockIndex* pnext;
+    int confirmations = ComputeNextBlockAndDepth(tip, blockindex, pnext);
+    result.pushKV("confirmations", confirmations);
+    result.pushKV("height", blockindex->nHeight);
+    result.pushKV("version", blockindex->nVersion);
+    result.pushKV("versionHex", strprintf("%08x", blockindex->nVersion));
+    result.pushKV("merkleroot", blockindex->hashMerkleRoot.GetHex());
+    result.pushKV("time", (int64_t)blockindex->nTime);
+    result.pushKV("mediantime", (int64_t)blockindex->GetMedianTimePast());
+    result.pushKV("nonce", (uint64_t)blockindex->nNonce);
+    result.pushKV("bits", strprintf("%08x", blockindex->nBits));
+    result.pushKV("difficulty", GetDifficulty(blockindex));
+    result.pushKV("chainwork", blockindex->nChainWork.GetHex());
+    result.pushKV("nTx", (uint64_t)blockindex->nTx);
+
+    if (blockindex->pprev)
+        result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
+    if (pnext)
+        result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
+    return result;
+                */
+
+
+                if (command == "list-class") {
+                    std::vector<std::string> list = g_nftMgr->getAssetClassByOwner(owner, offset);
+
+                    UniValue uResult(UniValue::VARR);
+                    for (int i = 0; i < list.size(); i++)
+                        uResult.push_back(list[i]);
+
+                    result = uResult.write();
+
+                } else if (command == "list-asset") {
+                    std::vector<std::string> list = g_nftMgr->getAssetByOwner(owner, offset);
+
+                    UniValue uResult(UniValue::VARR);
+                    for (int i = 0; i < list.size(); i++)
+                        uResult.push_back(list[i]);
+
+                    result = uResult.write();
+
+
+
+                } else
+                    result = "invalid-command";
+            }
+
+
+            return result;
+        },
+    };
+}
+
+
 static RPCHelpMan getNFT() {
     // arg0 - string - command - "get-class" or "get-asset"
     // arg1 - string - hash of nft to get
@@ -1551,6 +1725,8 @@ static const CRPCCommand commands[] =
 
     { "mining",              &submitNFT,         },
     { "mining",              &getNFT,         },
+    { "mining",              &listNFT,         },
+    { "mining",              &searchNFT,         },
 
 
 
