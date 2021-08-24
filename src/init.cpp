@@ -451,7 +451,7 @@ void SetupServerArgs()
     const auto regtestLLMQ = CreateChainParams(CBaseChainParams::REGTEST)->GetConsensus().llmqs.at(Consensus::LLMQ_TEST);
 
     // Hidden Options
-    std::vector<std::string> hidden_args = {"-h", "-help", "-dbcrashratio", "-forcecompactdb",
+    std::vector<std::string> hidden_args = {"-h", "-help", "-dbcrashratio", "-forcecompactdb", "-printcrashinfo",
         // GUI args. These will be overwritten by SetupUIArgs for the GUI
         "-allowselfsignedrootcertificates", "-choosedatadir", "-lang=<lang>", "-min", "-resetguisettings", "-rootcertificates=<file>", "-splash", "-uiplatform"};
 
