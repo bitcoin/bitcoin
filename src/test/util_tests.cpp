@@ -1251,7 +1251,8 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney)
     BOOST_CHECK_EQUAL(ParseMoney(" 0.00000001").value(), COIN/100000000);
 
     // Parsing amount that can not be represented should fail
-    BOOST_CHECK(!ParseMoney("100000000.00"));
+    // SYSCOIN
+    BOOST_CHECK(ParseMoney("100000000.00"));
     BOOST_CHECK(!ParseMoney("0.000000001"));
 
     // Parsing empty string should fail
