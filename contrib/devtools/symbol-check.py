@@ -14,7 +14,7 @@ import subprocess
 import sys
 from typing import List, Optional
 
-import lief
+import lief #type:ignore
 import pixie
 
 from utils import determine_wellknown_cmd

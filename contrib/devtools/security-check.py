@@ -10,7 +10,7 @@ Otherwise the exit status will be 1 and it will log which executables failed whi
 import sys
 from typing import List, Optional
 
-import lief
+import lief #type:ignore
 import pixie
 
 def check_ELF_PIE(executable) -> bool:
