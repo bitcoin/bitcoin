@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_basic_data)
 {
     // Perform tests both obfuscated and non-obfuscated.
     for (bool obfuscate : {false, true}) {
-        fs::path ph = GetDataDir() / (obfuscate ? "dbwrapper_1_obfuscate_true" : "dbwrapper_1_obfuscate_false");
+        fs::path ph = SetDataDir(std::string("dbwrapper_1").append(obfuscate ? "_true" : "_false"));
         CDBWrapper dbw(ph, (1 << 20), false, true, obfuscate);
 
         uint256 res;
@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(unicodepath)
     // On Windows this test will fail if the directory is created using
     // the ANSI CreateDirectoryA  call and the code page isn't UTF8.
     // It will succeed if the created with  CreateDirectoryW.
-    fs::path ph = GetDataDir() / "test_runner_₿_🏃_20191128_104644";
+    fs::path ph = SetDataDir("test_runner_₿_🏃_20191128_104644");
     CDBWrapper dbw(ph, (1 << 20));
 
     fs::path lockPath = ph / "LOCK";
