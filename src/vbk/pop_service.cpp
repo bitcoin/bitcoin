@@ -154,8 +154,7 @@ PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const CChainParams& para
 
     altintegration::PopPayouts rewards;
     ret = pop.getPopPayout(prevHash, rewards, state);
-    (void)ret;
-    assert(ret);
+    VBK_ASSERT_MSG(ret, "error: %s", state.toString());
 
     int halvings = (pindexPrev.nHeight + 1) / params.GetConsensus().nSubsidyHalvingInterval;
     PoPRewards result{};
