@@ -188,7 +188,7 @@ def print_logs_plain(log_events, colors):
 def print_logs_html(log_events):
     """Renders the iterator of log events into html."""
     try:
-        import jinja2
+        import jinja2 #type:ignore
     except ImportError:
         print("jinja2 not found. Try `pip install jinja2`")
         sys.exit(1)
