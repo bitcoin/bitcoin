@@ -574,7 +574,7 @@ static RPCHelpMan combinerawtransaction()
                 sigdata.MergeSignatureData(DataFromTransaction(txv, i, txout, txdata));
             }
         }
-        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(mergedTx, i, txout.nValue, &txdata, 1), txout.scriptPubKey, sigdata);
+        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(mergedTx, i, txout.nValue, txdata, 1), txout.scriptPubKey, sigdata);
 
         UpdateInput(txin, sigdata);
     }

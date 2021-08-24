@@ -566,7 +566,7 @@ SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutabl
     PrecomputedTransactionData txdata2;
     txdata2.Init(CTransaction(input2), {}, true);
     sigdata.MergeSignatureData(DataFromTransaction(input2, 0, tx->vout[0], txdata2));
-    ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(input1, 0, tx->vout[0].nValue, SIGHASH_ALL), tx->vout[0].scriptPubKey, sigdata);
+    ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(input1, 0, tx->vout[0].nValue, txdata1, SIGHASH_ALL), tx->vout[0].scriptPubKey, sigdata);
     return sigdata;
 }
 
