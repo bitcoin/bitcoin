@@ -1414,6 +1414,7 @@ static RPCHelpMan listtransactions()
                     {"count", RPCArg::Type::NUM, RPCArg::Default{10}, "The number of transactions to return"},
                     {"skip", RPCArg::Type::NUM, RPCArg::Default{0}, "The number of transactions to skip"},
                     {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Include transactions to watch-only addresses (see 'importaddress')"},
+                    {"ascending_order", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for ascending order (newest to oldest), false for descending order (oldest to newest), default is true"}, "The direction from which to start getting transactions"},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "",
@@ -1483,6 +1484,13 @@ static RPCHelpMan listtransactions()
     if (nFrom < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
 
+    // Default ascending_order to true if no value has been specified
+    bool ascending_order = true;
+
+    if (!request.params[4].isNull()) {
+        ascending_order = request.params[4].get_bool();
+    }
+
     UniValue ret(UniValue::VARR);
 
     {
@@ -1490,12 +1498,23 @@ static RPCHelpMan listtransactions()
 
         const CWallet::TxItems & txOrdered = pwallet->wtxOrdered;
 
-        // iterate backwards until we have nCount items to return:
-        for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
-        {
+        // Returns true when enough transactions have been accumulated.
+        auto AccumulateTxns = [&](auto it) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
             CWalletTx *const pwtx = (*it).second;
             ListTransactions(*pwallet, *pwtx, 0, true, ret, filter, filter_label);
-            if ((int)ret.size() >= (nCount+nFrom)) break;
+            return ((int)ret.size() >= (nCount + nFrom));
+        };
+
+        // iterate until we have nCount items to return:
+        // iterate backwards if ascending order or forwards if descending order
+        if (ascending_order) {
+            for (auto it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
+                if (AccumulateTxns(it)) break;
+            }
+        } else {
+            for (auto it = txOrdered.cbegin(); it != txOrdered.cend(); ++it) {
+                if (AccumulateTxns(it)) break;
+            }
         }
     }
 
@@ -1508,7 +1527,11 @@ static RPCHelpMan listtransactions()
 
     const std::vector<UniValue>& txs = ret.getValues();
     UniValue result{UniValue::VARR};
-    result.push_backV({ txs.rend() - nFrom - nCount, txs.rend() - nFrom }); // Return oldest to newest
+    if (ascending_order) {
+        result.push_backV({ txs.rend() - nFrom - nCount, txs.rend() - nFrom }); // Return oldest to newest
+    } else {
+        result.push_backV({ txs.cbegin() + nFrom, txs.cbegin() + nFrom + nCount }); // Return oldest to newest
+    }
     return result;
 },
     };

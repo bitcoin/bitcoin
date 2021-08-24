@@ -103,6 +103,14 @@ class ListTransactionsTest(BitcoinTestFramework):
                                 {"category": "receive", "amount": Decimal("0.1")},
                                 {"txid": txid, "label": "watchonly"})
 
+        self.log.info("Test 'ascending_order' feature")
+        # The first transaction counting from the oldest (descending order) should be the last transaction counting from the newest (ascending order)
+        assert_equal(self.nodes[0].listtransactions(count=1, ascending_order=False),
+                     self.nodes[0].listtransactions(count=1, skip=len(self.nodes[0].listtransactions(count=10000)) - 1, ascending_order=True))
+        # The second and third transactions counting from the oldest (descending order) should be the 2 before the last transaction counting from the newest (ascending order)
+        assert_equal(self.nodes[0].listtransactions(count=2, skip=1, ascending_order=False),
+                     self.nodes[0].listtransactions(count=2, skip=len(self.nodes[0].listtransactions(count=10000)) - 3, ascending_order=True))
+
         self.run_rbf_opt_in_test()
 
 
