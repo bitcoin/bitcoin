@@ -835,7 +835,7 @@ static UniValue getblockheader(const JSONRPCRequest& request)
         return strHex;
     }
 
-    return blockheaderToJSON(chainActive.Tip(), pblockindex);
+    return blockheaderToJSON(tip, pblockindex);
 }
 
 static UniValue getblockheaders(const JSONRPCRequest& request)
