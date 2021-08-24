@@ -243,25 +243,10 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
 class BaseSignatureChecker
 {
 public:
-    virtual bool CheckECDSASignature(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const
-    {
-        return false;
-    }
-
-    virtual bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const
-    {
-        return false;
-    }
-
-    virtual bool CheckLockTime(const CScriptNum& nLockTime) const
-    {
-         return false;
-    }
-
-    virtual bool CheckSequence(const CScriptNum& nSequence) const
-    {
-         return false;
-    }
+    virtual bool CheckECDSASignature(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const = 0;
+    virtual bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const = 0;
+    virtual bool CheckLockTime(const CScriptNum& nLockTime) const = 0;
+    virtual bool CheckSequence(const CScriptNum& nSequence) const = 0;
 
     virtual ~BaseSignatureChecker() {}
 };
@@ -331,6 +316,19 @@ public:
         return m_checker.CheckSequence(nSequence);
     }
 };
+
+/** Dummy signature checker which accepts all signatures. */
+class DummySignatureChecker final : public BaseSignatureChecker
+{
+public:
+    DummySignatureChecker() {}
+    bool CheckECDSASignature(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override { return true; }
+    bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror) const override { return true; }
+    bool CheckLockTime(const CScriptNum& nLockTime) const override { return false; }
+    bool CheckSequence(const CScriptNum& nSequence) const override { return false; }
+};
+/** A signature checker that accepts all signatures */
+inline const DummySignatureChecker DUMMY_CHECKER;
 
 /** Compute the BIP341 tapleaf hash from leaf version & script. */
 uint256 ComputeTapleafHash(uint8_t leaf_version, const CScript& script);
