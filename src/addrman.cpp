@@ -78,10 +78,10 @@ double CAddrInfo::GetChance(int64_t nNow) const
 }
 
 CAddrMan::CAddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio)
-    : m_asmap{std::move(asmap)}
-    , insecure_rand{deterministic}
+    : insecure_rand{deterministic}
     , nKey{deterministic ? uint256{1} : insecure_rand.rand256()}
     , m_consistency_check_ratio{consistency_check_ratio}
+    , m_asmap{std::move(asmap)}
 {
     for (auto& bucket : vvNew) {
         for (auto& entry : bucket) {
