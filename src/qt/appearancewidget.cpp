@@ -46,11 +46,11 @@ AppearanceWidget::AppearanceWidget(QWidget* parent) :
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
     mapper->setOrientation(Qt::Vertical);
 
-    connect(ui->theme, SIGNAL(currentTextChanged(const QString&)), this, SLOT(updateTheme(const QString&)));
-    connect(ui->fontFamily, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFontFamily(int)));
-    connect(ui->fontScaleSlider, SIGNAL(valueChanged(int)), this, SLOT(updateFontScale(int)));
-    connect(ui->fontWeightNormalSlider, SIGNAL(valueChanged(int)), this, SLOT(updateFontWeightNormal(int)));
-    connect(ui->fontWeightBoldSlider, SIGNAL(valueChanged(int)), this, SLOT(updateFontWeightBold(int)));
+    connect(ui->theme, &QComboBox::currentTextChanged, this, &AppearanceWidget::updateTheme);
+    connect(ui->fontFamily, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &AppearanceWidget::updateFontFamily);
+    connect(ui->fontScaleSlider, &QSlider::valueChanged, this, &AppearanceWidget::updateFontScale);
+    connect(ui->fontWeightNormalSlider, &QSlider::valueChanged, [this](auto nValue) { updateFontWeightNormal(nValue); });
+    connect(ui->fontWeightBoldSlider, &QSlider::valueChanged, [this](auto nValue) { updateFontWeightBold(nValue); });
 
     connect(ui->theme, &QComboBox::currentTextChanged, [=]() { Q_EMIT appearanceChanged(); });
     connect(ui->fontFamily, &QComboBox::currentTextChanged, [=]() { Q_EMIT appearanceChanged(); });

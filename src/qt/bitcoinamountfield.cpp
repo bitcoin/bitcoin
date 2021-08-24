@@ -74,7 +74,7 @@ public:
         setAlignment(Qt::AlignLeft);
         amountValidator = new AmountValidator(this);
         setValidator(amountValidator);
-        connect(this, SIGNAL(textEdited(QString)), this, SIGNAL(valueChanged()));
+        connect(this, &QLineEdit::textEdited, this, &AmountLineEdit::valueChanged);
     }
 
     void fixup(const QString &input)
@@ -178,7 +178,7 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent) :
     setFocusProxy(amount);
 
     // If one if the widgets changes, the combined content changes as well
-    connect(amount, SIGNAL(valueChanged()), this, SIGNAL(valueChanged()));
+    connect(amount, &AmountLineEdit::valueChanged, this, &BitcoinAmountField::valueChanged);
 }
 
 void BitcoinAmountField::clear()

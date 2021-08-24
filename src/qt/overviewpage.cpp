@@ -145,7 +145,7 @@ OverviewPage::OverviewPage(QWidget* parent) :
     // Note: minimum height of listTransactions will be set later in updateAdvancedCJUI() to reflect actual settings
     ui->listTransactions->setAttribute(Qt::WA_MacShowFocusRect, false);
 
-    connect(ui->listTransactions, SIGNAL(clicked(QModelIndex)), this, SLOT(handleTransactionClicked(QModelIndex)));
+    connect(ui->listTransactions, &QListView::clicked, this, &OverviewPage::handleTransactionClicked);
 
     // init "out of sync" warning labels
     ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
@@ -164,7 +164,7 @@ OverviewPage::OverviewPage(QWidget* parent) :
     showOutOfSyncWarning(true);
 
     timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(coinJoinStatus()));
+    connect(timer, &QTimer::timeout, [this]{ coinJoinStatus(); });
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
@@ -180,7 +180,6 @@ void OverviewPage::handleOutOfSyncWarningClicks()
 
 OverviewPage::~OverviewPage()
 {
-    if(timer) disconnect(timer, SIGNAL(timeout()), this, SLOT(coinJoinStatus()));
     delete ui;
 }
 
@@ -247,7 +246,7 @@ void OverviewPage::setClientModel(ClientModel *model)
     if(model)
     {
         // Show warning if this is a prerelease version
-        connect(model, SIGNAL(alertsChanged(QString)), this, SLOT(updateAlerts(QString)));
+        connect(model, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
         updateAlerts(model->getStatusBarWarnings());
     }
 }
@@ -263,18 +262,18 @@ void OverviewPage::setWalletModel(WalletModel *model)
         interfaces::Wallet& wallet = model->wallet();
         interfaces::WalletBalances balances = wallet.getBalances();
         setBalance(balances);
-        connect(model, SIGNAL(balanceChanged(interfaces::WalletBalances)), this, SLOT(setBalance(interfaces::WalletBalances)));
+        connect(model, &WalletModel::balanceChanged, this, &OverviewPage::setBalance);
 
-        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &OverviewPage::updateDisplayUnit);
         updateWatchOnlyLabels(wallet.haveWatchOnly() || gArgs.GetBoolArg("-debug-ui", false));
-        connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
+        connect(model, &WalletModel::notifyWatchonlyChanged, this, &OverviewPage::updateWatchOnlyLabels);
 
         // explicitly update PS frame and transaction list to reflect actual settings
         updateAdvancedCJUI(model->getOptionsModel()->getShowAdvancedCJUI());
 
-        connect(model->getOptionsModel(), SIGNAL(coinJoinRoundsChanged()), this, SLOT(updateCoinJoinProgress()));
-        connect(model->getOptionsModel(), SIGNAL(coinJoinAmountChanged()), this, SLOT(updateCoinJoinProgress()));
-        connect(model->getOptionsModel(), SIGNAL(AdvancedCJUIChanged(bool)), this, SLOT(updateAdvancedCJUI(bool)));
+        connect(model->getOptionsModel(), &OptionsModel::coinJoinRoundsChanged, this, &OverviewPage::updateCoinJoinProgress);
+        connect(model->getOptionsModel(), &OptionsModel::coinJoinAmountChanged, this, &OverviewPage::updateCoinJoinProgress);
+        connect(model->getOptionsModel(), &OptionsModel::AdvancedCJUIChanged, this, &OverviewPage::updateAdvancedCJUI);
         connect(model->getOptionsModel(), &OptionsModel::coinJoinEnabledChanged, [=]() {
             coinJoinStatus(true);
         });
@@ -283,7 +282,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         // we'll handle automatic backups and user warnings in coinJoinStatus()
         walletModel->coinJoin().disableAutobackups();
 
-        connect(ui->toggleCoinJoin, SIGNAL(clicked()), this, SLOT(toggleCoinJoin()));
+        connect(ui->toggleCoinJoin, &QPushButton::clicked, this, &OverviewPage::toggleCoinJoin);
 
         // coinjoin buttons will not react to spacebar must be clicked on
         ui->toggleCoinJoin->setFocusPolicy(Qt::NoFocus);
