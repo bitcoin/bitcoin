@@ -634,8 +634,8 @@ void SyscoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
         connect(_clientModel, &ClientModel::numConnectionsChanged, this, &SyscoinGUI::setNumConnections);
         connect(_clientModel, &ClientModel::networkActiveChanged, this, &SyscoinGUI::setNetworkActive);
 
-        modalOverlay->setKnownBestHeight(tip_info->header_height, QDateTime::fromTime_t(tip_info->header_time));
-        setNumBlocks(tip_info->block_height, QDateTime::fromTime_t(tip_info->block_time), tip_info->verification_progress, false, SynchronizationState::INIT_DOWNLOAD);
+        modalOverlay->setKnownBestHeight(tip_info->header_height, QDateTime::fromSecsSinceEpoch(tip_info->header_time));
+        setNumBlocks(tip_info->block_height, QDateTime::fromSecsSinceEpoch(tip_info->block_time), tip_info->verification_progress, false, SynchronizationState::INIT_DOWNLOAD);
         connect(_clientModel, &ClientModel::numBlocksChanged, this, &SyscoinGUI::setNumBlocks);
         // SYSCOIN
         connect(_clientModel, &ClientModel::additionalDataSyncProgressChanged, this, &SyscoinGUI::setAdditionalDataSyncProgress);
