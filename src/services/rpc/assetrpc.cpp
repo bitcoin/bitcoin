@@ -525,7 +525,7 @@ static RPCHelpMan syscoingetspvproof()
     return RPCHelpMan{"syscoingetspvproof",
     "\nReturns SPV proof for use with inter-chain transfers.\n",
     {
-        {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "A transaction that is in the block"},
+        {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A transaction that is in the block"},
         {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED_NAMED_ARG, "If specified, looks for txid in the block with this hash"}
     },
     RPCResult{
