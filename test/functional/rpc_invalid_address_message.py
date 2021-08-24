@@ -29,9 +29,6 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def test_validateaddress(self):
         node = self.nodes[0]
 
@@ -87,7 +84,10 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
 
     def run_test(self):
         self.test_validateaddress()
-        self.test_getaddressinfo()
+
+        if self.is_wallet_compiled():
+            self.init_wallet(0)
+            self.test_getaddressinfo()
 
 
 if __name__ == '__main__':
