@@ -33,10 +33,6 @@ public:
     SaltedOutpointHasher();
 
     /**
-     * This *must* return size_t. With Boost 1.46 on 32-bit systems the
-     * unordered_map will behave unpredictably if the custom hasher returns a
-     * uint64_t, resulting in failures when syncing the chain (#4634).
-     *
      * Having the hash noexcept allows libstdc++'s unordered_map to recalculate
      * the hash during rehash, so it does not have to cache the value. This
      * reduces node's memory by sizeof(size_t). The required recalculation has
