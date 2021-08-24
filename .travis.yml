@@ -222,6 +222,7 @@ after_success:
         RUN_FUNCTIONAL_TESTS=false
         GOAL="install"
         BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+
     - stage: test
       name: 'Win32  [GOAL: deploy]  [no gui tests]'
       env: >-
@@ -256,6 +257,7 @@ after_success:
         DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1"
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-debug CXXFLAGS=\"-g0 -O2\""
+
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [trusty]  [depends for now]'
       env: >-
@@ -276,6 +278,7 @@ after_success:
         RUN_FUNCTIONAL_TESTS=false # Disabled for now. TODO identify suppressions or exclude specific tests
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=thread --disable-hardening --disable-asm CC=clang CXX=clang++"
+
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
       env: >-
