@@ -83,9 +83,8 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
     (void)FormatISO8601Date(i64);
     (void)FormatISO8601DateTime(i64);
     {
-        int64_t parsed_money;
-        if (ParseMoney(FormatMoney(i64), parsed_money)) {
-            assert(parsed_money == i64);
+        if (std::optional<CAmount> parsed = ParseMoney(FormatMoney(i64))) {
+            assert(parsed.value() == i64);
         }
     }
     (void)GetSizeOfCompactSize(u64);
@@ -126,9 +125,8 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
     (void)ToLower(ch);
     (void)ToUpper(ch);
     {
-        int64_t parsed_money;
-        if (ParseMoney(ValueFromAmount(i64).getValStr(), parsed_money)) {
-            assert(parsed_money == i64);
+        if (std::optional<CAmount> parsed = ParseMoney(ValueFromAmount(i64).getValStr())) {
+            assert(parsed.value() == i64);
         }
     }
     if (i32 >= 0 && i32 <= 16) {
