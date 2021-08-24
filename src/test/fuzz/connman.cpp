@@ -104,12 +104,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
                 connman.RemoveAddedNode(random_string);
             },
             [&] {
-                const std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-                if (SanityCheckASMap(asmap)) {
-                    connman.SetAsmap(asmap);
-                }
-            },
-            [&] {
                 connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());
             },
             [&] {
