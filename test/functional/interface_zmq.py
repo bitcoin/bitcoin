@@ -82,8 +82,8 @@ class ZMQTestSetupBlock:
     raw transaction data.
     """
 
-    def __init__(self, node):
-        self.block_hash = node.generate(1)[0]
+    def __init__(self, test_framework, node):
+        self.block_hash = test_framework.generate(node, 1)[0]
         coinbase = node.getblock(self.block_hash, 2)['tx'][0]
         self.tx_hash = coinbase['txid']
         self.raw_tx = coinbase['hex']
@@ -147,7 +147,7 @@ class ZMQTest (BitcoinTestFramework):
         for sub in subscribers:
             sub.socket.set(zmq.RCVTIMEO, 1000)
         while True:
-            test_block = ZMQTestSetupBlock(self.nodes[0])
+            test_block = ZMQTestSetupBlock(self, self.nodes[0])
             recv_failed = False
             for sub in subscribers:
                 try:
