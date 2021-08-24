@@ -430,6 +430,7 @@ public:
     const CAddress addr;
     // Bind address of our side of the connection
     const CAddress addrBind;
+    const std::string m_addr_name;
     //! Whether this peer is an inbound onion, i.e. connected via our Tor onion service.
     const bool m_inbound_onion;
     std::atomic<int> nVersion{0};
@@ -691,10 +692,7 @@ private:
     //! service advertisements.
     const ServiceFlags nLocalServices;
 
-    std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
-
-    mutable RecursiveMutex cs_addrName;
-    std::string addrName GUARDED_BY(cs_addrName);
+    std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
 
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(cs_addrLocal);
