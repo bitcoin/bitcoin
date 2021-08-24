@@ -560,8 +560,12 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
 SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutableTransaction& input2, const CTransactionRef tx)
 {
     SignatureData sigdata;
-    sigdata = DataFromTransaction(input1, 0, tx->vout[0]);
-    sigdata.MergeSignatureData(DataFromTransaction(input2, 0, tx->vout[0]));
+    PrecomputedTransactionData txdata1;
+    txdata1.Init(CTransaction(input1), {}, true);
+    sigdata = DataFromTransaction(input1, 0, tx->vout[0], txdata1);
+    PrecomputedTransactionData txdata2;
+    txdata2.Init(CTransaction(input2), {}, true);
+    sigdata.MergeSignatureData(DataFromTransaction(input2, 0, tx->vout[0], txdata2));
     ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(input1, 0, tx->vout[0].nValue, SIGHASH_ALL), tx->vout[0].scriptPubKey, sigdata);
     return sigdata;
 }

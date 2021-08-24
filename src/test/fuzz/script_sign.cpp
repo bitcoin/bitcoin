@@ -92,7 +92,9 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
         const std::optional<CTxOut> tx_out = ConsumeDeserializable<CTxOut>(fuzzed_data_provider);
         const unsigned int n_in = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
         if (mutable_transaction && tx_out && mutable_transaction->vin.size() > n_in) {
-            SignatureData signature_data_1 = DataFromTransaction(*mutable_transaction, n_in, *tx_out);
+            PrecomputedTransactionData txdata;
+            txdata.Init(CTransaction(mutable_transaction.value()), {}, true);
+            SignatureData signature_data_1 = DataFromTransaction(*mutable_transaction, n_in, *tx_out, txdata);
             CTxIn input;
             UpdateInput(input, signature_data_1);
             const CScript script = ConsumeScript(fuzzed_data_provider);

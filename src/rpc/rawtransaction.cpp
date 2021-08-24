@@ -551,21 +551,30 @@ static RPCHelpMan combinerawtransaction()
     // transaction to avoid rehashing.
     const CTransaction txConst(mergedTx);
     // Sign what we can:
+    PrecomputedTransactionData txdata;
+    std::vector<CTxOut> spent_outputs;
     for (unsigned int i = 0; i < mergedTx.vin.size(); i++) {
-        CTxIn& txin = mergedTx.vin[i];
+        const CTxIn& txin = mergedTx.vin[i];
         const Coin& coin = view.AccessCoin(txin.prevout);
         if (coin.IsSpent()) {
             throw JSONRPCError(RPC_VERIFY_ERROR, "Input not found or already spent");
         }
+        spent_outputs.emplace_back(coin.out.nValue, coin.out.scriptPubKey);
+    }
+    txdata.Init(txConst, std::vector<CTxOut>(spent_outputs), true);
+
+    for (unsigned int i = 0; i < mergedTx.vin.size(); i++) {
+        CTxIn& txin = mergedTx.vin[i];
+        const CTxOut& txout = spent_outputs[i];
         SignatureData sigdata;
 
         // ... and merge in other signatures:
         for (const CMutableTransaction& txv : txVariants) {
             if (txv.vin.size() > i) {
-                sigdata.MergeSignatureData(DataFromTransaction(txv, i, coin.out));
+                sigdata.MergeSignatureData(DataFromTransaction(txv, i, txout, txdata));
             }
         }
-        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(mergedTx, i, coin.out.nValue, 1), coin.out.scriptPubKey, sigdata);
+        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(mergedTx, i, txout.nValue, &txdata, 1), txout.scriptPubKey, sigdata);
 
         UpdateInput(txin, sigdata);
     }
