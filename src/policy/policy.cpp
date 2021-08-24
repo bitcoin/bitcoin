@@ -37,7 +37,13 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     if (txout.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
         // sum the sizes of the parts of a transaction input
         // with 75% segwit discount applied to the script size.
-        nSize += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
+        if (witnessversion == 0) {
+            // P2WPKH spend, a compressed public key + a DER-encoded ECDSA signature
+            nSize += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
+        } else {
+            // Taproot key spend, a single BIP340 signature
+            nSize += (32 + 4 + 1 + (66 / WITNESS_SCALE_FACTOR) + 4);
+        }
     } else {
         nSize += (32 + 4 + 1 + 107 + 4); // the 148 mentioned above
     }

@@ -971,6 +971,25 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].nValue = 329;
     BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
     BOOST_CHECK_EQUAL(reason, "dust");
+
+    // Check Taproot outputs dust threshold
+    t.vout[0].scriptPubKey = CScript() << OP_1 << ParseHex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    t.vout[0].nValue = 300;
+    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    t.vout[0].nValue = 299;
+    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
+    BOOST_CHECK_EQUAL(reason, "dust");
+
+    // Check future Witness Program versions dust threshold
+    for (int op = OP_2; op <= OP_16; op += 1) {
+        t.vout[0].scriptPubKey = CScript() << (opcodetype)op << ParseHex("ffff");
+        t.vout[0].nValue = 210;
+        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+
+        t.vout[0].nValue = 209;
+        BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
+        BOOST_CHECK_EQUAL(reason, "dust");
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
