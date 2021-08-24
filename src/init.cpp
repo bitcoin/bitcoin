@@ -1201,8 +1201,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
 
         auto check_addrman = std::clamp<int32_t>(args.GetArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
-        node.addrman = std::make_unique<CAddrMan>(/* deterministic */ false, /* consistency_check_ratio */ check_addrman);
-        node.addrman->m_asmap = asmap;
+        node.addrman = std::make_unique<CAddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
 
         // Load addresses from peers.dat
         uiInterface.InitMessage(_("Loading P2P addresses…").translated);
@@ -1212,8 +1211,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             LogPrintf("Loaded %i addresses from peers.dat  %dms\n", node.addrman->size(), GetTimeMillis() - nStart);
         } else {
             // Addrman can be in an inconsistent state after failure, reset it
-            node.addrman = std::make_unique<CAddrMan>(/* deterministic */ false, /* consistency_check_ratio */ check_addrman);
-            node.addrman->m_asmap = asmap;
+            node.addrman = std::make_unique<CAddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
             LogPrintf("Recreating peers.dat\n");
             adb.Write(*node.addrman);
         }

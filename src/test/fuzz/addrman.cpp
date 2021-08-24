@@ -28,17 +28,11 @@ class CAddrManDeterministic : public CAddrMan
 public:
     FuzzedDataProvider& m_fuzzed_data_provider;
 
-    explicit CAddrManDeterministic(FuzzedDataProvider& fuzzed_data_provider)
-        : CAddrMan(/* deterministic */ true, /* consistency_check_ratio */ 0)
+    explicit CAddrManDeterministic(std::vector<bool> asmap, FuzzedDataProvider& fuzzed_data_provider)
+        : CAddrMan(std::move(asmap), /* deterministic */ true, /* consistency_check_ratio */ 0)
         , m_fuzzed_data_provider(fuzzed_data_provider)
     {
         WITH_LOCK(cs, insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
-        if (fuzzed_data_provider.ConsumeBool()) {
-            m_asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-            if (!SanityCheckASMap(m_asmap)) {
-                m_asmap.clear();
-            }
-        }
     }
 
     /**
@@ -228,7 +222,14 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    auto addr_man_ptr = std::make_unique<CAddrManDeterministic>(fuzzed_data_provider);
+    std::vector<bool> asmap;
+    if (fuzzed_data_provider.ConsumeBool()) {
+        asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
+        if (!SanityCheckASMap(asmap)) {
+            asmap.clear();
+        }
+    }
+    auto addr_man_ptr = std::make_unique<CAddrManDeterministic>(asmap, fuzzed_data_provider);
     if (fuzzed_data_provider.ConsumeBool()) {
         const std::vector<uint8_t> serialized_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
         CDataStream ds(serialized_data, SER_DISK, INIT_PROTO_VERSION);
@@ -237,7 +238,7 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
         try {
             ds >> *addr_man_ptr;
         } catch (const std::ios_base::failure&) {
-            addr_man_ptr = std::make_unique<CAddrManDeterministic>(fuzzed_data_provider);
+            addr_man_ptr = std::make_unique<CAddrManDeterministic>(asmap, fuzzed_data_provider);
         }
     }
     CAddrManDeterministic& addr_man = *addr_man_ptr;
@@ -306,9 +307,12 @@ FUZZ_TARGET_INIT(addrman_serdeser, initialize_addrman)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
-    CAddrManDeterministic addr_man1{fuzzed_data_provider};
-    CAddrManDeterministic addr_man2{fuzzed_data_provider};
-    addr_man2.m_asmap = addr_man1.m_asmap;
+    std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
+    if (!SanityCheckASMap(asmap)) {
+        asmap.clear();
+    }
+    CAddrManDeterministic addr_man1{asmap, fuzzed_data_provider};
+    CAddrManDeterministic addr_man2{asmap, fuzzed_data_provider};
 
     CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);
 
