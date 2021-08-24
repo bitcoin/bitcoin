@@ -279,6 +279,76 @@ size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_
     assert(false);
 }
 
+InputStack& InputStack::SetAvailable(Availability avail) {
+    available = avail;
+    if (avail == Availability::NO) {
+        stack.clear();
+        size = std::numeric_limits<size_t>::max();
+        has_sig = false;
+        malleable = false;
+        non_canon = false;
+    }
+    return *this;
+}
+
+InputStack& InputStack::SetWithSig() {
+    has_sig = true;
+    return *this;
+}
+
+InputStack& InputStack::SetNonCanon() {
+    non_canon = true;
+    return *this;
+}
+
+InputStack& InputStack::SetMalleable(bool x) {
+    malleable = x;
+    return *this;
+}
+
+InputStack operator+(InputStack a, InputStack b) {
+    a.stack = Cat(std::move(a.stack), std::move(b.stack));
+    if (a.available != Availability::NO && b.available != Availability::NO) a.size += b.size;
+    a.has_sig |= b.has_sig;
+    a.malleable |= b.malleable;
+    a.non_canon |= b.non_canon;
+    if (a.available == Availability::NO || b.available == Availability::NO) {
+        a.SetAvailable(Availability::NO);
+    } else if (a.available == Availability::MAYBE || b.available == Availability::MAYBE) {
+        a.SetAvailable(Availability::MAYBE);
+    }
+    return a;
+}
+
+InputStack operator|(InputStack a, InputStack b) {
+    // If only one is invalid, pick the other one. If both are invalid, pick an arbitrary one.
+    if (a.available == Availability::NO) return b;
+    if (b.available == Availability::NO) return a;
+    // If only one of the solutions has a signature, we must pick the other one.
+    if (!a.has_sig && b.has_sig) return a;
+    if (!b.has_sig && a.has_sig) return b;
+    if (!a.has_sig && !b.has_sig) {
+        // If neither solution requires a signature, the result is inevitably malleable.
+        a.malleable = true;
+        b.malleable = true;
+    } else {
+        // If both options require a signature, prefer the non-malleable one.
+        if (b.malleable && !a.malleable) return a;
+        if (a.malleable && !b.malleable) return b;
+    }
+    // Between two malleable or two non-malleable solutions, pick the smaller one between
+    // YESes, and the bigger ones between MAYBEs. Prefer YES over MAYBE.
+    if (a.available == Availability::YES && b.available == Availability::YES) {
+        return std::move(a.size <= b.size ? a : b);
+    } else if (a.available == Availability::MAYBE && b.available == Availability::MAYBE) {
+        return std::move(a.size >= b.size ? a : b);
+    } else if (a.available == Availability::YES) {
+        return a;
+    } else {
+        return b;
+    }
+}
+
 std::optional<std::vector<Opcode>> DecomposeScript(const CScript& script)
 {
     std::vector<Opcode> out;
