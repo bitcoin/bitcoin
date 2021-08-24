@@ -55,7 +55,8 @@ if ! command -v shellcheck > /dev/null; then
 fi
 
 EXCLUDE="--exclude=$(IFS=','; echo "${disabled[*]}")"
-if ! shellcheck "$EXCLUDE" $(git ls-files -- '*.sh' | grep -vE 'src/(leveldb|secp256k1|univalue)/'); then
+SOURCED_FILES=$(git ls-files | xargs gawk '/^# shellcheck shell=/ {print FILENAME} {nextfile}')  # Check shellcheck directive used for sourced files
+if ! shellcheck "$EXCLUDE" $SOURCED_FILES $(git ls-files -- '*.sh' | grep -vE 'src/(leveldb|secp256k1|univalue)/'); then
     EXIT_CODE=1
 fi
 
