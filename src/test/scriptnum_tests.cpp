@@ -164,35 +164,35 @@ static void RunOperators(const int64_t& num1, const int64_t& num2)
 
 BOOST_AUTO_TEST_CASE(creation)
 {
-    for(size_t i = 0; i < std::size(values); ++i)
+    for (auto value : values)
     {
-        for(size_t j = 0; j < std::size(offsets); ++j)
+        for (auto offset : offsets)
         {
-            RunCreate(values[i]);
-            RunCreate(values[i] + offsets[j]);
-            RunCreate(values[i] - offsets[j]);
+            RunCreate(value);
+            RunCreate(value + offset);
+            RunCreate(value - offset);
         }
     }
 }
 
 BOOST_AUTO_TEST_CASE(operators)
 {
-    for(size_t i = 0; i < std::size(values); ++i)
+    for (auto a : values)
     {
-        for(size_t j = 0; j < std::size(offsets); ++j)
+        for (auto b : values)
         {
-            RunOperators(values[i], values[i]);
-            RunOperators(values[i], -values[i]);
-            RunOperators(values[i], values[j]);
-            RunOperators(values[i], -values[j]);
-            RunOperators(values[i] + values[j], values[j]);
-            RunOperators(values[i] + values[j], -values[j]);
-            RunOperators(values[i] - values[j], values[j]);
-            RunOperators(values[i] - values[j], -values[j]);
-            RunOperators(values[i] + values[j], values[i] + values[j]);
-            RunOperators(values[i] + values[j], values[i] - values[j]);
-            RunOperators(values[i] - values[j], values[i] + values[j]);
-            RunOperators(values[i] - values[j], values[i] - values[j]);
+            RunOperators(a, a);
+            RunOperators(a, -a);
+            RunOperators(a, b);
+            RunOperators(a, -b);
+            RunOperators(a + b, b);
+            RunOperators(a + b, -b);
+            RunOperators(a - b, b);
+            RunOperators(a - b, -b);
+            RunOperators(a + b, a + b);
+            RunOperators(a + b, a - b);
+            RunOperators(a - b, a + b);
+            RunOperators(a - b, a - b);
         }
     }
 }
