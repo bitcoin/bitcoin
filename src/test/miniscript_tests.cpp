@@ -2,18 +2,23 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-
+#include <stdint.h>
 #include <string>
+#include <vector>
 
 #include <test/util/setup_common.h>
 #include <boost/test/unit_test.hpp>
 
+#include <core_io.h>
 #include <hash.h>
 #include <pubkey.h>
 #include <uint256.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha256.h>
+#include <script/interpreter.h>
 #include <script/miniscript.h>
+#include <script/standard.h>
+#include <script/script_error.h>
 
 namespace {
 
@@ -24,15 +29,22 @@ struct TestData {
     //! A map from the public keys to their CKeyIDs (faster than hashing every time).
     std::map<CPubKey, CKeyID> pkhashes;
     std::map<CKeyID, CPubKey> pkmap;
+    std::map<CPubKey, std::vector<unsigned char>> signatures;
 
     // Various precomputed hashes
     std::vector<std::vector<unsigned char>> sha256;
     std::vector<std::vector<unsigned char>> ripemd160;
     std::vector<std::vector<unsigned char>> hash256;
     std::vector<std::vector<unsigned char>> hash160;
+    std::map<std::vector<unsigned char>, std::vector<unsigned char>> sha256_preimages;
+    std::map<std::vector<unsigned char>, std::vector<unsigned char>> ripemd160_preimages;
+    std::map<std::vector<unsigned char>, std::vector<unsigned char>> hash256_preimages;
+    std::map<std::vector<unsigned char>, std::vector<unsigned char>> hash160_preimages;
 
     TestData()
     {
+        // All our signatures sign (and are required to sign) this constant message.
+        auto const MESSAGE_HASH = uint256S("f5cd94e18b6fe77dd7aca9e35c2b0c9cbd86356c80a71065");
         // We generate 255 public keys and 255 hashes of each type.
         for (int i = 1; i <= 255; ++i) {
             // This 32-byte array functions as both private key data and hash preimage (31 zero bytes plus any nonzero byte).
@@ -48,18 +60,28 @@ struct TestData {
             pkhashes.emplace(pubkey, keyid);
             pkmap.emplace(keyid, pubkey);
 
+            // Compute ECDSA signatures on MESSAGE_HASH with the private keys.
+            std::vector<unsigned char> sig;
+            BOOST_CHECK(key.Sign(MESSAGE_HASH, sig));
+            sig.push_back(1); // sighash byte
+            signatures.emplace(pubkey, sig);
+
             // Compute various hashes
             std::vector<unsigned char> hash;
             hash.resize(32);
             CSHA256().Write(keydata, 32).Finalize(hash.data());
             sha256.push_back(hash);
+            sha256_preimages[hash] = std::vector<unsigned char>(keydata, keydata + 32);
             CHash256().Write(keydata).Finalize(hash);
             hash256.push_back(hash);
+            hash256_preimages[hash] = std::vector<unsigned char>(keydata, keydata + 32);
             hash.resize(20);
             CRIPEMD160().Write(keydata, 32).Finalize(hash.data());
             ripemd160.push_back(hash);
+            ripemd160_preimages[hash] = std::vector<unsigned char>(keydata, keydata + 32);
             CHash160().Write(keydata).Finalize(hash);
             hash160.push_back(hash);
+            hash160_preimages[hash] = std::vector<unsigned char>(keydata, keydata + 32);
         }
     }
 };
@@ -67,7 +89,27 @@ struct TestData {
 //! Global TestData object
 std::unique_ptr<const TestData> g_testdata;
 
-/** A class encapsulating conversion routing for CPubKey. */
+//! A classification of leaf conditions in miniscripts (excluding true/false).
+enum class ChallengeType {
+    SHA256,
+    RIPEMD160,
+    HASH256,
+    HASH160,
+    OLDER,
+    AFTER,
+    PK
+};
+
+/* With each leaf condition we associate a challenge number.
+ * For hashes it's just the first 4 bytes of the hash. For pubkeys, it's the last 4 bytes.
+ */
+uint32_t ChallengeNumber(const CPubKey& pubkey) { return ReadLE32(pubkey.data() + 29); }
+uint32_t ChallengeNumber(const std::vector<unsigned char>& hash) { return ReadLE32(hash.data()); }
+
+//! A Challenge is a combination of type of leaf condition and its challenge number.
+typedef std::pair<ChallengeType, uint32_t> Challenge;
+
+/** A class encapulating conversion routing for CPubKey. */
 struct KeyConverter {
     typedef CPubKey Key;
 
@@ -111,6 +153,83 @@ struct KeyConverter {
     }
 };
 
+/** A class that encapsulates all signing/hash revealing operations. */
+struct Satisfier : public KeyConverter {
+    //! Which keys/timelocks/hash preimages are available.
+    std::set<Challenge> supported;
+
+    //! Implement simplified CLTV logic: stack value must exactly match an entry in `supported`.
+    bool CheckAfter(uint32_t value) const {
+        return supported.count(Challenge(ChallengeType::AFTER, value));
+    }
+
+    //! Implement simplified CSV logic: stack value must exactly match an entry in `supported`.
+    bool CheckOlder(uint32_t value) const {
+        return supported.count(Challenge(ChallengeType::OLDER, value));
+    }
+
+    //! Produce a signature for the given key.
+    miniscript::Availability Sign(const CPubKey& key, std::vector<unsigned char>& sig) const {
+        if (supported.count(Challenge(ChallengeType::PK, ChallengeNumber(key)))) {
+            auto it = g_testdata->signatures.find(key);
+            if (it == g_testdata->signatures.end()) return miniscript::Availability::NO;
+            sig = it->second;
+            return miniscript::Availability::YES;
+        }
+        return miniscript::Availability::NO;
+    }
+
+    //! Helper function for the various hash based satisfactions.
+    miniscript::Availability SatHash(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage, ChallengeType chtype) const {
+        if (!supported.count(Challenge(chtype, ChallengeNumber(hash)))) return miniscript::Availability::NO;
+        const auto& m =
+            chtype == ChallengeType::SHA256 ? g_testdata->sha256_preimages :
+            chtype == ChallengeType::HASH256 ? g_testdata->hash256_preimages :
+            chtype == ChallengeType::RIPEMD160 ? g_testdata->ripemd160_preimages :
+            g_testdata->hash160_preimages;
+        auto it = m.find(hash);
+        if (it == m.end()) return miniscript::Availability::NO;
+        preimage = it->second;
+        return miniscript::Availability::YES;
+    }
+
+    // Functions that produce the preimage for hashes of various types.
+    miniscript::Availability SatSHA256(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const { return SatHash(hash, preimage, ChallengeType::SHA256); }
+    miniscript::Availability SatRIPEMD160(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const { return SatHash(hash, preimage, ChallengeType::RIPEMD160); }
+    miniscript::Availability SatHASH256(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const { return SatHash(hash, preimage, ChallengeType::HASH256); }
+    miniscript::Availability SatHASH160(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const { return SatHash(hash, preimage, ChallengeType::HASH160); }
+};
+
+/** Mocking signature/timelock checker.
+ *
+ * It holds a pointer to a Satisfier object, to determine which timelocks are supposed to be available.
+ */
+class TestSignatureChecker : public BaseSignatureChecker {
+    const Satisfier *ctx;
+
+public:
+    TestSignatureChecker(const Satisfier *in_ctx) : ctx(in_ctx) {}
+
+    bool CheckECDSASignature(const std::vector<unsigned char>& sig, const std::vector<unsigned char>& pubkey, const CScript& scriptcode, SigVersion sigversion) const override {
+        CPubKey pk(pubkey);
+        if (!pk.IsValid()) return false;
+        // Instead of actually running signature validation, check if the signature matches the precomputed one for this key.
+        auto it = g_testdata->signatures.find(pk);
+        if (it == g_testdata->signatures.end()) return false;
+        return sig == it->second;
+    }
+
+    bool CheckLockTime(const CScriptNum& locktime) const override {
+        // Delegate to Satisfier.
+        return ctx->CheckAfter(locktime.GetInt64());
+    }
+
+    bool CheckSequence(const CScriptNum& sequence) const override {
+        // Delegate to Satisfier.
+        return ctx->CheckOlder(sequence.GetInt64());
+    }
+};
+
 //! Singleton instance of KeyConverter.
 const KeyConverter CONVERTER{};
 
@@ -119,6 +238,33 @@ using NodeType = miniscript::NodeType;
 using NodeRef = miniscript::NodeRef<CPubKey>;
 template<typename... Args> NodeRef MakeNodeRef(Args&&... args) { return miniscript::MakeNodeRef<CPubKey>(std::forward<Args>(args)...); }
 using miniscript::operator"" _mst;
+
+//! Determine whether a Miniscript node is satisfiable at all (and thus isn't equivalent to just "false").
+bool Satisfiable(const NodeRef& ref) {
+    switch (ref->nodetype) {
+        case NodeType::JUST_0:
+            return false;
+        case NodeType::AND_B: case NodeType::AND_V:
+            return Satisfiable(ref->subs[0]) && Satisfiable(ref->subs[1]);
+        case NodeType::OR_B: case NodeType::OR_C: case NodeType::OR_D: case NodeType::OR_I:
+            return Satisfiable(ref->subs[0]) || Satisfiable(ref->subs[1]);
+        case NodeType::ANDOR:
+            return (Satisfiable(ref->subs[0]) && Satisfiable(ref->subs[1])) || Satisfiable(ref->subs[2]);
+        case NodeType::WRAP_A: case NodeType::WRAP_C: case NodeType::WRAP_S:
+        case NodeType::WRAP_D: case NodeType::WRAP_V: case NodeType::WRAP_J:
+        case NodeType::WRAP_N:
+            return Satisfiable(ref->subs[0]);
+        case NodeType::PK_K: case NodeType::PK_H: case NodeType::MULTI:
+        case NodeType::AFTER: case NodeType::OLDER: case NodeType::HASH256:
+        case NodeType::HASH160: case NodeType::SHA256: case NodeType::RIPEMD160:
+        case NodeType::JUST_1:
+            return true;
+        case NodeType::THRESH:
+            return std::accumulate(ref->subs.begin(), ref->subs.end(), (size_t)0, [](size_t acc, const NodeRef& ref){return acc + Satisfiable(ref);}) >= ref->k;
+    }
+    assert(false);
+    return false;
+}
 
 NodeRef GenNode(miniscript::Type typ, int complexity);
 
@@ -248,6 +394,89 @@ NodeRef GenNode(miniscript::Type typ, int complexity) {
     return {};
 }
 
+
+/** Compute all challenges (pubkeys, hashes, timelocks) that occur in a given Miniscript. */
+std::set<Challenge> FindChallenges(const NodeRef& ref) {
+    std::set<Challenge> chal;
+    for (const auto& key : ref->keys) {
+        chal.emplace(ChallengeType::PK, ChallengeNumber(key));
+    }
+    if (ref->nodetype == miniscript::NodeType::OLDER) {
+        chal.emplace(ChallengeType::OLDER, ref->k);
+    } else if (ref->nodetype == miniscript::NodeType::AFTER) {
+        chal.emplace(ChallengeType::AFTER, ref->k);
+    } else if (ref->nodetype == miniscript::NodeType::SHA256) {
+        chal.emplace(ChallengeType::SHA256, ChallengeNumber(ref->data));
+    } else if (ref->nodetype == miniscript::NodeType::RIPEMD160) {
+        chal.emplace(ChallengeType::RIPEMD160, ChallengeNumber(ref->data));
+    } else if (ref->nodetype == miniscript::NodeType::HASH256) {
+        chal.emplace(ChallengeType::HASH256, ChallengeNumber(ref->data));
+    } else if (ref->nodetype == miniscript::NodeType::HASH160) {
+        chal.emplace(ChallengeType::HASH160, ChallengeNumber(ref->data));
+    }
+    for (const auto& sub : ref->subs) {
+        auto sub_chal = FindChallenges(sub);
+        chal.insert(sub_chal.begin(), sub_chal.end());
+    }
+    return chal;
+}
+
+/** Verify a satisfaction. */
+void Verify(const std::string& testcase, const NodeRef& node, const Satisfier& ctx, std::vector<std::vector<unsigned char>> stack, const CScript& script, bool nonmal) {
+    // Construct P2WSH scriptPubKey.
+    CScript spk = GetScriptForDestination(WitnessV0ScriptHash(script));
+    // Construct the P2WSH witness (script stack + script).
+    CScriptWitness witness;
+    witness.stack = std::move(stack);
+    witness.stack.push_back(std::vector<unsigned char>(script.begin(), script.end()));
+    // Use a test signature checker aware of which afters/olders we made valid.
+    TestSignatureChecker checker(&ctx);
+    ScriptError serror;
+    if (nonmal) BOOST_CHECK(stack.size() <= node->GetStackSize());
+    if (!VerifyScript(CScript(), spk, &witness, STANDARD_SCRIPT_VERIFY_FLAGS, checker, &serror)) {
+        // The only possible violation should be the ops limit, as that is hard to statically guarantee.
+        BOOST_CHECK(serror == SCRIPT_ERR_OP_COUNT);
+        // When using the non-malleable satisfier, and our OpsLimit analysis succeeds, no execution errors should occur at all.
+        BOOST_CHECK(!(nonmal && node->CheckOpsLimit()));
+    }
+}
+
+/** Run random satisfaction tests. */
+void TestSatisfy(const std::string& testcase, const NodeRef& node) {
+    auto script = node->ToScript(CONVERTER);
+    auto challenges = FindChallenges(node); // Find all challenges in the generated miniscript.
+    std::vector<Challenge> challist(challenges.begin(), challenges.end());
+    for (int iter = 0; iter < 3; ++iter) {
+        Shuffle(challist.begin(), challist.end(), g_insecure_rand_ctx);
+        Satisfier satisfier;
+        bool prev_mal_success = false, prev_nonmal_success = false;
+        // Go over all challenges involved in this miniscript in random order.
+        for (int add = -1; add < (int)challist.size(); ++add) {
+            if (add >= 0) satisfier.supported.insert(challist[add]); // The first iteration does not add anything
+            // First try to produce a potentially malleable satisfaction.
+            std::vector<std::vector<unsigned char>> stack;
+            bool mal_success = node->Satisfy(satisfier, stack, false) == miniscript::Availability::YES;
+            if (mal_success) Verify(testcase, node, satisfier, stack, script, false); // And verify it against consensus/standardness.
+            // Then produce a non-malleable satisfaction.
+            bool nonmal_success = node->Satisfy(satisfier, stack, true) == miniscript::Availability::YES;
+            if (nonmal_success) Verify(testcase, node, satisfier, std::move(stack), std::move(script), true);
+            // If a nonmalleable solution exists, a solution whatsoever must also exist.
+            BOOST_CHECK(mal_success >= nonmal_success);
+            // If a miniscript is nonmalleable and needs a signature, and a solution exists, a non-malleable solution must also exist.
+            if (node->IsNonMalleable() && node->NeedsSignature()) BOOST_CHECK_EQUAL(nonmal_success, mal_success);
+            // Adding more satisfied conditions can never remove our ability to produce a satisfaction.
+            BOOST_CHECK(mal_success >= prev_mal_success);
+            // For nonmalleable solutions this is only true if the added condition is PK; for other conditions, adding one may make an valid satisfaction become malleable.
+            if (add >= 0 && challist[add].first == ChallengeType::PK) BOOST_CHECK(nonmal_success >= prev_nonmal_success);
+            // Remember results for the next added challenge.
+            prev_mal_success = mal_success;
+            prev_nonmal_success = nonmal_success;
+        }
+        // If the miniscript was satisfiable at all, a satisfaction must be found after all conditions are added.
+        BOOST_CHECK_EQUAL(prev_mal_success, Satisfiable(node));
+    }
+}
+
 enum TestMode : int {
     TESTMODE_INVALID = 0,
     TESTMODE_VALID = 1,
@@ -276,6 +505,7 @@ void Test(const std::string& ms, const std::string& hexscript, int mode, int ops
         BOOST_CHECK_MESSAGE(inferred_miniscript->ToScript(CONVERTER) == computed_script, "Roundtrip failure: miniscript->script != miniscript->script->miniscript->script: " + ms);
         if (opslimit != -1) BOOST_CHECK_MESSAGE((int)node->GetOps() == opslimit, "Ops limit mismatch: " + ms + " (" + std::to_string(node->GetOps()) + " vs " + std::to_string(opslimit) + ")");
         if (stacklimit != -1) BOOST_CHECK_MESSAGE((int)node->GetStackSize() == stacklimit, "Stack limit mismatch: " + ms + " (" + std::to_string(node->GetStackSize()) + " vs " + std::to_string(stacklimit) + ")");
+        TestSatisfy(ms, node);
     }
 }
 } // namespace
@@ -437,6 +667,8 @@ BOOST_AUTO_TEST_CASE(random_tests)
         // Check that it matches the original (we can't use *decoded == *node because the miniscript representation may differ)
         BOOST_CHECK(decoded->ToScript(CONVERTER) == script); // The script corresponding to that decoded form must match exactly.
         BOOST_CHECK(decoded->GetType() == node->GetType()); // The type also has to match exactly.
+        // Random satisfaction tests.
+        TestSatisfy(str, node);
     }
 
     g_testdata.reset();
