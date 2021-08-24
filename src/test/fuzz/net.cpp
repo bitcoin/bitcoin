@@ -46,7 +46,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
                     return;
                 }
                 CNodeStats stats;
-                node.copyStats(stats, asmap);
+                node.CopyStats(stats, asmap);
             },
             [&] {
                 const CNode* add_ref_node = node.AddRef();

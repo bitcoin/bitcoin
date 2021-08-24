@@ -567,14 +567,14 @@ Network CNode::ConnectedThroughNetwork() const
 
 #undef X
 #define X(name) stats.name = name
-void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
+void CNode::CopyStats(CNodeStats& stats, const std::vector<bool>& asmap)
 {
     stats.nodeid = this->GetId();
     X(nServices);
     X(addr);
     X(addrBind);
     stats.m_network = ConnectedThroughNetwork();
-    stats.m_mapped_as = addr.GetMappedAS(m_asmap);
+    stats.m_mapped_as = addr.GetMappedAS(asmap);
     if (m_tx_relay != nullptr) {
         LOCK(m_tx_relay->cs_filter);
         stats.fRelayTxes = m_tx_relay->fRelayTxes;
@@ -2819,7 +2819,7 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats) const
     vstats.reserve(vNodes.size());
     for (CNode* pnode : vNodes) {
         vstats.emplace_back();
-        pnode->copyStats(vstats.back(), addrman.m_asmap);
+        pnode->CopyStats(vstats.back(), addrman.m_asmap);
     }
 }
 

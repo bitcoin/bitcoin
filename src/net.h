@@ -651,7 +651,7 @@ public:
 
     void CloseSocketDisconnect();
 
-    void copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap);
+    void CopyStats(CNodeStats& stats, const std::vector<bool>& asmap);
 
     ServiceFlags GetLocalServices() const
     {
