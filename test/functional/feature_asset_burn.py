@@ -124,10 +124,6 @@ class AssetBurnTest(SyscoinTestFramework):
         # check over block too
         out =  self.nodes[1].listunspentasset(self.asset)
         assert_equal(len(out), 0)
-        self.nodes[1].assetallocationburn(self.asset, 0.05, "0x931d387731bbbc988b312206c74f77d004d6b84b")
-        self.nodes[1].assetallocationburn(self.asset, 0.03, "0x931d387731bbbc988b312206c74f77d004d6b84b")
-        self.nodes[0].generate(1)
-        self.sync_blocks()
 
     def basic_asset(self, guid):
         if guid is None:
