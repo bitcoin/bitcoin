@@ -37,7 +37,7 @@ builder-image:
   image: $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
   variables:
     SDK_URL: https://bitcoincore.org/depends-sources/sdks
-    OSX_SDK: "10.11"
+    OSX_SDK: "10.14"
     MAKEJOBS: -j4
   before_script:
     - echo HOST=$HOST
