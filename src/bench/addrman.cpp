@@ -87,7 +87,7 @@ static void AddrManSelect(benchmark::Bench& bench)
 
     bench.run([&] {
         const auto& address = addrman.Select();
-        assert(address.GetPort() > 0);
+        assert(address.first.GetPort() > 0);
     });
 }
 

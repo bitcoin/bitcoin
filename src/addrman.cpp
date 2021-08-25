@@ -694,15 +694,13 @@ void AddrManImpl::Attempt_(const CService& addr, bool fCountFailure, int64_t nTi
     }
 }
 
-CAddrInfo AddrManImpl::Select_(bool newOnly) const
+std::pair<CAddress, int64_t> AddrManImpl::Select_(bool newOnly) const
 {
     AssertLockHeld(cs);
 
-    if (vRandom.empty())
-        return CAddrInfo();
+    if (vRandom.empty()) return {};
 
-    if (newOnly && nNew == 0)
-        return CAddrInfo();
+    if (newOnly && nNew == 0) return {};
 
     // Use a 50% chance for choosing between tried and new table entries.
     if (!newOnly &&
@@ -720,8 +718,9 @@ CAddrInfo AddrManImpl::Select_(bool newOnly) const
             const auto it_found{mapInfo.find(nId)};
             assert(it_found != mapInfo.end());
             const CAddrInfo& info{it_found->second};
-            if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30))
-                return info;
+            if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30)) {
+                return {info, info.nLastTry};
+            }
             fChanceFactor *= 1.2;
         }
     } else {
@@ -738,8 +737,9 @@ CAddrInfo AddrManImpl::Select_(bool newOnly) const
             const auto it_found{mapInfo.find(nId)};
             assert(it_found != mapInfo.end());
             const CAddrInfo& info{it_found->second};
-            if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30))
-                return info;
+            if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30)) {
+                return {info, info.nLastTry};
+            }
             fChanceFactor *= 1.2;
         }
     }
@@ -883,11 +883,11 @@ void AddrManImpl::ResolveCollisions_()
     }
 }
 
-CAddrInfo AddrManImpl::SelectTriedCollision_()
+std::pair<CAddress, int64_t> AddrManImpl::SelectTriedCollision_()
 {
     AssertLockHeld(cs);
 
-    if (m_tried_collisions.size() == 0) return CAddrInfo();
+    if (m_tried_collisions.size() == 0) return {};
 
     std::set<int>::iterator it = m_tried_collisions.begin();
 
@@ -898,7 +898,7 @@ CAddrInfo AddrManImpl::SelectTriedCollision_()
     // If id_new not found in mapInfo remove it from m_tried_collisions
     if (mapInfo.count(id_new) != 1) {
         m_tried_collisions.erase(it);
-        return CAddrInfo();
+        return {};
     }
 
     const CAddrInfo& newInfo = mapInfo[id_new];
@@ -907,9 +907,8 @@ CAddrInfo AddrManImpl::SelectTriedCollision_()
     int tried_bucket = newInfo.GetTriedBucket(nKey, m_asmap);
     int tried_bucket_pos = newInfo.GetBucketPosition(nKey, false, tried_bucket);
 
-    int id_old = vvTried[tried_bucket][tried_bucket_pos];
-
-    return mapInfo[id_old];
+    const CAddrInfo& info_old = mapInfo[vvTried[tried_bucket][tried_bucket_pos]];
+    return {info_old, info_old.nLastTry};
 }
 
 void AddrManImpl::Check() const
@@ -1059,20 +1058,20 @@ void AddrManImpl::ResolveCollisions()
     Check();
 }
 
-CAddrInfo AddrManImpl::SelectTriedCollision()
+std::pair<CAddress, int64_t> AddrManImpl::SelectTriedCollision()
 {
     LOCK(cs);
     Check();
-    const CAddrInfo ret = SelectTriedCollision_();
+    const auto ret = SelectTriedCollision_();
     Check();
     return ret;
 }
 
-CAddrInfo AddrManImpl::Select(bool newOnly) const
+std::pair<CAddress, int64_t> AddrManImpl::Select(bool newOnly) const
 {
     LOCK(cs);
     Check();
-    const CAddrInfo addrRet = Select_(newOnly);
+    const auto addrRet = Select_(newOnly);
     Check();
     return addrRet;
 }
@@ -1159,12 +1158,12 @@ void CAddrMan::ResolveCollisions()
     m_impl->ResolveCollisions();
 }
 
-CAddrInfo CAddrMan::SelectTriedCollision()
+std::pair<CAddress, int64_t> CAddrMan::SelectTriedCollision()
 {
     return m_impl->SelectTriedCollision();
 }
 
-CAddrInfo CAddrMan::Select(bool newOnly) const
+std::pair<CAddress, int64_t> CAddrMan::Select(bool newOnly) const
 {
     return m_impl->Select(newOnly);
 }
