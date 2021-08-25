@@ -1788,7 +1788,7 @@ RPCHelpMan listdescriptors()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
     if (!wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
