@@ -529,7 +529,7 @@ static RPCHelpMan syscoingetspvproof()
         {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED_NAMED_ARG, "If specified, looks for txid in the block with this hash"}
     },
     RPCResult{
-        RPCResult::Type::STR, "proof", "JSON representation of merkle proof (transaction index, siblings and block header and some other information useful for moving coins/assets to another chain)"},
+        RPCResult::Type::ANY, "proof", "JSON representation of merkle proof (transaction index, siblings and block header and some other information useful for moving coins/assets to another chain)"},
     RPCExamples{""},
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
