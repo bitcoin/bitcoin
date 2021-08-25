@@ -1457,7 +1457,7 @@ void RPCConsole::showOrHideBanTableIfRequired()
 
 RPCConsole::TabTypes RPCConsole::tabFocus() const
 {
-    return (TabTypes) ui->tabWidget->currentIndex();
+    return (TabTypes) ui->stackedWidgetRPC->currentIndex();
 }
 
 void RPCConsole::setTabFocus(enum TabTypes tabType)
@@ -1467,5 +1467,5 @@ void RPCConsole::setTabFocus(enum TabTypes tabType)
 
 QString RPCConsole::tabTitle(TabTypes tab_type) const
 {
-    return ui->tabWidget->tabText(tab_type);
+    return pageButtons->button(tab_type)->text();
 }
