@@ -218,17 +218,18 @@ public:
     }
 };
 
+[[nodiscard]] inline std::vector<bool> ConsumeAsmap(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
+    if (!SanityCheckASMap(asmap)) asmap.clear();
+    return asmap;
+}
+
 FUZZ_TARGET_INIT(addrman, initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    std::vector<bool> asmap;
-    if (fuzzed_data_provider.ConsumeBool()) {
-        asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-        if (!SanityCheckASMap(asmap)) {
-            asmap.clear();
-        }
-    }
+    std::vector<bool> asmap = ConsumeAsmap(fuzzed_data_provider);
     auto addr_man_ptr = std::make_unique<CAddrManDeterministic>(asmap, fuzzed_data_provider);
     if (fuzzed_data_provider.ConsumeBool()) {
         const std::vector<uint8_t> serialized_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
@@ -307,10 +308,7 @@ FUZZ_TARGET_INIT(addrman_serdeser, initialize_addrman)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
-    std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-    if (!SanityCheckASMap(asmap)) {
-        asmap.clear();
-    }
+    std::vector<bool> asmap = ConsumeAsmap(fuzzed_data_provider);
     CAddrManDeterministic addr_man1{asmap, fuzzed_data_provider};
     CAddrManDeterministic addr_man2{asmap, fuzzed_data_provider};
 
