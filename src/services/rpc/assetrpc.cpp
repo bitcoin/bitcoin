@@ -736,6 +736,11 @@ static RPCHelpMan syscoinstartgeth()
     },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", "");
+    if(NEVMSub.empty()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Could not start Geth. zmqpubnevm not defined");
+    }
     StopGethNode(gethPID);
 #if ENABLE_ZMQ
     if (g_zmq_notification_interface) {
@@ -756,6 +761,9 @@ static RPCHelpMan syscoinstartgeth()
     const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
     if(!StartGethNode(gethDescriptorURL, gethPID))
         throw JSONRPCError(RPC_MISC_ERROR, "Could not start Geth");
+    if(!chainman.ActiveChainstate().ResetLastBlock()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Could not reset last invalid block");
+    }
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", "success");
     return ret;

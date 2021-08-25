@@ -3451,6 +3451,33 @@ bool CChainState::MarkConflictingBlock(BlockValidationState& state, const CChain
     }
     return true;
 }
+bool CChainState::ResetLastBlock() {
+    if(pindexBestInvalid && pindexBestInvalid->GetAncestor(m_chain.Height()) == m_chain.Tip()) {
+        LogPrintf("%s: Found invalid best block, resetting %s\n", __func__, pindexBestInvalid->GetBlockHash().ToString());
+        uint256 hash(pindexBestInvalid->GetBlockHash());
+        {
+            LOCK(cs_main);
+            CBlockIndex* pblockindex = m_blockman.LookupBlockIndex(hash);
+            if (!pblockindex) {
+                LogPrintf("%s: Block not found\n", __func__);
+                return false;
+            }
+
+            ResetBlockFailureFlags(pblockindex);
+        }
+        // SYSCOIN do not re-validate eth txroots
+        fLoaded = false;
+        BlockValidationState state;
+        ActivateBestChain(state, Params());
+        fLoaded = true;
+
+        if (!state.IsValid()) {
+            LogPrintf("%s: Could not activate chain %s\n", __func__, state.ToString());
+            return false;
+        }
+    }
+    return true;
+}
 void CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {
     AssertLockHeld(cs_main);
     // SYSCOIN
