@@ -436,7 +436,7 @@ public:
         SerReadWriteMany(os, ser_action, ReadWriteAsHelper<CService>(obj));
     }
 
-    //! Always included in serialization, except in the network format on INIT_PROTO_VERSION.
+    //! Always included in serialization.
     uint32_t nTime{TIME_INIT};
     //! Serialized as uint64_t in V1, and as CompactSize in V2.
     ServiceFlags nServices{NODE_NONE};
