@@ -141,9 +141,9 @@ class InvalidTxRequestTest(BitcoinTestFramework):
                 tx_orphan_2_valid,  # The valid transaction (with sufficient fee)
             ]
         }
-        # Transactions that do not end up in the mempool
-        # tx_orphan_no_fee, because it has too low fee (p2ps[0] is not disconnected for relaying that tx)
-        # tx_orphan_invalid, because it has negative fee (p2ps[1] is disconnected for relaying that tx)
+        # Transactions that do not end up in the mempool:
+        # tx_orphan_2_no_fee, because it has too low fee (p2ps[0] is not disconnected for relaying that tx)
+        # tx_orphan_2_invalid, because it has negative fee (p2ps[1] is disconnected for relaying that tx)
 
         self.wait_until(lambda: 1 == len(node.getpeerinfo()), timeout=12)  # p2ps[1] is no longer connected
         assert_equal(expected_mempool, set(node.getrawmempool()))
