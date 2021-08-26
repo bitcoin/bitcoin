@@ -197,7 +197,7 @@ static RPCHelpMan getpeerinfo()
         CNodeStateStats statestats;
         bool fStateStats = peerman.GetNodeStateStats(stats.nodeid, statestats);
         obj.pushKV("id", stats.nodeid);
-        obj.pushKV("addr", stats.addrName);
+        obj.pushKV("addr", stats.m_addr_name);
         if (stats.addrBind.IsValid()) {
             obj.pushKV("addrbind", stats.addrBind.ToString());
         }

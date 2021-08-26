@@ -72,7 +72,7 @@ QVariant PeerTableModel::data(const QModelIndex& index, int role) const
         case NetNodeId:
             return (qint64)rec->nodeStats.nodeid;
         case Address:
-            return QString::fromStdString(rec->nodeStats.addrName);
+            return QString::fromStdString(rec->nodeStats.m_addr_name);
         case Direction:
             return QString(rec->nodeStats.fInbound ?
                                //: An Inbound Connection from a Peer.

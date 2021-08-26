@@ -331,7 +331,7 @@ CNode* CConnman::FindNode(const std::string& addrName)
 {
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes) {
-        if (pnode->GetAddrName() == addrName) {
+        if (pnode->m_addr_name == addrName) {
             return pnode;
         }
     }
@@ -530,11 +530,6 @@ std::string ConnectionTypeAsString(ConnectionType conn_type)
     assert(false);
 }
 
-std::string CNode::GetAddrName() const
-{
-    return m_addr_name;
-}
-
 CService CNode::GetAddrLocal() const
 {
     LOCK(cs_addrLocal);
@@ -577,7 +572,7 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     X(nLastBlockTime);
     X(nTimeConnected);
     X(nTimeOffset);
-    stats.addrName = GetAddrName();
+    X(m_addr_name);
     X(nVersion);
     {
         LOCK(cs_SubVer);
@@ -2127,7 +2122,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo() const
             if (pnode->addr.IsValid()) {
                 mapConnected[pnode->addr] = pnode->IsInboundConn();
             }
-            std::string addrName = pnode->GetAddrName();
+            std::string addrName{pnode->m_addr_name};
             if (!addrName.empty()) {
                 mapConnectedByName[std::move(addrName)] = std::make_pair(pnode->IsInboundConn(), static_cast<const CService&>(pnode->addr));
             }
@@ -3004,7 +2999,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 
     TRACE6(net, outbound_message,
         pnode->GetId(),
-        pnode->GetAddrName().c_str(),
+        pnode->m_addr_name.c_str(),
         pnode->ConnectionTypeAsString().c_str(),
         msg.m_type.c_str(),
         msg.data.size(),

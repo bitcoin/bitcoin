@@ -79,7 +79,6 @@ FUZZ_TARGET_INIT(net, initialize_net)
     }
 
     (void)node.GetAddrLocal();
-    (void)node.GetAddrName();
     (void)node.GetId();
     (void)node.GetLocalNonce();
     (void)node.GetLocalServices();
