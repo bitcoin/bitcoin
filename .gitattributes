@@ -1,1 +1,11 @@
 src/clientversion.cpp export-subst
+trace.info text merge=mps
+generated text merge=mps
+dependencies text merge=mps
+*.mpl text merge=mps
+*.msd text merge=mps
+*.devkit text merge=mps
+*.mpr text merge=mps
+*.mpsr text merge=mps
+*.model text merge=mps
+*.mps text merge=mps

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="MigrationProperties">
+    <entry key="jetbrains.mps.ide.mpsmigration.v182.ReapplyPatternMigration" value="executed" />
+    <entry key="jetbrains.mps.ide.mpsmigration.v191.SaveAllJavaStubMethodRefsToShortForeignFormat" value="executed" />
+    <entry key="jetbrains.mps.ide.mpsmigration.v191.UpdateJavaStubMethodRefs" value="executed" />
+    <entry key="jetbrains.mps.ide.mpsmigration.v_2019_3.DefaultFacetExplicitPersistence" value="executed" />
+  </component>
+</project>
