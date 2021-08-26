@@ -19,4 +19,5 @@ darwin_LIBTOOL:=$(shell xcrun -f libtool)
 darwin_OTOOL:=$(shell xcrun -f otool)
 darwin_NM:=$(shell xcrun -f nm)
 darwin_INSTALL_NAME_TOOL:=$(shell xcrun -f install_name_tool)
+darwin_native_binutils=
 darwin_native_toolchain=
