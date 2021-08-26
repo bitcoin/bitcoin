@@ -37,19 +37,25 @@ builder-image:
   image: $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
   variables:
     SDK_URL: https://bitcoincore.org/depends-sources/sdks
-    OSX_SDK: "10.14"
+    XCODE_VERSION: 11.3.1
+    XCODE_BUILD_ID: 11C505
     MAKEJOBS: -j4
   before_script:
     - echo HOST=$HOST
     - |
       if [ "$HOST" = "x86_64-apple-darwin16" ]; then
-        echo "Downloading MacOS SDK"
         mkdir -p depends/SDKs
         mkdir -p depends/sdk-sources
-        if [ ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then
-          curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz
+        OSX_SDK_BASENAME="Xcode-${XCODE_VERSION}-${XCODE_BUILD_ID}-extracted-SDK-with-libcxx-headers.tar.gz"
+        OSX_SDK_PATH="depends/sdk-sources/${OSX_SDK_BASENAME}"
+        if [ ! -f "$OSX_SDK_PATH" ]; then
+          echo "Downloading MacOS SDK"
+          curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
         fi
-        tar -C depends/SDKs -xf depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz
+        if [ -f "$OSX_SDK_PATH" ]; then
+          echo "Extracting MacOS SDK"
+          tar -C depends/SDKs -xf "$OSX_SDK_PATH"
+        fi
       fi
   script:
     - make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
