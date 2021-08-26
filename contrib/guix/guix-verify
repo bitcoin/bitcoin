@@ -77,11 +77,13 @@ verify() {
         echo ""
         echo "Hint: Either the signature is invalid or the public key is missing"
         echo ""
+        failure=1
     elif ! diff --report-identical "$compare_manifest" "$current_manifest" 1>&2; then
         echo "ERR: The SHA256SUMS attestation in these two directories differ:"
         echo "    '${compare_manifest}'"
         echo "    '${current_manifest}'"
         echo ""
+        failure=1
     else
         echo "Verified: '${current_manifest}'"
         echo ""
@@ -164,5 +166,9 @@ if (( ${#all_noncodesigned[@]} + ${#all_all[@]} == 0 )); then
     echo "ERR: Unable to perform any verifications as no signature directories"
     echo "     were found"
     echo ""
+    exit 1
+fi
+
+if [ -n "$failure" ]; then
     exit 1
 fi
