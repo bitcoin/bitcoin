@@ -3,23 +3,23 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">برای ویرایش آدرس یا برچسب‌گذاری راست‌کلیک کنید</translation>
+        <translation type="unfinished">برای ویرایش نشانی یا برچسب کلیک‌راست کنید</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>ایجاد یک آدرس جدید</translation>
+        <translation>نشانی جدید ایجاد کنید</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">جدید</translation>
+        <translation type="unfinished">&amp;تازه</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>کپی‌کردن آدرس انتخاب‌شده به حافظهٔ کلیپ‌بورد سیستم</translation>
+        <translation>کپی کردن آدرس انتخاب شده به کلیپ برد سیستم</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">کپی</translation>
+        <translation type="unfinished">&amp;کپی</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -27,15 +27,15 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>حذف آدرس های انتخاب شده از لیست</translation>
+        <translation>حذف نشانی‌های انتخابی از فهرست</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">آدرس یا برچسب را برای جستجو وارد کنید</translation>
+        <translation type="unfinished">نشانی یا برچسب را برای جستجو وارد کنید</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>صدور داده نوار جاری به یک فایل</translation>
+        <translation>خروجی گرفتن داده‌های برگه‌ی فعلی،به یک فایل</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -465,18 +465,58 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>نمایش یا عدم نمایش پنجره اصلی</translation>
     </message>
     <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation type="unfinished">رمزنگاری کیف پول</translation>
+    </message>
+    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>کلیدهای خصوصی متعلق به کیف پول شما را رمزگذاری کنید
  </translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation type="unfinished">نسخه پشتیبان کیف پول</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">تغییر عبارت عبور</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation>پیام‌ها را با آدرس بیت‌کوین خود امضا کنید تا مالکیت آن‌ها را اثبات کنید</translation>
     </message>
     <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">پیام تایید</translation>
+    </message>
+    <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation>پیام ها را تأیید کنید تا مطمئن شوید با آدرس های مشخص شده بیت کوین امضا شده اند
  </translation>
+    </message>
+    <message>
+        <source>&amp;Load PSBT from file…</source>
+        <translation type="unfinished">بارگیری PSBT از پرونده</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard…</source>
+        <translation type="unfinished">بارگیری PSBT از کلیپ‌بورد</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI…</source>
+        <translation type="unfinished">تکثیر نشانی</translation>
+    </message>
+    <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">بستن کیف پول</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">ساخت کیف پول</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">بستن همهٔ کیف پول‌ها</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -493,6 +533,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Tabs toolbar</source>
         <translation>نوار ابزار</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation type="unfinished">هماهنگ‌سازی با شبکه</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -617,6 +661,21 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Click for more actions.</source>
+        <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
+        <translation type="unfinished">برای عملیات‌های بیشتر کلیک کنید.</translation>
+    </message>
+    <message>
+        <source>Disable network activity</source>
+        <extracomment>A context menu item.</extracomment>
+        <translation type="unfinished">غیرفعال‌سازی فعالیت شبکه</translation>
+    </message>
+    <message>
+        <source>Enable network activity</source>
+        <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
+        <translation type="unfinished">فعال‌سازی فعالیت شبکه</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -773,6 +832,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">کپی مقدار</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">تکثیر نشانی</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">تکثیر برچسب</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">کپی مقدار</translation>
     </message>
@@ -828,6 +895,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">در حال ساخت کیف پول &lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+    <message>
         <source>Create wallet failed</source>
         <translation type="unfinished">کیف پول "ایجاد" نشد
  </translation>
@@ -837,7 +908,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">هشدار کیف پول ایجاد کنید
  </translation>
     </message>
-    </context>
+    <message>
+        <source>Can't list signers</source>
+        <translation type="unfinished">نمی‌توان امضاکنندگان را فهرست کرد</translation>
+    </message>
+</context>
 <context>
     <name>OpenWalletActivity</name>
     <message>
@@ -853,7 +928,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">کیف پول پیش فرض
  </translation>
     </message>
-    </context>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">در حال باز کردن کیف پول &lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+</context>
 <context>
     <name>WalletController</name>
     <message>
@@ -911,6 +990,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Make Blank Wallet</source>
         <translation type="unfinished">ساخت کیف پول خالی</translation>
+    </message>
+    <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation type="unfinished">از یک دستگاه دیگر مانند کیف پول سخت‌افزاری برای ورود استفاده کنید. در ابتدا امضاکنندهٔ جانبی اسکریپت را در ترجیحات کیف پول پیکربندی کنید.</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation type="unfinished">امضاکنندهٔ جانبی</translation>
     </message>
     <message>
         <source>Create</source>
@@ -995,6 +1082,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">بیت کوین</translation>
     </message>
     <message>
+        <source>%1 GB of free space available</source>
+        <translation type="unfinished">%1 گیگابایت فضای خالی در دسترس است</translation>
+    </message>
+    <message>
+        <source>(of %1 GB needed)</source>
+        <translation type="unfinished">(%1 گیگابایت لازم است)</translation>
+    </message>
+    <message>
+        <source>(%1 GB needed for full chain)</source>
+        <translation type="unfinished">(%1 برای زنجیر کامل نیاز است)</translation>
+    </message>
+    <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">حداقل %1 گیگابایت اطلاعات در این شاخه ذخیره خواهد شد، که به مرور زمان افزایش خواهد یافت.</translation>
     </message>
@@ -1034,6 +1133,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">از آنجا که اولین مرتبه این برنامه اجرا می‌شود، شما می‌توانید محل ذخیره داده‌های %1 را انتخاب نمایید.</translation>
     </message>
     <message>
+        <source> GB</source>
+        <translation type="unfinished">گیگابایت</translation>
+    </message>
+    <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
         <translation type="unfinished">اگر تصمیم بگیرید که فضای ذخیره سازی زنجیره بلوک (هرس) را محدود کنید ، داده های تاریخی باید بارگیری و پردازش شود ، اما اگر آن را حذف کنید ، اگر شما دیسک کم استفاده کنید.
  </translation>
@@ -1066,6 +1169,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>ShutdownWindow</name>
     <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1 در حال خاموش شدن است</translation>
+    </message>
+    <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation type="unfinished">تا پیش از بسته شدن این پنجره کامپیوتر خود را خاموش نکنید.</translation>
     </message>
@@ -1084,6 +1191,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Number of blocks left</source>
         <translation type="unfinished">تعداد بلوک‌های باقیمانده</translation>
+    </message>
+    <message>
+        <source>Unknown…</source>
+        <translation type="unfinished">ناشناخته</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation type="unfinished">در حال رایانش</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1109,7 +1224,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Esc</source>
         <translation type="unfinished">خروج</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">ناشناخته. هماهنگ‌سازی سربرگ‌ها (%1، %2%) </translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1169,12 +1288,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">فعال کردن قابلیت سکه و کنترل</translation>
     </message>
     <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation type="unfinished">امضاکنندهٔ جانبی (برای نمونه، کیف پول سخت‌افزاری)</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation type="unfinished">مسیر اسکریپت امضاکنندهٔ جانبی</translation>
+    </message>
+    <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>باز کردن خودکار درگاه شبکهٔ بیت‌کوین روی روترها. تنها زمانی کار می‌کند که روتر از پروتکل UPnP پشتیبانی کند و این پروتکل فعال باشد.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>نگاشت درگاه شبکه با استفاده از پروتکل &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Map port using NA&amp;T-PMP</source>
+        <translation type="unfinished">درگاه نقشه با استفاده از NA&amp;T-PMP</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1209,6 +1340,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Window</source>
         <translation>پنجره</translation>
+    </message>
+    <message>
+        <source>Show the icon in the system tray.</source>
+        <translation type="unfinished">نمایش نمادک در سینی سامانه.</translation>
+    </message>
+    <message>
+        <source>&amp;Show tray icon</source>
+        <translation type="unfinished">نمایش نمادک سینی</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1823,6 +1962,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy &amp;URI</source>
         <translation type="unfinished">کپی کردن &amp;آدرس URL</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">تکثیر نشانی</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">تکثیر برچسب</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -2644,6 +2791,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Min amount</source>
         <translation type="unfinished">حداقل میزان وجه</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">تکثیر نشانی</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">تکثیر برچسب</translation>
     </message>
     <message>
         <source>Export Transaction History</source>

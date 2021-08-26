@@ -299,6 +299,10 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
         <translation type="unfinished">Bu tənzimləməni geri almaq bütün blok zəncirinin yenidən endirilməsini tələb edəcək. </translation>
     </message>
     <message>
+        <source>Map port using &amp;UPnP</source>
+        <translation>&amp;UPnP istifadə edən xəritə portu</translation>
+    </message>
+    <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
         <translation type="unfinished">İstifadəçi interfeys dili burada tənzimlənə bilər. Bu tənzimləmə %1 yenidən başladıldıqdan sonra təsirli olacaq.</translation>
     </message>
@@ -392,6 +396,10 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Other</source>
+        <translation type="unfinished">Başqa</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation type="unfinished">Etiket</translation>

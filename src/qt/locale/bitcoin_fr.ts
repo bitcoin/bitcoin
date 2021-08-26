@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Cliquer à droite pour modifier l’adresse ou l’étiquette</translation>
+        <translation type="unfinished">Clic droit pour modifier l’adresse ou l’étiquette</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -93,7 +93,7 @@
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">Une erreur est survenue lors de l’enregistrement de la liste d’adresses vers %1. Veuillez ressayer plus tard.</translation>
+        <translation type="unfinished">Une erreur est survenue lors de l’enregistrement de la liste d’adresses vers %1. Veuillez réessayer plus tard.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -243,7 +243,11 @@
         <source>Internal error</source>
         <translation type="unfinished">erreur interne</translation>
     </message>
-    </context>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">Une erreur interne s'est produite. %1 va tenter de continuer en toute sécurité. Il s'agit d'un problème inattendu qui peut être signalé de la manière indiquée ci-dessous.</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -257,6 +261,10 @@
     <message>
         <source>Error: %1</source>
         <translation type="unfinished">Erreur : %1</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1 ne s'est pas fermé correctement...</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -451,6 +459,10 @@
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation>Vérifier les messages pour s’assurer qu’ils ont été signés avec les adresses Bitcoin indiquées</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard…</source>
+        <translation type="unfinished">Charger la TBSP à partir du presse-papiers...</translation>
     </message>
     <message>
         <source>Close Wallet…</source>
@@ -748,6 +760,22 @@
     <message>
         <source>Copy amount</source>
         <translation type="unfinished">Copier le montant</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Copier l’adresse</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Copier &amp;l’étiquette</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Copier le &amp;montant</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID</source>
+        <translation type="unfinished">Copier l’&amp;ID de la transaction</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -1502,6 +1530,10 @@
 <context>
     <name>QRImageWidget</name>
     <message>
+        <source>&amp;Save Image…</source>
+        <translation type="unfinished">&amp;Enregistrer l’image…</translation>
+    </message>
+    <message>
         <source>&amp;Copy Image</source>
         <translation type="unfinished">&amp;Copier l’image</translation>
     </message>
@@ -1872,6 +1904,18 @@
         <translation type="unfinished">Copier l’&amp;URI</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Copier l’adresse</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Copier &amp;l’étiquette</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Copier le &amp;montant</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation type="unfinished">Impossible de déverrouiller le porte-monnaie.</translation>
     </message>
@@ -1897,6 +1941,10 @@
     <message>
         <source>Copy &amp;Address</source>
         <translation type="unfinished">Copier l’&amp;adresse</translation>
+    </message>
+    <message>
+        <source>&amp;Save Image…</source>
+        <translation type="unfinished">&amp;Enregistrer l’image…</translation>
     </message>
     <message>
         <source>Payment information</source>
@@ -2021,8 +2069,16 @@
         <translation type="unfinished">Effacer tous les champs du formulaire.</translation>
     </message>
     <message>
+        <source>Inputs…</source>
+        <translation type="unfinished">Inputs...</translation>
+    </message>
+    <message>
         <source>Dust:</source>
         <translation type="unfinished">Poussière :</translation>
+    </message>
+    <message>
+        <source>Choose…</source>
+        <translation type="unfinished">Choisir...</translation>
     </message>
     <message>
         <source>Hide transaction fee settings</source>
@@ -2097,6 +2153,15 @@
         <translation type="unfinished">%1 (%2 blocs)</translation>
     </message>
     <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet</extracomment>
+        <translation type="unfinished">Signer sur le porte-monnaie hardware</translation>
+    </message>
+    <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation type="unfinished">Connecter le porte-monnaie hardware en premier lieu.</translation>
+    </message>
+    <message>
         <source>Cr&amp;eate Unsigned</source>
         <translation type="unfinished">Cr&amp;éer une transaction non signée</translation>
     </message>
@@ -2123,6 +2188,10 @@
     <message>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">Voulez-vous vraiment envoyer ?</translation>
+    </message>
+    <message>
+        <source>Sign and send</source>
+        <translation type="unfinished">Signer et envoyer</translation>
     </message>
     <message>
         <source>Sign failed</source>
@@ -2763,6 +2832,26 @@
         <translation type="unfinished">Montant min.</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Copier l’adresse</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Copier l’&amp;étiquette</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Copier le &amp;montant</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID</source>
+        <translation type="unfinished">Copier l’&amp;ID de la transaction</translation>
+    </message>
+    <message>
+        <source>A&amp;bandon transaction</source>
+        <translation type="unfinished">A&amp;bandonner la transaction</translation>
+    </message>
+    <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">Exporter l’historique transactionnel</translation>
     </message>
@@ -2878,6 +2967,10 @@
         <translation type="unfinished">Impossible de valider la transaction</translation>
     </message>
     <message>
+        <source>Can't display address</source>
+        <translation type="unfinished">Impossible d'afficher l'adresse</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation type="unfinished">porte-monnaie par défaut</translation>
     </message>
@@ -2899,6 +2992,11 @@
     <message>
         <source>Backup Wallet</source>
         <translation type="unfinished">Sauvegarder le porte-monnaie</translation>
+    </message>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">Données du porte-monnaie</translation>
     </message>
     <message>
         <source>Backup Failed</source>
@@ -2932,6 +3030,10 @@
         <translation type="unfinished">La valeur -maxtxfee est très élevée ! Des frais aussi élevés pourraient être payés en une seule transaction.</translation>
     </message>
     <message>
+        <source>Cannot downgrade wallet from version %i to version %i. Wallet version unchanged.</source>
+        <translation type="unfinished">Impossible de rétrograder le porte-monnaie de la version %i à la version %i. La version du porte-monnaie reste inchangée.</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation type="unfinished">Impossible d’obtenir un verrou sur le répertoire de données %s. %s fonctionne probablement déjà.</translation>
     </message>
@@ -2954,6 +3056,10 @@
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
         <translation type="unfinished">Échec d’estimation des frais. L’option de frais de repli est désactivée. Attendez quelques blocs ou activez -fallbackfee.</translation>
+    </message>
+    <message>
+        <source>File %s already exists. If you are sure this is what you want, move it out of the way first.</source>
+        <translation type="unfinished">Le fichier %sexiste déjà. Si vous souhaitez continuer, veuillez vous en débarasser.</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
@@ -3064,6 +3170,10 @@
         <translation type="unfinished">Chargement terminé</translation>
     </message>
     <message>
+        <source>Error creating %s</source>
+        <translation type="unfinished">Erreur lors de la création de %s</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">Erreur d’initialisation de la base de données de blocs</translation>
     </message>
@@ -3100,12 +3210,24 @@
         <translation type="unfinished">Erreur de lecture de la base de données, fermeture en cours.</translation>
     </message>
     <message>
+        <source>Error reading next record from wallet database</source>
+        <translation type="unfinished">Erreur de lecture du registre suivant dans la base de données du porte-monnaie</translation>
+    </message>
+    <message>
         <source>Error upgrading chainstate database</source>
         <translation type="unfinished">Erreur de mise à niveau de la base de données d’état de la chaîne</translation>
     </message>
     <message>
+        <source>Error: Couldn't create cursor into database</source>
+        <translation type="unfinished">Erreur : Impossible de créer le curseur dans la base de données</translation>
+    </message>
+    <message>
         <source>Error: Disk space is low for %s</source>
         <translation type="unfinished">Erreur : Il reste peu d’espace disque sur %s</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write record to new wallet</source>
+        <translation type="unfinished">Erreur : Impossible d'inscrire les données dans le nouveau porte-monnaie</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -3114,6 +3236,10 @@
     <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation type="unfinished">Échec de réanalyse du porte-monnaie lors de l’initialisation</translation>
+    </message>
+    <message>
+        <source>Importing…</source>
+        <translation type="unfinished">Importation...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
@@ -3126,6 +3252,10 @@
     <message>
         <source>Insufficient funds</source>
         <translation type="unfinished">Fonds insuffisants</translation>
+    </message>
+    <message>
+        <source>Invalid -i2psam address or hostname: '%s'</source>
+        <translation type="unfinished">Adresse -i2psam ou hôte invalide :'%s'</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
@@ -3160,6 +3290,22 @@
         <translation type="unfinished">Masque réseau invalide indiqué dans -whitelist : « %s »</translation>
     </message>
     <message>
+        <source>Loading P2P addresses…</source>
+        <translation type="unfinished">Chargement des adresses P2P...</translation>
+    </message>
+    <message>
+        <source>Loading banlist…</source>
+        <translation type="unfinished">Chargement de la banlist...</translation>
+    </message>
+    <message>
+        <source>Loading block index…</source>
+        <translation type="unfinished">Chargement du bloc d'index...</translation>
+    </message>
+    <message>
+        <source>Loading wallet…</source>
+        <translation type="unfinished">Chargement du porte-monnaie...</translation>
+    </message>
+    <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation type="unfinished">Un port doit être précisé avec -whitebind : « %s »</translation>
     </message>
@@ -3178,6 +3324,10 @@
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation type="unfinished">Réduction de -maxconnections de %d à %d, due aux restrictions du système</translation>
+    </message>
+    <message>
+        <source>Rescanning…</source>
+        <translation type="unfinished">Rescan...</translation>
     </message>
     <message>
         <source>Section [%s] is not recognized.</source>
@@ -3204,8 +3354,16 @@
         <translation type="unfinished">Le répertoire des blocs indiqué « %s » n’existe pas.</translation>
     </message>
     <message>
+        <source>Starting network threads…</source>
+        <translation type="unfinished">Démarrage des fils d'éxécution...</translation>
+    </message>
+    <message>
         <source>The source code is available from %s.</source>
         <translation type="unfinished">Le code source se trouve sur %s.</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist</source>
+        <translation type="unfinished">Le fichier de configuration spécifié %s n'existe pas</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3244,6 +3402,10 @@
         <translation type="unfinished">La transaction doit comporter au moins un destinataire</translation>
     </message>
     <message>
+        <source>Transaction needs a change address, but we can't generate it. %s</source>
+        <translation type="unfinished">La transaction nécessite un changement d'adresse, mais nous ne pouvons pas le réaliser. %s</translation>
+    </message>
+    <message>
         <source>Transaction too large</source>
         <translation type="unfinished">La transaction est trop grosse</translation>
     </message>
@@ -3268,6 +3430,10 @@
         <translation type="unfinished">Impossible de générer les clés</translation>
     </message>
     <message>
+        <source>Unable to open %s for writing</source>
+        <translation type="unfinished"> Impossible d'ouvrir %s en écriture</translation>
+    </message>
+    <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">Impossible de démarrer le serveur HTTP. Voir le journal de débogage pour plus de détails.</translation>
     </message>
@@ -3286,6 +3452,10 @@
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation type="unfinished">Réseau inconnu précisé dans -onlynet : « %s »</translation>
+    </message>
+    <message>
+        <source>Unknown new rules activated (versionbit %i)</source>
+        <translation type="unfinished">Nouvelles règles inconnues activées (versionbit%i)</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>

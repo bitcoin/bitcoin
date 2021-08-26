@@ -318,17 +318,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n hodina</numerusform>
+            <numerusform>%n hodin</numerusform>
+            <numerusform>%n hodin</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%n den</numerusform>
+            <numerusform>%n dnů</numerusform>
+            <numerusform>%n dnů</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -436,6 +436,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Při&amp;jmi</translation>
     </message>
     <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">&amp;Možnosti</translation>
+    </message>
+    <message>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Zobraz/Skryj</translation>
     </message>
@@ -456,6 +460,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Ověř zprávy, aby ses ujistil, že byly podepsány danými bitcoinovými adresami</translation>
     </message>
     <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">Zavřít peněženku...</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">Vytvořit peněženku...</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">Zavřít všcehny peněženky...</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation>&amp;Soubor</translation>
     </message>
@@ -470,6 +486,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Tabs toolbar</source>
         <translation>Panel s listy</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk…</source>
+        <translation type="unfinished">Vytvářím index bloků na disku...</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -1020,6 +1040,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>Intro</name>
     <message>
+        <source>%1 GB of free space available</source>
+        <translation type="unfinished">%1 GB volného místa</translation>
+    </message>
+    <message>
+        <source>(of %1 GB needed)</source>
+        <translation type="unfinished">(z požadovaných %1 GB )</translation>
+    </message>
+    <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">Bude proto potřebovat do tohoto adresáře uložit nejméně %1 GB dat – tohle číslo navíc bude v průběhu času růst.</translation>
     </message>
@@ -1071,6 +1099,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
         <translation type="unfinished">Vrácení tohoto nastavení vyžaduje opětovné stažení celého blockchainu. Je rychlejší stáhnout celý řetězec nejprve a prořezat jej později. Některé pokročilé funkce budou zakázány, dokud celý blockchain nebude stažen nanovo.</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">GB</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -1128,6 +1160,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Number of blocks left</source>
         <translation type="unfinished">Zbývající počet bloků</translation>
+    </message>
+    <message>
+        <source>Unknown…</source>
+        <translation type="unfinished">Neznámý…</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation type="unfinished">propočítávám…</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1534,6 +1574,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kopírovat do schránky</translation>
     </message>
     <message>
+        <source>Save…</source>
+        <translation type="unfinished">Uložit...</translation>
+    </message>
+    <message>
         <source>Close</source>
         <translation type="unfinished">Zavřít</translation>
     </message>
@@ -1681,6 +1725,11 @@ Pokud vidíte tuto chybu, měli byste požádat, aby obchodník poskytl adresu k
         <source>Ping</source>
         <extracomment>Title of Peers Table column which indicates the current latency of the connection with the peer.</extracomment>
         <translation type="unfinished">Odezva</translation>
+    </message>
+    <message>
+        <source>Peer</source>
+        <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
+        <translation type="unfinished">Protějšek</translation>
     </message>
     <message>
         <source>Sent</source>
@@ -2307,6 +2356,10 @@ Pokud vidíte tuto chybu, měli byste požádat, aby obchodník poskytl adresu k
         <translation type="unfinished">Prach:</translation>
     </message>
     <message>
+        <source>Choose…</source>
+        <translation type="unfinished">Zvol...</translation>
+    </message>
+    <message>
         <source>Hide transaction fee settings</source>
         <translation type="unfinished">Schovat nastavení poplatků transakce - transaction fee</translation>
     </message>
@@ -2377,6 +2430,11 @@ Pokud vidíte tuto chybu, měli byste požádat, aby obchodník poskytl adresu k
     <message>
         <source>%1 (%2 blocks)</source>
         <translation type="unfinished">%1 (%2 bloků)</translation>
+    </message>
+    <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet</extracomment>
+        <translation type="unfinished">Přihlásit na zařízení</translation>
     </message>
     <message>
         <source>Cr&amp;eate Unsigned</source>

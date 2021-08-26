@@ -327,13 +327,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation>
-            <numerusform />
+            <numerusform>%n초</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation>
-            <numerusform />
+            <numerusform>%n분</numerusform>
         </translation>
     </message>
     <message numerus="yes">

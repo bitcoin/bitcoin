@@ -888,6 +888,18 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
         <translation type="unfinished">Kopioi määrä</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Kopioi osoite</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Kopioi &amp;viite</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Kopioi &amp;määrä</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">Kopioi lukumäärä</translation>
     </message>
@@ -958,7 +970,11 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
         <source>Create wallet warning</source>
         <translation type="unfinished">Luo lompakkovaroitus</translation>
     </message>
-    </context>
+    <message>
+        <source>Can't list signers</source>
+        <translation type="unfinished">Allekirjoittajia ei voida listata</translation>
+    </message>
+</context>
 <context>
     <name>OpenWalletActivity</name>
     <message>
@@ -1046,6 +1062,10 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
     <message>
         <source>Descriptor Wallet</source>
         <translation type="unfinished">Kuvaajalompakko</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation type="unfinished">Ulkopuolinen allekirjoittaja</translation>
     </message>
     <message>
         <source>Create</source>
@@ -1418,6 +1438,10 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation type="unfinished">&amp;Käytä varmistamattomia vaihtorahoja</translation>
+    </message>
+    <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation type="unfinished">Ulkopuolinen allekirjoittaja (esim. laitelompakko)</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -2321,6 +2345,22 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
         <translation type="unfinished">Kopioi &amp;URI</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Kopioi osoite</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Kopioi &amp;viite</translation>
+    </message>
+    <message>
+        <source>Copy &amp;message</source>
+        <translation type="unfinished">Kopioi &amp;viesti</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Kopioi &amp;määrä</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation type="unfinished">Lompakkoa ei voitu avata.</translation>
     </message>
@@ -2331,6 +2371,10 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Request payment to …</source>
+        <translation type="unfinished">Pyydä maksua ooitteeseen ...</translation>
+    </message>
     <message>
         <source>Address:</source>
         <translation type="unfinished">Osoite:</translation>
@@ -2358,6 +2402,14 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
     <message>
         <source>Copy &amp;Address</source>
         <translation type="unfinished">Kopioi &amp;Osoite</translation>
+    </message>
+    <message>
+        <source>&amp;Verify</source>
+        <translation type="unfinished">&amp;Varmenna</translation>
+    </message>
+    <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation type="unfinished">Varmista tämä osoite esimerkiksi laitelompakon näytöltä</translation>
     </message>
     <message>
         <source>&amp;Save Image…</source>
@@ -2578,6 +2630,10 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
         <translation type="unfinished">%1 (%2 lohkoa)</translation>
     </message>
     <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation type="unfinished">Yhdistä lompakkolaitteesi ensin.</translation>
+    </message>
+    <message>
         <source>Cr&amp;eate Unsigned</source>
         <translation type="unfinished">L&amp;uo allekirjoittamaton</translation>
     </message>
@@ -2602,8 +2658,17 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
         <translation type="unfinished">Luo allekirjoittamaton</translation>
     </message>
     <message>
+        <source>Sign and send</source>
+        <translation type="unfinished">Allekirjoita ja lähetä</translation>
+    </message>
+    <message>
         <source>Sign failed</source>
         <translation type="unfinished">Allekirjoittaminen epäonnistui</translation>
+    </message>
+    <message>
+        <source>External signer not found</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Ulkopuolista allekirjoittajaa ei löydy</translation>
     </message>
     <message>
         <source>Save Transaction Data</source>
@@ -2617,6 +2682,10 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
     <message>
         <source>PSBT saved</source>
         <translation type="unfinished">PSBT tallennettu</translation>
+    </message>
+    <message>
+        <source>External balance:</source>
+        <translation type="unfinished">Ulkopuolinen saldo:</translation>
     </message>
     <message>
         <source>or</source>
@@ -3293,6 +3362,18 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
         <translation type="unfinished">Alue...</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Kopioi osoite</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Kopioi &amp;viite</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Kopioi &amp;määrä</translation>
+    </message>
+    <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">Vie rahansiirtohistoria</translation>
     </message>
@@ -3420,6 +3501,10 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
         <translation type="unfinished">Siirtoa ei voitu tehdä</translation>
     </message>
     <message>
+        <source>Can't display address</source>
+        <translation type="unfinished">Osoitetta ei voida näyttää</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation type="unfinished">oletuslompakko</translation>
     </message>
@@ -3503,6 +3588,10 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
         <translation type="unfinished">-maxtxfee on asetettu erittäin suureksi! Tämänkokoisia kuluja saatetaan maksaa yhdessä rahansiirrossa.</translation>
     </message>
     <message>
+        <source>Cannot downgrade wallet from version %i to version %i. Wallet version unchanged.</source>
+        <translation type="unfinished">Ei voida alentaa lompakon versiota versiosta %i versioon %i. Lompakon versio pysyy ennallaan.</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation type="unfinished">Ei voida lukita data-hakemistoa %s. %s on luultavasti jo käynnissä.</translation>
     </message>
@@ -3517,6 +3606,10 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation type="unfinished">Virhe luettaessa %s! Avaimet luetttiin oikein, mutta rahansiirtotiedot tai osoitekirjan sisältö saattavat olla puutteellisia tai vääriä.</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation type="unfinished">Virhe: Dump-tiedoston versio ei ole tuettu. Tämä bitcoin-lompakon versio tukee vain version 1 dump-tiedostoja. Annetun dump-tiedoston versio %s</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
@@ -3659,6 +3752,14 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
         <translation type="unfinished">Lataus on valmis</translation>
     </message>
     <message>
+        <source>Dump file %s does not exist.</source>
+        <translation type="unfinished">Dump-tiedostoa %s ei ole olemassa.</translation>
+    </message>
+    <message>
+        <source>Error creating %s</source>
+        <translation type="unfinished">Virhe luodessa %s</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">Virhe alustaessa lohkotietokantaa</translation>
     </message>
@@ -3711,6 +3812,10 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
         <translation type="unfinished">Virhe: levytila vähissä kohteessa %s</translation>
     </message>
     <message>
+        <source>Error: Dumpfile checksum does not match. Computed %s, expected %s</source>
+        <translation type="unfinished">Virhe: Dump-tiedoston tarkistussumma ei täsmää. Laskettu %s, odotettu %s</translation>
+    </message>
+    <message>
         <source>Error: Keypool ran out, please call keypoolrefill first</source>
         <translation type="unfinished">Virhe: Avainallas tyhjentyi, ole hyvä ja kutsu keypoolrefill ensin</translation>
     </message>
@@ -3755,6 +3860,10 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
         <translation type="unfinished">Lompakon saldo ei riitä</translation>
     </message>
     <message>
+        <source>Invalid -i2psam address or hostname: '%s'</source>
+        <translation type="unfinished">Virheellinen -i2psam osoite tai isäntänimi: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid -onion address or hostname: '%s'</source>
         <translation type="unfinished">Virheellinen -onion osoite tai isäntänimi: '%s'</translation>
     </message>
@@ -3787,6 +3896,10 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
         <translation type="unfinished">Ladataan P2P-osoitteita...</translation>
     </message>
     <message>
+        <source>Loading banlist…</source>
+        <translation type="unfinished">Ladataan kieltolistaa...</translation>
+    </message>
+    <message>
         <source>Loading block index…</source>
         <translation type="unfinished">Ladataan lohkoindeksiä...</translation>
     </message>
@@ -3811,12 +3924,24 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
         <translation type="unfinished">Karsintaa ei voi toteuttaa negatiivisella arvolla.</translation>
     </message>
     <message>
+        <source>Prune mode is incompatible with -coinstatsindex.</source>
+        <translation type="unfinished">Karsintatila ei ole yhteenopiva -coinstatsindex:n kanssa.</translation>
+    </message>
+    <message>
         <source>Prune mode is incompatible with -txindex.</source>
         <translation type="unfinished">Karsittu tila ei ole yhteensopiva -txindex:n kanssa.</translation>
     </message>
     <message>
+        <source>Pruning blockstore…</source>
+        <translation type="unfinished">Karsitaan lohkovarastoa...</translation>
+    </message>
+    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation type="unfinished">Vähennetään -maxconnections arvoa %d:stä %d:hen järjestelmän rajoitusten vuoksi.</translation>
+    </message>
+    <message>
+        <source>Replaying blocks…</source>
+        <translation type="unfinished">Tarkastetaan lohkoja...</translation>
     </message>
     <message>
         <source>Rescanning…</source>
@@ -3863,6 +3988,10 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
         <translation type="unfinished">Lähdekoodi löytyy %s.</translation>
     </message>
     <message>
+        <source>The specified config file %s does not exist</source>
+        <translation type="unfinished">Määritettyä asetustiedostoa %s ei ole olemassa</translation>
+    </message>
+    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation type="unfinished">Rahansiirron määrä on liian pieni kattaakseen maksukulun</translation>
     </message>
@@ -3899,6 +4028,10 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
         <translation type="unfinished">Lähetyksessä tulee olla ainakin yksi vastaanottaja</translation>
     </message>
     <message>
+        <source>Transaction needs a change address, but we can't generate it. %s</source>
+        <translation type="unfinished">Siirtoon tarvitaan vaihto-osoite, mutta emme voi luoda sitä. %s</translation>
+    </message>
+    <message>
         <source>Transaction too large</source>
         <translation type="unfinished">Siirtosumma liian iso</translation>
     </message>
@@ -3923,6 +4056,10 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
         <translation type="unfinished">Avaimia ei voitu luoda</translation>
     </message>
     <message>
+        <source>Unable to open %s for writing</source>
+        <translation type="unfinished">Ei pystytä avaamaan %s kirjoittamista varten</translation>
+    </message>
+    <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">HTTP-palvelinta ei voitu käynnistää. Katso debug-lokista lisätietoja.</translation>
     </message>
@@ -3943,6 +4080,10 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
         <translation type="unfinished">Tuntematon verkko -onlynet parametrina: '%s'</translation>
     </message>
     <message>
+        <source>Unknown new rules activated (versionbit %i)</source>
+        <translation type="unfinished">Tuntemattomia uusia sääntöjä aktivoitu (versiobitti %i)</translation>
+    </message>
+    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation type="unfinished">Lokikategoriaa %s=%s ei tueta.</translation>
     </message>
@@ -3961,6 +4102,10 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
     <message>
         <source>Verifying blocks…</source>
         <translation type="unfinished">Varmennetaan lohkoja...</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)…</source>
+        <translation type="unfinished">Varmennetaan lompakko(ita)...</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>

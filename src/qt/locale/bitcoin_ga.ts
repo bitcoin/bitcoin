@@ -92,6 +92,11 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Easpórtáil Liosta Seoltaí</translation>
     </message>
     <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation type="unfinished">Comhad athróige camógdheighilte</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">Theip ar Easpórtáil</translation>
     </message>
@@ -892,6 +897,10 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
     <message>
         <source>Encrypt Wallet</source>
         <translation type="unfinished">Criptigh Sparán</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation type="unfinished">Ardroghanna</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -2983,6 +2992,11 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
     <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">Easpórtáil Stair Idirbheart</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation type="unfinished">Comhad athróige camógdheighilte</translation>
     </message>
     <message>
         <source>Confirmed</source>

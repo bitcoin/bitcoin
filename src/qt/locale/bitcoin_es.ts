@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Crea una nueva dirección</translation>
+        <translation>Crear una nueva dirección</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -267,6 +267,10 @@ Firmar solo es posible con direcciones del tipo Legacy.</translation>
         <source>%1 didn't yet exit safely…</source>
         <translation type="unfinished">1%1 todavía no ha terminado de forma segura...</translation>
     </message>
+    <message>
+        <source>Internal</source>
+        <translation type="unfinished">Interno</translation>
+    </message>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation>
@@ -456,8 +460,8 @@ Firmar solo es posible con direcciones del tipo Legacy.</translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>Se ha procesado %n bloque del historial de transacciones.</numerusform>
+            <numerusform>Se han procesado %n bloques del historial de transacciones.</numerusform>
         </translation>
     </message>
     <message>
@@ -577,6 +581,14 @@ Firmar solo es posible con direcciones del tipo Legacy.</translation>
     <message>
         <source>Confirmed</source>
         <translation type="unfinished">Confirmado</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">copiar dirección </translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">copiar y etiquetar </translation>
     </message>
     <message>
         <source>yes</source>
@@ -949,6 +961,14 @@ Firmar solo es posible con direcciones del tipo Legacy.</translation>
         <translation type="unfinished">&amp;Cantidad</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">copiar dirección </translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">copiar y etiquetar </translation>
+    </message>
+    <message>
         <source>Could not generate new %1 address</source>
         <translation type="unfinished">No se ha podido generar una nueva dirección %1</translation>
     </message>
@@ -1145,6 +1165,14 @@ Firmar solo es posible con direcciones del tipo Legacy.</translation>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">copiar dirección </translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">copiar y etiquetar </translation>
+    </message>
     <message>
         <source>Confirmed</source>
         <translation type="unfinished">Confirmado</translation>
