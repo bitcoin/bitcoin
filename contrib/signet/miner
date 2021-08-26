@@ -553,7 +553,7 @@ def do_calibrate(args):
     print("nbits=%08x for %ds average mining time" % (target_to_nbits(want_targ), want_time))
     return 0
 
-def bitcoin_cli(basecmd, args, **kwargs):
+def syscoin_cli(basecmd, args, **kwargs):
     cmd = basecmd + ["-signet"] + args
     logging.debug("Calling syscoin-cli: %r", cmd)
     out = subprocess.run(cmd, stdout=subprocess.PIPE, **kwargs, check=True).stdout
@@ -600,7 +600,7 @@ def main():
 
     args = parser.parse_args(sys.argv[1:])
 
-    args.bcli = lambda *a, input=b"", **kwargs: bitcoin_cli(args.cli.split(" "), list(a), input=input, **kwargs)
+    args.bcli = lambda *a, input=b"", **kwargs: syscoin_cli(args.cli.split(" "), list(a), input=input, **kwargs)
 
     if hasattr(args, "address") and hasattr(args, "descriptor"):
         if args.address is None and args.descriptor is None:
