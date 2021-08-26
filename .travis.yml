@@ -288,6 +288,7 @@ after_success:
         RUN_BENCH=true
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=integer,undefined CC=clang CXX=clang++"
+
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
       env: >-
