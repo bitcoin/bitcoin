@@ -50,6 +50,7 @@ public:
 Q_SIGNALS:
     void createWalletButtonClicked();
     void message(const QString& title, const QString& message, unsigned int style);
+    void currentWalletSet();
 
 private:
     QStackedWidget *walletStack;

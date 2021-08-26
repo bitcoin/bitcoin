@@ -114,6 +114,7 @@ SyscoinGUI::SyscoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
         connect(walletFrame, &WalletFrame::message, [this](const QString& title, const QString& message, unsigned int style) {
             this->message(title, message, style);
         });
+        connect(walletFrame, &WalletFrame::currentWalletSet, [this] { updateWalletStatus(); });
         setCentralWidget(walletFrame);
     } else
 #endif // ENABLE_WALLET
@@ -735,7 +736,6 @@ void SyscoinGUI::addWallet(WalletModel* walletModel)
     });
     connect(wallet_view, &WalletView::encryptionStatusChanged, this, &SyscoinGUI::updateWalletStatus);
     connect(wallet_view, &WalletView::incomingTransaction, this, &SyscoinGUI::incomingTransaction);
-    connect(wallet_view, &WalletView::hdEnabledStatusChanged, this, &SyscoinGUI::updateWalletStatus);
     connect(this, &SyscoinGUI::setPrivacy, wallet_view, &WalletView::setPrivacy);
     wallet_view->setPrivacy(isPrivacyModeActivated());
     const QString display_name = walletModel->getDisplayName();
@@ -1445,9 +1445,8 @@ void SyscoinGUI::setEncryptionStatus(int status)
 
 void SyscoinGUI::updateWalletStatus()
 {
-    if (!walletFrame) {
-        return;
-    }
+    assert(walletFrame);
+
     WalletView * const walletView = walletFrame->currentWalletView();
     if (!walletView) {
         return;
