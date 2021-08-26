@@ -438,7 +438,11 @@ RPCHelpMan listtransactions()
                     {"label|dummy", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "If set, should be a valid label name to return only incoming transactions\n"
                           "with the specified label, or \"*\" to disable filtering and return all transactions."},
                     {"count", RPCArg::Type::NUM, RPCArg::Default{10}, "The number of transactions to return"},
-                    {"skip", RPCArg::Type::NUM, RPCArg::Default{0}, "The number of transactions to skip"},
+                    {"options|skip", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "for backward compatibility: passing in a number instead of an object will result in {\"skip\":nnn}",
+                        {
+                            {"skip", RPCArg::Type::NUM, RPCArg::Default{0}, "The number of transactions to skip."},
+                        },
+                        },
                     {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Include transactions to watch-only addresses (see 'importaddress')"},
                 },
                 RPCResult{
@@ -471,9 +475,9 @@ RPCHelpMan listtransactions()
             "\nList the most recent 10 transactions in the systems\n"
             + HelpExampleCli("listtransactions", "") +
             "\nList transactions 100 to 120\n"
-            + HelpExampleCli("listtransactions", "\"*\" 20 100") +
+            + HelpExampleCli("listtransactions", "\"*\" 20 '{\"skip\":100}'") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("listtransactions", "\"*\", 20, 100")
+            + HelpExampleRpc("listtransactions", "\"*\", 20, '{\"skip\":100}'")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -495,8 +499,20 @@ RPCHelpMan listtransactions()
     if (!request.params[1].isNull())
         nCount = request.params[1].getInt<int>();
     int nFrom = 0;
-    if (!request.params[2].isNull())
+    const UniValue& options = request.params[2];
+    if (options.type() == UniValue::VNUM) {
+        // backward compatibility int only fallback
         nFrom = request.params[2].getInt<int>();
+    }
+    else if (!options.isNull()) {
+        RPCTypeCheckObj(options,
+            {
+                {"skip", UniValueType(UniValue::VNUM)},
+            }, /* allow missing/null keys */ true, /* disallow unknown keys */ true);
+        if (options.exists("skip")) {
+            nFrom = options["skip"].getInt<int>();
+        }
+    }
     isminefilter filter = ISMINE_SPENDABLE;
 
     if (ParseIncludeWatchonly(request.params[3], *pwallet)) {
