@@ -885,7 +885,7 @@ static void GetWalletBalances(UniValue& result)
 }
 
 /**
- * GetProgressBar contructs a progress bar with 5% intervals.
+ * GetProgressBar constructs a progress bar with 5% intervals.
  *
  * @param[in]   progress      The proportion of the progress bar to be filled between 0 and 1.
  * @param[out]  progress_bar  String representation of the progress bar.
