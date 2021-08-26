@@ -45,7 +45,7 @@ To install WSL on Windows 10 with Fall Creators Update installed (version >= 162
   * Create a new UNIX user account (this is a separate account from your Windows account)
 
 ### Install on non-system drive (D:\ , F:\ ...)
-1. Enable windows subsystem for Linux system feature
+1. Enable Windows Subsystem for Linux system feature
 * Open **Powershell** as admin
 *Run this command :*
 
