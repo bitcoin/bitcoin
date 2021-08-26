@@ -118,10 +118,6 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
 
         // Handle changes in encryption status
         connect(_walletModel, &WalletModel::encryptionStatusChanged, this, &WalletView::encryptionStatusChanged);
-        updateEncryptionStatus();
-
-        // update HD status
-        Q_EMIT hdEnabledStatusChanged();
 
         // Balloon pop-up for new transaction
         connect(_walletModel->getTransactionTableModel(), &TransactionTableModel::rowsInserted, this, &WalletView::processNewTransaction);
@@ -211,11 +207,6 @@ void WalletView::showOutOfSyncWarning(bool fShow)
     overviewPage->showOutOfSyncWarning(fShow);
 }
 
-void WalletView::updateEncryptionStatus()
-{
-    Q_EMIT encryptionStatusChanged();
-}
-
 void WalletView::encryptWallet()
 {
     if(!walletModel)
@@ -224,7 +215,7 @@ void WalletView::encryptWallet()
     dlg.setModel(walletModel);
     dlg.exec();
 
-    updateEncryptionStatus();
+    Q_EMIT encryptionStatusChanged();
 }
 
 void WalletView::backupWallet()
