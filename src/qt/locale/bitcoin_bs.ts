@@ -153,6 +153,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Otključajte novčanik</translation>
     </message>
     <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>Ova radnja treba lozinku vašeg novčanika da dešifrira novčanik.</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>Dešifrirati novčanik</translation>
+    </message>
+    <message>
         <source>Change passphrase</source>
         <translation>Promijenite lozinku</translation>
     </message>
@@ -219,6 +227,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
         <translation>Lozinka unesena za dešifriranje novčanika nije ispravna.</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>Dešifriranje novčanika neuspješno</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
@@ -979,10 +991,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Vraćanje ove postavke zahtijeva ponovno preuzimanje cijelog lanca blokova. Brže je prvo preuzeti čitav lanac i kasnije ga obrezati. Onemogućava neke napredne funkcije.</translation>
     </message>
     <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</translation>
-    </message>
-    <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
         <translation>Ako ste odlučili ograničiti skladištenje lanca blokova (obrezivanje), povijesni podaci i dalje se moraju preuzeti i obraditi, ali će se nakon toga izbrisati kako bi se smanjila upotreba diska.</translation>
     </message>
@@ -1163,6 +1171,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>&amp;Mreža</translation>
     </message>
     <message>
+        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
+        <translation>Onemogućuje neke napredne stavke ali svi blokovi će i dalje biti u potpunosti validni(provjereni). Opoziv ove postavke zahtijeva ponovno skidanje čitavog blockchaina. Stvarna iskorištenost diska može da bude nešto veća.</translation>
+    </message>
+    <message>
         <source>GB</source>
         <translation>GB</translation>
     </message>
@@ -1242,12 +1254,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Error</source>
         <translation>Greška</translation>
     </message>
+    <message>
+        <source>The configuration file could not be opened.</source>
+        <translation>Konfiguracijski falj nije bilo moguce otvoriti.</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
         <translation>Obrazac</translation>
+    </message>
+    <message>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>Moguće je da su prikazane informacije zastarjele.Vaš novčanik se automatski sinhronizira sa Bitcoin mrežom nakon što je konekcija uspostavljena, ali proces nije još uvijek dovršen.</translation>
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation>Nedavne transakcije</translation>
     </message>
     </context>
 <context>
