@@ -4634,7 +4634,7 @@ bool DumpMempool(const CTxMemPool& pool, FopenFn mockable_fopen_function, bool s
 //! Guess how far we are in the verification process at the given block index
 //! require cs_main if pindex has not been validated yet (because nChainTx might be unset)
 double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pindex) {
-    if (pindex == nullptr)
+    if (pindex == nullptr || pindex->nHeight == 0)
         return 0.0;
 
     int64_t nNow = time(nullptr);
