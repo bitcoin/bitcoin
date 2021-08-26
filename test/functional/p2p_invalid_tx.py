@@ -174,9 +174,9 @@ class InvalidTxRequestTest(BitcoinTestFramework):
                 tx_orphan_2_valid,  # The valid transaction (with sufficient fee)
             ]
         }
-        # Transactions that do not end up in the mempool
-        # tx_orphan_no_fee, because it has too low fee (p2ps[0] is not disconnected for relaying that tx)
-        # tx_orphan_invaid, because it has negative fee (p2ps[1] is disconnected for relaying that tx)
+        # Transactions that do not end up in the mempool:
+        # tx_orphan_2_no_fee, because it has too low fee (p2ps[0] is not disconnected for relaying that tx)
+        # tx_orphan_2_invalid, because it has negative fee (p2ps[1] is disconnected for relaying that tx)
         if resolve_via_block:
             # This TX has appeared in a block instead of being broadcasted via the mempool
             expected_mempool.remove(tx_withhold.hash)
