@@ -5,7 +5,6 @@
 """Test transaction signing using the signrawtransaction* RPCs."""
 
 from test_framework.blocktools import (
-    CLTV_HEIGHT,
     COINBASE_MATURITY,
     CSV_ACTIVATION_HEIGHT,
 )
@@ -310,11 +309,10 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         getcontext().prec = 8
 
         # Make sure CLTV is active
-        generate_to_height(self, self.nodes[0], CLTV_HEIGHT)
         assert self.nodes[0].getblockchaininfo()['softforks']['bip65']['active']
 
         # Create a P2WSH script with CLTV
-        script = CScript([1000, OP_CHECKLOCKTIMEVERIFY, OP_DROP])
+        script = CScript([100, OP_CHECKLOCKTIMEVERIFY, OP_DROP])
         address = script_to_p2wsh(script)
 
         # Fund that address and make the spend
