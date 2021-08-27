@@ -140,7 +140,11 @@ $(package)_config_opts_linux += -no-feature-vulkan
 $(package)_config_opts_linux += -dbus-runtime
 $(package)_config_opts_arm_linux += -platform linux-g++ -xplatform bitcoin-linux-g++
 $(package)_config_opts_i686_linux  = -xplatform linux-g++-32
+ifneq (,$(findstring -stdlib=libc++,$($(1)_cxx)))
+$(package)_config_opts_x86_64_linux = -xplatform linux-clang-libc++
+else
 $(package)_config_opts_x86_64_linux = -xplatform linux-g++-64
+endif
 $(package)_config_opts_aarch64_linux = -xplatform linux-aarch64-gnu-g++
 $(package)_config_opts_powerpc64_linux = -platform linux-g++ -xplatform bitcoin-linux-g++
 $(package)_config_opts_powerpc64le_linux = -platform linux-g++ -xplatform bitcoin-linux-g++
