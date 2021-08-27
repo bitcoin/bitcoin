@@ -30,9 +30,9 @@
 
 
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, OptionsModel *_optionsModel, QObject *parent) :
-    QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(0),
-    transactionTableModel(0),
-    recentRequestsTableModel(0),
+    QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(nullptr),
+    transactionTableModel(nullptr),
+    recentRequestsTableModel(nullptr),
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(-1),
     cachedNumISLocks(0),
@@ -487,6 +487,11 @@ static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly
                               Q_ARG(bool, fHaveWatchonly));
 }
 
+static void NotifyCanGetAddressesChanged(WalletModel* walletmodel)
+{
+    QMetaObject::invokeMethod(walletmodel, "canGetAddressesChanged");
+}
+
 void WalletModel::subscribeToCoreSignals()
 {
     // Connect signals to wallet
@@ -498,6 +503,7 @@ void WalletModel::subscribeToCoreSignals()
     m_handler_chainlock_received = m_wallet->handleChainLockReceived(std::bind(NotifyChainLockReceived, this, std::placeholders::_1));
     m_handler_show_progress = m_wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2));
     m_handler_watch_only_changed = m_wallet->handleWatchOnlyChanged(std::bind(NotifyWatchonlyChanged, this, std::placeholders::_1));
+    m_handler_can_get_addrs_changed = m_wallet->handleCanGetAddressesChanged(boost::bind(NotifyCanGetAddressesChanged, this));
 }
 
 void WalletModel::unsubscribeFromCoreSignals()
@@ -511,6 +517,7 @@ void WalletModel::unsubscribeFromCoreSignals()
     m_handler_chainlock_received->disconnect();
     m_handler_show_progress->disconnect();
     m_handler_watch_only_changed->disconnect();
+    m_handler_can_get_addrs_changed->disconnect();
 }
 
 // WalletModel::UnlockContext implementation
@@ -595,6 +602,16 @@ bool WalletModel::isWalletEnabled()
 bool WalletModel::privateKeysDisabled() const
 {
     return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
+}
+
+bool WalletModel::canGetAddresses() const
+{
+    // The wallet can provide a fresh address if:
+    // * hdEnabled(): an HD seed is present; or
+    // * it is a legacy wallet, because:
+    //     * !hdEnabled(): an HD seed is not present; and
+    //     * !IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS): private keys have not been disabled (which results in hdEnabled() == true)
+    return m_wallet->hdEnabled() || (!m_wallet->hdEnabled() && !m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
 }
 
 QString WalletModel::getWalletName() const

@@ -292,9 +292,9 @@ bool PaymentServer::ipcSendCommandLine()
 PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
     QObject(parent),
     saveURIs(true),
-    uriServer(0),
-    netManager(0),
-    optionsModel(0)
+    uriServer(nullptr),
+    netManager(nullptr),
+    optionsModel(nullptr)
 {
     // Verify that the version of the library that we linked against is
     // compatible with the version of the headers we compiled against.
@@ -317,7 +317,7 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
 
         if (!uriServer->listen(name)) {
             // constructor is called early in init, so don't use "Q_EMIT message()" here
-            QMessageBox::critical(0, tr("Payment request error"),
+            QMessageBox::critical(nullptr, tr("Payment request error"),
                 tr("Cannot start dash: click-to-pay handler"));
         }
         else {

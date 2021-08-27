@@ -108,5 +108,5 @@ const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
                     titleAddText.c_str());
         }
     }
-    return 0;
+    return nullptr;
 }

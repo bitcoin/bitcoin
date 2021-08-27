@@ -614,6 +614,7 @@ void BitcoinGUI::createToolBars()
 
 #ifdef ENABLE_WALLET
         m_wallet_selector = new QComboBox(this);
+        m_wallet_selector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
         connect(m_wallet_selector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &BitcoinGUI::setCurrentWalletBySelectorIndex);
 
         QVBoxLayout* walletSelectorLayout = new QVBoxLayout(this);
@@ -1697,7 +1698,7 @@ void BitcoinGUI::updateProxyIcon()
     bool proxy_enabled = clientModel->getProxyInfo(ip_port);
 
     if (proxy_enabled) {
-        if (labelProxyIcon->pixmap() == 0) {
+        if (labelProxyIcon->pixmap() == nullptr) {
             QString ip_port_q = QString::fromStdString(ip_port);
             labelProxyIcon->setPixmap(GUIUtil::getIcon("proxy", GUIUtil::ThemedColor::GREEN).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
             labelProxyIcon->setToolTip(tr("Proxy is <b>enabled</b>: %1").arg(ip_port_q));
@@ -1738,26 +1739,22 @@ void BitcoinGUI::detectShutdown()
 
 void BitcoinGUI::showProgress(const QString &title, int nProgress)
 {
-    if (nProgress == 0)
-    {
-        progressDialog = new QProgressDialog(title, "", 0, 100, this);
+    if (nProgress == 0) {
+        progressDialog = new QProgressDialog(title, QString(), 0, 100, this);
+        GUIUtil::PolishProgressDialog(progressDialog);
         progressDialog->setWindowModality(Qt::ApplicationModal);
         progressDialog->setMinimumDuration(0);
-        progressDialog->setCancelButton(0);
         progressDialog->setAutoClose(false);
         progressDialog->setValue(0);
-    }
-    else if (nProgress == 100)
-    {
-        if (progressDialog)
-        {
+    } else if (nProgress == 100) {
+        if (progressDialog) {
             progressDialog->close();
             progressDialog->deleteLater();
             progressDialog = nullptr;
         }
-    }
-    else if (progressDialog)
+    } else if (progressDialog) {
         progressDialog->setValue(nProgress);
+    }
 }
 
 void BitcoinGUI::setTrayIconVisible(bool fHideTrayIcon)
@@ -1818,8 +1815,8 @@ void BitcoinGUI::handleRestart(QStringList args)
 }
 
 UnitDisplayStatusBarControl::UnitDisplayStatusBarControl() :
-    optionsModel(0),
-    menu(0)
+    optionsModel(nullptr),
+    menu(nullptr)
 {
     createContextMenu();
     setToolTip(tr("Unit to show amounts in. Click to select another unit."));

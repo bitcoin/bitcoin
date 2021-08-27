@@ -21,10 +21,10 @@
 
 TrafficGraphWidget::TrafficGraphWidget(QWidget *parent) :
     QWidget(parent),
-    timer(0),
+    timer(nullptr),
     fMax(DEFAULT_SAMPLE_HEIGHT),
     nMins(0),
-    clientModel(0),
+    clientModel(nullptr),
     trafficGraphData(TrafficGraphData::Range_30m)
 {
     timer = new QTimer(this);

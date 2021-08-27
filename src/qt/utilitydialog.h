@@ -51,7 +51,7 @@ class ShutdownWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit ShutdownWindow(interfaces::Node& node, QWidget *parent=0, Qt::WindowFlags f=0);
+    explicit ShutdownWindow(interfaces::Node& node, QWidget *parent=nullptr, Qt::WindowFlags f=Qt::Widget);
     static QWidget *showShutdownWindow(interfaces::Node& node, BitcoinGUI *window);
 
 protected:

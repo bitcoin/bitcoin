@@ -24,8 +24,8 @@
 SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget* parent) :
     QDialog(parent),
     ui(new Ui::SignVerifyMessageDialog),
-    model(0),
-    pageButtons(0)
+    model(nullptr),
+    pageButtons(nullptr)
 {
     ui->setupUi(this);
 

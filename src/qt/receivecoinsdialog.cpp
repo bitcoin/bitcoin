@@ -22,8 +22,8 @@
 ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget* parent) :
     QDialog(parent),
     ui(new Ui::ReceiveCoinsDialog),
-    columnResizingFixer(0),
-    model(0)
+    columnResizingFixer(nullptr),
+    model(nullptr)
 {
     ui->setupUi(this);
 
@@ -87,8 +87,13 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
         // Last 2 columns are set by the columnResizingFixer, when the table geometry is ready.
         columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, AMOUNT_MINIMUM_COLUMN_WIDTH, DATE_COLUMN_WIDTH, this);
 
-        // eventually disable the main receive button if private key operations are disabled
-        ui->receiveButton->setEnabled(!model->privateKeysDisabled());
+        // Set the button to be enabled or disabled based on whether the wallet can give out new addresses.
+        ui->receiveButton->setEnabled(model->canGetAddresses());
+
+        // Enable/disable the receive button if the wallet is now able/unable to give out new addresses.
+        connect(model, &WalletModel::canGetAddressesChanged, [this] {
+            ui->receiveButton->setEnabled(model->canGetAddresses());
+        });
     }
 }
 

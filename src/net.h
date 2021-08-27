@@ -438,17 +438,17 @@ public:
     void SetMaxOutboundTimeframe(uint64_t timeframe);
     uint64_t GetMaxOutboundTimeframe();
 
-    //!check if the outbound target is reached
-    // if param historicalBlockServingLimit is set true, the function will
-    // response true if the limit for serving historical blocks has been reached
+    //! check if the outbound target is reached
+    //! if param historicalBlockServingLimit is set true, the function will
+    //! response true if the limit for serving historical blocks has been reached
     bool OutboundTargetReached(bool historicalBlockServingLimit);
 
-    //!response the bytes left in the current max outbound cycle
-    // in case of no limit, it will always response 0
+    //! response the bytes left in the current max outbound cycle
+    //! in case of no limit, it will always response 0
     uint64_t GetOutboundTargetBytesLeft();
 
-    //!response the time in second left in the current max outbound cycle
-    // in case of no limit, it will always response 0
+    //! response the time in second left in the current max outbound cycle
+    //! in case of no limit, it will always response 0
     uint64_t GetMaxOutboundTimeLeftInCycle();
 
     uint64_t GetTotalBytesRecv();
@@ -895,6 +895,8 @@ public:
     std::atomic_bool fDisconnect;
     std::atomic<int64_t> nDisconnectLingerTime{0};
     std::atomic_bool fSocketShutdown{false};
+    // Setting fDisconnect to true will cause the node to be disconnected the
+    // next time DisconnectNodes() runs
     std::atomic_bool fOtherSideDisconnected { false };
     // We use fRelayTxes for two purposes -
     // a) it allows us to not relay tx invs before receiving the peer's version message

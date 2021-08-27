@@ -602,8 +602,8 @@ public:
     int64_t nTimeCreated;
     int64_t nTimeExpires;
     std::string strComment;
-    //! todo: add something to note what created it (user, getnewaddress, change)
-    //!   maybe should have a map<string, string> property map
+    // todo: add something to note what created it (user, getnewaddress, change)
+    //   maybe should have a map<string, string> property map
 
     explicit CWalletKey(int64_t nExpires=0);
 
@@ -1234,6 +1234,9 @@ public:
 
     /** Watch-only address added */
     boost::signals2::signal<void (bool fHaveWatchOnly)> NotifyWatchonlyChanged;
+
+    /** Keypool has new keys */
+    boost::signals2::signal<void ()> NotifyCanGetAddressesChanged;
 
     /** IS-lock received */
     boost::signals2::signal<void ()> NotifyISLockReceived;

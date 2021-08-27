@@ -931,6 +931,21 @@ Release notes should be added to a PR-specific release note file at
 All `release-notes*` files are merged into a single
 [/doc/release-notes.md](/doc/release-notes.md) file prior to the release.
 
+Release notes
+-------------
+
+Release notes should be written for any PR that:
+
+- introduces a notable new feature
+- fixes a significant bug
+- changes an API or configuration model
+- makes any other visible change to the end-user experience.
+
+Release notes should be added to a PR-specific release note file at
+`/doc/release-notes-<PR number>.md` to avoid conflicts between multiple PRs.
+All `release-notes*` files are merged into a single
+[/doc/release-notes.md](/doc/release-notes.md) file prior to the release.
+
 RPC interface guidelines
 --------------------------
 

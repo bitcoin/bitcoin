@@ -200,8 +200,8 @@ after_script:
     - echo $TRAVIS_COMMIT_LOG
 after_success:
     - if [ "$DOCKER_BUILD" = "true" ]; then docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD && ./docker/push-docker.sh; fi
-# lint stage
     - stage: lint
+      name: 'lint'
       env:
       cache: false
       language: python
@@ -212,8 +212,9 @@ after_success:
         - set -o errexit; source .travis/lint_05_before_script.sh
       script:
         - set -o errexit; source .travis/lint_06_script.sh
-# ARM
+
     - stage: test
+      name: 'ARM  [GOAL: install]  [no unit or functional tests]'
       env: >-
         HOST=arm-linux-gnueabihf
         PACKAGES="python3 g++-arm-linux-gnueabihf"
@@ -221,39 +222,54 @@ after_success:
         RUN_FUNCTIONAL_TESTS=false
         GOAL="install"
         BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
-# Win32
+
     - stage: test
+      name: 'Win32  [GOAL: deploy]  [no gui tests]'
       env: >-
         HOST=i686-w64-mingw32
         DPKG_ADD_ARCH="i386"
         PACKAGES="python3 nsis g++-mingw-w64-i686 wine-binfmt wine32"
         GOAL="deploy"
         BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
-# Win64
+
     - stage: test
+      name: 'Win64  [GOAL: deploy]  [no gui tests]'
       env: >-
         HOST=x86_64-w64-mingw32
         PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine-binfmt wine64"
         GOAL="deploy"
         BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
-# 32-bit + dash
+
     - stage: test
+      name: '32-bit + dash  [GOAL: install]'
       env: >-
         HOST=i686-pc-linux-gnu
         PACKAGES="g++-multilib python3-zmq"
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
         CONFIG_SHELL="/bin/dash"
-# x86_64 Linux (uses qt5 dev package instead of depends Qt to speed up build and avoid timeout)
+
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
         PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev libprotobuf-dev"
         DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1"
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-debug CXXFLAGS=\"-g0 -O2\""
-# x86_64 Linux (xenial, no depends, only system libs, sanitizers: thread (TSAN))
+
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [trusty]  [depends for now]'
+      env: >-
+        HOST=x86_64-unknown-linux-gnu
+        DOCKER_NAME_TAG=ubuntu:14.04
+        PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools libicu-dev libpng-dev libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.1++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
+        RUN_FUNCTIONAL_TESTS=false
+        GOAL="install"
+        BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=no"
+
+    - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
         DOCKER_NAME_TAG=ubuntu:16.04
@@ -262,8 +278,9 @@ after_success:
         RUN_FUNCTIONAL_TESTS=false # Disabled for now. TODO identify suppressions or exclude specific tests
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=thread --disable-hardening --disable-asm CC=clang CXX=clang++"
-# x86_64 Linux (no depends, only system libs, sanitizers: undefined (UBSAN) + integer)
+
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
         PACKAGES="clang llvm python3-zmq qtbase5-dev qttools5-dev-tools libssl1.0-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
@@ -271,8 +288,9 @@ after_success:
         RUN_BENCH=true
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=integer,undefined CC=clang CXX=clang++"
-# x86_64 Linux, No wallet
+
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
         PACKAGES="clang llvm python3 libssl1.0-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev"
@@ -290,8 +308,9 @@ after_success:
         DEP_OPTS="NO_WALLET=1"
         GOAL="install"
         BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
-# Cross-Mac
+
     - stage: test
+      name: 'macOS 10.10  [GOAL: deploy]'
       env: >-
         HOST=x86_64-apple-darwin14
         PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git"
