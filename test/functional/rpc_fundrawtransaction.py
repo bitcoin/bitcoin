@@ -587,15 +587,18 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Drain the keypool.
         self.nodes[1].getnewaddress()
         self.nodes[1].getrawchangeaddress()
-        inputs = []
-        outputs = {self.nodes[0].getnewaddress():1.19999500}
+
+        # Choose 2 inputs
+        inputs = self.nodes[1].listunspent()[0:2]
+        value = sum(inp["amount"] for inp in inputs) - Decimal("0.00000500") # Pay a 500 sat fee
+        outputs = {self.nodes[0].getnewaddress():value}
         rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
         # fund a transaction that does not require a new key for the change output
         self.nodes[1].fundrawtransaction(rawtx)
 
         # fund a transaction that requires a new key for the change output
         # creating the key must be impossible because the wallet is locked
-        outputs = {self.nodes[0].getnewaddress():1.1}
+        outputs = {self.nodes[0].getnewaddress():value - Decimal("0.1")}
         rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
         assert_raises_rpc_error(-4, "Transaction needs a change address, but we can't generate it.", self.nodes[1].fundrawtransaction, rawtx)
 
