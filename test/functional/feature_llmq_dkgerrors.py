@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Dash Core developers
+# Copyright (c) 2015-2021 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -75,11 +75,11 @@ class LLMQDKGErrors(DashTestFramework):
         for m in q['members']:
             if m['proTxHash'] == proTxHash:
                 if expectedValid:
-                    assert(m['valid'])
+                    assert m['valid']
                 else:
-                    assert(not m['valid'])
+                    assert not m['valid']
             else:
-                assert(m['valid'])
+                assert m['valid']
 
     def heal_masternodes(self, blockCount):
         # We're not testing PoSe here, so lets heal the MNs :)

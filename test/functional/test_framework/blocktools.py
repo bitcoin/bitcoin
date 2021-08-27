@@ -80,7 +80,7 @@ def create_tx_with_script(prevtx, n, script_sig=b"", amount=1, script_pub_key=CS
        Can optionally pass scriptPubKey and scriptSig, default is anyone-can-spend output.
     """
     tx = CTransaction()
-    assert(n < len(prevtx.vout))
+    assert n < len(prevtx.vout)
     tx.vin.append(CTxIn(COutPoint(prevtx.sha256, n), script_sig, 0xffffffff))
     tx.vout.append(CTxOut(amount, script_pub_key))
     tx.calc_sha256()

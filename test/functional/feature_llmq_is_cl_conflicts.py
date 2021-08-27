@@ -108,7 +108,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         if test_block_conflict:
             # The block shouldn't be accepted/connected but it should be known to node 0 now
             submit_result = self.nodes[0].submitblock(ToHex(block))
-            assert(submit_result == "conflict-tx-lock")
+            assert submit_result == "conflict-tx-lock"
 
         cl = self.create_chainlock(self.nodes[0].getblockcount() + 1, block)
 
@@ -140,10 +140,10 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         submit_result = self.nodes[1].submitblock(ToHex(block))
         if test_block_conflict:
             # Node 1 should receive the block from node 0 and should not accept it again via submitblock
-            assert(submit_result == "duplicate")
+            assert submit_result == "duplicate"
         else:
             # The block should get accepted now, and at the same time prune the conflicting ISLOCKs
-            assert(submit_result is None)
+            assert submit_result is None
 
         self.wait_for_chainlocked_block_all_nodes(block.hash)
 
@@ -217,7 +217,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         self.sync_all()
 
         # Assert that the conflicting tx got mined and the locked TX is not valid
-        assert(self.nodes[0].getrawtransaction(rawtx1_txid, True)['confirmations'] > 0)
+        assert self.nodes[0].getrawtransaction(rawtx1_txid, True)['confirmations'] > 0
         assert_raises_rpc_error(-25, "Missing inputs", self.nodes[0].sendrawtransaction, rawtx2)
 
         # Create the block and the corresponding clsig but do not relay clsig yet
@@ -232,20 +232,20 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         self.test_node.send_islock(islock)
         time.sleep(5)
 
-        assert(self.nodes[0].getbestblockhash() == good_tip)
-        assert(self.nodes[1].getbestblockhash() == good_tip)
+        assert self.nodes[0].getbestblockhash() == good_tip
+        assert self.nodes[1].getbestblockhash() == good_tip
 
         # Send the actual transaction and mine it
         self.nodes[0].sendrawtransaction(rawtx2)
         self.nodes[0].generate(1)
         self.sync_all()
 
-        assert(self.nodes[0].getrawtransaction(rawtx2_txid, True)['confirmations'] > 0)
-        assert(self.nodes[1].getrawtransaction(rawtx2_txid, True)['confirmations'] > 0)
-        assert(self.nodes[0].getrawtransaction(rawtx2_txid, True)['instantlock'])
-        assert(self.nodes[1].getrawtransaction(rawtx2_txid, True)['instantlock'])
-        assert(self.nodes[0].getbestblockhash() != good_tip)
-        assert(self.nodes[1].getbestblockhash() != good_tip)
+        assert self.nodes[0].getrawtransaction(rawtx2_txid, True)['confirmations'] > 0
+        assert self.nodes[1].getrawtransaction(rawtx2_txid, True)['confirmations'] > 0
+        assert self.nodes[0].getrawtransaction(rawtx2_txid, True)['instantlock']
+        assert self.nodes[1].getrawtransaction(rawtx2_txid, True)['instantlock']
+        assert self.nodes[0].getbestblockhash() != good_tip
+        assert self.nodes[1].getbestblockhash() != good_tip
 
         # Check that the CL-ed block overrides the one with islocks
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)  # Re-enable ChainLocks to accept clsig

@@ -5,7 +5,7 @@
 
 from test_framework.messages import CTransaction, FromHex, hash256, ser_compact_size, ser_string
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_raises_rpc_error, bytes_to_hex_str, satoshi_round, wait_until
+from test_framework.util import assert_raises_rpc_error, satoshi_round, wait_until
 
 '''
 rpc_verifyislock.py
@@ -43,15 +43,15 @@ class RPCVerifyISLockTest(DashTestFramework):
         wait_until(lambda: node.quorum("hasrecsig", 100, request_id, txid))
 
         rec_sig = node.quorum("getrecsig", 100, request_id, txid)['sig']
-        assert(node.verifyislock(request_id, txid, rec_sig))
+        assert node.verifyislock(request_id, txid, rec_sig)
         # Not mined, should use maxHeight
         assert not node.verifyislock(request_id, txid, rec_sig, 1)
         node.generate(1)
-        assert(txid not in node.getrawmempool())
+        assert txid not in node.getrawmempool()
         # Mined but at higher height, should use maxHeight
         assert not node.verifyislock(request_id, txid, rec_sig, 1)
         # Mined, should ignore higher maxHeight
-        assert(node.verifyislock(request_id, txid, rec_sig, node.getblockcount() + 100))
+        assert node.verifyislock(request_id, txid, rec_sig, node.getblockcount() + 100)
 
         # Mine one more quorum to have a full active set
         self.mine_quorum()
@@ -88,10 +88,10 @@ class RPCVerifyISLockTest(DashTestFramework):
         # Verify the ISLOCK for a transaction that is not yet known by the node
         rawtx_txid = node.decoderawtransaction(rawtx)["txid"]
         assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx_txid)
-        assert node.verifyislock(request_id, rawtx_txid, bytes_to_hex_str(islock.sig), node.getblockcount())
+        assert node.verifyislock(request_id, rawtx_txid, islock.sig.hex(), node.getblockcount())
         # Send the tx and verify the ISLOCK for a now known transaction
         assert rawtx_txid == node.sendrawtransaction(rawtx)
-        assert node.verifyislock(request_id, rawtx_txid, bytes_to_hex_str(islock.sig), node.getblockcount())
+        assert node.verifyislock(request_id, rawtx_txid, islock.sig.hex(), node.getblockcount())
 
 
 if __name__ == '__main__':

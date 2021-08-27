@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Dash Core developers
+# Copyright (c) 2015-2021 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, ToHex
@@ -26,7 +26,7 @@ class DIP0020ActivationTest(BitcoinTestFramework):
 
         # We should have some coins already
         utxos = self.node.listunspent()
-        assert (len(utxos) > 0)
+        assert len(utxos) > 0
 
         # Send some coins to a P2SH address constructed using disabled opcodes
         utxo = utxos[len(utxos) - 1]
@@ -38,9 +38,9 @@ class DIP0020ActivationTest(BitcoinTestFramework):
         txid = self.node.sendrawtransaction(tx_signed_hex)
 
         # This tx should be completely valid, should be included in mempool and mined in the next block
-        assert (txid in set(self.node.getrawmempool()))
+        assert txid in set(self.node.getrawmempool())
         self.node.generate(1)
-        assert (txid not in set(self.node.getrawmempool()))
+        assert txid not in set(self.node.getrawmempool())
 
         # Create spending tx
         value = int(value - self.relayfee * COIN)
@@ -64,7 +64,7 @@ class DIP0020ActivationTest(BitcoinTestFramework):
 
         # Should be spendable now
         tx0id = self.node.sendrawtransaction(tx0_hex)
-        assert (tx0id in set(self.node.getrawmempool()))
+        assert tx0id in set(self.node.getrawmempool())
 
 
 if __name__ == '__main__':

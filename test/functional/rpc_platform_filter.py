@@ -47,7 +47,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
             conn.request('POST', '/', json.dumps(body), {"Authorization": "Basic " + str_to_b64str(auth)})
             resp = conn.getresponse()
             if should_not_match:
-                assert(resp.status != expexted_status)
+                assert resp.status != expexted_status
             else:
                 assert_equal(resp.status, expexted_status)
             conn.close()

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Dash Core developers
+# Copyright (c) 2018-2021 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str, hash256, hex_str_to_bytes, isolate_node, reconnect_isolated_node
+from test_framework.util import assert_equal, assert_raises_rpc_error, hash256, hex_str_to_bytes, isolate_node, reconnect_isolated_node
 
 '''
 p2p_instantsend.py
@@ -67,7 +67,7 @@ class InstantSendTest(DashTestFramework):
             if i == self.isolated_idx:
                 continue
             res = self.nodes[i].waitforblock(wrong_block, timeout)
-            assert (res['hash'] != wrong_block)
+            assert res['hash'] != wrong_block
             # wait for long time only for first node
             timeout = 1
         # send coins back to the controller node without waiting for confirmations
@@ -95,7 +95,7 @@ class InstantSendTest(DashTestFramework):
 
         # create doublespending transaction, but don't relay it
         dblspnd_tx = self.create_raw_tx(sender, isolated, 0.5, 1, 100)
-        dblspnd_txid = bytes_to_hex_str(hash256(hex_str_to_bytes(dblspnd_tx['hex']))[::-1])
+        dblspnd_txid = hash256(hex_str_to_bytes(dblspnd_tx['hex']))[::-1].hex()
         # isolate one node from network
         isolate_node(isolated)
         # send doublespend transaction to isolated node

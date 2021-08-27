@@ -44,10 +44,10 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                 keypath = None
                 if keytype == "inactivehdseed=1":
                     # ensure the old master is still available
-                    assert (hd_master_addr_old == addr)
+                    assert hd_master_addr_old == addr
                 elif keytype == "hdseed=1":
                     # ensure we have generated a new hd master key
-                    assert (hd_master_addr_old != addr)
+                    assert hd_master_addr_old != addr
                     hd_master_addr_ret = addr
                 elif keytype == "script=1":
                     # scripts don't have keypaths
@@ -148,13 +148,13 @@ class WalletDumpTest(BitcoinTestFramework):
 
         # Make sure the address is not IsMine before import
         result = self.nodes[0].getaddressinfo(multisig_addr)
-        assert(result['ismine'] == False)
+        assert result['ismine'] == False
 
         self.nodes[0].importwallet(wallet_unenc_dump)
 
         # Now check IsMine is true
         result = self.nodes[0].getaddressinfo(multisig_addr)
-        assert(result['ismine'] == True)
+        assert result['ismine'] == True
 
 if __name__ == '__main__':
     WalletDumpTest().main()

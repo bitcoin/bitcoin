@@ -144,7 +144,7 @@ class Socks5Server():
                 thread.start()
 
     def start(self):
-        assert(not self.running)
+        assert not self.running
         self.running = True
         self.thread = threading.Thread(None, self.run)
         self.thread.daemon = True

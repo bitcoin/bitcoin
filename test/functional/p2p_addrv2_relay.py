@@ -26,7 +26,7 @@ class AddrReceiver(P2PInterface):
         for addr in message.addrs:
             assert_equal(addr.nServices, 1)
             assert addr.ip.startswith('123.123.123.')
-            assert (8333 <= addr.port < 8343)
+            assert 8333 <= addr.port < 8343
         self.addrv2_received_and_checked = True
 
     def wait_for_addrv2(self):

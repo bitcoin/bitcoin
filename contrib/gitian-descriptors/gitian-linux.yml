@@ -26,7 +26,6 @@ packages:
 - "faketime"
 - "bsdmainutils"
 - "ca-certificates"
-- "python"
 - "python3"
 - "libxkbcommon0"
 - "ccache"

@@ -25,7 +25,7 @@ class KeyPoolTest(BitcoinTestFramework):
         addr_before_encrypting = nodes[0].getnewaddress()
         addr_before_encrypting_data = nodes[0].getaddressinfo(addr_before_encrypting)
         wallet_info_old = nodes[0].getwalletinfo()
-        assert(addr_before_encrypting_data['hdchainid'] == wallet_info_old['hdchainid'])
+        assert addr_before_encrypting_data['hdchainid'] == wallet_info_old['hdchainid']
 
         # Encrypt wallet and wait to terminate
         nodes[0].encryptwallet('test')
@@ -33,14 +33,14 @@ class KeyPoolTest(BitcoinTestFramework):
         addr = nodes[0].getnewaddress()
         addr_data = nodes[0].getaddressinfo(addr)
         wallet_info = nodes[0].getwalletinfo()
-        assert(addr_before_encrypting_data['hdchainid'] == wallet_info['hdchainid'])
-        assert(addr_data['hdchainid'] == wallet_info['hdchainid'])
+        assert addr_before_encrypting_data['hdchainid'] == wallet_info['hdchainid']
+        assert addr_data['hdchainid'] == wallet_info['hdchainid']
 
         try:
             addr = nodes[0].getnewaddress()
             raise AssertionError('Keypool should be exhausted after one address')
         except JSONRPCException as e:
-            assert(e.error['code']==-12)
+            assert e.error['code']==-12
 
         # put six (plus 2) new keys in the keypool (100% external-, +100% internal-keys, 1 in min)
         nodes[0].walletpassphrase('test', 12000)
@@ -62,7 +62,7 @@ class KeyPoolTest(BitcoinTestFramework):
             nodes[0].getrawchangeaddress()
             raise AssertionError('Keypool should be exhausted after six addresses')
         except JSONRPCException as e:
-            assert(e.error['code']==-12)
+            assert e.error['code']==-12
 
         addr = set()
         # drain the external keys
@@ -72,13 +72,13 @@ class KeyPoolTest(BitcoinTestFramework):
         addr.add(nodes[0].getnewaddress())
         addr.add(nodes[0].getnewaddress())
         addr.add(nodes[0].getnewaddress())
-        assert(len(addr) == 6)
+        assert len(addr) == 6
         # the next one should fail
         try:
             addr = nodes[0].getnewaddress()
             raise AssertionError('Keypool should be exhausted after six addresses')
         except JSONRPCException as e:
-            assert(e.error['code']==-12)
+            assert e.error['code']==-12
 
         # refill keypool with three new addresses
         nodes[0].walletpassphrase('test', 1)
@@ -95,7 +95,7 @@ class KeyPoolTest(BitcoinTestFramework):
             nodes[0].generate(1)
             raise AssertionError('Keypool should be exhausted after three addesses')
         except JSONRPCException as e:
-            assert(e.error['code']==-12)
+            assert e.error['code']==-12
 
         nodes[0].walletpassphrase('test', 100)
         nodes[0].keypoolrefill(100)

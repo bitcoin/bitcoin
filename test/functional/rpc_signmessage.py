@@ -21,18 +21,18 @@ class SignMessagesTest(BitcoinTestFramework):
         expected_signature = 'ICzMhjIUmmXcPWy2+9nw01zQMawo+s5FIy6F7VMkL+TmIeNq1j3AMEuw075os29kh5KYLbysKkDlDD+EAqERBd4='
         signature = self.nodes[0].signmessagewithprivkey(priv_key, message)
         assert_equal(expected_signature, signature)
-        assert(self.nodes[0].verifymessage(address, signature, message))
+        assert self.nodes[0].verifymessage(address, signature, message)
 
         self.log.info('test signing with an address with wallet')
         address = self.nodes[0].getnewaddress()
         signature = self.nodes[0].signmessage(address, message)
-        assert(self.nodes[0].verifymessage(address, signature, message))
+        assert self.nodes[0].verifymessage(address, signature, message)
 
         self.log.info('test verifying with another address should not work')
         other_address = self.nodes[0].getnewaddress()
         other_signature = self.nodes[0].signmessage(other_address, message)
-        assert(not self.nodes[0].verifymessage(other_address, signature, message))
-        assert(not self.nodes[0].verifymessage(address, other_signature, message))
+        assert not self.nodes[0].verifymessage(other_address, signature, message)
+        assert not self.nodes[0].verifymessage(address, other_signature, message)
 
 if __name__ == '__main__':
     SignMessagesTest().main()
