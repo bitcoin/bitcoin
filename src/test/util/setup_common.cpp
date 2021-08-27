@@ -304,11 +304,6 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
     return mempool_txn;
 }
 
-TestChain100Setup::~TestChain100Setup()
-{
-    gArgs.ForceSetArg("-segwitheight", "0");
-}
-
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx) const
 {
     return FromTx(MakeTransactionRef(tx));

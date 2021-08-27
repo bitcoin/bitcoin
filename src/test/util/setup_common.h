@@ -145,8 +145,6 @@ struct TestChain100Setup : public RegTestingSetup {
                                                       CAmount output_amount = CAmount(1 * COIN),
                                                       bool submit = true);
 
-    ~TestChain100Setup();
-
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };
