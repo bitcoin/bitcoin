@@ -154,7 +154,10 @@ std::string get_filesystem_error_message(const fs::filesystem_error& e)
 #ifdef __GLIBCXX__
 
 // reference: https://github.com/gcc-mirror/gcc/blob/gcc-7_3_0-release/libstdc%2B%2B-v3/include/std/fstream#L270
-
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+#endif
 static std::string openmodeToStr(std::ios_base::openmode mode)
 {
     switch (mode & ~std::ios_base::ate) {
@@ -192,6 +195,9 @@ static std::string openmodeToStr(std::ios_base::openmode mode)
         return std::string();
     }
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 void ifstream::open(const fs::path& p, std::ios_base::openmode mode)
 {
