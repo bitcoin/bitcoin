@@ -248,7 +248,7 @@ public:
     int64_t nLastBlockTime;
     int64_t nTimeConnected;
     int64_t nTimeOffset;
-    std::string addrName;
+    std::string m_addr_name;
     int nVersion;
     std::string cleanSubVer;
     bool fInbound;
@@ -430,6 +430,7 @@ public:
     const CAddress addr;
     // Bind address of our side of the connection
     const CAddress addrBind;
+    const std::string m_addr_name;
     //! Whether this peer is an inbound onion, i.e. connected via our Tor onion service.
     const bool m_inbound_onion;
     std::atomic<int> nVersion{0};
@@ -658,10 +659,6 @@ public:
         return nLocalServices;
     }
 
-    std::string GetAddrName() const;
-    //! Sets the addrName only if it was not previously set
-    void MaybeSetAddrName(const std::string& addrNameIn);
-
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 
     /** A ping-pong round trip has completed successfully. Update latest and minimum ping times. */
@@ -693,10 +690,7 @@ private:
     //! service advertisements.
     const ServiceFlags nLocalServices;
 
-    std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
-
-    mutable RecursiveMutex cs_addrName;
-    std::string addrName GUARDED_BY(cs_addrName);
+    std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
 
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(cs_addrLocal);

@@ -38,9 +38,6 @@ FUZZ_TARGET_INIT(net, initialize_net)
                 node.CloseSocketDisconnect();
             },
             [&] {
-                node.MaybeSetAddrName(fuzzed_data_provider.ConsumeRandomLengthString(32));
-            },
-            [&] {
                 const std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
                 if (!SanityCheckASMap(asmap)) {
                     return;
@@ -82,7 +79,6 @@ FUZZ_TARGET_INIT(net, initialize_net)
     }
 
     (void)node.GetAddrLocal();
-    (void)node.GetAddrName();
     (void)node.GetId();
     (void)node.GetLocalNonce();
     (void)node.GetLocalServices();

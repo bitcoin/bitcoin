@@ -147,7 +147,7 @@ For example:
 ```C++
 TRACE6(net, inbound_message,
     pnode->GetId(),
-    pnode->GetAddrName().c_str(),
+    pnode->m_addr_name.c_str(),
     pnode->ConnectionTypeAsString().c_str(),
     sanitizedType.c_str(),
     msg.data.size(),

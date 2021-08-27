@@ -331,7 +331,7 @@ CNode* CConnman::FindNode(const std::string& addrName)
 {
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes) {
-        if (pnode->GetAddrName() == addrName) {
+        if (pnode->m_addr_name == addrName) {
             return pnode;
         }
     }
@@ -414,14 +414,10 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                 return nullptr;
             }
             // It is possible that we already have a connection to the IP/port pszDest resolved to.
-            // In that case, drop the connection that was just created, and return the existing CNode instead.
-            // Also store the name we used to connect in that CNode, so that future FindNode() calls to that
-            // name catch this early.
+            // In that case, drop the connection that was just created.
             LOCK(cs_vNodes);
             CNode* pnode = FindNode(static_cast<CService>(addrConnect));
-            if (pnode)
-            {
-                pnode->MaybeSetAddrName(std::string(pszDest));
+            if (pnode) {
                 LogPrintf("Failed to open new connection, already connected\n");
                 return nullptr;
             }
@@ -534,19 +530,8 @@ std::string ConnectionTypeAsString(ConnectionType conn_type)
     assert(false);
 }
 
-std::string CNode::GetAddrName() const {
-    LOCK(cs_addrName);
-    return addrName;
-}
-
-void CNode::MaybeSetAddrName(const std::string& addrNameIn) {
-    LOCK(cs_addrName);
-    if (addrName.empty()) {
-        addrName = addrNameIn;
-    }
-}
-
-CService CNode::GetAddrLocal() const {
+CService CNode::GetAddrLocal() const
+{
     LOCK(cs_addrLocal);
     return addrLocal;
 }
@@ -587,7 +572,7 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     X(nLastBlockTime);
     X(nTimeConnected);
     X(nTimeOffset);
-    stats.addrName = GetAddrName();
+    X(m_addr_name);
     X(nVersion);
     {
         LOCK(cs_SubVer);
@@ -2137,7 +2122,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo() const
             if (pnode->addr.IsValid()) {
                 mapConnected[pnode->addr] = pnode->IsInboundConn();
             }
-            std::string addrName = pnode->GetAddrName();
+            std::string addrName{pnode->m_addr_name};
             if (!addrName.empty()) {
                 mapConnectedByName[std::move(addrName)] = std::make_pair(pnode->IsInboundConn(), static_cast<const CService&>(pnode->addr));
             }
@@ -2966,6 +2951,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
     : nTimeConnected(GetTimeSeconds()),
       addr(addrIn),
       addrBind(addrBindIn),
+      m_addr_name{addrNameIn.empty() ? addr.ToStringIPPort() : addrNameIn},
       m_inbound_onion(inbound_onion),
       nKeyedNetGroup(nKeyedNetGroupIn),
       id(idIn),
@@ -2975,7 +2961,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
     hSocket = hSocketIn;
-    addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
     if (conn_type_in != ConnectionType::BLOCK_RELAY) {
         m_tx_relay = std::make_unique<TxRelay>();
     }
@@ -2985,7 +2970,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
     mapRecvBytesPerMsgCmd[NET_MESSAGE_COMMAND_OTHER] = 0;
 
     if (fLogIPs) {
-        LogPrint(BCLog::NET, "Added connection to %s peer=%d\n", addrName, id);
+        LogPrint(BCLog::NET, "Added connection to %s peer=%d\n", m_addr_name, id);
     } else {
         LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
     }
@@ -3014,7 +2999,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 
     TRACE6(net, outbound_message,
         pnode->GetId(),
-        pnode->GetAddrName().c_str(),
+        pnode->m_addr_name.c_str(),
         pnode->ConnectionTypeAsString().c_str(),
         msg.m_type.c_str(),
         msg.data.size(),
