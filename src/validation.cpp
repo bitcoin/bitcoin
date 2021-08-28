@@ -6204,7 +6204,7 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
     #else
         std::string commandStr = "";
         for(const std::string &cmdStr: vecCmdLineStr) {
-            commandStr += cmdStr + " "
+            commandStr += cmdStr + " ";
         }
         LogPrintf("%s: Starting geth with command line: %s...\n", __func__, commandStr);   
         pid = fork(attempt1.string(), commandStr);
