@@ -212,6 +212,10 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
             return false;
         }
 
+        if (database->Format().starts_with("bdb")) {
+            tfm::format(std::cerr, "dump: WARNING: BDB-backed wallets have a wallet id that is not currently dumped.\n");
+        }
+
         bool ret = DumpWallet(*database, error, dump_filename);
         if (!ret && !error.empty()) {
             tfm::format(std::cerr, "%s\n", error.original);
