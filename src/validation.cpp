@@ -4464,11 +4464,11 @@ void BlockManager::Unload() {
 
     m_block_nevm_index.clear();
 }
-bool CChainState::LoadNEVMBlockIndexDB(const CChainParams& chainparams)
+bool CChainState::LoadNEVMBlockIndexDB()
 {
     // SYSCOIN
     if (!m_blockman.LoadBlockIndex(
-            chainparams.GetConsensus(), *pnevmblocktree)) {
+            m_params.GetConsensus(), *pnevmblocktree)) {
         return false;
     }
     return true;
@@ -4888,7 +4888,7 @@ bool ChainstateManager::LoadBlockIndex()
     AssertLockHeld(cs_main);
     // Load block index from databases
     // SYSCOIN
-    bool retnevm = ActiveChainstate().LoadNEVMBlockIndexDB(chainparams);
+    bool retnevm = ActiveChainstate().LoadNEVMBlockIndexDB();
     if (!retnevm) return false;
     bool needs_init = fReindex;
     if (!fReindex) {

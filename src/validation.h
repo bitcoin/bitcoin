@@ -855,11 +855,10 @@ private:
     /** Check warning conditions and do some notifications on new chain tip set. */
     void UpdateTip(const CBlockIndex* pindexNew)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
+    // SYSCOIN
+    bool LoadNEVMBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     friend ChainstateManager;
 };
-// SYSCOIN
-bool LoadNEVMBlockIndexDB(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 void PruneNEVMData(CNEVMBlockIndex* pindex);
 /**
  * Provides an interface for creating and interacting with one or two
