@@ -1098,7 +1098,7 @@ private:
     bool fAddressesInitialized{false};
     AddrMan& addrman;
     std::deque<std::string> m_addr_fetches GUARDED_BY(m_addr_fetches_mutex);
-    RecursiveMutex m_addr_fetches_mutex;
+    Mutex m_addr_fetches_mutex;
     std::vector<std::string> m_added_nodes GUARDED_BY(m_added_nodes_mutex);
     mutable RecursiveMutex m_added_nodes_mutex;
     std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
