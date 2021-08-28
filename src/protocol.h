@@ -440,7 +440,8 @@ public:
             // In the network serialization format, the encoding (v1 or v2) is determined directly by
             // the value of ADDRV2_FORMAT in the stream version, as no explicitly encoded version
             // exists in the stream.
-            assert(s.GetType() & SER_NETWORK);
+            // SYSCOIN
+            assert(s.GetType() & SER_TRANSPORT);
             use_v2 = s.GetVersion() & ADDRV2_FORMAT;
         }
 
