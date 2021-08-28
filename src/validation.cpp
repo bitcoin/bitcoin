@@ -2253,7 +2253,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         }
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
-    if (!bReverify && fNEVMConnection && pindex->nHeight >= params.nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd, fJustCheck)) {
+    if (!bReverify && fNEVMConnection && pindex->nHeight >= m_params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd, fJustCheck)) {
         return false; // state filled by ConnectNEVMCommitment
     }
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
@@ -2721,7 +2721,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
     if (!pblock) {
         std::shared_ptr<CBlock> pblockNew = std::make_shared<CBlock>();
         // SYSCOIN
-        if (!ReadBlockFromDisk(*pblockNew, pindexNew, m_params.GetConsensus(), true, &m_blockman))
+        if (!ReadBlockFromDisk(*pblockNew, pindexNew, m_params.GetConsensus(), true, &m_blockman)) {
             return AbortNode(state, "Failed to read block");
         }
         pthisBlock = pblockNew;
@@ -3421,7 +3421,7 @@ bool CChainState::ResetLastBlock() {
         // SYSCOIN do not re-validate eth txroots
         fLoaded = false;
         BlockValidationState state;
-        ActivateBestChain(state, Params());
+        ActivateBestChain(state);
         fLoaded = true;
 
         if (!state.IsValid()) {
@@ -4813,12 +4813,12 @@ bool CChainState::ReplayBlocks()
         LogPrintf("Rolling forward %s (%i)\n", pindex->GetBlockHash().ToString(), nHeight);
         // SYSCOIN
         uiInterface.ShowProgress(_("Replaying blocks…").translated, (int) ((nHeight - nForkHeight) * 100.0 / (pindexNew->nHeight - nForkHeight)) , false);
-        if (!RollforwardBlock(pindex, cache, params, mapAssetsConnect, mapMintKeysConnect, vecTXIDPairs)) return false;
+        if (!RollforwardBlock(pindex, cache, mapAssetsConnect, mapMintKeysConnect, vecTXIDPairs)) return false;
         CBlock block;
-        if (!ReadBlockFromDisk(block, pindex, params.GetConsensus())) {
+        if (!ReadBlockFromDisk(block, pindex, m_params.GetConsensus())) {
             return error("RollbackBlock(): ReadBlockFromDisk() failed at %d, hash=%s", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
         }
-        if (fNEVMConnection && pindex->nHeight >= params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd, false)) {
+        if (fNEVMConnection && pindex->nHeight >= m_params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd, false)) {
             return error("RollbackBlock(): ConnectNEVMCommitment() failed at %d, hash=%s state=%s", pindexOld->nHeight, pindexOld->GetBlockHash().ToString(), state.ToString());
         }
     }
