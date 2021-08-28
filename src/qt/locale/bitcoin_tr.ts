@@ -1531,12 +1531,20 @@ Cüzdan kilidini aç.</translation>
         <translation>PSBT diske kaydedildi.</translation>
     </message>
     <message>
+        <source>Pays transaction fee: </source>
+        <translation>İşlem ücreti:&lt;br&gt;</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation>Toplam Tutar</translation>
     </message>
     <message>
         <source>or</source>
         <translation>veya</translation>
+    </message>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation>İşlemin hala imza(lar)a ihtiyacı var.</translation>
     </message>
     <message>
         <source>Transaction status is unknown.</source>

@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Rechtermuisklik om adres of label te wijzigen</translation>
+        <translation>Rechtermuisklik om adres of label aan te passen</translation>
     </message>
     <message>
         <source>Create a new address</source>
