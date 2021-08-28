@@ -177,6 +177,7 @@ static RPCHelpMan quorum_dkgstatus()
     }
     int tipHeight = pindexTip->nHeight;
 
+    auto proTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
     UniValue minableCommitments(UniValue::VOBJ);
     UniValue quorumConnections(UniValue::VOBJ);
     if(!node.connman)
@@ -193,13 +194,13 @@ static RPCHelpMan quorum_dkgstatus()
             }
             if(!pindexQuorum)
                 continue;
-            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, false);
-            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, true);
+            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, proTxHash, false);
+            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, proTxHash, true);
             std::map<uint256, CAddress> foundConnections;
             node.connman->ForEachNode([&](CNode* pnode) {
-                LOCK(pnode->cs_mnauth);
-                if (!pnode->verifiedProRegTxHash.IsNull() && allConnections.count(pnode->verifiedProRegTxHash)) {
-                    foundConnections.try_emplace(pnode->verifiedProRegTxHash, pnode->addr);
+                auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+                if (!verifiedProRegTxHash.IsNull() && allConnections.count(verifiedProRegTxHash)) {
+                    foundConnections.try_emplace(verifiedProRegTxHash, pnode->addr);
                 }
             });
             UniValue arr(UniValue::VARR);

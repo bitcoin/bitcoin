@@ -88,9 +88,9 @@ static const int INBOUND_EVICTION_PROTECTION_TIME = 1;
 /** Number of file descriptors required for message capture **/
 static const int NUM_FDS_MESSAGE_CAPTURE = 1;
 
-static const bool DEFAULT_FORCEDNSSEED = false;
-static const bool DEFAULT_DNSSEED = true;
-static const bool DEFAULT_FIXEDSEEDS = true;
+static constexpr bool DEFAULT_FORCEDNSSEED{false};
+static constexpr bool DEFAULT_DNSSEED{true};
+static constexpr bool DEFAULT_FIXEDSEEDS{true};
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
@@ -270,7 +270,7 @@ public:
     int64_t nLastBlockTime;
     int64_t nTimeConnected;
     int64_t nTimeOffset;
-    std::string addrName;
+    std::string m_addr_name;
     int nVersion;
     std::string cleanSubVer;
     bool fInbound;
@@ -457,15 +457,16 @@ public:
     std::atomic<int64_t> nTimeFirstMessageReceived;
     std::atomic<bool> fFirstMessageIsMNAUTH;
     // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
-    bool m_masternode_connection;
+    std::atomic<bool> m_masternode_connection;
     // If 'true' this node will be disconnected after MNAUTH
-    bool m_masternode_probe_connection;
+    std::atomic<bool> m_masternode_probe_connection;
     // If 'true', we identified it as an intra-quorum relay connection
-    bool m_masternode_iqr_connection;
+    std::atomic<bool> m_masternode_iqr_connection{false};
     // Address of this peer
     const CAddress addr;
     // Bind address of our side of the connection
     const CAddress addrBind;
+    const std::string m_addr_name;
     //! Whether this peer is an inbound onion, i.e. connected via our Tor onion service.
     const bool m_inbound_onion;
     std::atomic<int> nVersion{0};
@@ -616,10 +617,10 @@ public:
     // SYSCOIN
     // Challenge sent in VERSION to be answered with MNAUTH (only happens between MNs)
     mutable RecursiveMutex cs_mnauth;
-    uint256 sentMNAuthChallenge;
-    uint256 receivedMNAuthChallenge;
-    uint256 verifiedProRegTxHash;
-    uint256 verifiedPubKeyHash;
+    uint256 sentMNAuthChallenge GUARDED_BY(cs_mnauth);
+    uint256 receivedMNAuthChallenge GUARDED_BY(cs_mnauth);
+    uint256 verifiedProRegTxHash GUARDED_BY(cs_mnauth);
+    uint256 verifiedPubKeyHash GUARDED_BY(cs_mnauth);
 
     // If true, we will announce/send him plain recovered sigs (usually true for full nodes)
     std::atomic<bool> fSendRecSigs{false};
@@ -716,11 +717,47 @@ public:
         return nLocalServices;
     }
 
-    std::string GetAddrName() const;
-    //! Sets the addrName only if it was not previously set
-    void MaybeSetAddrName(const std::string& addrNameIn);
     // SYSCOIN
     bool CanRelay() const { LOCK(cs_mnauth); return !m_masternode_connection || m_masternode_iqr_connection; }
+    uint256 GetSentMNAuthChallenge() const {
+        LOCK(cs_mnauth);
+        return sentMNAuthChallenge;
+    }
+
+    uint256 GetReceivedMNAuthChallenge() const {
+        LOCK(cs_mnauth);
+        return receivedMNAuthChallenge;
+    }
+
+    uint256 GetVerifiedProRegTxHash() const {
+        LOCK(cs_mnauth);
+        return verifiedProRegTxHash;
+    }
+
+    uint256 GetVerifiedPubKeyHash() const {
+        LOCK(cs_mnauth);
+        return verifiedPubKeyHash;
+    }
+
+    void SetSentMNAuthChallenge(const uint256& newSentMNAuthChallenge) {
+        LOCK(cs_mnauth);
+        sentMNAuthChallenge = newSentMNAuthChallenge;
+    }
+
+    void SetReceivedMNAuthChallenge(const uint256& newReceivedMNAuthChallenge) {
+        LOCK(cs_mnauth);
+        receivedMNAuthChallenge = newReceivedMNAuthChallenge;
+    }
+
+    void SetVerifiedProRegTxHash(const uint256& newVerifiedProRegTxHash) {
+        LOCK(cs_mnauth);
+        verifiedProRegTxHash = newVerifiedProRegTxHash;
+    }
+
+    void SetVerifiedPubKeyHash(const uint256& newVerifiedPubKeyHash) {
+        LOCK(cs_mnauth);
+        verifiedPubKeyHash = newVerifiedPubKeyHash;
+    }
     bool IsMasternodeConnection() const { LOCK(cs_mnauth); return m_masternode_connection; }
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 
@@ -753,10 +790,7 @@ private:
     //! service advertisements.
     const ServiceFlags nLocalServices;
 
-    std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
-
-    mutable RecursiveMutex cs_addrName;
-    std::string addrName GUARDED_BY(cs_addrName);
+    std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
 
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(cs_addrLocal);
@@ -828,6 +862,9 @@ public:
         std::vector<NetWhitebindPermissions> vWhiteBinds;
         std::vector<CService> vBinds;
         std::vector<CService> onion_binds;
+        /// True if the user did not specify -bind= or -whitebind= and thus
+        /// we should bind on `0.0.0.0` (IPv4) and `::` (IPv6).
+        bool bind_on_any;
         bool m_use_addrman_outgoing = true;
         std::vector<std::string> m_specified_outgoing;
         std::vector<std::string> m_added_nodes;
@@ -844,7 +881,7 @@ public:
         nMaxAddnode = connOptions.nMaxAddnode;
         nMaxFeeler = connOptions.nMaxFeeler;
         m_max_outbound = m_max_outbound_full_relay + m_max_outbound_block_relay + nMaxFeeler;
-        clientInterface = connOptions.uiInterface;
+        m_client_interface = connOptions.uiInterface;
         m_banman = connOptions.m_banman;
         m_msgproc = connOptions.m_msgproc;
         nSendBufferMaxSize = connOptions.nSendBufferMaxSize;
@@ -1016,6 +1053,7 @@ public:
      *
      * @param[in]   address     Address of node to try connecting to
      * @param[in]   conn_type   ConnectionType::OUTBOUND or ConnectionType::BLOCK_RELAY
+     *                          or ConnectionType::ADDR_FETCH
      * @return      bool        Returns false if there are no available
      *                          slots for this connection:
      *                          - conn_type not a supported ConnectionType
@@ -1091,10 +1129,7 @@ private:
 
     bool BindListenPort(const CService& bindAddr, bilingual_str& strError, NetPermissionFlags permissions);
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
-    bool InitBinds(
-        const std::vector<CService>& binds,
-        const std::vector<NetWhitebindPermissions>& whiteBinds,
-        const std::vector<CService>& onion_binds);
+    bool InitBinds(const Options& options);
 
     void ThreadOpenAddedConnections();
     void AddAddrFetch(const std::string& strDest);
@@ -1260,7 +1295,7 @@ private:
     int nMaxFeeler;
     int m_max_outbound;
     bool m_use_addrman_outgoing;
-    CClientUIInterface* clientInterface;
+    CClientUIInterface* m_client_interface;
     NetEventsInterface* m_msgproc;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
     BanMan* m_banman;

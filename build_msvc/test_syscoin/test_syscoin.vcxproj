@@ -16,6 +16,7 @@
     <ClCompile Include="..\..\src\test\util\*.cpp" />
     <ClCompile Include="..\..\src\wallet\test\*_fixture.cpp" />
     <ClCompile Include="..\..\src\wallet\test\*_tests.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libsyscoinconsensus\libsyscoinconsensus.vcxproj">

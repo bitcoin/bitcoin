@@ -43,7 +43,7 @@ public:
         obj.clear();
         obj.setObject();
         obj.pushKV("version", (int)nVersion);
-        obj.pushKV("height", (int)nHeight);
+        obj.pushKV("height", nHeight);
         obj.pushKV("merkleRootMNList", merkleRootMNList.ToString());
         obj.pushKV("merkleRootQuorums", merkleRootQuorums.ToString());
     }

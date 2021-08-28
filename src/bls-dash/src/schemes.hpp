@@ -226,9 +226,8 @@ public:
  * This scheme reflects the Sign/Verify behaviour of older bls-signatures library versions (<0.1.29).
  */
 class LegacySchemeMPL : public CoreMPL {
-
+    using CoreMPL::Aggregate;
 public:
-    using CoreMPL::Aggregate; // imports both declarations from CoreMPL
     virtual ~LegacySchemeMPL() {};
     LegacySchemeMPL() : CoreMPL(std::string{}) {}
 

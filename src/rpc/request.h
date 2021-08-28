@@ -10,7 +10,8 @@
 #include <string>
 
 #include <univalue.h>
-
+// SYSCOIN
+struct NodeContext;
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id);
 UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id);
 std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id);
@@ -36,6 +37,8 @@ public:
     std::string authUser;
     std::string peerAddr;
     std::any context;
+    // SYSCOIN
+    NodeContext *nodeContext{nullptr};
 
     void parse(const UniValue& valRequest);
 };

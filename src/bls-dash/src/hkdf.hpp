@@ -15,7 +15,7 @@
 #ifndef SRC_BLSHKDF_HPP_
 #define SRC_BLSHKDF_HPP_
 
-#include <relic_conf.h>
+#include "relic_conf.h"
 #include <math.h>
 
 #if defined GMP && ARITH == GMP

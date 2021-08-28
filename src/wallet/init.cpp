@@ -37,7 +37,7 @@ public:
     //! Add wallets that should be opened to list of chain clients.
     void Construct(NodeContext& node) const override;
     // SYSCOIN
-    void AutoLockMasternodeCollaterals() const override;
+    void AutoLockMasternodeCollaterals(NodeContext& node) const override;
 };
 
 const WalletInitInterface& g_wallet_init_interface = WalletInit();
@@ -141,9 +141,19 @@ void WalletInit::Construct(NodeContext& node) const
     node.chain_clients.emplace_back(std::move(wallet_client));
 }
 // SYSCOIN
-void WalletInit::AutoLockMasternodeCollaterals() const
+void WalletInit::AutoLockMasternodeCollaterals(NodeContext& node) const
 {
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+    if(!node.wallet_client) {
+        LogPrintf("Wallet disabled, cannot lock masternode collateral!\n");
+        return;
+    }
+    WalletContext* walletContext = node.wallet_client->context();
+    if(!walletContext) {
+        LogPrintf("Wallet context not found, cannot lock masternode collateral!\n");
+        return;
+    }
+    LogPrintf("Locking masternode collateral!\n");
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(*walletContext)) {
         pwallet->AutoLockMasternodeCollaterals();
     }
 }

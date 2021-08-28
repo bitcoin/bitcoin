@@ -3,8 +3,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Pattern rule to print variables, e.g. make print-top_srcdir
-print-%:
-	@echo '$*' = '$($*)'
+print-%: FORCE
+	@echo '$*'='$($*)'
 
 DIST_SUBDIRS = secp256k1 univalue
 
@@ -34,11 +34,11 @@ SYSCOIN_INCLUDES += $(LIBCURL_CFLAGS)
 
 if EMBEDDED_CHIABLS
 LIBCHIA = bls-dash/build/libbls-dash.a
-LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIA) -lgmp
+LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIA) $(GMP_LIBS)
 $(LIBCHIA):
 	cd $(srcdir)/bls-dash/build && $(MAKE) $(AM_MAKEFLAGS)
 else
-LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIABLS_LIBS) -lgmp
+LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIABLS_LIBS) $(GMP_LIBS)
 endif
 
 LIBSYSCOIN_SERVER=libsyscoin_server.a
@@ -144,8 +144,6 @@ SYSCOIN_CORE_H = \
   governance/governancevalidators.h \
   governance/governancevote.h \
   governance/governancevotedb.h \
-  concurrentqueue.h \
-  ctpl.h \
   cxxtimer.hpp \
   evo/cbtx.h \
   evo/deterministicmns.h \
@@ -195,8 +193,11 @@ SYSCOIN_CORE_H = \
   core_memusage.h \
   cuckoocache.h \
   dbwrapper.h \
+  deploymentinfo.h \
+  deploymentstatus.h \
   external_signer.h \
   flatfile.h \
+  ctpl_stl.h \
   fs.h \
   httprpc.h \
   httpserver.h \
@@ -339,7 +340,6 @@ SYSCOIN_CORE_H = \
   validation.h \
   validationinterface.h \
   versionbits.h \
-  versionbitsinfo.h \
   wallet/bdb.h \
   wallet/coincontrol.h \
   wallet/coinselection.h \
@@ -492,6 +492,7 @@ libsyscoin_server_a_SOURCES = \
   chain.cpp \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
+  deploymentstatus.cpp \
   flatfile.cpp \
   httprpc.cpp \
   httpserver.cpp \
@@ -725,6 +726,7 @@ libsyscoin_common_a_SOURCES = \
   core_read.cpp \
   core_write.cpp \
   dbwrapper.cpp \
+  deploymentinfo.cpp \
   external_signer.cpp \
   init/common.cpp \
   key.cpp \
@@ -748,7 +750,6 @@ libsyscoin_common_a_SOURCES = \
   script/sign.cpp \
   script/signingprovider.cpp \
   script/standard.cpp \
-  versionbitsinfo.cpp \
   warnings.cpp \
   $(SYSCOIN_CORE_H)
 
@@ -1027,23 +1028,23 @@ clean-local:
 check-symbols: $(bin_PROGRAMS)
 if TARGET_DARWIN
 	@echo "Checking macOS dynamic libraries..."
-	$(AM_V_at) OTOOL=$(OTOOL) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
+	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
 endif
 
 if TARGET_WINDOWS
 	@echo "Checking Windows dynamic libraries..."
-	$(AM_V_at) OBJDUMP=$(OBJDUMP) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
+	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
 endif
 
 if GLIBC_BACK_COMPAT
 	@echo "Checking glibc back compat..."
-	$(AM_V_at) CPPFILT=$(CPPFILT) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
+	$(AM_V_at) CPPFILT='$(CPPFILT)' $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
 endif
 
 check-security: $(bin_PROGRAMS)
 if HARDEN
 	@echo "Checking binary security..."
-	$(AM_V_at) OBJDUMP=$(OBJDUMP) OTOOL=$(OTOOL) $(PYTHON) $(top_srcdir)/contrib/devtools/security-check.py $(bin_PROGRAMS)
+	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/security-check.py $(bin_PROGRAMS)
 endif
 
 libsyscoin_ipc_mpgen_input = \
@@ -1055,9 +1056,11 @@ EXTRA_DIST += $(libsyscoin_ipc_mpgen_input)
 if BUILD_MULTIPROCESS
 LIBSYSCOIN_IPC=libsyscoin_ipc.a
 libsyscoin_ipc_a_SOURCES = \
+  ipc/capnp/context.h \
   ipc/capnp/init-types.h \
   ipc/capnp/protocol.cpp \
   ipc/capnp/protocol.h \
+  ipc/context.h \
   ipc/exception.h \
   ipc/interfaces.cpp \
   ipc/process.cpp \

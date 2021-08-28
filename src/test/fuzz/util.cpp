@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <pubkey.h>
 #include <test/fuzz/util.h>
 #include <test/util/script.h>
 #include <util/rbf.h>
@@ -303,4 +304,197 @@ uint32_t ConsumeSequence(FuzzedDataProvider& fuzzed_data_provider) noexcept
                    MAX_BIP125_RBF_SEQUENCE,
                }) :
                fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+}
+
+CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    CTxDestination tx_destination;
+    const size_t call_size{CallOneOf(
+        fuzzed_data_provider,
+        [&] {
+            tx_destination = CNoDestination{};
+        },
+        [&] {
+            tx_destination = PKHash{ConsumeUInt160(fuzzed_data_provider)};
+        },
+        [&] {
+            tx_destination = ScriptHash{ConsumeUInt160(fuzzed_data_provider)};
+        },
+        [&] {
+            tx_destination = WitnessV0ScriptHash{ConsumeUInt256(fuzzed_data_provider)};
+        },
+        [&] {
+            tx_destination = WitnessV0KeyHash{ConsumeUInt160(fuzzed_data_provider)};
+        },
+        [&] {
+            tx_destination = WitnessV1Taproot{XOnlyPubKey{ConsumeUInt256(fuzzed_data_provider)}};
+        },
+        [&] {
+            WitnessUnknown witness_unknown{};
+            witness_unknown.version = fuzzed_data_provider.ConsumeIntegralInRange(2, 16);
+            std::vector<uint8_t> witness_unknown_program_1{fuzzed_data_provider.ConsumeBytes<uint8_t>(40)};
+            if (witness_unknown_program_1.size() < 2) {
+                witness_unknown_program_1 = {0, 0};
+            }
+            witness_unknown.length = witness_unknown_program_1.size();
+            std::copy(witness_unknown_program_1.begin(), witness_unknown_program_1.end(), witness_unknown.program);
+            tx_destination = witness_unknown;
+        })};
+    Assert(call_size == std::variant_size_v<CTxDestination>);
+    return tx_destination;
+}
+
+CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzzed_data_provider, const CTransaction& tx) noexcept
+{
+    // Avoid:
+    // policy/feerate.cpp:28:34: runtime error: signed integer overflow: 34873208148477500 * 1000 cannot be represented in type 'long'
+    //
+    // Reproduce using CFeeRate(348732081484775, 10).GetFeePerK()
+    const CAmount fee = std::min<CAmount>(ConsumeMoney(fuzzed_data_provider), std::numeric_limits<CAmount>::max() / static_cast<CAmount>(100000));
+    assert(MoneyRange(fee));
+    const int64_t time = fuzzed_data_provider.ConsumeIntegral<int64_t>();
+    const unsigned int entry_height = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
+    const bool spends_coinbase = fuzzed_data_provider.ConsumeBool();
+    const unsigned int sig_op_cost = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, MAX_BLOCK_SIGOPS_COST);
+    return CTxMemPoolEntry{MakeTransactionRef(tx), fee, time, entry_height, spends_coinbase, sig_op_cost, {}};
+}
+
+bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept
+{
+    for (const CTxIn& tx_in : tx.vin) {
+        const Coin& coin = inputs.AccessCoin(tx_in.prevout);
+        if (coin.IsSpent()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    const Network network = fuzzed_data_provider.PickValueInArray({Network::NET_IPV4, Network::NET_IPV6, Network::NET_INTERNAL, Network::NET_ONION});
+    CNetAddr net_addr;
+    if (network == Network::NET_IPV4) {
+        in_addr v4_addr = {};
+        v4_addr.s_addr = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+        net_addr = CNetAddr{v4_addr};
+    } else if (network == Network::NET_IPV6) {
+        if (fuzzed_data_provider.remaining_bytes() >= 16) {
+            in6_addr v6_addr = {};
+            memcpy(v6_addr.s6_addr, fuzzed_data_provider.ConsumeBytes<uint8_t>(16).data(), 16);
+            net_addr = CNetAddr{v6_addr, fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
+        }
+    } else if (network == Network::NET_INTERNAL) {
+        net_addr.SetInternal(fuzzed_data_provider.ConsumeBytesAsString(32));
+    } else if (network == Network::NET_ONION) {
+        net_addr.SetSpecial(fuzzed_data_provider.ConsumeBytesAsString(32));
+    }
+    return net_addr;
+}
+
+FILE* FuzzedFileProvider::open()
+{
+    SetFuzzedErrNo(m_fuzzed_data_provider);
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        return nullptr;
+    }
+    std::string mode;
+    CallOneOf(
+        m_fuzzed_data_provider,
+        [&] {
+            mode = "r";
+        },
+        [&] {
+            mode = "r+";
+        },
+        [&] {
+            mode = "w";
+        },
+        [&] {
+            mode = "w+";
+        },
+        [&] {
+            mode = "a";
+        },
+        [&] {
+            mode = "a+";
+        });
+#if defined _GNU_SOURCE && !defined __ANDROID__
+    const cookie_io_functions_t io_hooks = {
+        FuzzedFileProvider::read,
+        FuzzedFileProvider::write,
+        FuzzedFileProvider::seek,
+        FuzzedFileProvider::close,
+    };
+    return fopencookie(this, mode.c_str(), io_hooks);
+#else
+    (void)mode;
+    return nullptr;
+#endif
+}
+
+ssize_t FuzzedFileProvider::read(void* cookie, char* buf, size_t size)
+{
+    FuzzedFileProvider* fuzzed_file = (FuzzedFileProvider*)cookie;
+    SetFuzzedErrNo(fuzzed_file->m_fuzzed_data_provider);
+    if (buf == nullptr || size == 0 || fuzzed_file->m_fuzzed_data_provider.ConsumeBool()) {
+        return fuzzed_file->m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
+    }
+    const std::vector<uint8_t> random_bytes = fuzzed_file->m_fuzzed_data_provider.ConsumeBytes<uint8_t>(size);
+    if (random_bytes.empty()) {
+        return 0;
+    }
+    std::memcpy(buf, random_bytes.data(), random_bytes.size());
+    if (AdditionOverflow(fuzzed_file->m_offset, (int64_t)random_bytes.size())) {
+        return fuzzed_file->m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
+    }
+    fuzzed_file->m_offset += random_bytes.size();
+    return random_bytes.size();
+}
+
+ssize_t FuzzedFileProvider::write(void* cookie, const char* buf, size_t size)
+{
+    FuzzedFileProvider* fuzzed_file = (FuzzedFileProvider*)cookie;
+    SetFuzzedErrNo(fuzzed_file->m_fuzzed_data_provider);
+    const ssize_t n = fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<ssize_t>(0, size);
+    if (AdditionOverflow(fuzzed_file->m_offset, (int64_t)n)) {
+        return fuzzed_file->m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
+    }
+    fuzzed_file->m_offset += n;
+    return n;
+}
+
+int FuzzedFileProvider::seek(void* cookie, int64_t* offset, int whence)
+{
+    assert(whence == SEEK_SET || whence == SEEK_CUR || whence == SEEK_END);
+    FuzzedFileProvider* fuzzed_file = (FuzzedFileProvider*)cookie;
+    SetFuzzedErrNo(fuzzed_file->m_fuzzed_data_provider);
+    int64_t new_offset = 0;
+    if (whence == SEEK_SET) {
+        new_offset = *offset;
+    } else if (whence == SEEK_CUR) {
+        if (AdditionOverflow(fuzzed_file->m_offset, *offset)) {
+            return -1;
+        }
+        new_offset = fuzzed_file->m_offset + *offset;
+    } else if (whence == SEEK_END) {
+        const int64_t n = fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, 4096);
+        if (AdditionOverflow(n, *offset)) {
+            return -1;
+        }
+        new_offset = n + *offset;
+    }
+    if (new_offset < 0) {
+        return -1;
+    }
+    fuzzed_file->m_offset = new_offset;
+    *offset = new_offset;
+    return fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<int>(-1, 0);
+}
+
+int FuzzedFileProvider::close(void* cookie)
+{
+    FuzzedFileProvider* fuzzed_file = (FuzzedFileProvider*)cookie;
+    SetFuzzedErrNo(fuzzed_file->m_fuzzed_data_provider);
+    return fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<int>(-1, 0);
 }

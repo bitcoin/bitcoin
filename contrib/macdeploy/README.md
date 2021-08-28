@@ -16,7 +16,10 @@ Our current macOS SDK
 (`Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz`) can be
 extracted from
 [Xcode_12.1.xip](https://download.developer.apple.com/Developer_Tools/Xcode_12.1/Xcode_12.1.xip).
-An Apple ID is needed to download this.
+Alternatively, after logging in to your account go to 'Downloads', then 'More'
+and look for [`Xcode_12.1`](https://download.developer.apple.com/Developer_Tools/Xcode_12.1/Xcode_12.1.xip).
+An Apple ID and cookies enabled for the hostname are needed to download this.
+The `sha256sum` of the archive should be `612443b1894b39368a596ea1607f30cbb0481ad44d5e29c75edb71a6d2cf050f`.
 
 After Xcode version 7.x, Apple started shipping the `Xcode.app` in a `.xip`
 archive. This makes the SDK less-trivial to extract on non-macOS machines. One
@@ -76,7 +79,7 @@ and its `libLTO.so` rather than those from `llvmgcc`, as it was originally done 
 
 To complicate things further, all builds must target an Apple SDK. These SDKs are free to
 download, but not redistributable. To obtain it, register for an Apple Developer Account,
-then download [Xcode_11.3.1](https://download.developer.apple.com/Developer_Tools/Xcode_11.3.1/Xcode_11.3.1.xip).
+then download [Xcode_12.1](https://download.developer.apple.com/Developer_Tools/Xcode_12.1/Xcode_12.1.xip).
 
 This file is many gigabytes in size, but most (but not all) of what we need is
 contained only in a single directory:

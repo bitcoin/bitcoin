@@ -6,7 +6,7 @@
 
 import time
 
-from test_framework.messages import COIN, MAX_BLOCK_BASE_SIZE
+from test_framework.messages import COIN, MAX_BLOCK_WEIGHT
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, create_confirmed_utxos, create_lots_of_big_transactions, gen_return_txouts
 
@@ -48,7 +48,7 @@ class PrioritiseTransactionTest(SyscoinTestFramework):
         self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
         # SYSCOIN
         utxo_count = 360
-        utxos = create_confirmed_utxos(self.relayfee, self.nodes[0], utxo_count)
+        utxos = create_confirmed_utxos(self, self.relayfee, self.nodes[0], utxo_count)
         base_fee = self.relayfee*100 # our transactions are smaller than 100kb
         txids = []
 
@@ -61,15 +61,15 @@ class PrioritiseTransactionTest(SyscoinTestFramework):
             txids[i] = create_lots_of_big_transactions(self.nodes[0], self.txouts, utxos[start_range:end_range], end_range - start_range, (i+1)*base_fee)
 
         # Make sure that the size of each group of transactions exceeds
-        # MAX_BLOCK_BASE_SIZE -- otherwise the test needs to be revised to create
-        # more transactions.
+        # MAX_BLOCK_WEIGHT // 4 -- otherwise the test needs to be revised to
+        # create more transactions.
         mempool = self.nodes[0].getrawmempool(True)
         sizes = [0, 0, 0]
         for i in range(3):
             for j in txids[i]:
                 assert j in mempool
                 sizes[i] += mempool[j]['vsize']
-            assert sizes[i] > MAX_BLOCK_BASE_SIZE  # Fail => raise utxo_count
+            assert sizes[i] > MAX_BLOCK_WEIGHT // 4  # Fail => raise utxo_count
 
         # add a fee delta to something in the cheapest bucket and make sure it gets mined
         # also check that a different entry in the cheapest bucket is NOT mined

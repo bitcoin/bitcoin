@@ -63,18 +63,17 @@ bool IsSpecialTx(const CTransaction& tx)
 
 bool ProcessSpecialTxsInBlock(BlockManager &blockman, const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots)
 {
-    static int64_t nTimeLoop = 0;
-    static int64_t nTimeQuorum = 0;
-    static int64_t nTimeDMN = 0;
-    static int64_t nTimeMerkle = 0;
-
     try {
+        static int64_t nTimeLoop = 0;
+        static int64_t nTimeQuorum = 0;
+        static int64_t nTimeDMN = 0;
+        static int64_t nTimeMerkle = 0;
+
         int64_t nTime1 = GetTimeMicros();
 
-        for (size_t i = 0; i < block.vtx.size(); i++) {
-            const CTransaction& tx = *block.vtx[i];
+        for (const auto& ptr_tx : block.vtx) {
             TxValidationState txstate;
-            if (!CheckSpecialTx(blockman, tx, pindex->pprev, txstate, view, false)) {
+            if (!CheckSpecialTx(blockman, *ptr_tx, pindex->pprev, txstate, view, false)) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, txstate.GetRejectReason());
             }
         }

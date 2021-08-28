@@ -5,11 +5,12 @@
 #ifndef SYSCOIN_NODE_BLOCKSTORAGE_H
 #define SYSCOIN_NODE_BLOCKSTORAGE_H
 
-#include <cstdint>
-#include <vector>
-
 #include <fs.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
+
+#include <atomic>
+#include <cstdint>
+#include <vector>
 
 class ArgsManager;
 class BlockValidationState;
@@ -30,7 +31,8 @@ struct FlatFilePos;
 namespace Consensus {
 struct Params;
 }
-
+// SYSCOIN
+struct NodeContext;
 static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
 
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
@@ -83,6 +85,6 @@ bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& st
 
 FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp);
 // SYSCOIN
-void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args, CDSNotificationInterface* pdsNotificationInterface, std::unique_ptr<CDeterministicMNManager> &deterministicMNManager, const WalletInitInterface &g_wallet_init_interface);
+void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args, CDSNotificationInterface* pdsNotificationInterface, std::unique_ptr<CDeterministicMNManager> &deterministicMNManager, const WalletInitInterface &g_wallet_init_interface, NodeContext& node);
 
 #endif // SYSCOIN_NODE_BLOCKSTORAGE_H

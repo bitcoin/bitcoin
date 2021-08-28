@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
 
     // Try to sign the mutated input
     SignatureData sigdata;
-    BOOST_CHECK(spk_man->FillPSBT(psbtx, SIGHASH_ALL, true, true) != TransactionError::OK);
+    BOOST_CHECK(spk_man->FillPSBT(psbtx, PrecomputePSBTData(psbtx), SIGHASH_ALL, true, true) != TransactionError::OK);
 }
 
 BOOST_AUTO_TEST_CASE(parse_hd_keypath)

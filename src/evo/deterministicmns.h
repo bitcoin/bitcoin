@@ -17,11 +17,11 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <script/standard.h>
+#include <interfaces/chain.h>
 class CBlock;
 class CBlockIndex;
 class BlockValidationState;
 class CSimplifiedMNListDiff;
-class ChainstateManager;
 namespace llmq
 {
     class CFinalCommitment;
@@ -220,7 +220,7 @@ public:
     uint64_t GetInternalId() const;
 
     std::string ToString() const;
-    void ToJson(ChainstateManager& chainman, UniValue& obj) const;
+    void ToJson(interfaces::Chain& chain, UniValue& obj) const;
 };
 typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
 
@@ -355,7 +355,7 @@ public:
     }
     CDeterministicMNCPtr GetMN(const uint256& proTxHash) const;
     CDeterministicMNCPtr GetValidMN(const uint256& proTxHash) const;
-    CDeterministicMNCPtr GetMNByOperatorKey(const CBLSPublicKey& pubKey);
+    CDeterministicMNCPtr GetMNByOperatorKey(const CBLSPublicKey& pubKey) const;
     CDeterministicMNCPtr GetMNByCollateral(const COutPoint& collateralOutpoint) const;
     CDeterministicMNCPtr GetValidMNByCollateral(const COutPoint& collateralOutpoint) const;
     CDeterministicMNCPtr GetMNByService(const CService& service) const;

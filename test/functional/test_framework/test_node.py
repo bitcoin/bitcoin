@@ -112,10 +112,10 @@ class TestNode():
             self.args = ["valgrind", "--suppressions={}".format(suppressions_file),
                          "--gen-suppressions=all", "--exit-on-first-error=yes",
                          "--error-exitcode=1", "--quiet"] + self.args
-
-        if self.version_is_at_least(190000):
+        # SYSCOIN
+        if self.version_is_at_least(4010300):
             self.args.append("-logthreadnames")
-        if self.version_is_at_least(219900):
+        if self.version_is_at_least(4010300):
             self.args.append("-logsourcelocations")
 
         self.cli = TestNodeCLI(syscoin_cli, self.datadir)
@@ -261,7 +261,7 @@ class TestNode():
                     return
                 self.rpc = rpc
                 self.rpc_connected = True
-                self.url = self.rpc.url
+                self.url = self.rpc.rpc_url
                 return
             except JSONRPCException as e:  # Initialization phase
                 # -28 RPC in warmup
@@ -560,9 +560,8 @@ class TestNode():
         return p2p_conn
 
     def add_outbound_p2p_connection(self, p2p_conn, *, p2p_idx, connection_type="outbound-full-relay", **kwargs):
-        """Add an outbound p2p connection from node. Either
-        full-relay("outbound-full-relay") or
-        block-relay-only("block-relay-only") connection.
+        """Add an outbound p2p connection from node. Must be an
+        "outbound-full-relay", "block-relay-only" or "addr-fetch" connection.
 
         This method adds the p2p connection to the self.p2ps list and returns
         the connection to the caller.

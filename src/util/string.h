@@ -65,6 +65,14 @@ inline std::string Join(const std::vector<std::string>& list, const std::string&
 }
 
 /**
+ * Create an unordered multi-line list of items.
+ */
+inline std::string MakeUnorderedList(const std::vector<std::string>& items)
+{
+    return Join(items, "\n", [](const std::string& item) { return "- " + item; });
+}
+
+/**
  * Check if a string does not contain any embedded NUL (\0) characters
  */
 [[nodiscard]] inline bool ValidAsCString(const std::string& str) noexcept

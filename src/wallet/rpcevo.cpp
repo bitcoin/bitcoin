@@ -28,7 +28,7 @@
 #include <rpc/blockchain.h>
 #include <util/translation.h>
 #include <node/context.h>
-
+#include <node/transaction.h>
 
 static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
 {
@@ -149,18 +149,8 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
     uint256 hash = ::SerializeHash(payload);
     payload.sig = key.Sign(hash);
 }
-static UniValue SignAndSendSpecialTx(const JSONRPCRequest& request, const CMutableTransaction& tx, bool fSubmit = true)
+static UniValue SignAndSendSpecialTx(const JSONRPCRequest& request, const CWallet& pwallet, const CMutableTransaction& tx, bool fSubmit = true)
 {
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    {
-        LOCK(cs_main);
-
-        TxValidationState state;
-        if (!CheckSpecialTx(node.chainman->m_blockman, CTransaction(tx), node.chainman->ActiveTip(), state, node.chainman->ActiveChainstate().CoinsTip(), true)) {
-            throw std::runtime_error(state.ToString());
-        }
-    } // cs_main
-
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
     ds << tx;
 
@@ -173,12 +163,20 @@ static UniValue SignAndSendSpecialTx(const JSONRPCRequest& request, const CMutab
     if (!fSubmit) {
         return signResult["hex"].get_str();
     }
-    JSONRPCRequest sendRequest;
-    sendRequest.context = request.context;
-    sendRequest.URI = request.URI;
-    sendRequest.params.setArray();
-    sendRequest.params.push_back(signResult["hex"].get_str());
-    return sendrawtransaction().HandleRequest(sendRequest);
+    CMutableTransaction mtx;
+    if(!DecodeHexTx(mtx, signResult["hex"].get_str())) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
+    }
+    CTransactionRef txRef(MakeTransactionRef(std::move(mtx)));
+
+    int64_t virtual_size = GetVirtualTransactionSize(*txRef);
+    CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE_RATE.GetFee(virtual_size);
+
+    std::string err_string;
+    if (!pwallet.chain().broadcastTransaction(txRef, max_raw_tx_fee, true, err_string)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, err_string);
+    }
+    return txRef->GetHash().GetHex();
 }
 
 
@@ -210,7 +208,7 @@ static RPCHelpMan protx_register()
                                         "The private key belonging to this address must be known in your wallet."},
                     {"submit", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "If true, the resulting transaction is sent to the network."},
                 },
-                RPCResult{RPCResult::Type::STR_HEX, "hex", "txid"},
+                RPCResult{RPCResult::Type::STR_HEX, "", "The transaction hash in hex"},
                 RPCExamples{
                     HelpExampleCli("protx_register", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 0 173.249.49.9:18369 tsys1q2j57a4rtserh9022a63pvk3jqmg7un55stux0v 003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63 tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r 5 tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r")
                 + HelpExampleRpc("protx_register", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", 0, \"173.249.49.9:18369\", \"tsys1q2j57a4rtserh9022a63pvk3jqmg7un55stux0v\", \"003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63\", \"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\", 5, \"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\"")
@@ -225,7 +223,6 @@ static RPCHelpMan protx_register()
     pwallet->BlockUntilSyncedToCurrentChain();
     EnsureWalletIsUnlocked(*pwallet);
     
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
     size_t paramIdx = 0;
 
 
@@ -301,9 +298,11 @@ static RPCHelpMan protx_register()
 
 
     // referencing external collateral
-
-    Coin coin;
-    if (!GetUTXOCoin(*node.chainman, ptx.collateralOutpoint, coin)) {
+    std::map<COutPoint, Coin> coins;
+    coins[ptx.collateralOutpoint]; 
+    pwallet->chain().findCoins(coins);
+    const Coin &coin = coins.at(ptx.collateralOutpoint);
+    if(coin.IsSpent()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral not found: %s", ptx.collateralOutpoint.ToStringShort()));
     }
     CTxDestination txDest;
@@ -330,7 +329,7 @@ static RPCHelpMan protx_register()
     }
     SignSpecialTxPayloadByString(tx, ptx, key);
     SetTxPayload(tx, ptx);
-    return SignAndSendSpecialTx(request,  tx, fSubmit);
+    return SignAndSendSpecialTx(request, *pwallet, tx, fSubmit);
 },
     };
 }
@@ -361,7 +360,7 @@ static RPCHelpMan protx_register_fund()
                                         "The private key belonging to this address must be known in your wallet."},
                     {"submit", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "If true, the resulting transaction is sent to the network."},
                 },
-                RPCResult{RPCResult::Type::ANY, "hash", "txid"},
+                RPCResult{RPCResult::Type::STR_HEX, "", "The transaction hash in hex"},
                 RPCExamples{
                     HelpExampleCli("protx_register_fund", "\"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\" 173.249.49.9:18369 tsys1q2j57a4rtserh9022a63pvk3jqmg7un55stux0v 003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63 tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r 5 tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r")
             + HelpExampleRpc("protx_register_fund", "\"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\", \"173.249.49.9:18369\", \"tsys1q2j57a4rtserh9022a63pvk3jqmg7un55stux0v\", \"003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63\", \"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\", 5, \"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\"")
@@ -457,7 +456,7 @@ static RPCHelpMan protx_register_fund()
     ptx.collateralOutpoint.n = collateralIndex;
 
     SetTxPayload(tx, ptx);
-    return SignAndSendSpecialTx(request, tx, fSubmit);
+    return SignAndSendSpecialTx(request, *pwallet, tx, fSubmit);
 },
     };
 }  
@@ -496,7 +495,6 @@ static RPCHelpMan protx_register_prepare()
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -572,8 +570,11 @@ static RPCHelpMan protx_register_prepare()
     UpdateSpecialTxInputsHash(tx, ptx);
 
     // referencing external collateral
-    Coin coin;
-    if (!GetUTXOCoin(*node.chainman, ptx.collateralOutpoint, coin)) {
+    std::map<COutPoint, Coin> coins;
+    coins[ptx.collateralOutpoint]; 
+    pwallet->chain().findCoins(coins);
+    const Coin &coin = coins.at(ptx.collateralOutpoint);
+    if(coin.IsSpent()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral not found: %s", ptx.collateralOutpoint.ToStringShort()));
     }
     CTxDestination txDest;
@@ -612,14 +613,17 @@ static RPCHelpMan protx_register_submit()
                 {"tx", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The serialized transaction previously returned by \"protx_register_prepare\"."},
                 {"sig", RPCArg::Type::STR, RPCArg::Optional::NO, "The signature signed with the collateral key. Must be in base64 format."},
             },
-            RPCResult{RPCResult::Type::STR_HEX, "hex", "txid"},
+            RPCResult{RPCResult::Type::STR_HEX, "", "The transaction hash in hex"},
             RPCExamples{
                 HelpExampleCli("protx_register_submit", "")
             + HelpExampleRpc("protx_register_submit", "")
             },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
 
+    EnsureWalletIsUnlocked(*pwallet);
     CMutableTransaction tx;
     if (!DecodeHexTx(tx, request.params[0].get_str())) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "transaction not deserializable");
@@ -638,7 +642,7 @@ static RPCHelpMan protx_register_submit()
     ptx.vchSig = DecodeBase64(request.params[1].get_str().c_str());
 
     SetTxPayload(tx, ptx);
-    return SignAndSendSpecialTx(request, tx);
+    return SignAndSendSpecialTx(request, *pwallet, tx);
 },
     };
 }  
@@ -663,7 +667,7 @@ static RPCHelpMan protx_update_service()
                                     "If not specified, payoutAddress is the one that is going to be used.\n"
                                     "The private key belonging to this address must be known in your wallet."},
             },
-            RPCResult{RPCResult::Type::STR_HEX, "hex", "txid"},
+            RPCResult{RPCResult::Type::STR_HEX, "", "The transaction hash in hex"},
             RPCExamples{
                     HelpExampleCli("protx_update_service", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 173.249.49.9:18369 003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63 tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r")
                 + HelpExampleRpc("protx_update_service", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"173.249.49.9:18369\", \"003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63\", \"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\", \"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\"")
@@ -739,7 +743,7 @@ static RPCHelpMan protx_update_service()
     SignSpecialTxPayloadByHash(tx, ptx, keyOperator);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request, tx);
+    return SignAndSendSpecialTx(request, *pwallet, tx);
 },
     };
 }  
@@ -764,7 +768,7 @@ static RPCHelpMan protx_update_registrar()
                                     "If not specified, payoutAddress is the one that is going to be used.\n"
                                     "The private key belonging to this address must be known in your wallet."},
             },
-            RPCResult{RPCResult::Type::STR_HEX, "hex", "txid"},
+            RPCResult{RPCResult::Type::STR_HEX, "", "The transaction hash in hex"},
             RPCExamples{
                     HelpExampleCli("protx_update_registrar", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63 tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r")
                 + HelpExampleRpc("protx_update_registrar", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63\", \"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\", \"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\"")
@@ -838,7 +842,7 @@ static RPCHelpMan protx_update_registrar()
     SignSpecialTxPayloadByHash(tx, ptx, keyOwner);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request, tx);
+    return SignAndSendSpecialTx(request, *pwallet, tx);
 },
     };
 }  
@@ -860,7 +864,7 @@ static RPCHelpMan protx_revoke()
                                     "If not specified, payoutAddress is the one that is going to be used.\n"
                                     "The private key belonging to this address must be known in your wallet."},
             },
-            RPCResult{RPCResult::Type::STR_HEX, "hex", "txid"},
+            RPCResult{RPCResult::Type::STR_HEX, "", "The transaction hash in hex"},
             RPCExamples{
                     HelpExampleCli("protx_update_registrar", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63 0 tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r")
                 + HelpExampleRpc("protx_update_registrar", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63\", 0, \"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\"")
@@ -926,7 +930,7 @@ static RPCHelpMan protx_revoke()
     SignSpecialTxPayloadByHash(tx, ptx, keyOperator);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request, tx);
+    return SignAndSendSpecialTx(request, *pwallet, tx);
 },
     };
 } 
@@ -949,7 +953,7 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
     return spk_man.IsMine(script);
 }
-UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDeterministicMNCPtr& dmn, int detailed)
+UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, int detailed)
 {
     if (!detailed) {
         return dmn->proTxHash.ToString();
@@ -973,33 +977,26 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
             }
         }
         return o;
-    } else if(detailed >= 2) {
-        dmn->ToJson(*node.chainman, o);
-        int confirmations = GetUTXOConfirmations(*node.chainman,dmn->collateralOutpoint);
+    } else if(detailed >= 2 && pwallet) {
+        dmn->ToJson(pwallet->chain(), o);
+        std::map<COutPoint, Coin> coins;
+        coins[dmn->collateralOutpoint]; 
+        pwallet->chain().findCoins(coins);
+        int confirmations = 0;
+        const Coin &coin = coins.at(dmn->collateralOutpoint);
+        if(!coin.IsSpent()) {
+            confirmations = *pwallet->chain().getHeight() - coin.nHeight;
+        }
         o.pushKV("confirmations", confirmations);
         if (pwallet) {
             LOCK2(pwallet->cs_wallet, cs_main);
             bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner);
-            bool hasOperatorKey = false; //CheckWalletOwnsKey(dmn->pdmnState->keyIDOperator);
             bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting);
 
-            bool ownsCollateral = false;
-            CTransactionRef collateralTx;
-            uint256 tmpHashBlock;
-            uint32_t nBlockHeight;
-            CBlockIndex* blockindex = nullptr;
-            if(pblockindexdb->ReadBlockHeight(dmn->collateralOutpoint.hash, nBlockHeight)){	    
-                blockindex = node.chainman->ActiveChain()[nBlockHeight];
-            } 
-            collateralTx = GetTransaction(blockindex, node.mempool.get(), dmn->collateralOutpoint.hash, Params().GetConsensus(), tmpHashBlock);
-            if(collateralTx)
-                ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
-        
             UniValue walletObj(UniValue::VOBJ);
             walletObj.pushKV("hasOwnerKey", hasOwnerKey);
-            walletObj.pushKV("hasOperatorKey", hasOperatorKey);
+            walletObj.pushKV("hasOperatorKey", false);
             walletObj.pushKV("hasVotingKey", hasVotingKey);
-            walletObj.pushKV("ownsCollateral", ownsCollateral);
             walletObj.pushKV("ownsPayeeScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout));
             walletObj.pushKV("ownsOperatorRewardScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout));
             o.pushKV("wallet", walletObj);
@@ -1033,7 +1030,6 @@ static RPCHelpMan protx_list_wallet()
     if (wallet)
         pwallet = wallet.get();
 
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
     UniValue ret(UniValue::VARR);
 
     if (!pwallet) {
@@ -1043,8 +1039,8 @@ static RPCHelpMan protx_list_wallet()
 
     int detailed = !request.params[0].isNull() ? request.params[0].get_int() : 0;
 
-    int height = !request.params[1].isNull() ? request.params[1].get_int() : node.chainman->ActiveHeight();
-    if (height < 1 || height > node.chainman->ActiveHeight()) {
+    int height = !request.params[1].isNull() ? request.params[1].get_int() : *pwallet->chain().getHeight();
+    if (height < 1 || height > pwallet->chain().getHeight()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
     }
 
@@ -1054,16 +1050,14 @@ static RPCHelpMan protx_list_wallet()
     for (const auto& outpt : vOutpts) {
         setOutpts.emplace(outpt);
     }
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListForBlock(node.chainman->ActiveChain()[height], mnList);
+    const auto &mnList = pwallet->chain().getMNList(height);
     mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
         if (setOutpts.count(dmn->collateralOutpoint) ||
             CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner) ||
             CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting) ||
             CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout) ||
             CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout)) {
-            ret.push_back(BuildDMNListEntry(node, pwallet, dmn, detailed));
+            ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));
         }
     });
     return ret;
@@ -1089,7 +1083,6 @@ static RPCHelpMan protx_info_wallet()
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (wallet)
         pwallet = wallet.get();
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
     uint256 proTxHash = ParseHashV(request.params[0], "proTxHash");
     CDeterministicMNList mnList;
     if(deterministicMNManager)
@@ -1098,7 +1091,7 @@ static RPCHelpMan protx_info_wallet()
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));
     }
-    return BuildDMNListEntry(node, pwallet, dmn, 2);
+    return BuildDMNListEntry(pwallet, dmn, 2);
 },
     };
 } 

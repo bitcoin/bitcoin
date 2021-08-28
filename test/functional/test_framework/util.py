@@ -5,7 +5,7 @@
 """Helpful routines for regression testing."""
 
 from base64 import b64encode
-from binascii import hexlify, unhexlify
+from binascii import hexlify
 from decimal import Decimal, ROUND_DOWN
 from subprocess import CalledProcessError
 import hashlib
@@ -20,7 +20,6 @@ import shutil
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
-from io import BytesIO
 from typing import Callable, Optional
 
 logger = logging.getLogger("TestFramework.utils")
@@ -215,9 +214,6 @@ def EncodeDecimal(o):
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
 
-
-def hex_str_to_bytes(hex_str):
-    return unhexlify(hex_str.encode('ascii'))
 # SYSCOIN
 def bytes_to_hex_str(byte_str):
     return hexlify(byte_str).decode('ascii')
@@ -293,15 +289,15 @@ class PortSeed:
     n = None
 
 
-def get_rpc_proxy(url, node_number, *, timeout=None, coveragedir=None):
+def get_rpc_proxy(url: str, node_number: int, *, timeout: int=None, coveragedir: str=None) -> coverage.AuthServiceProxyWrapper:
     """
     Args:
-        url (str): URL of the RPC server to call
-        node_number (int): the node number (or id) that this calls to
+        url: URL of the RPC server to call
+        node_number: the node number (or id) that this calls to
 
     Kwargs:
-        timeout (int): HTTP timeout in seconds
-        coveragedir (str): Directory
+        timeout: HTTP timeout in seconds
+        coveragedir: Directory
 
     Returns:
         AuthServiceProxy. convenience object for making RPC calls.
@@ -312,11 +308,10 @@ def get_rpc_proxy(url, node_number, *, timeout=None, coveragedir=None):
         proxy_kwargs['timeout'] = int(timeout)
 
     proxy = AuthServiceProxy(url, **proxy_kwargs)
-    proxy.url = url  # store URL on proxy for info
 
     coverage_logfile = coverage.get_filename(coveragedir, node_number) if coveragedir else None
 
-    return coverage.AuthServiceProxyWrapper(proxy, coverage_logfile)
+    return coverage.AuthServiceProxyWrapper(proxy, url, coverage_logfile)
 
 
 def p2p_port(n):
@@ -345,17 +340,17 @@ def rpc_url(datadir, i, chain, rpchost):
 ################
 
 
-def initialize_datadir(dirname, n, chain):
+def initialize_datadir(dirname, n, chain, disable_autoconnect=True):
     datadir = get_datadir_path(dirname, n)
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
-    write_config(os.path.join(datadir, "syscoin.conf"), n=n, chain=chain)
+    write_config(os.path.join(datadir, "syscoin.conf"), n=n, chain=chain, disable_autoconnect=disable_autoconnect)
     os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
     os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
     return datadir
 
 
-def write_config(config_path, *, n, chain, extra_config=""):
+def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=True):
     # Translate chain subdirectory name to config name
     if chain == 'testnet3':
         chain_name_conf_arg = 'testnet'
@@ -383,6 +378,8 @@ def write_config(config_path, *, n, chain, extra_config=""):
         f.write("shrinkdebugfile=0\n")
         # To improve SQLite wallet performance so that the tests don't timeout, use -unsafesqlitesync
         f.write("unsafesqlitesync=1\n")
+        if disable_autoconnect:
+            f.write("connect=0\n")
         f.write(extra_config)
 
 
@@ -483,10 +480,10 @@ def find_output(node, txid, amount, *, blockhash=None):
 
 # Helper to create at least "count" utxos
 # Pass in a fee that is sufficient for relay and mining new transactions.
-def create_confirmed_utxos(fee, node, count):
+def create_confirmed_utxos(test_framework, fee, node, count):
     to_generate = int(0.5 * count) + 101
     while to_generate > 0:
-        node.generate(min(25, to_generate))
+        test_framework.generate(node, min(25, to_generate))
         to_generate -= 25
     utxos = node.listunspent()
     iterations = count - len(utxos)
@@ -507,7 +504,7 @@ def create_confirmed_utxos(fee, node, count):
         node.sendrawtransaction(signed_tx)
 
     while (node.getmempoolinfo()['size'] > 0):
-        node.generate(1)
+        test_framework.generate(node, 1)
 
     utxos = node.listunspent()
     assert len(utxos) >= count
@@ -550,7 +547,7 @@ def gen_return_txouts():
     from .messages import CTxOut
     txout = CTxOut()
     txout.nValue = 0
-    txout.scriptPubKey = hex_str_to_bytes(script_pubkey)
+    txout.scriptPubKey = bytes.fromhex(script_pubkey)
     for _ in range(128):
         txouts.append(txout)
     return txouts
@@ -561,7 +558,7 @@ def gen_return_txouts():
 def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
     addr = node.getnewaddress()
     txids = []
-    from .messages import CTransaction
+    from .messages import tx_from_hex
     for _ in range(num):
         t = utxos.pop()
         inputs = [{"txid": t["txid"], "vout": t["vout"]}]
@@ -569,8 +566,7 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
         change = t['amount'] - fee
         outputs[addr] = satoshi_round(change)
         rawtx = node.createrawtransaction(inputs, outputs)
-        tx = CTransaction()
-        tx.deserialize(BytesIO(hex_str_to_bytes(rawtx)))
+        tx = tx_from_hex(rawtx)
         for txout in txouts:
             tx.vout.append(txout)
         newtx = tx.serialize().hex()
@@ -580,7 +576,7 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
     return txids
 
 
-def mine_large_block(node, utxos=None):
+def mine_large_block(test_framework, node, utxos=None):
     # generate a 66k transaction,
     # and 14 of them is close to the 1MB block limit
     num = 14
@@ -591,7 +587,18 @@ def mine_large_block(node, utxos=None):
         utxos.extend(node.listunspent())
     fee = 100 * node.getnetworkinfo()["relayfee"]
     create_lots_of_big_transactions(node, txouts, utxos, num, fee=fee)
-    node.generate(1)
+    test_framework.generate(node, 1)
+
+
+def generate_to_height(test_framework, node, target_height):
+    """Generates blocks until a given target block height has been reached.
+       To prevent timeouts, only up to 200 blocks are generated per RPC call.
+       Can be used to activate certain soft-forks (e.g. CSV, CLTV)."""
+    current_height = node.getblockcount()
+    while current_height < target_height:
+        nblocks = min(200, target_height - current_height)
+        current_height += len(test_framework.generate(node, nblocks))
+    assert_equal(node.getblockcount(), target_height)
 
 
 def find_vout_for_address(node, txid, addr):

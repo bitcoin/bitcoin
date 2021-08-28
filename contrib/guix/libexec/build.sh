@@ -196,7 +196,10 @@ esac
 ####################
 
 # Build the depends tree, overriding variables that assume multilib gcc
+# Syscoin: -O to group output by target when using --jobs
+#          --no-print-directory needed because of '-O' side effect
 make -C depends --jobs="$JOBS" HOST="$HOST" \
+                                   -O --no-print-directory \
                                    ${V:+V=1} \
                                    ${SOURCES_PATH+SOURCES_PATH="$SOURCES_PATH"} \
                                    ${BASE_CACHE+BASE_CACHE="$BASE_CACHE"} \
@@ -214,6 +217,7 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    x86_64_linux_NM=x86_64-linux-gnu-nm \
                                    x86_64_linux_STRIP=x86_64-linux-gnu-strip \
                                    qt_config_opts_i686_linux='-platform linux-g++ -xplatform syscoin-linux-g++' \
+                                   qt_config_opts_x86_64_linux='-platform linux-g++ -xplatform syscoin-linux-g++' \
                                    FORCE_USE_SYSTEM_CLANG=1
 
 
@@ -226,37 +230,26 @@ GIT_ARCHIVE="${DIST_ARCHIVE_BASE}/${DISTNAME}.tar.gz"
 # Create the source tarball if not already there
 if [ ! -e "$GIT_ARCHIVE" ]; then
     mkdir -p "$(dirname "$GIT_ARCHIVE")"
-    touch "${DIST_ARCHIVE_BASE}"/SKIPATTEST.TAG
     git archive --prefix="${DISTNAME}/" --output="$GIT_ARCHIVE" HEAD
 fi
 
-# tmpdir="$(mktemp -d)"
-# (
-#     cd "$tmpdir"
-#     mkdir -p inputs
-#     ln -sf --target-directory=inputs "$GIT_ARCHIVE"
-
-#     mkdir -p "$OUTDIR"
-#     find -L inputs -type f -print0 | xargs -0 sha256sum > "${OUTDIR}/inputs.SHA256SUMS"
-# )
-
 mkdir -p "$OUTDIR"
-cat << EOF > "$OUTDIR"/inputs.SHA256SUMS
-$(sha256sum "$GIT_ARCHIVE" | cut -d' ' -f1)  inputs/$(basename "$GIT_ARCHIVE")
-EOF
 
 ###########################
 # Binary Tarball Building #
 ###########################
 
-# CONFIGFLAGS
+# SYSCOIN CONFIGFLAGS
 CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
+CONFIGFLAGS+=" --disable-debug"
 case "$HOST" in
-    *linux*) CONFIGFLAGS+=" --enable-glibc-back-compat" ;;
+    *linux*)  CONFIGFLAGS+=" --enable-glibc-back-compat" ;;
 esac
 
 # CFLAGS
 HOST_CFLAGS="-O2 -g"
+# CFLAGS Syscoin (Release, nodebug)
+HOST_CFLAGS="-O2"
 case "$HOST" in
     *linux*)  HOST_CFLAGS+=" -ffile-prefix-map=${PWD}=." ;;
     *mingw*)  HOST_CFLAGS+=" -fno-ident" ;;
@@ -266,10 +259,22 @@ esac
 # CXXFLAGS
 HOST_CXXFLAGS="$HOST_CFLAGS"
 
-# LDFLAGS
 case "$HOST" in
-    *linux*)  HOST_LDFLAGS="-Wl,--as-needed -Wl,--dynamic-linker=$glibc_dynamic_linker -static-libstdc++ -Wl,-O2" ;;
-    *mingw*)  HOST_LDFLAGS="-Wl,--no-insert-timestamp" ;;
+    arm-linux-gnueabihf) HOST_CXXFLAGS="${HOST_CXXFLAGS} -Wno-psabi" ;;
+esac
+
+# LDFLAGS
+# Syscoin: linux - strip-all, windows - strip-debug (or security check will fail)
+case "$HOST" in
+    *linux*)  HOST_LDFLAGS="-Wl,--as-needed -Wl,--dynamic-linker=$glibc_dynamic_linker -static-libstdc++ -Wl,-O2 -s" ;;
+    *mingw*)  HOST_LDFLAGS="-Wl,--no-insert-timestamp -Wl,-S" ;;
+esac
+
+# Using --no-tls-get-addr-optimize retains compatibility with glibc 2.17, by
+# avoiding a PowerPC64 optimisation available in glibc 2.22 and later.
+# https://sourceware.org/binutils/docs-2.35/ld/PowerPC64-ELF64.html
+case "$HOST" in
+    *powerpc64*) HOST_LDFLAGS="${HOST_LDFLAGS} -Wl,--no-tls-get-addr-optimize" ;;
 esac
 
 case "$HOST" in
@@ -302,12 +307,14 @@ mkdir -p "$DISTSRC"
     sed -i.old 's/-lstdc++ //g' config.status libtool src/univalue/config.status src/univalue/libtool
 
     # Build Syscoin Core
-    make --jobs="$JOBS" ${V:+V=1}
+    # Sycoin: add '-O --no-print-directory' (see Depends Building)
+   make -O --no-print-directory --jobs="$JOBS" ${V:+V=1}
 
-    # Perform basic ELF security checks on a series of executables.
+    # Check that symbol/security checks tools are sane.
+    make test-security-check ${V:+V=1}
+    # Perform basic security checks on a series of executables.
     make -C src --jobs=1 check-security ${V:+V=1}
-    # Check that executables only contain allowed gcc, glibc and libstdc++
-    # version symbols for Linux distro back-compatibility.
+    # Check that executables only contain allowed version symbols.
     make -C src --jobs=1 check-symbols  ${V:+V=1}
 
     mkdir -p "$OUTDIR"
@@ -379,6 +386,9 @@ mkdir -p "$DISTSRC"
                     find "${DISTNAME}/bin" -type f -executable -print0
                     find "${DISTNAME}/lib" -type f -print0
                 } | xargs -0 -n1 -P"$JOBS" -I{} "${DISTSRC}/contrib/devtools/split-debug.sh" {} {} {}.dbg
+                # Syscoin: Release, delete symbol files from split-debug
+                find "${DISTNAME}/bin" -name "*.dbg" -delete
+                find "${DISTNAME}/lib" -name "*.dbg" -delete
                 ;;
         esac
 
@@ -401,12 +411,13 @@ mkdir -p "$DISTSRC"
                     | sort \
                     | zip -X@ "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}.zip" \
                     || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}.zip" && exit 1 )
-                find "${DISTNAME}" -name "*.dbg" -print0 \
-                    | xargs -0r touch --no-dereference --date="@${SOURCE_DATE_EPOCH}"
-                find "${DISTNAME}" -name "*.dbg" \
-                    | sort \
-                    | zip -X@ "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}-debug.zip" \
-                    || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}-debug.zip" && exit 1 )
+                # Syscoin (Release, nodebug)
+                # find "${DISTNAME}" -name "*.dbg" -print0 \
+                #     | xargs -0r touch --no-dereference --date="@${SOURCE_DATE_EPOCH}"
+                # find "${DISTNAME}" -name "*.dbg" \
+                #     | sort \
+                #     | zip -X@ "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}-debug.zip" \
+                #     || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}-debug.zip" && exit 1 )
                 ;;
             *linux*)
                 find "${DISTNAME}" -not -name "*.dbg" -print0 \
@@ -414,11 +425,12 @@ mkdir -p "$DISTSRC"
                     | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
                     | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST}.tar.gz" \
                     || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}.tar.gz" && exit 1 )
-                find "${DISTNAME}" -name "*.dbg" -print0 \
-                    | sort --zero-terminated \
-                    | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
-                    | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST}-debug.tar.gz" \
-                    || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}-debug.tar.gz" && exit 1 )
+                # Syscoin (Release, nodebug)
+                # find "${DISTNAME}" -name "*.dbg" -print0 \
+                #     | sort --zero-terminated \
+                #     | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
+                #     | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST}-debug.tar.gz" \
+                #     || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}-debug.tar.gz" && exit 1 )
                 ;;
             *darwin*)
                 find "${DISTNAME}" -print0 \
@@ -450,3 +462,14 @@ mkdir -p "$DISTSRC"
 rm -rf "$ACTUAL_OUTDIR"
 mv --no-target-directory "$OUTDIR" "$ACTUAL_OUTDIR" \
     || ( rm -rf "$ACTUAL_OUTDIR" && exit 1 )
+
+(
+    cd /outdir-base
+    {
+        echo "$GIT_ARCHIVE"
+        find "$ACTUAL_OUTDIR" -type f
+    } | xargs realpath --relative-base="$PWD" \
+      | xargs sha256sum \
+      | sort -k2 \
+      | sponge "$ACTUAL_OUTDIR"/SHA256SUMS.part
+)

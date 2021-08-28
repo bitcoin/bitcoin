@@ -57,11 +57,11 @@ outgoing connections, but more is possible.
     -onlynet=onion  Make outgoing connections only to .onion addresses. Incoming
                     connections are not affected by this option. This option can be
                     specified multiple times to allow multiple network types, e.g.
-                    ipv4, ipv6 or onion. If you use this option with values other
-                    than onion you *cannot* disable onion connections; outgoing onion
-                    connections will be enabled when you use -proxy or -onion. Use
-                    -noonion or -onion=0 if you want to be sure there are no outbound
-                    onion connections over the default proxy or your defined -proxy.
+                    onlynet=ipv4, onlynet=ipv6, onlynet=onion, onlynet=i2p.
+                    Warning: if you use -onlynet with values other than onion, and
+                    the -onion or -proxy option is set, then outgoing onion
+                    connections will still be made; use -noonion or -onion=0 to
+                    disable outbound onion connections in this case.
 
 In a typical situation, this suffices to run behind a Tor proxy:
 

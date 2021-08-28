@@ -28,7 +28,6 @@
     https://github.com/syscoin/syscoin/blob/37a7fe9e440b83e2364d5498931253937abe9294/contrib/zmq/zmq_sub.py
 """
 
-import binascii
 import asyncio
 import zmq
 import zmq.asyncio
@@ -66,30 +65,30 @@ class ZMQHandler():
             sequence = str(struct.unpack('<I', seq)[-1])
         if topic == b"hashblock":
             print('- HASH BLOCK ('+sequence+') -')
-            print(binascii.hexlify(body))
+            print(body.hex())
         elif topic == b"hashtx":
             print('- HASH TX  ('+sequence+') -')
-            print(binascii.hexlify(body))
+            print(body.hex())
         elif topic == b"rawblock":
             print('- RAW BLOCK HEADER ('+sequence+') -')
-            print(binascii.hexlify(body[:80]))
+            print(body[:80].hex())
         elif topic == b"rawtx":
             print('- RAW TX ('+sequence+') -')
-            print(binascii.hexlify(body))
+            print(body.hex())
         elif topic == b"hashgovernancevote":
             print('- HASH GOVERNANCE VOTE ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"hashgovernanceobject":
             print('- HASH GOVERNANCE OBJECT ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"rawgovernancevote":
             print('- RAW GOVERNANCE VOTE ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"rawgovernanceobject":
             print('- RAW GOVERNANCE OBJECT ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"sequence":
-            hash = binascii.hexlify(body[:32])
+            hash = body[:32].hex()
             label = chr(body[32])
             mempool_sequence = None if len(body) != 32+1+8 else struct.unpack("<Q", body[32+1:])[0]
             print('- SEQUENCE ('+sequence+') -')

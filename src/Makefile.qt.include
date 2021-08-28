@@ -41,9 +41,9 @@ QT_MOC_CPP = \
   qt/moc_askpassphrasedialog.cpp \
   qt/moc_createwalletdialog.cpp \
   qt/moc_bantablemodel.cpp \
+  qt/moc_syscoin.cpp \
   qt/moc_syscoinaddressvalidator.cpp \
   qt/moc_syscoinamountfield.cpp \
-  qt/moc_syscoin.cpp \
   qt/moc_syscoingui.cpp \
   qt/moc_syscoinunits.cpp \
   qt/moc_clientmodel.cpp \
@@ -52,6 +52,7 @@ QT_MOC_CPP = \
   qt/moc_csvmodelwriter.cpp \
   qt/moc_editaddressdialog.cpp \
   qt/moc_guiutil.cpp \
+  qt/moc_initexecutor.cpp \
   qt/moc_intro.cpp \
   qt/moc_macdockiconhandler.cpp \
   qt/moc_macnotificationhandler.cpp \
@@ -111,9 +112,9 @@ SYSCOIN_QT_H = \
   qt/addresstablemodel.h \
   qt/askpassphrasedialog.h \
   qt/bantablemodel.h \
+  qt/syscoin.h \
   qt/syscoinaddressvalidator.h \
   qt/syscoinamountfield.h \
-  qt/syscoin.h \
   qt/syscoingui.h \
   qt/syscoinunits.h \
   qt/clientmodel.h \
@@ -124,6 +125,7 @@ SYSCOIN_QT_H = \
   qt/editaddressdialog.h \
   qt/guiconstants.h \
   qt/guiutil.h \
+  qt/initexecutor.h \
   qt/intro.h \
   qt/macdockiconhandler.h \
   qt/macnotificationhandler.h \
@@ -231,6 +233,7 @@ SYSCOIN_QT_BASE_CPP = \
   qt/clientmodel.cpp \
   qt/csvmodelwriter.cpp \
   qt/guiutil.cpp \
+  qt/initexecutor.cpp \
   qt/intro.cpp \
   qt/modaloverlay.cpp \
   qt/networkstyle.cpp \

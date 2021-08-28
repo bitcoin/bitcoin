@@ -7,7 +7,6 @@ import time
 import struct
 from test_framework.test_framework import DashTestFramework
 from test_framework.messages import CInv, hash256, msg_clsig, msg_inv, ser_string, uint256_from_str
-from test_framework.util import hex_str_to_bytes
 from test_framework.p2p import (
   P2PInterface,
 )
@@ -223,13 +222,13 @@ class LLMQChainLocksTest(DashTestFramework):
         # create a fake clsig for that block
         quorum_hash = self.nodes[0].quorum_list(1)["llmq_test"][0]
         request_id_buf = ser_string(b"clsig") + struct.pack("<I", height)
-        request_id_buf += hex_str_to_bytes(quorum_hash)[::-1]
+        request_id_buf += bytes.fromhex(quorum_hash)[::-1]
         request_id = hash256(request_id_buf)[::-1].hex()
         quorum_hash = self.nodes[0].quorum_list(1)["llmq_test"][0]
         for mn in self.mninfo:
             mn.node.quorum_sign(100, request_id, fake_block.hash, quorum_hash)
         rec_sig = self.get_recovered_sig(request_id, fake_block.hash)
-        fake_clsig = msg_clsig(height, fake_block.sha256, hex_str_to_bytes(rec_sig['sig']), [1,0,0,0])
+        fake_clsig = msg_clsig(height, fake_block.sha256, bytes.fromhex(rec_sig['sig']), [1,0,0,0])
         return fake_clsig, fake_block.hash
 
     def create_chained_txs(self, node, amount):

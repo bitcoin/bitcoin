@@ -5,10 +5,21 @@
 """Test the ZMQ notification interface."""
 import struct
 
-from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE, ADDRESS_BCRT1_P2WSH_OP_TRUE
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
+from test_framework.address import (
+    ADDRESS_BCRT1_P2WSH_OP_TRUE,
+    ADDRESS_BCRT1_UNSPENDABLE,
+)
+from test_framework.blocktools import (
+    add_witness_commitment,
+    create_block,
+    create_coinbase,
+)
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.messages import CTransaction, hash256, FromHex
+from test_framework.messages import (
+    CTransaction,
+    hash256,
+    tx_from_hex,
+)
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -71,8 +82,8 @@ class ZMQTestSetupBlock:
     raw transaction data.
     """
 
-    def __init__(self, node):
-        self.block_hash = node.generate(1)[0]
+    def __init__(self, test_framework, node):
+        self.block_hash = test_framework.generate(node, 1)[0]
         coinbase = node.getblock(self.block_hash, 2)['tx'][0]
         self.tx_hash = coinbase['txid']
         self.raw_tx = coinbase['hex']
@@ -121,7 +132,7 @@ class ZMQTest (SyscoinTestFramework):
             socket = self.ctx.socket(zmq.SUB)
             subscribers.append(ZMQSubscriber(socket, topic.encode()))
 
-        self.restart_node(0, ["-zmqpub%s=%s" % (topic, address) for topic, address in services] +
+        self.restart_node(0, [f"-zmqpub{topic}={address}" for topic, address in services] +
                              self.extra_args[0])
 
         for i, sub in enumerate(subscribers):
@@ -136,7 +147,7 @@ class ZMQTest (SyscoinTestFramework):
         for sub in subscribers:
             sub.socket.set(zmq.RCVTIMEO, 1000)
         while True:
-            test_block = ZMQTestSetupBlock(self.nodes[0])
+            test_block = ZMQTestSetupBlock(self, self.nodes[0])
             recv_failed = False
             for sub in subscribers:
                 try:
@@ -173,7 +184,7 @@ class ZMQTest (SyscoinTestFramework):
         rawtx = subs[3]
 
         num_blocks = 5
-        self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
+        self.log.info(f"Generate {num_blocks} blocks (and {num_blocks} coinbase txes)")
         genhashes = self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
 
         self.sync_all()
@@ -393,10 +404,10 @@ class ZMQTest (SyscoinTestFramework):
             bump_info = self.nodes[0].bumpfee(orig_txid)
             # Mine the pre-bump tx
             block = create_block(int(self.nodes[0].getbestblockhash(), 16), create_coinbase(self.nodes[0].getblockcount()+1))
-            tx = FromHex(CTransaction(), raw_tx)
+            tx = tx_from_hex(raw_tx)
             block.vtx.append(tx)
             for txid in more_tx:
-                tx = FromHex(CTransaction(), self.nodes[0].getrawtransaction(txid))
+                tx = tx_from_hex(self.nodes[0].getrawtransaction(txid))
                 block.vtx.append(tx)
             add_witness_commitment(block)
             block.solve()
@@ -493,7 +504,7 @@ class ZMQTest (SyscoinTestFramework):
             if mempool_sequence is not None:
                 zmq_mem_seq = mempool_sequence
                 if zmq_mem_seq > get_raw_seq:
-                    raise Exception("We somehow jumped mempool sequence numbers! zmq_mem_seq: {} > get_raw_seq: {}".format(zmq_mem_seq, get_raw_seq))
+                    raise Exception(f"We somehow jumped mempool sequence numbers! zmq_mem_seq: {zmq_mem_seq} > get_raw_seq: {get_raw_seq}")
 
         # 4) Moving forward, we apply the delta to our local view
         #    remaining txs(5) + 1 rbf(A+R) + 1 block connect + 1 final tx
@@ -509,7 +520,7 @@ class ZMQTest (SyscoinTestFramework):
                         assert mempool_sequence > expected_sequence
                         r_gap += mempool_sequence - expected_sequence
                     else:
-                        raise Exception("WARNING: txhash has unexpected mempool sequence value: {} vs expected {}".format(mempool_sequence, expected_sequence))
+                        raise Exception(f"WARNING: txhash has unexpected mempool sequence value: {mempool_sequence} vs expected {expected_sequence}")
             if label == "A":
                 assert hash_str not in mempool_view
                 mempool_view.add(hash_str)

@@ -47,11 +47,12 @@ public:
     static std::set<uint256> GetQuorumRelayMembers(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember, bool onlyOutbound);
     static std::set<size_t> CalcDeterministicWatchConnections(uint8_t llmqType, const CBlockIndex *pindexQuorum, size_t memberCount, size_t connectionCount);
 
-    static void EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& myProTxHash, bool allowWatch, CConnman& connman);
+    static bool EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& myProTxHash, CConnman& connman);
     static void AddQuorumProbeConnections(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& myProTxHash, CConnman& connman);
 
     static bool IsQuorumActive(uint8_t llmqType, const uint256& quorumHash);
-
+    /// Returns the state of `-watchquorums`
+    static bool IsWatchQuorumsEnabled();
     template<typename NodesContainer, typename Continue, typename Callback>
     static void IterateNodesRandom(NodesContainer& nodeStates, Continue&& cont, Callback&& callback, FastRandomContext& rnd)
     {

@@ -22,7 +22,7 @@ public:
 
 
     // Syscoin Specific WalletInitInterface
-    virtual void AutoLockMasternodeCollaterals() const = 0;
+    virtual void AutoLockMasternodeCollaterals(NodeContext& node) const = 0;
 
     virtual ~WalletInitInterface() {}
 };

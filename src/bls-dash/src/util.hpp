@@ -15,6 +15,7 @@
 #ifndef SRC_BLSUTIL_HPP_
 #define SRC_BLSUTIL_HPP_
 
+#include <algorithm>
 #include <iomanip>
 #include <sstream>
 #include <string>

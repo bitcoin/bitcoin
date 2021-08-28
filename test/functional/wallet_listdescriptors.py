@@ -30,9 +30,10 @@ class ListDescriptorsTest(SyscoinTestFramework):
         node = self.nodes[0]
         assert_raises_rpc_error(-18, 'No wallet is loaded.', node.listdescriptors)
 
-        self.log.info('Test that the command is not available for legacy wallets.')
-        node.createwallet(wallet_name='w1', descriptors=False)
-        assert_raises_rpc_error(-4, 'listdescriptors is not available for non-descriptor wallets', node.listdescriptors)
+        if self.is_bdb_compiled():
+            self.log.info('Test that the command is not available for legacy wallets.')
+            node.createwallet(wallet_name='w1', descriptors=False)
+            assert_raises_rpc_error(-4, 'listdescriptors is not available for non-descriptor wallets', node.listdescriptors)
 
         self.log.info('Test the command for empty descriptors wallet.')
         node.createwallet(wallet_name='w2', blank=True, descriptors=True)
@@ -71,6 +72,38 @@ class ListDescriptorsTest(SyscoinTestFramework):
             ],
         }
         assert_equal(expected, wallet.listdescriptors())
+        assert_equal(expected, wallet.listdescriptors(False))
+
+        self.log.info('Test list private descriptors')
+        expected_private = {
+            'wallet_name': 'w2',
+            'descriptors': [
+                {'desc': descsum_create('wpkh(' + xprv + hardened_path + '/0/*)'),
+                 'timestamp': 1296688602,
+                 'active': False,
+                 'range': [0, 0],
+                 'next': 0},
+            ],
+        }
+        assert_equal(expected_private, wallet.listdescriptors(True))
+
+        self.log.info("Test listdescriptors with encrypted wallet")
+        wallet.encryptwallet("pass")
+        assert_equal(expected, wallet.listdescriptors())
+
+        self.log.info('Test list private descriptors with encrypted wallet')
+        assert_raises_rpc_error(-13, 'Please enter the wallet passphrase with walletpassphrase first.', wallet.listdescriptors, True)
+        wallet.walletpassphrase(passphrase="pass", timeout=1000000)
+        assert_equal(expected_private, wallet.listdescriptors(True))
+
+        self.log.info('Test list private descriptors with watch-only wallet')
+        node.createwallet(wallet_name='watch-only', descriptors=True, disable_private_keys=True)
+        watch_only_wallet = node.get_wallet_rpc('watch-only')
+        watch_only_wallet.importdescriptors([{
+            'desc': descsum_create('wpkh(' + xpub_acc + ')'),
+            'timestamp': 1296688602,
+        }])
+        assert_raises_rpc_error(-4, 'Can\'t get descriptor string', watch_only_wallet.listdescriptors, True)
 
         self.log.info('Test non-active non-range combo descriptor')
         node.createwallet(wallet_name='w4', blank=True, descriptors=True)

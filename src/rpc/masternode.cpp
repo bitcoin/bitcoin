@@ -12,6 +12,7 @@
 #include <evo/deterministicmns.h>
 #include <net.h>
 #include <validation.h>
+#include <node/transaction.h>
 RPCHelpMan masternodelist();
 
 static RPCHelpMan masternode_list()
@@ -196,20 +197,25 @@ static RPCHelpMan masternode_status()
 
     UniValue mnObj(UniValue::VOBJ);
 
-    // keep compatibility with legacy status for now (might get deprecated/removed later)
-    mnObj.pushKV("outpoint", activeMasternodeInfo.outpoint.ToStringShort());
-    mnObj.pushKV("service", activeMasternodeInfo.service.ToString());
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
-    auto dmn = mnList.GetMN(activeMasternodeInfo.proTxHash);
-    if (dmn) {
-        mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
-        mnObj.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());
-        mnObj.pushKV("collateralIndex", (int)dmn->collateralOutpoint.n);
-        UniValue stateObj;
-        dmn->pdmnState->ToJson(stateObj);
-        mnObj.pushKV("dmnState", stateObj);
+    CDeterministicMNCPtr dmn;
+    {
+        LOCK(activeMasternodeInfoCs);
+
+        // keep compatibility with legacy status for now (might get deprecated/removed later)
+        mnObj.pushKV("outpoint", activeMasternodeInfo.outpoint.ToStringShort());
+        mnObj.pushKV("service", activeMasternodeInfo.service.ToString());
+        CDeterministicMNList mnList;
+        if(deterministicMNManager)
+            deterministicMNManager->GetListAtChainTip(mnList);
+        auto dmn = mnList.GetMN(activeMasternodeInfo.proTxHash);
+        if (dmn) {
+            mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
+            mnObj.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());
+            mnObj.pushKV("collateralIndex", (int)dmn->collateralOutpoint.n);
+            UniValue stateObj;
+            dmn->pdmnState->ToJson(stateObj);
+            mnObj.pushKV("dmnState", stateObj);
+        }
     }
     mnObj.pushKV("state", activeMasternodeManager->GetStateString());
     mnObj.pushKV("status", activeMasternodeManager->GetStatus());
@@ -494,9 +500,12 @@ RPCHelpMan masternodelist()
 
     mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
         std::string strOutpoint = dmn->collateralOutpoint.ToStringShort();
-        Coin coin;
         std::string collateralAddressStr = "UNKNOWN";
-        if (GetUTXOCoin(*node.chainman, dmn->collateralOutpoint, coin)) {
+        std::map<COutPoint, Coin> coins;
+        coins[dmn->collateralOutpoint]; 
+        node.chain->findCoins(coins);
+        const Coin &coin = coins.at(dmn->collateralOutpoint);
+        if (!coin.IsSpent()) {
             CTxDestination collateralDest;
             if (ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
                 collateralAddressStr = EncodeDestination(collateralDest);

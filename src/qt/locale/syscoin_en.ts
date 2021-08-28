@@ -753,8 +753,8 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <source>%n active connection(s) to Syscoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>%n active connection to Syscoin network.</numerusform>
+            <numerusform>%n active connections to Syscoin network.</numerusform>
         </translation>
     </message>
     <message>
@@ -1355,8 +1355,8 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>(sufficient to restore backups %n day old)</numerusform>
+            <numerusform>(sufficient to restore backups %n days old)</numerusform>
         </translation>
     </message>
     <message>

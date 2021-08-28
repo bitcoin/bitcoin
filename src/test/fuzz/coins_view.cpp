@@ -183,8 +183,8 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
     }
 
     {
-        const CCoinsViewCursor* coins_view_cursor = backend_coins_view.Cursor();
-        assert(coins_view_cursor == nullptr);
+        std::unique_ptr<CCoinsViewCursor> coins_view_cursor = backend_coins_view.Cursor();
+        assert(!coins_view_cursor);
         (void)backend_coins_view.EstimateSize();
         (void)backend_coins_view.GetBestBlock();
         (void)backend_coins_view.GetHeadBlocks();
@@ -261,7 +261,7 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                     // consensus/tx_verify.cpp:130: unsigned int GetP2SHSigOpCount(const CTransaction &, const CCoinsViewCache &): Assertion `!coin.IsSpent()' failed.
                     return;
                 }
-                const int flags = fuzzed_data_provider.ConsumeIntegral<int>();
+                const auto flags{fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
                 if (!transaction.vin.empty() && (flags & SCRIPT_VERIFY_WITNESS) != 0 && (flags & SCRIPT_VERIFY_P2SH) == 0) {
                     // Avoid:
                     // script/interpreter.cpp:1705: size_t CountWitnessSigOps(const CScript &, const CScript &, const CScriptWitness *, unsigned int): Assertion `(flags & SCRIPT_VERIFY_P2SH) != 0' failed.

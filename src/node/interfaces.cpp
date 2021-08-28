@@ -6,6 +6,8 @@
 #include <banman.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <deploymentstatus.h>
+#include <external_signer.h>
 #include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
@@ -218,16 +220,24 @@ public:
         }
         return false;
     }
-#ifdef ENABLE_EXTERNAL_SIGNER
     std::vector<ExternalSigner> externalSigners() override
     {
+#ifdef ENABLE_EXTERNAL_SIGNER
         std::vector<ExternalSigner> signers = {};
         const std::string command = gArgs.GetArg("-signer", "");
         if (command == "") return signers;
         ExternalSigner::Enumerate(command, signers, Params().NetworkIDString());
         return signers;
+#else
+        // This result is indistinguishable from a successful call that returns
+        // no signers. For the current GUI this doesn't matter, because the wallet
+        // creation dialog disables the external signer checkbox in both
+        // cases. The return type could be changed to std::optional<std::vector>
+        // (or something that also includes error messages) if this distinction
+        // becomes important.
+        return {};
+#endif // ENABLE_EXTERNAL_SIGNER
     }
-#endif
     int64_t getTotalBytesRecv() override { return m_context->connman ? m_context->connman->GetTotalBytesRecv() : 0; }
     int64_t getTotalBytesSent() override { return m_context->connman ? m_context->connman->GetTotalBytesSent() : 0; }
     size_t getMempoolSize() override { return m_context->mempool ? m_context->mempool->size() : 0; }
@@ -372,6 +382,7 @@ bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<Rec
         REVERSE_LOCK(lock);
         if (!ReadBlockFromDisk(*block.m_data, index, Params().GetConsensus())) block.m_data->SetNull();
     }
+    block.found = true;
     return true;
 }
 
@@ -513,6 +524,12 @@ public:
             return fork->nHeight;
         }
         return std::nullopt;
+    }
+    CDeterministicMNList getMNList(int height) override {
+        CDeterministicMNList mnList;
+        if(deterministicMNManager)
+            deterministicMNManager->GetListForBlock(m_node.chainman->ActiveChain()[height], mnList);
+        return mnList;
     }
     bool findBlock(const uint256& hash, const FoundBlock& block) override
     {
@@ -731,7 +748,7 @@ public:
     {
         LOCK(::cs_main);
         const CBlockIndex* tip = Assert(m_node.chainman)->ActiveChain().Tip();
-        return VersionBitsState(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_TAPROOT, versionbitscache) == ThresholdState::ACTIVE;
+        return DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_TAPROOT);
     }
     NodeContext& m_node;
 };

@@ -36,7 +36,8 @@ FUZZ_TARGET(crypto)
     SHA3_256 sha3;
     CSipHasher sip_hasher{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
 
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 30)
+    {
         CallOneOf(
             fuzzed_data_provider,
             [&] {

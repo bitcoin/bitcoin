@@ -48,6 +48,7 @@ public:
     enum ColumnIndex {
         NetNodeId = 0,
         Address,
+        Direction,
         ConnectionType,
         Network,
         Ping,
@@ -73,9 +74,6 @@ public:
 public Q_SLOTS:
     void refresh();
 
-Q_SIGNALS:
-    void changed();
-
 private:
     //! Internal peer data structure.
     QList<CNodeCombinedStats> m_peers_data{};
@@ -87,6 +85,9 @@ private:
         /*: Title of Peers Table column which contains the
             IP/Onion/I2P address of the connected peer. */
         tr("Address"),
+        /*: Title of Peers Table column which indicates the direction
+            the peer connection was initiated from. */
+        tr("Direction"),
         /*: Title of Peers Table column which describes the type of
             peer connection. The "type" describes why the connection exists. */
         tr("Type"),

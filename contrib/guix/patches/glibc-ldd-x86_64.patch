@@ -1,0 +1,10 @@
+By default, 'RTDLLIST' in 'ldd' refers to 'lib64/ld-linux-x86-64.so', whereas
+it's in 'lib/' for us.  This patch fixes that.
+
+--- glibc-2.17/sysdeps/unix/sysv/linux/x86_64/ldd-rewrite.sed	2012-12-25 04:02:13.000000000 +0100
++++ glibc-2.17/sysdeps/unix/sysv/linux/x86_64/ldd-rewrite.sed	2013-09-15 23:08:03.000000000 +0200
+@@ -1,3 +1,3 @@
+ /LD_TRACE_LOADED_OBJECTS=1/a\
+ add_env="$add_env LD_LIBRARY_VERSION=\\$verify_out"
+-s_^\(RTLDLIST=\)\(.*lib\)\(\|64\|x32\)\(/[^/]*\)\(-x86-64\|-x32\)\(\.so\.[0-9.]*\)[ 	]*$_\1"\2\4\6 \264\4-x86-64\6 \2x32\4-x32\6"_
++s_^\(RTLDLIST=\)\(.*lib\)\(\|64\|x32\)\(/[^/]*\)\(-x86-64\|-x32\)\(\.so\.[0-9.]*\)[ 	]*$_\1"\2\4\6 \2\4-x86-64\6 \2x32\4-x32\6"_

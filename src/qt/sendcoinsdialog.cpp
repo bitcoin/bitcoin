@@ -200,12 +200,14 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         ui->optInRBF->setCheckState(Qt::Checked);
 
         if (model->wallet().hasExternalSigner()) {
+            //: "device" usually means a hardware wallet
             ui->sendButton->setText(tr("Sign on device"));
             if (gArgs.GetArg("-signer", "") != "") {
                 ui->sendButton->setEnabled(true);
                 ui->sendButton->setToolTip(tr("Connect your hardware wallet first."));
             } else {
                 ui->sendButton->setEnabled(false);
+                //: "External signer" means using devices such as hardware wallets.
                 ui->sendButton->setToolTip(tr("Set external signer script path in Options -> Wallet"));
             }
         } else if (model->wallet().privateKeysDisabled()) {
@@ -428,11 +430,13 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
                 return;
             }
             if (err == TransactionError::EXTERNAL_SIGNER_NOT_FOUND) {
+                //: "External signer" means using devices such as hardware wallets.
                 QMessageBox::critical(nullptr, tr("External signer not found"), "External signer not found");
                 send_failure = true;
                 return;
             }
             if (err == TransactionError::EXTERNAL_SIGNER_FAILED) {
+                //: "External signer" means using devices such as hardware wallets.
                 QMessageBox::critical(nullptr, tr("External signer failure"), "External signer failure");
                 send_failure = true;
                 return;

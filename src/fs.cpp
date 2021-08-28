@@ -154,7 +154,10 @@ std::string get_filesystem_error_message(const fs::filesystem_error& e)
 #ifdef __GLIBCXX__
 
 // reference: https://github.com/gcc-mirror/gcc/blob/gcc-7_3_0-release/libstdc%2B%2B-v3/include/std/fstream#L270
-
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+#endif
 static std::string openmodeToStr(std::ios_base::openmode mode)
 {
     switch (mode & ~std::ios_base::ate) {
@@ -192,6 +195,9 @@ static std::string openmodeToStr(std::ios_base::openmode mode)
         return std::string();
     }
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 void ifstream::open(const fs::path& p, std::ios_base::openmode mode)
 {
@@ -242,7 +248,11 @@ void ofstream::close()
 }
 #else // __GLIBCXX__
 
+#if BOOST_VERSION >= 107700
+static_assert(sizeof(*BOOST_FILESYSTEM_C_STR(fs::path())) == sizeof(wchar_t),
+#else
 static_assert(sizeof(*fs::path().BOOST_FILESYSTEM_C_STR) == sizeof(wchar_t),
+#endif // BOOST_VERSION >= 107700
     "Warning: This build is using boost::filesystem ofstream and ifstream "
     "implementations which will fail to open paths containing multibyte "
     "characters. You should delete this static_assert to ignore this warning, "

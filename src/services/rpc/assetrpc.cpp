@@ -18,12 +18,12 @@
 #include <util/system.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
-#include <validationinterface.h>
 #if ENABLE_ZMQ
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqnotificationinterface.h>
 #include <zmq/zmqrpc.h>
 #endif
+#include <node/transaction.h>
 extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
@@ -604,7 +604,7 @@ static RPCHelpMan syscoingetspvproof()
     return RPCHelpMan{"syscoingetspvproof",
     "\nReturns SPV proof for use with inter-chain transfers.\n",
     {
-        {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "A transaction that is in the block"},
+        {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A transaction that is in the block"},
         {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED_NAMED_ARG, "If specified, looks for txid in the block with this hash"}
     },
     RPCResult{

@@ -61,7 +61,6 @@ public:
     {
         SetByteVector(vecBytes);
     }
-    virtual ~CBLSWrapper() {}
 
     CBLSWrapper(const CBLSWrapper& ref) = default;
     CBLSWrapper& operator=(const CBLSWrapper& ref) = default;
@@ -81,6 +80,8 @@ public:
         return *this;
     }
 
+    virtual ~CBLSWrapper() = default;
+
     bool operator==(const C& r) const
     {
         return fValid == r.fValid && impl == r.impl;
@@ -97,7 +98,7 @@ public:
 
     void Reset()
     {
-        *((C*)this) = C(fLegacy);
+        *(static_cast<C*>(this)) = C(fLegacy);
     }
 
     void SetByteVector(const std::vector<uint8_t>& vecBytes)
@@ -321,6 +322,7 @@ public:
     {
         *this = r;
     }
+    virtual ~CBLSLazyWrapper() = default;
 
     CBLSLazyWrapper& operator=(const CBLSLazyWrapper& r)
     {

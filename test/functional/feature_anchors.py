@@ -23,6 +23,7 @@ def check_node_connections(*, node, num_in, num_out):
 class AnchorsTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.disable_autoconnect = False
 
     def setup_network(self):
         self.setup_nodes()
