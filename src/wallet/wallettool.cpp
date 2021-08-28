@@ -174,6 +174,10 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
             return false;
         }
 
+        if (wallet_instance->GetDatabase().Format() == "bdb") {
+            tfm::format(std::cerr, "dump: WARNING: BDB-backed wallets have a wallet id that is not currently dumped.\n");
+        }
+
         bilingual_str error;
         bool ret = DumpWallet(*wallet_instance, error, dump_filename);
         if (!ret && !error.empty()) {

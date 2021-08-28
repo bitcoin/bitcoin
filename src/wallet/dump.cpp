@@ -160,6 +160,9 @@ bool CreateFromDump(const std::string& name, const fs::path& wallet_path, biling
         error = _("No wallet file format provided. To use createfromdump, -format=<format> must be provided.");
         return false;
     }
+    if (file_format == "bdb" || format_value == "bdb") {
+        warnings.push_back(_("Warning: BDB-backed wallets have a wallet id that is not currently restored."));
+    }
     DatabaseFormat data_format;
     if (file_format == "bdb") {
         data_format = DatabaseFormat::BERKELEY;
