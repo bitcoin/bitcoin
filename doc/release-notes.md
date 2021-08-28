@@ -1,9 +1,9 @@
-0.21.2rc1 Release Notes
+0.21.2rc2 Release Notes
 ====================
 
-Bitcoin Core version 0.21.2rc1 is now available from:
+Bitcoin Core version 0.21.2rc2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.21.2/test.rc1/>
+  <https://bitcoincore.org/bin/bitcoin-core-0.21.2/test.rc2/>
 
 This minor release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -42,7 +42,7 @@ longer supported. Additionally, Bitcoin Core does not yet change appearance
 when macOS "dark mode" is activated.
 
 
-0.21.2rc1 change log
+0.21.2rc2 change log
 =================
 
 ### P2P protocol and network code
@@ -63,6 +63,7 @@ when macOS "dark mode" is activated.
 - #21932 depends: update Qt 5.9 source url (kittywhiskers)
 - #22017 Update Windows code signing certificate (achow101)
 - #22191 Use custom MacOS code signing tool (achow101)
+- #22713 Fix build with Boost 1.77.0 (sizeofvoid)
 
 ### Tests and QA
 
@@ -70,6 +71,7 @@ when macOS "dark mode" is activated.
 - #20535 Fix intermittent feature_taproot issue (MarcoFalke)
 - #21663 Fix macOS brew install command (hebasto)
 - #22279 add missing ECCVerifyHandle to base_encode_decode (apoelstra)
+- #22730 Run fuzzer task for the master branch only (hebasto)
 
 ### GUI
 
@@ -99,6 +101,7 @@ Thanks to everyone who directly contributed to this release:
 - Pavol Rusnak
 - Pieter Wuille
 - prayank23
+- Rafael Sadowski
 - W. J. van der Laan
 
 
