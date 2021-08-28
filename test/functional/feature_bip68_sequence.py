@@ -333,7 +333,6 @@ class BIP68Test(SyscoinTestFramework):
         # tx3 to be removed.
         for i in range(2):
             block = create_block(tmpl=tmpl, ntime=cur_time)
-            block.nVersion = 3
             block.rehash()
             block.solve()
             tip = block.sha256
