@@ -5677,7 +5677,6 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
         ZeroMemory(&si, sizeof(si));
         GetStartupInfoW (&si);
         si.cb = sizeof(si); 
-        size_t start_pos = 0;
         //Prepare CreateProcess args
         std::wstring appQuoted_w(appQuoted.length(), L' '); // Make room for characters
         std::copy(appQuoted.begin(), appQuoted.end(), appQuoted_w.begin()); // Copy string to wstring.
