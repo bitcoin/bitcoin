@@ -791,8 +791,8 @@ public:
         }
         vWhitelistedRange = connOptions.vWhitelistedRange;
         {
-            LOCK(cs_vAddedNodes);
-            vAddedNodes = connOptions.m_added_nodes;
+            LOCK(m_added_nodes_mutex);
+            m_added_nodes = connOptions.m_added_nodes;
         }
         m_onion_binds = connOptions.onion_binds;
     }
@@ -823,8 +823,8 @@ public:
     using NodeFn = std::function<void(CNode*)>;
     void ForEachNode(const NodeFn& func)
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
+        LOCK(m_nodes_mutex);
+        for (auto&& node : m_nodes) {
             if (NodeFullyConnected(node))
                 func(node);
         }
@@ -832,8 +832,8 @@ public:
 
     void ForEachNode(const NodeFn& func) const
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
+        LOCK(m_nodes_mutex);
+        for (auto&& node : m_nodes) {
             if (NodeFullyConnected(node))
                 func(node);
         }
@@ -968,7 +968,7 @@ private:
 
     /**
      * Create a `CNode` object from a socket that has just been accepted and add the node to
-     * the `vNodes` member.
+     * the `m_nodes` member.
      * @param[in] hSocket Connected socket to communicate with the peer.
      * @param[in] permissionFlags The peer's permissions.
      * @param[in] addr_bind The address and port at our side of the connection.
@@ -1099,11 +1099,11 @@ private:
     AddrMan& addrman;
     std::deque<std::string> m_addr_fetches GUARDED_BY(m_addr_fetches_mutex);
     RecursiveMutex m_addr_fetches_mutex;
-    std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
-    mutable RecursiveMutex cs_vAddedNodes;
-    std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
-    std::list<CNode*> vNodesDisconnected;
-    mutable RecursiveMutex cs_vNodes;
+    std::vector<std::string> m_added_nodes GUARDED_BY(m_added_nodes_mutex);
+    mutable RecursiveMutex m_added_nodes_mutex;
+    std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
+    std::list<CNode*> m_nodes_disconnected;
+    mutable RecursiveMutex m_nodes_mutex;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
 
@@ -1225,7 +1225,7 @@ private:
     std::vector<CService> m_onion_binds;
 
     /**
-     * RAII helper to atomically create a copy of `vNodes` and add a reference
+     * RAII helper to atomically create a copy of `m_nodes` and add a reference
      * to each of the nodes. The nodes are released when this object is destroyed.
      */
     class NodesSnapshot
@@ -1234,8 +1234,8 @@ private:
         explicit NodesSnapshot(const CConnman& connman, bool shuffle)
         {
             {
-                LOCK(connman.cs_vNodes);
-                m_nodes_copy = connman.vNodes;
+                LOCK(connman.m_nodes_mutex);
+                m_nodes_copy = connman.m_nodes;
                 for (auto& node : m_nodes_copy) {
                     node->AddRef();
                 }
