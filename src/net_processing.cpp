@@ -1217,7 +1217,6 @@ void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
 void PeerManagerImpl::InitializeNode(CNode *pnode)
 {
     CAddress addr = pnode->addr;
-    std::string addrName = pnode->GetAddrName();
     NodeId nodeid = pnode->GetId();
     {
         LOCK(cs_main);
