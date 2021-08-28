@@ -231,7 +231,6 @@ void Shutdown(NodeContext& node)
     /// module was initialized.
     util::ThreadRename("shutoff");
     if (node.mempool) node.mempool->AddTransactionsUpdated(1);
-
     StopHTTPRPC();
     StopREST();
     StopRPC();
@@ -331,6 +330,8 @@ void Shutdown(NodeContext& node)
                     chainstate->ResetCoinsViews();
                 }
             }
+            // SYSCOIN
+            pnevmblocktree.reset();
         }
        
         passetdb.reset();
@@ -345,7 +346,8 @@ void Shutdown(NodeContext& node)
     for (const auto& client : node.chain_clients) {
         client->stop();
     }
-
+    // SYSCOIN
+    StopGethNode(gethPID);
 #if ENABLE_ZMQ
     if (g_zmq_notification_interface) {
         UnregisterValidationInterface(g_zmq_notification_interface);
@@ -506,10 +508,7 @@ void SetupServerArgs(ArgsManager& argsman)
 #endif
     argsman.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     // SYSCOIN
-    argsman.AddArg("-gethwebsocketport=<port>", strprintf("Listen for GETH Web Socket connections on <port> (default: %u)", 8646), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    argsman.AddArg("-gethrpcport=<port>", strprintf("Listen for GETH RPC connections on <port> (default: %u)", 8645), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    argsman.AddArg("-gethtestnet", strprintf("Connect to NEVM Rinkeby testnet network (default: %d)", false), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    argsman.AddArg("-gethsyncmode", strprintf("Geth sync mode, light, fast, full or disabled (to run your own geth node) (default: light)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    argsman.AddArg("-gethcommandline=<port>", strprintf("Geth command line parameters (default: %s)", ""), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-gethDescriptorURL", strprintf("Geth descriptor URL where to do versioning checks and binary downloads for Geth (default: https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-disablegovernance=<n>", strprintf("Disable governance validation (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS); 
@@ -600,6 +599,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-zmqpubrawblockhwm=<n>", strprintf("Set publish raw block outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubrawtxhwm=<n>", strprintf("Set publish raw transaction outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     // SYSCOIN
+    argsman.AddArg("-zmqpubnevm=<address>", "Enable NEVM publishing/subscriber for Geth node in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubhashgovernancevote=<address>", "Enable publish hash of governance votes transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubhashgovernanceobject=<address>", "Enable publish hash of governance objects transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubrawgovernancevote=<address>", "Enable publish raw governance votes transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
@@ -625,6 +625,7 @@ void SetupServerArgs(ArgsManager& argsman)
     hidden_args.emplace_back("-zmqpubrawblockhwm=<n>");
     hidden_args.emplace_back("-zmqpubrawtxhwm=<n>");
     hidden_args.emplace_back("-zmqpubsequencehwm=<n>");
+    hidden_args.emplace_back("-zmqpubnevm=<address>");
 #endif
 
     argsman.AddArg("-checkblocks=<n>", strprintf("How many blocks to check at startup (default: %u, 0 = all)", DEFAULT_CHECKBLOCKS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
@@ -1550,15 +1551,24 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     } else {
         LogPrintf("Using /16 prefix for IP bucketing\n");
     }
-
+    // SYSCOIN
+    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", "");
+    fNEVMConnection = !NEVMSub.empty();
 #if ENABLE_ZMQ
     g_zmq_notification_interface = CZMQNotificationInterface::Create();
-
+    if((!fRegTest && !fSigNet && fMasternodeMode) || fNEVMConnection) {
+        if(!g_zmq_notification_interface) {
+            return InitError(Untranslated("Could not establish ZMQ interface connections, check your ZMQ settings and try again..."));
+        }
+    }
     if (g_zmq_notification_interface) {
         RegisterValidationInterface(g_zmq_notification_interface);
     }
 #endif
     // SYSCOIN
+    if((!fRegTest && !fSigNet && fMasternodeMode) || fNEVMConnection) {
+        node.scheduler->scheduleFromNow([&] { DoGethMaintenance(); }, std::chrono::milliseconds{250});
+    }
     pdsNotificationInterface = new CDSNotificationInterface(*node.connman);
     RegisterValidationInterface(pdsNotificationInterface);
     // ********************************************************* Step 7: load block chain
@@ -1677,6 +1687,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();
                 pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
+                // SYSCOIN
+                pnevmblocktree.reset();
+                // we shouldn't clear this DB even on reset because it only stores the last maxTipAge*2 NEVM block data
+                // which we should have when propogating blocks across network as peers depend on it being there if not IBD (< maxTipAge*2 old)
+                pnevmblocktree.reset(new CNEVMBlockTreeDB(nBlockTreeDBCache, false));
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
@@ -1883,7 +1898,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
         }
     }
-
+    uiInterface.InitMessage("Loading Geth...");
+    UninterruptibleSleep(std::chrono::milliseconds{5000});
     // As LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill the GUI during the last operation. If so, exit.
     // As the program has not fully started yet, Shutdown() is possibly overkill.
@@ -2029,9 +2045,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey());
     }
     LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
-
-
- 
+    if(!fRegTest && !fNEVMConnection && fMasternodeMode) {
+        return InitError(Untranslated("You must define -zmqpubnevm on a masternode."));
+    }
+    #if ENABLE_ZMQ
+        if(!g_zmq_notification_interface && fNEVMConnection) {
+            return InitError(_("Unable to start ZMQ interface. See debug log for details."));
+        }
+    #endif
     // SYSCOIN ********************************************************* Step 11b: Load cache data
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
@@ -2234,12 +2255,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.scheduler->scheduleEvery([banman]{
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL);
-    // SYSCOIN
-    if(!fRegTest && !fSigNet && (fMasternodeMode || gArgs.IsArgSet("-gethsyncmode"))) {
-        node.scheduler->scheduleFromNow([&] { DoGethMaintenance(); }, std::chrono::seconds{15});
-    } 
 
     if (node.peerman) node.peerman->StartScheduledTasks(*node.scheduler);
+
 
 #if HAVE_SYSTEM
     StartupNotify(args);

@@ -15,14 +15,17 @@ class CZMQAbstractNotifier;
 // SYSCOIN
 class CGovernanceObject;
 class CGovernanceVote;
+class CNEVMBlock;
+class BlockValidationState;
+class uint256;
 using CZMQNotifierFactory = std::unique_ptr<CZMQAbstractNotifier> (*)();
 
 class CZMQAbstractNotifier
 {
 public:
     static const int DEFAULT_ZMQ_SNDHWM {1000};
-
-    CZMQAbstractNotifier() : psocket(nullptr), outbound_message_high_water_mark(DEFAULT_ZMQ_SNDHWM) { }
+    // SYSCOIN
+    CZMQAbstractNotifier() : psocket(nullptr), psocketsub(nullptr), outbound_message_high_water_mark(DEFAULT_ZMQ_SNDHWM) { }
     virtual ~CZMQAbstractNotifier();
 
     template <typename T>
@@ -34,15 +37,17 @@ public:
     std::string GetType() const { return type; }
     void SetType(const std::string &t) { type = t; }
     std::string GetAddress() const { return address; }
+    std::string GetAddressSub() const { return addresssub; }
     void SetAddress(const std::string &a) { address = a; }
+    void SetAddressSub(const std::string &a) { addresssub = a; }
     int GetOutboundMessageHighWaterMark() const { return outbound_message_high_water_mark; }
     void SetOutboundMessageHighWaterMark(const int sndhwm) {
         if (sndhwm >= 0) {
             outbound_message_high_water_mark = sndhwm;
         }
     }
-
-    virtual bool Initialize(void *pcontext) = 0;
+    // SYSCOIN
+    virtual bool Initialize(void *pcontext, void *pcontextsub) = 0;
     virtual void Shutdown() = 0;
 
     // Notifies of ConnectTip result, i.e., new active tip only
@@ -61,11 +66,18 @@ public:
     virtual bool NotifyTransactionMempool(const CTransaction &transaction);
     virtual bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
     virtual bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
+    virtual bool NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash);
+    virtual bool NotifyNEVMBlockDisconnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash);
+    virtual bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state);
+    virtual bool NotifyNEVMComms(bool bConnect, bool &bResponse);
 
 protected:
     void *psocket;
+    // SYSCOIN
+    void *psocketsub;
     std::string type;
     std::string address;
+    std::string addresssub;
     int outbound_message_high_water_mark; // aka SNDHWM
 };
 

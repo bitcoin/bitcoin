@@ -210,11 +210,25 @@ bool DecodeHexBlockHeader(CBlockHeader& header, const std::string& hex_header)
     if (!IsHex(hex_header)) return false;
 
     const std::vector<unsigned char> header_data{ParseHex(hex_header)};
-    CDataStream ser_header(header_data, SER_NETWORK, PROTOCOL_VERSION);
+    // SYSCOIN
+    CDataStream ser_header(header_data, SER_TRANSPORT, PROTOCOL_VERSION);
     try {
         ser_header >> header;
     } catch (const std::exception&) {
-        return false;
+        ser_header = CDataStream(header_data, SER_NETWORK, PROTOCOL_VERSION);
+        try {
+            ser_header >> header;
+        } catch (const std::exception&) {
+            return false;
+        }
+    }
+    if(header.IsNull()) {
+        ser_header = CDataStream(header_data, SER_NETWORK, PROTOCOL_VERSION);
+        try {
+            ser_header >> header;
+        } catch (const std::exception&) {
+            return false;
+        }      
     }
     return true;
 }
@@ -225,14 +239,32 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
         return false;
 
     std::vector<unsigned char> blockData(ParseHex(strHexBlk));
-    CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION);
+    // SYSCOIN
+    CDataStream ssBlock(blockData, SER_TRANSPORT, PROTOCOL_VERSION);
     try {
         ssBlock >> block;
     }
     catch (const std::exception&) {
+        ssBlock = CDataStream(blockData, SER_NETWORK, PROTOCOL_VERSION);
+        try {
+            ssBlock >> block;
+        }
+        catch (const std::exception&) {
+            return false;
+        }
+    }
+    if (block.vtx.empty() || !block.vtx[0]->IsCoinBase()) {
+        ssBlock = CDataStream(blockData, SER_NETWORK, PROTOCOL_VERSION);
+        try {
+            ssBlock >> block;
+        }
+        catch (const std::exception&) {
+            return false;
+        }
+    }
+    if (block.vtx.empty() || !block.vtx[0]->IsCoinBase()) {
         return false;
     }
-
     return true;
 }
 

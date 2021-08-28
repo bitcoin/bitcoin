@@ -152,6 +152,7 @@ enum
     SER_NETWORK         = (1 << 0),
     SER_DISK            = (1 << 1),
     SER_GETHASH         = (1 << 2),
+    SER_TRANSPORT       = (1 << 3),
 };
 
 //! Convert the reference base type to X, without changing constness or reference type.
@@ -1330,6 +1331,8 @@ public:
     }
 
     int GetVersion() const { return nVersion; }
+    // SYSCOIN
+    int GetType() const { return SER_DISK; }
 };
 
 template<typename Stream>

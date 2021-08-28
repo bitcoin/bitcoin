@@ -72,6 +72,7 @@ MSG_QUORUM_JUSTIFICATION = 17
 MSG_QUORUM_PREMATURE_COMMITMENT = 18
 MSG_QUORUM_RECOVERED_SIG = 19
 MSG_CLSIG = 20
+VERSION_NEVM = (1 << 7)
 # Constants for the auxpow block version.
 VERSION_AUXPOW = (1 << 8)
 VERSION_START_BIT = 16
@@ -252,6 +253,70 @@ def tx_from_hex(hex_string):
 
 # Objects that map to syscoind objects, which can be serialized/deserialized
 # SYSCOIN
+class CNEVMBlock:
+    __slots__ = ("blockhash", "parentblockhash", "txroot", "receiptroot", "blockdata")
+    def __init__(self, blockhash=0, parentblockhash=0,txroot=b"", receiptroot=b"", blockdata=b""):
+        self.blockhash = blockhash
+        self.parentblockhash = blockhash
+        self.txroot = txroot
+        self.receiptroot = receiptroot
+        self.blockdata = blockdata
+
+    def deserialize(self, f):
+        self.blockhash = deser_uint256(f)
+        self.parentblockhash = deser_uint256(f)
+        self.txroot = deser_string(f)
+        self.receiptroot = deser_string(f)
+        self.blockdata = deser_string(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_uint256(self.blockhash)
+        r += ser_uint256(self.parentblockhash)
+        r += ser_string(self.txroot)
+        r += ser_string(self.receiptroot)
+        r += ser_string(self.blockdata)
+        return r
+
+    def __repr__(self):
+        return "CEVMBlock(blockhash=%064x parentblockhash=%064x txroot=%s receiptroot=%s blockdata=%s)" % (self.blockhash, self.parentblockhash, self.txroot, self.receiptroot, self.blockdata)
+
+class CNEVMBlockConnect(CNEVMBlock):
+    __slots__ = ("sysblockhash")
+    def __init__(self):
+        super(CNEVMBlockConnect, self).__init__()
+        self.sysblockhash = 0
+
+    def deserialize(self, f):
+        super(CNEVMBlockConnect, self).deserialize(f)
+        self.sysblockhash = deser_uint256(f)
+
+    def serialize(self):
+        r = b""
+        r += super(CNEVMBlockConnect, self).serialize()
+        r += ser_uint256(self.sysblockhash)
+        return r
+
+    def __repr__(self):
+        return "CNEVMBlockConnect(blockhash=%064x parentblockhash=%064x sysblockhash=%064x txroot=%s receiptroot=%s blockdata=%s)" % (self.blockhash, self.parentblockhash, self.sysblockhash, self.txroot, self.receiptroot, self.blockdata)
+
+class CNEVMBlockDisconnect():
+    __slots__ = ("sysblockhash")
+    def __init__(self):
+        self.sysblockhash = 0
+
+    def deserialize(self, f):
+        self.sysblockhash = deser_uint256(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_uint256(self.sysblockhash)
+        return r
+
+    def __repr__(self):
+        return "CNEVMBlockDisconnect(sysblockhash=%064x)" % (self.sysblockhash)
+
+
 class CService:
     __slots__ = ("ip", "port")
     def __init__(self):
@@ -770,8 +835,14 @@ class CBlockHeader:
     def mark_auxpow(self):
         self.nVersion |= VERSION_AUXPOW
 
+    def mark_nevm(self):
+        self.nVersion |= VERSION_NEVM
+
     def is_auxpow(self):
         return (self.nVersion & VERSION_AUXPOW) > 0
+
+    def is_nevm(self):
+        return (self.nVersion & VERSION_NEVM) > 0
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<i", f.read(4))[0]
@@ -783,6 +854,9 @@ class CBlockHeader:
         if self.is_auxpow():
             self.auxpow = CAuxPow()
             self.auxpow.deserialize(f)
+        elif self.is_nevm():
+            # SYSCOIN read 1 byte for evm data, note auxpow has parent header which puts the extra byte at the end of auxpow
+            f.read(1)
         self.sha256 = None
         self.hash = None
 
@@ -796,6 +870,9 @@ class CBlockHeader:
         r += struct.pack("<I", self.nNonce)
         if self.is_auxpow():
             r += self.auxpow.serialize()
+        elif self.is_nevm():
+            # SYSCOIN nevm data, note auxpow reads one extra byte from parent block header so no need to read it if auxpow here
+            r += struct.pack("<b", 0)
         return r
 
     def calc_sha256(self):

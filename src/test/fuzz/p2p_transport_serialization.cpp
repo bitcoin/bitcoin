@@ -24,7 +24,8 @@ void initialize_p2p_transport_serialization()
 FUZZ_TARGET_INIT(p2p_transport_serialization, initialize_p2p_transport_serialization)
 {
     // Construct deserializer, with a dummy NodeId
-    V1TransportDeserializer deserializer{Params(), (NodeId)0, SER_NETWORK, INIT_PROTO_VERSION};
+    // SYSCOIN
+    V1TransportDeserializer deserializer{Params(), (NodeId)0, SER_TRANSPORT, INIT_PROTO_VERSION};
     V1TransportSerializer serializer{};
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 

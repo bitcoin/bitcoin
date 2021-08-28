@@ -18,6 +18,11 @@
 #include <util/system.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
+#if ENABLE_ZMQ
+#include <zmq/zmqabstractnotifier.h>
+#include <zmq/zmqnotificationinterface.h>
+#include <zmq/zmqrpc.h>
+#endif
 #include <node/transaction.h>
 extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
@@ -412,6 +417,80 @@ static RPCHelpMan syscoindecoderawtransaction()
     };
 }
 
+static RPCHelpMan getnevmblockchaininfo()
+{
+    return RPCHelpMan{"getnevmblockchaininfo",
+        "\nReturn NEVM blockchain information and status.\n",
+        {
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR_HEX, "bestblockhash", "The tip of the NEVM blockchain"},
+                {RPCResult::Type::STR_HEX, "previousblockhash", "The hash of the previous block"},
+                {RPCResult::Type::STR_HEX, "txroot", "Transaction root of the current tip"},
+                {RPCResult::Type::STR_HEX, "receiptroot", "Receipt root of the current tip"},
+                {RPCResult::Type::NUM, "blocksize", "Serialized NEVM block size. 0 means it has been pruned."},
+                {RPCResult::Type::NUM, "height", "The current NEVM blockchain height"},
+                {RPCResult::Type::STR, "commandline", "The NEVM command line parameters used to pass through to sysgeth"},
+                {RPCResult::Type::STR, "status", "The NEVM status, online or offline"},
+            }},
+        RPCExamples{
+            HelpExampleCli("getnevmblockchaininfo", "")
+            + HelpExampleRpc("getnevmblockchaininfo", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    UniValue oNEVM(UniValue::VOBJ);
+    CNEVMBlock evmBlock;
+    BlockValidationState state;
+    int nHeight;
+    CBlock block;
+    {
+        LOCK(cs_main);
+        auto *tip = chainman.ActiveChain().Tip();
+        nHeight = tip->nHeight;
+        auto *pblockindex = chainman.m_blockman.LookupBlockIndex(tip->GetBlockHash());
+        if (!pblockindex) {
+            throw JSONRPCError(RPC_MISC_ERROR, tip->GetBlockHash().ToString() + " not found");
+        }
+        if (IsBlockPruned(pblockindex)) {
+            throw JSONRPCError(RPC_MISC_ERROR, tip->GetBlockHash().ToString() + " not available (pruned data)");
+        }
+        if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus(), false, &chainman.m_blockman)) {
+            throw JSONRPCError(RPC_MISC_ERROR, tip->GetBlockHash().ToString() + " not found");
+        }
+        if(!GetNEVMData(state, block, evmBlock)) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, state.ToString());
+        }
+    }
+    const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
+    std::vector<UniValue> vec;
+    for(auto& cmd: cmdLine) {
+        UniValue v;
+        v.setStr(cmd);
+        vec.push_back(v);
+    }
+    std::reverse (evmBlock.nBlockHash.begin (), evmBlock.nBlockHash.end ()); // correct endian
+    std::reverse (evmBlock.nParentBlockHash.begin (), evmBlock.nParentBlockHash.end ()); // correct endian
+    oNEVM.__pushKV("bestblockhash", "0x" + evmBlock.nBlockHash.ToString());
+    oNEVM.__pushKV("previousblockhash", "0x" + evmBlock.nParentBlockHash.ToString());
+    oNEVM.__pushKV("txroot", "0x" + HexStr(evmBlock.vchTxRoot));
+    oNEVM.__pushKV("receiptroot", "0x" + HexStr(evmBlock.vchReceiptRoot));
+    oNEVM.__pushKV("height", (nHeight - Params().GetConsensus().nNEVMStartBlock) + 1);
+    oNEVM.__pushKV("blocksize", (int)block.vchNEVMBlockData.size());
+    UniValue arrVec(UniValue::VARR);
+    arrVec.push_backV(vec);
+    oNEVM.__pushKV("commandline", arrVec);
+    bool bResponse;
+    GetMainSignals().NotifyNEVMComms(true, bResponse);
+    oNEVM.__pushKV("status", bResponse? "online": "offline");
+    return oNEVM;
+},
+    };
+}
+
 static RPCHelpMan assetinfo()
 {
     return RPCHelpMan{"assetinfo",
@@ -552,6 +631,12 @@ static RPCHelpMan syscoingetspvproof()
                 pblockindex = node.chainman->ActiveChain()[coin.nHeight];
             }
         }
+        if (pblockindex == nullptr) {
+            uint32_t nBlockHeight;
+            if(pblockindexdb != nullptr && pblockindexdb->ReadBlockHeight(txhash, nBlockHeight)) {	    
+                pblockindex = node.chainman->ActiveChain()[nBlockHeight];
+            }
+        } 
     }
 
     // Allow txindex to catch up if we need to query it and before we acquire cs_main.
@@ -559,16 +644,12 @@ static RPCHelpMan syscoingetspvproof()
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
     CTransactionRef tx;
-    if (pblockindex == nullptr)
     {
         LOCK(cs_main);
-        tx = GetTransaction(nullptr, nullptr, txhash, Params().GetConsensus(), hashBlock);
+        hashBlock = pblockindex->GetBlockHash();
+        tx = GetTransaction(pblockindex, nullptr, txhash, Params().GetConsensus(), hashBlock);
         if(!tx || hashBlock.IsNull())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
-        pblockindex = node.chainman->m_blockman.LookupBlockIndex(hashBlock);
-        if (!pblockindex) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");
-        }
     }
 
     CBlock block;
@@ -601,7 +682,14 @@ static RPCHelpMan syscoingetspvproof()
         siblings.push_back(txHashFromBlock.GetHex());
     }
     res.__pushKV("siblings", siblings);
-    res.__pushKV("index", nIndex);    
+    res.__pushKV("index", nIndex);  
+    CNEVMBlock evmBlock;
+    BlockValidationState state;
+    if(!GetNEVMData(state, block, evmBlock)) {
+        throw JSONRPCError(RPC_MISC_ERROR, "NEVM data not found");
+    }  
+    std::reverse (evmBlock.nBlockHash.begin (), evmBlock.nBlockHash.end ()); // correct endian
+    res.__pushKV("nevm_blockhash", evmBlock.nBlockHash.GetHex());
     return res;
 },
     };
@@ -648,13 +736,34 @@ static RPCHelpMan syscoinstartgeth()
     },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", "");
+    if(NEVMSub.empty()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Could not start Geth. zmqpubnevm not defined");
+    }
     StopGethNode(gethPID);
-    int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
-    int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
-    const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-    const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-    if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
+#if ENABLE_ZMQ
+    if (g_zmq_notification_interface) {
+        UnregisterValidationInterface(g_zmq_notification_interface);
+        delete g_zmq_notification_interface;
+        g_zmq_notification_interface = nullptr;
+    }
+    g_zmq_notification_interface = CZMQNotificationInterface::Create();
+    if((!fRegTest && !fSigNet && fMasternodeMode) || fNEVMConnection) {
+        if(!g_zmq_notification_interface) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Could not establish ZMQ interface connections, check your ZMQ settings and try again...");
+        }
+    }
+    if (g_zmq_notification_interface) {
+        RegisterValidationInterface(g_zmq_notification_interface);
+    }
+#endif
+    const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+    if(!StartGethNode(gethDescriptorURL, gethPID))
         throw JSONRPCError(RPC_MISC_ERROR, "Could not start Geth");
+    if(!chainman.ActiveChainstate().ResetLastBlock()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Could not reset last invalid block");
+    }
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", "success");
     return ret;
@@ -823,6 +932,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            &syscoincheckmint,              },
     { "syscoin",            &assettransactionnotarize,      },
     { "syscoin",            &getnotarysighash,              },
+    { "syscoin",            &getnevmblockchaininfo,         },
 };
 // clang-format on
     for (const auto& c : commands) {

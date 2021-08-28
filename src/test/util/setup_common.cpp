@@ -156,6 +156,8 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_node.scheduler->m_service_thread = std::thread(util::TraceThread, "scheduler", [&] { m_node.scheduler->serviceQueue(); });
     GetMainSignals().RegisterBackgroundSignalScheduler(*m_node.scheduler);
 
+    // SYSCOIN
+    pnevmblocktree.reset(new CNEVMBlockTreeDB(1 << 20, true));
     m_node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
     m_node.mempool = std::make_unique<CTxMemPool>(m_node.fee_estimator.get(), 1);
 
@@ -189,6 +191,7 @@ ChainTestingSetup::~ChainTestingSetup()
     llmq::DestroyLLMQSystem();
     m_node.chainman->Reset();
     m_node.chainman.reset();
+    pnevmblocktree.reset();
     governance.reset();
 }
 

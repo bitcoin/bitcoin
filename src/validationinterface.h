@@ -26,6 +26,7 @@ class CGovernanceVote;
 class CGovernanceObject;
 class CDeterministicMNList;
 class CDeterministicMNListDiff;
+class CNEVMBlock;
 enum class MemPoolRemovalReason;
 
 /** Register subscriber */
@@ -187,6 +188,10 @@ protected:
     virtual void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) {}
     virtual void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject> &object) {}
     virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
+    virtual void NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash) {}
+    virtual void NotifyNEVMBlockDisconnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash) {}
+    virtual void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state) {}
+    virtual void NotifyNEVMComms(bool bConnect, bool &bResponse) {}
 };
 
 struct MainSignalsInstance;
@@ -225,6 +230,10 @@ public:
     void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
     void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
     void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff);
+    void NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash);
+    void NotifyNEVMBlockDisconnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash);
+    void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state);
+    void NotifyNEVMComms(bool bConnect, bool &bResponse);
 };
 
 CMainSignals& GetMainSignals();

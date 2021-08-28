@@ -1785,7 +1785,7 @@ static RPCHelpMan assetallocationmint()
             {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset guid"},
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Mint to this address."},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to mint.  Note that fees (in SYS) will be taken from the owner address"},
-            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on NEVM."},
+            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block that included the burn transaction on NEVM."},
             {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction hex."},
             {"txroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction merkle root that commits this transaction to the block header."},
             {"txmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction merkle root."},

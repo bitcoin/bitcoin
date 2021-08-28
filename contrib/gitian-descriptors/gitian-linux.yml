@@ -25,7 +25,7 @@ packages:
 - "python3"
 - "python3-pip"
 # SYSCOIN
-- "build-essential"
+- "libzmq3-dev"
 # Cross compilation HOSTS:
 #  - arm-linux-gnueabihf
 - "binutils-arm-linux-gnueabihf"

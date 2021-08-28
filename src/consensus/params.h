@@ -155,10 +155,12 @@ struct Params {
     double nSeniorityLevel1;
     unsigned int nSeniorityHeight2;
     double nSeniorityLevel2;
+    bool bTestnet;
     int nBridgeStartBlock;
     int nNEVMStartBlock;
     int nUTXOAssetsBlock;
     int nUTXOAssetsBlockProvisioning;
+    uint64_t nMinMNSubsidySats;
         
     int nSuperblockStartBlock;
     int nSuperblockCycle; // in blocks
@@ -200,9 +202,50 @@ struct Params {
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
-    int64_t nPowTargetSpacing1;
-    int64_t DifficultyAdjustmentIntervalOld() const { return nPowTargetTimespan / nPowTargetSpacing1; }
-    int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
+    int SuperBlockCycle(int nHeight) const { 
+        if (nHeight >= nNEVMStartBlock) {
+            return nSuperblockCycle;
+        } else {
+            return nSuperblockCycle*2.5;
+        }
+    }
+    double Seniority(int nHeight, int nDifferenceInBlocks) const { 
+        int nSeniorityAge1 = nSeniorityHeight1;
+        int nSeniorityAge2 = nSeniorityHeight2;
+        if(bTestnet) {
+            if(nDifferenceInBlocks >= nSeniorityAge2)
+                return nSeniorityLevel2;
+            else if(nDifferenceInBlocks >= nSeniorityAge1)
+                return nSeniorityLevel1;
+            return 0;
+        }
+        if (nHeight < nNEVMStartBlock) {
+            nSeniorityAge1 *= 2.5;
+            nSeniorityAge2 *= 2.5;
+        }
+        if(nDifferenceInBlocks >= nSeniorityAge2)
+            return nSeniorityLevel2;
+        else if(nDifferenceInBlocks >= nSeniorityAge1)
+            return nSeniorityLevel1;
+        return 0;    
+    }
+    int SubsidyHalvingInterval(int nHeight) const { 
+        if (nHeight >= nNEVMStartBlock) {
+            return nSubsidyHalvingInterval;
+        } else {
+            return nSubsidyHalvingInterval*2.5;
+        }
+    }
+    int64_t PowTargetSpacing(int nHeight) const {
+        if(nHeight >= nNEVMStartBlock) {
+            return nPowTargetSpacing; 
+        } else {
+            return (nPowTargetSpacing/2.5); 
+        }
+    }
+    int64_t DifficultyAdjustmentInterval(int nHeight) const {
+        return nPowTargetTimespan / PowTargetSpacing(nHeight);
+    }
     /** The best chain should have at least this much work */
     uint256 nMinimumChainWork;
     /** By default assume that the signatures in ancestors of this block are valid */

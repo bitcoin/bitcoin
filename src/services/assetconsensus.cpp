@@ -14,6 +14,7 @@
 #include <messagesigner.h>
 #include <util/rbf.h>
 #include <undo.h>
+#include <validationinterface.h>
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CAssetNFTDB> passetnftdb;
 std::unique_ptr<CNEVMTxRootsDB> pnevmtxrootsdb;
@@ -43,7 +44,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         LOCK(cs_setethstatus);
         readTxRootFail = !pnevmtxrootsdb || !pnevmtxrootsdb->ReadTxRoots(mintSyscoin.nBlockHash, txRootDB);
     }
-    if(readTxRootFail) {
+    if(readTxRootFail && fNEVMConnection) {
         return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
     }
      
@@ -104,10 +105,10 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
                      return FormatSyscoinErrorMessage(state, "mint-receipt-log-data-invalid-size", bSanityCheck);
                 }
                 // get last data field which should be our precisions
-                const std::vector<unsigned char> bridgeIdValue(dataValue.begin()+64, dataValue.end());
+                const std::vector<unsigned char> precisions(dataValue.begin()+64, dataValue.end());
                 // get precision
-                nERC20Precision = static_cast<uint8_t>(bridgeIdValue[31]);
-                nSPTPrecision = static_cast<uint8_t>(bridgeIdValue[30]);
+                nERC20Precision = static_cast<uint8_t>(precisions[31]);
+                nSPTPrecision = static_cast<uint8_t>(precisions[27]);
             }
         }
     }
@@ -117,13 +118,14 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     // check transaction spv proofs
     dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
     dev::RLP rlpReceiptRoot(&mintSyscoin.vchReceiptRoot);
+    if(fNEVMConnection) {
+        if(!txRootDB.vchTxRoot.empty() && mintSyscoin.vchTxRoot != txRootDB.vchTxRoot){
+            return FormatSyscoinErrorMessage(state, "mint-mismatching-txroot", bSanityCheck);
+        }
 
-    if(!txRootDB.vchTxRoot.empty() && mintSyscoin.vchTxRoot != txRootDB.vchTxRoot){
-        return FormatSyscoinErrorMessage(state, "mint-mismatching-txroot", bSanityCheck);
-    }
-
-    if(!txRootDB.vchReceiptRoot.empty() && mintSyscoin.vchReceiptRoot != txRootDB.vchReceiptRoot){
-        return FormatSyscoinErrorMessage(state, "mint-mismatching-receiptroot", bSanityCheck);
+        if(!txRootDB.vchReceiptRoot.empty() && mintSyscoin.vchReceiptRoot != txRootDB.vchReceiptRoot){
+            return FormatSyscoinErrorMessage(state, "mint-mismatching-receiptroot", bSanityCheck);
+        }
     }
     
     dev::RLP rlpTxParentNodes(&mintSyscoin.vchTxParentNodes);
@@ -246,7 +248,6 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }               
     return true;
 }
-
 bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, NEVMMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
     if(!fRegTest && nHeight < params.nUTXOAssetsBlock)
         return !IsSyscoinTx(tx.nVersion);
@@ -1012,7 +1013,7 @@ bool CNEVMTxRootsDB::FlushErase(const std::vector<uint256> &vecBlockHashes) {
     return WriteBatch(batch);
 }
 
-bool CNEVMTxRootsDB::FlushWrite(const NEVMTxRootMap &mapNEVMTxRoots) {
+bool CNEVMTxRootsDB::FlushWrite(NEVMTxRootMap &mapNEVMTxRoots) {
     if(mapNEVMTxRoots.empty())
         return true;
     CDBBatch batch(*this);
@@ -1020,7 +1021,9 @@ bool CNEVMTxRootsDB::FlushWrite(const NEVMTxRootMap &mapNEVMTxRoots) {
         batch.Write(key.first, key.second);
     }
     LogPrint(BCLog::SYS, "Flushing, writing %d nevm tx roots\n", mapNEVMTxRoots.size());
-    return WriteBatch(batch);
+    const bool res = WriteBatch(batch);
+    mapNEVMTxRoots.clear();
+    return res;
 }
 
 // called on connect

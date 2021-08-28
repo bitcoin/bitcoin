@@ -46,7 +46,7 @@ Optional dependencies:
  qt          | GUI              | GUI toolkit (only needed when GUI enabled)
  libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
  univalue    | Utility          | JSON parsing and encoding (bundled version will be used unless --with-system-univalue passed to configure)
- libzmq3     | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= 4.0.0)
+ libzmq3     | ZMQ notification | Allows generating ZMQ notifications (requires ZMQ version >= 4.0.0)
  sqlite3     | SQLite DB        | Optional, wallet storage (only needed when wallet enabled)
  systemtap   | Tracing (USDT)   | Optional, statically defined tracepoints
 
@@ -79,7 +79,7 @@ Finally, clang (often less resource hungry) can be used instead of gcc, which is
 
 Build requirements:
 
-    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 cmake
+    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 cmake libzmq3-dev
 
 Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
 
@@ -137,7 +137,7 @@ built by default.
 
 Build requirements:
 
-    sudo dnf install gcc-c++ libtool make autoconf automake python3
+    sudo dnf install gcc-c++ libtool make autoconf automake python3 zeromq-devel
 
 Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
 

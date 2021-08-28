@@ -69,6 +69,9 @@
 #include <messagesigner.h>
 #include <rpc/request.h>
 #include <signal.h>
+#ifndef WIN32
+#include <sys/wait.h>
+#endif
 // SYSCOIN
 RecursiveMutex cs_geth;
 struct DescriptorDetails {
@@ -166,6 +169,8 @@ extern std::vector<CBlockFileInfo> vinfoBlockFile;
 extern int nLastBlockFile;
 extern bool fCheckForPruning;
 extern std::set<CBlockIndex*> setDirtyBlockIndex;
+// SYSCOIN
+extern std::set<CNEVMBlockIndex*> setDirtyNEVMBlockIndex;
 extern std::set<int> setDirtyFileInfo;
 void FlushBlockFile(bool fFinalize = false, bool finalize_undo = false);
 // ... TODO move fully to blockstorage
@@ -175,6 +180,13 @@ CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash) const
     AssertLockHeld(cs_main);
     BlockMap::const_iterator it = m_block_index.find(hash);
     return it == m_block_index.end() ? nullptr : it->second;
+}
+// SYSCOIN
+CNEVMBlockIndex* BlockManager::LookupNEVMBlockIndex(const uint256& hash) const
+{
+    AssertLockHeld(cs_main);
+    NEVMBlockMap::const_iterator it = m_block_nevm_index.find(hash);
+    return it == m_block_nevm_index.end() ? nullptr : it->second;
 }
 std::pair<PrevBlockMap::iterator,PrevBlockMap::iterator> BlockManager::LookupBlockIndexPrev(const uint256& hash)
 {
@@ -201,6 +213,7 @@ CBlockIndex* BlockManager::FindForkInGlobalIndex(const CChain& chain, const CBlo
 }
 
 // SYSCOIN
+std::unique_ptr<CNEVMBlockTreeDB> pnevmblocktree;
 std::unique_ptr<CBlockIndexDB> pblockindexdb;
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        const CCoinsViewCache& inputs, unsigned int flags, bool cacheSigStore,
@@ -1358,12 +1371,14 @@ CAmount GetBlockSubsidy(unsigned int nHeight, const CChainParams& params, bool f
     }
 
     CAmount nSubsidy = 38.5 * COIN;
-    int reductions = nHeight / consensusParams.nSubsidyHalvingInterval;
+    // account for NEVM adjustment to 2.5 blocks
+    if(nHeight >= (unsigned int)consensusParams.nNEVMStartBlock)
+        nSubsidy *= 2.5;
+    int reductions = nHeight / consensusParams.SubsidyHalvingInterval(nHeight);
     if (reductions >= 50) {
         return 0;
     }
-    // Subsidy reduced every 525600 blocks which will occur approximately every year.
-    // yearly decline of production by 5% per year, projected ~888M coins max by year 2067+.
+    // Subsidy reduced every year by 5%
     for (int i = 0; i < reductions; i++) {
         nSubsidy -= nSubsidy / 20;
     }
@@ -1727,12 +1742,95 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
+// walk through ancestors and remove NEVM block data since chainlocked block ancestors wouldn't need to reverify evm data
+void PruneNEVMData(CNEVMBlockIndex* pindex) {
+    // go back MAX_TIP_AGE*2 blocks back and add to dirty index to clear vchNEVMBlockData
+    int64_t nAgeThreshold = nMaxTipAge*2;
+    int64_t nTime = GetAdjustedTime();
+    while (pindex != nullptr) {
+        if (pindex->GetBlockTime() >= (nTime - nAgeThreshold)) {
+             pindex = pindex->pprev;
+        }
+        else {
+            break;
+        }
+    }
+    // go back further MAX_TIP_AGE blocks and delete all mapped blocks older than tip age *2
+    while (pindex != nullptr) {
+        setDirtyNEVMBlockIndex.insert(pindex);
+        pindex = pindex->pprev;
+    }
+}
+bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMBlock &evmBlock) {
+    std::vector<unsigned char> vchData;
+	int nOut;
+	if (!GetSyscoinData(*block.vtx[0], vchData, nOut))
+		return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-data-output");
+    std::string strVchData(vchData.begin(), vchData.end());
+    auto pos = strVchData.find("NEVM");
+    if(pos == std::string::npos )
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-tag");
+    strVchData = strVchData.substr(pos+5);
+    std::vector<unsigned char> newVchData(strVchData.begin(), strVchData.end());
+    CDataStream ds(newVchData, SER_NETWORK, PROTOCOL_VERSION);
+    try {
+        ds >> evmBlock;
+    } catch (std::exception& e) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-unserialize");
+    }
+    return true;
+}
+bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const bool fInitialDownload, const bool fJustCheck) {
+    CNEVMBlock evmBlock;
+    if(!GetNEVMData(state, block, evmBlock)) {
+        return false; //state filled by GetNEVMData 
+    }
+    // return if block was already processed
+    auto it = mapNEVMTxRoots.find(evmBlock.nBlockHash);
+    if(it != mapNEVMTxRoots.end() || pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash)) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-duplicate");
+    }
+    if(!fInitialDownload) {
+        if(!block.vchNEVMBlockData.empty()) {
+            evmBlock.vchNEVMBlockData = std::move(block.vchNEVMBlockData);
+        } else if(fLoaded) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-empty");
+        }
+    }
+    
+    GetMainSignals().NotifyNEVMBlockConnect(evmBlock, state, fJustCheck? uint256(): nBlockHash);
+    bool res = state.IsValid();
+    if(res && !fJustCheck) {
+        NEVMTxRoot txRootDB;
+        txRootDB.vchTxRoot = evmBlock.vchTxRoot;
+        txRootDB.vchReceiptRoot = evmBlock.vchReceiptRoot;
+        mapNEVMTxRoots.try_emplace(evmBlock.nBlockHash, txRootDB);
+    }
+    return res;
+}
+bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint256& nBlockHash) {
+    CNEVMBlock evmBlock;
+    if(!GetNEVMData(state, block, evmBlock)) {
+        return false; // state filled by GetNEVMData
+    }
+    if(!pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash)) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-missing");
+    }
+    GetMainSignals().NotifyNEVMBlockDisconnect(evmBlock, state, nBlockHash);
+    bool res = state.IsValid();
+    if(res) {
+        vecNEVMBlocks.emplace_back(evmBlock.nBlockHash);
+    }
+    return res;
+}
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
-DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::vector<uint256> &vecNEVMBlocks, std::vector<uint256> &vecTXIDs)
+// SYSCOIN
+DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::vector<uint256> &vecNEVMBlocks, std::vector<uint256> &vecTXIDs, bool bReverify)
 {
     // SYSCOIN
-    bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
+    const auto& params = Params().GetConsensus();
+    bool fDIP0003Active = pindex->nHeight >= params.DIP0003Height;
     if (fDIP0003Active && !evoDb->VerifyBestBlock(pindex->GetBlockHash())) {
         // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
         AbortNode("Found EvoDB inconsistency, you must reindex to continue");
@@ -1796,7 +1894,12 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             // At this point, all of txundo.vprevout should have been moved out.
         }
     } 
-    // DisconnectNEVMCommitment(vecNEVMBlocks, block.vtx[0]);
+    BlockValidationState state;
+    if(!bReverify && fNEVMConnection && pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, block.GetHash())) {
+        const std::string &errStr = strprintf("DisconnectBlock(): NEVM block failed to disconnect: %s\n", state.ToString().c_str());
+        error(errStr.c_str());
+        return DISCONNECT_FAILED; 
+    }
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
     // SYSCOIN
@@ -1912,20 +2015,20 @@ static int64_t nTimeTotal = 0;
 static int64_t nBlocksTotal = 0;
 // SYSCOIN
 bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                  CCoinsViewCache& view, bool fJustCheck) {
+                  CCoinsViewCache& view, bool fJustCheck, bool bReverify) {
 
     AssetMap mapAssets;
     NEVMMintTxMap mapMintKeys;
     NEVMTxRootMap mapNEVMTxRoots;
     std::vector<std::pair<uint256, uint32_t> > vecTXIDPairs;
-    return ConnectBlock(block, state, pindex, view, fJustCheck, mapAssets, mapMintKeys, mapNEVMTxRoots, vecTXIDPairs);       
+    return ConnectBlock(block, state, pindex, view, fJustCheck, mapAssets, mapMintKeys, mapNEVMTxRoots, vecTXIDPairs, bReverify);       
 }
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
 bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                   CCoinsViewCache& view, bool fJustCheck, 
-                  AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMTxRootMap &mapNEVMTxRoots, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs)
+                  AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMTxRootMap &mapNEVMTxRoots, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs, bool bReverify)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -2118,7 +2221,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal");
             }
         }
-        // ConnectNEVMCommitment(mapNEVMTxRoots, block.vtx[0]);
 
         // GetTransactionSigOpCost counts 3 types of sigops:
         // * legacy (always)
@@ -2151,6 +2253,9 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         }
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
+    if (!bReverify && fNEVMConnection && pindex->nHeight >= params.nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd, fJustCheck)) {
+        return false; // state filled by ConnectNEVMCommitment
+    }
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCHMARK, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
@@ -2163,16 +2268,17 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // SYSCOIN : MODIFIED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
     const CAmount &blockReward = GetBlockSubsidy(pindex->nHeight, m_params);
     CAmount nMNSeniorityRet = 0;
+    CAmount nMNFloorDiffRet = 0;
     // detect MN was paid properly, accounting for seniority which is added to subsidy
-    if (!IsBlockPayeeValid(m_chain, *block.vtx[0], pindex->nHeight, blockReward, nFees, nMNSeniorityRet)) {
+    if (!IsBlockPayeeValid(m_chain, *block.vtx[0], pindex->nHeight, blockReward, nFees, nMNSeniorityRet, nMNFloorDiffRet)) {
         LogPrintf("ERROR: ConnectBlock(): couldn't find masternode or superblock payments\n");
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-payee");
     }
 
     std::string strError = "";
     // add seniority to reward when checking for limit
-    if (!IsBlockValueValid(block, pindex->nHeight, blockReward+nFees+nMNSeniorityRet, strError) && (fRegTest || pindex->nHeight >= m_params.GetConsensus().DIP0003EnforcementHeight)) {
-        LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%lld vs limit=%lld)\n", block.vtx[0]->GetValueOut(), blockReward+nFees+nMNSeniorityRet);
+    if (!IsBlockValueValid(block, pindex->nHeight, blockReward+nFees+nMNSeniorityRet+nMNFloorDiffRet, strError) && (fRegTest || pindex->nHeight >= m_params.GetConsensus().DIP0003EnforcementHeight)) {
+        LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%lld vs limit=%lld)\n", block.vtx[0]->GetValueOut(), blockReward+nFees+nMNSeniorityRet+nMNFloorDiffRet);
         // hack for feature_signet.py to pass which uses bitcoin blocks signed by the signet witness
         if(!fSigNet || pindex->nHeight > 100) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
@@ -2348,6 +2454,16 @@ bool CChainState::FlushStateToDisk(
                 }
                 if (!m_blockman.m_block_tree_db->WriteBatchSync(vFiles, nLastBlockFile, vBlocks)) {
                     return AbortNode(state, "Failed to write to block index database");
+                }     
+                // SYSCOIN
+                std::vector<const CNEVMBlockIndex*> vBlocksNEVM;
+                vBlocksNEVM.reserve(setDirtyNEVMBlockIndex.size());
+                for (std::set<CNEVMBlockIndex*>::iterator it = setDirtyNEVMBlockIndex.begin(); it != setDirtyNEVMBlockIndex.end(); ) {
+                    vBlocksNEVM.push_back(*it);
+                    setDirtyNEVMBlockIndex.erase(it++);
+                }
+                if (!pnevmblocktree->WriteBatchSync(vBlocksNEVM)) {
+                    return AbortNode(state, "Failed to write to nevm block index database");
                 }
             }
             // Finally remove any pruned files
@@ -2591,7 +2707,8 @@ public:
  *
  * The block is added to connectTrace if connection succeeds.
  */
-bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions& disconnectpool)
+// SYSCOIN
+bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions &disconnectpool)
 {
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
@@ -2600,9 +2717,11 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
     // Read block from disk.
     int64_t nTime1 = GetTimeMicros();
     std::shared_ptr<const CBlock> pthisBlock;
+    
     if (!pblock) {
         std::shared_ptr<CBlock> pblockNew = std::make_shared<CBlock>();
-        if (!ReadBlockFromDisk(*pblockNew, pindexNew, m_params.GetConsensus())) {
+        // SYSCOIN
+        if (!ReadBlockFromDisk(*pblockNew, pindexNew, m_params.GetConsensus(), true, &m_blockman))
             return AbortNode(state, "Failed to read block");
         }
         pthisBlock = pblockNew;
@@ -2713,7 +2832,7 @@ CBlockIndex* CChainState::FindMostWorkChain() {
                         pindexFailed->nStatus |= BLOCK_FAILED_CHILD;
                     // SYSCOIN
                     }   else if (fConflictingChain) {
-                        // We don't need data for conflciting blocks
+                        // We don't need data for conflicting blocks
                         pindexFailed->nStatus |= BLOCK_CONFLICT_CHAINLOCK;
                     } else if (fMissingData) {
                         // If we're missing data, then add back to m_blocks_unlinked,
@@ -2926,6 +3045,7 @@ bool CChainState::ActivateBestChain(BlockValidationState& state, std::shared_ptr
 
                 bool fInvalidFound = false;
                 std::shared_ptr<const CBlock> nullBlockPtr;
+                // SYSCOIN
                 if (!ActivateBestChainStep(state, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connectTrace)) {
                     // A system error occurred
                     return false;
@@ -3284,6 +3404,33 @@ bool CChainState::MarkConflictingBlock(BlockValidationState& state, CBlockIndex 
     }
     return true;
 }
+bool CChainState::ResetLastBlock() {
+    if(pindexBestInvalid && pindexBestInvalid->GetAncestor(m_chain.Height()) == m_chain.Tip()) {
+        LogPrintf("%s: Found invalid best block, resetting %s\n", __func__, pindexBestInvalid->GetBlockHash().ToString());
+        uint256 hash(pindexBestInvalid->GetBlockHash());
+        {
+            LOCK(cs_main);
+            CBlockIndex* pblockindex = m_blockman.LookupBlockIndex(hash);
+            if (!pblockindex) {
+                LogPrintf("%s: Block not found\n", __func__);
+                return false;
+            }
+
+            ResetBlockFailureFlags(pblockindex);
+        }
+        // SYSCOIN do not re-validate eth txroots
+        fLoaded = false;
+        BlockValidationState state;
+        ActivateBestChain(state, Params());
+        fLoaded = true;
+
+        if (!state.IsValid()) {
+            LogPrintf("%s: Could not activate chain %s\n", __func__, state.ToString());
+            return false;
+        }
+    }
+    return true;
+}
 void CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {
     AssertLockHeld(cs_main);
     // SYSCOIN
@@ -3339,7 +3486,18 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, enum Block
     BlockMap::iterator it = m_block_index.find(hash);
     if (it != m_block_index.end())
         return it->second;
-
+    // SYSCOIN
+    if(!block.vchNEVMBlockData.empty()) {
+        CNEVMBlockIndex* pindexNewNEVM = new CNEVMBlockIndex(block);
+        NEVMBlockMap::iterator mi = m_block_nevm_index.insert(std::make_pair(hash, pindexNewNEVM)).first;
+        pindexNewNEVM->hashBlock = ((*mi).first);
+        NEVMBlockMap::iterator miPrev = m_block_nevm_index.find(block.hashPrevBlock);
+        if (miPrev != m_block_nevm_index.end())
+        {
+            pindexNewNEVM->pprev = (*miPrev).second;
+        }
+        setDirtyNEVMBlockIndex.insert(pindexNewNEVM);
+    }
     // Construct new block index object
     CBlockIndex* pindexNew = new CBlockIndex(block);
     // We assign the sequence id to blocks only when the full data is available,
@@ -3472,8 +3630,12 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     // checks that use witness data may be performed here.
 
     // Size limits
-    if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT || ::GetSerializeSize(block, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT)
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-length", "size limits failed");
+    if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT || ::GetSerializeSize(block, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT) {
+        //SYSCOIN
+        if(block.IsNEVM() || fRegTest) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-length", "size limits failed");
+        }
+    }
 
     // First transaction must be coinbase, the rest must not be
     if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
@@ -3575,7 +3737,8 @@ CBlockIndex* BlockManager::GetLastCheckpoint(const CCheckpointData& data)
  *  in ConnectBlock().
  *  Note that -reindex-chainstate skips the validation that happens here!
  */
-static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, BlockManager& blockman, const CChainParams& params, const CBlockIndex* pindexPrev, int64_t nAdjustedTime) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+// SYSCOIN
+static bool ContextualCheckBlockHeader(const bool ibd, const CBlockHeader& block, BlockValidationState& state, BlockManager& blockman, const CChainParams& params, const CBlockIndex* pindexPrev, int64_t nAdjustedTime) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     assert(pindexPrev != nullptr);
     const int nHeight = pindexPrev->nHeight + 1;
@@ -3610,7 +3773,23 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     // Check timestamp
     if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
-
+    // SYSCOIN
+    // if not initial download, blocks should have nevm data present in header
+    if((pindexPrev->nHeight+1) >= consensusParams.nNEVMStartBlock) {
+        if(!fRegTest && !ibd && block.vchNEVMBlockData.empty()) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-data-not-found");
+        }
+        const int64_t &nAgeThreshold = nMaxTipAge*3;
+        if (!block.vchNEVMBlockData.empty() && block.GetBlockTime() < (nAdjustedTime - nAgeThreshold)) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-data-not-expected");
+        }
+        if (block.vchNEVMBlockData.size() > MAX_HEADER_SIZE_NEVM) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-data-too-large");
+        }
+        if(!block.IsNEVM() && (!fRegTest || fNEVMConnection)) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-version-expected");
+        }
+    }
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2, 3 and 4 upgrades
     // SYSCOIN
@@ -3717,7 +3896,8 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     // large by filling up the coinbase witness, which doesn't change
     // the block hash, so we couldn't mark the block as permanently
     // failed).
-    if (GetBlockWeight(block) > MAX_BLOCK_WEIGHT) {
+    bool nevmContext = nHeight >= consensusParams.nNEVMStartBlock;
+    if ((fRegTest || nevmContext) && GetBlockWeight(block) > MAX_BLOCK_WEIGHT) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-weight", strprintf("%s : weight limit failed", __func__));
     }
     // SYSCOIN
@@ -3734,7 +3914,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     return true;
 }
 
-bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex)
+bool BlockManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& block, BlockValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex)
 {
     AssertLockHeld(cs_main);
     // Check for duplicate
@@ -3775,13 +3955,13 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
             LogPrintf("ERROR: %s: prev block invalid\n", __func__);
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
         }
-        // SYSCOIN
+
         if (pindexPrev->nStatus & BLOCK_CONFLICT_CHAINLOCK) {
             // it's ok-ish, the other node is probably missing the latest chainlock
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-prevblk-chainlock");
         }
 
-        if (!ContextualCheckBlockHeader(block, state, *this, chainparams, pindexPrev, GetAdjustedTime()))
+        if (!ContextualCheckBlockHeader(ibd, block, state, *this, chainparams, pindexPrev, GetAdjustedTime()))
             return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), state.ToString());
 
         /* Determine if this block descends from any block which has been found
@@ -3843,11 +4023,13 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
 bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, BlockValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex)
 {
     AssertLockNotHeld(cs_main);
+    const bool ibd = ActiveChainstate().IsInitialBlockDownload();
     {
         LOCK(cs_main);
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
-            bool accepted = m_blockman.AcceptBlockHeader(
+            // SYSCOIN
+            bool accepted = m_blockman.AcceptBlockHeader(ibd,
                 header, state, chainparams, &pindex);
             ActiveChainstate().CheckBlockIndex();
 
@@ -3860,8 +4042,8 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
         }
     }
     if (NotifyHeaderTip(ActiveChainstate())) {
-        if (ActiveChainstate().IsInitialBlockDownload() && ppindex && *ppindex) {
-            LogPrintf("Synchronizing blockheaders, height: %d (~%.2f%%)\n", (*ppindex)->nHeight, 100.0/((*ppindex)->nHeight+(GetAdjustedTime() - (*ppindex)->GetBlockTime()) / Params().GetConsensus().nPowTargetSpacing) * (*ppindex)->nHeight);
+        if (ibd && ppindex && *ppindex) {
+            LogPrintf("Synchronizing blockheaders, height: %d (~%.2f%%)\n", (*ppindex)->nHeight, 100.0/((*ppindex)->nHeight+(GetAdjustedTime() - (*ppindex)->GetBlockTime()) / Params().GetConsensus().PowTargetSpacing((*ppindex)->nHeight)) * (*ppindex)->nHeight);
         }
     }
     return true;
@@ -3877,8 +4059,9 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
-
-    bool accepted_header = m_blockman.AcceptBlockHeader(block, state, m_params, &pindex);
+    // SYSCOIN
+    bool ibd = IsInitialBlockDownload();
+    bool accepted_header = m_blockman.AcceptBlockHeader(ibd || !fNewBlock, block, state, m_params, &pindex);
     CheckBlockIndex();
 
     if (!accepted_header)
@@ -3927,7 +4110,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)
-    if (!IsInitialBlockDownload() && m_chain.Tip() == pindex->pprev)
+    if (!ibd && m_chain.Tip() == pindex->pprev)
         GetMainSignals().NewPoWValidBlock(pindex, pblock);
 
     // Write block to history file
@@ -4013,7 +4196,8 @@ bool TestBlockValidity(BlockValidationState& state,
     auto dbTx = evoDb->BeginTransaction();
 
     // NOTE: CheckBlockHeader is called by CheckBlock
-    if (!ContextualCheckBlockHeader(block, state, chainstate.m_blockman, chainparams, pindexPrev, GetAdjustedTime()))
+    // SYSCOIN
+    if (!ContextualCheckBlockHeader(false, block, state, chainstate.m_blockman, chainparams, pindexPrev, GetAdjustedTime()))
         return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, state.ToString());
     if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot))
         return error("%s: Consensus::CheckBlock: %s", __func__, state.ToString());
@@ -4176,7 +4360,35 @@ CBlockIndex * BlockManager::InsertBlockIndex(const uint256& hash)
 
     return pindexNew;
 }
+// SYSCOIN
+CNEVMBlockIndex * BlockManager::InsertNEVMBlockIndex(const uint256& hash)
+{
+    AssertLockHeld(cs_main);
 
+    if (hash.IsNull())
+        return nullptr;
+
+    // Return existing
+    NEVMBlockMap::iterator mi = m_block_nevm_index.find(hash);
+    if (mi != m_block_nevm_index.end())
+        return (*mi).second;
+
+    // Create new
+    CNEVMBlockIndex* pindexNew = new CNEVMBlockIndex();
+    mi = m_block_nevm_index.insert(std::make_pair(hash, pindexNew)).first;
+    pindexNew->hashBlock = ((*mi).first);
+
+    return pindexNew;
+}
+bool BlockManager::LoadBlockIndex(
+    const Consensus::Params& consensus_params,
+    CNEVMBlockTreeDB& nevmblocktree)
+{
+    // SYSCOIN
+    if (!nevmblocktree.LoadBlockIndexGuts(consensus_params, [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertNEVMBlockIndex(hash); }))
+        return false;
+    return true;
+}
 bool BlockManager::LoadBlockIndex(
     const Consensus::Params& consensus_params,
     std::set<CBlockIndex*, CBlockIndexWorkComparator>& block_index_candidates)
@@ -4184,7 +4396,6 @@ bool BlockManager::LoadBlockIndex(
     if (!m_block_tree_db->LoadBlockIndexGuts(consensus_params, [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); })) {
         return false;
     }
-
     // Calculate nChainWork
     std::vector<std::pair<int, CBlockIndex*> > vSortedByHeight;
     vSortedByHeight.reserve(m_block_index.size());
@@ -4246,8 +4457,22 @@ void BlockManager::Unload() {
     }
 
     m_block_index.clear();
-}
+    // SYSCOIN
+    for (const NEVMBlockMap::value_type& entry : m_block_nevm_index) {
+        delete entry.second;
+    }
 
+    m_block_nevm_index.clear();
+}
+bool CChainState::LoadNEVMBlockIndexDB(const CChainParams& chainparams)
+{
+    // SYSCOIN
+    if (!m_blockman.LoadBlockIndex(
+            chainparams.GetConsensus(), *pnevmblocktree)) {
+        return false;
+    }
+    return true;
+}
 bool BlockManager::LoadBlockIndexDB(std::set<CBlockIndex*, CBlockIndexWorkComparator>& setBlockIndexCandidates)
 {
     if (!LoadBlockIndex(
@@ -4420,7 +4645,7 @@ bool CVerifyDB::VerifyDB(
         if (nCheckLevel >= 3 && curr_coins_usage <= chainstate.m_coinstip_cache_size_bytes) {
             assert(coins.GetBestBlock() == pindex->GetBlockHash());
             // SYSCOIN
-            DisconnectResult res = chainstate.DisconnectBlock(block, pindex, coins, mapAssets, mapMintKeys, vecNEVMBlocks, vecTXIDs);
+            DisconnectResult res = chainstate.DisconnectBlock(block, pindex, coins, mapAssets, mapMintKeys, vecNEVMBlocks, vecTXIDs, true);
             if (res == DISCONNECT_FAILED) {
                 return error("VerifyDB(): *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
             }
@@ -4453,7 +4678,8 @@ bool CVerifyDB::VerifyDB(
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
                 return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
-            if (!chainstate.ConnectBlock(block, state, pindex, coins)) {
+            // SYSCOIN
+            if (!chainstate.ConnectBlock(block, state, pindex, coins, false, true)) {
                 return error("VerifyDB(): *** found unconnectable block at %d, hash=%s (%s)", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
             }
             if (ShutdownRequested()) return true;
@@ -4525,6 +4751,7 @@ bool CChainState::ReplayBlocks()
     NEVMMintTxMap mapMintKeysDisconnect, mapMintKeysConnect;
     std::vector<uint256> vecNEVMBlocks;
     std::vector<uint256> vecTXIDs;
+    BlockValidationState state;
     if (hashHeads.empty()) return true; // We're already in a consistent state.
     if (hashHeads.size() != 2) return error("ReplayBlocks(): unknown inconsistent state");
 
@@ -4577,6 +4804,8 @@ bool CChainState::ReplayBlocks()
         }
     }
     std::vector<std::pair<uint256, uint32_t> > vecTXIDPairs;
+    NEVMTxRootMap mapNEVMTxRoots;
+    bool ibd = IsInitialBlockDownload();
     // Roll forward from the forking point to the new tip.
     int nForkHeight = pindexFork ? pindexFork->nHeight : 0;
     for (int nHeight = nForkHeight + 1; nHeight <= pindexNew->nHeight; ++nHeight) {
@@ -4584,7 +4813,14 @@ bool CChainState::ReplayBlocks()
         LogPrintf("Rolling forward %s (%i)\n", pindex->GetBlockHash().ToString(), nHeight);
         // SYSCOIN
         uiInterface.ShowProgress(_("Replaying blocks…").translated, (int) ((nHeight - nForkHeight) * 100.0 / (pindexNew->nHeight - nForkHeight)) , false);
-        if (!RollforwardBlock(pindex, cache, mapAssetsConnect, mapMintKeysConnect, vecTXIDPairs)) return false;
+        if (!RollforwardBlock(pindex, cache, params, mapAssetsConnect, mapMintKeysConnect, vecTXIDPairs)) return false;
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pindex, params.GetConsensus())) {
+            return error("RollbackBlock(): ReadBlockFromDisk() failed at %d, hash=%s", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
+        }
+        if (fNEVMConnection && pindex->nHeight >= params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd, false)) {
+            return error("RollbackBlock(): ConnectNEVMCommitment() failed at %d, hash=%s state=%s", pindexOld->nHeight, pindexOld->GetBlockHash().ToString(), state.ToString());
+        }
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
@@ -4592,7 +4828,7 @@ bool CChainState::ReplayBlocks()
     evoDb->WriteBestBlock(pindexNew->GetBlockHash());
     cache.Flush();
     if(passetdb != nullptr){
-        if(!passetdb->Flush(mapAssetsConnect) || !passetnftdb->Flush(mapAssetsConnect) || !pnevmtxmintdb->FlushWrite(mapMintKeysConnect) || !pblockindexdb->FlushWrite(vecTXIDPairs)){
+        if(!passetdb->Flush(mapAssetsConnect) || !passetnftdb->Flush(mapAssetsConnect) || !pnevmtxmintdb->FlushWrite(mapMintKeysConnect) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs)){
             return error("RollbackBlock(): Error flushing to asset dbs on roll forward %s", pindexOld->GetBlockHash().ToString());
         }
     }
@@ -4637,6 +4873,8 @@ void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman)
     vinfoBlockFile.clear();
     nLastBlockFile = 0;
     setDirtyBlockIndex.clear();
+    // SYSCOIN
+    setDirtyNEVMBlockIndex.clear();
     setDirtyFileInfo.clear();
     g_versionbitscache.Clear();
     for (int b = 0; b < VERSIONBITS_NUM_BITS; b++) {
@@ -4649,6 +4887,9 @@ bool ChainstateManager::LoadBlockIndex()
 {
     AssertLockHeld(cs_main);
     // Load block index from databases
+    // SYSCOIN
+    bool retnevm = ActiveChainstate().LoadNEVMBlockIndexDB(chainparams);
+    if (!retnevm) return false;
     bool needs_init = fReindex;
     if (!fReindex) {
         bool ret = m_blockman.LoadBlockIndexDB(ActiveChainstate().setBlockIndexCandidates);
@@ -5404,6 +5645,14 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
                       coins_count - coins_left);
             return false;
         }
+        if (coin.nHeight > base_height ||
+            outpoint.n >= std::numeric_limits<decltype(outpoint.n)>::max() // Avoid integer wrap-around in coinstats.cpp:ApplyHash
+        ) {
+            LogPrintf("[snapshot] bad snapshot data after deserializing %d coins\n",
+                      coins_count - coins_left);
+            return false;
+        }
+
         coins_cache.EmplaceCoinInternalDANGER(std::move(outpoint), std::move(coin));
 
         --coins_left;
@@ -5828,7 +6077,7 @@ bool GetDescriptorStats(const fs::path filePath, DescriptorDetails& details) {
                 const UniValue& binURLValue = find_value(binValue, "url");
                 if(binURLValue.isStr()) {
                     const UniValue& binChecksumValue = find_value(binValue, "sha256sum");
-                    const UniValue& signatureValue = find_value(binValue, "signature");
+                    const UniValue& signatureValue = find_value(binValue, fTestNet? "signatureT": "signatureM");
                     if(binChecksumValue.isStr() && signatureValue.isStr()) {
                         details.version = versionValue.get_str();
                         details.binURL = binURLValue.get_str();
@@ -5841,6 +6090,26 @@ bool GetDescriptorStats(const fs::path filePath, DescriptorDetails& details) {
         }  
     }
     return false;
+}
+std::vector<std::string> SanitizeGethCmdLine(const std::string& binaryURL, const std::string& dataDir) {
+    const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
+    std::vector<std::string> cmdLineRet;
+    cmdLineRet.push_back(binaryURL);
+    for(const auto &cmd: cmdLine){
+        cmdLineRet.push_back(cmd);
+    }
+    cmdLineRet.push_back("--datadir");
+    cmdLineRet.push_back(dataDir);
+    if(fTestNet || fRegTest) {
+        cmdLineRet.push_back("--tanenbaum");
+    } else {
+        cmdLineRet.push_back("--syscoin");
+    }
+    // Geth should subscribe to our publisher
+    const std::string &strPub = gArgs.GetArg("-zmqpubnevm", "");
+    cmdLineRet.push_back("--nevmpub");
+    cmdLineRet.push_back(strPub);
+    return cmdLineRet;
 }
 bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const std::string& binaryDestPath, const std::string& descriptorURL) {
     DescriptorDetails descriptorDetailsLocal, descriptorDetailsRemote;
@@ -5866,12 +6135,8 @@ bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const s
     LogPrintf("%s: Version (%s) is up-to-date!\n", __func__, descriptorDetailsRemote.version);
     return true;
 }
-bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websocketport, int ethrpcport, const std::string &mode)
+bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
 {
-    if(mode == "disabled") {
-        LogPrintf("%s: Geth is disabled, user chose to deploy their own Geth instance!\n", __func__);
-        return true;
-    }
     LOCK(cs_geth);
     // stop any geth nodes before starting
     StopGethNode(pid);
@@ -5895,13 +6160,13 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websock
         }
         return false;
     }
-    LogPrintf("%s: Starting geth on wsport %d rpcport %d (testnet=%d)...\n", __func__, websocketport, ethrpcport, bGethTestnet? 1:0);
-    
 
     fs::path attempt1 = binaryURL.string();
     attempt1 = attempt1.make_preferred();
 
     fs::path dataDir = gArgs.GetDataDirNet() / "geth";
+    const std::vector<std::string> &vecCmdLineStr = SanitizeGethCmdLine(attempt1.string(), dataDir.string());
+    
     #ifndef WIN32
     // Prevent killed child-processes remaining as "defunct"
     struct sigaction sa;
@@ -5919,35 +6184,30 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websock
     }
 	// TODO: sanitize environment variables as per
 	// https://wiki.sei.cmu.edu/confluence/display/c/ENV03-C.+Sanitize+the+environment+when+invoking+external+programs
-    if( pid == 0 ) {
-        std::string portStr = itostr(websocketport);
-        std::string rpcportStr = itostr(ethrpcport);
-        char * argvAttempt1[20] = {(char*)attempt1.string().c_str(), 
-                (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(),
-                (char*)"--http", (char*)"--http.api", (char*)"personal,eth", (char*)"--http.port", (char*)rpcportStr.c_str(),
-                (char*)"--ws.origins", (char*)"*",
-                (char*)"--syncmode", (char*)mode.c_str(), 
-                (char*)"--datadir", (char*)dataDir.c_str(),
-                (char*)"--allow-insecure-unlock",
-                bGethTestnet?(char*)"--rinkeby": NULL,
-                (char*)"--http.corsdomain",(char*)"*",
-                NULL };                                                              
-        execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
+    if( pid == 0 ) {     
+        std::vector<char*> commandVector;
+        for(const std::string &cmdStr: vecCmdLineStr) {
+            commandVector.push_back(const_cast<char*>(cmdStr.c_str()));
+        }
+        // push NULL to the end of the vector (execvp expects NULL as last element)
+        commandVector.push_back(NULL);
+        char **command = commandVector.data();    
+        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]);                                                  
+        execvp(command[0], &command[0]);
         if (errno != 0) {
-            LogPrintf("Geth not found at %s\n", argvAttempt1[0]);
+            LogPrintf("Geth not found at %s\n", attempt1.string());
         }
     } else {
         boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
         ofs << pid;
     }
     #else
-        std::string portStr = itostr(websocketport);
-        std::string rpcportStr = itostr(ethrpcport);
-        std::string args =  std::string("--http --http.api personal,eth --http.corsdomain * --http.port ") + rpcportStr + std::string(" --ws --ws.port ") + portStr + std::string(" --ws.origins * --syncmode ") + mode + std::string(" --datadir ") +  dataDir.string();
-        if(bGethTestnet) {
-            args += std::string(" --rinkeby");
+        std::string commandStr = "";
+        for(const std::string &cmdStr: vecCmdLineStr) {
+            commandStr += cmdStr + " "
         }
-        pid = fork(attempt1.string(), args);
+        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, commandStr);   
+        pid = fork(attempt1.string(), commandStr);
         if( pid <= 0 ) {
             LogPrintf("Geth not found at %s\n", attempt1.string());
         }  
@@ -5968,44 +6228,89 @@ void KillProcess(const pid_t& pid){
         TerminateProcess(handy,0);
     #endif  
     #ifndef WIN32
-        int result = 0;
-        for(int i =0;i<10;i++){
-            UninterruptibleSleep(std::chrono::milliseconds(500));
-            result = kill( pid, SIGINT ) ;
-            if(result == 0){
-                LogPrintf("%s: Killing with SIGINT %d\n", __func__, pid);
-                continue;
-            }  
-            LogPrintf("%s: Killed with SIGINT\n", __func__);
-            return;
+        LogPrintf("%s: Trying to kill with SIGINT\n", __func__);            
+        int result = kill( pid, SIGINT ) ;
+        if(result != 0) {
+            LogPrintf("%s: Process does not exist or exited already...\n", __func__);       
+            return;     
         }
+        pid_t w;
+        int status;
         for(int i =0;i<10;i++){
-            UninterruptibleSleep(std::chrono::milliseconds(500));
-            result = kill( pid, SIGTERM ) ;
-            if(result == 0){
-                LogPrintf("%s: Killing with SIGTERM %d\n", __func__, pid);
+            w = waitpid(pid, &status, WNOHANG);
+            if(w) {
+                if (WIFEXITED(status)) {
+                    LogPrintf("exited, status=%d\n", WEXITSTATUS(status));
+                    return;
+                } else if (WIFSIGNALED(status)) {
+                    LogPrintf("killed by signal %d\n", WTERMSIG(status));
+                    return;
+                } else if (WIFSTOPPED(status)) {
+                    LogPrintf("stopped by signal %d\n", WSTOPSIG(status));
+                    return;
+                } else if (WIFCONTINUED(status)) {
+                    LogPrintf("continued\n");
+                }
+                UninterruptibleSleep(std::chrono::milliseconds(1000));
                 continue;
             }  
-            LogPrintf("%s: Killed with SIGTERM\n", __func__);
-            return;
+            UninterruptibleSleep(std::chrono::milliseconds(1000));
         }
+        LogPrintf("%s: Trying to kill with SIGTERM\n", __func__);     
+        result = kill( pid, SIGTERM ) ;
         for(int i =0;i<10;i++){
-            UninterruptibleSleep(std::chrono::milliseconds(500));
-            result = kill( pid, SIGKILL ) ;
-            if(result == 0){
-                LogPrintf("%s: Killing with SIGKILL %d\n", __func__, pid);
+            w = waitpid(pid, &status, WNOHANG);
+            if(w) {
+                if (WIFEXITED(status)) {
+                    LogPrintf("exited, status=%d\n", WEXITSTATUS(status));
+                    return;
+                } else if (WIFSIGNALED(status)) {
+                    LogPrintf("killed by signal %d\n", WTERMSIG(status));
+                    return;
+                } else if (WIFSTOPPED(status)) {
+                    LogPrintf("stopped by signal %d\n", WSTOPSIG(status));
+                    return;
+                } else if (WIFCONTINUED(status)) {
+                    LogPrintf("continued\n");
+                }
+                UninterruptibleSleep(std::chrono::milliseconds(1000));
                 continue;
             }  
-            LogPrintf("%s: Killed with SIGKILL\n", __func__);
-            return;
-        }  
+            UninterruptibleSleep(std::chrono::milliseconds(1000));
+        }
+        LogPrintf("%s: Trying to kill with SIGKILL\n", __func__);     
+        result = kill( pid, SIGKILL) ;
+        for(int i =0;i<10;i++){
+            w = waitpid(pid, &status, WNOHANG);
+            if(w) {
+                if (WIFEXITED(status)) {
+                    LogPrintf("exited, status=%d\n", WEXITSTATUS(status));
+                    return;
+                } else if (WIFSIGNALED(status)) {
+                    LogPrintf("killed by signal %d\n", WTERMSIG(status));
+                    return;
+                } else if (WIFSTOPPED(status)) {
+                    LogPrintf("stopped by signal %d\n", WSTOPSIG(status));
+                    return;
+                } else if (WIFCONTINUED(status)) {
+                    LogPrintf("continued\n");
+                }
+                UninterruptibleSleep(std::chrono::milliseconds(1000));
+            }  
+            UninterruptibleSleep(std::chrono::milliseconds(1000));
+        }
         LogPrintf("%s: Done trying to kill with SIGINT-SIGTERM-SIGKILL\n", __func__);            
     #endif 
 }
 bool StopGethNode(pid_t &pid)
 {
-    if(pid < 0)
+    if(pid < 0) {
         return false;
+    }
+    if(fNEVMConnection && pid > 0) {
+        bool bResponse;
+        GetMainSignals().NotifyNEVMComms(false, bResponse);
+    }
     if(pid){
         try{
             KillProcess(pid);
@@ -6031,6 +6336,13 @@ bool StopGethNode(pid_t &pid)
         }  
     }
     boost::filesystem::remove(GetGethPidFile());
+    // check only on startup for any running sysgeth on OSX/Linux
+    #ifndef WIN32
+    if(pid == 0) {
+        LogPrintf("Killing any sysgeth processes that may be already running...\n");
+        ::system("pkill -9 -f sysgeth"); 
+    }
+    #endif
     pid = -1;
     return true;
 }
@@ -6041,14 +6353,14 @@ void DoGethMaintenance() {
     // hasn't started yet so start
     if(!fReindexGeth && gethPID == 0) {
         gethPID = -1;
+        pid_t temp = 0;
+        LogPrintf("%s: Stopping Geth\n", __func__); 
+        StopGethNode(temp);
         LogPrintf("%s: Starting Geth because PID's were uninitialized\n", __func__);
-        int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
-        int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
-        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-        bGethTestnet = gArgs.GetBoolArg("-gethtestnet", gArgs.GetChainName() != CBaseChainParams::MAIN);
-        const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-        if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
+        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+        if(!StartGethNode(gethDescriptorURL, gethPID)) {
             LogPrintf("%s: Failed to start Geth\n", __func__); 
+        }
     } else if(fReindexGeth){
         fReindexGeth = false;
         LogPrintf("%s: Stopping Geth\n", __func__); 
@@ -6057,7 +6369,9 @@ void DoGethMaintenance() {
         fs::path dataDir = gArgs.GetDataDirNet();
         fs::path gethDir = dataDir / "geth";
         fs::path gethKeyStoreDir = gethDir / "keystore";
+        fs::path gethNodeKeyPath = gethDir / "geth" / "nodekey";
         fs::path keyStoreTmpDir = dataDir / "keystoretmp";
+        fs::path nodeKeyTmpDir = dataDir / "nodekeytmp";
         bool existedKeystore = fs::exists(gethKeyStoreDir);
         if(existedKeystore){
             LogPrintf("%s: Copying keystore for Geth to a temp directory\n", __func__); 
@@ -6068,9 +6382,20 @@ void DoGethMaintenance() {
                 return;
             }
         }
+        bool existedNodekey = fs::exists(gethNodeKeyPath);
+        if(existedNodekey){
+            LogPrintf("%s: Copying temporary nodekey\n", __func__); 
+            try{
+                recursive_copy(gethNodeKeyPath, nodeKeyTmpDir);
+            } catch(const  std::runtime_error& e) {
+                LogPrintf("Failed copying nodekey %s\n", e.what());
+                return;
+            }
+        }
         LogPrintf("%s: Removing Geth data directory\n", __func__);
         // clean geth data dir
         fs::remove_all(gethDir);
+        UninterruptibleSleep(std::chrono::milliseconds{100});
         // replace keystore dir
         if(existedKeystore){
             LogPrintf("%s: Replacing keystore with temp keystore directory\n", __func__);
@@ -6083,13 +6408,21 @@ void DoGethMaintenance() {
             }
             fs::remove_all(keyStoreTmpDir);
         }
+        // preserve nodekey file
+        if(existedNodekey){
+            LogPrintf("%s: Replacing nodekey with temp nodekey\n", __func__);
+            try{
+                fs::create_directory(gethDir / "geth");
+                recursive_copy(nodeKeyTmpDir, gethNodeKeyPath);
+            } catch(const  std::runtime_error& e) {
+                LogPrintf("Failed copying temporary nodekey %s\n", e.what());
+                return;
+            }
+            fs::remove_all(nodeKeyTmpDir);
+        }
         LogPrintf("%s: Restarting Geth \n", __func__);
-        int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
-        int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
-        bGethTestnet = gArgs.GetBoolArg("-gethtestnet", gArgs.GetChainName() != CBaseChainParams::MAIN);
-        const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-        if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
+        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+        if(!StartGethNode(gethDescriptorURL, gethPID))
             LogPrintf("%s: Failed to start Geth\n", __func__); 
         // set flag that geth is resyncing
         fGethSynced = false;

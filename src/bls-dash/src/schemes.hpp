@@ -228,7 +228,6 @@ public:
 class LegacySchemeMPL : public CoreMPL {
     using CoreMPL::Aggregate;
 public:
-
     virtual ~LegacySchemeMPL() {};
     LegacySchemeMPL() : CoreMPL(std::string{}) {}
 

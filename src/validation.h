@@ -114,6 +114,7 @@ enum class SynchronizationState {
 extern RecursiveMutex cs_main;
 typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 // SYSCOIN
+typedef std::unordered_map<uint256, CNEVMBlockIndex*, BlockHasher> NEVMBlockMap;
 typedef std::unordered_multimap<uint256, CBlockIndex*, BlockHasher> PrevBlockMap;
 extern Mutex g_best_block_mutex;
 extern std::condition_variable g_best_block_cv;
@@ -425,6 +426,7 @@ private:
 public:
     BlockMap m_block_index GUARDED_BY(cs_main);
     // SYSCOIN
+    NEVMBlockMap m_block_nevm_index GUARDED_BY(cs_main);
     PrevBlockMap m_prev_block_index GUARDED_BY(cs_main);
 
     /** In order to efficiently track invalidity of headers, we keep the set of
@@ -465,6 +467,11 @@ public:
      * @param[out] block_index_candidates  Fill this set with any valid blocks for
      *                                     which we've downloaded all transactions.
      */
+    // SYSCOIN
+    bool LoadBlockIndex(
+        const Consensus::Params& consensus_params,
+        CNEVMBlockTreeDB& nevmblocktree)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool LoadBlockIndex(
         const Consensus::Params& consensus_params,
         std::set<CBlockIndex*, CBlockIndexWorkComparator>& block_index_candidates)
@@ -476,7 +483,7 @@ public:
     CBlockIndex* AddToBlockIndex(const CBlockHeader& block, enum BlockStatus nStatus = BLOCK_VALID_TREE) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Create a new block index entry for a given block hash */
     CBlockIndex* InsertBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
+    CNEVMBlockIndex* InsertNEVMBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     //! Mark one block file as pruned (modify associated database entries)
     void PruneOneBlockFile(const int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -484,7 +491,9 @@ public:
      * If a block header hasn't already been seen, call CheckBlockHeader on it, ensure
      * that it doesn't descend from an invalid block, and then add it to m_block_index.
      */
+    // SYSCOIN
     bool AcceptBlockHeader(
+        const bool ibd,
         const CBlockHeader& block,
         BlockValidationState& state,
         const CChainParams& chainparams,
@@ -492,6 +501,7 @@ public:
 
     CBlockIndex* LookupBlockIndex(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     // SYSCOIN
+    CNEVMBlockIndex* LookupNEVMBlockIndex(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     std::pair<PrevBlockMap::iterator,PrevBlockMap::iterator> LookupBlockIndexPrev(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Find the last common block between the parameter chain and a locator. */
     CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -740,12 +750,12 @@ public:
 
     // Block (dis)connection on a given view:
     // SYSCOIN
-    DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::vector<uint256> &vecNEVMBlocks, std::vector<uint256>& vecTXIDs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::vector<uint256> &vecNEVMBlocks, std::vector<uint256>& vecTXIDs, bool bReverify = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                    CCoinsViewCache& view, bool fJustCheck = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                    CCoinsViewCache& view, bool fJustCheck = false, bool bReverify = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     bool ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                    CCoinsViewCache& view, bool fJustCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMTxRootMap &mapNEVMTxRoots, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                    CCoinsViewCache& view, bool fJustCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMTxRootMap &mapNEVMTxRoots, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs, bool bReverify = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     // Apply the effects of a block disconnection on the UTXO set.
     bool DisconnectTip(BlockValidationState& state, DisconnectedBlockTransactions* disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
@@ -763,6 +773,7 @@ public:
     void EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex) LOCKS_EXCLUDED(cs_main);
     /** Remove invalidity status from a block and its descendants. */
     void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool ResetLastBlock() LOCKS_EXCLUDED(cs_main);
 
     /** Replay blocks that aren't fully applied to the database. */
     bool ReplayBlocks();
@@ -816,6 +827,7 @@ private:
     void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void InvalidChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ConflictingChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool LoadBlockIndexDB(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     //! Indirection necessary to make lock annotations work with an optional mempool.
     RecursiveMutex* MempoolMutex() const LOCK_RETURNED(m_mempool->cs)
@@ -846,7 +858,9 @@ private:
 
     friend ChainstateManager;
 };
-
+// SYSCOIN
+bool LoadNEVMBlockIndexDB(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+void PruneNEVMData(CNEVMBlockIndex* pindex);
 /**
  * Provides an interface for creating and interacting with one or two
  * chainstates: an IBD chainstate generated by downloading blocks, and
@@ -1071,6 +1085,7 @@ public:
 
 
 // SYSCOIN
+extern std::unique_ptr<CNEVMBlockTreeDB> pnevmblocktree;
 /** Global variable that points to the height based on a transaction id  */
 static const uint32_t MAX_BLOCK_INDEX = 43800*12; // 2.5 year of blocks
 // SYSCOIN
@@ -1087,11 +1102,14 @@ public:
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 bool PruneSyscoinDBs(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 void DoGethMaintenance();
-bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websocketport=8646, int ethrpcport=8645, const std::string & mode="light");
+bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid);
 bool StopGethNode(pid_t &pid);
 void KillProcess(const pid_t& pid);
 
 // SYSCOIN
+bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const bool fInitialDownload, const bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMBlock &evmBlock);
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.
  * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.

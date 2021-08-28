@@ -10,15 +10,20 @@
 class TxValidationState;
 class CCoinsViewCache;
 class CTxUndo;
+class CBlock;
+class BlockValidationState;
 class CNEVMTxRootsDB : public CDBWrapper {
 public:
     explicit CNEVMTxRootsDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     bool ReadTxRoots(const uint256& nBlockHash, NEVMTxRoot& txRoot) {
         return Read(nBlockHash, txRoot);
     } 
+    bool ExistsTxRoot(const uint256& nBlockHash) {
+        return Exists(nBlockHash);
+    } 
     bool Clear();
-    bool FlushErase(const std::vector<uint256> &vchBlockHashes);
-    bool FlushWrite(const NEVMTxRootMap &mapNEVMTxRoots);
+    bool FlushErase(const std::vector<uint256> &vecBlockHashes);
+    bool FlushWrite(NEVMTxRootMap &mapNEVMTxRoots);
 };
 
 class CNEVMMintedTxDB : public CDBWrapper {

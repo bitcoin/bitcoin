@@ -33,6 +33,7 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_commitment.h>
+#include <validationinterface.h>
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
@@ -130,12 +131,16 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
     bool fDIP0003Active_context = nHeight >= chainparams.GetConsensus().DIP0003Height;
+    bool NEVMActive_context = nHeight >= chainparams.GetConsensus().nNEVMStartBlock;
     if(nHeight >= chainparams.GetConsensus().nUTXOAssetsBlock) {
         const int32_t nChainId = chainparams.GetConsensus ().nAuxpowChainId;
         const int32_t nVersion = g_versionbitscache.ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
         pblock->SetBaseVersion(nVersion, nChainId);
     } else {
         pblock->SetOldBaseVersion(4, chainparams.GetConsensus ().nAuxpowOldChainId);
+    }
+    if(NEVMActive_context && (!fRegTest || fNEVMConnection)) {
+        pblock->SetNEVMVersion();
     }
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
@@ -187,6 +192,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         }
     }
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream dsNEVM(SER_NETWORK, PROTOCOL_VERSION);
     BlockValidationState state;
     if(fDIP0003Active_context) {
         // Update coinbase transaction with additional info about masternode and governance payments,
@@ -196,13 +202,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         cbTx.nVersion = 2;
         cbTx.nHeight = nHeight;
         llmq::CFinalCommitmentTxPayload qc;
-        for (auto& p : chainparams.GetConsensus().llmqs) {
-            // create commitment payload if quorum commitment is needed
-            llmq::CFinalCommitment commitment;
-            if (llmq::quorumBlockProcessor->GetMinableCommitment(p.first, nHeight, commitment)) {
-                coinbaseTx.nVersion = SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT;
-                qc.commitments.push_back(commitment);
-            }
+        // create commitment payload if quorum commitment is needed
+        llmq::CFinalCommitment commitment;
+        if (llmq::quorumBlockProcessor->GetMinableCommitment(chainparams.GetConsensus().llmqTypeChainLocks, nHeight, commitment)) {
+            coinbaseTx.nVersion = SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT;
+            qc.commitments.push_back(commitment);
         }
         if (coinbaseTx.nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
             qc.cbTx = cbTx;
@@ -225,11 +229,22 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         // get some info back to pass to getblocktemplate
         FillBlockPayments(m_chainstate.m_chain, coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->voutMasternodePayments, pblocktemplate->voutSuperblockPayments);
     }
-
-    
+    if(NEVMActive_context && fNEVMConnection) {
+        CNEVMBlock nevmBlock;
+        BlockValidationState state;
+        GetMainSignals().NotifyGetNEVMBlock(nevmBlock, state);
+        if(state.IsInvalid()) {
+            throw std::runtime_error(strprintf("Could not fetch NEVM block %s", state.ToString()));
+        }
+        // block data stored in block which is a mutable field that is only sent over network
+        pblock->vchNEVMBlockData = nevmBlock.vchNEVMBlockData;
+        nevmBlock.vchNEVMBlockData.clear();
+        dsNEVM << "NEVM" << nevmBlock;
+    }
     pblock->vtx[0] = MakeTransactionRef(coinbaseTx);
     // SYSCOIN
     pblocktemplate->vchCoinbaseCommitmentExtra = std::vector<unsigned char>(ds.begin(), ds.end());
+    pblocktemplate->vchCoinbaseCommitmentExtra.insert( pblocktemplate->vchCoinbaseCommitmentExtra.end(), dsNEVM.begin(), dsNEVM.end() );
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus(), pblocktemplate->vchCoinbaseCommitmentExtra);
     // add coinbase payload if not witness commitment which would append it after witness data, in this case we can assume no witness commitment
     if(pblocktemplate->vchCoinbaseCommitment.empty() && !pblocktemplate->vchCoinbaseCommitmentExtra.empty()) {

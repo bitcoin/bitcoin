@@ -29,6 +29,8 @@ These are the dependencies currently used by Syscoin Core. You can find instruct
 | ZeroMQ | [4.3.1](https://github.com/zeromq/libzmq/releases) | 4.0.0 | No |  |  |
 | zlib |  |  |  |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk) |
 
+<a name="note1">Note \*</a> : When compiling with `-stdlib=libc++`, the minimum supported libc++ version is 7.0.
+
 Controlling dependencies
 ------------------------
 Some dependencies are not needed in all configurations. The following are some factors that affect the dependency list.

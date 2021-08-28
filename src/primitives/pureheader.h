@@ -25,6 +25,7 @@ private:
     static const int32_t VERSIONAUXPOW_TOP_MASK = (1 << 28) + (1 << 29) + (1 << 30);
     /* Modifiers to the version.  */
     static const int32_t VERSION_AUXPOW = (1 << 8);
+    static const int32_t VERSION_NEVM = (1 << 7);
     static const uint8_t VERSION_START_BIT = 16;
     /** Bits above are reserved for the auxpow chain ID.  */
     static const int32_t VERSION_CHAIN_START = (1 << VERSION_START_BIT);
@@ -164,6 +165,23 @@ public:
             nVersion &= ~VERSION_AUXPOW;
     }
 
+    /**
+     * Check if the NEVM flag is set in the version.
+     * @return True iff this block version is marked as an NEVM data carrying block.
+     */
+    inline bool IsNEVM() const
+    {
+        return nVersion & VERSION_NEVM;
+    }
+
+    /**
+     * Set the NEVM flag.
+     */
+    inline void SetNEVMVersion()
+    {
+        nVersion |= VERSION_NEVM;
+    }
+    
     /**
      * Check whether this is a "legacy" block without chain ID.
      * @return True iff it is.

@@ -1149,10 +1149,10 @@ static RPCHelpMan getblock()
 
         block = GetBlockChecked(pblockindex);
     }
-
     if (verbosity <= 0)
     {
-        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        // SYSCOIN
+        CDataStream ssBlock(SER_TRANSPORT, PROTOCOL_VERSION | RPCSerializationFlags());
         ssBlock << block;
         std::string strHex = HexStr(ssBlock);
         return strHex;
@@ -2218,8 +2218,8 @@ static RPCHelpMan getblockstats()
 
         CAmount tx_total_out = 0;
         if (loop_outputs) {
+            tx_total_out = tx->GetValueOut();
             for (const CTxOut& out : tx->vout) {
-                tx_total_out += out.nValue;
                 utxo_size_inc += GetSerializeSize(out, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
             }
         }

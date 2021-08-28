@@ -62,7 +62,7 @@ static UniValue GetNetworkHashPS(int lookup, int height, const CChain& active_ch
 
     // If lookup is -1, then use blocks since last difficulty change.
     if (lookup <= 0)
-        lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval() + 1;
+        lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval(pb->nHeight) + 1;
 
     // If lookup is larger than chain, then set it to chain length.
     if (lookup > pb->nHeight)
@@ -698,9 +698,9 @@ static RPCHelpMan getblocktemplate()
     // Get expected MN/superblock payees. The call to GetBlockTxOuts might fail on regtest/devnet or when
     // testnet is reset. This is fine and we ignore failure (blocks will be accepted)
     std::vector<CTxOut> voutMasternodePayments;
-    CAmount mnRet;
+    CAmount mnRet, mnRet1;
     int nCollateralHeight;
-    mnpayments.GetBlockTxOuts(node.chainman->ActiveChain(), node.chainman->ActiveHeight() + 1, 0, voutMasternodePayments, 0, mnRet, nCollateralHeight);
+    mnpayments.GetBlockTxOuts(node.chainman->ActiveChain(), node.chainman->ActiveHeight() + 1, 0, voutMasternodePayments, 0, mnRet, mnRet1, nCollateralHeight);
 
     // next bock is a superblock and we need governance info to correctly construct it
     if (!fRegTest && !fSigNet && isSBSportActive

@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 define(_CLIENT_VERSION_MAJOR, 4)
-define(_CLIENT_VERSION_MINOR, 2)
-define(_CLIENT_VERSION_BUILD, 2)
+define(_CLIENT_VERSION_MINOR, 3)
+define(_CLIENT_VERSION_BUILD, 99)
 define(_CLIENT_VERSION_RC, 0)
 define(_CLIENT_VERSION_IS_RELEASE, true)
 define(_COPYRIGHT_YEAR, 2021)
@@ -1499,6 +1499,13 @@ if test "x$use_zmq" = xyes; then
 else
   AC_DEFINE_UNQUOTED([ENABLE_ZMQ], [0], [Define to 1 to enable ZMQ functions])
 fi
+
+if test "x$use_zmq" != xyes; then
+  if test "x$enable_fuzz_binary" != xyes; then
+    AC_MSG_ERROR([libzmq version 4.x or greater not found])
+  fi
+fi
+
 
 if test "x$use_zmq" = xyes; then
   dnl Assume libzmq was built for static linking

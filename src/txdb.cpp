@@ -15,7 +15,10 @@
 #include <util/vector.h>
 
 #include <stdint.h>
-
+// SYSCOIN
+#include <timedata.h>
+extern int64_t nMaxTipAge;
+extern std::set<CNEVMBlockIndex*> setDirtyNEVMBlockIndex;
 static constexpr uint8_t DB_COIN{'C'};
 static constexpr uint8_t DB_COINS{'c'};
 static constexpr uint8_t DB_BLOCK_FILES{'f'};
@@ -26,7 +29,6 @@ static constexpr uint8_t DB_HEAD_BLOCKS{'H'};
 static constexpr uint8_t DB_FLAG{'F'};
 static constexpr uint8_t DB_REINDEX_FLAG{'R'};
 static constexpr uint8_t DB_LAST_BLOCK{'l'};
-
 namespace {
 
 struct CoinEntry {
@@ -147,6 +149,9 @@ size_t CCoinsViewDB::EstimateSize() const
 }
 
 CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "blocks" / "index", nCacheSize, fMemory, fWipe) {
+}
+// SYSCOIN
+CNEVMBlockTreeDB::CNEVMBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "blocks" / "nevmindex", nCacheSize, fMemory, fWipe) {
 }
 
 bool CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info) {
@@ -276,7 +281,6 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
 
     pcursor->Seek(std::make_pair(DB_BLOCK_INDEX, uint256()));
-
     // Load m_block_index
     while (pcursor->Valid()) {
         if (ShutdownRequested()) return false;
@@ -312,6 +316,55 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
         }
     }
 
+    return true;
+}
+// SYSCOIN
+bool CNEVMBlockTreeDB::WriteBatchSync(const std::vector<const CNEVMBlockIndex*>& blockinfo) {
+    CDBBatch batch(*this);    
+    int64_t nAgeThreshold = nMaxTipAge*2;
+    int64_t nTime = GetAdjustedTime();
+    for (std::vector<const CNEVMBlockIndex*>::const_iterator it=blockinfo.begin(); it != blockinfo.end(); it++) {
+        if((*it)->GetBlockTime() < (nTime - nAgeThreshold)) {
+            batch.Erase(std::make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()));
+        } else {
+            batch.Write(std::make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), CDiskNEVMBlockIndex(*it));
+        }
+    }
+    return WriteBatch(batch, true);
+}
+bool CNEVMBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CNEVMBlockIndex*(const uint256&)> insertBlockIndex)
+{
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    int64_t nAgeThreshold = nMaxTipAge*2;
+    int64_t nTime = GetAdjustedTime();
+    pcursor->Seek(std::make_pair(DB_BLOCK_INDEX, uint256()));
+    // Load m_block_index
+    while (pcursor->Valid()) {
+        if (ShutdownRequested()) return false;
+        std::pair<uint8_t, uint256> key;
+        if (pcursor->GetKey(key) && key.first == DB_BLOCK_INDEX) {
+            CDiskNEVMBlockIndex diskindex;
+            if (pcursor->GetValue(diskindex)) {
+                // Construct block index object
+                CNEVMBlockIndex* pindexNew = insertBlockIndex(diskindex.GetBlockHash());
+                pindexNew->pprev           = insertBlockIndex(diskindex.hashPrev);
+                pindexNew->nTime           = diskindex.nTime;
+                if(pindexNew->nTime < (nTime - nAgeThreshold)) {
+                    // if block older than tip * 2 has evm block data, don't set the block data on index and mark it as dirty so it will get removed on flush
+                    if(!diskindex.vchNEVMBlockData.empty()) {
+                        setDirtyNEVMBlockIndex.insert(pindexNew);
+                    }
+                } else {
+                    pindexNew->vchNEVMBlockData = diskindex.vchNEVMBlockData;
+                }
+                pcursor->Next();
+            } else {
+                return error("%s: failed to read value", __func__);
+            }
+        } else {
+            break;
+        }
+    }
     return true;
 }
 

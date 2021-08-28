@@ -75,6 +75,7 @@ public:
 
     template<typename F> void Iterate(F&& f)
     {
+        
         WAIT_LOCK(m_mutex, lock);
         for (auto it = m_list.begin(); it != m_list.end();) {
             ++it->count;
@@ -272,4 +273,16 @@ void CMainSignals::NotifyGovernanceObject(const std::shared_ptr<const CGovernanc
 }
 void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyMasternodeListChanged(undo, oldMNList, diff); });
+}
+void CMainSignals::NotifyNEVMComms(bool bConnect, bool &bResponse) {
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyNEVMComms(bConnect, bResponse); });
+}
+void CMainSignals::NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash) {
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyNEVMBlockConnect(evmBlock, state, nBlockHash); });
+}
+void CMainSignals::NotifyNEVMBlockDisconnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash) {
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyNEVMBlockDisconnect(evmBlock, state, nBlockHash); });
+}
+void CMainSignals::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state) {
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGetNEVMBlock(evmBlock, state);});
 }

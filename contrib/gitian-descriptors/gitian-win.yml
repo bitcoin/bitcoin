@@ -23,6 +23,8 @@ packages:
 - "ca-certificates"
 - "python3"
 - "python3-pip"
+# SYSCOIN
+- "libzmq3-dev"
 remotes:
 - "url": "https://github.com/syscoin/syscoin.git"
   "dir": "syscoin"
