@@ -55,7 +55,7 @@ elif [ "$BUILD_TARGET" = "win64" ]; then
   export DIRECT_WINE_EXEC_TESTS=true
 elif [ "$BUILD_TARGET" = "linux32" ]; then
   export HOST=i686-pc-linux-gnu
-  export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks LDFLAGS=-static-libstdc++"
+  export BITCOIN_CONFIG="--enable-zmq --disable-bip70 --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks LDFLAGS=-static-libstdc++"
   export USE_SHELL="/bin/dash"
   export PYZMQ=true
 elif [ "$BUILD_TARGET" = "linux64" ]; then

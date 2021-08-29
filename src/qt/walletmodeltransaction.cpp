@@ -2,6 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#ifdef HAVE_CONFIG_H
+#include <config/dash-config.h>
+#endif
+
 #include <qt/walletmodeltransaction.h>
 
 #include <interfaces/node.h>
@@ -45,6 +49,7 @@ void WalletModelTransaction::reassignAmounts()
     {
         SendCoinsRecipient& rcp = (*it);
 
+#ifdef ENABLE_BIP70
         if (rcp.paymentRequest.IsInitialized())
         {
             CAmount subtotal = 0;
@@ -65,6 +70,7 @@ void WalletModelTransaction::reassignAmounts()
             rcp.amount = subtotal;
         }
         else // normal recipient (no payment request)
+#endif
         {
             for (const auto& txout : wtx->get().vout) {
                 CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
