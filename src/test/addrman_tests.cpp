@@ -763,8 +763,7 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     auto addrman_asmap1 = std::make_unique<CAddrManTest>(true, asmap1);
     auto addrman_asmap1_dup = std::make_unique<CAddrManTest>(true, asmap1);
     auto addrman_noasmap = std::make_unique<CAddrManTest>();
-    // SYSCOIN
-    CDataStream stream(SER_TRANSPORT, PROTOCOL_VERSION);
+    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
 
     CAddress addr = CAddress(ResolveService("250.1.1.1"), NODE_NONE);
     CNetAddr default_source;
@@ -827,8 +826,7 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
     // Confirm that invalid addresses are ignored in unserialization.
 
     auto addrman = std::make_unique<CAddrManTest>();
-    // SYSCOIN
-    CDataStream stream(SER_TRANSPORT, PROTOCOL_VERSION);
+    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
 
     const CAddress new1{ResolveService("5.5.5.5"), NODE_NONE};
     const CAddress new2{ResolveService("6.6.6.6"), NODE_NONE};
