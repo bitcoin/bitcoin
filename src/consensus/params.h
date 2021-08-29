@@ -155,7 +155,7 @@ struct Params {
     double nSeniorityLevel1;
     unsigned int nSeniorityHeight2;
     double nSeniorityLevel2;
-    bool bTestnet;
+    bool bTestnet{false};
     int nBridgeStartBlock;
     int nNEVMStartBlock;
     int nUTXOAssetsBlock;

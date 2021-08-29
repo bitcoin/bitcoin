@@ -1690,7 +1690,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 // SYSCOIN
                 pnevmblocktree.reset();
                 // we shouldn't clear this DB even on reset because it only stores the last maxTipAge*2 NEVM block data
-                // which we should have when propogating blocks across network as peers depend on it being there if not IBD (< maxTipAge*2 old)
+                // which we should have when propagating blocks across network as peers depend on it being there if not IBD (< maxTipAge*2 old)
                 pnevmblocktree.reset(new CNEVMBlockTreeDB(nBlockTreeDBCache, false));
 
                 if (fReset) {
