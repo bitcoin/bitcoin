@@ -492,7 +492,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     // Connect
     bool connected = false;
     std::unique_ptr<Sock> sock;
-    proxyType proxy;
+    Proxy proxy;
     CAddress addr_bind;
     assert(!addr_bind.IsValid());
     std::unique_ptr<i2p::sam::Session> i2p_transient_session;
@@ -3397,7 +3397,7 @@ bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_met
         return false;
     }
 
-    proxyType i2p_sam;
+    Proxy i2p_sam;
     if (GetProxy(NET_I2P, i2p_sam) && connOptions.m_i2p_accept_incoming) {
         m_i2p_sam_session = std::make_unique<i2p::sam::Session>(GetDataDir() / "i2p_private_key",
                                                                 i2p_sam.proxy, &interruptNet);

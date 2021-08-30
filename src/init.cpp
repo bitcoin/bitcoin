@@ -584,7 +584,7 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-onion=<ip:port>", "Use separate SOCKS5 proxy to reach peers via Tor onion services, set -noonion to disable (default: -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-i2psam=<ip:port>", "I2P SAM proxy to reach I2P peers and accept I2P connections (default: none)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-i2pacceptincoming", strprintf("Whether to accept inbound I2P connections (default: %i). Ignored if -i2psam is not set. Listening for inbound I2P connections is done through the SAM proxy, not by binding to a local address and port.", DEFAULT_I2P_ACCEPT_INCOMING), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
-    argsman.AddArg("-onlynet=<net>", "Make outgoing connections only through network <net> (" + Join(GetNetworkNames(), ", ") + "). Incoming connections are not affected by this option. This option can be specified multiple times to allow multiple networks. Warning: if it is used with non-onion networks and the -onion or -proxy option is set, then outbound onion connections will still be made; use -noonion or -onion=0 to disable outbound onion connections in this case.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-onlynet=<net>", "Make automatic outgoing connections only through network <net> (" + Join(GetNetworkNames(), ", ") + "). Incoming connections are not affected by this option. This option can be specified multiple times to allow multiple networks.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-peerblockfilters", strprintf("Serve compact block filters to peers per BIP 157 (default: %u)", DEFAULT_PEERBLOCKFILTERS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-peerbloomfilters", strprintf("Support filtering of blocks and transaction with bloom filters (default: %u)", DEFAULT_PEERBLOOMFILTERS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-peertimeout=<n>", strprintf("Specify a p2p connection timeout delay in seconds. After connecting to a peer, wait this amount of time before considering disconnection based on inactivity (minimum: 1, default: %d)", DEFAULT_PEER_CONNECT_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -1797,27 +1797,27 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     // Check for host lookup allowed before parsing any network related parameters
     fNameLookup = args.GetBoolArg("-dns", DEFAULT_NAME_LOOKUP);
 
+    Proxy onion_proxy;
+
     bool proxyRandomize = args.GetBoolArg("-proxyrandomize", DEFAULT_PROXYRANDOMIZE);
     // -proxy sets a proxy for all outgoing network traffic
     // -noproxy (or -proxy=0) as well as the empty string can be used to not set a proxy, this is the default
     std::string proxyArg = args.GetArg("-proxy", "");
-    SetReachable(NET_ONION, false);
     if (proxyArg != "" && proxyArg != "0") {
         CService proxyAddr;
         if (!Lookup(proxyArg, proxyAddr, 9050, fNameLookup)) {
             return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
         }
 
-        proxyType addrProxy = proxyType(proxyAddr, proxyRandomize);
+        Proxy addrProxy = Proxy(proxyAddr, proxyRandomize);
         if (!addrProxy.IsValid())
             return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
 
         SetProxy(NET_IPV4, addrProxy);
         SetProxy(NET_IPV6, addrProxy);
-        SetProxy(NET_ONION, addrProxy);
         SetProxy(NET_CJDNS, addrProxy);
         SetNameProxy(addrProxy);
-        SetReachable(NET_ONION, true); // by default, -proxy sets onion as reachable, unless -noonion later
+        onion_proxy = addrProxy;
     }
 
     // -onion can be used to set only a proxy for .onion, or override normal proxy for .onion addresses
@@ -1826,18 +1826,26 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     std::string onionArg = args.GetArg("-onion", "");
     if (onionArg != "") {
         if (onionArg == "0") { // Handle -noonion/-onion=0
-            SetReachable(NET_ONION, false);
+            onion_proxy = Proxy{};
         } else {
-            CService onionProxy;
-            if (!Lookup(onionArg, onionProxy, 9050, fNameLookup)) {
+            CService addr;
+            if (!Lookup(onionArg, addr, 9050, fNameLookup) || !addr.IsValid()) {
                 return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
             }
-            proxyType addrOnion = proxyType(onionProxy, proxyRandomize);
-            if (!addrOnion.IsValid())
-                return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
-            SetProxy(NET_ONION, addrOnion);
-            SetReachable(NET_ONION, true);
+            onion_proxy = Proxy{addr, proxyRandomize};
         }
+    }
+
+    if (onion_proxy.IsValid()) {
+        SetProxy(NET_ONION, onion_proxy);
+    } else {
+        if (args.IsArgSet("-onlynet") && IsReachable(NET_ONION)) {
+            return InitError(
+                _("Outbound connections restricted to Tor (-onlynet=onion) but the proxy for "
+                  "reaching the Tor network is not provided (no -proxy= and no -onion= given) or "
+                  "it is explicitly forbidden (-onion=0)"));
+        }
+        SetReachable(NET_ONION, false);
     }
 
     for (const std::string& strAddr : args.GetArgs("-externalip")) {
@@ -2539,8 +2547,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         if (!Lookup(i2psam_arg, addr, 7656, fNameLookup) || !addr.IsValid()) {
             return InitError(strprintf(_("Invalid -i2psam address or hostname: '%s'"), i2psam_arg));
         }
-        SetReachable(NET_I2P, true);
-        SetProxy(NET_I2P, proxyType{addr});
+        SetProxy(NET_I2P, Proxy{addr});
     } else {
         SetReachable(NET_I2P, false);
     }
