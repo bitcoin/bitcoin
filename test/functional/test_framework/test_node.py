@@ -510,7 +510,7 @@ class TestNode():
         # it would shut down cleanly instead of uncleanly when it lost the
         # connection to the node, which is not what we want for testing.
         wallet_pid = None
-        with open(self.debug_log_path, encoding="utf-8", errors="replace") as dl:
+        with open(self.debug_log_path(wallet=False), encoding="utf-8", errors="replace") as dl:
             for line in dl:
                 if m := re.search(r"\[.*?spawnProcess.*?\] \[ipc\] Process bitcoin-wallet pid ([0-9]+) launched", line):
                     wallet_pid = int(m.group(1))
@@ -539,9 +539,13 @@ class TestNode():
     def chain_path(self) -> Path:
         return self.datadir_path / self.chain
 
-    @property
-    def debug_log_path(self) -> Path:
-        return self.chain_path / 'debug.log'
+    def debug_log_path(self, wallet: bool) -> Path:
+        path = self.chain_path / 'debug.log'
+        if wallet:
+            wallet_path = path.with_name(path.name + ".wallet")
+            if wallet_path.exists():
+                path = wallet_path
+        return path
 
     @property
     def blocks_path(self) -> Path:
@@ -559,13 +563,13 @@ class TestNode():
     def wallets_path(self) -> Path:
         return self.chain_path / "wallets"
 
-    def debug_log_size(self, **kwargs) -> int:
-        with open(self.debug_log_path, **kwargs) as dl:
+    def debug_log_size(self, wallet: bool, **kwargs) -> int:
+        with open(self.debug_log_path(wallet), **kwargs) as dl:
             dl.seek(0, 2)
             return dl.tell()
 
     @contextlib.contextmanager
-    def assert_debug_log(self, expected_msgs, unexpected_msgs=None, timeout=2):
+    def assert_debug_log(self, expected_msgs, unexpected_msgs=None, timeout=2, wallet=False):
         if unexpected_msgs is None:
             unexpected_msgs = []
         assert_equal(type(expected_msgs), list)
@@ -573,7 +577,7 @@ class TestNode():
         remaining_expected = list(expected_msgs)
 
         time_end = time.time() + timeout * self.timeout_factor
-        prev_size = self.debug_log_size(encoding="utf-8")  # Must use same encoding that is used to read() below
+        prev_size = self.debug_log_size(wallet, encoding="utf-8")  # Must use same encoding that is used to read() below
 
         def join_log(log):
             return " - " + "\n - ".join(log.splitlines())
@@ -581,7 +585,7 @@ class TestNode():
         yield
 
         while True:
-            with open(self.debug_log_path, encoding="utf-8", errors="replace") as dl:
+            with open(self.debug_log_path(wallet), encoding="utf-8", errors="replace") as dl:
                 dl.seek(prev_size)
                 log = dl.read()
             for unexpected_msg in unexpected_msgs:
@@ -600,18 +604,18 @@ class TestNode():
                                     f'not found in log:\n\n{join_log(log)}\n\n')
 
     @contextlib.contextmanager
-    def busy_wait_for_debug_log(self, expected_msgs, timeout=60):
+    def busy_wait_for_debug_log(self, expected_msgs, timeout=60, wallet=False):
         """
         Block until we see a particular debug log message fragment or until we exceed the timeout.
         """
         time_end = time.time() + timeout * self.timeout_factor
-        prev_size = self.debug_log_size(mode="rb")  # Must use same mode that is used to read() below
+        prev_size = self.debug_log_size(wallet, mode="rb")  # Must use same mode that is used to read() below
         remaining_expected = list(expected_msgs)
 
         yield
 
         while True:
-            with open(self.debug_log_path, "rb") as dl:
+            with open(self.debug_log_path(wallet), "rb") as dl:
                 dl.seek(prev_size)
                 log = dl.read()
 
