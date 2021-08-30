@@ -647,7 +647,7 @@ static RPCHelpMan syscoingetspvproof()
          throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
     }
     CTransactionRef tx;
-    uint256 hashBlock = uint256();
+    hashBlock.SetNull();
     tx = GetTransaction(pblockindex, nullptr, txhash, Params().GetConsensus(), hashBlock);
     if(!tx || hashBlock.IsNull())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
