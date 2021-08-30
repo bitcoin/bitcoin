@@ -19,10 +19,17 @@ class DescriptorTest(BitcoinTestFramework):
         self.extra_args = [["-disablewallet"]]
         self.wallet_names = []
 
-    def test_desc(self, desc, isrange, issolvable, hasprivatekeys):
+    def test_desc(self, desc, isrange, issolvable, hasprivatekeys, receive_desc=None, change_desc=None):
         info = self.nodes[0].getdescriptorinfo(desc)
         assert_equal(info, self.nodes[0].getdescriptorinfo(descsum_create(desc)))
-        assert_equal(info['descriptor'], descsum_create(desc))
+        if receive_desc is not None:
+            assert_equal(info["descriptor"], descsum_create(receive_desc))
+        else:
+            assert_equal(info['descriptor'], descsum_create(desc))
+        if change_desc is not None:
+            assert_equal(info["descriptor_change"], descsum_create(change_desc))
+        else:
+            assert "descriptor_change" not in info
         assert_equal(info['isrange'], isrange)
         assert_equal(info['issolvable'], issolvable)
         assert_equal(info['hasprivatekeys'], hasprivatekeys)
@@ -60,6 +67,13 @@ class DescriptorTest(BitcoinTestFramework):
         self.test_desc("pkh([d34db33f/44'/0'/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/*)", isrange=True, issolvable=True, hasprivatekeys=False)
         # A set of *1-of-2* P2WSH multisig outputs where the first multisig key is the *1/0/`i`* child of the first specified xpub and the second multisig key is the *0/0/`i`* child of the second specified xpub, and `i` is any number in a configurable range (`0-1000` by default).
         self.test_desc("wsh(multi(1,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/0/*,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0/0/*))", isrange=True, issolvable=True, hasprivatekeys=False)
+        # A multipath descriptor
+        self.test_desc("wpkh(tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/<0;1>/*)", isrange=True, issolvable=True, hasprivatekeys=False,
+            receive_desc="wpkh(tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0/*)",
+            change_desc="wpkh(tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/*)")
+        self.test_desc("wsh(multi(1,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/<1;2>/0/*,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/<2;3>/0/*))", isrange=True, issolvable=True, hasprivatekeys=False,
+            receive_desc="wsh(multi(1,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/0/*,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/2/0/*))",
+            change_desc="wsh(multi(1,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/2/0/*,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/3/0/*))")
 
 
 if __name__ == '__main__':
