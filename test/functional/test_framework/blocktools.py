@@ -302,7 +302,6 @@ def get_masternode_payment(nHeight, nBlockReward, nStartHeight):
         if(fSubsidyAdjustmentPercentage > 0):
             nMNSeniorityRet = nSubsidy*fSubsidyAdjustmentPercentage
             nSubsidy += nMNSeniorityRet
-            
     return nSubsidy
 
 class TestFrameworkBlockTools(unittest.TestCase):

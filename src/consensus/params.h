@@ -155,7 +155,7 @@ struct Params {
     double nSeniorityLevel1;
     unsigned int nSeniorityHeight2;
     double nSeniorityLevel2;
-    bool bTestnet;
+    bool bTestnet{false};
     int nBridgeStartBlock;
     int nNEVMStartBlock;
     int nUTXOAssetsBlock;
@@ -212,7 +212,7 @@ struct Params {
     double Seniority(int nHeight, int nDifferenceInBlocks) const { 
         int nSeniorityAge1 = nSeniorityHeight1;
         int nSeniorityAge2 = nSeniorityHeight2;
-        if(bTestnet) {
+        if(bTestnet == true) {
             if(nDifferenceInBlocks >= nSeniorityAge2)
                 return nSeniorityLevel2;
             else if(nDifferenceInBlocks >= nSeniorityAge1)

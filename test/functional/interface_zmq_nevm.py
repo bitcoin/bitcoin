@@ -9,7 +9,6 @@ from test_framework.test_framework import SyscoinTestFramework
 from test_framework.messages import hash256, CNEVMBlock, CNEVMBlockConnect, CNEVMBlockDisconnect, uint256_from_str
 from test_framework.util import (
     assert_equal,
-    assert_raises_rpc_error,
 )
 from io import BytesIO
 from time import sleep
@@ -101,7 +100,7 @@ class ZMQPublisher:
         if evmBlockConnect.sysblockhash == 0:
             return True
         # mappings should not already exist, if they do flag the block as invalid
-        if self.sysToNEVMBlockMapping.get(evmBlockConnect.sysblockhash) != None or self.NEVMToSysBlockMapping.get(evmBlockConnect.blockhash) != None:
+        if self.sysToNEVMBlockMapping.get(evmBlockConnect.sysblockhash) is not None or self.NEVMToSysBlockMapping.get(evmBlockConnect.blockhash) is not None:
             return False
         self.sysToNEVMBlockMapping[evmBlockConnect.sysblockhash] = evmBlockConnect
         self.NEVMToSysBlockMapping[evmBlockConnect.blockhash] = evmBlockConnect.sysblockhash
@@ -110,15 +109,15 @@ class ZMQPublisher:
     def deleteBlock(self, evmBlockDisconnect):
         # mappings should already exist on disconnect, if they do not flag the disconnect as invalid
         nevmConnect = self.sysToNEVMBlockMapping.get(evmBlockDisconnect.sysblockhash)
-        if nevmConnect == None:
+        if nevmConnect is None:
             return False
         sysMappingHash = self.NEVMToSysBlockMapping.get(nevmConnect.blockhash)
-        if sysMappingHash == None:
+        if sysMappingHash is None:
             return False
         # sanity to ensure sys block hashes match so the maps are consistent
-        if sysMappingHash != nevmConnect.sysblockhash:
+        if sysMappingHash is not nevmConnect.sysblockhash:
             return False
-        
+
         self.sysToNEVMBlockMapping.pop(evmBlockDisconnect.sysblockhash, None)
         self.NEVMToSysBlockMapping.pop(nevmConnect.blockhash, None)
         return True
@@ -128,7 +127,7 @@ class ZMQPublisher:
 
     def getLastNEVMBlock(self):
         return self.sysToNEVMBlockMapping[self.getLastSYSBlock()]
-    
+
     def clearMappings(self):
         self.sysToNEVMBlockMapping = {}
         self.NEVMToSysBlockMapping = {}
@@ -163,7 +162,7 @@ class ZMQTest (SyscoinTestFramework):
         subscriber = ZMQPublisher(socket)
         self.extra_args[idx] = ["-zmqpubnevm=%s" % address]
 
-       
+
         self.restart_node(idx, self.extra_args[idx])
 
         # set subscriber's desired timeout for the test

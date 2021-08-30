@@ -24,6 +24,7 @@
 #include <walletinitinterface.h>
 #include <primitives/block.h>
 #include <node/context.h>
+#include <timedata.h>
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
 bool fHavePruned = false;
