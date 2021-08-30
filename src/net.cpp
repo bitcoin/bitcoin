@@ -47,6 +47,7 @@
 #include <functional>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <math.h>
 
@@ -111,6 +112,30 @@ RecursiveMutex cs_mapLocalHost;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(cs_mapLocalHost);
 static bool vfLimited[NET_MAX] GUARDED_BY(cs_mapLocalHost) = {};
 std::string strSubVersion;
+
+/**
+ * Check if making an automatic outbound connection to the given address is allowed.
+ * Could be restricted by the `-onlynet` configuration option.
+ * @return true if allowed
+ */
+static bool OutboundConnectionAllowedTo(const CNetAddr& addr)
+{
+    static const std::unordered_set<Network> onlynets = [](){
+        std::unordered_set<Network> ret;
+        if (gArgs.IsArgSet("-onlynet")) {
+            for (const std::string& net : gArgs.GetArgs("-onlynet")) {
+                ret.insert(ParseNetwork(net));
+            }
+        }
+        return ret;
+    }();
+
+    if (onlynets.empty()) {
+        return true;
+    }
+
+    return onlynets.count(addr.GetNetwork()) > 0;
+}
 
 void CConnman::AddAddrFetch(const std::string& strDest)
 {
@@ -2007,6 +2032,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 const CAddress addr = m_anchors.back();
                 m_anchors.pop_back();
                 if (!addr.IsValid() || IsLocal(addr) || !IsReachable(addr) ||
+                    !OutboundConnectionAllowedTo(addr) ||
                     !HasAllDesirableServiceFlags(addr.nServices) ||
                     setConnected.count(addr.GetGroup(addrman.m_asmap))) continue;
                 addrConnect = addr;
@@ -2059,6 +2085,10 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
             if (!IsReachable(addr))
                 continue;
+
+            if (!OutboundConnectionAllowedTo(addr)) {
+                continue;
+            }
 
             // only consider very recently tried nodes after 30 failed attempts
             if (nANow - addr.nLastTry < 600 && nTries < 30)
