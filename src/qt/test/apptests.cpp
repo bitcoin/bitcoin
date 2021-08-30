@@ -52,10 +52,10 @@ void TestRpcCommand(RPCConsole* console)
 } // namespace
 
 //! Entry point for BitcoinApplication tests.
-void AppTests::appTests()
+void AppTests::appTests(interfaces::Init& init)
 {
     qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
-    m_app.parameterSetup();
+    m_app.parameterSetup(init);
     QVERIFY(m_app.createOptionsModel(/*resetSettings=*/true));
     QScopedPointer<const NetworkStyle> style(NetworkStyle::instantiate(Params().GetChainType()));
     m_app.setupPlatformStyle();
