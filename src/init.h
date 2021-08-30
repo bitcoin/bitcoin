@@ -33,7 +33,7 @@ bool ShutdownRequested(node::NodeContext& node);
 void Interrupt(node::NodeContext& node);
 void Shutdown(node::NodeContext& node);
 //!Initialize the logging infrastructure
-void InitLogging(const ArgsManager& args);
+void InitLogging(const ArgsManager& args, const char* log_suffix);
 //!Parameter interaction: change current parameters depending on various rules
 void InitParameterInteraction(ArgsManager& args);
 
