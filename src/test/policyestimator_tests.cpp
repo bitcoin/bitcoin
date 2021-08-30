@@ -4,6 +4,7 @@
 
 #include <policy/fees.h>
 #include <policy/policy.h>
+#include <chain.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/time.h>
@@ -11,6 +12,8 @@
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
+
+extern CBlockIndex* pindexBestHeader;
 
 BOOST_FIXTURE_TEST_SUITE(policyestimator_tests, BasicTestingSetup)
 
@@ -23,6 +26,12 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     CAmount basefee(2000);
     CAmount deltaFee(100);
     std::vector<CAmount> feeV;
+
+    pindexBestHeader = new CBlockIndex();
+
+    // Maximum value of blocknum can be 665
+    pindexBestHeader->nHeight = 665;
+    assert(pindexBestHeader->nHeight);
 
     // Populate vectors of increasing fees
     for (int j = 0; j < 10; j++) {
@@ -178,6 +187,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     for (int i = 2; i < 9; i++) { // At 9, the original estimate was already at the bottom (b/c scale = 2)
         BOOST_CHECK(feeEst.estimateFee(i).GetFeePerK() < origFeeEst[i-1] - deltaFee);
     }
+    delete pindexBestHeader;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -9,6 +9,7 @@
 #include <fs.h>
 #include <logging.h>
 #include <streams.h>
+#include <chain.h>
 #include <txmempool.h>
 #include <util/serfloat.h>
 #include <util/system.h>
@@ -16,6 +17,8 @@
 static const char* FEE_ESTIMATES_FILENAME = "fee_estimates.dat";
 
 static constexpr double INF_FEERATE = 1e99;
+
+extern CBlockIndex *pindexBestHeader;
 
 std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
 {
@@ -623,6 +626,13 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     feeStats->ClearCurrent(nBlockHeight);
     shortStats->ClearCurrent(nBlockHeight);
     longStats->ClearCurrent(nBlockHeight);
+
+    assert(pindexBestHeader);
+    if((int)nBlockHeight < pindexBestHeader->nHeight - (int)OLDEST_ESTIMATE_HISTORY){
+        // Ignore older block transactions that won't contribute
+        // to fees calculation significantly.
+        return;
+    }
 
     // Decay all exponential averages
     feeStats->UpdateMovingAverages();

@@ -8,12 +8,15 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <chain.h>
 #include <txmempool.h>
 
 #include <cstdint>
 #include <optional>
 #include <string>
 #include <vector>
+
+extern CBlockIndex *pindexBestHeader;
 
 void initialize_policy_estimator()
 {
@@ -24,6 +27,7 @@ FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     CBlockPolicyEstimator block_policy_estimator;
+    pindexBestHeader = new CBlockIndex();
     while (fuzzed_data_provider.ConsumeBool()) {
         CallOneOf(
             fuzzed_data_provider,
@@ -53,7 +57,8 @@ FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
                 for (const CTxMemPoolEntry& mempool_entry : mempool_entries) {
                     ptrs.push_back(&mempool_entry);
                 }
-                block_policy_estimator.processBlock(fuzzed_data_provider.ConsumeIntegral<unsigned int>(), ptrs);
+                pindexBestHeader->nHeight = std::max(fuzzed_data_provider.ConsumeIntegral<int>(),0);
+                block_policy_estimator.processBlock(pindexBestHeader->nHeight, ptrs);
             },
             [&] {
                 (void)block_policy_estimator.removeTx(ConsumeUInt256(fuzzed_data_provider), /* inBlock */ fuzzed_data_provider.ConsumeBool());
@@ -74,4 +79,5 @@ FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
         block_policy_estimator.Write(fuzzed_auto_file);
         block_policy_estimator.Read(fuzzed_auto_file);
     }
+    delete pindexBestHeader;
 }
