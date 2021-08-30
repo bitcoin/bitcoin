@@ -109,11 +109,11 @@ class MultiWalletTest(BitcoinTestFramework):
 
         self.log.info("Verify warning is emitted when failing to scan the wallets directory")
         self.start_node(0)
-        with node.assert_debug_log(unexpected_msgs=['Error scanning directory entries under'], expected_msgs=[]):
+        with node.assert_debug_log(unexpected_msgs=['Error scanning directory entries under'], expected_msgs=[], wallet=True):
             result = node.listwalletdir()
             assert_equal(result, {'wallets': [{'name': 'default_wallet', 'warnings': []}]})
         os.chmod(data_dir(node, 'wallets'), 0)
-        with node.assert_debug_log(expected_msgs=['Error scanning directory entries under']):
+        with node.assert_debug_log(expected_msgs=['Error scanning directory entries under'], wallet=True):
             result = node.listwalletdir()
             assert_equal(result, {'wallets': []})
         self.stop_node(0)
@@ -176,20 +176,20 @@ class MultiWalletTest(BitcoinTestFramework):
 
         self.log.info("Test scanning for sub directories")
         # Baseline, no errors.
-        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Error while scanning wallet dir"]):
+        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Error while scanning wallet dir"], wallet=True):
             walletlist = node.listwalletdir()['wallets']
         assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
 
         # "Permission denied" error.
         os.mkdir(wallet_dir(node, 'no_access'))
         os.chmod(wallet_dir(node, 'no_access'), 0)
-        with node.assert_debug_log(expected_msgs=["Error while scanning wallet dir"]):
+        with node.assert_debug_log(expected_msgs=["Error while scanning wallet dir"], wallet=True):
             walletlist = node.listwalletdir()['wallets']
         # Need to ensure access is restored for cleanup
         os.chmod(wallet_dir(node, 'no_access'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
         # Verify that we no longer emit errors after restoring permissions
-        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Error while scanning wallet dir"]):
+        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Error while scanning wallet dir"], wallet=True):
             walletlist = node.listwalletdir()['wallets']
         assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
 
@@ -200,7 +200,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.log.info("Test for errors from too many levels of symbolic links")
         os.mkdir(wallet_dir(node, 'self_walletdat_symlink'))
         os.symlink('wallet.dat', wallet_dir(node, 'self_walletdat_symlink/wallet.dat'))
-        with node.assert_debug_log(expected_msgs=["Error while scanning wallet dir"]):
+        with node.assert_debug_log(expected_msgs=["Error while scanning wallet dir"], wallet=True):
             walletlist = node.listwalletdir()['wallets']
         assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
 
