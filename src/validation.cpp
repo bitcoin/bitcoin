@@ -3558,10 +3558,7 @@ void CChainState::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pi
             CBlockIndex *pindex = queue.front();
             queue.pop_front();
             pindex->nChainTx = (pindex->pprev ? pindex->pprev->nChainTx : 0) + pindex->nTx;
-            {
-                LOCK(cs_nBlockSequenceId);
-                pindex->nSequenceId = nBlockSequenceId++;
-            }
+            pindex->nSequenceId = nBlockSequenceId++;
             if (m_chain.Tip() == nullptr || !setBlockIndexCandidates.value_comp()(pindex, m_chain.Tip())) {
                 // SYSCOIN
                 if (!(pindex->nStatus & BLOCK_CONFLICT_CHAINLOCK)) {
