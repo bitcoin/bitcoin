@@ -402,7 +402,7 @@ static RPCHelpMan syscoindecoderawtransaction()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not decode transaction");
     
     CBlockIndex* blockindex = nullptr;
-    uint256 hashBlock = uint256();
+    uint256 hashBlock;
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
@@ -643,14 +643,14 @@ static RPCHelpMan syscoingetspvproof()
     if (g_txindex && !pblockindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
-    CTransactionRef tx;
-    {
-        LOCK(cs_main);
-        hashBlock = pblockindex->GetBlockHash();
-        tx = GetTransaction(pblockindex, nullptr, txhash, Params().GetConsensus(), hashBlock);
-        if(!tx || hashBlock.IsNull())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
+    if(!pblockindex) {
+         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
     }
+    CTransactionRef tx;
+    uint256 hashBlock = uint256();
+    tx = GetTransaction(pblockindex, nullptr, txhash, Params().GetConsensus(), hashBlock);
+    if(!tx || hashBlock.IsNull())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
 
     CBlock block;
     if (IsBlockPruned(pblockindex)) {
