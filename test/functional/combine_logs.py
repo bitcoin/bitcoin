@@ -97,6 +97,10 @@ def read_logs(tmp_dir):
             break
         files.append(("node%d" % i, logfile))
 
+        wallet_logfile = "{}/node{}/regtest/debug.log.wallet".format(tmp_dir, i)
+        if os.path.isfile(wallet_logfile):
+            files.append(("wall%d" % i, wallet_logfile))
+
     return heapq.merge(*[get_log_events(source, f) for source, f in files])
 
 
