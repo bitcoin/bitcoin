@@ -34,8 +34,7 @@ class BitcoinNodeInit : public interfaces::Init
 {
 public:
     BitcoinNodeInit(node::NodeContext& node, const char* arg0)
-        : m_node(node),
-          m_ipc(interfaces::MakeIpc(EXE_NAME, arg0, *this))
+        : m_node(node), m_ipc(interfaces::MakeIpc(EXE_NAME, "", arg0, *this))
     {
         InitContext(m_node);
         m_node.init = this;
@@ -43,7 +42,7 @@ public:
         // spawned by a bitcoin-gui process, after the ArgsManager configuration
         // is transferred from the parent process to the child process.
         m_ipc->context().init_process = [this] {
-            InitLogging(*Assert(m_node.args));
+            InitLogging(*Assert(m_node.args), m_ipc->logSuffix());
             InitParameterInteraction(*Assert(m_node.args));
         };
         ipc::capnp::SetupNodeServer(m_ipc->context());
