@@ -42,7 +42,7 @@ const char* EXE_NAME = "bitcoin-wallet";
 class BitcoinWalletInit : public interfaces::Init
 {
 public:
-    BitcoinWalletInit(const char* arg0) : m_ipc(interfaces::MakeIpc(EXE_NAME, arg0, *this))
+    BitcoinWalletInit(const char* arg0) : m_ipc(interfaces::MakeIpc(EXE_NAME, ".wallet", arg0, *this))
     {
         // Extra initialization code that runs when a bitcoin-wallet process is
         // spawned by a bitcoin-node process, after the ArgsManager
@@ -58,7 +58,7 @@ public:
             // util::Globals class that becomes a memberof kernel::Context
             m_kernel.emplace();
             m_ecc_context.emplace();
-            init::SetLoggingOptions(gArgs);
+            init::SetLoggingOptions(gArgs, m_ipc->logSuffix());
             if (auto result = init::SetLoggingCategories(gArgs); !result) {
                 throw std::runtime_error(util::ErrorString(result).original);
             }
