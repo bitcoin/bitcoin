@@ -87,6 +87,7 @@ Descriptors consist of several types of expressions. The top level expression is
   - [WIF](https://en.bitcoin.it/wiki/Wallet_import_format) encoded private keys may be specified instead of the corresponding public key, with the same meaning.
   - `xpub` encoded extended public key or `xprv` encoded extended private key (as defined in [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)).
     - Followed by zero or more `/NUM` unhardened and `/NUM'` hardened BIP32 derivation steps.
+      - No more than one of these derivation steps may be of the form `<NUM;NUM>` (including hardened indicators with either or both `NUM`). If such specifiers are included, the descriptor will be parsed as two descriptors where the first descriptor uses all of the first `NUM` in the pair, and the second descriptor uses the second `NUM` in the pair for all `KEY` expressions.
     - Optionally followed by a single `/*` or `/*'` final step to denote all (direct) unhardened or hardened children.
     - The usage of hardened derivation steps requires providing the private key.
 
@@ -234,6 +235,28 @@ necessary private keys. For this reason, anywhere a public key or xpub is
 supported, a private key in WIF format or xprv may be provided instead.
 This is useful when private keys are necessary for hardened derivation
 steps, or for dumping wallet descriptors including private key material.
+
+### Specifying receiving and change descriptors in one descriptor
+
+Since receiving and change addresses are frequently derived from the same
+extended key(s) but with a single derivation index changed, it is convenient
+to be able to specify a descriptor that can derive at the two different
+indexes. Thus a single pair of indexes is allowed in each derivation path
+following the extended key. When this descriptor is parsed, two descriptors
+will be produced, the first one will use the first index in the pair for all
+key expressions, and the second will use the second index.
+
+For example, a descriptor of the form:
+
+    multi(2,xpub.../<0;1>/0/*,xpub.../<2;3>/*)
+
+will expand to the two descriptors
+
+   multi(2,xpub.../0/0/*,xpub.../2/*)
+   multi(2,xpub.../1/0/*,xpub.../3/*)
+
+Then wallet implementations can use the first descriptor for receiving addresses
+and the second descriptor for change addresses.
 
 ### Compatibility with old wallets
 
