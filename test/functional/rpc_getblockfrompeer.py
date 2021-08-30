@@ -56,8 +56,8 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         self.log.info("Arguments must be sensible")
         assert_raises_rpc_error(-8, "hash must be of length 64 (not 4, for '1234')", self.nodes[0].getblockfrompeer, "1234", 0)
 
-        self.log.info("We must already have the header")
-        assert_raises_rpc_error(-1, "Block header missing", self.nodes[0].getblockfrompeer, "00" * 32, 0)
+        self.log.info("We can request blocks for which we do not have the header")
+        self.nodes[0].getblockfrompeer("11" * 32, 0)
 
         self.log.info("Non-existent peer generates error")
         assert_raises_rpc_error(-1, "Failed to fetch block from peer", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id + 1)

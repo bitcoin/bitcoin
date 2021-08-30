@@ -42,14 +42,14 @@ public:
     virtual ~PeerManager() { }
 
     /**
-     * Attempt to manually fetch block from a given peer. We must already have the header.
+     * Attempt to manually fetch block from a given peer.
      *
      * @param[in]  id       The peer id
      * @param[in]  hash     The block hash
-     * @param[in]  pindex   The blockindex
+     * @param[in]  pindex   The blockindex if we have the header, otherwise nullptr
      * @returns             Whether a request was successfully made
      */
-    virtual bool FetchBlock(NodeId id, const uint256& hash, const CBlockIndex& pindex) = 0;
+    virtual bool FetchBlock(NodeId id, const uint256& hash, const CBlockIndex* pindex) = 0;
 
     /** Get statistics from node state */
     virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
