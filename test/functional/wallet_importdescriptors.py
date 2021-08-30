@@ -15,6 +15,8 @@ variants.
 - `test_address()` is called to call getaddressinfo for an address on node1
   and test the values returned."""
 
+import time
+
 from test_framework.address import key_to_p2pkh
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
@@ -666,6 +668,57 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "timestamp": "now"},
                               success=True,
                               warnings=["Unknown output type, cannot set descriptor to active."])
+
+        self.log.info("Multipath descriptors")
+        self.nodes[1].createwallet(wallet_name="multipath", descriptors=True, blank=True)
+        w_multipath = self.nodes[1].get_wallet_rpc("multipath")
+        self.nodes[1].createwallet(wallet_name="multipath_split", descriptors=True, blank=True)
+        w_multisplit = self.nodes[1].get_wallet_rpc("multipath_split")
+        timestamp = int(time.time())
+
+        self.test_importdesc({"desc": descsum_create(f"wpkh({xpriv}/<10;20>/0/*)"),
+                              "active": True,
+                              "range": 10,
+                              "timestamp": "now",
+                              "label": "some label"},
+                              success=False,
+                              error_code=-8,
+                              error_message="Multipath descriptors should not have a label",
+                              wallet=w_multipath)
+        self.test_importdesc({"desc": descsum_create(f"wpkh({xpriv}/<10;20>/0/*)"),
+                              "active": True,
+                              "range": 10,
+                              "timestamp": timestamp,
+                              "internal": True},
+                              success=False,
+                              error_code=-5,
+                              error_message="Cannot have multipath descriptor while also specifying \'internal\'",
+                              wallet=w_multipath)
+
+        self.test_importdesc({"desc": descsum_create(f"wpkh({xpriv}/<10;20>/0/*)"),
+                              "active": True,
+                              "range": 10,
+                              "timestamp": timestamp},
+                              success=True,
+                              wallet=w_multipath)
+
+        self.test_importdesc({"desc": descsum_create(f"wpkh({xpriv}/10/0/*)"),
+                              "active": True,
+                              "range": 10,
+                              "timestamp": timestamp},
+                              success=True,
+                              wallet=w_multisplit)
+        self.test_importdesc({"desc": descsum_create(f"wpkh({xpriv}/20/0/*)"),
+                              "active": True,
+                              "range": 10,
+                              "internal": True,
+                              "timestamp": timestamp},
+                              success=True,
+                              wallet=w_multisplit)
+        for _ in range(0, 10):
+            assert_equal(w_multipath.getnewaddress(address_type="bech32"), w_multisplit.getnewaddress(address_type="bech32"))
+            assert_equal(w_multipath.getrawchangeaddress(address_type="bech32"), w_multisplit.getrawchangeaddress(address_type="bech32"))
+        assert_equal(sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"]), sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"]))
 
 if __name__ == '__main__':
     ImportDescriptorsTest().main()
