@@ -1,6 +1,6 @@
 version: '{branch}.{build}'
 skip_tags: true
-image: Visual Studio 2019
+image: Previous Visual Studio 2019
 configuration: Release
 platform: x64
 clone_depth: 5
