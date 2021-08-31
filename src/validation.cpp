@@ -661,7 +661,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 // Applications relying on first-seen mempool behavior should
                 // check all unconfirmed ancestors; otherwise an opt-in ancestor
                 // might be replaced, causing removal of this descendant.               
-                if (SignalsOptInRBF(*ptxConflicting)) {
+                if (!SignalsOptInRBF(*ptxConflicting)) {
                     // if not RBF then allow first double spend to be relayed, ZDAG by default isn't RBF enabled because it shouldn't be replaceable and because of checks below
                     // neither are its ancestors, they will be locked in as soon as you have a ZDAG tx because ZDAG isn't compliant with RBF.
                     if(IsZTx){
