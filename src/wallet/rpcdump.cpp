@@ -324,6 +324,98 @@ RPCHelpMan importaddress()
     };
 }
 
+static void RemoveAddress(CWallet*, const CTxDestination&, bool);
+static void RemoveScript(CWallet* const pwallet, const CScript& script, bool is_redeem_script, bool purge_txns) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+{
+    isminetype ismine = pwallet->IsMine(script);
+    if (!is_redeem_script && ismine == ISMINE_SPENDABLE) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "The wallet contains the private key for this address");
+    } else if (!is_redeem_script && ismine == ISMINE_NO) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "The wallet does not contain this address or script");
+    }
+    CHECK_NONFATAL(ismine == ISMINE_WATCH_ONLY || is_redeem_script);
+
+    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
+
+    if (spk_man.HaveWatchOnly(script) && !spk_man.PurgeWatchOnly(script)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error removing address/script from wallet");
+    }
+    if (is_redeem_script) {
+        CScriptID scriptID = CScriptID(script);
+        if (!spk_man.HaveCScript(scriptID)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error removing p2sh redeemScript from wallet");
+        }
+        RemoveAddress(pwallet, ScriptHash(scriptID), purge_txns);
+    } else {
+        CTxDestination destination;
+        if (ExtractDestination(script, destination)) {
+            pwallet->DelAddressBook(destination);
+        }
+    }
+
+    if (purge_txns) {
+        pwallet->RemoveTransactions(script);
+    }
+}
+
+static void RemoveAddress(CWallet* const pwallet, const CTxDestination& dest, bool purge_txns) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+{
+    CScript script = GetScriptForDestination(dest);
+    RemoveScript(pwallet, script, false, purge_txns);
+    // remove from address book
+    if (IsValidDestination(dest)) {
+        pwallet->DelAddressBook(dest);
+    }
+}
+
+RPCHelpMan removeaddress()
+{
+    return RPCHelpMan{
+        "removeaddress",
+        "\nRemoves an address or script (in hex) that was being watched as if it were in your wallet but was not being used to spend. Requires a new wallet backup.\n",
+        {
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The Bitcoin address (or hex-encoded script)"},
+            {"p2sh", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to remove the P2SH version of the script as well"},
+            {"purge_transactions", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to remove existing transactions from the wallet"},
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+            "\nRemove an address\n" + HelpExampleCli("removeaddress", "\"myaddress\"") +
+            "\nRemove a script\n" + HelpExampleCli("removeaddress", "\"myscript\"") +
+            "\nAs a JSON-RPC call\n" + HelpExampleRpc("removeaddress", "\"myaddress\"")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+            if (!wallet) return NullUniValue;
+
+            EnsureLegacyScriptPubKeyMan(*wallet, true);
+
+            // Whether to remove the p2sh version too
+            const bool is_p2sh{request.params[1].isNull() ? false : request.params[1].get_bool()};
+
+            // Whether to remove the wallet transactions too
+            const bool purge_txns{request.params[2].isNull() ? false : request.params[2].get_bool()};
+
+            {
+                LOCK(wallet->cs_wallet);
+
+                CTxDestination dest = DecodeDestination(request.params[0].get_str());
+                if (IsValidDestination(dest)) {
+                    if (is_p2sh) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot use the p2sh flag with an address - use a script instead");
+                    }
+                    RemoveAddress(wallet.get(), dest, purge_txns);
+                } else if (IsHex(request.params[0].get_str())) {
+                    std::vector<unsigned char> data(ParseHex(request.params[0].get_str()));
+                    RemoveScript(wallet.get(), CScript(data.begin(), data.end()), is_p2sh, purge_txns);
+                } else {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
+                }
+            }
+            return NullUniValue;
+    },
+        };
+}
+
 RPCHelpMan importprunedfunds()
 {
     return RPCHelpMan{"importprunedfunds",

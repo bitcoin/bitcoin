@@ -426,7 +426,7 @@ class WalletTest(BitcoinTestFramework):
             # Import address and private key to check correct behavior of spendable unspents
             # 1. Send some coins to generate new UTXO
             address_to_import = self.nodes[2].getnewaddress()
-            txid = self.nodes[0].sendtoaddress(address_to_import, 1)
+            addr_txid = self.nodes[0].sendtoaddress(address_to_import, 1)
             self.nodes[0].generate(1)
             self.sync_all(self.nodes[0:3])
 
@@ -493,25 +493,89 @@ class WalletTest(BitcoinTestFramework):
                 assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
                     self.nodes[2].sendtoaddress, address=address, amount=1, conf_target=target, estimate_mode=mode)
 
-            # 2. Import address from node2 to node1
+            # Import address from node2 to node1
             self.nodes[1].importaddress(address_to_import)
 
-            # 3. Validate that the imported address is watch-only on node1
+            # Validate that the imported address is watch-only on node1
             assert self.nodes[1].getaddressinfo(address_to_import)["iswatchonly"]
 
-            # 4. Check that the unspents after import are not spendable
+            # Check that the unspents after import are not spendable
             assert_array_result(self.nodes[1].listunspent(),
                                 {"address": address_to_import},
                                 {"spendable": False})
 
-            # 5. Import private key of the previously imported address on node1
+            # Remove the address from node1
+            self.nodes[1].removeaddress(address_to_import, False, False)
+
+            # Validate that the address is no longer in the wallet
+            assert not self.nodes[1].getaddressinfo(address_to_import)["iswatchonly"]
+
+            # Validate tx is still in wallet
+            self.nodes[1].gettransaction(addr_txid)
+
+            # Re-import address then purge transactions
+            self.nodes[1].importaddress(address_to_import)
+            self.nodes[1].removeaddress(address_to_import, False, True)
+
+            # Validate transaction is removed
+            assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", self.nodes[1].gettransaction, addr_txid)
+
+            # Validate that the address is no longer in the wallet
+            assert not self.nodes[1].getaddressinfo(address_to_import)["iswatchonly"]
+
+            # Attempt to remove address again
+            assert_raises_rpc_error(-4, "The wallet does not contain this address or script", self.nodes[1].removeaddress, address_to_import)
+
+            # Re-import the address
+            self.nodes[1].importaddress(address_to_import)
+
+            # Import private key of the previously imported address on node1
             priv_key = self.nodes[2].dumpprivkey(address_to_import)
             self.nodes[1].importprivkey(priv_key)
 
-            # 6. Check that the unspents are now spendable on node1
+            script = "76a91463fe7c47cf475802b1c4ec2d34d1ef33e6b0fc6388ac"
+            scriptAddr = "mpdg41HWZR8puTvV1A1wxpF85Gewn2VALN"
+            p2shAddr = "2Mw8MoHnYnWw2TwtcoWXC2hxr9Jx6YVELYQ"
+
+            # Import script
+            self.nodes[1].importaddress(script, "", False, True)
+
+            # Validate that the addresses are in the wallet
+            assert self.nodes[1].getaddressinfo(scriptAddr)["iswatchonly"]
+            assert self.nodes[1].getaddressinfo(p2shAddr)["iswatchonly"]
+
+            # Remove script
+            self.nodes[1].removeaddress(script, True, True)
+
+            # Validate that the addresses are no longer in the wallet
+            assert not self.nodes[1].getaddressinfo(scriptAddr)["iswatchonly"]
+            assert not self.nodes[1].getaddressinfo(p2shAddr)["iswatchonly"]
+
+            # Check that the unspents are now spendable on node1
             assert_array_result(self.nodes[1].listunspent(),
                                 {"address": address_to_import},
                                 {"spendable": True})
+
+            # Attempt to remove address after owning private key
+            assert_raises_rpc_error(-4, "The wallet contains the private key for this address", self.nodes[1].removeaddress, address_to_import)
+
+            # Check for removeaddress affecting other addresses
+            # Send some coins to generate new UTXO
+            address_to_import2 = self.nodes[2].getnewaddress()
+            txid = self.nodes[0].sendtoaddress(address_to_import2, 1)
+            self.nodes[0].generate(1)
+            self.sync_all(self.nodes[0:3])
+
+            # Import the new address from node2 to node1
+            self.nodes[1].importaddress(address_to_import2)
+            assert self.nodes[1].getaddressinfo(address_to_import2)["iswatchonly"]
+
+            # Remove the address from node1
+            self.nodes[1].removeaddress(address_to_import2)
+
+            # Check the address was removed and other address is unaffected
+            assert not self.nodes[1].getaddressinfo(address_to_import2)["iswatchonly"]
+            assert self.nodes[1].getaddressinfo(address_to_import)["ismine"]
 
         # Mine a block from node0 to an address from node1
         coinbase_addr = self.nodes[1].getnewaddress()

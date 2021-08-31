@@ -138,6 +138,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "importprivkey", 2, "rescan" },
     { "importaddress", 2, "rescan" },
     { "importaddress", 3, "p2sh" },
+    { "removeaddress", 1, "p2sh" },
+    { "removeaddress", 2, "purge_transactions" },
     { "importpubkey", 2, "rescan" },
     { "importmulti", 0, "requests" },
     { "importmulti", 1, "options" },

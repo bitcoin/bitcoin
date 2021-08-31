@@ -1026,6 +1026,45 @@ bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx
     return true;
 }
 
+void CWallet::RemoveTransactions(const CScript& script)
+{
+    LOCK(cs_wallet);
+
+    std::vector<std::unique_ptr<CWalletTx>> vWtx;
+    for (std::map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it) {
+        const CWalletTx& wTx = it->second;
+        bool txContainsScript = false;
+
+        // if the tx sends to this script
+        for (const CTxOut& txout : wTx.tx->vout) {
+            txContainsScript |= script == txout.scriptPubKey;
+        }
+
+        // if the tx spends from this script
+        if (!txContainsScript) {
+            for (const CTxIn& txin : wTx.tx->vin) {
+                std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(txin.prevout.hash);
+                if (mi != mapWallet.end()) {
+                    const CWalletTx& prev = (*mi).second;
+                    if (txin.prevout.n < prev.tx->vout.size()) {
+                        txContainsScript |= script == prev.tx->vout[txin.prevout.n].scriptPubKey;
+                    }
+                }
+            }
+        }
+
+        if (txContainsScript && !IsFromMe(*wTx.tx) && !IsMine(*wTx.tx)) {
+            vWtx.push_back(std::make_unique<CWalletTx>(this, MakeTransactionRef(std::move(*wTx.tx))));
+        }
+    }
+
+    for (const auto& wtx : vWtx) {
+        mapWallet.erase(wtx->GetHash());
+        WalletBatch(GetDatabase()).EraseTx(wtx->GetHash());
+        NotifyTransactionChanged(wtx->GetHash(), CT_DELETED);
+    }
+}
+
 bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Confirmation confirm, bool fUpdate)
 {
     const CTransaction& tx = *ptx;

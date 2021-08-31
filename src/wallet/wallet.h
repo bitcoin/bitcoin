@@ -507,6 +507,8 @@ public:
     int64_t IncOrderPosNext(WalletBatch *batch = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     DBErrors ReorderTransactions();
 
+    void RemoveTransactions(const CScript& script);
+
     void MarkDirty();
 
     //! Callback for updating transaction metadata in mapWallet.
