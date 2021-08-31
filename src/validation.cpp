@@ -6370,7 +6370,8 @@ void DoGethMaintenance() {
         fs::path keyStoreTmpDir = dataDir / "keystoretmp";
         fs::path nodeKeyTmpDir = dataDir / "nodekeytmp";
         bool existedKeystore = fs::exists(gethKeyStoreDir);
-        if(existedKeystore){
+        bool existedKeystoreTmp = fs::exists(keyStoreTmpDir);
+        if(existedKeystore && !existedKeystoreTmp){
             LogPrintf("%s: Copying keystore for Geth to a temp directory\n", __func__); 
             try{
                 recursive_copy(gethKeyStoreDir, keyStoreTmpDir);
@@ -6380,7 +6381,8 @@ void DoGethMaintenance() {
             }
         }
         bool existedNodekey = fs::exists(gethNodeKeyPath);
-        if(existedNodekey){
+        bool existedNodekeyTmp = fs::exists(nodeKeyTmpDir);
+        if(existedNodekey && !existedNodekeyTmp){
             LogPrintf("%s: Copying temporary nodekey\n", __func__); 
             try{
                 recursive_copy(gethNodeKeyPath, nodeKeyTmpDir);
