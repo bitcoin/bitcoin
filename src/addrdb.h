@@ -8,10 +8,8 @@
 
 #include <fs.h>
 #include <net_types.h> // For banmap_t
-#include <serialize.h>
 #include <univalue.h>
 
-#include <string>
 #include <vector>
 
 class CAddress;
@@ -43,12 +41,6 @@ public:
      * @throw std::runtime_error if the JSON does not have the expected fields.
      */
     explicit CBanEntry(const UniValue& json);
-
-    SERIALIZE_METHODS(CBanEntry, obj)
-    {
-        uint8_t ban_reason = 2; //! For backward compatibility
-        READWRITE(obj.nVersion, obj.nCreateTime, obj.nBanUntil, ban_reason);
-    }
 
     void SetNull()
     {
