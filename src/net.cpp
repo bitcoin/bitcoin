@@ -3704,10 +3704,8 @@ int CConnman::GetBestHeight() const
 
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 
-CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string& addrNameIn, bool fInboundIn) :
-    nTimeConnected(GetSystemTimeInSeconds()),
-    nTimeFirstMessageReceived(0),
-    fFirstMessageIsMNAUTH(false),
+CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, bool fInboundIn)
+    : nTimeConnected(GetSystemTimeInSeconds()),
     addr(addrIn),
     addrBind(addrBindIn),
     fInbound(fInboundIn),
@@ -3717,56 +3715,12 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     id(idIn),
     nLocalHostNonce(nLocalHostNonceIn),
     nLocalServices(nLocalServicesIn),
-    nMyStartingHeight(nMyStartingHeightIn),
-    nSendVersion(0)
+    nMyStartingHeight(nMyStartingHeightIn)
 {
-    nServices = NODE_NONE;
     hSocket = hSocketIn;
-    nRecvVersion = INIT_PROTO_VERSION;
-    nLastSend = 0;
-    nLastRecv = 0;
-    nSendBytes = 0;
-    nRecvBytes = 0;
-    nTimeOffset = 0;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
-    nVersion = 0;
-    nNumWarningsSkipped = 0;
-    nLastWarningTime = 0;
-    fOneShot = false;
-    m_manual_connection = false;
-    fClient = false; // set by version message
-    m_limited_node = false; // set by version message
-    fFeeler = false;
-    fSuccessfullyConnected = false;
-    fDisconnect = false;
-    nRefCount = 0;
-    nSendSize = 0;
-    nSendOffset = 0;
     hashContinue = uint256();
-    nStartingHeight = -1;
     filterInventoryKnown.reset();
-    fSendMempool = false;
-    fGetAddr = false;
-    nNextLocalAddrSend = 0;
-    nNextAddrSend = 0;
-    fRelayTxes = false;
-    fSentAddr = false;
-    timeLastMempoolReq = 0;
-    nLastBlockTime = 0;
-    nLastTXTime = 0;
-    nPingNonceSent = 0;
-    nPingUsecStart = 0;
-    nPingUsecTime = 0;
-    fPingQueued = false;
-    m_masternode_connection = false;
-    m_masternode_probe_connection = false;
-    nMinPingUsecTime = std::numeric_limits<int64_t>::max();
-    fPauseRecv = false;
-    fPauseSend = false;
-    fHasRecvData = false;
-    fCanSendData = false;
-    nProcessQueueSize = 0;
-    nSendMsgSize = 0;
 
     for (const std::string &msg : getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;

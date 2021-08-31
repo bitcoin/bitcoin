@@ -833,40 +833,40 @@ class CNode
     friend class CConnman;
 public:
     // socket
-    std::atomic<ServiceFlags> nServices;
+    std::atomic<ServiceFlags> nServices{NODE_NONE};
     SOCKET hSocket GUARDED_BY(cs_hSocket);
-    size_t nSendSize; // total size of all vSendMsg entries
-    size_t nSendOffset; // offset inside the first vSendMsg already sent
-    uint64_t nSendBytes GUARDED_BY(cs_vSend);
+    size_t nSendSize{0}; // total size of all vSendMsg entries
+    size_t nSendOffset{0}; // offset inside the first vSendMsg already sent
+    uint64_t nSendBytes GUARDED_BY(cs_vSend){0};
     std::list<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
-    std::atomic<size_t> nSendMsgSize;
+    std::atomic<size_t> nSendMsgSize{0};
     CCriticalSection cs_vSend;
     CCriticalSection cs_hSocket;
     CCriticalSection cs_vRecv;
 
     CCriticalSection cs_vProcessMsg;
     std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
-    size_t nProcessQueueSize;
+    size_t nProcessQueueSize{0};
 
     CCriticalSection cs_sendProcessing;
 
     std::deque<CInv> vRecvGetData;
-    uint64_t nRecvBytes GUARDED_BY(cs_vRecv);
-    std::atomic<int> nRecvVersion;
+    uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
+    std::atomic<int> nRecvVersion{INIT_PROTO_VERSION};
 
-    std::atomic<int64_t> nLastSend;
-    std::atomic<int64_t> nLastRecv;
+    std::atomic<int64_t> nLastSend{0};
+    std::atomic<int64_t> nLastRecv{0};
     const int64_t nTimeConnected;
-    std::atomic<int64_t> nTimeOffset;
-    std::atomic<int64_t> nLastWarningTime;
-    std::atomic<int64_t> nTimeFirstMessageReceived;
-    std::atomic<bool> fFirstMessageIsMNAUTH;
+    std::atomic<int64_t> nTimeOffset{0};
+    std::atomic<int64_t> nLastWarningTime{0};
+    std::atomic<int64_t> nTimeFirstMessageReceived{0};
+    std::atomic<bool> fFirstMessageIsMNAUTH{false};
     // Address of this peer
     const CAddress addr;
     // Bind address of our side of the connection
     const CAddress addrBind;
-    std::atomic<int> nNumWarningsSkipped;
-    std::atomic<int> nVersion;
+    std::atomic<int> nNumWarningsSkipped{0};
+    std::atomic<int> nVersion{0};
     /**
      * cleanSubVer is a sanitized string of the user agent byte array we read
      * from the wire. This cleaned string can safely be logged or displayed.
@@ -879,11 +879,11 @@ public:
     }
     // This boolean is unusued in actual processing, only present for backward compatibility at RPC/QT level
     bool m_legacyWhitelisted{false};
-    bool fFeeler; // If true this node is being used as a short lived feeler.
-    bool fOneShot;
-    bool m_manual_connection;
-    bool fClient;
-    bool m_limited_node; //after BIP159
+    bool fFeeler{false}; // If true this node is being used as a short lived feeler.
+    bool fOneShot{false};
+    bool m_manual_connection{false};
+    bool fClient{false}; // set by version message
+    bool m_limited_node{false}; //after BIP159, set by version message
     const bool fInbound;
 
     /**
@@ -891,8 +891,8 @@ public:
      * messages, implying a preference to receive ADDRv2 instead of ADDR ones.
      */
     std::atomic_bool m_wants_addrv2{false};
-    std::atomic_bool fSuccessfullyConnected;
-    std::atomic_bool fDisconnect;
+    std::atomic_bool fSuccessfullyConnected{false};
+    std::atomic_bool fDisconnect{false};
     std::atomic<int64_t> nDisconnectLingerTime{0};
     std::atomic_bool fSocketShutdown{false};
     // Setting fDisconnect to true will cause the node to be disconnected the
@@ -902,26 +902,26 @@ public:
     // a) it allows us to not relay tx invs before receiving the peer's version message
     // b) the peer may tell us in its version message that we should not relay tx invs
     //    unless it loads a bloom filter.
-    bool fRelayTxes; //protected by cs_filter
-    bool fSentAddr;
+    bool fRelayTxes GUARDED_BY(cs_filter){false};
+    bool fSentAddr{false};
     // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
-    std::atomic<bool> m_masternode_connection;
+    std::atomic<bool> m_masternode_connection{false};
     // If 'true' this node will be disconnected after MNAUTH
-    std::atomic<bool> m_masternode_probe_connection;
+    std::atomic<bool> m_masternode_probe_connection{false};
     // If 'true', we identified it as an intra-quorum relay connection
     std::atomic<bool> m_masternode_iqr_connection{false};
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
     std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter){nullptr};
-    std::atomic<int> nRefCount;
+    std::atomic<int> nRefCount{0};
 
     const uint64_t nKeyedNetGroup;
 
-    std::atomic_bool fPauseRecv;
-    std::atomic_bool fPauseSend;
+    std::atomic_bool fPauseRecv{false};
+    std::atomic_bool fPauseSend{false};
 
-    std::atomic_bool fHasRecvData;
-    std::atomic_bool fCanSendData;
+    std::atomic_bool fHasRecvData{false};
+    std::atomic_bool fCanSendData{false};
 
 protected:
     mapMsgCmdSize mapSendBytesPerMsgCmd;
@@ -929,15 +929,15 @@ protected:
 
 public:
     uint256 hashContinue;
-    std::atomic<int> nStartingHeight;
+    std::atomic<int> nStartingHeight{-1};
 
     // flood relay
     std::vector<CAddress> vAddrToSend;
     CRollingBloomFilter addrKnown;
-    bool fGetAddr;
+    bool fGetAddr{false};
     std::set<uint256> setKnown;
-    int64_t nNextAddrSend GUARDED_BY(cs_sendProcessing);
-    int64_t nNextLocalAddrSend GUARDED_BY(cs_sendProcessing);
+    int64_t nNextAddrSend GUARDED_BY(cs_sendProcessing){0};
+    int64_t nNextLocalAddrSend GUARDED_BY(cs_sendProcessing){0};
 
     // inventory based relay
     CRollingBloomFilter filterInventoryKnown GUARDED_BY(cs_inventory);
@@ -954,27 +954,27 @@ public:
     std::chrono::microseconds nNextInvSend{0};
     // Used for headers announcements - unfiltered blocks to relay
     // Also protected by cs_inventory
-    std::vector<uint256> vBlockHashesToAnnounce;
+    std::vector<uint256> vBlockHashesToAnnounce GUARDED_BY(cs_inventory);
     // Used for BIP35 mempool sending, also protected by cs_inventory
-    bool fSendMempool;
+    bool fSendMempool GUARDED_BY(cs_inventory){false};
 
     // Block and TXN accept times
-    std::atomic<int64_t> nLastBlockTime;
-    std::atomic<int64_t> nLastTXTime;
+    std::atomic<int64_t> nLastBlockTime{0};
+    std::atomic<int64_t> nLastTXTime{0};
 
     // Last time a "MEMPOOL" request was serviced.
-    std::atomic<int64_t> timeLastMempoolReq;
+    std::atomic<int64_t> timeLastMempoolReq{0};
     // Ping time measurement:
     // The pong reply we're expecting, or 0 if no pong expected.
-    std::atomic<uint64_t> nPingNonceSent;
+    std::atomic<uint64_t> nPingNonceSent{0};
     // Time (in usec) the last ping was sent, or 0 if no ping was ever sent.
-    std::atomic<int64_t> nPingUsecStart;
+    std::atomic<int64_t> nPingUsecStart{0};
     // Last measured round-trip time.
-    std::atomic<int64_t> nPingUsecTime;
+    std::atomic<int64_t> nPingUsecTime{0};
     // Best measured round-trip time.
-    std::atomic<int64_t> nMinPingUsecTime;
+    std::atomic<int64_t> nMinPingUsecTime{std::numeric_limits<int64_t>::max()};
     // Whether a ping is requested.
-    std::atomic<bool> fPingQueued;
+    std::atomic<bool> fPingQueued{false};
 
     // If true, we will send him CoinJoin queue messages
     std::atomic<bool> fSendDSQueue{false};
@@ -997,7 +997,7 @@ private:
     // Services offered to this peer
     const ServiceFlags nLocalServices;
     const int nMyStartingHeight;
-    int nSendVersion;
+    int nSendVersion {0};
     NetPermissionFlags m_permissionFlags{ PF_NONE };
     std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
 
