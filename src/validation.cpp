@@ -26,6 +26,7 @@
 #include <node/coinstats.h>
 #include <node/ui_interface.h>
 #include <policy/policy.h>
+#include <policy/rbf.h>
 #include <policy/settings.h>
 #include <pow.h>
 #include <primitives/block.h>
@@ -519,8 +520,10 @@ private:
         bool m_replacement_transaction;
         CAmount m_base_fees;
         CAmount m_modified_fees;
-        CAmount m_conflicting_fees;
-        size_t m_conflicting_size;
+        /** Total modified fees of all transactions being replaced. */
+        CAmount m_conflicting_fees{0};
+        /** Total virtual size of all transactions being replaced. */
+        size_t m_conflicting_size{0};
 
         const CTransactionRef& m_ptx;
         const uint256& m_hash;
@@ -651,33 +654,14 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             // SYSCOIN
             if (!setConflicts.count(ptxConflicting->GetHash()) && !setConflictsAsset.count(ptxConflicting->GetHash()))
             {
-                // Allow opt-out of transaction replacement by setting
-                // nSequence > MAX_BIP125_RBF_SEQUENCE (SEQUENCE_FINAL-2) on all inputs.
-                //
-                // SEQUENCE_FINAL-1 is picked to still allow use of nLockTime by
-                // non-replaceable transactions. All inputs rather than just one
-                // is for the sake of multi-party protocols, where we don't
-                // want a single party to be able to disable replacement.
-                //
                 // Transactions that don't explicitly signal replaceability are
                 // *not* replaceable with the current logic, even if one of their
                 // unconfirmed ancestors signals replaceability. This diverges
                 // from BIP125's inherited signaling description (see CVE-2021-31876).
                 // Applications relying on first-seen mempool behavior should
                 // check all unconfirmed ancestors; otherwise an opt-in ancestor
-                // might be replaced, causing removal of this descendant.
-                bool fReplacementOptOut = true;
-                
-                for (const CTxIn &_txin : ptxConflicting->vin)
-                {
-                    if (_txin.nSequence <= MAX_BIP125_RBF_SEQUENCE)
-                    {
-                        fReplacementOptOut = false;
-                        break;
-                    }
-                }
-                
-                if (fReplacementOptOut) {
+                // might be replaced, causing removal of this descendant.               
+                if (SignalsOptInRBF(*ptxConflicting)) {
                     // if not RBF then allow first double spend to be relayed, ZDAG by default isn't RBF enabled because it shouldn't be replaceable and because of checks below
                     // neither are its ancestors, they will be locked in as soon as you have a ZDAG tx because ZDAG isn't compliant with RBF.
                     if(IsZTx){
@@ -911,21 +895,14 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
 
-    // Check if it's economically rational to mine this transaction rather
-    // than the ones it replaces.
-    nConflictingFees = 0;
-    nConflictingSize = 0;
-    uint64_t nConflictingCount = 0;
-    
     // If we don't hold the lock allConflicting might be incomplete; the
     // subsequent RemoveStaged() and addUnchecked() calls don't guarantee
     // mempool consistency for us.
     fReplacementTransaction = setConflicts.size();
     if (fReplacementTransaction)
     {
+        std::string err_string;
         CFeeRate newFeeRate(nModifiedFees, nSize);
-        std::set<uint256> setConflictsParents;
-        const int maxDescendantsToVisit = 100;
         for (const auto& mi : setIterConflicting) {
             // Don't allow the replacement to reduce the feerate of the
             // mempool.
@@ -950,33 +927,26 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                             newFeeRate.ToString(),
                             oldFeeRate.ToString()));
             }
+        }
 
+        // Calculate all conflicting entries and enforce Rule #5.
+        if (!GetEntriesForConflicts(tx, m_pool, setIterConflicting, allConflicting, err_string)) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too many potential replacements", err_string);
+        }
+
+        // Check if it's economically rational to mine this transaction rather
+        // than the ones it replaces.
+        for (CTxMemPool::txiter it : allConflicting) {
+            nConflictingFees += it->GetModifiedFee();
+            nConflictingSize += it->GetTxSize();
+        }
+
+        std::set<uint256> setConflictsParents;
+        for (const auto& mi : setIterConflicting) {
             for (const CTxIn &txin : mi->GetTx().vin)
             {
                 setConflictsParents.insert(txin.prevout.hash);
             }
-
-            nConflictingCount += mi->GetCountWithDescendants();
-        }
-        // This potentially overestimates the number of actual descendants
-        // but we just want to be conservative to avoid doing too much
-        // work.
-        if (nConflictingCount <= maxDescendantsToVisit) {
-            // If not too many to replace, then calculate the set of
-            // transactions that would have to be evicted
-            for (CTxMemPool::txiter it : setIterConflicting) {
-                m_pool.CalculateDescendants(it, allConflicting);
-            }
-            for (CTxMemPool::txiter it : allConflicting) {
-                nConflictingFees += it->GetModifiedFee();
-                nConflictingSize += it->GetTxSize();
-            }
-        } else {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too many potential replacements",
-                    strprintf("rejecting replacement %s; too many potential replacements (%d > %d)\n",
-                        hash.ToString(),
-                        nConflictingCount,
-                        maxDescendantsToVisit));
         }
 
         for (unsigned int j = 0; j < tx.vin.size(); j++)
