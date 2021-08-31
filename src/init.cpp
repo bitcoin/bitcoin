@@ -33,6 +33,7 @@
 #include <net_permissions.h>
 #include <net_processing.h>
 #include <netbase.h>
+#include <netgroup.h>
 #include <node/blockstorage.h>
 #include <node/caches.h>
 #include <node/chainstate.h>
@@ -240,6 +241,7 @@ void Shutdown(NodeContext& node)
     node.connman.reset();
     node.banman.reset();
     node.addrman.reset();
+    node.netgroupman.reset();
 
     if (node.mempool && node.mempool->IsLoaded() && node.args->GetBoolArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool(*node.mempool);
@@ -1229,8 +1231,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     const bool ignores_incoming_txs{args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)};
 
     {
-        // Initialize addrman
-        assert(!node.addrman);
 
         // Read asmap file if configured
         std::vector<bool> asmap;
@@ -1254,6 +1254,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             LogPrintf("Using /16 prefix for IP bucketing\n");
         }
 
+        // Initialize netgroup manager
+        assert(!node.netgroupman);
+        node.netgroupman = std::make_unique<NetGroupManager>();
+
+        // Initialize addrman
+        assert(!node.addrman);
         uiInterface.InitMessage(_("Loading P2P addresses…").translated);
         if (const auto error{LoadAddrman(asmap, args, node.addrman)}) {
             return InitError(*error);
