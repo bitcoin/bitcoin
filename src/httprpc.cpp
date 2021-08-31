@@ -251,9 +251,10 @@ static bool InitRPCAuthentication()
         LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
         strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
     }
-    if (gArgs.GetArg("-rpcauth", "") != "" || gArgs.GetArg("-rpcauthfile", "") != "")
-    {
+    if (gArgs.GetArg("-rpcauth", "") != "" || gArgs.GetArg("-rpcauthfile", "") != "") {
         LogPrintf("Using rpcauth authentication.\n");
+    }
+    if (gArgs.GetArg("-rpcauth", "") != "") {
         for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
             std::vector<std::string> fields;
             boost::split(fields, rpcauth, boost::is_any_of(":$"));
@@ -264,6 +265,8 @@ static bool InitRPCAuthentication()
                 return false;
             }
         }
+    }
+    if (gArgs.GetArg("-rpcauthfile", "") != "") {
         for (std::string path : gArgs.GetArgs("-rpcauthfile")) {
             fsbridge::ifstream file;
             file.open(path);
