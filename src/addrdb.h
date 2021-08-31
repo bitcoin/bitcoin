@@ -19,21 +19,15 @@ class CDataStream;
 class CBanEntry
 {
 public:
-    static const int CURRENT_VERSION=1;
-    int nVersion;
-    int64_t nCreateTime;
-    int64_t nBanUntil;
+    static constexpr int CURRENT_VERSION{1};
+    int nVersion{CBanEntry::CURRENT_VERSION};
+    int64_t nCreateTime{0};
+    int64_t nBanUntil{0};
 
-    CBanEntry()
-    {
-        SetNull();
-    }
+    CBanEntry() {}
 
     explicit CBanEntry(int64_t nCreateTimeIn)
-    {
-        SetNull();
-        nCreateTime = nCreateTimeIn;
-    }
+        : nCreateTime{nCreateTimeIn} {}
 
     /**
      * Create a ban entry from JSON.
@@ -41,13 +35,6 @@ public:
      * @throw std::runtime_error if the JSON does not have the expected fields.
      */
     explicit CBanEntry(const UniValue& json);
-
-    void SetNull()
-    {
-        nVersion = CBanEntry::CURRENT_VERSION;
-        nCreateTime = 0;
-        nBanUntil = 0;
-    }
 
     /**
      * Generate a JSON representation of this ban entry.
