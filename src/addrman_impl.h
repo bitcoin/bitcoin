@@ -100,7 +100,7 @@ public:
 class AddrManImpl
 {
 public:
-    AddrManImpl(std::vector<bool>&& asmap, bool deterministic, int32_t consistency_check_ratio);
+    AddrManImpl(const NetGroupManager& netgroupman, bool deterministic, int32_t consistency_check_ratio);
 
     ~AddrManImpl();
 
@@ -139,8 +139,6 @@ public:
 
     std::optional<AddressPosition> FindAddressEntry(const CAddress& addr)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
-
-    const std::vector<bool>& GetAsmap() const;
 
     friend class AddrManDeterministic;
 
@@ -212,21 +210,8 @@ private:
     /** Perform consistency checks every m_consistency_check_ratio operations (if non-zero). */
     const int32_t m_consistency_check_ratio;
 
-    // Compressed IP->ASN mapping, loaded from a file when a node starts.
-    // Should be always empty if no file was provided.
-    // This mapping is then used for bucketing nodes in Addrman.
-    //
-    // If asmap is provided, nodes will be bucketed by
-    // AS they belong to, in order to make impossible for a node
-    // to connect to several nodes hosted in a single AS.
-    // This is done in response to Erebus attack, but also to generally
-    // diversify the connections every node creates,
-    // especially useful when a large fraction of nodes
-    // operate under a couple of cloud providers.
-    //
-    // If a new asmap was provided, the existing records
-    // would be re-bucketed accordingly.
-    const std::vector<bool> m_asmap;
+    /** Reference to the netgroup manager. netgroupman must be constructed before addrman and destructed after. */
+    const NetGroupManager& m_netgroupman;
 
     //! Find an entry.
     AddrInfo* Find(const CService& addr, int* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);

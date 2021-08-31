@@ -1256,12 +1256,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         // Initialize netgroup manager
         assert(!node.netgroupman);
-        node.netgroupman = std::make_unique<NetGroupManager>();
+        node.netgroupman = std::make_unique<NetGroupManager>(std::move(asmap));
 
         // Initialize addrman
         assert(!node.addrman);
         uiInterface.InitMessage(_("Loading P2P addresses…").translated);
-        if (const auto error{LoadAddrman(asmap, args, node.addrman)}) {
+        if (const auto error{LoadAddrman(*node.netgroupman, args, node.addrman)}) {
             return InitError(*error);
         }
     }
@@ -1269,7 +1269,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.banman);
     node.banman = std::make_unique<BanMan>(gArgs.GetDataDirNet() / "banlist", &uiInterface, args.GetIntArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);
-    node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max()), *node.addrman, args.GetBoolArg("-networkactive", true));
+    node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()),
+                                              GetRand(std::numeric_limits<uint64_t>::max()),
+                                              *node.addrman, *node.netgroupman, args.GetBoolArg("-networkactive", true));
 
     assert(!node.fee_estimator);
     // Don't initialize fee estimation with old data if we don't relay transactions,

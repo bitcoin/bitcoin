@@ -1997,7 +1997,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     case ConnectionType::BLOCK_RELAY:
                     case ConnectionType::ADDR_FETCH:
                     case ConnectionType::FEELER:
-                        setConnected.insert(pnode->addr.GetGroup(addrman.GetAsmap()));
+                        setConnected.insert(pnode->addr.GetGroup(m_netgroupman.GetAsmap()));
                 } // no default case, so the compiler can warn about missing cases
             }
         }
@@ -2071,7 +2071,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 m_anchors.pop_back();
                 if (!addr.IsValid() || IsLocal(addr) || !IsReachable(addr) ||
                     !HasAllDesirableServiceFlags(addr.nServices) ||
-                    setConnected.count(addr.GetGroup(addrman.GetAsmap()))) continue;
+                    setConnected.count(addr.GetGroup(m_netgroupman.GetAsmap()))) continue;
                 addrConnect = addr;
                 LogPrint(BCLog::NET, "Trying to make an anchor connection to %s\n", addrConnect.ToString());
                 break;
@@ -2112,7 +2112,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
 
             // Require outbound connections, other than feelers, to be to distinct network groups
-            if (!fFeeler && setConnected.count(addr.GetGroup(addrman.GetAsmap()))) {
+            if (!fFeeler && setConnected.count(addr.GetGroup(m_netgroupman.GetAsmap()))) {
                 break;
             }
 
@@ -2499,8 +2499,12 @@ void CConnman::SetNetworkActive(bool active)
     }
 }
 
-CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, AddrMan& addrman_in, bool network_active)
-    : addrman(addrman_in), nSeed0(nSeed0In), nSeed1(nSeed1In)
+CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, AddrMan& addrman_in,
+                   const NetGroupManager& netgroupman, bool network_active)
+    : addrman(addrman_in)
+    , m_netgroupman{netgroupman}
+    , nSeed0(nSeed0In)
+    , nSeed1(nSeed1In)
 {
     SetTryNewOutboundPeer(false);
 
@@ -2859,7 +2863,7 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats) const
     for (CNode* pnode : m_nodes) {
         vstats.emplace_back();
         pnode->CopyStats(vstats.back());
-        vstats.back().m_mapped_as = pnode->addr.GetMappedAS(addrman.GetAsmap());
+        vstats.back().m_mapped_as = pnode->addr.GetMappedAS(m_netgroupman.GetAsmap());
     }
 }
 
@@ -3094,7 +3098,7 @@ CSipHasher CConnman::GetDeterministicRandomizer(uint64_t id) const
 
 uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
 {
-    std::vector<unsigned char> vchNetGroup(ad.GetGroup(addrman.GetAsmap()));
+    std::vector<unsigned char> vchNetGroup(ad.GetGroup(m_netgroupman.GetAsmap()));
 
     return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup.data(), vchNetGroup.size()).Finalize();
 }
