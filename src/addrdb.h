@@ -16,33 +16,6 @@ class CAddress;
 class CAddrMan;
 class CDataStream;
 
-class CBanEntry
-{
-public:
-    static constexpr int CURRENT_VERSION{1};
-    int nVersion{CBanEntry::CURRENT_VERSION};
-    int64_t nCreateTime{0};
-    int64_t nBanUntil{0};
-
-    CBanEntry() {}
-
-    explicit CBanEntry(int64_t nCreateTimeIn)
-        : nCreateTime{nCreateTimeIn} {}
-
-    /**
-     * Create a ban entry from JSON.
-     * @param[in] json A JSON representation of a ban entry, as created by `ToJson()`.
-     * @throw std::runtime_error if the JSON does not have the expected fields.
-     */
-    explicit CBanEntry(const UniValue& json);
-
-    /**
-     * Generate a JSON representation of this ban entry.
-     * @return JSON suitable for passing to the `CBanEntry(const UniValue&)` constructor.
-     */
-    UniValue ToJson() const;
-};
-
 /** Access to the (IP) address database (peers.dat) */
 class CAddrDB
 {
