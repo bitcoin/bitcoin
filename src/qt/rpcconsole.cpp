@@ -672,9 +672,10 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
             ui->peerWidget->setColumnWidth(PeerTableModel::NetNodeId, GUIUtil::TextWidth(fm, "99999"));
             ui->peerWidget->setColumnWidth(PeerTableModel::Direction, DIRECTION_COLUMN_WIDTH);
             ui->peerWidget->setColumnWidth(PeerTableModel::Address, ADDRESS_COLUMN_WIDTH);
-            ui->peerWidget->setColumnWidth(PeerTableModel::ConnectionType, GUIUtil::TextWidth(fm, "Address Fetch"));
-            ui->peerWidget->setColumnWidth(PeerTableModel::Sent, GUIUtil::TextWidth(fm, "1023 GBx"));
-            ui->peerWidget->setColumnWidth(PeerTableModel::Received, GUIUtil::TextWidth(fm, "1023 GBx"));
+            ui->peerWidget->setColumnWidth(PeerTableModel::ConnectionType, GUIUtil::TextWidth(fm, GUIUtil::ConnectionTypeToQString(ConnectionType::ADDR_FETCH /* TODO: Find the longest string? */, /* prepend_direction */ false)));
+            const auto bytesize_width = GUIUtil::TextWidth(fm, GUIUtil::formatBytes(999'000'000'000) + "x");
+            ui->peerWidget->setColumnWidth(PeerTableModel::Sent, bytesize_width);
+            ui->peerWidget->setColumnWidth(PeerTableModel::Received, bytesize_width);
             ui->peerWidget->setColumnWidth(PeerTableModel::Subversion, SUBVERSION_COLUMN_WIDTH);
             ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
         }
