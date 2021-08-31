@@ -289,9 +289,6 @@ std::atomic_bool g_is_mempool_loaded{false};
 
 static void CheckBlockIndex(const Consensus::Params& consensusParams);
 
-/** Constant stuff for coinbase transactions we create: */
-CScript COINBASE_FLAGS;
-
 // Internal stuff
 namespace {
     CBlockIndex *&pindexBestInvalid = g_chainstate.pindexBestInvalid;
