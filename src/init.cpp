@@ -1569,7 +1569,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(*node.connman, *node.addrman, node.banman.get(),
-                                     chainman, *node.mempool, ignores_incoming_txs);
+                                     chainman, node.mempool.get(), ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
     // ********************************************************* Step 8: start indexers
