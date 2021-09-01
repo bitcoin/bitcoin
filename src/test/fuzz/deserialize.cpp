@@ -195,10 +195,6 @@ FUZZ_TARGET_DESERIALIZE(blockheader_deserialize, {
     CBlockHeader bh;
     DeserializeFromFuzzingInput(buffer, bh);
 })
-FUZZ_TARGET_DESERIALIZE(banentry_deserialize, {
-    CBanEntry be;
-    DeserializeFromFuzzingInput(buffer, be);
-})
 FUZZ_TARGET_DESERIALIZE(txundo_deserialize, {
     CTxUndo tu;
     DeserializeFromFuzzingInput(buffer, tu);
