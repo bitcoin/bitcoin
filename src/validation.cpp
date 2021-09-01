@@ -3422,6 +3422,14 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-version", "POP bit is NOT set, and pop data is NOT empty");
     }
 
+    if(block.nVersion & VeriBlock::POP_BLOCK_VERSION_BIT) {
+        // run stateless validation on PopData
+        altintegration::ValidationState vs;
+        if(!VeriBlock::GetPop().check(block.popData, vs)) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-" + vs.GetPath(), vs.GetDebugMessage());
+        }
+    }
+
     // All potential-corruption validation must be done before we do any
     // transaction validation, as otherwise we may mark the header as invalid
     // because we receive the wrong transactions for it.
