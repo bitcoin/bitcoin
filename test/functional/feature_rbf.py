@@ -586,6 +586,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # Reports true due to inheritance
         assert_equal(True, self.nodes[0].getmempoolentry(optout_child_tx['txid'])['bip125-replaceable'])
 
+        self.log.info('Check that the (optout) child tx can not be replaced directly')
         replacement_child_tx = self.wallet.create_self_transfer(
             from_node=self.nodes[0],
             utxo_to_spend=parent_utxo,
@@ -594,14 +595,11 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             mempool_valid=False,
         )
 
-        # Broadcast replacement child tx
-        # BIP 125 :
-        # 1. The original transactions signal replaceability explicitly or through inheritance as described in the above
-        # Summary section.
-        # The original transaction (`optout_child_tx`) doesn't signal RBF but its parent (`optin_parent_tx`) does.
-        # The replacement transaction (`replacement_child_tx`) should be able to replace the original transaction.
-        # See CVE-2021-31876 for further explanations.
-        assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['bip125-replaceable'])
+        # The transaction we are attempting to replace (`optout_child_tx`) doesn't signal RBF but its parent (`optin_parent_tx`) does.
+        # The replacement transaction (`replacement_child_tx`) should be able to replace `optout_child_tx` due to replaceability through inheritance.
+        # Here we show that this isn't the case. See CVE-2021-31876 for further explanations.
+        assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['bip125-replaceable'])  # explicitly signals replaceability
+        assert_equal(True, self.nodes[0].getmempoolentry(optout_child_tx['txid'])['bip125-replaceable'])  # reports `True` due to inherited signaling from `optin_parent_tx`
         assert_raises_rpc_error(-26, 'txn-mempool-conflict', self.nodes[0].sendrawtransaction, replacement_child_tx["hex"], 0)
 
         self.log.info('Check that the child tx can still be replaced (via a tx that also replaces the parent)')
