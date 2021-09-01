@@ -2613,6 +2613,7 @@ static void AppendWarning(std::string& res, const std::string& warn)
 
 /** Check warning conditions and do some notifications on new chain tip set. */
 void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainParams) {
+    AssertLockHeld(cs_main);
     // New best block
     mempool.AddTransactionsUpdated(1);
 
@@ -3727,6 +3728,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
  */
 static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
+    AssertLockHeld(cs_main);
     const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
 
     // Start enforcing BIP113 (Median Time Past) using versionbits logic.
