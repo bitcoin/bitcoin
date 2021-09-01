@@ -19,10 +19,6 @@ public:
         : m_asmap{std::move(asmap)}
     {}
 
-    /* Get a reference to (const) asmap. May be held as long as NetGroupManager
-     * exists, since the data is const. */
-    const std::vector<bool>& GetAsmap() const { return m_asmap; }
-
     /** Get a checksum identifying the asmap being used. */
     uint256 GetAsmapChecksum() const;
 
