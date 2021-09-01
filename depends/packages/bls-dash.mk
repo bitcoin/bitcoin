@@ -7,6 +7,7 @@ $(package)_build_subdir=build
 $(package)_sha256_hash=276c8573104e5f18bb5b9fd3ffd49585dda5ba5f6de2de74759dda8ca5a9deac
 $(package)_dependencies=gmp cmake
 $(package)_patches=gcc_alignment_cast.patch
+$(package)_darwin_triplet=x86_64-apple-darwin18
 
 $(package)_relic_version=3a23142be0a5510a3aa93cd6c76fc59d3fc732a5
 $(package)_relic_download_path=https://github.com/relic-toolkit/relic/archive
@@ -46,8 +47,9 @@ define $(package)_set_vars
   $(package)_config_opts_debug=-DDEBUG=ON -DCMAKE_BUILD_TYPE=Debug
 
   ifneq ($(darwin_native_toolchain),)
-    $(package)_config_opts_darwin+= -DCMAKE_AR="$(host_prefix)/native/bin/$($(package)_ar)"
-    $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$(host_prefix)/native/bin/$($(package)_ranlib)"
+    $(package)_config_opts_darwin+= -DCMAKE_AR="$(host_prefix)/native/bin/$($(package)_darwin_triplet)-ar"
+    $(package)_config_opts_darwin+= -DCMAKE_LINKER="$(host_prefix)/native/bin/$($(package)_darwin_triplet)-ld"
+    $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$(host_prefix)/native/bin/$($(package)_darwin_triplet)-ranlib"
   endif
 
   $(package)_cppflags+=-UBLSALLOC_SODIUM
