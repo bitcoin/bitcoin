@@ -4,6 +4,7 @@
 
 #include <addrdb.h>
 #include <addrman.h>
+#include <addrman_impl.h>
 #include <chainparams.h>
 #include <clientversion.h>
 #include <hash.h>
@@ -90,30 +91,30 @@ public:
 
     CAddrInfo* Find(const CNetAddr& addr, int* pnId = nullptr)
     {
-        LOCK(cs);
-        return CAddrMan::Find(addr, pnId);
+        LOCK(m_impl->cs);
+        return m_impl->Find(addr, pnId);
     }
 
     CAddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId = nullptr)
     {
-        LOCK(cs);
-        return CAddrMan::Create(addr, addrSource, pnId);
+        LOCK(m_impl->cs);
+        return m_impl->Create(addr, addrSource, pnId);
     }
 
     void Delete(int nId)
     {
-        LOCK(cs);
-        CAddrMan::Delete(nId);
+        LOCK(m_impl->cs);
+        m_impl->Delete(nId);
     }
 
     // Used to test deserialization
     std::pair<int, int> GetBucketAndEntry(const CAddress& addr)
     {
-        LOCK(cs);
-        int nId = mapAddr[addr];
+        LOCK(m_impl->cs);
+        int nId = m_impl->mapAddr[addr];
         for (int bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; ++bucket) {
             for (int entry = 0; entry < ADDRMAN_BUCKET_SIZE; ++entry) {
-                if (nId == vvNew[bucket][entry]) {
+                if (nId == m_impl->vvNew[bucket][entry]) {
                     return std::pair<int, int>(bucket, entry);
                 }
             }
