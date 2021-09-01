@@ -102,7 +102,16 @@ void selectPopConfig(const std::string& network)
 {
     altintegration::Config popconfig;
 
-    if (network == CBaseChainParams::TESTNET) {
+    if (network == CBaseChainParams::MAIN) {
+        throw std::runtime_error("Bootstrap with mainnet BTC/VBK blocks!");
+        // TODO
+//        auto btcparam = std::make_shared<altintegration::BtcChainParamsMain>();
+//        popconfig.setBTC(testnetBTCstartHeight, testnetBTCblocks, btcparam);
+//        auto vbkparam = std::make_shared<altintegration::VbkChainParamsMain>();
+//        popconfig.setVBK(testnetVBKstartHeight, testnetVBKblocks, vbkparam);
+//        auto altparam = std::make_shared<VeriBlock::AltChainParamsVBTC>(Params().GenesisBlock(), /*mainnet=*/true);
+//        popconfig.alt = altparam;
+    } else if (network == CBaseChainParams::TESTNET) {
         auto btcparam = std::make_shared<altintegration::BtcChainParamsTest>();
         popconfig.setBTC(testnetBTCstartHeight, testnetBTCblocks, btcparam);
         auto vbkparam = std::make_shared<altintegration::VbkChainParamsTest>();
@@ -124,7 +133,7 @@ void selectPopConfig(const std::string& network)
         auto altparam = std::make_shared<VeriBlock::AltChainParamsVBTCDetRegTest>();
         popconfig.alt = altparam;
     } else {
-        throw std::invalid_argument("currently only supports test/regtest/detregtest");
+        throw std::invalid_argument("currently only supports main/test/regtest/detregtest");
     }
 
     VeriBlock::SetPopConfig(popconfig);

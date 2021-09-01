@@ -23,9 +23,6 @@
 
 #include <veriblock/pop.hpp>
 
-#define VBK_1  0xc0
-#define VBK_VERSION (VBK_1 + 0x1)
-
 static CBlock CreateGenesisBlockDefault(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     CMutableTransaction txNew;
@@ -72,13 +69,13 @@ CMainParams::CMainParams()
 {
     strNetworkID = CBaseChainParams::MAIN;
     consensus.nSubsidyHalvingInterval = 210000;
-    consensus.BIP16Exception = uint256S("0x00000000000002dc756eebf4f49723ed8d30cc28a5f108eb94b1ba88ac4f9c22");
+    consensus.BIP16Exception = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
     consensus.BIP34Height = 1;
-    consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
-    consensus.BIP65Height = 1;          // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
-    consensus.BIP66Height = 1;          // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
-    consensus.CSVHeight = 1;            // 000000000000000004a1b34462cb8aeebd5799177f7a29cf28f2d1961716b5b5
-    consensus.SegwitHeight = 1;         // 0000000000000000001c8018d9cb3b742ef25114f27563e3fc4a1902167f9893
+    consensus.BIP34Hash = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
+    consensus.BIP65Height = 1;          // 0x0000000000000000000000000000000000000000000000000000000000000000
+    consensus.BIP66Height = 1;          // 0x0000000000000000000000000000000000000000000000000000000000000000
+    consensus.CSVHeight = 1;            // 0x0000000000000000000000000000000000000000000000000000000000000000
+    consensus.SegwitHeight = 1;         // 0x0000000000000000000000000000000000000000000000000000000000000000
     consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
     consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
     consensus.nPowTargetSpacing = 10 * 60;
@@ -91,22 +88,22 @@ CMainParams::CMainParams()
     consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
     consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999;   // December 31, 2008
 
-    consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000001533efd8d716a517fe2c5008");
-    consensus.defaultAssumeValid = uint256S("0x0000000000000000000b9d2ec5a352ecba0592946514a92f14319dc2b367fc72"); // 654683
+    consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000aaaa");
+    consensus.defaultAssumeValid = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
 
     /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-    pchMessageStart[0] = 1;
-    pchMessageStart[1] = 1;
-    pchMessageStart[2] = 1;
-    pchMessageStart[3] = 1 + VBK_VERSION;
-    nDefaultPort = 8333;
+    pchMessageStart[0] = 'v';
+    pchMessageStart[1] = 'B';
+    pchMessageStart[2] = 'T';
+    pchMessageStart[3] = 'C';
+    nDefaultPort = 8033;
     nPruneAfterHeight = 100000;
-    m_assumed_blockchain_size = 350;
-    m_assumed_chain_state_size = 6;
+    m_assumed_blockchain_size = 1;
+    m_assumed_chain_state_size = 1;
 
     genesis = CreateGenesisBlockDefault(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
     consensus.hashGenesisBlock = genesis.GetHash();
@@ -141,10 +138,22 @@ CMainParams::CMainParams()
         {}};
 
     chainTxData = ChainTxData{
-        // Data from RPC: getchaintxstats 4096 00000000000000000005f8920febd3925f8272a6a71237563d78c2edfdd09ddf
-        /* nTime    */ 1569926786,
-        /* nTxCount */ 460596047,
-        /* dTxRate  */ 3.77848885073875,
+        /**
+         * vbitcoin-cli getchaintxstats                                                                                                                                                                                                                                                                                                        bogdan@big
+         * {
+         *    "time": 1630388498,
+         *    "txcount": 51731,
+         *    "window_final_block_hash": "0000000f6c2dd40ebc89b81848934657e1acb9e74441ae6fc337b2da990573c0",
+         *    "window_final_block_height": 51627,
+         *    "window_block_count": 4320,
+         *    "window_tx_count": 4324,
+         *    "window_interval": 964989,
+         *    "txrate": 0.004480880092933702
+         *  }
+         */
+        /* nTime    */ 1630388498,
+        /* nTxCount */ 1,
+        /* dTxRate  */ 0.004480880092933702,
     };
  }
 
@@ -155,9 +164,9 @@ CMainParams::CMainParams()
  {
      strNetworkID = CBaseChainParams::TESTNET;
      consensus.nSubsidyHalvingInterval = 210000;
-     consensus.BIP16Exception = uint256S("0x00000000dd30457c001f4095d208cc1296b0eed002427aa599874af7a432b105");
+     consensus.BIP16Exception = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
      consensus.BIP34Height = 1;
-     consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
+     consensus.BIP34Hash = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
      consensus.BIP65Height = 1;          // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
      consensus.BIP66Height = 1;          // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
      consensus.CSVHeight = 1;            // 00000000025e930139bac5c6c31a403776da130831ab85be56578f3fa75369bb
@@ -175,16 +184,16 @@ CMainParams::CMainParams()
      consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999;   // December 31, 2008
 
      consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000aaaa");
-     consensus.defaultAssumeValid = uint256S("0x000000000000006433d1efec504c53ca332b64963c425395515b01977bd7b3b0"); // 1864000
+     consensus.defaultAssumeValid = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
 
      pchMessageStart[0] = 2;
      pchMessageStart[1] = 2;
      pchMessageStart[2] = 2;
-     pchMessageStart[3] = 2 + VBK_VERSION;
+     pchMessageStart[3] = 2;
      nDefaultPort = 18333;
      nPruneAfterHeight = 1000;
-     m_assumed_blockchain_size = 40;
-     m_assumed_chain_state_size = 2;
+     m_assumed_blockchain_size = 1;
+     m_assumed_chain_state_size = 1;
 
 //     CBlock(hash=0000000fa9a9736fd815daea197d2cf0526e1c4641c365a5e5c811374795fdb6, ver=0x00000001, hashPrevBlock=0000000000000000000000000000000000000000000000000000000000000000, hashMerkleRoot=345a907c247b9500ecb312e5c2b027b0ec3c6bd70ebd428044eadb9f78460046, nTime=1340, nBits=1d1fffff, nNonce=15922192, vtx=1)
 //     CTransaction(hash=345a907c24, ver=1, vin.size=1, vout.size=1, nLockTime=0)
@@ -229,10 +238,10 @@ CMainParams::CMainParams()
          {}};
 
      chainTxData = ChainTxData{
-         // Data from RPC: getchaintxstats 4096 000000000000006433d1efec504c53ca332b64963c425395515b01977bd7b3b0
-         /* nTime    */ 1603359686,
-         /* nTxCount */ 58090238,
-         /* dTxRate  */ 0.1232886622799463,
+         // 00000001da906d7e587fe344ca51b097d621f88aaad0f93389d4df558492e86e
+         /* nTime    */ 1630388498,
+         /* nTxCount */ 1,
+         /* dTxRate  */ 0.004480880092933702,
      };
  }
 
@@ -268,7 +277,7 @@ CRegTestParams::CRegTestParams(const ArgsManager& args)
     pchMessageStart[0] = 3;
     pchMessageStart[1] = 3;
     pchMessageStart[2] = 3;
-    pchMessageStart[3] = 3 + VBK_VERSION;
+    pchMessageStart[3] = 3;
     nDefaultPort = 18444;
     nPruneAfterHeight = 1000;
     m_assumed_blockchain_size = 0;
@@ -401,7 +410,7 @@ CDetRegTestParams::CDetRegTestParams(const ArgsManager& args)
     pchMessageStart[0] = 3;
     pchMessageStart[1] = 3;
     pchMessageStart[2] = 3;
-    pchMessageStart[3] = 3 + VBK_VERSION;
+    pchMessageStart[3] = 3;
     nDefaultPort = 18555;
     nPruneAfterHeight = 1000;
     m_assumed_blockchain_size = 0;
