@@ -1,0 +1,24 @@
+commit 7b6eb33ecd88768b28c67ce5d2d68a7eed5936b6
+Author: fanquake <fanquake@gmail.com>
+Date:   Tue Aug 25 14:34:53 2020 +0800
+
+    Remove rule that causes inadvertant header regeneration
+
+    Otherwise the makefile will needlessly attempt to re-generate the
+    headers with gperf. This can be dropped once the upstream build is fixed.
+
+    See #10851.
+
+diff --git a/src/Makefile.in b/src/Makefile.in
+index f4626ad..4ae1b00 100644
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -903,7 +903,7 @@ fcobjshash.gperf: fcobjshash.gperf.h fcobjs.h
+ 	' - > $@.tmp && \
+ 	mv -f $@.tmp $@ || ( $(RM) $@.tmp && false )
+
+-fcobjshash.h: fcobjshash.gperf
++fcobjshash.h:
+ 	$(AM_V_GEN) $(GPERF) -m 100 $< > $@.tmp && \
+ 	mv -f $@.tmp $@ || ( $(RM) $@.tmp && false )
+
