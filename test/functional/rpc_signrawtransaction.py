@@ -42,10 +42,6 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         # 2) No script verification error occurred
         assert 'errors' not in rawTxSigned
 
-        # Perform the same test on signrawtransaction
-        rawTxSigned2 = self.nodes[0].signrawtransaction(rawTx, inputs, privKeys)
-        assert_equal(rawTxSigned, rawTxSigned2)
-
     def test_with_lock_outputs(self):
         """Test correct error reporting when trying to sign a locked output"""
         self.nodes[0].encryptwallet("password")
@@ -117,10 +113,6 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         assert_equal(rawTxSigned['errors'][0]['vout'], inputs[1]['vout'])
         assert_equal(rawTxSigned['errors'][1]['txid'], inputs[2]['txid'])
         assert_equal(rawTxSigned['errors'][1]['vout'], inputs[2]['vout'])
-
-        # Perform same test with signrawtransaction
-        rawTxSigned2 = self.nodes[0].signrawtransaction(rawTx, scripts, privKeys)
-        assert_equal(rawTxSigned, rawTxSigned2)
 
     def run_test(self):
         self.successful_signing_test()
