@@ -1189,7 +1189,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 InitError(strprintf(_("Could not find asmap file %s"), asmap_path));
                 return false;
             }
-            asmap = CAddrMan::DecodeAsmap(asmap_path);
+            asmap = DecodeAsmap(asmap_path);
             if (asmap.size() == 0) {
                 InitError(strprintf(_("Could not parse asmap file %s"), asmap_path));
                 return false;

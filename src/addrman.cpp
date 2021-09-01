@@ -9,7 +9,6 @@
 #include <logging.h>
 #include <netaddress.h>
 #include <serialize.h>
-#include <util/asmap.h>
 
 #include <cmath>
 #include <optional>
@@ -1007,31 +1006,4 @@ CAddrInfo CAddrMan::SelectTriedCollision_()
     int id_old = vvTried[tried_bucket][tried_bucket_pos];
 
     return mapInfo[id_old];
-}
-
-std::vector<bool> CAddrMan::DecodeAsmap(fs::path path)
-{
-    std::vector<bool> bits;
-    FILE *filestr = fsbridge::fopen(path, "rb");
-    CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
-    if (file.IsNull()) {
-        LogPrintf("Failed to open asmap file from disk\n");
-        return bits;
-    }
-    fseek(filestr, 0, SEEK_END);
-    int length = ftell(filestr);
-    LogPrintf("Opened asmap file %s (%d bytes) from disk\n", path, length);
-    fseek(filestr, 0, SEEK_SET);
-    uint8_t cur_byte;
-    for (int i = 0; i < length; ++i) {
-        file >> cur_byte;
-        for (int bit = 0; bit < 8; ++bit) {
-            bits.push_back((cur_byte >> bit) & 1);
-        }
-    }
-    if (!SanityCheckASMap(bits, 128)) {
-        LogPrintf("Sanity check of asmap file %s failed\n", path);
-        return {};
-    }
-    return bits;
 }
