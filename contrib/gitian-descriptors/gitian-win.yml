@@ -20,7 +20,6 @@ packages:
 - "nsis"
 - "zip"
 - "ca-certificates"
-- "python"
 - "python3"
 - "rename"
 - "ccache"

@@ -6,7 +6,7 @@
 """Helpful routines for regression testing."""
 
 from base64 import b64encode
-from binascii import hexlify, unhexlify
+from binascii import unhexlify
 from decimal import Decimal, ROUND_DOWN
 import hashlib
 import inspect
@@ -194,9 +194,6 @@ def check_json_precision():
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
 
-def bytes_to_hex_str(byte_str):
-    return hexlify(byte_str).decode('ascii')
-
 def hash256(byte_str):
     sha256 = hashlib.sha256()
     sha256.update(byte_str)
@@ -288,7 +285,7 @@ def get_rpc_proxy(url, node_number, *, timeout=None, coveragedir=None):
     return coverage.AuthServiceProxyWrapper(proxy, coverage_logfile)
 
 def p2p_port(n):
-    assert(n <= MAX_NODES)
+    assert n <= MAX_NODES
     return PORT_MIN + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
 
 def rpc_port(n):
@@ -523,7 +520,7 @@ def gather_inputs(from_node, amount_needed, confirmations_required=1):
     """
     Return a random set of unspent txouts that are enough to pay amount_needed
     """
-    assert(confirmations_required >= 0)
+    assert confirmations_required >= 0
     utxo = from_node.listunspent(confirmations_required)
     random.shuffle(utxo)
     inputs = []
@@ -601,7 +598,7 @@ def create_confirmed_utxos(fee, node, count):
         node.generate(1)
 
     utxos = node.listunspent()
-    assert(len(utxos) >= count)
+    assert len(utxos) >= count
     return utxos
 
 # Create large OP_RETURN txouts that can be appended to a transaction

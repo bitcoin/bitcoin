@@ -13,7 +13,7 @@ from test_framework.messages import CTransaction, msg_block, ToHex
 from test_framework.mininode import mininode_lock, P2PInterface
 from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP, CScriptNum
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str, hex_str_to_bytes, wait_until
+from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes, wait_until
 
 from io import BytesIO
 
@@ -124,7 +124,7 @@ class BIP65Test(BitcoinTestFramework):
 
         # First we show that this tx is valid except for CLTV by getting it
         # rejected from the mempool for exactly that reason.
-        assert_raises_rpc_error(-26, 'non-mandatory-script-verify-flag (Negative locktime) (code 64)', self.nodes[0].sendrawtransaction, bytes_to_hex_str(spendtx.serialize()), True)
+        assert_raises_rpc_error(-26, 'non-mandatory-script-verify-flag (Negative locktime) (code 64)', self.nodes[0].sendrawtransaction, spendtx.serialize().hex(), True)
 
         # Now we verify that a block with this transaction is also invalid.
         block.vtx.append(spendtx)

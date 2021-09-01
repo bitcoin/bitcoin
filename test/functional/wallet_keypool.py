@@ -35,7 +35,7 @@ class KeyPoolTest(BitcoinTestFramework):
         addr.add(nodes[0].getrawchangeaddress())
         addr.add(nodes[0].getrawchangeaddress())
         # assert that three unique addresses were returned
-        assert(len(addr) == 3)
+        assert len(addr) == 3
         # the next one should fail
         assert_raises_rpc_error(-12, "Keypool ran out", nodes[0].getrawchangeaddress)
 

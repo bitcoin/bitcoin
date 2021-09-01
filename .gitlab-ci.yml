@@ -37,12 +37,12 @@ builder-image:
   image: $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
   variables:
     SDK_URL: https://bitcoincore.org/depends-sources/sdks
-    OSX_SDK: "10.11"
+    OSX_SDK: "10.14"
     MAKEJOBS: -j4
   before_script:
     - echo HOST=$HOST
     - |
-      if [ "$HOST" = "x86_64-apple-darwin14" ]; then
+      if [ "$HOST" = "x86_64-apple-darwin16" ]; then
         echo "Downloading MacOS SDK"
         mkdir -p depends/SDKs
         mkdir -p depends/sdk-sources
@@ -187,12 +187,12 @@ x86_64-unknown-linux-gnu-release:
     HOST: x86_64-unknown-linux-gnu
     DEP_OPTS: "NO_UPNP=1"
 
-x86_64-apple-darwin14:
+x86_64-apple-darwin16:
   extends:
     - .build-depends-template
     - .skip-in-fast-mode-template
   variables:
-    HOST: x86_64-apple-darwin14
+    HOST: x86_64-apple-darwin16
 
 ###
 
@@ -267,7 +267,7 @@ mac-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-apple-darwin14
+    - x86_64-apple-darwin16
   variables:
     BUILD_TARGET: mac
 

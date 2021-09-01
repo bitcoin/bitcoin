@@ -12,7 +12,7 @@ from test_framework.messages import msg_block
 from test_framework.mininode import mininode_lock, P2PInterface
 from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str, wait_until
+from test_framework.util import assert_equal, assert_raises_rpc_error, wait_until
 
 DERSIG_HEIGHT = 1251
 
@@ -114,7 +114,7 @@ class BIP66Test(BitcoinTestFramework):
 
         # First we show that this tx is valid except for DERSIG by getting it
         # rejected from the mempool for exactly that reason.
-        assert_raises_rpc_error(-26, 'non-mandatory-script-verify-flag (Non-canonical DER signature) (code 64)', self.nodes[0].sendrawtransaction, bytes_to_hex_str(spendtx.serialize()), True)
+        assert_raises_rpc_error(-26, 'non-mandatory-script-verify-flag (Non-canonical DER signature) (code 64)', self.nodes[0].sendrawtransaction, spendtx.serialize().hex(), True)
 
         # Now we verify that a block with this transaction is also invalid.
         block.vtx.append(spendtx)

@@ -33,7 +33,7 @@ class LLMQConnections(DashTestFramework):
             count = self.get_mn_connection_count(mn.node)
             total_count += count
             assert_greater_than_or_equal(count, 2)
-        assert(total_count < 40)
+        assert total_count < 40
 
         self.check_reconnects(2)
 

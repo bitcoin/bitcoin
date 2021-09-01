@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Dash Core developers
+# Copyright (c) 2015-2021 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -48,7 +48,7 @@ class DIP3Test(BitcoinTestFramework):
 
         # Make sure we're below block 135 (which activates dip3)
         self.log.info("testing rejection of ProTx before dip3 activation")
-        assert(self.nodes[0].getblockchaininfo()['blocks'] < 135)
+        assert self.nodes[0].getblockchaininfo()['blocks'] < 135
 
         mns = []
 
@@ -60,7 +60,7 @@ class DIP3Test(BitcoinTestFramework):
 
         # block 150 starts enforcing DIP3 MN payments
         self.nodes[0].generate(150 - self.nodes[0].getblockcount())
-        assert(self.nodes[0].getblockcount() == 150)
+        assert self.nodes[0].getblockcount() == 150
 
         self.log.info("mining final block for DIP3 activation")
         self.nodes[0].generate(1)
@@ -163,7 +163,7 @@ class DIP3Test(BitcoinTestFramework):
                     if 'addresses' in out['scriptPubKey']:
                         if expected_payee in out['scriptPubKey']['addresses'] and out['valueSat'] == expected_amount:
                             found_multisig_payee = True
-        assert(found_multisig_payee)
+        assert found_multisig_payee
 
         self.log.info("testing reusing of collaterals for replaced MNs")
         for i in range(0, 5):
@@ -192,7 +192,7 @@ class DIP3Test(BitcoinTestFramework):
         old_dmnState = mn.node.masternode("status")["dmnState"]
         old_voting_address = old_dmnState["votingAddress"]
         new_voting_address = node.getnewaddress()
-        assert(old_voting_address != new_voting_address)
+        assert old_voting_address != new_voting_address
         # also check if funds from payout address are used when no fee source address is specified
         node.sendtoaddress(mn.rewards_address, 0.001)
         node.protx('update_registrar', mn.protx_hash, "", new_voting_address, "")
@@ -200,9 +200,9 @@ class DIP3Test(BitcoinTestFramework):
         self.sync_all()
         new_dmnState = mn.node.masternode("status")["dmnState"]
         new_voting_address_from_rpc = new_dmnState["votingAddress"]
-        assert(new_voting_address_from_rpc == new_voting_address)
+        assert new_voting_address_from_rpc == new_voting_address
         # make sure payoutAddress is the same as before
-        assert(old_dmnState["payoutAddress"] == new_dmnState["payoutAddress"])
+        assert old_dmnState["payoutAddress"] == new_dmnState["payoutAddress"]
 
     def prepare_mn(self, node, idx, alias):
         mn = Masternode()
@@ -230,7 +230,7 @@ class DIP3Test(BitcoinTestFramework):
             if txout['value'] == Decimal(1000):
                 mn.collateral_vout = txout['n']
                 break
-        assert(mn.collateral_vout != -1)
+        assert mn.collateral_vout != -1
 
     # register a protx MN and also fund it (using collateral inside ProRegTx)
     def register_fund_mn(self, node, mn):
@@ -247,7 +247,7 @@ class DIP3Test(BitcoinTestFramework):
             if txout['value'] == Decimal(1000):
                 mn.collateral_vout = txout['n']
                 break
-        assert(mn.collateral_vout != -1)
+        assert mn.collateral_vout != -1
 
     # create a protx MN which refers to an existing collateral
     def register_mn(self, node, mn):
@@ -276,7 +276,7 @@ class DIP3Test(BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
         info = self.nodes[0].protx('info', mn.protx_hash)
-        assert(info['state']['payoutAddress'] == payee)
+        assert info['state']['payoutAddress'] == payee
 
     def test_protx_update_service(self, mn):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)

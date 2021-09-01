@@ -10,7 +10,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
-    bytes_to_hex_str,
 )
 
 
@@ -88,7 +87,7 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # Nonstandard scriptPubKey + !internal
         self.log.info("Should not import a nonstandard scriptPubKey without internal flag")
-        nonstandardScriptPubKey = address['scriptPubKey'] + bytes_to_hex_str(script.CScript([script.OP_NOP]))
+        nonstandardScriptPubKey = address['scriptPubKey'] + script.CScript([script.OP_NOP]).hex()
         address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
         result = self.nodes[1].importmulti([{
             "scriptPubKey": nonstandardScriptPubKey,

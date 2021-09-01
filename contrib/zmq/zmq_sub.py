@@ -22,7 +22,6 @@
     https://github.com/bitcoin/bitcoin/blob/37a7fe9e440b83e2364d5498931253937abe9294/contrib/zmq/zmq_sub.py
 """
 
-import binascii
 import asyncio
 import zmq
 import zmq.asyncio
@@ -72,52 +71,52 @@ class ZMQHandler():
 
         if topic == b"hashblock":
             print('- HASH BLOCK ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"hashchainlock":
             print('- HASH CHAINLOCK ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"hashtx":
             print ('- HASH TX ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"hashtxlock":
             print('- HASH TX LOCK ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"hashgovernancevote":
             print('- HASH GOVERNANCE VOTE ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"hashgovernanceobject":
             print('- HASH GOVERNANCE OBJECT ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"hashinstantsenddoublespend":
             print('- HASH IS DOUBLE SPEND ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"rawblock":
             print('- RAW BLOCK HEADER ('+sequence+') -')
-            print(binascii.hexlify(body[:80]).decode("utf-8"))
+            print(body[:80].hex())
         elif topic == b"rawchainlock":
             print('- RAW CHAINLOCK ('+sequence+') -')
-            print(binascii.hexlify(body[:80]).decode("utf-8"))
+            print(body[:80].hex())
         elif topic == b"rawchainlocksig":
             print('- RAW CHAINLOCK SIG ('+sequence+') -')
-            print(binascii.hexlify(body[:80]).decode("utf-8"))
+            print(body[:80].hex())
         elif topic == b"rawtx":
             print('- RAW TX ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"rawtxlock":
             print('- RAW TX LOCK ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"rawtxlocksig":
             print('- RAW TX LOCK SIG ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"rawgovernancevote":
             print('- RAW GOVERNANCE VOTE ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"rawgovernanceobject":
             print('- RAW GOVERNANCE OBJECT ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         elif topic == b"rawinstantsenddoublespend":
             print('- RAW IS DOUBLE SPEND ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
+            print(body.hex())
         # schedule ourselves to receive the next message
         asyncio.ensure_future(self.handle())
 

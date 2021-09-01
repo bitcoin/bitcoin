@@ -806,12 +806,12 @@ class DashTestFramework(BitcoinTestFramework):
         self.bump_mocktime(1)
 
         mn_info = self.nodes[0].masternodelist("status")
-        assert (len(mn_info) == self.mn_count)
+        assert len(mn_info) == self.mn_count
         for status in mn_info.values():
-            assert (status == 'ENABLED')
+            assert status == 'ENABLED'
 
     def create_raw_tx(self, node_from, node_to, amount, min_inputs, max_inputs):
-        assert (min_inputs <= max_inputs)
+        assert min_inputs <= max_inputs
         # fill inputs
         inputs = []
         balances = node_from.listunspent()
@@ -841,9 +841,9 @@ class DashTestFramework(BitcoinTestFramework):
                 inputs[-1] = input
             last_amount = float(tx['amount'])
 
-        assert (len(inputs) >= min_inputs)
-        assert (len(inputs) <= max_inputs)
-        assert (in_amount >= amount)
+        assert len(inputs) >= min_inputs
+        assert len(inputs) <= max_inputs
+        assert in_amount >= amount
         # fill outputs
         receiver_address = node_to.getnewaddress()
         change_address = node_from.getnewaddress()

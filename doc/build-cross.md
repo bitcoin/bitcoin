@@ -19,20 +19,20 @@ Additionally, the Mac OSX SDK must be downloaded and extracted manually:
 ```bash
 $ mkdir -p depends/sdk-sources
 $ mkdir -p depends/SDKs
-$ curl https://bitcoincore.org/depends-sources/sdks/MacOSX10.11.sdk.tar.gz -o depends/sdk-sources/MacOSX10.11.sdk.tar.gz
-$ tar -C depends/SDKs -xf depends/sdk-sources/MacOSX10.11.sdk.tar.gz
+$ curl https://bitcoincore.org/depends-sources/sdks/MacOSX10.14.sdk.tar.gz -o depends/sdk-sources/MacOSX10.14.sdk.tar.gz
+$ tar -C depends/SDKs -xf depends/sdk-sources/MacOSX10.14.sdk.tar.gz
 ```
 
 When building the dependencies, as described in [build-generic](build-generic.md), use
 
 ```bash
-$ make HOST=x86_64-apple-darwin14 -j4
+$ make HOST=x86_64-apple-darwin16 -j4
 ```
 
 When building Dash Core, use
 
 ```bash
-$ ./configure --prefix=`pwd`/depends/x86_64-apple-darwin14
+$ ./configure --prefix=`pwd`/depends/x86_64-apple-darwin16
 ```
 
 Windows 64bit Cross-compilation
