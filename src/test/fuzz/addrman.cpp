@@ -4,6 +4,7 @@
 
 #include <addrdb.h>
 #include <addrman.h>
+#include <addrman_impl.h>
 #include <chainparams.h>
 #include <merkleblock.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -43,13 +44,13 @@ public:
         : CAddrMan(std::move(asmap), /* deterministic */ true, /* consistency_check_ratio */ 0)
         , m_fuzzed_data_provider(fuzzed_data_provider)
     {
-        WITH_LOCK(cs, insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
+        WITH_LOCK(m_impl->cs, m_impl->insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
     }
 
     /**
      * Generate a random address. Always returns a valid address.
      */
-    CNetAddr RandAddr() EXCLUSIVE_LOCKS_REQUIRED(cs)
+    CNetAddr RandAddr() EXCLUSIVE_LOCKS_REQUIRED(m_impl->cs)
     {
         CNetAddr addr;
         if (m_fuzzed_data_provider.remaining_bytes() > 1 && m_fuzzed_data_provider.ConsumeBool()) {
@@ -61,7 +62,7 @@ public:
                                                                    {4, ADDR_TORV3_SIZE},
                                                                    {5, ADDR_I2P_SIZE},
                                                                    {6, ADDR_CJDNS_SIZE}};
-            uint8_t net = insecure_rand.randrange(5) + 1; // [1..5]
+            uint8_t net = m_impl->insecure_rand.randrange(5) + 1; // [1..5]
             if (net == 3) {
                 net = 6;
             }
@@ -69,7 +70,7 @@ public:
             CDataStream s(SER_NETWORK, PROTOCOL_VERSION | ADDRV2_FORMAT);
 
             s << net;
-            s << insecure_rand.randbytes(net_len_map.at(net));
+            s << m_impl->insecure_rand.randbytes(net_len_map.at(net));
 
             s >> addr;
         }
@@ -89,7 +90,7 @@ public:
      */
     void Fill()
     {
-        LOCK(cs);
+        LOCK(m_impl->cs);
 
         // Add some of the addresses directly to the "tried" table.
 
@@ -102,20 +103,20 @@ public:
         // the latter is exhausted it just returns 0.
         for (size_t i = 0; i < num_sources; ++i) {
             const auto source = RandAddr();
-            const size_t num_addresses = insecure_rand.randrange(500) + 1; // [1..500]
+            const size_t num_addresses = m_impl->insecure_rand.randrange(500) + 1; // [1..500]
 
             for (size_t j = 0; j < num_addresses; ++j) {
                 const auto addr = CAddress{CService{RandAddr(), 8333}, NODE_NETWORK};
-                const auto time_penalty = insecure_rand.randrange(100000001);
-                Add_(addr, source, time_penalty);
+                const auto time_penalty = m_impl->insecure_rand.randrange(100000001);
+                m_impl->Add_(addr, source, time_penalty);
 
-                if (n > 0 && mapInfo.size() % n == 0) {
-                    Good_(addr, false, GetTime());
+                if (n > 0 && m_impl->mapInfo.size() % n == 0) {
+                    m_impl->Good_(addr, false, GetTime());
                 }
 
                 // Add 10% of the addresses from more than one source.
-                if (insecure_rand.randrange(10) == 0 && prev_source.IsValid()) {
-                    Add_(addr, prev_source, time_penalty);
+                if (m_impl->insecure_rand.randrange(10) == 0 && prev_source.IsValid()) {
+                    m_impl->Add_({addr}, prev_source, time_penalty);
                 }
             }
             prev_source = source;
@@ -131,10 +132,10 @@ public:
      */
     bool operator==(const CAddrManDeterministic& other)
     {
-        LOCK2(cs, other.cs);
+        LOCK2(m_impl->cs, other.m_impl->cs);
 
-        if (mapInfo.size() != other.mapInfo.size() || nNew != other.nNew ||
-            nTried != other.nTried) {
+        if (m_impl->mapInfo.size() != other.m_impl->mapInfo.size() || m_impl->nNew != other.m_impl->nNew ||
+            m_impl->nTried != other.m_impl->nTried) {
             return false;
         }
 
@@ -160,15 +161,15 @@ public:
 
         using Addresses = std::unordered_set<CAddrInfo, CAddrInfoHasher, CAddrInfoEq>;
 
-        const size_t num_addresses{mapInfo.size()};
+        const size_t num_addresses{m_impl->mapInfo.size()};
 
         Addresses addresses{num_addresses, addrinfo_hasher, addrinfo_eq};
-        for (const auto& [id, addr] : mapInfo) {
+        for (const auto& [id, addr] : m_impl->mapInfo) {
             addresses.insert(addr);
         }
 
         Addresses other_addresses{num_addresses, addrinfo_hasher, addrinfo_eq};
-        for (const auto& [id, addr] : other.mapInfo) {
+        for (const auto& [id, addr] : other.m_impl->mapInfo) {
             other_addresses.insert(addr);
         }
 
@@ -176,14 +177,14 @@ public:
             return false;
         }
 
-        auto IdsReferToSameAddress = [&](int id, int other_id) EXCLUSIVE_LOCKS_REQUIRED(cs, other.cs) {
+        auto IdsReferToSameAddress = [&](int id, int other_id) EXCLUSIVE_LOCKS_REQUIRED(m_impl->cs, other.m_impl->cs) {
             if (id == -1 && other_id == -1) {
                 return true;
             }
             if ((id == -1 && other_id != -1) || (id != -1 && other_id == -1)) {
                 return false;
             }
-            return mapInfo.at(id) == other.mapInfo.at(other_id);
+            return m_impl->mapInfo.at(id) == other.m_impl->mapInfo.at(other_id);
         };
 
         // Check that `vvNew` contains the same addresses as `other.vvNew`. Notice - `vvNew[i][j]`
@@ -191,7 +192,7 @@ public:
         // themselves may differ between `vvNew` and `other.vvNew`.
         for (size_t i = 0; i < ADDRMAN_NEW_BUCKET_COUNT; ++i) {
             for (size_t j = 0; j < ADDRMAN_BUCKET_SIZE; ++j) {
-                if (!IdsReferToSameAddress(vvNew[i][j], other.vvNew[i][j])) {
+                if (!IdsReferToSameAddress(m_impl->vvNew[i][j], other.m_impl->vvNew[i][j])) {
                     return false;
                 }
             }
@@ -200,7 +201,7 @@ public:
         // Same for `vvTried`.
         for (size_t i = 0; i < ADDRMAN_TRIED_BUCKET_COUNT; ++i) {
             for (size_t j = 0; j < ADDRMAN_BUCKET_SIZE; ++j) {
-                if (!IdsReferToSameAddress(vvTried[i][j], other.vvTried[i][j])) {
+                if (!IdsReferToSameAddress(m_impl->vvTried[i][j], other.m_impl->vvTried[i][j])) {
                     return false;
                 }
             }
