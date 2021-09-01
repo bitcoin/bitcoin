@@ -166,6 +166,21 @@ struct OutputGroup
     CAmount GetSelectionAmount() const;
 };
 
+/** Compute the waste for this result given the cost of change
+ * and the opportunity cost of spending these inputs now vs in the future.
+ * If change exists, waste = change_cost + inputs * (effective_feerate - long_term_feerate)
+ * If no change, waste = excess + inputs * (effective_feerate - long_term_feerate)
+ * where excess = selected_effective_value - target
+ * change_cost = effective_feerate * change_output_size + long_term_feerate * change_spend_size
+ *
+ * @param[in] inputs The selected inputs
+ * @param[in] change_cost The cost of creating change and spending it in the future. Only used if there is change. Must be 0 if there is no change.
+ * @param[in] target The amount targeted by the coin selection algorithm.
+ * @param[in] use_effective_value Whether to use the input's effective value (when true) or the real value (when false).
+ * @return The waste
+ */
+[[nodiscard]] CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
+
 bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret);
 
 // Original coin selection algorithm as a fallback

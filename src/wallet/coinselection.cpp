@@ -341,3 +341,30 @@ CAmount OutputGroup::GetSelectionAmount() const
 {
     return m_subtract_fee_outputs ? m_value : effective_value;
 }
+
+CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, CAmount change_cost, CAmount target, bool use_effective_value)
+{
+    // This function should not be called with empty inputs as that would mean the selection failed
+    assert(!inputs.empty());
+
+    // Always consider the cost of spending an input now vs in the future.
+    CAmount waste = 0;
+    CAmount selected_effective_value = 0;
+    for (const CInputCoin& coin : inputs) {
+        waste += coin.m_fee - coin.m_long_term_fee;
+        selected_effective_value += use_effective_value ? coin.effective_value : coin.txout.nValue;
+    }
+
+    if (change_cost) {
+        // Consider the cost of making change and spending it in the future
+        // If we aren't making change, the caller should've set change_cost to 0
+        assert(change_cost > 0);
+        waste += change_cost;
+    } else {
+        // When we are not making change (change_cost == 0), consider the excess we are throwing away to fees
+        assert(selected_effective_value >= target);
+        waste += selected_effective_value - target;
+    }
+
+    return waste;
+}
