@@ -39,12 +39,8 @@ FUZZ_TARGET_INIT(net, initialize_net)
                 node.CloseSocketDisconnect();
             },
             [&] {
-                const std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-                if (!SanityCheckASMap(asmap, 128)) {
-                    return;
-                }
                 CNodeStats stats;
-                node.CopyStats(stats, asmap);
+                node.CopyStats(stats);
             },
             [&] {
                 const CNode* add_ref_node = node.AddRef();
