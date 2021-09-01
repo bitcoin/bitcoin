@@ -144,13 +144,6 @@ arm-linux-gnueabihf:
   variables:
     HOST: arm-linux-gnueabihf
 
-i686-w64-mingw32:
-  extends:
-    - .build-depends-template
-    - .skip-in-fast-mode-template
-  variables:
-    HOST: i686-w64-mingw32
-
 x86_64-w64-mingw32:
   extends:
     - .build-depends-template
@@ -202,15 +195,6 @@ arm-linux-build:
     - arm-linux-gnueabihf
   variables:
     BUILD_TARGET: arm-linux
-
-win32-build:
-  extends:
-    - .build-template
-    - .skip-in-fast-mode-template
-  needs:
-    - i686-w64-mingw32
-  variables:
-    BUILD_TARGET: win32
 
 win64-build:
   extends:

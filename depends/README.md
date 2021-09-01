@@ -20,7 +20,6 @@ created. To use it for Dash:
 
 Common `host-platform-triplets` for cross compilation are:
 
-- `i686-w64-mingw32` for Win32
 - `x86_64-w64-mingw32` for Win64
 - `x86_64-apple-darwin16` for macOS
 - `arm-linux-gnueabihf` for Linux ARM 32 bit
@@ -37,7 +36,7 @@ For macOS cross compilation:
 
     sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools
 
-For Win32/Win64 cross compilation:
+For Win64 cross compilation:
 
 - see [build-windows.md](../doc/build-windows.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
 

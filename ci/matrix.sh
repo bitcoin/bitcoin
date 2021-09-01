@@ -43,11 +43,6 @@ if [ "$BUILD_TARGET" = "arm-linux" ]; then
   export BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports --enable-werror CXXFLAGS=-Wno-psabi"
   export RUN_UNITTESTS=false
   export RUN_INTEGRATIONTESTS=false
-elif [ "$BUILD_TARGET" = "win32" ]; then
-  export HOST=i686-w64-mingw32
-  export DPKG_ADD_ARCH="i386"
-  export BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --disable-miner"
-  export DIRECT_WINE_EXEC_TESTS=true
 elif [ "$BUILD_TARGET" = "win64" ]; then
   export HOST=x86_64-w64-mingw32
   export DPKG_ADD_ARCH="i386"

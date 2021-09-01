@@ -98,7 +98,6 @@ def sign():
         subprocess.check_call(['bin/gbuild', '--skip-image', '--upgrade', '--commit', 'signature='+args.commit, '../dash/contrib/gitian-descriptors/gitian-win-signer.yml'])
         subprocess.check_call(['bin/gsign', '-p', args.sign_prog, '--signer', args.signer, '--release', args.version+'-win-signed', '--destination', '../gitian.sigs/', '../dash/contrib/gitian-descriptors/gitian-win-signer.yml'])
         subprocess.check_call('mv build/out/dashcore-*win64-setup.exe ../dashcore-binaries/'+args.version, shell=True)
-        subprocess.check_call('mv build/out/dashcore-*win32-setup.exe ../dashcore-binaries/'+args.version, shell=True)
 
     if args.macos:
         print('\nSigning ' + args.version + ' MacOS')
