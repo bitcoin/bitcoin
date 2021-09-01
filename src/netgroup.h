@@ -22,8 +22,23 @@ public:
      * exists, since the data is const. */
     const std::vector<bool>& GetAsmap() const { return m_asmap; }
 
+    /**
+     * Get the canonical identifier of the network group for address.
+     *
+     * The groups are assigned in a way where it should be costly for an attacker to
+     * obtain addresses with many different group identifiers, even if it is cheap
+     * to obtain addresses with the same identifier.
+     *
+     * @note No two connections will be attempted to addresses with the same network
+     *       group.
+     */
     std::vector<unsigned char> GetGroup(const CNetAddr& address) const;
 
+    /**
+     *  Get the autonomous system on the BGP path to address.
+     *
+     *  The ip->AS mapping depends on how asmap is constructed.
+     */
     uint32_t GetMappedAS(const CNetAddr& address) const;
 
 private:

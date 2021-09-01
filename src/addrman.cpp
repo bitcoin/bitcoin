@@ -610,7 +610,7 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
             pinfo->nRefCount++;
             vvNew[nUBucket][nUBucketPos] = nId;
             LogPrint(BCLog::ADDRMAN, "Added %s mapped to AS%i to new[%i][%i]\n",
-                     addr.ToString(), addr.GetMappedAS(m_netgroupman.GetAsmap()), nUBucket, nUBucketPos);
+                     addr.ToString(), m_netgroupman.GetMappedAS(addr), nUBucket, nUBucketPos);
         } else {
             if (pinfo->nRefCount == 0) {
                 Delete(nId);
@@ -669,7 +669,7 @@ bool AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
         // move nId to the tried tables
         MakeTried(info, nId);
         LogPrint(BCLog::ADDRMAN, "Moved %s mapped to AS%i to tried[%i][%i]\n",
-                 addr.ToString(), addr.GetMappedAS(m_netgroupman.GetAsmap()), tried_bucket, tried_bucket_pos);
+                 addr.ToString(), m_netgroupman.GetMappedAS(addr), tried_bucket, tried_bucket_pos);
         return true;
     }
 }
