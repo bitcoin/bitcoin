@@ -56,7 +56,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
         size_t n_ancestors = det_rand.randrange(10)+1;
         for (size_t ancestor = 0; ancestor < n_ancestors && !available_coins.empty(); ++ancestor){
             size_t idx = det_rand.randrange(available_coins.size());
-            Available coin = available_coins[idx];
+            Available& coin = available_coins[idx];
             uint256 hash = coin.ref->GetHash();
             // biased towards taking just one ancestor, but maybe more
             size_t n_to_take = det_rand.randrange(2) == 0 ? 1 : 1+det_rand.randrange(coin.ref->vout.size() - coin.vin_left);
@@ -66,15 +66,17 @@ static void ComplexMemPool(benchmark::Bench& bench)
                 tx.vin.back().scriptSig = CScript() << coin.tx_count;
                 tx.vin.back().scriptWitness.stack.push_back(CScriptNum(coin.tx_count).getvch());
             }
-            if (coin.vin_left == coin.ref->vin.size()) {
-                coin = available_coins.back();
+            if (coin.vin_left == coin.ref->vout.size()) {
+                if(available_coins.size()-1!=idx){ // if idx is not the last index swap it with the end index
+                   std::swap(available_coins[idx], available_coins.back());
+                }
                 available_coins.pop_back();
             }
-            tx.vout.resize(det_rand.randrange(10)+2);
-            for (auto& out : tx.vout) {
-                out.scriptPubKey = CScript() << CScriptNum(tx_counter) << OP_EQUAL;
-                out.nValue = 10 * COIN;
-            }
+        }
+        tx.vout.resize(det_rand.randrange(10)+2);
+        for (auto& out : tx.vout) {
+            out.scriptPubKey = CScript() << CScriptNum(tx_counter) << OP_EQUAL;
+            out.nValue = 10 * COIN;
         }
         ordered_coins.emplace_back(MakeTransactionRef(tx));
         available_coins.emplace_back(ordered_coins.back(), tx_counter++);
