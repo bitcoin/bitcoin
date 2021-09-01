@@ -218,11 +218,7 @@ void AddrManImpl::Serialize(Stream& s_) const
     }
     // Store asmap checksum after bucket entries so that it
     // can be ignored by older clients for backward compatibility.
-    uint256 asmap_checksum;
-    if (m_netgroupman.GetAsmap().size() != 0) {
-        asmap_checksum = SerializeHash(m_netgroupman.GetAsmap());
-    }
-    s << asmap_checksum;
+    s << m_netgroupman.GetAsmapChecksum();
 }
 
 template <typename Stream>
@@ -335,10 +331,7 @@ void AddrManImpl::Unserialize(Stream& s_)
     // If the bucket count and asmap checksum haven't changed, then attempt
     // to restore the entries to the buckets/positions they were in before
     // serialization.
-    uint256 supplied_asmap_checksum;
-    if (m_netgroupman.GetAsmap().size() != 0) {
-        supplied_asmap_checksum = SerializeHash(m_netgroupman.GetAsmap());
-    }
+    uint256 supplied_asmap_checksum{m_netgroupman.GetAsmapChecksum()};
     uint256 serialized_asmap_checksum;
     if (format >= Format::V2_ASMAP) {
         s >> serialized_asmap_checksum;
