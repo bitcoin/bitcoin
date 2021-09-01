@@ -1997,7 +1997,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     case ConnectionType::BLOCK_RELAY:
                     case ConnectionType::ADDR_FETCH:
                     case ConnectionType::FEELER:
-                        setConnected.insert(pnode->addr.GetGroup(m_netgroupman.GetAsmap()));
+                        setConnected.insert(m_netgroupman.GetGroup(pnode->addr));
                 } // no default case, so the compiler can warn about missing cases
             }
         }
@@ -2071,7 +2071,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 m_anchors.pop_back();
                 if (!addr.IsValid() || IsLocal(addr) || !IsReachable(addr) ||
                     !HasAllDesirableServiceFlags(addr.nServices) ||
-                    setConnected.count(addr.GetGroup(m_netgroupman.GetAsmap()))) continue;
+                    setConnected.count(m_netgroupman.GetGroup(addr))) continue;
                 addrConnect = addr;
                 LogPrint(BCLog::NET, "Trying to make an anchor connection to %s\n", addrConnect.ToString());
                 break;
@@ -2112,7 +2112,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
 
             // Require outbound connections, other than feelers, to be to distinct network groups
-            if (!fFeeler && setConnected.count(addr.GetGroup(m_netgroupman.GetAsmap()))) {
+            if (!fFeeler && setConnected.count(m_netgroupman.GetGroup(addr))) {
                 break;
             }
 
@@ -2863,7 +2863,7 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats) const
     for (CNode* pnode : m_nodes) {
         vstats.emplace_back();
         pnode->CopyStats(vstats.back());
-        vstats.back().m_mapped_as = pnode->addr.GetMappedAS(m_netgroupman.GetAsmap());
+        vstats.back().m_mapped_as = m_netgroupman.GetMappedAS(pnode->addr);
     }
 }
 
@@ -3096,9 +3096,9 @@ CSipHasher CConnman::GetDeterministicRandomizer(uint64_t id) const
     return CSipHasher(nSeed0, nSeed1).Write(id);
 }
 
-uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
+uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& address) const
 {
-    std::vector<unsigned char> vchNetGroup(ad.GetGroup(m_netgroupman.GetAsmap()));
+    std::vector<unsigned char> vchNetGroup(m_netgroupman.GetGroup(address));
 
     return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup.data(), vchNetGroup.size()).Finalize();
 }

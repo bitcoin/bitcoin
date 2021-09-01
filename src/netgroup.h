@@ -5,6 +5,8 @@
 #ifndef BITCOIN_NETGROUP_H
 #define BITCOIN_NETGROUP_H
 
+#include <netaddress.h>
+
 #include <vector>
 
 /**
@@ -19,6 +21,10 @@ public:
     /* Get a reference to (const) asmap. May be held as long as NetGroupManager
      * exists, since the data is const. */
     const std::vector<bool>& GetAsmap() const { return m_asmap; }
+
+    std::vector<unsigned char> GetGroup(const CNetAddr& address) const;
+
+    uint32_t GetMappedAS(const CNetAddr& address) const;
 
 private:
     /** Compressed IP->ASN mapping, loaded from a file when a node starts.

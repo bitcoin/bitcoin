@@ -76,15 +76,15 @@ public:
     }
 
     //! Calculate in which "tried" bucket this entry belongs
-    int GetTriedBucket(const uint256 &nKey, const std::vector<bool> &asmap) const;
+    int GetTriedBucket(const uint256& nKey, const NetGroupManager& netgroupman) const;
 
     //! Calculate in which "new" bucket this entry belongs, given a certain source
-    int GetNewBucket(const uint256 &nKey, const CNetAddr& src, const std::vector<bool> &asmap) const;
+    int GetNewBucket(const uint256& nKey, const CNetAddr& src, const NetGroupManager& netgroupman) const;
 
     //! Calculate in which "new" bucket this entry belongs, using its default source
-    int GetNewBucket(const uint256 &nKey, const std::vector<bool> &asmap) const
+    int GetNewBucket(const uint256& nKey, const NetGroupManager& netgroupman) const
     {
-        return GetNewBucket(nKey, source, asmap);
+        return GetNewBucket(nKey, source, netgroupman);
     }
 
     //! Calculate in which position of a bucket to store this entry.

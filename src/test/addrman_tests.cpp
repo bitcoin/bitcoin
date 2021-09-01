@@ -357,27 +357,25 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
     uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
     uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
 
-    std::vector<bool> asmap; // use /16
-
-    BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, asmap), 40);
+    BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, EMPTY_NETGROUPMAN), 40);
 
     // Test: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
-    BOOST_CHECK(info1.GetTriedBucket(nKey1, asmap) != info1.GetTriedBucket(nKey2, asmap));
+    BOOST_CHECK(info1.GetTriedBucket(nKey1, EMPTY_NETGROUPMAN) != info1.GetTriedBucket(nKey2, EMPTY_NETGROUPMAN));
 
     // Test: Two addresses with same IP but different ports can map to
     //  different buckets because they have different keys.
     AddrInfo info2 = AddrInfo(addr2, source1);
 
     BOOST_CHECK(info1.GetKey() != info2.GetKey());
-    BOOST_CHECK(info1.GetTriedBucket(nKey1, asmap) != info2.GetTriedBucket(nKey1, asmap));
+    BOOST_CHECK(info1.GetTriedBucket(nKey1, EMPTY_NETGROUPMAN) != info2.GetTriedBucket(nKey1, EMPTY_NETGROUPMAN));
 
     std::set<int> buckets;
     for (int i = 0; i < 255; i++) {
         AddrInfo infoi = AddrInfo(
             CAddress(ResolveService("250.1.1." + ToString(i)), NODE_NONE),
             ResolveIP("250.1.1." + ToString(i)));
-        int bucket = infoi.GetTriedBucket(nKey1, asmap);
+        int bucket = infoi.GetTriedBucket(nKey1, EMPTY_NETGROUPMAN);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the same /16 prefix should
@@ -389,7 +387,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
         AddrInfo infoj = AddrInfo(
             CAddress(ResolveService("250." + ToString(j) + ".1.1"), NODE_NONE),
             ResolveIP("250." + ToString(j) + ".1.1"));
-        int bucket = infoj.GetTriedBucket(nKey1, asmap);
+        int bucket = infoj.GetTriedBucket(nKey1, EMPTY_NETGROUPMAN);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the different /16 prefix should map to more than
@@ -409,27 +407,25 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
     uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
     uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
 
-    std::vector<bool> asmap; // use /16
-
     // Test: Make sure the buckets are what we expect
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, asmap), 786);
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, source1, asmap), 786);
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, EMPTY_NETGROUPMAN), 786);
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, source1, EMPTY_NETGROUPMAN), 786);
 
     // Test: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
-    BOOST_CHECK(info1.GetNewBucket(nKey1, asmap) != info1.GetNewBucket(nKey2, asmap));
+    BOOST_CHECK(info1.GetNewBucket(nKey1, EMPTY_NETGROUPMAN) != info1.GetNewBucket(nKey2, EMPTY_NETGROUPMAN));
 
     // Test: Ports should not affect bucket placement in the addr
     AddrInfo info2 = AddrInfo(addr2, source1);
     BOOST_CHECK(info1.GetKey() != info2.GetKey());
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, asmap), info2.GetNewBucket(nKey1, asmap));
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, EMPTY_NETGROUPMAN), info2.GetNewBucket(nKey1, EMPTY_NETGROUPMAN));
 
     std::set<int> buckets;
     for (int i = 0; i < 255; i++) {
         AddrInfo infoi = AddrInfo(
             CAddress(ResolveService("250.1.1." + ToString(i)), NODE_NONE),
             ResolveIP("250.1.1." + ToString(i)));
-        int bucket = infoi.GetNewBucket(nKey1, asmap);
+        int bucket = infoi.GetNewBucket(nKey1, EMPTY_NETGROUPMAN);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the same group (\16 prefix for IPv4) should
@@ -442,7 +438,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
                                         ResolveService(
                                             ToString(250 + (j / 255)) + "." + ToString(j % 256) + ".1.1"), NODE_NONE),
             ResolveIP("251.4.1.1"));
-        int bucket = infoj.GetNewBucket(nKey1, asmap);
+        int bucket = infoj.GetNewBucket(nKey1, EMPTY_NETGROUPMAN);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the same source groups should map to NO MORE
@@ -454,7 +450,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
         AddrInfo infoj = AddrInfo(
             CAddress(ResolveService("250.1.1.1"), NODE_NONE),
             ResolveIP("250." + ToString(p) + ".1.1"));
-        int bucket = infoj.GetNewBucket(nKey1, asmap);
+        int bucket = infoj.GetNewBucket(nKey1, EMPTY_NETGROUPMAN);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the different source groups should map to MORE
@@ -475,6 +471,9 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
 // 101.8.0.0/16 AS8
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 {
+    std::vector<bool> asmap = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
+    NetGroupManager ngm_asmap{asmap};
+
     CAddress addr1 = CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.1.1", 9999), NODE_NONE);
 
@@ -486,27 +485,25 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
     uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
     uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
 
-    std::vector<bool> asmap = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
-
-    BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, asmap), 236);
+    BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, ngm_asmap), 236);
 
     // Test: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
-    BOOST_CHECK(info1.GetTriedBucket(nKey1, asmap) != info1.GetTriedBucket(nKey2, asmap));
+    BOOST_CHECK(info1.GetTriedBucket(nKey1, ngm_asmap) != info1.GetTriedBucket(nKey2, ngm_asmap));
 
     // Test: Two addresses with same IP but different ports can map to
     //  different buckets because they have different keys.
     AddrInfo info2 = AddrInfo(addr2, source1);
 
     BOOST_CHECK(info1.GetKey() != info2.GetKey());
-    BOOST_CHECK(info1.GetTriedBucket(nKey1, asmap) != info2.GetTriedBucket(nKey1, asmap));
+    BOOST_CHECK(info1.GetTriedBucket(nKey1, ngm_asmap) != info2.GetTriedBucket(nKey1, ngm_asmap));
 
     std::set<int> buckets;
     for (int j = 0; j < 255; j++) {
         AddrInfo infoj = AddrInfo(
             CAddress(ResolveService("101." + ToString(j) + ".1.1"), NODE_NONE),
             ResolveIP("101." + ToString(j) + ".1.1"));
-        int bucket = infoj.GetTriedBucket(nKey1, asmap);
+        int bucket = infoj.GetTriedBucket(nKey1, ngm_asmap);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the different /16 prefix MAY map to more than
@@ -518,7 +515,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
         AddrInfo infoj = AddrInfo(
             CAddress(ResolveService("250." + ToString(j) + ".1.1"), NODE_NONE),
             ResolveIP("250." + ToString(j) + ".1.1"));
-        int bucket = infoj.GetTriedBucket(nKey1, asmap);
+        int bucket = infoj.GetTriedBucket(nKey1, ngm_asmap);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the different /16 prefix MAY NOT map to more than
@@ -528,6 +525,9 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 
 BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
 {
+    std::vector<bool> asmap = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
+    NetGroupManager ngm_asmap{asmap};
+
     CAddress addr1 = CAddress(ResolveService("250.1.2.1", 8333), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.2.1", 9999), NODE_NONE);
 
@@ -538,27 +538,25 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
     uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
     uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
 
-    std::vector<bool> asmap = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
-
     // Test: Make sure the buckets are what we expect
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, asmap), 795);
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, source1, asmap), 795);
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, ngm_asmap), 795);
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, source1, ngm_asmap), 795);
 
     // Test: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
-    BOOST_CHECK(info1.GetNewBucket(nKey1, asmap) != info1.GetNewBucket(nKey2, asmap));
+    BOOST_CHECK(info1.GetNewBucket(nKey1, ngm_asmap) != info1.GetNewBucket(nKey2, ngm_asmap));
 
     // Test: Ports should not affect bucket placement in the addr
     AddrInfo info2 = AddrInfo(addr2, source1);
     BOOST_CHECK(info1.GetKey() != info2.GetKey());
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, asmap), info2.GetNewBucket(nKey1, asmap));
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, ngm_asmap), info2.GetNewBucket(nKey1, ngm_asmap));
 
     std::set<int> buckets;
     for (int i = 0; i < 255; i++) {
         AddrInfo infoi = AddrInfo(
             CAddress(ResolveService("250.1.1." + ToString(i)), NODE_NONE),
             ResolveIP("250.1.1." + ToString(i)));
-        int bucket = infoi.GetNewBucket(nKey1, asmap);
+        int bucket = infoi.GetNewBucket(nKey1, ngm_asmap);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the same /16 prefix
@@ -571,7 +569,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
                                         ResolveService(
                                             ToString(250 + (j / 255)) + "." + ToString(j % 256) + ".1.1"), NODE_NONE),
             ResolveIP("251.4.1.1"));
-        int bucket = infoj.GetNewBucket(nKey1, asmap);
+        int bucket = infoj.GetNewBucket(nKey1, ngm_asmap);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the same source /16 prefix should not map to more
@@ -583,7 +581,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
         AddrInfo infoj = AddrInfo(
             CAddress(ResolveService("250.1.1.1"), NODE_NONE),
             ResolveIP("101." + ToString(p) + ".1.1"));
-        int bucket = infoj.GetNewBucket(nKey1, asmap);
+        int bucket = infoj.GetNewBucket(nKey1, ngm_asmap);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the different source /16 prefixes usually map to MORE
@@ -595,7 +593,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
         AddrInfo infoj = AddrInfo(
             CAddress(ResolveService("250.1.1.1"), NODE_NONE),
             ResolveIP("250." + ToString(p) + ".1.1"));
-        int bucket = infoj.GetNewBucket(nKey1, asmap);
+        int bucket = infoj.GetNewBucket(nKey1, ngm_asmap);
         buckets.insert(bucket);
     }
     // Test: IP addresses in the different source /16 prefixes sometimes map to NO MORE
