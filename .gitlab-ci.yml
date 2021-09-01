@@ -43,7 +43,7 @@ builder-image:
   before_script:
     - echo HOST=$HOST
     - |
-      if [ "$HOST" = "x86_64-apple-darwin16" ]; then
+      if [ "$HOST" = "x86_64-apple-darwin18" ]; then
         mkdir -p depends/SDKs
         mkdir -p depends/sdk-sources
         OSX_SDK_BASENAME="Xcode-${XCODE_VERSION}-${XCODE_BUILD_ID}-extracted-SDK-with-libcxx-headers.tar.gz"
@@ -186,12 +186,12 @@ x86_64-unknown-linux-gnu-release:
     HOST: x86_64-unknown-linux-gnu
     DEP_OPTS: "NO_UPNP=1"
 
-x86_64-apple-darwin16:
+x86_64-apple-darwin18:
   extends:
     - .build-depends-template
     - .skip-in-fast-mode-template
   variables:
-    HOST: x86_64-apple-darwin16
+    HOST: x86_64-apple-darwin18
 
 ###
 
@@ -257,7 +257,7 @@ mac-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-apple-darwin16
+    - x86_64-apple-darwin18
   variables:
     BUILD_TARGET: mac
 
