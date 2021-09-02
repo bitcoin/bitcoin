@@ -1,0 +1,21 @@
+From: Kittywhiskers Van Gogh <63189531+kittywhiskers@users.noreply.github.com>
+Date: Thu, 2 Sep 2021 00:18:25 +0530
+Subject: [PATCH] Resolve "not a multiple of its alignment" build error
+
+---
+ src/md/blake2.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- a/src/md/blake2.h
++++ b/src/md/blake2.h
+@@ -137,8 +137,8 @@ extern "C" {
+ 
+   /* Padded structs result in a compile-time error */
+   enum {
++    BLAKE2_DUMMY_1 = 1/(int)(sizeof(blake2s_param) == BLAKE2S_OUTBYTES),
++    BLAKE2_DUMMY_2 = 1/(int)(sizeof(blake2b_param) == BLAKE2B_OUTBYTES)
+-    BLAKE2_DUMMY_1 = 1/(sizeof(blake2s_param) == BLAKE2S_OUTBYTES),
+-    BLAKE2_DUMMY_2 = 1/(sizeof(blake2b_param) == BLAKE2B_OUTBYTES)
+   };
+ 
+   /* Streaming API */
