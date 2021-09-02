@@ -261,7 +261,7 @@ For ways to generate more granular profiles, see the README in
 
 ### Util tests
 
-Util tests can be run locally by running `test/util/bitcoin-util-test.py`.
+Util tests can be run locally by running `test/util/test_runner.py`.
 Use the `-v` option for verbose output.
 
 ### Lint tests
