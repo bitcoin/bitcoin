@@ -618,6 +618,17 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['bip125-replaceable'])
         assert_raises_rpc_error(-26, 'txn-mempool-conflict', self.nodes[0].sendrawtransaction, replacement_child_tx["hex"], 0)
 
+        self.log.info('Check that the child tx can still be replaced (via a tx that also replaces the parent)')
+        replacement_parent_tx = self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=confirmed_utxo,
+            sequence=0xffffffff,
+            fee_rate=Decimal('0.03'),
+        )
+        # Check that child is removed and update wallet utxo state
+        assert_raises_rpc_error(-5, 'Transaction not in mempool', self.nodes[0].getmempoolentry, optout_child_tx['txid'])
+        self.wallet.get_utxo(txid=optout_child_tx['txid'])
+
     def test_replacement_relay_fee(self):
         tx = self.wallet.send_self_transfer(from_node=self.nodes[0])['tx']
 
