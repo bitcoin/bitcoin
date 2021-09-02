@@ -2,7 +2,7 @@
 ["The following are deserialized transactions which are valid."],
 ["They are in the form"],
 ["[[[prevout hash, prevout index, prevout scriptPubKey, amount?], [input 2], ...],"],
-["serializedTransaction, excluded verifyFlags]"],
+["serializedTransaction, excluded verifyFlags, always included verifyFlags?, skip excluded one by one?]"],
 ["Objects that are only a single string (like this one) are ignored"],
 
 ["The following is 23b397edccd3740a74adb603c9756370fafcde9bcc4483eb271ecad09a94dd63"],

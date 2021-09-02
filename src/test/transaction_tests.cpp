@@ -197,11 +197,19 @@ BOOST_AUTO_TEST_CASE(tx_valid)
         std::string strTest = test.write();
         if (test[0].isArray())
         {
-            if (test.size() != 3 || !test[1].isStr() || !test[2].isStr())
+            const size_t size = test.size();
+            const bool default_args = size == 3;
+            const bool has_skip_exclude_one = size == 5;
+            const bool has_extra_flags = size == 4;
+            const bool size_correct = default_args || has_extra_flags || has_skip_exclude_one;
+            const bool extra_flags_correct = !has_extra_flags || test[3].isStr();
+            const bool skip_exclude_one_correct = !has_skip_exclude_one  || test[4].isBool();
+            if (!size_correct || !test[1].isStr() || !test[2].isStr() || !extra_flags_correct || !skip_exclude_one_correct)
             {
                 BOOST_ERROR("Bad test: " << strTest);
                 continue;
             }
+            const bool skip_exclude_one = has_skip_exclude_one? test[4].get_bool() : false;
 
             std::map<COutPoint, CScript> mapprevOutScriptPubKeys;
             std::map<COutPoint, int64_t> mapprevOutValues;
@@ -242,33 +250,36 @@ BOOST_AUTO_TEST_CASE(tx_valid)
 
             PrecomputedTransactionData txdata(tx);
             unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
+            unsigned int extra_verify_flags = has_extra_flags? ParseScriptFlags(test[3].get_str()) : 0;
 
             // Check that the test gives a valid combination of flags (otherwise VerifyScript will throw). Don't edit the flags.
             if (~verify_flags != FillFlags(~verify_flags)) {
                 BOOST_ERROR("Bad test flags: " << strTest);
             }
 
-            BOOST_CHECK_MESSAGE(CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, ~verify_flags, txdata, strTest, /* expect_valid */ true),
+            BOOST_CHECK_MESSAGE(CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, extra_verify_flags|~verify_flags, txdata, strTest, /* expect_valid */ true),
                                 "Tx unexpectedly failed: " << strTest);
 
             // Backwards compatibility of script verification flags: Removing any flag(s) should not invalidate a valid transaction
             for (const auto& [name, flag] : mapFlagNames) {
                 // Removing individual flags
-                unsigned int flags = TrimFlags(~(verify_flags | flag));
+                unsigned int flags = TrimFlags(extra_verify_flags | ~(verify_flags | flag));
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /* expect_valid */ true)) {
                     BOOST_ERROR("Tx unexpectedly failed with flag " << name << " unset: " << strTest);
                 }
                 // Removing random combinations of flags
-                flags = TrimFlags(~(verify_flags | (unsigned int)InsecureRandBits(mapFlagNames.size())));
+                flags = TrimFlags(extra_verify_flags | ~(verify_flags | (unsigned int)InsecureRandBits(mapFlagNames.size())));
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /* expect_valid */ true)) {
                     BOOST_ERROR("Tx unexpectedly failed with random flags " << ToString(flags) << ": " << strTest);
                 }
             }
 
             // Check that flags are maximal: transaction should fail if any unset flags are set.
-            for (auto flags_excluding_one : ExcludeIndividualFlags(verify_flags)) {
-                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, ~flags_excluding_one, txdata, strTest, /* expect_valid */ false)) {
-                    BOOST_ERROR("Too many flags unset: " << strTest);
+            if (!skip_exclude_one) {
+                for (auto flags_excluding_one : ExcludeIndividualFlags(verify_flags)) {
+                    if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, ~flags_excluding_one, txdata, strTest, /* expect_valid */ false)) {
+                        BOOST_ERROR("Too many flags unset: " << strTest);
+                    }
                 }
             }
         }
