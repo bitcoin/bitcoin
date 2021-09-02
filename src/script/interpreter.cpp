@@ -1908,10 +1908,9 @@ bool GenericTransactionSignatureChecker<T>::CheckDefaultCheckTemplateVerifyHash(
                         txdata->m_scriptSigs_single_hash, nIn);
             return std::equal(hash_tmpl.begin(), hash_tmpl.end(), hash.data());
         }
+    } else {
+        return HandleMissingData(m_mdb);
     }
-    assert(txTo != nullptr);
-    uint256 hash_tmpl = GetDefaultCheckTemplateVerifyHash(*txTo, nIn);
-    return std::equal(hash_tmpl.begin(), hash_tmpl.end(), hash.data());
 }
 // explicit instantiation
 template class GenericTransactionSignatureChecker<CTransaction>;
