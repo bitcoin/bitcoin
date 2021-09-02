@@ -19,6 +19,7 @@ from test_framework.script import CScript, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_raises_rpc_error,
 )
 from test_framework.script_util import (
@@ -36,7 +37,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             [
                 "-acceptnonstdtxn=1",
                 "-maxorphantx=1000",
-                f"-limitancestorcount={MAX_REPLACEMENT_LIMIT + 1}", # enough room to test BIP125 Rule #5
+                f"-limitancestorcount={MAX_REPLACEMENT_LIMIT + 3}", # enough room to test BIP125 Rule #5
                 "-limitancestorsize=101",
                 "-limitdescendantcount=200",
                 "-limitdescendantsize=101",
@@ -90,6 +91,9 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.log.info("Running test prechecks overestimates replacements...")
         self.test_prechecks_overestimates_replacements()
 
+        self.log.info("Running test reorged inherited signaling...")
+        self.test_reorged_inherited_signaling()
+
         self.log.info("Passed")
 
     def make_utxo(self, node, amount, confirmed=True, scriptPubKey=DUMMY_P2WPKH_SCRIPT):
@@ -113,11 +117,12 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         return COutPoint(int(txid, 16), n)
 
-    def create_double_input_self_transfer(self, input_utxos, fee_rate):
+    def create_double_input_self_transfer(self, input_utxos, fee_rate, sequence=BIP125_SEQUENCE_NUMBER):
         """Given two input utxos, create one transaction that spends both of them"""
         [tx, staging_tx] = list(map(lambda utxo: self.wallet.create_self_transfer(
             from_node=self.nodes[0],
             utxo_to_spend=utxo,
+            sequence=sequence,
             fee_rate=fee_rate,
         )["tx"], input_utxos))
 
@@ -695,6 +700,43 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert replacement_tx['txid'] not in mempool
         for parent_tx in parent_txs:
             assert parent_tx not in mempool
+
+        # clean up all evicted utxos / update wallet utxo state
+        self.wallet.get_utxo(txid=tx['txid'])
+        self.wallet.get_utxo(txid=replacement_tx['txid'])
+
+    def test_reorged_inherited_signaling(self):
+        confirmed_utxos = [self.wallet.get_utxo(), self.wallet.get_utxo()]
+
+        # One opt-in parent transaction, one opt-out
+        parent_txs = list(map(lambda utxo: self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=utxo,
+            sequence=BIP125_SEQUENCE_NUMBER if confirmed_utxos.index(utxo) == 0 else 0xffffffff,
+            fee_rate=Decimal('0.0001'),
+        ), confirmed_utxos))
+        optin_parent_tx, optout_parent_tx = parent_txs
+
+        # Craft a transaction that spends both parents so we can create one chain of descendant transactions
+        parent_utxos = list(map(lambda tx: self.wallet.get_utxo(txid=tx['txid']), parent_txs))
+        joined_tx_hex = self.create_double_input_self_transfer(parent_utxos, Decimal('0.0001'), sequence=0xffffffff)
+        joined_tx_txid = self.nodes[0].sendrawtransaction(joined_tx_hex)
+
+        # Only a single input needs to signal replaceability (whether explicitly or through inheritance) for the resulting transaction to signal
+        assert_equal(True, self.nodes[0].getmempoolentry(joined_tx_txid)['bip125-replaceable'])
+
+        # Get the `joined_tx` utxo into our wallet so we can spend a chain of descendants from it
+        joined_tx = self.nodes[0].decoderawtransaction(joined_tx_hex)
+        self.wallet.scan_tx(joined_tx)
+        joined_utxo = self.wallet.get_utxo(txid=joined_tx_txid)
+
+        # If we confirm `optin_parent_tx` descendants will no longer inherit signaling
+        hash = self.generateblock(self.nodes[0], output=self.wallet.get_address(), transactions=[optin_parent_tx['txid']])['hash']
+        assert_equal(False, self.nodes[0].getmempoolentry(joined_tx_txid)['bip125-replaceable'])
+
+        # Get `optin_parent_tx` back in our mempool, once again descendants inherit signaling
+        self.nodes[0].invalidateblock(hash)
+        assert_equal(True, self.nodes[0].getmempoolentry(joined_tx_txid)['bip125-replaceable'])
 
 if __name__ == '__main__':
     ReplaceByFeeTest().main()
