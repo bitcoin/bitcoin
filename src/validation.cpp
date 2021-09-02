@@ -42,6 +42,7 @@
 #include <util/validation.h>
 #include <util/system.h>
 #include <validationinterface.h>
+#include <versionbitsinfo.h>
 #include <warnings.h>
 
 #include <masternode/masternode-payments.h>

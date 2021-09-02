@@ -7,6 +7,7 @@
 #include <banman.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
+#include <consensus/params.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
 #include <index/txindex.h>
@@ -52,6 +53,8 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     InitScriptExecutionCache();
     CCoinJoin::InitStandardDenominations();
     fCheckBlockIndex = true;
+    // Make sure CreateAndProcessBlock() support building <deployment_name> blocks before activating it in these tests.
+    //gArgs.ForceSetArg("-vbparams", strprintf("deployment_name:0:%d", (int64_t)Consensus::BIP9Deployment::NO_TIMEOUT));
     SelectParams(chainName);
     evoDb.reset(new CEvoDB(1 << 20, true, true));
     deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));

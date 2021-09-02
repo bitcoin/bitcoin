@@ -35,6 +35,7 @@
 #include <util/system.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <versionbitsinfo.h>
 #include <warnings.h>
 
 #include <evo/specialtx.h>

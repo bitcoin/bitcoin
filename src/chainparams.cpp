@@ -11,10 +11,14 @@
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/strencodings.h>
+#include <versionbitsinfo.h>
 
 #include <arith_uint256.h>
 
 #include <assert.h>
+
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
@@ -77,75 +81,6 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
     const char* pszTimestamp = "Wired 09/Jan/2014 The Grand Experiment Goes Live: Overstock.com Is Now Accepting Bitcoins";
     const CScript genesisOutputScript = CScript() << ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
-}
-
-
-void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff)
-{
-    consensus.vDeployments[d].nStartTime = nStartTime;
-    consensus.vDeployments[d].nTimeout = nTimeout;
-    if (nWindowSize != -1) {
-            consensus.vDeployments[d].nWindowSize = nWindowSize;
-    }
-    if (nThresholdStart != -1) {
-        consensus.vDeployments[d].nThresholdStart = nThresholdStart;
-    }
-    if (nThresholdMin != -1) {
-        consensus.vDeployments[d].nThresholdMin = nThresholdMin;
-    }
-    if (nFalloffCoeff != -1) {
-        consensus.vDeployments[d].nFalloffCoeff = nFalloffCoeff;
-    }
-}
-
-void CChainParams::UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight)
-{
-    consensus.DIP0003Height = nActivationHeight;
-    consensus.DIP0003EnforcementHeight = nEnforcementHeight;
-}
-
-void CChainParams::UpdateDIP8Parameters(int nActivationHeight)
-{
-    consensus.DIP0008Height = nActivationHeight;
-}
-
-void CChainParams::UpdateBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
-{
-    consensus.nMasternodePaymentsStartBlock = nMasternodePaymentsStartBlock;
-    consensus.nBudgetPaymentsStartBlock = nBudgetPaymentsStartBlock;
-    consensus.nSuperblockStartBlock = nSuperblockStartBlock;
-}
-
-void CChainParams::UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor)
-{
-    consensus.nMinimumDifficultyBlocks = nMinimumDifficultyBlocks;
-    consensus.nHighSubsidyBlocks = nHighSubsidyBlocks;
-    consensus.nHighSubsidyFactor = nHighSubsidyFactor;
-}
-
-void CChainParams::UpdateLLMQChainLocks(Consensus::LLMQType llmqType) {
-    consensus.llmqTypeChainLocks = llmqType;
-}
-
-void CChainParams::UpdateLLMQInstantSend(Consensus::LLMQType llmqType) {
-    consensus.llmqTypeInstantSend = llmqType;
-}
-
-void CChainParams::UpdateLLMQTestParams(int size, int threshold) {
-    auto& params = consensus.llmqs.at(Consensus::LLMQ_TEST);
-    params.size = size;
-    params.minSize = threshold;
-    params.threshold = threshold;
-    params.dkgBadVotesThreshold = threshold;
-}
-
-void CChainParams::UpdateLLMQDevnetParams(int size, int threshold)
-{
-    auto& params = consensus.llmqs.at(Consensus::LLMQ_DEVNET);
-    params.size = size;
-    params.minSize = threshold;
-    params.threshold = threshold;
-    params.dkgBadVotesThreshold = threshold;
 }
 
 static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount& reward)
@@ -709,7 +644,7 @@ public:
  */
 class CDevNetParams : public CChainParams {
 public:
-    CDevNetParams(bool fHelpOnly = false) {
+    explicit CDevNetParams(const ArgsManager& args) {
         strNetworkID = "devnet";
         consensus.nSubsidyHalvingInterval = 210240;
         consensus.nMasternodePaymentsStartBlock = 4010; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
@@ -813,15 +748,14 @@ public:
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
 
+        UpdateDevnetSubsidyAndDiffParametersFromArgs(args);
         genesis = CreateGenesisBlock(1417713337, 1096447, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e"));
         assert(genesis.hashMerkleRoot == uint256S("0xe0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7"));
 
-        if (!fHelpOnly) {
-            devnetGenesis = FindDevNetGenesisBlock(genesis, 50 * COIN);
-            consensus.hashDevnetGenesisBlock = devnetGenesis.GetHash();
-        }
+        devnetGenesis = FindDevNetGenesisBlock(genesis, 50 * COIN);
+        consensus.hashDevnetGenesisBlock = devnetGenesis.GetHash();
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -850,6 +784,10 @@ public:
         consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
+
+        UpdateDevnetLLMQChainLocksFromArgs(args);
+        UpdateDevnetLLMQInstantSendFromArgs(args);
+        UpdateLLMQDevnetParametersFromArgs(args);
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
@@ -881,6 +819,48 @@ public:
             0.01                          // * estimated number of transactions per second
         };
     }
+
+    /**
+     * Allows modifying the subsidy and difficulty devnet parameters.
+     */
+    void UpdateDevnetSubsidyAndDiffParameters(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor)
+    {
+        consensus.nMinimumDifficultyBlocks = nMinimumDifficultyBlocks;
+        consensus.nHighSubsidyBlocks = nHighSubsidyBlocks;
+        consensus.nHighSubsidyFactor = nHighSubsidyFactor;
+    }
+    void UpdateDevnetSubsidyAndDiffParametersFromArgs(const ArgsManager& args);
+
+    /**
+     * Allows modifying the LLMQ type for ChainLocks.
+     */
+    void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType)
+    {
+        consensus.llmqTypeChainLocks = llmqType;
+    }
+    void UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager& args);
+
+    /**
+     * Allows modifying the LLMQ type for InstantSend.
+     */
+    void UpdateDevnetLLMQInstantSend(Consensus::LLMQType llmqType)
+    {
+        consensus.llmqTypeInstantSend = llmqType;
+    }
+    void UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager& args);
+
+    /**
+     * Allows modifying parameters of the devnet LLMQ
+     */
+    void UpdateLLMQDevnetParameters(int size, int threshold)
+    {
+        auto& params = consensus.llmqs.at(Consensus::LLMQ_DEVNET);
+        params.size = size;
+        params.minSize = threshold;
+        params.threshold = threshold;
+        params.dkgBadVotesThreshold = threshold;
+    }
+    void UpdateLLMQDevnetParametersFromArgs(const ArgsManager& args);
 };
 
 /**
@@ -888,7 +868,7 @@ public:
  */
 class CRegTestParams : public CChainParams {
 public:
-    CRegTestParams() {
+    explicit CRegTestParams(const ArgsManager& args) {
         strNetworkID = "regtest";
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nMasternodePaymentsStartBlock = 240;
@@ -971,6 +951,11 @@ public:
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
 
+        UpdateVersionBitsParametersFromArgs(args);
+        UpdateDIP3ParametersFromArgs(args);
+        UpdateDIP8ParametersFromArgs(args);
+        UpdateBudgetParametersFromArgs(args);
+
         genesis = CreateGenesisBlock(1417713337, 1096447, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e"));
@@ -1029,26 +1014,298 @@ public:
         consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_TEST;
         consensus.llmqTypePlatform = Consensus::LLMQ_TEST;
+
+        UpdateLLMQTestParametersFromArgs(args);
     }
+
+    /**
+     * Allows modifying the Version Bits regtest parameters.
+     */
+    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff)
+    {
+        consensus.vDeployments[d].nStartTime = nStartTime;
+        consensus.vDeployments[d].nTimeout = nTimeout;
+        if (nWindowSize != -1) {
+            consensus.vDeployments[d].nWindowSize = nWindowSize;
+        }
+        if (nThresholdStart != -1) {
+            consensus.vDeployments[d].nThresholdStart = nThresholdStart;
+        }
+        if (nThresholdMin != -1) {
+            consensus.vDeployments[d].nThresholdMin = nThresholdMin;
+        }
+        if (nFalloffCoeff != -1) {
+            consensus.vDeployments[d].nFalloffCoeff = nFalloffCoeff;
+        }
+    }
+    void UpdateVersionBitsParametersFromArgs(const ArgsManager& args);
+
+    /**
+     * Allows modifying the DIP3 activation and enforcement height
+     */
+    void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight)
+    {
+        consensus.DIP0003Height = nActivationHeight;
+        consensus.DIP0003EnforcementHeight = nEnforcementHeight;
+    }
+    void UpdateDIP3ParametersFromArgs(const ArgsManager& args);
+
+    /**
+     * Allows modifying the DIP8 activation height
+     */
+    void UpdateDIP8Parameters(int nActivationHeight)
+    {
+        consensus.DIP0008Height = nActivationHeight;
+    }
+    void UpdateDIP8ParametersFromArgs(const ArgsManager& args);
+
+    /**
+     * Allows modifying the budget regtest parameters.
+     */
+    void UpdateBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
+    {
+        consensus.nMasternodePaymentsStartBlock = nMasternodePaymentsStartBlock;
+        consensus.nBudgetPaymentsStartBlock = nBudgetPaymentsStartBlock;
+        consensus.nSuperblockStartBlock = nSuperblockStartBlock;
+    }
+    void UpdateBudgetParametersFromArgs(const ArgsManager& args);
+
+    /**
+     * Allows modifying parameters of the test LLMQ
+     */
+    void UpdateLLMQTestParameters(int size, int threshold)
+    {
+        auto& params = consensus.llmqs.at(Consensus::LLMQ_TEST);
+        params.size = size;
+        params.minSize = threshold;
+        params.threshold = threshold;
+        params.dkgBadVotesThreshold = threshold;
+    }
+    void UpdateLLMQTestParametersFromArgs(const ArgsManager& args);
 };
 
-static std::unique_ptr<CChainParams> globalChainParams;
+void CRegTestParams::UpdateVersionBitsParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-vbparams")) return;
+
+    for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
+        std::vector<std::string> vDeploymentParams;
+        boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
+        if (vDeploymentParams.size() != 3 && vDeploymentParams.size() != 5 && vDeploymentParams.size() != 7) {
+            throw std::runtime_error("Version bits parameters malformed, expecting "
+                    "<deployment>:<start>:<end> or "
+                    "<deployment>:<start>:<end>:<window>:<threshold> or "
+                    "<deployment>:<start>:<end>:<window>:<thresholdstart>:<thresholdmin>:<falloffcoeff>");
+        }
+        int64_t nStartTime, nTimeout, nWindowSize = -1, nThresholdStart = -1, nThresholdMin = -1, nFalloffCoeff = -1;
+        if (!ParseInt64(vDeploymentParams[1], &nStartTime)) {
+            throw std::runtime_error(strprintf("Invalid nStartTime (%s)", vDeploymentParams[1]));
+        }
+        if (!ParseInt64(vDeploymentParams[2], &nTimeout)) {
+            throw std::runtime_error(strprintf("Invalid nTimeout (%s)", vDeploymentParams[2]));
+        }
+        if (vDeploymentParams.size() >= 5) {
+            if (!ParseInt64(vDeploymentParams[3], &nWindowSize)) {
+                throw std::runtime_error(strprintf("Invalid nWindowSize (%s)", vDeploymentParams[3]));
+            }
+            if (!ParseInt64(vDeploymentParams[4], &nThresholdStart)) {
+                throw std::runtime_error(strprintf("Invalid nThresholdStart (%s)", vDeploymentParams[4]));
+            }
+        }
+        if (vDeploymentParams.size() == 7) {
+            if (!ParseInt64(vDeploymentParams[5], &nThresholdMin)) {
+                throw std::runtime_error(strprintf("Invalid nThresholdMin (%s)", vDeploymentParams[5]));
+            }
+            if (!ParseInt64(vDeploymentParams[6], &nFalloffCoeff)) {
+                throw std::runtime_error(strprintf("Invalid nFalloffCoeff (%s)", vDeploymentParams[6]));
+            }
+        }
+        bool found = false;
+        for (int j=0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
+            if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
+                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff);
+                found = true;
+                LogPrintf("Setting version bits activation parameters for %s to start=%ld, timeout=%ld, window=%ld, thresholdstart=%ld, thresholdmin=%ld, falloffcoeff=%ld\n",
+                          vDeploymentParams[0], nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff);
+                break;
+            }
+        }
+        if (!found) {
+            throw std::runtime_error(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
+        }
+    }
+}
+
+void CRegTestParams::UpdateDIP3ParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-dip3params")) return;
+
+    std::string strParams = args.GetArg("-dip3params", "");
+    std::vector<std::string> vParams;
+    boost::split(vParams, strParams, boost::is_any_of(":"));
+    if (vParams.size() != 2) {
+        throw std::runtime_error("DIP3 parameters malformed, expecting <activation>:<enforcement>");
+    }
+    int nDIP3ActivationHeight, nDIP3EnforcementHeight;
+    if (!ParseInt32(vParams[0], &nDIP3ActivationHeight)) {
+        throw std::runtime_error(strprintf("Invalid activation height (%s)", vParams[0]));
+    }
+    if (!ParseInt32(vParams[1], &nDIP3EnforcementHeight)) {
+        throw std::runtime_error(strprintf("Invalid enforcement height (%s)", vParams[1]));
+    }
+    LogPrintf("Setting DIP3 parameters to activation=%ld, enforcement=%ld\n", nDIP3ActivationHeight, nDIP3EnforcementHeight);
+    UpdateDIP3Parameters(nDIP3ActivationHeight, nDIP3EnforcementHeight);
+}
+
+void CRegTestParams::UpdateDIP8ParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-dip8params")) return;
+
+    std::string strParams = args.GetArg("-dip8params", "");
+    std::vector<std::string> vParams;
+    boost::split(vParams, strParams, boost::is_any_of(":"));
+    if (vParams.size() != 1) {
+        throw std::runtime_error("DIP8 parameters malformed, expecting <activation>");
+    }
+    int nDIP8ActivationHeight;
+    if (!ParseInt32(vParams[0], &nDIP8ActivationHeight)) {
+        throw std::runtime_error(strprintf("Invalid activation height (%s)", vParams[0]));
+    }
+    LogPrintf("Setting DIP8 parameters to activation=%ld\n", nDIP8ActivationHeight);
+    UpdateDIP8Parameters(nDIP8ActivationHeight);
+}
+
+void CRegTestParams::UpdateBudgetParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-budgetparams")) return;
+
+    std::string strParams = args.GetArg("-budgetparams", "");
+    std::vector<std::string> vParams;
+    boost::split(vParams, strParams, boost::is_any_of(":"));
+    if (vParams.size() != 3) {
+        throw std::runtime_error("Budget parameters malformed, expecting <masternode>:<budget>:<superblock>");
+    }
+    int nMasternodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock;
+    if (!ParseInt32(vParams[0], &nMasternodePaymentsStartBlock)) {
+        throw std::runtime_error(strprintf("Invalid masternode start height (%s)", vParams[0]));
+    }
+    if (!ParseInt32(vParams[1], &nBudgetPaymentsStartBlock)) {
+        throw std::runtime_error(strprintf("Invalid budget start block (%s)", vParams[1]));
+    }
+    if (!ParseInt32(vParams[2], &nSuperblockStartBlock)) {
+        throw std::runtime_error(strprintf("Invalid superblock start height (%s)", vParams[2]));
+    }
+    LogPrintf("Setting budget parameters to masternode=%ld, budget=%ld, superblock=%ld\n", nMasternodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
+    UpdateBudgetParameters(nMasternodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
+}
+
+void CRegTestParams::UpdateLLMQTestParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-llmqtestparams")) return;
+
+    std::string strParams = args.GetArg("-llmqtestparams", "");
+    std::vector<std::string> vParams;
+    boost::split(vParams, strParams, boost::is_any_of(":"));
+    if (vParams.size() != 2) {
+        throw std::runtime_error("LLMQ_TEST parameters malformed, expecting <size>:<threshold>");
+    }
+    int size, threshold;
+    if (!ParseInt32(vParams[0], &size)) {
+        throw std::runtime_error(strprintf("Invalid LLMQ_TEST size (%s)", vParams[0]));
+    }
+    if (!ParseInt32(vParams[1], &threshold)) {
+        throw std::runtime_error(strprintf("Invalid LLMQ_TEST threshold (%s)", vParams[1]));
+    }
+    LogPrintf("Setting LLMQ_TEST parameters to size=%ld, threshold=%ld\n", size, threshold);
+    UpdateLLMQTestParameters(size, threshold);
+}
+
+void CDevNetParams::UpdateDevnetSubsidyAndDiffParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-minimumdifficultyblocks") && !args.IsArgSet("-highsubsidyblocks") && !args.IsArgSet("-highsubsidyfactor")) return;
+
+    int nMinimumDifficultyBlocks = gArgs.GetArg("-minimumdifficultyblocks", consensus.nMinimumDifficultyBlocks);
+    int nHighSubsidyBlocks = gArgs.GetArg("-highsubsidyblocks", consensus.nHighSubsidyBlocks);
+    int nHighSubsidyFactor = gArgs.GetArg("-highsubsidyfactor", consensus.nHighSubsidyFactor);
+    LogPrintf("Setting minimumdifficultyblocks=%ld, highsubsidyblocks=%ld, highsubsidyfactor=%ld\n", nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
+    UpdateDevnetSubsidyAndDiffParameters(nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
+}
+
+void CDevNetParams::UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-llmqchainlocks")) return;
+
+    std::string strLLMQType = gArgs.GetArg("-llmqchainlocks", consensus.llmqs.at(consensus.llmqTypeChainLocks).name);
+    Consensus::LLMQType llmqType = Consensus::LLMQ_NONE;
+    for (const auto& p : consensus.llmqs) {
+        if (p.second.name == strLLMQType) {
+            llmqType = p.first;
+        }
+    }
+    if (llmqType == Consensus::LLMQ_NONE) {
+        throw std::runtime_error("Invalid LLMQ type specified for -llmqchainlocks.");
+    }
+    LogPrintf("Setting llmqchainlocks to size=%ld\n", llmqType);
+    UpdateDevnetLLMQChainLocks(llmqType);
+}
+
+void CDevNetParams::UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-llmqinstantsend")) return;
+
+    std::string strLLMQType = gArgs.GetArg("-llmqinstantsend", consensus.llmqs.at(consensus.llmqTypeInstantSend).name);
+    Consensus::LLMQType llmqType = Consensus::LLMQ_NONE;
+    for (const auto& p : consensus.llmqs) {
+        if (p.second.name == strLLMQType) {
+            llmqType = p.first;
+        }
+    }
+    if (llmqType == Consensus::LLMQ_NONE) {
+        throw std::runtime_error("Invalid LLMQ type specified for -llmqinstantsend.");
+    }
+    LogPrintf("Setting llmqinstantsend to size=%ld\n", llmqType);
+    UpdateDevnetLLMQInstantSend(llmqType);
+}
+
+void CDevNetParams::UpdateLLMQDevnetParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-llmqdevnetparams")) return;
+
+    std::string strParams = args.GetArg("-llmqdevnetparams", "");
+    std::vector<std::string> vParams;
+    boost::split(vParams, strParams, boost::is_any_of(":"));
+    if (vParams.size() != 2) {
+        throw std::runtime_error("LLMQ_DEVNET parameters malformed, expecting <size>:<threshold>");
+    }
+    int size, threshold;
+    if (!ParseInt32(vParams[0], &size)) {
+        throw std::runtime_error(strprintf("Invalid LLMQ_DEVNET size (%s)", vParams[0]));
+    }
+    if (!ParseInt32(vParams[1], &threshold)) {
+        throw std::runtime_error(strprintf("Invalid LLMQ_DEVNET threshold (%s)", vParams[1]));
+    }
+    LogPrintf("Setting LLMQ_DEVNET parameters to size=%ld, threshold=%ld\n", size, threshold);
+    UpdateLLMQDevnetParameters(size, threshold);
+}
+
+static std::unique_ptr<const CChainParams> globalChainParams;
 
 const CChainParams &Params() {
     assert(globalChainParams);
     return *globalChainParams;
 }
 
-std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain, bool fHelpOnly)
+std::unique_ptr<const CChainParams> CreateChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
         return std::unique_ptr<CChainParams>(new CMainParams());
     else if (chain == CBaseChainParams::TESTNET)
         return std::unique_ptr<CChainParams>(new CTestNetParams());
     else if (chain == CBaseChainParams::DEVNET) {
-        return std::unique_ptr<CChainParams>(new CDevNetParams(fHelpOnly));
+        return std::unique_ptr<CChainParams>(new CDevNetParams(gArgs));
     } else if (chain == CBaseChainParams::REGTEST)
-        return std::unique_ptr<CChainParams>(new CRegTestParams());
+        return std::unique_ptr<CChainParams>(new CRegTestParams(gArgs));
+
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
@@ -1056,49 +1313,4 @@ void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
     globalChainParams = CreateChainParams(network);
-}
-
-void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff)
-{
-    globalChainParams->UpdateVersionBitsParameters(d, nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff);
-}
-
-void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight)
-{
-    globalChainParams->UpdateDIP3Parameters(nActivationHeight, nEnforcementHeight);
-}
-
-void UpdateDIP8Parameters(int nActivationHeight)
-{
-    globalChainParams->UpdateDIP8Parameters(nActivationHeight);
-}
-
-void UpdateBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
-{
-    globalChainParams->UpdateBudgetParameters(nMasternodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
-}
-
-void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor)
-{
-    globalChainParams->UpdateSubsidyAndDiffParams(nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
-}
-
-void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType)
-{
-    globalChainParams->UpdateLLMQChainLocks(llmqType);
-}
-
-void UpdateDevnetLLMQInstantSend(Consensus::LLMQType llmqType)
-{
-    globalChainParams->UpdateLLMQInstantSend(llmqType);
-}
-
-void UpdateLLMQTestParams(int size, int threshold)
-{
-    globalChainParams->UpdateLLMQTestParams(size, threshold);
-}
-
-void UpdateLLMQDevnetParams(int size, int threshold)
-{
-    globalChainParams->UpdateLLMQDevnetParams(size, threshold);
 }
