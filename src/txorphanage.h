@@ -9,9 +9,13 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <sync.h>
+#include <uint256.h>
 
+#include <stddef.h>
+#include <stdint.h>
 #include <map>
 #include <set>
+#include <vector>
 
 /** A class to track orphan transactions (failed on TX_MISSING_INPUTS)
  * Since we cannot distinguish orphans from bad transactions with

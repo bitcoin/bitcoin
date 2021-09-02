@@ -7,7 +7,10 @@
 #include <consensus/validation.h>
 #include <logging.h>
 #include <policy/policy.h>
+#include <random.h>
+#include <util/time.h>
 
+#include <algorithm>
 #include <cassert>
 
 /** Expiration time for orphan transactions in seconds */
