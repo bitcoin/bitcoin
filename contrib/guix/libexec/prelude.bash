@@ -49,7 +49,7 @@ fi
 # Set common variables
 ################
 
-VERSION="${VERSION:-$(git_head_version)}"
+VERSION="${FORCE_VERSION:-$(git_head_version)}"
 DISTNAME="${DISTNAME:-bitcoin-${VERSION}}"
 
 version_base_prefix="${PWD}/guix-build-"
