@@ -357,6 +357,7 @@ void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     nChild = (code[5] << 24) | (code[6] << 16) | (code[7] << 8) | code[8];
     memcpy(chaincode.begin(), code+9, 32);
     key.Set(code+42, code+BIP32_EXTKEY_SIZE, true);
+    if ((nDepth == 0 && (nChild != 0 || ReadLE32(vchFingerprint) != 0)) || code[41] != 0) key = CKey();
 }
 
 bool ECC_InitSanityCheck() {
