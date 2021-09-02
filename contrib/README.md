@@ -24,17 +24,11 @@ Build Tools and Keys
 Contains files used to package dashd/dash-qt
 for Debian-based Linux systems. If you compile dashd/dash-qt yourself, there are some useful files here.
 
-### [Gitian-descriptors](/contrib/gitian-descriptors) ###
-Notes on getting Gitian builds up and running using KVM.
-
 ### [Builder keys](/contrib/builder-keys)
 PGP keys used for signing Dash Core [release](/doc/release-process.md) results.
 
 ### [MacDeploy](/contrib/macdeploy) ###
 Scripts and notes for Mac builds.
-
-### [Gitian-build](/contrib/gitian-build.py) ###
-Script for running full Gitian builds.
 
 Test and Verify Tools
 ---------------------
