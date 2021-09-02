@@ -385,12 +385,12 @@ public:
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
 
-        genesis = CreateGenesisBlock(1576000001, 500647, 0x1e0fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1576000002, 1140241, 0x1e0fffff, 1, 50 * COIN);
         /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000009e79cfb8c84bb786380480ecfd98d04a51bfbfd39e1ac496fb621fabb4b"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000041838ac8f7dce14652ec26557d6dc5ab70da7de53f54626800bdfc5afd"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         vFixedSeeds.clear();
@@ -667,13 +667,13 @@ public:
 
         UpdateActivationParametersFromArgs(args);
 
-        genesis = CreateGenesisBlock(1553040332, 2, 0x207fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1553040331, 3, 0x207fffff, 1, 50 * COIN);
         
         /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
-        GenerateGenesisBlock(genesisHeader, hash);
-        consensus.hashGenesisBlock = genesis.GetHash();*/
-        assert(consensus.hashGenesisBlock == uint256S("0x5f4ef6d3dfb2b9b121a5bb24ab781b2b34b4e6f6bec0e091eb671d32bca9dc84"));
+        GenerateGenesisBlock(genesisHeader, hash);*/
+        consensus.hashGenesisBlock = genesis.GetHash();
+        assert(consensus.hashGenesisBlock == uint256S("0x28a2c2d251f46fac05ade79085cbcb2ae4ec67ea24f1f1c7b40a348c00521194"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
