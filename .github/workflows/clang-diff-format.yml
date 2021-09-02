@@ -1,0 +1,17 @@
+name: Clang Diff Format Check
+
+on:
+  pull_request:
+    branches:
+      - develop
+jobs:
+  ClangFormat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Fetch git
+        run: git fetch
+      - name: Run Clang-Format-Diff.py
+        run: git diff -U0 origin/develop | ./contrib/devtools/clang-format-diff.py -p1
+
