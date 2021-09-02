@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <limits>
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -419,6 +420,30 @@ void univalue_readwrite()
     BOOST_CHECK(!v.read("{} 42"));
 }
 
+void univalue_numbers()
+{
+    UniValue v;
+    BOOST_CHECK(v.setInt(std::numeric_limits<int64_t>::max()));
+    BOOST_CHECK(v.isNum());
+    BOOST_CHECK_EQUAL(v.getValStr(), "9223372036854775807");
+
+    BOOST_CHECK(v.setInt(std::numeric_limits<int64_t>::lowest()));
+    BOOST_CHECK(v.isNum());
+    BOOST_CHECK_EQUAL(v.getValStr(), "-9223372036854775808");
+
+    BOOST_CHECK(v.setInt(int64_t(0)));
+    BOOST_CHECK(v.isNum());
+    BOOST_CHECK_EQUAL(v.getValStr(), "0");
+
+    BOOST_CHECK(v.setInt(std::numeric_limits<uint64_t>::max()));
+    BOOST_CHECK(v.isNum());
+    BOOST_CHECK_EQUAL(v.getValStr(), "18446744073709551615");
+
+    BOOST_CHECK(v.setInt(uint64_t(0)));
+    BOOST_CHECK(v.isNum());
+    BOOST_CHECK_EQUAL(v.getValStr(), "0");
+}
+
 int main (int argc, char *argv[])
 {
     univalue_constructor();
@@ -428,6 +453,7 @@ int main (int argc, char *argv[])
     univalue_array();
     univalue_object();
     univalue_readwrite();
+    univalue_numbers();
     return 0;
 }
 

@@ -5,15 +5,42 @@
 
 #include <univalue.h>
 
+#include <algorithm>
 #include <iomanip>
 #include <map>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 const UniValue NullUniValue;
+
+namespace {
+
+/**
+ * Performs locale-independent to string conversion of integral numbers.
+ *
+ * This is much faster than using a temporary stringstream.
+ */
+template<typename T>
+void appendNumToString(T n, std::string& str)
+{
+    auto unsigned_n = static_cast<typename std::make_unsigned<T>::type>(n);
+    if (n < 0) {
+        str.push_back('-');
+        unsigned_n = 0 - unsigned_n;
+    }
+    auto old_size = str.size();
+    do {
+        str.push_back(static_cast<char>('0' + (unsigned_n % 10)));
+        unsigned_n /= 10;
+    } while (unsigned_n);
+    std::reverse(str.begin() + old_size, str.end());
+}
+
+}
 
 void UniValue::clear()
 {
@@ -59,20 +86,18 @@ bool UniValue::setNumStr(const std::string& val_)
 
 bool UniValue::setInt(uint64_t val_)
 {
-    std::ostringstream oss;
-
-    oss << val_;
-
-    return setNumStr(oss.str());
+    clear();
+    typ = VNUM;
+    appendNumToString(val_, val);
+    return true;
 }
 
 bool UniValue::setInt(int64_t val_)
 {
-    std::ostringstream oss;
-
-    oss << val_;
-
-    return setNumStr(oss.str());
+    clear();
+    typ = VNUM;
+    appendNumToString(val_, val);
+    return true;
 }
 
 bool UniValue::setFloat(double val_)
