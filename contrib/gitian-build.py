@@ -8,9 +8,7 @@ import sys
 def setup():
     global args, workdir
     programs = ['ruby', 'git', 'make', 'wget']
-    if args.lxc:
-        programs += ['apt-cacher-ng', 'lxc', 'debootstrap']
-    elif args.kvm:
+    if args.kvm:
         programs += ['apt-cacher-ng', 'python-vm-builder', 'qemu-kvm', 'qemu-utils']
     elif args.docker and not os.path.isfile('/lib/systemd/system/docker.service'):
         dockers = ['docker.io', 'docker-ce']
@@ -19,8 +17,10 @@ def setup():
             if return_code == 0:
                 break
         if return_code != 0:
-            print('Cannot find any way to install Docker', file=sys.stderr)
-            exit(1)
+            print('Cannot find any way to install Docker.', file=sys.stderr)
+            sys.exit(1)
+    else:
+        programs += ['apt-cacher-ng', 'lxc', 'debootstrap']
     subprocess.check_call(['sudo', 'apt-get', 'install', '-qq'] + programs)
     if not os.path.isdir('gitian.sigs'):
         subprocess.check_call(['git', 'clone', 'https://github.com/dashpay/gitian.sigs.git'])
@@ -41,7 +41,7 @@ def setup():
     if args.is_bionic and not args.kvm and not args.docker:
         subprocess.check_call(['sudo', 'sed', '-i', 's/lxcbr0/br0/', '/etc/default/lxc-net'])
         print('Reboot is required')
-        exit(0)
+        sys.exit(0)
 
 def build():
     global args, workdir
@@ -118,20 +118,36 @@ def sign():
 
 def verify():
     global args, workdir
+    rc = 0
     os.chdir('gitian-builder')
 
     print('\nVerifying v'+args.version+' Linux\n')
-    subprocess.call(['bin/gverify', '-v', '-d', '../gitian.sigs/', '-r', args.version+'-linux', '../dash/contrib/gitian-descriptors/gitian-linux.yml'])
+    if subprocess.call(['bin/gverify', '-v', '-d', '../gitian.sigs/', '-r', args.version+'-linux', '../dash/contrib/gitian-descriptors/gitian-linux.yml']):
+        print('Verifying v'+args.version+' Linux FAILED\n')
+        rc = 1
+
     print('\nVerifying v'+args.version+' Windows\n')
-    subprocess.call(['bin/gverify', '-v', '-d', '../gitian.sigs/', '-r', args.version+'-win-unsigned', '../dash/contrib/gitian-descriptors/gitian-win.yml'])
+    if subprocess.call(['bin/gverify', '-v', '-d', '../gitian.sigs/', '-r', args.version+'-win-unsigned', '../dash/contrib/gitian-descriptors/gitian-win.yml']):
+        print('Verifying v'+args.version+' Windows FAILED\n')
+        rc = 1
+
     print('\nVerifying v'+args.version+' MacOS\n')
-    subprocess.call(['bin/gverify', '-v', '-d', '../gitian.sigs/', '-r', args.version+'-osx-unsigned', '../dash/contrib/gitian-descriptors/gitian-osx.yml'])
+    if subprocess.call(['bin/gverify', '-v', '-d', '../gitian.sigs/', '-r', args.version+'-osx-unsigned', '../dash/contrib/gitian-descriptors/gitian-osx.yml']):
+        print('Verifying v'+args.version+' MacOS FAILED\n')
+        rc = 1
+
     print('\nVerifying v'+args.version+' Signed Windows\n')
-    subprocess.call(['bin/gverify', '-v', '-d', '../gitian.sigs/', '-r', args.version+'-win-signed', '../dash/contrib/gitian-descriptors/gitian-win-signer.yml'])
+    if subprocess.call(['bin/gverify', '-v', '-d', '../gitian.sigs/', '-r', args.version+'-win-signed', '../dash/contrib/gitian-descriptors/gitian-win-signer.yml']):
+        print('Verifying v'+args.version+' Signed Windows FAILED\n')
+        rc = 1
+
     print('\nVerifying v'+args.version+' Signed MacOS\n')
-    subprocess.call(['bin/gverify', '-v', '-d', '../gitian.sigs/', '-r', args.version+'-osx-signed', '../dash/contrib/gitian-descriptors/gitian-osx-signer.yml'])
+    if subprocess.call(['bin/gverify', '-v', '-d', '../gitian.sigs/', '-r', args.version+'-osx-signed', '../dash/contrib/gitian-descriptors/gitian-osx-signer.yml']):
+        print('Verifying v'+args.version+' Signed MacOS FAILED\n')
+        rc = 1
 
     os.chdir(workdir)
+    return rc
 
 def main():
     global args, workdir
@@ -164,25 +180,24 @@ def main():
     args.docker = (args.virtualization == 'docker')
 
     script_name = os.path.basename(sys.argv[0])
-    # Set all USE_* environment variables for gitian-builder: USE_LXC, USE_DOCKER and USE_VBOX
+    if not args.lxc and not args.kvm and not args.docker:
+        print(script_name+': Wrong virtualization option.')
+        print('Try '+script_name+' --help for more information')
+        sys.exit(1)
+
+    # Ensure no more than one environment variable for gitian-builder (USE_LXC, USE_VBOX, USE_DOCKER) is set as they
+    # can interfere (e.g., USE_LXC being set shadows USE_DOCKER; for details see gitian-builder/libexec/make-clean-vm).
+    os.environ['USE_LXC'] = ''
     os.environ['USE_VBOX'] = ''
-    if args.lxc:
+    os.environ['USE_DOCKER'] = ''
+    if args.docker:
+        os.environ['USE_DOCKER'] = '1'
+    elif not args.kvm:
         os.environ['USE_LXC'] = '1'
-        os.environ['USE_DOCKER'] = ''
         if 'GITIAN_HOST_IP' not in os.environ.keys():
             os.environ['GITIAN_HOST_IP'] = '10.0.3.1'
         if 'LXC_GUEST_IP' not in os.environ.keys():
             os.environ['LXC_GUEST_IP'] = '10.0.3.5'
-    elif args.kvm:
-        os.environ['USE_LXC'] = ''
-        os.environ['USE_DOCKER'] = ''
-    elif args.docker:
-        os.environ['USE_LXC'] = ''
-        os.environ['USE_DOCKER'] = '1'
-    else:
-        print(script_name+': Wrong virtualization option.')
-        print('Try '+script_name+' --help for more information')
-        exit(1)
 
     if args.setup:
         setup()
@@ -203,11 +218,11 @@ def main():
     if not args.signer:
         print(script_name+': Missing signer')
         print('Try '+script_name+' --help for more information')
-        exit(1)
+        sys.exit(1)
     if not args.version:
         print(script_name+': Missing version')
         print('Try '+script_name+' --help for more information')
-        exit(1)
+        sys.exit(1)
 
     # Add leading 'v' for tags
     if args.commit and args.pull:
@@ -240,7 +255,7 @@ def main():
         os.chdir('gitian.sigs')
         subprocess.check_call(['git', 'pull'])
         os.chdir(workdir)
-        verify()
+        sys.exit(verify())
 
 if __name__ == '__main__':
     main()
