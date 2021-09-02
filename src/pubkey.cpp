@@ -350,6 +350,7 @@ void CExtPubKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     nChild = (code[5] << 24) | (code[6] << 16) | (code[7] << 8) | code[8];
     memcpy(chaincode.begin(), code+9, 32);
     pubkey.Set(code+41, code+BIP32_EXTKEY_SIZE);
+    if ((nDepth == 0 && (nChild != 0 || ReadLE32(vchFingerprint) != 0)) || !pubkey.IsFullyValid()) pubkey = CPubKey();
 }
 
 bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild) const {
