@@ -3,7 +3,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # These environment variables are set by the build process and read by
-# test/functional/test_runner.py and test/util/bitcoin-util-test.py
+# test/*/test_runner.py and test/util/rpcauth-test.py
 
 [environment]
 PACKAGE_NAME=@PACKAGE_NAME@

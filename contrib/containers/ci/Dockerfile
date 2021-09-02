@@ -80,7 +80,6 @@ RUN pip3 install \
     pyzmq \
     vulture==2.3 \
     mypy==0.781 \
-    yq \
     multiprocess
 
 # dash_hash
