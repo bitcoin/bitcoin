@@ -21,33 +21,32 @@ Hybrid layer 2 PoW/PoS consensus with bonded validator system (masternodes) ZDAG
 
 Governance formula: We have implemented a % decline schedule — starting the first month with 1500000 SYS and ending on the 24th month with 196708 SYS. After that period, the superblock starts with 151767 SYS a month and will decline 5% every year. Read more about it here: https://medium.com/@syscoin/syscoin-4-0-rewards-specifications-a3dc01d85adf.
 
-Interoptibility through a trust-less, no custodian, no counterparty bridge to NEVM. Existing ERC20 assets can move to and from Syscoin Platform Tokens at will. This is the first time a fractional supply, two-way bridge has been developed and brought to market. It will enable a scaling infrastructure for NEVM as well as flexibility for existing Syscoin ecosystem. A sharing and collobrative approach to foster growth in the industry was the goal, this is the results of over 18 months of research and development by [Blockchain Foundry Inc](https://www.blockchainfoundry.co/). Documentation can be found [here](https://github.com/syscoin/sysethereum-docs).
-
-The bridge allows existing ERC20's following the standard spec [EIP-20](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md) to trust-lessly move across chains. This is different than other projects that use custodians (operators that are in control of the movement of funds), which can cause theoretical attacks especially as value of transfers increases. Our implementation relies on PoW as the absolute security mechanism which is tried, tested and true from Nakamoto consensus used in Bitcoin. Either side uses SPV proofs while having knowledge of the longest chain. On NEVM, Syscoin block headers are saved in a smart contract to validate against SPV proofs and on Syscoin, nodes are listening to the NEVM network natively through Geth light nodes. This way we have absolute knowledge of the chains when validating SPV proofs and no external parties are needed to attest on the longest chain. See documentation for more [details](https://github.com/syscoin/sysethereum-docs).
+Interoptibility between UTXO assets and ERC20 NEVM account model through a trust-less, zero custodian, zero counterparty internal bridge. Documentation can be found [here](https://github.com/syscoin/sysethereum-docs).
 
 For more information, as well as an immediately useable, binary version of
 the Syscoin Core software, see https://syscoin.org/, or read the
 [original whitepaper](https://syscoin.org/zdag_syscoin_whitepaper.pdf).
 
-Syscoin is a merge-minable SHA256 coin which provides an array of useful services which leverage the bitcoin protocol and blockchain technology.
+Syscoin is a merge-minable SHA256 coin which provides an array of useful services which leverage the bitcoin protocol and blockchain technology. It enables turing complete smart contracts running in an NEVM (Network-enhanced Virtual Machine) to leverage bitcoin security through merged-mining. Scaling the technology will happen on layer 2 (zkRollups for NEVM and Lightning Networks for UTXO assets).
 
-888 million total coins (deflation 5 percent per year, deflation on all payouts)
-Block time: 60 seconds target
-Rewards: 38.5 Syscoins per block deflated 5 percent per year.
+Block time: 150 seconds target
+Halving interval: 210240 (~1 year)
+Rewards: 96.25 Syscoins per block deflated 5 percent per year
 10 percent to governance proposals
-22.5 percent to miner
-67.5 percent to masternode
+90 percent split with miner/masternode of which:
+   25 percent to miner
+   75 percent to masternode
+50 percent of the transaction fees paid to masternode
+Masternode minium subsidy(before seniority): 5.275 Syscoins (can not go below this amount even accounting for deflation)
+NEVM subsidy (EIP1559): 10.55 Syscoins (static, not deflating)
 SHA256 Proof of Work
 Mineable either exclusively or via merge-mining any SHA256 PoW coin
 Masternode collateral requirement: 100000 Syscoins
-Masternode seniority: 35% increase after 1 year, 100% increase after 2.5 years
-Governance proposals payout schedule: every month
-There is a 5% deflation per year on Syscoin
+Masternode seniority: 35 percent increase after 210240 blocks (~1 year), 100 percent increase after 525600 blocks (~2.5 years)
+Governance proposals payout schedule: every 17520 blocks (~1 month)
 Governance funding per round (Approx. 2m Syscoins per month to start)
-Governance funding gets 5% deflation per round (superblock). See formula below.
-Consensus enforced segwit (all transactions have witness programs except coinbase)
+Governance funding gets 5% deflation per round (superblock). See formula below
 Codebase based off of latest Bitcoin Core (https://github.com/bitcoin/bitcoin)
-Services include:
 
 For more information read the Syscoin whitepaper.
 
