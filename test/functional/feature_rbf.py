@@ -36,7 +36,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             [
                 "-acceptnonstdtxn=1",
                 "-maxorphantx=1000",
-                "-limitancestorcount=50",
+                f"-limitancestorcount={MAX_REPLACEMENT_LIMIT + 1}", # enough room to test BIP125 Rule #5
                 "-limitancestorsize=101",
                 "-limitdescendantcount=200",
                 "-limitdescendantsize=101",
@@ -87,6 +87,9 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.log.info("Running test replacement relay fee...")
         self.test_replacement_relay_fee()
 
+        self.log.info("Running test prechecks overestimates replacements...")
+        self.test_prechecks_overestimates_replacements()
+
         self.log.info("Passed")
 
     def make_utxo(self, node, amount, confirmed=True, scriptPubKey=DUMMY_P2WPKH_SCRIPT):
@@ -109,6 +112,19 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 mempool_size = new_size
 
         return COutPoint(int(txid, 16), n)
+
+    def create_double_input_self_transfer(self, input_utxos, fee_rate):
+        """Given two input utxos, create one transaction that spends both of them"""
+        [tx, staging_tx] = list(map(lambda utxo: self.wallet.create_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=utxo,
+            fee_rate=fee_rate,
+        )["tx"], input_utxos))
+
+        tx.vin.append(staging_tx.vin[0])
+        tx.wit.vtxinwit.append(staging_tx.wit.vtxinwit[0])
+        tx.vout[0].nValue = tx.vout[0].nValue + staging_tx.vout[0].nValue
+        return tx.serialize().hex()
 
     def test_simple_doublespend(self):
         """Simple doublespend"""
@@ -620,6 +636,65 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # fee conforming to node's `incrementalrelayfee` policy of 1000 sat per KB.
         tx.vout[0].nValue -= 1
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx.serialize().hex())
+
+    def test_prechecks_overestimates_replacements(self):
+        confirmed_utxos = [self.wallet.get_utxo(), self.wallet.get_utxo()]
+
+        # Two opt-in parent transactions
+        parent_txs = list(map(lambda utxo: self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=utxo,
+            sequence=BIP125_SEQUENCE_NUMBER,
+            fee_rate=Decimal('0.0001'),
+        ), confirmed_utxos))
+
+        # Craft a transaction that spends both parents so we can create one chain of descendant transactions
+        parent_utxos = list(map(lambda tx: self.wallet.get_utxo(txid=tx['txid']), parent_txs))
+        joined_tx_hex = self.create_double_input_self_transfer(parent_utxos, Decimal('0.0001'))
+        joined_tx_txid = self.nodes[0].sendrawtransaction(joined_tx_hex)
+
+        # Get the `joined_tx` utxo into our wallet so we can spend a chain of descendants from it
+        joined_tx = self.nodes[0].decoderawtransaction(joined_tx_hex)
+        self.wallet.scan_tx(joined_tx)
+        joined_utxo = self.wallet.get_utxo(txid=joined_tx_txid)
+
+        # Create a chain half the size of `MAX_REPLACEMENT_LIMIT` spending `joined_tx` - well under the BIP125 Rule #5 imposed limit
+        tx = None
+        for _ in range(MAX_REPLACEMENT_LIMIT // 2):
+            tx = self.wallet.send_self_transfer(
+                from_node=self.nodes[0],
+                utxo_to_spend=joined_utxo if tx is None else self.wallet.get_utxo(txid=tx['txid']),  # a straight line of descendants
+                fee_rate=Decimal('0.0001'),
+            )
+
+        # Even though there are well under `MAX_REPLACEMENT_LIMIT` transactions that will be evicted due to this replacement,
+        # in this case we still reject the replacement attempt because of the way `MemPoolAccept::PreChecks` double-counts descendants.
+        # Each `confirmed_utxo` has the exact same descendants, but they are each counted twice!
+        replacement_attempt_tx_hex = self.create_double_input_self_transfer(confirmed_utxos, Decimal('0.01'))
+        assert_raises_rpc_error(-26, 'too many potential replacements', self.nodes[0].sendrawtransaction, replacement_attempt_tx_hex, 0)
+
+        # However, we can still craft a transaction that replaces the entire descendant chain by only replacing one of the `parent_txs`
+        replacement_tx = self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=confirmed_utxos[0],  # replace the opt-in parent transaction
+            sequence=BIP125_SEQUENCE_NUMBER,
+            fee_rate=Decimal('0.01'),
+        )
+        mempool = self.nodes[0].getrawmempool()
+        assert replacement_tx['txid'] in mempool
+        assert parent_txs[0]['txid'] not in mempool
+        assert parent_txs[1]['txid'] in mempool
+        assert tx['txid'] not in mempool
+
+        # And funny enough, _now_ we can successfully broadcast that same `replacement_tx_hex` which just failed with the
+        # "too many potential replacements" error. It was just a little tricky to get around `MemPoolAccept::PreChecks`
+        # double-counting evictions.
+        replacement_attempt_tx_txid = self.nodes[0].sendrawtransaction(replacement_attempt_tx_hex, 0)
+        mempool = self.nodes[0].getrawmempool()
+        assert replacement_attempt_tx_txid in mempool
+        assert replacement_tx['txid'] not in mempool
+        for parent_tx in parent_txs:
+            assert parent_tx not in mempool
 
 if __name__ == '__main__':
     ReplaceByFeeTest().main()
