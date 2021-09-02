@@ -503,6 +503,9 @@ private:
         std::unique_ptr<CTxMemPoolEntry> m_entry;
         std::list<CTransactionRef> m_replaced_transactions;
 
+        /** Virtual size of the transaction as used by the mempool, calculated using serialized size
+         * of the transaction and sigops. */
+        int64_t m_vsize;
         CAmount m_base_fees;
         CAmount m_modified_fees;
         /** Total modified fees of all transactions being replaced. */
@@ -732,7 +735,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     entry.reset(new CTxMemPoolEntry(ptx, ws.m_base_fees, nAcceptTime, m_active_chainstate.m_chain.Height(),
             fSpendsCoinbase, nSigOpsCost, lp));
-    unsigned int nSize = entry->GetTxSize();
+    ws.m_vsize = entry->GetTxSize();
 
     if (nSigOpsCost > MAX_STANDARD_TX_SIGOPS_COST)
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "bad-txns-too-many-sigops",
@@ -740,7 +743,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // No transactions are allowed below minRelayTxFee except from disconnected
     // blocks
-    if (!bypass_limits && !CheckFeeRate(nSize, nModifiedFees, state)) return false;
+    if (!bypass_limits && !CheckFeeRate(ws.m_vsize, nModifiedFees, state)) return false;
 
     const CTxMemPool::setEntries setIterConflicting = m_pool.GetIterSet(setConflicts);
     // Calculate in-mempool ancestors, up to a limit.
@@ -795,7 +798,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // to be secure by simply only having two immediately-spendable
         // outputs - one for each counterparty. For more info on the uses for
         // this, see https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/016518.html
-        if (nSize >  EXTRA_DESCENDANT_TX_SIZE_LIMIT ||
+        if (ws.m_vsize > EXTRA_DESCENDANT_TX_SIZE_LIMIT ||
                 !m_pool.CalculateMemPoolAncestors(*entry, setAncestors, 2, m_limit_ancestor_size, m_limit_descendants + 1, m_limit_descendant_size + EXTRA_DESCENDANT_TX_SIZE_LIMIT, dummy_err_string)) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", errString);
         }
@@ -813,7 +816,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     m_rbf = !setConflicts.empty();
     if (m_rbf) {
-        CFeeRate newFeeRate(nModifiedFees, nSize);
+        CFeeRate newFeeRate(nModifiedFees, ws.m_vsize);
         // It's possible that the replacement pays more fees than its direct conflicts but not more
         // than all conflicts (i.e. the direct conflicts have high-fee descendants). However, if the
         // replacement doesn't pay more fees than its direct conflicts, then we can be sure it's not
@@ -841,7 +844,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             nConflictingFees += it->GetModifiedFee();
             nConflictingSize += it->GetTxSize();
         }
-        if (const auto err_string{PaysForRBF(nConflictingFees, nModifiedFees, nSize, ::incrementalRelayFee, hash)}) {
+        if (const auto err_string{PaysForRBF(nConflictingFees, nModifiedFees, ws.m_vsize,
+                                             ::incrementalRelayFee, hash)}) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
         }
     }
@@ -967,14 +971,14 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
 
     // Tx was accepted, but not added
     if (args.m_test_accept) {
-        return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_base_fees);
+        return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize, ws.m_base_fees);
     }
 
     if (!Finalize(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
     GetMainSignals().TransactionAddedToMempool(ptx, m_pool.GetAndIncrementSequence());
 
-    return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_base_fees);
+    return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize, ws.m_base_fees);
 }
 
 PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::vector<CTransactionRef>& txns, ATMPArgs& args)
@@ -1033,7 +1037,8 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
             // When test_accept=true, transactions that pass PolicyScriptChecks are valid because there are
             // no further mempool checks (passing PolicyScriptChecks implies passing ConsensusScriptChecks).
             results.emplace(ws.m_ptx->GetWitnessHash(),
-                            MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_base_fees));
+                            MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions),
+                                                         ws.m_vsize, ws.m_base_fees));
         }
     }
 
