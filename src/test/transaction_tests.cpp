@@ -765,95 +765,89 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     key.MakeNewKey(true);
     t.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
 
-    std::string reason;
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    constexpr auto CheckIsStandard = [](const auto& t) {
+        std::string reason;
+        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+        BOOST_CHECK(reason.empty());
+    };
+    constexpr auto CheckIsNotStandard = [](const auto& t, const std::string& reason_in) {
+        std::string reason;
+        BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
+        BOOST_CHECK_EQUAL(reason_in, reason);
+    };
+
+    CheckIsStandard(t);
 
     // Check dust with default relay fee:
-    CAmount nDustThreshold = 182 * dustRelayFee.GetFeePerK()/1000;
+    CAmount nDustThreshold = 182 * dustRelayFee.GetFeePerK() / 1000;
     BOOST_CHECK_EQUAL(nDustThreshold, 546);
     // dust:
     t.vout[0].nValue = nDustThreshold - 1;
-    reason.clear();
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "dust");
+    CheckIsNotStandard(t, "dust");
     // not dust:
     t.vout[0].nValue = nDustThreshold;
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
 
     // Disallowed nVersion
     t.nVersion = -1;
-    reason.clear();
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "version");
+    CheckIsNotStandard(t, "version");
 
     t.nVersion = 0;
-    reason.clear();
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "version");
+    CheckIsNotStandard(t, "version");
 
     t.nVersion = 3;
-    reason.clear();
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "version");
+    CheckIsNotStandard(t, "version");
 
     // Allowed nVersion
     t.nVersion = 1;
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
 
     t.nVersion = 2;
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
 
     // Check dust with odd relay fee to verify rounding:
     // nDustThreshold = 182 * 3702 / 1000
     dustRelayFee = CFeeRate(3702);
     // dust:
     t.vout[0].nValue = 673 - 1;
-    reason.clear();
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "dust");
+    CheckIsNotStandard(t, "dust");
     // not dust:
     t.vout[0].nValue = 673;
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
     dustRelayFee = CFeeRate(DUST_RELAY_TX_FEE);
 
     t.vout[0].scriptPubKey = CScript() << OP_1;
-    reason.clear();
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "scriptpubkey");
+    CheckIsNotStandard(t, "scriptpubkey");
 
     // MAX_OP_RETURN_RELAY-byte TxoutType::NULL_DATA (standard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     BOOST_CHECK_EQUAL(MAX_OP_RETURN_RELAY, t.vout[0].scriptPubKey.size());
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
 
     // MAX_OP_RETURN_RELAY+1-byte TxoutType::NULL_DATA (non-standard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3800");
     BOOST_CHECK_EQUAL(MAX_OP_RETURN_RELAY + 1, t.vout[0].scriptPubKey.size());
-    reason.clear();
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "scriptpubkey");
+    CheckIsNotStandard(t, "scriptpubkey");
 
     // Data payload can be encoded in any way...
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("");
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("00") << ParseHex("01");
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
     // OP_RESERVED *is* considered to be a PUSHDATA type opcode by IsPushOnly()!
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_RESERVED << -1 << 0 << ParseHex("01") << 2 << 3 << 4 << 5 << 6 << 7 << 8 << 9 << 10 << 11 << 12 << 13 << 14 << 15 << 16;
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << 0 << ParseHex("01") << 2 << ParseHex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
 
     // ...so long as it only contains PUSHDATA's
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_RETURN;
-    reason.clear();
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "scriptpubkey");
+    CheckIsNotStandard(t, "scriptpubkey");
 
     // TxoutType::NULL_DATA w/o PUSHDATA
     t.vout.resize(1);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
 
     // Only one TxoutType::NULL_DATA permitted in all cases
     t.vout.resize(2);
@@ -861,21 +855,15 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].nValue = 0;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     t.vout[1].nValue = 0;
-    reason.clear();
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "multi-op-return");
+    CheckIsNotStandard(t, "multi-op-return");
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    reason.clear();
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "multi-op-return");
+    CheckIsNotStandard(t, "multi-op-return");
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    reason.clear();
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "multi-op-return");
+    CheckIsNotStandard(t, "multi-op-return");
 
     // Check large scriptSig (non-standard if size is >1650 bytes)
     t.vout.resize(1);
@@ -883,12 +871,10 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
     // OP_PUSHDATA2 with len (3 bytes) + data (1647 bytes) = 1650 bytes
     t.vin[0].scriptSig = CScript() << std::vector<unsigned char>(1647, 0); // 1650
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
 
     t.vin[0].scriptSig = CScript() << std::vector<unsigned char>(1648, 0); // 1651
-    reason.clear();
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "scriptsig-size");
+    CheckIsNotStandard(t, "scriptsig-size");
 
     // Check scriptSig format (non-standard if there are any other ops than just PUSHs)
     t.vin[0].scriptSig = CScript()
@@ -897,7 +883,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
         << std::vector<unsigned char>(235, 0)     // OP_PUSHDATA1 x [...x bytes...]
         << std::vector<unsigned char>(1234, 0)    // OP_PUSHDATA2 x [...x bytes...]
         << OP_9;
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
 
     const std::vector<unsigned char> non_push_ops = { // arbitrary set of non-push operations
         OP_NOP, OP_VERIFY, OP_IF, OP_ROT, OP_3DUP, OP_SIZE, OP_EQUAL, OP_ADD, OP_SUB,
@@ -917,11 +903,10 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
         // replace current push-op with each non-push-op
         for (auto op : non_push_ops) {
             t.vin[0].scriptSig[index] = op;
-            BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-            BOOST_CHECK_EQUAL(reason, "scriptsig-not-pushonly");
+            CheckIsNotStandard(t, "scriptsig-not-pushonly");
         }
         t.vin[0].scriptSig[index] = orig_op; // restore op
-        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+        CheckIsStandard(t);
     }
 
     // Check tx-size (non-standard if transaction weight is > MAX_STANDARD_TX_WEIGHT)
@@ -934,53 +919,46 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     //                      ===============================
     //                                total: 400000 vbytes
     BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(t)), 400000);
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
 
     // increase output size by one byte, so we end up with 400004 vbytes
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << std::vector<unsigned char>(20, 0); // output size: 31 bytes
     BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(t)), 400004);
-    reason.clear();
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "tx-size");
+    CheckIsNotStandard(t, "tx-size");
 
     // Check bare multisig (standard if policy flag fIsBareMultisigStd is set)
     fIsBareMultisigStd = true;
     t.vout[0].scriptPubKey = GetScriptForMultisig(1, {key.GetPubKey()}); // simple 1-of-1
     t.vin.resize(1);
     t.vin[0].scriptSig = CScript() << std::vector<unsigned char>(65, 0);
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
 
     fIsBareMultisigStd = false;
-    reason.clear();
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "bare-multisig");
+    CheckIsNotStandard(t, "bare-multisig");
     fIsBareMultisigStd = DEFAULT_PERMIT_BAREMULTISIG;
 
     // Check P2WPKH outputs dust threshold
     t.vout[0].scriptPubKey = CScript() << OP_0 << ParseHex("ffffffffffffffffffffffffffffffffffffffff");
     t.vout[0].nValue = 294;
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
     t.vout[0].nValue = 293;
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "dust");
+    CheckIsNotStandard(t, "dust");
 
     // Check P2WSH outputs dust threshold
     t.vout[0].scriptPubKey = CScript() << OP_0 << ParseHex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
     t.vout[0].nValue = 330;
-    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+    CheckIsStandard(t);
     t.vout[0].nValue = 329;
-    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-    BOOST_CHECK_EQUAL(reason, "dust");
+    CheckIsNotStandard(t, "dust");
 
     // Check future Witness Program versions dust threshold
     for (int op = OP_2; op <= OP_16; op += 1) {
         t.vout[0].scriptPubKey = CScript() << (opcodetype)op << ParseHex("ffff");
         t.vout[0].nValue = 240;
-        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+        CheckIsStandard(t);
 
         t.vout[0].nValue = 239;
-        BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
-        BOOST_CHECK_EQUAL(reason, "dust");
+        CheckIsNotStandard(t, "dust");
     }
 }
 
