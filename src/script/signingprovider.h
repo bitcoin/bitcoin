@@ -26,6 +26,30 @@ public:
     virtual bool HaveKey(const CKeyID &address) const { return false; }
     virtual bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const { return false; }
     virtual bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const { return false; }
+
+    bool GetKeyByXOnly(const XOnlyPubKey& pubkey, CKey& key) const
+    {
+        for (const auto& id : pubkey.GetKeyIDs()) {
+            if (GetKey(id, key)) return true;
+        }
+        return false;
+    }
+
+    bool GetPubKeyByXOnly(const XOnlyPubKey& pubkey, CPubKey& out) const
+    {
+        for (const auto& id : pubkey.GetKeyIDs()) {
+            if (GetPubKey(id, out)) return true;
+        }
+        return false;
+    }
+
+    bool GetKeyOriginByXOnly(const XOnlyPubKey& pubkey, KeyOriginInfo& info) const
+    {
+        for (const auto& id : pubkey.GetKeyIDs()) {
+            if (GetKeyOrigin(id, info)) return true;
+        }
+        return false;
+    }
 };
 
 extern const SigningProvider& DUMMY_SIGNING_PROVIDER;
