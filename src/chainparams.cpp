@@ -61,7 +61,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
     tfm::format(std::cout,"genesis.nNonce = %u \n", genesisBlock.nNonce);
     tfm::format(std::cout,"Generate hash = %s\n", phash.ToString().c_str());
     tfm::format(std::cout,"genesis.hashMerkleRoot = %s\n", genesisBlock.hashMerkleRoot.ToString().c_str());
-}  */ 
+} */ 
 /**
  * Build the genesis block. Note that the output of its generation
  * transaction cannot be spent since it did not originally exist in the
@@ -667,13 +667,13 @@ public:
 
         UpdateActivationParametersFromArgs(args);
 
-        genesis = CreateGenesisBlock(1553040331, 3, 0x207fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1553040332, 2, 0x207fffff, 1, 50 * COIN);
         
         /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
-        GenerateGenesisBlock(genesisHeader, hash);*/
-        consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x28a2c2d251f46fac05ade79085cbcb2ae4ec67ea24f1f1c7b40a348c00521194"));
+        GenerateGenesisBlock(genesisHeader, hash);
+        consensus.hashGenesisBlock = genesis.GetHash();*/
+        assert(consensus.hashGenesisBlock == uint256S("0x5f4ef6d3dfb2b9b121a5bb24ab781b2b34b4e6f6bec0e091eb671d32bca9dc84"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
