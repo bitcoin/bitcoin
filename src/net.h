@@ -911,7 +911,7 @@ public:
     // If 'true', we identified it as an intra-quorum relay connection
     std::atomic<bool> m_masternode_iqr_connection{false};
     CSemaphoreGrant grantOutbound;
-    CCriticalSection cs_filter;
+    mutable CCriticalSection cs_filter;
     std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter){nullptr};
     std::atomic<int> nRefCount{0};
 
@@ -953,7 +953,6 @@ public:
     CCriticalSection cs_inventory;
     std::chrono::microseconds nNextInvSend{0};
     // Used for headers announcements - unfiltered blocks to relay
-    // Also protected by cs_inventory
     std::vector<uint256> vBlockHashesToAnnounce GUARDED_BY(cs_inventory);
     // Used for BIP35 mempool sending, also protected by cs_inventory
     bool fSendMempool GUARDED_BY(cs_inventory){false};

@@ -494,7 +494,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_reorg, TestChainDIP3Setup)
 
     CTxMemPool testPool;
     TestMemPoolEntryHelper entry;
-    LOCK(testPool.cs);
+    LOCK2(cs_main, testPool.cs);
 
     // Create ProUpServ and test block reorg which double-spend ProRegTx
     auto tx_up_serv = CreateProUpServTx(utxos, tx_reg.GetHash(), operatorKey, 2, CScript(), coinbaseKey);
@@ -564,7 +564,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_dual_proregtx, TestChainDIP3Setup)
 
     CTxMemPool testPool;
     TestMemPoolEntryHelper entry;
-    LOCK(testPool.cs);
+    LOCK2(cs_main, testPool.cs);
 
     testPool.addUnchecked(entry.FromTx(tx_reg1));
     BOOST_CHECK_EQUAL(testPool.size(), 1U);
