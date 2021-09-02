@@ -789,7 +789,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     fReplacementTransaction = setConflicts.size();
     if (fReplacementTransaction)
     {
-        std::string err_string;
         CFeeRate newFeeRate(nModifiedFees, nSize);
         for (const auto& mi : setIterConflicting) {
             // Don't allow the replacement to reduce the feerate of the
@@ -818,8 +817,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         }
 
         // Calculate all conflicting entries and enforce Rule #5.
-        if (!GetEntriesForConflicts(tx, m_pool, setIterConflicting, allConflicting, err_string)) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too many potential replacements", err_string);
+        if (const auto err_string{GetEntriesForConflicts(tx, m_pool, setIterConflicting, allConflicting)}) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
+                                 "too many potential replacements", *err_string);
         }
 
         // Check if it's economically rational to mine this transaction rather

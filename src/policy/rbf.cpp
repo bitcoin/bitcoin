@@ -47,11 +47,10 @@ RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx)
     return SignalsOptInRBF(tx) ? RBFTransactionState::REPLACEABLE_BIP125 : RBFTransactionState::UNKNOWN;
 }
 
-bool GetEntriesForConflicts(const CTransaction& tx,
+std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
                             CTxMemPool& m_pool,
                             const CTxMemPool::setEntries& setIterConflicting,
-                            CTxMemPool::setEntries& allConflicting,
-                            std::string& err_string)
+                            CTxMemPool::setEntries& allConflicting)
 {
     AssertLockHeld(m_pool.cs);
     const uint256 hash = tx.GetHash();
@@ -62,11 +61,10 @@ bool GetEntriesForConflicts(const CTransaction& tx,
         // but we just want to be conservative to avoid doing too much
         // work.
         if (nConflictingCount > MAX_BIP125_REPLACEMENT_CANDIDATES) {
-            err_string = strprintf("rejecting replacement %s; too many potential replacements (%d > %d)\n",
+            return strprintf("rejecting replacement %s; too many potential replacements (%d > %d)\n",
                         hash.ToString(),
                         nConflictingCount,
                         MAX_BIP125_REPLACEMENT_CANDIDATES);
-            return false;
         }
     }
     // If not too many to replace, then calculate the set of
@@ -74,6 +72,6 @@ bool GetEntriesForConflicts(const CTransaction& tx,
     for (CTxMemPool::txiter it : setIterConflicting) {
         m_pool.CalculateDescendants(it, allConflicting);
     }
-    return true;
+    return std::nullopt;
 }
 
