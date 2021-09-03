@@ -479,7 +479,7 @@ static RPCHelpMan getnevmblockchaininfo()
     arrVec.push_backV(vec);
     oNEVM.__pushKV("commandline", arrVec);
     bool bResponse;
-    GetMainSignals().NotifyNEVMComms(true, bResponse);
+    GetMainSignals().NotifyNEVMComms("status", bResponse);
     oNEVM.__pushKV("status", bResponse? "online": "offline");
     return oNEVM;
 },

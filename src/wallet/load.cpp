@@ -13,6 +13,7 @@
 #include <util/system.h>
 #include <util/translation.h>
 #include <wallet/context.h>
+#include <wallet/spend.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 
