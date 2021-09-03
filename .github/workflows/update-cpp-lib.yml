@@ -35,7 +35,7 @@ jobs:
           assignees: ${{ github.event.client_payload.actor }}
           draft: false
           branch: veriblock-pop-cpp
-          request-to-parent: false
+          push-to-fork: VeriBlock/vbk-ri-btc
           labels: |
             dependencies
             automated
