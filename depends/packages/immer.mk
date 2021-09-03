@@ -4,6 +4,7 @@ $(package)_download_path=https://github.com/arximboldi/immer/archive
 $(package)_download_file=$($(package)_version).tar.gz
 $(package)_file_name=$(package)-$($(package)_download_file)
 $(package)_sha256_hash=c3bb8847034437dee64adacb04e1e0163ae640b596c582eb4c0aa1d7c6447cd7
+$(package)_build_subdir=build_tmp
 $(package)_dependencies=cmake boost
 
 define $(package)_fetch_cmds
@@ -28,7 +29,7 @@ define $(package)_config_cmds
   export CFLAGS="$($(package)_cflags) $($(package)_cppflags)" && \
   export CXXFLAGS="$($(package)_cxxflags) $($(package)_cppflags)" && \
   export LDFLAGS="$($(package)_ldflags)" && \
-  $(host_prefix)/bin/cmake . $($(package)_config_opts)
+  $(host_prefix)/bin/cmake ../ $($(package)_config_opts)
 endef
 
 define $(package)_build_cmds
