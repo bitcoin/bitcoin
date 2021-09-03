@@ -4,8 +4,8 @@ import sys
 import ctypes
 from bcc import BPF, USDT
 
-""" Example script to log details about coins flushed by the Bitcoin client
-utilizing USDT probes and the flush:flush tracepoint. """
+"""Example logging Bitcoin Core utxo set cache flushes utilizing
+    the utxocache:flush tracepoint."""
 
 # USAGE:  ./contrib/tracing/log_utxocache_flush.py path/to/bitcoind
 
@@ -22,8 +22,10 @@ struct data_t
   bool is_flush_prune;
   bool is_full_flush;
 };
+
 // BPF perf buffer to push the data to user space.
 BPF_PERF_OUTPUT(flush);
+
 int trace_flush(struct pt_regs *ctx) {
   struct data_t data = {};
   bpf_usdt_readarg(1, ctx, &data.duration);
@@ -45,8 +47,8 @@ FLUSH_MODES = [
 ]
 
 
-# define output data structure
 class Data(ctypes.Structure):
+    # define output data structure corresponding to struct data_t
     _fields_ = [
         ("duration", ctypes.c_uint64),
         ("mode", ctypes.c_uint32),
