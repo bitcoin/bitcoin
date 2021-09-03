@@ -606,10 +606,29 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     // To provide for future soft-fork extensibility, if the
                     // operand has the disabled lock-time flag set,
                     // CHECKSEQUENCEVERIFY behaves as a NOP.
-                    if ((nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG) != 0)
+                    // This also covers CTxIn::SEQUENCE_FINAL since all bits are
+                    // set in that case.
+                    if ((nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG) != 0) {
+                        // CHECKSEQUENCEVERIFY behaving as NOP, set error appropriately
+                        if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
+                            return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
                         break;
+                    }
+
+                    // Only when discouraging un-upgraded semantics,
+                    // If uninterpreted fields are set, treat and reject as a NOP.
+                    if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS &&
+                        (nSequence & ~(CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | CTxIn::SEQUENCE_LOCKTIME_MASK)) != 0) {
+                        // CHECKSEQUENCEVERIFY behaving as NOP, set error appropriately
+                        return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                    }
 
                     // Compare the specified sequence number with the input.
+                    // nSequence here will be masked to the lower 16 bits and
+                    // type flag, but may have bits set in range 1<<16 to 1<<21
+                    // and 1<<23 to 1<<30 inclusive that will be ignored for
+                    // consensus but may be rejected by the standardness rule
+                    // above.  bit 31 is expected to not be set.
                     if (!checker.CheckSequence(nSequence))
                         return set_error(serror, SCRIPT_ERR_UNSATISFIED_LOCKTIME);
 
