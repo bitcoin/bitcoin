@@ -10,6 +10,7 @@
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
+#include <wallet/spend.h>
 #include <wallet/test/wallet_test_fixture.h>
 #include <wallet/wallet.h>
 
@@ -87,7 +88,7 @@ static void add_coin(CWallet& wallet, const CAmount& nValue, int nAge = 6*24, bo
         wtx->m_amounts[CWalletTx::DEBIT].Set(ISMINE_SPENDABLE, 1);
         wtx->m_is_cache_empty = false;
     }
-    COutput output(wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
+    COutput output(wallet, *wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     vCoins.push_back(output);
 }
 static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0, bool spendable = false)
@@ -144,7 +145,7 @@ inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& coins)
 inline std::vector<OutputGroup>& KnapsackGroupOutputs(const CoinEligibilityFilter& filter)
 {
     static std::vector<OutputGroup> static_groups;
-    static_groups = testWallet.GroupOutputs(vCoins, coin_selection_params, filter, /* positive_only */false);
+    static_groups = GroupOutputs(testWallet, vCoins, coin_selection_params, filter, /* positive_only */false);
     return static_groups;
 }
 
@@ -316,7 +317,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coin_control.fAllowOtherInputs = true;
         coin_control.Select(COutPoint(vCoins.at(0).tx->GetHash(), vCoins.at(0).i));
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(0);
-        BOOST_CHECK(wallet->SelectCoins(vCoins, 10 * CENT, setCoinsRet, nValueRet, coin_control, coin_selection_params_bnb));
+        BOOST_CHECK(SelectCoins(*wallet, vCoins, 10 * CENT, setCoinsRet, nValueRet, coin_control, coin_selection_params_bnb));
     }
 }
 
@@ -657,7 +658,7 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
         CoinSet out_set;
         CAmount out_value = 0;
         CCoinControl cc;
-        BOOST_CHECK(testWallet.SelectCoins(vCoins, target, out_set, out_value, cc, cs_params));
+        BOOST_CHECK(SelectCoins(testWallet, vCoins, target, out_set, out_value, cc, cs_params));
         BOOST_CHECK_GE(out_value, target);
     }
 }
