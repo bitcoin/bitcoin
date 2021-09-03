@@ -50,7 +50,7 @@ script: |
   export GZIP="-9n"
   export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export TZ="UTC"
-  export BUILD_DIR=`pwd`
+  export BUILD_DIR="$PWD"
   mkdir -p ${WRAP_DIR}
   if test -n "$GBUILD_CACHE_ENABLED"; then
     export SOURCES_PATH=${GBUILD_COMMON_CACHE}
@@ -128,7 +128,7 @@ script: |
   cat << EOF > ${WRAP_DIR}/${prog}
   #!/usr/bin/env bash
   # GCCVERSION=${GCCVERSION}
-  REAL="`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1`"
+  REAL="$(which -a ${prog}-8 | grep -v ${WRAP_DIR}/${prog} | head -1)"
   for var in "\$@"
   do
     if [ "\$var" = "-m32" ]; then
@@ -144,7 +144,7 @@ script: |
   done
 
   cd dash
-  BASEPREFIX=`pwd`/depends
+  BASEPREFIX="${PWD}/depends"
   # Build dependencies for each host
   for i in $HOSTS; do
     EXTRA_INCLUDES="$EXTRA_INCLUDES_BASE/$i"
@@ -163,10 +163,11 @@ script: |
 
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
-  CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
+  CONFIG_SITE=${BASEPREFIX}/$(echo "${HOSTS}" | awk '{print $1;}')/share/config.site ./configure --prefix=/
   make dist
-  SOURCEDIST=`echo dashcore-*.tar.gz`
-  DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
+  SOURCEDIST=$(echo dashcore-*.tar.gz)
+  DISTNAME=${SOURCEDIST/%.tar.gz}
+
   # Correct tar file order
   mkdir -p temp
   pushd temp
@@ -183,7 +184,7 @@ script: |
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     mkdir -p distsrc-${i}
     cd distsrc-${i}
-    INSTALLPATH=`pwd`/installed/${DISTNAME}
+    INSTALLPATH="${PWD}/installed/${DISTNAME}"
     mkdir -p ${INSTALLPATH}
     tar --strip-components=1 -xf ../$SOURCEDIST
 

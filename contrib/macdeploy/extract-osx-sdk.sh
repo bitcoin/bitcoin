@@ -8,7 +8,7 @@ set -e
 
 INPUTFILE="Xcode_7.3.1.dmg"
 HFSFILENAME="5.hfs"
-SDKDIR="Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk"
+SDKDIR="Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz"
 
 7z x "${INPUTFILE}" "${HFSFILENAME}"
 SDKNAME="$(basename "${SDKDIR}")"

@@ -18,6 +18,7 @@ RUN pip3 install jinja2
 RUN pip3 install flake8==3.5.0
 RUN pip3 install codespell==1.13.0
 RUN pip3 install vulture==0.29
+RUN pip3 install yq
 
 # dash_hash
 RUN git clone https://github.com/dashpay/dash_hash
