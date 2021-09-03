@@ -143,6 +143,14 @@ are lexicographically ordered as described in BIP67.
 
 For a good example of a basic M-of-N multisig between multiple participants using descriptor
 wallets and PSBTs, as well as a signing flow, see [this functional test](/test/functional/wallet_multisig_descriptor_psbt.py).
+
+Disclaimers: It is important to note that this example serves as a quick-start and is kept basic for readability. A downside of the approach
+outlined here is that each participant must maintain (and backup) two separate wallets: a signer and the corresponding multisig.
+It should also be noted that privacy best-practices are not "by default" here - participants should take care to only use the signer to sign
+transactions related to the multisig. Lastly, it is not recommended to use anything other than a Bitcoin Core descriptor wallet to serve as your
+signer(s). Other wallets, whether hardware or software, likely impose additional checks and safeguards to prevent users from signing transactions that
+could lead to loss of funds, or are deemed security hazards. Conforming to various 3rd-party checks and verifications is not in the scope of this example.
+
 The basic steps are:
 
   1. Every participant generates an xpub. The most straightforward way is to create a new descriptor wallet which we will refer to as
