@@ -214,6 +214,7 @@ task:
     image: big-sur-xcode-12.5  # https://cirrus-ci.org/guide/macOS
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    MAKEJOBS: "-j24"  # Use all available CPU on the native macOS host
     CI_USE_APT_INSTALL: "no"
     PACKAGE_MANAGER_INSTALL: "echo"  # Nothing to do
     FILE_ENV: "./ci/test/00_setup_env_mac_host.sh"
