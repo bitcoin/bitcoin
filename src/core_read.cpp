@@ -19,13 +19,15 @@
 #include <string>
 
 namespace {
-
-opcodetype ParseOpCode(const std::string& s)
+class OpCodeParser
 {
-    static std::map<std::string, opcodetype> mapOpNames;
+private:
+    std::map<std::string, opcodetype> mapOpNames;
 
-    if (mapOpNames.empty()) {
-        for (unsigned int op = 0; op <= MAX_OPCODE; op++) {
+public:
+    OpCodeParser()
+    {
+        for (unsigned int op = 0; op <= MAX_OPCODE; ++op) {
             // Allow OP_RESERVED to get into mapOpNames
             if (op < OP_NOP && op != OP_RESERVED) {
                 continue;
@@ -42,9 +44,18 @@ opcodetype ParseOpCode(const std::string& s)
             }
         }
     }
-    auto it = mapOpNames.find(s);
-    if (it == mapOpNames.end()) throw std::runtime_error("script parse error: unknown opcode");
-    return it->second;
+    opcodetype Parse(const std::string& s) const
+    {
+        auto it = mapOpNames.find(s);
+        if (it == mapOpNames.end()) throw std::runtime_error("script parse error: unknown opcode");
+        return it->second;
+    }
+};
+
+opcodetype ParseOpCode(const std::string& s)
+{
+    static const OpCodeParser ocp;
+    return ocp.Parse(s);
 }
 
 } // namespace
