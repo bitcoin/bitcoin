@@ -5,9 +5,11 @@
 #include <wallet/coinselection.h>
 
 #include <policy/feerate.h>
+#include <util/check.h>
 #include <util/system.h>
 #include <util/moneystr.h>
 
+#include <numeric>
 #include <optional>
 
 // Descending order comparator
@@ -166,6 +168,30 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selectio
     }
 
     return true;
+}
+
+std::optional<std::pair<std::set<CInputCoin>, CAmount>> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value)
+{
+    std::set<CInputCoin> out_set;
+    CAmount value_ret = 0;
+
+    std::vector<size_t> indexes;
+    indexes.resize(utxo_pool.size());
+    std::iota(indexes.begin(), indexes.end(), 0);
+    Shuffle(indexes.begin(), indexes.end(), FastRandomContext());
+
+    CAmount selected_eff_value = 0;
+    for (const size_t i : indexes) {
+        const OutputGroup& group = utxo_pool.at(i);
+        Assume(group.GetSelectionAmount() > 0);
+        selected_eff_value += group.GetSelectionAmount();
+        value_ret += group.m_value;
+        util::insert(out_set, group.m_outputs);
+        if (selected_eff_value >= target_value) {
+            return std::make_pair(out_set, value_ret);
+        }
+    }
+    return std::nullopt;
 }
 
 static void ApproximateBestSubset(const std::vector<OutputGroup>& groups, const CAmount& nTotalLower, const CAmount& nTargetValue,

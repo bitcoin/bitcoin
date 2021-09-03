@@ -10,6 +10,8 @@
 #include <primitives/transaction.h>
 #include <random.h>
 
+#include <optional>
+
 //! target minimum change amount
 static constexpr CAmount MIN_CHANGE{COIN / 100};
 //! final minimum change amount after paying for fees
@@ -184,6 +186,15 @@ struct OutputGroup
 [[nodiscard]] CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
 
 bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret);
+
+/** Select coins by Single Random Draw. OutputGroups are selected randomly from the eligible
+ * outputs until the target is satisfied
+ *
+ * @param[in]  utxo_pool    The positive effective value OutputGroups eligible for selection
+ * @param[in]  target_value The target value to select for
+ * @returns If successful, a pair of set of outputs and total selected value, otherwise, std::nullopt
+ */
+std::optional<std::pair<std::set<CInputCoin>, CAmount>> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value);
 
 // Original coin selection algorithm as a fallback
 bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
