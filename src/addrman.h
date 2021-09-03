@@ -322,7 +322,7 @@ public:
             throw std::ios_base::failure(strprintf(
                 "Unsupported format of addrman database: %u. It is compatible with formats >=%u, "
                 "but the maximum supported by this version of %s is %u.",
-                format, lowest_compatible, PACKAGE_NAME, static_cast<uint8_t>(FILE_FORMAT)));
+                uint8_t{format}, uint8_t{lowest_compatible}, PACKAGE_NAME, uint8_t{FILE_FORMAT}));
         }
 
         s >> nKey;
