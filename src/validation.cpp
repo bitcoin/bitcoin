@@ -73,6 +73,11 @@
 #include <sys/wait.h>
 #endif
 // SYSCOIN
+#if ENABLE_ZMQ
+#include <zmq/zmqabstractnotifier.h>
+#include <zmq/zmqnotificationinterface.h>
+#include <zmq/zmqrpc.h>
+#endif
 RecursiveMutex cs_geth;
 struct DescriptorDetails {
     std::string version;
@@ -1780,7 +1785,7 @@ bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMBlock &e
     }
     return true;
 }
-bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const bool fInitialDownload, const bool fJustCheck) {
+bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const bool fInitialDownload, const bool fJustCheck) {
     CNEVMBlock evmBlock;
     if(!GetNEVMData(state, block, evmBlock)) {
         return false; //state filled by GetNEVMData 
@@ -1800,12 +1805,26 @@ bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTx
     
     GetMainSignals().NotifyNEVMBlockConnect(evmBlock, state, fJustCheck? uint256(): nBlockHash);
     bool res = state.IsValid();
+    // try to bring collection back alive if its not connected for some reason
+    if(!res && state.GetRejectReason() == "nevm-connect-not-sent") {
+        bool bResponse;
+        GetMainSignals().NotifyNEVMComms(true, bResponse);
+        if(!bResponse) {
+            if(RestartGethNode()) {
+                // try again after resetting connection
+                GetMainSignals().NotifyNEVMBlockConnect(evmBlock, state, fJustCheck? uint256(): nBlockHash);
+                res = state.IsValid();
+            }
+        }
+    }
     if(res && !fJustCheck) {
         NEVMTxRoot txRootDB;
         txRootDB.vchTxRoot = evmBlock.vchTxRoot;
         txRootDB.vchReceiptRoot = evmBlock.vchReceiptRoot;
         mapNEVMTxRoots.try_emplace(evmBlock.nBlockHash, txRootDB);
     }
+
+
     return res;
 }
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint256& nBlockHash) {
@@ -2253,7 +2272,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         }
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
-    if (!bReverify && fNEVMConnection && pindex->nHeight >= m_params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), ibd, fJustCheck)) {
+    if (!bReverify && fNEVMConnection && pindex->nHeight >= m_params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, blockHash, ibd, fJustCheck)) {
         return false; // state filled by ConnectNEVMCommitment
     }
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
@@ -6130,6 +6149,40 @@ bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const s
          }
     }
     LogPrintf("%s: Version (%s) is up-to-date!\n", __func__, descriptorDetailsRemote.version);
+    return true;
+}
+bool CChainState::RestartGethNode() {
+    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", "");
+    if(NEVMSub.empty()) {
+        LogPrintf("RestartGethNode: Could not start Geth. zmqpubnevm not defined\n");
+        return false;
+    }
+    StopGethNode(gethPID);
+#if ENABLE_ZMQ
+    if (g_zmq_notification_interface) {
+        UnregisterValidationInterface(g_zmq_notification_interface);
+        delete g_zmq_notification_interface;
+        g_zmq_notification_interface = nullptr;
+    }
+    g_zmq_notification_interface = CZMQNotificationInterface::Create();
+    if((!fRegTest && !fSigNet && fMasternodeMode) || fNEVMConnection) {
+        if(!g_zmq_notification_interface) {
+            LogPrintf("RestartGethNode: Could not establish ZMQ interface connections, check your ZMQ settings and try again...\n");
+        }
+    }
+    if (g_zmq_notification_interface) {
+        RegisterValidationInterface(g_zmq_notification_interface);
+    }
+#endif
+    const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+    if(!StartGethNode(gethDescriptorURL, gethPID)) {
+        LogPrintf("RestartGethNode: Could not start Geth\n");
+        return false;
+    }
+    if(!ResetLastBlock()) {
+        LogPrintf("RestartGethNode: Could not reset last invalid block\n");
+        return false;
+    }
     return true;
 }
 bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
