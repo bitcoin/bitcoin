@@ -145,22 +145,24 @@ For a good example of a basic M-of-N multisig between multiple participants usin
 wallets and PSBTs, as well as a signing flow, see [this functional test](/test/functional/wallet_multisig_descriptor_psbt.py).
 The basic steps are:
 
-  1. Every participant generates an xpub. The most straightforward way is to create a new descriptor wallet.
-     Avoid reusing this wallet for any other purpose. Hint: extract the wallet's xpubs using `listdescriptors`
-     and pick the one from the `pkh` descriptor since it's least likely to be accidentally reused (legacy addresses)
+  1. Every participant generates an xpub. The most straightforward way is to create a new descriptor wallet which we will refer to as
+     the participant's signer wallet. Avoid reusing this wallet for any purpose other than signing transactions from the
+     corresponding multisig we are about to create. Hint: extract the wallet's xpubs using `listdescriptors` and pick the one from the
+     `pkh` descriptor since it's least likely to be accidentally reused (legacy addresses)
   2. Create a watch-only descriptor wallet (blank, private keys disabled). Now the multisig is created by importing the two descriptors:
      `wsh(sortedmulti(<M>,XPUB1/0/*,XPUB2/0/*,…,XPUBN/0/*))` and `wsh(sortedmulti(<M>,XPUB1/1/*,XPUB2/1/*,…,XPUBN/1/*))`
      (one descriptor w/ `0` for receiving addresses and another w/ `1` for change). Every participant does this
   3. A receiving address is generated for the multisig. As a check to ensure step 2 was done correctly, every participant
      should verify they get the same addresses
   4. Funds are sent to the resulting address
-  5. A sending transaction is created using `walletcreatefundedpsbt` (anyone can initiate this). It is simple to do this in
-     the GUI by going to the `Send` tab in the multisig wallet and creating an unsigned transaction (PSBT)
-  6. At least `M` users check the PSBT with `decodepsbt` and (if OK) signs it with `walletprocesspsbt`. It is simple to do
-     this in the GUI by Loading the PSBT from file and signing it
-  7. The signed PSBTs are collected with `combinepsbt`, finalized w/ `finalizepsbt`, and
-     then the resulting transaction is broadcasted to the network
-  8. Checks that balances are correct after the transaction has been included in a block
+  5. A sending transaction from the multisig is created using `walletcreatefundedpsbt` (anyone can initiate this). It is simple to do
+     this in the GUI by going to the `Send` tab in the multisig wallet and creating an unsigned transaction (PSBT)
+  6. At least `M` participants check the PSBT with their multisig using `decodepsbt` to verify the transaction is OK before signing it.
+  7. (If OK) the participant signs the PSBT with their signer wallet using `walletprocesspsbt`. It is simple to do this in the GUI by
+     loading the PSBT from file and signing it
+  8. The signed PSBTs are collected with `combinepsbt`, finalized w/ `finalizepsbt`, and then the resulting transaction is broadcasted
+     to the network. Note that any wallet (eg one of the signers or multisig) is capable of doing this.
+  9. Checks that balances are correct after the transaction has been included in a block
 
 You may prefer a daisy chained signing flow where each participant signs the PSBT one after another until
 the PSBT has been signed `M` times and is "complete." For the most part, the steps above remain the same, except (6, 7)
