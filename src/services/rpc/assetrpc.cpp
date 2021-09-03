@@ -18,11 +18,6 @@
 #include <util/system.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
-#if ENABLE_ZMQ
-#include <zmq/zmqabstractnotifier.h>
-#include <zmq/zmqnotificationinterface.h>
-#include <zmq/zmqrpc.h>
-#endif
 #include <node/transaction.h>
 extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
@@ -737,32 +732,8 @@ static RPCHelpMan syscoinstartgeth()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", "");
-    if(NEVMSub.empty()) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Could not start Geth. zmqpubnevm not defined");
-    }
-    StopGethNode(gethPID);
-#if ENABLE_ZMQ
-    if (g_zmq_notification_interface) {
-        UnregisterValidationInterface(g_zmq_notification_interface);
-        delete g_zmq_notification_interface;
-        g_zmq_notification_interface = nullptr;
-    }
-    g_zmq_notification_interface = CZMQNotificationInterface::Create();
-    if((!fRegTest && !fSigNet && fMasternodeMode) || fNEVMConnection) {
-        if(!g_zmq_notification_interface) {
-            throw JSONRPCError(RPC_MISC_ERROR, "Could not establish ZMQ interface connections, check your ZMQ settings and try again...");
-        }
-    }
-    if (g_zmq_notification_interface) {
-        RegisterValidationInterface(g_zmq_notification_interface);
-    }
-#endif
-    const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-    if(!StartGethNode(gethDescriptorURL, gethPID))
-        throw JSONRPCError(RPC_MISC_ERROR, "Could not start Geth");
-    if(!chainman.ActiveChainstate().ResetLastBlock()) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Could not reset last invalid block");
+    if(!chainman.ActiveChainstate().RestartGethNode()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Could not restart geth, see debug.log for more information...");
     }
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", "success");

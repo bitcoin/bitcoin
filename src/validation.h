@@ -768,6 +768,7 @@ public:
     /** Mark a block as invalid. */
     bool InvalidateBlock(BlockValidationState& state, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
     // SYSCOIN
+    bool RestartGethNode();
     bool MarkConflictingBlock(BlockValidationState& state, CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex) LOCKS_EXCLUDED(cs_main);
     /** Remove invalidity status from a block and its descendants. */
@@ -856,6 +857,7 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     // SYSCOIN
     bool LoadNEVMBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const bool fInitialDownload, const bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     friend ChainstateManager;
 };
 void PruneNEVMData(CNEVMBlockIndex* pindex);
@@ -1105,7 +1107,6 @@ bool StopGethNode(pid_t &pid);
 void KillProcess(const pid_t& pid);
 
 // SYSCOIN
-bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const bool fInitialDownload, const bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMBlock &evmBlock);
 /**
