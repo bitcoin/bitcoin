@@ -212,7 +212,7 @@ CMainParams::CMainParams()
      vSeeds.clear();
 
      // VeriBlock
-     consensus.VeriBlockPopSecurityHeight = 200;
+     consensus.VeriBlockPopSecurityHeight = 1;
      consensus.ZawyLWMAHeight = 100;
      consensus.nZawyLwmaAveragingWindow = 45;
      assert(consensus.ZawyLWMAHeight > consensus.nZawyLwmaAveragingWindow);
