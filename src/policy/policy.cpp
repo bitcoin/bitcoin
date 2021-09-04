@@ -108,6 +108,23 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
             reason = "scriptsig-not-pushonly";
             return false;
         }
+
+        // Check that if we are setting an uninterpreted sequence value
+        // that we do not treat it as standard as new rules may apply
+        // in the future due to an upgrade, so we prefer not to treat
+        // such inputs as standard.
+        const bool seq_is_reserved = (txin.nSequence < CTxIn::SEQUENCE_FINAL-2) && (
+        // when sequence is set to disabled, it is reserved for future use
+        ((txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG) != 0) ||
+        // when sequence has bits set outside of the type flag and locktime mask,
+        // it is reserved for future use.
+        ((~(CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | CTxIn::SEQUENCE_LOCKTIME_MASK) &
+                txin.nSequence) != 0)
+        );
+        if (seq_is_reserved) {
+            reason = "sequence-flags-reserved";
+            return false;
+        }
     }
 
     unsigned int nDataOut = 0;
