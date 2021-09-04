@@ -39,7 +39,7 @@ protected:
     void NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash) override;
     void NotifyNEVMBlockDisconnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nBlockHash) override;
     void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState& state) override;
-    void NotifyNEVMComms(bool bConnect, bool &bResponse) override;
+    void NotifyNEVMComms(const std::string& commMessage, bool &bResponse) override;
 private:
     CZMQNotificationInterface();
 

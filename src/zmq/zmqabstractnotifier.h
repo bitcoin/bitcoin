@@ -69,7 +69,7 @@ public:
     virtual bool NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash);
     virtual bool NotifyNEVMBlockDisconnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash);
     virtual bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state);
-    virtual bool NotifyNEVMComms(bool bConnect, bool &bResponse);
+    virtual bool NotifyNEVMComms(const std::string& commMessage, bool &bResponse);
 
 protected:
     void *psocket;

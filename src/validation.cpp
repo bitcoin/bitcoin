@@ -1429,6 +1429,10 @@ bool CChainState::IsInitialBlockDownload() const
     if (m_chain.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
         return true;
     LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
+    if(fNEVMConnection) {
+        bool bResponse;
+        GetMainSignals().NotifyNEVMComms("startnetwork", bResponse);
+    }
     m_cached_finished_ibd.store(true, std::memory_order_relaxed);
     return false;
 }
@@ -1775,10 +1779,10 @@ bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootM
     
     GetMainSignals().NotifyNEVMBlockConnect(evmBlock, state, fJustCheck? uint256(): nBlockHash);
     bool res = state.IsValid();
-    // try to bring collection back alive if its not connected for some reason
+    // try to bring connection back alive if its not connected for some reason
     if(!res && state.GetRejectReason() == "nevm-connect-not-sent") {
         bool bResponse;
-        GetMainSignals().NotifyNEVMComms(true, bResponse);
+        GetMainSignals().NotifyNEVMComms("status", bResponse);
         if(!bResponse) {
             if(RestartGethNode()) {
                 // try again after resetting connection
@@ -6153,6 +6157,12 @@ bool CChainState::RestartGethNode() {
         LogPrintf("RestartGethNode: Could not reset last invalid block\n");
         return false;
     }
+    bool bResponse;
+    GetMainSignals().NotifyNEVMComms("startnetwork", bResponse);
+    if(!bResponse) {
+        LogPrintf("RestartGethNode: Could not start network\n");
+        return false;  
+    }
     return true;
 }
 bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
@@ -6329,7 +6339,7 @@ bool StopGethNode(pid_t &pid)
     }
     if(fNEVMConnection && pid > 0) {
         bool bResponse;
-        GetMainSignals().NotifyNEVMComms(false, bResponse);
+        GetMainSignals().NotifyNEVMComms("disconnect", bResponse);
     }
     if(pid){
         try{
