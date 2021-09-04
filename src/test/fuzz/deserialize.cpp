@@ -4,6 +4,7 @@
 
 #include <addrdb.h>
 #include <addrman.h>
+#include <addrman_impl.h>
 #include <blockencodings.h>
 #include <blockfilter.h>
 #include <chain.h>
