@@ -55,7 +55,7 @@ The instructions below use `vcpkg` to install the dependencies.
 PS >py -3 msvc-autogen.py
 ```
 
-- An optional step is to adjust the settings in the `build_msvc` directory and the `common.init.vcxproj` file. This project file contains settings that are common to all projects such as the runtime library version and target Windows SDK version. The Qt directories can also be set.
+- An optional step is to adjust the settings in the `build_msvc` directory and the `common.init.vcxproj` file. This project file contains settings that are common to all projects such as the runtime library version and target Windows SDK version. The Qt directories can also be set. To specify a non-default path to a static Qt package directory, use the `QTBASEDIR` environment variable.
 
 - To build from the command line with the Visual Studio 2019 toolchain use:
 
