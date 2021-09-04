@@ -133,7 +133,7 @@ class RPCPackagesTest(BitcoinTestFramework):
     def test_chain(self):
         node = self.nodes[0]
         first_coin = self.coins.pop()
-        (chain_hex, chain_txns) = create_raw_chain(node, first_coin, self.address, self.privkeys)
+        chain_hex, chain_txns = create_raw_chain(node, first_coin, self.address, self.privkeys)
         self.log.info("Check that testmempoolaccept requires packages to be sorted by dependency")
         assert_equal(node.testmempoolaccept(rawtxs=chain_hex[::-1]),
                 [{"txid": tx.rehash(), "wtxid": tx.getwtxid(), "package-error": "package-not-sorted"} for tx in chain_txns[::-1]])
