@@ -929,7 +929,7 @@ public:
     CChainState& InitializeChainstate(
         CTxMemPool* mempool,
         const std::optional<uint256>& snapshot_blockhash = std::nullopt)
-        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+        LIFETIMEBOUND EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Get all chainstates currently being used.
     std::vector<CChainState*> GetAll();
