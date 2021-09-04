@@ -53,22 +53,6 @@ static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{0};
  *    * Several indexes are kept for high performance. Setting m_consistency_check_ratio with the -checkaddrman
  *      configuration option will introduce (expensive) consistency checks for the entire data structure.
  */
-
-/** Total number of buckets for tried addresses */
-static constexpr int32_t ADDRMAN_TRIED_BUCKET_COUNT_LOG2{8};
-static constexpr int ADDRMAN_TRIED_BUCKET_COUNT{1 << ADDRMAN_TRIED_BUCKET_COUNT_LOG2};
-
-/** Total number of buckets for new addresses */
-static constexpr int32_t ADDRMAN_NEW_BUCKET_COUNT_LOG2{10};
-static constexpr int ADDRMAN_NEW_BUCKET_COUNT{1 << ADDRMAN_NEW_BUCKET_COUNT_LOG2};
-
-/** Maximum allowed number of entries in buckets for new and tried addresses */
-static constexpr int32_t ADDRMAN_BUCKET_SIZE_LOG2{6};
-static constexpr int ADDRMAN_BUCKET_SIZE{1 << ADDRMAN_BUCKET_SIZE_LOG2};
-
-/**
- * Stochastical (IP) address manager
- */
 class CAddrMan
 {
     const std::unique_ptr<AddrManImpl> m_impl;
