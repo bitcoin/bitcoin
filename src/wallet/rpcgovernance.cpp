@@ -7,7 +7,7 @@
 #include <validation.h>
 #include <rpc/server.h>
 #include <wallet/rpcwallet.h>
-#include <wallet/wallet.h>
+#include <wallet/spend.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
 #include <evo/deterministicmns.h>
@@ -205,7 +205,7 @@ static RPCHelpMan gobject_prepare()
     }
 
     CTransactionRef tx;
-    if (!pwallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
+    if (!GetBudgetSystemCollateralTX(*pwallet, tx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
         std::string err = "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.";
         if (!request.params[4].isNull() && !request.params[5].isNull()) {
             err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";

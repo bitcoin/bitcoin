@@ -1242,14 +1242,8 @@ std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, ParseS
     CPubKey pubkey(full_key);
     std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey, true);
     KeyOriginInfo info;
-    if (provider.GetKeyOrigin(pubkey.GetID(), info)) {
+    if (provider.GetKeyOriginByXOnly(xkey, info)) {
         return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
-    } else {
-        full_key[0] = 0x03;
-        pubkey = CPubKey(full_key);
-        if (provider.GetKeyOrigin(pubkey.GetID(), info)) {
-            return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
-        }
     }
     return key_provider;
 }

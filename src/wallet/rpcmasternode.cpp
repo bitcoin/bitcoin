@@ -4,7 +4,7 @@
 
 #include <rpc/server.h>
 #include <wallet/rpcwallet.h>
-#include <wallet/wallet.h>
+#include <wallet/spend.h>
 
 static RPCHelpMan masternode_outputs()
 {
@@ -27,7 +27,7 @@ static RPCHelpMan masternode_outputs()
     std::vector<COutput> vPossibleCoins;
     {
         LOCK(pwallet->cs_wallet);
-        pwallet->AvailableCoins(vPossibleCoins, nullptr, nMNCollateralRequired, nMNCollateralRequired, MAX_MONEY, 0, MAX_ASSET, MAX_ASSET, 0, true);
+        AvailableCoins(*pwallet, vPossibleCoins, nullptr, nMNCollateralRequired, nMNCollateralRequired, MAX_MONEY, 0, MAX_ASSET, MAX_ASSET, 0, true);
     }
 
     UniValue objArr(UniValue::VARR);

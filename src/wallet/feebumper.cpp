@@ -12,6 +12,8 @@
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
+#include <wallet/receive.h>
+#include <wallet/spend.h>
 #include <wallet/wallet.h>
 //! Check whether transaction has descendant in wallet or mempool, or has been
 //! mined, or conflicts with a mined transaction. Return a feebumper::Result.
@@ -29,7 +31,7 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
         }
     }
 
-    if (wtx.GetDepthInMainChain() != 0) {
+    if (wallet.GetTxDepthInMainChain(wtx) != 0) {
         errors.push_back(Untranslated("Transaction has been mined, or is conflicted with a mined transaction"));
         return feebumper::Result::WALLET_ERROR;
     }
@@ -47,7 +49,7 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
     // check that original tx consists entirely of our inputs
     // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
     isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
-    if (!wallet.IsAllFromMe(*wtx.tx, filter)) {
+    if (!AllInputsMine(wallet, *wtx.tx, filter)) {
         errors.push_back(Untranslated("Transaction contains inputs that don't belong to this wallet"));
         return feebumper::Result::WALLET_ERROR;
     }
@@ -80,7 +82,7 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wt
 
     // Given old total fee and transaction size, calculate the old feeRate
     isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
-    CAmount old_fee = wtx.GetDebit(filter) - wtx.tx->GetValueOut();
+    CAmount old_fee = CachedTxGetDebit(wallet, wtx, filter) - wtx.tx->GetValueOut();
     const int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
     CFeeRate nOldFeeRate(old_fee, txSize);
     // Min total fee is old fee + relay fee
@@ -192,7 +194,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     int i = 0;
     for (std::vector<CTxOut>::iterator it = mtx.vout.begin() ; it != mtx.vout.end();) {
         const auto& output = *it;
-        if (wallet.IsChange(output)) {
+        if (!OutputIsChange(wallet, output)) {
             CTxDestination change_dest;
             ExtractDestination(output.scriptPubKey, change_dest);
             new_coin_control.destChange = change_dest;
@@ -204,7 +206,8 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         i++;
     }
     isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
-    old_fee = wtx.GetDebit(filter) - wtx.tx->GetValueOut();
+    old_fee = CachedTxGetDebit(wallet, wtx, filter) - wtx.tx->GetValueOut();
+
     if (coin_control.m_feerate) {
         // The user provided a feeRate argument.
         // We calculate this here to avoid compiler warning on the cs_wallet lock
@@ -233,13 +236,13 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         for(const auto & pos: vecChangePos) {
             nChangePosRet = pos;
             fee_ret = 0;
-            if (!wallet.FundTransaction(mtx, fee_ret, nChangePosRet, fail_reason, lockUnspents, setSubtractFeeFromOutputs, new_coin_control)) {
+            if (!FundTransaction(wallet, mtx, fee_ret, nChangePosRet, fail_reason, lockUnspents, setSubtractFeeFromOutputs, new_coin_control)) {
                 errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + fail_reason);
                 return Result::WALLET_ERROR;
             }
         }
     } else {
-        if (!wallet.FundTransaction(mtx, fee_ret, nChangePosRet, fail_reason, lockUnspents, setSubtractFeeFromOutputs, new_coin_control)) {
+        if (!FundTransaction(wallet, mtx, fee_ret, nChangePosRet, fail_reason, lockUnspents, setSubtractFeeFromOutputs, new_coin_control)) {
             errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + fail_reason);
             return Result::WALLET_ERROR;
         }   

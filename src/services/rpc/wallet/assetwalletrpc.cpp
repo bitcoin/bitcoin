@@ -9,7 +9,6 @@
 #include <rpc/util.h>
 #include <rpc/blockchain.h>
 #include <wallet/rpcwallet.h>
-#include <wallet/wallet.h>
 #include <wallet/fees.h>
 #include <policy/policy.h>
 #include <consensus/validation.h>
@@ -27,6 +26,7 @@
 #include <messagesigner.h>
 #include <rpc/rawtransaction_util.h>
 #include <nevm/sha3.h>
+#include <wallet/spend.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose);
@@ -391,7 +391,7 @@ static RPCHelpMan syscoinburntoassetallocation()
     CAmount nFeeRequired = 0;
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
-    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, false /* sign*/, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)) {
+    if (!CreateTransaction(*pwallet, vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, false /* sign*/, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
     }
     CMutableTransaction mtx(*tx);
@@ -635,7 +635,7 @@ RPCHelpMan assetnew()
         coin_control.destChange = dest;
     bool lockUnspents = false;   
     mtx.nVersion = SYSCOIN_TX_VERSION_ASSET_ACTIVATE;
-    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+    if (!FundTransaction(*pwallet, mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     data.clear();
@@ -654,7 +654,7 @@ RPCHelpMan assetnew()
     mtx.vout.push_back(CTxOut(opreturnRecipient.nAmount, opreturnRecipient.scriptPubKey));
     nFeeRequired = 0;
     nChangePosRet = -1;
-    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+    if (!FundTransaction(*pwallet, mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     // Script verification errors
@@ -765,7 +765,7 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     coin_control.m_min_depth = 1;
     coin_control.fAllowWatchOnly = fAllowWatchOnly;
     std::vector<COutput> vecOutputs;
-    pwallet.AvailableCoins(vecOutputs, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, 0, false, *coin_control.assetInfo, nVersionIn);
+    AvailableCoins(pwallet, vecOutputs, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, 0, false, *coin_control.assetInfo, nVersionIn);
     int nNumOutputsFound = 0;
     int nFoundOutput = -1;
     for(unsigned int i = 0; i < vecOutputs.size(); i++) {
@@ -835,7 +835,7 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     coin_control.fAllowOtherInputs = recp.nAmount <= 0 || !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
-    if (!pwallet.CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, false /* sign*/, nVersionIn)) {
+    if (!CreateTransaction(pwallet, vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, false /* sign*/, nVersionIn)) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
     }
     
@@ -1553,7 +1553,7 @@ static RPCHelpMan assetallocationsendmany()
         if(nAmountLargest > nAmountSys) {
             setSubtractFeeFromOutputs.emplace(idxLargest);
         }
-        if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+        if (!FundTransaction(*pwallet, mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
             throw JSONRPCError(RPC_WALLET_ERROR, error.original);
         }
     }
@@ -1735,7 +1735,7 @@ static RPCHelpMan assetallocationburn()
     }
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
     coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
-    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+    if (!FundTransaction(*pwallet, mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     // Script verification errors
@@ -1914,7 +1914,7 @@ static RPCHelpMan assetallocationmint()
     coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
     bool lockUnspents = false;
     std::set<int> setSubtractFeeFromOutputs;
-    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+    if (!FundTransaction(*pwallet, mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     // Script verification errors

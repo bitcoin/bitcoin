@@ -11,7 +11,7 @@
 #include <validation.h>
 
 #include <wallet/coincontrol.h>
-#include <wallet/wallet.h>
+#include <wallet/spend.h>
 #include <wallet/rpcwallet.h>
 
 #include <netbase.h>
@@ -84,7 +84,7 @@ static void FundSpecialTx(CWallet& pwallet, CMutableTransaction& tx, const Speci
         coinControl.destChange = fundDest;
 
         std::vector<COutput> vecOutputs;
-        pwallet.AvailableCoins(vecOutputs);
+        AvailableCoins(pwallet, vecOutputs);
 
         for (const auto& out : vecOutputs) {
             CTxDestination txDest;
@@ -101,7 +101,7 @@ static void FundSpecialTx(CWallet& pwallet, CMutableTransaction& tx, const Speci
         bilingual_str error;
         CTransactionRef wtx;
         FeeCalculation fee_calc_out;
-        bool fCreated = pwallet.CreateTransaction(vecSend, wtx, nFeeRequired, nChangePosRet, error, coinControl, fee_calc_out);
+        bool fCreated = CreateTransaction(pwallet, vecSend, wtx, nFeeRequired, nChangePosRet, error, coinControl, fee_calc_out);
         if (!fCreated)
             throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
 
