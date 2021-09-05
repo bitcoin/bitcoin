@@ -1351,7 +1351,6 @@ class TaprootTest(BitcoinTestFramework):
             # Construct CTransaction with random nVersion, nLocktime
             tx = CTransaction()
             tx.nVersion = random.choice([1, 2, random.randint(-0x80000000, 0x7fffffff)])
-            min_sequence = (tx.nVersion != 1 and tx.nVersion != 0) * 0x80000000  # The minimum sequence number to disable relative locktime
             if random.choice([True, False]):
                 tx.nLockTime = random.randrange(LOCKTIME_THRESHOLD, self.lastblocktime - 7200)  # all absolute locktimes in the past
             else:
@@ -1389,7 +1388,7 @@ class TaprootTest(BitcoinTestFramework):
             amount = sum(utxo.output.nValue for utxo in input_utxos)
             fee = min(random.randrange(MIN_FEE * 2, MIN_FEE * 4), amount - DUST_LIMIT)  # 10000-20000 sat fee
             in_value = amount - fee
-            tx.vin = [CTxIn(outpoint=utxo.outpoint, nSequence=random.randint(min_sequence, 0xffffffff)) for utxo in input_utxos]
+            tx.vin = [CTxIn(outpoint=utxo.outpoint, nSequence=random.randint(0xffffffff-2, 0xffffffff)) for utxo in input_utxos]
             tx.wit.vtxinwit = [CTxInWitness() for _ in range(len(input_utxos))]
             sigops_weight = sum(utxo.spender.sigops_weight for utxo in input_utxos)
             self.log.debug("Test: %s" % (", ".join(utxo.spender.comment for utxo in input_utxos)))
