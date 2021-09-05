@@ -39,10 +39,8 @@ export LC_ALL=C
 
 KNOWN_VIOLATIONS=(
     "src/syscoin-tx.cpp.*stoul"
-    "src/syscoin-tx.cpp.*trim_right"
     "src/dbwrapper.cpp.*stoul"
     "src/dbwrapper.cpp:.*vsnprintf"
-    "src/httprpc.cpp.*trim"
     "src/node/blockstorage.cpp:.*atoi"
     "src/qt/rpcconsole.cpp:.*atoi"
     "src/rest.cpp:.*strtol"
