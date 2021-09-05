@@ -11,7 +11,7 @@ MacOSX Cross-compilation
 Cross-compiling to MacOSX requires a few additional packages to be installed:
 
 ```bash
-$ sudo apt-get install python3-setuptools libcap-dev zlib1g-dev libbz2-dev
+$ sudo apt-get install python3-setuptools libcap-dev zlib1g-dev libbz2-dev cmake
 ```
 
 Additionally, the Mac OSX SDK must be downloaded and extracted manually:
