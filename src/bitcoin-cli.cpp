@@ -303,6 +303,7 @@ public:
     const int ID_BLOCKCHAININFO = 1;
     const int ID_WALLETINFO = 2;
     const int ID_BALANCES = 3;
+    const int ID_MEMPOOLINFO = 4;
 
     /** Create a simulated `getinfo` request. */
     UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
@@ -315,6 +316,8 @@ public:
         result.push_back(JSONRPCRequestObj("getblockchaininfo", NullUniValue, ID_BLOCKCHAININFO));
         result.push_back(JSONRPCRequestObj("getwalletinfo", NullUniValue, ID_WALLETINFO));
         result.push_back(JSONRPCRequestObj("getbalances", NullUniValue, ID_BALANCES));
+        UniValue params{RPCConvertValues("getmempoolinfo", {"[1,10,100,200,1000]"})};
+        result.push_back(JSONRPCRequestObj("getmempoolinfo", params, ID_MEMPOOLINFO));
         return result;
     }
 
@@ -359,6 +362,13 @@ public:
             result.pushKV("balance", batch[ID_BALANCES]["result"]["mine"]["trusted"]);
         }
         result.pushKV("relayfee", batch[ID_NETWORKINFO]["result"]["relayfee"]);
+
+        result.pushKV("feerate_dist1", batch[ID_MEMPOOLINFO]["result"]["fee_histogram"]["fee_rate_groups"]["1"]["size"]);
+        result.pushKV("feerate_dist2", batch[ID_MEMPOOLINFO]["result"]["fee_histogram"]["fee_rate_groups"]["10"]["size"]);
+        result.pushKV("feerate_dist3", batch[ID_MEMPOOLINFO]["result"]["fee_histogram"]["fee_rate_groups"]["100"]["size"]);
+        result.pushKV("feerate_dist4", batch[ID_MEMPOOLINFO]["result"]["fee_histogram"]["fee_rate_groups"]["200"]["size"]);
+        result.pushKV("mempool_bytes", batch[ID_MEMPOOLINFO]["result"]["bytes"]);
+
         result.pushKV("warnings", batch[ID_NETWORKINFO]["result"]["warnings"]);
         return JSONRPCReplyObj(result, NullUniValue, 1);
     }
@@ -929,6 +939,46 @@ static void GetProgressBar(double progress, std::string& progress_bar)
 }
 
 /**
+ * GetFeerateBar constructs fee rate distribution bars using dynamic increment based on size.
+ *
+ * @param[in]  size      Size of fee rate group in bytes.
+ * @param[out] size_bar  String representation of the distribution bar.
+ * @param[in]  inc_size  Minimum size of fee rate groups in bytes.
+ * @param[in]  max_size  Maximum size of fee rate groups in bytes.
+ */
+static void GetFeerateBar(double size, std::string& size_bar, double inc_size, double max_size)
+{
+    if (size == 0) return;
+
+    static double INCREMENT{inc_size};
+    static const std::string BAR{"\u2591"};
+
+    if (max_size < 10000){
+        for (int i = 0; i < size / INCREMENT; ++i) {
+            size_bar += BAR;
+        }
+    } else if (max_size > 10000 && max_size < 100000){
+        for (int i = 0; i < size / (INCREMENT*10); ++i) {
+            size_bar += BAR;
+        }
+    } else if (max_size > 100000 && max_size < 1000000){
+    	for (int i = 0; i < size / (INCREMENT*100); ++i) {
+            size_bar += BAR;
+        }
+    } else if (max_size > 1000000 && max_size < 10000000){
+    	for (int i = 0; i < size / (INCREMENT*1000); ++i) {
+            size_bar += BAR;
+        }
+    } else if (max_size > 10000000 && max_size < 100000000){
+    	for (int i = 0; i < size / (INCREMENT*10000); ++i) {
+            size_bar += BAR;
+        }
+    }
+}
+
+
+
+/**
  * ParseGetInfoResult takes in -getinfo result in UniValue object and parses it
  * into a user friendly UniValue string to be printed on the console.
  * @param[out] result  Reference to UniValue result containing the -getinfo output.
@@ -937,7 +987,7 @@ static void ParseGetInfoResult(UniValue& result)
 {
     if (!find_value(result, "error").isNull()) return;
 
-    std::string RESET, GREEN, BLUE, YELLOW, MAGENTA, CYAN;
+    std::string RESET, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN;
     bool should_colorize = false;
 
 #ifndef WIN32
@@ -960,11 +1010,13 @@ static void ParseGetInfoResult(UniValue& result)
 
     if (should_colorize) {
         RESET = "\x1B[0m";
+        RED = "\x1B[31m";
         GREEN = "\x1B[32m";
-        BLUE = "\x1B[34m";
         YELLOW = "\x1B[33m";
+        BLUE = "\x1B[34m";
         MAGENTA = "\x1B[35m";
         CYAN = "\x1B[36m";
+
     }
 
     std::string result_string = strprintf("%sChain: %s%s\n", BLUE, result["chain"].getValStr(), RESET);
@@ -998,7 +1050,7 @@ static void ParseGetInfoResult(UniValue& result)
 
     if (!result["has_wallet"].isNull()) {
         const std::string walletname = result["walletname"].getValStr();
-        result_string += strprintf("%sWallet: %s%s\n", MAGENTA, walletname.empty() ? "\"\"" : walletname, RESET);
+        result_string += strprintf("%sWallet: %s%s\n", CYAN, walletname.empty() ? "\"\"" : walletname, RESET);
 
         result_string += strprintf("Keypool size: %s\n", result["keypoolsize"].getValStr());
         if (!result["unlocked_until"].isNull()) {
@@ -1026,6 +1078,64 @@ static void ParseGetInfoResult(UniValue& result)
                                        wallet.empty() ? "\"\"" : wallet);
         }
         result_string += "\n";
+    }
+
+    const double mempool_bytes{result["mempool_bytes"].get_real()};
+
+    if (mempool_bytes >0){
+
+    	result_string += strprintf("%sMempool:%s\n", MAGENTA, RESET);
+
+    	std::string fee_rate;
+    	std::string size_bar;
+    	double fee_size = 0;
+
+    	double size1 = result["feerate_dist1"].get_real();
+    	double size2 = result["feerate_dist2"].get_real();
+    	double size3 = result["feerate_dist3"].get_real();
+    	double size4 = result["feerate_dist4"].get_real();
+
+    	//Removing zero from numbers used in std::min to avoid division by zero in GetFeerateBar()
+    	auto const ignore_zero = [](auto const& a, auto const& b) -> bool {
+        	if(0 == a || 0 == b)
+        	{
+            	return false;
+        	}
+        	return a < b;
+    	};
+
+    	double max_size = std::max({size1, size2, size3, size4});
+    	double inc_size = std::min({size1, size2, size3, size4}, ignore_zero);
+
+    	for (int i = 1; i < 5; ++i) {
+
+        	switch (i)
+    		{
+    		case 1: fee_rate = "1-9       |";
+    		        fee_size = size1;
+        		break;
+    		case 2: fee_rate = "10-99     |";
+    		        fee_size = size2;
+        		break;
+    		case 3: fee_rate = "100-199   |";
+    		        fee_size = size3;
+        		break;
+        	case 4: fee_rate = "Above 200 |";
+        	        fee_size = size4;
+        		break;
+    		}
+
+    		GetFeerateBar(fee_size, size_bar, inc_size, max_size);
+    		size_bar += " ";
+
+    		if (fee_size > 0){
+        	result_string += strprintf("%s %s %d\n", fee_rate, size_bar, fee_size);
+        	size_bar = "";
+     	 }
+    	}
+
+    result_string += strprintf("sat/vB\n\n");
+
     }
 
     result_string += strprintf("%sWarnings:%s %s", YELLOW, RESET, result["warnings"].getValStr());
