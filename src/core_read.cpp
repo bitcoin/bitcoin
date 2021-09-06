@@ -215,7 +215,7 @@ bool DecodeHexBlockHeader(CBlockHeader& header, const std::string& hex_header)
     try {
         ser_header >> header;
     } catch (const std::exception&) {
-        ser_header = CDataStream(header_data, SER_TRANSPORT, PROTOCOL_VERSION);
+        ser_header = CDataStream(header_data, SER_NETWORK, PROTOCOL_VERSION);
         try {
             ser_header >> header;
         } catch (const std::exception&) {
@@ -237,7 +237,7 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
         ssBlock >> block;
     }
     catch (const std::exception&) {
-        ssBlock = CDataStream(blockData, SER_TRANSPORT, PROTOCOL_VERSION);
+        ssBlock = CDataStream(blockData, SER_NETWORK, PROTOCOL_VERSION);
         try {
             ssBlock >> block;
         }

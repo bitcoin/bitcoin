@@ -453,7 +453,7 @@ static RPCHelpMan getnevmblockchaininfo()
         if (IsBlockPruned(pblockindex)) {
             throw JSONRPCError(RPC_MISC_ERROR, tip->GetBlockHash().ToString() + " not available (pruned data)");
         }
-        if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus(), false, &chainman.m_blockman)) {
+        if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
             throw JSONRPCError(RPC_MISC_ERROR, tip->GetBlockHash().ToString() + " not found");
         }
         if(!GetNEVMData(state, block, evmBlock)) {

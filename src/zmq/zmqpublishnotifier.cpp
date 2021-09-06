@@ -315,7 +315,7 @@ bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(const std::string &commMessag
     }
     return true;
 }
-bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nSYSBlockHash)
+bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMZMQBlock &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nSYSBlockHash)
 {
     if(bFirstTime) {
         bFirstTime = false;
@@ -338,7 +338,7 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMBloc
     uint256 hash = evmBlock.nBlockHash;
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block connect %s to %s, subscriber %s\n", hash.GetHex(), this->address, this->addresssub);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss << evmBlock << nSYSBlockHash;
+    ss << evmBlock << block.vchNEVMBlockData << nSYSBlockHash;
     if(!SendZmqMessageNEVM(MSG_NEVMBLOCKCONNECT, &(*ss.begin()), ss.size()))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-connect-not-sent");
 
@@ -371,7 +371,7 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMBloc
 
     return true;
 }
-bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(const CNEVMBlock &evmBlock, BlockValidationState &state, const uint256& nSYSBlockHash)
+bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nSYSBlockHash)
 {
     if(bFirstTime) {
         bFirstTime = false;
@@ -389,10 +389,6 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(const CNE
             zmq_close(psocketsub);
             return false;
         }
-    }
-    // disconnect shouldn't include the block data
-    if(!evmBlock.vchNEVMBlockData.empty()) {
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-disconnect-empty");
     }
     std::vector<std::string> parts;
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block disconnect %s to %s, subscriber %s\n", nSYSBlockHash.GetHex(), this->address, this->addresssub);

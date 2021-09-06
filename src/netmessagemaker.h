@@ -19,8 +19,7 @@ public:
     {
         CSerializedNetMsg msg;
         msg.m_type = std::move(msg_type);
-        // SYSCOIN
-        CVectorWriter{ SER_TRANSPORT, nFlags | nVersion, msg.data, 0, std::forward<Args>(args)... };
+        CVectorWriter{ SER_NETWORK, nFlags | nVersion, msg.data, 0, std::forward<Args>(args)... };
         return msg;
     }
 

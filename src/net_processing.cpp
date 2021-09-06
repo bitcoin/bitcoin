@@ -171,13 +171,11 @@ static constexpr auto AVG_FEEFILTER_BROADCAST_INTERVAL = 10min;
 /** Maximum feefilter broadcast delay after significant change. */
 // SYSCOIN
 static const unsigned int MAX_HEADERS_SIZE = (6 << 20); // 6 MiB
-static const unsigned int MAX_HEADERS_SIZE_NEVM = (40 << 20); // 40 MiB
 /** Size of a headers message that is the threshold for assuming that the
  *  peer has more headers (even if we have less than MAX_HEADERS_RESULTS).
  *  This is used starting with SIZE_HEADERS_LIMIT_VERSION peers.
  */
 static const unsigned int THRESHOLD_HEADERS_SIZE = (4 << 20); // 4 MiB
-static const unsigned int THRESHOLD_HEADERS_SIZE_NEVM = (32 << 20); //  32 MiB
 static constexpr auto MAX_FEEFILTER_CHANGE_DELAY = 5min;
 /** Maximum number of compact filters that may be requested with one getcfilters. See BIP 157. */
 static constexpr uint32_t MAX_GETCFILTERS_SIZE = 1000;
@@ -1918,10 +1916,12 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         return;
     }
     std::shared_ptr<const CBlock> pblock;
+    // SYSCOIN
+    bool bRecent = false;
     if (a_recent_block && a_recent_block->GetHash() == pindex->GetBlockHash()) {
         pblock = a_recent_block;
-    // SYSCOIN
-    /*} else if (inv.IsMsgWitnessBlk()) {
+        bRecent = true;
+    } else if (inv.IsMsgWitnessBlk()) {
         // Fast-path: in this case it is possible to serve the block directly from disk,
         // as the network format matches the format on disk
         std::vector<uint8_t> block_data;
@@ -1931,10 +1931,10 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
 
         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, MakeSpan(block_data)));
         // Don't set pblock as we've sent the block
-    */} else {
+    } else {
         // Send block from disk
         std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
-        if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus(), false, &m_chainman.m_blockman)) {
+        if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus())) {
             assert(!"cannot load block from disk");
         }
         pblock = pblockRead;
@@ -1979,7 +1979,8 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
                 if ((fPeerWantsWitness || !fWitnessesPresentInARecentCompactBlock) && a_recent_compact_block && a_recent_compact_block->header.GetHash() == pindex->GetBlockHash()) {
                     m_connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, *a_recent_compact_block));
                 } else {
-                    CBlockHeaderAndShortTxIDs cmpctblock(*pblock, fPeerWantsWitness);
+                    // SYSCOIN
+                    CBlockHeaderAndShortTxIDs cmpctblock(*pblock, fPeerWantsWitness, !bRecent);
                     m_connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, cmpctblock));
                 }
             } else {
@@ -2271,13 +2272,10 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
         return;
     }
     size_t nSize = 0;
-    size_t nSizeNEVM = 0;
     for (const auto& header : headers) {
         nSize += GetSerializeSize(header, PROTOCOL_VERSION);
-        // SYSCOIN
-        nSizeNEVM += header.vchNEVMBlockData.size();
         if (pfrom.nVersion >= SIZE_HEADERS_LIMIT_VERSION
-              && (nSize > MAX_HEADERS_SIZE || nSizeNEVM > MAX_HEADERS_SIZE_NEVM)) {
+              && nSize > MAX_HEADERS_SIZE) {
             Misbehaving(pfrom.GetId(), 20, "nSize > MAX_HEADERS_SIZE");
             return;
         }
@@ -2359,9 +2357,8 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
         }
 
         bool maxSize = (nCount == MAX_HEADERS_RESULTS);
-        // SYSCOIN
         if (pfrom.nVersion >= SIZE_HEADERS_LIMIT_VERSION
-              && (nSize >= THRESHOLD_HEADERS_SIZE || nSizeNEVM >= THRESHOLD_HEADERS_SIZE_NEVM))
+              && nSize >= THRESHOLD_HEADERS_SIZE)
             maxSize = true;
         // FIXME: This change (with hasNewHeaders) is rolled back in Syscoin,
         // but I think it should stay here for merge-mined coins.  Try to get
@@ -3410,7 +3407,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
             if (pindex->nHeight >= m_chainman.ActiveChain().Height() - MAX_BLOCKTXN_DEPTH) {
                 CBlock block;
-                bool ret = ReadBlockFromDisk(block, pindex, m_chainparams.GetConsensus(), false);
+                bool ret = ReadBlockFromDisk(block, pindex, m_chainparams.GetConsensus());
                 assert(ret);
 
                 SendBlockTransactions(pfrom, block, req);
@@ -3478,22 +3475,18 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         std::vector<CBlock> vHeaders;
         unsigned nCount = 0;
         unsigned nSize = 0;
-        // SYSCOIN
-        unsigned nSizeNEVM = 0;
         LogPrint(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
         for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex))
         {
-            // SYSCOIN
-            const CBlockHeader &header = pindex->GetBlockHeader(m_chainparams.GetConsensus(), false, &m_chainman.m_blockman);
+            const CBlockHeader header = pindex->GetBlockHeader(m_chainparams.GetConsensus());
             ++nCount;
             nSize += GetSerializeSize(header, PROTOCOL_VERSION);
-            nSizeNEVM += header.vchNEVMBlockData.size();
-            vHeaders.push_back(header);
+            vHeaders.push_back(pindex->GetBlockHeader(m_chainparams.GetConsensus()));
             if (nCount >= MAX_HEADERS_RESULTS
-                    || pindex->GetBlockHash() == hashStop)
+                  || pindex->GetBlockHash() == hashStop)
                 break;
             if (pfrom.nVersion >= SIZE_HEADERS_LIMIT_VERSION
-                    && (nSize >= THRESHOLD_HEADERS_SIZE || nSizeNEVM >= THRESHOLD_HEADERS_SIZE_NEVM))
+                  && nSize >= THRESHOLD_HEADERS_SIZE)
                 break;
         }
        /* Check maximum headers size before pushing the message
@@ -3502,7 +3495,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
            should be small enough in comparison to the hard max size.
            Do it nevertheless to be sure.  */
         if (pfrom.nVersion >= SIZE_HEADERS_LIMIT_VERSION
-              && (nSize > MAX_HEADERS_SIZE || nSizeNEVM > MAX_HEADERS_SIZE_NEVM))
+              && nSize > MAX_HEADERS_SIZE)
             LogPrintf("ERROR: not pushing 'headers', too large\n");
         else
         {
@@ -3850,7 +3843,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 }
 
                 PartiallyDownloadedBlock& partialBlock = *(*queuedBlockIt)->partialBlock;
-                ReadStatus status = partialBlock.InitData(cmpctblock, vExtraTxnForCompact);
+                ReadStatus status = partialBlock.InitData(cmpctblock, vExtraTxnForCompact, cmpctblock.vchNEVMBlockData);
                 if (status == READ_STATUS_INVALID) {
                     RemoveBlockRequest(pindex->GetBlockHash()); // Reset in-flight state in case Misbehaving does not result in a disconnect
                     Misbehaving(pfrom.GetId(), 100, "invalid compact block");
@@ -3872,6 +3865,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     // Dirty hack to jump to BLOCKTXN code (TODO: move message handling into their own functions)
                     BlockTransactions txn;
                     txn.blockhash = cmpctblock.header.GetHash();
+                    // SYSCOIN
+                    if(!partialBlock.vchNEVMBlockData.empty())
+                        txn.vchNEVMBlockData = partialBlock.vchNEVMBlockData;
                     blockTxnMsg << txn;
                     fProcessBLOCKTXN = true;
                 } else {
@@ -3891,7 +3887,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     return;
                 }
                 std::vector<CTransactionRef> dummy;
-                status = tempBlock.FillBlock(*pblock, dummy);
+                // SYSCOIN
+                status = tempBlock.FillBlock(*pblock, dummy, cmpctblock.vchNEVMBlockData);
                 if (status == READ_STATUS_OK) {
                     fBlockReconstructed = true;
                 }
@@ -3976,7 +3973,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 return;
             }
             PartiallyDownloadedBlock& partialBlock = *it->second.second->partialBlock;
-            ReadStatus status = partialBlock.FillBlock(*pblock, resp.txn);
+            // SYSCOIN
+            ReadStatus status = partialBlock.FillBlock(*pblock, resp.txn, resp.vchNEVMBlockData);
             if (status == READ_STATUS_INVALID) {
                 RemoveBlockRequest(resp.blockhash); // Reset in-flight state in case Misbehaving does not result in a disconnect
                 Misbehaving(pfrom.GetId(), 100, "invalid compact block/non-matching block transactions");
@@ -5009,15 +5007,15 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     }
                     pBestIndex = pindex;
                     if (fFoundStartingHeader) {
-                        // SYSCOIN add this to the headers message
-                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams, false, &m_chainman.m_blockman));
+                        // add this to the headers message
+                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams));
                     } else if (PeerHasHeader(&state, pindex)) {
                         continue; // keep looking for the first new block
                     } else if (pindex->pprev == nullptr || PeerHasHeader(&state, pindex->pprev)) {
-                        // SYSCOIN Peer doesn't have this header but they do have the prior one.
+                        // Peer doesn't have this header but they do have the prior one.
                         // Start sending headers.
                         fFoundStartingHeader = true;
-                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams, false, &m_chainman.m_blockman));
+                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams));
                     } else {
                         // Peer doesn't have this header or the prior one -- nothing will
                         // connect, so bail out.
@@ -5043,7 +5041,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                                 m_connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, *most_recent_compact_block));
                             }
                             else {
-                                CBlockHeaderAndShortTxIDs cmpctblock(*most_recent_block, state.fWantsCmpctWitness);
+                                // SYSCOIN
+                                CBlockHeaderAndShortTxIDs cmpctblock(*most_recent_block, state.fWantsCmpctWitness, false);
                                 m_connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, cmpctblock));
                             }
                             fGotBlockFromCache = true;
@@ -5051,10 +5050,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     }
                     if (!fGotBlockFromCache) {
                         CBlock block;
-                        // SYSCOIN
-                        bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams, false, &m_chainman.m_blockman);
+                        bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams);
                         assert(ret);
-                        CBlockHeaderAndShortTxIDs cmpctblock(block, state.fWantsCmpctWitness);
+                        // SYSCOIN
+                        CBlockHeaderAndShortTxIDs cmpctblock(block, state.fWantsCmpctWitness, true);
                         m_connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, cmpctblock));
                     }
                     state.pindexBestHeaderSent = pBestIndex;

@@ -152,7 +152,8 @@ enum
     SER_NETWORK         = (1 << 0),
     SER_DISK            = (1 << 1),
     SER_GETHASH         = (1 << 2),
-    SER_TRANSPORT       = (1 << 3),
+    // SYSCOIN
+    SER_SIZE            = (1 << 3),
 };
 
 //! Convert the reference base type to X, without changing constness or reference type.
@@ -1303,10 +1304,11 @@ class CSizeComputer
 {
 protected:
     size_t nSize;
-
+    // SYSCOIN
+    const int nProtocol;
     const int nVersion;
 public:
-    explicit CSizeComputer(int nVersionIn) : nSize(0), nVersion(nVersionIn) {}
+    explicit CSizeComputer(int nVersionIn, int nProtocolIn = SER_SIZE) : nSize(0), nProtocol(nProtocolIn), nVersion(nVersionIn) {}
 
     void write(const char *psz, size_t _nSize)
     {
@@ -1332,7 +1334,7 @@ public:
 
     int GetVersion() const { return nVersion; }
     // SYSCOIN
-    int GetType() const { return SER_DISK; }
+    int GetType() const { return nProtocol; }
 };
 
 template<typename Stream>
@@ -1405,9 +1407,9 @@ inline void WriteCompactSize(CSizeComputer &s, uint64_t nSize)
 }
 
 template <typename T>
-size_t GetSerializeSize(const T& t, int nVersion = 0)
+size_t GetSerializeSize(const T& t, int nVersion = 0, int nProtocol = SER_SIZE)
 {
-    return (CSizeComputer(nVersion) << t).size();
+    return (CSizeComputer(nVersion, nProtocol) << t).size();
 }
 // SYSCOIN
 template <typename S, typename T>

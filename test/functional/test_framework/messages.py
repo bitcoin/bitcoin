@@ -1040,6 +1040,7 @@ class P2PHeaderAndShortIDs:
             self.shortids.append(struct.unpack("<Q", f.read(6) + b'\x00\x00')[0])
         self.prefilled_txn = deser_vector(f, PrefilledTransaction)
         self.prefilled_txn_length = len(self.prefilled_txn)
+        f.read(1)
 
     # When using version 2 compact blocks, we must serialize with_witness.
     def serialize(self, with_witness=False):
@@ -1054,6 +1055,8 @@ class P2PHeaderAndShortIDs:
             r += ser_vector(self.prefilled_txn, "serialize_with_witness")
         else:
             r += ser_vector(self.prefilled_txn, "serialize_without_witness")
+        # SYSCOIN nevm data
+        r += struct.pack("<b", 0)
         return r
 
     def __repr__(self):
@@ -1192,6 +1195,7 @@ class BlockTransactions:
     def deserialize(self, f):
         self.blockhash = deser_uint256(f)
         self.transactions = deser_vector(f, CTransaction)
+        f.read(1)
 
     def serialize(self, with_witness=True):
         r = b""
@@ -1200,6 +1204,8 @@ class BlockTransactions:
             r += ser_vector(self.transactions, "serialize_with_witness")
         else:
             r += ser_vector(self.transactions, "serialize_without_witness")
+        # SYSCOIN nevm data
+        r += struct.pack("<b", 0)
         return r
 
     def __repr__(self):

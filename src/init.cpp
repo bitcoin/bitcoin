@@ -330,8 +330,6 @@ void Shutdown(NodeContext& node)
                     chainstate->ResetCoinsViews();
                 }
             }
-            // SYSCOIN
-            pnevmblocktree.reset();
         }
        
         passetdb.reset();
@@ -1687,11 +1685,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();
                 pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
-                // SYSCOIN
-                pnevmblocktree.reset();
-                // we shouldn't clear this DB even on reset because it only stores the last maxTipAge*2 NEVM block data
-                // which we should have when propagating blocks across network as peers depend on it being there if not IBD (< maxTipAge*2 old)
-                pnevmblocktree.reset(new CNEVMBlockTreeDB(nBlockTreeDBCache, false));
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);

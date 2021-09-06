@@ -7,6 +7,8 @@
 #include <cassert>
 #include <uint256.h>
 #include <logging.h>
+// SYSCOIN
+#include <primitives/block.h>
 const int CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM;
 
 CZMQAbstractNotifier::~CZMQAbstractNotifier()
@@ -26,11 +28,11 @@ bool CZMQAbstractNotifier::NotifyNEVMComms(const std::string& commMessage, bool 
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyNEVMBlockConnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash)
+bool CZMQAbstractNotifier::NotifyNEVMBlockConnect(const CNEVMZMQBlock &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash)
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyNEVMBlockDisconnect(const CNEVMBlock &evmBlock,  BlockValidationState &state, const uint256& nBlockHash)
+bool CZMQAbstractNotifier::NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash)
 {
     return true;
 }
