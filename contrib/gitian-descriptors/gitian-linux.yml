@@ -128,7 +128,7 @@ script: |
   cat << EOF > ${WRAP_DIR}/${prog}
   #!/usr/bin/env bash
   # GCCVERSION=${GCCVERSION}
-  REAL="$(which -a ${prog}-8 | grep -v ${WRAP_DIR}/${prog} | head -1)"
+  REAL="$(which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1)"
   for var in "\$@"
   do
     if [ "\$var" = "-m32" ]; then
