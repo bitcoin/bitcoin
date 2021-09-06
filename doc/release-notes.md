@@ -1,9 +1,9 @@
-0.20.1 Release Notes
+0.20.2rc3 Release Notes
 ====================
 
-Bitcoin Core version 0.20.1 is now available from:
+Bitcoin Core version 0.20.2rc3 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.20.1/>
+  <https://bitcoincore.org/bin/bitcoin-core-0.20.2/test.rc3>
 
 This minor release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -101,39 +101,48 @@ requiring the full previous transaction for segwit inputs. The witness utxo
 is still provided to maintain compatibility with software which relied on its
 existence to determine whether an input was segwit.
 
-0.20.1 change log
+0.20.2rc3 change log
 =================
 
-### Mining
-- #19019 Fix GBT: Restore "!segwit" and "csv" to "rules" key (luke-jr)
-
 ### P2P protocol and network code
-- #19219 Replace automatic bans with discouragement filter (sipa)
+
+- #19620 Add txids with non-standard inputs to reject filter (sdaftuar)
+- #20146 Send post-verack handshake messages at most once (MarcoFalke)
 
 ### Wallet
-- #19300 Handle concurrent wallet loading (promag)
-- #18982 Minimal fix to restore conflicted transaction notifications (ryanofsky)
+
+- #19740 Simplify and fix CWallet::SignTransaction (achow101)
 
 ### RPC and other APIs
-- #19524 Increment input value sum only once per UTXO in decodepsbt (fanquake)
-- #19517 psbt: Increment input value sum only once per UTXO in decodepsbt (achow101)
-- #19215 psbt: Include and allow both non_witness_utxo and witness_utxo for segwit inputs (achow101)
 
-### GUI
-- #19097 Add missing QPainterPath include (achow101)
-- #19059 update Qt base translations for macOS release (fanquake)
+- #19836 Properly deserialize txs with witness before signing (MarcoFalke)
+- #20731 Add missing description of vout in getrawtransaction help text (benthecarman)
 
 ### Build system
-- #19152 improve build OS configure output (skmcontrib)
-- #19536 qt, build: Fix QFileDialog for static builds (hebasto)
+
+- #20142 build: set minimum required Boost to 1.48.0 (fanquake)
+- #20298 use the new plistlib API (jonasschnelli)
+- #20880 gitian: Use custom MacOS code signing tool (achow101)
+- #22190 Use latest signapple commit (achow101)
 
 ### Tests and QA
-- #19444 Remove cached directories and associated script blocks from appveyor config (sipsorcery)
-- #18640 appveyor: Remove clcache (MarcoFalke)
+
+- #19839 Set appveyor vm version to previous Visual Studio 2019 release. (sipsorcery)
+- #19842 Update the vcpkg checkout commit ID in appveyor config. (sipsorcery)
+- #20562 Test that a fully signed tx given to signrawtx is unchanged (achow101)
 
 ### Miscellaneous
-- #19194 util: Don't reference errno when pthread fails (miztake)
-- #18700 Fix locking on WSL using flock instead of fcntl (meshcollider)
+
+- #19192 Extract net permissions doc (MarcoFalke)
+- #19777 Correct description for getblockstats's txs field (shesek)
+- #20080 Strip any trailing / in -datadir and -blocksdir paths (hebasto)
+- #20082 fixes read buffer to use min rather than max (EthanHeilman)
+- #20141 Avoid the use of abs64 in timedata (sipa)
+- #20756 Add missing field (permissions) to the getpeerinfo help (amitiuttarwar)
+- #20861 BIP 350: Implement Bech32m and use it for v1+ segwit addresses (sipa)
+- #22124 Update translations after closing 0.20.x on Transifex (hebasto)
+- #21471 fix bech32_encode calls in gen_key_io_test_vectors.py (sipa)
+- #22837 mention bech32m/BIP350 in doc/descriptors.md (sipa)
 
 Credits
 =======
@@ -141,18 +150,16 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 - Aaron Clauson
+- Amiti Uttarwar
 - Andrew Chow
+- Ethan Heilman
 - fanquake
 - Hennadii Stepanov
-- João Barbosa
-- Luke Dashjr
+- Jonas Schnelli
 - MarcoFalke
-- MIZUTA Takeshi
+- Nadav Ivgi
 - Pieter Wuille
-- Russell Yanofsky
-- sachinkm77
-- Samuel Dobson
-- Wladimir J. van der Laan
+- Suhas Daftuar
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
