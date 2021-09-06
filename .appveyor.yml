@@ -51,7 +51,7 @@ after_build:
 test_script:
 - cmd: src\test_bitcoin.exe -l test_suite
 - cmd: src\bench_bitcoin.exe > NUL
-- ps:  python test\util\bitcoin-util-test.py
+- ps:  python test\util\test_runner.py
 - cmd: python test\util\rpcauth-test.py
 # Fee estimation test failing on appveyor with: WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted.
 # functional tests disabled for now. See
