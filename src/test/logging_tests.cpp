@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(logging_timer)
     SetMockTime(1);
     auto micro_timer = BCLog::Timer<std::chrono::microseconds>("tests", "end_msg");
     SetMockTime(2);
-    BOOST_CHECK_EQUAL(micro_timer.LogMsg("test micros"), "tests: test micros (1000000.00μs)");
+    BOOST_CHECK_EQUAL(micro_timer.LogMsg("test micros"), "tests: test micros (1000000μs)");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

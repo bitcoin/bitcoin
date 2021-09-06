@@ -337,8 +337,8 @@ bitcoin_test_clean : FORCE
 
 check-local: $(BITCOIN_TESTS:.cpp=.cpp.test)
 if BUILD_BITCOIN_TX
-	@echo "Running test/util/bitcoin-util-test.py..."
-	$(PYTHON) $(top_builddir)/test/util/bitcoin-util-test.py
+	@echo "Running test/util/test_runner.py..."
+	$(PYTHON) $(top_builddir)/test/util/test_runner.py
 endif
 	@echo "Running test/util/rpcauth-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/rpcauth-test.py

@@ -57,7 +57,7 @@ class RpcMiscTest(BitcoinTestFramework):
         self.log.info("test logging rpc and help")
 
         # Test logging RPC returns the expected number of logging categories.
-        assert_equal(len(node.logging()), 24)
+        assert_equal(len(node.logging()), 25)
 
         # Test toggling a logging category on/off/on with the logging RPC.
         assert_equal(node.logging()['qt'], True)

@@ -9,7 +9,7 @@ import argparse
 from shutil import copyfile
 
 SOURCE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
-DEFAULT_PLATFORM_TOOLSET = R'v141'
+DEFAULT_PLATFORM_TOOLSET = R'v142'
 
 libs = [
     'libbitcoin_cli',
