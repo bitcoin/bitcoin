@@ -99,6 +99,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "evo/deterministicmns -> validation -> evo/deterministicmns"
     "evo/chainhelper -> masternode/payments -> validation -> evo/chainhelper"
     "evo/deterministicmns -> validationinterface -> evo/deterministicmns"
+    "logging -> util/system -> sync -> logging/timer -> logging"
 )
 
 EXIT_CODE=0
