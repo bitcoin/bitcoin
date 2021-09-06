@@ -79,6 +79,31 @@ public:
      * relative lock-time. */
     static const uint32_t SEQUENCE_LOCKTIME_DISABLE_FLAG = (1U << 31);
 
+    /* The top 8 bits may be used as a type flag for marking specific
+     * use cases. New uses cases should define their semantics via a
+     * BIP before use, typically. This code was introducded in particular
+     * for compatibility with the lightning network which uses UNCHECKED_METADATA
+     * application. See Bolt-3:
+     * https://github.com/lightningnetwork/lightning-rfc/blob/master/03-transactions.md#commitment-transaction
+     */
+    static const uint32_t SEQUENCE_ROOT_TYPE_SHIFT = 24;
+
+    /* enum of all root sequence types */
+    enum class SEQUENCE_ROOT_TYPE : uint8_t {
+        NORMAL = 0x00,
+        UNCHECKED_METADATA = 0x80,
+        // Used for Special Values
+        SPECIAL = 0xff,
+    };
+
+    /* Reserved Values: */
+    /* Sequence number that is rbf-opt-out (BIP 125); relative-timelock-opt-out
+     * (BIP 68); and absolute-timelock-opt-in. */
+    static const uint32_t SEQUENCE_VALUE_RESERVED_NO_RBF_YES_CLTV = 0xfffffffe;
+    /* Sequence number that is rbf-opt-in (BIP 125); and relative-timelock-opt-out
+     * (BIP 68); and absolute-timelock-opt-in. */
+    static const uint32_t SEQUENCE_VALUE_RESERVED_YES_RBF_NO_CSV = 0xfffffffd;
+
     /* If CTxIn::nSequence encodes a relative lock-time and this flag
      * is set, the relative lock-time has units of 512 seconds,
      * otherwise it specifies blocks with a granularity of 1. */

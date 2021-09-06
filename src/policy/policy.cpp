@@ -113,15 +113,43 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
         // that we do not treat it as standard as new rules may apply
         // in the future due to an upgrade, so we prefer not to treat
         // such inputs as standard.
-        const bool seq_is_reserved = (txin.nSequence < CTxIn::SEQUENCE_FINAL-2) && (
-        // when sequence is set to disabled, it is reserved for future use
-        ((txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG) != 0) ||
-        // when sequence has bits set outside of the type flag and locktime mask,
-        // it is reserved for future use.
-        ((~(CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | CTxIn::SEQUENCE_LOCKTIME_MASK) &
-                txin.nSequence) != 0)
-        );
-        if (seq_is_reserved) {
+        bool seq_is_reserved_for_upgrade;
+        switch (static_cast<CTxIn::SEQUENCE_ROOT_TYPE>(txin.nSequence >> CTxIn::SEQUENCE_ROOT_TYPE_SHIFT)) {
+        case CTxIn::SEQUENCE_ROOT_TYPE::NORMAL: {
+            // when sequence has bits set outside of the type flag and locktime mask,
+            // it is reserved for future use.
+            // (locktime disable flag is implicitly 0 in SEQUENCE_ROOT_TYPE::NORMAL)
+            const uint32_t mask = ~(CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | CTxIn::SEQUENCE_LOCKTIME_MASK);
+            seq_is_reserved_for_upgrade = (mask & txin.nSequence) != 0;
+            break;
+        }
+        case CTxIn::SEQUENCE_ROOT_TYPE::UNCHECKED_METADATA: {
+            seq_is_reserved_for_upgrade = false;
+            break;
+        }
+        case CTxIn::SEQUENCE_ROOT_TYPE::SPECIAL: {
+            switch (txin.nSequence) {
+            case CTxIn::SEQUENCE_FINAL:
+            case CTxIn::SEQUENCE_VALUE_RESERVED_NO_RBF_YES_CLTV:
+            case CTxIn::SEQUENCE_VALUE_RESERVED_YES_RBF_NO_CSV: {
+                seq_is_reserved_for_upgrade = false;
+                break;
+            }
+            default: {
+                // was not a special reserved value, keep reserved for upgrade.
+                seq_is_reserved_for_upgrade = true;
+                break;
+            }
+            }
+            break;
+        }
+        default: {
+            // unknown root type, keep reserved for upgrade.
+            seq_is_reserved_for_upgrade = true;
+            break;
+        }
+        }
+        if (seq_is_reserved_for_upgrade) {
             reason = "sequence-flags-reserved";
             return false;
         }
