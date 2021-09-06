@@ -101,7 +101,7 @@ task:
     - git reset --hard
     - if ($env:CIRRUS_PR -eq $null) { exit 0; }
     - git fetch $env:CIRRUS_REPO_CLONE_URL $env:CIRRUS_BASE_BRANCH
-    - git merge FETCH_HEAD  <# Merge base to detect silent merge conflicts #>
+    - git merge FETCH_HEAD
   vcpkg_cache:
     folder: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
   install_python_script:
