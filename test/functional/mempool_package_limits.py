@@ -265,7 +265,6 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             for i in range(12):
                 (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, spk)
                 txid = tx.rehash()
-                value -= Decimal("0.0001")
                 node.sendrawtransaction(txhex)
                 if i == 11:
                     # last 2 transactions will be the parents of Pc
@@ -276,7 +275,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         # Child Pc
         pc_hex = create_child_with_parents(node, self.address, self.privkeys, parents_tx, values, scripts)
         pc_tx = tx_from_hex(pc_hex)
-        pc_value = sum(values) - Decimal("0.0002")
+        pc_value = Decimal(pc_tx.vout[0].nValue) / COIN
         pc_spk = pc_tx.vout[0].scriptPubKey.hex()
 
         # Child Pd
@@ -307,29 +306,29 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         package_hex = []
         parent_txns = []
         parent_values = []
-        scripts = []
+        parent_scripts = []
         for _ in range(5): # Make package transactions P0 ... P4
-            gp_tx = []
-            gp_values = []
-            gp_scripts = []
+            grandparent_txs = []
+            grandparent_values = []
+            grandparent_scripts = []
             for _ in range(4): # Make mempool transactions M(4i+1)...M(4i+4)
                 parent_coin = self.coins.pop()
                 value = parent_coin["amount"]
                 txid = parent_coin["txid"]
                 (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value)
-                gp_tx.append(tx)
-                gp_values.append(value)
-                gp_scripts.append(spk)
+                grandparent_txs.append(tx)
+                grandparent_values.append(value)
+                grandparent_scripts.append(spk)
                 node.sendrawtransaction(txhex)
             # Package transaction Pi
-            pi_hex = create_child_with_parents(node, self.address, self.privkeys, gp_tx, gp_values, gp_scripts)
+            pi_hex = create_child_with_parents(node, self.address, self.privkeys, grandparent_txs, grandparent_values, grandparent_scripts)
             package_hex.append(pi_hex)
             pi_tx = tx_from_hex(pi_hex)
             parent_txns.append(pi_tx)
             parent_values.append(Decimal(pi_tx.vout[0].nValue) / COIN)
-            scripts.append(pi_tx.vout[0].scriptPubKey.hex())
+            parent_scripts.append(pi_tx.vout[0].scriptPubKey.hex())
         # Package transaction PC
-        package_hex.append(create_child_with_parents(node, self.address, self.privkeys, parent_txns, parent_values, scripts))
+        package_hex.append(create_child_with_parents(node, self.address, self.privkeys, parent_txns, parent_values, parent_scripts))
 
         assert_equal(20, node.getmempoolinfo()["size"])
         assert_equal(6, len(package_hex))
