@@ -733,6 +733,7 @@ libsyscoin_common_a_SOURCES = \
   key_io.cpp \
   merkleblock.cpp \
   messagesigner.cpp \
+  net_types.cpp \
   netaddress.cpp \
   netbase.cpp \
   net_permissions.cpp \
