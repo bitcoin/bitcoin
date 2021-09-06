@@ -286,7 +286,7 @@ EXTRA_DIST += \
     test/fuzz
 
 EXTRA_DIST += \
-    test/util/syscoin-util-test.py \
+    test/util/test_runner.py \
     test/util/data/syscoin-util-test.json \
     test/util/data/blanktxv1.hex \
     test/util/data/blanktxv1.json \
