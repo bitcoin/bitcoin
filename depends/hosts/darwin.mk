@@ -12,14 +12,13 @@ ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
 # FORCE_USE_SYSTEM_CLANG is empty, so we use our depends-managed, pinned clang
 # from llvm.org
 
-# The native_cctools package is what provides clang when FORCE_USE_SYSTEM_CLANG
-# is empty
+# Clang is a dependency of native_cctools when FORCE_USE_SYSTEM_CLANG is empty
 darwin_native_toolchain=native_cctools
 
 clang_prog=$(build_prefix)/bin/clang
 clangxx_prog=$(clang_prog)++
 
-clang_resource_dir=$(build_prefix)/lib/clang/$(native_cctools_clang_version)
+clang_resource_dir=$(build_prefix)/lib/clang/$(native_clang_version)
 else
 # FORCE_USE_SYSTEM_CLANG is non-empty, so we use the clang from the user's
 # system
@@ -101,7 +100,7 @@ darwin_CC=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
               -u LIBRARY_PATH \
             $(clang_prog) --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
               -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
-              --sysroot=$(OSX_SDK) \
+              -isysroot$(OSX_SDK) \
               -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
               -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
 darwin_CXX=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
@@ -109,7 +108,7 @@ darwin_CXX=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
                -u LIBRARY_PATH \
              $(clangxx_prog) --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
                -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
-               --sysroot=$(OSX_SDK) \
+               -isysroot$(OSX_SDK) \
                -stdlib=libc++ -nostdinc++ \
                -Xclang -cxx-isystem$(OSX_SDK)/usr/include/c++/v1 \
                -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
