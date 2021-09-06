@@ -70,7 +70,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         value = first_coin["amount"]
 
         for i in range(mempool_count + package_count):
-            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
+            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, spk)
             txid = tx.rehash()
             if i < mempool_count:
                 node.sendrawtransaction(txhex)
@@ -142,7 +142,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         value = parent_value
         txid = parent_txid
         for i in range(12):
-            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
+            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, spk)
             txid = tx.rehash()
             if i < 11: # M2a... M12a
                 node.sendrawtransaction(txhex)
@@ -160,7 +160,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         spk = tx_child_b.vout[0].scriptPubKey.hex()
         txid = tx_child_b.rehash()
         for i in range(12):
-            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
+            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, spk)
             txid = tx.rehash()
             if i < 11: # M3b... M13b
                 node.sendrawtransaction(txhex)
@@ -209,7 +209,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             txid = top_coin["txid"]
             value = top_coin["amount"]
             for i in range(13):
-                (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
+                (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, spk)
                 txid = tx.rehash()
                 if i < 12:
                     node.sendrawtransaction(txhex)
@@ -263,7 +263,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             txid = top_coin["txid"]
             value = top_coin["amount"]
             for i in range(12):
-                (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
+                (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, spk)
                 txid = tx.rehash()
                 value -= Decimal("0.0001")
                 node.sendrawtransaction(txhex)
@@ -280,7 +280,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         pc_spk = pc_tx.vout[0].scriptPubKey.hex()
 
         # Child Pd
-        (_, pd_hex, _, _) = make_chain(node, self.address, self.privkeys, pc_tx.rehash(), pc_value, 0, pc_spk)
+        (_, pd_hex, _, _) = make_chain(node, self.address, self.privkeys, pc_tx.rehash(), pc_value, pc_spk)
 
         assert_equal(24, node.getmempoolinfo()["size"])
         testres_too_long = node.testmempoolaccept(rawtxs=[pc_hex, pd_hex])
@@ -366,7 +366,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             top_coin = self.coins.pop()
             txid = top_coin["txid"]
             value = top_coin["amount"]
-            (tx, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk, high_fee)
+            (tx, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, spk, high_fee)
             bulked_tx = bulk_transaction(tx, node, target_weight, self.privkeys)
             node.sendrawtransaction(bulked_tx.serialize().hex())
             parents_tx.append(bulked_tx)
@@ -381,7 +381,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         pc_hex = pc_tx.serialize().hex()
 
         # Package transaction D
-        (small_pd, _, val, spk) = make_chain(node, self.address, self.privkeys, pc_tx.rehash(), pc_value, 0, pc_spk, high_fee)
+        (small_pd, _, val, spk) = make_chain(node, self.address, self.privkeys, pc_tx.rehash(), pc_value, pc_spk, high_fee)
         prevtxs = [{
             "txid": pc_tx.rehash(),
             "vout": 0,
@@ -438,7 +438,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
                 "amount": value,
             }]
             if j == 0: # normal key
-                (tx_small, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, j, spk, high_fee)
+                (tx_small, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, spk, high_fee)
                 mempool_tx = bulk_transaction(tx_small, node, target_weight, self.privkeys, prevtxs)
             else: # OP_TRUE
                 inputs = [{"txid": txid, "vout": 1}]
@@ -451,7 +451,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             spk = mempool_tx.vout[0].scriptPubKey.hex()
             value = Decimal(mempool_tx.vout[0].nValue) / COIN
             txid = mempool_tx.rehash()
-            (tx_small, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk, high_fee)
+            (tx_small, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, spk, high_fee)
             prevtxs = [{
                 "txid": txid,
                 "vout": 0,
