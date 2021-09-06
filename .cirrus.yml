@@ -18,8 +18,12 @@ persistent_worker_template: &PERSISTENT_WORKER_TEMPLATE
   persistent_worker: {}  # https://cirrus-ci.org/guide/persistent-workers/
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
-base_template: &BASE_TEMPLATE
+filter_template: &FILTER_TEMPLATE
   skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+  stateful: false  # https://cirrus-ci.org/guide/writing-tasks/#stateful-tasks
+
+base_template: &BASE_TEMPLATE
+  << : *FILTER_TEMPLATE
   merge_base_script:
     # Unconditionally install git (used in fingerprint_script) and set the
     # default git author name (used in verify-commits.py)
@@ -29,7 +33,6 @@ base_template: &BASE_TEMPLATE
     - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
     - git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_BRANCH
     - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
-  stateful: false  # https://cirrus-ci.org/guide/writing-tasks/#stateful-tasks
 
 main_template: &MAIN_TEMPLATE
   timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
@@ -59,22 +62,6 @@ compute_credits_template: &CREDITS_TEMPLATE
   # Only use credits for pull requests to the main repo
   use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin' && $CIRRUS_PR != ""
 
-#task:
-#  name: "Windows"
-#  windows_container:
-#    image: cirrusci/windowsservercore:2019
-#  env:
-#    CIRRUS_SHELL: powershell
-#    PATH: 'C:\Python37;C:\Python37\Scripts;%PATH%'
-#    PYTHONUTF8: 1
-#    QT_DOWNLOAD_URL: 'https://github.com/sipsorcery/qt_win_binary/releases/download/v1.6/Qt5.9.8_x64_static_vs2019.zip'
-#    QT_DOWNLOAD_HASH: '9a8c6eb20967873785057fdcd329a657c7f922b0af08c5fde105cc597dd37e21'
-#    QT_LOCAL_PATH: 'C:\Qt5.9.8_x64_static_vs2019'
-#    VCPKG_INSTALL_PATH: 'C:\tools\vcpkg\installed'
-#    VCPKG_COMMIT_ID: 'ed0df8ecc4ed7e755ea03e18aaf285fd9b4b4a74'
-#  install_script:
-#    - choco install python --version=3.7.7 -y
-
 task:
   name: 'lint [bionic]'
   << : *BASE_TEMPLATE
@@ -88,6 +75,73 @@ task:
     - ./ci/lint_run_all.sh
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+
+task:
+  name: "Win64 native [unit tests, no functional tests] [msvc]"
+  << : *FILTER_TEMPLATE
+  windows_container:
+    cpu: 4
+    memory: 16G
+    image: cirrusci/windowsservercore:visualstudio2019
+  timeout_in: 120m
+  env:
+    CIRRUS_SHELL: powershell
+    PATH: 'C:\Python39;C:\Python39\Scripts;C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin;%PATH%'
+    PYTHONUTF8: 1
+    VCPKG_TAG: '75522bb1f2e7d863078bcd06322348f053a9e33f'
+    VCPKG_FEATURE_FLAGS: 'manifests'
+    QT_DOWNLOAD_URL: 'https://github.com/sipsorcery/qt_win_binary/releases/download/qt51211x64_static_vs2019_160900/Qt5.12.11_x64_static_vs2019_160900.zip'
+    QT_DOWNLOAD_HASH: 'b24436bbc49ac69d992efc148e640f02e8dec426bed5f8497abf735e7d7d59d0'
+    QT_LOCAL_PATH: 'C:\Qt5.12.11_x64_static_vs2019_160900'
+    IgnoreWarnIntDirInTempDetected: 'true'
+  merge_script:
+    - git config --global user.email "ci@ci.ci"
+    - git config --global user.name "ci"
+    - git config core.filemode false
+    - git reset --hard
+    - if ($env:CIRRUS_PR -eq $null) { exit 0; }
+    - git fetch $env:CIRRUS_REPO_CLONE_URL $env:CIRRUS_BASE_BRANCH
+    - git merge FETCH_HEAD  <# Merge base to detect silent merge conflicts #>
+  vcpkg_cache:
+    folder: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
+  install_python_script:
+    - choco install --yes --no-progress python3 --version=3.9.6
+    - Write-Host ""
+    - python -VV
+  install_vcpkg_script:
+    - cd ..
+    - git clone --quiet https://github.com/microsoft/vcpkg.git
+    - cd vcpkg
+    - git -c advice.detachedHead=false checkout $env:VCPKG_TAG
+    - .\bootstrap-vcpkg -disableMetrics
+    - Add-Content "triplets\x64-windows-static.cmake" "set(VCPKG_BUILD_TYPE release)"
+    - .\vcpkg integrate install
+    - Write-Host ""
+    - .\vcpkg version
+  download_qt_binaries_script: |
+      Invoke-WebRequest -Uri $env:QT_DOWNLOAD_URL -Out qtdownload.zip;
+      Write-Host "Qt binaries successfully downloaded, checking hash against $env:QT_DOWNLOAD_HASH...";
+      if ((Get-FileHash qtdownload.zip).Hash -eq $env:QT_DOWNLOAD_HASH) {
+        Write-Host "Downloaded Qt binaries archive matched the expected hash.";
+        Expand-Archive qtdownload.zip -DestinationPath $env:QT_LOCAL_PATH;
+      }
+      else {
+        Write-Host "ERROR: Downloaded Qt binaries archive did not match the expected hash.";
+        exit 1;
+      }
+  build_environment_script:
+    - choco list --localonly
+    - Write-Host ""
+    - msbuild -version
+  build_script:
+    - cd $env:CIRRUS_WORKING_DIR
+    - python build_msvc\msvc-autogen.py
+    - msbuild build_msvc\bitcoin.sln -property:Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
+  unit_tests_script:
+    - src\test_bitcoin.exe
+    - src\bench_bitcoin.exe > $null
+    - python test\util\test_runner.py
+    - python test\util\rpcauth-test.py
 
 task:
   name: 'ARM [unit tests, no functional tests] [buster]'
