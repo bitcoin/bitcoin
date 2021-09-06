@@ -652,7 +652,7 @@ public:
 
     void CloseSocketDisconnect();
 
-    void copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap);
+    void CopyStats(CNodeStats& stats, const std::vector<bool>& asmap);
 
     ServiceFlags GetLocalServices() const
     {
@@ -942,8 +942,6 @@ public:
         Variable intervals will result in privacy decrease.
     */
     std::chrono::microseconds PoissonNextSendInbound(std::chrono::microseconds now, std::chrono::seconds average_interval);
-
-    void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
     /** Return true if we should disconnect the peer for failing an inactivity check. */
     bool ShouldRunInactivityChecks(const CNode& node, std::optional<int64_t> now=std::nullopt) const;
