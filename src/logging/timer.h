@@ -60,21 +60,13 @@ public:
 
         if (std::is_same<TimeType, std::chrono::microseconds>::value) {
             return strprintf("%s: %s (%iμs)", m_prefix, msg, end_time.count());
-        }
-
-        std::string units;
-        float divisor = 1;
-
-        if (std::is_same<TimeType, std::chrono::milliseconds>::value) {
-            units = "ms";
-            divisor = 1000.;
+        } else if (std::is_same<TimeType, std::chrono::milliseconds>::value) {
+            return strprintf("%s: %s (%.2fms)", m_prefix, msg, end_time.count() * 0.001);
         } else if (std::is_same<TimeType, std::chrono::seconds>::value) {
-            units = "s";
-            divisor = 1000. * 1000.;
+            return strprintf("%s: %s (%.2fs)", m_prefix, msg, end_time.count() * 0.000001);
+        } else {
+            return "Error: unexpected time type";
         }
-
-        const float time_ms = end_time.count() / divisor;
-        return strprintf("%s: %s (%.2f%s)", m_prefix, msg, time_ms, units);
     }
 
 private:
