@@ -86,6 +86,8 @@
 #include <bls/bls.h>
 
 #ifndef WIN32
+#include <attributes.h>
+#include <cerrno>
 #include <signal.h>
 #include <sys/stat.h>
 #endif
@@ -127,6 +129,29 @@ static CDSNotificationInterface* pdsNotificationInterface = nullptr;
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 
 static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
+/**
+ * The PID file facilities.
+ */
+#ifndef WIN32
+static const char* BITCOIN_PID_FILENAME = "dashd.pid";
+
+static fs::path GetPidFile()
+{
+    return AbsPathForConfigVal(fs::path(gArgs.GetArg("-pid", BITCOIN_PID_FILENAME)));
+}
+
+[[nodiscard]] static bool CreatePidFile()
+{
+    FILE* file = fsbridge::fopen(GetPidFile(), "w");
+    if (file) {
+        fprintf(file, "%d\n", getpid());
+        fclose(file);
+        return true;
+    } else {
+        return InitError(strprintf(_("Unable to create the PID file '%s': %s"), GetPidFile().string(), std::strerror(errno)));
+    }
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -343,9 +368,11 @@ void PrepareShutdown()
 
 #ifndef WIN32
     try {
-        fs::remove(GetPidFile());
+        if (!fs::remove(GetPidFile())) {
+            LogPrintf("%s: Unable to remove PID file: File does not exist\n", __func__);
+        }
     } catch (const fs::filesystem_error& e) {
-        LogPrintf("%s: Unable to remove pidfile: %s\n", __func__, e.what());
+        LogPrintf("%s: Unable to remove PID file: %s\n", __func__, e.what());
     }
 #endif
     UnregisterAllValidationInterfaces();
@@ -1542,7 +1569,10 @@ bool AppInitMain()
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 4a: application initialization
 #ifndef WIN32
-    CreatePidFile(GetPidFile(), getpid());
+    if (!CreatePidFile()) {
+        // Detailed error printed inside CreatePidFile().
+        return false;
+    }
 #endif
     if (g_logger->m_print_to_file) {
         if (gArgs.GetBoolArg("-shrinkdebugfile", g_logger->DefaultShrinkDebugFile())) {

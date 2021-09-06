@@ -61,7 +61,6 @@ extern const std::string gCoinJoinName;
 int64_t GetStartupTime();
 
 extern const char * const BITCOIN_CONF_FILENAME;
-extern const char * const BITCOIN_PID_FILENAME;
 
 /** Translate a message to the native language of the user. */
 const extern std::function<std::string(const char*)> G_TRANSLATION_FUN;
@@ -109,10 +108,6 @@ const fs::path &GetDataDir(bool fNetSpecific = true);
 fs::path GetBackupsDir();
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
-#ifndef WIN32
-fs::path GetPidFile();
-void CreatePidFile(const fs::path &path, pid_t pid);
-#endif
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
