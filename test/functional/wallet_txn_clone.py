@@ -4,12 +4,14 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet accounts properly when there are cloned transactions with malleated scriptsigs."""
 
+import io
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes,
     disconnect_nodes,
 )
+from test_framework.messages import CTransaction, COIN
 
 class TxnMallTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -61,19 +63,14 @@ class TxnMallTest(BitcoinTestFramework):
         clone_raw = self.nodes[0].createrawtransaction(clone_inputs, clone_outputs, clone_locktime)
 
         # createrawtransaction randomizes the order of its outputs, so swap them if necessary.
-        # output 0 is at version+#inputs+input+sigstub+sequence+#outputs
-        # 400 DASH serialized is 00902f5009000000
-        pos0 = 2 * (4 + 1 + 36 + 1 + 4 + 1)
-        hex400 = "00902f5009000000"
-        output_len = 16 + 2 + 2 * int("0x" + clone_raw[pos0 + 16:pos0 + 16 + 2], 0)
-        if (rawtx1["vout"][0]["value"] == 400 and clone_raw[pos0:pos0 + 16] != hex400 or rawtx1["vout"][0]["value"] != 400 and clone_raw[pos0:pos0 + 16] == hex400):
-            output0 = clone_raw[pos0:pos0 + output_len]
-            output1 = clone_raw[pos0 + output_len:pos0 + 2 * output_len]
-            clone_raw = clone_raw[:pos0] + output1 + output0 + clone_raw[pos0 + 2 * output_len:]
+        clone_tx = CTransaction()
+        clone_tx.deserialize(io.BytesIO(bytes.fromhex(clone_raw)))
+        if (rawtx1["vout"][0]["value"] == 400 and clone_tx.vout[0].nValue != 400*COIN or rawtx1["vout"][0]["value"] != 400 and clone_tx.vout[0].nValue == 400*COIN):
+            (clone_tx.vout[0], clone_tx.vout[1]) = (clone_tx.vout[1], clone_tx.vout[0])
 
         # Use a different signature hash type to sign.  This creates an equivalent but malleated clone.
         # Don't send the clone anywhere yet
-        tx1_clone = self.nodes[0].signrawtransactionwithwallet(clone_raw, None, "ALL|ANYONECANPAY")
+        tx1_clone = self.nodes[0].signrawtransactionwithwallet(clone_tx.serialize().hex(), None, "ALL|ANYONECANPAY")
         assert_equal(tx1_clone["complete"], True)
 
         # Have node0 mine a block, if requested:
