@@ -171,22 +171,19 @@ bool CBanDB::Read(banmap_t& banSet)
     return true;
 }
 
-CAddrDB::CAddrDB()
+bool DumpPeerAddresses(const ArgsManager& args, const CAddrMan& addr)
 {
-    pathAddr = GetDataDir() / "peers.dat";
-}
-
-bool CAddrDB::Write(const CAddrMan& addr)
-{
+    const auto pathAddr = GetDataDir() / "peers.dat";
     return SerializeFileDB("peers", pathAddr, addr, CLIENT_VERSION);
 }
 
-bool CAddrDB::Read(CAddrMan& addr)
+bool ReadPeerAddresses(const ArgsManager& args, CAddrMan& addr)
 {
+    const auto pathAddr = GetDataDir() / "peers.dat";
     return DeserializeFileDB(pathAddr, addr, CLIENT_VERSION);
 }
 
-bool CAddrDB::Read(CAddrMan& addr, CDataStream& ssPeers)
+bool ReadFromStream(CAddrMan& addr, CDataStream& ssPeers)
 {
     return DeserializeDB(ssPeers, addr, false);
 }

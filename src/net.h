@@ -6,7 +6,6 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
-#include <addrdb.h>
 #include <addrman.h>
 #include <bloom.h>
 #include <chainparams.h>
