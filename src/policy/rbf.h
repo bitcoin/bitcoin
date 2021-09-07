@@ -99,4 +99,10 @@ std::optional<std::string> PaysForRBF(CAmount original_fees,
                                       CFeeRate relay_fee,
                                       const uint256& txid);
 
+/** Check that the ancestor score of replacement transaction(s) is at least as high as the ancestor
+ * scores of every mempool transaction it conflicts with. */
+std::optional<std::string> CheckAncestorScores(CAmount replacement_fees,
+                                               int64_t replacement_vsize,
+                                               const CTxMemPool::setEntries& ancestors,
+                                               const CTxMemPool::setEntries& all_conflicts);
 #endif // BITCOIN_POLICY_RBF_H

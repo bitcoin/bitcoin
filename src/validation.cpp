@@ -459,6 +459,9 @@ public:
          * policies such as mempool min fee and min relay fee.
          */
         const bool m_package_feerates;
+        /** When true, allow transactions to bypass BIP125 Rule #2 if their ancestor score is higher
+         * than that of all mempool transactions it's replacing.*/
+        const bool m_enforce_bip125_rule2;
 
         /** Parameters for single transaction mempool validation. */
         static ATMPArgs SingleAccept(const CChainParams& chainparams, int64_t accept_time,
@@ -472,6 +475,7 @@ public:
                             /* m_allow_bip125_replacement */ true,
                             /* m_package_submission */ false,
                             /* m_package_feerates */ false,
+                            /* m_enforce_bip125_rule2 */ true,
             };
         }
 
@@ -486,6 +490,7 @@ public:
                             /* m_allow_bip125_replacement */ false,
                             /* m_package_submission */ false,
                             /* m_package_feerates */ true,
+                            /* m_enforce_bip125_rule2 */ true,
             };
         }
 
@@ -499,6 +504,7 @@ public:
                             /* m_allow_bip125_replacement */ true,
                             /* m_package_submission */ true,
                             /* m_package_feerates */ true,
+                            /* m_enforce_bip125_rule2 */ true,
             };
         }
 
@@ -562,10 +568,11 @@ private:
     bool PreChecks(ATMPArgs& args, Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Run mempool-related checks like ancestor/descendant limits and RBF.
-    bool MempoolChecks(Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
+    bool MempoolChecks(const ATMPArgs& args, Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Enforce mempool ancestor/descendant limits.
-    bool PackageMempoolChecks(const std::vector<CTransactionRef>& txns,
+    bool PackageMempoolChecks(const ATMPArgs& args,
+                              const std::vector<CTransactionRef>& txns,
                               std::vector<Workspace>& workspaces,
                               PackageValidationState& package_state) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
@@ -810,7 +817,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     const CTxMemPool::setEntries setIterConflicting = m_pool.GetIterSet(ws.m_conflicts);
     // Calculate in-mempool ancestors, up to a limit.
-    if (ws.m_conflicts.size() == 1) {
+    std::string err_string;
+    if (ws.m_conflicts.size() == 1 && HasNoNewUnconfirmed(tx, m_pool, setIterConflicting) == std::nullopt) {
         // In general, when we receive an RBF transaction with mempool conflicts, we want to know whether we
         // would meet the chain limits after the conflicts have been removed. However, there isn't a practical
         // way to do this short of calculating the ancestor and descendant sets with an overlay cache of
@@ -820,16 +828,13 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // the below carve-out are able to be RBF'ed, without impacting the security the carve-out provides
         // for off-chain contract systems (see link in the comment below).
         //
-        // Specifically, the subset of RBF transactions which we allow despite chain limits are those which
-        // conflict directly with exactly one other transaction (but may evict children of said transaction),
-        // and which are not adding any new mempool dependencies. Note that the "no new mempool dependencies"
-        // check is accomplished later, so we don't bother doing anything about it here, but if BIP 125 is
-        // amended, we may need to move that check to here instead of removing it wholesale.
-        //
-        // Such transactions are clearly not merging any existing packages, so we are only concerned with
-        // ensuring that (a) no package is growing past the package size (not count) limits and (b) we are
-        // not allowing something to effectively use the (below) carve-out spot when it shouldn't be allowed
-        // to.
+        // Specifically, the subset of RBF transactions which we allow despite chain limits are
+        // those which conflict directly with exactly one other transaction (but may evict children
+        // of said transaction), and which are not adding any new mempool dependencies. Such
+        // transactions are clearly not merging any existing packages, so we are only concerned with
+        // ensuring that (a) no package is growing past the package size (not count) limits and (b)
+        // we are not allowing something to effectively use the (below) carve-out spot when it
+        // shouldn't be allowed to.
         //
         // To check these we first check if we meet the RBF criteria, above, and increment the descendant
         // limits by the direct conflict and its descendants (as these are recalculated in
@@ -883,7 +888,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     return true;
 }
 
-bool MemPoolAccept::MempoolChecks(Workspace& ws)
+bool MemPoolAccept::MempoolChecks(const ATMPArgs& args, Workspace& ws)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(m_pool.cs);
@@ -911,10 +916,18 @@ bool MemPoolAccept::MempoolChecks(Workspace& ws)
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                                  "too many potential replacements", *err_string);
         }
-        // Enforce BIP125 Rule #2.
-        if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, setIterConflicting)}) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
-                                 "replacement-adds-unconfirmed", *err_string);
+
+        if (const auto err_string_2{HasNoNewUnconfirmed(tx, m_pool, setIterConflicting)}) {
+            assert(!ws.m_ancestors.empty());
+            if (args.m_enforce_bip125_rule2) {
+                return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
+                                     "replacement-adds-unconfirmed", *err_string_2);
+            } else if (const auto err_string_anc{CheckAncestorScores(ws.m_modified_fees, ws.m_vsize,
+                                                                     ws.m_ancestors, m_all_conflicts)}) {
+                // Bypass BIP125 Rule #2 under the condition that the replacement transaction has a higher
+                // ancestor score than that of all mempool transactions it is trying to replace.
+                return state.Invalid(TxValidationResult::TX_LOW_FEE, "insufficient fee", *err_string_anc);
+            }
         }
 
         // Check if it's economically rational to mine this transaction rather than the ones it
@@ -931,7 +944,8 @@ bool MemPoolAccept::MempoolChecks(Workspace& ws)
     return true;
 }
 
-bool MemPoolAccept::PackageMempoolChecks(const std::vector<CTransactionRef>& txns,
+bool MemPoolAccept::PackageMempoolChecks(const ATMPArgs& args,
+                                         const std::vector<CTransactionRef>& txns,
                                          std::vector<Workspace>& workspaces,
                                          PackageValidationState& package_state)
 {
@@ -973,7 +987,7 @@ bool MemPoolAccept::PackageMempoolChecks(const std::vector<CTransactionRef>& txn
                                      "package RBF failed: insufficient fees", *err_string);
     }
 
-    // Calculate all conflicting entries and enforce Rules 2 and 5.
+    // Calculate all conflicting entries and enforce BIP125 Rule #5.
     for (Workspace& ws : workspaces) {
         // The aggregated set of conflicts cannot exceed 100.
         if (const auto err_string{GetEntriesForConflicts(*ws.m_ptx, m_pool, direct_conflict_iters,
@@ -981,19 +995,28 @@ bool MemPoolAccept::PackageMempoolChecks(const std::vector<CTransactionRef>& txn
             return package_state.Invalid(PackageValidationResult::PCKG_POLICY,
                                          "package RBF failed: too many potential replacements", *err_string);
         }
-        // None of the package transactions are allowed to spend additional unconfirmed inputs, even
-        // if they aren't one of the transactions that conflicts with mempool.  (Note that this rule
-        // doesn't apply to the child in the package).  Rationale: This rule is intended to prevent
-        // us from overestimating a replacement transaction's ancestor score. For example, the
+    }
+
+    // These checks require m_collective_ancestors and m_all_conflicts to be fully populated.
+    for (Workspace& ws : workspaces) {
+        // Avoid overestimating a replacement transaction's ancestor score. For example, the
         // replacement transactions themselves may have a high feerate, but depend on some low-fee
         // mempool transactions that actually don't make them better candidates for mining than the
-        // ones they would replace. For now, if any of the package transactions had ancestors, we
-        // can't trust the package feerate, so don't allow any new unconfirmed inputs.
-        // TODO: Remove this requirement by using the child's ancestor fees and feerate (including
-        // mempool and package transactions) instead.
-        if (const auto err_string{HasNoNewUnconfirmed(*ws.m_ptx, m_pool, direct_conflict_iters)}) {
-            return package_state.Invalid(PackageValidationResult::PCKG_POLICY,
-                                         "package RBF failed: replacement adds unconfirmed", *err_string);
+        // ones they would replace.
+        if (const auto err_string_2{HasNoNewUnconfirmed(*ws.m_ptx, m_pool, direct_conflict_iters)}) {
+            assert(!m_collective_ancestors.empty());
+            if (args.m_enforce_bip125_rule2) {
+                return ws.m_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
+                                          "package RBF failed: replacement adds unconfirmed", *err_string_2);
+            } else if (const auto err_string_anc{CheckAncestorScores(m_total_modified_fees, m_total_vsize,
+                                                                     m_collective_ancestors, m_all_conflicts)}) {
+                // When the package is a child with parents, we can treat it as one big tx with
+                // inputs = inputs of parents, outputs = outputs of child + UTXOs of parents.
+                // Bypass BIP125 Rule #2 under the condition that the package has a higher ancestor
+                // score than that of all mempool transactions it is trying to replace.
+                return ws.m_state.Invalid(TxValidationResult::TX_LOW_FEE,
+                                          "package RBF failed: insufficient fee", *err_string_anc);
+            }
         }
     }
 
@@ -1198,7 +1221,7 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
 
     if (!PreChecks(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
-    if (!MempoolChecks(ws)) return MempoolAcceptResult::Failure(ws.m_state);
+    if (!MempoolChecks(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
     // Only compute the precomputed transaction data if we need to verify
     // scripts (ie, other policy checks pass). We perform the inexpensive
@@ -1283,7 +1306,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
     // because it's unnecessary. Also, CPFP carve out can increase the limit for individual
     // transactions, but this exemption is not extended to packages in CheckPackageLimits().
     std::string err_string;
-    if (txns.size() > 1 && !PackageMempoolChecks(txns, workspaces, package_state)) {
+    if (txns.size() > 1 && !PackageMempoolChecks(args, txns, workspaces, package_state)) {
         return PackageMempoolAcceptResult(package_state, std::move(results));
     }
 

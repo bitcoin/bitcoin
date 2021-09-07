@@ -88,13 +88,6 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx,
     }
 
     for (unsigned int j = 0; j < tx.vin.size(); j++) {
-        // BIP125 Rule #2: We don't want to accept replacements that require low feerate junk to be
-        // mined first.  Ideally we'd keep track of the ancestor feerates and make the decision
-        // based on that, but for now requiring all new inputs to be confirmed works.
-        //
-        // Note that if you relax this to make RBF a little more useful, this may break the
-        // CalculateMempoolAncestors RBF relaxation which subtracts the conflict count/size from the
-        // descendant limit.
         if (!parents_of_conflicts.count(tx.vin[j].prevout.hash)) {
             // Rather than check the UTXO set - potentially expensive - it's cheaper to just check
             // if the new input refers to a tx that's in the mempool.
@@ -171,6 +164,39 @@ std::optional<std::string> PaysForRBF(CAmount original_fees,
                          txid.ToString(),
                          FormatMoney(additional_fees),
                          FormatMoney(relay_fee.GetFee(replacement_vsize)));
+    }
+    return std::nullopt;
+}
+
+std::optional<std::string> CheckAncestorScores(CAmount replacement_fees,
+                                               int64_t replacement_vsize,
+                                               const CTxMemPool::setEntries& ancestors,
+                                               const CTxMemPool::setEntries& all_conflicts)
+{
+    assert(!ancestors.empty());
+    assert(!all_conflicts.empty());
+    // Ancestor score is the total modified fees divided by the total size.
+    // To get the ancestor score, add up all the individual modified fees and sizes. Don't try to
+    // use the cached ancestor fees and sizes, because entries may have overlapping ancestors.
+    for (CTxMemPool::txiter it : ancestors) {
+        replacement_fees += it->GetModifiedFee();
+        replacement_vsize += it->GetTxSize();
+    }
+    const CFeeRate replacement_ancestor_score(replacement_fees, replacement_vsize);
+    for (CTxMemPool::txiter it : all_conflicts) {
+        const CFeeRate ancestor_score(it->GetModFeesWithAncestors(), it->GetSizeWithAncestors());
+        if (replacement_ancestor_score < ancestor_score) {
+            // Mining code will select transactions in order of ancestor score. Require the ancestor
+            // score of replacement transaction(s) to be at least as high as the ancestor score of
+            // every mempool transaction it's trying to replace. In other words, our replacement
+            // transaction must be a better (i.e. more economical) candidate for mining than the
+            // best transaction it conflicts with, otherwise it could be lowering the fee of the
+            // next block. This must be paired with Rule #4 to ensure that the replacements are also
+            // paying for their relay fees.
+            return strprintf("replacement ancestor score too low; %s < %s",
+                             FormatMoney(replacement_fees),
+                             FormatMoney(ancestor_score.GetFee(replacement_vsize)));
+        }
     }
     return std::nullopt;
 }

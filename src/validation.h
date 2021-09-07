@@ -247,7 +247,8 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPoo
 *    true (analogous but not identical to BIP125 RBF):
 *    - No package transaction replaces the dependency of another package transaction.
 *    - All original transactions signal replaceability.
-*    - None of the transactions in the package have any unconfirmed inputs.
+*    - If any of the transactions have unconfirmed inputs, the child's ancestor score must be at
+*      least as high as the ancestor scores of every mempool transaction being replaced.
 *    - The package total modified fees >= the modified fees of the original transactions.
 *    - The package pays for its own bandwidth: its feerate is >= incrementalRelayFee higher than the
 *      original transactions.
