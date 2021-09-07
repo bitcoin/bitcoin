@@ -344,8 +344,7 @@ RPCHelpMan importprunedfunds()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
     }
     uint256 hashTx = tx.GetHash();
-    // SYSCOIN
-    CDataStream ssMB(ParseHexV(request.params[1], "proof"), SER_TRANSPORT, PROTOCOL_VERSION);
+    CDataStream ssMB(ParseHexV(request.params[1], "proof"), SER_NETWORK, PROTOCOL_VERSION);
     CMerkleBlock merkleBlock;
     ssMB >> merkleBlock;
 

@@ -41,7 +41,6 @@ public:
     // A BlockTransactionsRequest message
     uint256 blockhash;
     std::vector<uint16_t> indexes;
-
     SERIALIZE_METHODS(BlockTransactionsRequest, obj)
     {
         READWRITE(obj.blockhash, Using<VectorFormatter<DifferenceFormatter>>(obj.indexes));
@@ -53,14 +52,15 @@ public:
     // A BlockTransactions message
     uint256 blockhash;
     std::vector<CTransactionRef> txn;
-
+    // SYSCOIN
+    std::vector<unsigned char> vchNEVMBlockData{};
     BlockTransactions() {}
     explicit BlockTransactions(const BlockTransactionsRequest& req) :
         blockhash(req.blockhash), txn(req.indexes.size()) {}
 
     SERIALIZE_METHODS(BlockTransactions, obj)
     {
-        READWRITE(obj.blockhash, Using<VectorFormatter<TransactionCompression>>(obj.txn));
+        READWRITE(obj.blockhash, Using<VectorFormatter<TransactionCompression>>(obj.txn), obj.vchNEVMBlockData);
     }
 };
 
@@ -70,7 +70,7 @@ struct PrefilledTransaction {
     // as a proper transaction-in-block-index in PartiallyDownloadedBlock
     uint16_t index;
     CTransactionRef tx;
-
+    
     SERIALIZE_METHODS(PrefilledTransaction, obj) { READWRITE(COMPACTSIZE(obj.index), Using<TransactionCompression>(obj.tx)); }
 };
 
@@ -98,13 +98,14 @@ protected:
 
 public:
     static constexpr int SHORTTXIDS_LENGTH = 6;
-
+    // SYSCOIN
+    std::vector<unsigned char> vchNEVMBlockData{};
     CBlockHeader header;
 
     // Dummy for deserialization
     CBlockHeaderAndShortTxIDs() {}
-
-    CBlockHeaderAndShortTxIDs(const CBlock& block, bool fUseWTXID);
+    // SYSCOIN
+    CBlockHeaderAndShortTxIDs(const CBlock& block, bool fUseWTXID, bool fMoveNEVMData = false);
 
     uint64_t GetShortID(const uint256& txhash) const;
 
@@ -112,7 +113,7 @@ public:
 
     SERIALIZE_METHODS(CBlockHeaderAndShortTxIDs, obj)
     {
-        READWRITE(obj.header, obj.nonce, Using<VectorFormatter<CustomUintFormatter<SHORTTXIDS_LENGTH>>>(obj.shorttxids), obj.prefilledtxn);
+        READWRITE(obj.header, obj.nonce, Using<VectorFormatter<CustomUintFormatter<SHORTTXIDS_LENGTH>>>(obj.shorttxids), obj.prefilledtxn, obj.vchNEVMBlockData);
         if (ser_action.ForRead()) {
             if (obj.BlockTxCount() > std::numeric_limits<uint16_t>::max()) {
                 throw std::ios_base::failure("indexes overflowed 16 bits");
@@ -121,7 +122,7 @@ public:
         }
     }
 };
-
+static std::vector<unsigned char> emptyVecData;
 class PartiallyDownloadedBlock {
 protected:
     std::vector<CTransactionRef> txn_available;
@@ -129,12 +130,15 @@ protected:
     const CTxMemPool* pool;
 public:
     CBlockHeader header;
+    // SYSCOIN
+    std::vector<unsigned char> vchNEVMBlockData{};
     explicit PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
 
     // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form
-    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn);
+    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn, std::vector<unsigned char> &vchNEVMBlockData=emptyVecData);
     bool IsTxAvailable(size_t index) const;
-    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing);
+    // SYSCOIN
+    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, std::vector<unsigned char> &vchNEVMBlockData=emptyVecData);
 };
 
 #endif // SYSCOIN_BLOCKENCODINGS_H

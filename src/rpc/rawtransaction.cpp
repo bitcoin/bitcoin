@@ -320,8 +320,7 @@ static RPCHelpMan gettxoutproof()
     if (ntxFound != setTxids.size()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not all transactions found in specified or retrieved block");
     }
-    // SYSCOIN
-    CDataStream ssMB(SER_TRANSPORT, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+    CDataStream ssMB(SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
     CMerkleBlock mb(block, setTxids);
     ssMB << mb;
     std::string strHex = HexStr(ssMB);
@@ -347,8 +346,7 @@ static RPCHelpMan verifytxoutproof()
                 RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    // SYSCOIN
-    CDataStream ssMB(ParseHexV(request.params[0], "proof"), SER_TRANSPORT, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+    CDataStream ssMB(ParseHexV(request.params[0], "proof"), SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
     CMerkleBlock merkleBlock;
     ssMB >> merkleBlock;
 

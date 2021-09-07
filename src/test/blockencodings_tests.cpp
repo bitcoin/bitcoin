@@ -118,10 +118,10 @@ public:
     uint64_t nonce;
     std::vector<uint64_t> shorttxids;
     std::vector<PrefilledTransaction> prefilledtxn;
-
+    // SYSCOIN
+    std::vector<unsigned char> vchNEVMBlockData;
     explicit TestHeaderAndShortIDs(const CBlockHeaderAndShortTxIDs& orig) {
-        // SYSCOIN
-        CDataStream stream(SER_TRANSPORT, PROTOCOL_VERSION);
+        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
         stream << orig;
         stream >> *this;
     }
@@ -129,15 +129,14 @@ public:
         TestHeaderAndShortIDs(CBlockHeaderAndShortTxIDs(block, true)) {}
 
     uint64_t GetShortID(const uint256& txhash) const {
-        // SYSCOIN
-        CDataStream stream(SER_TRANSPORT, PROTOCOL_VERSION);
+        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
         stream << *this;
         CBlockHeaderAndShortTxIDs base;
         stream >> base;
         return base.GetShortID(txhash);
     }
-
-    SERIALIZE_METHODS(TestHeaderAndShortIDs, obj) { READWRITE(obj.header, obj.nonce, Using<VectorFormatter<CustomUintFormatter<CBlockHeaderAndShortTxIDs::SHORTTXIDS_LENGTH>>>(obj.shorttxids), obj.prefilledtxn); }
+    // SYSCOIN
+    SERIALIZE_METHODS(TestHeaderAndShortIDs, obj) { READWRITE(obj.header, obj.nonce, Using<VectorFormatter<CustomUintFormatter<CBlockHeaderAndShortTxIDs::SHORTTXIDS_LENGTH>>>(obj.shorttxids), obj.prefilledtxn, obj.vchNEVMBlockData); }
 };
 
 BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)

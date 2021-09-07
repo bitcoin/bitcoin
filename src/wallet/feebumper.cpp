@@ -194,7 +194,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     int i = 0;
     for (std::vector<CTxOut>::iterator it = mtx.vout.begin() ; it != mtx.vout.end();) {
         const auto& output = *it;
-        if (!OutputIsChange(wallet, output)) {
+        if (OutputIsChange(wallet, output)) {
             CTxDestination change_dest;
             ExtractDestination(output.scriptPubKey, change_dest);
             new_coin_control.destChange = change_dest;

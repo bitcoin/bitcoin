@@ -25,8 +25,6 @@ class CBlockHeader : public CPureBlockHeader
 public:
     // auxpow (if this is a merge-minded block)
     std::shared_ptr<CAuxPow> auxpow;
-    // SYSCOIN
-    std::vector<unsigned char> vchNEVMBlockData;
     CBlockHeader()
     {
         SetNull();
@@ -41,9 +39,6 @@ public:
             assert(auxpow != nullptr);
             s << *auxpow;
         }
-        // SYSCOIN
-        if (this->IsNEVM() && (s.GetType() & SER_TRANSPORT))
-            s << vchNEVMBlockData;
     }
     template<typename Stream>
     void Unserialize(Stream& s)
@@ -57,9 +52,6 @@ public:
         } else {
             auxpow.reset();
         }
-        // SYSCOIN
-        if (this->IsNEVM() && (s.GetType() & SER_TRANSPORT))
-            s >> vchNEVMBlockData;
     }
 
     
@@ -67,8 +59,6 @@ public:
     {
         CPureBlockHeader::SetNull();
         auxpow.reset();
-        // SYSCOIN
-        vchNEVMBlockData.clear();
     }
 
     /**
@@ -86,7 +76,8 @@ public:
     std::vector<CTransactionRef> vtx;
     // memory only
     mutable bool fChecked;
-
+    // SYSCOIN
+    std::vector<unsigned char> vchNEVMBlockData;
     CBlock()
     {
         SetNull();
@@ -102,6 +93,9 @@ public:
     {
         READWRITEAS(CBlockHeader, obj);
         READWRITE(obj.vtx);
+        // SYSCOIN
+        if (obj.IsNEVM() && !(s.GetType() & SER_GETHASH) && !(s.GetType() & SER_SIZE))
+            READWRITE(obj.vchNEVMBlockData);
     }
 
     void SetNull()
@@ -109,6 +103,8 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         fChecked = false;
+        // SYSCOIN
+        vchNEVMBlockData.clear();
     }
 
     CBlockHeader GetBlockHeader() const
@@ -121,8 +117,6 @@ public:
         block.nBits          = nBits;
         block.nNonce         = nNonce;
         block.auxpow         = auxpow;
-        // SYSCOIN
-        block.vchNEVMBlockData         = vchNEVMBlockData;
         return block;
     }
 

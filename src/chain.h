@@ -21,10 +21,8 @@ class BlockManager;
  * Maximum amount of time that a block timestamp is allowed to exceed the
  * current network-adjusted time before the block will be accepted.
  */
-static constexpr int64_t MAX_FUTURE_BLOCK_TIME = 2 * 60 * 60;
 
-// SYSCOIN
-static constexpr unsigned int MAX_HEADER_SIZE_NEVM = (8 << 20); // 8 MiB
+static constexpr int64_t MAX_FUTURE_BLOCK_TIME = 2 * 60 * 60;
 
 /**
  * Timestamp window used as a grace period by code that compares external
@@ -236,7 +234,7 @@ public:
         return ret;
     }
 
-    CBlockHeader GetBlockHeader(const Consensus::Params& consensusParams, bool fCheckPOW = true, BlockManager* blockman = nullptr) const;
+    CBlockHeader GetBlockHeader(const Consensus::Params& consensusParams) const;
 
     uint256 GetBlockHash() const
     {
@@ -327,56 +325,6 @@ public:
         return CPureBlockHeader::GetOldBaseVersion(nVersion);
     }
 };
-// SYSCOIN
-class CNEVMBlockIndex
-{
-public:
-    //! pointer to the index of the predecessor of this block
-    CNEVMBlockIndex* pprev{nullptr};
-
-    std::vector<unsigned char> vchNEVMBlockData;
-    uint32_t nTime{0};
-    uint256 hashBlock;
-    CNEVMBlockIndex()
-    {
-    }
-    explicit CNEVMBlockIndex(const CBlock& block): vchNEVMBlockData(block.vchNEVMBlockData), nTime(block.nTime), hashBlock(block.GetHash())
-    {
-    }
-
-    uint256 GetBlockHash() const
-    {
-        return hashBlock;
-    }
-    int64_t GetBlockTime() const
-    {
-        return (int64_t)nTime;
-    }
-    static constexpr int nMedianTimeSpan = 11;
-
-    int64_t GetMedianTimePast() const
-    {
-        int64_t pmedian[nMedianTimeSpan];
-        int64_t* pbegin = &pmedian[nMedianTimeSpan];
-        int64_t* pend = &pmedian[nMedianTimeSpan];
-
-        const CNEVMBlockIndex* pindex = this;
-        for (int i = 0; i < nMedianTimeSpan && pindex; i++, pindex = pindex->pprev)
-            *(--pbegin) = pindex->GetBlockTime();
-
-        std::sort(pbegin, pend);
-        return pbegin[(pend - pbegin)/2];
-    }
-    std::string ToString() const
-    {
-        std::string str = "CNEVMBlockIndex(";
-        str += strprintf("\n                pprev=%p, hashBlock=%s, dataSize=%d)",
-            pprev,
-            GetBlockHash().ToString(),
-            vchNEVMBlockData.size());
-        return str;
-    }
-};
 
 arith_uint256 GetBlockProof(const CBlockIndex& block);
 /** Return the time it would take to redo the work difference between from and to, assuming the current hashrate corresponds to the difficulty at tip, in seconds. */
@@ -440,35 +388,6 @@ public:
         str += strprintf("\n                hashBlock=%s, hashPrev=%s)",
             GetBlockHash().ToString(),
             hashPrev.ToString());
-        return str;
-    }
-};
-// SYSCOIN
-/** Used to marshal pointers into hashes for db storage. */
-class CDiskNEVMBlockIndex : public CNEVMBlockIndex
-{
-public:
-    uint256 hashPrev;
-    CDiskNEVMBlockIndex() {
-    }
-
-    explicit CDiskNEVMBlockIndex(const CNEVMBlockIndex* pindex) : CNEVMBlockIndex(*pindex) {
-        hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
-    }
-
-    SERIALIZE_METHODS(CDiskNEVMBlockIndex, obj)
-    {
-        READWRITE(obj.hashBlock);
-        READWRITE(obj.hashPrev);
-        READWRITE(obj.nTime);
-        READWRITE(obj.vchNEVMBlockData);
-    }
-    std::string ToString() const
-    {
-        std::string str = "CDiskNEVMBlockIndex(";
-        str += CNEVMBlockIndex::ToString();
-        str += strprintf("\n               hashBlock=%s hashPrev=%s)",
-            hashBlock.ToString(), hashPrev.ToString());
         return str;
     }
 };

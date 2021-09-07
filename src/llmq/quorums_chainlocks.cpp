@@ -447,10 +447,6 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             mostRecentChainLockShare = clsig;
             TryUpdateBestChainLock(pindexSig);
         }
-        {
-            LOCK(cs_main);
-            PruneNEVMData(chainman.m_blockman.LookupNEVMBlockIndex(clsig.blockHash));
-        }
         // Note: do not hold cs while calling RelayInv
         AssertLockNotHeld(cs);
         connman.RelayOtherInv(clsigInv);
