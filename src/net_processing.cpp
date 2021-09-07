@@ -1927,13 +1927,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     }
 
     // VeriBlock: if POP is not enabled, ignore POP-related P2P calls
-    if (VeriBlock::isPopEnabled()) {
-        int tipHeight = ChainActive().Height();
-        if (Params().isPopActive(tipHeight)) {
-            int pop_res = VeriBlock::p2p::processPopData(pfrom, strCommand, vRecv, connman);
-            if (pop_res >= 0) {
-                return pop_res;
-            }
+    if (VeriBlock::isPopActive()) {
+        int pop_res = VeriBlock::p2p::processPopData(pfrom, strCommand, vRecv, connman);
+        if (pop_res >= 0) {
+            return pop_res;
         }
     }
 
@@ -3994,7 +3991,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
 
         // VeriBlock offer Pop Data
-        if (VeriBlock::isPopEnabled()) {
+        if (VeriBlock::isPopActive()) {
             VeriBlock::p2p::offerPopData<altintegration::ATV>(pto, connman, msgMaker);
             VeriBlock::p2p::offerPopData<altintegration::VTB>(pto, connman, msgMaker);
             VeriBlock::p2p::offerPopData<altintegration::VbkBlock>(pto, connman, msgMaker);

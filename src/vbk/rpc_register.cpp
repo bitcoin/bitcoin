@@ -28,7 +28,7 @@ namespace {
 
 void EnsurePopEnabled()
 {
-    if (!VeriBlock::isPopEnabled()) {
+    if (!VeriBlock::isCrossedBootstrapBlock()) {
         throw JSONRPCError(RPC_MISC_ERROR,
             strprintf("POP protocol is not enabled. Current=%d, bootstrap height=%d",
                 ChainActive().Height(),

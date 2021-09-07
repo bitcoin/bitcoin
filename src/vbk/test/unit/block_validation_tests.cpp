@@ -21,42 +21,6 @@ inline std::vector<uint8_t> operator""_v(const char* s, size_t size)
 
 BOOST_AUTO_TEST_SUITE(block_validation_tests)
 
-//BOOST_FIXTURE_TEST_CASE(BlockWithMaxNumberOfPopTxes, BlockValidationFixture)
-//{
-//    auto& config = VeriBlock::getService<VeriBlock::Config>();
-//    std::vector<CMutableTransaction> pubs;
-//    for (size_t i = 0; i < std::min(config.max_pop_tx_amount, 256u); ++i) {
-//        CScript script;
-//        script << std::vector<uint8_t>{10, (uint8_t)i} << OP_CHECKATV << OP_CHECKPOP;
-//        pubs.emplace_back(VeriBlock::MakePopTx(script));
-//    }
-//
-//    bool isBlockValid = true;
-//    auto block = CreateAndProcessBlock(pubs, cbKey, &isBlockValid);
-//    BOOST_CHECK(isBlockValid);
-//    BOOST_CHECK(block.vtx.size() == config.max_pop_tx_amount + 1 /* coinbase */);
-//}
-//
-//
-//BOOST_FIXTURE_TEST_CASE(BlockWithBothPopTxes, BlockValidationFixture)
-//{
-//    VeriBlock::Context ctx;
-//    ctx.btc.push_back(btc_header);
-//    ctx.vbk.push_back(vbk_header);
-//
-//    CMutableTransaction ctxtx = VeriBlock::MakePopTx(ctxscript);
-//    CMutableTransaction pubtx = VeriBlock::MakePopTx(pubscript);
-//
-//    EXPECT_CALL(pop_service_mock, checkATVinternally).Times(1);
-//    EXPECT_CALL(pop_service_mock, checkVTBinternally).Times(1);
-//
-//    auto block = CreateAndProcessBlock({ctxtx, pubtx}, cbKey);
-//
-//    BOOST_CHECK(block.vtx.size() == 3);
-//    BOOST_CHECK(block.vtx[0]->IsCoinBase());
-//    BOOST_CHECK(*block.vtx[1] == CTransaction(ctxtx));
-//    BOOST_CHECK(*block.vtx[2] == CTransaction(pubtx));
-//}
 
 static altintegration::PopData generateRandPopData()
 {

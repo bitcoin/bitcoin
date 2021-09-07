@@ -19,13 +19,9 @@ uint256 TopLevelMerkleRoot(const CBlockIndex* prevIndex, const CBlock& block, bo
     // first, build regular merkle root from transactions
     auto txRoot = BlockMerkleRoot(block, mutated);
 
-    // if POP is not enabled for 'block' , use original txRoot as merkle root
-    if (!VeriBlock::isPopEnabled()) {
-        return txRoot;
-    }
-
+    // if POP is not enabled/activated for 'block' , use original txRoot as merkle root
     const auto height = prevIndex == nullptr ? 0 : prevIndex->nHeight + 1;
-    if (!Params().isPopActive(height)) {
+    if (!VeriBlock::isPopActive(height)) {
         return txRoot;
     }
 

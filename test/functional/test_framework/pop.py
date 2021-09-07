@@ -181,7 +181,10 @@ def mine_until_pop_enabled(node, address=None):
         node.waitforblockheight(enabled)
 
 
-def mine_until_pop_active(node, address=None):
+def mine_until_pop_active(node, address=None, delta=0):
+    '''
+    :delta - if delta == -1, then mining stops 1 block behind activation
+    '''
     existing = node.getblockcount()
     activate = node.getblockchaininfo()['softforks']['pop_security']['height']
     assert activate >= 0, "POP security should be able to activate"
@@ -189,10 +192,10 @@ def mine_until_pop_active(node, address=None):
         assert activate - existing < 2000, "POP security activates on height {}. Will take too long to activate".format(
             activate)
         if address is None:
-            node.generate(nblocks=(activate - existing))
+            node.generate(nblocks=(activate - existing + delta))
         else:
-            node.generatetoaddress(nblocks=(activate - existing), address=address)
-        node.waitforblockheight(activate)
+            node.generatetoaddress(nblocks=(activate - existing + delta), address=address)
+        node.waitforblockheight(activate + delta)
 
 def get_keystone_interval(node):
     params = node.getpopparams()
