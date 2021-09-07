@@ -12,8 +12,8 @@ $(call fetch_file,$(package),$($(package)_download_path),$($(package)_download_f
 endef
 
 define $(package)_set_vars
-  $(package)_config_opts=-DCMAKE_INSTALL_INCLUDEDIR=$($(package)_staging_dir)/$(host_prefix)/include
-  $(package)_config_opts+=-DCMAKE_INSTALL_LIBDIR=$($(package)_staging_dir)/$(host_prefix)/lib
+  $(package)_config_opts=-DCMAKE_INSTALL_INCLUDEDIR=$(host_prefix)/include
+  $(package)_config_opts+=-DCMAKE_INSTALL_LIBDIR=$(host_prefix)/lib
   $(package)_config_opts_linux=-DCMAKE_SYSTEM_NAME=Linux
   $(package)_config_opts_darwin=-DCMAKE_SYSTEM_NAME=Darwin
   $(package)_config_opts_mingw32=-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS=""
@@ -37,5 +37,5 @@ define $(package)_build_cmds
 endef
 
 define $(package)_stage_cmds
-  $(MAKE) install
+  $(MAKE) DESTDIR=$($(package)_staging_dir) install
 endef
