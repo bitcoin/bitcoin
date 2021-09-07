@@ -1069,8 +1069,7 @@ void CInstantSendManager::TransactionRemovedFromMempool(const CTransactionRef& t
         return;
     }
 
-    LOCK(cs);
-    CInstantSendLockPtr islock = db.GetInstantSendLockByTxid(tx->GetHash());
+    CInstantSendLockPtr islock = WITH_LOCK(cs, return db.GetInstantSendLockByTxid(tx->GetHash()));
 
     if (islock == nullptr) {
         return;
