@@ -2130,6 +2130,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             // Require outbound connections, other than feelers, to be to distinct network groups
             if (!fFeeler && setConnected.count(addr.GetGroup(addrman.GetAsmap()))) {
                 break;
+            }
             // if anchor was set, and it's a dmn then override to full relay from blocks only
             if (isMasternode && anchor) {
                 conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
@@ -2140,7 +2141,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             if (!addr.IsValid() || (!fAllowLocal && IsLocal(addr)))
                 break;
             // Require outbound connections, other than feelers, to be to distinct network groups
-            if (!fFeeler && setConnected.count(addr.GetGroup(addrman.m_asmap))) {
+            if (!fFeeler && setConnected.count(addr.GetGroup(addrman.GetAsmap()))) {
                 break;
             }
             if (!IsReachable(addr))
