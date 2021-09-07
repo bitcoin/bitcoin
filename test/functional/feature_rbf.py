@@ -84,9 +84,12 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.log.info("Running test replacement relay fee...")
         self.test_replacement_relay_fee()
 
+        self.log.info("Running test replacements with low ancestor score...")
+        self.test_low_ancestor_score()
+
         self.log.info("Passed")
 
-    def make_utxo(self, node, amount, confirmed=True, scriptPubKey=DUMMY_P2WPKH_SCRIPT):
+    def make_utxo(self, node, amount, confirmed=True, fee=0.0001*COIN, scriptPubKey=DUMMY_P2WPKH_SCRIPT):
         """Create a txout with a given amount and scriptPubKey
 
         confirmed - txouts created will be confirmed in the blockchain;
@@ -600,6 +603,36 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # fee conforming to node's `incrementalrelayfee` policy of 1000 sat per KB.
         tx.vout[0].nValue -= 1
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx.serialize().hex())
+
+    def test_low_ancestor_score(self):
+        """Replacement transaction can have new unconfirmed inputs, but should be rejected if its
+        ancestor score is worse than the original transaction.
+        """
+        confirmed_utxo = self.make_utxo(self.nodes[0], int(1 * COIN))
+        confirmed_utxo_2 = self.make_utxo(self.nodes[0], int(0.0001 * COIN), True, 0.00001 * COIN)
+        unconfirmed_utxo = self.make_utxo(self.nodes[0], int(0.00011 * COIN), False, 0.00001 * COIN)
+
+        # Original transaction
+        tx1 = CTransaction()
+        tx1.vin = [CTxIn(confirmed_utxo), CTxIn(confirmed_utxo_2)] # 1.0001
+        tx1.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)] # fee = 0.0001
+        tx1_hex = tx1.serialize().hex()
+        self.nodes[0].sendrawtransaction(tx1_hex, 0)
+
+        # Replacement transaction with low ancestor score
+        tx2 = CTransaction()
+        tx2.vin = [CTxIn(confirmed_utxo), CTxIn(unconfirmed_utxo)] # 1.0001
+        tx2.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)] # fee = 0.00011
+        tx2_hex = tx2.serialize().hex()
+        assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx2_hex, 0)
+
+        # Replacement transaction with high ancestor score
+        tx3 = CTransaction()
+        tx3.vin = [CTxIn(confirmed_utxo), CTxIn(unconfirmed_utxo)] # 1.0001
+        tx3.vout = [CTxOut(int(0.999 * COIN), DUMMY_P2WPKH_SCRIPT)] # fee = 0.00011
+        tx3_hex = tx3.serialize().hex()
+        self.nodes[0].sendrawtransaction(tx3_hex)
+
 
 if __name__ == '__main__':
     ReplaceByFeeTest().main()
