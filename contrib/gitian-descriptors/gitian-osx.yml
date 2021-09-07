@@ -27,6 +27,7 @@ packages:
 - "python3-setuptools"
 - "fonts-tuffy"
 - "ccache"
+- "cmake"
 remotes:
 - "url": "https://github.com/dashpay/dash.git"
   "dir": "dash"
