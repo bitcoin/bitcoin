@@ -28,11 +28,6 @@ BOOST_AUTO_TEST_CASE(logging_timer)
     auto sec_timer = BCLog::Timer<std::chrono::seconds>("tests", "end_msg");
     SetMockTime(2);
     BOOST_CHECK_EQUAL(sec_timer.LogMsg("test secs"), "tests: test secs (1.00s)");
-
-    SetMockTime(1);
-    auto minute_timer = BCLog::Timer<std::chrono::minutes>("tests", "end_msg");
-    SetMockTime(2);
-    BOOST_CHECK_EQUAL(minute_timer.LogMsg("test minutes"), "Error: unexpected time type");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
