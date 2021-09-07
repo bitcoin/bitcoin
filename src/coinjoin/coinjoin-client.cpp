@@ -1042,6 +1042,12 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
 
+    int winners_to_skip{8};
+
+    if (Params().NetworkIDString() == CBaseChainParams::DEVNET || Params().NetworkIDString() == CBaseChainParams::REGTEST) {
+        winners_to_skip = 0;
+    }
+
     // Look through the queues and see if anything matches
     CCoinJoinQueue dsq;
     while (coinJoinClientQueueManager.GetQueueItemAndTry(dsq)) {
@@ -1053,7 +1059,7 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
         }
 
         // skip next mn payments winners
-        if (dmn->pdmnState->nLastPaidHeight + mnList.GetValidMNsCount() < mnList.GetHeight() + 8) {
+        if (dmn->pdmnState->nLastPaidHeight + mnList.GetValidMNsCount() < mnList.GetHeight() + winners_to_skip) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::JoinExistingQueue -- skipping winner, masternode=%s\n", dmn->proTxHash.ToString());
             continue;
         }
