@@ -3472,16 +3472,17 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
-        std::vector<CBlock> vHeaders;
+        // SYSCOIN
+        std::vector<CBlockHeader> vHeaders;
         unsigned nCount = 0;
         unsigned nSize = 0;
         LogPrint(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
         for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex))
         {
-            const CBlockHeader header = pindex->GetBlockHeader(m_chainparams.GetConsensus());
+            const CBlockHeader &header = pindex->GetBlockHeader(m_chainparams.GetConsensus());
             ++nCount;
             nSize += GetSerializeSize(header, PROTOCOL_VERSION);
-            vHeaders.push_back(pindex->GetBlockHeader(m_chainparams.GetConsensus()));
+            vHeaders.push_back(header);
             if (nCount >= MAX_HEADERS_RESULTS
                   || pindex->GetBlockHash() == hashStop)
                 break;
@@ -4044,7 +4045,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         headers.resize(nCount);
         for (unsigned int n = 0; n < nCount; n++) {
             vRecv >> headers[n];
-            ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
+            // SYSCOIN
+            // ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
 
         return ProcessHeadersMessage(pfrom, *peer, headers, /*via_compact_block=*/false);

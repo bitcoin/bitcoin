@@ -854,9 +854,6 @@ class CBlockHeader:
         if self.is_auxpow():
             self.auxpow = CAuxPow()
             self.auxpow.deserialize(f)
-        elif self.is_nevm():
-            # SYSCOIN read 1 byte for evm data, note auxpow has parent header which puts the extra byte at the end of auxpow
-            f.read(1)
         self.sha256 = None
         self.hash = None
 
@@ -870,9 +867,6 @@ class CBlockHeader:
         r += struct.pack("<I", self.nNonce)
         if self.is_auxpow():
             r += self.auxpow.serialize()
-        elif self.is_nevm():
-            # SYSCOIN nevm data, note auxpow reads one extra byte from parent block header so no need to read it if auxpow here
-            r += struct.pack("<b", 0)
         return r
 
     def calc_sha256(self):
@@ -910,6 +904,9 @@ class CBlock(CBlockHeader):
     def deserialize(self, f):
         super().deserialize(f)
         self.vtx = deser_vector(f, CTransaction)
+        if self.is_nevm():
+            # SYSCOIN read 1 byte for evm data, note auxpow has parent header which puts the extra byte at the end of auxpow
+            f.read(1)
 
     def serialize(self, with_witness=True):
         r = b""
@@ -918,6 +915,9 @@ class CBlock(CBlockHeader):
             r += ser_vector(self.vtx, "serialize_with_witness")
         else:
             r += ser_vector(self.vtx, "serialize_without_witness")
+        if self.is_nevm():
+            # SYSCOIN nevm data, note auxpow reads one extra byte from parent block header so no need to read it if auxpow here
+            r += struct.pack("<b", 0)
         return r
 
     # Calculate the merkle root given a vector of transaction hashes
@@ -1040,6 +1040,7 @@ class P2PHeaderAndShortIDs:
             self.shortids.append(struct.unpack("<Q", f.read(6) + b'\x00\x00')[0])
         self.prefilled_txn = deser_vector(f, PrefilledTransaction)
         self.prefilled_txn_length = len(self.prefilled_txn)
+        # SYSCOIN read 1 byte for evm data
         f.read(1)
 
     # When using version 2 compact blocks, we must serialize with_witness.
@@ -1833,13 +1834,14 @@ class msg_headers:
 
     def deserialize(self, f):
         # comment in syscoind indicates these should be deserialized as blocks
-        blocks = deser_vector(f, CBlock)
-        for x in blocks:
+        # SYSCOIN
+        blockheaders = deser_vector(f, CBlockHeader)
+        for x in blockheaders:
             self.headers.append(CBlockHeader(x))
 
     def serialize(self):
-        blocks = [CBlock(x) for x in self.headers]
-        return ser_vector(blocks)
+        # SYSCOIN
+        return ser_vector(self.headers)
 
     def __repr__(self):
         return "msg_headers(headers=%s)" % repr(self.headers)
