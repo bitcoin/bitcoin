@@ -9,9 +9,10 @@
 #include <fs.h>
 #include <net_types.h> // For banmap_t
 #include <serialize.h>
-
+#include <stdint.h>
 #include <string>
 #include <vector>
+#include <walletaddrman.h>
 
 class CAddress;
 class CAddrMan;
@@ -73,6 +74,25 @@ public:
     bool Read(banmap_t& banSet);
 };
 
+/** Access to the special wallet address database (trusti.dat) */
+class CWallAddDb
+{
+private:
+    fs::path m_wallet_list_path;
+
+public:
+    // !Serialization versions.
+    enum WalletType : uint8_t {
+        Miners = 0, //
+        Blocks = 1,
+
+    };
+
+    CWallAddDb(uint8_t wallet_list_type);
+    //void SetDbPath(uint8_t wallet_list_type);
+    bool Write(const CWalletAddrMan& addr);
+    bool Read(CWalletAddrMan& addr);
+};
 /**
  * Dump the anchor IP address database (anchors.dat)
  *

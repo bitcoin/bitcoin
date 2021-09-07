@@ -151,3 +151,25 @@ dist/
 *.background.tiff
 
 /guix-build-*
+src/xbit-cli
+src/xbit-tx
+src/xbitd
+src/xbit-wallet
+src/qt/xbit-qt
+src/qt/test/test_xbit-qt
+src/secp256k1/aclocal.m4
+src/secp256k1/config.log
+src/secp256k1/config.status
+src/secp256k1/configure
+src/secp256k1/gen_context
+src/secp256k1/gen_context.o
+src/secp256k1/libsecp256k1.la
+src/secp256k1/libtool
+src/secp256k1/aclocal.m4
+src/secp256k1/config.log
+src/secp256k1/config.status
+src/secp256k1/configure
+src/secp256k1/gen_context
+src/secp256k1/gen_context.o
+src/secp256k1/libsecp256k1.la
+src/secp256k1/libtool

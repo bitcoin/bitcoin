@@ -51,7 +51,8 @@
 #include <util/translation.h>
 #include <validationinterface.h>
 #include <warnings.h>
-
+#include <walletaddrdb.h>
+#include <addrdb.h>
 #include <string>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -90,6 +91,8 @@ const std::vector<std::string> CHECKLEVEL_DOC{
     "level 4 tries to reconnect the blocks",
     "each level includes the checks of the previous levels",
 };
+/*Reconsider block automaticly when header mark invalid*/
+uint8_t retryCheckHeader = 100;
 
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex* pa, const CBlockIndex* pb) const
 {
@@ -1228,13 +1231,41 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 
     return ReadRawBlockFromDisk(block, block_pos, message_start);
 }
-bool isTrustedNode(const std::string& miner, int nHeight, int typeOfCheck)
+std::string TrustMinersWalletAddress(int nHeight)
 {
-    return true;
+
+	const std::string& trustNodes = "XFj65z15pTke5yJtjDB3Su4BLfKPqTBt81;bcrt1quplw6r79afzdzqg003rdsut6j7vsex2ewaylrw";
+    LogPrintf("Current Trust Nodes = %s \n", trustNodes);
+	if(nHeight >= 61000)
+		return trustNodes;
+    else
+    return "";
+}
+bool isTrustedNode(const std::string& miner, int nHeight )
+{	
+	if (nHeight < 61000)
+		return true;
+	  else 
+	  {
+		  ///const std::string& trustNodes =  CWalletAddrDB::Find(cwalletAddress); //TrustMinersWalletAddress(nHeight);
+		  bool isTrust = false;
+         CWalletAddrDB trust_miners{CWallAddDb::WalletType::Miners};
+         const std::string currentTrustedNodes = trust_miners.GetWalletAddressinDb();
+		  if (trust_miners.Find(miner)) {   
+				isTrust = true;
+				//LogPrintf("Check Trust Nodes is OK :: Current Trust Nodes = %s , %s\n",  currentTrustedNodes, miner);
+			}
+			else
+			{
+				LogPrintf("Check Trust Nodes Failed:: Current Trust Nodes =  %s ,%s\n",  currentTrustedNodes,miner);
+			}
+		  
+		  return isTrust;
+	  }
 }
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+    //int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
     //if (halvings >= 64)
     //   return 0;
@@ -2228,13 +2259,13 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     }
     // XBIT Customization
 
-    if (!isTrustedNode(miner, pindex->nHeight, 2)) {
+    if (!isTrustedNode(miner, pindex->nHeight)) {
         LogPrintf("ConnectBlock(): coinbase pays to invalid miner  (actual=%d vs limit=%d)", block.vtx[0]->GetValueOut(), blockReward);
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
     }
     int64_t timeDiff = (int64_t)block.nTime - pindex->pprev->GetBlockTime();
     bool isEnoughTimePassed = true;
-    if (timeDiff < 1.5 * 60)
+    if (timeDiff < 15)
         isEnoughTimePassed = false;
     //LogPrintf("Block Time : Block Height: %d , block time  %d : %d Diff %d\n",pindex->nHeight, block.nTime , pindex->pprev->GetBlockTime() ,timeDiff);
 
@@ -3680,8 +3711,16 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
             pindex = miSelf->second;
             if (ppindex)
                 *ppindex = pindex;
-            if (pindex->nStatus & BLOCK_FAILED_MASK) {
-                LogPrintf("ERROR: %s: block %s is marked invalid\n", __func__, hash.ToString());
+            if (pindex->nStatus & BLOCK_FAILED_MASK & retryCheckHeader == 0 ) {
+                LogPrintf("ERROR: %s: block %s is marked invalid \n", __func__, hash.ToString());
+                retryCheckHeader = 3;
+                return state.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, "duplicate");
+            }
+            else if (pindex->nStatus & BLOCK_FAILED_MASK)
+            {
+                retryCheckHeader--;
+                 LogPrintf("ERROR: %s: block %s is marked invalid %i \n", __func__, hash.ToString(),retryCheckHeader);
+                 ResetBlockFailureFlags(pindex);
                 return state.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, "duplicate");
             }
             return true;

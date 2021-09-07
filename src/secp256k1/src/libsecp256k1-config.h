@@ -27,7 +27,7 @@
 #define ENABLE_MODULE_SCHNORRSIG 1
 
 /* Define this symbol if OpenSSL EC functions are available */
-#define ENABLE_OPENSSL_TESTS 1
+/* #undef ENABLE_OPENSSL_TESTS */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
@@ -36,7 +36,7 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define this symbol if libcrypto is installed */
-#define HAVE_LIBCRYPTO 1
+/* #undef HAVE_LIBCRYPTO */
 
 /* Define this symbol if libgmp is installed */
 /* #undef HAVE_LIBGMP */

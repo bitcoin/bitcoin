@@ -106,6 +106,8 @@ endif
 XBIT_CORE_H = \
   addrdb.h \
   addrman.h \
+  walletaddrman.h \
+  walletaddrdb.h  \
   attributes.h \
   banman.h \
   base58.h \
@@ -285,6 +287,8 @@ libxbit_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libxbit_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
+  walletaddrman.cpp \
+  walletaddrdb.cpp \
   banman.cpp \
   blockencodings.cpp \
   blockfilter.cpp \

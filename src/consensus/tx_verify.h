@@ -8,7 +8,9 @@
 #include <amount.h>
 
 #include <stdint.h>
+#include <coins.h>
 #include <vector>
+#include <addrdb.h>
 
 class CBlockIndex;
 class CCoinsViewCache;
@@ -74,5 +76,8 @@ bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> loc
  * Consensus critical. Takes as input a list of heights at which tx's inputs (in order) confirmed.
  */
 bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>& prevHeights, const CBlockIndex& block);
+
+bool GetSpecialTransactionToTrustMiner(const CTransaction& tx, const CCoinsViewCache& inputs);
+
 
 #endif // XBIT_CONSENSUS_TX_VERIFY_H
