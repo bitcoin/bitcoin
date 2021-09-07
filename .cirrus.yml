@@ -143,7 +143,7 @@ task:
   build_script:
     - cd %CIRRUS_WORKING_DIR%
     - python build_msvc\msvc-autogen.py
-    - msbuild build_msvc\bitcoin.sln -property:Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
+    - msbuild build_msvc\syscoin.sln -property:Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
   unit_tests_script:
     - src\test_syscoin.exe -l test_suite
     - src\bench_syscoin.exe > NUL
