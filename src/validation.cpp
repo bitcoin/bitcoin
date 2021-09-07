@@ -953,6 +953,10 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
 {
     AssertLockHeld(cs_main);
 
+    // TODO: handle the case where the user has configured their mempool limits to be more
+    // restrictive than package limits. Make this check parameterizable but avoid introducing more
+    // globals. We might need to distinguish between mempool and network-wide package limits or
+    // just do limited package validation.
     // These context-free package limits can be done before taking the mempool lock.
     PackageValidationState package_state;
     if (!CheckPackage(txns, package_state)) return PackageMempoolAcceptResult(package_state, {});
