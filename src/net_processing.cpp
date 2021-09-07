@@ -4972,7 +4972,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             // blocks, or if the peer doesn't want headers, just
             // add all to the inv queue.
             LOCK(peer->m_block_inv_mutex);
-            std::vector<CBlock> vHeaders;
+            // SYSCOIN
+            std::vector<CBlockHeader> vHeaders;
             bool fRevertToInv = ((!state.fPreferHeaders &&
                                  (!state.fPreferHeaderAndIDs || peer->m_blocks_for_headers_relay.size() > 1)) ||
                                  peer->m_blocks_for_headers_relay.size() > MAX_BLOCKS_TO_ANNOUNCE);

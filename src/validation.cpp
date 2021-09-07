@@ -3571,7 +3571,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         }
     }
     // SYSCOIN
-    if(block.IsNEVM() && block.vchNEVMBlockData.empty()) {
+    if(block.IsNEVM() && block.vchNEVMBlockData.empty() && !fRegTest) {
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-data-not-found");
     }
     // First transaction must be coinbase, the rest must not be

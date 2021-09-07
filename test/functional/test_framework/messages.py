@@ -1841,7 +1841,8 @@ class msg_headers:
 
     def serialize(self):
         # SYSCOIN
-        return ser_vector(self.headers)
+        blocks = [CBlockHeader(x) for x in self.headers]
+        return ser_vector(blocks)
 
     def __repr__(self):
         return "msg_headers(headers=%s)" % repr(self.headers)
