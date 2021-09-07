@@ -14,6 +14,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <util/asmap.h>
 
 #include <cstdint>
 #include <optional>
@@ -39,7 +40,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
             },
             [&] {
                 const std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-                if (!SanityCheckASMap(asmap)) {
+                if (!SanityCheckASMap(asmap, 128)) {
                     return;
                 }
                 CNodeStats stats;
