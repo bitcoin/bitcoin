@@ -722,34 +722,36 @@ Network CNetAddr::GetNetClass() const
     return m_net;
 }
 
-uint32_t CNetAddr::GetMappedAS(const std::vector<bool> &asmap) const {
-    uint32_t net_class = GetNetClass();
-    if (asmap.size() == 0 || (net_class != NET_IPV4 && net_class != NET_IPV6)) {
+uint32_t CNetAddr::GetMappedAS(const std::vector<bool> &m_asmap) const {
+    const CNetAddr& address = *this;
+    uint32_t net_class = address.GetNetClass();
+    if (m_asmap.size() == 0 || (net_class != NET_IPV4 && net_class != NET_IPV6)) {
         return 0; // Indicates not found, safe because AS0 is reserved per RFC7607.
     }
     std::vector<bool> ip_bits(128);
-    if (HasLinkedIPv4()) {
+    if (address.HasLinkedIPv4()) {
         // For lookup, treat as if it was just an IPv4 address (IPV4_IN_IPV6_PREFIX + IPv4 bits)
         for (int8_t byte_i = 0; byte_i < 12; ++byte_i) {
             for (uint8_t bit_i = 0; bit_i < 8; ++bit_i) {
                 ip_bits[byte_i * 8 + bit_i] = (IPV4_IN_IPV6_PREFIX[byte_i] >> (7 - bit_i)) & 1;
             }
         }
-        uint32_t ipv4 = GetLinkedIPv4();
+        uint32_t ipv4 = address.GetLinkedIPv4();
         for (int i = 0; i < 32; ++i) {
             ip_bits[96 + i] = (ipv4 >> (31 - i)) & 1;
         }
     } else {
         // Use all 128 bits of the IPv6 address otherwise
-        assert(IsIPv6());
+        assert(address.IsIPv6());
+        auto addr_bytes = address.GetAddrBytes();
         for (int8_t byte_i = 0; byte_i < 16; ++byte_i) {
-            uint8_t cur_byte = m_addr[byte_i];
+            uint8_t cur_byte = addr_bytes[byte_i];
             for (uint8_t bit_i = 0; bit_i < 8; ++bit_i) {
                 ip_bits[byte_i * 8 + bit_i] = (cur_byte >> (7 - bit_i)) & 1;
             }
         }
     }
-    uint32_t mapped_as = Interpret(asmap, ip_bits);
+    uint32_t mapped_as = Interpret(m_asmap, ip_bits);
     return mapped_as;
 }
 
@@ -763,13 +765,13 @@ uint32_t CNetAddr::GetMappedAS(const std::vector<bool> &asmap) const {
  * @note No two connections will be attempted to addresses with the same network
  *       group.
  */
-std::vector<unsigned char> CNetAddr::GetGroup(const std::vector<bool> &asmap) const
+std::vector<unsigned char> CNetAddr::GetGroup(const std::vector<bool> &m_asmap) const
 {
+    const CNetAddr& address = *this;
     std::vector<unsigned char> vchRet;
-    uint32_t net_class = GetNetClass();
     // If non-empty asmap is supplied and the address is IPv4/IPv6,
     // return ASN to be used for bucketing.
-    uint32_t asn = GetMappedAS(asmap);
+    uint32_t asn = GetMappedAS(m_asmap);
     if (asn != 0) { // Either asmap was empty, or address has non-asmappable net class (e.g. TOR).
         vchRet.push_back(NET_IPV6); // IPv4 and IPv6 with same ASN should be in the same bucket
         for (int i = 0; i < 4; i++) {
@@ -778,31 +780,34 @@ std::vector<unsigned char> CNetAddr::GetGroup(const std::vector<bool> &asmap) co
         return vchRet;
     }
 
-    vchRet.push_back(net_class);
+    vchRet.push_back(address.GetNetClass());
+    int nStartByte{0};
     int nBits{0};
 
-    if (IsLocal()) {
+    if (address.IsLocal()) {
         // all local addresses belong to the same group
-    } else if (IsInternal()) {
-        // all internal-usage addresses get their own group
+    } else if (address.IsInternal()) {
+        // All internal-usage addresses get their own group.
+        // Skip over the INTERNAL_IN_IPV6_PREFIX returned by CAddress::GetAddrBytes().
+        nStartByte = INTERNAL_IN_IPV6_PREFIX.size();
         nBits = ADDR_INTERNAL_SIZE * 8;
-    } else if (!IsRoutable()) {
+    } else if (!address.IsRoutable()) {
         // all other unroutable addresses belong to the same group
-    } else if (HasLinkedIPv4()) {
+    } else if (address.HasLinkedIPv4()) {
         // IPv4 addresses (and mapped IPv4 addresses) use /16 groups
-        uint32_t ipv4 = GetLinkedIPv4();
+        uint32_t ipv4 = address.GetLinkedIPv4();
         vchRet.push_back((ipv4 >> 24) & 0xFF);
         vchRet.push_back((ipv4 >> 16) & 0xFF);
         return vchRet;
-    } else if (IsTor() || IsI2P()) {
+    } else if (address.IsTor() || address.IsI2P()) {
         nBits = 4;
-    } else if (IsCJDNS()) {
+    } else if (address.IsCJDNS()) {
         // Treat in the same way as Tor and I2P because the address in all of
         // them is "random" bytes (derived from a public key). However in CJDNS
         // the first byte is a constant 0xfc, so the random bytes come after it.
         // Thus skip the constant 8 bits at the start.
         nBits = 12;
-    } else if (IsHeNet()) {
+    } else if (address.IsHeNet()) {
         // for he.net, use /36 groups
         nBits = 36;
     } else {
@@ -811,13 +816,14 @@ std::vector<unsigned char> CNetAddr::GetGroup(const std::vector<bool> &asmap) co
     }
 
     // Push our address onto vchRet.
+    auto addr_bytes = address.GetAddrBytes();
     const size_t num_bytes = nBits / 8;
-    vchRet.insert(vchRet.end(), m_addr.begin(), m_addr.begin() + num_bytes);
+    vchRet.insert(vchRet.end(), addr_bytes.begin() + nStartByte, addr_bytes.begin() + nStartByte + num_bytes);
     nBits %= 8;
     // ...for the last byte, push nBits and for the rest of the byte push 1's
     if (nBits > 0) {
-        assert(num_bytes < m_addr.size());
-        vchRet.push_back(m_addr[num_bytes] | ((1 << (8 - nBits)) - 1));
+        assert(num_bytes < addr_bytes.size());
+        vchRet.push_back(addr_bytes[num_bytes] | ((1 << (8 - nBits)) - 1));
     }
 
     return vchRet;
