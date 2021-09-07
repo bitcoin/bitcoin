@@ -25,7 +25,7 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    CAddrMan addrman(/* deterministic */ false, /* consistency_check_ratio */ 0);
+    CAddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
     CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman, fuzzed_data_provider.ConsumeBool()};
     CNetAddr random_netaddr;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
@@ -102,12 +102,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
             },
             [&] {
                 connman.RemoveAddedNode(random_string);
-            },
-            [&] {
-                const std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-                if (SanityCheckASMap(asmap)) {
-                    connman.SetAsmap(asmap);
-                }
             },
             [&] {
                 connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());

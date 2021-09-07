@@ -58,12 +58,14 @@ public:
             return strprintf("%s: %s", m_prefix, msg);
         }
 
-        std::string units = "";
+        if (std::is_same<TimeType, std::chrono::microseconds>::value) {
+            return strprintf("%s: %s (%iμs)", m_prefix, msg, end_time.count());
+        }
+
+        std::string units;
         float divisor = 1;
 
-        if (std::is_same<TimeType, std::chrono::microseconds>::value) {
-            units = "μs";
-        } else if (std::is_same<TimeType, std::chrono::milliseconds>::value) {
+        if (std::is_same<TimeType, std::chrono::milliseconds>::value) {
             units = "ms";
             divisor = 1000.;
         } else if (std::is_same<TimeType, std::chrono::seconds>::value) {
@@ -93,6 +95,8 @@ private:
 } // namespace BCLog
 
 
+#define LOG_TIME_MICROS_WITH_CATEGORY(end_msg, log_category) \
+    BCLog::Timer<std::chrono::microseconds> PASTE2(logging_timer, __COUNTER__)(__func__, end_msg, log_category)
 #define LOG_TIME_MILLIS_WITH_CATEGORY(end_msg, log_category) \
     BCLog::Timer<std::chrono::milliseconds> PASTE2(logging_timer, __COUNTER__)(__func__, end_msg, log_category)
 #define LOG_TIME_SECONDS(end_msg) \

@@ -39,6 +39,7 @@ In order to build Syscoin Core a static build of Qt is required. The runtime lib
 
 Some prebuilt x64 versions of Qt can be downloaded from [here](https://github.com/syscoin/syscoin/releases). Please be aware these downloads are NOT officially sanctioned by Syscoin Core and are provided for developer convenience only. They should NOT be used for builds that will be used in a production environment or with real funds.
 
+To determine which Qt prebuilt version to download open the `.cirrus.yml` file and note the `QT_DOWNLOAD_URL`. When extracting the zip file the destination path must be set to `C:\`. This is due to the way that Qt includes, libraries and tools use internal paths.
 
 To build Syscoin Core without Qt unload or disable the `syscoin-qt`, `libsyscoin_qt` and `test_syscoin-qt` projects.
 
@@ -64,25 +65,14 @@ msbuild /m syscoin.sln /p:Platform=x64 /p:Configuration=Release /t:build
 
 - Alternatively, open the `build_msvc/syscoin.sln` file in Visual Studio 2019.
 
-AppVeyor
----------------------
-The .appveyor.yml in the root directory is suitable to perform builds on [AppVeyor](https://www.appveyor.com/) Continuous Integration servers. The simplest way to perform an AppVeyor build is to fork Syscoin Core and then configure a new AppVeyor Project pointing to the forked repository.
-
-For safety reasons the Syscoin Core .appveyor.yml file has the artifact options disabled. The build will be performed but no executable files will be available. To enable artifacts on a forked repository uncomment the lines shown below:
-
-```
-    #- 7z a syscoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
-    #- path: syscoin-%APPVEYOR_BUILD_VERSION%.zip
-```
-
 Security
 ---------------------
-[Base address randomization](https://docs.microsoft.com/en-us/cpp/build/reference/dynamicbase-use-address-space-layout-randomization?view=msvc-160) is used to make Bitcoin Core more secure. When building Bitcoin using the `build_msvc` process base address randomization can be disabled by editing `common.init.vcproj` to change `RandomizedBaseAddress` from `true` to `false` and then rebuilding the project.
+[Base address randomization](https://docs.microsoft.com/en-us/cpp/build/reference/dynamicbase-use-address-space-layout-randomization?view=msvc-160) is used to make Syscoin Core more secure. When building Syscoin using the `build_msvc` process base address randomization can be disabled by editing `common.init.vcproj` to change `RandomizedBaseAddress` from `true` to `false` and then rebuilding the project.
 
-To check if `bitcoind` has `RandomizedBaseAddress` enabled or disabled run
+To check if `syscoind` has `RandomizedBaseAddress` enabled or disabled run
 
 ```
-.\dumpbin.exe /headers src/bitcoind.exe
+.\dumpbin.exe /headers src/syscoind.exe
 ```
 
 If is it enabled then in the output `Dynamic base` will be listed in the `DLL characteristics` under `OPTIONAL HEADER VALUES` as shown below

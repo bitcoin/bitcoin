@@ -705,6 +705,33 @@ case $host in
          if $BREW list --versions qt5 >/dev/null; then
            export PKG_CONFIG_PATH="$($BREW --prefix qt5 2>/dev/null)/lib/pkgconfig:$PKG_CONFIG_PATH"
          fi
+
+         case $host in
+           *aarch64*)
+             dnl The preferred Homebrew prefix for Apple Silicon is /opt/homebrew.
+             dnl Therefore, as we do not use pkg-config to detect miniupnpc and libnatpmp
+             dnl packages, we should set the CPPFLAGS and LDFLAGS variables for them
+             dnl explicitly.
+             if test "x$use_upnp" != xno && $BREW list --versions miniupnpc >/dev/null; then
+               miniupnpc_prefix=$($BREW --prefix miniupnpc 2>/dev/null)
+               if test "x$suppress_external_warnings" != xno; then
+                 CPPFLAGS="$CPPFLAGS -isystem $miniupnpc_prefix/include"
+               else
+                 CPPFLAGS="$CPPFLAGS -I$miniupnpc_prefix/include"
+               fi
+               LDFLAGS="$LDFLAGS -L$miniupnpc_prefix/lib"
+             fi
+             if test "x$use_natpmp" != xno && $BREW list --versions libnatpmp >/dev/null; then
+               libnatpmp_prefix=$($BREW --prefix libnatpmp 2>/dev/null)
+               if test "x$suppress_external_warnings" != xno; then
+                 CPPFLAGS="$CPPFLAGS -isystem $libnatpmp_prefix/include"
+               else
+                 CPPFLAGS="$CPPFLAGS -I$libnatpmp_prefix/include"
+               fi
+               LDFLAGS="$LDFLAGS -L$libnatpmp_prefix/lib"
+             fi
+             ;;
+         esac
        fi
      else
        case $build_os in
@@ -1900,7 +1927,7 @@ AC_CONFIG_LINKS([contrib/devtools/test-symbol-check.py:contrib/devtools/test-sym
 AC_CONFIG_LINKS([contrib/filter-lcov.py:contrib/filter-lcov.py])
 AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
 AC_CONFIG_LINKS([test/fuzz/test_runner.py:test/fuzz/test_runner.py])
-AC_CONFIG_LINKS([test/util/syscoin-util-test.py:test/util/syscoin-util-test.py])
+AC_CONFIG_LINKS([test/util/test_runner.py:test/util/test_runner.py])
 AC_CONFIG_LINKS([test/util/rpcauth-test.py:test/util/rpcauth-test.py])
 
 dnl boost's m4 checks do something really nasty: they export these vars. As a
