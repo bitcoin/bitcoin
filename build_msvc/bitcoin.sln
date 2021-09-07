@@ -32,7 +32,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bench_bitcoin", "bench_bitc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bitcoin-tx", "bitcoin-tx\bitcoin-tx.vcxproj", "{D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bitcoin-util", "bitcoin-util\bitcoin-util.vcxproj", "{D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bitcoin-util", "bitcoin-util\bitcoin-util.vcxproj", "{57A04EC9-542A-4E40-83D0-AC3BE1F36805}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bitcoin-wallet", "bitcoin-wallet\bitcoin-wallet.vcxproj", "{84DE8790-EDE3-4483-81AC-C32F15E861F4}"
 EndProject
@@ -178,6 +178,14 @@ Global
         {D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}.Release|x64.Build.0 = Release|x64
         {D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}.Release|x86.ActiveCfg = Release|Win32
         {D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}.Release|x86.Build.0 = Release|Win32
+        {57A04EC9-542A-4E40-83D0-AC3BE1F36805}.Debug|x64.ActiveCfg = Debug|x64
+        {57A04EC9-542A-4E40-83D0-AC3BE1F36805}.Debug|x64.Build.0 = Debug|x64
+        {57A04EC9-542A-4E40-83D0-AC3BE1F36805}.Debug|x86.ActiveCfg = Debug|Win32
+        {57A04EC9-542A-4E40-83D0-AC3BE1F36805}.Debug|x86.Build.0 = Debug|Win32
+        {57A04EC9-542A-4E40-83D0-AC3BE1F36805}.Release|x64.ActiveCfg = Release|x64
+        {57A04EC9-542A-4E40-83D0-AC3BE1F36805}.Release|x64.Build.0 = Release|x64
+        {57A04EC9-542A-4E40-83D0-AC3BE1F36805}.Release|x86.ActiveCfg = Release|Win32
+        {57A04EC9-542A-4E40-83D0-AC3BE1F36805}.Release|x86.Build.0 = Release|Win32
         {84DE8790-EDE3-4483-81AC-C32F15E861F4}.Debug|x64.ActiveCfg = Debug|x64
         {84DE8790-EDE3-4483-81AC-C32F15E861F4}.Debug|x64.Build.0 = Debug|x64
         {84DE8790-EDE3-4483-81AC-C32F15E861F4}.Debug|x86.ActiveCfg = Debug|Win32
