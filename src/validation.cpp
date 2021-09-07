@@ -842,7 +842,6 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     const CTransaction& tx = *ws.m_ptx;
     const uint256& hash = ws.m_hash;
     TxValidationState& state = ws.m_state;
-
     CFeeRate newFeeRate(ws.m_modified_fees, ws.m_vsize);
     // It's possible that the replacement pays more fees than its direct conflicts but not more
     // than all conflicts (i.e. the direct conflicts have high-fee descendants). However, if the
@@ -864,6 +863,13 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                              "replacement-adds-unconfirmed", *err_string);
     }
+    // Require that the replacement transaction have a higher ancestor score than that of all
+    // transactions it's trying to replace.
+    if (const auto err_string{CheckAncestorScores(ws.m_modified_fees, ws.m_vsize,
+                                                  ws.m_ancestors, ws.m_all_conflicting)}) {
+        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
+    }
+
     // Check if it's economically rational to mine this transaction rather than the ones it
     // replaces and pays for its own relay fees. Enforce BIP125 Rules #3 and #4.
     for (CTxMemPool::txiter it : ws.m_all_conflicting) {
