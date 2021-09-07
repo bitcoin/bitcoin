@@ -69,6 +69,7 @@ namespace BCLog {
         CHAINLOCKS  = (1 << 30),
         I2P         = (uint64_t)(1ULL << 31),
         IPC         = (uint64_t)(1ULL << 32),
+        LOCK        = (uint64_t)(1ULL << 33),
         ALL         = ~(uint64_t)0,
     };
 
