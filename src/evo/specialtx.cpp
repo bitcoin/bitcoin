@@ -91,6 +91,8 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
 
 bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, const CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots)
 {
+    AssertLockHeld(cs_main);
+
     try {
         static int64_t nTimeLoop = 0;
         static int64_t nTimeQuorum = 0;
@@ -146,6 +148,8 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
 
 bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex)
 {
+    AssertLockHeld(cs_main);
+
     try {
         for (int i = (int)block.vtx.size() - 1; i >= 0; --i) {
             const CTransaction& tx = *block.vtx[i];

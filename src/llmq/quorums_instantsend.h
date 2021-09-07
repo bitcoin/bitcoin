@@ -199,9 +199,9 @@ public:
     void InterruptWorkerThread();
 
 private:
-    void ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params);
+    void ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params) LOCKS_EXCLUDED(cs);
     bool CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params) const;
-    bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, const Consensus::Params& params) const;
+    bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, const Consensus::Params& params) const LOCKS_EXCLUDED(cs);
     bool IsConflicted(const CTransaction& tx) const;
 
     void HandleNewInputLockRecoveredSig(const CRecoveredSig& recoveredSig, const uint256& txid);
@@ -210,16 +210,16 @@ private:
     bool TrySignInputLocks(const CTransaction& tx, bool allowResigning, Consensus::LLMQType llmqType);
     void TrySignInstantSendLock(const CTransaction& tx);
 
-    void ProcessMessageInstantSendLock(const CNode* pfrom, const CInstantSendLockPtr& islock);
+    void ProcessMessageInstantSendLock(const CNode* pfrom, const CInstantSendLockPtr& islock) LOCKS_EXCLUDED(cs);
     static bool PreVerifyInstantSendLock(const CInstantSendLock& islock);
     bool ProcessPendingInstantSendLocks();
     std::unordered_set<uint256> ProcessPendingInstantSendLocks(int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban);
     void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLockPtr& islock);
 
-    void AddNonLockedTx(const CTransactionRef& tx, const CBlockIndex* pindexMined);
-    void RemoveNonLockedTx(const uint256& txid, bool retryChildren);
-    void RemoveConflictedTx(const CTransaction& tx);
-    void TruncateRecoveredSigsForInputs(const CInstantSendLock& islock);
+    void AddNonLockedTx(const CTransactionRef& tx, const CBlockIndex* pindexMined) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void RemoveNonLockedTx(const uint256& txid, bool retryChildren) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void RemoveConflictedTx(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void TruncateRecoveredSigsForInputs(const CInstantSendLock& islock) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);
     void ResolveBlockConflicts(const uint256& islockHash, const CInstantSendLock& islock);
@@ -251,7 +251,7 @@ public:
     void NotifyChainLock(const CBlockIndex* pindexChainLock);
     void UpdatedBlockTip(const CBlockIndex* pindexNew);
 
-    void RemoveConflictingLock(const uint256& islockHash, const CInstantSendLock& islock);
+    void RemoveConflictingLock(const uint256& islockHash, const CInstantSendLock& islock) LOCKS_EXCLUDED(cs);
 
     size_t GetInstantSendLockCount() const;
 };

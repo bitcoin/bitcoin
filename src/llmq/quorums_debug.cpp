@@ -132,7 +132,7 @@ UniValue CDKGDebugStatus::ToJson(int detailLevel) const
     return ret;
 }
 
-void CDKGDebugManager::GetLocalDebugStatus(llmq::CDKGDebugStatus& ret)
+void CDKGDebugManager::GetLocalDebugStatus(llmq::CDKGDebugStatus& ret) const
 {
     LOCK(cs);
     ret = localStatus;

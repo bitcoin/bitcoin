@@ -455,6 +455,8 @@ void CInstantSendManager::InterruptWorkerThread()
 
 void CInstantSendManager::ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params)
 {
+    AssertLockNotHeld(cs);
+
     if (!fMasternodeMode || !IsInstantSendEnabled() || !masternodeSync.IsBlockchainSynced()) {
         return;
     }
@@ -563,6 +565,8 @@ bool CInstantSendManager::CheckCanLock(const CTransaction& tx, bool printDebug, 
 
 bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, const Consensus::Params& params) const
 {
+    AssertLockNotHeld(cs);
+
     int nInstantSendConfirmationsRequired = params.nInstantSendConfirmationsRequired;
 
     if (IsLocked(outpoint.hash)) {
@@ -745,6 +749,8 @@ void CInstantSendManager::ProcessMessage(CNode* pfrom, const std::string& strCom
 
 void CInstantSendManager::ProcessMessageInstantSendLock(const CNode* pfrom, const llmq::CInstantSendLockPtr& islock)
 {
+    AssertLockNotHeld(cs);
+
     auto hash = ::SerializeHash(*islock);
 
     {
@@ -1398,6 +1404,8 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
 
 void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const llmq::CInstantSendLock& islock)
 {
+    AssertLockNotHeld(cs);
+
     LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: Removing ISLOCK and its chained children\n", __func__,
               islock.txid.ToString(), islockHash.ToString());
     int tipHeight;

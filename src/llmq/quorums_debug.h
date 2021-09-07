@@ -89,13 +89,13 @@ public:
 class CDKGDebugManager
 {
 private:
-    CCriticalSection cs;
+    mutable CCriticalSection cs;
     CDKGDebugStatus localStatus GUARDED_BY(cs);
 
 public:
     CDKGDebugManager();
 
-    void GetLocalDebugStatus(CDKGDebugStatus& ret);
+    void GetLocalDebugStatus(CDKGDebugStatus& ret) const;
 
     void ResetLocalSessionStatus(Consensus::LLMQType llmqType);
     void InitLocalSessionStatus(Consensus::LLMQType llmqType, const uint256& quorumHash, int quorumHeight);

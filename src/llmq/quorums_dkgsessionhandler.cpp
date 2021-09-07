@@ -248,7 +248,7 @@ void CDKGSessionHandler::WaitForNewQuorum(const uint256& oldQuorumHash) const
 void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
                                           const uint256& expectedQuorumHash,
                                           double randomSleepFactor,
-                                          const WhileWaitFunc& runWhileWaiting)
+                                          const WhileWaitFunc& runWhileWaiting) const
 {
     if (!curSession->AreWeMember()) {
         // Non-members do not participate and do not create any network load, no need to sleep.

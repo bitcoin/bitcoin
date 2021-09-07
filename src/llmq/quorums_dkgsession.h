@@ -298,7 +298,7 @@ public:
     void SendContributions(CDKGPendingMessages& pendingMessages);
     bool PreVerifyMessage(const CDKGContribution& qc, bool& retBan) const;
     void ReceiveMessage(const CDKGContribution& qc, bool& retBan);
-    void VerifyPendingContributions();
+    void VerifyPendingContributions() EXCLUSIVE_LOCKS_REQUIRED(cs_pending);
 
     // Phase 2: complaint
     void VerifyAndComplain(CDKGPendingMessages& pendingMessages);

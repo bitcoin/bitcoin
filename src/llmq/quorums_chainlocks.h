@@ -55,7 +55,7 @@ class CChainLocksHandler : public CRecoveredSigsListener
 private:
     CScheduler* scheduler;
     boost::thread* scheduler_thread;
-    CCriticalSection cs;
+    mutable CCriticalSection cs;
     bool tryLockChainTipScheduled GUARDED_BY(cs) {false};
     bool isEnabled GUARDED_BY(cs) {false};
     bool isEnforced GUARDED_BY(cs) {false};
@@ -87,9 +87,9 @@ public:
     void Start();
     void Stop();
 
-    bool AlreadyHave(const CInv& inv);
-    bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret);
-    CChainLockSig GetBestChainLock();
+    bool AlreadyHave(const CInv& inv) const;
+    bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const;
+    CChainLockSig GetBestChainLock() const;
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
     void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash);
@@ -103,15 +103,15 @@ public:
     void EnforceBestChainLock();
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
 
-    bool HasChainLock(int nHeight, const uint256& blockHash);
-    bool HasConflictingChainLock(int nHeight, const uint256& blockHash);
+    bool HasChainLock(int nHeight, const uint256& blockHash) const;
+    bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const;
 
-    bool IsTxSafeForMining(const uint256& txid);
+    bool IsTxSafeForMining(const uint256& txid) const;
 
 private:
     // these require locks to be held already
-    bool InternalHasChainLock(int nHeight, const uint256& blockHash);
-    bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash);
+    bool InternalHasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash);
 
