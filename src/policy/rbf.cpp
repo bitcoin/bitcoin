@@ -150,6 +150,7 @@ std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& i
 std::optional<std::string> PaysForRBF(CAmount original_fees,
                                       CAmount replacement_fees,
                                       size_t replacement_vsize,
+                                      CFeeRate relay_fee,
                                       const uint256& txid)
 {
     // The replacement must pay greater fees than the transactions it
@@ -163,11 +164,11 @@ std::optional<std::string> PaysForRBF(CAmount original_fees,
     // Finally in addition to paying more fees than the conflicts the
     // new transaction must pay for its own bandwidth.
     CAmount additional_fees = replacement_fees - original_fees;
-    if (additional_fees < ::incrementalRelayFee.GetFee(replacement_vsize)) {
+    if (additional_fees < relay_fee.GetFee(replacement_vsize)) {
         return strprintf("rejecting replacement %s, not enough additional fees to relay; %s < %s",
                          txid.ToString(),
                          FormatMoney(additional_fees),
-                         FormatMoney(::incrementalRelayFee.GetFee(replacement_vsize)));
+                         FormatMoney(relay_fee.GetFee(replacement_vsize)));
     }
     return std::nullopt;
 }

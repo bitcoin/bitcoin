@@ -803,7 +803,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             nConflictingFees += it->GetModifiedFee();
             nConflictingSize += it->GetTxSize();
         }
-        if (const auto err_string{PaysForRBF(nConflictingFees, nModifiedFees, nSize, hash)}) {
+        if (const auto err_string{PaysForRBF(nConflictingFees, nModifiedFees, nSize, ::incrementalRelayFee, hash)}) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
         }
     }

@@ -84,12 +84,14 @@ std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& i
  * @param[in]   original_fees       Total modified fees of original transaction(s).
  * @param[in]   replacement_fees    Total modified fees of replacement transaction(s).
  * @param[in]   replacement_vsize   Total virtual size of replacement transaction(s).
+ * @param[in]   relay_fee           The node's minimum feerate for transaction relay.
  * @param[in]   txid                Transaction ID, included in the error message if violation occurs.
  * @returns error string if fees are insufficient, otherwise std::nullopt.
  */
 std::optional<std::string> PaysForRBF(CAmount original_fees,
                                       CAmount replacement_fees,
                                       size_t replacement_vsize,
+                                      CFeeRate relay_fee,
                                       const uint256& txid);
 
 #endif // BITCOIN_POLICY_RBF_H
