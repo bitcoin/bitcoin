@@ -344,7 +344,7 @@ class ToolWalletTest(BitcoinTestFramework):
         non_exist_dump = os.path.join(self.nodes[0].datadir, "wallet.nodump")
         self.assert_raises_tool_error('Unknown wallet file format "notaformat" provided. Please provide one of "bdb" or "sqlite".', '-wallet=todump', '-format=notaformat', '-dumpfile={}'.format(wallet_dump), 'createfromdump')
         self.assert_raises_tool_error('Dump file {} does not exist.'.format(non_exist_dump), '-wallet=todump', '-dumpfile={}'.format(non_exist_dump), 'createfromdump')
-        wallet_path = os.path.join(self.nodes[0].datadir, 'regtest/wallets/todump2')
+        wallet_path = os.path.join(self.nodes[0].datadir, 'regtest', 'wallets', 'todump2')
         self.assert_raises_tool_error('Failed to create database path \'{}\'. Database already exists.'.format(wallet_path), '-wallet=todump2', '-dumpfile={}'.format(wallet_dump), 'createfromdump')
         self.assert_raises_tool_error("The -descriptors option can only be used with the 'create' command.", '-descriptors', '-wallet=todump2', '-dumpfile={}'.format(wallet_dump), 'createfromdump')
 
