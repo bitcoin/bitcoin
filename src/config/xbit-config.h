@@ -24,19 +24,19 @@
 #define CLIENT_VERSION_MINOR 21
 
 /* Build revision */
-#define CLIENT_VERSION_REVISION 0
+#define CLIENT_VERSION_REVISION 2
 
 /* Copyright holder(s) before %s replacement */
 #define COPYRIGHT_HOLDERS "The %s developers"
 
 /* Copyright holder(s) */
-#define COPYRIGHT_HOLDERS_FINAL "The XBit Core developers"
+#define COPYRIGHT_HOLDERS_FINAL "The XBit Core developers- The Counos Platform"
 
 /* Replacement for %s in copyright holders string */
 #define COPYRIGHT_HOLDERS_SUBSTITUTION "XBit Core"
 
 /* Copyright year */
-#define COPYRIGHT_YEAR 2020
+#define COPYRIGHT_YEAR 2021
 
 /* Define this symbol to build code that uses AVX2 intrinsics */
 #define ENABLE_AVX2 1
@@ -51,7 +51,7 @@
 #define ENABLE_WALLET 1
 
 /* Define to 1 to enable ZMQ functions */
-#define ENABLE_ZMQ 1
+#define ENABLE_ZMQ 0
 
 /* define if the Boost library is available */
 #define HAVE_BOOST /**/
@@ -255,16 +255,16 @@
 #define HAVE_MEMORY_H 1
 
 /* Define to 1 if you have the <miniupnpc/miniupnpc.h> header file. */
-#define HAVE_MINIUPNPC_MINIUPNPC_H 1
+/* #undef HAVE_MINIUPNPC_MINIUPNPC_H */
 
 /* Define to 1 if you have the <miniupnpc/miniwget.h> header file. */
-#define HAVE_MINIUPNPC_MINIWGET_H 1
+/* #undef HAVE_MINIUPNPC_MINIWGET_H */
 
 /* Define to 1 if you have the <miniupnpc/upnpcommands.h> header file. */
-#define HAVE_MINIUPNPC_UPNPCOMMANDS_H 1
+/* #undef HAVE_MINIUPNPC_UPNPCOMMANDS_H */
 
 /* Define to 1 if you have the <miniupnpc/upnperrors.h> header file. */
-#define HAVE_MINIUPNPC_UPNPERRORS_H 1
+/* #undef HAVE_MINIUPNPC_UPNPERRORS_H */
 
 /* Define this symbol if you have posix_fallocate */
 #define HAVE_POSIX_FALLOCATE 1
@@ -406,11 +406,11 @@
 /* #undef USE_QRCODE */
 
 /* Define if sqlite support should be compiled in */
-#define USE_SQLITE 1
+/* #undef USE_SQLITE */
 
 /* UPnP support not compiled if undefined, otherwise value (0 or 1) determines
    default state */
-#define USE_UPNP 0
+/* #undef USE_UPNP */
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
