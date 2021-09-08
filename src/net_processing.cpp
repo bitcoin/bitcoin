@@ -4607,6 +4607,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         fForceSendHeaders = true;
                     pBestIndex = pindex;
                     if (fForceSendHeaders) {
+                        vHeaders.push_back(pindex->GetBlockHeader());
+                    } else if (fFoundStartingHeader) {
                         // add this to the headers message
                         vHeaders.push_back(pindex->GetBlockHeader());
                     } else if (PeerHasHeader(&state, pindex)) {
