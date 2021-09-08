@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from decimal import Decimal
+import random
 
 from test_framework.address import (
     ADDRESS_BCRT1_P2WSH_OP_TRUE,
@@ -173,6 +174,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.test_package_rbf_conflicting_conflicts()
         self.test_cpfp()
         self.test_package_ancestor_score()
+        self.test_package_rbf_partial()
 
     def test_package_rbf_basic(self):
         self.log.info("Test that packages can RBF")
@@ -371,6 +373,25 @@ class PackageRelayTest(BitcoinTestFramework):
         })
         (package_hex2, package_txns2) = self.create_simple_package(parent_coins, Decimal("0.00011"))
         assert_raises_rpc_error(-25, "package RBF failed: insufficient fees", node.submitrawpackage, package_hex2)
+        node.generate(1)
+
+    def test_package_rbf_partial(self):
+        self.log.info("Test that package RBF works when a transaction was already submitted")
+        node = self.nodes[0]
+        num_parents = 10
+        parent_coins = self.coins[:num_parents]
+        del self.coins[:num_parents]
+        (package_hex1, package_txns1) = self.create_simple_package(parent_coins, DEFAULT_FEE, DEFAULT_FEE)
+        (package_hex2, package_txns2) = self.create_simple_package(parent_coins, DEFAULT_FEE * 3, DEFAULT_FEE * 3)
+        node.submitrawpackage(package_hex1)
+        self.assert_mempool_contents(expected=package_txns1, unexpected=package_txns2)
+        # Maybe submit one or more of the parents
+        for parent in package_hex2[:-1]:
+            if random.choice([True, False]):
+                # Should successfully RBF since we gave them triple fees
+                node.sendrawtransaction(parent)
+        node.submitrawpackage(package_hex2)
+        self.assert_mempool_contents(expected=package_txns2, unexpected=package_txns1)
         node.generate(1)
 
 
