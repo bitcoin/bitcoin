@@ -126,6 +126,7 @@ class DashZMQTest (DashTestFramework):
             self.test_chainlock_publishers()
             self.test_instantsend_publishers()
             self.test_governance_publishers()
+            self.test_getzmqnotifications()
         finally:
             # Destroy the ZMQ context.
             self.log.debug("Destroying ZMQ context")
@@ -381,6 +382,24 @@ class DashZMQTest (DashTestFramework):
         # Unsubscribe from governance messages
         self.unsubscribe(governance_publishers)
 
+    def test_getzmqnotifications(self):
+        # Test getzmqnotifications RPC
+        assert_equal(self.nodes[0].getzmqnotifications(), [
+            {"type": "pubhashchainlock", "address": self.address, "hwm": 1000},
+            {"type": "pubhashgovernanceobject", "address": self.address, "hwm": 1000},
+            {"type": "pubhashgovernancevote", "address": self.address, "hwm": 1000},
+            {"type": "pubhashinstantsenddoublespend", "address": self.address, "hwm": 1000},
+            {"type": "pubhashrecoveredsig", "address": self.address, "hwm": 1000},
+            {"type": "pubhashtxlock", "address": self.address, "hwm": 1000},
+            {"type": "pubrawchainlock", "address": self.address, "hwm": 1000},
+            {"type": "pubrawchainlocksig", "address": self.address, "hwm": 1000},
+            {"type": "pubrawgovernanceobject", "address": self.address, "hwm": 1000},
+            {"type": "pubrawgovernancevote", "address": self.address, "hwm": 1000},
+            {"type": "pubrawinstantsenddoublespend", "address": self.address, "hwm": 1000},
+            {"type": "pubrawrecoveredsig", "address": self.address, "hwm": 1000},
+            {"type": "pubrawtxlock", "address": self.address, "hwm": 1000},
+            {"type": "pubrawtxlocksig", "address": self.address, "hwm": 1000},
+        ])
 
 if __name__ == '__main__':
     DashZMQTest().main()
