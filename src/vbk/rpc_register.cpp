@@ -39,7 +39,7 @@ void EnsurePopEnabled()
 void EnsurePopActive()
 {
     auto tipheight = ChainActive().Height();
-    if (!Params().isPopActive(tipheight)) {
+    if (!VeriBlock::isPopActive()) {
         throw JSONRPCError(RPC_MISC_ERROR,
             strprintf("POP protocol is not active. Current=%d, activation height=%d",
                 tipheight,

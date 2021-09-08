@@ -50,7 +50,7 @@ struct E2eFixture : public TestChain100Setup {
 
         // create N blocks necessary to start POP fork resolution
         CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-        while (!Params().isPopActive(ChainActive().Tip()->nHeight)) {
+        while (!VeriBlock::isPopActive()) {
             CBlock b = CreateAndProcessBlock({}, scriptPubKey);
             m_coinbase_txns.push_back(b.vtx[0]);
         }
