@@ -23,7 +23,8 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
-
+// SYSCOIN 
+#include <QSettings>
 WalletFrame::WalletFrame(const PlatformStyle* _platformStyle, QWidget* parent)
     : QFrame(parent),
       platformStyle(_platformStyle),
@@ -54,11 +55,6 @@ WalletFrame::WalletFrame(const PlatformStyle* _platformStyle, QWidget* parent)
     // SYSCOIN
     masternodeListPage = new MasternodeList();
     walletStack->addWidget(masternodeListPage);
-    // SYSCOIN
-    QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool()) {
-        masternodeListPage->setWalletModel(_walletModel);
-    }
 }
 
 WalletFrame::~WalletFrame()
@@ -94,7 +90,11 @@ bool WalletFrame::addView(WalletView* walletView)
 
     walletStack->addWidget(walletView);
     mapWalletViews[walletView->getWalletModel()] = walletView;
-
+    // SYSCOIN
+    QSettings settings;
+    if (settings.value("fShowMasternodesTab").toBool()) {
+        masternodeListPage->setWalletModel(walletView->getWalletModel());
+    }
     return true;
 }
 
