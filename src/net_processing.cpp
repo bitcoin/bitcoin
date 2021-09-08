@@ -4046,7 +4046,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         for (unsigned int n = 0; n < nCount; n++) {
             vRecv >> headers[n];
             // SYSCOIN
-            // ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
+            if(!headers[n].IsNEVM())
+                ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
 
         return ProcessHeadersMessage(pfrom, *peer, headers, /*via_compact_block=*/false);
