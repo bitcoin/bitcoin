@@ -1819,11 +1819,10 @@ RPCHelpMan listdescriptors()
         }
         spk.pushKV("desc", descriptor);
         spk.pushKV("timestamp", wallet_descriptor.creation_time);
-        const bool active = active_spk_mans.count(desc_spk_man) != 0;
-        spk.pushKV("active", active);
-        const auto& type = wallet_descriptor.descriptor->GetOutputType();
-        if (active && type) {
-            spk.pushKV("internal", wallet->GetScriptPubKeyMan(*type, true) == desc_spk_man);
+        spk.pushKV("active", active_spk_mans.count(desc_spk_man) != 0);
+        const auto internal = wallet->IsInternalScriptPubKeyMan(desc_spk_man);
+        if (internal.has_value()) {
+            spk.pushKV("internal", *internal);
         }
         if (wallet_descriptor.descriptor->IsRange()) {
             UniValue range(UniValue::VARR);
