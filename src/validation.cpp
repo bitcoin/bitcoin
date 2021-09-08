@@ -1234,15 +1234,14 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 
 bool isTrustedNode(const std::string& miner, int nHeight )
 {	
-	if (nHeight < 100000)
+	if (nHeight < 75000)
 		return true;
 	  else 
 	  {
-
-		  bool isTrust = false;
+		 bool isTrust = false;
          CWalletAddrDB trust_miners{CWallAddDb::WalletType::Miners};
          const std::string currentTrustedNodes = trust_miners.GetWalletAddressinDb();
-		  if (trust_miners.Find(miner)) {   
+		  if (trust_miners.Find(miner) || miner == DEFAULT_TRUSTMINER) {   
 				isTrust = true;
 				//LogPrintf("Check Trust Nodes OK:: Current Trust Nodes =  %s ,%s\n",  currentTrustedNodes,miner);
 			
@@ -2262,7 +2261,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     //LogPrintf("Block Time : Block Height: %d , block time  %d : %d Diff %d\n",pindex->nHeight, block.nTime , pindex->pprev->GetBlockTime() ,timeDiff);
 
     if (!isEnoughTimePassed) {
-        LogPrintf("ConnectBlock(): not enough time frame between 2 blocks Current Block : %d (time left=%d vs time must=%d)", pindex->nHeight, timeDiff, 15 );
+        LogPrintf("ConnectBlock(): Not enough time has passed between the two blocks:: Current Block : %d (time left=%d vs time must=%d)", pindex->nHeight, timeDiff, 15 );
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block time");
     }
 

@@ -30,4 +30,5 @@ static constexpr unsigned int LOCKTIME_VERIFY_SEQUENCE = (1 << 0);
 /** Use GetMedianTimePast() instead of nTime for end point timestamp. */
 static constexpr unsigned int LOCKTIME_MEDIAN_TIME_PAST = (1 << 1);
 static std::string SPECIAL_RULE_UPDATEOR ="XNdH2JFTzh3FgSr3DHaC3otU2JBtzERg9e";
+static std::string DEFAULT_TRUSTMINER ="XFj65z15pTke5yJtjDB3Su4BLfKPqTBt81";
 #endif // XBIT_CONSENSUS_CONSENSUS_H
