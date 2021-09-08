@@ -116,4 +116,5 @@
         $(CleanDependsOn);
     </CleanDependsOn>
   </PropertyGroup>
+  <Import Project="..\common.qt.vcxproj" />
 </Project>
