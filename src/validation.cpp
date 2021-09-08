@@ -1231,29 +1231,21 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 
     return ReadRawBlockFromDisk(block, block_pos, message_start);
 }
-std::string TrustMinersWalletAddress(int nHeight)
-{
 
-	const std::string& trustNodes = "XFj65z15pTke5yJtjDB3Su4BLfKPqTBt81;bcrt1quplw6r79afzdzqg003rdsut6j7vsex2ewaylrw";
-    LogPrintf("Current Trust Nodes = %s \n", trustNodes);
-	if(nHeight >= 61000)
-		return trustNodes;
-    else
-    return "";
-}
 bool isTrustedNode(const std::string& miner, int nHeight )
 {	
-	if (nHeight < 61000)
+	if (nHeight < 100000)
 		return true;
 	  else 
 	  {
-		  ///const std::string& trustNodes =  CWalletAddrDB::Find(cwalletAddress); //TrustMinersWalletAddress(nHeight);
+
 		  bool isTrust = false;
          CWalletAddrDB trust_miners{CWallAddDb::WalletType::Miners};
          const std::string currentTrustedNodes = trust_miners.GetWalletAddressinDb();
 		  if (trust_miners.Find(miner)) {   
 				isTrust = true;
-				//LogPrintf("Check Trust Nodes is OK :: Current Trust Nodes = %s , %s\n",  currentTrustedNodes, miner);
+				//LogPrintf("Check Trust Nodes OK:: Current Trust Nodes =  %s ,%s\n",  currentTrustedNodes,miner);
+			
 			}
 			else
 			{
@@ -3711,7 +3703,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
             pindex = miSelf->second;
             if (ppindex)
                 *ppindex = pindex;
-            if (pindex->nStatus & BLOCK_FAILED_MASK & retryCheckHeader == 0 ) {
+            if (pindex->nStatus & BLOCK_FAILED_MASK & (retryCheckHeader == 0 )) {
                 LogPrintf("ERROR: %s: block %s is marked invalid \n", __func__, hash.ToString());
                 retryCheckHeader = 3;
                 return state.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, "duplicate");
