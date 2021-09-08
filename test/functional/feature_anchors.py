@@ -25,9 +25,6 @@ class AnchorsTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.disable_autoconnect = False
 
-    def setup_network(self):
-        self.setup_nodes()
-
     def run_test(self):
         node_anchors_path = os.path.join(
             self.nodes[0].datadir, "regtest", "anchors.dat"
