@@ -57,6 +57,10 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
         assert info['isvalid']
         assert 'error' not in info
 
+        info = node.validateaddress(BECH32_INVALID_VERSION)
+        assert not info['isvalid']
+        assert_equal(info['error'], 'Invalid Bech32 address witness version')
+
         # Base58
         info = node.validateaddress(BASE58_INVALID_PREFIX)
         assert not info['isvalid']
