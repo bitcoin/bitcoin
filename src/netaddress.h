@@ -224,7 +224,7 @@ public:
      */
     bool IsRelayable() const
     {
-        return IsIPv4() || IsIPv6() || IsTor() || IsI2P();
+        return IsIPv4() || IsIPv6() || IsTor() || IsI2P() || IsCJDNS();
     }
 
     /**
