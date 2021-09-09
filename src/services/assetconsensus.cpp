@@ -113,7 +113,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         }
     }
     if(nERC20Precision == 0 || nSPTPrecision == 0) {
-        //return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-precision", bSanityCheck);
+        return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-precision", bSanityCheck);
     }
     
     // check transaction spv proofs
