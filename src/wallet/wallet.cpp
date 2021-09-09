@@ -1062,8 +1062,23 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Co
 
             // loop though all outputs
             for (const CTxOut& txout: tx.vout) {
-                for (const auto& spk_man_pair : m_spk_managers) {
-                    spk_man_pair.second->MarkUnusedAddresses(txout.scriptPubKey);
+                for (const auto& spk_man : GetScriptPubKeyMans(txout.scriptPubKey)) {
+                    for (auto &dest : spk_man->MarkUnusedAddresses(txout.scriptPubKey)) {
+                        // If internal flag is not defined try to infer it from the ScriptPubKeyMan
+                        if (!dest.internal.has_value()) {
+                            dest.internal = IsInternalScriptPubKeyMan(spk_man);
+                        }
+
+                        // skip if can't determine whether it's a receiving address or not
+                        if (!dest.internal.has_value()) continue;
+
+                        // If this is a receiving address and it's not in the address book yet
+                        // (e.g. it wasn't generated on this node or we're restoring from backup)
+                        // add it to the address book for proper transaction accounting
+                        if (!*dest.internal && !FindAddressBookEntry(dest.dest, /* allow_change= */ false)) {
+                            SetAddressBook(dest.dest, "", "receive");
+                        }
+                    }
                 }
             }
 
