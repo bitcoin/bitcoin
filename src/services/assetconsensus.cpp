@@ -45,7 +45,6 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         readTxRootFail = !pnevmtxrootsdb || !pnevmtxrootsdb->ReadTxRoots(mintSyscoin.nBlockHash, txRootDB);
     }
     if(readTxRootFail && fNEVMConnection) {
-        LogPrintf("mintSyscoin.nBlockHash %s\n", mintSyscoin.nBlockHash.GetHex());
         return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
     }
      
@@ -114,22 +113,20 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         }
     }
     if(nERC20Precision == 0 || nSPTPrecision == 0) {
-        return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-precision", bSanityCheck);
+        //return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-precision", bSanityCheck);
     }
     
     // check transaction spv proofs
     std::vector<unsigned char> rlpTxRootVec(mintSyscoin.nTxRoot.begin(), mintSyscoin.nTxRoot.end());
+    std::reverse(rlpTxRootVec.begin(),rlpTxRootVec.end());
     rlpTxRootVec.insert(rlpTxRootVec.begin(), 0xa0);
     std::vector<unsigned char> rlpReceiptRootVec(mintSyscoin.nReceiptRoot.begin(),  mintSyscoin.nReceiptRoot.end());
+    std::reverse(rlpReceiptRootVec.begin(),rlpReceiptRootVec.end());
     rlpReceiptRootVec.insert(rlpReceiptRootVec.begin(), 0xa0);
-    LogPrintf("rlpTxRoot %s\n", HexStr(rlpTxRootVec));
     dev::RLP rlpTxRoot(&rlpTxRootVec);
-    LogPrintf("rlpReceiptRoot %s\n", HexStr(rlpReceiptRootVec));
     dev::RLP rlpReceiptRoot(&rlpReceiptRootVec);
-    LogPrintf("3\n");
     if(fNEVMConnection) {
         if(mintSyscoin.nTxRoot != txRootDB.nTxRoot){
-            LogPrintf("mintSyscoin.nTxRoot %s txRootDB.nTxRoot %s\n", mintSyscoin.nTxRoot.GetHex(), txRootDB.nTxRoot.GetHex());
             return FormatSyscoinErrorMessage(state, "mint-mismatching-txroot", bSanityCheck);
         }
 
@@ -279,8 +276,7 @@ bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const 
         else if (IsAssetTx(tx.nVersion)) {
             good = CheckAssetInputs(params, tx, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck, mapAssetIn, mapAssetOut);
         } 
-    } catch (const std::exception e) {
-        LogPrintf("e %s\n", e.what());
+    } catch (...) {
         return FormatSyscoinErrorMessage(state, "checksyscoininputs-exception", bSanityCheck);
     }
     return good;
