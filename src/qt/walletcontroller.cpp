@@ -57,12 +57,6 @@ WalletController::~WalletController()
     delete m_activity_worker;
 }
 
-std::vector<WalletModel*> WalletController::getOpenWallets() const
-{
-    QMutexLocker locker(&m_mutex);
-    return m_wallets;
-}
-
 std::map<std::string, bool> WalletController::listWalletDir() const
 {
     QMutexLocker locker(&m_mutex);
