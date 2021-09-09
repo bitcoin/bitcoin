@@ -9,6 +9,8 @@ from test_framework.util import (
     assert_equal,
     softfork_active,
 )
+import os
+
 
 class SegwitUpgradeTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -35,8 +37,11 @@ class SegwitUpgradeTest(BitcoinTestFramework):
         # Restarting the node (with segwit activation height set to 5) should result in a shutdown
         # because the blockchain consists of 3 insufficiently validated blocks per segwit consensus rules.
         node.assert_start_raises_init_error(
-                extra_args=["-segwitheight=5"],
-                expected_msg=": Witness data for blocks after height 5 requires validation. Please restart with -reindex..\nPlease restart with -reindex or -reindex-chainstate to recover.")
+            extra_args=["-segwitheight=5"],
+            expected_msg=": Witness data for blocks after height 5 requires "
+            f"validation. Please restart with -reindex..{os.linesep}"
+            "Please restart with -reindex or -reindex-chainstate to recover.",
+        )
 
         # As directed, the user restarts the node with -reindex
         self.start_node(0, extra_args=["-reindex", "-segwitheight=5"])
