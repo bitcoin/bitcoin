@@ -23,7 +23,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.nodes[0].generate(200)
+        self.generate(self.nodes[0], 200)
         self.sync_blocks()
         self.basic_zdag_doublespend()
         self.burn_zdag_doublespend()
@@ -31,7 +31,7 @@ class AssetZDAGTest(SyscoinTestFramework):
 
     def basic_zdag_doublespend(self):
         self.basic_asset(guid=None)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         newaddress2 = self.nodes[1].getnewaddress()
         newaddress1 = self.nodes[0].getnewaddress()
         self.nodes[2].importprivkey(self.nodes[1].dumpprivkey(newaddress2))
@@ -39,7 +39,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         # create 2 utxo's so below newaddress1 recipient of 0.5 COIN uses 1 and the newaddress3 recipient on node3 uses the other on dbl spend
         self.nodes[0].sendtoaddress(newaddress2, 1)
         self.nodes[0].sendtoaddress(newaddress2, 1)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset, 'minimumAmountAsset': 0.5})
         assert_equal(len(out), 1)
@@ -50,7 +50,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         time.sleep(0.25)
         self.nodes[0].assetallocationsend(self.asset, newaddress2, 1)
         time.sleep(0.25)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         # should have 2 sys utxos and 2 asset utxos
         out =  self.nodes[2].listunspent()
@@ -84,7 +84,7 @@ class AssetZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_MAJOR_CONFLICT)
             # will conflict because its using tx3 which uses tx2 which is in conflict state
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_MAJOR_CONFLICT)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         tx2inchain = False
         for i in range(3):
@@ -118,7 +118,7 @@ class AssetZDAGTest(SyscoinTestFramework):
 
     def burn_zdag_doublespend(self):
         self.basic_asset(guid=None)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         useraddress2 = self.nodes[1].getnewaddress()
         useraddress3 = self.nodes[2].getnewaddress()
         useraddress4 = self.nodes[3].getnewaddress()
@@ -131,14 +131,14 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(useraddress3, 1)
         self.nodes[0].sendtoaddress(useraddress4, 1)
         self.nodes[0].assetsendmany(self.asset,[{'address': useraddress1,'amount':1.0},{'address': useraddress2,'amount':0.4},{'address': useraddress3,'amount':0.5}])
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         # create separate output for dbl spend
         self.nodes[0].assetsend(self.asset, useraddress1, 0.5)
         time.sleep(0.25)
         # try to do multiple asset sends in one block
         assert_raises_rpc_error(-4, 'No inputs found for this asset', self.nodes[0].assetsend, self.asset, useraddress1, 2)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.2)
         time.sleep(0.25)
@@ -170,7 +170,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[1].getrawtransaction, txdblspend)
         assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[2].getrawtransaction, txdblspend)
         self.nodes[3].getrawtransaction(txdblspend)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         # after block, even node4 should have removed conflicting tx
         assert_raises_rpc_error(-5, 'No such mempool transaction', self.nodes[3].getrawtransaction, txdblspend)
@@ -188,14 +188,14 @@ class AssetZDAGTest(SyscoinTestFramework):
     def burn_zdag_doublespend_chain(self):
         # SYSX guid on regtest is 123456
         self.basic_asset('123456')
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         useraddress1 = self.nodes[1].getnewaddress()
         useraddress2 = self.nodes[2].getnewaddress()
         useraddress3 = self.nodes[3].getnewaddress()
         self.nodes[0].sendtoaddress(useraddress1, 1)
         self.nodes[0].sendtoaddress(useraddress2, 1)
         self.nodes[0].sendtoaddress(useraddress3, 1)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.nodes[0].syscoinburntoassetallocation(self.asset, 1)
         time.sleep(0.25)
         self.nodes[0].syscoinburntoassetallocation(self.asset, 1)
@@ -224,7 +224,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         assert_equal(len(out), 1)
         assert_equal(out[0]['asset_guid'], '123456')
         assert_equal(out[0]['asset_amount'], 0)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
         assert_equal(out[0]['asset_guid'], '123456')
@@ -255,7 +255,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         assert_equal(len(out), 0)
         # check listunspent is empty in mempool, all should be burned
         self.nodes[0].assetupdate(self.asset, '', '', 127, '', {}, {})
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         time.sleep(0.25)
         assert(self.nodes[1].getbalance() - (balanceBefore+Decimal(0.1)) < Decimal(0.001))
         assert(self.nodes[2].getbalance() - (balanceBefore+Decimal(0.01101)) < Decimal(0.001))

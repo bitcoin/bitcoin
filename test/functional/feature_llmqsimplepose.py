@@ -118,7 +118,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             t = time.time()
             while (not self.check_banned(mn)) and (time.time() - t) < 240:
                 self.reset_probe_timeouts()
-                self.nodes[0].generate(1)
+                self.generate(self.nodes[0], 1)
                 self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
 
             assert(self.check_banned(mn))
@@ -134,7 +134,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 addr = self.nodes[0].getnewaddress()
                 self.nodes[0].sendtoaddress(addr, 0.1)
                 self.nodes[0].protx_update_service(mn.proTxHash, '127.0.0.1:%d' % p2p_port(mn.node.index), mn.keyOperator, "", addr)
-                self.nodes[0].generate(1)
+                self.generate(self.nodes[0], 1)
                 assert(not self.check_banned(mn))
 
                 if restart:

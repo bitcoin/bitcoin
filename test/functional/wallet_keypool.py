@@ -162,7 +162,7 @@ class KeyPoolTest(SyscoinTestFramework):
         w1.walletpassphrase('test', 100)
 
         res = w1.sendtoaddress(address=address, amount=0.00010000)
-        nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         destination = addr.pop()
 
         # Using a fee rate (10 sat / byte) well above the minimum relay rate
@@ -215,7 +215,7 @@ def test_auxpow(self, nodes):
         assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 12)
     else:
         assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 0)
-    nodes[0].generate(1)
+    self.generate(nodes[0], 1)
     if self.options.descriptors:
         assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 12)
     else:

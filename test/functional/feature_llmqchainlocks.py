@@ -53,7 +53,7 @@ class LLMQChainLocksTest(DashTestFramework):
         for i in range(len(self.nodes)):
             if i != 1:
                 self.connect_nodes(i, 1)
-        self.nodes[0].generate(10)
+        self.generate(self.nodes[0], 10)
         self.sync_blocks(self.nodes, timeout=60*5)
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
@@ -65,11 +65,11 @@ class LLMQChainLocksTest(DashTestFramework):
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.wait_for_sporks_same()
         self.log.info("Mine single block, wait for chainlock")
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
         self.log.info("Mine many blocks, wait for chainlock")
-        self.nodes[0].generate(20)
+        self.generate(self.nodes[0], 20)
         # We need more time here due to 20 blocks being generated at once
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)
 
@@ -82,22 +82,22 @@ class LLMQChainLocksTest(DashTestFramework):
         self.isolate_node(self.nodes[0])
         node0_mining_addr = self.nodes[0].getnewaddress()
         node0_tip = self.nodes[0].getbestblockhash()
-        self.nodes[1].generatetoaddress(5, node0_mining_addr)
+        self.generatetoaddress(self.nodes[1], 5, node0_mining_addr)
         self.wait_for_chainlocked_block(self.nodes[1], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getbestblockhash() == node0_tip)
         self.reconnect_isolated_node(self.nodes[0], 1)
-        self.nodes[1].generatetoaddress(1, node0_mining_addr)
+        self.generatetoaddress(self.nodes[1], 1, node0_mining_addr)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[1].getbestblockhash())
 
         self.log.info("Isolate node, mine on both parts of the network, and reconnect")
         self.isolate_node(self.nodes[0])
-        bad_tip = self.nodes[0].generate(5)[-1]
-        self.nodes[1].generatetoaddress(1, node0_mining_addr)
+        bad_tip =  self.generate(self.nodes[0], 5)[-1]
+        self.generatetoaddress(self.nodes[1], 1, node0_mining_addr)
         good_tip = self.nodes[1].getbestblockhash()
         self.wait_for_chainlocked_block(self.nodes[1], good_tip)
         assert(not self.nodes[0].getblock(self.nodes[0].getbestblockhash())["chainlock"])
         self.reconnect_isolated_node(self.nodes[0], 1)
-        self.nodes[1].generatetoaddress(1, node0_mining_addr)
+        self.generatetoaddress(self.nodes[1], 1, node0_mining_addr)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getblock(self.nodes[0].getbestblockhash())["previousblockhash"] == good_tip)
         assert(self.nodes[1].getblock(self.nodes[1].getbestblockhash())["previousblockhash"] == good_tip)
@@ -120,10 +120,10 @@ class LLMQChainLocksTest(DashTestFramework):
         assert(self.nodes[0].getbestblockhash() == good_tip)
         self.nodes[0].invalidateblock(good_tip)
         self.log.info("Now try to reorg the chain")
-        self.nodes[0].generate(2)
+        self.generate(self.nodes[0], 2)
         time.sleep(6)
         assert(self.nodes[1].getbestblockhash() == good_tip)
-        bad_tip = self.nodes[0].generate(2)[-1]
+        bad_tip = self.generate(self.nodes[0], 2)[-1]
         time.sleep(6)
         assert(self.nodes[0].getbestblockhash() == bad_tip)
         assert(self.nodes[1].getbestblockhash() == good_tip)
@@ -132,7 +132,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.nodes[0].reconsiderblock(good_tip)
         assert(self.nodes[0].getbestblockhash() != good_tip)
         good_fork = good_tip
-        good_tip = self.nodes[1].generatetoaddress(1, node0_mining_addr)[-1]  # this should mark bad_tip as conflicting
+        good_tip = self.generatetoaddress(self.nodes[1], 1, node0_mining_addr)[-1]  # this should mark bad_tip as conflicting
         self.wait_for_chainlocked_block(self.nodes[0], good_tip)
         assert(self.nodes[0].getbestblockhash() == good_tip)
         found = False
@@ -158,7 +158,7 @@ class LLMQChainLocksTest(DashTestFramework):
             txs.append(self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1))
         txs += self.create_chained_txs(self.nodes[0], 1)
         self.log.info("Assert that after block generation these TXs are included")
-        node0_tip = self.nodes[0].generate(1)[-1]
+        node0_tip = self.generate(self.nodes[0], 1)[-1]
         for txid in txs:
             tx = self.nodes[0].getrawtransaction(txid, True)
             assert("confirmations" in tx)
@@ -166,7 +166,7 @@ class LLMQChainLocksTest(DashTestFramework):
         node0_tip_block = self.nodes[0].getblock(node0_tip)
         assert(not node0_tip_block["chainlock"])
         assert(node0_tip_block["previousblockhash"] == good_tip)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.log.info("Assert that TXs got included now")
         for txid in txs:
             tx = self.nodes[0].getrawtransaction(txid, True)
@@ -191,7 +191,7 @@ class LLMQChainLocksTest(DashTestFramework):
         time.sleep(5)
         for node in self.nodes:
             self.wait_for_most_recent_chainlock(node, fake_block_hash1, timeout=5)
-        tip = self.nodes[0].generate(1)[-1]
+        tip = self.generate(self.nodes[0], 1)[-1]
         self.sync_blocks()
         self.bump_mocktime(5, nodes=self.nodes)
         self.wait_for_chainlocked_block_all_nodes(tip, timeout=15)
@@ -210,7 +210,7 @@ class LLMQChainLocksTest(DashTestFramework):
         time.sleep(5)
         for node in self.nodes:
             self.wait_for_most_recent_chainlock(node, fake_block_hash3, timeout=15)
-        tip = self.nodes[0].generate(1)[-1]
+        tip = self.generate(self.nodes[0], 1)[-1]
         self.bump_mocktime(7, nodes=self.nodes)
         self.wait_for_chainlocked_block_all_nodes(tip, timeout=15)
         self.nodes[0].disconnect_p2ps()

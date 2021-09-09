@@ -24,7 +24,7 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.nodes[0].generate(200)
+        self.generate(self.nodes[0], 200)
         self.sync_blocks()
         self.burn_zdag_ancestor_nonzdag()
         self.burn_zdag_ancestor_doublespend()
@@ -32,14 +32,14 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
     # dbl spend verify zdag will flag any descendents but not ancestor txs
     def burn_zdag_ancestor_doublespend(self):
         self.basic_asset(guid=None)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         useraddress0 = self.nodes[0].getnewaddress()
         useraddress2 = self.nodes[2].getnewaddress()
         useraddress3 = self.nodes[3].getnewaddress()
         self.nodes[0].sendtoaddress(useraddress2, 1)
         self.nodes[2].importprivkey(self.nodes[0].dumpprivkey(useraddress0))
         self.nodes[0].assetsend(self.asset, useraddress0, 1.5)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001, 0, False)['txid']
         time.sleep(0.25)
         tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001, 0, False)['txid']
@@ -69,7 +69,7 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_STATUS_OK)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx6)['status'], ZDAG_MAJOR_CONFLICT)
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         for i in range(2):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)
@@ -82,13 +82,13 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
     # verify zdag will flag any descendents of non-zdag tx but not ancestors
     def burn_zdag_ancestor_nonzdag(self):
         self.basic_asset(guid=None)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         useraddress0 = self.nodes[0].getnewaddress()
         useraddress1 = self.nodes[1].getnewaddress()
         useraddress2 = self.nodes[2].getnewaddress()
         useraddress3 = self.nodes[3].getnewaddress()
         self.nodes[0].assetsend(self.asset, useraddress0, 1.5)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001)['txid']
         time.sleep(0.25)
         tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001)['txid']
@@ -107,7 +107,7 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)
@@ -136,7 +136,7 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_STATUS_OK)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_STATUS_OK)
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_NOT_FOUND)

@@ -977,7 +977,7 @@ class DashTestFramework(SyscoinTestFramework):
                     break
             if not found_unconfirmed:
                 break
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
         self.sync_blocks()
 
     def bump_scheduler(self, t, nodes=None):
@@ -1025,10 +1025,10 @@ class DashTestFramework(SyscoinTestFramework):
             self.nodes[0].lockunspent(True, [{'txid': txid, 'vout': collateral_vout}])
             proTxHash = self.nodes[0].protx_register_fund(address, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
         else:
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             proTxHash = self.nodes[0].protx_register(txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
         self.sync_all()
 
@@ -1039,7 +1039,7 @@ class DashTestFramework(SyscoinTestFramework):
         rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 99.9999})
         rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
         self.nodes[0].sendrawtransaction(rawtx["hex"])
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
         self.mninfo.remove(mn)
 
@@ -1101,7 +1101,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.log.info("Generating %d coins" % required_balance)
         while self.nodes[0].getbalance() < required_balance:
             self.bump_mocktime(1)
-            self.nodes[0].generatetoaddress(10, self.nodes[0].getnewaddress())
+            self.generatetoaddress(self.nodes[0], 10, self.nodes[0].getnewaddress())
         num_simple_nodes = self.num_nodes - self.mn_count - 1
         self.log.info("Creating and starting %s simple nodes", num_simple_nodes)
         for i in range(0, num_simple_nodes):
@@ -1110,7 +1110,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.log.info("Activating DIP3")
         if not self.fast_dip3_enforcement:
             while self.nodes[0].getblockcount() < 500:
-                self.nodes[0].generatetoaddress(10, self.nodes[0].getnewaddress())
+                self.generatetoaddress(self.nodes[0], 10, self.nodes[0].getnewaddress())
         self.sync_all()
 
         # create masternodes
@@ -1124,7 +1124,7 @@ class DashTestFramework(SyscoinTestFramework):
             self.connect_nodes(i+1, 0)
 
         self.bump_mocktime(1)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         # sync nodes
         self.sync_all()
         # Enable ChainLocks by default
@@ -1348,7 +1348,7 @@ class DashTestFramework(SyscoinTestFramework):
         def wait_func():
             if quorum_hash in self.nodes[0].quorum_list()["llmq_test"]:
                 return True
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.bump_mocktime(1, nodes=nodes)
             self.sync_blocks(nodes)
             return False
@@ -1381,7 +1381,7 @@ class DashTestFramework(SyscoinTestFramework):
             self.bump_mocktime(bumptime, nodes=nodes)
 
         def timeout_func1():
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.bump_mocktime(bumptime, nodes=nodes)
             self.sync_blocks(nodes)
 
@@ -1390,7 +1390,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.log.info("skip_count {}".format(skip_count))
         if skip_count != 0:
             timeout_func()
-            self.nodes[0].generate(skip_count)
+            self.generate(self.nodes[0], skip_count)
         self.sync_blocks(nodes)
 
         q = self.nodes[0].getbestblockhash()
@@ -1401,31 +1401,32 @@ class DashTestFramework(SyscoinTestFramework):
         if spork23_active:
             self.wait_for_masternode_probes(mninfos_valid, wait_proc=timeout_func)
         self.bump_mocktime(1, nodes=nodes)
-        self.nodes[0].generate(2)
+        self.generate(self.nodes[0], 2)
+        self.generate(self.nodes[0], 2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 2 (contribute)")
         self.wait_for_quorum_phase(q, 2, expected_members, "receivedContributions", expected_contributions, mninfos_online, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 2 (contribute)"))
         self.bump_mocktime(1, nodes=nodes)
-        self.nodes[0].generate(2)
+        self.generate(self.nodes[0], 2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 3 (complain)")
         self.wait_for_quorum_phase(q, 3, expected_members, "receivedComplaints", expected_complaints, mninfos_online, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 3 (complain)"))
         self.bump_mocktime(1, nodes=nodes)
-        self.nodes[0].generate(2)
+        self.generate(self.nodes[0], 2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 4 (justify)")
         self.wait_for_quorum_phase(q, 4, expected_members, "receivedJustifications", expected_justifications, mninfos_online, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 4 (justify)"))
         self.bump_mocktime(1, nodes=nodes)
-        self.nodes[0].generate(2)
+        self.generate(self.nodes[0], 2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 5 (commit)")
         self.wait_for_quorum_phase(q, 5, expected_members, "receivedPrematureCommitments", expected_commitments, mninfos_online, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 5 (commit)"))
         self.bump_mocktime(1, nodes=nodes)
-        self.nodes[0].generate(2)
+        self.generate(self.nodes[0], 2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 6 (mining)")
@@ -1437,7 +1438,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.log.info("Mining final commitment")
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].getblocktemplate({"rules": ["segwit"]}) # this calls CreateNewBlock
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for quorum to appear in the list")
@@ -1447,7 +1448,7 @@ class DashTestFramework(SyscoinTestFramework):
         quorum_info = self.nodes[0].quorum_info(100, new_quorum)
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
-        self.nodes[0].generate(8)
+        self.generate(self.nodes[0], 8)
         self.bump_mocktime(5, nodes=nodes)
         self.sync_blocks(nodes)
 

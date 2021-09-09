@@ -77,7 +77,7 @@ class TestSyscoinCli(SyscoinTestFramework):
 
     def run_test(self):
         """Main test logic"""
-        self.nodes[0].generate(BLOCKS)
+        self.generate(self.nodes[0], BLOCKS)
 
         cli_response = self.nodes[0].cli("-version").send_cli()
         assert "{} RPC client version".format(self.config['environment']['PACKAGE_NAME']) in cli_response
@@ -166,8 +166,8 @@ class TestSyscoinCli(SyscoinTestFramework):
             w1.sendtoaddress(w2.getnewaddress(), amounts[1])
             w1.sendtoaddress(w3.getnewaddress(), amounts[2])
 
-            # Mine a block to confirm; adds a block reward (50 SYS) to the default wallet.
-            self.nodes[0].generate(1)
+            # Mine a block to confirm; adds a block reward (50 BTC) to the default wallet.
+            self.generate(self.nodes[0], 1)
 
             self.log.info("Test -getinfo with multiple wallets and -rpcwallet returns specified wallet balance")
             for i in range(len(wallets)):
@@ -300,7 +300,7 @@ class TestSyscoinCli(SyscoinTestFramework):
             assert_raises_rpc_error(-19, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate', 1, 2, 3).echo)
         else:
             self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
-            self.nodes[0].generate(25)  # maintain block parity with the wallet_compiled conditional branch
+            self.generate(self.nodes[0], 25)  # maintain block parity with the wallet_compiled conditional branch
 
         self.log.info("Test -version with node stopped")
         self.stop_node(0)

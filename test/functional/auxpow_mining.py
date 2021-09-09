@@ -43,7 +43,7 @@ class AuxpowMiningTest (SyscoinTestFramework):
   def run_test (self):
     # Activate segwit if requested.
     if self.options.segwit:
-      self.nodes[0].generate (500)
+      self.generate(self.nodes[0], 500)
       self.sync_all ()
 
     # Test with getauxblock and createauxblock/submitauxblock.
@@ -69,7 +69,7 @@ class AuxpowMiningTest (SyscoinTestFramework):
 
     # If we receive a new block, the old hash will be replaced.
     self.sync_all ()
-    self.nodes[1].generate (1)
+    self.generate(self.nodes[1], 1)
     self.sync_all ()
     auxblock2 = create ()
     assert auxblock['hash'] != auxblock2['hash']
@@ -82,7 +82,7 @@ class AuxpowMiningTest (SyscoinTestFramework):
 
     # Invalidate the block again, send a transaction and query for the
     # auxblock to solve that contains the transaction.
-    self.nodes[0].generate (1)
+    self.generate(self.nodes[0], 1)
     addr = self.nodes[1].get_deterministic_priv_key ().address
     txid = self.nodes[0].sendtoaddress (addr, 1)
     self.sync_all ()

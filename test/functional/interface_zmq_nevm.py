@@ -187,7 +187,7 @@ class ZMQTest (SyscoinTestFramework):
         Thread(target=receive_thread_nevm, args=(self, 0, nevmsub,)).start()
         Thread(target=receive_thread_nevm, args=(self, 1, nevmsub1,)).start()
 
-        self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
+        self.generatetoaddress(self.nodes[0], num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
         self.sync_blocks()
         # test simple disconnect, save best block go back to 205 (first NEVM block) and then reconsider back to tip
         bestblockhash = self.nodes[0].getbestblockhash()
@@ -250,14 +250,14 @@ class ZMQTest (SyscoinTestFramework):
         # reorg test
         self.disconnect_nodes(0, 1)
         self.log.info("Mine 4 blocks on Node 0")
-        self.nodes[0].generatetoaddress(4, ADDRESS_BCRT1_UNSPENDABLE)
+        self.generatetoaddress(self.nodes[0], 4, ADDRESS_BCRT1_UNSPENDABLE)
         # node1 should have 210 because its disconnected and node0 should have 4 more (214)
         assert_equal(self.nodes[1].getblockcount(), 210)
         assert_equal(self.nodes[0].getblockcount(), 214)
         besthash_n0 = self.nodes[0].getbestblockhash()
 
         self.log.info("Mine competing 6 blocks on Node 1")
-        self.nodes[1].generatetoaddress(6, ADDRESS_BCRT1_UNSPENDABLE)
+        self.generatetoaddress(self.nodes[1], 6, ADDRESS_BCRT1_UNSPENDABLE)
         assert_equal(self.nodes[1].getblockcount(), 216)
 
         self.log.info("Connect nodes to force a reorg")
@@ -278,7 +278,7 @@ class ZMQTest (SyscoinTestFramework):
         self.log.info("Generating on node0 in separate thread")
         Thread(target=thread_generate, args=(self, self.nodes[0],)).start()
         self.log.info("Creating re-org and letting node1 become longest chain, node0 should re-org to node0")
-        self.nodes[1].generatetoaddress(10, ADDRESS_BCRT1_UNSPENDABLE)
+        self.generatetoaddress(self.nodes[1], 10, ADDRESS_BCRT1_UNSPENDABLE)
         besthash = self.nodes[1].getbestblockhash()
         nevmsub.artificialDelay = False
         sleep(1)

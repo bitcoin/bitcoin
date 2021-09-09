@@ -17,7 +17,7 @@ class AssetBurnTest(SyscoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.nodes[0].generate(200)
+        self.generate(self.nodes[0], 200)
         self.sync_blocks()
         self.basic_burn_asset()
         self.basic_burn_asset_multiple()
@@ -25,26 +25,26 @@ class AssetBurnTest(SyscoinTestFramework):
 
     def basic_burn_asset(self):
         self.basic_asset(None)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1)
         self.nodes[0].assetsend(self.asset, self.nodes[1].getnewaddress(), 0.5)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         out =  self.nodes[1].listunspentasset(self.asset)
         assert_equal(len(out), 1)
         # try to burn more than we own
         assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[1].assetallocationburn, self.asset, 0.6, "0x931d387731bbbc988b312206c74f77d004d6b84b")
         self.nodes[1].assetallocationburn(self.asset, 0.5, "0x931d387731bbbc988b312206c74f77d004d6b84b")
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         out =  self.nodes[1].listunspentasset(self.asset)
         assert_equal(len(out), 0)
 
     def two_way_burn(self):
         # burn SYS to SYSX and back
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 100)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         balancebefore = self.nodes[1].getbalance()
         txid = self.nodes[1].syscoinburntoassetallocation(self.asset, 50)['txid']
@@ -52,7 +52,7 @@ class AssetBurnTest(SyscoinTestFramework):
         fee = self.nodes[1].gettransaction(txid)['fee']
         assert_equal(self.nodes[1].getbalance(), (balancebefore + fee) - 50)
         self.sync_mempools()
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         out = self.nodes[1].listunspentasset(self.asset)
         assert_equal(len(out), 1)
@@ -62,7 +62,7 @@ class AssetBurnTest(SyscoinTestFramework):
         balancebefore = self.nodes[1].getbalance()
         txid = self.nodes[1].assetallocationburn(self.asset, 22)['txid']
         self.sync_mempools()
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         fee = self.nodes[1].gettransaction(txid)['fee']
         assert_equal(self.nodes[1].getbalance(), (balancebefore + fee) + 22)
@@ -72,7 +72,7 @@ class AssetBurnTest(SyscoinTestFramework):
         balancebefore = self.nodes[1].getbalance()
         txid = self.nodes[1].assetallocationburn(self.asset, 28)['txid']
         self.sync_mempools()
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         fee = self.nodes[1].gettransaction(txid)['fee']
         assert_equal(self.nodes[1].getbalance(), (balancebefore + fee) + 28)
@@ -82,10 +82,10 @@ class AssetBurnTest(SyscoinTestFramework):
     def basic_burn_asset_multiple(self):
         # SYSX guid on regtest is 123456
         self.basic_asset('123456')
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         self.nodes[0].assetsend(self.asset, self.nodes[1].getnewaddress(), 1)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         out =  self.nodes[1].listunspentasset(self.asset)
         assert_equal(len(out), 1)
@@ -119,7 +119,7 @@ class AssetBurnTest(SyscoinTestFramework):
         time.sleep(0.25)
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         # check over block too
         out =  self.nodes[1].listunspentasset(self.asset)
