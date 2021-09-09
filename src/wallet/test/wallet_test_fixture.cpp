@@ -8,7 +8,7 @@
 
 WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
     : TestingSetup(chainName),
-      m_wallet(m_node.chain.get(), "", CreateMockWalletDatabase())
+      m_wallet(m_node.chain.get(), "", m_args, CreateMockWalletDatabase())
 {
     m_wallet.LoadWallet();
     m_chain_notifications_handler = m_node.chain->handleNotifications({ &m_wallet, [](CWallet*) {} });
