@@ -94,17 +94,14 @@ task:
     x64_NATIVE_TOOLS: '"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"'
     IgnoreWarnIntDirInTempDetected: 'true'
   merge_script:
-    - ps: git config --global user.email "ci@ci.ci"
-    - ps: git config --global user.name "ci"
+    - git config --global user.email "ci@ci.ci"
+    - git config --global user.name "ci"
     # Windows filesystem loses the executable bit, and all of the executable
     # files are considered "modified" now. It will break the following `git merge`
     # command. The next two commands make git ignore this issue.
-    - ps: git config core.filemode false
-    - ps: git reset --hard
-    - ps: if ($env:CIRRUS_PR -eq $null) { exit 0; }
-    - ps: git fetch $env:CIRRUS_REPO_CLONE_URL $env:CIRRUS_BASE_BRANCH
-    # Merge base to detect silent merge conflicts.
-    - ps: git merge FETCH_HEAD
+    - git config core.filemode false
+    - git reset --hard
+    - PowerShell -NoLogo -Command if ($env:CIRRUS_PR -ne $null) { git fetch $env:CIRRUS_REPO_CLONE_URL $env:CIRRUS_BASE_BRANCH; git merge FETCH_HEAD; }
   msvc_qt_built_cache:
     folder: "%QTBASEDIR%"
     reupload_on_changes: false
