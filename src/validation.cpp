@@ -415,7 +415,7 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
     }
 
     // Call CheckInputScripts() to cache signature and script validity against current tip consensus rules.
-    return CheckInputScripts(tx, state, view, flags, /* cacheSigStore = */ true, /* cacheFullSciptStore = */ true, txdata);
+    return CheckInputScripts(tx, state, view, flags, /* cacheSigStore= */ true, /* cacheFullScriptStore= */ true, txdata);
 }
 
 namespace {

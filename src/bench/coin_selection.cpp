@@ -53,7 +53,7 @@ static void CoinSelection(benchmark::Bench& bench)
     const CoinSelectionParams coin_selection_params(/* change_output_size= */ 34,
                                                     /* change_spend_size= */ 148, /* effective_feerate= */ CFeeRate(0),
                                                     /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
-                                                    /* tx_no_inputs_size= */ 0, /* avoid_partial= */ false);
+                                                    /* tx_noinputs_size= */ 0, /* avoid_partial= */ false);
     bench.run([&] {
         std::set<CInputCoin> setCoinsRet;
         CAmount nValueRet;
