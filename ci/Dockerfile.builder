@@ -40,8 +40,12 @@ RUN apt-get update && apt-get install $APT_ARGS g++-arm-linux-gnueabihf && rm -r
 RUN apt-get update && apt-get install $APT_ARGS g++-mingw-w64-x86-64 && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install $APT_ARGS wine-stable wine32 wine64 bc nsis xorriso && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install $APT_ARGS python3-zmq && rm -rf /var/lib/apt/lists/*
-RUN apt-get update && apt-get install $APT_ARGS shellcheck cppcheck && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install $APT_ARGS cppcheck && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install $APT_ARGS imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools && rm -rf /var/lib/apt/lists/*
+
+ARG SHELLCHECK_VERSION=v0.6.0
+RUN curl -s "https://storage.googleapis.com/shellcheck/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar --xz -xf - --directory /tmp/
+ENV PATH "/tmp/shellcheck-${SHELLCHECK_VERSION}:${PATH}"
 
 # This is a hack. It is needed because gcc-multilib and g++-multilib are conflicting with g++-arm-linux-gnueabihf. This is
 # due to gcc-multilib installing the following symbolic link, which is needed for -m32 support. However, this causes
