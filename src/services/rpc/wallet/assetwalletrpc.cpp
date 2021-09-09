@@ -119,14 +119,14 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
     CMintSyscoin mintSyscoin(*wtx.tx);
     if (!mintSyscoin.IsNull()) {
         UniValue oSPVProofObj(UniValue::VOBJ);
-        oSPVProofObj.__pushKV("txid", mintSyscoin.strTxHash);  
+        oSPVProofObj.__pushKV("txid", mintSyscoin.nTxHash.GetHex());  
         oSPVProofObj.__pushKV("blockhash", mintSyscoin.nBlockHash.GetHex());  
         oSPVProofObj.__pushKV("postx", mintSyscoin.posTx);
-        oSPVProofObj.__pushKV("txroot", HexStr(mintSyscoin.vchTxRoot));
+        oSPVProofObj.__pushKV("txroot", mintSyscoin.nTxRoot.GetHex());
         oSPVProofObj.__pushKV("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
         oSPVProofObj.__pushKV("txpath", HexStr(mintSyscoin.vchTxPath));
         oSPVProofObj.__pushKV("posReceipt", mintSyscoin.posReceipt); 
-        oSPVProofObj.__pushKV("receiptroot", HexStr(mintSyscoin.vchReceiptRoot));  
+        oSPVProofObj.__pushKV("receiptroot", mintSyscoin.nReceiptRoot.GetHex());  
         oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes)); 
         entry.__pushKV("spv_proof", oSPVProofObj); 
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
@@ -1868,14 +1868,14 @@ static RPCHelpMan assetallocationmint()
     mintSyscoin.voutAssets.emplace_back(assetOut);
     mintSyscoin.nBlockHash = nBlockHash;
     mintSyscoin.posTx = posTxValue;    
-    mintSyscoin.vchTxRoot = ParseHex(strTxRoot);
+    mintSyscoin.nTxRoot = uint256S(strTxRoot);
     mintSyscoin.vchTxParentNodes = ParseHex(strTxParentNodes);
     mintSyscoin.vchTxPath = ParseHex(strTxPath);
     mintSyscoin.posReceipt = posReceiptValue;
-    mintSyscoin.vchReceiptRoot = ParseHex(strReceiptRoot);
+    mintSyscoin.nReceiptRoot = uint256S(strReceiptRoot);
     mintSyscoin.vchReceiptParentNodes = ParseHex(strReceiptParentNodes);
     std::vector<unsigned char> vchTxValue(mintSyscoin.vchTxParentNodes.begin()+mintSyscoin.posTx, mintSyscoin.vchTxParentNodes.end());
-    mintSyscoin.strTxHash = dev::sha3(vchTxValue).hex();
+    mintSyscoin.nTxHash = uint256S(dev::sha3(vchTxValue).hex());
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
     CTxOut change_prototype_txout(0, scriptPubKey);
     CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };    

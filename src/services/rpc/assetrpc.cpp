@@ -471,8 +471,8 @@ static RPCHelpMan getnevmblockchaininfo()
     std::reverse (evmBlock.nParentBlockHash.begin (), evmBlock.nParentBlockHash.end ()); // correct endian
     oNEVM.__pushKV("bestblockhash", "0x" + evmBlock.nBlockHash.ToString());
     oNEVM.__pushKV("previousblockhash", "0x" + evmBlock.nParentBlockHash.ToString());
-    oNEVM.__pushKV("txroot", "0x" + HexStr(evmBlock.vchTxRoot));
-    oNEVM.__pushKV("receiptroot", "0x" + HexStr(evmBlock.vchReceiptRoot));
+    oNEVM.__pushKV("txroot", "0x" + evmBlock.nTxRoot.GetHex());
+    oNEVM.__pushKV("receiptroot", "0x" + evmBlock.nReceiptRoot.GetHex());
     oNEVM.__pushKV("height", (nHeight - Params().GetConsensus().nNEVMStartBlock) + 1);
     oNEVM.__pushKV("blocksize", (int)block.vchNEVMBlockData.size());
     UniValue arrVec(UniValue::VARR);
@@ -768,7 +768,6 @@ static RPCHelpMan syscoingettxroots()
     if(!ParseHashStr(blockHashStr, nBlockHash)) {
          throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read block hash");
     }
-    std::pair<std::vector<unsigned char>,std::vector<unsigned char>> vchTxRoots;
     NEVMTxRoot txRootDB;
     if(!pnevmtxrootsdb || !pnevmtxrootsdb->ReadTxRoots(nBlockHash, txRootDB)){
        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read transaction roots");
@@ -776,8 +775,8 @@ static RPCHelpMan syscoingettxroots()
       
     UniValue ret(UniValue::VOBJ);  
     ret.pushKV("blockhash", nBlockHash.GetHex());
-    ret.pushKV("txroot", HexStr(txRootDB.vchTxRoot));
-    ret.pushKV("receiptroot", HexStr(txRootDB.vchReceiptRoot));
+    ret.pushKV("txroot", txRootDB.nTxRoot.GetHex());
+    ret.pushKV("receiptroot", txRootDB.nReceiptRoot.GetHex());
     
     return ret;
 },
@@ -805,7 +804,7 @@ static RPCHelpMan syscoincheckmint()
     std::string strTxHash = request.params[0].get_str();
     boost::erase_all(strTxHash, "0x");  // strip 0x
     uint256 sysTxid;
-    if(!pnevmtxmintdb || !pnevmtxmintdb->Read(strTxHash, sysTxid)){
+    if(!pnevmtxmintdb || !pnevmtxmintdb->Read(uint256S(strTxHash), sysTxid)){
        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read Syscoin transaction using block hash");
     }
     UniValue output(UniValue::VOBJ);
@@ -864,15 +863,10 @@ static RPCHelpMan syscoinsetethheaders()
         }
         std::string txRootStr = tupleArray[1].get_str();
         boost::erase_all(txRootStr, "0x");  // strip 0x
-        // add RLP header in case it doesn't already have it
-        if(txRootStr.find("a0") != 0)
-            txRootStr = "a0" + txRootStr;
-        txRoot.vchTxRoot = ParseHex(txRootStr);
+        txRoot.nTxRoot = uint256S(txRootStr);
         std::string txReceiptRoot = tupleArray[2].get_str();
         boost::erase_all(txReceiptRoot, "0x");  // strip 0x
-        if(txReceiptRoot.find("a0") != 0)
-            txReceiptRoot = "a0" + txReceiptRoot;
-        txRoot.vchReceiptRoot = ParseHex(txReceiptRoot);
+        txRoot.nReceiptRoot = uint256S(txReceiptRoot);
         txRootMap.try_emplace(nBlockHash, txRoot);
     } 
     bool res = pnevmtxrootsdb->FlushWrite(txRootMap);

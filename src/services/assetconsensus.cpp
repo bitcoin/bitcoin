@@ -45,6 +45,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         readTxRootFail = !pnevmtxrootsdb || !pnevmtxrootsdb->ReadTxRoots(mintSyscoin.nBlockHash, txRootDB);
     }
     if(readTxRootFail && fNEVMConnection) {
+        LogPrintf("mintSyscoin.nBlockHash %s\n", mintSyscoin.nBlockHash.GetHex());
         return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
     }
      
@@ -101,11 +102,11 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
             // topic hash matches with TokenFreeze signature
             if(Params().GetConsensus().vchTokenFreezeMethod == rlpReceiptLogTopicsValue[0].toBytes(dev::RLP::VeryStrict)) {
                 const std::vector<unsigned char> &dataValue = rlpReceiptLogValue[2].toBytes(dev::RLP::VeryStrict);
-                if(dataValue.size() < 96) {
+                if(dataValue.size() < 128) {
                      return FormatSyscoinErrorMessage(state, "mint-receipt-log-data-invalid-size", bSanityCheck);
                 }
                 // get last data field which should be our precisions
-                const std::vector<unsigned char> precisions(dataValue.begin()+64, dataValue.end());
+                const std::vector<unsigned char> precisions(dataValue.begin()+96, dataValue.end());
                 // get precision
                 nERC20Precision = static_cast<uint8_t>(precisions[31]);
                 nSPTPrecision = static_cast<uint8_t>(precisions[27]);
@@ -115,42 +116,51 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(nERC20Precision == 0 || nSPTPrecision == 0) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-precision", bSanityCheck);
     }
+    
     // check transaction spv proofs
-    dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
-    dev::RLP rlpReceiptRoot(&mintSyscoin.vchReceiptRoot);
+    std::vector<unsigned char> rlpTxRootVec(mintSyscoin.nTxRoot.begin(), mintSyscoin.nTxRoot.end());
+    rlpTxRootVec.insert(rlpTxRootVec.begin(), 0xa0);
+    std::vector<unsigned char> rlpReceiptRootVec(mintSyscoin.nReceiptRoot.begin(),  mintSyscoin.nReceiptRoot.end());
+    rlpReceiptRootVec.insert(rlpReceiptRootVec.begin(), 0xa0);
+    LogPrintf("rlpTxRoot %s\n", HexStr(rlpTxRootVec));
+    dev::RLP rlpTxRoot(&rlpTxRootVec);
+    LogPrintf("rlpReceiptRoot %s\n", HexStr(rlpReceiptRootVec));
+    dev::RLP rlpReceiptRoot(&rlpReceiptRootVec);
+    LogPrintf("3\n");
     if(fNEVMConnection) {
-        if(!txRootDB.vchTxRoot.empty() && mintSyscoin.vchTxRoot != txRootDB.vchTxRoot){
+        if(mintSyscoin.nTxRoot != txRootDB.nTxRoot){
+            LogPrintf("mintSyscoin.nTxRoot %s txRootDB.nTxRoot %s\n", mintSyscoin.nTxRoot.GetHex(), txRootDB.nTxRoot.GetHex());
             return FormatSyscoinErrorMessage(state, "mint-mismatching-txroot", bSanityCheck);
         }
 
-        if(!txRootDB.vchReceiptRoot.empty() && mintSyscoin.vchReceiptRoot != txRootDB.vchReceiptRoot){
+        if(mintSyscoin.nReceiptRoot != txRootDB.nReceiptRoot){
             return FormatSyscoinErrorMessage(state, "mint-mismatching-receiptroot", bSanityCheck);
         }
     }
     
     dev::RLP rlpTxParentNodes(&mintSyscoin.vchTxParentNodes);
     std::vector<unsigned char> vchTxValue(mintSyscoin.vchTxParentNodes.begin()+mintSyscoin.posTx, mintSyscoin.vchTxParentNodes.end());
-    // validate mintSyscoin.strTxHash is the hash of vchTxValue
-    if(dev::sha3(vchTxValue).hex() != mintSyscoin.strTxHash) {
+    // validate mintSyscoin.nTxHash is the hash of vchTxValue
+    if(uint256S(dev::sha3(vchTxValue).hex()) != mintSyscoin.nTxHash) {
         return FormatSyscoinErrorMessage(state, "mint-verify-tx-hash", bSanityCheck);
     }
     dev::RLP rlpTxValue(&vchTxValue);
     const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
     dev::RLP rlpTxPath(&vchTxPath);
     // ensure eth tx not already spent in a previous block
-    if(pnevmtxmintdb->Exists(mintSyscoin.strTxHash)) {
+    if(pnevmtxmintdb->Exists(mintSyscoin.nTxHash)) {
         return FormatSyscoinErrorMessage(state, "mint-exists", bSanityCheck);
     } 
     // sanity check is set in mempool during m_test_accept and when miner validates block
     // we care to ensure unique bridge id's in the mempool, not to emplace on test_accept
     if(bSanityCheck) {
-        if(mapMintKeys.find(mintSyscoin.strTxHash) != mapMintKeys.end()) {
+        if(mapMintKeys.find(mintSyscoin.nTxHash) != mapMintKeys.end()) {
             return FormatSyscoinErrorMessage(state, "mint-duplicate-transfer", bSanityCheck);
         }
     }
     else {
         // ensure eth tx not already spent in current processing block or mempool(mapMintKeysMempool passed in)
-        auto itMap = mapMintKeys.try_emplace(mintSyscoin.strTxHash, txHash);
+        auto itMap = mapMintKeys.try_emplace(mintSyscoin.nTxHash, txHash);
         if(!itMap.second) {
             return FormatSyscoinErrorMessage(state, "mint-duplicate-transfer", bSanityCheck);
         }
@@ -269,7 +279,8 @@ bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const 
         else if (IsAssetTx(tx.nVersion)) {
             good = CheckAssetInputs(params, tx, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck, mapAssetIn, mapAssetOut);
         } 
-    } catch (...) {
+    } catch (const std::exception e) {
+        LogPrintf("e %s\n", e.what());
         return FormatSyscoinErrorMessage(state, "checksyscoininputs-exception", bSanityCheck);
     }
     return good;
@@ -281,7 +292,7 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, NEVMMint
         LogPrint(BCLog::SYS,"DisconnectMintAsset: Cannot unserialize data inside of this transaction relating to an assetallocationmint\n");
         return false;
     }
-    mapMintKeys.try_emplace(mintSyscoin.strTxHash, txHash);
+    mapMintKeys.try_emplace(mintSyscoin.nTxHash, txHash);
     return true;
 }
 
