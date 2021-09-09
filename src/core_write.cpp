@@ -68,7 +68,6 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint
         entry.__pushKV("txid", txHash.GetHex());
         entry.__pushKV("blockhash", hashBlock.GetHex());  
         UniValue oSPVProofObj(UniValue::VOBJ);
-        oSPVProofObj.__pushKV("txid", mintSyscoin.nTxHash.GetHex());  
         oSPVProofObj.__pushKV("blockhash", mintSyscoin.nBlockHash.GetHex());  
         oSPVProofObj.__pushKV("postx", mintSyscoin.posTx);
         oSPVProofObj.__pushKV("txroot", mintSyscoin.nTxRoot.GetHex()); 

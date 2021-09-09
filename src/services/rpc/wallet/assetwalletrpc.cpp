@@ -735,8 +735,8 @@ static RPCHelpMan assetnewtest()
             {RPCResult::Type::STR, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
-    HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
-    + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 127, \"notary_address\", {}, {}")
+    HelpExampleCli("assetnewtest", "123456 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
+    + HelpExampleRpc("assetnewtest", "123456, 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 127, \"notary_address\", {}, {}")
     },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
