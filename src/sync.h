@@ -6,6 +6,8 @@
 #ifndef BITCOIN_SYNC_H
 #define BITCOIN_SYNC_H
 
+#include <logging.h>
+#include <logging/timer.h>
 #include <threadsafety.h>
 #include <util/macros.h>
 
@@ -149,9 +151,6 @@ inline void AssertLockNotHeldInline(const char* name, const char* file, int line
 inline void AssertLockNotHeldInline(const char* name, const char* file, int line, SharedMutex* cs) LOCKS_EXCLUDED(cs) { AssertLockNotHeldInternal(name, file, line, cs); }
 #define AssertLockNotHeld(cs) AssertLockNotHeldInline(#cs, __FILE__, __LINE__, &cs)
 
-/** Prints a lock contention to the log */
-void LockContention(const char* pszName, const char* pszFile, int nLine);
-
 /** Wrapper around std::unique_lock style lock for Mutex. */
 template <typename Mutex, typename Base = typename Mutex::UniqueLock>
 class SCOPED_LOCKABLE UniqueLock : public Base
@@ -161,7 +160,7 @@ private:
     {
         EnterCritical(pszName, pszFile, nLine, Base::mutex());
         if (Base::try_lock()) return;
-        LockContention(pszName, pszFile, nLine); // log the contention
+        LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
         Base::lock();
     }
 

@@ -9,6 +9,7 @@
 #include <logging.h>
 #include <util/macros.h>
 #include <util/time.h>
+#include <util/types.h>
 
 #include <chrono>
 #include <string>
@@ -58,23 +59,15 @@ public:
             return strprintf("%s: %s", m_prefix, msg);
         }
 
-        if (std::is_same<TimeType, std::chrono::microseconds>::value) {
+        if constexpr (std::is_same<TimeType, std::chrono::microseconds>::value) {
             return strprintf("%s: %s (%iμs)", m_prefix, msg, end_time.count());
+        } else if constexpr (std::is_same<TimeType, std::chrono::milliseconds>::value) {
+            return strprintf("%s: %s (%.2fms)", m_prefix, msg, end_time.count() * 0.001);
+        } else if constexpr (std::is_same<TimeType, std::chrono::seconds>::value) {
+            return strprintf("%s: %s (%.2fs)", m_prefix, msg, end_time.count() * 0.000001);
+        } else {
+            static_assert(ALWAYS_FALSE<TimeType>, "Error: unexpected time type");
         }
-
-        std::string units;
-        float divisor = 1;
-
-        if (std::is_same<TimeType, std::chrono::milliseconds>::value) {
-            units = "ms";
-            divisor = 1000.;
-        } else if (std::is_same<TimeType, std::chrono::seconds>::value) {
-            units = "s";
-            divisor = 1000. * 1000.;
-        }
-
-        const float time_ms = end_time.count() / divisor;
-        return strprintf("%s: %s (%.2f%s)", m_prefix, msg, time_ms, units);
     }
 
 private:
@@ -89,7 +82,6 @@ private:
     //! Forwarded on to LogPrint if specified - has the effect of only
     //! outputting the timing log when a particular debug= category is specified.
     const BCLog::LogFlags m_log_category{};
-
 };
 
 } // namespace BCLog
