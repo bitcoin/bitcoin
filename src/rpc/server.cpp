@@ -187,7 +187,7 @@ bool ParseBoolV(const UniValue& v, const std::string &strName)
     else if (v.isStr())
         strBool = v.get_str();
 
-    std::transform(strBool.begin(), strBool.end(), strBool.begin(), ::tolower);
+    std::transform(strBool.begin(), strBool.end(), strBool.begin(), ToLower);
 
     if (strBool == "true" || strBool == "yes" || strBool == "1") {
         return true;
