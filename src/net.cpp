@@ -9,6 +9,7 @@
 
 #include <net.h>
 
+#include <addrdb.h>
 #include <banman.h>
 #include <clientversion.h>
 #include <compat.h>
@@ -24,6 +25,7 @@
 #include <scheduler.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 #include <util/thread.h>
 #include <util/trace.h>
 #include <util/translation.h>
@@ -1747,8 +1749,7 @@ void CConnman::DumpAddresses()
 {
     int64_t nStart = GetTimeMillis();
 
-    CAddrDB adb;
-    adb.Write(addrman);
+    DumpPeerAddresses(::gArgs, addrman);
 
     LogPrint(BCLog::NET, "Flushed %d addresses to peers.dat  %dms\n",
            addrman.size(), GetTimeMillis() - nStart);

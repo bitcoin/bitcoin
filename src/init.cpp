@@ -1206,14 +1206,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         // Load addresses from peers.dat
         uiInterface.InitMessage(_("Loading P2P addresses…").translated);
         int64_t nStart = GetTimeMillis();
-        CAddrDB adb;
-        if (adb.Read(*node.addrman)) {
+        if (ReadPeerAddresses(args, *node.addrman)) {
             LogPrintf("Loaded %i addresses from peers.dat  %dms\n", node.addrman->size(), GetTimeMillis() - nStart);
         } else {
             // Addrman can be in an inconsistent state after failure, reset it
             node.addrman = std::make_unique<CAddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
             LogPrintf("Recreating peers.dat\n");
-            adb.Write(*node.addrman);
+            DumpPeerAddresses(args, *node.addrman);
         }
     }
 

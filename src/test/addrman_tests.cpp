@@ -5,13 +5,14 @@
 #include <addrdb.h>
 #include <addrman.h>
 #include <chainparams.h>
+#include <clientversion.h>
+#include <hash.h>
+#include <netbase.h>
+#include <random.h>
 #include <test/data/asmap.raw.h>
 #include <test/util/setup_common.h>
 #include <util/asmap.h>
 #include <util/string.h>
-#include <hash.h>
-#include <netbase.h>
-#include <random.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -1002,7 +1003,7 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "[::]:0");
 }
 
-BOOST_AUTO_TEST_CASE(caddrdb_read)
+BOOST_AUTO_TEST_CASE(load_addrman)
 {
     CAddrManUncorrupted addrmanUncorrupted;
 
@@ -1037,17 +1038,17 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     BOOST_CHECK(addrman1.size() == 3);
     BOOST_CHECK(exceptionThrown == false);
 
-    // Test that CAddrDB::Read creates an addrman with the correct number of addrs.
+    // Test that ReadFromStream creates an addrman with the correct number of addrs.
     CDataStream ssPeers2 = AddrmanToStream(addrmanUncorrupted);
 
     CAddrMan addrman2(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
     BOOST_CHECK(addrman2.size() == 0);
-    BOOST_CHECK(CAddrDB::Read(addrman2, ssPeers2));
+    BOOST_CHECK(ReadFromStream(addrman2, ssPeers2));
     BOOST_CHECK(addrman2.size() == 3);
 }
 
 
-BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
+BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
 {
     CAddrManCorrupted addrmanCorrupted;
 
@@ -1063,16 +1064,16 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     } catch (const std::exception&) {
         exceptionThrown = true;
     }
-    // Even through de-serialization failed addrman is not left in a clean state.
+    // Even though de-serialization failed addrman is not left in a clean state.
     BOOST_CHECK(addrman1.size() == 1);
     BOOST_CHECK(exceptionThrown);
 
-    // Test that CAddrDB::Read fails if peers.dat is corrupt
+    // Test that ReadFromStream fails if peers.dat is corrupt
     CDataStream ssPeers2 = AddrmanToStream(addrmanCorrupted);
 
     CAddrMan addrman2(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
     BOOST_CHECK(addrman2.size() == 0);
-    BOOST_CHECK(!CAddrDB::Read(addrman2, ssPeers2));
+    BOOST_CHECK(!ReadFromStream(addrman2, ssPeers2));
 }
 
 

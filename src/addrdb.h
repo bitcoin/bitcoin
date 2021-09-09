@@ -12,21 +12,15 @@
 
 #include <vector>
 
-class CAddress;
+class ArgsManager;
 class CAddrMan;
+class CAddress;
 class CDataStream;
 
-/** Access to the (IP) address database (peers.dat) */
-class CAddrDB
-{
-private:
-    fs::path pathAddr;
-public:
-    CAddrDB();
-    bool Write(const CAddrMan& addr);
-    bool Read(CAddrMan& addr);
-    static bool Read(CAddrMan& addr, CDataStream& ssPeers);
-};
+bool DumpPeerAddresses(const ArgsManager& args, const CAddrMan& addr);
+bool ReadPeerAddresses(const ArgsManager& args, CAddrMan& addr);
+/** Only used by tests. */
+bool ReadFromStream(CAddrMan& addr, CDataStream& ssPeers);
 
 /** Access to the banlist database (banlist.json) */
 class CBanDB
