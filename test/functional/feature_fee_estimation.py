@@ -197,7 +197,7 @@ class EstimateFeeTest(BitcoinTestFramework):
                 tx_kbytes = (len(txhex) // 2) / 1000.0
                 self.fees_per_kb.append(float(fee) / tx_kbytes)
             self.sync_mempools(wait=.1)
-            mined = mining_node.getblock(mining_node.generate(1)[0], True)["tx"]
+            mined = mining_node.getblock(self.generate(mining_node, 1)[0], True)["tx"]
             self.sync_blocks(wait=.1)
             # update which txouts are confirmed
             newmem = []
@@ -221,7 +221,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Mine
         while len(self.nodes[0].getrawmempool()) > 0:
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
 
         # Repeatedly split those 2 outputs, doubling twice for each rep
         # Use txouts to monitor the available utxo, since these won't be tracked in wallet
@@ -231,12 +231,12 @@ class EstimateFeeTest(BitcoinTestFramework):
             while len(self.txouts) > 0:
                 split_inputs(self.nodes[0], self.txouts, self.txouts2)
             while len(self.nodes[0].getrawmempool()) > 0:
-                self.nodes[0].generate(1)
+                self.generate(self.nodes[0], 1)
             # Double txouts2 to txouts
             while len(self.txouts2) > 0:
                 split_inputs(self.nodes[0], self.txouts2, self.txouts)
             while len(self.nodes[0].getrawmempool()) > 0:
-                self.nodes[0].generate(1)
+                self.generate(self.nodes[0], 1)
             reps += 1
         self.log.info("Finished splitting")
 
@@ -269,7 +269,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Finish by mining a normal-sized block:
         while len(self.nodes[1].getrawmempool()) > 0:
-            self.nodes[1].generate(1)
+            self.generate(self.nodes[1], 1)
 
         self.sync_blocks(self.nodes[0:3], wait=.1)
         self.log.info("Final estimates after emptying mempools")

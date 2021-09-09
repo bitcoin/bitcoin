@@ -40,7 +40,7 @@ class AddressesDeprecationTest(BitcoinTestFramework):
         txid = node.sendrawtransaction(hexstring=tx_signed, maxfeerate=0)
 
         self.log.info("Test RPCResult scriptPubKey no longer returns the fields addresses or reqSigs by default")
-        hash = node.generateblock(output=node.getnewaddress(), transactions=[txid])['hash']
+        hash = self.generateblock(node, output=node.getnewaddress(), transactions=[txid])['hash']
         # Ensure both nodes have the newly generated block on disk.
         self.sync_blocks()
         script_pub_key = node.getblock(blockhash=hash, verbose=2)['tx'][-1]['vout'][0]['scriptPubKey']

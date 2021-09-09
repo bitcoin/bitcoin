@@ -72,7 +72,7 @@ class BIP66Test(BitcoinTestFramework):
         self.test_dersig_info(is_active=False)
 
         self.log.info("Mining %d blocks", DERSIG_HEIGHT - 2)
-        self.coinbase_txids = [self.nodes[0].getblock(b)['tx'][0] for b in self.miniwallet.generate(DERSIG_HEIGHT - 2)]
+        self.coinbase_txids = [self.nodes[0].getblock(b)['tx'][0] for b in self.generate(self.miniwallet, DERSIG_HEIGHT - 2)]
 
         self.log.info("Test that a transaction with non-DER signature can still appear in a block")
 

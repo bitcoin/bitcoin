@@ -30,7 +30,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         # All nodes are in IBD from genesis, so they'll need the miner (node2) to be an outbound connection, or have
         # only one connection. (See fPreferredDownload in net_processing)
         self.connect_nodes(1, 2)
-        self.nodes[2].generate(COINBASE_MATURITY + 1)
+        self.generate(self.nodes[2], COINBASE_MATURITY + 1)
         self.sync_all()
 
         self.test_no_blockhash()
@@ -44,7 +44,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
     def test_no_blockhash(self):
         self.log.info("Test no blockhash")
         txid = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        blockhash, = self.nodes[2].generate(1)
+        blockhash, = self.generate(self.nodes[2], 1)
         blockheight = self.nodes[2].getblockheader(blockhash)['height']
         self.sync_all()
 
@@ -86,7 +86,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         a -8 invalid parameter error is thrown.
         '''
         self.log.info("Test target_confirmations")
-        blockhash, = self.nodes[2].generate(1)
+        blockhash, = self.generate(self.nodes[2], 1)
         blockheight = self.nodes[2].getblockheader(blockhash)['height']
         self.sync_all()
 
@@ -136,8 +136,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
         senttx = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 1)
 
         # generate on both sides
-        nodes1_last_blockhash = self.nodes[1].generate(6)[-1]
-        nodes2_first_blockhash = self.nodes[2].generate(7)[0]
+        nodes1_last_blockhash = self.generate(self.nodes[1], 6)[-1]
+        nodes2_first_blockhash = self.generate(self.nodes[2], 7)[0]
         self.log.debug("nodes[1] last blockhash = {}".format(nodes1_last_blockhash))
         self.log.debug("nodes[2] first blockhash = {}".format(nodes2_first_blockhash))
 
@@ -191,7 +191,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         privkey = bytes_to_wif(eckey.get_bytes())
         address = key_to_p2wpkh(eckey.get_pubkey().get_bytes())
         self.nodes[2].sendtoaddress(address, 10)
-        self.nodes[2].generate(6)
+        self.generate(self.nodes[2], 6)
         self.sync_all()
         self.nodes[2].importprivkey(privkey)
         utxos = self.nodes[2].listunspent()
@@ -225,8 +225,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
                 self.nodes[2].createrawtransaction(utxo_dicts, recipient_dict2))['hex'])
 
         # generate on both sides
-        lastblockhash = self.nodes[1].generate(3)[2]
-        self.nodes[2].generate(4)
+        lastblockhash = self.generate(self.nodes[1], 3)[2]
+        self.generate(self.nodes[2], 4)
 
         self.join_network()
 
@@ -297,7 +297,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         txid1 = self.nodes[1].sendrawtransaction(signedtx)
 
         # generate bb1-bb2 on right side
-        self.nodes[2].generate(2)
+        self.generate(self.nodes[2], 2)
 
         # send from nodes[2]; this will end up in bb3
         txid2 = self.nodes[2].sendrawtransaction(signedtx)
@@ -305,8 +305,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
         assert_equal(txid1, txid2)
 
         # generate on both sides
-        lastblockhash = self.nodes[1].generate(3)[2]
-        self.nodes[2].generate(2)
+        lastblockhash = self.generate(self.nodes[1], 3)[2]
+        self.generate(self.nodes[2], 2)
 
         self.join_network()
 
@@ -365,7 +365,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         assert_equal(original_found, True)
         assert_equal(double_found, True)
 
-        lastblockhash = spending_node.generate(1)[0]
+        lastblockhash = self.generate(spending_node, 1)[0]
 
         # check that neither transaction exists
         block_hash = spending_node.listsinceblock(lastblockhash)

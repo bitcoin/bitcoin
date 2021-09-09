@@ -51,7 +51,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
 
         num_blocks_to_generate = int((self.node_min_work[1] - starting_chain_work) / REGTEST_WORK_PER_BLOCK)
         self.log.info(f"Generating {num_blocks_to_generate} blocks on node0")
-        hashes = self.nodes[0].generatetoaddress(num_blocks_to_generate,
+        hashes = self.generatetoaddress(self.nodes[0], num_blocks_to_generate,
                                                  self.nodes[0].get_deterministic_priv_key().address)
 
         self.log.info(f"Node0 current chain work: {self.nodes[0].getblockheader(hashes[-1])['chainwork']}")
@@ -73,7 +73,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getblockcount(), starting_blockcount)
 
         self.log.info("Generating one more block")
-        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
+        self.generatetoaddress(self.nodes[0], 1, self.nodes[0].get_deterministic_priv_key().address)
 
         self.log.info("Verifying nodes are all synced")
 
