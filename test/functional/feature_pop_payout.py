@@ -18,7 +18,7 @@ Expected balance is POW_PAYOUT * 10 + pop payout. (node0 has only 10 mature coin
 """
 
 from test_framework.pop import endorse_block, mine_until_pop_active
-from test_framework.pop_const import POW_PAYOUT, POP_PAYOUT_DELAY
+from test_framework.pop_const import POP_PAYOUT_DELAY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes,
@@ -100,8 +100,7 @@ class PopPayouts(BitcoinTestFramework):
         # node[0] has 210 (lastblock) mature coinbases and a single pop payout
         assert lastblock == 210, "calculation below are only valid for POP activation height = 210"
         pop_payout = float(outputs[1]['value'])
-        half_payout = POW_PAYOUT / 2
-        assert balance == POW_PAYOUT * 149 + half_payout * 50 + half_payout * .6 * 11 + pop_payout
+        assert balance == 8713.75  + pop_payout
         self.log.warning("success! _case1_endorse_keystone_get_paid()")
 
     def run_test(self):

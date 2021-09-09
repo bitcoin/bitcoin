@@ -122,6 +122,7 @@ def create_coinbase(height, pubkey=None):
     coinbaseoutput = CTxOut()
     coinbaseoutput.nValue = POW_PAYOUT * COIN
     if height >= POP_ACTIVATION_HEIGHT:
+        coinbaseoutput.nValue = 5 * COIN
         coinbaseoutput.nValue = int(coinbaseoutput.nValue * (100 - POW_REWARD_PERCENTAGE) / 100)
     halvings = int(height / 150)  # regtest
     coinbaseoutput.nValue >>= halvings

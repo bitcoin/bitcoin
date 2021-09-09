@@ -78,7 +78,7 @@ CMainParams::CMainParams()
     consensus.SegwitHeight = 1;         // 0x0000000000000000000000000000000000000000000000000000000000000000
     consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
     consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-    consensus.nPowTargetSpacing = 10 * 60;
+    consensus.nPowTargetSpacing = 2 * 60;
     consensus.fPowAllowMinDifficultyBlocks = false;
     consensus.fPowNoRetargeting = false;
     consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
@@ -173,7 +173,7 @@ CMainParams::CMainParams()
      consensus.SegwitHeight = 1;         // 00000000002b980fcd729daaa248fd9316a5200e9b367f4ff2c42453e84201ca
      consensus.powLimit = uint256S("000007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
      consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-     consensus.nPowTargetSpacing = 10 * 60;
+     consensus.nPowTargetSpacing = 2 * 60;
      consensus.fPowAllowMinDifficultyBlocks = true;
      consensus.fPowNoRetargeting = false;
      consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains

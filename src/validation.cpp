@@ -1214,6 +1214,7 @@ CAmount GetBlockSubsidy(int nHeight, const CChainParams& params)
     CAmount nSubsidy = 50 * COIN;
 
     if (VeriBlock::isPopActive(nHeight)) {
+        nSubsidy = 5 * COIN;
         nSubsidy = VeriBlock::getCoinbaseSubsidy(nSubsidy, nHeight, params);
     }
 

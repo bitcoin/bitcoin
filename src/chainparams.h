@@ -94,7 +94,7 @@ public:
     }
 
     uint32_t PopRewardPercentage() const {return mPopRewardPercentage;}
-    int32_t PopRewardCoefficient() const {return mPopRewardCoefficient;}
+    double PopRewardCoefficient() const {return mPopRewardCoefficient;}
 
 protected:
     CChainParams() {}
@@ -119,9 +119,9 @@ protected:
 
     // VeriBlock:
     // cut this % from coinbase subsidy
-    uint32_t mPopRewardPercentage = 40; // %
+    uint32_t mPopRewardPercentage = 50; // %
     // every pop reward will be multiplied by this coefficient
-    int32_t mPopRewardCoefficient = 20;
+    double mPopRewardCoefficient = 2.5;
 };
 
 class CMainParams : public CChainParams

@@ -68,8 +68,8 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
     }
     // with 50 vBTC payout:
 //    BOOST_CHECK_EQUAL(nSum, CAmount{2099999997690000});
-    // with 50*60% vBTC payout and RegTest
-    BOOST_CHECK_EQUAL(nSum, CAmount{47244115000});
+    // with 50*20% vBTC payout and RegTest
+    BOOST_CHECK_EQUAL(nSum, CAmount{3937008000});
 }
 
 static bool ReturnFalse() { return false; }
