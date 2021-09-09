@@ -112,7 +112,7 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
     WalletContext& context = *node.walletClient().context();
     AddWallet(context, wallet);
     WalletModel walletModel(interfaces::MakeWallet(context, wallet), clientModel, platformStyle.get());
-    RemoveWallet(context, wallet, /* load_on_startup= */ std::nullopt);
+    RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt);
     EditAddressDialog editAddressDialog(EditAddressDialog::NewSendingAddress);
     editAddressDialog.setModel(walletModel.getAddressTableModel());
 
