@@ -20,7 +20,7 @@ std::string FormatMoney(const CAmount& n)
 
     // Right-trim excess zeros before the decimal point:
     int nTrim = 0;
-    for (int i = str.size()-1; (str[i] == '0' && isdigit(str[i-2])); --i)
+    for (int i = str.size()-1; (str[i] == '0' && IsDigit(str[i-2])); --i)
         ++nTrim;
     if (nTrim)
         str.erase(str.size()-nTrim, nTrim);
@@ -41,7 +41,7 @@ bool ParseMoney(const char* pszIn, CAmount& nRet)
     std::string strWhole;
     int64_t nUnits = 0;
     const char* p = pszIn;
-    while (isspace(*p))
+    while (IsSpace(*p))
         p++;
     for (; *p; p++)
     {
@@ -49,21 +49,21 @@ bool ParseMoney(const char* pszIn, CAmount& nRet)
         {
             p++;
             int64_t nMult = COIN / 10;
-            while (isdigit(*p) && (nMult > 0))
+            while (IsDigit(*p) && (nMult > 0))
             {
                 nUnits += nMult * (*p++ - '0');
                 nMult /= 10;
             }
             break;
         }
-        if (isspace(*p))
+        if (IsSpace(*p))
             break;
-        if (!isdigit(*p))
+        if (!IsDigit(*p))
             return false;
         strWhole.insert(strWhole.end(), *p);
     }
     for (; *p; p++)
-        if (!isspace(*p))
+        if (!IsSpace(*p))
             return false;
     if (strWhole.size() > 10) // guard against 63 bit overflow
         return false;
