@@ -663,7 +663,7 @@ bool CNetAddr::GetInAddr(struct in_addr* pipv4Addr) const
 }
 
 /**
- * Try to get our IPv6 address.
+ * Try to get our IPv6 (or CJDNS) address.
  *
  * @param[out] pipv6Addr The in6_addr struct to which to copy.
  *
@@ -674,7 +674,7 @@ bool CNetAddr::GetInAddr(struct in_addr* pipv4Addr) const
  */
 bool CNetAddr::GetIn6Addr(struct in6_addr* pipv6Addr) const
 {
-    if (!IsIPv6()) {
+    if (!IsIPv6() && !IsCJDNS()) {
         return false;
     }
     assert(sizeof(*pipv6Addr) == m_addr.size());
@@ -993,7 +993,7 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
         paddrin->sin_port = htons(port);
         return true;
     }
-    if (IsIPv6()) {
+    if (IsIPv6() || IsCJDNS()) {
         if (*addrlen < (socklen_t)sizeof(struct sockaddr_in6))
             return false;
         *addrlen = sizeof(struct sockaddr_in6);
