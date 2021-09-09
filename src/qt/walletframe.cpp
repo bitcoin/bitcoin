@@ -13,6 +13,7 @@
 // SYSCOIN
 #include <qt/masternodelist.h>
 #include <qt/walletview.h>
+#include <util/system.h>
 
 #include <cassert>
 

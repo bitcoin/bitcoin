@@ -6,23 +6,16 @@
 #ifndef SYSCOIN_ADDRMAN_H
 #define SYSCOIN_ADDRMAN_H
 
-#include <clientversion.h>
-#include <config/syscoin-config.h>
 #include <fs.h>
-#include <hash.h>
+#include <logging.h>
 #include <netaddress.h>
 #include <protocol.h>
-#include <random.h>
-#include <streams.h>
 #include <sync.h>
 #include <timedata.h>
-#include <tinyformat.h>
-#include <util/system.h>
 
-#include <iostream>
+#include <cstdint>
 #include <optional>
 #include <set>
-#include <stdint.h>
 #include <unordered_map>
 #include <vector>
 

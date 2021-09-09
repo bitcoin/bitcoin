@@ -6,7 +6,6 @@
 #ifndef SYSCOIN_NET_H
 #define SYSCOIN_NET_H
 
-#include <addrdb.h>
 #include <addrman.h>
 #include <amount.h>
 #include <bloom.h>
