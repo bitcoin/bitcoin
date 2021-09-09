@@ -123,7 +123,7 @@ std::vector<std::string> GetNetworkNames(bool append_unroutable)
     std::vector<std::string> names;
     for (int n = 0; n < NET_MAX; ++n) {
         const enum Network network{static_cast<Network>(n)};
-        if (network == NET_UNROUTABLE || network == NET_CJDNS || network == NET_INTERNAL) continue;
+        if (network == NET_UNROUTABLE || network == NET_INTERNAL) continue;
         names.emplace_back(GetNetworkName(network));
     }
     if (append_unroutable) {
