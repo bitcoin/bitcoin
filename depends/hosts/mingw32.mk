@@ -3,7 +3,7 @@ mingw32_CXX := $(host)-g++-posix
 endif
 
 mingw32_CFLAGS=-pipe -std=$(C_STANDARD)
-mingw32_CXXFLAGS=-pipe
+mingw32_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
 
 ifneq ($(LTO),)
 mingw32_CFLAGS += -flto

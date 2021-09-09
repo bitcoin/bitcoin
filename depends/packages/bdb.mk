@@ -15,7 +15,6 @@ $(package)_config_opts_netbsd=--with-pic
 $(package)_config_opts_openbsd=--with-pic
 $(package)_config_opts_android=--with-pic
 $(package)_cflags+=-Wno-error=implicit-function-declaration
-$(package)_cxxflags+=-std=c++17
 $(package)_cppflags_mingw32=-DUNICODE -D_UNICODE
 endef
 

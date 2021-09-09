@@ -1,5 +1,5 @@
 netbsd_CFLAGS=-pipe -std=$(C_STANDARD)
-netbsd_CXXFLAGS=-pipe
+netbsd_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
 
 ifneq ($(LTO),)
 netbsd_CFLAGS += -flto
