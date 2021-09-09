@@ -681,7 +681,7 @@ static RPCHelpMan syscoingetspvproof()
     CNEVMBlock evmBlock;
     BlockValidationState state;
     if(!GetNEVMData(state, block, evmBlock)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "NEVM data not found");
+        throw JSONRPCError(RPC_MISC_ERROR, state.ToString());
     }  
     std::reverse (evmBlock.nBlockHash.begin (), evmBlock.nBlockHash.end ()); // correct endian
     res.__pushKV("nevm_blockhash", evmBlock.nBlockHash.GetHex());
