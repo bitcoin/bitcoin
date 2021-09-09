@@ -247,9 +247,15 @@ void WalletFrame::usedReceivingAddresses()
         walletView->usedReceivingAddresses();
 }
 
-WalletView *WalletFrame::currentWalletView()
+WalletView* WalletFrame::currentWalletView() const
 {
     return qobject_cast<WalletView*>(walletStack->currentWidget());
+}
+
+WalletModel* WalletFrame::currentWalletModel() const
+{
+    WalletView* wallet_view = currentWalletView();
+    return wallet_view ? wallet_view->getWalletModel() : nullptr;
 }
 
 void WalletFrame::outOfSyncWarningClicked()
