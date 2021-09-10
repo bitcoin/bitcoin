@@ -786,9 +786,9 @@ static RPCHelpMan syscoingettxroots()
 static RPCHelpMan syscoincheckmint()
 {
     return RPCHelpMan{"syscoincheckmint",
-    "\nGet the Syscoin mint transaction by looking up using NEVM TXID.\n",
+    "\nGet the Syscoin mint transaction by looking up using NEVM tx hash (This is no the txid, it is the sha3 of the transaction bytes value).\n",
     {
-        {"nevm_txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "NEVM TXID used to burn funds to move to Syscoin."}
+        {"nevm_txhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "NEVM Tx Hash used to burn funds to move to Syscoin."}
     },
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -796,8 +796,8 @@ static RPCHelpMan syscoincheckmint()
             {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
         }}, 
     RPCExamples{
-        HelpExampleCli("syscoincheckmint", "0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10")
-        + HelpExampleRpc("syscoincheckmint", "0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10")
+        HelpExampleCli("syscoincheckmint", "d8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10")
+        + HelpExampleRpc("syscoincheckmint", "d8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10")
     },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -805,7 +805,7 @@ static RPCHelpMan syscoincheckmint()
     boost::erase_all(strTxHash, "0x");  // strip 0x
     uint256 sysTxid;
     if(!pnevmtxmintdb || !pnevmtxmintdb->Read(uint256S(strTxHash), sysTxid)){
-       throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read Syscoin transaction using block hash");
+       throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read Syscoin txid using mint transaction hash");
     }
     UniValue output(UniValue::VOBJ);
     output.pushKV("txid", sysTxid.GetHex());
@@ -817,7 +817,7 @@ static RPCHelpMan syscoincheckmint()
 static RPCHelpMan syscoinsetethheaders()
 {
     return RPCHelpMan{"syscoinsetethheaders",
-        "\nSets NEVM headers in Syscoin to validate transactions through the SYSX bridge. Only useful for testing in regtest mode.\n",
+        "\nSets NEVM headers in Syscoin to validate transactions through the NEVM bridge. Only useful for testing in regtest mode.\n",
         {
             {"headers", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of arrays (block hashes, tx root) from NEVM blockchain", 
                 {
@@ -861,12 +861,17 @@ static RPCHelpMan syscoinsetethheaders()
         if(!ParseHashStr(blockHashStr, nBlockHash)) {
              throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse block hash");
         }
-        std::string txRootStr = tupleArray[1].get_str();
-        boost::erase_all(txRootStr, "0x");  // strip 0x
-        txRoot.nTxRoot = uint256S(txRootStr);
-        std::string txReceiptRoot = tupleArray[2].get_str();
-        boost::erase_all(txReceiptRoot, "0x");  // strip 0x
-        txRoot.nReceiptRoot = uint256S(txReceiptRoot);
+        std::string strTxRoot = tupleArray[1].get_str();
+        boost::erase_all(strTxRoot, "0x");  // strip 0x
+        // reverse endianness of root's as they are stored in eth as LE
+        std::vector<unsigned char> vchTxRoot(ParseHex(strTxRoot));
+        std::reverse(vchTxRoot.begin(), vchTxRoot.end());
+        txRoot.nTxRoot = uint256S(HexStr(vchTxRoot));
+        std::string strReceiptRoot = tupleArray[2].get_str();
+        boost::erase_all(strReceiptRoot, "0x");  // strip 0x
+        std::vector<unsigned char> vchReceiptRoot(ParseHex(strReceiptRoot));
+        std::reverse(vchReceiptRoot.begin(), vchReceiptRoot.end());
+        txRoot.nReceiptRoot = uint256S(HexStr(vchReceiptRoot));
         txRootMap.try_emplace(nBlockHash, txRoot);
     } 
     bool res = pnevmtxrootsdb->FlushWrite(txRootMap);
