@@ -61,7 +61,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
     tfm::format(std::cout,"genesis.nNonce = %u \n", genesisBlock.nNonce);
     tfm::format(std::cout,"Generate hash = %s\n", phash.ToString().c_str());
     tfm::format(std::cout,"genesis.hashMerkleRoot = %s\n", genesisBlock.hashMerkleRoot.ToString().c_str());
-} */ 
+} */
 /**
  * Build the genesis block. Note that the output of its generation
  * transaction cannot be spent since it did not originally exist in the
@@ -210,6 +210,7 @@ public:
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 1045909988;
+        consensus.nNEVMChainID = 57;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
         consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
         consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");
@@ -367,6 +368,7 @@ public:
         consensus.fStrictChainId = false;
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 123456;
+        consensus.nNEVMChainID = 5700;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
         consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
         consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");
@@ -508,6 +510,7 @@ public:
         consensus.nMinMNSubsidySats = 527500000;
 
         consensus.nSYSXAsset = 1965866356;
+        consensus.nNEVMChainID = 5700;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
         consensus.vchSYSXERC20Manager = ParseHex("443d9a14fb6ba2A45465bEC3767186f404Ccea25");
         consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");
@@ -647,6 +650,7 @@ public:
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 0;
         consensus.nSYSXAsset = 123456;
+        consensus.nNEVMChainID = 5700;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
         consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
         consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");

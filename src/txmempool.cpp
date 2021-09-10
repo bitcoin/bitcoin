@@ -608,7 +608,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     if(IsSyscoinMintTx(it->GetTx().nVersion)) {
         CMintSyscoin mintSyscoin(it->GetTx());
         if(!mintSyscoin.IsNull())
-            mapMintKeysMempool.erase(mintSyscoin.strTxHash);
+            mapMintKeysMempool.erase(mintSyscoin.nTxHash);
     }
     cachedInnerUsage -= memusage::DynamicUsage(it->GetMemPoolParentsConst()) + memusage::DynamicUsage(it->GetMemPoolChildrenConst());
     mapTx.erase(it);

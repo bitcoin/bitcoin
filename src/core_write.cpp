@@ -68,14 +68,14 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint
         entry.__pushKV("txid", txHash.GetHex());
         entry.__pushKV("blockhash", hashBlock.GetHex());  
         UniValue oSPVProofObj(UniValue::VOBJ);
-        oSPVProofObj.__pushKV("txid", mintSyscoin.strTxHash);  
+        oSPVProofObj.__pushKV("txhash", mintSyscoin.nTxHash.GetHex());  
         oSPVProofObj.__pushKV("blockhash", mintSyscoin.nBlockHash.GetHex());  
         oSPVProofObj.__pushKV("postx", mintSyscoin.posTx);
-        oSPVProofObj.__pushKV("txroot", HexStr(mintSyscoin.vchTxRoot)); 
+        oSPVProofObj.__pushKV("txroot", mintSyscoin.nTxRoot.GetHex()); 
         oSPVProofObj.__pushKV("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
         oSPVProofObj.__pushKV("txpath", HexStr(mintSyscoin.vchTxPath)); 
         oSPVProofObj.__pushKV("posReceipt", mintSyscoin.posReceipt);  
-        oSPVProofObj.__pushKV("receiptroot", HexStr(mintSyscoin.vchReceiptRoot));  
+        oSPVProofObj.__pushKV("receiptroot", mintSyscoin.nReceiptRoot.GetHex());  
         oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes));  
         entry.__pushKV("spv_proof", oSPVProofObj);
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);

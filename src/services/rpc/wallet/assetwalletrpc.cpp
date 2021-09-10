@@ -119,14 +119,14 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
     CMintSyscoin mintSyscoin(*wtx.tx);
     if (!mintSyscoin.IsNull()) {
         UniValue oSPVProofObj(UniValue::VOBJ);
-        oSPVProofObj.__pushKV("txid", mintSyscoin.strTxHash);  
+        oSPVProofObj.__pushKV("txhash", mintSyscoin.nTxHash.GetHex());  
         oSPVProofObj.__pushKV("blockhash", mintSyscoin.nBlockHash.GetHex());  
         oSPVProofObj.__pushKV("postx", mintSyscoin.posTx);
-        oSPVProofObj.__pushKV("txroot", HexStr(mintSyscoin.vchTxRoot));
+        oSPVProofObj.__pushKV("txroot", mintSyscoin.nTxRoot.GetHex());
         oSPVProofObj.__pushKV("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
         oSPVProofObj.__pushKV("txpath", HexStr(mintSyscoin.vchTxPath));
         oSPVProofObj.__pushKV("posReceipt", mintSyscoin.posReceipt); 
-        oSPVProofObj.__pushKV("receiptroot", HexStr(mintSyscoin.vchReceiptRoot));  
+        oSPVProofObj.__pushKV("receiptroot", mintSyscoin.nReceiptRoot.GetHex());  
         oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes)); 
         entry.__pushKV("spv_proof", oSPVProofObj); 
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
@@ -735,8 +735,8 @@ static RPCHelpMan assetnewtest()
             {RPCResult::Type::STR, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
-    HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
-    + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 127, \"notary_address\", {}, {}")
+    HelpExampleCli("assetnewtest", "123456 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
+    + HelpExampleRpc("assetnewtest", "123456, 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 127, \"notary_address\", {}, {}")
     },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -1867,15 +1867,23 @@ static RPCHelpMan assetallocationmint()
     }
     mintSyscoin.voutAssets.emplace_back(assetOut);
     mintSyscoin.nBlockHash = nBlockHash;
-    mintSyscoin.posTx = posTxValue;    
-    mintSyscoin.vchTxRoot = ParseHex(strTxRoot);
+    mintSyscoin.posTx = posTxValue;
+    // reverse root's endianness become NEVM stores as LE and Syscoin core uses BE
+    std::vector<unsigned char> vchTxRoot(ParseHex(strTxRoot));
+    std::reverse(vchTxRoot.begin(), vchTxRoot.end());
+    mintSyscoin.nTxRoot = uint256S(HexStr(vchTxRoot));
     mintSyscoin.vchTxParentNodes = ParseHex(strTxParentNodes);
     mintSyscoin.vchTxPath = ParseHex(strTxPath);
     mintSyscoin.posReceipt = posReceiptValue;
-    mintSyscoin.vchReceiptRoot = ParseHex(strReceiptRoot);
+    std::vector<unsigned char> vchReceiptRoot(ParseHex(strReceiptRoot));
+    std::reverse(vchReceiptRoot.begin(), vchReceiptRoot.end());
+    mintSyscoin.nReceiptRoot = uint256S(HexStr(vchReceiptRoot));
     mintSyscoin.vchReceiptParentNodes = ParseHex(strReceiptParentNodes);
     std::vector<unsigned char> vchTxValue(mintSyscoin.vchTxParentNodes.begin()+mintSyscoin.posTx, mintSyscoin.vchTxParentNodes.end());
-    mintSyscoin.strTxHash = dev::sha3(vchTxValue).hex();
+    std::vector<unsigned char> vchTxHash(dev::sha3(vchTxValue).asBytes());
+    // we must reverse the endian-ness because we store uint256 in BE but NEVM uses LE.
+    std::reverse(vchTxHash.begin(), vchTxHash.end());
+    mintSyscoin.nTxHash = uint256S(HexStr(vchTxHash));
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
     CTxOut change_prototype_txout(0, scriptPubKey);
     CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };    
