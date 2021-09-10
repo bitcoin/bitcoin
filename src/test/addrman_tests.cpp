@@ -1043,7 +1043,7 @@ BOOST_AUTO_TEST_CASE(load_addrman)
 
     CAddrMan addrman2(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
     BOOST_CHECK(addrman2.size() == 0);
-    BOOST_CHECK(ReadFromStream(addrman2, ssPeers2));
+    ReadFromStream(addrman2, ssPeers2);
     BOOST_CHECK(addrman2.size() == 3);
 }
 
@@ -1073,7 +1073,7 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
 
     CAddrMan addrman2(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
     BOOST_CHECK(addrman2.size() == 0);
-    BOOST_CHECK(!ReadFromStream(addrman2, ssPeers2));
+    BOOST_CHECK_THROW(ReadFromStream(addrman2, ssPeers2), std::ios_base::failure);
 }
 
 

@@ -23,5 +23,8 @@ FUZZ_TARGET_INIT(data_stream_addr_man, initialize_data_stream_addr_man)
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     CDataStream data_stream = ConsumeDataStream(fuzzed_data_provider);
     CAddrMan addr_man(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
-    ReadFromStream(addr_man, data_stream);
+    try {
+        ReadFromStream(addr_man, data_stream);
+    } catch (const std::exception&) {
+    }
 }
