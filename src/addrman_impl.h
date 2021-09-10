@@ -17,7 +17,6 @@ public:
     //! last counted attempt (memory only)
     int64_t nLastCountAttempt{0};
 
-private:
     //! where knowledge about this address first came from
     CNetAddr source;
 
@@ -35,11 +34,6 @@ private:
 
     //! position in vRandom
     mutable int nRandomPos{-1};
-
-    friend class AddrManImpl;
-    friend class CAddrManDeterministic;
-
-public:
 
     SERIALIZE_METHODS(CAddrInfo, obj)
     {
