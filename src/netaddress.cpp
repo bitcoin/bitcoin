@@ -892,6 +892,11 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
         case NET_I2P: return REACH_PRIVATE;
         default: return REACH_DEFAULT;
         }
+    case NET_CJDNS:
+        switch (ourNet) {
+        case NET_CJDNS: return REACH_PRIVATE;
+        default: return REACH_DEFAULT;
+        }
     case NET_TEREDO:
         switch(ourNet) {
         default:          return REACH_DEFAULT;
