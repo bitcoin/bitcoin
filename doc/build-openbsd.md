@@ -28,7 +28,7 @@ this compiler is used and not ancient g++ 4.2.1. This is done by appending
 `CC=cc CC_FOR_BUILD=cc CXX=c++` to configuration commands. Mixing different
 compilers within the same executable will result in errors.
 
-### Building BerkeleyDB
+## Building BerkeleyDB
 
 BerkeleyDB is only necessary for the wallet functionality. To skip this, pass
 `--disable-wallet` to `./configure` and skip to the next section.
@@ -48,7 +48,7 @@ from the root of the repository. Then set `BDB_PREFIX` for the next section:
 export BDB_PREFIX="$PWD/db4"
 ```
 
-### Building Bitcoin Core
+## Building Bitcoin Core
 
 **Important**: Use `gmake` (the non-GNU `make` will exit with an error).
 
