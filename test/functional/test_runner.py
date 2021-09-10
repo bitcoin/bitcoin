@@ -17,6 +17,7 @@ from collections import deque
 import configparser
 import datetime
 import os
+import platform
 import time
 import shutil
 import signal
@@ -564,7 +565,8 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
     # Killing the process group will also terminate the current process but that is
     # not an issue
     if len(job_queue.jobs):
-        os.killpg(os.getpgid(0), signal.SIGKILL)
+        if platform.system() != "Windows":
+            os.killpg(os.getpgid(0), signal.SIGKILL)
 
     sys.exit(not all_passed)
 
