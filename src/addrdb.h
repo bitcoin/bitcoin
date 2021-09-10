@@ -10,17 +10,18 @@
 #include <net_types.h> // For banmap_t
 #include <univalue.h>
 
+#include <optional>
 #include <vector>
 
 class ArgsManager;
 class CAddrMan;
 class CAddress;
 class CDataStream;
+struct bilingual_str;
 
 bool DumpPeerAddresses(const ArgsManager& args, const CAddrMan& addr);
-bool ReadPeerAddresses(const ArgsManager& args, CAddrMan& addr);
 /** Only used by tests. */
-bool ReadFromStream(CAddrMan& addr, CDataStream& ssPeers);
+void ReadFromStream(CAddrMan& addr, CDataStream& ssPeers);
 
 /** Access to the banlist database (banlist.json) */
 class CBanDB
@@ -45,6 +46,9 @@ public:
      */
     bool Read(banmap_t& banSet);
 };
+
+/** Returns an error string on failure */
+std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const ArgsManager& args, std::unique_ptr<CAddrMan>& addrman);
 
 /**
  * Dump the anchor IP address database (anchors.dat)
