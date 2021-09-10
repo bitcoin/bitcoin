@@ -66,7 +66,7 @@ class DIP3Test(SyscoinTestFramework):
         mns.append(before_dip3_mn)
 
         # block 432 starts enforcing DIP3 MN payments
-        self.generate(self.nodes[0](432 - self.nodes[0].getblockcount())
+        self.generate(self.nodes[0], 432 - self.nodes[0].getblockcount())
         assert(self.nodes[0].getblockcount() == 432)
 
         self.log.info("mining final block for DIP3 activation")
