@@ -96,31 +96,12 @@ public:
             for (size_t j = 0; j < num_addresses; ++j) {
                 const auto addr = CAddress{CService{RandAddr(), 8333}, NODE_NETWORK};
                 const auto time_penalty = insecure_rand.randrange(100000001);
-#if 1
-                // 2.83 sec to fill.
-                if (n > 0 && mapInfo.size() % n == 0 && mapAddr.find(addr) == mapAddr.end()) {
-                    // Add to the "tried" table (if the bucket slot is free).
-                    const CAddrInfo dummy{addr, source};
-                    const int bucket = dummy.GetTriedBucket(nKey, m_asmap);
-                    const int bucket_pos = dummy.GetBucketPosition(nKey, false, bucket);
-                    if (vvTried[bucket][bucket_pos] == -1) {
-                        int id;
-                        CAddrInfo* addr_info = Create(addr, source, &id);
-                        vvTried[bucket][bucket_pos] = id;
-                        addr_info->fInTried = true;
-                        ++nTried;
-                    }
-                } else {
-                    // Add to the "new" table.
-                    Add_(addr, source, time_penalty);
-                }
-#else
-                // 261.91 sec to fill.
                 Add_(addr, source, time_penalty);
+
                 if (n > 0 && mapInfo.size() % n == 0) {
                     Good_(addr, false, GetTime());
                 }
-#endif
+
                 // Add 10% of the addresses from more than one source.
                 if (insecure_rand.randrange(10) == 0 && prev_source.IsValid()) {
                     Add_(addr, prev_source, time_penalty);
