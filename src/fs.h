@@ -15,7 +15,83 @@
 #include <boost/filesystem/fstream.hpp>
 
 /** Filesystem operations and types */
-namespace fs = boost::filesystem;
+namespace fs {
+
+using namespace boost::filesystem;
+
+/**
+ * Path class wrapper to prepare application code for transition from
+ * boost::filesystem library to std::filesystem implementation. The main
+ * purpose of the class is to define fs::path::u8string() and fs::u8path()
+ * functions not present in boost. In the next git commit, it also blocks calls
+ * to the fs::path(std::string) implicit constructor and the fs::path::string()
+ * method, which worked well in the boost::filesystem implementation, but have
+ * unsafe and unpredictable behavior on Windows in the std::filesystem
+ * implementation (see implementation note in \ref PathToString for details).
+ */
+class path : public boost::filesystem::path
+{
+public:
+    using boost::filesystem::path::path;
+    path(boost::filesystem::path path) : boost::filesystem::path::path(std::move(path)) {}
+
+    // Define UTF-8 string conversion method not present in boost::filesystem but present in std::filesystem.
+    std::string u8string() const { return boost::filesystem::path::string(); }
+};
+
+// Define UTF-8 string conversion function not present in boost::filesystem but present in std::filesystem.
+static inline path u8path(const std::string& string)
+{
+    return boost::filesystem::path(string);
+}
+
+/**
+ * Convert path object to byte string. On POSIX, paths natively are byte
+ * strings so this is trivial. On Windows, paths natively are Unicode, so an
+ * encoding step is necessary.
+ *
+ * The inverse of \ref PathToString is \ref PathFromString. The strings
+ * returned and parsed by these functions can be used to call POSIX APIs, and
+ * for roundtrip conversion, logging, and debugging. But they are not
+ * guaranteed to be valid UTF-8, and are generally meant to be used internally,
+ * not externally. When communicating with external programs and libraries that
+ * require UTF-8, fs::path::u8string() and fs::u8path() methods can be used.
+ * For other applications, if support for non UTF-8 paths is required, or if
+ * higher-level JSON or XML or URI or C-style escapes are preferred, it may be
+ * also be appropriate to use different path encoding functions.
+ *
+ * Implementation note: On Windows, the std::filesystem::path(string)
+ * constructor and std::filesystem::path::string() method are not safe to use
+ * here, because these methods encode the path using C++'s narrow multibyte
+ * encoding, which on Windows corresponds to the current "code page", which is
+ * unpredictable and typically not able to represent all valid paths. So
+ * std::filesystem::path::u8string() and std::filesystem::u8path() functions
+ * are used instead on Windows. On POSIX, u8string/u8path functions are not
+ * safe to use because paths are not always valid UTF-8, so plain string
+ * methods which do not transform the path there are used.
+ */
+static inline std::string PathToString(const path& path)
+{
+#ifdef WIN32
+    return path.u8string();
+#else
+    static_assert(std::is_same<path::string_type, std::string>::value, "PathToString not implemented on this platform");
+    return path.boost::filesystem::path::string();
+#endif
+}
+
+/**
+ * Convert byte string to path object. Inverse of \ref PathToString.
+ */
+static inline path PathFromString(const std::string& string)
+{
+#ifdef WIN32
+    return u8path(string);
+#else
+    return boost::filesystem::path(string);
+#endif
+}
+} // namespace fs
 
 /** Bridge operations to C stdio */
 namespace fsbridge {
