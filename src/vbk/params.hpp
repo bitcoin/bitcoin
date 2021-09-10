@@ -26,9 +26,9 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
         bootstrap.timestamp = genesis.GetBlockTime();
 
         // these parameters changed in comparison to default parameters
-        this->mPopPayoutsParams->mPopPayoutDelay = 30;
+        this->mPopPayoutsParams->mPopPayoutDelay = 150;
         this->mPopPayoutsParams->mDifficultyAveragingInterval = 30;
-        this->mEndorsementSettlementInterval = 30;
+        this->mEndorsementSettlementInterval = 150;
         this->mPreserveBlocksBehindFinal = mEndorsementSettlementInterval;
 
         //! copying all parameters here to make sure that

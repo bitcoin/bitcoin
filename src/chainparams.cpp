@@ -68,7 +68,7 @@ static CBlock CreateGenesisBlockDefault(uint32_t nTime, uint32_t nNonce, uint32_
 CMainParams::CMainParams()
 {
     strNetworkID = CBaseChainParams::MAIN;
-    consensus.nSubsidyHalvingInterval = 210000;
+    consensus.nSubsidyHalvingInterval = 1050000;
     consensus.BIP16Exception = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
     consensus.BIP34Height = 1;
     consensus.BIP34Hash = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
@@ -163,7 +163,7 @@ CMainParams::CMainParams()
  CTestNetParams::CTestNetParams()
  {
      strNetworkID = CBaseChainParams::TESTNET;
-     consensus.nSubsidyHalvingInterval = 210000;
+     consensus.nSubsidyHalvingInterval = 1050000;
      consensus.BIP16Exception = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
      consensus.BIP34Height = 1;
      consensus.BIP34Hash = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
