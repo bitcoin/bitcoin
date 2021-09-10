@@ -69,6 +69,7 @@ SEQ_RANDOM_HIGH_BIT = 1 << 25
 SEQ_TYPE_FLAG = 1 << 22
 SEQ_RANDOM_LOW_BIT = 1 << 18
 
+
 def relative_locktime(sdf, srhb, stf, srlb):
     """Returns a locktime with certain bits set."""
 
@@ -83,6 +84,7 @@ def relative_locktime(sdf, srhb, stf, srlb):
         locktime |= SEQ_RANDOM_LOW_BIT
     return locktime
 
+
 def all_rlt_txs(txs):
     return [tx['tx'] for tx in txs]
 
@@ -92,6 +94,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.num_nodes = 1
         self.setup_clean_chain = True
         self.extra_args = [[
+            '-peertimeout=999999',  # bump because mocktime might cause a disconnect otherwise
             '-whitelist=noban@127.0.0.1',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]
@@ -143,13 +146,13 @@ class BIP68_112_113Test(BitcoinTestFramework):
         for i, (sdf, srhb, stf, srlb) in enumerate(product(*[[True, False]] * 4)):
             locktime = relative_locktime(sdf, srhb, stf, srlb)
             tx = self.create_self_transfer_from_utxo(bip112inputs[i])
-            if (varyOP_CSV):  # if varying OP_CSV, nSequence is fixed
+            if varyOP_CSV:  # if varying OP_CSV, nSequence is fixed
                 tx.vin[0].nSequence = BASE_RELATIVE_LOCKTIME + locktime_delta
             else:  # vary nSequence instead, OP_CSV is fixed
                 tx.vin[0].nSequence = locktime + locktime_delta
             tx.nVersion = txversion
             self.miniwallet.sign_tx(tx)
-            if (varyOP_CSV):
+            if varyOP_CSV:
                 tx.vin[0].scriptSig = CScript([locktime, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
             else:
                 tx.vin[0].scriptSig = CScript([BASE_RELATIVE_LOCKTIME, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
@@ -197,7 +200,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         # Activation height is hardcoded
         # We advance to block height five below BIP112 activation for the following tests
-        test_blocks = self.generate_blocks(CSV_ACTIVATION_HEIGHT-5 - COINBASE_BLOCK_COUNT)
+        test_blocks = self.generate_blocks(CSV_ACTIVATION_HEIGHT - 5 - COINBASE_BLOCK_COUNT)
         self.send_blocks(test_blocks)
         assert not softfork_active(self.nodes[0], 'csv')
 
@@ -481,6 +484,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         self.send_blocks([self.create_test_block(time_txs)])
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
+
 
 if __name__ == '__main__':
     BIP68_112_113Test().main()
