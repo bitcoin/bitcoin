@@ -142,9 +142,6 @@ static constexpr int ADDRMAN_BUCKET_SIZE{1 << ADDRMAN_BUCKET_SIZE_LOG2};
 class CAddrMan
 {
 public:
-    // Read asmap from provided binary file
-    static std::vector<bool> DecodeAsmap(fs::path path);
-
     template <typename Stream>
     void Serialize(Stream& s_) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
