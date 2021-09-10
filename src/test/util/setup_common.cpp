@@ -91,8 +91,8 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
         extra_args);
     util::ThreadRename("test");
     fs::create_directories(m_path_root);
-    m_args.ForceSetArg("-datadir", m_path_root.string());
-    gArgs.ForceSetArg("-datadir", m_path_root.string());
+    m_args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
+    gArgs.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     gArgs.ClearPathCache();
     {
         SetupServerArgs(*m_node.args);

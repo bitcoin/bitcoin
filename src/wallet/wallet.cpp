@@ -2515,16 +2515,16 @@ std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, cons
     // 2. Path to an existing directory.
     // 3. Path to a symlink to a directory.
     // 4. For backwards compatibility, the name of a data file in -walletdir.
-    const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), name);
+    const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(name));
     fs::file_type path_type = fs::symlink_status(wallet_path).type();
     if (!(path_type == fs::file_not_found || path_type == fs::directory_file ||
           (path_type == fs::symlink_file && fs::is_directory(wallet_path)) ||
-          (path_type == fs::regular_file && fs::path(name).filename() == name))) {
+          (path_type == fs::regular_file && fs::PathFromString(name).filename() == fs::PathFromString(name)))) {
         error_string = Untranslated(strprintf(
               "Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "
               "database/log.?????????? files can be stored, a location where such a directory could be created, "
               "or (for backwards compatibility) the name of an existing data file in -walletdir (%s)",
-              name, GetWalletDir()));
+              name, fs::quoted(fs::PathToString(GetWalletDir()))));
         status = DatabaseStatus::FAILED_BAD_PATH;
         return nullptr;
     }

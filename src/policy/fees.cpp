@@ -527,7 +527,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator()
     fs::path est_filepath = gArgs.GetDataDirNet() / FEE_ESTIMATES_FILENAME;
     CAutoFile est_file(fsbridge::fopen(est_filepath, "rb"), SER_DISK, CLIENT_VERSION);
     if (est_file.IsNull() || !Read(est_file)) {
-        LogPrintf("Failed to read fee estimates from %s. Continue anyway.\n", est_filepath.string());
+        LogPrintf("Failed to read fee estimates from %s. Continue anyway.\n", fs::PathToString(est_filepath));
     }
 }
 
@@ -887,7 +887,7 @@ void CBlockPolicyEstimator::Flush() {
     fs::path est_filepath = gArgs.GetDataDirNet() / FEE_ESTIMATES_FILENAME;
     CAutoFile est_file(fsbridge::fopen(est_filepath, "wb"), SER_DISK, CLIENT_VERSION);
     if (est_file.IsNull() || !Write(est_file)) {
-        LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", est_filepath.string());
+        LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", fs::PathToString(est_filepath));
     }
 }
 

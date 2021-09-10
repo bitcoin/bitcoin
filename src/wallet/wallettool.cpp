@@ -125,7 +125,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         return false;
     }
     const std::string name = args.GetArg("-wallet", "");
-    const fs::path path = fsbridge::AbsPathJoin(GetWalletDir(), name);
+    const fs::path path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(name));
 
     if (command == "create") {
         DatabaseOptions options;

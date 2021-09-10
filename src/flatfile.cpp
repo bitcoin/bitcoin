@@ -41,11 +41,11 @@ FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only)
     if (!file && !read_only)
         file = fsbridge::fopen(path, "wb+");
     if (!file) {
-        LogPrintf("Unable to open file %s\n", path.string());
+        LogPrintf("Unable to open file %s\n", fs::PathToString(path));
         return nullptr;
     }
     if (pos.nPos && fseek(file, pos.nPos, SEEK_SET)) {
-        LogPrintf("Unable to seek to position %u of %s\n", pos.nPos, path.string());
+        LogPrintf("Unable to seek to position %u of %s\n", pos.nPos, fs::PathToString(path));
         fclose(file);
         return nullptr;
     }
