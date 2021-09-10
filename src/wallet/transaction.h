@@ -20,17 +20,6 @@
 typedef std::map<std::string, std::string> mapValue_t;
 
 
-static inline void ReadOrderPos(int64_t& nOrderPos, mapValue_t& mapValue)
-{
-    if (!mapValue.count("n"))
-    {
-        nOrderPos = -1; // TODO: calculate elsewhere
-        return;
-    }
-    nOrderPos = atoi64(mapValue["n"]);
-}
-
-
 static inline void WriteOrderPos(const int64_t& nOrderPos, mapValue_t& mapValue)
 {
     if (nOrderPos == -1)
@@ -232,7 +221,8 @@ public:
             setConfirmed();
         }
 
-        ReadOrderPos(nOrderPos, mapValue);
+        const auto it_op = mapValue.find("n");
+        nOrderPos = (it_op != mapValue.end()) ? atoi64(it_op->second) : -1;
         nTimeSmart = mapValue.count("timesmart") ? (unsigned int)atoi64(mapValue["timesmart"]) : 0;
 
         mapValue.erase("fromaccount");
