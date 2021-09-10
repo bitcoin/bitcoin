@@ -35,6 +35,9 @@ public:
         WITH_LOCK(cs, insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
     }
 
+    using CAddrMan::ForceCheckAddrman;
+    using CAddrMan::cs;
+
     /**
      * Generate a random address. Always returns a valid address.
      */
@@ -238,6 +241,9 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
         ds.SetVersion(ser_version);
         try {
             ds >> *addr_man_ptr;
+            if (0 != WITH_LOCK(addr_man_ptr->cs, return addr_man_ptr->ForceCheckAddrman())) {
+                throw std::ios_base::failure{"Reset addrman after consistency check failed"};
+            }
         } catch (const std::ios_base::failure&) {
             addr_man_ptr = std::make_unique<CAddrManDeterministic>(asmap, fuzzed_data_provider);
         }
