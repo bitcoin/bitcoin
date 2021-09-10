@@ -168,19 +168,36 @@ unsigned int FillFlags(unsigned int flags)
     return flags;
 }
 
-// Exclude each possible script verify flag from flags. Returns a set of these flag combinations
-// that are valid and without duplicates. For example: if flags=1111 and the 4 possible flags are
-// 0001, 0010, 0100, and 1000, this should return the set {0111, 1011, 1101, 1110}.
+// Exclude each possible script verify flag from flags. Returns a set of all
+// submasks.
 // Assumes that mapFlagNames contains all script verify flags.
-std::set<unsigned int> ExcludeIndividualFlags(unsigned int flags)
+std::set<unsigned int> GenerateAllSubMasks(unsigned int flags)
 {
-    std::set<unsigned int> flags_combos;
-    for (const auto& pair : mapFlagNames) {
-        const unsigned int flags_excluding_one = TrimFlags(flags & ~(pair.second));
-        if (flags != flags_excluding_one) {
-            flags_combos.insert(flags_excluding_one);
+    std::vector<unsigned int> set_flags;
+    const size_t n_flags = sizeof(unsigned int)*8;
+    set_flags.reserve(n_flags);
+    for (size_t i = 0; i < n_flags; ++i) {
+        const unsigned int flag = flags & (1 << i);
+        if (flag) {
+            set_flags.push_back(flag);
         }
     }
+    const size_t combos = 1 << set_flags.size();
+    // skip last all set flags
+    std::vector<unsigned int> all_flag_combos(combos-1);
+    for (size_t i = 0; i < combos-1; ++i){
+        for(size_t j = 0; j < set_flags.size(); ++j) {
+            if (i & (1<<j)) {
+                all_flag_combos[i] |= set_flags[j];
+            }
+        }
+    }
+
+    std::set<unsigned int> flags_combos;
+    for (const unsigned int submask : all_flag_combos) {
+        flags_combos.insert(TrimFlags(submask));
+    }
+    flags_combos.erase(flags);
     return flags_combos;
 }
 
@@ -266,8 +283,8 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             }
 
             // Check that flags are maximal: transaction should fail if any unset flags are set.
-            for (auto flags_excluding_one : ExcludeIndividualFlags(verify_flags)) {
-                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, ~flags_excluding_one, txdata, strTest, /* expect_valid */ false)) {
+            for (auto submask_flags : GenerateAllSubMasks(verify_flags)) {
+                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, ~submask_flags, txdata, strTest, /* expect_valid */ false)) {
                     BOOST_ERROR("Too many flags unset: " << strTest);
                 }
             }
@@ -357,8 +374,8 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             }
 
             // Check that flags are minimal: transaction should succeed if any set flags are unset.
-            for (auto flags_excluding_one : ExcludeIndividualFlags(verify_flags)) {
-                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags_excluding_one, txdata, strTest, /* expect_valid */ true)) {
+            for (auto submask_flags : GenerateAllSubMasks(verify_flags)) {
+                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, submask_flags, txdata, strTest, /* expect_valid */ true)) {
                     BOOST_ERROR("Too many flags set: " << strTest);
                 }
             }
