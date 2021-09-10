@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install $APT_ARGS python3-pip python3-setuptools &
 # Python stuff
 RUN pip3 install pyzmq # really needed?
 RUN pip3 install jinja2
-RUN pip3 install flake8==3.5.0
+RUN pip3 install flake8==3.7.8
 RUN pip3 install codespell==1.15.0
 RUN pip3 install vulture==2.3
 RUN pip3 install yq
