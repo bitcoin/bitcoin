@@ -140,7 +140,7 @@ brew install qt@5
 
 Ensure that the `qt@5` package is installed, not the `qt` package.
 If 'qt' is installed, the build process will fail.
-if installed, remove the `qt` package with the following command:
+If installed, remove the `qt` package with the following command:
 
 ``` bash
 brew uninstall qt
