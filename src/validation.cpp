@@ -1216,7 +1216,7 @@ static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainp
         if(IsSyscoinMintTx(tx->nVersion)) {
             CMintSyscoin mintSyscoin(*tx);
             if(!mintSyscoin.IsNull())
-                mapMintKeysMempool.erase(mintSyscoin.strTxHash);
+                mapMintKeysMempool.erase(mintSyscoin.nTxHash);
         }
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
@@ -1760,8 +1760,8 @@ bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootM
     }
     if(res && !fJustCheck) {
         NEVMTxRoot txRootDB;
-        txRootDB.vchTxRoot = evmZMQBlock.vchTxRoot;
-        txRootDB.vchReceiptRoot = evmZMQBlock.vchReceiptRoot;
+        txRootDB.nTxRoot = evmZMQBlock.nTxRoot;
+        txRootDB.nReceiptRoot = evmZMQBlock.nReceiptRoot;
         mapNEVMTxRoots.try_emplace(evmZMQBlock.nBlockHash, txRootDB);
     }
 

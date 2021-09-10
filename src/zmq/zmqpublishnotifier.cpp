@@ -448,10 +448,10 @@ bool CZMQPublishNEVMBlockNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, Bloc
         if(evmBlock.nParentBlockHash.IsNull()) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-parse-phash");
         }
-        if(evmBlock.vchTxRoot.size() != 32) {
+        if(evmBlock.nTxRoot.IsNull()) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-txroot");
         }
-        if(evmBlock.vchReceiptRoot.size() != 32) {
+        if(evmBlock.nReceiptRoot.IsNull()) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-receiptroot");
         }
         if(evmBlock.vchNEVMBlockData.empty()) {

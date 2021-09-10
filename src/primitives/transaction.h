@@ -960,13 +960,13 @@ public:
     // where in vchTxParentNodes the vchTxValue can be found as an offset
     uint16_t posTx;
     std::vector<unsigned char> vchTxParentNodes;
-    std::vector<unsigned char> vchTxRoot;
+    uint256 nTxRoot;
     std::vector<unsigned char> vchTxPath;
     // where in vchReceiptParentNodes the vchReceiptValue can be found as an offset
     uint16_t posReceipt;
     std::vector<unsigned char> vchReceiptParentNodes; 
-    std::vector<unsigned char> vchReceiptRoot;
-    std::string strTxHash;
+    uint256 nReceiptRoot;
+    uint256 nTxHash;
     uint256 nBlockHash;
 
     CMintSyscoin() {
@@ -977,12 +977,12 @@ public:
 
     SERIALIZE_METHODS(CMintSyscoin, obj) {
         READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.strTxHash, obj.nBlockHash, obj.posTx,
+        READWRITE(obj.nTxHash, obj.nBlockHash, obj.posTx,
         obj.vchTxParentNodes, obj.vchTxPath, obj.posReceipt,
-        obj.vchReceiptParentNodes, obj.vchTxRoot, obj.vchReceiptRoot);
+        obj.vchReceiptParentNodes, obj.nTxRoot, obj.nReceiptRoot);
     }
 
-    inline void SetNull() { voutAssets.clear(); posTx = 0; vchTxRoot.clear(); vchReceiptRoot.clear(); vchTxParentNodes.clear(); vchTxPath.clear(); posReceipt = 0; vchReceiptParentNodes.clear(); strTxHash.clear(); nBlockHash.SetNull();  }
+    inline void SetNull() { voutAssets.clear(); posTx = 0; nTxRoot.SetNull(); nReceiptRoot.SetNull(); vchTxParentNodes.clear(); vchTxPath.clear(); posReceipt = 0; vchReceiptParentNodes.clear(); nTxHash.SetNull(); nBlockHash.SetNull();  }
     inline bool IsNull() const { return (voutAssets.empty() && posTx == 0 && posReceipt == 0); }
     int UnserializeFromData(const std::vector<unsigned char> &vchData);
     bool UnserializeFromTx(const CTransaction &tx);
@@ -1013,11 +1013,11 @@ public:
 };
 class NEVMTxRoot {
     public:
-    std::vector<unsigned char> vchTxRoot;
-    std::vector<unsigned char> vchReceiptRoot;
+    uint256 nTxRoot;
+    uint256 nReceiptRoot;
     SERIALIZE_METHODS(NEVMTxRoot, obj)
     {
-        READWRITE(obj.vchTxRoot, obj.vchReceiptRoot);
+        READWRITE(obj.nTxRoot, obj.nReceiptRoot);
     }
 };
 
@@ -1025,29 +1025,29 @@ class CNEVMBlock {
     public:
     uint256 nBlockHash;
     uint256 nParentBlockHash;
-    std::vector<unsigned char> vchTxRoot;
-    std::vector<unsigned char> vchReceiptRoot;
+    uint256 nTxRoot;
+    uint256 nReceiptRoot;
     std::vector<unsigned char>  vchNEVMBlockData;
     SERIALIZE_METHODS(CNEVMBlock, obj)
     {
-        READWRITE(obj.nBlockHash, obj.nParentBlockHash, obj.vchTxRoot, obj.vchReceiptRoot, obj.vchNEVMBlockData);
+        READWRITE(obj.nBlockHash, obj.nParentBlockHash, obj.nTxRoot, obj.nReceiptRoot, obj.vchNEVMBlockData);
     }
 };
 class CNEVMZMQBlock {
     public:
     uint256 nBlockHash;
     uint256 nParentBlockHash;
-    std::vector<unsigned char> vchTxRoot;
-    std::vector<unsigned char> vchReceiptRoot;
+    uint256 nTxRoot;
+    uint256 nReceiptRoot;
     CNEVMZMQBlock(CNEVMBlock&& evmBlock){
         nBlockHash = std::move(evmBlock.nBlockHash);
         nParentBlockHash = std::move(evmBlock.nParentBlockHash);
-        vchTxRoot = std::move(evmBlock.vchTxRoot);
-        vchReceiptRoot = std::move(evmBlock.vchReceiptRoot);
+        nTxRoot = std::move(evmBlock.nTxRoot);
+        nReceiptRoot = std::move(evmBlock.nReceiptRoot);
     }
     SERIALIZE_METHODS(CNEVMZMQBlock, obj)
     {
-        READWRITE(obj.nBlockHash, obj.nParentBlockHash, obj.vchTxRoot, obj.vchReceiptRoot);
+        READWRITE(obj.nBlockHash, obj.nParentBlockHash, obj.nTxRoot, obj.nReceiptRoot);
     }
 };
 bool IsSyscoinTx(const int &nVersion);
@@ -1062,7 +1062,7 @@ int GetSyscoinDataOutput(const CMutableTransaction& mtx);
 bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, int& nOut);
 bool GetSyscoinData(const CMutableTransaction &mtx, std::vector<unsigned char> &vchData, int& nOut);
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
-typedef std::unordered_map<std::string, uint256> NEVMMintTxMap;
+typedef std::unordered_map<uint256, uint256> NEVMMintTxMap;
 typedef std::unordered_map<uint256, NEVMTxRoot> NEVMTxRootMap;
 typedef std::unordered_map<uint32_t, std::pair<std::vector<uint64_t>, CAsset > > AssetMap;
 /** A generic txid reference (txid or wtxid). */

@@ -101,11 +101,11 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
             // topic hash matches with TokenFreeze signature
             if(Params().GetConsensus().vchTokenFreezeMethod == rlpReceiptLogTopicsValue[0].toBytes(dev::RLP::VeryStrict)) {
                 const std::vector<unsigned char> &dataValue = rlpReceiptLogValue[2].toBytes(dev::RLP::VeryStrict);
-                if(dataValue.size() < 96) {
+                if(dataValue.size() < 128) {
                      return FormatSyscoinErrorMessage(state, "mint-receipt-log-data-invalid-size", bSanityCheck);
                 }
                 // get last data field which should be our precisions
-                const std::vector<unsigned char> precisions(dataValue.begin()+64, dataValue.end());
+                const std::vector<unsigned char> precisions(dataValue.begin()+96, dataValue.end());
                 // get precision
                 nERC20Precision = static_cast<uint8_t>(precisions[31]);
                 nSPTPrecision = static_cast<uint8_t>(precisions[27]);
@@ -115,42 +115,50 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(nERC20Precision == 0 || nSPTPrecision == 0) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-precision", bSanityCheck);
     }
+    
     // check transaction spv proofs
-    dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
-    dev::RLP rlpReceiptRoot(&mintSyscoin.vchReceiptRoot);
+    std::vector<unsigned char> rlpTxRootVec(txRootDB.nTxRoot.begin(), txRootDB.nTxRoot.end());
+    dev::RLPStream sTxRoot, sReceiptRoot;
+    sTxRoot.append(rlpTxRootVec);
+    std::vector<unsigned char> rlpReceiptRootVec(txRootDB.nReceiptRoot.begin(),  txRootDB.nReceiptRoot.end());
+    sReceiptRoot.append(rlpReceiptRootVec);
+    dev::RLP rlpTxRoot(sTxRoot.out());
+    dev::RLP rlpReceiptRoot(sReceiptRoot.out());
     if(fNEVMConnection) {
-        if(!txRootDB.vchTxRoot.empty() && mintSyscoin.vchTxRoot != txRootDB.vchTxRoot){
+        if(mintSyscoin.nTxRoot != txRootDB.nTxRoot){
             return FormatSyscoinErrorMessage(state, "mint-mismatching-txroot", bSanityCheck);
         }
-
-        if(!txRootDB.vchReceiptRoot.empty() && mintSyscoin.vchReceiptRoot != txRootDB.vchReceiptRoot){
+        if(mintSyscoin.nReceiptRoot != txRootDB.nReceiptRoot){
             return FormatSyscoinErrorMessage(state, "mint-mismatching-receiptroot", bSanityCheck);
         }
     }
     
     dev::RLP rlpTxParentNodes(&mintSyscoin.vchTxParentNodes);
     std::vector<unsigned char> vchTxValue(mintSyscoin.vchTxParentNodes.begin()+mintSyscoin.posTx, mintSyscoin.vchTxParentNodes.end());
-    // validate mintSyscoin.strTxHash is the hash of vchTxValue
-    if(dev::sha3(vchTxValue).hex() != mintSyscoin.strTxHash) {
+    std::vector<unsigned char> vchTxHash(dev::sha3(vchTxValue).asBytes());
+    // we must reverse the endian-ness because we store uint256 in BE but Eth uses LE.
+    std::reverse(vchTxHash.begin(), vchTxHash.end());
+    // validate mintSyscoin.nTxHash is the hash of vchTxValue, this is not the TXID which would require deserializataion of the transaction object, for our purpose we only need
+    // uniqueness per transaction that is immutable and we do not care specifically for the txid but only that the hash cannot be reproduced for double-spend
+    if(uint256S(HexStr(vchTxHash)) != mintSyscoin.nTxHash) {
         return FormatSyscoinErrorMessage(state, "mint-verify-tx-hash", bSanityCheck);
     }
     dev::RLP rlpTxValue(&vchTxValue);
     const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
-    dev::RLP rlpTxPath(&vchTxPath);
     // ensure eth tx not already spent in a previous block
-    if(pnevmtxmintdb->Exists(mintSyscoin.strTxHash)) {
+    if(pnevmtxmintdb->Exists(mintSyscoin.nTxHash)) {
         return FormatSyscoinErrorMessage(state, "mint-exists", bSanityCheck);
     } 
     // sanity check is set in mempool during m_test_accept and when miner validates block
     // we care to ensure unique bridge id's in the mempool, not to emplace on test_accept
     if(bSanityCheck) {
-        if(mapMintKeys.find(mintSyscoin.strTxHash) != mapMintKeys.end()) {
+        if(mapMintKeys.find(mintSyscoin.nTxHash) != mapMintKeys.end()) {
             return FormatSyscoinErrorMessage(state, "mint-duplicate-transfer", bSanityCheck);
         }
     }
     else {
         // ensure eth tx not already spent in current processing block or mempool(mapMintKeysMempool passed in)
-        auto itMap = mapMintKeys.try_emplace(mintSyscoin.strTxHash, txHash);
+        auto itMap = mapMintKeys.try_emplace(mintSyscoin.nTxHash, txHash);
         if(!itMap.second) {
             return FormatSyscoinErrorMessage(state, "mint-duplicate-transfer", bSanityCheck);
         }
@@ -166,25 +174,28 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if (!rlpTxValue.isList()) {
         return FormatSyscoinErrorMessage(state, "mint-tx-rlp-list", bSanityCheck);
     }
-    if (rlpTxValue.itemCount() < 6) {
+    if (rlpTxValue.itemCount() < 8) {
         return FormatSyscoinErrorMessage(state, "mint-tx-itemcount", bSanityCheck);
-    }        
-    if (!rlpTxValue[5].isData()) {
+    }    
+    const dev::u256& nChainID = rlpTxValue[0].toInt<dev::u256>(dev::RLP::VeryStrict);
+    if(!nChainID.compare(dev::u256(Params().GetConsensus().nNEVMChainID))) {
+        return FormatSyscoinErrorMessage(state, "mint-invalid-chainid", bSanityCheck);
+    }
+    if (!rlpTxValue[7].isData()) {
         return FormatSyscoinErrorMessage(state, "mint-tx-array", bSanityCheck);
-    }        
-    if (rlpTxValue[3].isEmpty()) {
+    }      
+    if (rlpTxValue[5].isEmpty()) {
         return FormatSyscoinErrorMessage(state, "mint-tx-invalid-receiver", bSanityCheck);
-    }                       
-    const dev::Address &address160 = rlpTxValue[3].toHash<dev::Address>(dev::RLP::VeryStrict);
+    }                  
+    const dev::Address &address160 = rlpTxValue[5].toHash<dev::Address>(dev::RLP::VeryStrict);
 
     // ensure ERC20Manager is in the "to" field for the contract, meaning the function was called on this contract for freezing supply
     if(Params().GetConsensus().vchSYSXERC20Manager != address160.asBytes()) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-contract-manager", bSanityCheck);
     }
-    
     CAmount outputAmount;
     uint64_t nAssetNEVM = 0;
-    const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
+    const std::vector<unsigned char> &rlpBytes = rlpTxValue[7].toBytes(dev::RLP::VeryStrict);
     std::vector<unsigned char> vchERC20ContractAddress;
     CTxDestination dest;
     std::string witnessAddress;
@@ -281,7 +292,7 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, NEVMMint
         LogPrint(BCLog::SYS,"DisconnectMintAsset: Cannot unserialize data inside of this transaction relating to an assetallocationmint\n");
         return false;
     }
-    mapMintKeys.try_emplace(mintSyscoin.strTxHash, txHash);
+    mapMintKeys.try_emplace(mintSyscoin.nTxHash, txHash);
     return true;
 }
 
