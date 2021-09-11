@@ -148,7 +148,7 @@ struct Params {
     uint256 hashGenesisBlock;
     // SYSCOIN
     uint64_t nSYSXAsset;
-    uint8_t nNEVMChainID;
+    uint32_t nNEVMChainID;
     std::vector<unsigned char> vchSYSXBurnMethodSignature;
     std::vector<unsigned char> vchSYSXERC20Manager;
     std::vector<unsigned char> vchTokenFreezeMethod;
