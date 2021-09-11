@@ -350,7 +350,7 @@ bool CQuorumBlockProcessor::IsMiningPhase(uint8_t llmqType, int nHeight)
     return false;
 }
 
-bool CQuorumBlockProcessor::IsCommitmentRequired(uint8_t llmqType, int nHeight)
+bool CQuorumBlockProcessor::IsCommitmentRequired(uint8_t llmqType, int nHeight) const
 {
     AssertLockHeld(cs_main);
     uint256 quorumHash = GetQuorumBlockHash(chainman, llmqType, nHeight);
@@ -379,7 +379,7 @@ uint256 CQuorumBlockProcessor::GetQuorumBlockHash(ChainstateManager& chainman, u
     return quorumBlockHash;
 }
 
-bool CQuorumBlockProcessor::HasMinedCommitment(uint8_t llmqType, const uint256& quorumHash)
+bool CQuorumBlockProcessor::HasMinedCommitment(uint8_t llmqType, const uint256& quorumHash) const
 {
     if(!evoDb)
         return false;
@@ -399,7 +399,7 @@ bool CQuorumBlockProcessor::HasMinedCommitment(uint8_t llmqType, const uint256& 
     return fExists;
 }
 
-CFinalCommitmentPtr CQuorumBlockProcessor::GetMinedCommitment(uint8_t llmqType, const uint256& quorumHash, uint256& retMinedBlockHash)
+CFinalCommitmentPtr CQuorumBlockProcessor::GetMinedCommitment(uint8_t llmqType, const uint256& quorumHash, uint256& retMinedBlockHash) const
 {
     if(!evoDb)
         return nullptr;
@@ -413,7 +413,7 @@ CFinalCommitmentPtr CQuorumBlockProcessor::GetMinedCommitment(uint8_t llmqType, 
 }
 
 // The returned quorums are in reversed order, so the most recent one is at index 0
-void CQuorumBlockProcessor::GetMinedCommitmentsUntilBlock(uint8_t llmqType, const CBlockIndex* pindex, size_t maxCount, std::vector<const CBlockIndex*> &ret)
+void CQuorumBlockProcessor::GetMinedCommitmentsUntilBlock(uint8_t llmqType, const CBlockIndex* pindex, size_t maxCount, std::vector<const CBlockIndex*> &ret) const
 {
     if(!evoDb)
         return;
@@ -451,7 +451,7 @@ void CQuorumBlockProcessor::GetMinedCommitmentsUntilBlock(uint8_t llmqType, cons
 }
 
 // The returned quorums are in reversed order, so the most recent one is at index 0
-void CQuorumBlockProcessor::GetMinedAndActiveCommitmentsUntilBlock(const CBlockIndex* pindex, std::map<uint8_t, std::vector<const CBlockIndex*>>& ret)
+void CQuorumBlockProcessor::GetMinedAndActiveCommitmentsUntilBlock(const CBlockIndex* pindex, std::map<uint8_t, std::vector<const CBlockIndex*>>& ret) const
 {
     ret.clear();
     for (const auto& p : Params().GetConsensus().llmqs) {
@@ -464,7 +464,7 @@ void CQuorumBlockProcessor::GetMinedAndActiveCommitmentsUntilBlock(const CBlockI
 
 }
 
-bool CQuorumBlockProcessor::HasMineableCommitment(const uint256& hash)
+bool CQuorumBlockProcessor::HasMineableCommitment(const uint256& hash) const
 {
     LOCK(minableCommitmentsCs);
     return minableCommitments.count(hash) != 0;

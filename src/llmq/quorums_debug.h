@@ -94,7 +94,7 @@ private:
 public:
     CDKGDebugManager();
 
-    void GetLocalDebugStatus(CDKGDebugStatus& ret);
+    void GetLocalDebugStatus(CDKGDebugStatus& ret) const;
 
     void ResetLocalSessionStatus(uint8_t llmqType);
     void InitLocalSessionStatus(uint8_t llmqType, const uint256& quorumHash, uint32_t quorumHeight);
