@@ -1402,7 +1402,6 @@ class DashTestFramework(SyscoinTestFramework):
             self.wait_for_masternode_probes(mninfos_valid, wait_proc=timeout_func)
         self.bump_mocktime(1, nodes=nodes)
         self.generate(self.nodes[0], 2)
-        self.generate(self.nodes[0], 2)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 2 (contribute)")

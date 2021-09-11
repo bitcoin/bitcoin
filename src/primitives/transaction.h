@@ -1024,30 +1024,27 @@ class NEVMTxRoot {
 class CNEVMBlock {
     public:
     uint256 nBlockHash;
-    uint256 nParentBlockHash;
     uint256 nTxRoot;
     uint256 nReceiptRoot;
     std::vector<unsigned char>  vchNEVMBlockData;
     SERIALIZE_METHODS(CNEVMBlock, obj)
     {
-        READWRITE(obj.nBlockHash, obj.nParentBlockHash, obj.nTxRoot, obj.nReceiptRoot, obj.vchNEVMBlockData);
+        READWRITE(obj.nBlockHash, obj.nTxRoot, obj.nReceiptRoot, obj.vchNEVMBlockData);
     }
 };
 class CNEVMZMQBlock {
     public:
     uint256 nBlockHash;
-    uint256 nParentBlockHash;
     uint256 nTxRoot;
     uint256 nReceiptRoot;
     CNEVMZMQBlock(CNEVMBlock&& evmBlock){
         nBlockHash = std::move(evmBlock.nBlockHash);
-        nParentBlockHash = std::move(evmBlock.nParentBlockHash);
         nTxRoot = std::move(evmBlock.nTxRoot);
         nReceiptRoot = std::move(evmBlock.nReceiptRoot);
     }
     SERIALIZE_METHODS(CNEVMZMQBlock, obj)
     {
-        READWRITE(obj.nBlockHash, obj.nParentBlockHash, obj.nTxRoot, obj.nReceiptRoot);
+        READWRITE(obj.nBlockHash, obj.nTxRoot, obj.nReceiptRoot);
     }
 };
 bool IsSyscoinTx(const int &nVersion);

@@ -460,13 +460,10 @@ bool CZMQPublishNEVMBlockNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, Bloc
         try {
             ss >> evmBlock;
         } catch (const std::exception& e) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-parse-response");
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, e.what());
         }
         if(evmBlock.nBlockHash.IsNull()) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-parse-hash");
-        }
-        if(evmBlock.nParentBlockHash.IsNull()) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-parse-phash");
         }
         if(evmBlock.nTxRoot.IsNull()) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-txroot");

@@ -203,7 +203,7 @@ class DIP3Test(SyscoinTestFramework):
         # also check if funds from payout address are used when no fee source address is specified
         node.sendtoaddress(mn.rewards_address, 0.001)
         node.protx_update_registrar(mn.protx_hash, "", new_voting_address, "")
-        node.generate(1)
+        self.generate(node, 1)
         self.sync_all()
         new_dmnState = mn.node.masternode_status()["dmnState"]
         new_voting_address_from_rpc = new_dmnState["votingAddress"]
@@ -231,7 +231,7 @@ class DIP3Test(SyscoinTestFramework):
         mn.collateral_address = node.getnewaddress()
         mn.collateral_txid = node.sendtoaddress(mn.collateral_address, 100)
         mn.collateral_vout = -1
-        node.generate(1)
+        self.generate(node, 1)
 
         rawtx = node.getrawtransaction(mn.collateral_txid, 1)
         for txout in rawtx['vout']:
@@ -263,7 +263,7 @@ class DIP3Test(SyscoinTestFramework):
         mn.rewards_address = node.getnewaddress()
 
         mn.protx_hash = node.protx_register(mn.collateral_txid, mn.collateral_vout, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address, mn.fundsAddr)
-        node.generate(1)
+        self.generate(node, 1)
 
     def start_mn(self, mn):
         start_idx = len(self.nodes) - 1
