@@ -42,6 +42,12 @@ class MiningTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
 
+        def assert_submitblock(block, result_str_1, result_str_2=None):
+            block.solve()
+            result_str_2 = result_str_2 or 'duplicate-invalid'
+            assert_equal(result_str_1, node.submitblock(hexdata=block.serialize().hex()))
+            assert_equal(result_str_2, node.submitblock(hexdata=block.serialize().hex()))
+
         self.log.info('getmininginfo')
         mining_info = node.getmininginfo()
         assert_equal(mining_info['blocks'], 200)
@@ -102,6 +108,7 @@ class MiningTest(BitcoinTestFramework):
         bad_block = copy.deepcopy(block)
         bad_block.vtx.append(bad_block.vtx[0])
         assert_template(node, bad_block, 'bad-txns-duplicate')
+        assert_submitblock(bad_block, 'bad-txns-duplicate', 'bad-txns-duplicate')
 
         self.log.info("getblocktemplate: Test invalid transaction")
         bad_block = copy.deepcopy(block)
@@ -110,12 +117,14 @@ class MiningTest(BitcoinTestFramework):
         bad_tx.rehash()
         bad_block.vtx.append(bad_tx)
         assert_template(node, bad_block, 'bad-txns-inputs-missingorspent')
+        assert_submitblock(bad_block, 'bad-txns-inputs-missingorspent')
 
         self.log.info("getblocktemplate: Test nonfinal transaction")
         bad_block = copy.deepcopy(block)
         bad_block.vtx[0].nLockTime = 2 ** 32 - 1
         bad_block.vtx[0].rehash()
         assert_template(node, bad_block, 'bad-txns-nonfinal')
+        assert_submitblock(bad_block, 'bad-txns-nonfinal')
 
         self.log.info("getblocktemplate: Test bad tx count")
         # The tx count is immediately after the block header
@@ -134,24 +143,29 @@ class MiningTest(BitcoinTestFramework):
         bad_block = copy.deepcopy(block)
         bad_block.hashMerkleRoot += 1
         assert_template(node, bad_block, 'bad-txnmrklroot', False)
+        assert_submitblock(bad_block, 'bad-txnmrklroot', 'bad-txnmrklroot')
 
         self.log.info("getblocktemplate: Test bad timestamps")
         bad_block = copy.deepcopy(block)
         bad_block.nTime = 2 ** 31 - 1
         assert_template(node, bad_block, 'time-too-new')
+        assert_submitblock(bad_block, 'time-too-new', 'time-too-new')
         bad_block.nTime = 0
         assert_template(node, bad_block, 'time-too-old')
+        assert_submitblock(bad_block, 'time-too-old', 'time-too-old')
 
         self.log.info("getblocktemplate: Test not best block")
         bad_block = copy.deepcopy(block)
         bad_block.hashPrevBlock = 123
         assert_template(node, bad_block, 'inconclusive-not-best-prevblk')
+        assert_submitblock(bad_block, 'prev-blk-not-found', 'prev-blk-not-found')
 
         self.log.info('submitheader tests')
         assert_raises_rpc_error(-22, 'Block header decode failed', lambda: node.submitheader(hexdata='xx' * 80))
         assert_raises_rpc_error(-22, 'Block header decode failed', lambda: node.submitheader(hexdata='ff' * 78))
         assert_raises_rpc_error(-25, 'Must submit previous header', lambda: node.submitheader(hexdata='ff' * 80))
 
+        block.nTime += 1
         block.solve()
 
         def filter_tip_keys(chaintips):
@@ -180,7 +194,8 @@ class MiningTest(BitcoinTestFramework):
         node.submitheader(hexdata=CBlockHeader(bad_block_root).serialize().hex())
         assert chain_tip(bad_block_root.hash) in filter_tip_keys(node.getchaintips())
         # Should still reject invalid blocks, even if we have the header:
-        assert_equal(node.submitblock(hexdata=bad_block_root.serialize().hex()), 'invalid')
+        assert_equal(node.submitblock(hexdata=bad_block_root.serialize().hex()), 'bad-txnmrklroot')
+        assert_equal(node.submitblock(hexdata=bad_block_root.serialize().hex()), 'bad-txnmrklroot')
         assert chain_tip(bad_block_root.hash) in filter_tip_keys(node.getchaintips())
         # We know the header for this invalid block, so should just return early without error:
         node.submitheader(hexdata=CBlockHeader(bad_block_root).serialize().hex())
@@ -191,7 +206,8 @@ class MiningTest(BitcoinTestFramework):
         bad_block_lock.vtx[0].rehash()
         bad_block_lock.hashMerkleRoot = bad_block_lock.calc_merkle_root()
         bad_block_lock.solve()
-        assert_equal(node.submitblock(hexdata=bad_block_lock.serialize().hex()), 'invalid')
+        assert_equal(node.submitblock(hexdata=bad_block_lock.serialize().hex()), 'bad-txns-nonfinal')
+        assert_equal(node.submitblock(hexdata=bad_block_lock.serialize().hex()), 'duplicate-invalid')
         # Build a "good" block on top of the submitted bad block
         bad_block2 = copy.deepcopy(block)
         bad_block2.hashPrevBlock = bad_block_lock.sha256
@@ -217,6 +233,7 @@ class MiningTest(BitcoinTestFramework):
         assert_raises_rpc_error(-25, 'bad-prevblk', lambda: node.submitheader(hexdata=CBlockHeader(bad_block2).serialize().hex()))
         node.submitheader(hexdata=CBlockHeader(block).serialize().hex())
         node.submitheader(hexdata=CBlockHeader(bad_block_root).serialize().hex())
+        assert_equal(node.submitblock(hexdata=block.serialize().hex()), 'duplicate')  # valid
 
 
 if __name__ == '__main__':
