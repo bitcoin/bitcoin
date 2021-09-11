@@ -4199,6 +4199,8 @@ void CChainState::CheckBlockIndex()
         return;
     }
 
+    LOG_TIME_MILLIS_WITH_CATEGORY("consistency checks", BCLog::BLOCK);
+
     LOCK(cs_main);
 
     // During a reindex, we read the genesis block and call CheckBlockIndex before ActivateBestChain,
