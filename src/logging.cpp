@@ -161,6 +161,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::IPC, "ipc"},
     {BCLog::LOCK, "lock"},
     {BCLog::UTIL, "util"},
+    {BCLog::BLOCK, "block"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 };
