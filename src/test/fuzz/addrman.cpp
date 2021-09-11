@@ -306,6 +306,7 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
     (void)const_addr_man.size();
     CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);
     data_stream << const_addr_man;
+    assert(0 == WITH_LOCK(addr_man_ptr->cs, return addr_man_ptr->ForceCheckAddrman()));
 }
 
 // Check that serialize followed by unserialize produces the same addrman.
