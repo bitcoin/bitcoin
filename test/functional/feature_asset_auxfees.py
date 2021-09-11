@@ -17,10 +17,10 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.nodes[0].generate(200)
+        self.generate(self.nodes[0], 200)
         self.basic_asset()
         self.nodes[0].assetsend(self.asset, self.nodes[0].getnewaddress(), 1000)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), 250)
         self.sync_mempools()
@@ -30,7 +30,7 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         assert_equal(out[0]['asset_amount'], Decimal('1.06'))
         # remove aux fees
         self.nodes[0].assetupdate(self.asset, '', '', 127, '', {}, {})
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         self.nodes[0].assetallocationsend(self.asset, self.nodes[0].getnewaddress(), 250)
         self.sync_mempools()
@@ -38,11 +38,11 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         assert_equal(len(out), 1)
         assert_equal(out[0]['asset_guid'], self.asset)
         assert_equal(out[0]['asset_amount'], Decimal('1.06'))
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         # clear aux fees
         self.nodes[0].assetupdate(self.asset, '','', 127, '', {}, {})
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         assetInfo = self.nodes[0].assetinfo(self.asset)
         assert('auxfee' not in assetInfo)
 
@@ -52,7 +52,7 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         auxfeesExpected = {'auxfee_address': newaddressfee, 'fee_struct': [{'bound': Decimal('0E-8'), 'percentage': '0.01000'}, {'bound': Decimal('10.00000000'), 'percentage': '0.00400'}, {'bound': Decimal('250.00000000'), 'percentage': '0.00200'}, {'bound': Decimal('2500.00000000'), 'percentage': '0.00070'}, {'bound': Decimal('25000.00000000'), 'percentage': '0.00007'}, {'bound': Decimal('250000.00000000'), 'percentage': '0.00000'}]}
         self.asset = self.nodes[0].assetnew('1', 'AGX', 'AGX silver backed token, licensed and operated by Interfix corporation', '0x', 8, 10000, 127, '', {}, auxfees)['asset_guid']
         self.sync_mempools()
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         assetInfo = self.nodes[0].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)

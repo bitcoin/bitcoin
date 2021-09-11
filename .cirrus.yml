@@ -1,6 +1,4 @@
-### Global defaults
-
-env:
+env:  # Global defaults
   PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
   MAKEJOBS: "-j4"
   TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
@@ -228,7 +226,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
 
 task:
-  name: '[multiprocess] [focal]'
+  name: '[multiprocess, i686, DEBUG] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -237,7 +235,7 @@ task:
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     MAKEJOBS: "-j8"
-    FILE_ENV: "./ci/test/00_setup_env_native_multiprocess.sh"
+    FILE_ENV: "./ci/test/00_setup_env_i686_multiprocess.sh"
 
 task:
   name: '[no wallet] [bionic]'

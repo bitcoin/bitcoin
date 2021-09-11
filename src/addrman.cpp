@@ -5,10 +5,12 @@
 
 #include <addrman.h>
 
+#include <clientversion.h>
 #include <hash.h>
 #include <logging.h>
 #include <netaddress.h>
 #include <serialize.h>
+#include <streams.h>
 
 #include <math.h>
 #include <optional>
@@ -244,9 +246,9 @@ void CAddrMan::Unserialize(Stream& s_)
     const uint8_t lowest_compatible = compat - INCOMPATIBILITY_BASE;
     if (lowest_compatible > FILE_FORMAT) {
         throw std::ios_base::failure(strprintf(
-                    "Unsupported format of addrman database: %u. It is compatible with formats >=%u, "
-                    "but the maximum supported by this version of %s is %u.",
-                    format, lowest_compatible, PACKAGE_NAME, static_cast<uint8_t>(FILE_FORMAT)));
+            "Unsupported format of addrman database: %u. It is compatible with formats >=%u, "
+            "but the maximum supported by this version of %s is %u.",
+            uint8_t{format}, uint8_t{lowest_compatible}, PACKAGE_NAME, uint8_t{FILE_FORMAT}));
     }
 
     s >> nKey;
@@ -1022,31 +1024,4 @@ CAddrInfo CAddrMan::SelectTriedCollision_()
     int id_old = vvTried[tried_bucket][tried_bucket_pos];
 
     return mapInfo[id_old];
-}
-
-std::vector<bool> CAddrMan::DecodeAsmap(fs::path path)
-{
-    std::vector<bool> bits;
-    FILE *filestr = fsbridge::fopen(path, "rb");
-    CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
-    if (file.IsNull()) {
-        LogPrintf("Failed to open asmap file from disk\n");
-        return bits;
-    }
-    fseek(filestr, 0, SEEK_END);
-    int length = ftell(filestr);
-    LogPrintf("Opened asmap file %s (%d bytes) from disk\n", path, length);
-    fseek(filestr, 0, SEEK_SET);
-    uint8_t cur_byte;
-    for (int i = 0; i < length; ++i) {
-        file >> cur_byte;
-        for (int bit = 0; bit < 8; ++bit) {
-            bits.push_back((cur_byte >> bit) & 1);
-        }
-    }
-    if (!SanityCheckASMap(bits)) {
-        LogPrintf("Sanity check of asmap file %s failed\n", path);
-        return {};
-    }
-    return bits;
 }

@@ -438,7 +438,7 @@ static RPCHelpMan getnevmblockchaininfo()
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     UniValue oNEVM(UniValue::VOBJ);
-    CNEVMBlock evmBlock;
+    CNEVMHeader evmBlock;
     BlockValidationState state;
     int nHeight;
     CBlock block;
@@ -468,9 +468,7 @@ static RPCHelpMan getnevmblockchaininfo()
         vec.push_back(v);
     }
     std::reverse (evmBlock.nBlockHash.begin (), evmBlock.nBlockHash.end ()); // correct endian
-    std::reverse (evmBlock.nParentBlockHash.begin (), evmBlock.nParentBlockHash.end ()); // correct endian
     oNEVM.__pushKV("bestblockhash", "0x" + evmBlock.nBlockHash.ToString());
-    oNEVM.__pushKV("previousblockhash", "0x" + evmBlock.nParentBlockHash.ToString());
     oNEVM.__pushKV("txroot", "0x" + evmBlock.nTxRoot.GetHex());
     oNEVM.__pushKV("receiptroot", "0x" + evmBlock.nReceiptRoot.GetHex());
     oNEVM.__pushKV("height", (nHeight - Params().GetConsensus().nNEVMStartBlock) + 1);
@@ -678,7 +676,7 @@ static RPCHelpMan syscoingetspvproof()
     }
     res.__pushKV("siblings", siblings);
     res.__pushKV("index", nIndex);  
-    CNEVMBlock evmBlock;
+    CNEVMHeader evmBlock;
     BlockValidationState state;
     if(!GetNEVMData(state, block, evmBlock)) {
         throw JSONRPCError(RPC_MISC_ERROR, state.ToString());

@@ -81,6 +81,7 @@ WalletView::WalletView(WalletModel* wallet_model, const PlatformStyle* _platform
     if (settings.value("fShowMasternodesTab").toBool()) {
         masternodeListPage = new MasternodeList();
         addWidget(masternodeListPage);
+        masternodeListPage->setWalletModel(walletModel);
     }
 
     connect(overviewPage, &OverviewPage::transactionClicked, this, &WalletView::transactionClicked);

@@ -31,7 +31,7 @@ define $(package)_extract_cmds
 endef
 
 define $(package)_set_vars
-  $(package)_config_opts=-DSTLIB=ON -DSHLIB=OFF -DSTBIN=ON
+  $(package)_config_opts=-DSTLIB=ON -DSHLIB=OFF -DSTBIN=OFF
   $(package)_config_opts+= -DBUILD_BLS_PYTHON_BINDINGS=0 -DBUILD_BLS_TESTS=0 -DBUILD_BLS_BENCHMARKS=0 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_C_STANDARD=99
   $(package)_config_opts_linux=-DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux -DMULTI=PTHREAD
   $(package)_config_opts_darwin=-DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin -DMULTI=PTHREAD

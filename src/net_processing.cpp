@@ -3472,8 +3472,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
-        // SYSCOIN
-        std::vector<CBlockHeader> vHeaders;
+        std::vector<CBlock> vHeaders;
         unsigned nCount = 0;
         unsigned nSize = 0;
         LogPrint(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
@@ -4046,7 +4045,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         for (unsigned int n = 0; n < nCount; n++) {
             vRecv >> headers[n];
             // SYSCOIN
-            // ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
+            if(headers[n].IsNEVM())
+                ReadCompactSize(vRecv);
+            ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
 
         return ProcessHeadersMessage(pfrom, *peer, headers, /*via_compact_block=*/false);
@@ -4972,8 +4973,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             // blocks, or if the peer doesn't want headers, just
             // add all to the inv queue.
             LOCK(peer->m_block_inv_mutex);
-            // SYSCOIN
-            std::vector<CBlockHeader> vHeaders;
+            std::vector<CBlock> vHeaders;
             bool fRevertToInv = ((!state.fPreferHeaders &&
                                  (!state.fPreferHeaderAndIDs || peer->m_blocks_for_headers_relay.size() > 1)) ||
                                  peer->m_blocks_for_headers_relay.size() > MAX_BLOCKS_TO_ANNOUNCE);

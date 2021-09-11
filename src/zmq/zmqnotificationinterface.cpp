@@ -209,7 +209,7 @@ void CZMQNotificationInterface::NotifyNEVMComms(const std::string& commMessage, 
         return notifier->NotifyNEVMComms(commMessage, bResponse);
     });
 }
-void CZMQNotificationInterface::NotifyNEVMBlockConnect(const CNEVMZMQBlock &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash)
+void CZMQNotificationInterface::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash)
 {
     TryForEach(notifiers, [&evmBlock, &block, &nBlockHash, &state](CZMQAbstractNotifier* notifier) {
         return notifier->NotifyNEVMBlockConnect(evmBlock, block, state, nBlockHash);

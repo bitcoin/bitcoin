@@ -221,7 +221,7 @@ public:
 [[nodiscard]] inline std::vector<bool> ConsumeAsmap(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-    if (!SanityCheckASMap(asmap)) asmap.clear();
+    if (!SanityCheckASMap(asmap, 128)) asmap.clear();
     return asmap;
 }
 

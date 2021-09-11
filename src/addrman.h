@@ -6,23 +6,16 @@
 #ifndef SYSCOIN_ADDRMAN_H
 #define SYSCOIN_ADDRMAN_H
 
-#include <clientversion.h>
-#include <config/syscoin-config.h>
 #include <fs.h>
-#include <hash.h>
+#include <logging.h>
 #include <netaddress.h>
 #include <protocol.h>
-#include <random.h>
-#include <streams.h>
 #include <sync.h>
 #include <timedata.h>
-#include <tinyformat.h>
-#include <util/system.h>
 
-#include <iostream>
+#include <cstdint>
 #include <optional>
 #include <set>
-#include <stdint.h>
 #include <unordered_map>
 #include <vector>
 
@@ -149,9 +142,6 @@ static constexpr int ADDRMAN_BUCKET_SIZE{1 << ADDRMAN_BUCKET_SIZE_LOG2};
 class CAddrMan
 {
 public:
-    // Read asmap from provided binary file
-    static std::vector<bool> DecodeAsmap(fs::path path);
-
     template <typename Stream>
     void Serialize(Stream& s_) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 

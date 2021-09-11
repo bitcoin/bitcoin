@@ -17,7 +17,7 @@ class AssetMintTest(SyscoinTestFramework):
 
 
     def run_test(self):
-        self.nodes[0].generate(200)
+        self.generate(self.nodes[0], 200)
         self.sync_blocks()
         self.asset = '123456'
         spv_tx_root = "bf2fe1a8c7401fe41cd90e351d7a7b0146912e9e5a1bab17f80a602021793e60"
@@ -30,7 +30,7 @@ class AssetMintTest(SyscoinTestFramework):
         blockhash = '0xd232b110d7e64d23ec6f76a500db9465c1293ed450ef3fa8e634483a2900e84e'
 
         self.basic_asset()
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         assetInfo = self.nodes[0].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
         self.sync_blocks()
@@ -47,7 +47,7 @@ class AssetMintTest(SyscoinTestFramework):
         time.sleep(0.25)
         # cannot mint twice
         assert_raises_rpc_error(-4, 'mint-duplicate-transfer', self.nodes[0].assetallocationmint, self.asset, newaddress, 1, blockhash, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         # after a block it should show a different exists error
         assert_raises_rpc_error(-4, 'mint-exists', self.nodes[0].assetallocationmint, self.asset, newaddress, 1, blockhash, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)

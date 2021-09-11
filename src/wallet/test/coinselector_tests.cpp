@@ -40,7 +40,7 @@ CoinEligibilityFilter filter_standard_extra(6, 6, 0);
 CoinSelectionParams coin_selection_params(/* use_bnb= */ false, /* change_output_size= */ 0,
                                           /* change_spend_size= */ 0, /* effective_feerate= */ CFeeRate(0),
                                           /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
-                                          /* tx_no_inputs_size= */ 0, /* avoid_partial= */ false);
+                                          /* tx_noinputs_size= */ 0, /* avoid_partial= */ false);
 
 static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>& set)
 {
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     CoinSelectionParams coin_selection_params_bnb(/* use_bnb= */ true, /* change_output_size= */ 0,
                                                   /* change_spend_size= */ 0, /* effective_feerate= */ CFeeRate(3000),
                                                   /* long_term_feerate= */ CFeeRate(1000), /* discard_feerate= */ CFeeRate(1000),
-                                                  /* tx_no_inputs_size= */ 0, /* avoid_partial= */ false);
+                                                  /* tx_noinputs_size= */ 0, /* avoid_partial= */ false);
     CoinSet setCoinsRet;
     CAmount nValueRet;
     bool bnb_used;

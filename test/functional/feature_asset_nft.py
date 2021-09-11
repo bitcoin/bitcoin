@@ -17,7 +17,7 @@ class AssetNFTTest(SyscoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.nodes[0].generate(200)
+        self.generate(self.nodes[0], 200)
         self.basic_assetnft()
         self.basic_assetduplicatenft()
         self.basic_overflowassetnft()
@@ -41,10 +41,10 @@ class AssetNFTTest(SyscoinTestFramework):
         nftID = '1'
         nftGuid = self.CreateAssetID(nftID, asset)
         self.sync_mempools()
-        self.nodes[1].generate(3)
+        self.generate(self.nodes[1], 3)
         self.sync_blocks()
         self.nodes[0].assetsend(asset, self.nodes[1].getnewaddress(), 1.1, 0, nftID)
-        self.nodes[0].generate(3)
+        self.generate(self.nodes[0], 3)
         self.sync_blocks()
         out = self.nodes[1].listunspent(query_options={'assetGuid': nftGuid, 'minimumAmountAsset': 1.1})
         assert_equal(len(out), 1)
@@ -53,10 +53,10 @@ class AssetNFTTest(SyscoinTestFramework):
         asset = self.nodes[0].assetnew('1', 'NFT', 'asset nft description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
         nftID = '1'
         self.sync_mempools()
-        self.nodes[1].generate(3)
+        self.generate(self.nodes[1], 3)
         self.sync_blocks()
         self.nodes[0].assetsend(asset, self.nodes[1].getnewaddress(), 1.1, 0, nftID)
-        self.nodes[0].generate(3)
+        self.generate(self.nodes[0], 3)
         self.sync_blocks()
         assert_raises_rpc_error(-4, 'asset-nft-duplicate', self.nodes[0].assetsend, asset, self.nodes[1].getnewaddress(), 1.1, 0, nftID)
 
@@ -64,14 +64,14 @@ class AssetNFTTest(SyscoinTestFramework):
         asset = self.nodes[0].assetnew('1', 'NFT', 'asset nft description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
         nftID = str(0xFFFFFFFF + 1)
         self.sync_mempools()
-        self.nodes[1].generate(3)
+        self.generate(self.nodes[1], 3)
         self.sync_blocks()
         assert_raises_rpc_error(-32602, 'Could not parse NFTID', self.nodes[0].assetsend, asset, self.nodes[1].getnewaddress(), 1, 0, nftID)
 
     def basic_multiassetnft(self):
         asset = self.nodes[0].assetnew('1', 'NFT', 'asset nft description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
         self.sync_mempools()
-        self.nodes[1].generate(3)
+        self.generate(self.nodes[1], 3)
         self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1)
         self.sync_blocks()
         nftUser1 = '1'
@@ -87,7 +87,7 @@ class AssetNFTTest(SyscoinTestFramework):
         user4 = self.nodes[1].getnewaddress()
         assert_raises_rpc_error(-4, 'bad-txns-asset-multiple-zero-out', self.nodes[0].assetsendmany, asset,[{'address': user1,'amount':0.00000001,'NFTID':nftUser1},{'address': user2,'amount':0.4,'NFTID':nftUser2},{'address': user3,'amount':0.5},{'address': user4,'amount':0.6,'NFTID':nftUser4},{'address': user4,'amount':0}])
         self.nodes[0].assetsendmany(asset,[{'address': user1,'amount':0.00000001,'NFTID':nftUser1},{'address': user2,'amount':0.4,'NFTID':nftUser2},{'address': user3,'amount':0.5},{'address': user4,'amount':0.6,'NFTID':nftUser4}])
-        self.nodes[0].generate(3)
+        self.generate(self.nodes[0], 3)
         self.sync_blocks()
         nftGuidUser1 = self.CreateAssetID(nftUser1, asset)
         nftGuidUser2 = self.CreateAssetID(nftUser2, asset)
@@ -115,7 +115,7 @@ class AssetNFTTest(SyscoinTestFramework):
         assert_raises_rpc_error(-4, 'Insufficient funds', self.nodes[1].assetallocationsend, nftGuidUser2, self.nodes[0].getnewaddress(), 0.5)
         assert_raises_rpc_error(-4, 'Insufficient funds', self.nodes[1].assetallocationsend, asset, self.nodes[0].getnewaddress(), 0.6)
         self.nodes[1].assetallocationsend(nftGuidUser1, self.nodes[0].getnewaddress(), 0.00000001)
-        self.nodes[1].generate(1)
+        self.generate(self.nodes[1], 1)
         self.sync_blocks()
         out = self.nodes[1].listunspentasset(nftGuidUser1)
         assert_equal(len(out), 0)
@@ -128,7 +128,7 @@ class AssetNFTTest(SyscoinTestFramework):
         asset = self.nodes[0].assetnew('1', 'NFT', 'asset nft description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
         nftID = str(0xFFFFFFFF)
         self.sync_mempools()
-        self.nodes[1].generate(3)
+        self.generate(self.nodes[1], 3)
         self.sync_blocks()
         assert_raises_rpc_error(-4, 'asset-nft-output-zeroval', self.nodes[0].assetsend, asset, self.nodes[1].getnewaddress(), 0, 0, nftID)
 

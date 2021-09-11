@@ -569,6 +569,4 @@ public:
     }
 };
 
-bool SanityCheckASMap(const std::vector<bool>& asmap);
-
 #endif // SYSCOIN_NETADDRESS_H

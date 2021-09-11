@@ -277,7 +277,7 @@ void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMN
 void CMainSignals::NotifyNEVMComms(const std::string& commMessage, bool &bResponse) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyNEVMComms(commMessage, bResponse); });
 }
-void CMainSignals::NotifyNEVMBlockConnect(const CNEVMZMQBlock &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash) {
+void CMainSignals::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyNEVMBlockConnect(evmBlock, block, state, nBlockHash); });
 }
 void CMainSignals::NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash) {

@@ -119,6 +119,7 @@ extern std::condition_variable g_best_block_cv;
 extern uint256 g_best_block;
 // SYSCOIN
 extern std::atomic_bool fReindexGeth;
+static constexpr uint8_t NEVM_MAGIC_BYTES[4] = {'n', 'e', 'v', 'm'};
 /** Whether there are dedicated script-checking threads running.
  * False indicates all script checking is done on the main threadMessageHandler thread.
  */
@@ -1093,7 +1094,7 @@ void KillProcess(const pid_t& pid);
 
 // SYSCOIN
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMBlock &evmBlock);
+bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock);
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.
  * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.

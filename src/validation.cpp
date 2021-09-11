@@ -454,7 +454,7 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
     }
 
     // Call CheckInputScripts() to cache signature and script validity against current tip consensus rules.
-    return CheckInputScripts(tx, state, view, flags, /* cacheSigStore = */ true, /* cacheFullSciptStore = */ true, txdata);
+    return CheckInputScripts(tx, state, view, flags, /* cacheSigStore= */ true, /* cacheFullScriptStore= */ true, txdata);
 }
 
 namespace {
@@ -875,17 +875,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // that we have the set of all ancestors we can detect this
     // pathological case by making sure setConflicts/setConflictsAsset and setAncestors don't
     // intersect.
-    for (CTxMemPool::txiter ancestorIt : setAncestors)
-    {
-        const uint256 &hashAncestor = ancestorIt->GetTx().GetHash();
-        // SYSCOIN
-        if (setConflicts.count(hashAncestor) || setConflictsAsset.count(hashAncestor))
-        {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-spends-conflicting-tx",
-                    strprintf("%s spends conflicting transaction %s",
-                        hash.ToString(),
-                        hashAncestor.ToString()));
-        }
+    // SYSCOIN
+    if (const auto err_string{EntriesAndTxidsDisjoint(setAncestors, setConflicts, setConflictsAsset, hash)}) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-spends-conflicting-tx", *err_string);
     }
 
 
@@ -895,98 +887,30 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     fReplacementTransaction = setConflicts.size();
     if (fReplacementTransaction)
     {
-        std::string err_string;
         CFeeRate newFeeRate(nModifiedFees, nSize);
-        for (const auto& mi : setIterConflicting) {
-            // Don't allow the replacement to reduce the feerate of the
-            // mempool.
-            //
-            // We usually don't want to accept replacements with lower
-            // feerates than what they replaced as that would lower the
-            // feerate of the next block. Requiring that the feerate always
-            // be increased is also an easy-to-reason about way to prevent
-            // DoS attacks via replacements.
-            //
-            // We only consider the feerates of transactions being directly
-            // replaced, not their indirect descendants. While that does
-            // mean high feerate children are ignored when deciding whether
-            // or not to replace, we do require the replacement to pay more
-            // overall fees too, mitigating most cases.
-            CFeeRate oldFeeRate(mi->GetModifiedFee(), mi->GetTxSize());
-            if (newFeeRate <= oldFeeRate)
-            {
-                return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
-                        strprintf("rejecting replacement %s; new feerate %s <= old feerate %s",
-                            hash.ToString(),
-                            newFeeRate.ToString(),
-                            oldFeeRate.ToString()));
-            }
+        if (const auto err_string{PaysMoreThanConflicts(setIterConflicting, newFeeRate, hash)}) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
         }
 
         // Calculate all conflicting entries and enforce Rule #5.
-        if (!GetEntriesForConflicts(tx, m_pool, setIterConflicting, allConflicting, err_string)) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too many potential replacements", err_string);
+        if (const auto err_string{GetEntriesForConflicts(tx, m_pool, setIterConflicting, allConflicting)}) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
+                                 "too many potential replacements", *err_string);
+        }
+        // Enforce Rule #2.
+        if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, setIterConflicting)}) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
+                                 "replacement-adds-unconfirmed", *err_string);
         }
 
         // Check if it's economically rational to mine this transaction rather
-        // than the ones it replaces.
+        // than the ones it replaces. Enforce Rules #3 and #4.
         for (CTxMemPool::txiter it : allConflicting) {
             nConflictingFees += it->GetModifiedFee();
             nConflictingSize += it->GetTxSize();
         }
-
-        std::set<uint256> setConflictsParents;
-        for (const auto& mi : setIterConflicting) {
-            for (const CTxIn &txin : mi->GetTx().vin)
-            {
-                setConflictsParents.insert(txin.prevout.hash);
-            }
-        }
-
-        for (unsigned int j = 0; j < tx.vin.size(); j++)
-        {
-            // We don't want to accept replacements that require low
-            // feerate junk to be mined first. Ideally we'd keep track of
-            // the ancestor feerates and make the decision based on that,
-            // but for now requiring all new inputs to be confirmed works.
-            //
-            // Note that if you relax this to make RBF a little more useful,
-            // this may break the CalculateMempoolAncestors RBF relaxation,
-            // above. See the comment above the first CalculateMempoolAncestors
-            // call for more info.
-            if (!setConflictsParents.count(tx.vin[j].prevout.hash))
-            {
-                // Rather than check the UTXO set - potentially expensive -
-                // it's cheaper to just check if the new input refers to a
-                // tx that's in the mempool.
-                if (m_pool.exists(tx.vin[j].prevout.hash)) {
-                    return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "replacement-adds-unconfirmed",
-                            strprintf("replacement %s adds unconfirmed input, idx %d",
-                                hash.ToString(), j));
-                }
-            }
-        }
-
-        // The replacement must pay greater fees than the transactions it
-        // replaces - if we did the bandwidth used by those conflicting
-        // transactions would not be paid for.
-        if (nModifiedFees < nConflictingFees)
-        {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
-                    strprintf("rejecting replacement %s, less fees than conflicting txs; %s < %s",
-                        hash.ToString(), FormatMoney(nModifiedFees), FormatMoney(nConflictingFees)));
-        }
-
-        // Finally in addition to paying more fees than the conflicts the
-        // new transaction must pay for its own bandwidth.
-        CAmount nDeltaFees = nModifiedFees - nConflictingFees;
-        if (nDeltaFees < ::incrementalRelayFee.GetFee(nSize))
-        {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
-                    strprintf("rejecting replacement %s, not enough additional fees to relay; %s < %s",
-                        hash.ToString(),
-                        FormatMoney(nDeltaFees),
-                        FormatMoney(::incrementalRelayFee.GetFee(nSize))));
+        if (const auto err_string{PaysForRBF(nConflictingFees, nModifiedFees, nSize, hash)}) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
         }
     }
     return true;
@@ -1710,41 +1634,39 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
-bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMBlock &evmBlock) {
+bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlockHeader) {
     std::vector<unsigned char> vchData;
 	int nOut;
 	if (!GetSyscoinData(*block.vtx[0], vchData, nOut))
 		return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-data-output");
-    std::string strVchData(vchData.begin(), vchData.end());
-    auto pos = strVchData.find("NEVM");
-    if(pos == std::string::npos )
+    auto pos = std::find(vchData.begin(), vchData.end(), *NEVM_MAGIC_BYTES);
+    if(pos == vchData.end() )
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-tag");
-    strVchData = strVchData.substr(pos+5);
-    std::vector<unsigned char> newVchData(strVchData.begin(), strVchData.end());
-    CDataStream ds(newVchData, SER_NETWORK, PROTOCOL_VERSION);
+    pos += sizeof(NEVM_MAGIC_BYTES);
+    vchData = std::vector<unsigned char>(pos, pos+sizeof(CNEVMHeader));
+    CDataStream ds(vchData, SER_NETWORK, PROTOCOL_VERSION);
     try {
-        ds >> evmBlock;
+        ds >> evmBlockHeader;
     } catch (std::exception& e) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-unserialize");
     }
     return true;
 }
 bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const bool fJustCheck) {
-    CNEVMBlock evmBlock;
-    if(!GetNEVMData(state, block, evmBlock)) {
+    CNEVMHeader nevmBlockHeader;
+    if(!GetNEVMData(state, block, nevmBlockHeader)) {
         return false; //state filled by GetNEVMData 
     }
     // return if block was already processed
-    auto it = mapNEVMTxRoots.find(evmBlock.nBlockHash);
-    if(it != mapNEVMTxRoots.end() || pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash)) {
+    auto it = mapNEVMTxRoots.find(nevmBlockHeader.nBlockHash);
+    if(it != mapNEVMTxRoots.end() || pnevmtxrootsdb->ExistsTxRoot(nevmBlockHeader.nBlockHash)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-duplicate");
     }
   
     if(block.vchNEVMBlockData.empty()) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-empty");
     }
-    const CNEVMZMQBlock evmZMQBlock(std::move(evmBlock));
-    GetMainSignals().NotifyNEVMBlockConnect(evmZMQBlock, block, state, fJustCheck? uint256(): nBlockHash);
+    GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash);
     bool res = state.IsValid();
     // try to bring connection back alive if its not connected for some reason
     if(!res && state.GetRejectReason() == "nevm-connect-not-sent") {
@@ -1753,23 +1675,23 @@ bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootM
         if(!bResponse) {
             if(RestartGethNode()) {
                 // try again after resetting connection
-                GetMainSignals().NotifyNEVMBlockConnect(evmZMQBlock, block, state, fJustCheck? uint256(): nBlockHash);
+                GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash);
                 res = state.IsValid();
             }
         }
     }
     if(res && !fJustCheck) {
         NEVMTxRoot txRootDB;
-        txRootDB.nTxRoot = evmZMQBlock.nTxRoot;
-        txRootDB.nReceiptRoot = evmZMQBlock.nReceiptRoot;
-        mapNEVMTxRoots.try_emplace(evmZMQBlock.nBlockHash, txRootDB);
+        txRootDB.nTxRoot = nevmBlockHeader.nTxRoot;
+        txRootDB.nReceiptRoot = nevmBlockHeader.nReceiptRoot;
+        mapNEVMTxRoots.try_emplace(nevmBlockHeader.nBlockHash, txRootDB);
     }
 
 
     return res;
 }
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint256& nBlockHash) {
-    CNEVMBlock evmBlock;
+    CNEVMHeader evmBlock;
     if(!GetNEVMData(state, block, evmBlock)) {
         return false; // state filled by GetNEVMData
     }

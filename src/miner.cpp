@@ -237,9 +237,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
             throw std::runtime_error(strprintf("Could not fetch NEVM block %s", state.ToString()));
         }
         // block data stored in block which is a mutable field that is only sent over network
-        pblock->vchNEVMBlockData = nevmBlock.vchNEVMBlockData;
-        nevmBlock.vchNEVMBlockData.clear();
-        dsNEVM << "NEVM" << nevmBlock;
+        pblock->vchNEVMBlockData = std::move(nevmBlock.vchNEVMBlockData);
+        dsNEVM << NEVM_MAGIC_BYTES << CNEVMHeader(std::move(nevmBlock));
     }
     pblock->vtx[0] = MakeTransactionRef(coinbaseTx);
     // SYSCOIN

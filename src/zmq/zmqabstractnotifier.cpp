@@ -28,7 +28,7 @@ bool CZMQAbstractNotifier::NotifyNEVMComms(const std::string& commMessage, bool 
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyNEVMBlockConnect(const CNEVMZMQBlock &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash)
+bool CZMQAbstractNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash)
 {
     return true;
 }

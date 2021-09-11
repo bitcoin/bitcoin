@@ -254,32 +254,29 @@ def tx_from_hex(hex_string):
 # Objects that map to syscoind objects, which can be serialized/deserialized
 # SYSCOIN
 class CNEVMBlock:
-    __slots__ = ("blockhash", "parentblockhash", "txroot", "receiptroot", "blockdata")
-    def __init__(self, blockhash=0, parentblockhash=0,txroot=b"", receiptroot=b"", blockdata=b""):
+    __slots__ = ("blockhash", "txroot", "receiptroot", "blockdata")
+    def __init__(self, blockhash=0, txroot=0, receiptroot=0, blockdata=b""):
         self.blockhash = blockhash
-        self.parentblockhash = blockhash
         self.txroot = txroot
         self.receiptroot = receiptroot
         self.blockdata = blockdata
 
     def deserialize(self, f):
         self.blockhash = deser_uint256(f)
-        self.parentblockhash = deser_uint256(f)
-        self.txroot = deser_string(f)
-        self.receiptroot = deser_string(f)
+        self.txroot = deser_uint256(f)
+        self.receiptroot = deser_uint256(f)
         self.blockdata = deser_string(f)
 
     def serialize(self):
         r = b""
         r += ser_uint256(self.blockhash)
-        r += ser_uint256(self.parentblockhash)
-        r += ser_string(self.txroot)
-        r += ser_string(self.receiptroot)
+        r += ser_uint256(self.txroot)
+        r += ser_uint256(self.receiptroot)
         r += ser_string(self.blockdata)
         return r
 
     def __repr__(self):
-        return "CEVMBlock(blockhash=%064x parentblockhash=%064x txroot=%s receiptroot=%s blockdata=%s)" % (self.blockhash, self.parentblockhash, self.txroot, self.receiptroot, self.blockdata)
+        return "CEVMBlock(blockhash=%064x txroot=%064x receiptroot=%064x blockdata=%s)" % (self.blockhash, self.txroot, self.receiptroot, self.blockdata)
 
 class CNEVMBlockConnect(CNEVMBlock):
     __slots__ = ("sysblockhash")
@@ -298,7 +295,7 @@ class CNEVMBlockConnect(CNEVMBlock):
         return r
 
     def __repr__(self):
-        return "CNEVMBlockConnect(blockhash=%064x parentblockhash=%064x sysblockhash=%064x txroot=%s receiptroot=%s blockdata=%s)" % (self.blockhash, self.parentblockhash, self.sysblockhash, self.txroot, self.receiptroot, self.blockdata)
+        return "CNEVMBlockConnect(blockhash=%064x sysblockhash=%064x txroot=%064x receiptroot=%064x blockdata=%s)" % (self.blockhash,  self.sysblockhash, self.txroot, self.receiptroot, self.blockdata)
 
 class CNEVMBlockDisconnect():
     __slots__ = ("sysblockhash")
@@ -854,6 +851,9 @@ class CBlockHeader:
         if self.is_auxpow():
             self.auxpow = CAuxPow()
             self.auxpow.deserialize(f)
+        elif self.is_nevm():
+            # SYSCOIN read 1 byte for nevm data, note auxpow has parent header which puts the extra byte at the end of auxpow
+            f.read(1)
         self.sha256 = None
         self.hash = None
 
@@ -867,6 +867,9 @@ class CBlockHeader:
         r += struct.pack("<I", self.nNonce)
         if self.is_auxpow():
             r += self.auxpow.serialize()
+        elif self.is_nevm():
+            # SYSCOIN nevm data, note auxpow reads one extra byte from parent block header so no need to read it if auxpow here
+            r += struct.pack("<b", 0)
         return r
 
     def calc_sha256(self):
@@ -904,9 +907,6 @@ class CBlock(CBlockHeader):
     def deserialize(self, f):
         super().deserialize(f)
         self.vtx = deser_vector(f, CTransaction)
-        if self.is_nevm():
-            # SYSCOIN read 1 byte for evm data, note auxpow has parent header which puts the extra byte at the end of auxpow
-            f.read(1)
 
     def serialize(self, with_witness=True):
         r = b""
@@ -915,9 +915,6 @@ class CBlock(CBlockHeader):
             r += ser_vector(self.vtx, "serialize_with_witness")
         else:
             r += ser_vector(self.vtx, "serialize_without_witness")
-        if self.is_nevm():
-            # SYSCOIN nevm data, note auxpow reads one extra byte from parent block header so no need to read it if auxpow here
-            r += struct.pack("<b", 0)
         return r
 
     # Calculate the merkle root given a vector of transaction hashes
@@ -1040,7 +1037,6 @@ class P2PHeaderAndShortIDs:
             self.shortids.append(struct.unpack("<Q", f.read(6) + b'\x00\x00')[0])
         self.prefilled_txn = deser_vector(f, PrefilledTransaction)
         self.prefilled_txn_length = len(self.prefilled_txn)
-        # SYSCOIN read 1 byte for evm data
         f.read(1)
 
     # When using version 2 compact blocks, we must serialize with_witness.
@@ -1834,14 +1830,12 @@ class msg_headers:
 
     def deserialize(self, f):
         # comment in syscoind indicates these should be deserialized as blocks
-        # SYSCOIN
-        blockheaders = deser_vector(f, CBlockHeader)
-        for x in blockheaders:
+        blocks = deser_vector(f, CBlock)
+        for x in blocks:
             self.headers.append(CBlockHeader(x))
 
     def serialize(self):
-        # SYSCOIN
-        blocks = [CBlockHeader(x) for x in self.headers]
+        blocks = [CBlock(x) for x in self.headers]
         return ser_vector(blocks)
 
     def __repr__(self):
