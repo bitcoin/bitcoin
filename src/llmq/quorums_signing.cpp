@@ -234,7 +234,7 @@ bool CRecoveredSigsDb::HasRecoveredSig(uint8_t llmqType, const uint256& id, cons
     return db->Exists(k);
 }
 
-bool CRecoveredSigsDb::HasRecoveredSigForId(uint8_t llmqType, const uint256& id)
+bool CRecoveredSigsDb::HasRecoveredSigForId(uint8_t llmqType, const uint256& id) const
 {
     auto cacheKey = std::make_pair(llmqType, id);
     bool ret;
@@ -254,7 +254,7 @@ bool CRecoveredSigsDb::HasRecoveredSigForId(uint8_t llmqType, const uint256& id)
     return ret;
 }
 
-bool CRecoveredSigsDb::HasRecoveredSigForSession(const uint256& signHash)
+bool CRecoveredSigsDb::HasRecoveredSigForSession(const uint256& signHash) const
 {
     bool ret;
     {
@@ -272,7 +272,7 @@ bool CRecoveredSigsDb::HasRecoveredSigForSession(const uint256& signHash)
     return ret;
 }
 
-bool CRecoveredSigsDb::HasRecoveredSigForHash(const uint256& hash)
+bool CRecoveredSigsDb::HasRecoveredSigForHash(const uint256& hash) const
 {
     bool ret;
     {
@@ -307,7 +307,7 @@ bool CRecoveredSigsDb::ReadRecoveredSig(uint8_t llmqType, const uint256& id, CRe
     }
 }
 
-bool CRecoveredSigsDb::GetRecoveredSigByHash(const uint256& hash, CRecoveredSig& ret)
+bool CRecoveredSigsDb::GetRecoveredSigByHash(const uint256& hash, CRecoveredSig& ret) const
 {
     auto k1 = std::make_tuple(std::string("rs_h"), hash);
     std::pair<uint8_t, uint256> k2;
@@ -318,7 +318,7 @@ bool CRecoveredSigsDb::GetRecoveredSigByHash(const uint256& hash, CRecoveredSig&
     return ReadRecoveredSig(k2.first, k2.second, ret);
 }
 
-bool CRecoveredSigsDb::GetRecoveredSigById(uint8_t llmqType, const uint256& id, CRecoveredSig& ret)
+bool CRecoveredSigsDb::GetRecoveredSigById(uint8_t llmqType, const uint256& id, CRecoveredSig& ret) const
 {
     return ReadRecoveredSig(llmqType, id, ret);
 }
@@ -548,7 +548,7 @@ CSigningManager::CSigningManager(bool fMemory, CConnman& _connman, PeerManager& 
 {
 }
 
-bool CSigningManager::AlreadyHave(const uint256& hash)
+bool CSigningManager::AlreadyHave(const uint256& hash) const
 {
     {
         LOCK(cs);
@@ -560,7 +560,7 @@ bool CSigningManager::AlreadyHave(const uint256& hash)
     return db.HasRecoveredSigForHash(hash);
 }
 
-bool CSigningManager::GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret)
+bool CSigningManager::GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret) const
 {
     if (!db.GetRecoveredSigByHash(hash, ret)) {
         return false;
@@ -983,22 +983,22 @@ bool CSigningManager::AsyncSignIfMember(uint8_t llmqType, const uint256& id, con
     return true;
 }
 
-bool CSigningManager::HasRecoveredSig(uint8_t llmqType, const uint256& id, const uint256& msgHash)
+bool CSigningManager::HasRecoveredSig(uint8_t llmqType, const uint256& id, const uint256& msgHash) const
 {
     return db.HasRecoveredSig(llmqType, id, msgHash);
 }
 
-bool CSigningManager::HasRecoveredSigForId(uint8_t llmqType, const uint256& id)
+bool CSigningManager::HasRecoveredSigForId(uint8_t llmqType, const uint256& id) const
 {
     return db.HasRecoveredSigForId(llmqType, id);
 }
 
-bool CSigningManager::HasRecoveredSigForSession(const uint256& signHash)
+bool CSigningManager::HasRecoveredSigForSession(const uint256& signHash) const
 {
     return db.HasRecoveredSigForSession(signHash);
 }
 
-bool CSigningManager::GetRecoveredSigForId(uint8_t llmqType, const uint256& id, llmq::CRecoveredSig& retRecSig)
+bool CSigningManager::GetRecoveredSigForId(uint8_t llmqType, const uint256& id, llmq::CRecoveredSig& retRecSig) const
 {
     if (!db.GetRecoveredSigById(llmqType, id, retRecSig)) {
         return false;
@@ -1006,7 +1006,7 @@ bool CSigningManager::GetRecoveredSigForId(uint8_t llmqType, const uint256& id, 
     return true;
 }
 
-bool CSigningManager::IsConflicting(uint8_t llmqType, const uint256& id, const uint256& msgHash)
+bool CSigningManager::IsConflicting(uint8_t llmqType, const uint256& id, const uint256& msgHash) const
 {
     if (!db.HasRecoveredSigForId(llmqType, id)) {
         // no recovered sig present, so no conflict
@@ -1022,12 +1022,12 @@ bool CSigningManager::IsConflicting(uint8_t llmqType, const uint256& id, const u
     return false;
 }
 
-bool CSigningManager::HasVotedOnId(uint8_t llmqType, const uint256& id)
+bool CSigningManager::HasVotedOnId(uint8_t llmqType, const uint256& id) const
 {
     return db.HasVotedOnId(llmqType, id);
 }
 
-bool CSigningManager::GetVoteForId(uint8_t llmqType, const uint256& id, uint256& msgHashRet)
+bool CSigningManager::GetVoteForId(uint8_t llmqType, const uint256& id, uint256& msgHashRet) const
 {
     return db.GetVoteForId(llmqType, id, msgHashRet);
 }

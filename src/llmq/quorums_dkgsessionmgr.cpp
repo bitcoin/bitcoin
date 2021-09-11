@@ -299,7 +299,7 @@ void CDKGSessionManager::WriteEncryptedContributions(uint8_t llmqType, const CBl
 {
     db->Write(std::make_tuple(DB_ENC_CONTRIB, llmqType, pindexQuorum->GetBlockHash(), proTxHash), contributions);
 }
-bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const CBlockIndex* pindexQuorum, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet)
+bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const CBlockIndex* pindexQuorum, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet) const
 {
     LOCK(contributionsCacheCs);
     std::vector<CDeterministicMNCPtr> members;
@@ -366,7 +366,7 @@ bool CDKGSessionManager::GetEncryptedContributions(uint8_t llmqType, const CBloc
     return true;
 }
 
-void CDKGSessionManager::CleanupCache()
+void CDKGSessionManager::CleanupCache() const
 {
     LOCK(contributionsCacheCs);
     auto curTime = GetTimeMillis();

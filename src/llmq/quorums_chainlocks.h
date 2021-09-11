@@ -85,11 +85,11 @@ public:
     void Start();
     void Stop();
 
-    bool AlreadyHave(const uint256& hash);
-    bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret);
-    const CChainLockSig GetMostRecentChainLock();
-    const CChainLockSig GetBestChainLock();
-    const std::map<CQuorumCPtr, CChainLockSigCPtr> GetBestChainLockShares();
+    bool AlreadyHave(const uint256& hash) const;
+    bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const;
+    const CChainLockSig GetMostRecentChainLock() const;
+    const CChainLockSig GetBestChainLock() const ;
+    const std::map<CQuorumCPtr, CChainLockSigCPtr> GetBestChainLockShares() const;
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
     void ProcessNewChainLock(NodeId from, CChainLockSig& clsig, const uint256& hash, const uint256& idIn = uint256());
@@ -99,13 +99,13 @@ public:
     void TrySignChainTip();
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
 
-    bool HasChainLock(int nHeight, const uint256& blockHash);
-    bool HasConflictingChainLock(int nHeight, const uint256& blockHash);
+    bool HasChainLock(int nHeight, const uint256& blockHash) const;
+    bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const;
 
 private:
     // these require locks to be held already
-    bool InternalHasChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool InternalHasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     bool TryUpdateBestChainLock(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool VerifyChainLockShare(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret) LOCKS_EXCLUDED(cs);

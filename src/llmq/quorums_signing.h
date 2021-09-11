@@ -83,19 +83,19 @@ private:
     std::unique_ptr<CDBWrapper> db{nullptr};
 
     mutable RecursiveMutex cs;
-    unordered_lru_cache<std::pair<uint8_t, uint256>, bool, StaticSaltedHasher, 30000> hasSigForIdCache GUARDED_BY(cs);
-    unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForSessionCache GUARDED_BY(cs);
-    unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForHashCache GUARDED_BY(cs);
+    mutable unordered_lru_cache<std::pair<uint8_t, uint256>, bool, StaticSaltedHasher, 30000> hasSigForIdCache GUARDED_BY(cs);
+    mutable unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForSessionCache GUARDED_BY(cs);
+    mutable unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForHashCache GUARDED_BY(cs);
 
 public:
     explicit CRecoveredSigsDb(bool fMemory, bool fWipe);
 
     bool HasRecoveredSig(uint8_t llmqType, const uint256& id, const uint256& msgHash) const;
-    bool HasRecoveredSigForId(uint8_t llmqType, const uint256& id);
-    bool HasRecoveredSigForSession(const uint256& signHash);
-    bool HasRecoveredSigForHash(const uint256& hash);
-    bool GetRecoveredSigByHash(const uint256& hash, CRecoveredSig& ret);
-    bool GetRecoveredSigById(uint8_t llmqType, const uint256& id, CRecoveredSig& ret);
+    bool HasRecoveredSigForId(uint8_t llmqType, const uint256& id) const ;
+    bool HasRecoveredSigForSession(const uint256& signHash) const;
+    bool HasRecoveredSigForHash(const uint256& hash) const;
+    bool GetRecoveredSigByHash(const uint256& hash, CRecoveredSig& ret) const;
+    bool GetRecoveredSigById(uint8_t llmqType, const uint256& id, CRecoveredSig& ret) const;
     void WriteRecoveredSig(const CRecoveredSig& recSig);
     void RemoveRecoveredSig(uint8_t llmqType, const uint256& id) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void TruncateRecoveredSig(uint8_t llmqType, const uint256& id);
@@ -153,8 +153,8 @@ public:
     static const int SIGN_HEIGHT_OFFSET = 8;
     CSigningManager(bool fMemory, CConnman& _connman, PeerManager& _peerman, ChainstateManager& _chainman, bool fWipe);
 
-    bool AlreadyHave(const uint256& hash);
-    bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret);
+    bool AlreadyHave(const uint256& hash) const;
+    bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret) const;
 
     void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv);
 
@@ -186,14 +186,14 @@ public:
     void UnregisterRecoveredSigsListener(CRecoveredSigsListener* l);
 
     bool AsyncSignIfMember(uint8_t llmqType, const uint256& id, const uint256& msgHash, const uint256& quorumHash = uint256(), bool allowReSign = false);
-    bool HasRecoveredSig(uint8_t llmqType, const uint256& id, const uint256& msgHash);
-    bool HasRecoveredSigForId(uint8_t llmqType, const uint256& id);
-    bool HasRecoveredSigForSession(const uint256& signHash);
-    bool GetRecoveredSigForId(uint8_t llmqType, const uint256& id, CRecoveredSig& retRecSig);
-    bool IsConflicting(uint8_t llmqType, const uint256& id, const uint256& msgHash);
+    bool HasRecoveredSig(uint8_t llmqType, const uint256& id, const uint256& msgHash) const;
+    bool HasRecoveredSigForId(uint8_t llmqType, const uint256& id) const;
+    bool HasRecoveredSigForSession(const uint256& signHash) const;
+    bool GetRecoveredSigForId(uint8_t llmqType, const uint256& id, CRecoveredSig& retRecSig) const;
+    bool IsConflicting(uint8_t llmqType, const uint256& id, const uint256& msgHash) const;
 
-    bool HasVotedOnId(uint8_t llmqType, const uint256& id);
-    bool GetVoteForId(uint8_t llmqType, const uint256& id, uint256& msgHashRet);
+    bool HasVotedOnId(uint8_t llmqType, const uint256& id) const;
+    bool GetVoteForId(uint8_t llmqType, const uint256& id, uint256& msgHashRet) const;
 
     static std::vector<CQuorumCPtr> GetActiveQuorumSet(uint8_t llmqType, int signHeight);
     static CQuorumCPtr SelectQuorumForSigning(ChainstateManager& chainman, uint8_t llmqType, const uint256& selectionHash, int signHeight = -1 /*chain tip*/, int signOffset = SIGN_HEIGHT_OFFSET);
