@@ -83,7 +83,7 @@ private:
     bool deterministic;
 public:
     explicit AddrManTest(bool makeDeterministic = true,
-                          std::vector<bool> asmap = std::vector<bool>())
+                         std::vector<bool> asmap = std::vector<bool>())
         : AddrMan(asmap, makeDeterministic, /* consistency_check_ratio */ 100)
     {
         deterministic = makeDeterministic;

@@ -70,13 +70,13 @@ public:
     size_t size() const;
 
     //! Add addresses to addrman's new table.
-    bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty = 0);
+    bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty = 0);
 
     //! Mark an entry as accessible, possibly moving it from "new" to "tried".
-    void Good(const CService &addr, int64_t nTime = GetAdjustedTime());
+    void Good(const CService& addr, int64_t nTime = GetAdjustedTime());
 
     //! Mark an entry as connection attempted to.
-    void Attempt(const CService &addr, bool fCountFailure, int64_t nTime = GetAdjustedTime());
+    void Attempt(const CService& addr, bool fCountFailure, int64_t nTime = GetAdjustedTime());
 
     //! See if any to-be-evicted tried table entries have been tested and if so resolve the collisions.
     void ResolveCollisions();
@@ -121,10 +121,10 @@ public:
      * @param[in]   addr     The address of the peer we were connected to
      * @param[in]   nTime    The time that we were last connected to this peer
      */
-    void Connected(const CService &addr, int64_t nTime = GetAdjustedTime());
+    void Connected(const CService& addr, int64_t nTime = GetAdjustedTime());
 
     //! Update an entry's service bits.
-    void SetServices(const CService &addr, ServiceFlags nServices);
+    void SetServices(const CService& addr, ServiceFlags nServices);
 
     const std::vector<bool>& GetAsmap() const;
 
