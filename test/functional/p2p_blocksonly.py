@@ -6,7 +6,7 @@
 
 import time
 
-from test_framework.messages import msg_tx
+from test_framework.messages import msg_tx, msg_inv, CInv, MSG_WTX
 from test_framework.p2p import P2PInterface, P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -33,12 +33,19 @@ class P2PBlocksOnly(BitcoinTestFramework):
         self.nodes[0].add_p2p_connection(P2PInterface())
         tx, txid, wtxid, tx_hex = self.check_p2p_tx_violation()
 
+        self.log.info('Check that tx invs also violate the protocol')
+        self.nodes[0].add_p2p_connection(P2PInterface())
+        with self.nodes[0].assert_debug_log(['transaction (0000000000000000000000000000000000000000000000000000000000001234) inv sent in violation of protocol, disconnecting peer']):
+            self.nodes[0].p2ps[0].send_message(msg_inv([CInv(t=MSG_WTX, h=0x1234)]))
+            self.nodes[0].p2ps[0].wait_for_disconnect()
+            del self.nodes[0].p2ps[0]
+
         self.log.info('Check that txs from rpc are not rejected and relayed to other peers')
         tx_relay_peer = self.nodes[0].add_p2p_connection(P2PInterface())
         assert_equal(self.nodes[0].getpeerinfo()[0]['relaytxes'], True)
 
         assert_equal(self.nodes[0].testmempoolaccept([tx_hex])[0]['allowed'], True)
-        with self.nodes[0].assert_debug_log(['received getdata for: wtx {} peer=1'.format(wtxid)]):
+        with self.nodes[0].assert_debug_log(['received getdata for: wtx {} peer'.format(wtxid)]):
             self.nodes[0].sendrawtransaction(tx_hex)
             tx_relay_peer.wait_for_tx(txid)
             assert_equal(self.nodes[0].getmempoolinfo()['size'], 1)
