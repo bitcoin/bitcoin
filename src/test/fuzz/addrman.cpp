@@ -28,20 +28,20 @@ FUZZ_TARGET_INIT(data_stream_addr_man, initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     CDataStream data_stream = ConsumeDataStream(fuzzed_data_provider);
-    CAddrMan addr_man(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    AddrMan addr_man(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
     try {
         ReadFromStream(addr_man, data_stream);
     } catch (const std::exception&) {
     }
 }
 
-class CAddrManDeterministic : public CAddrMan
+class AddrManDeterministic : public AddrMan
 {
 public:
     FuzzedDataProvider& m_fuzzed_data_provider;
 
-    explicit CAddrManDeterministic(std::vector<bool> asmap, FuzzedDataProvider& fuzzed_data_provider)
-        : CAddrMan(std::move(asmap), /* deterministic */ true, /* consistency_check_ratio */ 0)
+    explicit AddrManDeterministic(std::vector<bool> asmap, FuzzedDataProvider& fuzzed_data_provider)
+        : AddrMan(std::move(asmap), /* deterministic */ true, /* consistency_check_ratio */ 0)
         , m_fuzzed_data_provider(fuzzed_data_provider)
     {
         WITH_LOCK(m_impl->cs, m_impl->insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
@@ -130,7 +130,7 @@ public:
      * - vvNew entries refer to the same addresses
      * - vvTried entries refer to the same addresses
      */
-    bool operator==(const CAddrManDeterministic& other)
+    bool operator==(const AddrManDeterministic& other)
     {
         LOCK2(m_impl->cs, other.m_impl->cs);
 
@@ -223,7 +223,7 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     std::vector<bool> asmap = ConsumeAsmap(fuzzed_data_provider);
-    auto addr_man_ptr = std::make_unique<CAddrManDeterministic>(asmap, fuzzed_data_provider);
+    auto addr_man_ptr = std::make_unique<AddrManDeterministic>(asmap, fuzzed_data_provider);
     if (fuzzed_data_provider.ConsumeBool()) {
         const std::vector<uint8_t> serialized_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
         CDataStream ds(serialized_data, SER_DISK, INIT_PROTO_VERSION);
@@ -232,10 +232,10 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
         try {
             ds >> *addr_man_ptr;
         } catch (const std::ios_base::failure&) {
-            addr_man_ptr = std::make_unique<CAddrManDeterministic>(asmap, fuzzed_data_provider);
+            addr_man_ptr = std::make_unique<AddrManDeterministic>(asmap, fuzzed_data_provider);
         }
     }
-    CAddrManDeterministic& addr_man = *addr_man_ptr;
+    AddrManDeterministic& addr_man = *addr_man_ptr;
     while (fuzzed_data_provider.ConsumeBool()) {
         CallOneOf(
             fuzzed_data_provider,
@@ -284,7 +284,7 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
                 }
             });
     }
-    const CAddrMan& const_addr_man{addr_man};
+    const AddrMan& const_addr_man{addr_man};
     (void)const_addr_man.GetAddr(
         /* max_addresses */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
         /* max_pct */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
@@ -302,8 +302,8 @@ FUZZ_TARGET_INIT(addrman_serdeser, initialize_addrman)
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     std::vector<bool> asmap = ConsumeAsmap(fuzzed_data_provider);
-    CAddrManDeterministic addr_man1{asmap, fuzzed_data_provider};
-    CAddrManDeterministic addr_man2{asmap, fuzzed_data_provider};
+    AddrManDeterministic addr_man1{asmap, fuzzed_data_provider};
+    AddrManDeterministic addr_man2{asmap, fuzzed_data_provider};
 
     CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);
 

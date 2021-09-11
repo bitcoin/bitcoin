@@ -22,26 +22,26 @@
 
 using namespace std::literals;
 
-class CAddrManSerializationMock : public CAddrMan
+class AddrManSerializationMock : public AddrMan
 {
 public:
     virtual void Serialize(CDataStream& s) const = 0;
 
-    CAddrManSerializationMock()
-        : CAddrMan(/* asmap */ std::vector<bool>(), /* deterministic */ true, /* consistency_check_ratio */ 100)
+    AddrManSerializationMock()
+        : AddrMan(/* asmap */ std::vector<bool>(), /* deterministic */ true, /* consistency_check_ratio */ 100)
     {}
 };
 
-class CAddrManUncorrupted : public CAddrManSerializationMock
+class AddrManUncorrupted : public AddrManSerializationMock
 {
 public:
     void Serialize(CDataStream& s) const override
     {
-        CAddrMan::Serialize(s);
+        AddrMan::Serialize(s);
     }
 };
 
-class CAddrManCorrupted : public CAddrManSerializationMock
+class AddrManCorrupted : public AddrManSerializationMock
 {
 public:
     void Serialize(CDataStream& s) const override
@@ -67,7 +67,7 @@ public:
     }
 };
 
-static CDataStream AddrmanToStream(const CAddrManSerializationMock& _addrman)
+static CDataStream AddrmanToStream(const AddrManSerializationMock& _addrman)
 {
     CDataStream ssPeersIn(SER_DISK, CLIENT_VERSION);
     ssPeersIn << Params().MessageStart();
@@ -77,14 +77,14 @@ static CDataStream AddrmanToStream(const CAddrManSerializationMock& _addrman)
     return CDataStream(vchData, SER_DISK, CLIENT_VERSION);
 }
 
-class CAddrManTest : public CAddrMan
+class AddrManTest : public AddrMan
 {
 private:
     bool deterministic;
 public:
-    explicit CAddrManTest(bool makeDeterministic = true,
+    explicit AddrManTest(bool makeDeterministic = true,
                           std::vector<bool> asmap = std::vector<bool>())
-        : CAddrMan(asmap, makeDeterministic, /* consistency_check_ratio */ 100)
+        : AddrMan(asmap, makeDeterministic, /* consistency_check_ratio */ 100)
     {
         deterministic = makeDeterministic;
     }
@@ -166,7 +166,7 @@ BOOST_FIXTURE_TEST_SUITE(addrman_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(addrman_simple)
 {
-    auto addrman = std::make_unique<CAddrManTest>();
+    auto addrman = std::make_unique<AddrManTest>();
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     BOOST_CHECK(addrman->size() >= 1);
 
     // Test: reset addrman and test AddrMan::Add multiple addresses works as expected
-    addrman = std::make_unique<CAddrManTest>();
+    addrman = std::make_unique<AddrManTest>();
     std::vector<CAddress> vAddr;
     vAddr.push_back(CAddress(ResolveService("250.1.1.3", 8333), NODE_NONE));
     vAddr.push_back(CAddress(ResolveService("250.1.1.4", 8333), NODE_NONE));
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
 
 BOOST_AUTO_TEST_CASE(addrman_ports)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(addrman_ports)
 
 BOOST_AUTO_TEST_CASE(addrman_select)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(addrman_select)
 
 BOOST_AUTO_TEST_CASE(addrman_new_collisions)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(addrman_new_collisions)
 
 BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
 
 BOOST_AUTO_TEST_CASE(addrman_find)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     BOOST_CHECK_EQUAL(addrman.size(), 0U);
 
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(addrman_find)
 
 BOOST_AUTO_TEST_CASE(addrman_create)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     BOOST_CHECK_EQUAL(addrman.size(), 0U);
 
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(addrman_create)
 
 BOOST_AUTO_TEST_CASE(addrman_delete)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     BOOST_CHECK_EQUAL(addrman.size(), 0U);
 
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(addrman_delete)
 
 BOOST_AUTO_TEST_CASE(addrman_getaddr)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     // Test: Sanity check, GetAddr should never return anything if addrman
     //  is empty.
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
 
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     CAddress addr1 = CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.1.1", 9999), NODE_NONE);
@@ -545,7 +545,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
 
 BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     CAddress addr1 = CAddress(ResolveService("250.1.2.1", 8333), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.2.1", 9999), NODE_NONE);
@@ -623,7 +623,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
 // 101.8.0.0/16 AS8
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     CAddress addr1 = CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.1.1", 9999), NODE_NONE);
@@ -678,7 +678,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 
 BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     CAddress addr1 = CAddress(ResolveService("250.1.2.1", 8333), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.2.1", 9999), NODE_NONE);
@@ -760,9 +760,9 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
 {
     std::vector<bool> asmap1 = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
 
-    auto addrman_asmap1 = std::make_unique<CAddrManTest>(true, asmap1);
-    auto addrman_asmap1_dup = std::make_unique<CAddrManTest>(true, asmap1);
-    auto addrman_noasmap = std::make_unique<CAddrManTest>();
+    auto addrman_asmap1 = std::make_unique<AddrManTest>(true, asmap1);
+    auto addrman_asmap1_dup = std::make_unique<AddrManTest>(true, asmap1);
+    auto addrman_noasmap = std::make_unique<AddrManTest>();
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
 
     CAddress addr = CAddress(ResolveService("250.1.1.1"), NODE_NONE);
@@ -792,8 +792,8 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     BOOST_CHECK(bucketAndEntry_asmap1.second != bucketAndEntry_noasmap.second);
 
     // deserializing non-asmaped peers.dat to asmaped addrman
-    addrman_asmap1 = std::make_unique<CAddrManTest>(true, asmap1);
-    addrman_noasmap = std::make_unique<CAddrManTest>();
+    addrman_asmap1 = std::make_unique<AddrManTest>(true, asmap1);
+    addrman_noasmap = std::make_unique<AddrManTest>();
     addrman_noasmap->Add({addr}, default_source);
     stream << *addrman_noasmap;
     stream >> *addrman_asmap1;
@@ -804,8 +804,8 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     BOOST_CHECK(bucketAndEntry_asmap1_deser.second == bucketAndEntry_asmap1_dup.second);
 
     // used to map to different buckets, now maps to the same bucket.
-    addrman_asmap1 = std::make_unique<CAddrManTest>(true, asmap1);
-    addrman_noasmap = std::make_unique<CAddrManTest>();
+    addrman_asmap1 = std::make_unique<AddrManTest>(true, asmap1);
+    addrman_noasmap = std::make_unique<AddrManTest>();
     CAddress addr1 = CAddress(ResolveService("250.1.1.1"), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.2.1.1"), NODE_NONE);
     addrman_noasmap->Add({addr, addr2}, default_source);
@@ -825,7 +825,7 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
 {
     // Confirm that invalid addresses are ignored in unserialization.
 
-    auto addrman = std::make_unique<CAddrManTest>();
+    auto addrman = std::make_unique<AddrManTest>();
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
 
     const CAddress new1{ResolveService("5.5.5.5"), NODE_NONE};
@@ -857,14 +857,14 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
     BOOST_REQUIRE(pos + sizeof(tried2_raw_replacement) <= stream.size());
     memcpy(stream.data() + pos, tried2_raw_replacement, sizeof(tried2_raw_replacement));
 
-    addrman = std::make_unique<CAddrManTest>();
+    addrman = std::make_unique<AddrManTest>();
     stream >> *addrman;
     BOOST_CHECK_EQUAL(addrman->size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     BOOST_CHECK(addrman.size() == 0);
 
@@ -896,7 +896,7 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
 
 BOOST_AUTO_TEST_CASE(addrman_noevict)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     // Add 35 addresses.
     CNetAddr source = ResolveIP("252.2.2.2");
@@ -952,7 +952,7 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
 
 BOOST_AUTO_TEST_CASE(addrman_evictionworks)
 {
-    CAddrManTest addrman;
+    AddrManTest addrman;
 
     BOOST_CHECK(addrman.size() == 0);
 
@@ -1006,7 +1006,7 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
 
 BOOST_AUTO_TEST_CASE(load_addrman)
 {
-    CAddrManUncorrupted addrmanUncorrupted;
+    AddrManUncorrupted addrmanUncorrupted;
 
     CService addr1, addr2, addr3;
     BOOST_CHECK(Lookup("250.7.1.1", addr1, 8333, false));
@@ -1025,7 +1025,7 @@ BOOST_AUTO_TEST_CASE(load_addrman)
     // Test that the de-serialization does not throw an exception.
     CDataStream ssPeers1 = AddrmanToStream(addrmanUncorrupted);
     bool exceptionThrown = false;
-    CAddrMan addrman1(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
+    AddrMan addrman1(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
 
     BOOST_CHECK(addrman1.size() == 0);
     try {
@@ -1042,7 +1042,7 @@ BOOST_AUTO_TEST_CASE(load_addrman)
     // Test that ReadFromStream creates an addrman with the correct number of addrs.
     CDataStream ssPeers2 = AddrmanToStream(addrmanUncorrupted);
 
-    CAddrMan addrman2(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
+    AddrMan addrman2(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
     BOOST_CHECK(addrman2.size() == 0);
     ReadFromStream(addrman2, ssPeers2);
     BOOST_CHECK(addrman2.size() == 3);
@@ -1051,12 +1051,12 @@ BOOST_AUTO_TEST_CASE(load_addrman)
 
 BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
 {
-    CAddrManCorrupted addrmanCorrupted;
+    AddrManCorrupted addrmanCorrupted;
 
     // Test that the de-serialization of corrupted addrman throws an exception.
     CDataStream ssPeers1 = AddrmanToStream(addrmanCorrupted);
     bool exceptionThrown = false;
-    CAddrMan addrman1(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
+    AddrMan addrman1(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
     BOOST_CHECK(addrman1.size() == 0);
     try {
         unsigned char pchMsgTmp[4];
@@ -1072,7 +1072,7 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
     // Test that ReadFromStream fails if peers.dat is corrupt
     CDataStream ssPeers2 = AddrmanToStream(addrmanCorrupted);
 
-    CAddrMan addrman2(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
+    AddrMan addrman2(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
     BOOST_CHECK(addrman2.size() == 0);
     BOOST_CHECK_THROW(ReadFromStream(addrman2, ssPeers2), std::ios_base::failure);
 }

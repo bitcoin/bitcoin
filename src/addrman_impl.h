@@ -138,8 +138,8 @@ public:
 
     const std::vector<bool>& GetAsmap() const;
 
-    friend class CAddrManTest;
-    friend class CAddrManDeterministic;
+    friend class AddrManTest;
+    friend class AddrManDeterministic;
 
 private:
     //! A mutex to protect the inner data structures.

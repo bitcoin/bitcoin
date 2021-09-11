@@ -51,14 +51,14 @@ static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{0};
  *    * Several indexes are kept for high performance. Setting m_consistency_check_ratio with the -checkaddrman
  *      configuration option will introduce (expensive) consistency checks for the entire data structure.
  */
-class CAddrMan
+class AddrMan
 {
     const std::unique_ptr<AddrManImpl> m_impl;
 
 public:
-    explicit CAddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio);
+    explicit AddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio);
 
-    ~CAddrMan();
+    ~AddrMan();
 
     template <typename Stream>
     void Serialize(Stream& s_) const;
@@ -128,8 +128,8 @@ public:
 
     const std::vector<bool>& GetAsmap() const;
 
-    friend class CAddrManTest;
-    friend class CAddrManDeterministic;
+    friend class AddrManTest;
+    friend class AddrManDeterministic;
 };
 
 #endif // BITCOIN_ADDRMAN_H
