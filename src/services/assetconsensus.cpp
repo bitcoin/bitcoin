@@ -178,7 +178,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         return FormatSyscoinErrorMessage(state, "mint-tx-itemcount", bSanityCheck);
     }    
     const dev::u256& nChainID = rlpTxValue[0].toInt<dev::u256>(dev::RLP::VeryStrict);
-    if(!nChainID.compare(dev::u256(Params().GetConsensus().nNEVMChainID))) {
+    if(nChainID != (dev::u256(Params().GetConsensus().nNEVMChainID))) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-chainid", bSanityCheck);
     }
     if (!rlpTxValue[7].isData()) {
