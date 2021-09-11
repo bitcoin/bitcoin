@@ -2,7 +2,7 @@
 ["The following are deserialized transactions which are invalid."],
 ["They are in the form"],
 ["[[[prevout hash, prevout index, prevout scriptPubKey, amount?], [input 2], ...],"],
-["serializedTransaction, verifyFlags]"],
+["serializedTransaction, verifyFlags, [{\"if_unset\": [\"flag A\", ...], \"then_unset\": [\"flag X\", ...]}]?]"],
 ["Use BADTX for verifyFlags if it is expected to fail CheckTransaction()"],
 ["Objects that are only a single string (like this one) are ignored"],
 
