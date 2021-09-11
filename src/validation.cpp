@@ -1666,8 +1666,10 @@ bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootM
     if(block.vchNEVMBlockData.empty()) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-empty");
     }
-    GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash);
-    bool res = state.IsValid();
+    if(fNEVMConnection) {
+        GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash);
+    }
+    bool res = state.IsValid() || !fNEVMConnection;
     // try to bring connection back alive if its not connected for some reason
     if(!res && state.GetRejectReason() == "nevm-connect-not-sent") {
         bool bResponse;
@@ -1698,8 +1700,10 @@ bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> 
     if(!pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-missing");
     }
-    GetMainSignals().NotifyNEVMBlockDisconnect(state, nBlockHash);
-    bool res = state.IsValid();
+    if(fNEVMConnection) {
+        GetMainSignals().NotifyNEVMBlockDisconnect(state, nBlockHash);
+    }
+    bool res = state.IsValid() || !fNEVMConnection;
     if(res) {
         vecNEVMBlocks.emplace_back(evmBlock.nBlockHash);
     }
@@ -1777,7 +1781,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
         }
     } 
     BlockValidationState state;
-    if(!bReverify && fNEVMConnection && pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, block.GetHash())) {
+    if(!bReverify && pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, block.GetHash())) {
         const std::string &errStr = strprintf("DisconnectBlock(): NEVM block failed to disconnect: %s\n", state.ToString().c_str());
         error(errStr.c_str());
         return DISCONNECT_FAILED; 
@@ -2135,7 +2139,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         }
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
-    if (!bReverify && fNEVMConnection && pindex->nHeight >= m_params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, blockHash, fJustCheck)) {
+    if (!bReverify && pindex->nHeight >= m_params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, blockHash, fJustCheck)) {
         return false; // state filled by ConnectNEVMCommitment
     }
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
@@ -3633,9 +3637,8 @@ static bool ContextualCheckBlockHeader(const bool ibd, const CBlockHeader& block
     if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
     // SYSCOIN
-    // if not initial download, blocks should have nevm data present in header
     if((pindexPrev->nHeight+1) >= consensusParams.nNEVMStartBlock) {
-        if(!block.IsNEVM() && (!fRegTest || fNEVMConnection)) {
+        if(!block.IsNEVM() && !fRegTest) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-version-expected");
         }
     }
@@ -4516,7 +4519,7 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
         return error("%s: ProcessSpecialTxsInBlock for block %s failed with %s", __func__,
             pindex->GetBlockHash().ToString(), state.ToString());
     }
-    if (fNEVMConnection && pindex->nHeight >= m_params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), false)) {
+    if (pindex->nHeight >= m_params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), false)) {
         return error("RollbackBlock(): ConnectNEVMCommitment() failed at %d, hash=%s state=%s", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
     }
     for (const CTransactionRef& tx : block.vtx) {
