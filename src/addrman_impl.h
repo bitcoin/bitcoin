@@ -111,29 +111,29 @@ public:
 
     size_t size() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty)
+    bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void Good(const CService &addr, int64_t nTime)
+    void Good(const CService& addr, int64_t nTime)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void Attempt(const CService &addr, bool fCountFailure, int64_t nTime)
+    void Attempt(const CService& addr, bool fCountFailure, int64_t nTime)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void ResolveCollisions() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     std::pair<CAddress, int64_t> SelectTriedCollision() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    std::pair<CAddress, int64_t>  Select(bool newOnly) const
+    std::pair<CAddress, int64_t> Select(bool newOnly) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void Connected(const CService &addr, int64_t nTime)
+    void Connected(const CService& addr, int64_t nTime)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void SetServices(const CService &addr, ServiceFlags nServices)
+    void SetServices(const CService& addr, ServiceFlags nServices)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     const std::vector<bool>& GetAsmap() const;
@@ -225,10 +225,10 @@ private:
     const std::vector<bool> m_asmap;
 
     //! Find an entry.
-    AddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    AddrInfo* Find(const CNetAddr& addr, int* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Create a new entry and add it to the internal data structures mapInfo, mapAddr and vRandom.
-    AddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    AddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Swap two elements in vRandom.
     void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2) const EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -242,11 +242,11 @@ private:
     //! Move an entry from the "new" table(s) to the "tried" table
     void MakeTried(AddrInfo& info, int nId) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    void Good_(const CService &addr, bool test_before_evict, int64_t time) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void Good_(const CService& addr, bool test_before_evict, int64_t time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    void Attempt_(const CService &addr, bool fCountFailure, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void Attempt_(const CService& addr, bool fCountFailure, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     std::pair<CAddress, int64_t> Select_(bool newOnly) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -254,7 +254,7 @@ private:
 
     void Connected_(const CService& addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    void SetServices_(const CService &addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void SetServices_(const CService& addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void ResolveCollisions_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
