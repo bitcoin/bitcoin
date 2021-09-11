@@ -358,10 +358,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000004b8e46524f7"); // 550k
+        consensus.nMinimumChainWork = uint256{}; // 550k
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x0000013d53482bd69c5403f344643668619f77302910e57ffe7b1d375e73cc91"); // 550k
+        consensus.defaultAssumeValid = uint256{}; // 550k
         consensus.nAuxpowStartHeight = 1;
         consensus.nAuxpowChainId = 8;
         consensus.nAuxpowOldChainId = 4096;
@@ -372,9 +372,9 @@ public:
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
         consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
         consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");
-        consensus.nBridgeStartBlock = 1000;
-        consensus.nNEVMStartBlock = 845000;
-        consensus.nUTXOAssetsBlock = 1348000;
+        consensus.nBridgeStartBlock = 0;
+        consensus.nNEVMStartBlock = 205;
+        consensus.nUTXOAssetsBlock = 0;
         consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 10000;
         consensus.DIP0003Height = 545000;
         consensus.DIP0003EnforcementHeight = 545000;
@@ -387,12 +387,12 @@ public:
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
 
-        genesis = CreateGenesisBlock(1576000000, 297648, 0x1e0fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1576000006, 4738692, 0x1e0fffff, 1, 50 * COIN);
         /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x0000066e1a6b9cfeac8295dce0cc8d9170690a74bc4878cf8a0b412554f5c222"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000696183af9184c63ba498527f0feb6d4f0661df626aad92011acd18c249e"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         vFixedSeeds.clear();
@@ -427,13 +427,13 @@ public:
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         m_is_mockable_chain = false;
 
-        checkpointData = {
+        /*checkpointData = {
             {
                 {360, uint256S("0x00000c04c5926f539074420b40088d4b099d748d07795df891ca391799b6e54c")},
                 {250000, uint256S("0x00000131e97a4cb713338f33b8fa6573c85f1772e4dd7d510ca2281cc0be86e2")},
                 {534114, uint256S("0x0000013d53482bd69c5403f344643668619f77302910e57ffe7b1d375e73cc91")},
             }
-        };
+        };*/
 
         m_assumeutxo_data = MapAssumeutxo{
             // TODO to be specified in a future patch.
