@@ -297,10 +297,40 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
         std::string strTest = test.write();
         if (test[0].isArray())
         {
-            if (test.size() != 3 || !test[1].isStr() || !test[2].isStr())
+            const bool mandatory_fields_present = test.size() >= 3 && test[1].isStr() && test[2].isStr();
+            const bool one_by_one_fills = test.size() >= 4 ? test[3].isArray() : true;
+            const bool max_arg_count = test.size() <= 4;
+            if (!mandatory_fields_present || !max_arg_count || !one_by_one_fills)
             {
                 BOOST_ERROR("Bad test: " << strTest);
                 continue;
+            }
+            std::vector<std::pair<unsigned int, unsigned int>> excluded_flag_settings;
+            if (test.size() >= 4) {
+                try {
+                    const UniValue& fills = test[3].get_array();
+                    for (unsigned int i = 0; i < fills.size(); ++i) {
+                        const UniValue& fill = fills[i].get_obj();
+                        const UniValue if_unset = fill["if_unset"].get_array();
+                        const UniValue then_unset = fill["then_unset"].get_array();
+                        excluded_flag_settings.push_back(std::make_pair(0, 0));
+                        unsigned int& if_set_flags = excluded_flag_settings.back().first;
+                        unsigned int& then_set_flags = excluded_flag_settings.back().second;
+                        for (unsigned int j = 0; j < if_unset.size(); ++j) {
+                            const auto& flag = mapFlagNames.find(if_unset[j].get_str());
+                            if (flag == mapFlagNames.end()) BOOST_ERROR("Unknown Flag: " << if_unset[j].get_str());
+                            if_set_flags |= flag->second;
+                        }
+                        for (unsigned int j = 0; j < then_unset.size(); ++j) {
+                            const auto& flag = mapFlagNames.find(then_unset[j].get_str());
+                            if (flag == mapFlagNames.end()) BOOST_ERROR("Unknown Flag: " << then_unset[j].get_str());
+                            then_set_flags |= flag->second;
+                        }
+
+                    }
+                } catch (std::runtime_error e) {
+                    BOOST_ERROR("Improperly Formatted One-By-One Fill Settings " << strTest);
+                }
             }
 
             std::map<COutPoint, CScript> mapprevOutScriptPubKeys;
@@ -369,9 +399,27 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             }
 
             // Check that flags are minimal: transaction should succeed if any set flags are unset.
+            // unset flags according to if_unset/then_unset rules and de-duplicate entries.
+            std::set<unsigned int> flags_excluded;
             for (auto flags_excluding_one : ExcludeIndividualFlags(verify_flags)) {
-                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags_excluding_one, txdata, strTest, /*expect_valid=*/true)) {
-                    BOOST_ERROR("Too many flags set: " << strTest);
+                // re-apply rules until result is stable
+                unsigned int pre;
+                do {
+                    pre = flags_excluding_one;
+                    for (const auto& fill_if : excluded_flag_settings) {
+                        // check if all flags in the entry are unset
+                        if ((fill_if.first & flags_excluding_one) == 0) {
+                            flags_excluding_one &= ~fill_if.second;
+                            // re-evaluate all prior rules early if changed
+                            if (pre != flags_excluding_one) break;
+                        }
+                    }
+                } while (pre != flags_excluding_one);
+                flags_excluded.insert(flags_excluding_one);
+            }
+            for (auto flags_excluding_one : flags_excluded) {
+                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags_excluding_one, txdata, strTest, /* expect_valid=*/ true)) {
+                    BOOST_ERROR("Too many flags set: " << FormatScriptFlags(flags_excluding_one) << "\n" << strTest);
                 }
             }
         }
