@@ -24,7 +24,7 @@ class AssetReOrgTest(SyscoinTestFramework):
         self.disconnect_nodes(0, 2)
         self.basic_asset()
         # create fork
-       self.generate(self.nodes[0], 11)
+        self.generate(self.nodes[0], 11)
         # won't exist on node 0 because it was created on node 2 and we are disconnected
         assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[0].assetinfo, self.asset)
         self.generate(self.nodes[2], 10)
