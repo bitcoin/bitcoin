@@ -5,7 +5,7 @@
 #ifndef BITCOIN_INTERFACES_NODE_H
 #define BITCOIN_INTERFACES_NODE_H
 
-#include <amount.h>     // For CAmount
+#include <consensus/amount.h>
 #include <external_signer.h>
 #include <net.h>        // For NodeId
 #include <net_types.h>  // For banmap_t

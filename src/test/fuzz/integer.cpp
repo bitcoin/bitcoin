@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <amount.h>
 #include <arith_uint256.h>
 #include <compressor.h>
+#include <consensus/amount.h>
 #include <consensus/merkle.h>
 #include <core_io.h>
 #include <crypto/common.h>

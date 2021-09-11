@@ -10,10 +10,10 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <amount.h>
 #include <arith_uint256.h>
 #include <attributes.h>
 #include <chain.h>
+#include <consensus/amount.h>
 #include <fs.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>

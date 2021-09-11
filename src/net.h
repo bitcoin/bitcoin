@@ -7,10 +7,10 @@
 #define BITCOIN_NET_H
 
 #include <addrman.h>
-#include <amount.h>
 #include <bloom.h>
 #include <chainparams.h>
 #include <compat.h>
+#include <consensus/amount.h>
 #include <crypto/siphash.h>
 #include <hash.h>
 #include <i2p.h>

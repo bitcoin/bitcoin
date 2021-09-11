@@ -8,6 +8,7 @@
 
 #include <checkqueue.h>
 #include <clientversion.h>
+#include <consensus/amount.h>
 #include <consensus/tx_check.h>
 #include <consensus/validation.h>
 #include <core_io.h>
