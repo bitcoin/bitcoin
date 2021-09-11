@@ -39,13 +39,11 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     } 
 
     NEVMTxRoot txRootDB;
-    bool readTxRootFail;
     {
         LOCK(cs_setethstatus);
-        readTxRootFail = !pnevmtxrootsdb || !pnevmtxrootsdb->ReadTxRoots(mintSyscoin.nBlockHash, txRootDB);
-    }
-    if(readTxRootFail && fNEVMConnection) {
-        return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
+        if(!pnevmtxrootsdb || !pnevmtxrootsdb->ReadTxRoots(mintSyscoin.nBlockHash, txRootDB)) {
+            return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
+        }
     }
      
      // check transaction receipt validity
@@ -124,14 +122,13 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     sReceiptRoot.append(rlpReceiptRootVec);
     dev::RLP rlpTxRoot(sTxRoot.out());
     dev::RLP rlpReceiptRoot(sReceiptRoot.out());
-    if(fNEVMConnection) {
-        if(mintSyscoin.nTxRoot != txRootDB.nTxRoot){
-            return FormatSyscoinErrorMessage(state, "mint-mismatching-txroot", bSanityCheck);
-        }
-        if(mintSyscoin.nReceiptRoot != txRootDB.nReceiptRoot){
-            return FormatSyscoinErrorMessage(state, "mint-mismatching-receiptroot", bSanityCheck);
-        }
+    if(mintSyscoin.nTxRoot != txRootDB.nTxRoot){
+        return FormatSyscoinErrorMessage(state, "mint-mismatching-txroot", bSanityCheck);
     }
+    if(mintSyscoin.nReceiptRoot != txRootDB.nReceiptRoot){
+        return FormatSyscoinErrorMessage(state, "mint-mismatching-receiptroot", bSanityCheck);
+    }
+    
     
     dev::RLP rlpTxParentNodes(&mintSyscoin.vchTxParentNodes);
     std::vector<unsigned char> vchTxValue(mintSyscoin.vchTxParentNodes.begin()+mintSyscoin.posTx, mintSyscoin.vchTxParentNodes.end());
@@ -178,7 +175,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         return FormatSyscoinErrorMessage(state, "mint-tx-itemcount", bSanityCheck);
     }    
     const dev::u256& nChainID = rlpTxValue[0].toInt<dev::u256>(dev::RLP::VeryStrict);
-    if(!nChainID.compare(dev::u256(Params().GetConsensus().nNEVMChainID))) {
+    if(nChainID != (dev::u256(Params().GetConsensus().nNEVMChainID))) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-chainid", bSanityCheck);
     }
     if (!rlpTxValue[7].isData()) {
