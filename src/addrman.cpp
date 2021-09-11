@@ -269,14 +269,14 @@ void AddrManImpl::Unserialize(Stream& s_)
 
     if (nNew > ADDRMAN_NEW_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE || nNew < 0) {
         throw std::ios_base::failure(
-                strprintf("Corrupt CAddrMan serialization: nNew=%d, should be in [0, %d]",
+                strprintf("Corrupt AddrMan serialization: nNew=%d, should be in [0, %d]",
                     nNew,
                     ADDRMAN_NEW_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE));
     }
 
     if (nTried > ADDRMAN_TRIED_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE || nTried < 0) {
         throw std::ios_base::failure(
-                strprintf("Corrupt CAddrMan serialization: nTried=%d, should be in [0, %d]",
+                strprintf("Corrupt AddrMan serialization: nTried=%d, should be in [0, %d]",
                     nTried,
                     ADDRMAN_TRIED_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE));
     }
@@ -1110,83 +1110,83 @@ const std::vector<bool>& AddrManImpl::GetAsmap() const
     return m_asmap;
 }
 
-CAddrMan::CAddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio)
+AddrMan::AddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio)
     : m_impl(std::make_unique<AddrManImpl>(std::move(asmap), deterministic, consistency_check_ratio)) {}
 
-CAddrMan::~CAddrMan() = default;
+AddrMan::~AddrMan() = default;
 
 template <typename Stream>
-void CAddrMan::Serialize(Stream& s_) const
+void AddrMan::Serialize(Stream& s_) const
 {
     m_impl->Serialize<Stream>(s_);
 }
 
 template <typename Stream>
-void CAddrMan::Unserialize(Stream& s_)
+void AddrMan::Unserialize(Stream& s_)
 {
     m_impl->Unserialize<Stream>(s_);
 }
 
 // explicit instantiation
-template void CAddrMan::Serialize(CHashWriter& s) const;
-template void CAddrMan::Serialize(CAutoFile& s) const;
-template void CAddrMan::Serialize(CDataStream& s) const;
-template void CAddrMan::Unserialize(CAutoFile& s);
-template void CAddrMan::Unserialize(CHashVerifier<CAutoFile>& s);
-template void CAddrMan::Unserialize(CDataStream& s);
-template void CAddrMan::Unserialize(CHashVerifier<CDataStream>& s);
+template void AddrMan::Serialize(CHashWriter& s) const;
+template void AddrMan::Serialize(CAutoFile& s) const;
+template void AddrMan::Serialize(CDataStream& s) const;
+template void AddrMan::Unserialize(CAutoFile& s);
+template void AddrMan::Unserialize(CHashVerifier<CAutoFile>& s);
+template void AddrMan::Unserialize(CDataStream& s);
+template void AddrMan::Unserialize(CHashVerifier<CDataStream>& s);
 
-size_t CAddrMan::size() const
+size_t AddrMan::size() const
 {
     return m_impl->size();
 }
 
-bool CAddrMan::Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty)
+bool AddrMan::Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty)
 {
     return m_impl->Add(vAddr, source, nTimePenalty);
 }
 
-void CAddrMan::Good(const CService &addr, int64_t nTime)
+void AddrMan::Good(const CService &addr, int64_t nTime)
 {
     m_impl->Good(addr, nTime);
 }
 
-void CAddrMan::Attempt(const CService &addr, bool fCountFailure, int64_t nTime)
+void AddrMan::Attempt(const CService &addr, bool fCountFailure, int64_t nTime)
 {
     m_impl->Attempt(addr, fCountFailure, nTime);
 }
 
-void CAddrMan::ResolveCollisions()
+void AddrMan::ResolveCollisions()
 {
     m_impl->ResolveCollisions();
 }
 
-std::pair<CAddress, int64_t> CAddrMan::SelectTriedCollision()
+std::pair<CAddress, int64_t> AddrMan::SelectTriedCollision()
 {
     return m_impl->SelectTriedCollision();
 }
 
-std::pair<CAddress, int64_t> CAddrMan::Select(bool newOnly) const
+std::pair<CAddress, int64_t> AddrMan::Select(bool newOnly) const
 {
     return m_impl->Select(newOnly);
 }
 
-std::vector<CAddress> CAddrMan::GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
+std::vector<CAddress> AddrMan::GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
 {
     return m_impl->GetAddr(max_addresses, max_pct, network);
 }
 
-void CAddrMan::Connected(const CService &addr, int64_t nTime)
+void AddrMan::Connected(const CService &addr, int64_t nTime)
 {
     m_impl->Connected(addr, nTime);
 }
 
-void CAddrMan::SetServices(const CService &addr, ServiceFlags nServices)
+void AddrMan::SetServices(const CService &addr, ServiceFlags nServices)
 {
     m_impl->SetServices(addr, nServices);
 }
 
-const std::vector<bool>& CAddrMan::GetAsmap() const
+const std::vector<bool>& AddrMan::GetAsmap() const
 {
     return m_impl->GetAsmap();
 }
