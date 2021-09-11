@@ -9,6 +9,7 @@
 
 #include <chainparamsbase.h>
 #include <clientversion.h>
+#include <policy/feerate.h>
 #include <rpc/client.h>
 #include <rpc/mining.h>
 #include <rpc/protocol.h>
@@ -28,6 +29,10 @@
 #include <string>
 #include <tuple>
 
+#ifndef WIN32
+#include <unistd.h>
+#endif
+
 #include <event2/buffer.h>
 #include <event2/keyvalq_struct.h>
 #include <support/events.h>
@@ -40,12 +45,16 @@ UrlDecodeFn* const URL_DECODE = urlDecode;
 
 static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
+static constexpr int DEFAULT_WAIT_CLIENT_TIMEOUT = 0;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
 static constexpr int8_t UNKNOWN_NETWORK{-1};
 
 /** Default number of blocks to generate for RPC generatetoaddress. */
 static const std::string DEFAULT_NBLOCKS = "1";
+
+/** Default -color setting. */
+static const std::string DEFAULT_COLOR_SETTING{"auto"};
 
 static void SetupCliArgs(ArgsManager& argsman)
 {
@@ -65,6 +74,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional integer argument from 0 to 4 can be passed for different peers listings (default: 0). Pass \"help\" for detailed help documentation.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
     SetupChainParamsBaseOptions(argsman);
+    argsman.AddArg("-color=<when>", strprintf("Color setting for CLI output (default: %s). Valid values: always, auto (add color codes when standard output is connected to a terminal and OS is not WIN32), never.", DEFAULT_COLOR_SETTING), ArgsManager::ALLOW_STRING, OptionsCategory::OPTIONS);
     argsman.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcclienttimeout=<n>", strprintf("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)", DEFAULT_HTTP_CLIENT_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcconnect=<ip>", strprintf("Send commands to node running on <ip> (default: %s)", DEFAULT_RPCCONNECT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -73,6 +83,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-rpcport=<port>", strprintf("Connect to JSON-RPC on <port> (default: %u, testnet: %u, signet: %u, regtest: %u)", defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort(), signetBaseParams->RPCPort(), regtestBaseParams->RPCPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcuser=<user>", "Username for JSON-RPC connections", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcwait", "Wait for RPC server to start", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-rpcwaittimeout=<n>", strprintf("Timeout in seconds to wait for the RPC server to start, or 0 for no timeout. (default: %d)", DEFAULT_WAIT_CLIENT_TIMEOUT), ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcwallet=<walletname>", "Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to bitcoind). This changes the RPC endpoint used, e.g. http://127.0.0.1:8332/wallet/<walletname>", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-stdin", "Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases). When combined with -stdinrpcpass, the first line from standard input is used for the RPC password.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-stdinrpcpass", "Read RPC password from standard input as a single line. When combined with -stdin, the first line from standard input is used for the RPC password. When combined with -stdinwalletpassphrase, -stdinrpcpass consumes the first line, and -stdinwalletpassphrase consumes the second.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -82,9 +93,6 @@ static void SetupCliArgs(ArgsManager& argsman)
 /** libevent event log callback */
 static void libevent_log_cb(int severity, const char *msg)
 {
-#ifndef EVENT_LOG_ERR // EVENT_LOG_ERR was added in 2.0.19; but before then _EVENT_LOG_ERR existed.
-# define EVENT_LOG_ERR _EVENT_LOG_ERR
-#endif
     // Ignore everything other than errors
     if (severity >= EVENT_LOG_ERR) {
         throw std::runtime_error(strprintf("libevent error: %s", msg));
@@ -336,7 +344,9 @@ public:
         result.pushKV("difficulty", batch[ID_BLOCKCHAININFO]["result"]["difficulty"]);
         result.pushKV("chain", UniValue(batch[ID_BLOCKCHAININFO]["result"]["chain"]));
         if (!batch[ID_WALLETINFO]["result"].isNull()) {
+            result.pushKV("has_wallet", true);
             result.pushKV("keypoolsize", batch[ID_WALLETINFO]["result"]["keypoolsize"]);
+            result.pushKV("walletname", batch[ID_WALLETINFO]["result"]["walletname"]);
             if (!batch[ID_WALLETINFO]["result"]["unlocked_until"].isNull()) {
                 result.pushKV("unlocked_until", batch[ID_WALLETINFO]["result"]["unlocked_until"]);
             }
@@ -373,7 +383,9 @@ private:
     bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
     bool m_is_asmap_on{false};
     size_t m_max_addr_length{0};
-    size_t m_max_age_length{3};
+    size_t m_max_addr_processed_length{5};
+    size_t m_max_addr_rate_limited_length{6};
+    size_t m_max_age_length{5};
     size_t m_max_id_length{2};
     struct Peer {
         std::string addr;
@@ -383,6 +395,8 @@ private:
         std::string age;
         double min_ping;
         double ping;
+        int64_t addr_processed;
+        int64_t addr_rate_limited;
         int64_t last_blck;
         int64_t last_recv;
         int64_t last_send;
@@ -390,6 +404,7 @@ private:
         int id;
         int mapped_as;
         int version;
+        bool is_addr_relay_enabled;
         bool is_bip152_hb_from;
         bool is_bip152_hb_to;
         bool is_block_relay;
@@ -418,7 +433,7 @@ private:
         if (conn_type == "addr-fetch") return "addr";
         return "";
     }
-    const int64_t m_time_now{GetSystemTimeInSeconds()};
+    const int64_t m_time_now{GetTimeSeconds()};
 
 public:
     static constexpr int ID_PEERINFO = 0;
@@ -470,6 +485,8 @@ public:
                 const int peer_id{peer["id"].get_int()};
                 const int mapped_as{peer["mapped_as"].isNull() ? 0 : peer["mapped_as"].get_int()};
                 const int version{peer["version"].get_int()};
+                const int64_t addr_processed{peer["addr_processed"].isNull() ? 0 : peer["addr_processed"].get_int64()};
+                const int64_t addr_rate_limited{peer["addr_rate_limited"].isNull() ? 0 : peer["addr_rate_limited"].get_int64()};
                 const int64_t conn_time{peer["conntime"].get_int64()};
                 const int64_t last_blck{peer["last_block"].get_int64()};
                 const int64_t last_recv{peer["lastrecv"].get_int64()};
@@ -480,10 +497,13 @@ public:
                 const std::string addr{peer["addr"].get_str()};
                 const std::string age{conn_time == 0 ? "" : ToString((m_time_now - conn_time) / 60)};
                 const std::string sub_version{peer["subver"].get_str()};
+                const bool is_addr_relay_enabled{peer["addr_relay_enabled"].isNull() ? false : peer["addr_relay_enabled"].get_bool()};
                 const bool is_bip152_hb_from{peer["bip152_hb_from"].get_bool()};
                 const bool is_bip152_hb_to{peer["bip152_hb_to"].get_bool()};
-                m_peers.push_back({addr, sub_version, conn_type, network, age, min_ping, ping, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_bip152_hb_from, is_bip152_hb_to, is_block_relay, is_outbound});
+                m_peers.push_back({addr, sub_version, conn_type, network, age, min_ping, ping, addr_processed, addr_rate_limited, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_addr_relay_enabled, is_bip152_hb_from, is_bip152_hb_to, is_block_relay, is_outbound});
                 m_max_addr_length = std::max(addr.length() + 1, m_max_addr_length);
+                m_max_addr_processed_length = std::max(ToString(addr_processed).length(), m_max_addr_processed_length);
+                m_max_addr_rate_limited_length = std::max(ToString(addr_rate_limited).length(), m_max_addr_rate_limited_length);
                 m_max_age_length = std::max(age.length(), m_max_age_length);
                 m_max_id_length = std::max(ToString(peer_id).length(), m_max_id_length);
                 m_is_asmap_on |= (mapped_as != 0);
@@ -491,39 +511,46 @@ public:
         }
 
         // Generate report header.
-        std::string result{strprintf("%s %s%s - %i%s\n\n", PACKAGE_NAME, FormatFullVersion(), ChainToString(), networkinfo["protocolversion"].get_int(), networkinfo["subversion"].get_str())};
+        std::string result{strprintf("%s client %s%s - server %i%s\n\n", PACKAGE_NAME, FormatFullVersion(), ChainToString(), networkinfo["protocolversion"].get_int(), networkinfo["subversion"].get_str())};
 
         // Report detailed peer connections list sorted by direction and minimum ping time.
         if (DetailsRequested() && !m_peers.empty()) {
             std::sort(m_peers.begin(), m_peers.end());
-            result += strprintf("<->   type   net  mping   ping send recv  txn  blk  hb %*s ", m_max_age_length, "age");
+            result += strprintf("<->   type   net  mping   ping send recv  txn  blk  hb %*s%*s%*s ",
+                                m_max_addr_processed_length, "addrp",
+                                m_max_addr_rate_limited_length, "addrl",
+                                m_max_age_length, "age");
             if (m_is_asmap_on) result += " asmap ";
             result += strprintf("%*s %-*s%s\n", m_max_id_length, "id", IsAddressSelected() ? m_max_addr_length : 0, IsAddressSelected() ? "address" : "", IsVersionSelected() ? "version" : "");
             for (const Peer& peer : m_peers) {
                 std::string version{ToString(peer.version) + peer.sub_version};
                 result += strprintf(
-                    "%3s %6s %5s%7s%7s%5s%5s%5s%5s  %2s %*s%*i %*s %-*s%s\n",
+                    "%3s %6s %5s%7s%7s%5s%5s%5s%5s  %2s %*s%*s%*s%*i %*s %-*s%s\n",
                     peer.is_outbound ? "out" : "in",
                     ConnectionTypeForNetinfo(peer.conn_type),
                     peer.network,
                     PingTimeToString(peer.min_ping),
                     PingTimeToString(peer.ping),
-                    peer.last_send == 0 ? "" : ToString(m_time_now - peer.last_send),
-                    peer.last_recv == 0 ? "" : ToString(m_time_now - peer.last_recv),
-                    peer.last_trxn == 0 ? "" : ToString((m_time_now - peer.last_trxn) / 60),
-                    peer.last_blck == 0 ? "" : ToString((m_time_now - peer.last_blck) / 60),
+                    peer.last_send ? ToString(m_time_now - peer.last_send) : "",
+                    peer.last_recv ? ToString(m_time_now - peer.last_recv) : "",
+                    peer.last_trxn ? ToString((m_time_now - peer.last_trxn) / 60) : peer.is_block_relay ? "*" : "",
+                    peer.last_blck ? ToString((m_time_now - peer.last_blck) / 60) : "",
                     strprintf("%s%s", peer.is_bip152_hb_to ? "." : " ", peer.is_bip152_hb_from ? "*" : " "),
+                    m_max_addr_processed_length, // variable spacing
+                    peer.addr_processed ? ToString(peer.addr_processed) : peer.is_addr_relay_enabled ? "" : ".",
+                    m_max_addr_rate_limited_length, // variable spacing
+                    peer.addr_rate_limited ? ToString(peer.addr_rate_limited) : "",
                     m_max_age_length, // variable spacing
                     peer.age,
                     m_is_asmap_on ? 7 : 0, // variable spacing
-                    m_is_asmap_on && peer.mapped_as != 0 ? ToString(peer.mapped_as) : "",
+                    m_is_asmap_on && peer.mapped_as ? ToString(peer.mapped_as) : "",
                     m_max_id_length, // variable spacing
                     peer.id,
                     IsAddressSelected() ? m_max_addr_length : 0, // variable spacing
                     IsAddressSelected() ? peer.addr : "",
                     IsVersionSelected() && version != "0" ? version : "");
             }
-            result += strprintf("                     ms     ms  sec  sec  min  min     %*s\n\n", m_max_age_length, "min");
+            result += strprintf("                     ms     ms  sec  sec  min  min                %*s\n\n", m_max_age_length, "min");
         }
 
         // Report peer connection totals by type.
@@ -597,10 +624,14 @@ public:
         "  send     Time since last message sent to the peer, in seconds\n"
         "  recv     Time since last message received from the peer, in seconds\n"
         "  txn      Time since last novel transaction received from the peer and accepted into our mempool, in minutes\n"
+        "           \"*\" - the peer requested we not relay transactions to it (relaytxes is false)\n"
         "  blk      Time since last novel block passing initial validity checks received from the peer, in minutes\n"
         "  hb       High-bandwidth BIP152 compact block relay\n"
         "           \".\" (to)   - we selected the peer as a high-bandwidth peer\n"
         "           \"*\" (from) - the peer selected us as a high-bandwidth peer\n"
+        "  addrp    Total number of addresses processed, excluding those dropped due to rate limiting\n"
+        "           \".\" - we do not relay addresses to this peer (addr_relay_enabled is false)\n"
+        "  addrl    Total number of addresses dropped due to rate limiting\n"
         "  age      Duration of connection to the peer, in minutes\n"
         "  asmap    Mapped AS (Autonomous System) number in the BGP route to the peer, used for diversifying\n"
         "           peer selection (only displayed if the -asmap config option is set)\n"
@@ -794,6 +825,9 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
     UniValue response(UniValue::VOBJ);
     // Execute and handle connection failures with -rpcwait.
     const bool fWait = gArgs.GetBoolArg("-rpcwait", false);
+    const int timeout = gArgs.GetArg("-rpcwaittimeout", DEFAULT_WAIT_CLIENT_TIMEOUT);
+    const auto deadline{GetTime<std::chrono::microseconds>() + 1s * timeout};
+
     do {
         try {
             response = CallRPC(rh, strMethod, args, rpcwallet);
@@ -804,11 +838,12 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
                 }
             }
             break; // Connection succeeded, no need to retry.
-        } catch (const CConnectionFailed&) {
-            if (fWait) {
-                UninterruptibleSleep(std::chrono::milliseconds{1000});
+        } catch (const CConnectionFailed& e) {
+            const auto now{GetTime<std::chrono::microseconds>()};
+            if (fWait && (timeout <= 0 || now < deadline)) {
+                UninterruptibleSleep(1s);
             } else {
-                throw;
+                throw CConnectionFailed(strprintf("timeout on transient error: %s", e.what()));
             }
         }
     } while (fWait);
@@ -865,6 +900,133 @@ static void GetWalletBalances(UniValue& result)
         balances.pushKV(wallet_name, balance);
     }
     result.pushKV("balances", balances);
+}
+
+/**
+ * GetProgressBar constructs a progress bar with 5% intervals.
+ *
+ * @param[in]   progress      The proportion of the progress bar to be filled between 0 and 1.
+ * @param[out]  progress_bar  String representation of the progress bar.
+ */
+static void GetProgressBar(double progress, std::string& progress_bar)
+{
+    if (progress < 0 || progress > 1) return;
+
+    static constexpr double INCREMENT{0.05};
+    static const std::string COMPLETE_BAR{"\u2592"};
+    static const std::string INCOMPLETE_BAR{"\u2591"};
+
+    for (int i = 0; i < progress / INCREMENT; ++i) {
+        progress_bar += COMPLETE_BAR;
+    }
+
+    for (int i = 0; i < (1 - progress) / INCREMENT; ++i) {
+        progress_bar += INCOMPLETE_BAR;
+    }
+}
+
+/**
+ * ParseGetInfoResult takes in -getinfo result in UniValue object and parses it
+ * into a user friendly UniValue string to be printed on the console.
+ * @param[out] result  Reference to UniValue result containing the -getinfo output.
+ */
+static void ParseGetInfoResult(UniValue& result)
+{
+    if (!find_value(result, "error").isNull()) return;
+
+    std::string RESET, GREEN, BLUE, YELLOW, MAGENTA, CYAN;
+    bool should_colorize = false;
+
+#ifndef WIN32
+    if (isatty(fileno(stdout))) {
+        // By default, only print colored text if OS is not WIN32 and stdout is connected to a terminal.
+        should_colorize = true;
+    }
+#endif
+
+    if (gArgs.IsArgSet("-color")) {
+        const std::string color{gArgs.GetArg("-color", DEFAULT_COLOR_SETTING)};
+        if (color == "always") {
+            should_colorize = true;
+        } else if (color == "never") {
+            should_colorize = false;
+        } else if (color != "auto") {
+            throw std::runtime_error("Invalid value for -color option. Valid values: always, auto, never.");
+        }
+    }
+
+    if (should_colorize) {
+        RESET = "\x1B[0m";
+        GREEN = "\x1B[32m";
+        BLUE = "\x1B[34m";
+        YELLOW = "\x1B[33m";
+        MAGENTA = "\x1B[35m";
+        CYAN = "\x1B[36m";
+    }
+
+    std::string result_string = strprintf("%sChain: %s%s\n", BLUE, result["chain"].getValStr(), RESET);
+    result_string += strprintf("Blocks: %s\n", result["blocks"].getValStr());
+    result_string += strprintf("Headers: %s\n", result["headers"].getValStr());
+
+    const double ibd_progress{result["verificationprogress"].get_real()};
+    std::string ibd_progress_bar;
+    // Display the progress bar only if IBD progress is less than 99%
+    if (ibd_progress < 0.99) {
+      GetProgressBar(ibd_progress, ibd_progress_bar);
+      // Add padding between progress bar and IBD progress
+      ibd_progress_bar += " ";
+    }
+
+    result_string += strprintf("Verification progress: %s%.4f%%\n", ibd_progress_bar, ibd_progress * 100);
+    result_string += strprintf("Difficulty: %s\n\n", result["difficulty"].getValStr());
+
+    result_string += strprintf(
+        "%sNetwork: in %s, out %s, total %s%s\n",
+        GREEN,
+        result["connections"]["in"].getValStr(),
+        result["connections"]["out"].getValStr(),
+        result["connections"]["total"].getValStr(),
+        RESET);
+    result_string += strprintf("Version: %s\n", result["version"].getValStr());
+    result_string += strprintf("Time offset (s): %s\n", result["timeoffset"].getValStr());
+    const std::string proxy = result["proxy"].getValStr();
+    result_string += strprintf("Proxy: %s\n", proxy.empty() ? "N/A" : proxy);
+    result_string += strprintf("Min tx relay fee rate (%s/kvB): %s\n\n", CURRENCY_UNIT, result["relayfee"].getValStr());
+
+    if (!result["has_wallet"].isNull()) {
+        const std::string walletname = result["walletname"].getValStr();
+        result_string += strprintf("%sWallet: %s%s\n", MAGENTA, walletname.empty() ? "\"\"" : walletname, RESET);
+
+        result_string += strprintf("Keypool size: %s\n", result["keypoolsize"].getValStr());
+        if (!result["unlocked_until"].isNull()) {
+            result_string += strprintf("Unlocked until: %s\n", result["unlocked_until"].getValStr());
+        }
+        result_string += strprintf("Transaction fee rate (-paytxfee) (%s/kvB): %s\n\n", CURRENCY_UNIT, result["paytxfee"].getValStr());
+    }
+    if (!result["balance"].isNull()) {
+        result_string += strprintf("%sBalance:%s %s\n\n", CYAN, RESET, result["balance"].getValStr());
+    }
+
+    if (!result["balances"].isNull()) {
+        result_string += strprintf("%sBalances%s\n", CYAN, RESET);
+
+        size_t max_balance_length{10};
+
+        for (const std::string& wallet : result["balances"].getKeys()) {
+            max_balance_length = std::max(result["balances"][wallet].getValStr().length(), max_balance_length);
+        }
+
+        for (const std::string& wallet : result["balances"].getKeys()) {
+            result_string += strprintf("%*s %s\n",
+                                       max_balance_length,
+                                       result["balances"][wallet].getValStr(),
+                                       wallet.empty() ? "\"\"" : wallet);
+        }
+        result_string += "\n";
+    }
+
+    result_string += strprintf("%sWarnings:%s %s", YELLOW, RESET, result["warnings"].getValStr());
+    result.setStr(result_string);
 }
 
 /**
@@ -988,9 +1150,13 @@ static int CommandLineRPC(int argc, char *argv[])
             UniValue result = find_value(reply, "result");
             const UniValue& error = find_value(reply, "error");
             if (error.isNull()) {
-                if (gArgs.IsArgSet("-getinfo") && !gArgs.IsArgSet("-rpcwallet")) {
-                    GetWalletBalances(result); // fetch multiwallet balances and append to result
+                if (gArgs.GetBoolArg("-getinfo", false)) {
+                    if (!gArgs.IsArgSet("-rpcwallet")) {
+                        GetWalletBalances(result); // fetch multiwallet balances and append to result
+                    }
+                    ParseGetInfoResult(result);
                 }
+
                 ParseResult(result, strPrint);
             } else {
                 ParseError(error, strPrint, nRet);

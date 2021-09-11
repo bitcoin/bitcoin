@@ -5,6 +5,7 @@
 """Test the importprunedfunds and removeprunedfunds RPCs."""
 from decimal import Decimal
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.address import key_to_p2wpkh
 from test_framework.key import ECKey
 from test_framework.test_framework import BitcoinTestFramework
@@ -24,7 +25,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Mining blocks...")
-        self.nodes[0].generate(101)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
         self.sync_all()
 
@@ -46,7 +47,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         self.sync_all()
 
         # Node 1 sync test
-        assert_equal(self.nodes[1].getblockcount(), 101)
+        assert_equal(self.nodes[1].getblockcount(), COINBASE_MATURITY + 1)
 
         # Address Test - before import
         address_info = self.nodes[1].getaddressinfo(address1)
@@ -63,17 +64,17 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         # Send funds to self
         txnid1 = self.nodes[0].sendtoaddress(address1, 0.1)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         rawtxn1 = self.nodes[0].gettransaction(txnid1)['hex']
         proof1 = self.nodes[0].gettxoutproof([txnid1])
 
         txnid2 = self.nodes[0].sendtoaddress(address2, 0.05)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         rawtxn2 = self.nodes[0].gettransaction(txnid2)['hex']
         proof2 = self.nodes[0].gettxoutproof([txnid2])
 
         txnid3 = self.nodes[0].sendtoaddress(address3, 0.025)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         rawtxn3 = self.nodes[0].gettransaction(txnid3)['hex']
         proof3 = self.nodes[0].gettxoutproof([txnid3])
 

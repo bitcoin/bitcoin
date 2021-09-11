@@ -12,7 +12,6 @@ import socket
 import struct
 import array
 import os
-from binascii import unhexlify
 
 # STATE_ESTABLISHED = '01'
 # STATE_SYN_SENT  = '02'
@@ -44,7 +43,7 @@ def _remove_empty(array):
 def _convert_ip_port(array):
     host,port = array.split(':')
     # convert host from mangled-per-four-bytes form as used by kernel
-    host = unhexlify(host)
+    host = bytes.fromhex(host)
     host_out = ''
     for x in range(0, len(host) // 4):
         (val,) = struct.unpack('=I', host[x*4:(x+1)*4])
@@ -151,7 +150,7 @@ def test_ipv6_local():
     have_ipv6 = True
     try:
         s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        s.connect(('::1', 0))
+        s.connect(('::1', 1))
     except socket.error:
         have_ipv6 = False
     return have_ipv6

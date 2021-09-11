@@ -182,7 +182,7 @@ public:
     //!
     //! Note: this value is modified to show BLOCK_OPT_WITNESS during UTXO snapshot
     //! load to avoid the block index being spuriously rewound.
-    //! @sa RewindBlockIndex
+    //! @sa NeedsRedownload
     //! @sa ActivateSnapshot
     uint32_t nStatus{0};
 

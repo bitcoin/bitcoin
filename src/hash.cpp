@@ -47,8 +47,10 @@ unsigned int MurmurHash3(unsigned int nHashSeed, Span<const unsigned char> vData
     switch (vDataToHash.size() & 3) {
         case 3:
             k1 ^= tail[2] << 16;
+            [[fallthrough]];
         case 2:
             k1 ^= tail[1] << 8;
+            [[fallthrough]];
         case 1:
             k1 ^= tail[0];
             k1 *= c1;

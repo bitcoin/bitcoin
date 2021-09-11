@@ -1,8 +1,8 @@
-/**********************************************************************
- * Copyright (c) 2013, 2014 Pieter Wuille                             *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                              *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 #ifndef SECP256K1_FIELD_REPR_IMPL_H
 #define SECP256K1_FIELD_REPR_IMPL_H
@@ -13,6 +13,7 @@
 
 #include "util.h"
 #include "field.h"
+#include "modinv64_impl.h"
 
 #if defined(USE_ASM_X86_64)
 #include "field_5x52_asm_impl.h"
@@ -161,7 +162,7 @@ static void secp256k1_fe_normalize_var(secp256k1_fe *r) {
 #endif
 }
 
-static int secp256k1_fe_normalizes_to_zero(secp256k1_fe *r) {
+static int secp256k1_fe_normalizes_to_zero(const secp256k1_fe *r) {
     uint64_t t0 = r->n[0], t1 = r->n[1], t2 = r->n[2], t3 = r->n[3], t4 = r->n[4];
 
     /* z0 tracks a possible raw value of 0, z1 tracks a possible raw value of P */
@@ -184,7 +185,7 @@ static int secp256k1_fe_normalizes_to_zero(secp256k1_fe *r) {
     return (z0 == 0) | (z1 == 0xFFFFFFFFFFFFFULL);
 }
 
-static int secp256k1_fe_normalizes_to_zero_var(secp256k1_fe *r) {
+static int secp256k1_fe_normalizes_to_zero_var(const secp256k1_fe *r) {
     uint64_t t0, t1, t2, t3, t4;
     uint64_t z0, z1;
     uint64_t x;
@@ -495,6 +496,82 @@ static SECP256K1_INLINE void secp256k1_fe_from_storage(secp256k1_fe *r, const se
 #ifdef VERIFY
     r->magnitude = 1;
     r->normalized = 1;
+#endif
+}
+
+static void secp256k1_fe_from_signed62(secp256k1_fe *r, const secp256k1_modinv64_signed62 *a) {
+    const uint64_t M52 = UINT64_MAX >> 12;
+    const uint64_t a0 = a->v[0], a1 = a->v[1], a2 = a->v[2], a3 = a->v[3], a4 = a->v[4];
+
+    /* The output from secp256k1_modinv64{_var} should be normalized to range [0,modulus), and
+     * have limbs in [0,2^62). The modulus is < 2^256, so the top limb must be below 2^(256-62*4).
+     */
+    VERIFY_CHECK(a0 >> 62 == 0);
+    VERIFY_CHECK(a1 >> 62 == 0);
+    VERIFY_CHECK(a2 >> 62 == 0);
+    VERIFY_CHECK(a3 >> 62 == 0);
+    VERIFY_CHECK(a4 >> 8 == 0);
+
+    r->n[0] =  a0                   & M52;
+    r->n[1] = (a0 >> 52 | a1 << 10) & M52;
+    r->n[2] = (a1 >> 42 | a2 << 20) & M52;
+    r->n[3] = (a2 >> 32 | a3 << 30) & M52;
+    r->n[4] = (a3 >> 22 | a4 << 40);
+
+#ifdef VERIFY
+    r->magnitude = 1;
+    r->normalized = 1;
+    secp256k1_fe_verify(r);
+#endif
+}
+
+static void secp256k1_fe_to_signed62(secp256k1_modinv64_signed62 *r, const secp256k1_fe *a) {
+    const uint64_t M62 = UINT64_MAX >> 2;
+    const uint64_t a0 = a->n[0], a1 = a->n[1], a2 = a->n[2], a3 = a->n[3], a4 = a->n[4];
+
+#ifdef VERIFY
+    VERIFY_CHECK(a->normalized);
+#endif
+
+    r->v[0] = (a0       | a1 << 52) & M62;
+    r->v[1] = (a1 >> 10 | a2 << 42) & M62;
+    r->v[2] = (a2 >> 20 | a3 << 32) & M62;
+    r->v[3] = (a3 >> 30 | a4 << 22) & M62;
+    r->v[4] =  a4 >> 40;
+}
+
+static const secp256k1_modinv64_modinfo secp256k1_const_modinfo_fe = {
+    {{-0x1000003D1LL, 0, 0, 0, 256}},
+    0x27C7F6E22DDACACFLL
+};
+
+static void secp256k1_fe_inv(secp256k1_fe *r, const secp256k1_fe *x) {
+    secp256k1_fe tmp;
+    secp256k1_modinv64_signed62 s;
+
+    tmp = *x;
+    secp256k1_fe_normalize(&tmp);
+    secp256k1_fe_to_signed62(&s, &tmp);
+    secp256k1_modinv64(&s, &secp256k1_const_modinfo_fe);
+    secp256k1_fe_from_signed62(r, &s);
+
+#ifdef VERIFY
+    VERIFY_CHECK(secp256k1_fe_normalizes_to_zero(r) == secp256k1_fe_normalizes_to_zero(&tmp));
+#endif
+}
+
+static void secp256k1_fe_inv_var(secp256k1_fe *r, const secp256k1_fe *x) {
+    secp256k1_fe tmp;
+    secp256k1_modinv64_signed62 s;
+
+    tmp = *x;
+    secp256k1_fe_normalize_var(&tmp);
+    secp256k1_fe_to_signed62(&s, &tmp);
+    secp256k1_modinv64_var(&s, &secp256k1_const_modinfo_fe);
+    secp256k1_fe_from_signed62(r, &s);
+
+#ifdef VERIFY
+    VERIFY_CHECK(secp256k1_fe_normalizes_to_zero(r) == secp256k1_fe_normalizes_to_zero(&tmp));
 #endif
 }
 

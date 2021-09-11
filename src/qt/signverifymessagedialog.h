@@ -31,6 +31,7 @@ public:
 
 protected:
     bool eventFilter(QObject *object, QEvent *event) override;
+    void changeEvent(QEvent* e) override;
 
 private:
     Ui::SignVerifyMessageDialog *ui;

@@ -4,9 +4,16 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test gettxoutproof and verifytxoutproof RPCs."""
 
-from test_framework.messages import CMerkleBlock, FromHex, ToHex
+from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.messages import (
+    CMerkleBlock,
+    from_hex,
+)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
 from test_framework.wallet import MiniWallet
 
 
@@ -22,8 +29,8 @@ class MerkleBlockTest(BitcoinTestFramework):
     def run_test(self):
         miniwallet = MiniWallet(self.nodes[0])
         # Add enough mature utxos to the wallet, so that all txs spend confirmed coins
-        miniwallet.generate(5)
-        self.nodes[0].generate(100)
+        self.generate(miniwallet, 5)
+        self.generate(self.nodes[0], COINBASE_MATURITY)
         self.sync_all()
 
         chain_height = self.nodes[1].getblockcount()
@@ -34,7 +41,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         # This will raise an exception because the transaction is not yet in a block
         assert_raises_rpc_error(-5, "Transaction not yet in block", self.nodes[0].gettxoutproof, [txid1])
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         blockhash = self.nodes[0].getblockhash(chain_height + 1)
         self.sync_all()
 
@@ -50,7 +57,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         txin_spent = miniwallet.get_utxo()  # Get the change from txid2
         tx3 = miniwallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=txin_spent)
         txid3 = tx3['txid']
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         txid_spent = txin_spent["txid"]
@@ -87,10 +94,10 @@ class MerkleBlockTest(BitcoinTestFramework):
         assert txid1 in self.nodes[0].verifytxoutproof(proof)
         assert txid2 in self.nodes[1].verifytxoutproof(proof)
 
-        tweaked_proof = FromHex(CMerkleBlock(), proof)
+        tweaked_proof = from_hex(CMerkleBlock(), proof)
 
         # Make sure that our serialization/deserialization is working
-        assert txid1 in self.nodes[0].verifytxoutproof(ToHex(tweaked_proof))
+        assert txid1 in self.nodes[0].verifytxoutproof(tweaked_proof.serialize().hex())
 
         # Check to see if we can go up the merkle tree and pass this off as a
         # single-transaction block
@@ -99,7 +106,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         tweaked_proof.txn.vBits = [True] + [False]*7
 
         for n in self.nodes:
-            assert not n.verifytxoutproof(ToHex(tweaked_proof))
+            assert not n.verifytxoutproof(tweaked_proof.serialize().hex())
 
         # TODO: try more variants, eg transactions at different depths, and
         # verify that the proofs are invalid

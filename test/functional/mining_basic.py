@@ -13,6 +13,7 @@ from decimal import Decimal
 
 from test_framework.blocktools import (
     create_coinbase,
+    get_witness_script,
     NORMAL_GBT_REQUEST_PARAMS,
     TIME_GENESIS_BLOCK,
 )
@@ -20,6 +21,7 @@ from test_framework.messages import (
     CBlock,
     CBlockHeader,
     BLOCK_HEADER_SIZE,
+    ser_uint256,
 )
 from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
@@ -49,21 +51,24 @@ class MiningTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.supports_cli = False
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def mine_chain(self):
         self.log.info('Create some old blocks')
         for t in range(TIME_GENESIS_BLOCK, TIME_GENESIS_BLOCK + 200 * 600, 600):
             self.nodes[0].setmocktime(t)
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
         mining_info = self.nodes[0].getmininginfo()
         assert_equal(mining_info['blocks'], 200)
         assert_equal(mining_info['currentblocktx'], 0)
         assert_equal(mining_info['currentblockweight'], 4000)
 
         self.log.info('test blockversion')
-        self.restart_node(0, extra_args=['-mocktime={}'.format(t), '-blockversion=1337'])
+        self.restart_node(0, extra_args=[f'-mocktime={t}', '-blockversion=1337'])
         self.connect_nodes(0, 1)
         assert_equal(1337, self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
-        self.restart_node(0, extra_args=['-mocktime={}'.format(t)])
+        self.restart_node(0, extra_args=[f'-mocktime={t}'])
         self.connect_nodes(0, 1)
         assert_equal(VERSIONBITS_TOP_BITS + (1 << VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT), self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
         self.restart_node(0)
@@ -89,8 +94,22 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(mining_info['networkhashps'], Decimal('0.003333333333333334'))
         assert_equal(mining_info['pooledtx'], 0)
 
-        # Mine a block to leave initial block download
-        node.generatetoaddress(1, node.get_deterministic_priv_key().address)
+        self.log.info("getblocktemplate: Test default witness commitment")
+        txid = int(node.sendtoaddress(node.getnewaddress(), 1), 16)
+        tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
+
+        # Check that default_witness_commitment is present.
+        assert 'default_witness_commitment' in tmpl
+        witness_commitment = tmpl['default_witness_commitment']
+
+        # Check that default_witness_commitment is correct.
+        witness_root = CBlock.get_merkle_root([ser_uint256(0),
+                                               ser_uint256(txid)])
+        script = get_witness_script(witness_root, 0)
+        assert_equal(witness_commitment, script.hex())
+
+        # Mine a block to leave initial block download and clear the mempool
+        self.generatetoaddress(node, 1, node.get_deterministic_priv_key().address)
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
         self.log.info("getblocktemplate: Test capability advertised")
         assert 'proposal' in tmpl['capabilities']
@@ -252,7 +271,7 @@ class MiningTest(BitcoinTestFramework):
         assert chain_tip(block.hash, status='active', branchlen=0) in node.getchaintips()
 
         # Building a few blocks should give the same results
-        node.generatetoaddress(10, node.get_deterministic_priv_key().address)
+        self.generatetoaddress(node, 10, node.get_deterministic_priv_key().address)
         assert_raises_rpc_error(-25, 'time-too-old', lambda: node.submitheader(hexdata=CBlockHeader(bad_block_time).serialize().hex()))
         assert_raises_rpc_error(-25, 'bad-prevblk', lambda: node.submitheader(hexdata=CBlockHeader(bad_block2).serialize().hex()))
         node.submitheader(hexdata=CBlockHeader(block).serialize().hex())

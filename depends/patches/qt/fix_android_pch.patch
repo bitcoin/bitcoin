@@ -1,6 +1,6 @@
 --- old/qtbase/mkspecs/common/android-base-head.conf
 +++ new/qtbase/mkspecs/common/android-base-head.conf
-@@ -73,6 +73,6 @@ CROSS_COMPILE = $$NDK_TOOLCHAIN_PATH/bin/$$NDK_TOOLS_PREFIX-
+@@ -72,6 +72,6 @@ CROSS_COMPILE = $$NDK_TOOLCHAIN_PATH/bin/$$NDK_TOOLS_PREFIX-
  QMAKE_PCH_OUTPUT_EXT    = .gch
 
  QMAKE_CFLAGS_PRECOMPILE       = -x c-header -c ${QMAKE_PCH_INPUT} -o ${QMAKE_PCH_OUTPUT}

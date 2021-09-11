@@ -27,6 +27,7 @@
 #include <chrono>
 #include <utility>
 
+class PlatformStyle;
 class QValidatedLineEdit;
 class SendCoinsRecipient;
 
@@ -231,9 +232,31 @@ namespace GUIUtil
 
     qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal minPointSize = 4, qreal startPointSize = 14);
 
-    class ClickableLabel : public QLabel
+    class ThemedLabel : public QLabel
     {
         Q_OBJECT
+
+    public:
+        explicit ThemedLabel(const PlatformStyle* platform_style, QWidget* parent = nullptr);
+        void setThemedPixmap(const QString& image_filename, int width, int height);
+
+    protected:
+        void changeEvent(QEvent* e) override;
+
+    private:
+        const PlatformStyle* m_platform_style;
+        QString m_image_filename;
+        int m_pixmap_width;
+        int m_pixmap_height;
+        void updateThemedPixmap();
+    };
+
+    class ClickableLabel : public ThemedLabel
+    {
+        Q_OBJECT
+
+    public:
+        explicit ClickableLabel(const PlatformStyle* platform_style, QWidget* parent = nullptr);
 
     Q_SIGNALS:
         /** Emitted when the label is clicked. The relative mouse coordinates of the click are

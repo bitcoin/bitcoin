@@ -97,7 +97,9 @@ void SendCoinsEntry::clear()
     ui->payTo->clear();
     ui->addAsLabel->clear();
     ui->payAmount->clear();
-    ui->checkboxSubtractFeeFromAmount->setCheckState(Qt::Unchecked);
+    if (model && model->getOptionsModel()) {
+        ui->checkboxSubtractFeeFromAmount->setChecked(model->getOptionsModel()->getSubFeeFromAmount());
+    }
     ui->messageTextLabel->clear();
     ui->messageTextLabel->hide();
     ui->messageLabel->hide();
@@ -234,6 +236,19 @@ void SendCoinsEntry::updateDisplayUnit()
         ui->payAmount_is->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
         ui->payAmount_s->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     }
+}
+
+void SendCoinsEntry::changeEvent(QEvent* e)
+{
+    if (e->type() == QEvent::PaletteChange) {
+        ui->addressBookButton->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/address-book")));
+        ui->pasteButton->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/editpaste")));
+        ui->deleteButton->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/remove")));
+        ui->deleteButton_is->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/remove")));
+        ui->deleteButton_s->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/remove")));
+    }
+
+    QStackedWidget::changeEvent(e);
 }
 
 bool SendCoinsEntry::updateLabel(const QString &address)

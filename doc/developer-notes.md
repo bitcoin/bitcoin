@@ -88,7 +88,11 @@ code.
     separate words (snake_case).
     - Class member variables have a `m_` prefix.
     - Global variables have a `g_` prefix.
-  - Compile-time constant names are all uppercase, and use `_` to separate words.
+  - Constant names are all uppercase, and use `_` to separate words.
+  - Enumerator constants may be `snake_case`, `PascalCase` or `ALL_CAPS`.
+    This is a more tolerant policy than the [C++ Core
+    Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Renum-caps),
+    which recommend using `snake_case`.  Please use what seems appropriate.
   - Class names, function names, and method names are UpperCamelCase
     (PascalCase). Do not prefix class names with `C`.
   - Test suite naming convention: The Boost test suite in file
@@ -669,19 +673,19 @@ Foo(vec);
 
 ```cpp
 enum class Tabs {
-    INFO,
-    CONSOLE,
-    GRAPH,
-    PEERS
+    info,
+    console,
+    network_graph,
+    peers
 };
 
 int GetInt(Tabs tab)
 {
     switch (tab) {
-    case Tabs::INFO: return 0;
-    case Tabs::CONSOLE: return 1;
-    case Tabs::GRAPH: return 2;
-    case Tabs::PEERS: return 3;
+    case Tabs::info: return 0;
+    case Tabs::console: return 1;
+    case Tabs::network_graph: return 2;
+    case Tabs::peers: return 3;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
@@ -1159,13 +1163,6 @@ A few guidelines for introducing and reviewing new RPC interfaces:
 - Don't forget to fill in the argument names correctly in the RPC command table.
 
   - *Rationale*: If not, the call can not be used with name-based arguments.
-
-- Set okSafeMode in the RPC command table to a sensible value: safe mode is when the
-  blockchain is regarded to be in a confused state, and the client deems it unsafe to
-  do anything irreversible such as send. Anything that just queries should be permitted.
-
-  - *Rationale*: Troubleshooting a node in safe mode is difficult if half the
-    RPCs don't work.
 
 - Add every non-string RPC argument `(method, idx, name)` to the table `vRPCConvertParams` in `rpc/client.cpp`.
 

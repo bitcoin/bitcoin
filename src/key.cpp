@@ -7,10 +7,13 @@
 
 #include <crypto/common.h>
 #include <crypto/hmac_sha512.h>
+#include <hash.h>
 #include <random.h>
 
 #include <secp256k1.h>
+#include <secp256k1_extrakeys.h>
 #include <secp256k1_recovery.h>
+#include <secp256k1_schnorrsig.h>
 
 static secp256k1_context* secp256k1_context_sign = nullptr;
 
@@ -258,6 +261,24 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
     return true;
 }
 
+bool CKey::SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint256* merkle_root, const uint256* aux) const
+{
+    assert(sig.size() == 64);
+    secp256k1_keypair keypair;
+    if (!secp256k1_keypair_create(secp256k1_context_sign, &keypair, begin())) return false;
+    if (merkle_root) {
+        secp256k1_xonly_pubkey pubkey;
+        if (!secp256k1_keypair_xonly_pub(secp256k1_context_sign, &pubkey, nullptr, &keypair)) return false;
+        unsigned char pubkey_bytes[32];
+        if (!secp256k1_xonly_pubkey_serialize(secp256k1_context_sign, pubkey_bytes, &pubkey)) return false;
+        uint256 tweak = XOnlyPubKey(pubkey_bytes).ComputeTapTweakHash(merkle_root->IsNull() ? nullptr : merkle_root);
+        if (!secp256k1_keypair_xonly_tweak_add(GetVerifyContext(), &keypair, tweak.data())) return false;
+    }
+    bool ret = secp256k1_schnorrsig_sign(secp256k1_context_sign, sig.data(), hash.data(), &keypair, aux ? (unsigned char*)aux->data() : nullptr);
+    memory_cleanse(&keypair, sizeof(keypair));
+    return ret;
+}
+
 bool CKey::Load(const CPrivKey &seckey, const CPubKey &vchPubKey, bool fSkipCheck=false) {
     if (!ec_seckey_import_der(secp256k1_context_sign, (unsigned char*)begin(), seckey.data(), seckey.size()))
         return false;
@@ -336,6 +357,7 @@ void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     nChild = (code[5] << 24) | (code[6] << 16) | (code[7] << 8) | code[8];
     memcpy(chaincode.begin(), code+9, 32);
     key.Set(code+42, code+BIP32_EXTKEY_SIZE, true);
+    if ((nDepth == 0 && (nChild != 0 || ReadLE32(vchFingerprint) != 0)) || code[41] != 0) key = CKey();
 }
 
 bool ECC_InitSanityCheck() {

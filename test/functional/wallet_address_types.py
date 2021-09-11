@@ -53,6 +53,7 @@ Test that the nodes generate the correct change address type:
 from decimal import Decimal
 import itertools
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import (
     descsum_create,
@@ -220,7 +221,7 @@ class AddressTypeTest(BitcoinTestFramework):
     def run_test(self):
         # Mine 101 blocks on node5 to bring nodes out of IBD and make sure that
         # no coinbases are maturing for the nodes-under-test during the test
-        self.nodes[5].generate(101)
+        self.generate(self.nodes[5], COINBASE_MATURITY + 1)
         self.sync_blocks()
 
         uncompressed_1 = "0496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858ee"
@@ -258,7 +259,7 @@ class AddressTypeTest(BitcoinTestFramework):
             self.log.info("Sending from node {} ({}) with{} multisig using {}".format(from_node, self.extra_args[from_node], "" if multisig else "out", "default" if address_type is None else address_type))
             old_balances = self.get_balances()
             self.log.debug("Old balances are {}".format(old_balances))
-            to_send = (old_balances[from_node] / 101).quantize(Decimal("0.00000001"))
+            to_send = (old_balances[from_node] / (COINBASE_MATURITY + 1)).quantize(Decimal("0.00000001"))
             sends = {}
             addresses = {}
 
@@ -305,7 +306,7 @@ class AddressTypeTest(BitcoinTestFramework):
                 assert_equal(unconf_balances[to_node], to_send * 10 * (2 + n))
 
             # node5 collects fee and block subsidy to keep accounting simple
-            self.nodes[5].generate(1)
+            self.generate(self.nodes[5], 1)
             self.sync_blocks()
 
             # Verify that the receiving wallet contains a UTXO with the expected address, and expected descriptor
@@ -335,7 +336,7 @@ class AddressTypeTest(BitcoinTestFramework):
 
         # Fund node 4:
         self.nodes[5].sendtoaddress(self.nodes[4].getnewaddress(), Decimal("1"))
-        self.nodes[5].generate(1)
+        self.generate(self.nodes[5], 1)
         self.sync_blocks()
         assert_equal(self.nodes[4].getbalance(), 1)
 
@@ -371,6 +372,16 @@ class AddressTypeTest(BitcoinTestFramework):
         self.log.info("Except for getrawchangeaddress if specified:")
         self.test_address(4, self.nodes[4].getrawchangeaddress(), multisig=False, typ='p2sh-segwit')
         self.test_address(4, self.nodes[4].getrawchangeaddress('bech32'), multisig=False, typ='bech32')
+
+        if self.options.descriptors:
+            self.log.info("Descriptor wallets do not have bech32m addresses by default yet")
+            # TODO: Remove this when they do
+            assert_raises_rpc_error(-12, "Error: No bech32m addresses available", self.nodes[0].getnewaddress, "", "bech32m")
+            assert_raises_rpc_error(-12, "Error: No bech32m addresses available", self.nodes[0].getrawchangeaddress, "bech32m")
+        else:
+            self.log.info("Legacy wallets cannot make bech32m addresses")
+            assert_raises_rpc_error(-8, "Legacy wallets cannot provide bech32m addresses", self.nodes[0].getnewaddress, "", "bech32m")
+            assert_raises_rpc_error(-8, "Legacy wallets cannot provide bech32m addresses", self.nodes[0].getrawchangeaddress, "bech32m")
 
 if __name__ == '__main__':
     AddressTypeTest().main()

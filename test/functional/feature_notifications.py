@@ -20,7 +20,7 @@ FILE_CHARS_DISALLOWED = '/\\?%*:|"<>' if os.name == 'nt' else '/'
 UNCONFIRMED_HASH_STRING = 'unconfirmed'
 
 def notify_outputname(walletname, txid):
-    return txid if os.name == 'nt' else '{}_{}'.format(walletname, txid)
+    return txid if os.name == 'nt' else f'{walletname}_{txid}'
 
 
 class NotificationsTest(BitcoinTestFramework):
@@ -39,11 +39,11 @@ class NotificationsTest(BitcoinTestFramework):
 
         # -alertnotify and -blocknotify on node0, walletnotify on node1
         self.extra_args = [[
-            "-alertnotify=echo > {}".format(os.path.join(self.alertnotify_dir, '%s')),
-            "-blocknotify=echo > {}".format(os.path.join(self.blocknotify_dir, '%s')),
+            f"-alertnotify=echo > {os.path.join(self.alertnotify_dir, '%s')}",
+            f"-blocknotify=echo > {os.path.join(self.blocknotify_dir, '%s')}",
         ], [
             "-rescan",
-            "-walletnotify=echo %h_%b > {}".format(os.path.join(self.walletnotify_dir, notify_outputname('%w', '%s'))),
+            f"-walletnotify=echo %h_%b > {os.path.join(self.walletnotify_dir, notify_outputname('%w', '%s'))}",
         ]]
         self.wallet_names = [self.default_wallet_name, self.wallet]
         super().setup_network()
@@ -54,12 +54,12 @@ class NotificationsTest(BitcoinTestFramework):
             seed = "cTdGmKFWpbvpKQ7ejrdzqYT2hhjyb3GPHnLAK7wdi5Em67YLwSm9"
             xpriv = "tprv8ZgxMBicQKsPfHCsTwkiM1KT56RXbGGTqvc2hgqzycpwbHqqpcajQeMRZoBD35kW4RtyCemu6j34Ku5DEspmgjKdt2qe4SvRch5Kk8B8A2v"
             desc_imports = [{
-                "desc": descsum_create("wpkh(" + xpriv + "/0/*)"),
+                "desc": descsum_create(f"wpkh({xpriv}/0/*)"),
                 "timestamp": 0,
                 "active": True,
                 "keypool": True,
             },{
-                "desc": descsum_create("wpkh(" + xpriv + "/1/*)"),
+                "desc": descsum_create(f"wpkh({xpriv}/1/*)"),
                 "timestamp": 0,
                 "active": True,
                 "keypool": True,
@@ -76,7 +76,7 @@ class NotificationsTest(BitcoinTestFramework):
 
         self.log.info("test -blocknotify")
         block_count = 10
-        blocks = self.nodes[1].generatetoaddress(block_count, self.nodes[1].getnewaddress() if self.is_wallet_compiled() else ADDRESS_BCRT1_UNSPENDABLE)
+        blocks = self.generatetoaddress(self.nodes[1], block_count, self.nodes[1].getnewaddress() if self.is_wallet_compiled() else ADDRESS_BCRT1_UNSPENDABLE)
 
         # wait at most 10 seconds for expected number of files before reading the content
         self.wait_until(lambda: len(os.listdir(self.blocknotify_dir)) == block_count, timeout=10)
@@ -110,7 +110,7 @@ class NotificationsTest(BitcoinTestFramework):
             # triggered by node 1
             self.log.info("test -walletnotify with conflicting transactions")
             self.nodes[0].rescanblockchain()
-            self.nodes[0].generatetoaddress(100, ADDRESS_BCRT1_UNSPENDABLE)
+            self.generatetoaddress(self.nodes[0], 100, ADDRESS_BCRT1_UNSPENDABLE)
             self.sync_blocks()
 
             # Generate transaction on node 0, sync mempools, and check for
@@ -131,7 +131,7 @@ class NotificationsTest(BitcoinTestFramework):
 
             # Add bump1 transaction to new block, checking for a notification
             # and the correct number of confirmations.
-            blockhash1 = self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)[0]
+            blockhash1 = self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)[0]
             blockheight1 = self.nodes[0].getblockcount()
             self.sync_blocks()
             self.expect_wallet_notify([(bump1, blockheight1, blockhash1)])
@@ -148,7 +148,7 @@ class NotificationsTest(BitcoinTestFramework):
             # about newly confirmed bump2 and newly conflicted tx2.
             self.disconnect_nodes(0, 1)
             bump2 = self.nodes[0].bumpfee(tx2)["txid"]
-            blockhash2 = self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)[0]
+            blockhash2 = self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)[0]
             blockheight2 = self.nodes[0].getblockcount()
             assert_equal(self.nodes[0].gettransaction(bump2)["confirmations"], 1)
             assert_equal(tx2 in self.nodes[1].getrawmempool(), True)

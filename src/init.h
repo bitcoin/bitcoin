@@ -20,9 +20,6 @@ struct NodeContext;
 namespace interfaces {
 struct BlockAndHeaderTipInfo;
 }
-namespace boost {
-class thread_group;
-} // namespace boost
 
 /** Interrupt threads */
 void Interrupt(NodeContext& node);
@@ -69,7 +66,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info 
 /**
  * Register all arguments with the ArgsManager
  */
-void SetupServerArgs(NodeContext& node);
+void SetupServerArgs(ArgsManager& argsman);
 
 /** Returns licensing information (for -version) */
 std::string LicenseInfo();

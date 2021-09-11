@@ -15,6 +15,7 @@ variants.
 - `test_address()` is called to call getaddressinfo for an address on node1
   and test the values returned."""
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.script import (
     CScript,
     OP_NOP,
@@ -61,8 +62,8 @@ class ImportMultiTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Mining blocks...")
-        self.nodes[0].generate(1)
-        self.nodes[1].generate(1)
+        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[1], 1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
         self.nodes[1].syncwithvalidationinterfacequeue()  # Sync the timestamp to the wallet, so that importmulti works
 
@@ -255,9 +256,9 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # P2SH address
         multisig = get_multisig(self.nodes[0])
-        self.nodes[1].generate(100)
+        self.generate(self.nodes[1], COINBASE_MATURITY)
         self.nodes[1].sendtoaddress(multisig.p2sh_addr, 10.00)
-        self.nodes[1].generate(1)
+        self.generate(self.nodes[1], 1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
         self.nodes[1].syncwithvalidationinterfacequeue()
 
@@ -276,9 +277,9 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # P2SH + Redeem script
         multisig = get_multisig(self.nodes[0])
-        self.nodes[1].generate(100)
+        self.generate(self.nodes[1], COINBASE_MATURITY)
         self.nodes[1].sendtoaddress(multisig.p2sh_addr, 10.00)
-        self.nodes[1].generate(1)
+        self.generate(self.nodes[1], 1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
         self.nodes[1].syncwithvalidationinterfacequeue()
 
@@ -297,9 +298,9 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # P2SH + Redeem script + Private Keys + !Watchonly
         multisig = get_multisig(self.nodes[0])
-        self.nodes[1].generate(100)
+        self.generate(self.nodes[1], COINBASE_MATURITY)
         self.nodes[1].sendtoaddress(multisig.p2sh_addr, 10.00)
-        self.nodes[1].generate(1)
+        self.generate(self.nodes[1], 1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
         self.nodes[1].syncwithvalidationinterfacequeue()
 
@@ -323,9 +324,9 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # P2SH + Redeem script + Private Keys + Watchonly
         multisig = get_multisig(self.nodes[0])
-        self.nodes[1].generate(100)
+        self.generate(self.nodes[1], COINBASE_MATURITY)
         self.nodes[1].sendtoaddress(multisig.p2sh_addr, 10.00)
-        self.nodes[1].generate(1)
+        self.generate(self.nodes[1], 1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
         self.nodes[1].syncwithvalidationinterfacequeue()
 
@@ -744,6 +745,27 @@ class ImportMultiTest(BitcoinTestFramework):
         assert_equal(pub_import_info['pubkey'], pub)
         assert 'hdmasterfingerprint' not in pub_import_info
         assert 'hdkeypath' not in pub_import_info
+
+        # Bech32m addresses and descriptors cannot be imported
+        self.log.info("Bech32m addresses and descriptors cannot be imported")
+        self.test_importmulti(
+            {
+                "scriptPubKey": {"address": "bcrt1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqc8gma6"},
+                "timestamp": "now",
+            },
+            success=False,
+            error_code=-5,
+            error_message="Bech32m addresses cannot be imported into legacy wallets",
+        )
+        self.test_importmulti(
+            {
+                "desc": descsum_create("tr({})".format(pub)),
+                "timestamp": "now",
+            },
+            success=False,
+            error_code=-5,
+            error_message="Bech32m descriptors cannot be imported into legacy wallets",
+        )
 
         # Import some public keys to the keypool of a no privkey wallet
         self.log.info("Adding pubkey to keypool of disableprivkey wallet")

@@ -60,6 +60,9 @@ public:
         MINIMUM_COLUMN_WIDTH = 23
     };
 
+protected:
+    void changeEvent(QEvent* e) override;
+
 private:
     WalletModel *model{nullptr};
     TransactionFilterProxy *transactionProxyModel{nullptr};
@@ -84,6 +87,8 @@ private:
     QWidget *createDateRangeWidget();
 
     bool eventFilter(QObject *obj, QEvent *event) override;
+
+    const PlatformStyle* m_platform_style;
 
 private Q_SLOTS:
     void contextualMenu(const QPoint &);

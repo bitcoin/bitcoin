@@ -146,10 +146,11 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
       dnl https://bugreports.qt.io/browse/QTBUG-27097.
       AX_CHECK_LINK_FLAG([-lwtsapi32], [QT_LIBS="$QT_LIBS -lwtsapi32"], [AC_MSG_ERROR([could not link against -lwtsapi32])])
       _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWindowsIntegrationPlugin], [-lqwindows])
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWindowsVistaStylePlugin], [-lqwindowsvistastyle])
       AC_DEFINE(QT_QPA_PLATFORM_WINDOWS, 1, [Define this symbol if the qt platform is windows])
     elif test "x$TARGET_OS" = xlinux; then
       dnl workaround for https://bugreports.qt.io/browse/QTBUG-74874
-      AX_CHECK_LINK_FLAG([-lxcb-shm], [QT_LIBS="-lxcb-shm $QT_LIBS"], [AC_MSG_ERROR([could not link against -lxcb-shm])])
+      AX_CHECK_LINK_FLAG([-lxcb-shm], [QT_LIBS="$QT_LIBS -lxcb-shm"], [AC_MSG_ERROR([could not link against -lxcb-shm])])
       _BITCOIN_QT_CHECK_STATIC_PLUGIN([QXcbIntegrationPlugin], [-lqxcb])
       AC_DEFINE(QT_QPA_PLATFORM_XCB, 1, [Define this symbol if the qt platform is xcb])
     elif test "x$TARGET_OS" = xdarwin; then
@@ -349,7 +350,7 @@ AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_LIBS], [
   PKG_CHECK_MODULES([QT_FONTDATABASE], [${qt_lib_prefix}FontDatabaseSupport${qt_lib_suffix}], [QT_LIBS="$QT_FONTDATABASE_LIBS $QT_LIBS"])
   PKG_CHECK_MODULES([QT_THEME], [${qt_lib_prefix}ThemeSupport${qt_lib_suffix}], [QT_LIBS="$QT_THEME_LIBS $QT_LIBS"])
   if test "x$TARGET_OS" = xlinux; then
-    PKG_CHECK_MODULES([QT_INPUT], [${qt_lib_prefix}XcbQpa], [QT_LIBS="$QT_INPUT_LIBS $QT_LIBS"])
+    PKG_CHECK_MODULES([QT_INPUT], [${qt_lib_prefix}InputSupport], [QT_LIBS="$QT_INPUT_LIBS $QT_LIBS"])
     PKG_CHECK_MODULES([QT_SERVICE], [${qt_lib_prefix}ServiceSupport], [QT_LIBS="$QT_SERVICE_LIBS $QT_LIBS"])
     PKG_CHECK_MODULES([QT_XCBQPA], [${qt_lib_prefix}XcbQpa], [QT_LIBS="$QT_XCBQPA_LIBS $QT_LIBS"])
   elif test "x$TARGET_OS" = xdarwin; then

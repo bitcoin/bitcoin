@@ -8,6 +8,7 @@
 #include <outputtype.h>
 #include <script/standard.h>
 #ifdef ENABLE_WALLET
+#include <util/translation.h>
 #include <wallet/wallet.h>
 #endif
 
@@ -18,7 +19,7 @@ std::string getnewaddress(CWallet& w)
 {
     constexpr auto output_type = OutputType::BECH32;
     CTxDestination dest;
-    std::string error;
+    bilingual_str error;
     if (!w.GetNewDestination(output_type, "", dest, error)) assert(false);
 
     return EncodeDestination(dest);

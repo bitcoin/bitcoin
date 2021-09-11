@@ -5,13 +5,38 @@
 
 #include <addrman.h>
 
+#include <clientversion.h>
 #include <hash.h>
 #include <logging.h>
 #include <netaddress.h>
 #include <serialize.h>
+#include <streams.h>
 
 #include <cmath>
 #include <optional>
+#include <unordered_map>
+#include <unordered_set>
+
+/** Over how many buckets entries with tried addresses from a single group (/16 for IPv4) are spread */
+static constexpr uint32_t ADDRMAN_TRIED_BUCKETS_PER_GROUP{8};
+/** Over how many buckets entries with new addresses originating from a single group are spread */
+static constexpr uint32_t ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP{64};
+/** Maximum number of times an address can be added to the new table */
+static constexpr int32_t ADDRMAN_NEW_BUCKETS_PER_ADDRESS{8};
+/** How old addresses can maximally be */
+static constexpr int64_t ADDRMAN_HORIZON_DAYS{30};
+/** After how many failed attempts we give up on a new node */
+static constexpr int32_t ADDRMAN_RETRIES{3};
+/** How many successive failures are allowed ... */
+static constexpr int32_t ADDRMAN_MAX_FAILURES{10};
+/** ... in at least this many days */
+static constexpr int64_t ADDRMAN_MIN_FAIL_DAYS{7};
+/** How recent a successful connection should be before we allow an address to be evicted from tried */
+static constexpr int64_t ADDRMAN_REPLACEMENT_HOURS{4};
+/** The maximum number of tried addr collisions to store */
+static constexpr size_t ADDRMAN_SET_TRIED_COLLISION_SIZE{10};
+/** The maximum time we'll spend trying to resolve a tried table collision, in seconds */
+static constexpr int64_t ADDRMAN_TEST_WINDOW{40*60}; // 40 minutes
 
 int CAddrInfo::GetTriedBucket(const uint256& nKey, const std::vector<bool> &asmap) const
 {
@@ -36,7 +61,7 @@ int CAddrInfo::GetNewBucket(const uint256& nKey, const CNetAddr& src, const std:
 
 int CAddrInfo::GetBucketPosition(const uint256 &nKey, bool fNew, int nBucket) const
 {
-    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << (fNew ? 'N' : 'K') << nBucket << GetKey()).GetCheapHash();
+    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << (fNew ? uint8_t{'N'} : uint8_t{'K'}) << nBucket << GetKey()).GetCheapHash();
     return hash1 % ADDRMAN_BUCKET_SIZE;
 }
 
@@ -75,14 +100,313 @@ double CAddrInfo::GetChance(int64_t nNow) const
     return fChance;
 }
 
+CAddrMan::CAddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio)
+    : insecure_rand{deterministic}
+    , nKey{deterministic ? uint256{1} : insecure_rand.rand256()}
+    , m_consistency_check_ratio{consistency_check_ratio}
+    , m_asmap{std::move(asmap)}
+{
+    for (auto& bucket : vvNew) {
+        for (auto& entry : bucket) {
+            entry = -1;
+        }
+    }
+    for (auto& bucket : vvTried) {
+        for (auto& entry : bucket) {
+            entry = -1;
+        }
+    }
+}
+
+template <typename Stream>
+void CAddrMan::Serialize(Stream& s_) const
+{
+    LOCK(cs);
+
+    /**
+     * Serialized format.
+     * * format version byte (@see `Format`)
+     * * lowest compatible format version byte. This is used to help old software decide
+     *   whether to parse the file. For example:
+     *   * Bitcoin Core version N knows how to parse up to format=3. If a new format=4 is
+     *     introduced in version N+1 that is compatible with format=3 and it is known that
+     *     version N will be able to parse it, then version N+1 will write
+     *     (format=4, lowest_compatible=3) in the first two bytes of the file, and so
+     *     version N will still try to parse it.
+     *   * Bitcoin Core version N+2 introduces a new incompatible format=5. It will write
+     *     (format=5, lowest_compatible=5) and so any versions that do not know how to parse
+     *     format=5 will not try to read the file.
+     * * nKey
+     * * nNew
+     * * nTried
+     * * number of "new" buckets XOR 2**30
+     * * all new addresses (total count: nNew)
+     * * all tried addresses (total count: nTried)
+     * * for each new bucket:
+     *   * number of elements
+     *   * for each element: index in the serialized "all new addresses"
+     * * asmap checksum
+     *
+     * 2**30 is xorred with the number of buckets to make addrman deserializer v0 detect it
+     * as incompatible. This is necessary because it did not check the version number on
+     * deserialization.
+     *
+     * vvNew, vvTried, mapInfo, mapAddr and vRandom are never encoded explicitly;
+     * they are instead reconstructed from the other information.
+     *
+     * This format is more complex, but significantly smaller (at most 1.5 MiB), and supports
+     * changes to the ADDRMAN_ parameters without breaking the on-disk structure.
+     *
+     * We don't use SERIALIZE_METHODS since the serialization and deserialization code has
+     * very little in common.
+     */
+
+    // Always serialize in the latest version (FILE_FORMAT).
+
+    OverrideStream<Stream> s(&s_, s_.GetType(), s_.GetVersion() | ADDRV2_FORMAT);
+
+    s << static_cast<uint8_t>(FILE_FORMAT);
+
+    // Increment `lowest_compatible` iff a newly introduced format is incompatible with
+    // the previous one.
+    static constexpr uint8_t lowest_compatible = Format::V3_BIP155;
+    s << static_cast<uint8_t>(INCOMPATIBILITY_BASE + lowest_compatible);
+
+    s << nKey;
+    s << nNew;
+    s << nTried;
+
+    int nUBuckets = ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30);
+    s << nUBuckets;
+    std::unordered_map<int, int> mapUnkIds;
+    int nIds = 0;
+    for (const auto& entry : mapInfo) {
+        mapUnkIds[entry.first] = nIds;
+        const CAddrInfo &info = entry.second;
+        if (info.nRefCount) {
+            assert(nIds != nNew); // this means nNew was wrong, oh ow
+            s << info;
+            nIds++;
+        }
+    }
+    nIds = 0;
+    for (const auto& entry : mapInfo) {
+        const CAddrInfo &info = entry.second;
+        if (info.fInTried) {
+            assert(nIds != nTried); // this means nTried was wrong, oh ow
+            s << info;
+            nIds++;
+        }
+    }
+    for (int bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
+        int nSize = 0;
+        for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
+            if (vvNew[bucket][i] != -1)
+                nSize++;
+        }
+        s << nSize;
+        for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
+            if (vvNew[bucket][i] != -1) {
+                int nIndex = mapUnkIds[vvNew[bucket][i]];
+                s << nIndex;
+            }
+        }
+    }
+    // Store asmap checksum after bucket entries so that it
+    // can be ignored by older clients for backward compatibility.
+    uint256 asmap_checksum;
+    if (m_asmap.size() != 0) {
+        asmap_checksum = SerializeHash(m_asmap);
+    }
+    s << asmap_checksum;
+}
+
+template <typename Stream>
+void CAddrMan::Unserialize(Stream& s_)
+{
+    LOCK(cs);
+
+    assert(vRandom.empty());
+
+    Format format;
+    s_ >> Using<CustomUintFormatter<1>>(format);
+
+    int stream_version = s_.GetVersion();
+    if (format >= Format::V3_BIP155) {
+        // Add ADDRV2_FORMAT to the version so that the CNetAddr and CAddress
+        // unserialize methods know that an address in addrv2 format is coming.
+        stream_version |= ADDRV2_FORMAT;
+    }
+
+    OverrideStream<Stream> s(&s_, s_.GetType(), stream_version);
+
+    uint8_t compat;
+    s >> compat;
+    const uint8_t lowest_compatible = compat - INCOMPATIBILITY_BASE;
+    if (lowest_compatible > FILE_FORMAT) {
+        throw std::ios_base::failure(strprintf(
+            "Unsupported format of addrman database: %u. It is compatible with formats >=%u, "
+            "but the maximum supported by this version of %s is %u.",
+            uint8_t{format}, uint8_t{lowest_compatible}, PACKAGE_NAME, uint8_t{FILE_FORMAT}));
+    }
+
+    s >> nKey;
+    s >> nNew;
+    s >> nTried;
+    int nUBuckets = 0;
+    s >> nUBuckets;
+    if (format >= Format::V1_DETERMINISTIC) {
+        nUBuckets ^= (1 << 30);
+    }
+
+    if (nNew > ADDRMAN_NEW_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE || nNew < 0) {
+        throw std::ios_base::failure(
+                strprintf("Corrupt CAddrMan serialization: nNew=%d, should be in [0, %d]",
+                    nNew,
+                    ADDRMAN_NEW_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE));
+    }
+
+    if (nTried > ADDRMAN_TRIED_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE || nTried < 0) {
+        throw std::ios_base::failure(
+                strprintf("Corrupt CAddrMan serialization: nTried=%d, should be in [0, %d]",
+                    nTried,
+                    ADDRMAN_TRIED_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE));
+    }
+
+    // Deserialize entries from the new table.
+    for (int n = 0; n < nNew; n++) {
+        CAddrInfo &info = mapInfo[n];
+        s >> info;
+        mapAddr[info] = n;
+        info.nRandomPos = vRandom.size();
+        vRandom.push_back(n);
+    }
+    nIdCount = nNew;
+
+    // Deserialize entries from the tried table.
+    int nLost = 0;
+    for (int n = 0; n < nTried; n++) {
+        CAddrInfo info;
+        s >> info;
+        int nKBucket = info.GetTriedBucket(nKey, m_asmap);
+        int nKBucketPos = info.GetBucketPosition(nKey, false, nKBucket);
+        if (info.IsValid()
+                && vvTried[nKBucket][nKBucketPos] == -1) {
+            info.nRandomPos = vRandom.size();
+            info.fInTried = true;
+            vRandom.push_back(nIdCount);
+            mapInfo[nIdCount] = info;
+            mapAddr[info] = nIdCount;
+            vvTried[nKBucket][nKBucketPos] = nIdCount;
+            nIdCount++;
+        } else {
+            nLost++;
+        }
+    }
+    nTried -= nLost;
+
+    // Store positions in the new table buckets to apply later (if possible).
+    // An entry may appear in up to ADDRMAN_NEW_BUCKETS_PER_ADDRESS buckets,
+    // so we store all bucket-entry_index pairs to iterate through later.
+    std::vector<std::pair<int, int>> bucket_entries;
+
+    for (int bucket = 0; bucket < nUBuckets; ++bucket) {
+        int num_entries{0};
+        s >> num_entries;
+        for (int n = 0; n < num_entries; ++n) {
+            int entry_index{0};
+            s >> entry_index;
+            if (entry_index >= 0 && entry_index < nNew) {
+                bucket_entries.emplace_back(bucket, entry_index);
+            }
+        }
+    }
+
+    // If the bucket count and asmap checksum haven't changed, then attempt
+    // to restore the entries to the buckets/positions they were in before
+    // serialization.
+    uint256 supplied_asmap_checksum;
+    if (m_asmap.size() != 0) {
+        supplied_asmap_checksum = SerializeHash(m_asmap);
+    }
+    uint256 serialized_asmap_checksum;
+    if (format >= Format::V2_ASMAP) {
+        s >> serialized_asmap_checksum;
+    }
+    const bool restore_bucketing{nUBuckets == ADDRMAN_NEW_BUCKET_COUNT &&
+        serialized_asmap_checksum == supplied_asmap_checksum};
+
+    if (!restore_bucketing) {
+        LogPrint(BCLog::ADDRMAN, "Bucketing method was updated, re-bucketing addrman entries from disk\n");
+    }
+
+    for (auto bucket_entry : bucket_entries) {
+        int bucket{bucket_entry.first};
+        const int entry_index{bucket_entry.second};
+        CAddrInfo& info = mapInfo[entry_index];
+
+        // Don't store the entry in the new bucket if it's not a valid address for our addrman
+        if (!info.IsValid()) continue;
+
+        // The entry shouldn't appear in more than
+        // ADDRMAN_NEW_BUCKETS_PER_ADDRESS. If it has already, just skip
+        // this bucket_entry.
+        if (info.nRefCount >= ADDRMAN_NEW_BUCKETS_PER_ADDRESS) continue;
+
+        int bucket_position = info.GetBucketPosition(nKey, true, bucket);
+        if (restore_bucketing && vvNew[bucket][bucket_position] == -1) {
+            // Bucketing has not changed, using existing bucket positions for the new table
+            vvNew[bucket][bucket_position] = entry_index;
+            ++info.nRefCount;
+        } else {
+            // In case the new table data cannot be used (bucket count wrong or new asmap),
+            // try to give them a reference based on their primary source address.
+            bucket = info.GetNewBucket(nKey, m_asmap);
+            bucket_position = info.GetBucketPosition(nKey, true, bucket);
+            if (vvNew[bucket][bucket_position] == -1) {
+                vvNew[bucket][bucket_position] = entry_index;
+                ++info.nRefCount;
+            }
+        }
+    }
+
+    // Prune new entries with refcount 0 (as a result of collisions or invalid address).
+    int nLostUnk = 0;
+    for (auto it = mapInfo.cbegin(); it != mapInfo.cend(); ) {
+        if (it->second.fInTried == false && it->second.nRefCount == 0) {
+            const auto itCopy = it++;
+            Delete(itCopy->first);
+            ++nLostUnk;
+        } else {
+            ++it;
+        }
+    }
+    if (nLost + nLostUnk > 0) {
+        LogPrint(BCLog::ADDRMAN, "addrman lost %i new and %i tried addresses due to collisions or invalid addresses\n", nLostUnk, nLost);
+    }
+
+    Check();
+}
+
+// explicit instantiation
+template void CAddrMan::Serialize(CHashWriter& s) const;
+template void CAddrMan::Serialize(CAutoFile& s) const;
+template void CAddrMan::Serialize(CDataStream& s) const;
+template void CAddrMan::Unserialize(CAutoFile& s);
+template void CAddrMan::Unserialize(CHashVerifier<CAutoFile>& s);
+template void CAddrMan::Unserialize(CDataStream& s);
+template void CAddrMan::Unserialize(CHashVerifier<CDataStream>& s);
+
 CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId)
 {
-    std::map<CNetAddr, int>::iterator it = mapAddr.find(addr);
+    AssertLockHeld(cs);
+
+    const auto it = mapAddr.find(addr);
     if (it == mapAddr.end())
         return nullptr;
     if (pnId)
         *pnId = (*it).second;
-    std::map<int, CAddrInfo>::iterator it2 = mapInfo.find((*it).second);
+    const auto it2 = mapInfo.find((*it).second);
     if (it2 != mapInfo.end())
         return &(*it2).second;
     return nullptr;
@@ -90,6 +414,8 @@ CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId)
 
 CAddrInfo* CAddrMan::Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId)
 {
+    AssertLockHeld(cs);
+
     int nId = nIdCount++;
     mapInfo[nId] = CAddrInfo(addr, addrSource);
     mapAddr[addr] = nId;
@@ -100,8 +426,10 @@ CAddrInfo* CAddrMan::Create(const CAddress& addr, const CNetAddr& addrSource, in
     return &mapInfo[nId];
 }
 
-void CAddrMan::SwapRandom(unsigned int nRndPos1, unsigned int nRndPos2)
+void CAddrMan::SwapRandom(unsigned int nRndPos1, unsigned int nRndPos2) const
 {
+    AssertLockHeld(cs);
+
     if (nRndPos1 == nRndPos2)
         return;
 
@@ -110,11 +438,13 @@ void CAddrMan::SwapRandom(unsigned int nRndPos1, unsigned int nRndPos2)
     int nId1 = vRandom[nRndPos1];
     int nId2 = vRandom[nRndPos2];
 
-    assert(mapInfo.count(nId1) == 1);
-    assert(mapInfo.count(nId2) == 1);
+    const auto it_1{mapInfo.find(nId1)};
+    const auto it_2{mapInfo.find(nId2)};
+    assert(it_1 != mapInfo.end());
+    assert(it_2 != mapInfo.end());
 
-    mapInfo[nId1].nRandomPos = nRndPos2;
-    mapInfo[nId2].nRandomPos = nRndPos1;
+    it_1->second.nRandomPos = nRndPos2;
+    it_2->second.nRandomPos = nRndPos1;
 
     vRandom[nRndPos1] = nId2;
     vRandom[nRndPos2] = nId1;
@@ -122,6 +452,8 @@ void CAddrMan::SwapRandom(unsigned int nRndPos1, unsigned int nRndPos2)
 
 void CAddrMan::Delete(int nId)
 {
+    AssertLockHeld(cs);
+
     assert(mapInfo.count(nId) != 0);
     CAddrInfo& info = mapInfo[nId];
     assert(!info.fInTried);
@@ -136,6 +468,8 @@ void CAddrMan::Delete(int nId)
 
 void CAddrMan::ClearNew(int nUBucket, int nUBucketPos)
 {
+    AssertLockHeld(cs);
+
     // if there is an entry in the specified bucket, delete it.
     if (vvNew[nUBucket][nUBucketPos] != -1) {
         int nIdDelete = vvNew[nUBucket][nUBucketPos];
@@ -151,6 +485,8 @@ void CAddrMan::ClearNew(int nUBucket, int nUBucketPos)
 
 void CAddrMan::MakeTried(CAddrInfo& info, int nId)
 {
+    AssertLockHeld(cs);
+
     // remove the entry from all new buckets
     for (int bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
         int pos = info.GetBucketPosition(nKey, true, bucket);
@@ -199,6 +535,8 @@ void CAddrMan::MakeTried(CAddrInfo& info, int nId)
 
 void CAddrMan::Good_(const CService& addr, bool test_before_evict, int64_t nTime)
 {
+    AssertLockHeld(cs);
+
     int nId;
 
     nLastGood = nTime;
@@ -265,6 +603,8 @@ void CAddrMan::Good_(const CService& addr, bool test_before_evict, int64_t nTime
 
 bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty)
 {
+    AssertLockHeld(cs);
+
     if (!addr.IsRoutable())
         return false;
 
@@ -338,6 +678,8 @@ bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimeP
 
 void CAddrMan::Attempt_(const CService& addr, bool fCountFailure, int64_t nTime)
 {
+    AssertLockHeld(cs);
+
     CAddrInfo* pinfo = Find(addr);
 
     // if not found, bail out
@@ -358,9 +700,11 @@ void CAddrMan::Attempt_(const CService& addr, bool fCountFailure, int64_t nTime)
     }
 }
 
-CAddrInfo CAddrMan::Select_(bool newOnly)
+CAddrInfo CAddrMan::Select_(bool newOnly) const
 {
-    if (size() == 0)
+    AssertLockHeld(cs);
+
+    if (vRandom.empty())
         return CAddrInfo();
 
     if (newOnly && nNew == 0)
@@ -379,8 +723,9 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
                 nKBucketPos = (nKBucketPos + insecure_rand.randbits(ADDRMAN_BUCKET_SIZE_LOG2)) % ADDRMAN_BUCKET_SIZE;
             }
             int nId = vvTried[nKBucket][nKBucketPos];
-            assert(mapInfo.count(nId) == 1);
-            CAddrInfo& info = mapInfo[nId];
+            const auto it_found{mapInfo.find(nId)};
+            assert(it_found != mapInfo.end());
+            const CAddrInfo& info{it_found->second};
             if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30))
                 return info;
             fChanceFactor *= 1.2;
@@ -396,8 +741,9 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
                 nUBucketPos = (nUBucketPos + insecure_rand.randbits(ADDRMAN_BUCKET_SIZE_LOG2)) % ADDRMAN_BUCKET_SIZE;
             }
             int nId = vvNew[nUBucket][nUBucketPos];
-            assert(mapInfo.count(nId) == 1);
-            CAddrInfo& info = mapInfo[nId];
+            const auto it_found{mapInfo.find(nId)};
+            assert(it_found != mapInfo.end());
+            const CAddrInfo& info{it_found->second};
             if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30))
                 return info;
             fChanceFactor *= 1.2;
@@ -405,11 +751,18 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
     }
 }
 
-#ifdef DEBUG_ADDRMAN
-int CAddrMan::Check_()
+int CAddrMan::Check_() const
 {
-    std::set<int> setTried;
-    std::map<int, int> mapNew;
+    AssertLockHeld(cs);
+
+    // Run consistency checks 1 in m_consistency_check_ratio times if enabled
+    if (m_consistency_check_ratio == 0) return 0;
+    if (insecure_rand.randrange(m_consistency_check_ratio) >= 1) return 0;
+
+    LogPrint(BCLog::ADDRMAN, "Addrman checks started: new %i, tried %i, total %u\n", nNew, nTried, vRandom.size());
+
+    std::unordered_set<int> setTried;
+    std::unordered_map<int, int> mapNew;
 
     if (vRandom.size() != (size_t)(nTried + nNew))
         return -7;
@@ -430,8 +783,10 @@ int CAddrMan::Check_()
                 return -4;
             mapNew[n] = info.nRefCount;
         }
-        if (mapAddr[info] != n)
+        const auto it{mapAddr.find(info)};
+        if (it == mapAddr.end() || it->second != n) {
             return -5;
+        }
         if (info.nRandomPos < 0 || (size_t)info.nRandomPos >= vRandom.size() || vRandom[info.nRandomPos] != n)
             return -14;
         if (info.nLastTry < 0)
@@ -447,15 +802,18 @@ int CAddrMan::Check_()
 
     for (int n = 0; n < ADDRMAN_TRIED_BUCKET_COUNT; n++) {
         for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
-             if (vvTried[n][i] != -1) {
-                 if (!setTried.count(vvTried[n][i]))
-                     return -11;
-                 if (mapInfo[vvTried[n][i]].GetTriedBucket(nKey, m_asmap) != n)
-                     return -17;
-                 if (mapInfo[vvTried[n][i]].GetBucketPosition(nKey, false, n) != i)
-                     return -18;
-                 setTried.erase(vvTried[n][i]);
-             }
+            if (vvTried[n][i] != -1) {
+                if (!setTried.count(vvTried[n][i]))
+                    return -11;
+                const auto it{mapInfo.find(vvTried[n][i])};
+                if (it == mapInfo.end() || it->second.GetTriedBucket(nKey, m_asmap) != n) {
+                    return -17;
+                }
+                if (it->second.GetBucketPosition(nKey, false, n) != i) {
+                    return -18;
+                }
+                setTried.erase(vvTried[n][i]);
+            }
         }
     }
 
@@ -464,8 +822,10 @@ int CAddrMan::Check_()
             if (vvNew[n][i] != -1) {
                 if (!mapNew.count(vvNew[n][i]))
                     return -12;
-                if (mapInfo[vvNew[n][i]].GetBucketPosition(nKey, true, n) != i)
+                const auto it{mapInfo.find(vvNew[n][i])};
+                if (it == mapInfo.end() || it->second.GetBucketPosition(nKey, true, n) != i) {
                     return -19;
+                }
                 if (--mapNew[vvNew[n][i]] == 0)
                     mapNew.erase(vvNew[n][i]);
             }
@@ -479,12 +839,14 @@ int CAddrMan::Check_()
     if (nKey.IsNull())
         return -16;
 
+    LogPrint(BCLog::ADDRMAN, "Addrman checks completed successfully\n");
     return 0;
 }
-#endif
 
-void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size_t max_pct, std::optional<Network> network)
+void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size_t max_pct, std::optional<Network> network) const
 {
+    AssertLockHeld(cs);
+
     size_t nNodes = vRandom.size();
     if (max_pct != 0) {
         nNodes = max_pct * nNodes / 100;
@@ -501,9 +863,10 @@ void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size
 
         int nRndPos = insecure_rand.randrange(vRandom.size() - n) + n;
         SwapRandom(n, nRndPos);
-        assert(mapInfo.count(vRandom[n]) == 1);
+        const auto it{mapInfo.find(vRandom[n])};
+        assert(it != mapInfo.end());
 
-        const CAddrInfo& ai = mapInfo[vRandom[n]];
+        const CAddrInfo& ai{it->second};
 
         // Filter by network (optional)
         if (network != std::nullopt && ai.GetNetClass() != network) continue;
@@ -517,6 +880,8 @@ void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size
 
 void CAddrMan::Connected_(const CService& addr, int64_t nTime)
 {
+    AssertLockHeld(cs);
+
     CAddrInfo* pinfo = Find(addr);
 
     // if not found, bail out
@@ -537,6 +902,8 @@ void CAddrMan::Connected_(const CService& addr, int64_t nTime)
 
 void CAddrMan::SetServices_(const CService& addr, ServiceFlags nServices)
 {
+    AssertLockHeld(cs);
+
     CAddrInfo* pinfo = Find(addr);
 
     // if not found, bail out
@@ -555,6 +922,8 @@ void CAddrMan::SetServices_(const CService& addr, ServiceFlags nServices)
 
 void CAddrMan::ResolveCollisions_()
 {
+    AssertLockHeld(cs);
+
     for (std::set<int>::iterator it = m_tried_collisions.begin(); it != m_tried_collisions.end();) {
         int id_new = *it;
 
@@ -614,6 +983,8 @@ void CAddrMan::ResolveCollisions_()
 
 CAddrInfo CAddrMan::SelectTriedCollision_()
 {
+    AssertLockHeld(cs);
+
     if (m_tried_collisions.size() == 0) return CAddrInfo();
 
     std::set<int>::iterator it = m_tried_collisions.begin();
@@ -637,31 +1008,4 @@ CAddrInfo CAddrMan::SelectTriedCollision_()
     int id_old = vvTried[tried_bucket][tried_bucket_pos];
 
     return mapInfo[id_old];
-}
-
-std::vector<bool> CAddrMan::DecodeAsmap(fs::path path)
-{
-    std::vector<bool> bits;
-    FILE *filestr = fsbridge::fopen(path, "rb");
-    CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
-    if (file.IsNull()) {
-        LogPrintf("Failed to open asmap file from disk\n");
-        return bits;
-    }
-    fseek(filestr, 0, SEEK_END);
-    int length = ftell(filestr);
-    LogPrintf("Opened asmap file %s (%d bytes) from disk\n", path, length);
-    fseek(filestr, 0, SEEK_SET);
-    char cur_byte;
-    for (int i = 0; i < length; ++i) {
-        file >> cur_byte;
-        for (int bit = 0; bit < 8; ++bit) {
-            bits.push_back((cur_byte >> bit) & 1);
-        }
-    }
-    if (!SanityCheckASMap(bits)) {
-        LogPrintf("Sanity check of asmap file %s failed\n", path);
-        return {};
-    }
-    return bits;
 }

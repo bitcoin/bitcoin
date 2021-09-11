@@ -6,6 +6,11 @@
 #include <util/system.h>
 
 #ifdef ENABLE_EXTERNAL_SIGNER
+#if defined(WIN32) && !defined(__kernel_entry)
+// A workaround for boost 1.71 incompatibility with mingw-w64 compiler.
+// For details see https://github.com/bitcoin/bitcoin/pull/22348.
+#define __kernel_entry
+#endif
 #include <boost/process.hpp>
 #endif // ENABLE_EXTERNAL_SIGNER
 
@@ -365,11 +370,14 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         m_settings.command_line_options[key].push_back(value);
     }
 
-    // we do not allow -includeconf from command line
+    // we do not allow -includeconf from command line, only -noincludeconf
     if (auto* includes = util::FindKey(m_settings.command_line_options, "includeconf")) {
-        const auto& include{*util::SettingsSpan(*includes).begin()}; // pick first value as example
-        error = "-includeconf cannot be used from commandline; -includeconf=" + include.write();
-        return false;
+        const util::SettingsSpan values{*includes};
+        // Range may be empty if -noincludeconf was passed
+        if (!values.empty()) {
+            error = "-includeconf cannot be used from commandline; -includeconf=" + values.begin()->write();
+            return false; // pick first value as example
+        }
     }
     return true;
 }
@@ -494,11 +502,11 @@ bool ArgsManager::InitSettings(std::string& error)
 
     std::vector<std::string> errors;
     if (!ReadSettingsFile(&errors)) {
-        error = strprintf("Failed loading settings file:\n- %s\n", Join(errors, "\n- "));
+        error = strprintf("Failed loading settings file:\n%s\n", MakeUnorderedList(errors));
         return false;
     }
     if (!WriteSettingsFile(&errors)) {
-        error = strprintf("Failed saving settings file:\n- %s\n", Join(errors, "\n- "));
+        error = strprintf("Failed saving settings file:\n%s\n", MakeUnorderedList(errors));
         return false;
     }
     return true;
@@ -617,14 +625,14 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     m_settings.forced_settings[SettingName(strArg)] = strValue;
 }
 
-void ArgsManager::AddCommand(const std::string& cmd, const std::string& help, const OptionsCategory& cat)
+void ArgsManager::AddCommand(const std::string& cmd, const std::string& help)
 {
     Assert(cmd.find('=') == std::string::npos);
     Assert(cmd.at(0) != '-');
 
     LOCK(cs_args);
     m_accept_any_command = false; // latch to false
-    std::map<std::string, Arg>& arg_map = m_available_args[cat];
+    std::map<std::string, Arg>& arg_map = m_available_args[OptionsCategory::COMMANDS];
     auto ret = arg_map.emplace(cmd, Arg{"", help, ArgsManager::COMMAND});
     Assert(ret.second); // Fail on duplicate commands
 }
@@ -896,6 +904,11 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     const std::string confPath = GetArg("-conf", BITCOIN_CONF_FILENAME);
     fsbridge::ifstream stream(GetConfigFile(confPath));
 
+    // not ok to have a config file specified that cannot be opened
+    if (IsArgSet("-conf") && !stream.good()) {
+        error = strprintf("specified config file \"%s\" could not be opened.", confPath);
+        return false;
+    }
     // ok to not have a config file
     if (stream.good()) {
         if (!ReadConfigStream(stream, confPath, error, ignore_invalid_keys)) {
@@ -1240,9 +1253,9 @@ void runCommand(const std::string& strCommand)
 }
 #endif
 
-#ifdef ENABLE_EXTERNAL_SIGNER
 UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in)
 {
+#ifdef ENABLE_EXTERNAL_SIGNER
     namespace bp = boost::process;
 
     UniValue result_json;
@@ -1274,8 +1287,10 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
     if (!result_json.read(result)) throw std::runtime_error("Unable to parse JSON: " + result);
 
     return result_json;
-}
+#else
+    throw std::runtime_error("Compiled without external signing support (required for external signing).");
 #endif // ENABLE_EXTERNAL_SIGNER
+}
 
 void SetupEnvironment()
 {
@@ -1291,7 +1306,7 @@ void SetupEnvironment()
 #endif
     // On most POSIX systems (e.g. Linux, but not BSD) the environment's locale
     // may be invalid, in which case the "C.UTF-8" locale is used as fallback.
-#if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
+#if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__NetBSD__)
     try {
         std::locale(""); // Raises a runtime error if current locale is invalid
     } catch (const std::runtime_error&) {

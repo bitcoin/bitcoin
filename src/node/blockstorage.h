@@ -5,11 +5,12 @@
 #ifndef BITCOIN_NODE_BLOCKSTORAGE_H
 #define BITCOIN_NODE_BLOCKSTORAGE_H
 
-#include <cstdint>
-#include <vector>
-
 #include <fs.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
+
+#include <atomic>
+#include <cstdint>
+#include <vector>
 
 class ArgsManager;
 class BlockValidationState;

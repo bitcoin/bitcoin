@@ -16,6 +16,10 @@ define $(package)_set_vars
   $(package)_cppflags_mingw32=-D_WIN32_WINNT=0x0601
 endef
 
+define $(package)_preprocess_cmds
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub build-aux
+endef
+
 define $(package)_config_cmds
   $($(package)_autoconf)
 endef

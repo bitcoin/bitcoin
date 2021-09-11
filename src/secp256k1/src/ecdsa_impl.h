@@ -1,8 +1,8 @@
-/**********************************************************************
- * Copyright (c) 2013-2015 Pieter Wuille                              *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2013-2015 Pieter Wuille                               *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 
 #ifndef SECP256K1_ECDSA_IMPL_H
@@ -140,7 +140,7 @@ static int secp256k1_der_parse_integer(secp256k1_scalar *r, const unsigned char 
         overflow = 1;
     }
     if (!overflow) {
-        memcpy(ra + 32 - rlen, *sig, rlen);
+        if (rlen) memcpy(ra + 32 - rlen, *sig, rlen);
         secp256k1_scalar_set_b32(r, ra, &overflow);
     }
     if (overflow) {

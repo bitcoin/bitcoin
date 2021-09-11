@@ -5,6 +5,8 @@
 # names can be used.
 # See https://github.com/google/sanitizers/issues/1364
 signed-integer-overflow:txmempool.cpp
+# nLastSuccess read from peers.dat might cause an overflow in IsTerrible
+signed-integer-overflow:addrman.cpp
 # https://github.com/bitcoin/bitcoin/pull/21798#issuecomment-829180719
 signed-integer-overflow:policy/feerate.cpp
 
@@ -89,6 +91,7 @@ implicit-signed-integer-truncation:leveldb/
 implicit-signed-integer-truncation:miner.cpp
 implicit-signed-integer-truncation:net.cpp
 implicit-signed-integer-truncation:net_processing.cpp
+implicit-signed-integer-truncation:netaddress.cpp
 implicit-signed-integer-truncation:streams.h
 implicit-signed-integer-truncation:test/arith_uint256_tests.cpp
 implicit-signed-integer-truncation:test/skiplist_tests.cpp
@@ -98,7 +101,6 @@ implicit-unsigned-integer-truncation:crypto/
 implicit-unsigned-integer-truncation:leveldb/
 # std::variant warning fixed in https://github.com/gcc-mirror/gcc/commit/074436cf8cdd2a9ce75cadd36deb8301f00e55b9
 implicit-unsigned-integer-truncation:std::__detail::__variant::_Variant_storage
-shift-base:nanobench.h
 shift-base:*/include/c++/
 shift-base:arith_uint256.cpp
 shift-base:crypto/

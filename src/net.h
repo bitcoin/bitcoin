@@ -6,7 +6,6 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
-#include <addrdb.h>
 #include <addrman.h>
 #include <amount.h>
 #include <bloom.h>
@@ -79,9 +78,9 @@ static const int64_t DEFAULT_PEER_CONNECT_TIMEOUT = 60;
 /** Number of file descriptors required for message capture **/
 static const int NUM_FDS_MESSAGE_CAPTURE = 1;
 
-static const bool DEFAULT_FORCEDNSSEED = false;
-static const bool DEFAULT_DNSSEED = true;
-static const bool DEFAULT_FIXEDSEEDS = true;
+static constexpr bool DEFAULT_FORCEDNSSEED{false};
+static constexpr bool DEFAULT_DNSSEED{true};
+static constexpr bool DEFAULT_FIXEDSEEDS{true};
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
@@ -248,7 +247,7 @@ public:
     int64_t nLastBlockTime;
     int64_t nTimeConnected;
     int64_t nTimeOffset;
-    std::string addrName;
+    std::string m_addr_name;
     int nVersion;
     std::string cleanSubVer;
     bool fInbound;
@@ -430,6 +429,7 @@ public:
     const CAddress addr;
     // Bind address of our side of the connection
     const CAddress addrBind;
+    const std::string m_addr_name;
     //! Whether this peer is an inbound onion, i.e. connected via our Tor onion service.
     const bool m_inbound_onion;
     std::atomic<int> nVersion{0};
@@ -651,16 +651,12 @@ public:
 
     void CloseSocketDisconnect();
 
-    void copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap);
+    void CopyStats(CNodeStats& stats);
 
     ServiceFlags GetLocalServices() const
     {
         return nLocalServices;
     }
-
-    std::string GetAddrName() const;
-    //! Sets the addrName only if it was not previously set
-    void MaybeSetAddrName(const std::string& addrNameIn);
 
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 
@@ -693,10 +689,7 @@ private:
     //! service advertisements.
     const ServiceFlags nLocalServices;
 
-    std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
-
-    mutable RecursiveMutex cs_addrName;
-    std::string addrName GUARDED_BY(cs_addrName);
+    std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
 
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(cs_addrLocal);
@@ -768,10 +761,12 @@ public:
         std::vector<NetWhitebindPermissions> vWhiteBinds;
         std::vector<CService> vBinds;
         std::vector<CService> onion_binds;
+        /// True if the user did not specify -bind= or -whitebind= and thus
+        /// we should bind on `0.0.0.0` (IPv4) and `::` (IPv6).
+        bool bind_on_any;
         bool m_use_addrman_outgoing = true;
         std::vector<std::string> m_specified_outgoing;
         std::vector<std::string> m_added_nodes;
-        std::vector<bool> m_asmap;
         bool m_i2p_accept_incoming;
     };
 
@@ -784,7 +779,7 @@ public:
         nMaxAddnode = connOptions.nMaxAddnode;
         nMaxFeeler = connOptions.nMaxFeeler;
         m_max_outbound = m_max_outbound_full_relay + m_max_outbound_block_relay + nMaxFeeler;
-        clientInterface = connOptions.uiInterface;
+        m_client_interface = connOptions.uiInterface;
         m_banman = connOptions.m_banman;
         m_msgproc = connOptions.m_msgproc;
         nSendBufferMaxSize = connOptions.nSendBufferMaxSize;
@@ -890,6 +885,7 @@ public:
      *
      * @param[in]   address     Address of node to try connecting to
      * @param[in]   conn_type   ConnectionType::OUTBOUND or ConnectionType::BLOCK_RELAY
+     *                          or ConnectionType::ADDR_FETCH
      * @return      bool        Returns false if there are no available
      *                          slots for this connection:
      *                          - conn_type not a supported ConnectionType
@@ -945,8 +941,6 @@ public:
     */
     std::chrono::microseconds PoissonNextSendInbound(std::chrono::microseconds now, std::chrono::seconds average_interval);
 
-    void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
-
     /** Return true if we should disconnect the peer for failing an inactivity check. */
     bool ShouldRunInactivityChecks(const CNode& node, std::optional<int64_t> now=std::nullopt) const;
 
@@ -962,10 +956,7 @@ private:
 
     bool BindListenPort(const CService& bindAddr, bilingual_str& strError, NetPermissionFlags permissions);
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
-    bool InitBinds(
-        const std::vector<CService>& binds,
-        const std::vector<NetWhitebindPermissions>& whiteBinds,
-        const std::vector<CService>& onion_binds);
+    bool InitBinds(const Options& options);
 
     void ThreadOpenAddedConnections();
     void AddAddrFetch(const std::string& strDest);
@@ -1125,7 +1116,7 @@ private:
     int nMaxFeeler;
     int m_max_outbound;
     bool m_use_addrman_outgoing;
-    CClientUIInterface* clientInterface;
+    CClientUIInterface* m_client_interface;
     NetEventsInterface* m_msgproc;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
     BanMan* m_banman;
@@ -1209,7 +1200,7 @@ struct NodeEvictionCandidate
     uint64_t nKeyedNetGroup;
     bool prefer_evict;
     bool m_is_local;
-    bool m_is_onion;
+    Network m_network;
 };
 
 /**
@@ -1227,20 +1218,20 @@ struct NodeEvictionCandidate
  * longest, to replicate the non-eviction implicit behavior and preclude attacks
  * that start later.
  *
- * Half of these protected spots (1/4 of the total) are reserved for onion peers
- * connected via our tor control service, if any, sorted by longest uptime, even
- * if they're not longest uptime overall. Any remaining slots of the 1/4 are
- * then allocated to protect localhost peers, if any (or up to 2 localhost peers
- * if no slots remain and 2 or more onion peers were protected), sorted by
- * longest uptime, as manually configured hidden services not using
- * `-bind=addr[:port]=onion` will not be detected as inbound onion connections.
+ * Half of these protected spots (1/4 of the total) are reserved for the
+ * following categories of peers, sorted by longest uptime, even if they're not
+ * longest uptime overall:
  *
- * This helps protect onion peers, which tend to be otherwise disadvantaged
- * under our eviction criteria for their higher min ping times relative to IPv4
- * and IPv6 peers, and favorise the diversity of peer connections.
+ * - onion peers connected via our tor control service
  *
- * This function was extracted from SelectNodeToEvict() to be able to test the
- * ratio-based protection logic deterministically.
+ * - localhost peers, as manually configured hidden services not using
+ *   `-bind=addr[:port]=onion` will not be detected as inbound onion connections
+ *
+ * - I2P peers
+ *
+ * This helps protect these privacy network peers, which tend to be otherwise
+ * disadvantaged under our eviction criteria for their higher min ping times
+ * relative to IPv4/IPv6 peers, and favorise the diversity of peer connections.
  */
 void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvictionCandidates);
 

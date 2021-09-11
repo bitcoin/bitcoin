@@ -4,8 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test wallet group functionality."""
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import CTransaction, FromHex, ToHex
+from test_framework.messages import (
+    tx_from_hex,
+)
 from test_framework.util import (
     assert_approx,
     assert_equal,
@@ -31,7 +34,7 @@ class WalletGroupTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Setting up")
         # Mine some coins
-        self.nodes[0].generate(101)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
         # Get some addresses from the two nodes
         addr1 = [self.nodes[1].getnewaddress() for _ in range(3)]
@@ -42,7 +45,7 @@ class WalletGroupTest(BitcoinTestFramework):
         [self.nodes[0].sendtoaddress(addr, 1.0) for addr in addrs]
         [self.nodes[0].sendtoaddress(addr, 0.5) for addr in addrs]
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         # For each node, send 0.2 coins back to 0;
@@ -74,7 +77,7 @@ class WalletGroupTest(BitcoinTestFramework):
 
         self.log.info("Test avoiding partial spends if warranted, even if avoidpartialspends is disabled")
         self.sync_all()
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         # Nodes 1-2 now have confirmed UTXOs (letters denote destinations):
         # Node #1:      Node #2:
         # - A  1.0      - D0 1.0
@@ -110,7 +113,7 @@ class WalletGroupTest(BitcoinTestFramework):
         addr_aps = self.nodes[3].getnewaddress()
         self.nodes[0].sendtoaddress(addr_aps, 1.0)
         self.nodes[0].sendtoaddress(addr_aps, 1.0)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
         with self.nodes[3].assert_debug_log(['Fee non-grouped = 2820, grouped = 4160, using grouped']):
             txid4 = self.nodes[3].sendtoaddress(self.nodes[0].getnewaddress(), 0.1)
@@ -122,7 +125,7 @@ class WalletGroupTest(BitcoinTestFramework):
 
         addr_aps2 = self.nodes[3].getnewaddress()
         [self.nodes[0].sendtoaddress(addr_aps2, 1.0) for _ in range(5)]
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
         with self.nodes[3].assert_debug_log(['Fee non-grouped = 5520, grouped = 8240, using non-grouped']):
             txid5 = self.nodes[3].sendtoaddress(self.nodes[0].getnewaddress(), 2.95)
@@ -136,7 +139,7 @@ class WalletGroupTest(BitcoinTestFramework):
         self.log.info("Test wallet option maxapsfee threshold from non-grouped to grouped")
         addr_aps3 = self.nodes[4].getnewaddress()
         [self.nodes[0].sendtoaddress(addr_aps3, 1.0) for _ in range(5)]
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
         with self.nodes[4].assert_debug_log(['Fee non-grouped = 5520, grouped = 8240, using grouped']):
             txid6 = self.nodes[4].sendtoaddress(self.nodes[0].getnewaddress(), 2.95)
@@ -148,18 +151,18 @@ class WalletGroupTest(BitcoinTestFramework):
         # Empty out node2's wallet
         self.nodes[2].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=self.nodes[2].getbalance(), subtractfeefromamount=True)
         self.sync_all()
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
 
         self.log.info("Fill a wallet with 10,000 outputs corresponding to the same scriptPubKey")
         for _ in range(5):
             raw_tx = self.nodes[0].createrawtransaction([{"txid":"0"*64, "vout":0}], [{addr2[0]: 0.05}])
-            tx = FromHex(CTransaction(), raw_tx)
+            tx = tx_from_hex(raw_tx)
             tx.vin = []
             tx.vout = [tx.vout[0]] * 2000
-            funded_tx = self.nodes[0].fundrawtransaction(ToHex(tx))
+            funded_tx = self.nodes[0].fundrawtransaction(tx.serialize().hex())
             signed_tx = self.nodes[0].signrawtransactionwithwallet(funded_tx['hex'])
             self.nodes[0].sendrawtransaction(signed_tx['hex'])
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.sync_all()
 
         # Check that we can create a transaction that only requires ~100 of our

@@ -12,7 +12,7 @@
 
 std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
 {
-    const size_t offset = wallet_dir.string().size() + 1;
+    const size_t offset = wallet_dir.string().size() + (wallet_dir == wallet_dir.root_name() ? 0 : 1);
     std::vector<fs::path> paths;
     boost::system::error_code ec;
 

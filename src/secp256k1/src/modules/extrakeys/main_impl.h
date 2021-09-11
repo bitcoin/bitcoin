@@ -1,14 +1,14 @@
-/**********************************************************************
- * Copyright (c) 2020 Jonas Nick                                      *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2020 Jonas Nick                                       *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
-#ifndef _SECP256K1_MODULE_EXTRAKEYS_MAIN_
-#define _SECP256K1_MODULE_EXTRAKEYS_MAIN_
+#ifndef SECP256K1_MODULE_EXTRAKEYS_MAIN_H
+#define SECP256K1_MODULE_EXTRAKEYS_MAIN_H
 
-#include "include/secp256k1.h"
-#include "include/secp256k1_extrakeys.h"
+#include "../../../include/secp256k1.h"
+#include "../../../include/secp256k1_extrakeys.h"
 
 static SECP256K1_INLINE int secp256k1_xonly_pubkey_load(const secp256k1_context* ctx, secp256k1_ge *ge, const secp256k1_xonly_pubkey *pubkey) {
     return secp256k1_pubkey_load(ctx, ge, (const secp256k1_pubkey *) pubkey);
@@ -53,6 +53,32 @@ int secp256k1_xonly_pubkey_serialize(const secp256k1_context* ctx, unsigned char
     }
     secp256k1_fe_get_b32(output32, &pk.x);
     return 1;
+}
+
+int secp256k1_xonly_pubkey_cmp(const secp256k1_context* ctx, const secp256k1_xonly_pubkey* pk0, const secp256k1_xonly_pubkey* pk1) {
+    unsigned char out[2][32];
+    const secp256k1_xonly_pubkey* pk[2];
+    int i;
+
+    VERIFY_CHECK(ctx != NULL);
+    pk[0] = pk0; pk[1] = pk1;
+    for (i = 0; i < 2; i++) {
+        /* If the public key is NULL or invalid, xonly_pubkey_serialize will
+         * call the illegal_callback and return 0. In that case we will
+         * serialize the key as all zeros which is less than any valid public
+         * key. This results in consistent comparisons even if NULL or invalid
+         * pubkeys are involved and prevents edge cases such as sorting
+         * algorithms that use this function and do not terminate as a
+         * result. */
+        if (!secp256k1_xonly_pubkey_serialize(ctx, out[i], pk[i])) {
+            /* Note that xonly_pubkey_serialize should already set the output to
+             * zero in that case, but it's not guaranteed by the API, we can't
+             * test it and writing a VERIFY_CHECK is more complex than
+             * explicitly memsetting (again). */
+            memset(out[i], 0, sizeof(out[i]));
+        }
+    }
+    return secp256k1_memcmp_var(out[0], out[1], sizeof(out[1]));
 }
 
 /** Keeps a group element as is if it has an even Y and otherwise negates it.
@@ -180,10 +206,20 @@ int secp256k1_keypair_create(const secp256k1_context* ctx, secp256k1_keypair *ke
 
     ret = secp256k1_ec_pubkey_create_helper(&ctx->ecmult_gen_ctx, &sk, &pk, seckey32);
     secp256k1_keypair_save(keypair, &sk, &pk);
-    memczero(keypair, sizeof(*keypair), !ret);
+    secp256k1_memczero(keypair, sizeof(*keypair), !ret);
 
     secp256k1_scalar_clear(&sk);
     return ret;
+}
+
+int secp256k1_keypair_sec(const secp256k1_context* ctx, unsigned char *seckey, const secp256k1_keypair *keypair) {
+    VERIFY_CHECK(ctx != NULL);
+    ARG_CHECK(seckey != NULL);
+    memset(seckey, 0, 32);
+    ARG_CHECK(keypair != NULL);
+
+    memcpy(seckey, &keypair->data[0], 32);
+    return 1;
 }
 
 int secp256k1_keypair_pub(const secp256k1_context* ctx, secp256k1_pubkey *pubkey, const secp256k1_keypair *keypair) {

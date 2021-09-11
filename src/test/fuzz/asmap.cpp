@@ -4,6 +4,7 @@
 
 #include <netaddress.h>
 #include <test/fuzz/fuzz.h>
+#include <util/asmap.h>
 
 #include <cstdint>
 #include <vector>
@@ -42,7 +43,7 @@ FUZZ_TARGET(asmap)
             asmap.push_back((buffer[1 + i] >> j) & 1);
         }
     }
-    if (!SanityCheckASMap(asmap)) return;
+    if (!SanityCheckASMap(asmap, 128)) return;
 
     const uint8_t* addr_data = buffer.data() + 1 + asmap_size;
     CNetAddr net_addr;
