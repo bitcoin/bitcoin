@@ -37,7 +37,7 @@ Rewards: 96.25 Syscoins per block deflated 5 percent per year
    25 percent to miner
    75 percent to masternode
 50 percent of the transaction fees paid to masternode
-Masternode minium subsidy(before seniority): 5.275 Syscoins (can not go below this amount even accounting for deflation)
+Masternode minimum subsidy(before seniority): 5.275 Syscoins (can not go below this amount even accounting for deflation)
 NEVM subsidy (EIP1559): 10.55 Syscoins (static, not deflating)
 SHA256 Proof of Work
 Mineable either exclusively or via merge-mining any SHA256 PoW coin
