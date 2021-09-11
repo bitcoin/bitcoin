@@ -105,7 +105,7 @@ FUZZ_TARGET_DESERIALIZE(block_filter_deserialize, {
     DeserializeFromFuzzingInput(buffer, block_filter);
 })
 FUZZ_TARGET_DESERIALIZE(addr_info_deserialize, {
-    CAddrInfo addr_info;
+    AddrInfo addr_info;
     DeserializeFromFuzzingInput(buffer, addr_info);
 })
 FUZZ_TARGET_DESERIALIZE(block_file_info_deserialize, {
