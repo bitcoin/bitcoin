@@ -497,6 +497,11 @@ void BitcoinGUI::createMenuBar()
         file->addAction(verifyMessageAction);
         file->addSeparator();
     }
+    file->addAction(openConfEditorAction);
+    if(walletFrame) {
+        file->addAction(showBackupsAction);
+    }
+    file->addSeparator();
     file->addAction(quitAction);
 
     QMenu *settings = appMenuBar->addMenu(tr("&Settings"));
@@ -560,20 +565,6 @@ void BitcoinGUI::createMenuBar()
             rpcConsole->setTabFocus(tab_type);
             showDebugWindow();
         });
-    }
-
-    QMenu *tools = appMenuBar->addMenu(tr("&Tools"));
-    tools->addAction(openInfoAction);
-    tools->addAction(openRPCConsoleAction);
-    tools->addAction(openGraphAction);
-    tools->addAction(openPeersAction);
-    if(walletFrame) {
-        tools->addAction(openRepairAction);
-    }
-    tools->addSeparator();
-    tools->addAction(openConfEditorAction);
-    if(walletFrame) {
-        tools->addAction(showBackupsAction);
     }
 
     QMenu *help = appMenuBar->addMenu(tr("&Help"));
