@@ -24,9 +24,7 @@
 #include <set>
 #include <vector>
 
-#include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/split.hpp>
 
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
@@ -347,8 +345,8 @@ void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlRe
         for (const auto& line : reply.lines) {
             if (0 == line.compare(0, 20, "net/listeners/socks=")) {
                 const std::string port_list_str = line.substr(20);
-                std::vector<std::string> port_list;
-                boost::split(port_list, port_list_str, boost::is_any_of(" "));
+                std::vector<std::string> port_list = SplitString(port_list_str, ' ');
+
                 for (auto& portstr : port_list) {
                     if (portstr.empty()) continue;
                     if ((portstr[0] == '"' || portstr[0] == '\'') && portstr.size() >= 2 && (*portstr.rbegin() == portstr[0])) {
@@ -542,8 +540,10 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
             if (l.first == "AUTH") {
                 std::map<std::string,std::string> m = ParseTorReplyMapping(l.second);
                 std::map<std::string,std::string>::iterator i;
-                if ((i = m.find("METHODS")) != m.end())
-                    boost::split(methods, i->second, boost::is_any_of(","));
+                if ((i = m.find("METHODS")) != m.end()) {
+                    std::vector<std::string> m_vec = SplitString(i->second, ',');
+                    methods = std::set<std::string>(m_vec.begin(), m_vec.end());
+                }
                 if ((i = m.find("COOKIEFILE")) != m.end())
                     cookiefile = i->second;
             } else if (l.first == "VERSION") {

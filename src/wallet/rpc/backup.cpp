@@ -26,8 +26,6 @@
 #include <tuple>
 #include <string>
 
-#include <boost/algorithm/string.hpp>
-
 #include <univalue.h>
 
 
@@ -546,8 +544,7 @@ RPCHelpMan importwallet()
             if (line.empty() || line[0] == '#')
                 continue;
 
-            std::vector<std::string> vstr;
-            boost::split(vstr, line, boost::is_any_of(" "));
+            std::vector<std::string> vstr = SplitString(line, ' ');
             if (vstr.size() < 2)
                 continue;
             CKey key = DecodeSecret(vstr[0]);
