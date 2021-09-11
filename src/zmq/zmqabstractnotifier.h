@@ -16,7 +16,7 @@ class CZMQAbstractNotifier;
 class CGovernanceObject;
 class CGovernanceVote;
 class CNEVMBlock;
-class CNEVMZMQBlock;
+class CNEVMHeader;
 class CBlock;
 class BlockValidationState;
 class uint256;
@@ -68,7 +68,7 @@ public:
     virtual bool NotifyTransactionMempool(const CTransaction &transaction);
     virtual bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
     virtual bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
-    virtual bool NotifyNEVMBlockConnect(const CNEVMZMQBlock &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash);
+    virtual bool NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash);
     virtual bool NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash);
     virtual bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state);
     virtual bool NotifyNEVMComms(const std::string& commMessage, bool &bResponse);

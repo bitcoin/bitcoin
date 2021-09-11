@@ -852,7 +852,7 @@ class CBlockHeader:
             self.auxpow = CAuxPow()
             self.auxpow.deserialize(f)
         elif self.is_nevm():
-            # SYSCOIN read 1 byte for evm data, note auxpow has parent header which puts the extra byte at the end of auxpow
+            # SYSCOIN read 1 byte for nevm data, note auxpow has parent header which puts the extra byte at the end of auxpow
             f.read(1)
         self.sha256 = None
         self.hash = None

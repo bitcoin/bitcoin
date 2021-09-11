@@ -1634,41 +1634,39 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
-bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMBlock &evmBlock) {
+bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlockHeader) {
     std::vector<unsigned char> vchData;
 	int nOut;
 	if (!GetSyscoinData(*block.vtx[0], vchData, nOut))
 		return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-data-output");
-    std::string strVchData(vchData.begin(), vchData.end());
-    auto pos = strVchData.find("NEVM");
-    if(pos == std::string::npos )
+    auto pos = std::find(vchData.begin(), vchData.end(), *NEVM_MAGIC_BYTES);
+    if(pos == vchData.end() )
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-tag");
-    strVchData = strVchData.substr(pos+5);
-    std::vector<unsigned char> newVchData(strVchData.begin(), strVchData.end());
-    CDataStream ds(newVchData, SER_NETWORK, PROTOCOL_VERSION);
+    pos += sizeof(NEVM_MAGIC_BYTES);
+    vchData = std::vector<unsigned char>(pos, pos+sizeof(CNEVMHeader));
+    CDataStream ds(vchData, SER_NETWORK, PROTOCOL_VERSION);
     try {
-        ds >> evmBlock;
+        ds >> evmBlockHeader;
     } catch (std::exception& e) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-unserialize");
     }
     return true;
 }
 bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const bool fJustCheck) {
-    CNEVMBlock evmBlock;
-    if(!GetNEVMData(state, block, evmBlock)) {
+    CNEVMHeader nevmBlockHeader;
+    if(!GetNEVMData(state, block, nevmBlockHeader)) {
         return false; //state filled by GetNEVMData 
     }
     // return if block was already processed
-    auto it = mapNEVMTxRoots.find(evmBlock.nBlockHash);
-    if(it != mapNEVMTxRoots.end() || pnevmtxrootsdb->ExistsTxRoot(evmBlock.nBlockHash)) {
+    auto it = mapNEVMTxRoots.find(nevmBlockHeader.nBlockHash);
+    if(it != mapNEVMTxRoots.end() || pnevmtxrootsdb->ExistsTxRoot(nevmBlockHeader.nBlockHash)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-duplicate");
     }
   
     if(block.vchNEVMBlockData.empty()) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-empty");
     }
-    const CNEVMZMQBlock evmZMQBlock(std::move(evmBlock));
-    GetMainSignals().NotifyNEVMBlockConnect(evmZMQBlock, block, state, fJustCheck? uint256(): nBlockHash);
+    GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash);
     bool res = state.IsValid();
     // try to bring connection back alive if its not connected for some reason
     if(!res && state.GetRejectReason() == "nevm-connect-not-sent") {
@@ -1677,23 +1675,23 @@ bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootM
         if(!bResponse) {
             if(RestartGethNode()) {
                 // try again after resetting connection
-                GetMainSignals().NotifyNEVMBlockConnect(evmZMQBlock, block, state, fJustCheck? uint256(): nBlockHash);
+                GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash);
                 res = state.IsValid();
             }
         }
     }
     if(res && !fJustCheck) {
         NEVMTxRoot txRootDB;
-        txRootDB.nTxRoot = evmZMQBlock.nTxRoot;
-        txRootDB.nReceiptRoot = evmZMQBlock.nReceiptRoot;
-        mapNEVMTxRoots.try_emplace(evmZMQBlock.nBlockHash, txRootDB);
+        txRootDB.nTxRoot = nevmBlockHeader.nTxRoot;
+        txRootDB.nReceiptRoot = nevmBlockHeader.nReceiptRoot;
+        mapNEVMTxRoots.try_emplace(nevmBlockHeader.nBlockHash, txRootDB);
     }
 
 
     return res;
 }
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint256& nBlockHash) {
-    CNEVMBlock evmBlock;
+    CNEVMHeader evmBlock;
     if(!GetNEVMData(state, block, evmBlock)) {
         return false; // state filled by GetNEVMData
     }

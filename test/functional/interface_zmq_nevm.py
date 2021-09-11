@@ -96,7 +96,7 @@ class ZMQPublisher:
         self.socket.close()
 
     def addBlock(self, evmBlockConnect):
-        # special case if miner is just testing validity of block, sys block hash is 0, we just want to provide message if evm block is valid without updating mappings
+        # special case if miner is just testing validity of block, sys block hash is 0, we just want to provide message if nevm block is valid without updating mappings
         if evmBlockConnect.sysblockhash == 0:
             return True
         # mappings should not already exist, if they do flag the block as invalid

@@ -438,7 +438,7 @@ static RPCHelpMan getnevmblockchaininfo()
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     UniValue oNEVM(UniValue::VOBJ);
-    CNEVMBlock evmBlock;
+    CNEVMHeader evmBlock;
     BlockValidationState state;
     int nHeight;
     CBlock block;
@@ -676,7 +676,7 @@ static RPCHelpMan syscoingetspvproof()
     }
     res.__pushKV("siblings", siblings);
     res.__pushKV("index", nIndex);  
-    CNEVMBlock evmBlock;
+    CNEVMHeader evmBlock;
     BlockValidationState state;
     if(!GetNEVMData(state, block, evmBlock)) {
         throw JSONRPCError(RPC_MISC_ERROR, state.ToString());

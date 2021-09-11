@@ -1020,33 +1020,36 @@ class NEVMTxRoot {
         READWRITE(obj.nTxRoot, obj.nReceiptRoot);
     }
 };
-
-class CNEVMBlock {
+class CNEVMHeader {
     public:
     uint256 nBlockHash;
     uint256 nTxRoot;
     uint256 nReceiptRoot;
-    std::vector<unsigned char>  vchNEVMBlockData;
-    SERIALIZE_METHODS(CNEVMBlock, obj)
-    {
-        READWRITE(obj.nBlockHash, obj.nTxRoot, obj.nReceiptRoot, obj.vchNEVMBlockData);
-    }
-};
-class CNEVMZMQBlock {
-    public:
-    uint256 nBlockHash;
-    uint256 nTxRoot;
-    uint256 nReceiptRoot;
-    CNEVMZMQBlock(CNEVMBlock&& evmBlock){
+    CNEVMHeader(){
+        SetNull();
+    };
+    CNEVMHeader(CNEVMHeader&& evmBlock){
         nBlockHash = std::move(evmBlock.nBlockHash);
         nTxRoot = std::move(evmBlock.nTxRoot);
         nReceiptRoot = std::move(evmBlock.nReceiptRoot);
     }
-    SERIALIZE_METHODS(CNEVMZMQBlock, obj)
+    SERIALIZE_METHODS(CNEVMHeader, obj)
     {
         READWRITE(obj.nBlockHash, obj.nTxRoot, obj.nReceiptRoot);
     }
+    inline void SetNull() { nBlockHash.SetNull(); nTxRoot.SetNull(); nReceiptRoot.SetNull(); }
 };
+
+class CNEVMBlock: public CNEVMHeader {
+    public:
+    std::vector<unsigned char>  vchNEVMBlockData;
+    SERIALIZE_METHODS(CNEVMBlock, obj)
+    {
+        READWRITEAS(CNEVMHeader, obj);
+        READWRITE(obj.vchNEVMBlockData);
+    }
+};
+
 bool IsSyscoinTx(const int &nVersion);
 bool IsMasternodeTx(const int &nVersion);
 bool IsAssetAllocationTx(const int &nVersion);
