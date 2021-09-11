@@ -6,7 +6,6 @@
 
 #include <crypto/sha256.h>
 #include <key.h>
-#include <random.h>
 #include <stacktraces.h>
 #include <util/strencodings.h>
 #include <util/system.h>
@@ -81,7 +80,6 @@ int main(int argc, char** argv)
     RegisterPrettySignalHandlers();
     RegisterPrettyTerminateHander();
 
-    RandomInit();
     ECC_Start();
     ECCVerifyHandle verifyHandle;
 

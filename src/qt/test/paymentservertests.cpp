@@ -181,12 +181,12 @@ void PaymentServerTests::paymentServerTests()
     QCOMPARE(PaymentServer::verifyExpired(r.paymentRequest.getDetails()), true);
 
     // Test BIP70 DoS protection:
-    unsigned char randData[BIP70_MAX_PAYMENTREQUEST_SIZE + 1];
-    GetRandBytes(randData, sizeof(randData));
+    auto randdata = FastRandomContext().randbytes(BIP70_MAX_PAYMENTREQUEST_SIZE + 1);
+
     // Write data to a temp file:
     QTemporaryFile tempFile;
     tempFile.open();
-    tempFile.write((const char*)randData, sizeof(randData));
+    tempFile.write((const char*)randdata.data(), randdata.size());
     tempFile.close();
     // compares 50001 <= BIP70_MAX_PAYMENTREQUEST_SIZE == false
     QCOMPARE(PaymentServer::verifySize(tempFile.size()), false);
