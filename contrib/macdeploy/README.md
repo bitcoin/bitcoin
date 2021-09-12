@@ -16,7 +16,10 @@ Our current macOS SDK
 (`Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz`) can be
 extracted from
 [Xcode_12.1.xip](https://download.developer.apple.com/Developer_Tools/Xcode_12.1/Xcode_12.1.xip).
-An Apple ID is needed to download this.
+Alternatively, after logging in to your account go to 'Downloads', then 'More'
+and look for [`Xcode_12.1`](https://download.developer.apple.com/Developer_Tools/Xcode_12.1/Xcode_12.1.xip).
+An Apple ID and cookies enabled for the hostname are needed to download this.
+The `sha256sum` of the archive should be `612443b1894b39368a596ea1607f30cbb0481ad44d5e29c75edb71a6d2cf050f`.
 
 After Xcode version 7.x, Apple started shipping the `Xcode.app` in a `.xip`
 archive. This makes the SDK less-trivial to extract on non-macOS machines. One
@@ -76,7 +79,7 @@ and its `libLTO.so` rather than those from `llvmgcc`, as it was originally done 
 
 To complicate things further, all builds must target an Apple SDK. These SDKs are free to
 download, but not redistributable. To obtain it, register for an Apple Developer Account,
-then download [Xcode_11.3.1](https://download.developer.apple.com/Developer_Tools/Xcode_11.3.1/Xcode_11.3.1.xip).
+then download [Xcode_12.1](https://download.developer.apple.com/Developer_Tools/Xcode_12.1/Xcode_12.1.xip).
 
 This file is many gigabytes in size, but most (but not all) of what we need is
 contained only in a single directory:
@@ -87,9 +90,9 @@ Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
 
 See the SDK Extraction notes above for how to obtain it.
 
-The Gitian descriptors build 2 sets of files: Linux tools, then Apple binaries which are
+The Guix process build 2 sets of files: Linux tools, then Apple binaries which are
 created using these tools. The build process has been designed to avoid including the
-SDK's files in Gitian's outputs. All interim tarballs are fully deterministic and may be freely
+SDK's files in Guix's outputs. All interim tarballs are fully deterministic and may be freely
 redistributed.
 
 [`xorrisofs`](https://www.gnu.org/software/xorriso/) is used to create the DMG.
@@ -110,11 +113,11 @@ order to satisfy the new Gatekeeper requirements. Because this private key canno
 shared, we'll have to be a bit creative in order for the build process to remain somewhat
 deterministic. Here's how it works:
 
-- Builders use Gitian to create an unsigned release. This outputs an unsigned DMG which
+- Builders use Guix to create an unsigned release. This outputs an unsigned DMG which
   users may choose to bless and run. It also outputs an unsigned app structure in the form
   of a tarball, which also contains all of the tools that have been previously (deterministically)
   built in order to create a final DMG.
 - The Apple keyholder uses this unsigned app to create a detached signature, using the
   script that is also included there. Detached signatures are available from this [repository](https://github.com/bitcoin-core/bitcoin-detached-sigs).
-- Builders feed the unsigned app + detached signature back into Gitian. It uses the
+- Builders feed the unsigned app + detached signature back into Guix. It uses the
   pre-built tools to recombine the pieces into a deterministic DMG.

@@ -31,8 +31,9 @@ ChaCha20Poly1305AEAD::ChaCha20Poly1305AEAD(const unsigned char* K_1, size_t K_1_
 {
     assert(K_1_len == CHACHA20_POLY1305_AEAD_KEY_LEN);
     assert(K_2_len == CHACHA20_POLY1305_AEAD_KEY_LEN);
-    m_chacha_main.SetKey(K_1, CHACHA20_POLY1305_AEAD_KEY_LEN);
-    m_chacha_header.SetKey(K_2, CHACHA20_POLY1305_AEAD_KEY_LEN);
+
+    m_chacha_header.SetKey(K_1, CHACHA20_POLY1305_AEAD_KEY_LEN);
+    m_chacha_main.SetKey(K_2, CHACHA20_POLY1305_AEAD_KEY_LEN);
 
     // set the cached sequence number to uint64 max which hints for an unset cache.
     // we can't hit uint64 max since the rekey rule (which resets the sequence number) is 1GB

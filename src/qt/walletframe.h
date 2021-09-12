@@ -35,7 +35,7 @@ public:
 
     void setClientModel(ClientModel *clientModel);
 
-    bool addWallet(WalletModel* walletModel, WalletView* walletView);
+    bool addView(WalletView* walletView);
     void setCurrentWallet(WalletModel* wallet_model);
     void removeWallet(WalletModel* wallet_model);
     void removeAllWallets();
@@ -48,6 +48,8 @@ public:
 
 Q_SIGNALS:
     void createWalletButtonClicked();
+    void message(const QString& title, const QString& message, unsigned int style);
+    void currentWalletSet();
 
 private:
     QStackedWidget *walletStack;

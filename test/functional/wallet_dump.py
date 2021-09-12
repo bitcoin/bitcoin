@@ -134,7 +134,7 @@ class WalletDumpTest(BitcoinTestFramework):
         self.log.info('Mine a block one second before the wallet is dumped')
         dump_time = int(time.time())
         self.nodes[0].setmocktime(dump_time - 1)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.nodes[0].setmocktime(dump_time)
         dump_time_str = '# * Created on {}Z'.format(
             datetime.datetime.fromtimestamp(

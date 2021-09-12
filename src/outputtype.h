@@ -11,6 +11,7 @@
 #include <script/standard.h>
 
 #include <array>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -28,7 +29,7 @@ static constexpr auto OUTPUT_TYPES = std::array{
     OutputType::BECH32M,
 };
 
-[[nodiscard]] bool ParseOutputType(const std::string& str, OutputType& output_type);
+std::optional<OutputType> ParseOutputType(const std::string& str);
 const std::string& FormatOutputType(OutputType type);
 
 /**

@@ -72,7 +72,7 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
             total_in += t["amount"]
             tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), b""))
         if total_in <= amount + fee:
-            raise RuntimeError("Insufficient funds: need %d, have %d" % (amount + fee, total_in))
+            raise RuntimeError(f"Insufficient funds: need {amount + fee}, have {total_in}")
     tx.vout.append(CTxOut(int((total_in - amount - fee) * COIN), P2SH_1))
     tx.vout.append(CTxOut(int(amount * COIN), P2SH_2))
     # These transactions don't need to be signed, but we still have to insert
@@ -124,8 +124,7 @@ def check_raw_estimates(node, fees_seen):
             assert_greater_than(feerate, 0)
 
             if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
-                raise AssertionError("Estimated fee (%f) out of range (%f,%f)"
-                                     % (feerate, min(fees_seen), max(fees_seen)))
+                raise AssertionError(f"Estimated fee ({feerate}) out of range ({min(fees_seen)},{max(fees_seen)})")
 
 def check_smart_estimates(node, fees_seen):
     """Call estimatesmartfee and verify that the estimates meet certain invariants."""
@@ -138,11 +137,9 @@ def check_smart_estimates(node, fees_seen):
         assert_greater_than(feerate, 0)
 
         if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
-            raise AssertionError("Estimated fee (%f) out of range (%f,%f)"
-                                 % (feerate, min(fees_seen), max(fees_seen)))
+            raise AssertionError(f"Estimated fee ({feerate}) out of range ({min(fees_seen)},{max(fees_seen)})")
         if feerate - delta > last_feerate:
-            raise AssertionError("Estimated fee (%f) larger than last fee (%f) for lower number of confirms"
-                                 % (feerate, last_feerate))
+            raise AssertionError(f"Estimated fee ({feerate}) larger than last fee ({last_feerate}) for lower number of confirms")
         last_feerate = feerate
 
         if i == 0:
@@ -200,7 +197,7 @@ class EstimateFeeTest(BitcoinTestFramework):
                 tx_kbytes = (len(txhex) // 2) / 1000.0
                 self.fees_per_kb.append(float(fee) / tx_kbytes)
             self.sync_mempools(wait=.1)
-            mined = mining_node.getblock(mining_node.generate(1)[0], True)["tx"]
+            mined = mining_node.getblock(self.generate(mining_node, 1)[0], True)["tx"]
             self.sync_blocks(wait=.1)
             # update which txouts are confirmed
             newmem = []
@@ -224,7 +221,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Mine
         while len(self.nodes[0].getrawmempool()) > 0:
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
 
         # Repeatedly split those 2 outputs, doubling twice for each rep
         # Use txouts to monitor the available utxo, since these won't be tracked in wallet
@@ -234,12 +231,12 @@ class EstimateFeeTest(BitcoinTestFramework):
             while len(self.txouts) > 0:
                 split_inputs(self.nodes[0], self.txouts, self.txouts2)
             while len(self.nodes[0].getrawmempool()) > 0:
-                self.nodes[0].generate(1)
+                self.generate(self.nodes[0], 1)
             # Double txouts2 to txouts
             while len(self.txouts2) > 0:
                 split_inputs(self.nodes[0], self.txouts2, self.txouts)
             while len(self.nodes[0].getrawmempool()) > 0:
-                self.nodes[0].generate(1)
+                self.generate(self.nodes[0], 1)
             reps += 1
         self.log.info("Finished splitting")
 
@@ -272,7 +269,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Finish by mining a normal-sized block:
         while len(self.nodes[1].getrawmempool()) > 0:
-            self.nodes[1].generate(1)
+            self.generate(self.nodes[1], 1)
 
         self.sync_blocks(self.nodes[0:3], wait=.1)
         self.log.info("Final estimates after emptying mempools")

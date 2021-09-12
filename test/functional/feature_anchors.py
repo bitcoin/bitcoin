@@ -23,9 +23,7 @@ def check_node_connections(*, node, num_in, num_out):
 class AnchorsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-
-    def setup_network(self):
-        self.setup_nodes()
+        self.disable_autoconnect = False
 
     def run_test(self):
         node_anchors_path = os.path.join(

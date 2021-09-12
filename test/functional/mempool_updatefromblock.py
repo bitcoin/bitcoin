@@ -86,12 +86,12 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
             unsigned_raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
             signed_raw_tx = self.nodes[0].signrawtransactionwithwallet(unsigned_raw_tx)
             tx_id.append(self.nodes[0].sendrawtransaction(signed_raw_tx['hex']))
-            tx_size.append(self.nodes[0].getrawmempool(True)[tx_id[-1]]['vsize'])
+            tx_size.append(self.nodes[0].getmempoolentry(tx_id[-1])['vsize'])
 
             if tx_count in n_tx_to_mine:
                 # The created transactions are mined into blocks by batches.
                 self.log.info('The batch of {} transactions has been accepted into the mempool.'.format(len(self.nodes[0].getrawmempool())))
-                block_hash = self.nodes[0].generate(1)[0]
+                block_hash = self.generate(self.nodes[0], 1)[0]
                 if not first_block_hash:
                     first_block_hash = block_hash
                 assert_equal(len(self.nodes[0].getrawmempool()), 0)
@@ -109,10 +109,11 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         self.log.info('Checking descendants/ancestors properties of all of the in-mempool transactions...')
         for k, tx in enumerate(tx_id):
             self.log.debug('Check transaction #{}.'.format(k))
-            assert_equal(self.nodes[0].getrawmempool(True)[tx]['descendantcount'], size - k)
-            assert_equal(self.nodes[0].getrawmempool(True)[tx]['descendantsize'], sum(tx_size[k:size]))
-            assert_equal(self.nodes[0].getrawmempool(True)[tx]['ancestorcount'], k + 1)
-            assert_equal(self.nodes[0].getrawmempool(True)[tx]['ancestorsize'], sum(tx_size[0:(k + 1)]))
+            entry = self.nodes[0].getmempoolentry(tx)
+            assert_equal(entry['descendantcount'], size - k)
+            assert_equal(entry['descendantsize'], sum(tx_size[k:size]))
+            assert_equal(entry['ancestorcount'], k + 1)
+            assert_equal(entry['ancestorsize'], sum(tx_size[0:(k + 1)]))
 
     def run_test(self):
         # Use batch size limited by DEFAULT_ANCESTOR_LIMIT = 25 to not fire "too many unconfirmed parents" error.

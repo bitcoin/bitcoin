@@ -46,7 +46,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
     def run_test(self):
         # Mine some blocks and have them mature.
         peer_inv_store = self.nodes[0].add_p2p_connection(P2PTxInvStore()) # keep track of invs
-        self.nodes[0].generate(COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
         utxo = self.nodes[0].listunspent(10)
         txid = utxo[0]['txid']
         vout = utxo[0]['vout']
@@ -89,28 +89,28 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(entry, mempool[x])
 
             # Check that the descendant calculations are correct
-            assert_equal(mempool[x]['descendantcount'], descendant_count)
-            descendant_fees += mempool[x]['fee']
-            assert_equal(mempool[x]['modifiedfee'], mempool[x]['fee'])
-            assert_equal(mempool[x]['fees']['base'], mempool[x]['fee'])
-            assert_equal(mempool[x]['fees']['modified'], mempool[x]['modifiedfee'])
-            assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN)
-            assert_equal(mempool[x]['fees']['descendant'], descendant_fees)
-            descendant_vsize += mempool[x]['vsize']
-            assert_equal(mempool[x]['descendantsize'], descendant_vsize)
+            assert_equal(entry['descendantcount'], descendant_count)
+            descendant_fees += entry['fee']
+            assert_equal(entry['modifiedfee'], entry['fee'])
+            assert_equal(entry['fees']['base'], entry['fee'])
+            assert_equal(entry['fees']['modified'], entry['modifiedfee'])
+            assert_equal(entry['descendantfees'], descendant_fees * COIN)
+            assert_equal(entry['fees']['descendant'], descendant_fees)
+            descendant_vsize += entry['vsize']
+            assert_equal(entry['descendantsize'], descendant_vsize)
             descendant_count += 1
 
             # Check that ancestor calculations are correct
-            assert_equal(mempool[x]['ancestorcount'], ancestor_count)
-            assert_equal(mempool[x]['ancestorfees'], ancestor_fees * COIN)
-            assert_equal(mempool[x]['ancestorsize'], ancestor_vsize)
-            ancestor_vsize -= mempool[x]['vsize']
-            ancestor_fees -= mempool[x]['fee']
+            assert_equal(entry['ancestorcount'], ancestor_count)
+            assert_equal(entry['ancestorfees'], ancestor_fees * COIN)
+            assert_equal(entry['ancestorsize'], ancestor_vsize)
+            ancestor_vsize -= entry['vsize']
+            ancestor_fees -= entry['fee']
             ancestor_count -= 1
 
             # Check that parent/child list is correct
-            assert_equal(mempool[x]['spentby'], descendants[-1:])
-            assert_equal(mempool[x]['depends'], ancestors[-2:-1])
+            assert_equal(entry['spentby'], descendants[-1:])
+            assert_equal(entry['depends'], ancestors[-2:-1])
 
             # Check that getmempooldescendants is correct
             assert_equal(sorted(descendants), sorted(self.nodes[0].getmempooldescendants(x)))
@@ -153,12 +153,12 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # Check that ancestor modified fees includes fee deltas from
         # prioritisetransaction
         self.nodes[0].prioritisetransaction(txid=chain[0], fee_delta=1000)
-        mempool = self.nodes[0].getrawmempool(True)
         ancestor_fees = 0
         for x in chain:
-            ancestor_fees += mempool[x]['fee']
-            assert_equal(mempool[x]['fees']['ancestor'], ancestor_fees + Decimal('0.00001'))
-            assert_equal(mempool[x]['ancestorfees'], ancestor_fees * COIN + 1000)
+            entry = self.nodes[0].getmempoolentry(x)
+            ancestor_fees += entry['fee']
+            assert_equal(entry['fees']['ancestor'], ancestor_fees + Decimal('0.00001'))
+            assert_equal(entry['ancestorfees'], ancestor_fees * COIN + 1000)
 
         # Undo the prioritisetransaction for later tests
         self.nodes[0].prioritisetransaction(txid=chain[0], fee_delta=-1000)
@@ -166,20 +166,20 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # Check that descendant modified fees includes fee deltas from
         # prioritisetransaction
         self.nodes[0].prioritisetransaction(txid=chain[-1], fee_delta=1000)
-        mempool = self.nodes[0].getrawmempool(True)
 
         descendant_fees = 0
         for x in reversed(chain):
-            descendant_fees += mempool[x]['fee']
-            assert_equal(mempool[x]['fees']['descendant'], descendant_fees + Decimal('0.00001'))
-            assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN + 1000)
+            entry = self.nodes[0].getmempoolentry(x)
+            descendant_fees += entry['fee']
+            assert_equal(entry['fees']['descendant'], descendant_fees + Decimal('0.00001'))
+            assert_equal(entry['descendantfees'], descendant_fees * COIN + 1000)
 
         # Adding one more transaction on to the chain should fail.
         assert_raises_rpc_error(-26, "too-long-mempool-chain", chain_transaction, self.nodes[0], [txid], [vout], value, fee, 1)
 
         # Check that prioritising a tx before it's added to the mempool works
         # First clear the mempool by mining a block.
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
         # Prioritise a transaction that has been mined, then add it back to the
@@ -190,16 +190,15 @@ class MempoolPackagesTest(BitcoinTestFramework):
         self.nodes[1].invalidateblock(self.nodes[1].getbestblockhash())
 
         # Now check that the transaction is in the mempool, with the right modified fee
-        mempool = self.nodes[0].getrawmempool(True)
-
         descendant_fees = 0
         for x in reversed(chain):
-            descendant_fees += mempool[x]['fee']
+            entry = self.nodes[0].getmempoolentry(x)
+            descendant_fees += entry['fee']
             if (x == chain[-1]):
-                assert_equal(mempool[x]['modifiedfee'], mempool[x]['fee']+satoshi_round(0.00002))
-                assert_equal(mempool[x]['fees']['modified'], mempool[x]['fee']+satoshi_round(0.00002))
-            assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN + 2000)
-            assert_equal(mempool[x]['fees']['descendant'], descendant_fees+satoshi_round(0.00002))
+                assert_equal(entry['modifiedfee'], entry['fee']+satoshi_round(0.00002))
+                assert_equal(entry['fees']['modified'], entry['fee']+satoshi_round(0.00002))
+            assert_equal(entry['descendantfees'], descendant_fees * COIN + 2000)
+            assert_equal(entry['fees']['descendant'], descendant_fees+satoshi_round(0.00002))
 
         # Check that node1's mempool is as expected (-> custom ancestor limit)
         mempool0 = self.nodes[0].getrawmempool(False)
@@ -255,7 +254,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # - txs from previous ancestor test (-> custom ancestor limit)
         # - parent tx for descendant test
         # - txs chained off parent tx (-> custom descendant limit)
-        self.wait_until(lambda: len(self.nodes[1].getrawmempool(False)) ==
+        self.wait_until(lambda: len(self.nodes[1].getrawmempool()) ==
                                 MAX_ANCESTORS_CUSTOM + 1 + MAX_DESCENDANTS_CUSTOM, timeout=10)
         mempool0 = self.nodes[0].getrawmempool(False)
         mempool1 = self.nodes[1].getrawmempool(False)
@@ -271,7 +270,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
         # Test reorg handling
         # First, the basics:
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         self.nodes[1].invalidateblock(self.nodes[0].getbestblockhash())
         self.nodes[1].reconsiderblock(self.nodes[0].getbestblockhash())
@@ -318,7 +317,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
             value = sent_value
 
         # Mine these in a block
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         # Now generate tx8, with a big fee

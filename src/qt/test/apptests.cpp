@@ -12,7 +12,6 @@
 #include <qt/rpcconsole.h>
 #include <shutdown.h>
 #include <test/util/setup_common.h>
-#include <univalue.h>
 #include <validation.h>
 
 #if defined(HAVE_CONFIG_H)
@@ -21,8 +20,10 @@
 
 #include <QAction>
 #include <QLineEdit>
+#include <QRegularExpression>
 #include <QScopedPointer>
 #include <QSignalSpy>
+#include <QString>
 #include <QTest>
 #include <QTextEdit>
 #include <QtGlobal>
@@ -30,6 +31,13 @@
 #include <QtTest/QtTestGui>
 
 namespace {
+//! Regex find a string group inside of the console output
+QString FindInConsole(const QString& output, const QString& pattern)
+{
+    const QRegularExpression re(pattern);
+    return re.match(output).captured(1);
+}
+
 //! Call getblockchaininfo RPC and check first field of JSON output.
 void TestRpcCommand(RPCConsole* console)
 {
@@ -41,10 +49,9 @@ void TestRpcCommand(RPCConsole* console)
     QTest::keyClick(lineEdit, Qt::Key_Return);
     QVERIFY(mw_spy.wait(1000));
     QCOMPARE(mw_spy.count(), 4);
-    QString output = messagesWidget->toPlainText();
-    UniValue value;
-    value.read(output.right(output.size() - output.lastIndexOf(QChar::ObjectReplacementCharacter) - 1).toStdString());
-    QCOMPARE(value["chain"].get_str(), std::string("regtest"));
+    const QString output = messagesWidget->toPlainText();
+    const QString pattern = QStringLiteral("\"chain\": \"(\\w+)\"");
+    QCOMPARE(FindInConsole(output, pattern), QString("regtest"));
 }
 } // namespace
 

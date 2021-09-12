@@ -49,7 +49,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Derive some HD addresses and remember the last
         # Also send funds to each add
-        self.nodes[0].generate(COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
         hd_add = None
         NUM_HD_ADDS = 10
         for i in range(1, NUM_HD_ADDS + 1):
@@ -61,9 +61,9 @@ class WalletHDTest(BitcoinTestFramework):
                 assert_equal(hd_info["hdkeypath"], "m/0'/0'/" + str(i) + "'")
             assert_equal(hd_info["hdmasterfingerprint"], hd_fingerprint)
             self.nodes[0].sendtoaddress(hd_add, 1)
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
         self.nodes[0].sendtoaddress(non_hd_add, 1)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
 
         # create an internal key (again)
         change_addr = self.nodes[1].getrawchangeaddress()
@@ -179,7 +179,7 @@ class WalletHDTest(BitcoinTestFramework):
             assert_raises_rpc_error(-5, "Already have this key", self.nodes[1].sethdseed, False, self.nodes[1].dumpprivkey(self.nodes[1].getnewaddress()))
 
             self.log.info('Test sethdseed restoring with keys outside of the initial keypool')
-            self.nodes[0].generate(10)
+            self.generate(self.nodes[0], 10)
             # Restart node 1 with keypool of 3 and a different wallet
             self.nodes[1].createwallet(wallet_name='origin', blank=True)
             self.restart_node(1, extra_args=['-keypool=3', '-wallet=origin'])
@@ -228,7 +228,7 @@ class WalletHDTest(BitcoinTestFramework):
             # The wallet that has set a new seed (restore_rpc) should not detect this transaction.
             txid = self.nodes[0].sendtoaddress(addr, 1)
             origin_rpc.sendrawtransaction(self.nodes[0].gettransaction(txid)['hex'])
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.sync_blocks()
             origin_rpc.gettransaction(txid)
             assert_raises_rpc_error(-5, 'Invalid or non-wallet transaction id', restore_rpc.gettransaction, txid)
@@ -239,7 +239,7 @@ class WalletHDTest(BitcoinTestFramework):
             # The previous transaction (out_of_kp_txid) should still not be detected as a rescan is required.
             txid = self.nodes[0].sendtoaddress(last_addr, 1)
             origin_rpc.sendrawtransaction(self.nodes[0].gettransaction(txid)['hex'])
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.sync_blocks()
             origin_rpc.gettransaction(txid)
             restore_rpc.gettransaction(txid)

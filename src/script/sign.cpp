@@ -11,6 +11,7 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <uint256.h>
+#include <util/translation.h>
 #include <util/vector.h>
 
 typedef std::vector<unsigned char> valtype;
@@ -59,22 +60,7 @@ bool MutableTransactionSignatureCreator::CreateSchnorrSig(const SigningProvider&
     assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
 
     CKey key;
-    {
-        // For now, use the old full pubkey-based key derivation logic. As it indexed by
-        // Hash160(full pubkey), we need to try both a version prefixed with 0x02, and one
-        // with 0x03.
-        unsigned char b[33] = {0x02};
-        std::copy(pubkey.begin(), pubkey.end(), b + 1);
-        CPubKey fullpubkey;
-        fullpubkey.Set(b, b + 33);
-        CKeyID keyid = fullpubkey.GetID();
-        if (!provider.GetKey(keyid, key)) {
-            b[0] = 0x03;
-            fullpubkey.Set(b, b + 33);
-            CKeyID keyid = fullpubkey.GetID();
-            if (!provider.GetKey(keyid, key)) return false;
-        }
-    }
+    if (!provider.GetKeyByXOnly(pubkey, key)) return false;
 
     // BIP341/BIP342 signing needs lots of precomputed transaction data. While some
     // (non-SIGHASH_DEFAULT) sighash modes exist that can work with just some subset
@@ -629,7 +615,7 @@ bool IsSegWitOutput(const SigningProvider& provider, const CScript& script)
     return false;
 }
 
-bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, int nHashType, std::map<int, std::string>& input_errors)
+bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, int nHashType, std::map<int, bilingual_str>& input_errors)
 {
     bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
 
@@ -639,29 +625,26 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
 
     PrecomputedTransactionData txdata;
     std::vector<CTxOut> spent_outputs;
-    spent_outputs.resize(mtx.vin.size());
-    bool have_all_spent_outputs = true;
-    for (unsigned int i = 0; i < mtx.vin.size(); i++) {
+    for (unsigned int i = 0; i < mtx.vin.size(); ++i) {
         CTxIn& txin = mtx.vin[i];
         auto coin = coins.find(txin.prevout);
         if (coin == coins.end() || coin->second.IsSpent()) {
-            have_all_spent_outputs = false;
+            txdata.Init(txConst, /* spent_outputs */ {}, /* force */ true);
+            break;
         } else {
-            spent_outputs[i] = CTxOut(coin->second.out.nValue, coin->second.out.scriptPubKey);
+            spent_outputs.emplace_back(coin->second.out.nValue, coin->second.out.scriptPubKey);
         }
     }
-    if (have_all_spent_outputs) {
+    if (spent_outputs.size() == mtx.vin.size()) {
         txdata.Init(txConst, std::move(spent_outputs), true);
-    } else {
-        txdata.Init(txConst, {}, true);
     }
 
     // Sign what we can:
-    for (unsigned int i = 0; i < mtx.vin.size(); i++) {
+    for (unsigned int i = 0; i < mtx.vin.size(); ++i) {
         CTxIn& txin = mtx.vin[i];
         auto coin = coins.find(txin.prevout);
         if (coin == coins.end() || coin->second.IsSpent()) {
-            input_errors[i] = "Input not found or already spent";
+            input_errors[i] = _("Input not found or already spent");
             continue;
         }
         const CScript& prevPubKey = coin->second.out.scriptPubKey;
@@ -677,7 +660,7 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
 
         // amount must be specified for valid segwit signature
         if (amount == MAX_MONEY && !txin.scriptWitness.IsNull()) {
-            input_errors[i] = "Missing amount";
+            input_errors[i] = _("Missing amount");
             continue;
         }
 
@@ -685,12 +668,12 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
         if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount, txdata, MissingDataBehavior::FAIL), &serror)) {
             if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
                 // Unable to sign input and verification failed (possible attempt to partially sign).
-                input_errors[i] = "Unable to sign input, invalid stack size (possibly missing key)";
+                input_errors[i] = Untranslated("Unable to sign input, invalid stack size (possibly missing key)");
             } else if (serror == SCRIPT_ERR_SIG_NULLFAIL) {
                 // Verification failed (possibly due to insufficient signatures).
-                input_errors[i] = "CHECK(MULTI)SIG failing with non-zero signature (possibly need more signatures)";
+                input_errors[i] = Untranslated("CHECK(MULTI)SIG failing with non-zero signature (possibly need more signatures)");
             } else {
-                input_errors[i] = ScriptErrorString(serror);
+                input_errors[i] = Untranslated(ScriptErrorString(serror));
             }
         } else {
             // If this input succeeds, make sure there is no error set for it

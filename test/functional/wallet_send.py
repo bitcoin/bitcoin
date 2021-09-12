@@ -241,7 +241,7 @@ class WalletSendTest(BitcoinTestFramework):
                 assert_equal(res, [{"success": True}, {"success": True}])
 
         w0.sendtoaddress(a2_receive, 10) # fund w3
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
 
         if not self.options.descriptors:
@@ -260,7 +260,7 @@ class WalletSendTest(BitcoinTestFramework):
                 assert_equal(res, [{"success": True}])
 
             w0.sendtoaddress(a2_receive, 10) # fund w4
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.sync_blocks()
 
         self.log.info("Send to address...")
@@ -435,14 +435,14 @@ class WalletSendTest(BitcoinTestFramework):
         assert not res[0]["allowed"]
         assert_equal(res[0]["reject-reason"], "non-final")
         # It shouldn't be confirmed in the next block
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         assert_equal(self.nodes[0].gettransaction(txid)["confirmations"], 0)
         # The mempool should allow it now:
         res = self.nodes[0].testmempoolaccept([hex])
         assert res[0]["allowed"]
         # Don't wait for wallet to add it to the mempool:
         res = self.nodes[0].sendrawtransaction(hex)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         assert_equal(self.nodes[0].gettransaction(txid)["confirmations"], 1)
         self.sync_all()
 

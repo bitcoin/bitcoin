@@ -35,7 +35,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Warning: this test will take about 70 seconds in the best case. Be patient.")
         self.log.info("Test that longpollid doesn't change between successive getblocktemplate() invocations if nothing else happens")
-        self.nodes[0].generate(10)
+        self.generate(self.nodes[0], 10)
         template = self.nodes[0].getblocktemplate({'rules': ['segwit']})
         longpollid = template['longpollid']
         template2 = self.nodes[0].getblocktemplate({'rules': ['segwit']})
@@ -48,9 +48,9 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         thr.join(5)  # wait 5 seconds or until thread exits
         assert thr.is_alive()
 
-        miniwallets = [ MiniWallet(node) for node in self.nodes ]
+        miniwallets = [MiniWallet(node) for node in self.nodes]
         self.log.info("Test that longpoll will terminate if another node generates a block")
-        miniwallets[1].generate(1)  # generate a block on another node
+        self.generate(miniwallets[1], 1)  # generate a block on another node
         # check that thread will exit now that new transaction entered mempool
         thr.join(5)  # wait 5 seconds or until thread exits
         assert not thr.is_alive()
@@ -58,12 +58,12 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         self.log.info("Test that longpoll will terminate if we generate a block ourselves")
         thr = LongpollThread(self.nodes[0])
         thr.start()
-        miniwallets[0].generate(1)  # generate a block on own node
+        self.generate(miniwallets[0], 1)  # generate a block on own node
         thr.join(5)  # wait 5 seconds or until thread exits
         assert not thr.is_alive()
 
         # Add enough mature utxos to the wallets, so that all txs spend confirmed coins
-        self.nodes[0].generate(COINBASE_MATURITY)
+        self.generate(self.nodes[0], COINBASE_MATURITY)
         self.sync_blocks()
 
         self.log.info("Test that introducing a new transaction into the mempool will terminate the longpoll")

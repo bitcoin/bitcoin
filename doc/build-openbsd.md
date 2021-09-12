@@ -68,7 +68,7 @@ export AUTOMAKE_VERSION=1.16
 Make sure `BDB_PREFIX` is set to the appropriate path from the above steps.
 
 Note that building with external signer support currently fails on OpenBSD,
-hence you have to explicitely disable it by passing the parameter
+hence you have to explicitly disable it by passing the parameter
 `--disable-external-signer` to the configure script.
 (Background: the feature requires the header-only library boost::process, which
 is available on OpenBSD 6.9 via Boost 1.72.0, but contains certain system calls

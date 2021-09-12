@@ -221,7 +221,7 @@ class AddressTypeTest(BitcoinTestFramework):
     def run_test(self):
         # Mine 101 blocks on node5 to bring nodes out of IBD and make sure that
         # no coinbases are maturing for the nodes-under-test during the test
-        self.nodes[5].generate(COINBASE_MATURITY + 1)
+        self.generate(self.nodes[5], COINBASE_MATURITY + 1)
         self.sync_blocks()
 
         uncompressed_1 = "0496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858ee"
@@ -306,7 +306,7 @@ class AddressTypeTest(BitcoinTestFramework):
                 assert_equal(unconf_balances[to_node], to_send * 10 * (2 + n))
 
             # node5 collects fee and block subsidy to keep accounting simple
-            self.nodes[5].generate(1)
+            self.generate(self.nodes[5], 1)
             self.sync_blocks()
 
             # Verify that the receiving wallet contains a UTXO with the expected address, and expected descriptor
@@ -336,7 +336,7 @@ class AddressTypeTest(BitcoinTestFramework):
 
         # Fund node 4:
         self.nodes[5].sendtoaddress(self.nodes[4].getnewaddress(), Decimal("1"))
-        self.nodes[5].generate(1)
+        self.generate(self.nodes[5], 1)
         self.sync_blocks()
         assert_equal(self.nodes[4].getbalance(), 1)
 

@@ -18,7 +18,7 @@ BanMan::BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t 
     if (m_client_interface) m_client_interface->InitMessage(_("Loading banlist…").translated);
 
     int64_t n_start = GetTimeMillis();
-    if (m_ban_db.Read(m_banned, m_is_dirty)) {
+    if (m_ban_db.Read(m_banned)) {
         SweepBanned(); // sweep out unused entries
 
         LogPrint(BCLog::NET, "Loaded %d banned node addresses/subnets  %dms\n", m_banned.size(),

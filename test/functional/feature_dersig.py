@@ -4,10 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP66 (DER SIG).
 
-Test that the DERSIG soft-fork activates at (regtest) height 1251.
+Test the DERSIG soft-fork activation on regtest.
 """
 
 from test_framework.blocktools import (
+    DERSIG_HEIGHT,
     create_block,
     create_coinbase,
 )
@@ -22,8 +23,6 @@ from test_framework.wallet import (
     MiniWallet,
     MiniWalletMode,
 )
-
-DERSIG_HEIGHT = 1251
 
 
 # A canonical signature consists of:
@@ -73,7 +72,7 @@ class BIP66Test(BitcoinTestFramework):
         self.test_dersig_info(is_active=False)
 
         self.log.info("Mining %d blocks", DERSIG_HEIGHT - 2)
-        self.coinbase_txids = [self.nodes[0].getblock(b)['tx'][0] for b in self.miniwallet.generate(DERSIG_HEIGHT - 2)]
+        self.coinbase_txids = [self.nodes[0].getblock(b)['tx'][0] for b in self.generate(self.miniwallet, DERSIG_HEIGHT - 2)]
 
         self.log.info("Test that a transaction with non-DER signature can still appear in a block")
 
@@ -90,8 +89,10 @@ class BIP66Test(BitcoinTestFramework):
         block.rehash()
         block.solve()
 
+        assert_equal(self.nodes[0].getblockcount(), DERSIG_HEIGHT - 2)
         self.test_dersig_info(is_active=False)  # Not active as of current tip and next block does not need to obey rules
         peer.send_and_ping(msg_block(block))
+        assert_equal(self.nodes[0].getblockcount(), DERSIG_HEIGHT - 1)
         self.test_dersig_info(is_active=True)  # Not active as of current tip, but next block must obey rules
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
@@ -103,7 +104,7 @@ class BIP66Test(BitcoinTestFramework):
         block.rehash()
         block.solve()
 
-        with self.nodes[0].assert_debug_log(expected_msgs=['{}, bad-version(0x00000002)'.format(block.hash)]):
+        with self.nodes[0].assert_debug_log(expected_msgs=[f'{block.hash}, bad-version(0x00000002)']):
             peer.send_and_ping(msg_block(block))
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
             peer.sync_with_ping()
@@ -133,7 +134,7 @@ class BIP66Test(BitcoinTestFramework):
         block.rehash()
         block.solve()
 
-        with self.nodes[0].assert_debug_log(expected_msgs=['CheckInputScripts on {} failed with non-mandatory-script-verify-flag (Non-canonical DER signature)'.format(block.vtx[-1].hash)]):
+        with self.nodes[0].assert_debug_log(expected_msgs=[f'CheckInputScripts on {block.vtx[-1].hash} failed with non-mandatory-script-verify-flag (Non-canonical DER signature)']):
             peer.send_and_ping(msg_block(block))
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
             peer.sync_with_ping()

@@ -31,15 +31,19 @@ struct CNodeStateStats {
     std::vector<int> vHeightInFlight;
     uint64_t m_addr_processed = 0;
     uint64_t m_addr_rate_limited = 0;
+    bool m_addr_relay_enabled{false};
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
 {
 public:
     static std::unique_ptr<PeerManager> make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
-                                             BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
+                                             BanMan* banman, ChainstateManager& chainman,
                                              CTxMemPool& pool, bool ignore_incoming_txs);
     virtual ~PeerManager() { }
+
+    /** Begin running background tasks, should only be called once */
+    virtual void StartScheduledTasks(CScheduler& scheduler) = 0;
 
     /** Get statistics from node state */
     virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;

@@ -48,6 +48,7 @@ Optional dependencies:
  univalue    | Utility          | JSON parsing and encoding (bundled version will be used unless --with-system-univalue passed to configure)
  libzmq3     | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= 4.0.0)
  sqlite3     | SQLite DB        | Optional, wallet storage (only needed when wallet enabled)
+ systemtap   | Tracing (USDT)   | Optional, statically defined tracepoints
 
 For the versions used, see [dependencies.md](dependencies.md)
 
@@ -107,6 +108,10 @@ ZMQ dependencies (provides ZMQ API):
 
     sudo apt-get install libzmq3-dev
 
+User-Space, Statically Defined Tracing (USDT) dependencies:
+
+    sudo apt install systemtap-sdt-dev
+
 GUI dependencies:
 
 If you want to build bitcoin-qt, make sure that the required packages for Qt development
@@ -116,6 +121,10 @@ To build without GUI pass `--without-gui`.
 To build with Qt 5 you need the following:
 
     sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools
+
+Additionally, to support Wayland protocol for modern desktop environments:
+
+    sudo apt install qtwayland5
 
 libqrencode (optional) can be installed with:
 
@@ -162,6 +171,10 @@ ZMQ dependencies (provides ZMQ API):
 
     sudo dnf install zeromq-devel
 
+User-Space, Statically Defined Tracing (USDT) dependencies:
+
+    sudo dnf install systemtap
+
 GUI dependencies:
 
 If you want to build bitcoin-qt, make sure that the required packages for Qt development
@@ -171,6 +184,10 @@ To build without GUI pass `--without-gui`.
 To build with Qt 5 you need the following:
 
     sudo dnf install qt5-qttools-devel qt5-qtbase-devel
+
+Additionally, to support Wayland protocol for modern desktop environments:
+
+    sudo dnf install qt5-qtwayland
 
 libqrencode (optional) can be installed with:
 

@@ -27,7 +27,6 @@ from test_framework.script_util import (
     script_to_p2sh_script,
     script_to_p2wsh_script,
 )
-from test_framework.util import hex_str_to_bytes
 
 Key = namedtuple('Key', ['privkey',
                          'pubkey',
@@ -93,7 +92,7 @@ def get_multisig(node):
         addr = node.getaddressinfo(node.getnewaddress())
         addrs.append(addr['address'])
         pubkeys.append(addr['pubkey'])
-    script_code = CScript([OP_2] + [hex_str_to_bytes(pubkey) for pubkey in pubkeys] + [OP_3, OP_CHECKMULTISIG])
+    script_code = CScript([OP_2] + [bytes.fromhex(pubkey) for pubkey in pubkeys] + [OP_3, OP_CHECKMULTISIG])
     witness_script = script_to_p2wsh_script(script_code)
     return Multisig(privkeys=[node.dumpprivkey(addr) for addr in addrs],
                     pubkeys=pubkeys,

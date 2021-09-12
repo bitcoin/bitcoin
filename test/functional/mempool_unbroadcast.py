@@ -32,7 +32,7 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         node = self.nodes[0]
 
         min_relay_fee = node.getnetworkinfo()["relayfee"]
-        utxos = create_confirmed_utxos(min_relay_fee, node, 10)
+        utxos = create_confirmed_utxos(self, min_relay_fee, node, 10)
 
         self.disconnect_nodes(0, 1)
 
@@ -94,9 +94,7 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
 
         self.log.info("Rebroadcast transaction and ensure it is not added to unbroadcast set when already in mempool")
         rpc_tx_hsh = node.sendrawtransaction(txFS["hex"])
-        mempool = node.getrawmempool(True)
-        assert rpc_tx_hsh in mempool
-        assert not mempool[rpc_tx_hsh]['unbroadcast']
+        assert not node.getmempoolentry(rpc_tx_hsh)['unbroadcast']
 
     def test_txn_removal(self):
         self.log.info("Test that transactions removed from mempool are removed from unbroadcast set")
@@ -111,7 +109,7 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         # a block
         removal_reason = "Removed {} from set of unbroadcast txns before confirmation that txn was sent out".format(txhsh)
         with node.assert_debug_log([removal_reason]):
-            node.generate(1)
+            self.generate(node, 1)
 
 if __name__ == "__main__":
     MempoolUnbroadcastTest().main()
