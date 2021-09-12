@@ -44,6 +44,7 @@
 #include <undo.h>
 #include <util/check.h> // For NDEBUG compile time check
 #include <util/hasher.h>
+#include <util/ioprio.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/strencodings.h>
@@ -4164,6 +4165,8 @@ void CChainState::LoadExternalBlockFile(FILE* fileIn, FlatFilePos* dbp)
 
     int nLoaded = 0;
     try {
+        IOPRIO_IDLER(/* lowprio */ true);
+
         // This takes over fileIn and calls fclose() on it in the CBufferedFile destructor
         CBufferedFile blkdat(fileIn, 2*MAX_BLOCK_SERIALIZED_SIZE, MAX_BLOCK_SERIALIZED_SIZE+8, SER_DISK, CLIENT_VERSION);
         uint64_t nRewind = blkdat.GetPos();
