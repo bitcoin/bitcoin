@@ -59,6 +59,7 @@
 #include <QToolButton>
 #include <QUrlQuery>
 #include <QVBoxLayout>
+#include <QWindow>
 
 
 const std::string BitcoinGUI::DEFAULT_UIPLATFORM =
@@ -410,9 +411,9 @@ void BitcoinGUI::createActions()
     openPeersAction->setEnabled(false);
     openRepairAction->setEnabled(false);
 
-    usedSendingAddressesAction = new QAction(tr("&Sending addresses..."), this);
+    usedSendingAddressesAction = new QAction(tr("&Sending addresses"), this);
     usedSendingAddressesAction->setStatusTip(tr("Show the list of used sending addresses and labels"));
-    usedReceivingAddressesAction = new QAction(tr("&Receiving addresses..."), this);
+    usedReceivingAddressesAction = new QAction(tr("&Receiving addresses"), this);
     usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
 
     openAction = new QAction(tr("Open &URI..."), this);
@@ -495,10 +496,12 @@ void BitcoinGUI::createMenuBar()
         file->addAction(signMessageAction);
         file->addAction(verifyMessageAction);
         file->addSeparator();
-        file->addAction(usedSendingAddressesAction);
-        file->addAction(usedReceivingAddressesAction);
-        file->addSeparator();
     }
+    file->addAction(openConfEditorAction);
+    if(walletFrame) {
+        file->addAction(showBackupsAction);
+    }
+    file->addSeparator();
     file->addAction(quitAction);
 
     QMenu *settings = appMenuBar->addMenu(tr("&Settings"));
@@ -512,18 +515,61 @@ void BitcoinGUI::createMenuBar()
     }
     settings->addAction(optionsAction);
 
-    QMenu *tools = appMenuBar->addMenu(tr("&Tools"));
-    tools->addAction(openInfoAction);
-    tools->addAction(openRPCConsoleAction);
-    tools->addAction(openGraphAction);
-    tools->addAction(openPeersAction);
-    if(walletFrame) {
-        tools->addAction(openRepairAction);
+    QMenu* window_menu = appMenuBar->addMenu(tr("&Window"));
+
+    QAction* minimize_action = window_menu->addAction(tr("Minimize"));
+    minimize_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_M));
+    connect(minimize_action, &QAction::triggered, [] {
+        qApp->focusWindow()->showMinimized();
+    });
+    connect(qApp, &QApplication::focusWindowChanged, [minimize_action] (QWindow* window) {
+        minimize_action->setEnabled(window != nullptr && (window->flags() & Qt::Dialog) != Qt::Dialog && window->windowState() != Qt::WindowMinimized);
+    });
+
+#ifdef Q_OS_MAC
+    QAction* zoom_action = window_menu->addAction(tr("Zoom"));
+    connect(zoom_action, &QAction::triggered, [] {
+        QWindow* window = qApp->focusWindow();
+        if (window->windowState() != Qt::WindowMaximized) {
+            window->showMaximized();
+        } else {
+            window->showNormal();
+        }
+    });
+
+    connect(qApp, &QApplication::focusWindowChanged, [zoom_action] (QWindow* window) {
+        zoom_action->setEnabled(window != nullptr);
+    });
+#else
+    QAction* restore_action = window_menu->addAction(tr("Restore"));
+    connect(restore_action, &QAction::triggered, [] {
+        qApp->focusWindow()->showNormal();
+    });
+
+    connect(qApp, &QApplication::focusWindowChanged, [restore_action] (QWindow* window) {
+        restore_action->setEnabled(window != nullptr);
+    });
+#endif
+
+    if (walletFrame) {
+        window_menu->addSeparator();
+        QAction* main_window_action = window_menu->addAction(tr("Main Window"));
+        connect(main_window_action, &QAction::triggered, [this] {
+            GUIUtil::bringToFront(this);
+        });
+
+        window_menu->addSeparator();
+        window_menu->addAction(usedSendingAddressesAction);
+        window_menu->addAction(usedReceivingAddressesAction);
     }
-    tools->addSeparator();
-    tools->addAction(openConfEditorAction);
-    if(walletFrame) {
-        tools->addAction(showBackupsAction);
+
+    window_menu->addSeparator();
+    for (RPCConsole::TabTypes tab_type : rpcConsole->tabs()) {
+        QAction* tab_action = window_menu->addAction(rpcConsole->tabTitle(tab_type));
+        connect(tab_action, &QAction::triggered, [this, tab_type] {
+            rpcConsole->setTabFocus(tab_type);
+            showDebugWindow();
+        });
     }
 
     QMenu *help = appMenuBar->addMenu(tr("&Help"));
