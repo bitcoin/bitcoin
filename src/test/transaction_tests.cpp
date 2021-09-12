@@ -173,31 +173,19 @@ unsigned int FillFlags(unsigned int flags)
 // Assumes that mapFlagNames contains all script verify flags.
 std::set<unsigned int> GenerateAllSubMasks(unsigned int flags)
 {
-    std::vector<unsigned int> set_flags;
-    const size_t n_flags = sizeof(unsigned int)*8;
-    set_flags.reserve(n_flags);
-    for (size_t i = 0; i < n_flags; ++i) {
-        const unsigned int flag = flags & (1 << i);
-        if (flag) {
-            set_flags.push_back(flag);
-        }
-    }
-    const size_t combos = 1 << set_flags.size();
-    // skip last all set flags
-    std::vector<unsigned int> all_flag_combos(combos-1);
-    for (size_t i = 0; i < combos-1; ++i){
-        for(size_t j = 0; j < set_flags.size(); ++j) {
-            if (i & (1<<j)) {
-                all_flag_combos[i] |= set_flags[j];
-            }
-        }
-    }
+    // Submask Algorithm adapted from
+    // https://cp-algorithms.com/algebra/all-submasks.html
 
-    std::set<unsigned int> flags_combos;
-    for (const unsigned int submask : all_flag_combos) {
-        flags_combos.insert(TrimFlags(submask));
+    // The algorithm does not process 0, manually include it
+    std::set<unsigned int> flags_combos{0};
+    for (unsigned int s{flags}; s; s = (s - 1) & flags) {
+        // TrimFlags before inserting into set so that we only have valid flag
+        // combinations
+        flags_combos.insert(TrimFlags(s));
     }
-    flags_combos.erase(flags);
+    // remove flags from set (even if we skipped the first loop iteration above,
+    // because of TrimFlags we must always erase here)
+    flags_combos.erase(TrimFlags(flags));
     return flags_combos;
 }
 
