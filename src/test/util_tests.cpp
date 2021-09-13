@@ -2349,6 +2349,55 @@ BOOST_AUTO_TEST_CASE(test_spanparsing)
     BOOST_CHECK_EQUAL(SpanToStr(results[3]), "");
 }
 
+BOOST_AUTO_TEST_CASE(test_SplitString)
+{
+    // Empty string.
+    {
+        std::vector<std::string> result = SplitString("", '-');
+        BOOST_CHECK_EQUAL(result.size(), 1);
+        BOOST_CHECK_EQUAL(result[0], "");
+    }
+
+    // Empty items.
+    {
+        std::vector<std::string> result = SplitString("-", '-');
+        BOOST_CHECK_EQUAL(result.size(), 2);
+        BOOST_CHECK_EQUAL(result[0], "");
+        BOOST_CHECK_EQUAL(result[1], "");
+    }
+
+    // More empty items.
+    {
+        std::vector<std::string> result = SplitString("--", '-');
+        BOOST_CHECK_EQUAL(result.size(), 3);
+        BOOST_CHECK_EQUAL(result[0], "");
+        BOOST_CHECK_EQUAL(result[1], "");
+        BOOST_CHECK_EQUAL(result[2], "");
+    }
+
+    // Separator is not present.
+    {
+        std::vector<std::string> result = SplitString("abc", '-');
+        BOOST_CHECK_EQUAL(result.size(), 1);
+        BOOST_CHECK_EQUAL(result[0], "abc");
+    }
+
+    // Basic behavior.
+    {
+        std::vector<std::string> result = SplitString("a-b", '-');
+        BOOST_CHECK_EQUAL(result.size(), 2);
+        BOOST_CHECK_EQUAL(result[0], "a");
+        BOOST_CHECK_EQUAL(result[1], "b");
+    }
+
+    // Case-sensitivity of the separator.
+    {
+        std::vector<std::string> result = SplitString("AAA", 'a');
+        BOOST_CHECK_EQUAL(result.size(), 1);
+        BOOST_CHECK_EQUAL(result[0], "AAA");
+    }
+}
+
 BOOST_AUTO_TEST_CASE(test_LogEscapeMessage)
 {
     // ASCII and UTF-8 must pass through unaltered.
