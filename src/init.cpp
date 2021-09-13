@@ -1543,7 +1543,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             return InitError(ResolveErrMsg("externalip", strAddr));
     }
     // SYSCOIN
-    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", "");
+    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", fRegTest? "": "tcp://127.0.0.1:1111");
     fNEVMConnection = !NEVMSub.empty();
 #if ENABLE_ZMQ
     g_zmq_notification_interface = CZMQNotificationInterface::Create();

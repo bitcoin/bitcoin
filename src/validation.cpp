@@ -5910,7 +5910,7 @@ std::vector<std::string> SanitizeGethCmdLine(const std::string& binaryURL, const
         cmdLineRet.push_back("--syscoin");
     }
     // Geth should subscribe to our publisher
-    const std::string &strPub = gArgs.GetArg("-zmqpubnevm", "");
+    const std::string &strPub = gArgs.GetArg("-zmqpubnevm", fRegTest? "": "tcp://127.0.0.1:1111");
     cmdLineRet.push_back("--nevmpub");
     cmdLineRet.push_back(strPub);
     return cmdLineRet;
@@ -5940,7 +5940,7 @@ bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const s
     return true;
 }
 bool CChainState::RestartGethNode() {
-    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", "");
+    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", fRegTest? "": "tcp://127.0.0.1:1111");
     if(NEVMSub.empty()) {
         LogPrintf("RestartGethNode: Could not start Geth. zmqpubnevm not defined\n");
         return false;
