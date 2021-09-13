@@ -49,18 +49,19 @@ void erasePopDataNodeState(const NodeId& id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 }
 
 template <typename pop_t>
-bool processGetPopData(CNode* node, CConnman* connman, CDataStream& vRecv, altintegration::MemPool& pop_mempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool processGetPopData(CNode* node, CConnman* connman, CDataStream& vRecv, altintegration::MemPool& pop_mempool)
 {
-    AssertLockHeld(cs_main);
     std::vector<std::vector<uint8_t>> requested_data;
     vRecv >> requested_data;
 
     if (requested_data.size() > MAX_POP_DATA_SENDING_AMOUNT) {
+        LOCK(cs_main);
         LogPrint(BCLog::NET, "peer %d send oversized message getdata size() = %u \n", node->GetId(), requested_data.size());
         Misbehaving(node->GetId(), 20, strprintf("message getdata size() = %u", requested_data.size()));
         return false;
     }
 
+    LOCK(cs_main);
     auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<pop_t>();
 
     const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
@@ -84,26 +85,21 @@ bool processGetPopData(CNode* node, CConnman* connman, CDataStream& vRecv, altin
 }
 
 template <typename pop_t>
-bool processOfferPopData(CNode* node, CConnman* connman, CDataStream& vRecv, altintegration::MemPool& pop_mempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool processOfferPopData(CNode* node, CConnman* connman, CDataStream& vRecv, altintegration::MemPool& pop_mempool)
 {
-    AssertLockHeld(cs_main);
     LogPrint(BCLog::NET, "received offered pop data: %s, bytes size: %d\n", pop_t::name(), vRecv.size());
-
-    // do not process 'offers' during initial block download
-    if (::ChainstateActive().IsInitialBlockDownload()) {
-        // TODO: may want to keep a list of offered payloads, then filter all existing (on-chain) payloadsm and 'GET' others
-        return true;
-    }
 
     std::vector<std::vector<uint8_t>> offered_data;
     vRecv >> offered_data;
 
     if (offered_data.size() > MAX_POP_DATA_SENDING_AMOUNT) {
+        LOCK(cs_main);
         LogPrint(BCLog::NET, "peer %d sent oversized message getdata size() = %u \n", node->GetId(), offered_data.size());
         Misbehaving(node->GetId(), 20, strprintf("message getdata size() = %u", offered_data.size()));
         return false;
     }
 
+    LOCK(cs_main);
     auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<pop_t>();
 
     std::vector<std::vector<uint8_t>> requested_data;
@@ -190,35 +186,35 @@ int processPopData(CNode* pfrom, const std::string& strCommand, CDataStream& vRe
     //----------------------
 
     // offer Pop Data
-    if (strCommand == offer_prefix + altintegration::ATV::name()) {
-        LOCK(cs_main);
+    static std::string ofATV = offer_prefix + altintegration::ATV::name();
+    if (strCommand == ofATV) {
         return processOfferPopData<altintegration::ATV>(pfrom, connman, vRecv, pop_mempool);
     }
 
-    if (strCommand == offer_prefix + altintegration::VTB::name()) {
-        LOCK(cs_main);
+    static std::string ofVTB = offer_prefix + altintegration::VTB::name();
+    if (strCommand == ofVTB) {
         return processOfferPopData<altintegration::VTB>(pfrom, connman, vRecv, pop_mempool);
     }
 
-    if (strCommand == offer_prefix + altintegration::VbkBlock::name()) {
-        LOCK(cs_main);
+    static std::string ofVBK = offer_prefix + altintegration::VbkBlock::name();
+    if (strCommand == ofVBK) {
         return processOfferPopData<altintegration::VbkBlock>(pfrom, connman, vRecv, pop_mempool);
     }
     //-----------------
 
     // get Pop Data
-    if (strCommand == get_prefix + altintegration::ATV::name()) {
-        LOCK(cs_main);
+    static std::string getATV = get_prefix + altintegration::ATV::name();
+    if (strCommand == getATV) {
         return processGetPopData<altintegration::ATV>(pfrom, connman, vRecv, pop_mempool);
     }
 
-    if (strCommand == get_prefix + altintegration::VTB::name()) {
-        LOCK(cs_main);
+    static std::string getVTB = get_prefix + altintegration::VTB::name();
+    if (strCommand == getVTB) {
         return processGetPopData<altintegration::VTB>(pfrom, connman, vRecv, pop_mempool);
     }
 
-    if (strCommand == get_prefix + altintegration::VbkBlock::name()) {
-        LOCK(cs_main);
+    static std::string getVBK = get_prefix + altintegration::VbkBlock::name();
+    if (strCommand == getVBK) {
         return processGetPopData<altintegration::VbkBlock>(pfrom, connman, vRecv, pop_mempool);
     }
 

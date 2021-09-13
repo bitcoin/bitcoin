@@ -1928,6 +1928,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     // VeriBlock: if POP is not enabled, ignore POP-related P2P calls
     if (VeriBlock::isPopActive()) {
+        if(ChainstateActive().IsInitialBlockDownload()) {
+            // ignore all POP-related messages until sync is completed
+            return true;
+        }
         int pop_res = VeriBlock::p2p::processPopData(pfrom, strCommand, vRecv, connman);
         if (pop_res >= 0) {
             return pop_res;

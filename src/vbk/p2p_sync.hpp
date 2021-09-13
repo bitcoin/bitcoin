@@ -84,6 +84,10 @@ void offerPopData(CNode* node, CConnman* connman, const CNetMsgMaker& msgMaker) 
     std::vector<std::vector<uint8_t>> hashes;
 
     auto addhashes = [&](const std::unordered_map<typename PopDataType::id_t, std::shared_ptr<PopDataType>>& map) {
+        if (map.size() > 1000 || hashes.size() > 1000) {
+            // TODO: remove
+            return;
+        }
         for (const auto& el : map) {
             PopP2PState& pop_state = pop_state_map[el.first];
             if (pop_state.offered_pop_data == 0 && pop_state.known_pop_data == 0) {
