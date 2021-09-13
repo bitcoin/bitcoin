@@ -36,7 +36,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         miniwallet = MiniWallet(node)
         relayfee = node.getnetworkinfo()['relayfee']
 
-        self.log.info('Check that mempoolminfee is minrelytxfee')
+        self.log.info('Check that mempoolminfee is minrelaytxfee')
         assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
         assert_equal(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
 
@@ -68,7 +68,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         # Initial tx created should not be present in the mempool anymore as it had a lower fee rate
         assert tx_to_be_evicted_id not in node.getrawmempool()
 
-        self.log.info('Check that mempoolminfee is larger than minrelytxfee')
+        self.log.info('Check that mempoolminfee is larger than minrelaytxfee')
         assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
         assert_greater_than(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
 
