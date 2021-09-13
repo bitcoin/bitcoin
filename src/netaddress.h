@@ -550,6 +550,7 @@ public:
     }
 
     friend class CServiceHash;
+    friend CService MaybeFlipIPv6toCJDNS(const CService& service);
 };
 
 class CServiceHash
