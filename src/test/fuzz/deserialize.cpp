@@ -115,11 +115,6 @@ FUZZ_TARGET_DESERIALIZE(block_header_and_short_txids_deserialize, {
     CBlockHeaderAndShortTxIDs block_header_and_short_txids;
     DeserializeFromFuzzingInput(buffer, block_header_and_short_txids);
 })
-FUZZ_TARGET_DESERIALIZE(fee_rate_deserialize, {
-    CFeeRate fee_rate;
-    DeserializeFromFuzzingInput(buffer, fee_rate);
-    AssertEqualAfterSerializeDeserialize(fee_rate);
-})
 FUZZ_TARGET_DESERIALIZE(merkle_block_deserialize, {
     CMerkleBlock merkle_block;
     DeserializeFromFuzzingInput(buffer, merkle_block);

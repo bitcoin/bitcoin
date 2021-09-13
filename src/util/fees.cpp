@@ -5,6 +5,7 @@
 
 #include <util/fees.h>
 
+#include <policy/feerate.h>
 #include <policy/fees.h>
 #include <util/strencodings.h>
 #include <util/string.h>
