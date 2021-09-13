@@ -737,9 +737,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     const auto& params = args.m_chainparams.GetConsensus();
     if(tx.HasAssets()) {
         isAssetTx = IsAssetTx(tx.nVersion);
-        TxValidationState tx_state;
-        if (!CheckSyscoinInputs(tx, params, hash, tx_state, m_active_chainstate.m_chain.Tip()->nHeight, m_active_chainstate.m_chain.Tip()->GetMedianTimePast(), mapMintKeysMempool, args.m_test_accept, mapAssetIn, mapAssetOut)) {
-            return state.Invalid(TxValidationResult::TX_CONFLICT, "bad-syscoin-tx", tx_state.ToString()); 
+        if (!CheckSyscoinInputs(tx, params, hash, state, m_active_chainstate.m_chain.Tip()->nHeight, m_active_chainstate.m_chain.Tip()->GetMedianTimePast(), mapMintKeysMempool, args.m_test_accept, mapAssetIn, mapAssetOut)) {
+            return false; // state filled in by CheckSyscoinInputs
         } 
     }  
     // Check for non-standard pay-to-script-hash in inputs
@@ -1136,11 +1135,15 @@ static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainp
             // SYSCOIN
             mapAssetAllocationConflicts.erase(hashTx);
         }
-        // remove nevm tx from mempool structure
-        if(IsSyscoinMintTx(tx->nVersion)) {
-            CMintSyscoin mintSyscoin(*tx);
-            if(!mintSyscoin.IsNull())
-                mapMintKeysMempool.erase(mintSyscoin.nTxHash);
+        // if we had duplicate mint's we don't want to remove the mint tx hash, but only if we had some other error not related to TX_MINT_DUPLICATE
+        if(result.m_state.GetResult() != TxValidationResult::TX_MINT_DUPLICATE) {
+            // remove nevm tx from mempool structure
+            if(IsSyscoinMintTx(tx->nVersion)) {
+                CMintSyscoin mintSyscoin(*tx);
+                if(!mintSyscoin.IsNull()) {
+                    mapMintKeysMempool.erase(mintSyscoin.nTxHash);
+                }
+            }
         }
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
