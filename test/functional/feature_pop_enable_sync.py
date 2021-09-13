@@ -12,7 +12,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.pop import endorse_block
 from test_framework.util import assert_raises_rpc_error, connect_nodes, disconnect_nodes
-
+import time
 
 class PopEnableSync(BitcoinTestFramework):
     def set_test_params(self):

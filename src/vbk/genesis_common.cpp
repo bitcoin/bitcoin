@@ -66,4 +66,26 @@ CBlock CreateGenesisBlock(
     return VeriBlock::CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
 
+CBlock CreateGenesisBlock(
+    uint32_t nTime,
+    uint32_t nNonce,
+    uint32_t nBits,
+    int32_t nVersion,
+    const std::string& coinbase)
+{
+    CMutableTransaction tx;
+    CDataStream ss(ParseHex(coinbase), SER_NETWORK, PROTOCOL_VERSION);
+    ss >> tx; // do not expect any exceptions
+
+    CBlock genesis;
+    genesis.nTime = nTime;
+    genesis.nBits = nBits;
+    genesis.nNonce = nNonce;
+    genesis.nVersion = nVersion;
+    genesis.vtx.push_back(MakeTransactionRef(std::move(tx)));
+    genesis.hashPrevBlock.SetNull();
+    genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
+    return genesis;
+}
+
 } // namespace VeriBlock

@@ -105,10 +105,10 @@ CMainParams::CMainParams()
     m_assumed_blockchain_size = 1;
     m_assumed_chain_state_size = 1;
 
-    genesis = CreateGenesisBlockDefault(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
+    genesis = VeriBlock::CreateGenesisBlock(1631200000, 862267501, 0x1d00ffff, 1, "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff4104ffff001d01043956657269426c6f636b20426974636f696e205265666572656e636520496d706c656d656e746174696f6e2c20536570742031332c2032303231ffffffff010065cd1d000000001600143dd5f2f667315cc98e669deb88d3dfe831aa2cea00000000");
     consensus.hashGenesisBlock = genesis.GetHash();
-    assert(consensus.hashGenesisBlock == uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
-    assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+    assert(consensus.hashGenesisBlock == uint256S("0x00000000ce2a3361df78fb9bb59b089ec637c8b29175725f4d9d643cad74f1e5"));
+    assert(genesis.hashMerkleRoot == uint256S("0x5c24f8481961119a2d73a84aef8fc32e839f35cb8407455d37a8efc37e9e915a"));
 
     // VeriBlock
     consensus.VeriBlockPopSecurityHeight = 200;
@@ -195,18 +195,10 @@ CMainParams::CMainParams()
      m_assumed_blockchain_size = 1;
      m_assumed_chain_state_size = 1;
 
-//     CBlock(hash=0000000fa9a9736fd815daea197d2cf0526e1c4641c365a5e5c811374795fdb6, ver=0x00000001, hashPrevBlock=0000000000000000000000000000000000000000000000000000000000000000, hashMerkleRoot=345a907c247b9500ecb312e5c2b027b0ec3c6bd70ebd428044eadb9f78460046, nTime=1340, nBits=1d1fffff, nNonce=15922192, vtx=1)
-//     CTransaction(hash=345a907c24, ver=1, vin.size=1, vout.size=1, nLockTime=0)
-//     CTxIn(COutPoint(0000000000, 4294967295), coinbase 04ffff1f1d01040956657269426c6f636b)
-//     CScriptWitness()
-//     CTxOut(nValue=50.00000000, scriptPubKey=41047c62bbf7f5aa4dd5c16bad99ac)
-     genesis = VeriBlock::CreateGenesisBlock(
-         1340, 15922192, 0x1d1fffff, 1, 50 * COIN,
-         "047c62bbf7f5aa4dd5c16bad99ac621b857fac4e93de86e45f5ada73404eeb44dedcf377b03c14a24e9d51605d9dd2d8ddaef58760d9c4bb82d9c8f06d96e79488",
-         "VeriBlock");
+     genesis = VeriBlock::CreateGenesisBlock(1631200000, 412533384, 0x1d07ffff, 1, "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff4104ffff071d01043956657269426c6f636b20426974636f696e205265666572656e636520496d706c656d656e746174696f6e2c20536570742031332c2032303231ffffffff010065cd1d000000001600143dd5f2f667315cc98e669deb88d3dfe831aa2cea00000000");
      consensus.hashGenesisBlock = genesis.GetHash();
-     assert(consensus.hashGenesisBlock == uint256S("0000000fa9a9736fd815daea197d2cf0526e1c4641c365a5e5c811374795fdb6"));
-     assert(genesis.hashMerkleRoot == uint256S("345a907c247b9500ecb312e5c2b027b0ec3c6bd70ebd428044eadb9f78460046"));
+     assert(consensus.hashGenesisBlock == uint256S("0x00000000152547e03b86a4d667ded82a91fe4fe02245affae26ad8b20c950a60"));
+     assert(genesis.hashMerkleRoot == uint256S("0x172a104def609f48532c3e4afbd9d9f530b7c359d031ac47d63191cb11ae56fe"));
 
      vFixedSeeds.clear();
      vSeeds.clear();

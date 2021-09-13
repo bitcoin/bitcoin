@@ -31,6 +31,13 @@ CBlock CreateGenesisBlock(
     const std::string& initialPubkeyHex,
     const std::string& pszTimestamp);
 
+CBlock CreateGenesisBlock(
+    uint32_t nTime,
+    uint32_t nNonce,
+    uint32_t nBits,
+    int32_t nVersion,
+    const std::string& coinbase);
+
 } // namespace VeriBlock
 
 #endif //BITCOIN_SRC_VBK_GENESIS_COMMON_HPP

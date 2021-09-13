@@ -97,6 +97,7 @@ BOOST_FIXTURE_TEST_CASE(regtest, GenesisBlockFixture)
     //    }
 
     check("regtest");
+    check("detregtest");
 }
 
 
