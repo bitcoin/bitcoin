@@ -230,7 +230,7 @@ BASE_SCRIPTS = [
     'rpc_bind.py --ipv6',
     'rpc_bind.py --nonloopback',
     'mining_basic.py',
-    'feature_signet.py',
+    #'feature_signet.py',
     'wallet_bumpfee.py',
     'wallet_bumpfee.py --descriptors',
     'wallet_implicitsegwit.py --legacy-wallet',
