@@ -9,6 +9,7 @@ $(package)_config_opts=--disable-shared --enable-host-shared --prefix=$(host_pre
 endef
 
 define $(package)_config_cmds
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub . && \
   $($(package)_autoconf)
 endef
 
