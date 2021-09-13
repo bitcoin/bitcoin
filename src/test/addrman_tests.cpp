@@ -915,5 +915,35 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
     BOOST_CHECK_THROW(ReadFromStream(addrman2, ssPeers2), std::ios_base::failure);
 }
 
+BOOST_AUTO_TEST_CASE(addrman_update_address)
+{
+    // Tests updating nTime via Connected() and nServices via SetServices()
+    auto addrman = TestAddrMan();
+    CNetAddr source{ResolveIP("252.2.2.2")};
+    CAddress addr{CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE)};
+
+    int64_t start_time{GetAdjustedTime() - 10000};
+    addr.nTime = start_time;
+    BOOST_CHECK(addrman->Add({addr}, source));
+    BOOST_CHECK_EQUAL(addrman->size(), 1U);
+
+    // Updating an addrman entry with a different port doesn't change it
+    CAddress addr_diff_port{CAddress(ResolveService("250.1.1.1", 8334), NODE_NONE)};
+    addr_diff_port.nTime = start_time;
+    addrman->Connected(addr_diff_port);
+    addrman->SetServices(addr_diff_port, NODE_NETWORK_LIMITED);
+    std::vector<CAddress> vAddr1{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_CHECK_EQUAL(vAddr1.size(), 1U);
+    BOOST_CHECK_EQUAL(vAddr1.at(0).nTime, start_time);
+    BOOST_CHECK_EQUAL(vAddr1.at(0).nServices, NODE_NONE);
+
+    // Updating an addrman entry with the correct port is successful
+    addrman->Connected(addr);
+    addrman->SetServices(addr, NODE_NETWORK_LIMITED);
+    std::vector<CAddress> vAddr2 = addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt);
+    BOOST_CHECK_EQUAL(vAddr2.size(), 1U);
+    BOOST_CHECK(vAddr2.at(0).nTime >= start_time + 10000);
+    BOOST_CHECK_EQUAL(vAddr2.at(0).nServices, NODE_NETWORK_LIMITED);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
