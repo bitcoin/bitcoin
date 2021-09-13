@@ -56,7 +56,9 @@ class AbstractThresholdConditionChecker {
 protected:
     virtual bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const =0;
     virtual int64_t BeginTime(const Consensus::Params& params) const =0;
-    virtual int64_t EndTime(const Consensus::Params& params) const =0;
+    virtual int64_t EndTime(const Consensus::Params& params) const = 0;
+    virtual int64_t BeginHeight(const Consensus::Params& params) const = 0;
+    virtual int64_t EndHeight(const Consensus::Params& params) const = 0;
     virtual int MinActivationHeight(const Consensus::Params& params) const { return 0; }
     virtual int Period(const Consensus::Params& params) const =0;
     virtual int Threshold(const Consensus::Params& params) const =0;

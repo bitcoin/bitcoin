@@ -145,7 +145,6 @@ class BlockchainTest(BitcoinTestFramework):
                         'count': 57,
                         'possible': True,
                     },
-                    'min_activation_height': 0,
                 },
                 'active': False
             },
@@ -156,7 +155,6 @@ class BlockchainTest(BitcoinTestFramework):
                     'start_time': -1,
                     'timeout': 9223372036854775807,
                     'since': 0,
-                    'min_activation_height': 0,
                 },
                 'height': 0,
                 'active': True

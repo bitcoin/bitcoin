@@ -6,7 +6,7 @@
 
 from decimal import Decimal
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.util import assert_equal
 
 signet_blocks = [
@@ -40,6 +40,9 @@ class SignetBasicTest(BitcoinTestFramework):
         ]
 
     def run_test(self):
+        if True:
+            raise SkipTest("Signet not supported")
+
         self.log.info("basic tests using OP_TRUE challenge")
 
         self.log.info('getmininginfo')
