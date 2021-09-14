@@ -1,7 +1,7 @@
 /**********************************************************************
  * Copyright (c) 2013, 2014 Pieter Wuille                             *
  * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ * file COPYING or https://opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
 #ifndef BITCOIN_LIBSECP256K1_CONFIG_H

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/licenses/mit-license.php.
 """Test asmap config argument for ASN-based IP bucketing.
 
 Verify node behaviour and debug log when launching bitcoind in these cases:

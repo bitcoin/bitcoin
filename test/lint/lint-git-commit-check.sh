@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Copyright (c) 2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/licenses/mit-license.php.
 #
 # Linter to check that commit messages have a new line before the body
 # or no body at all

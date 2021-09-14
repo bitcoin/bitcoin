@@ -2,7 +2,7 @@
 #
 # Copyright (c) 2018-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/licenses/mit-license.php.
 #
 # Make sure we explicitly open all text files using UTF-8 (or ASCII) encoding to
 # avoid potential issues on the BSDs where the locale is not always set.

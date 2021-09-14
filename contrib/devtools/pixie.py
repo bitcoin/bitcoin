@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2020 Wladimir J. van der Laan
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/licenses/mit-license.php.
 '''
 Compact, self-contained ELF implementation for bitcoin-core security checks.
 '''

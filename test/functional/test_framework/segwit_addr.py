@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2017 Pieter Wuille
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/licenses/mit-license.php.
 """Reference implementation for Bech32/Bech32m and segwit addresses."""
 import unittest
 from enum import Enum

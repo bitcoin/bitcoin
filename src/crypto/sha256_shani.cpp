@@ -1,6 +1,6 @@
 // Copyright (c) 2018-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://opensource.org/licenses/mit-license.php.
 //
 // Based on https://github.com/noloader/SHA-Intrinsics/blob/master/sha256-x86.c,
 // Written and placed in public domain by Jeffrey Walton.

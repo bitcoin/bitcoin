@@ -1,6 +1,6 @@
 dnl Copyright (c) 2013-2014 The Bitcoin Core developers
 dnl Distributed under the MIT software license, see the accompanying
-dnl file COPYING or http://www.opensource.org/licenses/mit-license.php.
+dnl file COPYING or https://opensource.org/licenses/mit-license.php.
 
 dnl BITCOIN_SUBDIR_TO_INCLUDE([CPPFLAGS-VARIABLE-NAME],[SUBDIRECTORY-NAME],[HEADER-FILE])
 dnl SUBDIRECTORY-NAME must end with a path separator

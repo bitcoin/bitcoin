@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2019-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/licenses/mit-license.php.
 """Tests NODE_COMPACT_FILTERS (BIP 157/158).
 
 Tests that a node configured with -blockfilterindex and -peerblockfilters signals
