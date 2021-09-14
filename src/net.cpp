@@ -2037,6 +2037,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 addr = addrman.Select();
             }
 
+            // The following checks are never applied to MANUAL and ADDR_FETCH,
+            // because those connections are made elsewhere.
+            assert(conn_type != ConnectionType::MANUAL);
+            assert(conn_type != ConnectionType::ADDR_FETCH);
+
             // Require outbound connections, other than feelers, to be to distinct network groups
             if (!fFeeler && setConnected.count(addr.GetGroup(addrman.GetAsmap()))) {
                 break;
