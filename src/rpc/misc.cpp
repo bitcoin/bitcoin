@@ -116,7 +116,7 @@ static RPCHelpMan createmultisig()
                         {RPCResult::Type::STR, "address", "The value of the new multisig address."},
                         {RPCResult::Type::STR_HEX, "redeemScript", "The string value of the hex-encoded redemption script."},
                         {RPCResult::Type::STR, "descriptor", "The descriptor for this multisig"},
-                        {RPCResult::Type::ARR, "warnings", /* optional */ true, "Any warnings resulting from the creation of this multisig",
+                        {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Any warnings resulting from the creation of this multisig",
                         {
                             {RPCResult::Type::STR, "", ""},
                         }},

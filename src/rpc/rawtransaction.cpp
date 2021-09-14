@@ -335,7 +335,7 @@ static RPCHelpMan gettxoutproof()
     LOCK(cs_main);
 
     if (pblockindex == nullptr) {
-        const CTransactionRef tx = GetTransaction(/* block_index */ nullptr, /* mempool */ nullptr, *setTxids.begin(), Params().GetConsensus(), hashBlock);
+        const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), Params().GetConsensus(), hashBlock);
         if (!tx || hashBlock.IsNull()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
         }
@@ -597,7 +597,7 @@ static RPCHelpMan decodescript()
     } else {
         // Empty scripts are valid
     }
-    ScriptPubKeyToUniv(script, r, /* include_hex */ false);
+    ScriptPubKeyToUniv(script, r, /*include_hex=*/false);
 
     std::vector<std::vector<unsigned char>> solutions_data;
     const TxoutType which_type{Solver(script, solutions_data)};
@@ -674,7 +674,7 @@ static RPCHelpMan decodescript()
                 // Scripts that are not fit for P2WPKH are encoded as P2WSH.
                 segwitScr = GetScriptForDestination(WitnessV0ScriptHash(script));
             }
-            ScriptPubKeyToUniv(segwitScr, sr, /* include_hex */ true);
+            ScriptPubKeyToUniv(segwitScr, sr, /*include_hex=*/true);
             sr.pushKV("p2sh-segwit", EncodeDestination(ScriptHash(segwitScr)));
             r.pushKV("segwit", sr);
         }
@@ -925,7 +925,7 @@ static RPCHelpMan sendrawtransaction()
     std::string err_string;
     AssertLockNotHeld(cs_main);
     NodeContext& node = EnsureAnyNodeContext(request.context);
-    const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /*relay*/ true, /*wait_callback*/ true);
+    const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /*relay=*/true, /*wait_callback=*/true);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
     }
@@ -1017,7 +1017,7 @@ static RPCHelpMan testmempoolaccept()
     CChainState& chainstate = chainman.ActiveChainstate();
     const PackageMempoolAcceptResult package_result = [&] {
         LOCK(::cs_main);
-        if (txns.size() > 1) return ProcessNewPackage(chainstate, mempool, txns, /* test_accept */ true);
+        if (txns.size() > 1) return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/true);
         return PackageMempoolAcceptResult(txns[0]->GetWitnessHash(),
                chainman.ProcessTransaction(txns[0], /*test_accept=*/ true));
     }();
@@ -1321,7 +1321,7 @@ static RPCHelpMan decodepsbt()
             txout = input.witness_utxo;
 
             UniValue o(UniValue::VOBJ);
-            ScriptPubKeyToUniv(txout.scriptPubKey, o, /* include_hex */ true);
+            ScriptPubKeyToUniv(txout.scriptPubKey, o, /*include_hex=*/true);
 
             UniValue out(UniValue::VOBJ);
             out.pushKV("amount", ValueFromAmount(txout.nValue));

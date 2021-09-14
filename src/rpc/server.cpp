@@ -167,7 +167,7 @@ static RPCHelpMan stop()
     // to the client (intended for testing)
                 "\nRequest a graceful shutdown of " PACKAGE_NAME ".",
                 {
-                    {"wait", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "how long to wait in ms", "", {}, /* hidden */ true},
+                    {"wait", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "how long to wait in ms", "", {}, /*hidden=*/true},
                 },
                 RPCResult{RPCResult::Type::STR, "", "A string with the content '" + RESULT + "'"},
                 RPCExamples{""},

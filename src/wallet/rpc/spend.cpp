@@ -108,7 +108,7 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and fee_rate");
         }
         // Fee rates in sat/vB cannot represent more than 3 significant digits.
-        cc.m_feerate = CFeeRate{AmountFromValue(fee_rate, /* decimals */ 3)};
+        cc.m_feerate = CFeeRate{AmountFromValue(fee_rate, /*decimals=*/3)};
         if (override_min_fee) cc.fOverrideFeeRate = true;
         // Default RBF to true for explicit fee_rate, if unset.
         if (!cc.m_signal_bip125_rbf) cc.m_signal_bip125_rbf = true;
@@ -203,7 +203,7 @@ RPCHelpMan sendtoaddress()
     // We also enable partial spend avoidance if reuse avoidance is set.
     coin_control.m_avoid_partial_spends |= coin_control.m_avoid_address_reuse;
 
-    SetFeeEstimateMode(*pwallet, coin_control, /* conf_target */ request.params[6], /* estimate_mode */ request.params[7], /* fee_rate */ request.params[9], /* override_min_fee */ false);
+    SetFeeEstimateMode(*pwallet, coin_control, /*conf_target=*/request.params[6], /*estimate_mode=*/request.params[7], /*fee_rate=*/request.params[9], /*override_min_fee=*/false);
 
     EnsureWalletIsUnlocked(*pwallet);
 
@@ -306,7 +306,7 @@ RPCHelpMan sendmany()
         coin_control.m_signal_bip125_rbf = request.params[5].get_bool();
     }
 
-    SetFeeEstimateMode(*pwallet, coin_control, /* conf_target */ request.params[6], /* estimate_mode */ request.params[7], /* fee_rate */ request.params[8], /* override_min_fee */ false);
+    SetFeeEstimateMode(*pwallet, coin_control, /*conf_target=*/request.params[6], /*estimate_mode=*/request.params[7], /*fee_rate=*/request.params[8], /*override_min_fee=*/false);
 
     std::vector<CRecipient> recipients;
     ParseRecipients(sendTo, subtractFeeFromAmount, recipients);
@@ -736,7 +736,7 @@ RPCHelpMan fundrawtransaction()
     CCoinControl coin_control;
     // Automatically select (additional) coins. Can be overridden by options.add_inputs.
     coin_control.m_add_inputs = true;
-    FundTransaction(*pwallet, tx, fee, change_position, request.params[1], coin_control, /* override_min_fee */ true);
+    FundTransaction(*pwallet, tx, fee, change_position, request.params[1], coin_control, /*override_min_fee=*/true);
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("hex", EncodeHexTx(CTransaction(tx)));
@@ -941,7 +941,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
         if (options.exists("replaceable")) {
             coin_control.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
-        SetFeeEstimateMode(*pwallet, coin_control, conf_target, options["estimate_mode"], options["fee_rate"], /* override_min_fee */ false);
+        SetFeeEstimateMode(*pwallet, coin_control, conf_target, options["estimate_mode"], options["fee_rate"], /*override_min_fee=*/false);
     }
 
     // Make sure the results are valid at least up to the most recent block
@@ -1177,7 +1177,7 @@ RPCHelpMan send()
             // be overridden by options.add_inputs.
             coin_control.m_add_inputs = rawTx.vin.size() == 0;
             SetOptionsInputWeights(options["inputs"], options);
-            FundTransaction(*pwallet, rawTx, fee, change_position, options, coin_control, /* override_min_fee */ false);
+            FundTransaction(*pwallet, rawTx, fee, change_position, options, coin_control, /*override_min_fee=*/false);
 
             bool add_to_wallet = true;
             if (options.exists("add_to_wallet")) {
@@ -1418,7 +1418,7 @@ RPCHelpMan walletcreatefundedpsbt()
     // be overridden by options.add_inputs.
     coin_control.m_add_inputs = rawTx.vin.size() == 0;
     SetOptionsInputWeights(request.params[0], options);
-    FundTransaction(wallet, rawTx, fee, change_position, options, coin_control, /* override_min_fee */ true);
+    FundTransaction(wallet, rawTx, fee, change_position, options, coin_control, /*override_min_fee=*/true);
 
     // Make a blank psbt
     PartiallySignedTransaction psbtx(rawTx);

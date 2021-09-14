@@ -938,7 +938,7 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     // array members have first opportunity to recover unused slots from the previous iteration.
     struct Net { bool is_local; Network id; size_t count; };
     std::array<Net, 3> networks{
-        {{false, NET_I2P, 0}, {/* localhost */ true, NET_MAX, 0}, {false, NET_ONION, 0}}};
+        {{false, NET_I2P, 0}, {/*localhost=*/true, NET_MAX, 0}, {false, NET_ONION, 0}}};
 
     // Count and store the number of eviction candidates per network.
     for (Net& n : networks) {
@@ -2769,7 +2769,7 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
     auto r = m_addr_response_caches.emplace(cache_id, CachedAddrResponse{});
     CachedAddrResponse& cache_entry = r.first->second;
     if (cache_entry.m_cache_entry_expiration < current_time) { // If emplace() added new one it has expiration 0.
-        cache_entry.m_addrs_response_cache = GetAddresses(max_addresses, max_pct, /* network */ std::nullopt);
+        cache_entry.m_addrs_response_cache = GetAddresses(max_addresses, max_pct, /*network=*/std::nullopt);
         // Choosing a proper cache lifetime is a trade-off between the privacy leak minimization
         // and the usefulness of ADDR responses to honest users.
         //
