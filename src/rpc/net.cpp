@@ -921,6 +921,7 @@ static RPCHelpMan addpeeraddress()
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address of the peer"},
             {"port", RPCArg::Type::NUM, RPCArg::Optional::NO, "The port of the peer"},
+            {"tried", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, attempt to add the peer to the tried addresses table"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -929,8 +930,8 @@ static RPCHelpMan addpeeraddress()
             },
         },
         RPCExamples{
-            HelpExampleCli("addpeeraddress", "\"1.2.3.4\" 8333")
-    + HelpExampleRpc("addpeeraddress", "\"1.2.3.4\", 8333")
+            HelpExampleCli("addpeeraddress", "\"1.2.3.4\" 8333 true")
+    + HelpExampleRpc("addpeeraddress", "\"1.2.3.4\", 8333, true")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -941,6 +942,7 @@ static RPCHelpMan addpeeraddress()
 
     const std::string& addr_string{request.params[0].get_str()};
     const uint16_t port{static_cast<uint16_t>(request.params[1].get_int())};
+    const bool tried{request.params[2].isTrue()};
 
     UniValue obj(UniValue::VOBJ);
     CNetAddr net_addr;
@@ -951,7 +953,13 @@ static RPCHelpMan addpeeraddress()
         address.nTime = GetAdjustedTime();
         // The source address is set equal to the address. This is equivalent to the peer
         // announcing itself.
-        if (node.addrman->Add({address}, address)) success = true;
+        if (node.addrman->Add({address}, address)) {
+            success = true;
+            if (tried) {
+                // Attempt to move the address to the tried addresses table.
+                node.addrman->Good(address);
+            }
+        }
     }
 
     obj.pushKV("success", success);
