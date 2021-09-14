@@ -341,8 +341,8 @@ A review can be a conceptual review, where the reviewer leaves a comment
 
 After conceptual agreement on the change, code review can be provided. A review
 begins with `ACK BRANCH_COMMIT`, where `BRANCH_COMMIT` is the top of the PR
-branch, followed by a description of how the reviewer did the review. The
-following language is used within pull request comments:
+branch. The ACK statement is followed by a description of how the reviewer did
+the review. The following language is used within pull request comments:
 
   - "I have tested the code", involving change-specific manual testing in
     addition to running the unit, functional, or fuzz tests, and in case it is
@@ -350,6 +350,11 @@ following language is used within pull request comments:
   - "I have not tested the code, but I have reviewed it and it looks
     OK, I agree it can be merged";
   - A "nit" refers to a trivial, often non-blocking issue.
+
+The following are variations to the ACK statement that convey meaning as shorthand:
+  - `tACK BRANCH_COMMIT`: Short for 'Tested ACK', meaning "I have tested the code and approve the changes".
+  - `utACK BRANCH_COMMIT`: Short for 'Untested ACK', meaning "I have not tested the code, but I approve the changes".
+  - `crACK BRANCH_COMMIT`: Short for 'Code Review ACK', meaning "I have only reviewed the code and approve the changes".
 
 Project maintainers reserve the right to weigh the opinions of peer reviewers
 using common sense judgement and may also weigh based on merit. Reviewers that
