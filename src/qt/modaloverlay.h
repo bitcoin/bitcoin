@@ -47,6 +47,7 @@ private:
     bool layerIsVisible;
     bool userClosed;
     bool foreverHidden;
+    void UpdateHeaderSyncLabel();
 };
 
 #endif // BITCOIN_QT_MODALOVERLAY_H

@@ -418,7 +418,7 @@ bool CNetAddr::IsLocal() const
         return true;
     }
 
-   return false;
+    return false;
 }
 
 bool CNetAddr::IsValid() const

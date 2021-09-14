@@ -5,20 +5,44 @@
 # See "man systemd.service" for details.
 
 # Note that almost all daemon options could be specified in
-# /etc/dash/dash.conf
+# /etc/dash/dash.conf, except for those explicitly specified as arguments
+# in ExecStart=
 
 [Unit]
 Description=Dash daemon
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/dashd -daemon -conf=/etc/dash/dash.conf -pid=/run/dashd/dashd.pid
-# Creates /run/dash owned by dashcore
-RuntimeDirectory=dashd
-User=dashcore
+ExecStart=/usr/bin/dashd -daemon \
+                                                            -pid=/run/dashd/dashd.pid \
+                                                            -conf=/etc/dash/dash.conf  \
+                                                            -datadir=/var/lib/dashd
+
+# Process management
+####################
+
 Type=forking
 PIDFile=/run/dashd/dashd.pid
 Restart=on-failure
+
+# Directory creation and permissions
+####################################
+
+# Run as dash:dash
+User=dashcore
+Group=dashcore
+
+# /run/dashd
+RuntimeDirectory=dashd
+RuntimeDirectoryMode=0710
+
+# /etc/dash
+ConfigurationDirectory=dash
+ConfigurationDirectoryMode=0710
+
+# /var/lib/dashd
+StateDirectory=dashd
+StateDirectoryMode=0710
 
 # Hardening measures
 ####################
