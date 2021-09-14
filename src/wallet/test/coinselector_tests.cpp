@@ -133,7 +133,7 @@ inline std::vector<OutputGroup>& KnapsackGroupOutputs(const std::vector<COutput>
                                               /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
                                               /* tx_noinputs_size= */ 0, /* avoid_partial= */ false);
     static std::vector<OutputGroup> static_groups;
-    static_groups = GroupOutputs(wallet, coins, coin_selection_params, filter, /* positive_only */false);
+    static_groups = GroupOutputs(wallet, coins, coin_selection_params, filter, /*positive_only=*/false);
     return static_groups;
 }
 
@@ -733,7 +733,7 @@ BOOST_AUTO_TEST_CASE(waste_test)
     add_coin(1 * COIN, 1, selection, fee, fee);
     add_coin(2 * COIN, 2, selection, fee, fee);
     const CAmount exact_target{in_amt - fee * 2};
-    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, /* change_cost */ 0, exact_target));
+    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, /*change_cost=*/0, exact_target));
     selection.clear();
 
     // No Waste when (fee - long_term_fee) == (-cost_of_change), and no excess
