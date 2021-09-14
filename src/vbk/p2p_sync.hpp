@@ -55,25 +55,6 @@ const static std::string offer_prefix = "of";
 const static uint32_t MAX_POP_DATA_SENDING_AMOUNT = 100;
 const static uint32_t MAX_POP_MESSAGE_SENDING_COUNT = 30;
 
-template <typename pop_t>
-void offerPopDataToAllNodes(const pop_t& p)
-{
-    std::vector<std::vector<uint8_t>> p_id = {p.getId().asVector()};
-    CConnman* connman = g_rpc_node->connman.get();
-    const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
-
-    connman->ForEachNode([&connman, &msgMaker, &p_id](CNode* node) {
-        LOCK(cs_main);
-
-        auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<pop_t>();
-        PopP2PState& pop_state = pop_state_map[p_id[0]];
-        if (pop_state.offered_pop_data == 0) {
-            ++pop_state.offered_pop_data;
-            connman->PushMessage(node, msgMaker.Make(offer_prefix + pop_t::name(), p_id));
-        }
-    });
-}
-
 
 template <typename PopDataType>
 void offerPopData(CNode* node, CConnman* connman, const CNetMsgMaker& msgMaker) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -84,10 +65,6 @@ void offerPopData(CNode* node, CConnman* connman, const CNetMsgMaker& msgMaker) 
     std::vector<std::vector<uint8_t>> hashes;
 
     auto addhashes = [&](const std::unordered_map<typename PopDataType::id_t, std::shared_ptr<PopDataType>>& map) {
-        if (map.size() > 1000 || hashes.size() > 1000) {
-            // TODO: remove
-            return;
-        }
         for (const auto& el : map) {
             PopP2PState& pop_state = pop_state_map[el.first];
             if (pop_state.offered_pop_data == 0 && pop_state.known_pop_data == 0) {

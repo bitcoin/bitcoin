@@ -32,11 +32,6 @@ void InitPopContext(CDBWrapper& db)
     auto payloads_provider = std::make_shared<PayloadsProvider>(db);
     auto block_provider = std::make_shared<BlockReader>(db);
     SetPop(payloads_provider, block_provider);
-
-    auto& app = GetPop();
-    app.getMemPool().onAccepted<altintegration::ATV>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::ATV>);
-    app.getMemPool().onAccepted<altintegration::VTB>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::VTB>);
-    app.getMemPool().onAccepted<altintegration::VbkBlock>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::VbkBlock>);
 }
 
 CBlockIndex* compareTipToBlock(CBlockIndex* candidate)
