@@ -322,6 +322,13 @@ maintainers take into account the peer review when determining if there is
 consensus to merge a pull request (remember that discussions may have been
 spread out over GitHub, mailing list and IRC discussions).
 
+#### ACK Statement
+
+The `ACK` statement is the foundation of a peer review; It represents approval,
+or refusal (`NACK`), of the concept or code. A `NACK` needs to include a
+rationale for why the change is not worthwhile. NACKs without accompanying reasoning
+may be disregarded.
+
 #### Conceptual Review
 
 A review can be a conceptual review, where the reviewer leaves a comment
@@ -329,9 +336,6 @@ A review can be a conceptual review, where the reviewer leaves a comment
    request",
  * `Approach (N)ACK`, meaning `Concept ACK`, but "I do (not) agree with the
    approach of this change".
-
-A `NACK` needs to include a rationale why the change is not worthwhile.
-NACKs without accompanying reasoning may be disregarded.
 
 #### Code Review
 
