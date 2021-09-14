@@ -48,6 +48,8 @@ void erasePopDataNodeState(const NodeId& id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     mapPopDataNodeState.erase(id);
 }
 
+int size = 0;
+int sizeCheckCounter = 0;
 template <typename pop_t>
 bool processGetPopData(CNode* node, CConnman* connman, CDataStream& vRecv, altintegration::MemPool& pop_mempool)
 {
@@ -60,6 +62,20 @@ bool processGetPopData(CNode* node, CConnman* connman, CDataStream& vRecv, altin
         Misbehaving(node->GetId(), 20, strprintf("message getdata size() = %u", requested_data.size()));
         return false;
     }
+    
+    if (std::is_same<pop_t, altintegration::ATV>::value) {
+        sizeCheckCounter++;
+        int size = lastSize;
+        if (sizeCheckCounter % 250 == 0) {
+            auto& pop_mempool = VeriBlock::GetPop().getMemPool();
+            UniValue a = altintegration::ToJSON<UniValue>(pop_mempool);
+            size = a.getValues().at(1).getValues().size();
+            lastSize = size;
+        }
+        if (size > 1000) {
+            return true;
+        }
+    } 
 
     LOCK(cs_main);
     auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<pop_t>();
