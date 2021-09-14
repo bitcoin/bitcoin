@@ -1908,19 +1908,24 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 if (pnode->IsFullOutboundConn()) nOutboundFullRelay++;
                 if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
 
-                // Netgroups for inbound and manual peers are not excluded because our goal here
-                // is to not use multiple of our limited outbound slots on a single netgroup
-                // but inbound and manual peers do not use our outbound slots. Inbound peers
-                // also have the added issue that they could be attacker controlled and used
-                // to prevent us from connecting to particular hosts if we used them here.
+                // Make sure our persistent outbound slots belong to different netgroups.
                 switch (pnode->m_conn_type) {
+                    // We currently don't take inbound connections into account. Since they are
+                    // free to make, an attacker could make them to prevent us from connecting to
+                    // certain peers.
                     case ConnectionType::INBOUND:
+                    // Manually selected connections should not affect how we select outbound
+                    // peers from addrman.
                     case ConnectionType::MANUAL:
+                    // Short-lived outbound connections should not affect how we select outbound
+                    // peers from addrman.
+                    case ConnectionType::ADDR_FETCH:
+                    // Short-lived outbound connections should not affect how we select outbound
+                    // peers from addrman.
+                    case ConnectionType::FEELER:
                         break;
                     case ConnectionType::OUTBOUND_FULL_RELAY:
                     case ConnectionType::BLOCK_RELAY:
-                    case ConnectionType::ADDR_FETCH:
-                    case ConnectionType::FEELER:
                         setConnected.insert(pnode->addr.GetGroup(addrman.GetAsmap()));
                 } // no default case, so the compiler can warn about missing cases
             }
