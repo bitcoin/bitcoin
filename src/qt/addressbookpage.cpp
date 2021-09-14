@@ -282,7 +282,7 @@ void AddressBookPage::on_exportButton_clicked()
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Export Address List"), QString(),
         /*: Expanded name of the CSV file format.
-            See https://en.wikipedia.org/wiki/Comma-separated_values */
+            See: https://en.wikipedia.org/wiki/Comma-separated_values. */
         tr("Comma separated file") + QLatin1String(" (*.csv)"), nullptr);
 
     if (filename.isNull())
