@@ -212,6 +212,13 @@ private:
 
     std::vector<unsigned char> CreateObfuscateKey() const;
 
+    // Removed from interface later when pimpl'd
+    bool doRawGet(const CDataStream& ssKey, std::string& strValue) const;
+
+    std::optional<CDataStream> doGet(const CDataStream& ssKey) const;
+
+    bool doExists(const CDataStream& ssKey) const;
+
 public:
     /**
      * @param[in] path        Location in the filesystem where leveldb data will be stored.
@@ -233,20 +240,16 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey((const char*)ssKey.data(), ssKey.size());
 
         std::string strValue;
-        leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
-        if (!status.ok()) {
-            if (status.IsNotFound())
-                return false;
-            LogPrintf("LevelDB read failure: %s\n", status.ToString());
-            dbwrapper_private::HandleError(status);
+
+        auto maybe_data = doGet(ssKey);
+        if (!maybe_data) {
+            return false;
         }
+
         try {
-            CDataStream ssValue{MakeByteSpan(strValue), SER_DISK, CLIENT_VERSION};
-            ssValue.Xor(obfuscate_key);
-            ssValue >> value;
+            *maybe_data >> value;
         } catch (const std::exception&) {
             return false;
         }
@@ -267,17 +270,8 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey((const char*)ssKey.data(), ssKey.size());
 
-        std::string strValue;
-        leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
-        if (!status.ok()) {
-            if (status.IsNotFound())
-                return false;
-            LogPrintf("LevelDB read failure: %s\n", status.ToString());
-            dbwrapper_private::HandleError(status);
-        }
-        return true;
+        return doExists(ssKey);
     }
 
     template <typename K>
