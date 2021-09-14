@@ -731,7 +731,13 @@ void CInstantSendManager::HandleNewInstantSendLockRecoveredSig(const llmq::CReco
     }
 
     islock->sig = recoveredSig.sig;
-    ProcessInstantSendLock(-1, ::SerializeHash(*islock), islock);
+    auto hash = ::SerializeHash(*islock);
+
+    LOCK(cs);
+    if (pendingInstantSendLocks.count(hash) || db.KnownInstantSendLock(hash)) {
+        return;
+    }
+    pendingInstantSendLocks.emplace(hash, std::make_pair(-1, islock));
 }
 
 void CInstantSendManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
