@@ -1914,9 +1914,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     // free to make, an attacker could make them to prevent us from connecting to
                     // certain peers.
                     case ConnectionType::INBOUND:
-                    // Manually selected connections should not affect how we select outbound
-                    // peers from addrman.
-                    case ConnectionType::MANUAL:
                     // Short-lived outbound connections should not affect how we select outbound
                     // peers from addrman.
                     case ConnectionType::ADDR_FETCH:
@@ -1924,6 +1921,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     // peers from addrman.
                     case ConnectionType::FEELER:
                         break;
+                    case ConnectionType::MANUAL:
                     case ConnectionType::OUTBOUND_FULL_RELAY:
                     case ConnectionType::BLOCK_RELAY:
                         setConnected.insert(pnode->addr.GetGroup(addrman.GetAsmap()));
