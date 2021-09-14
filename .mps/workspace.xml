@@ -13,7 +13,7 @@
         <TabState>
           <option name="title" value="Console" />
           <tab>
-            <model ref="ce8ff5c6-fc2b-4107-9d35-2574709f6ab5/r:8687cb5e-4ce4-465e-b599-7ad967216f94(TempModulece8ff5c6-fc2b-4107-9d35-2574709f6ab5/ConsoleModel_4505680290545)">
+            <model ref="9a1d89f7-8217-4ec9-b24d-25dc70f3a2d0/r:c39359c2-229c-4ad6-ad35-5a9fa47b5693(TempModule9a1d89f7-8217-4ec9-b24d-25dc70f3a2d0/ConsoleModel_1597533512113)">
               <persistence version="9" />
               <languages>
                 <devkit ref="70d3d6da-af63-483d-a75f-9c8acf8de332(jetbrains.mps.console.devkit)" />
@@ -33,11 +33,11 @@
                   <concept id="757553790980850366" name="jetbrains.mps.console.base.structure.History" flags="ng" index="3balQm" />
                 </language>
               </registry>
-              <node concept="aymSD" id="4kNgQuTtyNH">
-                <node concept="3balQm" id="4kNgQuTtyNI" role="aymYE" />
-                <node concept="2Clz$F" id="4kNgQuTtyNJ" role="aymYO" />
-                <node concept="2_V_lH" id="4kNgQuTtyNK" role="1PhJh3">
-                  <ref role="2_V_lI" node="4kNgQuTtyNJ" resolve="CommandHolder" />
+              <node concept="aymSD" id="4rm1Z4_kpqF">
+                <node concept="3balQm" id="4rm1Z4_kpqG" role="aymYE" />
+                <node concept="2Clz$F" id="4rm1Z4_kpqH" role="aymYO" />
+                <node concept="2_V_lH" id="4rm1Z4_kpqI" role="1PhJh3">
+                  <ref role="2_V_lI" node="4rm1Z4_kpqH" resolve="CommandHolder" />
                 </node>
               </node>
             </model>
@@ -75,6 +75,7 @@
     </option>
   </component>
   <component name="ProjectId" id="1xHhOuyWlAqAOO7P1RIC0spoJS6" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectPluginManager">
     <option name="pluginsState">
       <option name="jetbrains.mps.baseLanguage.lightweightdsl.pluginSolution.plugin.PluginSolution_ProjectPlugin">
@@ -145,7 +146,6 @@
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1" />
     <panes>
-      <pane id="FileSystem" />
       <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
@@ -157,6 +157,7 @@
           </SELECTED>
         </subPane>
       </pane>
+      <pane id="FileSystem" />
     </panes>
   </component>
   <component name="ProjectViewState">
@@ -234,7 +235,21 @@
       <option name="project" value="LOCAL" />
       <updated>1630017968219</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="new">
+      <created>1631640476345</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1631640476345</updated>
+    </task>
+    <task id="LOCAL-00003" summary="new">
+      <created>1631640485569</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1631640485569</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="UsagesViewTool">
@@ -254,6 +269,7 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="new" />
