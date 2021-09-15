@@ -17,6 +17,7 @@ from collections import deque
 import configparser
 import datetime
 import os
+import platform
 import time
 import shutil
 import signal
@@ -343,7 +344,7 @@ def main():
     parser.add_argument('--keepcache', '-k', action='store_true', help='the default behavior is to flush the cache directory on startup. --keepcache retains the cache from the previous testrun.')
     parser.add_argument('--quiet', '-q', action='store_true', help='only print dots, results summary and failure logs')
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
-    parser.add_argument('--failfast', action='store_true', help='stop execution after the first test failure')
+    parser.add_argument('--failfast', action='store_true', help='stop execution after the first test failure (ignored on Windows)')
     parser.add_argument('--filter', help='filter scripts to run by regular expression')
 
     args, unknown_args = parser.parse_known_args()
@@ -452,7 +453,7 @@ def main():
         enable_coverage=args.coverage,
         args=passon_args,
         combined_logs_len=args.combinedlogslen,
-        failfast=args.failfast,
+        failfast=args.failfast if platform.system() != "Windows" else False,
         use_term_control=args.ansi,
     )
 

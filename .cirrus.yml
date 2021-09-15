@@ -146,7 +146,7 @@ task:
     - python test\util\test_runner.py
     - python test\util\rpcauth-test.py
   functional_tests_script:
-    - python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 rpc_help feature_config_args rpc_signer feature_presegwit_node_upgrade "tool_wallet.py --descriptors" --failfast  # TODO enable '--extended' and remove cherry-picked test list
+    - python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 rpc_help feature_config_args rpc_signer feature_presegwit_node_upgrade "tool_wallet.py --descriptors"  # TODO enable '--extended' and remove cherry-picked test list
 
 task:
   name: 'ARM [unit tests, no functional tests] [buster]'
