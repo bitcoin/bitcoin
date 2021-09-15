@@ -1964,7 +1964,9 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     assert(pindex);
     assert(*pindex->phashBlock == block.GetHash());
     int64_t nTimeStart = GetTimeMicros();
-    std::string miner = "DEF";
+    //std::string miner = "DEF";
+    std::string miners[4] ={"DEF","DEF","DEF","DEF"};
+    uint8_t minersCountLimit = 4; // this number must be equal to miners[] predefine rows
     // Check it again in case a previous version let a bad block in
     // NOTE: We don't currently (re-)invoke ContextualCheckBlock() or
     // ContextualCheckBlockHeader() here. This means that if we add a new
@@ -2188,25 +2190,28 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal");
             }
         } else if (tx.IsCoinBase()) {
-            try {
-                UniValue out(UniValue::VOBJ);
-                ScriptPubKeyToUniv(tx.vout[0].scriptPubKey, out, true);
-
-                UniValue u = find_value(out, "addresses");
-                UniValue uv = u.getValues()[0];
-                miner = uv.get_str();
-            } catch (std::exception& e) {
+             if(tx.vout.size() > minersCountLimit)
+                {
+                    LogPrintf("ConnectBlock(): Too many address for miners defined  (TX vout Count=%d vs limit=%d)", tx.vout.size() , sizeof(miners));
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
+                }
+            for (unsigned int i = 0; i < tx.vout.size() ; i++) {
+                
                 try {
+                    
+                    const CTxOut& transaction = tx.vout[i];
                     UniValue out(UniValue::VOBJ);
-                    ScriptPubKeyToUniv(tx.vout[1].scriptPubKey, out, true);
-
+                    
+                    ScriptPubKeyToUniv(transaction.scriptPubKey, out, true);
                     UniValue u = find_value(out, "addresses");
                     UniValue uv = u.getValues()[0];
-                    miner = uv.get_str();
-                } catch (std::exception& e) {
+                    miners[i] = uv.get_str();
+                    
+
+                } catch (const std::exception& e) {
+                       
                 }
             }
-            //LogPrintf("miner address :%$ /n",miner);
         }
 
         // GetTransactionSigOpCost counts 3 types of sigops:
@@ -2249,10 +2254,14 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
     }
     // XBIT Customization
-
-    if (!isTrustedNode(miner, pindex->nHeight)) {
+   
+    for(int i=0; i < minersCountLimit; i++)
+    {
+        
+    if (miners[i] != "DEF" && (!isTrustedNode(miners[i], pindex->nHeight))) {
         LogPrintf("ConnectBlock(): coinbase pays to invalid miner  (actual=%d vs limit=%d)", block.vtx[0]->GetValueOut(), blockReward);
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
+      }
     }
     int64_t timeDiff = (int64_t)block.nTime - pindex->pprev->GetBlockTime();
     bool isEnoughTimePassed = true;
