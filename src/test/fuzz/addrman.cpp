@@ -85,7 +85,7 @@ public:
         // 0, 1, 2, 3 corresponding to 0%, 100%, 50%, 33%
         const size_t n = m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 3);
 
-        const size_t num_sources = m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(10, 50);
+        const size_t num_sources = m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 50);
         CNetAddr prev_source;
         // Use insecure_rand inside the loops instead of m_fuzzed_data_provider because when
         // the latter is exhausted it just returns 0.
