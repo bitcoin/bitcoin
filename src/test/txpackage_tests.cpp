@@ -73,19 +73,19 @@ BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100Setup)
     CKey parent_key;
     parent_key.MakeNewKey(true);
     CScript parent_locking_script = GetScriptForDestination(PKHash(parent_key.GetPubKey()));
-    auto mtx_parent = CreateValidMempoolTransaction(/* input_transaction */ m_coinbase_txns[0], /* vout */ 0,
-                                                    /* input_height */ 0, /* input_signing_key */ coinbaseKey,
-                                                    /* output_destination */ parent_locking_script,
-                                                    /* output_amount */ CAmount(49 * COIN), /* submit */ false);
+    auto mtx_parent = CreateValidMempoolTransaction(/*input_transaction=*/ m_coinbase_txns[0], /*input_vout=*/0,
+                                                    /*input_height=*/ 0, /*input_signing_key=*/coinbaseKey,
+                                                    /*output_destination=*/ parent_locking_script,
+                                                    /*output_amount=*/ CAmount(49 * COIN), /*submit=*/false);
     CTransactionRef tx_parent = MakeTransactionRef(mtx_parent);
 
     CKey child_key;
     child_key.MakeNewKey(true);
     CScript child_locking_script = GetScriptForDestination(PKHash(child_key.GetPubKey()));
-    auto mtx_child = CreateValidMempoolTransaction(/* input_transaction */ tx_parent, /* vout */ 0,
-                                                   /* input_height */ 101, /* input_signing_key */ parent_key,
-                                                   /* output_destination */ child_locking_script,
-                                                   /* output_amount */ CAmount(48 * COIN), /* submit */ false);
+    auto mtx_child = CreateValidMempoolTransaction(/*input_transaction=*/ tx_parent, /*input_vout=*/0,
+                                                   /*input_height=*/ 101, /*input_signing_key=*/parent_key,
+                                                   /*output_destination */ child_locking_script,
+                                                   /*output_amount=*/ CAmount(48 * COIN), /*submit=*/false);
     CTransactionRef tx_child = MakeTransactionRef(mtx_child);
     const auto result_parent_child = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, {tx_parent, tx_child}, /* test_accept */ true);
     BOOST_CHECK_MESSAGE(result_parent_child.m_state.IsValid(),

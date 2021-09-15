@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
 {
     bool ignored;
     auto ProcessBlock = [&](std::shared_ptr<const CBlock> block) -> bool {
-        return Assert(m_node.chainman)->ProcessNewBlock(Params(), block, /* fForceProcessing */ true, /* fNewBlock */ &ignored);
+        return Assert(m_node.chainman)->ProcessNewBlock(Params(), block, /*force_processing=*/true, /*new_block=*/&ignored);
     };
 
     // Process all mined blocks
