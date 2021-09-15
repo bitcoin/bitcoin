@@ -4650,10 +4650,11 @@ static RPCHelpMan upgradewallet()
 #ifdef ENABLE_EXTERNAL_SIGNER
 static RPCHelpMan walletdisplayaddress()
 {
-    return RPCHelpMan{"walletdisplayaddress",
+    return RPCHelpMan{
+        "walletdisplayaddress",
         "Display address on an external signer for verification.",
         {
-            {"address",     RPCArg::Type::STR, RPCArg::Optional::NO, /* default_val */ "", "bitcoin address to display"},
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "bitcoin address to display"},
         },
         RPCResult{
             RPCResult::Type::OBJ,"","",
