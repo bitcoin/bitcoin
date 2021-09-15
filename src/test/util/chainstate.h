@@ -16,7 +16,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-auto NoMalleation = [](CAutoFile& file, SnapshotMetadata& meta){};
+const auto NoMalleation = [](CAutoFile& file, SnapshotMetadata& meta){};
 
 /**
  * Create and activate a UTXO snapshot, optionally providing a function to
