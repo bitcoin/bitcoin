@@ -41,7 +41,7 @@ namespace BCLog {
         HTTP        = (1 <<  3),
         BENCHMARK   = (1 <<  4),
         ZMQ         = (1 <<  5),
-        DB          = (1 <<  6),
+        WALLETDB    = (1 <<  6),
         RPC         = (1 <<  7),
         ESTIMATEFEE = (1 <<  8),
         ADDRMAN     = (1 <<  9),
@@ -194,12 +194,13 @@ static inline void LogPrintf(const char* fmt, const Args&... args)
     }
 }
 
-template <typename... Args>
-static inline void LogPrint(const BCLog::LogFlags& category, const Args&... args)
-{
-    if (LogAcceptCategory((category))) {
-        LogPrintf(args...);
-    }
-}
+// Use a macro instead of a function for conditional logging to prevent
+// evaluating arguments when logging for the category is not enabled.
+#define LogPrint(category, ...)              \
+    do {                                     \
+        if (LogAcceptCategory((category))) { \
+            LogPrintf(__VA_ARGS__);          \
+        }                                    \
+    } while (0)
 
 #endif // BITCOIN_LOGGING_H
