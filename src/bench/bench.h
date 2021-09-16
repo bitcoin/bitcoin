@@ -43,6 +43,7 @@ typedef std::function<void(Bench&)> BenchFunction;
 struct Args {
     bool is_list_only;
     bool quiet;
+    int iters;
     std::vector<double> asymptote;
     std::string output_csv;
     std::string output_json;

@@ -57,22 +57,27 @@ void benchmark::BenchRunner::RunAll(const Args& args)
             continue;
         }
 
-        Bench bench;
-        bench.name(p.first);
-        bench.m_quiet = args.quiet;
-
-        if (args.asymptote.empty()) {
-            p.second(bench);
-        } else {
-            for (auto n : args.asymptote) {
-                bench.complexityN(n);
-                p.second(bench);
+        for (int i = 0; i < args.iters; ++i) {
+            if (i == 0 && args.iters > 1) {
+                std::cout << std::endl;
             }
-            std::cout << bench.complexityBigO() << std::endl;
-        }
+            Bench bench;
+            bench.name(p.first);
+            bench.m_quiet = args.quiet;
 
-        if (!bench.results().empty()) {
-            benchmarkResults.push_back(bench.results().back());
+            if (args.asymptote.empty()) {
+                p.second(bench);
+            } else {
+                for (auto n : args.asymptote) {
+                    bench.complexityN(n);
+                    p.second(bench);
+                }
+                std::cout << bench.complexityBigO() << std::endl;
+            }
+
+            if (!bench.results().empty()) {
+                benchmarkResults.push_back(bench.results().back());
+            }
         }
     }
 
