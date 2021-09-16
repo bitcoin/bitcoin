@@ -65,10 +65,10 @@ task:
   lint_script:
     - ./ci/lint_run_all.sh
 task:
-  name: 'ARM [unit tests, no functional tests] [buster]'
+  name: 'ARM [unit tests, no functional tests] [bullseye]'
   << : *GLOBAL_TASK_TEMPLATE
   arm_container:
-    image: debian:buster
+    image: debian:bullseye
     cpu: 2
     memory: 8G
   env:
