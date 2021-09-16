@@ -27,7 +27,7 @@ bool TransactionRecord::showTransaction()
 /*
  * Decompose CWallet transaction to model transaction records.
  */
-QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx)
+QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Node& node, interfaces::Wallet& wallet, const interfaces::WalletTx& wtx)
 {
     QList<TransactionRecord> parts;
     int64_t nTime = wtx.time;
@@ -36,8 +36,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
     CAmount nNet = nCredit - nDebit;
     uint256 hash = wtx.tx->GetHash();
     std::map<std::string, std::string> mapValue = wtx.value_map;
-    auto node = interfaces::MakeNode();
-    auto& coinJoinOptions = node->coinJoinOptions();
+    auto& coinJoinOptions = node.coinJoinOptions();
 
     if (nNet > 0 || wtx.is_coinbase || wtx.is_platform_transfer)
     {

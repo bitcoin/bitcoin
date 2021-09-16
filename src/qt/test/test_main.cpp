@@ -7,6 +7,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <interfaces/init.h>
 #include <interfaces/node.h>
 #include <qt/bitcoin.h>
 #include <qt/test/apptests.h>
@@ -62,7 +63,8 @@ int main(int argc, char* argv[])
     }
 
     NodeContext node_context;
-    std::unique_ptr<interfaces::Node> node = interfaces::MakeNode(&node_context);
+    int unused_exit_status;
+    std::unique_ptr<interfaces::Init> init = interfaces::MakeNodeInit(node_context, argc, argv, unused_exit_status);
     gArgs.ForceSetArg("-listen", "0");
     gArgs.ForceSetArg("-listenonion", "0");
     gArgs.ForceSetArg("-discover", "0");
@@ -81,10 +83,8 @@ int main(int argc, char* argv[])
     #endif
 
     BitcoinApplication app;
-    app.setNode(*node);
     app.setApplicationName("Dash-Qt-test");
-
-    app.node().context()->args = &gArgs;     // Make gArgs available in the NodeContext
+    app.createNode(*init);
 
     int num_test_failures{0};
 

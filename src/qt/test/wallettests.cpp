@@ -108,6 +108,8 @@ void TestGUI(interfaces::Node& node)
     for (int i = 0; i < 5; ++i) {
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
+    auto wallet_loader = interfaces::MakeWalletLoader(*test.m_node.chain, test.m_node.coinjoin_loader, *Assert(test.m_node.args));
+    test.m_node.wallet_loader = wallet_loader.get();
     node.setContext(&test.m_node);
     const std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), node.context()->coinjoin_loader.get(), "", CreateMockWalletDatabase());
     AddWallet(wallet);
