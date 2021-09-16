@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <txmempool.h>
-
+#include <chain.h> // For FindEarliestAtLeast()
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
@@ -54,6 +54,20 @@ void CTxMemPoolEntry::UpdateLockPoints(const LockPoints& lp)
 size_t CTxMemPoolEntry::GetTxSize() const
 {
     return GetVirtualTransactionSize(nTxWeight, sigOpCost);
+}
+
+unsigned int CTxMemPoolEntry::GetHeight(const CChain& active_chain) const
+{
+    //int64_t now = GetTimeSeconds();
+    CBlockIndex* ret = active_chain.FindEarliestAtLeast(nTime, 0);
+    // The new way to calculate entry height is more accurate as it uses the correct height for the transaction when received
+    // during IBD, and also when loaded from mempool.dat.
+    unsigned int newEntryHeight = ret ? ret->nHeight-1 : active_chain.Height();
+    std::string strSame;
+    if ((entryHeight != newEntryHeight) && (nodeid != -2)) // Hide LoadMempool entries as we know they differ
+        LogPrintf("%s: nTime=%s entryHeight=%d newEntryHeight=%d ret=%d peer=%d\n", __func__, FormatISO8601DateTime(nTime), entryHeight, newEntryHeight, ret ? 1 : 0, nodeid);
+
+    return newEntryHeight;
 }
 
 // Update the given tx for any in-mempool descendants.
@@ -413,7 +427,7 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
     nTransactionsUpdated += n;
 }
 
-void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate)
+void CTxMemPool::addUnchecked(const CChain& active_chain, const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate)
 {
     // Add to memory pool without checking anything.
     // Used by AcceptToMemoryPool(), which DOES do
@@ -458,7 +472,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     totalTxSize += entry.GetTxSize();
     m_total_fee += entry.GetFee();
     if (minerPolicyEstimator) {
-        minerPolicyEstimator->processTransaction(entry, validFeeEstimate);
+        minerPolicyEstimator->processTransaction(active_chain, entry, validFeeEstimate);
     }
 
     vTxHashes.emplace_back(tx.GetWitnessHash(), newit);
@@ -623,7 +637,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
 /**
  * Called when a block is connected. Removes from mempool and updates the miner fee estimator.
  */
-void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight)
+void CTxMemPool::removeForBlock(const CChain& active_chain, const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight)
 {
     AssertLockHeld(cs);
     std::vector<const CTxMemPoolEntry*> entries;
@@ -636,7 +650,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
             entries.push_back(&*i);
     }
     // Before the txs in the new block have been removed from the mempool, update policy estimates
-    if (minerPolicyEstimator) {minerPolicyEstimator->processBlock(nBlockHeight, entries);}
+    if (minerPolicyEstimator) {minerPolicyEstimator->processBlock(active_chain, nBlockHeight, entries);}
     for (const auto& tx : vtx)
     {
         txiter it = mapTx.find(tx->GetHash());
@@ -1046,13 +1060,13 @@ int CTxMemPool::Expire(std::chrono::seconds time)
     return stage.size();
 }
 
-void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, bool validFeeEstimate)
+void CTxMemPool::addUnchecked(const CChain& active_chain, const CTxMemPoolEntry &entry, bool validFeeEstimate)
 {
     setEntries setAncestors;
     uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
     std::string dummy;
     CalculateMemPoolAncestors(entry, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy);
-    return addUnchecked(entry, setAncestors, validFeeEstimate);
+    return addUnchecked(active_chain, entry, setAncestors, validFeeEstimate);
 }
 
 void CTxMemPool::UpdateChild(txiter entry, txiter child, bool add)

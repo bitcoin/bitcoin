@@ -535,10 +535,14 @@ CBlockPolicyEstimator::~CBlockPolicyEstimator()
 {
 }
 
-void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate)
+void CBlockPolicyEstimator::processTransaction(const CChain& active_chain, const CTxMemPoolEntry& entry, bool validFeeEstimate)
 {
     LOCK(m_cs_fee_estimator);
-    unsigned int txHeight = entry.GetHeight();
+    unsigned int txHeight;
+    {
+        LOCK(cs_main);
+        txHeight = entry.GetHeight(active_chain);
+    }
     uint256 hash = entry.GetTx().GetHash();
     if (mapMemPoolTxs.count(hash)) {
         LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error mempool tx %s already being tracked\n",
@@ -574,7 +578,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     assert(bucketIndex == bucketIndex3);
 }
 
-bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry)
+bool CBlockPolicyEstimator::processBlockTx(const CChain& active_chain, unsigned int nBlockHeight, const CTxMemPoolEntry* entry)
 {
     if (!removeTx(entry->GetTx().GetHash(), true)) {
         // This transaction wasn't being tracked for fee estimation
@@ -584,7 +588,12 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
     // How many blocks did it take for miners to include this transaction?
     // blocksToConfirm is 1-based, so a transaction included in the earliest
     // possible block has confirmation count of 1
-    int blocksToConfirm = nBlockHeight - entry->GetHeight();
+    unsigned int txHeight;
+    {
+        LOCK(cs_main);
+        txHeight = entry->GetHeight(active_chain);
+    }
+    int blocksToConfirm = nBlockHeight - txHeight;
     if (blocksToConfirm <= 0) {
         // This can't happen because we don't process transactions from a block with a height
         // lower than our greatest seen height
@@ -601,7 +610,7 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
     return true;
 }
 
-void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
+void CBlockPolicyEstimator::processBlock(const CChain& active_chain, unsigned int nBlockHeight,
                                          std::vector<const CTxMemPoolEntry*>& entries)
 {
     LOCK(m_cs_fee_estimator);
@@ -632,7 +641,7 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     unsigned int countedTxs = 0;
     // Update averages with data points from current block
     for (const auto& entry : entries) {
-        if (processBlockTx(nBlockHeight, entry))
+        if (processBlockTx(active_chain, nBlockHeight, entry))
             countedTxs++;
     }
 

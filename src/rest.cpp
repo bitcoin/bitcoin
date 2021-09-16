@@ -274,11 +274,13 @@ static bool rest_block(const std::any& context,
     CBlock block;
     CBlockIndex* pblockindex = nullptr;
     CBlockIndex* tip = nullptr;
+    CChain* active_chain = nullptr;
     {
         ChainstateManager* maybe_chainman = GetChainman(context, req);
         if (!maybe_chainman) return false;
         ChainstateManager& chainman = *maybe_chainman;
         LOCK(cs_main);
+        active_chain = &chainman.ActiveChain();
         tip = chainman.ActiveChain().Tip();
         pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pblockindex) {
@@ -391,12 +393,17 @@ static bool rest_mempool_contents(const std::any& context, HTTPRequest* req, con
     if (!CheckWarmup(req)) return false;
     const CTxMemPool* mempool = GetMemPool(context, req);
     if (!mempool) return false;
+    ChainstateManager* maybe_chainman = GetChainman(context, req);
+    if (!maybe_chainman) return false;
+    ChainstateManager& chainman = *maybe_chainman;
+    LOCK(cs_main);
+    const CChain& active_chain = chainman.ActiveChain();
     std::string param;
     const RetFormat rf = ParseDataFormat(param, strURIPart);
 
     switch (rf) {
     case RetFormat::JSON: {
-        UniValue mempoolObject = MempoolToJSON(*mempool, true);
+        UniValue mempoolObject = MempoolToJSON(active_chain, *mempool, true);
 
         std::string strJSON = mempoolObject.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
