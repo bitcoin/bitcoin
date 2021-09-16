@@ -571,7 +571,7 @@ libbitcoin_common_a_SOURCES = \
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
-# backward-compatibility objects and their sanity checks are linked.
+# sanity checks are linked.
 libbitcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_util_a_SOURCES = \
@@ -617,11 +617,6 @@ libbitcoin_util_a_SOURCES = \
 
 if USE_LIBEVENT
 libbitcoin_util_a_SOURCES += util/url.cpp
-endif
-
-if GLIBC_BACK_COMPAT
-libbitcoin_util_a_SOURCES += compat/glibc_compat.cpp
-AM_LDFLAGS += $(COMPAT_LDFLAGS)
 endif
 
 # cli: shared between bitcoin-cli and bitcoin-qt
@@ -750,10 +745,6 @@ bitcoin_util_LDADD += $(BOOST_LIBS)
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
 libbitcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
-
-if GLIBC_BACK_COMPAT
-  libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
-endif
 
 libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
 libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1)
