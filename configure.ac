@@ -1229,13 +1229,14 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
  [ AC_MSG_RESULT(no); HAVE_WEAK_GETAUXVAL=0 ]
 )
 
+have_any_system=no
 AC_MSG_CHECKING([for std::system])
 AC_LINK_IFELSE(
     [ AC_LANG_PROGRAM(
         [[ #include <cstdlib> ]],
         [[ int nErr = std::system(""); ]]
     )],
-    [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_STD__SYSTEM, 1, Define to 1 if std::system is available.)],
+    [ AC_MSG_RESULT(yes); have_any_system=yes],
     [ AC_MSG_RESULT(no) ]
 )
 
@@ -1245,11 +1246,13 @@ AC_LINK_IFELSE(
         [[ ]],
         [[ int nErr = ::_wsystem(""); ]]
     )],
-    [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_WSYSTEM, 1, Define to 1 if ::wsystem is available.)],
+    [ AC_MSG_RESULT(yes); have_any_system=yes],
     [ AC_MSG_RESULT(no) ]
 )
 
-AC_DEFINE([HAVE_SYSTEM], [HAVE_STD__SYSTEM || HAVE_WSYSTEM], [std::system or ::wsystem])
+if test "x$have_any_system" != "xno"; then
+  AC_DEFINE(HAVE_SYSTEM, 1, Define to 1 if std::system or ::wsystem is available.)
+fi
 
 LEVELDB_CPPFLAGS=
 LIBLEVELDB=
