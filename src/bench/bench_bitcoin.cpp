@@ -21,6 +21,7 @@ static void SetupBenchArgs(ArgsManager& argsman)
     argsman.AddArg("-list", "List benchmarks without executing them", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-output_csv=<output.csv>", "Generate CSV file with the most important benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-output_json=<output.json>", "Generate JSON file with all benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-quiet", "Silence warnings and recommendations in benchmark results", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
 }
 
 // parses a comma separated list like "10,20,30,50"
@@ -59,6 +60,7 @@ int main(int argc, char** argv)
     args.asymptote = parseAsymptote(argsman.GetArg("-asymptote", ""));
     args.output_csv = argsman.GetArg("-output_csv", "");
     args.output_json = argsman.GetArg("-output_json", "");
+    args.quiet = argsman.GetBoolArg("-quiet", false);
 
     benchmark::BenchRunner::RunAll(args);
 
