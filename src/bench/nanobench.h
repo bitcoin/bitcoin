@@ -624,6 +624,9 @@ public:
     Bench& operator=(Bench const& other);
     ~Bench() noexcept;
 
+    //! Whether to suppress warnings and recommendations. Equivalent to NANOBENCH_SUPPRESS_WARNINGS.
+    bool m_quiet{false};
+
     /*!
       @brief Repeatedly calls `op()` based on the configuration, and performs measurements.
 

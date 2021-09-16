@@ -61,6 +61,8 @@ void benchmark::BenchRunner::RunAll(const Args& args)
 
         Bench bench;
         bench.name(p.first);
+        bench.m_quiet = args.quiet;
+
         if (args.asymptote.empty()) {
             p.second(bench);
         } else {
