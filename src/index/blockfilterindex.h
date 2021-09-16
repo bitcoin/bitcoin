@@ -39,6 +39,7 @@ private:
     size_t WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& filter);
 
     Mutex m_cs_headers_cache;
+    /** cache of block hash to filter header, to avoid disk access when responding to getcfcheckpt. */
     std::unordered_map<uint256, uint256, FilterHeaderHasher> m_headers_cache GUARDED_BY(m_cs_headers_cache);
 
 protected:

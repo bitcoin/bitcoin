@@ -5,12 +5,16 @@
 """Tests NODE_COMPACT_FILTERS (BIP 157/158).
 
 Tests that a node configured with -blockfilterindex and -peerblockfilters can serve
-cfcheckpts.
+cfheaders and cfcheckpts.
 """
 
 from test_framework.messages import (
     FILTER_TYPE_BASIC,
+    hash256,
     msg_getcfcheckpt,
+    msg_getcfheaders,
+    ser_uint256,
+    uint256_from_str,
 )
 from test_framework.mininode import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -100,10 +104,43 @@ class CompactFiltersTest(BitcoinTestFramework):
             [int(header, 16) for header in (stale_cfcheckpt,)]
         )
 
+        self.log.info("Check that peers can fetch cfheaders on active chain.")
+        request = msg_getcfheaders(
+            filter_type=FILTER_TYPE_BASIC,
+            start_height=1,
+            stop_hash=int(main_block_hash, 16)
+        )
+        node0.send_and_ping(request)
+        response = node0.last_message['cfheaders']
+        assert_equal(len(response.hashes), 1000)
+        assert_equal(
+            compute_last_header(response.prev_header, response.hashes),
+            int(main_cfcheckpt, 16)
+        )
+
+        self.log.info("Check that peers can fetch cfheaders on stale chain.")
+        request = msg_getcfheaders(
+            filter_type=FILTER_TYPE_BASIC,
+            start_height=1,
+            stop_hash=int(stale_block_hash, 16)
+        )
+        node0.send_and_ping(request)
+        response = node0.last_message['cfheaders']
+        assert_equal(len(response.hashes), 1000)
+        assert_equal(
+            compute_last_header(response.prev_header, response.hashes),
+            int(stale_cfcheckpt, 16)
+        )
+
         self.log.info("Requests to node 1 without NODE_COMPACT_FILTERS results in disconnection.")
         requests = [
             msg_getcfcheckpt(
                 filter_type=FILTER_TYPE_BASIC,
+                stop_hash=int(main_block_hash, 16)
+            ),
+            msg_getcfheaders(
+                filter_type=FILTER_TYPE_BASIC,
+                start_height=1000,
                 stop_hash=int(main_block_hash, 16)
             ),
         ]
@@ -114,6 +151,12 @@ class CompactFiltersTest(BitcoinTestFramework):
 
         self.log.info("Check that invalid requests result in disconnection.")
         requests = [
+            # Requesting too many filter headers results in disconnection.
+            msg_getcfheaders(
+                filter_type=FILTER_TYPE_BASIC,
+                start_height=0,
+                stop_hash=int(tip_hash, 16)
+            ),
             # Requesting unknown filter type results in disconnection.
             msg_getcfcheckpt(
                 filter_type=255,
@@ -129,6 +172,13 @@ class CompactFiltersTest(BitcoinTestFramework):
             node0 = self.nodes[0].add_p2p_connection(P2PInterface())
             node0.send_message(request)
             node0.wait_for_disconnect()
+
+def compute_last_header(prev_header, hashes):
+    """Compute the last filter header from a starting header and a sequence of filter hashes."""
+    header = ser_uint256(prev_header)
+    for filter_hash in hashes:
+        header = hash256(ser_uint256(filter_hash) + header)
+    return uint256_from_str(header)
 
 if __name__ == '__main__':
     CompactFiltersTest().main()
