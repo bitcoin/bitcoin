@@ -22,9 +22,9 @@
 #include <optional>
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
-                                 int64_t _nTime, unsigned int _entryHeight,
+                                 int64_t _nTime,
                                  bool _spendsCoinbase, int64_t _sigOpsCost, LockPoints lp)
-    : tx(_tx), nFee(_nFee), nTxWeight(GetTransactionWeight(*tx)), nUsageSize(RecursiveDynamicUsage(tx)), nTime(_nTime), entryHeight(_entryHeight),
+    : tx(_tx), nFee(_nFee), nTxWeight(GetTransactionWeight(*tx)), nUsageSize(RecursiveDynamicUsage(tx)), nTime(_nTime),
     spendsCoinbase(_spendsCoinbase), sigOpCost(_sigOpsCost), lockPoints(lp)
 {
     nCountWithDescendants = 1;
@@ -58,16 +58,8 @@ size_t CTxMemPoolEntry::GetTxSize() const
 
 unsigned int CTxMemPoolEntry::GetHeight(const CChain& active_chain) const
 {
-    //int64_t now = GetTimeSeconds();
     CBlockIndex* ret = active_chain.FindEarliestAtLeast(nTime, 0);
-    // The new way to calculate entry height is more accurate as it uses the correct height for the transaction when received
-    // during IBD, and also when loaded from mempool.dat.
-    unsigned int newEntryHeight = ret ? ret->nHeight-1 : active_chain.Height();
-    std::string strSame;
-    if ((entryHeight != newEntryHeight) && (nodeid != -2)) // Hide LoadMempool entries as we know they differ
-        LogPrintf("%s: nTime=%s entryHeight=%d newEntryHeight=%d ret=%d peer=%d\n", __func__, FormatISO8601DateTime(nTime), entryHeight, newEntryHeight, ret ? 1 : 0, nodeid);
-
-    return newEntryHeight;
+    return ret ? ret->nHeight - 1 : active_chain.Height();
 }
 
 // Update the given tx for any in-mempool descendants.
