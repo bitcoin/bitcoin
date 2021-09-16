@@ -4,11 +4,18 @@
 
 #include <bench/bench.h>
 
-#include <chainparams.h>
 #include <test/util/setup_common.h>
-#include <validation.h>
 
+#include <chrono>
+#include <fstream>
+#include <functional>
+#include <iostream>
+#include <map>
 #include <regex>
+#include <string>
+#include <vector>
+
+using namespace std::chrono_literals;
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
