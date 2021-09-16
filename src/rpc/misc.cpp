@@ -190,10 +190,6 @@ static UniValue validateaddress(const JSONRPCRequest& request)
         throw std::runtime_error(
             "validateaddress \"address\"\n"
             "\nReturn information about the given dash address.\n"
-            "DEPRECATION WARNING: Parts of this command have been deprecated and moved to getaddressinfo. Clients must\n"
-            "transition to using getaddressinfo to access this information before upgrading to v0.18. The following deprecated\n"
-            "fields have moved to getaddressinfo and will only be shown here with -deprecatedrpc=validateaddress: ismine, iswatchonly,\n"
-            "script, hex, pubkeys, sigsrequired, pubkey, addresses, embedded, iscompressed, account, timestamp, hdkeypath.\n"
             "\nArguments:\n"
             "1. \"address\"                    (string, required) The dash address to validate\n"
             "\nResult:\n"
