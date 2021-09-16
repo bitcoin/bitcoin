@@ -7,7 +7,6 @@
 from copy import deepcopy
 from decimal import Decimal
 
-from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import (
     BIP125_SEQUENCE_NUMBER,
     COIN,
@@ -18,9 +17,17 @@ from test_framework.messages import (
 )
 from test_framework.script import CScript, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_round
-from test_framework.script_util import DUMMY_P2WPKH_SCRIPT, DUMMY_2_P2WPKH_SCRIPT
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+    assert_raises_rpc_error,
+)
+from test_framework.script_util import (
+    DUMMY_P2WPKH_SCRIPT,
+    DUMMY_2_P2WPKH_SCRIPT,
+)
 from test_framework.wallet import MiniWallet
+
 
 MAX_REPLACEMENT_LIMIT = 100
 class ReplaceByFeeTest(BitcoinTestFramework):
@@ -89,29 +96,23 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def make_utxo(self, node, amount, confirmed=True, scriptPubKey=DUMMY_P2WPKH_SCRIPT):
         """Create a txout with a given amount and scriptPubKey
 
-        Mines coins as needed.
+        Assumes that MiniWallet has enough funds to cover the amount and the fixed fee
+        (from it's internal utxos, the one with the largest value is taken).
 
         confirmed - txouts created will be confirmed in the blockchain;
                     unconfirmed otherwise.
         """
-        fee = 1 * COIN
-        while node.getbalance() < satoshi_round((amount + fee) / COIN):
-            self.generate(node, COINBASE_MATURITY)
-
-        new_addr = node.getnewaddress()
-        txid = node.sendtoaddress(new_addr, satoshi_round((amount + fee) / COIN))
-        tx1 = node.getrawtransaction(txid, 1)
-        txid = int(txid, 16)
-        i, _ = next(filter(lambda vout: new_addr == vout[1]['scriptPubKey']['address'], enumerate(tx1['vout'])))
-
-        tx2 = CTransaction()
-        tx2.vin = [CTxIn(COutPoint(txid, i))]
-        tx2.vout = [CTxOut(amount, scriptPubKey)]
-        tx2.rehash()
-
-        signed_tx = node.signrawtransactionwithwallet(tx2.serialize().hex())
-
-        txid = node.sendrawtransaction(signed_tx['hex'], 0)
+        # MiniWallet only supports sweeping utxos to its own internal scriptPubKey, so in
+        # order to create an output with arbitrary amount/scriptPubKey, we have to add it
+        # manually after calling the create_self_transfer method. The MiniWallet output's
+        # nValue has to be adapted accordingly (amount and fee deduction). To keep things
+        # simple, we use a fixed fee of 1000 Satoshis here.
+        fee = 1000
+        tx = self.wallet.create_self_transfer(from_node=node, fee_rate=0, mempool_valid=False)['tx']
+        assert_greater_than(tx.vout[0].nValue, amount + fee)
+        tx.vout[0].nValue -= (amount + fee)           # change output -> MiniWallet
+        tx.vout.append(CTxOut(amount, scriptPubKey))  # desired output -> to be returned
+        txid = self.wallet.sendrawtransaction(from_node=node, tx_hex=tx.serialize().hex())
 
         # If requested, ensure txouts are confirmed.
         if confirmed:
@@ -124,7 +125,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 assert new_size < mempool_size
                 mempool_size = new_size
 
-        return COutPoint(int(txid, 16), 0)
+        return COutPoint(int(txid, 16), 1)
 
     def test_simple_doublespend(self):
         """Simple doublespend"""
