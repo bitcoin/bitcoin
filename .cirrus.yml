@@ -149,10 +149,12 @@ task:
 #     - python test\util\rpcauth-test.py
 
 task:
-  name: 'ARM [unit tests, no functional tests] [buster]'
+  name: 'ARM [unit tests, no functional tests] [bullseye]'
   << : *GLOBAL_TASK_TEMPLATE
-  container:
-    image: debian:buster
+  arm_container:
+    image: debian:bullseye
+    cpu: 2
+    memory: 8G
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_arm.sh"
