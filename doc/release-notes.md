@@ -91,6 +91,10 @@ Tools and Utilities
 
 - Update `-getinfo` to return data in a user-friendly format that also reduces vertical space. (#21832)
 
+- CLI `-addrinfo` now returns a single field for the number of `onion` addresses
+  known to the node instead of separate `torv2` and `torv3` fields, as support
+  for Tor V2 addresses was removed from Bitcoin Core in 22.0. (#22544)
+
 Wallet
 ------
 
