@@ -467,7 +467,7 @@ start over.
     - `/root/.cache/guix/`
     - `/root/.guix-profile/`
 
-[b17e]: http://bootstrappable.org/
+[b17e]: https://bootstrappable.org/
 [r12e/source-date-epoch]: https://reproducible-builds.org/docs/source-date-epoch/
 
 [guix/install.sh]: https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh
