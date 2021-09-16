@@ -2771,7 +2771,6 @@ static RPCHelpMan createwallet()
         throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without sqlite support (required for descriptor wallets)");
 #endif
         flags |= WALLET_FLAG_DESCRIPTORS;
-        warnings.emplace_back(Untranslated("Wallet is an experimental descriptor wallet"));
     }
     if (!request.params[7].isNull() && request.params[7].get_bool()) {
 #ifdef ENABLE_EXTERNAL_SIGNER
