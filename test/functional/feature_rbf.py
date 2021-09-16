@@ -161,14 +161,14 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def test_doublespend_chain(self):
         """Doublespend of a long chain"""
 
-        initial_nValue = 50 * COIN
+        initial_nValue = 5 * COIN
         tx0_outpoint = self.make_utxo(self.nodes[0], initial_nValue)
 
         prevout = tx0_outpoint
         remaining_value = initial_nValue
         chain_txids = []
-        while remaining_value > 10 * COIN:
-            remaining_value -= 1 * COIN
+        while remaining_value > 1 * COIN:
+            remaining_value -= int(0.1 * COIN)
             tx = CTransaction()
             tx.vin = [CTxIn(prevout, nSequence=0)]
             tx.vout = [CTxOut(remaining_value, CScript([1, OP_DROP] * 15 + [1]))]
@@ -178,10 +178,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             prevout = COutPoint(int(txid, 16), 0)
 
         # Whether the double-spend is allowed is evaluated by including all
-        # child fees - 40 BTC - so this attempt is rejected.
+        # child fees - 4 BTC - so this attempt is rejected.
         dbl_tx = CTransaction()
         dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        dbl_tx.vout = [CTxOut(initial_nValue - 30 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        dbl_tx.vout = [CTxOut(initial_nValue - 3 * COIN, DUMMY_P2WPKH_SCRIPT)]
         dbl_tx_hex = dbl_tx.serialize().hex()
 
         # This will raise an exception due to insufficient fee
@@ -190,7 +190,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # Accepted with sufficient fee
         dbl_tx = CTransaction()
         dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        dbl_tx.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        dbl_tx.vout = [CTxOut(int(0.1 * COIN), DUMMY_P2WPKH_SCRIPT)]
         dbl_tx_hex = dbl_tx.serialize().hex()
         self.nodes[0].sendrawtransaction(dbl_tx_hex, 0)
 
