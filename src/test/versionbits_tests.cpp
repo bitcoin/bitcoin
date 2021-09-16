@@ -312,6 +312,93 @@ BOOST_AUTO_TEST_CASE(versionbits_sanity)
     }
 }
 
+/** Check that ComputeBlockVersion will set the appropriate bit correctly for BIP8 (height-based) activation */
+static void check_computeblockversion_bip8(const Consensus::Params& params, Consensus::DeploymentPos dep)
+{
+    // nStartTime and nTimeout must be set to 0 to use BIP8
+    BOOST_CHECK(params.vDeployments[dep].nStartTime == 0 && params.vDeployments[dep].nTimeout == 0);
+
+    int64_t bit = params.vDeployments[dep].bit;
+    int64_t nStartHeight = params.vDeployments[dep].nStartHeight;
+    int64_t nTimeoutHeight = params.vDeployments[dep].nTimeoutHeight;
+    uint32_t nMinerConfirmationWindow = params.nMinerConfirmationWindow;
+
+    // should not be any signalling for first block
+    BOOST_CHECK_EQUAL(ComputeBlockVersion(nullptr, params), VERSIONBITS_TOP_BITS);
+
+    BOOST_CHECK(nStartHeight >= 0);
+    BOOST_CHECK_EQUAL(nStartHeight % nMinerConfirmationWindow, 0U);
+
+    BOOST_CHECK(nTimeoutHeight <= std::numeric_limits<uint32_t>::max());
+    BOOST_CHECK_EQUAL(nTimeoutHeight % nMinerConfirmationWindow, 0U);
+
+    BOOST_CHECK(0 <= bit && bit < 32);
+    BOOST_CHECK(((1 << bit) & VERSIONBITS_TOP_MASK) == 0);
+
+    int64_t nTime = 100000;
+
+    const CBlockIndex* lastBlock = nullptr;
+
+    {
+        // In the first chain, we don't set the bit, and wait for forced activation via timeout.
+        // The bit should be set by CBV during range [nStartHeight, nTimeoutHeight + nMinerConfirmationWindow)
+        VersionBitsTester chain;
+
+        // Bit should not be set before nStartHeight
+        lastBlock = chain.Mine(nStartHeight - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
+
+        // Once we hit nStartHeight, the feature switches to STARTED, we should be able to signal for activation.
+        for (uint32_t i = nStartHeight; i < nTimeoutHeight; i++) {
+            lastBlock = chain.Mine(i, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+            BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+            BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
+        }
+
+        // Once the time height is hit, the feature switches to LOCKED_IN for 1 full miner confirmation window
+        for (uint32_t i = 0; i < nMinerConfirmationWindow; i++) {
+            lastBlock = chain.Mine(nTimeoutHeight + i, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+            BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+            BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
+        }
+
+        // After 1 full confirmation window, the feature should be ACTIVE, so we should stop setting the bit.
+        lastBlock = chain.Mine(nTimeoutHeight + nMinerConfirmationWindow, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
+    }
+
+    {
+        // In the second chain, we set the bit to activate before forced activation at nTimeoutHeight.
+        // We will signal for the feature during the first confirmation window.
+        // It should be LOCKED-IN for the 2nd window, after which it switches to ACTIVE.
+        // The bit should be set by CBV while STARTED and LOCKED-IN, and then no longer set while ACTIVE.
+        // That is, it should be set by CBV during range [nStartHeight, nStartHeight + 2 * nMinerConfirmationWindow)
+        VersionBitsTester chain;
+
+        // Bit should not be set before nStartHeight
+        lastBlock = chain.Mine(nStartHeight - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
+
+        // Once we hit nStartHeight, the feature switches to STARTED, and we start signaling for activation.
+        for (uint32_t i = 0; i < nMinerConfirmationWindow; i++) {
+            lastBlock = chain.Mine(nStartHeight + i, nTime, VERSIONBITS_TOP_BITS | (1 << bit)).Tip();
+            BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+            BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
+        }
+
+        // After the first confirmation window, the feature switches to LOCKED-IN for 1 full miner confirmation window.
+        for (uint32_t i = 0; i < nMinerConfirmationWindow; i++) {
+            lastBlock = chain.Mine(nStartHeight + nMinerConfirmationWindow + i, nTime, VERSIONBITS_TOP_BITS | (1 << bit)).Tip();
+            BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+            BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
+        }
+
+        // After 1 full LOCKED-IN confirmation window, the feature should be ACTIVE, so we should stop setting the bit.
+        lastBlock = chain.Mine(nStartHeight + (2 * nMinerConfirmationWindow), nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
+    }
+}
+
 /** Check that ComputeBlockVersion will set the appropriate bit correctly */
 static void check_computeblockversion(const Consensus::Params& params, Consensus::DeploymentPos dep)
 {
@@ -321,8 +408,10 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
     int64_t bit = params.vDeployments[dep].bit;
     int64_t nStartTime = params.vDeployments[dep].nStartTime;
     int64_t nTimeout = params.vDeployments[dep].nTimeout;
-    int64_t nStartHeight = params.vDeployments[dep].nStartHeight;
-    int64_t nTimeoutHeight = params.vDeployments[dep].nTimeoutHeight;
+
+    if (nStartTime == 0 && nTimeout == 0) {
+        return check_computeblockversion_bip8(params, dep);
+    }
 
     // should not be any signalling for first block
     BOOST_CHECK_EQUAL(ComputeBlockVersion(nullptr, params), VERSIONBITS_TOP_BITS);
@@ -336,9 +425,6 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
     BOOST_CHECK(nTimeout <= std::numeric_limits<uint32_t>::max() || nTimeout == Consensus::BIP9Deployment::NO_TIMEOUT);
     BOOST_CHECK(0 <= bit && bit < 32);
     BOOST_CHECK(((1 << bit) & VERSIONBITS_TOP_MASK) == 0);
-    BOOST_CHECK(nStartHeight >= 0);
-    BOOST_CHECK_EQUAL(nStartHeight % params.nMinerConfirmationWindow, 0U);
-    BOOST_CHECK(nTimeoutHeight <= std::numeric_limits<uint32_t>::max());
 
     // In the first chain, test that the bit is set by CBV until it has failed.
     // In the second chain, test the bit is set by CBV while STARTED and
@@ -457,7 +543,7 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
 {
     // check that any deployment on any chain can conceivably reach both
     // ACTIVE and FAILED states in roughly the way we expect
-    for (const auto& chain_name : {CBaseChainParams::MAIN, CBaseChainParams::TESTNET, CBaseChainParams::REGTEST}) {
+    for (const auto& chain_name : { CBaseChainParams::MAIN, CBaseChainParams::TESTNET, CBaseChainParams::REGTEST}) {
         const auto chainParams = CreateChainParams(*m_node.args, chain_name);
         for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++i) {
             check_computeblockversion(chainParams->GetConsensus(), static_cast<Consensus::DeploymentPos>(i));
@@ -473,15 +559,6 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
         check_computeblockversion(chainParams->GetConsensus(), Consensus::DEPLOYMENT_TESTDUMMY);
     }
 
-    {
-        // Use regtest/testdummy to ensure we always exercise the
-        // min_activation_height test, even if we're not using that in a
-        // live deployment
-        ArgsManager args;
-        args.ForceSetArg("-vbparams", "testdummy:1199145601:1230767999:403200"); // January 1, 2008 - December 31, 2008, min act height 403200
-        const auto chainParams = CreateChainParams(args, CBaseChainParams::REGTEST);
-        check_computeblockversion(chainParams->GetConsensus(), Consensus::DEPLOYMENT_TESTDUMMY);
-    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

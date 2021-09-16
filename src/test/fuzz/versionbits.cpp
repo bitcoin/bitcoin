@@ -29,16 +29,16 @@ public:
     const int64_t m_end;
     const int m_period;
     const int m_threshold;
-    const int m_min_activation_height;
+    const int64_t m_begin_height;
+    const int64_t m_end_height;
     const int m_bit;
 
-    TestConditionChecker(int64_t begin, int64_t end, int period, int threshold, int min_activation_height, int bit)
-        : m_begin{begin}, m_end{end}, m_period{period}, m_threshold{threshold}, m_min_activation_height{min_activation_height}, m_bit{bit}
+    TestConditionChecker(int64_t begin, int64_t end, int period, int threshold, int64_t begin_height, int64_t end_height, int bit)
+        : m_begin{begin}, m_end{end}, m_period{period}, m_threshold{threshold}, m_begin_height{begin_height}, m_end_height{end_height}, m_bit{bit}
     {
         assert(m_period > 0);
         assert(0 <= m_threshold && m_threshold <= m_period);
         assert(0 <= m_bit && m_bit < 32 && m_bit < VERSIONBITS_NUM_BITS);
-        assert(0 <= m_min_activation_height);
     }
 
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override { return Condition(pindex->nVersion); }
@@ -46,7 +46,8 @@ public:
     int64_t EndTime(const Consensus::Params& params) const override { return m_end; }
     int Period(const Consensus::Params& params) const override { return m_period; }
     int Threshold(const Consensus::Params& params) const override { return m_threshold; }
-    int MinActivationHeight(const Consensus::Params& params) const override { return m_min_activation_height; }
+    int64_t BeginHeight(const Consensus::Params& params) const override { return m_begin_height; }
+    int64_t EndHeight(const Consensus::Params& params) const override { return m_end_height; }
 
     ThresholdState GetStateFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateFor(pindexPrev, dummy_params, m_cache); }
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, dummy_params, m_cache); }
@@ -144,6 +145,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     bool never_active_test = false;
     int64_t start_time;
     int64_t timeout;
+    int64_t start_height = 0;
+    int64_t end_height = 0;
     if (fuzzed_data_provider.ConsumeBool()) {
         // pick the timestamp to switch based on a block
         // note states will change *after* these blocks because mediantime lags
@@ -166,9 +169,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         }
         timeout = fuzzed_data_provider.ConsumeBool() ? Consensus::BIP9Deployment::NO_TIMEOUT : fuzzed_data_provider.ConsumeIntegral<int64_t>();
     }
-    int min_activation = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * max_periods);
 
-    TestConditionChecker checker(start_time, timeout, period, threshold, min_activation, bit);
+    TestConditionChecker checker(start_time, timeout, period, threshold, start_height, end_height, bit);
 
     // Early exit if the versions don't signal sensibly for the deployment
     if (!checker.Condition(ver_signal)) return;
@@ -304,15 +306,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         }
         break;
     case ThresholdState::LOCKED_IN:
-        if (exp_state == ThresholdState::LOCKED_IN) {
-            assert(current_block->nHeight + 1 < min_activation);
-        } else {
+        if (exp_state != ThresholdState::LOCKED_IN) {
             assert(exp_state == ThresholdState::STARTED);
             assert(blocks_sig >= threshold);
         }
         break;
     case ThresholdState::ACTIVE:
-        assert(always_active_test || min_activation <= current_block->nHeight + 1);
         assert(exp_state == ThresholdState::ACTIVE || exp_state == ThresholdState::LOCKED_IN);
         break;
     case ThresholdState::FAILED:
