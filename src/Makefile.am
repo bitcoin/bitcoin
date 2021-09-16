@@ -757,7 +757,7 @@ libsyscoin_common_a_SOURCES = \
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
-# backward-compatibility objects and their sanity checks are linked.
+# sanity checks are linked.
 libsyscoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_util_a_SOURCES = \
@@ -805,11 +805,6 @@ if USE_LIBEVENT
 libsyscoin_util_a_SOURCES += util/url.cpp
 endif
 
-if GLIBC_BACK_COMPAT
-libsyscoin_util_a_SOURCES += compat/glibc_compat.cpp
-AM_LDFLAGS += $(COMPAT_LDFLAGS)
-endif
-
 # cli: shared between syscoin-cli and syscoin-qt
 libsyscoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -818,11 +813,6 @@ libsyscoin_cli_a_SOURCES = \
   compat/stdin.cpp \
   rpc/client.cpp \
   $(SYSCOIN_CORE_H)
-
-if GLIBC_BACK_COMPAT
-libsyscoin_cli_a_SOURCES += compat/glibc_compat.cpp
-AM_LDFLAGS += $(COMPAT_LDFLAGS)
-endif
 
 nodist_libsyscoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
@@ -954,9 +944,6 @@ if BUILD_SYSCOIN_LIBS
 include_HEADERS = script/syscoinconsensus.h
 libsyscoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libsyscoin_crypto_base_a_SOURCES) $(libsyscoin_consensus_a_SOURCES)
 
-if GLIBC_BACK_COMPAT
-  libsyscoinconsensus_la_SOURCES += compat/glibc_compat.cpp
-endif
 
 libsyscoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
 libsyscoinconsensus_la_LIBADD = $(LIBSECP256K1)
@@ -1036,11 +1023,6 @@ endif
 if TARGET_WINDOWS
 	@echo "Checking Windows dynamic libraries..."
 	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
-endif
-
-if GLIBC_BACK_COMPAT
-	@echo "Checking glibc back compat..."
-	$(AM_V_at) CPPFILT='$(CPPFILT)' $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
 endif
 
 check-security: $(bin_PROGRAMS)
