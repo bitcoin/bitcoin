@@ -700,14 +700,13 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
 {
     std::vector<bool> asmap1 = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
 
-    auto addrman_asmap1 = std::make_unique<AddrManTest>(asmap1);
-    auto addrman_asmap1_dup = std::make_unique<AddrManTest>(asmap1);
-    auto addrman_noasmap = std::make_unique<AddrManTest>();
+    auto addrman_asmap1 = std::make_unique<AddrMan>(asmap1, /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    auto addrman_asmap1_dup = std::make_unique<AddrMan>(asmap1, /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    auto addrman_noasmap = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
 
     CAddress addr = CAddress(ResolveService("250.1.1.1"), NODE_NONE);
     CNetAddr default_source;
-
 
     addrman_asmap1->Add({addr}, default_source);
 
@@ -715,50 +714,48 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     // serizalizing/deserializing addrman with the same asmap
     stream >> *addrman_asmap1_dup;
 
-    std::pair<int, int> bucketAndEntry_asmap1 = addrman_asmap1->GetBucketAndEntry(addr);
-    std::pair<int, int> bucketAndEntry_asmap1_dup = addrman_asmap1_dup->GetBucketAndEntry(addr);
-    BOOST_CHECK(bucketAndEntry_asmap1.second != -1);
-    BOOST_CHECK(bucketAndEntry_asmap1_dup.second != -1);
+    AddressPosition addr_pos1 = addrman_asmap1->FindAddressEntry(addr).value();
+    AddressPosition addr_pos2 = addrman_asmap1_dup->FindAddressEntry(addr).value();
+    BOOST_CHECK(addr_pos1.multiplicity != 0);
+    BOOST_CHECK(addr_pos2.multiplicity != 0);
 
-    BOOST_CHECK(bucketAndEntry_asmap1.first == bucketAndEntry_asmap1_dup.first);
-    BOOST_CHECK(bucketAndEntry_asmap1.second == bucketAndEntry_asmap1_dup.second);
+    BOOST_CHECK(addr_pos1 == addr_pos2);
 
     // deserializing asmaped peers.dat to non-asmaped addrman
     stream << *addrman_asmap1;
     stream >> *addrman_noasmap;
-    std::pair<int, int> bucketAndEntry_noasmap = addrman_noasmap->GetBucketAndEntry(addr);
-    BOOST_CHECK(bucketAndEntry_noasmap.second != -1);
-    BOOST_CHECK(bucketAndEntry_asmap1.first != bucketAndEntry_noasmap.first);
-    BOOST_CHECK(bucketAndEntry_asmap1.second != bucketAndEntry_noasmap.second);
+    AddressPosition addr_pos3 = addrman_noasmap->FindAddressEntry(addr).value();
+    BOOST_CHECK(addr_pos3.multiplicity != 0);
+    BOOST_CHECK(addr_pos1.bucket != addr_pos3.bucket);
+    BOOST_CHECK(addr_pos1.position != addr_pos3.position);
 
     // deserializing non-asmaped peers.dat to asmaped addrman
-    addrman_asmap1 = std::make_unique<AddrManTest>(asmap1);
-    addrman_noasmap = std::make_unique<AddrManTest>();
+    addrman_asmap1 = std::make_unique<AddrMan>(asmap1, /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    addrman_noasmap = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
     addrman_noasmap->Add({addr}, default_source);
     stream << *addrman_noasmap;
     stream >> *addrman_asmap1;
-    std::pair<int, int> bucketAndEntry_asmap1_deser = addrman_asmap1->GetBucketAndEntry(addr);
-    BOOST_CHECK(bucketAndEntry_asmap1_deser.second != -1);
-    BOOST_CHECK(bucketAndEntry_asmap1_deser.first != bucketAndEntry_noasmap.first);
-    BOOST_CHECK(bucketAndEntry_asmap1_deser.first == bucketAndEntry_asmap1_dup.first);
-    BOOST_CHECK(bucketAndEntry_asmap1_deser.second == bucketAndEntry_asmap1_dup.second);
+
+    AddressPosition addr_pos4 = addrman_asmap1->FindAddressEntry(addr).value();
+    BOOST_CHECK(addr_pos4.multiplicity != 0);
+    BOOST_CHECK(addr_pos4.bucket != addr_pos3.bucket);
+    BOOST_CHECK(addr_pos4 == addr_pos2);
 
     // used to map to different buckets, now maps to the same bucket.
-    addrman_asmap1 = std::make_unique<AddrManTest>(asmap1);
-    addrman_noasmap = std::make_unique<AddrManTest>();
+    addrman_asmap1 = std::make_unique<AddrMan>(asmap1, /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    addrman_noasmap = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
     CAddress addr1 = CAddress(ResolveService("250.1.1.1"), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.2.1.1"), NODE_NONE);
     addrman_noasmap->Add({addr, addr2}, default_source);
-    std::pair<int, int> bucketAndEntry_noasmap_addr1 = addrman_noasmap->GetBucketAndEntry(addr1);
-    std::pair<int, int> bucketAndEntry_noasmap_addr2 = addrman_noasmap->GetBucketAndEntry(addr2);
-    BOOST_CHECK(bucketAndEntry_noasmap_addr1.first != bucketAndEntry_noasmap_addr2.first);
-    BOOST_CHECK(bucketAndEntry_noasmap_addr1.second != bucketAndEntry_noasmap_addr2.second);
+    AddressPosition addr_pos5 = addrman_noasmap->FindAddressEntry(addr1).value();
+    AddressPosition addr_pos6 = addrman_noasmap->FindAddressEntry(addr2).value();
+    BOOST_CHECK(addr_pos5.bucket != addr_pos6.bucket);
     stream << *addrman_noasmap;
     stream >> *addrman_asmap1;
-    std::pair<int, int> bucketAndEntry_asmap1_deser_addr1 = addrman_asmap1->GetBucketAndEntry(addr1);
-    std::pair<int, int> bucketAndEntry_asmap1_deser_addr2 = addrman_asmap1->GetBucketAndEntry(addr2);
-    BOOST_CHECK(bucketAndEntry_asmap1_deser_addr1.first == bucketAndEntry_asmap1_deser_addr2.first);
-    BOOST_CHECK(bucketAndEntry_asmap1_deser_addr1.second != bucketAndEntry_asmap1_deser_addr2.second);
+    AddressPosition addr_pos7 = addrman_asmap1->FindAddressEntry(addr1).value();
+    AddressPosition addr_pos8 = addrman_asmap1->FindAddressEntry(addr2).value();
+    BOOST_CHECK(addr_pos7.bucket == addr_pos8.bucket);
+    BOOST_CHECK(addr_pos7.position != addr_pos8.position);
 }
 
 BOOST_AUTO_TEST_CASE(remove_invalid)
