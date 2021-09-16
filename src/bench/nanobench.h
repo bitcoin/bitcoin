@@ -1707,13 +1707,13 @@ namespace detail {
 
 char const* getEnv(char const* name);
 bool isEndlessRunning(std::string const& name);
-bool isWarningsEnabled();
+bool isWarningsEnabled(bool quiet);
 
 template <typename T>
 T parseFile(std::string const& filename);
 
 void gatherStabilityInformation(std::vector<std::string>& warnings, std::vector<std::string>& recommendations);
-void printStabilityInformationOnce(std::ostream* os);
+void printStabilityInformationOnce(std::ostream* os, bool quiet);
 
 // remembers the last table settings used. When it changes, a new table header is automatically written for the new entry.
 uint64_t& singletonHeaderHash() noexcept;
@@ -1937,8 +1937,9 @@ bool isEndlessRunning(std::string const& name) {
     return nullptr != endless && endless == name;
 }
 
-// True when environment variable NANOBENCH_SUPPRESS_WARNINGS is either not set at all, or set to "0"
-bool isWarningsEnabled() {
+// True when -quiet option is false and environment variable NANOBENCH_SUPPRESS_WARNINGS is unset or "0".
+bool isWarningsEnabled(bool quiet) {
+    if (quiet) return false;
     auto suppression = getEnv("NANOBENCH_SUPPRESS_WARNINGS");
     return nullptr == suppression || suppression == std::string("0");
 }
@@ -1999,9 +2000,9 @@ void gatherStabilityInformation(std::vector<std::string>& warnings, std::vector<
     }
 }
 
-void printStabilityInformationOnce(std::ostream* outStream) {
+void printStabilityInformationOnce(std::ostream* outStream, bool quiet) {
     static bool shouldPrint = true;
-    if (shouldPrint && outStream && isWarningsEnabled()) {
+    if (shouldPrint && outStream && isWarningsEnabled(quiet)) {
         auto& os = *outStream;
         shouldPrint = false;
         std::vector<std::string> warnings;
@@ -2062,7 +2063,7 @@ struct IterationLogic::Impl {
     explicit Impl(Bench const& bench)
         : mBench(bench)
         , mResult(bench.config()) {
-        printStabilityInformationOnce(mBench.output());
+        printStabilityInformationOnce(mBench.output(), mBench.m_quiet);
 
         // determine target runtime per epoch
         mTargetRuntimePerEpoch = detail::clockResolution() * mBench.clockResolutionMultiple();
@@ -2278,7 +2279,7 @@ struct IterationLogic::Impl {
                     os << col.value();
                 }
                 os << "| ";
-                auto showUnstable = isWarningsEnabled() && rErrorMedian >= 0.05;
+                auto showUnstable = isWarningsEnabled(mBench.m_quiet) && rErrorMedian >= 0.05;
                 if (showUnstable) {
                     os << ":wavy_dash: ";
                 }
