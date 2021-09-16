@@ -10,11 +10,13 @@
 #include <util/system.h>
 #include <util/time.h>
 
-#include <codecvt>
-#include <cwchar>
-#include <locale>
 #include <stdexcept>
 #include <string>
+
+#ifdef WIN32
+#include <codecvt>
+#include <locale>
+#endif
 
 #ifdef USE_POLL
 #include <poll.h>
