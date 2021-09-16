@@ -20,6 +20,6 @@ void CBatchedLogger::Flush()
     if (!accept || msg.empty()) {
         return;
     }
-    g_logger->LogPrintStr(strprintf("%s:\n%s", header, msg));
+    LogInstance().LogPrintStr(strprintf("%s:\n%s", header, msg));
     msg.clear();
 }

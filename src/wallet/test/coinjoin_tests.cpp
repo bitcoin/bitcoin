@@ -46,7 +46,8 @@ public:
         }
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver);
+        const CBlockIndex *stop_block, *failed_block;
+        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block);
     }
 
     ~CTransactionBuilderTestSetup()

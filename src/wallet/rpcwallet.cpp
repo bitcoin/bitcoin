@@ -3287,7 +3287,8 @@ static UniValue upgradetohd(const JSONRPCRequest& request)
         if (!reserver.reserve()) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
         }
-        pwallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, true);
+        const CBlockIndex *stop_block, *failed_block;
+        pwallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block, true);
     }
 
     return true;
@@ -4153,16 +4154,17 @@ static UniValue rescanblockchain(const JSONRPCRequest& request)
         }
     }
 
-    CBlockIndex *stopBlock = pwallet->ScanForWalletTransactions(pindexStart, pindexStop, reserver, true);
-    if (!stopBlock) {
-        if (pwallet->IsAbortingRescan()) {
-            throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted.");
-        }
-        // if we got a nullptr returned, ScanForWalletTransactions did rescan up to the requested stopindex
-        stopBlock = pindexStop ? pindexStop : pChainTip;
-    }
-    else {
+    const CBlockIndex *failed_block, *stopBlock;
+    CWallet::ScanResult result =
+        pwallet->ScanForWalletTransactions(pindexStart, pindexStop, reserver, failed_block, stopBlock, true);
+    switch (result) {
+    case CWallet::ScanResult::SUCCESS:
+        break; // stopBlock set by ScanForWalletTransactions
+    case CWallet::ScanResult::FAILURE:
         throw JSONRPCError(RPC_MISC_ERROR, "Rescan failed. Potentially corrupted data files.");
+    case CWallet::ScanResult::USER_ABORT:
+        throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted.");
+        // no default case, so the compiler can warn about missing cases
     }
     UniValue response(UniValue::VOBJ);
     response.pushKV("start_height", pindexStart->nHeight);
