@@ -73,6 +73,33 @@ jobs:
           echo "ubuntu-${{ env.BRANCH }}-${{ env.GIT_HASH }}-asan"
           echo "----"
 
+  ubuntu-valgrind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Get snapshot hash, version & branch
+        id: snapshot
+        run: |
+          echo "GIT_HASH=$(git rev-parse --short=7 "$GITHUB_SHA")" >> $GITHUB_ENV
+          echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//./g')" >> $GITHUB_ENV
+          echo "TAGS=$(if [ "${{ github.event_name }}" == "push" ] && [ "$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" == "master" ]; then echo "latest-valgrind,$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')"; elif [ "${{ github.event_name }}" == "pull_request" ]; then echo ""; else echo "$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')"; fi)" >> $GITHUB_ENV
+      - name: Publish to Registry
+        env:
+          BUILD_TYPE: ${{ matrix.build }}
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: veriblock/vbitcoin
+          username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
+          dockerfile: ubuntu-valgrind.Dockerfile
+          tags: "ubuntu-${{ env. BRANCH }}-${{ env.GIT_HASH }}-valgrind"
+      - name: Show Tags
+        run: |
+          echo "Successfully pushed the following tags:"
+          echo "----"
+          echo "ubuntu-${{ env.BRANCH }}-${{ env.GIT_HASH }}-valgrind"
+          echo "----"
+
   alpine:
     runs-on: ubuntu-latest
     steps:

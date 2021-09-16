@@ -18,7 +18,7 @@ RUN export VERIBLOCK_POP_CPP_VERSION=$(awk -F '=' '/\$\(package\)_version/{print
      cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION}; \
      mkdir build; \
      cd build; \
-     cmake .. -DCMAKE_BUILD_TYPE=Debug -DASAN=ON -DTESTING=OFF; \
+     cmake .. -DCMAKE_BUILD_TYPE=Debug -DASAN=OFF -DTESTING=OFF; \
      make -j2 install \
     )
 
@@ -30,8 +30,7 @@ RUN CC=gcc-7 CXX=g++-7 ./configure \
   --disable-ccache \
   --disable-man \
   --with-libs=no \
-  --enable-debug \
-  --with-sanitizers=address
+  --enable-debug
 RUN make -j4 install
 # remove source files to decrease image size
 RUN rm -rf /app
