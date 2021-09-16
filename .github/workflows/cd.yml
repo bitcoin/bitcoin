@@ -7,7 +7,6 @@ on:
       - develop
       - release/*
       - test_deploy
-      - feature/*
 
   pull_request:
     branches:
