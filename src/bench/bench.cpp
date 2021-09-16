@@ -4,9 +4,7 @@
 
 #include <bench/bench.h>
 
-#include <chainparams.h>
 #include <test/util/setup_common.h>
-#include <validation.h>
 
 #include <regex>
 
