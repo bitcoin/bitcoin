@@ -26,6 +26,7 @@
 #include <index/txindex.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
+#include <interfaces/init.h>
 #include <interfaces/node.h>
 #include <mapport.h>
 #include <miner.h>
@@ -1063,7 +1064,7 @@ bool AppInitLockDataDirectory()
 
 bool AppInitInterfaces(NodeContext& node)
 {
-    node.chain = interfaces::MakeChain(node);
+    node.chain = node.init->makeChain();
     // Create client interfaces for wallets that are supposed to be loaded
     // according to -wallet and -disablewallet options. This only constructs
     // the interfaces, it doesn't load wallet data. Wallets actually get loaded
