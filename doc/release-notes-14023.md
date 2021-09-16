@@ -1,5 +1,5 @@
-Accout API removed
-------------------
+Account API removed
+-------------------
 
 The 'account' API was deprecated in v0.17 and has been fully removed in v0.18.
 The 'label' API was introduced in v0.17 as a replacement for accounts.

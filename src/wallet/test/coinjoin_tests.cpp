@@ -89,7 +89,7 @@ public:
         for (CAmount nAmount : vecAmounts) {
             BOOST_CHECK(wallet->CreateTransaction({{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, reserveKey, nFeeRet, nChangePosRet, strError, coinControl));
             CValidationState state;
-            BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, {}, reserveKey, nullptr, state));
+            BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, reserveKey, nullptr, state));
             AddTxToChain(tx->GetHash());
             for (size_t n = 0; n < tx->vout.size(); ++n) {
                 if (nChangePosRet != -1 && n == nChangePosRet) {
