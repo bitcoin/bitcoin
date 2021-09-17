@@ -51,12 +51,9 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
         }
     });
 
-    #ifndef USE_SQLITE
-        ui->descriptor_checkbox->setToolTip(tr("Compiled without sqlite support (required for descriptor wallets)"));
-        ui->descriptor_checkbox->setEnabled(false);
-        ui->descriptor_checkbox->setChecked(false);
-    #endif
-
+    ui->descriptor_checkbox->setToolTip("Coming Soon");
+    ui->descriptor_checkbox->setEnabled(false);
+    ui->descriptor_checkbox->setChecked(false);
 }
 
 CreateWalletDialog::~CreateWalletDialog()
