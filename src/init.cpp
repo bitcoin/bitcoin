@@ -845,7 +845,7 @@ void InitLogging()
     LogInstance().m_log_threadnames = gArgs.GetBoolArg("-logthreadnames", DEFAULT_LOGTHREADNAMES);
     LogInstance().EnableCategory(BCLog::POP);
 
-    std::string poplogverbosity = gArgs.GetArg("-poplogverbosity", "warn");
+    std::string poplogverbosity = gArgs.GetArg("-poplogverbosity", "error");
     altintegration::SetLogger<VeriBlock::VBTCLogger>();
     altintegration::GetLogger().level = altintegration::StringToLevel(poplogverbosity);
 
