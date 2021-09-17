@@ -26,8 +26,6 @@ class PopShutdownSync(BitcoinTestFramework):
 
     def setup_network(self):
         self.setup_nodes()
-        for node in self.nodes:
-            node.setmocktime(1617025247)
         mine_until_pop_active(self.nodes[0])
 
         # all nodes connected and synced
