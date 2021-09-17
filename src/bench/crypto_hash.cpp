@@ -134,10 +134,6 @@ static void MuHashDiv(benchmark::Bench& bench)
     FastRandomContext rng(true);
     MuHash3072 muhash{rng.randbytes(32)};
 
-    for (size_t i = 0; i < bench.epochIterations(); ++i) {
-        acc *= muhash;
-    }
-
     bench.run([&] {
         acc /= muhash;
     });
