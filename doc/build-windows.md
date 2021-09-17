@@ -5,10 +5,8 @@ Below are some notes on how to build Dash Core for Windows.
 
 The options known to work for building Dash Core on Windows are:
 
-* On Linux, using the [Mingw-w64](https://mingw-w64.org/doku.php) cross compiler tool chain. Ubuntu Focal 20.04 is required
-and is the platform used to build the Dash Core Windows release binaries.
-* On Windows, using [Windows
-Subsystem for Linux (WSL)](https://docs.microsoft.com/windows/wsl/about) and the Mingw-w64 cross compiler tool chain.
+* On Linux, using the [Mingw-w64](https://www.mingw-w64.org/) cross compiler tool chain.
+* On Windows, using [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/windows/wsl/about) and Mingw-w64.
 
 Other options which may work, but which have not been extensively tested are (please contribute instructions):
 
@@ -17,40 +15,12 @@ Other options which may work, but which have not been extensively tested are (pl
 Installing Windows Subsystem for Linux
 ---------------------------------------
 
-With Windows 10, Microsoft has released a new feature named the [Windows
-Subsystem for Linux (WSL)](https://docs.microsoft.com/windows/wsl/about). This
-feature allows you to run a bash shell directly on Windows in an Ubuntu-based
-environment. Within this environment you can cross compile for Windows without
-the need for a separate Linux VM or server. Note that while WSL can be installed with
-other Linux variants, such as OpenSUSE, the following instructions have only been
-tested with Ubuntu.
-
-This feature is not supported in versions of Windows prior to Windows 10 or on
-Windows Server SKUs. In addition, it is available [only for 64-bit versions of
-Windows](https://docs.microsoft.com/windows/wsl/install-win10).
-
-Full instructions to install WSL are available on the above link.
-To install WSL on Windows 10 with Fall Creators Update installed (version >= 16215.0) do the following:
-
-1. Enable the Windows Subsystem for Linux feature
-  * Open the Windows Features dialog (`OptionalFeatures.exe`)
-  * Enable 'Windows Subsystem for Linux'
-  * Click 'OK' and restart if necessary
-2. Install Ubuntu
-  * Open Microsoft Store and search for "Ubuntu 20.04" or use [this link](https://www.microsoft.com/store/productId/9MTTCL66CPXJ)
-  * Click Install
-3. Complete Installation
-  * Open a cmd prompt and type "Ubuntu2004"
-  * Create a new UNIX user account (this is a separate account from your Windows account)
-
-After the bash shell is active, you can follow the instructions below, starting
-with the "Cross-compilation" section. Compiling the 64-bit version is
-recommended, but it is possible to compile the 32-bit version.
+Follow the upstream installation instructions, available [here](https://docs.microsoft.com/windows/wsl/install-win10).
 
 Cross-compilation
 -------------------
 
-These steps can be performed on, for example, an Ubuntu VM. The depends system
+The steps below can be performed on Ubuntu or WSL. The depends system
 will also work on other Linux distributions, however the commands for
 installing the toolchain will be different.
 
