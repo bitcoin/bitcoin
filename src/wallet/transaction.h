@@ -19,25 +19,6 @@
 
 typedef std::map<std::string, std::string> mapValue_t;
 
-
-static inline void ReadOrderPos(int64_t& nOrderPos, mapValue_t& mapValue)
-{
-    if (!mapValue.count("n"))
-    {
-        nOrderPos = -1; // TODO: calculate elsewhere
-        return;
-    }
-    nOrderPos = atoi64(mapValue["n"]);
-}
-
-
-static inline void WriteOrderPos(const int64_t& nOrderPos, mapValue_t& mapValue)
-{
-    if (nOrderPos == -1)
-        return;
-    mapValue["n"] = ToString(nOrderPos);
-}
-
 /** Legacy class used for deserializing vtxPrev for backwards compatibility.
  * vtxPrev was removed in commit 93a18a3650292afbb441a47d1fa1b94aeb0164e3,
  * but old wallet.dat files may still contain vtxPrev vectors of CMerkleTxs.
@@ -192,7 +173,9 @@ public:
         mapValue_t mapValueCopy = mapValue;
 
         mapValueCopy["fromaccount"] = "";
-        WriteOrderPos(nOrderPos, mapValueCopy);
+        if (nOrderPos != -1) {
+            mapValueCopy["n"] = ToString(nOrderPos);
+        }
         if (nTimeSmart) {
             mapValueCopy["timesmart"] = strprintf("%u", nTimeSmart);
         }
@@ -232,8 +215,10 @@ public:
             setConfirmed();
         }
 
-        ReadOrderPos(nOrderPos, mapValue);
-        nTimeSmart = mapValue.count("timesmart") ? (unsigned int)atoi64(mapValue["timesmart"]) : 0;
+        const auto it_op = mapValue.find("n");
+        nOrderPos = (it_op != mapValue.end()) ? atoi64(it_op->second) : -1;
+        const auto it_ts = mapValue.find("timesmart");
+        nTimeSmart = (it_ts != mapValue.end()) ? static_cast<unsigned int>(atoi64(it_ts->second)) : 0;
 
         mapValue.erase("fromaccount");
         mapValue.erase("spent");
