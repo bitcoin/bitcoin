@@ -46,7 +46,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # the pre-mined test framework chain contains coinbase outputs to the
         # MiniWallet's default address ADDRESS_BCRT1_P2WSH_OP_TRUE in blocks
         # 76-100 (see method BitcoinTestFramework._initialize_chain())
-        self.wallet.scan_blocks(start=76, num=2)
+        self.wallet.rescan_utxos()
 
         self.log.info("Running test simple doublespend...")
         self.test_simple_doublespend()
