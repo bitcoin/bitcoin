@@ -440,7 +440,7 @@ int64_t WalletModel::getKeysLeftSinceAutoBackup() const
 static void NotifyUnload(WalletModel* walletModel)
 {
     qDebug() << "NotifyUnload";
-    QMetaObject::invokeMethod(walletModel, "unload", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(walletModel, "unload");
 }
 
 static void NotifyKeyStoreStatusChanged(WalletModel *walletmodel)

@@ -7,6 +7,7 @@
 #include <config/dash-config.h>
 #endif
 
+#include <qt/dash.h>
 #include <qt/bitcoingui.h>
 
 #include <chainparams.h>
@@ -24,7 +25,7 @@
 
 #ifdef ENABLE_WALLET
 #include <qt/paymentserver.h>
-#include <qt/walletmodel.h>
+#include <qt/walletcontroller.h>
 #endif
 
 #include <interfaces/handler.h>
@@ -70,11 +71,6 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 Q_DECLARE_METATYPE(bool*)
 Q_DECLARE_METATYPE(CAmount)
 Q_DECLARE_METATYPE(uint256)
-
-/** Translate string to current locale using Qt. */
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = [](const char* psz) {
-    return QCoreApplication::translate("dash-core", psz).toStdString();
-};
 
 static QString GetLangTerritory()
 {
@@ -139,99 +135,6 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
         LogPrintf("GUI: %s\n", msg.toStdString());
     }
 }
-
-/** Class encapsulating Dash Core startup and shutdown.
- * Allows running startup and shutdown in a different thread from the UI thread.
- */
-class BitcoinCore: public QObject
-{
-    Q_OBJECT
-public:
-    explicit BitcoinCore(interfaces::Node& node);
-
-public Q_SLOTS:
-    void initialize();
-    void shutdown();
-    void restart(QStringList args);
-
-Q_SIGNALS:
-    void initializeResult(bool success);
-    void shutdownResult();
-    void runawayException(const QString &message);
-
-private:
-    /// Pass fatal exception message to UI thread
-    void handleRunawayException(const std::exception_ptr e);
-
-    interfaces::Node& m_node;
-};
-
-/** Main Dash application object */
-class BitcoinApplication: public QApplication
-{
-    Q_OBJECT
-public:
-    explicit BitcoinApplication(interfaces::Node& node, int &argc, char **argv);
-    ~BitcoinApplication();
-
-#ifdef ENABLE_WALLET
-    /// Create payment server
-    void createPaymentServer();
-#endif
-    /// parameter interaction/setup based on rules
-    void parameterSetup();
-    /// Create options model
-    void createOptionsModel(bool resetSettings);
-    /// Create main window
-    void createWindow(const NetworkStyle *networkStyle);
-    /// Create splash screen
-    void createSplashScreen(const NetworkStyle *networkStyle);
-
-    /// Request core initialization
-    void requestInitialize();
-    /// Request core shutdown
-    void requestShutdown();
-
-    /// Get process return value
-    int getReturnValue() const { return returnValue; }
-
-    /// Get window identifier of QMainWindow (BitcoinGUI)
-    WId getMainWinId() const;
-
-public Q_SLOTS:
-    void initializeResult(bool success);
-    void shutdownResult();
-    /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
-    void handleRunawayException(const QString &message);
-    void addWallet(WalletModel* walletModel);
-    void removeWallet();
-
-Q_SIGNALS:
-    void requestedInitialize();
-    void requestedRestart(QStringList args);
-    void requestedShutdown();
-    void stopThread();
-    void splashFinished();
-
-private:
-    QThread *coreThread;
-    interfaces::Node& m_node;
-    OptionsModel *optionsModel;
-    ClientModel *clientModel;
-    BitcoinGUI *window;
-    QTimer *pollShutdownTimer;
-#ifdef ENABLE_WALLET
-    PaymentServer* paymentServer;
-    std::vector<WalletModel*> m_wallet_models;
-    std::unique_ptr<interfaces::Handler> m_handler_load_wallet;
-#endif
-    int returnValue;
-    std::unique_ptr<QWidget> shutdownWindow;
-
-    void startThread();
-};
-
-#include <qt/dash.moc>
 
 BitcoinCore::BitcoinCore(interfaces::Node& node) :
     QObject(), m_node(node)
@@ -300,10 +203,6 @@ BitcoinApplication::BitcoinApplication(interfaces::Node& node, int &argc, char *
     clientModel(nullptr),
     window(nullptr),
     pollShutdownTimer(nullptr),
-#ifdef ENABLE_WALLET
-    paymentServer(nullptr),
-    m_wallet_models(),
-#endif
     returnValue(0)
 {
     setQuitOnLastWindowClosed(false);
@@ -364,6 +263,11 @@ void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
     connect(this, &BitcoinApplication::requestedShutdown, splash, &QWidget::close);
 }
 
+bool BitcoinApplication::baseInitialize()
+{
+    return m_node.baseInitialize();
+}
+
 void BitcoinApplication::startThread()
 {
     if(coreThread)
@@ -417,11 +321,8 @@ void BitcoinApplication::requestShutdown()
     pollShutdownTimer->stop();
 
 #ifdef ENABLE_WALLET
-    window->removeAllWallets();
-    for (const WalletModel* walletModel : m_wallet_models) {
-        delete walletModel;
-    }
-    m_wallet_models.clear();
+    delete m_wallet_controller;
+    m_wallet_controller = nullptr;
 #endif
     delete clientModel;
     clientModel = nullptr;
@@ -430,35 +331,6 @@ void BitcoinApplication::requestShutdown()
 
     // Request shutdown from core thread
     Q_EMIT requestedShutdown();
-}
-
-void BitcoinApplication::addWallet(WalletModel* walletModel)
-{
-#ifdef ENABLE_WALLET
-    window->addWallet(walletModel);
-
-    if (m_wallet_models.empty()) {
-        window->setCurrentWallet(walletModel);
-    }
-
-#ifdef ENABLE_BIP70
-    connect(walletModel, &WalletModel::coinsSent,
-        paymentServer, &PaymentServer::fetchPaymentACK);
-#endif
-    connect(walletModel, &WalletModel::unload, this, &BitcoinApplication::removeWallet);
-
-    m_wallet_models.push_back(walletModel);
-#endif
-}
-
-void BitcoinApplication::removeWallet()
-{
-#ifdef ENABLE_WALLET
-    WalletModel* walletModel = static_cast<WalletModel*>(sender());
-    m_wallet_models.erase(std::find(m_wallet_models.begin(), m_wallet_models.end(), walletModel));
-    window->removeWallet(walletModel);
-    walletModel->deleteLater();
-#endif
 }
 
 void BitcoinApplication::initializeResult(bool success)
@@ -471,26 +343,22 @@ void BitcoinApplication::initializeResult(bool success)
         // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
         qWarning() << "Platform customization:" << gArgs.GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM).c_str();
 #ifdef ENABLE_WALLET
+        m_wallet_controller = new WalletController(m_node, optionsModel, this);
 #ifdef ENABLE_BIP70
         PaymentServer::LoadRootCAs();
 #endif
-        paymentServer->setOptionsModel(optionsModel);
+        if (paymentServer) {
+            paymentServer->setOptionsModel(optionsModel);
+#ifdef ENABLE_BIP70
+            connect(m_wallet_controller, &WalletController::coinsSent, paymentServer, &PaymentServer::fetchPaymentACK);
+#endif
+        }
 #endif
 
         clientModel = new ClientModel(m_node, optionsModel);
         window->setClientModel(clientModel);
-
 #ifdef ENABLE_WALLET
-        m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
-            WalletModel* wallet_model = new WalletModel(std::move(wallet), m_node, optionsModel, nullptr);
-            // Fix wallet model thread affinity.
-            wallet_model->moveToThread(thread());
-            QMetaObject::invokeMethod(this, "addWallet", Qt::QueuedConnection, Q_ARG(WalletModel*, wallet_model));
-        });
-
-        for (auto& wallet : m_node.getWallets()) {
-            addWallet(new WalletModel(std::move(wallet), m_node, optionsModel));
-        }
+        window->setWalletController(m_wallet_controller);
 #endif
 
         // If -min option passed, start window minimized (iconified) or minimized to tray
@@ -502,6 +370,7 @@ void BitcoinApplication::initializeResult(bool success)
             window->showMinimized();
         }
         Q_EMIT splashFinished();
+        Q_EMIT windowShown(window);
 
         // Let the users setup their preferred appearance if there are no settings for it defined yet.
         GUIUtil::setupAppearance(window, clientModel->getOptionsModel());
@@ -509,12 +378,14 @@ void BitcoinApplication::initializeResult(bool success)
 #ifdef ENABLE_WALLET
         // Now that initialization/startup is done, process any command-line
         // dash: URIs or payment requests:
-        connect(paymentServer, &PaymentServer::receivedPaymentRequest, window, &BitcoinGUI::handlePaymentRequest);
-        connect(window, &BitcoinGUI::receivedURI, paymentServer, &PaymentServer::handleURIOrFile);
-        connect(paymentServer, &PaymentServer::message, [this](const QString& title, const QString& message, unsigned int style) {
-            window->message(title, message, style);
-        });
-        QTimer::singleShot(100, paymentServer, &PaymentServer::uiReady);
+        if (paymentServer) {
+            connect(paymentServer, &PaymentServer::receivedPaymentRequest, window, &BitcoinGUI::handlePaymentRequest);
+            connect(window, &BitcoinGUI::receivedURI, paymentServer, &PaymentServer::handleURIOrFile);
+            connect(paymentServer, &PaymentServer::message, [this](const QString& title, const QString& message, unsigned int style) {
+                window->message(title, message, style);
+            });
+            QTimer::singleShot(100, paymentServer, &PaymentServer::uiReady);
+        }
 #endif
         pollShutdownTimer->start(200);
     } else {
@@ -564,7 +435,7 @@ static void SetupUIArgs()
 }
 
 #ifndef BITCOIN_QT_TEST
-int main(int argc, char *argv[])
+int GuiMain(int argc, char* argv[])
 {
     RegisterPrettyTerminateHander();
     RegisterPrettySignalHandlers();
@@ -606,9 +477,6 @@ int main(int argc, char *argv[])
     //   IMPORTANT if it is no longer a typedef use the normal variant above
     qRegisterMetaType< CAmount >("CAmount");
     qRegisterMetaType< std::function<void()> >("std::function<void()>");
-#ifdef ENABLE_WALLET
-    qRegisterMetaType<WalletModel*>("WalletModel*");
-#endif
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
@@ -821,7 +689,7 @@ int main(int argc, char *argv[])
         // Perform base initialization before spinning up initialization/shutdown thread
         // This is acceptable because this function only contains steps that are quick to execute,
         // so the GUI thread won't be held up.
-        if (node->baseInitialize()) {
+        if (app.baseInitialize()) {
             app.requestInitialize();
 #if defined(Q_OS_WIN)
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely...").arg(QObject::tr(PACKAGE_NAME)), (HWND)app.getMainWinId());
