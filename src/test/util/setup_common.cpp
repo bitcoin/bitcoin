@@ -114,7 +114,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     InitSignatureCache();
     InitScriptExecutionCache();
     m_node.chain = interfaces::MakeChain(m_node);
-    g_wallet_init_interface.Construct(m_node);
     fCheckBlockIndex = true;
     static bool noui_connected = false;
     if (!noui_connected) {
@@ -193,7 +192,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
 
-    m_node.addrman = std::make_unique<CAddrMan>(/* deterministic */ false, /* consistency_check_ratio */ 0);
+    m_node.addrman = std::make_unique<CAddrMan>(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman,

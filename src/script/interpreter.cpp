@@ -1874,9 +1874,9 @@ static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, c
     assert(control.size() >= TAPROOT_CONTROL_BASE_SIZE);
     assert(program.size() >= uint256::size());
     //! The internal pubkey (x-only, so no Y coordinate parity).
-    const XOnlyPubKey p{uint256(std::vector<unsigned char>(control.begin() + 1, control.begin() + TAPROOT_CONTROL_BASE_SIZE))};
+    const XOnlyPubKey p{Span<const unsigned char>{control.data() + 1, control.data() + TAPROOT_CONTROL_BASE_SIZE}};
     //! The output pubkey (taken from the scriptPubKey).
-    const XOnlyPubKey q{uint256(program)};
+    const XOnlyPubKey q{program};
     // Compute the Merkle root from the leaf and the provided path.
     const uint256 merkle_root = ComputeTaprootMerkleRoot(control, tapleaf_hash);
     // Verify that the output pubkey matches the tweaked internal pubkey, after correcting for parity.

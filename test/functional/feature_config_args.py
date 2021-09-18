@@ -164,11 +164,14 @@ class ConfArgsTest(BitcoinTestFramework):
         # fixed seeds
         assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
         start = int(time.time())
-        with self.nodes[0].assert_debug_log(expected_msgs=[
-                "Loaded 0 addresses from peers.dat",
-                "0 addresses found from DNS seeds",
-                "opencon thread start",  # Ensure ThreadOpenConnections::start time is properly set
-        ]):
+        with self.nodes[0].assert_debug_log(
+                expected_msgs=[
+                    "Loaded 0 addresses from peers.dat",
+                    "0 addresses found from DNS seeds",
+                    "opencon thread start",  # Ensure ThreadOpenConnections::start time is properly set
+                ],
+                timeout=10,
+        ):
             self.start_node(0, extra_args=['-dnsseed=1', '-fixedseeds=1', f'-mocktime={start}'])
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Adding fixed seeds as 60 seconds have passed and addrman is empty",
@@ -206,11 +209,14 @@ class ConfArgsTest(BitcoinTestFramework):
         # We expect the node will allow 60 seconds prior to using fixed seeds
         assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
         start = int(time.time())
-        with self.nodes[0].assert_debug_log(expected_msgs=[
-                "Loaded 0 addresses from peers.dat",
-                "DNS seeding disabled",
-                "opencon thread start",  # Ensure ThreadOpenConnections::start time is properly set
-        ]):
+        with self.nodes[0].assert_debug_log(
+                expected_msgs=[
+                    "Loaded 0 addresses from peers.dat",
+                    "DNS seeding disabled",
+                    "opencon thread start",  # Ensure ThreadOpenConnections::start time is properly set
+                ],
+                timeout=10,
+        ):
             self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=1', '-addnode=fakenodeaddr', f'-mocktime={start}'])
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Adding fixed seeds as 60 seconds have passed and addrman is empty",
@@ -247,6 +253,10 @@ class ConfArgsTest(BitcoinTestFramework):
             f.write(conf_file_contents)
 
         self.nodes[0].assert_start_raises_init_error([f'-conf={conf_file}'], f'Error: Error reading configuration file: specified data directory "{new_data_dir}" does not exist.')
+
+        # Check that an explicitly specified config file that cannot be opened fails
+        none_existent_conf_file = os.path.join(default_data_dir, "none_existent_bitcoin.conf")
+        self.nodes[0].assert_start_raises_init_error(['-conf=' + none_existent_conf_file], 'Error: Error reading configuration file: specified config file "' + none_existent_conf_file + '" could not be opened.')
 
         # Create the directory and ensure the config file now works
         os.mkdir(new_data_dir)

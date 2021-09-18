@@ -25,9 +25,9 @@ class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
         self.sync_index(height=200)
         assert_greater_than(len(self.nodes[0].getblockfilter(self.nodes[0].getbestblockhash())['filter']), 0)
         # Mine two batches of blocks to avoid hitting NODE_NETWORK_LIMITED_MIN_BLOCKS disconnection
-        self.nodes[0].generate(250)
+        self.generate(self.nodes[0], 250)
         self.sync_all()
-        self.nodes[0].generate(250)
+        self.generate(self.nodes[0], 250)
         self.sync_all()
         self.sync_index(height=700)
 
@@ -46,7 +46,7 @@ class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
 
         self.log.info("make sure accessing the blockfilters throws an error")
         assert_raises_rpc_error(-1, "Index is not enabled for filtertype basic", self.nodes[0].getblockfilter, self.nodes[0].getblockhash(2))
-        self.nodes[0].generate(1000)
+        self.generate(self.nodes[0], 1000)
 
         self.log.info("prune below the blockfilterindexes best block while blockfilters are disabled")
         pruneheight_new = self.nodes[0].pruneblockchain(1000)

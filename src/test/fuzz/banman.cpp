@@ -41,10 +41,6 @@ static bool operator==(const CBanEntry& lhs, const CBanEntry& rhs)
 
 FUZZ_TARGET_INIT(banman, initialize_banman)
 {
-    // The complexity is O(N^2), where N is the input size, because each call
-    // might call DumpBanlist (or other methods that are at least linear
-    // complexity of the input size).
-    int limit_max_ops{300};
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     fs::path banlist_file = gArgs.GetDataDirNet() / "fuzzed_banlist";
@@ -63,7 +59,11 @@ FUZZ_TARGET_INIT(banman, initialize_banman)
 
     {
         BanMan ban_man{banlist_file, /* client_interface */ nullptr, /* default_ban_time */ ConsumeBanTimeOffset(fuzzed_data_provider)};
-        while (--limit_max_ops >= 0 && fuzzed_data_provider.ConsumeBool()) {
+        // The complexity is O(N^2), where N is the input size, because each call
+        // might call DumpBanlist (or other methods that are at least linear
+        // complexity of the input size).
+        LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
+        {
             CallOneOf(
                 fuzzed_data_provider,
                 [&] {

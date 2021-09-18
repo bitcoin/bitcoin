@@ -23,7 +23,7 @@ else
 $(package)_toolset_$(host_os)=gcc
 endif
 $(package)_config_libraries=filesystem,system,test
-$(package)_cxxflags=-std=c++17 -fvisibility=hidden
+$(package)_cxxflags+=-std=c++17 -fvisibility=hidden
 $(package)_cxxflags_linux=-fPIC
 $(package)_cxxflags_android=-fPIC
 $(package)_cxxflags_x86_64_darwin=-fcf-protection=full

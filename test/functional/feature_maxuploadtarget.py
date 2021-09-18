@@ -38,7 +38,6 @@ class MaxUploadTest(BitcoinTestFramework):
         self.extra_args = [[
             "-maxuploadtarget=800",
             "-acceptnonstdtxn=1",
-            "-peertimeout=9999",  # bump because mocktime might cause a disconnect otherwise
         ]]
         self.supports_cli = False
 
@@ -56,7 +55,7 @@ class MaxUploadTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(old_time)
 
         # Generate some old blocks
-        self.nodes[0].generate(130)
+        self.generate(self.nodes[0], 130)
 
         # p2p_conns[0] will only request old blocks
         # p2p_conns[1] will only request new blocks
@@ -67,7 +66,7 @@ class MaxUploadTest(BitcoinTestFramework):
             p2p_conns.append(self.nodes[0].add_p2p_connection(TestP2PConn()))
 
         # Now mine a big block
-        mine_large_block(self.nodes[0], self.utxo_cache)
+        mine_large_block(self, self.nodes[0], self.utxo_cache)
 
         # Store the hash; we'll request this later
         big_old_block = self.nodes[0].getbestblockhash()
@@ -78,7 +77,7 @@ class MaxUploadTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(int(time.time()) - 2*60*60*24)
 
         # Mine one more block, so that the prior block looks old
-        mine_large_block(self.nodes[0], self.utxo_cache)
+        mine_large_block(self, self.nodes[0], self.utxo_cache)
 
         # We'll be requesting this new block too
         big_new_block = self.nodes[0].getbestblockhash()

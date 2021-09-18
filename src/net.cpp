@@ -9,6 +9,7 @@
 
 #include <net.h>
 
+#include <addrdb.h>
 #include <banman.h>
 #include <clientversion.h>
 #include <compat.h>
@@ -24,6 +25,7 @@
 #include <scheduler.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 #include <util/thread.h>
 #include <util/trace.h>
 #include <util/translation.h>
@@ -190,8 +192,8 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices)
 static int GetnScore(const CService& addr)
 {
     LOCK(cs_mapLocalHost);
-    if (mapLocalHost.count(addr) == 0) return 0;
-    return mapLocalHost[addr].nScore;
+    const auto it = mapLocalHost.find(addr);
+    return (it != mapLocalHost.end()) ? it->second.nScore : 0;
 }
 
 // Is our peer's addrLocal potentially useful as an external IP source?
@@ -243,10 +245,10 @@ bool AddLocal(const CService& addr, int nScore)
 
     {
         LOCK(cs_mapLocalHost);
-        bool fAlready = mapLocalHost.count(addr) > 0;
-        LocalServiceInfo &info = mapLocalHost[addr];
-        if (!fAlready || nScore >= info.nScore) {
-            info.nScore = nScore + (fAlready ? 1 : 0);
+        const auto [it, is_newly_added] = mapLocalHost.emplace(addr, LocalServiceInfo());
+        LocalServiceInfo &info = it->second;
+        if (is_newly_added || nScore >= info.nScore) {
+            info.nScore = nScore + (is_newly_added ? 0 : 1);
             info.nPort = addr.GetPort();
         }
     }
@@ -288,12 +290,10 @@ bool IsReachable(const CNetAddr &addr)
 /** vote for a local address */
 bool SeenLocal(const CService& addr)
 {
-    {
-        LOCK(cs_mapLocalHost);
-        if (mapLocalHost.count(addr) == 0)
-            return false;
-        mapLocalHost[addr].nScore++;
-    }
+    LOCK(cs_mapLocalHost);
+    const auto it = mapLocalHost.find(addr);
+    if (it == mapLocalHost.end()) return false;
+    ++it->second.nScore;
     return true;
 }
 
@@ -331,7 +331,7 @@ CNode* CConnman::FindNode(const std::string& addrName)
 {
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes) {
-        if (pnode->GetAddrName() == addrName) {
+        if (pnode->m_addr_name == addrName) {
             return pnode;
         }
     }
@@ -414,14 +414,10 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                 return nullptr;
             }
             // It is possible that we already have a connection to the IP/port pszDest resolved to.
-            // In that case, drop the connection that was just created, and return the existing CNode instead.
-            // Also store the name we used to connect in that CNode, so that future FindNode() calls to that
-            // name catch this early.
+            // In that case, drop the connection that was just created.
             LOCK(cs_vNodes);
             CNode* pnode = FindNode(static_cast<CService>(addrConnect));
-            if (pnode)
-            {
-                pnode->MaybeSetAddrName(std::string(pszDest));
+            if (pnode) {
                 LogPrintf("Failed to open new connection, already connected\n");
                 return nullptr;
             }
@@ -534,19 +530,8 @@ std::string ConnectionTypeAsString(ConnectionType conn_type)
     assert(false);
 }
 
-std::string CNode::GetAddrName() const {
-    LOCK(cs_addrName);
-    return addrName;
-}
-
-void CNode::MaybeSetAddrName(const std::string& addrNameIn) {
-    LOCK(cs_addrName);
-    if (addrName.empty()) {
-        addrName = addrNameIn;
-    }
-}
-
-CService CNode::GetAddrLocal() const {
+CService CNode::GetAddrLocal() const
+{
     LOCK(cs_addrLocal);
     return addrLocal;
 }
@@ -567,14 +552,13 @@ Network CNode::ConnectedThroughNetwork() const
 
 #undef X
 #define X(name) stats.name = name
-void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
+void CNode::CopyStats(CNodeStats& stats)
 {
     stats.nodeid = this->GetId();
     X(nServices);
     X(addr);
     X(addrBind);
     stats.m_network = ConnectedThroughNetwork();
-    stats.m_mapped_as = addr.GetMappedAS(m_asmap);
     if (m_tx_relay != nullptr) {
         LOCK(m_tx_relay->cs_filter);
         stats.fRelayTxes = m_tx_relay->fRelayTxes;
@@ -587,7 +571,7 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     X(nLastBlockTime);
     X(nTimeConnected);
     X(nTimeOffset);
-    stats.addrName = GetAddrName();
+    X(m_addr_name);
     X(nVersion);
     {
         LOCK(cs_SubVer);
@@ -1762,8 +1746,7 @@ void CConnman::DumpAddresses()
 {
     int64_t nStart = GetTimeMillis();
 
-    CAddrDB adb;
-    adb.Write(addrman);
+    DumpPeerAddresses(::gArgs, addrman);
 
     LogPrint(BCLog::NET, "Flushed %d addresses to peers.dat  %dms\n",
            addrman.size(), GetTimeMillis() - nStart);
@@ -1936,7 +1919,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     case ConnectionType::BLOCK_RELAY:
                     case ConnectionType::ADDR_FETCH:
                     case ConnectionType::FEELER:
-                        setConnected.insert(pnode->addr.GetGroup(addrman.m_asmap));
+                        setConnected.insert(pnode->addr.GetGroup(addrman.GetAsmap()));
                 } // no default case, so the compiler can warn about missing cases
             }
         }
@@ -2010,7 +1993,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 m_anchors.pop_back();
                 if (!addr.IsValid() || IsLocal(addr) || !IsReachable(addr) ||
                     !HasAllDesirableServiceFlags(addr.nServices) ||
-                    setConnected.count(addr.GetGroup(addrman.m_asmap))) continue;
+                    setConnected.count(addr.GetGroup(addrman.GetAsmap()))) continue;
                 addrConnect = addr;
                 LogPrint(BCLog::NET, "Trying to make an anchor connection to %s\n", addrConnect.ToString());
                 break;
@@ -2050,7 +2033,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
 
             // Require outbound connections, other than feelers, to be to distinct network groups
-            if (!fFeeler && setConnected.count(addr.GetGroup(addrman.m_asmap))) {
+            if (!fFeeler && setConnected.count(addr.GetGroup(addrman.GetAsmap()))) {
                 break;
             }
 
@@ -2137,7 +2120,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo() const
             if (pnode->addr.IsValid()) {
                 mapConnected[pnode->addr] = pnode->IsInboundConn();
             }
-            std::string addrName = pnode->GetAddrName();
+            std::string addrName{pnode->m_addr_name};
             if (!addrName.empty()) {
                 mapConnectedByName[std::move(addrName)] = std::make_pair(pnode->IsInboundConn(), static_cast<const CService&>(pnode->addr));
             }
@@ -2819,7 +2802,8 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats) const
     vstats.reserve(vNodes.size());
     for (CNode* pnode : vNodes) {
         vstats.emplace_back();
-        pnode->copyStats(vstats.back(), addrman.m_asmap);
+        pnode->CopyStats(vstats.back());
+        vstats.back().m_mapped_as = pnode->addr.GetMappedAS(addrman.GetAsmap());
     }
 }
 
@@ -2966,6 +2950,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
     : nTimeConnected(GetTimeSeconds()),
       addr(addrIn),
       addrBind(addrBindIn),
+      m_addr_name{addrNameIn.empty() ? addr.ToStringIPPort() : addrNameIn},
       m_inbound_onion(inbound_onion),
       nKeyedNetGroup(nKeyedNetGroupIn),
       id(idIn),
@@ -2975,7 +2960,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
     hSocket = hSocketIn;
-    addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
     if (conn_type_in != ConnectionType::BLOCK_RELAY) {
         m_tx_relay = std::make_unique<TxRelay>();
     }
@@ -2985,7 +2969,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
     mapRecvBytesPerMsgCmd[NET_MESSAGE_COMMAND_OTHER] = 0;
 
     if (fLogIPs) {
-        LogPrint(BCLog::NET, "Added connection to %s peer=%d\n", addrName, id);
+        LogPrint(BCLog::NET, "Added connection to %s peer=%d\n", m_addr_name, id);
     } else {
         LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
     }
@@ -3014,7 +2998,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 
     TRACE6(net, outbound_message,
         pnode->GetId(),
-        pnode->GetAddrName().c_str(),
+        pnode->m_addr_name.c_str(),
         pnode->ConnectionTypeAsString().c_str(),
         msg.m_type.c_str(),
         msg.data.size(),
@@ -3082,7 +3066,7 @@ CSipHasher CConnman::GetDeterministicRandomizer(uint64_t id) const
 
 uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
 {
-    std::vector<unsigned char> vchNetGroup(ad.GetGroup(addrman.m_asmap));
+    std::vector<unsigned char> vchNetGroup(ad.GetGroup(addrman.GetAsmap()));
 
     return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup.data(), vchNetGroup.size()).Finalize();
 }

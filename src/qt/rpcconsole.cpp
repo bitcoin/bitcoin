@@ -651,7 +651,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         setNumConnections(model->getNumConnections());
         connect(model, &ClientModel::numConnectionsChanged, this, &RPCConsole::setNumConnections);
 
-        setNumBlocks(bestblock_height, QDateTime::fromTime_t(bestblock_date), verification_progress, false);
+        setNumBlocks(bestblock_height, QDateTime::fromSecsSinceEpoch(bestblock_date), verification_progress, false);
         connect(model, &ClientModel::numBlocksChanged, this, &RPCConsole::setNumBlocks);
 
         updateNetworkState();
@@ -680,6 +680,11 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
 
         // create peer table context menu
         peersTableContextMenu = new QMenu(this);
+        //: Context menu action to copy the address of a peer.
+        peersTableContextMenu->addAction(tr("&Copy address"), [this] {
+            GUIUtil::copyEntryData(ui->peerWidget, PeerTableModel::Address, Qt::DisplayRole);
+        });
+        peersTableContextMenu->addSeparator();
         peersTableContextMenu->addAction(tr("&Disconnect"), this, &RPCConsole::disconnectSelectedNode);
         peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 &hour"), [this] { banSelectedNode(60 * 60); });
         peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 d&ay"), [this] { banSelectedNode(60 * 60 * 24); });
@@ -706,6 +711,13 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
 
         // create ban table context menu
         banTableContextMenu = new QMenu(this);
+        /*: Context menu action to copy the IP/Netmask of a banned peer.
+            IP/Netmask is the combination of a peer's IP address and its Netmask.
+            For IP address, see: https://en.wikipedia.org/wiki/IP_address. */
+        banTableContextMenu->addAction(tr("&Copy IP/Netmask"), [this] {
+            GUIUtil::copyEntryData(ui->banlistWidget, BanTableModel::Address, Qt::DisplayRole);
+        });
+        banTableContextMenu->addSeparator();
         banTableContextMenu->addAction(tr("&Unban"), this, &RPCConsole::unbanSelectedNode);
         connect(ui->banlistWidget, &QTableView::customContextMenuRequested, this, &RPCConsole::showBanTableContextMenu);
 
@@ -1129,7 +1141,7 @@ void RPCConsole::updateDetailWidget()
     }
     const auto stats = selected_peers.first().data(PeerTableModel::StatsRole).value<CNodeCombinedStats*>();
     // update the detail ui with latest node information
-    QString peerAddrDetails(QString::fromStdString(stats->nodeStats.addrName) + " ");
+    QString peerAddrDetails(QString::fromStdString(stats->nodeStats.m_addr_name) + " ");
     peerAddrDetails += tr("(peer: %1)").arg(QString::number(stats->nodeStats.nodeid));
     if (!stats->nodeStats.addrLocal.empty())
         peerAddrDetails += "<br />" + tr("via %1").arg(QString::fromStdString(stats->nodeStats.addrLocal));

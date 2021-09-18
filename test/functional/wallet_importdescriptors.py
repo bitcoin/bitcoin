@@ -74,7 +74,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 0)
 
         self.log.info('Mining coins')
-        w0.generatetoaddress(COINBASE_MATURITY + 1, w0.getnewaddress())
+        self.generatetoaddress(w0, COINBASE_MATURITY + 1, w0.getnewaddress())
 
         # RPC importdescriptors -----------------------------------------------
 
@@ -405,7 +405,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                      solvable=True,
                      ismine=True)
         txid = w0.sendtoaddress(address, 49.99995540)
-        w0.generatetoaddress(6, w0.getnewaddress())
+        self.generatetoaddress(w0, 6, w0.getnewaddress())
         self.sync_blocks()
         tx = wpriv.createrawtransaction([{"txid": txid, "vout": 0}], {w0.getnewaddress(): 49.999})
         signed_tx = wpriv.signrawtransactionwithwallet(tx)
@@ -451,12 +451,12 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(change_addr, 'bcrt1qt9uhe3a9hnq7vajl7a094z4s3crm9ttf8zw3f5v9gr2nyd7e3lnsy44n8e')
         assert_equal(wmulti_priv.getwalletinfo()['keypoolsize'], 1000)
         txid = w0.sendtoaddress(addr, 10)
-        self.nodes[0].generate(6)
+        self.generate(self.nodes[0], 6)
         self.sync_all()
         send_txid = wmulti_priv.sendtoaddress(w0.getnewaddress(), 8)
         decoded = wmulti_priv.decoderawtransaction(wmulti_priv.gettransaction(send_txid)['hex'])
         assert_equal(len(decoded['vin'][0]['txinwitness']), 4)
-        self.nodes[0].generate(6)
+        self.generate(self.nodes[0], 6)
         self.sync_all()
 
         self.nodes[1].createwallet(wallet_name="wmulti_pub", disable_private_keys=True, blank=True, descriptors=True)
@@ -494,7 +494,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         txid2 = w0.sendtoaddress(addr2, 10)
         vout2 = find_vout_for_address(self.nodes[0], txid2, addr2)
 
-        self.nodes[0].generate(6)
+        self.generate(self.nodes[0], 6)
         self.sync_all()
         assert_equal(wmulti_pub.getbalance(), wmulti_priv.getbalance())
 
@@ -582,7 +582,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
         addr = wmulti_priv_big.getnewaddress()
         w0.sendtoaddress(addr, 10)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
         # It is standard and would relay.
         txid = wmulti_priv_big.sendtoaddress(w0.getnewaddress(), 9.999)
@@ -617,7 +617,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
         addr = multi_priv_big.getnewaddress("", "legacy")
         w0.sendtoaddress(addr, 10)
-        self.nodes[0].generate(6)
+        self.generate(self.nodes[0], 6)
         self.sync_all()
         # It is standard and would relay.
         txid = multi_priv_big.sendtoaddress(w0.getnewaddress(), 10, "", "",

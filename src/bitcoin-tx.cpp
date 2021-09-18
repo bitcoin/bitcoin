@@ -188,10 +188,11 @@ static void RegisterLoad(const std::string& strInput)
 
 static CAmount ExtractAndValidateValue(const std::string& strValue)
 {
-    CAmount value;
-    if (!ParseMoney(strValue, value))
+    if (std::optional<CAmount> parsed = ParseMoney(strValue)) {
+        return parsed.value();
+    } else {
         throw std::runtime_error("invalid TX output value");
-    return value;
+    }
 }
 
 static void MutateTxVersion(CMutableTransaction& tx, const std::string& cmdVal)
@@ -771,9 +772,7 @@ static std::string readStdin()
     if (ferror(stdin))
         throw std::runtime_error("error reading stdin");
 
-    boost::algorithm::trim_right(ret);
-
-    return ret;
+    return TrimString(ret);
 }
 
 static int CommandLineRawTx(int argc, char* argv[])

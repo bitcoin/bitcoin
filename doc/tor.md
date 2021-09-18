@@ -23,10 +23,9 @@ There are several ways to see your local onion address in Bitcoin Core:
 You may set the `-debug=tor` config logging option to have additional
 information in the debug log about your Tor configuration.
 
-CLI `-addrinfo` returns the number of addresses known to your node per network
-type, including Tor v2 and v3. This is useful to see how many onion addresses
-are known to your node for `-onlynet=onion` and how many Tor v3 addresses it
-knows when upgrading to Bitcoin Core v22.0 and up that supports Tor v3 only.
+CLI `-addrinfo` returns the number of addresses known to your node per
+network. This can be useful to see how many onion peers your node knows,
+e.g. for `-onlynet=onion`.
 
 ## 1. Run Bitcoin Core behind a Tor proxy
 
@@ -57,11 +56,11 @@ outgoing connections, but more is possible.
     -onlynet=onion  Make outgoing connections only to .onion addresses. Incoming
                     connections are not affected by this option. This option can be
                     specified multiple times to allow multiple network types, e.g.
-                    ipv4, ipv6 or onion. If you use this option with values other
-                    than onion you *cannot* disable onion connections; outgoing onion
-                    connections will be enabled when you use -proxy or -onion. Use
-                    -noonion or -onion=0 if you want to be sure there are no outbound
-                    onion connections over the default proxy or your defined -proxy.
+                    onlynet=ipv4, onlynet=ipv6, onlynet=onion, onlynet=i2p.
+                    Warning: if you use -onlynet with values other than onion, and
+                    the -onion or -proxy option is set, then outgoing onion
+                    connections will still be made; use -noonion or -onion=0 to
+                    disable outbound onion connections in this case.
 
 In a typical situation, this suffices to run behind a Tor proxy:
 
@@ -134,7 +133,7 @@ You can also check the group of the cookie file. On most Linux systems, the Tor
 auth cookie will usually be `/run/tor/control.authcookie`:
 
 ```
-stat -c '%G' /run/tor/control.authcookie
+TORGROUP=$(stat -c '%G' /run/tor/control.authcookie)
 ```
 
 Once you have determined the `${TORGROUP}` and selected the `${USER}` that will

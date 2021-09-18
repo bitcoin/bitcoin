@@ -17,7 +17,7 @@ class WalletRBFTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.nodes[0].generate(COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
         # sending a transaction without fee estimations must be possible by default on regtest
         self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)

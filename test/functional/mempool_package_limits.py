@@ -26,6 +26,7 @@ from test_framework.wallet import (
     bulk_transaction,
     create_child_with_parents,
     make_chain,
+    DEFAULT_FEE,
 )
 
 class MempoolPackageLimitsTest(BitcoinTestFramework):
@@ -40,7 +41,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         self.address = node.get_deterministic_priv_key().address
         self.coins = []
         # The last 100 coinbase transactions are premature
-        for b in node.generatetoaddress(200, self.address)[:100]:
+        for b in self.generatetoaddress(node, 200, self.address)[:100]:
             coinbase = node.getblock(blockhash=b, verbosity=2)["tx"][0]
             self.coins.append({
                 "txid": coinbase["txid"],
@@ -50,6 +51,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
 
         self.test_chain_limits()
         self.test_desc_count_limits()
+        self.test_desc_count_limits_2()
         self.test_anc_count_limits()
         self.test_anc_count_limits_2()
         self.test_anc_count_limits_bushy()
@@ -83,7 +85,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             assert_equal(txres["package-error"], "package-mempool-limits")
 
         # Clear mempool and check that the package passes now
-        node.generate(1)
+        self.generate(node, 1)
         assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=chain_hex)])
 
     def test_chain_limits(self):
@@ -174,6 +176,74 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             assert_equal(txres["package-error"], "package-mempool-limits")
 
         # Clear mempool and check that the package passes now
+        self.generate(node, 1)
+        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=package_hex)])
+
+    def test_desc_count_limits_2(self):
+        """Create a Package with 24 transaction in mempool and 2 transaction in package:
+                      M1
+                     ^  ^
+                   M2    ^
+                   .      ^
+                  .        ^
+                 .          ^
+                M24          ^
+                              ^
+                              P1
+                              ^
+                              P2
+        P1 has M1 as a mempool ancestor, P2 has no in-mempool ancestors, but when
+        combined P2 has M1 as an ancestor and M1 exceeds descendant_limits(23 in-mempool
+        descendants + 2 in-package descendants, a total of 26 including itself).
+        """
+
+        node = self.nodes[0]
+        package_hex = []
+        # M1
+        first_coin_a = self.coins.pop()
+        parent_value = (first_coin_a["amount"] - DEFAULT_FEE) / 2 # Deduct reasonable fee and make 2 outputs
+        inputs = [{"txid": first_coin_a["txid"], "vout": 0}]
+        outputs = [{self.address : parent_value}, {ADDRESS_BCRT1_P2WSH_OP_TRUE : parent_value}]
+        rawtx = node.createrawtransaction(inputs, outputs)
+
+        parent_signed = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=self.privkeys)
+        assert parent_signed["complete"]
+        parent_tx = tx_from_hex(parent_signed["hex"])
+        parent_txid = parent_tx.rehash()
+        node.sendrawtransaction(parent_signed["hex"])
+
+        # Chain M2...M24
+        spk = parent_tx.vout[0].scriptPubKey.hex()
+        value = parent_value
+        txid = parent_txid
+        for i in range(23): # M2...M24
+            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
+            txid = tx.rehash()
+            node.sendrawtransaction(txhex)
+
+        # P1
+        value_p1 = (parent_value - DEFAULT_FEE)
+        rawtx_p1 = node.createrawtransaction([{"txid": parent_txid, "vout": 1}], [{self.address : value_p1}])
+        tx_child_p1 = tx_from_hex(rawtx_p1)
+        tx_child_p1.wit.vtxinwit = [CTxInWitness()]
+        tx_child_p1.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+        tx_child_p1_hex = tx_child_p1.serialize().hex()
+        txid_child_p1 = tx_child_p1.rehash()
+        package_hex.append(tx_child_p1_hex)
+        tx_child_p1_spk = tx_child_p1.vout[0].scriptPubKey.hex()
+
+        # P2
+        (_, tx_child_p2_hex, _, _) = make_chain(node, self.address, self.privkeys, txid_child_p1, value_p1, 0, tx_child_p1_spk)
+        package_hex.append(tx_child_p2_hex)
+
+        assert_equal(24, node.getmempoolinfo()["size"])
+        assert_equal(2, len(package_hex))
+        testres = node.testmempoolaccept(rawtxs=package_hex)
+        assert_equal(len(testres), len(package_hex))
+        for txres in testres:
+            assert_equal(txres["package-error"], "package-mempool-limits")
+
+        # Clear mempool and check that the package passes now
         node.generate(1)
         assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=package_hex)])
 
@@ -230,7 +300,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             assert_equal(txres["package-error"], "package-mempool-limits")
 
         # Clear mempool and check that the package passes now
-        node.generate(1)
+        self.generate(node, 1)
         assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=package_hex)])
 
     def test_anc_count_limits_2(self):
@@ -288,7 +358,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             assert_equal(txres["package-error"], "package-mempool-limits")
 
         # Clear mempool and check that the package passes now
-        node.generate(1)
+        self.generate(node, 1)
         assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=[pc_hex, pd_hex])])
 
     def test_anc_count_limits_bushy(self):
@@ -338,7 +408,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             assert_equal(txres["package-error"], "package-mempool-limits")
 
         # Clear mempool and check that the package passes now
-        node.generate(1)
+        self.generate(node, 1)
         assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=package_hex)])
 
     def test_anc_size_limits(self):
@@ -397,7 +467,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             assert_equal(txres["package-error"], "package-mempool-limits")
 
         # Clear mempool and check that the package passes now
-        node.generate(1)
+        self.generate(node, 1)
         assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=[pc_hex, pd_hex])])
 
     def test_desc_size_limits(self):
@@ -468,7 +538,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             assert_equal(txres["package-error"], "package-mempool-limits")
 
         # Clear mempool and check that the package passes now
-        node.generate(1)
+        self.generate(node, 1)
         assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=package_hex)])
 
 if __name__ == "__main__":

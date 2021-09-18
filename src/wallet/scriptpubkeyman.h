@@ -148,17 +148,6 @@ public:
     }
 };
 
-class KeyIDHasher
-{
-public:
-    KeyIDHasher() {}
-
-    size_t operator()(const CKeyID& id) const
-    {
-        return id.GetUint64(0);
-    }
-};
-
 /*
  * A class implementing ScriptPubKeyMan manages some (or all) scriptPubKeys used in a wallet.
  * It contains the scripts and keys related to the scriptPubKeys it manages.

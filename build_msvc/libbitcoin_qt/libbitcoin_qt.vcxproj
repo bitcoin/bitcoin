@@ -140,20 +140,6 @@
     </ClCompile>
   </ItemDefinitionGroup>
 
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <PreprocessorDefinitions>_X86_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(QtIncludes);$(GeneratedFilesOutDir)\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-  </ItemDefinitionGroup>
-
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <PreprocessorDefinitions>_X86_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(QtIncludes);$(GeneratedFilesOutDir)\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-  </ItemDefinitionGroup>
-
   <ItemGroup>
     <QT_MOC Include="..\..\src\qt\bitcoinamountfield.cpp" />
     <QT_MOC Include="..\..\src\qt\intro.cpp" />

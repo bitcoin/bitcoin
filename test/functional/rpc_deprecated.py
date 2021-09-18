@@ -21,7 +21,7 @@ class DeprecatedRpcTest(BitcoinTestFramework):
         # In run_test:
         # self.log.info("Test generate RPC")
         # assert_raises_rpc_error(-32, 'The wallet generate rpc method is deprecated', self.nodes[0].rpc.generate, 1)
-        # self.nodes[1].generate(1)
+        # self.generate(self.nodes[1], 1)
 
         self.log.info("No tested deprecated RPC methods")
 

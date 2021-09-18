@@ -160,7 +160,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.start_node(0)
 
         # clear out mempool
-        node0.generate(1)
+        self.generate(node0, 1)
 
         # ensure node0 doesn't have any connections
         # make a transaction that will remain in the unbroadcast set

@@ -15,6 +15,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "index/base -> validation -> index/blockfilterindex -> index/base"
     "index/coinstatsindex -> node/coinstats -> index/coinstatsindex"
     "policy/fees -> txmempool -> policy/fees"
+    "policy/rbf -> txmempool -> validation -> policy/rbf"
     "qt/addresstablemodel -> qt/walletmodel -> qt/addresstablemodel"
     "qt/recentrequeststablemodel -> qt/walletmodel -> qt/recentrequeststablemodel"
     "qt/sendcoinsdialog -> qt/walletmodel -> qt/sendcoinsdialog"
@@ -23,10 +24,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "wallet/fees -> wallet/wallet -> wallet/fees"
     "wallet/wallet -> wallet/walletdb -> wallet/wallet"
     "node/coinstats -> validation -> node/coinstats"
-    # Temporary circular dependencies that allow wallet.h/wallet.cpp to be
-    # split up in a MOVEONLY commit. These are removed in #21206.
-    "wallet/receive -> wallet/wallet -> wallet/receive"
-    "wallet/spend -> wallet/wallet -> wallet/spend"
 )
 
 EXIT_CODE=0

@@ -26,6 +26,7 @@
 #include <index/txindex.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
+#include <interfaces/init.h>
 #include <interfaces/node.h>
 #include <mapport.h>
 #include <miner.h>
@@ -860,6 +861,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         return InitError(Untranslated("Cannot set -bind or -whitebind together with -listen=0"));
     }
 
+    // if listen=0, then disallow listenonion=1
+    if (!args.GetBoolArg("-listen", DEFAULT_LISTEN) && args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
+        return InitError(Untranslated("Cannot set -listen=0 together with -listenonion=1"));
+    }
+
     // Make sure enough file descriptors are available
     int nBind = std::max(nUserBind, size_t(1));
     nUserMaxConnections = args.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
@@ -916,10 +922,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
     // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
     if (args.IsArgSet("-incrementalrelayfee")) {
-        CAmount n = 0;
-        if (!ParseMoney(args.GetArg("-incrementalrelayfee", ""), n))
+        if (std::optional<CAmount> inc_relay_fee = ParseMoney(args.GetArg("-incrementalrelayfee", ""))) {
+            ::incrementalRelayFee = CFeeRate{inc_relay_fee.value()};
+        } else {
             return InitError(AmountErrMsg("incrementalrelayfee", args.GetArg("-incrementalrelayfee", "")));
-        incrementalRelayFee = CFeeRate(n);
+        }
     }
 
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
@@ -951,12 +958,12 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     if (args.IsArgSet("-minrelaytxfee")) {
-        CAmount n = 0;
-        if (!ParseMoney(args.GetArg("-minrelaytxfee", ""), n)) {
+        if (std::optional<CAmount> min_relay_fee = ParseMoney(args.GetArg("-minrelaytxfee", ""))) {
+            // High fee check is done afterward in CWallet::Create()
+            ::minRelayTxFee = CFeeRate{min_relay_fee.value()};
+        } else {
             return InitError(AmountErrMsg("minrelaytxfee", args.GetArg("-minrelaytxfee", "")));
         }
-        // High fee check is done afterward in CWallet::Create()
-        ::minRelayTxFee = CFeeRate(n);
     } else if (incrementalRelayFee > ::minRelayTxFee) {
         // Allow only setting incrementalRelayFee to control both
         ::minRelayTxFee = incrementalRelayFee;
@@ -966,18 +973,19 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // Sanity check argument for min fee for including tx in block
     // TODO: Harmonize which arguments need sanity checking and where that happens
     if (args.IsArgSet("-blockmintxfee")) {
-        CAmount n = 0;
-        if (!ParseMoney(args.GetArg("-blockmintxfee", ""), n))
+        if (!ParseMoney(args.GetArg("-blockmintxfee", ""))) {
             return InitError(AmountErrMsg("blockmintxfee", args.GetArg("-blockmintxfee", "")));
+        }
     }
 
     // Feerate used to define dust.  Shouldn't be changed lightly as old
     // implementations may inadvertently create non-standard transactions
     if (args.IsArgSet("-dustrelayfee")) {
-        CAmount n = 0;
-        if (!ParseMoney(args.GetArg("-dustrelayfee", ""), n))
+        if (std::optional<CAmount> parsed = ParseMoney(args.GetArg("-dustrelayfee", ""))) {
+            dustRelayFee = CFeeRate{parsed.value()};
+        } else {
             return InitError(AmountErrMsg("dustrelayfee", args.GetArg("-dustrelayfee", "")));
-        dustRelayFee = CFeeRate(n);
+        }
     }
 
     fRequireStandard = !args.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
@@ -1056,7 +1064,7 @@ bool AppInitLockDataDirectory()
 
 bool AppInitInterfaces(NodeContext& node)
 {
-    node.chain = interfaces::MakeChain(node);
+    node.chain = node.init->makeChain();
     // Create client interfaces for wallets that are supposed to be loaded
     // according to -wallet and -disablewallet options. This only constructs
     // the interfaces, it doesn't load wallet data. Wallets actually get loaded
@@ -1164,23 +1172,41 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     fDiscover = args.GetBoolArg("-discover", true);
     const bool ignores_incoming_txs{args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)};
 
-    assert(!node.addrman);
-    auto check_addrman = std::clamp<int32_t>(args.GetArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
-    node.addrman = std::make_unique<CAddrMan>(/* deterministic */ false, /* consistency_check_ratio */ check_addrman);
     {
-        // Load addresses from peers.dat
-        uiInterface.InitMessage(_("Loading P2P addresses…").translated);
-        int64_t nStart = GetTimeMillis();
-        CAddrDB adb;
-        if (adb.Read(*node.addrman)) {
-            LogPrintf("Loaded %i addresses from peers.dat  %dms\n", node.addrman->size(), GetTimeMillis() - nStart);
+        // Initialize addrman
+        assert(!node.addrman);
+
+        // Read asmap file if configured
+        std::vector<bool> asmap;
+        if (args.IsArgSet("-asmap")) {
+            fs::path asmap_path = fs::path(args.GetArg("-asmap", ""));
+            if (asmap_path.empty()) {
+                asmap_path = DEFAULT_ASMAP_FILENAME;
+            }
+            if (!asmap_path.is_absolute()) {
+                asmap_path = gArgs.GetDataDirNet() / asmap_path;
+            }
+            if (!fs::exists(asmap_path)) {
+                InitError(strprintf(_("Could not find asmap file %s"), asmap_path));
+                return false;
+            }
+            asmap = DecodeAsmap(asmap_path);
+            if (asmap.size() == 0) {
+                InitError(strprintf(_("Could not parse asmap file %s"), asmap_path));
+                return false;
+            }
+            const uint256 asmap_version = SerializeHash(asmap);
+            LogPrintf("Using asmap version %s for IP bucketing\n", asmap_version.ToString());
         } else {
-            // Addrman can be in an inconsistent state after failure, reset it
-            node.addrman = std::make_unique<CAddrMan>(/* deterministic */ false, /* consistency_check_ratio */ check_addrman);
-            LogPrintf("Recreating peers.dat\n");
-            adb.Write(*node.addrman);
+            LogPrintf("Using /16 prefix for IP bucketing\n");
+        }
+
+        uiInterface.InitMessage(_("Loading P2P addresses…").translated);
+        if (const auto error{LoadAddrman(asmap, args, node.addrman)}) {
+            return InitError(*error);
         }
     }
+
     assert(!node.banman);
     node.banman = std::make_unique<BanMan>(gArgs.GetDataDirNet() / "banlist", &uiInterface, args.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);
@@ -1283,31 +1309,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             AddLocal(addrLocal, LOCAL_MANUAL);
         else
             return InitError(ResolveErrMsg("externalip", strAddr));
-    }
-
-    // Read asmap file if configured
-    if (args.IsArgSet("-asmap")) {
-        fs::path asmap_path = fs::path(args.GetArg("-asmap", ""));
-        if (asmap_path.empty()) {
-            asmap_path = DEFAULT_ASMAP_FILENAME;
-        }
-        if (!asmap_path.is_absolute()) {
-            asmap_path = gArgs.GetDataDirNet() / asmap_path;
-        }
-        if (!fs::exists(asmap_path)) {
-            InitError(strprintf(_("Could not find asmap file %s"), asmap_path));
-            return false;
-        }
-        std::vector<bool> asmap = CAddrMan::DecodeAsmap(asmap_path);
-        if (asmap.size() == 0) {
-            InitError(strprintf(_("Could not parse asmap file %s"), asmap_path));
-            return false;
-        }
-        const uint256 asmap_version = SerializeHash(asmap);
-        node.connman->SetAsmap(std::move(asmap));
-        LogPrintf("Using asmap version %s for IP bucketing\n", asmap_version.ToString());
-    } else {
-        LogPrintf("Using /16 prefix for IP bucketing\n");
     }
 
 #if ENABLE_ZMQ
@@ -1566,6 +1567,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
+        if (const auto error{CheckLegacyTxindex(*Assert(chainman.m_blockman.m_block_tree_db))}) {
+            return InitError(*error);
+        }
+
         g_txindex = std::make_unique<TxIndex>(nTxIndexCache, false, fReindex);
         if (!g_txindex->Start(chainman.ActiveChainstate())) {
             return false;

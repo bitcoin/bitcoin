@@ -5,6 +5,8 @@
 # names can be used.
 # See https://github.com/google/sanitizers/issues/1364
 signed-integer-overflow:txmempool.cpp
+# nLastSuccess read from peers.dat might cause an overflow in IsTerrible
+signed-integer-overflow:addrman.cpp
 # https://github.com/bitcoin/bitcoin/pull/21798#issuecomment-829180719
 signed-integer-overflow:policy/feerate.cpp
 

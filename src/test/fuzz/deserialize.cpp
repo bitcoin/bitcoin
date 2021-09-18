@@ -188,16 +188,12 @@ FUZZ_TARGET_DESERIALIZE(blockmerkleroot, {
     BlockMerkleRoot(block, &mutated);
 })
 FUZZ_TARGET_DESERIALIZE(addrman_deserialize, {
-    CAddrMan am(/* deterministic */ false, /* consistency_check_ratio */ 0);
+    CAddrMan am(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
     DeserializeFromFuzzingInput(buffer, am);
 })
 FUZZ_TARGET_DESERIALIZE(blockheader_deserialize, {
     CBlockHeader bh;
     DeserializeFromFuzzingInput(buffer, bh);
-})
-FUZZ_TARGET_DESERIALIZE(banentry_deserialize, {
-    CBanEntry be;
-    DeserializeFromFuzzingInput(buffer, be);
 })
 FUZZ_TARGET_DESERIALIZE(txundo_deserialize, {
     CTxUndo tu;

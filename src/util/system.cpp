@@ -904,6 +904,11 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     const std::string confPath = GetArg("-conf", BITCOIN_CONF_FILENAME);
     fsbridge::ifstream stream(GetConfigFile(confPath));
 
+    // not ok to have a config file specified that cannot be opened
+    if (IsArgSet("-conf") && !stream.good()) {
+        error = strprintf("specified config file \"%s\" could not be opened.", confPath);
+        return false;
+    }
     // ok to not have a config file
     if (stream.good()) {
         if (!ReadConfigStream(stream, confPath, error, ignore_invalid_keys)) {
@@ -1301,7 +1306,7 @@ void SetupEnvironment()
 #endif
     // On most POSIX systems (e.g. Linux, but not BSD) the environment's locale
     // may be invalid, in which case the "C.UTF-8" locale is used as fallback.
-#if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
+#if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__NetBSD__)
     try {
         std::locale(""); // Raises a runtime error if current locale is invalid
     } catch (const std::runtime_error&) {

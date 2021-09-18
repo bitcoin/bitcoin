@@ -91,6 +91,10 @@ Tools and Utilities
 
 - Update `-getinfo` to return data in a user-friendly format that also reduces vertical space. (#21832)
 
+- CLI `-addrinfo` now returns a single field for the number of `onion` addresses
+  known to the node instead of separate `torv2` and `torv3` fields, as support
+  for Tor V2 addresses was removed from Bitcoin Core in 22.0. (#22544)
+
 Wallet
 ------
 
@@ -112,6 +116,7 @@ Tests
   changed.
   * BIP 34 (blockheight in coinbase) from 500 to 2 (#16333)
   * BIP 66 (DERSIG) from 1251 to 102 (#22632)
+  * BIP 65 (CLTV) from 1351 to 111 (#21862)
 
 Credits
 =======

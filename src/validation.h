@@ -11,7 +11,9 @@
 #endif
 
 #include <amount.h>
+#include <arith_uint256.h>
 #include <attributes.h>
+#include <chain.h>
 #include <coins.h>
 #include <consensus/validation.h>
 #include <crypto/common.h> // for ReadLE64
@@ -21,10 +23,11 @@
 #include <policy/packages.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
 #include <script/script_error.h>
-#include <sync.h>
-#include <txmempool.h> // For CTxMemPool::cs
-#include <txdb.h>
 #include <serialize.h>
+#include <sync.h>
+#include <txdb.h>
+#include <txmempool.h> // For CTxMemPool::cs
+#include <uint256.h>
 #include <util/check.h>
 #include <util/hasher.h>
 #include <util/translation.h>
@@ -42,7 +45,6 @@
 
 class CChainState;
 class BlockValidationState;
-class CBlockIndex;
 class CBlockTreeDB;
 class CBlockUndo;
 class CChainParams;
@@ -558,9 +560,8 @@ protected:
      * Every received block is assigned a unique and increasing identifier, so we
      * know which one to give priority in case of a fork.
      */
-    RecursiveMutex cs_nBlockSequenceId;
     /** Blocks loaded from disk are assigned id 0, so start the counter at 1. */
-    int32_t nBlockSequenceId = 1;
+    int32_t nBlockSequenceId GUARDED_BY(::cs_main) = 1;
     /** Decreasing counter (used by subsequent preciousblock calls). */
     int32_t nBlockReverseSequenceId = -1;
     /** chainwork for the last block that preciousblock has been applied to. */
@@ -749,7 +750,7 @@ public:
 
     void PruneBlockIndexCandidates();
 
-    void UnloadBlockIndex();
+    void UnloadBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Check whether we are doing an initial block download (synchronizing from disk or network) */
     bool IsInitialBlockDownload() const;
@@ -930,7 +931,7 @@ public:
     CChainState& InitializeChainstate(
         CTxMemPool* mempool,
         const std::optional<uint256>& snapshot_blockhash = std::nullopt)
-        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+        LIFETIMEBOUND EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Get all chainstates currently being used.
     std::vector<CChainState*> GetAll();

@@ -93,7 +93,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.nodes[1].assert_start_raises_init_error(["-whitebind=noban@127.0.0.1/10"], "Cannot resolve -whitebind address", match=ErrorMatch.PARTIAL_REGEX)
 
     def check_tx_relay(self):
-        block_op_true = self.nodes[0].getblock(self.nodes[0].generatetoaddress(100, ADDRESS_BCRT1_P2WSH_OP_TRUE)[0])
+        block_op_true = self.nodes[0].getblock(self.generatetoaddress(self.nodes[0], 100, ADDRESS_BCRT1_P2WSH_OP_TRUE)[0])
         self.sync_all()
 
         self.log.debug("Create a connection from a forcerelay peer that rebroadcasts raw txs")

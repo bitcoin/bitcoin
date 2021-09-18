@@ -8,73 +8,20 @@
 
 #include <fs.h>
 #include <net_types.h> // For banmap_t
-#include <serialize.h>
 #include <univalue.h>
 
-#include <string>
+#include <optional>
 #include <vector>
 
-class CAddress;
+class ArgsManager;
 class CAddrMan;
+class CAddress;
 class CDataStream;
+struct bilingual_str;
 
-class CBanEntry
-{
-public:
-    static const int CURRENT_VERSION=1;
-    int nVersion;
-    int64_t nCreateTime;
-    int64_t nBanUntil;
-
-    CBanEntry()
-    {
-        SetNull();
-    }
-
-    explicit CBanEntry(int64_t nCreateTimeIn)
-    {
-        SetNull();
-        nCreateTime = nCreateTimeIn;
-    }
-
-    /**
-     * Create a ban entry from JSON.
-     * @param[in] json A JSON representation of a ban entry, as created by `ToJson()`.
-     * @throw std::runtime_error if the JSON does not have the expected fields.
-     */
-    explicit CBanEntry(const UniValue& json);
-
-    SERIALIZE_METHODS(CBanEntry, obj)
-    {
-        uint8_t ban_reason = 2; //! For backward compatibility
-        READWRITE(obj.nVersion, obj.nCreateTime, obj.nBanUntil, ban_reason);
-    }
-
-    void SetNull()
-    {
-        nVersion = CBanEntry::CURRENT_VERSION;
-        nCreateTime = 0;
-        nBanUntil = 0;
-    }
-
-    /**
-     * Generate a JSON representation of this ban entry.
-     * @return JSON suitable for passing to the `CBanEntry(const UniValue&)` constructor.
-     */
-    UniValue ToJson() const;
-};
-
-/** Access to the (IP) address database (peers.dat) */
-class CAddrDB
-{
-private:
-    fs::path pathAddr;
-public:
-    CAddrDB();
-    bool Write(const CAddrMan& addr);
-    bool Read(CAddrMan& addr);
-    static bool Read(CAddrMan& addr, CDataStream& ssPeers);
-};
+bool DumpPeerAddresses(const ArgsManager& args, const CAddrMan& addr);
+/** Only used by tests. */
+void ReadFromStream(CAddrMan& addr, CDataStream& ssPeers);
 
 /** Access to the banlist database (banlist.json) */
 class CBanDB
@@ -99,6 +46,9 @@ public:
      */
     bool Read(banmap_t& banSet);
 };
+
+/** Returns an error string on failure */
+std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const ArgsManager& args, std::unique_ptr<CAddrMan>& addrman);
 
 /**
  * Dump the anchor IP address database (anchors.dat)

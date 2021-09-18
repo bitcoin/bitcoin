@@ -180,6 +180,23 @@ XOnlyPubKey::XOnlyPubKey(Span<const unsigned char> bytes)
     std::copy(bytes.begin(), bytes.end(), m_keydata.begin());
 }
 
+std::vector<CKeyID> XOnlyPubKey::GetKeyIDs() const
+{
+    std::vector<CKeyID> out;
+    // For now, use the old full pubkey-based key derivation logic. As it is indexed by
+    // Hash160(full pubkey), we need to return both a version prefixed with 0x02, and one
+    // with 0x03.
+    unsigned char b[33] = {0x02};
+    std::copy(m_keydata.begin(), m_keydata.end(), b + 1);
+    CPubKey fullpubkey;
+    fullpubkey.Set(b, b + 33);
+    out.push_back(fullpubkey.GetID());
+    b[0] = 0x03;
+    fullpubkey.Set(b, b + 33);
+    out.push_back(fullpubkey.GetID());
+    return out;
+}
+
 bool XOnlyPubKey::IsFullyValid() const
 {
     secp256k1_xonly_pubkey pubkey;
@@ -333,6 +350,7 @@ void CExtPubKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     nChild = (code[5] << 24) | (code[6] << 16) | (code[7] << 8) | code[8];
     memcpy(chaincode.begin(), code+9, 32);
     pubkey.Set(code+41, code+BIP32_EXTKEY_SIZE);
+    if ((nDepth == 0 && (nChild != 0 || ReadLE32(vchFingerprint) != 0)) || !pubkey.IsFullyValid()) pubkey = CPubKey();
 }
 
 bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild) const {

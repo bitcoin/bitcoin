@@ -23,7 +23,7 @@ class DumptxoutsetTest(BitcoinTestFramework):
         node = self.nodes[0]
         mocktime = node.getblockheader(node.getblockhash(0))['time'] + 1
         node.setmocktime(mocktime)
-        node.generate(COINBASE_MATURITY)
+        self.generate(node, COINBASE_MATURITY)
 
         FILENAME = 'txoutset.dat'
         out = node.dumptxoutset(FILENAME)
