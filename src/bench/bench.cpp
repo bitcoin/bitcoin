@@ -61,6 +61,12 @@ void benchmark::BenchRunner::RunAll(const Args& args)
 
         Bench bench;
         bench.name(p.first);
+        if (args.min_time > 0ms) {
+            // convert to nanos before dividing to reduce rounding errors
+            std::chrono::nanoseconds min_time_ns = args.min_time;
+            bench.minEpochTime(min_time_ns / bench.epochs());
+        }
+
         if (args.asymptote.empty()) {
             p.second(bench);
         } else {
