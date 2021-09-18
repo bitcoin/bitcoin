@@ -53,7 +53,7 @@
 #include <sys/vmmeter.h>
 #endif
 #endif
-#if defined(HAVE_STRONG_GETAUXVAL) || defined(HAVE_WEAK_GETAUXVAL)
+#if defined(HAVE_STRONG_GETAUXVAL)
 #include <sys/auxv.h>
 #endif
 
