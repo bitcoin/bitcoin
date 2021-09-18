@@ -21,6 +21,7 @@ FUZZERS_MISSING_CORPORA = [
     "fee_rate_deserialize",
     "flat_file_pos_deserialize",
     "key_origin_info_deserialize",
+    "locale",
     "merkle_block_deserialize",
     "out_point_deserialize",
     "partial_merkle_tree_deserialize",
@@ -32,6 +33,8 @@ FUZZERS_MISSING_CORPORA = [
     "script_deserialize",
     "sub_net_deserialize",
     "tx_in_deserialize",
+    "tx_in",
+    "tx_out",
 ]
 
 def main():
@@ -47,6 +50,11 @@ def main():
         '--export_coverage',
         action='store_true',
         help='If true, export coverage information to files in the seed corpus',
+    )
+    parser.add_argument(
+        '--valgrind',
+        action='store_true',
+        help='If true, run fuzzing binaries under the valgrind memory error detector. Valgrind 3.14 or later required.',
     )
     parser.add_argument(
         'seed_dir',
@@ -116,10 +124,11 @@ def main():
         test_list=test_list_selection,
         build_dir=config["environment"]["BUILDDIR"],
         export_coverage=args.export_coverage,
+        use_valgrind=args.valgrind,
     )
 
 
-def run_once(*, corpus, test_list, build_dir, export_coverage):
+def run_once(*, corpus, test_list, build_dir, export_coverage, use_valgrind):
     for t in test_list:
         corpus_path = os.path.join(corpus, t)
         if t in FUZZERS_MISSING_CORPORA:
@@ -130,6 +139,8 @@ def run_once(*, corpus, test_list, build_dir, export_coverage):
             '-detect_leaks=0',
             corpus_path,
         ]
+        if use_valgrind:
+            args = ['valgrind', '--quiet', '--error-exitcode=1', '--exit-on-first-error=yes'] + args
         logging.debug('Run {} with args {}'.format(t, args))
         result = subprocess.run(args, stderr=subprocess.PIPE, universal_newlines=True)
         output = result.stderr

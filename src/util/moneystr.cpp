@@ -8,6 +8,7 @@
 #include <primitives/transaction.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 
 std::string FormatMoney(const CAmount& n)
 {
@@ -33,6 +34,9 @@ std::string FormatMoney(const CAmount& n)
 
 bool ParseMoney(const std::string& str, CAmount& nRet)
 {
+    if (!ValidAsCString(str)) {
+        return false;
+    }
     return ParseMoney(str.c_str(), nRet);
 }
 
