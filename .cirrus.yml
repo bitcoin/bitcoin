@@ -75,7 +75,7 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
-  name: "Win64 native [unit tests, no functional tests] [msvc]"
+  name: "Win64 native [msvc]"
   << : *FILTER_TEMPLATE
   windows_container:
     cpu: 4
@@ -93,6 +93,7 @@ task:
     QTBASEDIR: 'C:\Qt5.12.11_x64_static_vs2019_160900'
     x64_NATIVE_TOOLS: '"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"'
     IgnoreWarnIntDirInTempDetected: 'true'
+    EXCLUDE_TESTS: 'feature_addrman.py,feature_bip68_sequence.py,feature_fee_estimation.py,mining_prioritisetransaction.py,p2p_getaddr_caching.py,p2p_invalid_locator.py,p2p_invalid_tx.py,rpc_misc.py,rpc_net.py,wallet_avoidreuse.py,wallet_descriptor.py,wallet_groups.py,wallet_keypool.py'
   merge_script:
     - git config --global user.email "ci@ci.ci"
     - git config --global user.name "ci"
@@ -146,7 +147,8 @@ task:
     - python test\util\test_runner.py
     - python test\util\rpcauth-test.py
   functional_tests_script:
-    - python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 rpc_help feature_config_args rpc_signer feature_presegwit_node_upgrade "tool_wallet.py --descriptors" --failfast  # TODO enable '--extended' and remove cherry-picked test list
+    # TODO enable '--extended' and drop '--exclude'.
+    - python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 --exclude %EXCLUDE_TESTS% --failfast
 
 task:
   name: 'ARM [unit tests, no functional tests] [bullseye]'
