@@ -118,6 +118,14 @@ builder-image:
     when: always
     paths:
       - $CI_PROJECT_DIR/build-ci
+    # Exclude some less important binaries to reduce the size of the artifacts
+    exclude:
+      - build-ci/dashcore-$BUILD_TARGET/src/bench/bench_dash
+      - build-ci/dashcore-$BUILD_TARGET/src/bench/bench_dash.exe
+      - build-ci/dashcore-$BUILD_TARGET/src/qt/test/test_dash-qt
+      - build-ci/dashcore-$BUILD_TARGET/src/qt/test/test_dash-qt.exe
+      - build-ci/dashcore-$BUILD_TARGET/src/test/test_dash
+      - build-ci/dashcore-$BUILD_TARGET/src/test/test_dash.exe
     expire_in: 3 days
 
 .test-template:
