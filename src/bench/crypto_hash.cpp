@@ -110,9 +110,9 @@ static void MuHash(benchmark::Bench& bench)
 {
     MuHash3072 acc;
     unsigned char key[32] = {0};
-    int i = 0;
+    uint32_t i = 0;
     bench.run([&] {
-        key[0] = ++i;
+        key[0] = ++i & 0xFF;
         acc *= MuHash3072(key);
     });
 }
