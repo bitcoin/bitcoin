@@ -873,6 +873,8 @@ static RPCHelpMan getnodeaddresses()
                             {RPCResult::Type::STR, "address", "The address of the node"},
                             {RPCResult::Type::NUM, "port", "The port number of the node"},
                             {RPCResult::Type::STR, "network", "The network (" + Join(GetNetworkNames(), ", ") + ") the node connected through"},
+                            {RPCResult::Type::BOOL, "tried", "Whether a connection to this node was successfully made and its address is in our addrman tried table"},
+                            {RPCResult::Type::NUM, "reference_count", /* optional */ true, "The addrman new table reference count for the node address. Only returned if it is in our new table, i.e. \"tried\" is false"},
                         }},
                     }
                 },
@@ -907,6 +909,10 @@ static RPCHelpMan getnodeaddresses()
         obj.pushKV("address", addr.ToStringIP());
         obj.pushKV("port", addr.GetPort());
         obj.pushKV("network", GetNetworkName(addr.GetNetClass()));
+        obj.pushKV("tried", addr.fInTried);
+        if (!addr.fInTried) {
+            obj.pushKV("reference_count", addr.nRefCount);
+        }
         ret.push_back(obj);
     }
     return ret;
