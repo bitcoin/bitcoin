@@ -79,6 +79,7 @@
 #include <zmq/zmqnotificationinterface.h>
 #include <zmq/zmqrpc.h>
 #endif
+#include <unistd.h>
 RecursiveMutex cs_geth;
 struct DescriptorDetails {
     std::string version;
@@ -6010,7 +6011,7 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
 
     fs::path dataDir = gArgs.GetDataDirNet() / "geth";
     const std::vector<std::string> &vecCmdLineStr = SanitizeGethCmdLine(attempt1.string(), dataDir.string());
-    
+    fs::path log = gArgs.GetDataDirNet() / "geth" / "sysgeth.log";
     #ifndef WIN32
     // Prevent killed child-processes remaining as "defunct"
     struct sigaction sa;
@@ -6032,11 +6033,19 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
         std::vector<char*> commandVector;
         for(const std::string &cmdStr: vecCmdLineStr) {
             commandVector.push_back(const_cast<char*>(cmdStr.c_str()));
-        }
+        }  
+       
         // push NULL to the end of the vector (execvp expects NULL as last element)
         commandVector.push_back(NULL);
         char **command = commandVector.data();    
-        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]);                                                  
+        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]); 
+        int err = open(log.string().c_str(), O_RDWR|O_CREAT|O_APPEND, 0600);
+        if (err == -1) {
+            LogPrintf("Could not open sysgeth.log\n");
+            return false;
+        }
+        if (-1 == dup2(err, fileno(stderr))) { LogPrintf("Cannot redirect stderr for syssgeth\n"); return false; }   
+        fflush(stderr); close(err);                               
         execvp(command[0], &command[0]);
         if (errno != 0) {
             LogPrintf("Geth not found at %s\n", attempt1.string());
