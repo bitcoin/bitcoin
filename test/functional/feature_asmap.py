@@ -27,14 +27,19 @@ import os
 import shutil
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal
+
 
 DEFAULT_ASMAP_FILENAME = 'ip_asn.map' # defined in src/init.cpp
 ASMAP = '../../src/test/data/asmap.raw' # path to unit test skeleton asmap
 VERSION = 'fec61fa21a9f46f3b17bdcd660d7f4cd90b966aad3aec593c99b35f0aca15853'
+ADDRMAN = [[0, True], [1, False]]
+
 
 def expected_messages(filename):
     return [f'Opened asmap file "{filename}" (59 bytes) from disk',
             f'Using asmap version {VERSION} for IP bucketing']
+
 
 class AsmapTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -43,7 +48,7 @@ class AsmapTest(BitcoinTestFramework):
 
     def fill_addrman(self, node_id):
         """Add 1 tried address to the addrman, followed by 1 new address."""
-        for addr, tried in [[0, True], [1, False]]:
+        for addr, tried in ADDRMAN:
             self.nodes[node_id].addpeeraddress(address=f"101.{addr}.0.0", tried=tried, port=8333)
 
     def test_without_asmap_arg(self):
@@ -87,13 +92,11 @@ class AsmapTest(BitcoinTestFramework):
         self.start_node(0, ["-asmap", "-checkaddrman=1"])
         self.fill_addrman(node_id=0)
         self.restart_node(0, ["-asmap", "-checkaddrman=1"])
-        with self.node.assert_debug_log(
-            expected_msgs=[
-                "Addrman checks started: new 1, tried 1, total 2",
-                "Addrman checks completed successfully",
-            ]
-        ):
-            self.node.getnodeaddresses()  # getnodeaddresses re-runs the addrman checks
+        addrs = sorted(self.node.getnodeaddresses(count=0), key=lambda k: k["address"])
+        assert_equal(len(addrs), 2)
+        for n, tried in ADDRMAN:
+            assert_equal(addrs[n]["address"], f"101.{n}.0.0")
+            assert_equal(addrs[n]["tried"], tried)
         os.remove(self.default_asmap)
 
     def test_default_asmap_with_missing_file(self):
