@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Widecoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,11 +18,17 @@ enum class OutputType {
     LEGACY,
     P2SH_SEGWIT,
     BECH32,
+    BECH32M,
 };
 
-extern const std::array<OutputType, 3> OUTPUT_TYPES;
+static constexpr auto OUTPUT_TYPES = std::array{
+    OutputType::LEGACY,
+    OutputType::P2SH_SEGWIT,
+    OutputType::BECH32,
+    OutputType::BECH32M,
+};
 
-NODISCARD bool ParseOutputType(const std::string& str, OutputType& output_type);
+[[nodiscard]] bool ParseOutputType(const std::string& str, OutputType& output_type);
 const std::string& FormatOutputType(OutputType type);
 
 /**
@@ -40,5 +46,8 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key);
  * necessary scripts) to the keystore.
  */
 CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, const CScript& script, OutputType);
+
+/** Get the OutputType for a CTxDestination */
+std::optional<OutputType> OutputTypeFromDestination(const CTxDestination& dest);
 
 #endif // WIDECOIN_OUTPUTTYPE_H

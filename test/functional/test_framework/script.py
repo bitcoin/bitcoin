@@ -29,8 +29,6 @@ MAX_SCRIPT_ELEMENT_SIZE = 520
 LOCKTIME_THRESHOLD = 500000000
 ANNEX_TAG = 0x50
 
-OPCODE_NAMES = {}  # type: Dict[CScriptOp, str]
-
 LEAF_VERSION_TAPSCRIPT = 0xc0
 
 def hash160(s):
@@ -47,7 +45,6 @@ def bn2vch(v):
     # Serialize to bytes
     return encoded_v.to_bytes(n_bytes, 'little')
 
-_opcode_instances = []  # type: List[CScriptOp]
 class CScriptOp(int):
     """A single script opcode"""
     __slots__ = ()
@@ -110,6 +107,9 @@ class CScriptOp(int):
             assert len(_opcode_instances) == n
             _opcode_instances.append(super().__new__(cls, n))
             return _opcode_instances[n]
+
+OPCODE_NAMES: Dict[CScriptOp, str] = {}
+_opcode_instances: List[CScriptOp] = []
 
 # Populate opcode instance table
 for n in range(0xff + 1):
@@ -787,7 +787,7 @@ def TaprootSignatureHash(txTo, spent_utxos, hash_type, input_index = 0, scriptpa
 
 def taproot_tree_helper(scripts):
     if len(scripts) == 0:
-        return ([], bytes(0 for _ in range(32)))
+        return ([], bytes())
     if len(scripts) == 1:
         # One entry: treat as a leaf
         script = scripts[0]
@@ -824,21 +824,33 @@ def taproot_tree_helper(scripts):
     h = TaggedHash("TapBranch", left_h + right_h)
     return (left + right, h)
 
-TaprootInfo = namedtuple("TaprootInfo", "scriptPubKey,inner_pubkey,negflag,tweak,leaves")
+# A TaprootInfo object has the following fields:
+# - scriptPubKey: the scriptPubKey (witness v1 CScript)
+# - internal_pubkey: the internal pubkey (32 bytes)
+# - negflag: whether the pubkey in the scriptPubKey was negated from internal_pubkey+tweak*G (bool).
+# - tweak: the tweak (32 bytes)
+# - leaves: a dict of name -> TaprootLeafInfo objects for all known leaves
+TaprootInfo = namedtuple("TaprootInfo", "scriptPubKey,internal_pubkey,negflag,tweak,leaves")
+
+# A TaprootLeafInfo object has the following fields:
+# - script: the leaf script (CScript or bytes)
+# - version: the leaf version (0xc0 for BIP342 tapscript)
+# - merklebranch: the merkle branch to use for this leaf (32*N bytes)
 TaprootLeafInfo = namedtuple("TaprootLeafInfo", "script,version,merklebranch")
 
 def taproot_construct(pubkey, scripts=None):
     """Construct a tree of Taproot spending conditions
 
-    pubkey: an ECPubKey object for the internal pubkey
+    pubkey: a 32-byte xonly pubkey for the internal pubkey (bytes)
     scripts: a list of items; each item is either:
-             - a (name, CScript) tuple
-             - a (name, CScript, leaf version) tuple
+             - a (name, CScript or bytes, leaf version) tuple
+             - a (name, CScript or bytes) tuple (defaulting to leaf version 0xc0)
              - another list of items (with the same structure)
-             - a function, which specifies how to compute the hashing partner
-               in function of the hash of whatever it is combined with
+             - a list of two items; the first of which is an item itself, and the
+               second is a function. The function takes as input the Merkle root of the
+               first item, and produces a (fictitious) partner to hash with.
 
-    Returns: script (sPK or redeemScript), tweak, {name:(script, leaf version, negation flag, innerkey, merklepath), ...}
+    Returns: a TaprootInfo object
     """
     if scripts is None:
         scripts = []

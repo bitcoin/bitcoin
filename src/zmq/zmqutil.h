@@ -5,6 +5,8 @@
 #ifndef WIDECOIN_ZMQ_ZMQUTIL_H
 #define WIDECOIN_ZMQ_ZMQUTIL_H
 
-void zmqError(const char* str);
+#include <string>
+
+void zmqError(const std::string& str);
 
 #endif // WIDECOIN_ZMQ_ZMQUTIL_H

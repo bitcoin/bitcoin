@@ -11,10 +11,14 @@
 
 [Unit]
 Description=Widecoin daemon
-After=network.target
+Documentation=https://github.com/widecoin/widecoin/blob/master/doc/init.md
+
+# https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget/
+After=network-online.target
+Wants=network-online.target
 
 [Service]
-ExecStart=/usr/bin/widecoind -daemon \
+ExecStart=/usr/bin/widecoind -daemonwait \
                             -pid=/run/widecoind/widecoind.pid \
                             -conf=/etc/widecoin/widecoin.conf \
                             -datadir=/var/lib/widecoind
@@ -29,6 +33,7 @@ ExecStartPre=/bin/chgrp widecoin /etc/widecoin
 Type=forking
 PIDFile=/run/widecoind/widecoind.pid
 Restart=on-failure
+TimeoutStartSec=infinity
 TimeoutStopSec=600
 
 # Directory creation and permissions

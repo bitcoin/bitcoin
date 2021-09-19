@@ -13,7 +13,6 @@ from test_framework.test_framework import WidecoinTestFramework
 class InvalidLocatorTest(WidecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.setup_clean_chain = False
 
     def run_test(self):
         node = self.nodes[0]  # convenience reference to the node

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Widecoin Core developers
+# Copyright (c) 2014-2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test longpolling with getblocktemplate."""
@@ -8,6 +8,7 @@ from decimal import Decimal
 import random
 import threading
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import get_rpc_proxy
 from test_framework.wallet import MiniWallet
@@ -62,7 +63,7 @@ class GetBlockTemplateLPTest(WidecoinTestFramework):
         assert not thr.is_alive()
 
         # Add enough mature utxos to the wallets, so that all txs spend confirmed coins
-        self.nodes[0].generate(100)
+        self.nodes[0].generate(COINBASE_MATURITY)
         self.sync_blocks()
 
         self.log.info("Test that introducing a new transaction into the mempool will terminate the longpoll")

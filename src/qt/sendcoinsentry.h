@@ -69,6 +69,9 @@ private Q_SLOTS:
     void on_pasteButton_clicked();
     void updateDisplayUnit();
 
+protected:
+    void changeEvent(QEvent* e) override;
+
 private:
     SendCoinsRecipient recipient;
     Ui::SendCoinsEntry *ui;

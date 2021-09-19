@@ -2,6 +2,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+# Pattern rule to print variables, e.g. make print-top_srcdir
+print-%: FORCE
+	@echo '$*'='$($*)'
+
 DIST_SUBDIRS = secp256k1 univalue
 
 AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS)
@@ -70,6 +74,7 @@ EXTRA_LIBRARIES += \
   $(LIBWIDECOIN_CONSENSUS) \
   $(LIBWIDECOIN_SERVER) \
   $(LIBWIDECOIN_CLI) \
+  $(LIBWIDECOIN_IPC) \
   $(LIBWIDECOIN_WALLET) \
   $(LIBWIDECOIN_WALLET_TOOL) \
   $(LIBWIDECOIN_ZMQ)
@@ -92,13 +97,19 @@ endif
 if BUILD_WIDECOIN_CLI
   bin_PROGRAMS += widecoin-cli
 endif
+
 if BUILD_WIDECOIN_TX
   bin_PROGRAMS += widecoin-tx
 endif
+
 if ENABLE_WALLET
 if BUILD_WIDECOIN_WALLET
   bin_PROGRAMS += widecoin-wallet
 endif
+endif
+
+if BUILD_WIDECOIN_UTIL
+  bin_PROGRAMS += widecoin-util
 endif
 
 .PHONY: FORCE check-symbols check-security
@@ -134,24 +145,34 @@ WIDECOIN_CORE_H = \
   core_memusage.h \
   cuckoocache.h \
   dbwrapper.h \
+  deploymentinfo.h \
+  deploymentstatus.h \
+  external_signer.h \
   flatfile.h \
   fs.h \
   httprpc.h \
   httpserver.h \
+  i2p.h \
   index/base.h \
   index/blockfilterindex.h \
+  index/coinstatsindex.h \
   index/disktxpos.h \
   index/txindex.h \
   indirectmap.h \
   init.h \
+  init/common.h \
   interfaces/chain.h \
+  interfaces/echo.h \
   interfaces/handler.h \
+  interfaces/init.h \
+  interfaces/ipc.h \
   interfaces/node.h \
   interfaces/wallet.h \
   key.h \
   key_io.h \
   logging.h \
   logging/timer.h \
+  mapport.h \
   memusage.h \
   merkleblock.h \
   miner.h \
@@ -162,6 +183,7 @@ WIDECOIN_CORE_H = \
   netaddress.h \
   netbase.h \
   netmessagemaker.h \
+  node/blockstorage.h \
   node/coin.h \
   node/coinstats.h \
   node/context.h \
@@ -170,10 +192,10 @@ WIDECOIN_CORE_H = \
   node/ui_interface.h \
   node/utxo_snapshot.h \
   noui.h \
-  optional.h \
   outputtype.h \
   policy/feerate.h \
   policy/fees.h \
+  policy/packages.h \
   policy/policy.h \
   policy/rbf.h \
   policy/settings.h \
@@ -186,6 +208,7 @@ WIDECOIN_CORE_H = \
   rpc/blockchain.h \
   rpc/client.h \
   rpc/mining.h \
+  rpc/net.h \
   rpc/protocol.h \
   rpc/rawtransaction_util.h \
   rpc/register.h \
@@ -213,28 +236,37 @@ WIDECOIN_CORE_H = \
   timedata.h \
   torcontrol.h \
   txdb.h \
-  txrequest.h \
   txmempool.h \
+  txorphanage.h \
+  txrequest.h \
   undo.h \
   util/asmap.h \
   util/bip32.h \
   util/bytevectorhash.h \
   util/check.h \
+  util/epochguard.h \
   util/error.h \
   util/fees.h \
+  util/getuniquepath.h \
   util/golombrice.h \
+  util/hash_type.h \
+  util/hasher.h \
   util/macros.h \
-  util/memory.h \
   util/message.h \
   util/moneystr.h \
   util/rbf.h \
-  util/ref.h \
+  util/readwritefile.h \
+  util/serfloat.h \
   util/settings.h \
+  util/sock.h \
   util/spanparsing.h \
   util/string.h \
   util/system.h \
+  util/thread.h \
   util/threadnames.h \
   util/time.h \
+  util/tokenpipe.h \
+  util/trace.h \
   util/translation.h \
   util/ui_change_type.h \
   util/url.h \
@@ -242,21 +274,25 @@ WIDECOIN_CORE_H = \
   validation.h \
   validationinterface.h \
   versionbits.h \
-  versionbitsinfo.h \
   wallet/bdb.h \
   wallet/coincontrol.h \
   wallet/coinselection.h \
   wallet/context.h \
   wallet/crypter.h \
   wallet/db.h \
+  wallet/dump.h \
+  wallet/external_signer_scriptpubkeyman.h \
   wallet/feebumper.h \
   wallet/fees.h \
   wallet/ismine.h \
   wallet/load.h \
+  wallet/receive.h \
   wallet/rpcwallet.h \
   wallet/salvage.h \
   wallet/scriptpubkeyman.h \
+  wallet/spend.h \
   wallet/sqlite.h \
+  wallet/transaction.h \
   wallet/wallet.h \
   wallet/walletdb.h \
   wallet/wallettool.h \
@@ -276,11 +312,13 @@ obj/build.h: FORCE
 	  "$(abs_top_srcdir)"
 libwidecoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
+ipc/capnp/libwidecoin_ipc_a-ipc.$(OBJEXT): $(libwidecoin_ipc_mpgen_input:=.h)
+
 # server: shared between widecoind and widecoin-qt
 # Contains code accessing mempool and chain state that is meant to be separated
 # from wallet and gui code (see node/README.md). Shared code should go in
 # libwidecoin_common or libwidecoin_util libraries, instead.
-libwidecoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libwidecoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libwidecoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libwidecoin_server_a_SOURCES = \
   addrdb.cpp \
@@ -291,26 +329,31 @@ libwidecoin_server_a_SOURCES = \
   chain.cpp \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
+  deploymentstatus.cpp \
   flatfile.cpp \
   httprpc.cpp \
   httpserver.cpp \
+  i2p.cpp \
   index/base.cpp \
   index/blockfilterindex.cpp \
+  index/coinstatsindex.cpp \
   index/txindex.cpp \
   init.cpp \
-  interfaces/chain.cpp \
-  interfaces/node.cpp \
+  mapport.cpp \
   miner.cpp \
   net.cpp \
   net_processing.cpp \
+  node/blockstorage.cpp \
   node/coin.cpp \
   node/coinstats.cpp \
   node/context.cpp \
+  node/interfaces.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
   node/ui_interface.cpp \
   noui.cpp \
   policy/fees.cpp \
+  policy/packages.cpp \
   policy/rbf.cpp \
   policy/settings.cpp \
   pow.cpp \
@@ -327,8 +370,9 @@ libwidecoin_server_a_SOURCES = \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
-  txrequest.cpp \
   txmempool.cpp \
+  txorphanage.cpp \
+  txrequest.cpp \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
@@ -358,19 +402,22 @@ endif
 libwidecoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) $(SQLITE_CFLAGS)
 libwidecoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libwidecoin_wallet_a_SOURCES = \
-  interfaces/wallet.cpp \
-  wallet/bdb.cpp \
   wallet/coincontrol.cpp \
   wallet/context.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
+  wallet/dump.cpp \
+  wallet/external_signer_scriptpubkeyman.cpp \
   wallet/feebumper.cpp \
   wallet/fees.cpp \
+  wallet/interfaces.cpp \
   wallet/load.cpp \
+  wallet/receive.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
-  wallet/salvage.cpp \
   wallet/scriptpubkeyman.cpp \
+  wallet/spend.cpp \
+  wallet/transaction.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
@@ -379,6 +426,9 @@ libwidecoin_wallet_a_SOURCES = \
 
 if USE_SQLITE
 libwidecoin_wallet_a_SOURCES += wallet/sqlite.cpp
+endif
+if USE_BDB
+libwidecoin_wallet_a_SOURCES += wallet/bdb.cpp wallet/salvage.cpp
 endif
 
 libwidecoin_wallet_tool_a_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
@@ -406,6 +456,8 @@ crypto_libwidecoin_crypto_base_a_SOURCES = \
   crypto/hmac_sha512.h \
   crypto/poly1305.h \
   crypto/poly1305.cpp \
+  crypto/muhash.h \
+  crypto/muhash.cpp \
   crypto/ripemd160.cpp \
   crypto/ripemd160.h \
   crypto/sha1.cpp \
@@ -490,6 +542,9 @@ libwidecoin_common_a_SOURCES = \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
+  deploymentinfo.cpp \
+  external_signer.cpp \
+  init/common.cpp \
   key.cpp \
   key_io.cpp \
   merkleblock.cpp \
@@ -502,13 +557,13 @@ libwidecoin_common_a_SOURCES = \
   protocol.cpp \
   psbt.cpp \
   rpc/rawtransaction_util.cpp \
+  rpc/external_signer.cpp \
   rpc/util.cpp \
   scheduler.cpp \
   script/descriptor.cpp \
   script/sign.cpp \
   script/signingprovider.cpp \
   script/standard.cpp \
-  versionbitsinfo.cpp \
   warnings.cpp \
   $(WIDECOIN_CORE_H)
 
@@ -521,11 +576,12 @@ libwidecoin_util_a_SOURCES = \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
-  compat/glibc_sanity.cpp \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
   fs.cpp \
+  interfaces/echo.cpp \
   interfaces/handler.cpp \
+  interfaces/init.cpp \
   logging.cpp \
   random.cpp \
   randomenv.cpp \
@@ -538,16 +594,23 @@ libwidecoin_util_a_SOURCES = \
   util/bytevectorhash.cpp \
   util/error.cpp \
   util/fees.cpp \
+  util/getuniquepath.cpp \
+  util/hasher.cpp \
+  util/sock.cpp \
   util/system.cpp \
   util/message.cpp \
   util/moneystr.cpp \
   util/rbf.cpp \
+  util/readwritefile.cpp \
   util/settings.cpp \
+  util/thread.cpp \
   util/threadnames.cpp \
+  util/serfloat.cpp \
   util/spanparsing.cpp \
   util/strencodings.cpp \
   util/string.cpp \
   util/time.cpp \
+  util/tokenpipe.cpp \
   $(WIDECOIN_CORE_H)
 
 if USE_LIBEVENT
@@ -594,19 +657,19 @@ widecoin_bin_ldadd = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-widecoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
+widecoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
-widecoind_SOURCES = $(widecoin_daemon_sources)
+widecoind_SOURCES = $(widecoin_daemon_sources) init/widecoind.cpp
 widecoind_CPPFLAGS = $(widecoin_bin_cppflags)
 widecoind_CXXFLAGS = $(widecoin_bin_cxxflags)
 widecoind_LDFLAGS = $(widecoin_bin_ldflags)
 widecoind_LDADD = $(LIBWIDECOIN_SERVER) $(widecoin_bin_ldadd)
 
-widecoin_node_SOURCES = $(widecoin_daemon_sources)
+widecoin_node_SOURCES = $(widecoin_daemon_sources) init/widecoin-node.cpp
 widecoin_node_CPPFLAGS = $(widecoin_bin_cppflags)
 widecoin_node_CXXFLAGS = $(widecoin_bin_cxxflags)
 widecoin_node_LDFLAGS = $(widecoin_bin_ldflags)
-widecoin_node_LDADD = $(LIBWIDECOIN_SERVER) $(widecoin_bin_ldadd)
+widecoin_node_LDADD = $(LIBWIDECOIN_SERVER) $(widecoin_bin_ldadd) $(LIBWIDECOIN_IPC) $(LIBMULTIPROCESS_LIBS)
 
 # widecoin-cli binary #
 widecoin_cli_SOURCES = widecoin-cli.cpp
@@ -658,6 +721,27 @@ widecoin_wallet_LDADD = $(LIBWIDECOIN_WALLET_TOOL) $(widecoin_bin_ldadd)
 if TARGET_WINDOWS
 widecoin_wallet_SOURCES += widecoin-wallet-res.rc
 endif
+#
+
+# widecoin-util binary #
+widecoin_util_SOURCES = widecoin-util.cpp
+widecoin_util_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
+widecoin_util_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+widecoin_util_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+
+if TARGET_WINDOWS
+widecoin_util_SOURCES += widecoin-util-res.rc
+endif
+
+widecoin_util_LDADD = \
+  $(LIBWIDECOIN_COMMON) \
+  $(LIBWIDECOIN_UTIL) \
+  $(LIBUNIVALUE) \
+  $(LIBWIDECOIN_CONSENSUS) \
+  $(LIBWIDECOIN_CRYPTO) \
+  $(LIBSECP256K1)
+
+widecoin_util_LDADD += $(BOOST_LIBS)
 #
 
 # widecoinconsensus library #
@@ -730,23 +814,56 @@ clean-local:
 check-symbols: $(bin_PROGRAMS)
 if TARGET_DARWIN
 	@echo "Checking macOS dynamic libraries..."
-	$(AM_V_at) OTOOL=$(OTOOL) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
+	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
 endif
 
 if TARGET_WINDOWS
 	@echo "Checking Windows dynamic libraries..."
-	$(AM_V_at) OBJDUMP=$(OBJDUMP) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
+	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
 endif
 
-if GLIBC_BACK_COMPAT
+if TARGET_LINUX
 	@echo "Checking glibc back compat..."
-	$(AM_V_at) READELF=$(READELF) CPPFILT=$(CPPFILT) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
+	$(AM_V_at) CPPFILT='$(CPPFILT)' $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
 endif
 
 check-security: $(bin_PROGRAMS)
 if HARDEN
 	@echo "Checking binary security..."
-	$(AM_V_at) READELF=$(READELF) OBJDUMP=$(OBJDUMP) OTOOL=$(OTOOL) $(PYTHON) $(top_srcdir)/contrib/devtools/security-check.py $(bin_PROGRAMS)
+	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/security-check.py $(bin_PROGRAMS)
+endif
+
+libwidecoin_ipc_mpgen_input = \
+  ipc/capnp/echo.capnp \
+  ipc/capnp/init.capnp
+EXTRA_DIST += $(libwidecoin_ipc_mpgen_input)
+%.capnp:
+
+if BUILD_MULTIPROCESS
+LIBWIDECOIN_IPC=libwidecoin_ipc.a
+libwidecoin_ipc_a_SOURCES = \
+  ipc/capnp/init-types.h \
+  ipc/capnp/protocol.cpp \
+  ipc/capnp/protocol.h \
+  ipc/exception.h \
+  ipc/interfaces.cpp \
+  ipc/process.cpp \
+  ipc/process.h \
+  ipc/protocol.h
+libwidecoin_ipc_a_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
+libwidecoin_ipc_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(LIBMULTIPROCESS_CFLAGS)
+
+include $(MPGEN_PREFIX)/include/mpgen.mk
+libwidecoin_ipc_mpgen_output = \
+  $(libwidecoin_ipc_mpgen_input:=.c++) \
+  $(libwidecoin_ipc_mpgen_input:=.h) \
+  $(libwidecoin_ipc_mpgen_input:=.proxy-client.c++) \
+  $(libwidecoin_ipc_mpgen_input:=.proxy-server.c++) \
+  $(libwidecoin_ipc_mpgen_input:=.proxy-types.c++) \
+  $(libwidecoin_ipc_mpgen_input:=.proxy-types.h) \
+  $(libwidecoin_ipc_mpgen_input:=.proxy.h)
+nodist_libwidecoin_ipc_a_SOURCES = $(libwidecoin_ipc_mpgen_output)
+CLEANFILES += $(libwidecoin_ipc_mpgen_output)
 endif
 
 if EMBEDDED_LEVELDB

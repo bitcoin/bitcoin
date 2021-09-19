@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 The Widecoin Core developers
+// Copyright (c) 2017-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -29,6 +29,12 @@ FILE *fopen(const fs::path& p, const char *mode)
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t> utf8_cvt;
     return ::_wfopen(p.wstring().c_str(), utf8_cvt.from_bytes(mode).c_str());
 #endif
+}
+
+fs::path AbsPathJoin(const fs::path& base, const fs::path& path)
+{
+    assert(base.is_absolute());
+    return fs::absolute(path, base);
 }
 
 #ifndef WIN32
@@ -236,7 +242,11 @@ void ofstream::close()
 }
 #else // __GLIBCXX__
 
+#if BOOST_VERSION >= 107700
+static_assert(sizeof(*BOOST_FILESYSTEM_C_STR(fs::path())) == sizeof(wchar_t),
+#else
 static_assert(sizeof(*fs::path().BOOST_FILESYSTEM_C_STR) == sizeof(wchar_t),
+#endif // BOOST_VERSION >= 107700
     "Warning: This build is using boost::filesystem ofstream and ifstream "
     "implementations which will fail to open paths containing multibyte "
     "characters. You should delete this static_assert to ignore this warning, "

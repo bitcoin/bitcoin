@@ -72,14 +72,14 @@ BOOST_AUTO_TEST_CASE(compress_script_to_ckey_id)
     CScript script = CScript() << OP_DUP << OP_HASH160 << ToByteVector(pubkey.GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
     BOOST_CHECK_EQUAL(script.size(), 25U);
 
-    std::vector<unsigned char> out;
+    CompressedScript out;
     bool done = CompressScript(script, out);
     BOOST_CHECK_EQUAL(done, true);
 
     // Check compressed script
     BOOST_CHECK_EQUAL(out.size(), 21U);
     BOOST_CHECK_EQUAL(out[0], 0x00);
-    BOOST_CHECK_EQUAL(memcmp(&out[1], &script[3], 20), 0); // compare the 20 relevant chars of the CKeyId in the script
+    BOOST_CHECK_EQUAL(memcmp(out.data() + 1, script.data() + 3, 20), 0); // compare the 20 relevant chars of the CKeyId in the script
 }
 
 BOOST_AUTO_TEST_CASE(compress_script_to_cscript_id)
@@ -89,14 +89,14 @@ BOOST_AUTO_TEST_CASE(compress_script_to_cscript_id)
     script << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL;
     BOOST_CHECK_EQUAL(script.size(), 23U);
 
-    std::vector<unsigned char> out;
+    CompressedScript out;
     bool done = CompressScript(script, out);
     BOOST_CHECK_EQUAL(done, true);
 
     // Check compressed script
     BOOST_CHECK_EQUAL(out.size(), 21U);
     BOOST_CHECK_EQUAL(out[0], 0x01);
-    BOOST_CHECK_EQUAL(memcmp(&out[1], &script[2], 20), 0); // compare the 20 relevant chars of the CScriptId in the script
+    BOOST_CHECK_EQUAL(memcmp(out.data() + 1, script.data() + 2, 20), 0); // compare the 20 relevant chars of the CScriptId in the script
 }
 
 BOOST_AUTO_TEST_CASE(compress_script_to_compressed_pubkey_id)
@@ -107,14 +107,14 @@ BOOST_AUTO_TEST_CASE(compress_script_to_compressed_pubkey_id)
     CScript script = CScript() << ToByteVector(key.GetPubKey()) << OP_CHECKSIG; // COMPRESSED_PUBLIC_KEY_SIZE (33)
     BOOST_CHECK_EQUAL(script.size(), 35U);
 
-    std::vector<unsigned char> out;
+    CompressedScript out;
     bool done = CompressScript(script, out);
     BOOST_CHECK_EQUAL(done, true);
 
     // Check compressed script
     BOOST_CHECK_EQUAL(out.size(), 33U);
-    BOOST_CHECK_EQUAL(memcmp(&out[0], &script[1], 1), 0);
-    BOOST_CHECK_EQUAL(memcmp(&out[1], &script[2], 32), 0); // compare the 32 chars of the compressed CPubKey
+    BOOST_CHECK_EQUAL(memcmp(out.data(), script.data() + 1, 1), 0);
+    BOOST_CHECK_EQUAL(memcmp(out.data() + 1, script.data() + 2, 32), 0); // compare the 32 chars of the compressed CPubKey
 }
 
 BOOST_AUTO_TEST_CASE(compress_script_to_uncompressed_pubkey_id)
@@ -124,13 +124,13 @@ BOOST_AUTO_TEST_CASE(compress_script_to_uncompressed_pubkey_id)
     CScript script =  CScript() << ToByteVector(key.GetPubKey()) << OP_CHECKSIG; // PUBLIC_KEY_SIZE (65)
     BOOST_CHECK_EQUAL(script.size(), 67U);                   // 1 char code + 65 char pubkey + OP_CHECKSIG
 
-    std::vector<unsigned char> out;
+    CompressedScript out;
     bool done = CompressScript(script, out);
     BOOST_CHECK_EQUAL(done, true);
 
     // Check compressed script
     BOOST_CHECK_EQUAL(out.size(), 33U);
-    BOOST_CHECK_EQUAL(memcmp(&out[1], &script[2], 32), 0); // first 32 chars of CPubKey are copied into out[1:]
+    BOOST_CHECK_EQUAL(memcmp(out.data() + 1, script.data() + 2, 32), 0); // first 32 chars of CPubKey are copied into out[1:]
     BOOST_CHECK_EQUAL(out[0], 0x04 | (script[65] & 0x01)); // least significant bit (lsb) of last char of pubkey is mapped into out[0]
 }
 

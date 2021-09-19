@@ -1,11 +1,10 @@
-// Copyright (c) 2015-2018 The Widecoin Core developers
+// Copyright (c) 2015-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef WIDECOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 #define WIDECOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 
-#include <util/memory.h>
 
 #include <memory>
 #include <string>
@@ -27,7 +26,7 @@ public:
     template <typename T>
     static std::unique_ptr<CZMQAbstractNotifier> Create()
     {
-        return MakeUnique<T>();
+        return std::make_unique<T>();
     }
 
     std::string GetType() const { return type; }

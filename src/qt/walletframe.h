@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Widecoin Core developers
+// Copyright (c) 2011-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,6 @@
 #include <QFrame>
 #include <QMap>
 
-class WidecoinGUI;
 class ClientModel;
 class PlatformStyle;
 class SendCoinsRecipient;
@@ -31,12 +30,12 @@ class WalletFrame : public QFrame
     Q_OBJECT
 
 public:
-    explicit WalletFrame(const PlatformStyle *platformStyle, WidecoinGUI *_gui = nullptr);
+    explicit WalletFrame(const PlatformStyle* platformStyle, QWidget* parent);
     ~WalletFrame();
 
     void setClientModel(ClientModel *clientModel);
 
-    bool addWallet(WalletModel *walletModel);
+    bool addWallet(WalletModel* walletModel, WalletView* walletView);
     void setCurrentWallet(WalletModel* wallet_model);
     void removeWallet(WalletModel* wallet_model);
     void removeAllWallets();
@@ -48,12 +47,10 @@ public:
     QSize sizeHint() const override { return m_size_hint; }
 
 Q_SIGNALS:
-    /** Notify that the user has requested more information about the out-of-sync warning */
-    void requestedSyncWarningInfo();
+    void createWalletButtonClicked();
 
 private:
     QStackedWidget *walletStack;
-    WidecoinGUI *gui;
     ClientModel *clientModel;
     QMap<WalletModel*, WalletView*> mapWalletViews;
 
@@ -86,7 +83,7 @@ public Q_SLOTS:
     void gotoLoadPSBT(bool from_clipboard = false);
 
     /** Encrypt the wallet */
-    void encryptWallet(bool status);
+    void encryptWallet();
     /** Backup the wallet */
     void backupWallet();
     /** Change encrypted wallet passphrase */
@@ -98,8 +95,6 @@ public Q_SLOTS:
     void usedSendingAddresses();
     /** Show used receiving addresses */
     void usedReceivingAddresses();
-    /** Pass on signal over requested out-of-sync-warning information */
-    void outOfSyncWarningClicked();
 };
 
 #endif // WIDECOIN_QT_WALLETFRAME_H

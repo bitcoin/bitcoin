@@ -16,6 +16,10 @@ if BUILD_WIDECOIN_TX
   dist_man1_MANS+=widecoin-tx.1
 endif
 
+if BUILD_WIDECOIN_UTIL
+  dist_man1_MANS+=widecoin-util.1
+endif
+
 if ENABLE_WALLET
 if BUILD_WIDECOIN_WALLET
   dist_man1_MANS+=widecoin-wallet.1

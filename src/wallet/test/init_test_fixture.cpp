@@ -1,8 +1,9 @@
-// Copyright (c) 2018-2019 The Widecoin Core developers
+// Copyright (c) 2018-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <fs.h>
+#include <univalue.h>
 #include <util/check.h>
 #include <util/system.h>
 
@@ -10,12 +11,12 @@
 
 InitWalletDirTestingSetup::InitWalletDirTestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
 {
-    m_wallet_client = MakeWalletClient(*m_chain, *Assert(m_node.args));
+    m_wallet_client = MakeWalletClient(*m_node.chain, *Assert(m_node.args));
 
     std::string sep;
     sep += fs::path::preferred_separator;
 
-    m_datadir = GetDataDir();
+    m_datadir = gArgs.GetDataDirNet();
     m_cwd = fs::current_path();
 
     m_walletdir_path_cases["default"] = m_datadir / "wallets";
@@ -31,12 +32,19 @@ InitWalletDirTestingSetup::InitWalletDirTestingSetup(const std::string& chainNam
     fs::create_directories(m_walletdir_path_cases["default"]);
     fs::create_directories(m_walletdir_path_cases["custom"]);
     fs::create_directories(m_walletdir_path_cases["relative"]);
+#if BOOST_VERSION >= 107700
+    std::ofstream f(BOOST_FILESYSTEM_C_STR(m_walletdir_path_cases["file"]));
+#else
     std::ofstream f(m_walletdir_path_cases["file"].BOOST_FILESYSTEM_C_STR);
+#endif // BOOST_VERSION >= 107700
     f.close();
 }
 
 InitWalletDirTestingSetup::~InitWalletDirTestingSetup()
 {
+    gArgs.LockSettings([&](util::Settings& settings) {
+        settings.forced_settings.erase("walletdir");
+    });
     fs::current_path(m_cwd);
 }
 

@@ -7,3 +7,5 @@ check: FORCE
 	$(MAKE) -C .. test_widecoin_qt_check
 widecoin-qt widecoin-qt.exe: FORCE
 	 $(MAKE) -C .. widecoin_qt
+apk: FORCE
+	$(MAKE) -C .. widecoin_qt_apk

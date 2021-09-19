@@ -1,0 +1,44 @@
+Fix compiling with GCC 11
+
+See: https://bugreports.qt.io/browse/QTBUG-90395.
+
+Upstream commits:
+ - Qt 5.15 -- unavailable as open source
+ - Qt 6.0: b2af6332ea37e45ab230a7a5d2d278f86d961b83
+ - Qt 6.1: 9c56d4da2ff631a8c1c30475bd792f6c86bda53c
+
+--- old/qtbase/src/corelib/global/qendian.h
++++ new/qtbase/src/corelib/global/qendian.h
+@@ -44,6 +44,8 @@
+ #include <QtCore/qfloat16.h>
+ #include <QtCore/qglobal.h>
+ 
++#include <limits>
++
+ // include stdlib.h and hope that it defines __GLIBC__ for glibc-based systems
+ #include <stdlib.h>
+ #include <string.h>
+
+--- old/qtbase/src/corelib/tools/qbytearraymatcher.h
++++ new/qtbase/src/corelib/tools/qbytearraymatcher.h
+@@ -42,6 +42,8 @@
+ 
+ #include <QtCore/qbytearray.h>
+ 
++#include <limits>
++
+ QT_BEGIN_NAMESPACE
+ 
+ 
+
+--- old/qtbase/src/tools/moc/generator.cpp
++++ new/qtbase/src/tools/moc/generator.cpp
+@@ -40,6 +40,8 @@
+ #include <QtCore/qplugin.h>
+ #include <QtCore/qstringview.h>
+ 
++#include <limits>
++
+ #include <math.h>
+ #include <stdio.h>
+ 

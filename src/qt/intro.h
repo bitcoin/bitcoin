@@ -36,6 +36,7 @@ public:
 
     QString getDataDirectory();
     void setDataDirectory(const QString &dataDir);
+    int64_t getPruneMiB() const;
 
     /**
      * Determine data directory. Let the user choose if the current one doesn't exist.
@@ -44,10 +45,10 @@ public:
      * @returns true if a data directory was selected, false if the user cancelled the selection
      * dialog.
      *
-     * @note do NOT call global GetDataDir() before calling this function, this
+     * @note do NOT call global gArgs.GetDataDirNet() before calling this function, this
      * will cause the wrong path to be cached.
      */
-    static bool showIfNeeded(bool& did_show_intro, bool& prune);
+    static bool showIfNeeded(bool& did_show_intro, int64_t& prune_MiB);
 
 Q_SIGNALS:
     void requestCheck();
@@ -72,7 +73,7 @@ private:
     //! Total required space (in GB) depending on user choice (prune or not prune).
     int64_t m_required_space_gb{0};
     uint64_t m_bytes_available{0};
-    const int64_t m_prune_target_gb;
+    int64_t m_prune_target_gb;
 
     void startThread();
     void checkPath(const QString &dataDir);

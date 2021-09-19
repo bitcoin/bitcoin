@@ -23,7 +23,7 @@ don't have test cases for.
 - The oldest supported Python version is specified in [doc/dependencies.md](/doc/dependencies.md).
   Consider using [pyenv](https://github.com/pyenv/pyenv), which checks [.python-version](/.python-version),
   to prevent accidentally introducing modern syntax from an unsupported Python version.
-  The Travis linter also checks this, but [possibly not in all cases](https://github.com/widecoin/widecoin/pull/14884#discussion_r239585126).
+  The CI linter job also checks this, but [possibly not in all cases](https://github.com/widecoin/widecoin/pull/14884#discussion_r239585126).
 - See [the python lint script](/test/lint/lint-python.sh) that checks for violations that
   could lead to bugs and issues in the test code.
 - Use [type hints](https://docs.python.org/3/library/typing.html) in your code to improve code readability
@@ -34,7 +34,7 @@ don't have test cases for.
 - When subclassing the WidecoinTestFramework, place overrides for the
   `set_test_params()`, `add_options()` and `setup_xxxx()` methods at the top of
   the subclass, then locally-defined helper methods, then the `run_test()` method.
-- Use `'{}'.format(x)` for string formatting, not `'%s' % x`.
+- Use `f'{x}'` for string formatting in preference to `'{}'.format(x)` or `'%s' % x`.
 
 #### Naming guidelines
 
@@ -63,10 +63,13 @@ don't have test cases for.
 - Avoid stop-starting the nodes multiple times during the test if possible. A
   stop-start takes several seconds, so doing it several times blows up the
   runtime of the test.
-- Set the `self.setup_clean_chain` variable in `set_test_params()` to control whether
-  or not to use the cached data directories. The cached data directories
-  contain a 200-block pre-mined blockchain and wallets for four nodes. Each node
-  has 25 mature blocks (25x50=1250 WCN) in its wallet.
+- Set the `self.setup_clean_chain` variable in `set_test_params()` to `True` to
+  initialize an empty blockchain and start from the Genesis block, rather than
+  load a premined blockchain from cache with the default value of `False`. The
+  cached data directories contain a 200-block pre-mined blockchain with the
+  spendable mining rewards being split between four nodes. Each node has 25
+  mature block subsidies (25x50=1250 WCN) in its wallet. Using them is much more
+  efficient than mining blocks in your test.
 - When calling RPCs with lots of arguments, consider using named keyword
   arguments instead of positional arguments to make the intent of the call
   clear to readers.

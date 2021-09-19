@@ -5,7 +5,6 @@
 #ifndef WIDECOIN_COMPAT_SANITY_H
 #define WIDECOIN_COMPAT_SANITY_H
 
-bool glibc_sanity_test();
 bool glibcxx_sanity_test();
 
 #endif // WIDECOIN_COMPAT_SANITY_H

@@ -60,16 +60,17 @@ start_pre() {
 	"${WIDECOIND_PIDDIR}"
 
 	checkpath -f \
-	-o ${WIDECOIND_USER}:${WIDECOIND_GROUP} \
+	-o "${WIDECOIND_USER}:${WIDECOIND_GROUP}" \
 	-m 0660 \
-	${WIDECOIND_CONFIGFILE}
+	"${WIDECOIND_CONFIGFILE}"
 
 	checkconfig || return 1
 }
 
 checkconfig()
 {
-	if ! grep -qs '^rpcpassword=' "${WIDECOIND_CONFIGFILE}" ; then
+	if grep -qs '^rpcuser=' "${WIDECOIND_CONFIGFILE}" && \
+		! grep -qs '^rpcpassword=' "${WIDECOIND_CONFIGFILE}" ; then
 		eerror ""
 		eerror "ERROR: You must set a secure rpcpassword to run widecoind."
 		eerror "The setting must appear in ${WIDECOIND_CONFIGFILE}"

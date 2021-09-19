@@ -1,22 +1,19 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Widecoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef WIDECOIN_ATTRIBUTES_H
 #define WIDECOIN_ATTRIBUTES_H
 
-#if defined(__has_cpp_attribute)
-#  if __has_cpp_attribute(nodiscard)
-#    define NODISCARD [[nodiscard]]
-#  endif
-#endif
-#ifndef NODISCARD
-#  if defined(_MSC_VER) && _MSC_VER >= 1700
-#    define NODISCARD _Check_return_
+#if defined(__clang__)
+#  if __has_attribute(lifetimebound)
+#    define LIFETIMEBOUND [[clang::lifetimebound]]
 #  else
-#    define NODISCARD __attribute__((warn_unused_result))
+#    define LIFETIMEBOUND
 #  endif
+#else
+#  define LIFETIMEBOUND
 #endif
 
 #endif // WIDECOIN_ATTRIBUTES_H
