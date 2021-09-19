@@ -5,7 +5,7 @@
 deadlock:WalletBatch
 
 # Intentional deadlock in tests
-deadlock:TestPotentialDeadLockDetected
+deadlock:sync_tests::potential_deadlock_detected
 
 # Wildcard for all gui tests, should be replaced with non-wildcard suppressions
 race:src/qt/test/*

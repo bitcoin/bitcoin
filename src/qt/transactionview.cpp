@@ -155,7 +155,7 @@ transactionView(nullptr), abandonAction(nullptr), columnResizingFixer(nullptr)
     QAction *copyTxIDAction = new QAction(tr("Copy transaction ID"), this);
     QAction *copyTxHexAction = new QAction(tr("Copy raw transaction"), this);
     QAction *copyTxPlainText = new QAction(tr("Copy full transaction details"), this);
-    QAction *editLabelAction = new QAction(tr("Edit label"), this);
+    QAction *editLabelAction = new QAction(tr("Edit address label"), this);
     QAction *showDetailsAction = new QAction(tr("Show transaction details"), this);
     QAction *showAddressQRCodeAction = new QAction(tr("Show address QR code"), this);
 
