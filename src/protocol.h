@@ -216,6 +216,20 @@ extern const char *GETBLOCKTXN;
  * @since protocol version 70209 as described by BIP 152
  */
 extern const char *BLOCKTXN;
+/**
+ * getcfcheckpt requests evenly spaced compact filter headers, enabling
+ * parallelized download and validation of the headers between them.
+ * Only available with service bit NODE_COMPACT_FILTERS as described by
+ * BIP 157 & 158.
+ */
+extern const char *GETCFCHECKPT;
+/**
+ * cfcheckpt is a response to a getcfcheckpt request containing a vector of
+ * evenly spaced filter headers for blocks on the requested chain.
+ * Only available with service bit NODE_COMPACT_FILTERS as described by
+ * BIP 157 & 158.
+ */
+extern const char *CFCHECKPT;
 
 // Dash message types
 // NOTE: do NOT declare non-implmented here, we don't want them to be exposed to the outside
