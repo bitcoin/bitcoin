@@ -344,14 +344,14 @@ syscoin_qt_libtoolflags = $(AM_LIBTOOLFLAGS) --tag CXX
 
 qt_syscoin_qt_CPPFLAGS = $(syscoin_qt_cppflags)
 qt_syscoin_qt_CXXFLAGS = $(syscoin_qt_cxxflags)
-qt_syscoin_qt_SOURCES = $(syscoin_qt_sources)
+qt_syscoin_qt_SOURCES = $(syscoin_qt_sources) init/syscoind.cpp
 qt_syscoin_qt_LDADD = $(syscoin_qt_ldadd)
 qt_syscoin_qt_LDFLAGS = $(syscoin_qt_ldflags)
 qt_syscoin_qt_LIBTOOLFLAGS = $(syscoin_qt_libtoolflags)
 
 syscoin_gui_CPPFLAGS = $(syscoin_qt_cppflags)
 syscoin_gui_CXXFLAGS = $(syscoin_qt_cxxflags)
-syscoin_gui_SOURCES = $(syscoin_qt_sources)
+syscoin_gui_SOURCES = $(syscoin_qt_sources) init/syscoind.cpp
 syscoin_gui_LDADD = $(syscoin_qt_ldadd)
 syscoin_gui_LDFLAGS = $(syscoin_qt_ldflags)
 syscoin_gui_LIBTOOLFLAGS = $(syscoin_qt_libtoolflags)

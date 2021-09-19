@@ -692,6 +692,11 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
 
         // create peer table context menu
         peersTableContextMenu = new QMenu(this);
+        //: Context menu action to copy the address of a peer.
+        peersTableContextMenu->addAction(tr("&Copy address"), [this] {
+            GUIUtil::copyEntryData(ui->peerWidget, PeerTableModel::Address, Qt::DisplayRole);
+        });
+        peersTableContextMenu->addSeparator();
         peersTableContextMenu->addAction(tr("&Disconnect"), this, &RPCConsole::disconnectSelectedNode);
         peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 &hour"), [this] { banSelectedNode(60 * 60); });
         peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 d&ay"), [this] { banSelectedNode(60 * 60 * 24); });
@@ -720,7 +725,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         banTableContextMenu = new QMenu(this);
         /*: Context menu action to copy the IP/Netmask of a banned peer.
             IP/Netmask is the combination of a peer's IP address and its Netmask.
-            For IP address see: https://en.wikipedia.org/wiki/IP_address */
+            For IP address, see: https://en.wikipedia.org/wiki/IP_address. */
         banTableContextMenu->addAction(tr("&Copy IP/Netmask"), [this] {
             GUIUtil::copyEntryData(ui->banlistWidget, BanTableModel::Address, Qt::DisplayRole);
         });

@@ -79,6 +79,14 @@ class MiniWallet:
             self._address = ADDRESS_BCRT1_P2WSH_OP_TRUE
             self._scriptPubKey = bytes.fromhex(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
+    def rescan_utxos(self):
+        """Drop all utxos and rescan the utxo set"""
+        self._utxos = []
+        res = self._test_node.scantxoutset(action="start", scanobjects=[f'raw({self._scriptPubKey.hex()})'])
+        assert_equal(True, res['success'])
+        for utxo in res['unspents']:
+            self._utxos.append({'txid': utxo['txid'], 'vout': utxo['vout'], 'value': utxo['amount']})
+
     def scan_blocks(self, *, start=1, num):
         """Scan the blocks for self._address outputs and add them to self._utxos"""
         for i in range(start, start + num):

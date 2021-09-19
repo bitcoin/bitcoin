@@ -9,6 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\qt\main.cpp" />
+    <ClCompile Include="..\..\src\init\syscoind.cpp" />
     <ResourceCompile Include="..\..\src\qt\res\syscoin-qt-res.rc" />
   </ItemGroup>
   <ItemGroup>
