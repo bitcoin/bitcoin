@@ -356,7 +356,7 @@ class P2PInterface(P2PConnection):
 
         return create_conn
 
-    def peer_accept_connection(self, *args, services=NODE_NETWORK | NODE_WITNESS, **kwargs):
+    def peer_accept_connection(self, *args, services=P2P_SERVICES, **kwargs):
         create_conn = super().peer_accept_connection(*args, **kwargs)
         self.peer_connect_send_version(services)
 

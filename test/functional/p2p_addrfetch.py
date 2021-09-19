@@ -8,14 +8,21 @@ Test p2p addr-fetch connections
 
 import time
 
-from test_framework.messages import msg_addr, CAddress, NODE_NETWORK, NODE_WITNESS
-from test_framework.p2p import P2PInterface, p2p_lock
+from test_framework.messages import (
+    CAddress,
+    msg_addr,
+)
+from test_framework.p2p import (
+    P2PInterface,
+    p2p_lock,
+    P2P_SERVICES,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
 ADDR = CAddress()
 ADDR.time = int(time.time())
-ADDR.nServices = NODE_NETWORK | NODE_WITNESS
+ADDR.nServices = P2P_SERVICES
 ADDR.ip = "192.0.0.8"
 ADDR.port = 18444
 

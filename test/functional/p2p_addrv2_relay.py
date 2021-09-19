@@ -11,10 +11,11 @@ import time
 from test_framework.messages import (
     CAddress,
     msg_addrv2,
-    NODE_NETWORK,
-    NODE_WITNESS,
 )
-from test_framework.p2p import P2PInterface
+from test_framework.p2p import (
+    P2PInterface,
+    P2P_SERVICES,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
@@ -24,7 +25,7 @@ ADDRS = []
 for i in range(10):
     addr = CAddress()
     addr.time = int(time.time()) + i
-    addr.nServices = NODE_NETWORK | NODE_WITNESS
+    addr.nServices = P2P_SERVICES
     # Add one I2P address at an arbitrary position.
     if i == 5:
         addr.net = addr.NET_I2P
