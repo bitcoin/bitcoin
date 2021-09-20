@@ -22,6 +22,16 @@
 /** Default for -checkaddrman */
 static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{0};
 
+namespace AddrMan {
+/** Statistics about a CAddress for RPC getnodeaddresses. */
+struct Address : CAddress {
+    int nRefCount{0};     //! reference count in new sets (memory only)
+    bool fInTried{false}; //! in tried set? (memory only)
+    Address(const CAddress& addr, int count, bool tried) : CAddress(addr), nRefCount(count), fInTried(tried){};
+};
+using Addresses = std::vector<Address>;
+} // namespace AddrMan
+
 /**
  * Extended statistics about a CAddress
  */
