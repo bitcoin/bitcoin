@@ -57,7 +57,7 @@ def cli_get_info_string_to_dict(cli_get_info_string):
             if key == 'Wallet' and value == '""':
                 # Set default wallet("") to empty string
                 value = ''
-            if key == "Proxy" and value == "N/A":
+            if key == "Proxies" and value == "n/a":
                 # Set N/A to empty string to represent no proxy
                 value = ''
             cli_get_info[key.strip()] = value.strip()
@@ -127,9 +127,16 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(int(cli_get_info['Time offset (s)']), network_info['timeoffset'])
         expected_network_info = f"in {network_info['connections_in']}, out {network_info['connections_out']}, total {network_info['connections']}"
         assert_equal(cli_get_info["Network"], expected_network_info)
-        assert_equal(cli_get_info['Proxy'], network_info['networks'][0]['proxy'])
+        assert_equal(cli_get_info['Proxies'], network_info['networks'][0]['proxy'])
         assert_equal(Decimal(cli_get_info['Difficulty']), blockchain_info['difficulty'])
         assert_equal(cli_get_info['Chain'], blockchain_info['chain'])
+
+        self.log.info("Test -getinfo and bitcoin-cli return all proxies")
+        self.restart_node(0, extra_args=["-proxy=127.0.0.1:9050", "-i2psam=127.0.0.1:7656"])
+        network_info = self.nodes[0].getnetworkinfo()
+        cli_get_info_string = self.nodes[0].cli('-getinfo').send_cli()
+        cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
+        assert_equal(cli_get_info["Proxies"], "127.0.0.1:9050 (ipv4, ipv6, onion), 127.0.0.1:7656 (i2p)")
 
         if self.is_wallet_compiled():
             self.log.info("Test -getinfo and bitcoin-cli getwalletinfo return expected wallet info")
