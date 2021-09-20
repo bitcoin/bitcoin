@@ -8,14 +8,13 @@
 #include <rpc/blockchain.h> // for RPCNotifyBlockChange
 #include <util/time.h> // for GetTime
 #include <node/blockstorage.h> // for CleanupBlockRevFiles, fHavePruned, fReindex
-#include <node/context.h> // for NodeContext
 #include <node/ui_interface.h> // for InitError, uiInterface, and CClientUIInterface member access
 #include <shutdown.h> // for ShutdownRequested
 #include <validation.h> // for a lot of things
 
 std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      ChainstateManager& chainman,
-                                                     NodeContext& node,
+                                                     CTxMemPool* mempool,
                                                      bool fPruneMode,
                                                      const CChainParams& chainparams,
                                                      bool fReindexChainState,
@@ -32,11 +31,11 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     do {
         try {
             LOCK(cs_main);
-            chainman.InitializeChainstate(Assert(node.mempool.get()));
+            chainman.InitializeChainstate(Assert(mempool));
             chainman.m_total_coinstip_cache = nCoinCacheUsage;
             chainman.m_total_coinsdb_cache = nCoinDBCache;
 
-            UnloadBlockIndex(node.mempool.get(), chainman);
+            UnloadBlockIndex(mempool, chainman);
 
             auto& pblocktree{chainman.m_blockman.m_block_tree_db};
             // new CBlockTreeDB tries to delete the existing file, which

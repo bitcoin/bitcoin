@@ -10,7 +10,7 @@
 
 class CChainParams;
 class ChainstateManager;
-struct NodeContext;
+class CTxMemPool;
 
 enum class ChainstateLoadingError {
     ERROR_LOADING_BLOCK_DB,
@@ -55,7 +55,7 @@ enum class ChainstateLoadingError {
  */
 std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      ChainstateManager& chainman,
-                                                     NodeContext& node,
+                                                     CTxMemPool* mempool,
                                                      bool fPruneMode,
                                                      const CChainParams& chainparams,
                                                      bool fReindexChainState,
