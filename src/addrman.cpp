@@ -851,7 +851,7 @@ int CAddrMan::ForceCheckAddrman() const
     return 0;
 }
 
-void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size_t max_pct, std::optional<Network> network) const
+void CAddrMan::GetAddr_(AddrMan::Addresses& vAddr, size_t max_addresses, size_t max_pct, std::optional<Network> network) const
 {
     AssertLockHeld(cs);
 
@@ -882,7 +882,7 @@ void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size
         // Filter for quality
         if (ai.IsTerrible(now)) continue;
 
-        vAddr.push_back(ai);
+        vAddr.push_back({ai, ai.nRefCount, ai.fInTried});
     }
 }
 

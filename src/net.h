@@ -847,14 +847,14 @@ public:
      * @param[in] max_pct        Maximum percentage of addresses to return (0 = all).
      * @param[in] network        Select only addresses of this network (nullopt = all).
      */
-    std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct, std::optional<Network> network) const;
+    AddrMan::Addresses GetAddresses(size_t max_addresses, size_t max_pct, std::optional<Network> network) const;
     /**
      * Cache is used to minimize topology leaks, so it should
      * be used for all non-trusted calls, for example, p2p.
      * A non-malicious call (from RPC or a peer with addr permission) should
      * call the function without a parameter to avoid using the cache.
      */
-    std::vector<CAddress> GetAddresses(CNode& requestor, size_t max_addresses, size_t max_pct);
+    AddrMan::Addresses GetAddresses(CNode& requestor, size_t max_addresses, size_t max_pct);
 
     // This allows temporarily exceeding m_max_outbound_full_relay, with the goal of finding
     // a peer that is better than all our current peers.
@@ -1067,7 +1067,7 @@ private:
      * with fresh timestamps (per self-announcement).
      */
     struct CachedAddrResponse {
-        std::vector<CAddress> m_addrs_response_cache;
+        AddrMan::Addresses m_addrs_response_cache;
         std::chrono::microseconds m_cache_entry_expiration{0};
     };
 

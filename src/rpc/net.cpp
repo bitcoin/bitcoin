@@ -897,10 +897,10 @@ static RPCHelpMan getnodeaddresses()
     }
 
     // returns a shuffled list of CAddress
-    const std::vector<CAddress> vAddr{connman.GetAddresses(count, /* max_pct */ 0, network)};
+    const AddrMan::Addresses addrs{connman.GetAddresses(count, /* max_pct */ 0, network)};
     UniValue ret(UniValue::VARR);
 
-    for (const CAddress& addr : vAddr) {
+    for (const auto& addr : addrs) {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("time", (int)addr.nTime);
         obj.pushKV("services", (uint64_t)addr.nServices);
