@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Widecoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,11 +8,9 @@
 
 #include <chainparamsseeds.h>
 #include <consensus/merkle.h>
+#include <deploymentinfo.h>
 #include <hash.h> // for signet block challenge hash
-#include <tinyformat.h>
 #include <util/system.h>
-#include <util/strencodings.h>
-#include <versionbitsinfo.h>
 
 #include <assert.h>
 
@@ -58,7 +57,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
 }
 
 /**
- * Main network
+ * Main network on which people trade goods and services.
  */
 class CMainParams : public CChainParams {
 public:
@@ -67,7 +66,7 @@ public:
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 2102400;
-        consensus.BIP16Exception = uint256S("0x0000000b9fe756297c4f3b60ed7f55169680f8277812855ec546d5cb888c93a6"); // 2294
+        consensus.BIP16Exception = uint256S("0x0000000b9fe756297c4f3b60ed7f55169680f8277812855ec546d5cb888c93a6");
         consensus.BIP34Height = 2294;
         consensus.BIP34Hash = uint256S("0x0000000b9fe756297c4f3b60ed7f55169680f8277812855ec546d5cb888c93a6");
         consensus.BIP65Height = 2294;
@@ -76,23 +75,25 @@ public:
         consensus.SegwitHeight = 0;
         consensus.MinBIP9WarningHeight = 120; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetTimespan = 1 * 60 * 60; // 1 hours
+        consensus.nPowTargetTimespan = 1 * 60 * 60; // 1 hour
         consensus.nPowTargetSpacing = 0.5 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 95; // 79% of 120
         consensus.nMinerConfirmationWindow = 120; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].min_activation_height = 0; // No activation delay
 
         // Deployment of Taproot (BIPs 340-342)
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1230767999; // December 31, 2008
-        //Blocks = 281247
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = 1619222400; // April 24th, 2021
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000; // August 11th, 2021
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 709632; // Approximately November 12th, 2021
+
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000017c5953833ff7e9098");
-        consensus.defaultAssumeValid = uint256S("0x000000000000067565350a3898e1667b95b4157df514f4045394525f311cac4d"); 
+        consensus.defaultAssumeValid = uint256S("0x000000000000067565350a3898e1667b95b4157df514f4045394525f311cac4d"); // 281247
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -105,8 +106,8 @@ public:
         pchMessageStart[3] = 0xdc;
         nDefaultPort = 8553;
         nPruneAfterHeight = 100000;
-        m_assumed_blockchain_size = 1;
-        m_assumed_chain_state_size = 1;
+        m_assumed_blockchain_size = 2;
+        m_assumed_chain_state_size = 2;
 
         genesis = CreateGenesisBlock(1616638264, 1485372, 0x1e0ffff0, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -124,7 +125,6 @@ public:
         vSeeds.emplace_back("seed04.widecoin.org");
         vSeeds.emplace_back("seed05.widecoin.org");
 
-
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,73);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,33);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,153);
@@ -133,7 +133,7 @@ public:
 
         bech32_hrp = "wc";
 
-        vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
+        vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_main), std::end(chainparams_seed_main));
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
@@ -149,8 +149,12 @@ public:
             }
         };
 
+        m_assumeutxo_data = MapAssumeutxo{
+         // TODO to be specified in a future patch.2
+        };
+
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 49188 0000000000005c467e7982512b65b794c399e9081f9ceecd7435bb0de6379405
+            // Data from RPC: getchaintxstats 4096 00000000000000000008a89e854d57e5667df88f1cdef6fde2fbca1de5b639ad
             /* nTime    */ 1627560852,
             /* nTxCount */ 333769,
             /* dTxRate  */ 0.03335011704430017,
@@ -159,7 +163,7 @@ public:
 };
 
 /**
- * Testnet (v3)
+ * Testnet (v3): public test network which is reset from time to time.
  */
 class CTestNetParams : public CChainParams {
 public:
@@ -184,13 +188,15 @@ public:
         consensus.nRuleChangeActivationThreshold = 95; // 79% of 120
         consensus.nMinerConfirmationWindow = 120; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].min_activation_height = 0; // No activation delay
 
         // Deployment of Taproot (BIPs 340-342)
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1230767999; // December 31, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = 1619222400; // April 24th, 2021
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000; // August 11th, 2021
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         consensus.nMinimumChainWork = uint256S("0x");
         consensus.defaultAssumeValid = uint256S("0x");
@@ -201,8 +207,8 @@ public:
         pchMessageStart[3] = 0xdb;
         nDefaultPort = 18553;
         nPruneAfterHeight = 1000;
-        m_assumed_blockchain_size = 1;
-        m_assumed_chain_state_size = 1;
+        m_assumed_blockchain_size = 2;
+        m_assumed_chain_state_size = 2;
 
         genesis = CreateGenesisBlock(1616884884, 157408, 0x1e0ffff0, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -213,6 +219,7 @@ public:
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
         vSeeds.emplace_back("testnetseed01.widecoin.org");
+        vSeeds.emplace_back("testnetseed02.widecoin.org");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,65);
@@ -222,7 +229,7 @@ public:
 
         bech32_hrp = "tw";
 
-        vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
+        vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_test), std::end(chainparams_seed_test));
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
@@ -231,12 +238,16 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("0x000008aad534f457cf11da13a6f3c90d34fe5c090595ae06d3e246cfb6222903")},
+                {546, uint256S("0x000008aad534f457cf11da13a6f3c90d34fe5c090595ae06d3e246cfb6222903")},
             }
         };
 
+        m_assumeutxo_data = MapAssumeutxo{
+            // TODO to be specified in a future patch.
+        };
+
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 000000000000006433d1efec504c53ca332b64963c425395515b01977bd7b3b0
+            // Data from RPC: getchaintxstats 4096 0000000000004ae2f3896ca8ecd41c460a35bf6184e145d91558cece1c688a76
             /* nTime    */ 1616884884,
             /* nTxCount */ 0,
             /* dTxRate  */ 0.1232886622799463,
@@ -245,7 +256,7 @@ public:
 };
 
 /**
- * Signet
+ * Signet: test network with an additional consensus parameter (see BIP325).
  */
 class SigNetParams : public CChainParams {
 public:
@@ -257,14 +268,14 @@ public:
             bin = ParseHex("512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae");
             //vSeeds.emplace_back("178.128.221.177");
             //vSeeds.emplace_back("2a01:7c8:d005:390::5");
-            //vSeeds.emplace_back("v7ajjeirttkbnt32wpy3c6w3emwnfr3fkla7hpxcfokr3ysd3kqtzmqd.onion:38553");
+            //vSeeds.emplace_back("v7ajjeirttkbnt32wpy3c6w3emwnfr3fkla7hpxcfokr3ysd3kqtzmqd.onion:38333");
 
             consensus.nMinimumChainWork = uint256S("0x");
             consensus.defaultAssumeValid = uint256S("0x");
             m_assumed_blockchain_size = 1;
             m_assumed_chain_state_size = 0;
             chainTxData = ChainTxData{
-                // Data from RPC: getchaintxstats 4096 0000002a1de0f46379358c1fd09906f7ac59adf3712323ed90eb59e4c183c020
+                // Data from RPC: getchaintxstats 4096 000000187d4440e5bff91488b700a140441e089a8aaea707414982460edbfe54
                 /* nTime    */ 1617605541,
                 /* nTxCount */ 0,
                 /* dTxRate  */ 0.00159272030651341,
@@ -303,22 +314,24 @@ public:
         consensus.BIP66Height = 1;
         consensus.CSVHeight = 1;
         consensus.SegwitHeight = 1;
-        consensus.nPowTargetTimespan = 1 * 60 * 60; // 1 hours
-        consensus.nPowTargetSpacing = 0.5 * 60;
-        consensus.fPowAllowMinDifficultyBlocks = true;
+        consensus.nPowTargetTimespan = 1 * 60 * 60; // 1 hour
+        consensus.nPowTargetSpacing = 0.5 * 60;;
+        consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 95; // 79% of 120
         consensus.nMinerConfirmationWindow = 120; // nPowTargetTimespan / nPowTargetSpacing
         consensus.MinBIP9WarningHeight = 0;
         consensus.powLimit = uint256S("00000377ae000000000000000000000000000000000000000000000000000000");
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].min_activation_height = 0; // No activation delay
 
         // Activation of Taproot (BIPs 340-342)
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         // message start is defined as the first 4 bytes of the sha256d of the block script
         CHashWriter h(SER_DISK, 0);
@@ -352,7 +365,8 @@ public:
 };
 
 /**
- * Regression test
+ * Regression test: intended for private networks only. Has minimal difficulty to ensure that
+ * blocks can be found instantly.
  */
 class CRegTestParams : public CChainParams {
 public:
@@ -371,17 +385,21 @@ public:
         consensus.MinBIP9WarningHeight = 0;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 1 * 60 * 60; // 1 hours
-        consensus.nPowTargetSpacing = 0.5 * 60;
+        consensus.nPowTargetSpacing =  0.5 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
-        consensus.nRuleChangeActivationThreshold = 95; // 79% for testchains
+        consensus.nRuleChangeActivationThreshold =  95; // 79% for testchains
         consensus.nMinerConfirmationWindow = 120; // Faster than normal for regtest (144 instead of 2016)
+
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].min_activation_height = 0; // No activation delay
+
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         consensus.nMinimumChainWork = uint256{};
         consensus.defaultAssumeValid = uint256{};
@@ -391,7 +409,7 @@ public:
         pchMessageStart[2] = 0xb5;
         pchMessageStart[3] = 0xda;
         nDefaultPort = 18444;
-        nPruneAfterHeight = 1000;
+        nPruneAfterHeight = args.GetBoolArg("-fastprune", false) ? 100 : 1000;
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
 
@@ -416,6 +434,10 @@ public:
             }
         };
 
+        m_assumeutxo_data = MapAssumeutxo{
+            // TODO to be specified in a future patch.
+        };
+
         chainTxData = ChainTxData{
             0,
             0,
@@ -431,13 +453,14 @@ public:
         bech32_hrp = "wcrt";
     }
 
-    /**
+    /**b
      * Allows modifying the Version Bits regtest parameters.
      */
-    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
+    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int min_activation_height)
     {
         consensus.vDeployments[d].nStartTime = nStartTime;
         consensus.vDeployments[d].nTimeout = nTimeout;
+        consensus.vDeployments[d].min_activation_height = min_activation_height;
     }
     void UpdateActivationParametersFromArgs(const ArgsManager& args);
 };
@@ -460,22 +483,26 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
     for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
         std::vector<std::string> vDeploymentParams;
         boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
-        if (vDeploymentParams.size() != 3) {
-            throw std::runtime_error("Version bits parameters malformed, expecting deployment:start:end");
+        if (vDeploymentParams.size() < 3 || 4 < vDeploymentParams.size()) {
+            throw std::runtime_error("Version bits parameters malformed, expecting deployment:start:end[:min_activation_height]");
         }
         int64_t nStartTime, nTimeout;
+        int min_activation_height = 0;
         if (!ParseInt64(vDeploymentParams[1], &nStartTime)) {
             throw std::runtime_error(strprintf("Invalid nStartTime (%s)", vDeploymentParams[1]));
         }
         if (!ParseInt64(vDeploymentParams[2], &nTimeout)) {
             throw std::runtime_error(strprintf("Invalid nTimeout (%s)", vDeploymentParams[2]));
         }
+        if (vDeploymentParams.size() >= 4 && !ParseInt32(vDeploymentParams[3], &min_activation_height)) {
+            throw std::runtime_error(strprintf("Invalid min_activation_height (%s)", vDeploymentParams[3]));
+        }
         bool found = false;
         for (int j=0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
             if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
-                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), nStartTime, nTimeout);
+                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), nStartTime, nTimeout, min_activation_height);
                 found = true;
-                LogPrintf("Setting version bits activation parameters for %s to start=%ld, timeout=%ld\n", vDeploymentParams[0], nStartTime, nTimeout);
+                LogPrintf("Setting version bits activation parameters for %s to start=%ld, timeout=%ld, min_activation_height=%d\n", vDeploymentParams[0], nStartTime, nTimeout, min_activation_height);
                 break;
             }
         }

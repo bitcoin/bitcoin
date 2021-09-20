@@ -17,7 +17,8 @@
 
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static constexpr unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24; // Default 24-hour ban
-// How often to dump addresses to banlist.dat
+
+/// How often to dump banned addresses/subnets to disk.
 static constexpr std::chrono::minutes DUMP_BANS_INTERVAL{15};
 
 class CClientUIInterface;
@@ -30,7 +31,7 @@ class CSubNet;
 // If an address or subnet is banned, we never accept incoming connections from
 // it and never create outgoing connections to it. We won't gossip its address
 // to other peers in addr messages. Banned addresses and subnets are stored to
-// banlist.dat on shutdown and reloaded on startup. Banning can be used to
+// disk on shutdown and reloaded on startup. Banning can be used to
 // prevent connections with spy nodes or other griefers.
 //
 // 2. Discouragement. If a peer misbehaves enough (see Misbehaving() in
@@ -79,7 +80,6 @@ public:
     void DumpBanlist();
 
 private:
-    void SetBanned(const banmap_t& banmap);
     bool BannedSetIsDirty();
     //!set the "dirty" flag for the banlist
     void SetBannedSetDirty(bool dirty = true);

@@ -1,10 +1,9 @@
 QT_TS = \
-  qt/locale/widecoin_af.ts \
   qt/locale/widecoin_am.ts \
   qt/locale/widecoin_ar.ts \
+  qt/locale/widecoin_az.ts \
   qt/locale/widecoin_be.ts \
   qt/locale/widecoin_bg.ts \
-  qt/locale/widecoin_bn.ts \
   qt/locale/widecoin_bs.ts \
   qt/locale/widecoin_ca.ts \
   qt/locale/widecoin_cs.ts \
@@ -13,7 +12,6 @@ QT_TS = \
   qt/locale/widecoin_de.ts \
   qt/locale/widecoin_el.ts \
   qt/locale/widecoin_en.ts \
-  qt/locale/widecoin_en_GB.ts \
   qt/locale/widecoin_eo.ts \
   qt/locale/widecoin_es.ts \
   qt/locale/widecoin_es_CL.ts \
@@ -27,9 +25,12 @@ QT_TS = \
   qt/locale/widecoin_fi.ts \
   qt/locale/widecoin_fil.ts \
   qt/locale/widecoin_fr.ts \
+  qt/locale/widecoin_ga.ts \
+  qt/locale/widecoin_gd.ts \
+  qt/locale/widecoin_gl.ts \
   qt/locale/widecoin_gl_ES.ts \
+  qt/locale/widecoin_gu.ts \
   qt/locale/widecoin_he.ts \
-  qt/locale/widecoin_hi.ts \
   qt/locale/widecoin_hr.ts \
   qt/locale/widecoin_hu.ts \
   qt/locale/widecoin_id.ts \
@@ -38,6 +39,7 @@ QT_TS = \
   qt/locale/widecoin_ja.ts \
   qt/locale/widecoin_ka.ts \
   qt/locale/widecoin_kk.ts \
+  qt/locale/widecoin_kl.ts \
   qt/locale/widecoin_km.ts \
   qt/locale/widecoin_ko.ts \
   qt/locale/widecoin_ku_IQ.ts \
@@ -54,15 +56,16 @@ QT_TS = \
   qt/locale/widecoin_nb.ts \
   qt/locale/widecoin_ne.ts \
   qt/locale/widecoin_nl.ts \
+  qt/locale/widecoin_no.ts \
   qt/locale/widecoin_pam.ts \
   qt/locale/widecoin_pl.ts \
   qt/locale/widecoin_pt.ts \
   qt/locale/widecoin_pt_BR.ts \
   qt/locale/widecoin_ro.ts \
   qt/locale/widecoin_ru.ts \
+  qt/locale/widecoin_sc.ts \
   qt/locale/widecoin_si.ts \
   qt/locale/widecoin_sk.ts \
-  qt/locale/widecoin_sl.ts \
   qt/locale/widecoin_sn.ts \
   qt/locale/widecoin_sq.ts \
   qt/locale/widecoin_sr.ts \
@@ -73,6 +76,7 @@ QT_TS = \
   qt/locale/widecoin_te.ts \
   qt/locale/widecoin_th.ts \
   qt/locale/widecoin_tr.ts \
+  qt/locale/widecoin_ug.ts \
   qt/locale/widecoin_uk.ts \
   qt/locale/widecoin_ur.ts \
   qt/locale/widecoin_uz@Cyrl.ts \
@@ -83,5 +87,4 @@ QT_TS = \
   qt/locale/widecoin_zh.ts \
   qt/locale/widecoin_zh_CN.ts \
   qt/locale/widecoin_zh_HK.ts \
-  qt/locale/widecoin_zh_TW.ts \
-  qt/locale/widecoin_zu.ts
+  qt/locale/widecoin_zh_TW.ts

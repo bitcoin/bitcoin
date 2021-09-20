@@ -9,13 +9,17 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 
-std::string FormatMoney(const CAmount& n)
+std::string FormatMoney(const CAmount n)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
-    int64_t n_abs = (n > 0 ? n : -n);
-    int64_t quotient = n_abs/COIN;
-    int64_t remainder = n_abs%COIN;
+    static_assert(COIN > 1);
+    int64_t quotient = n / COIN;
+    int64_t remainder = n % COIN;
+    if (n < 0) {
+        quotient = -quotient;
+        remainder = -remainder;
+    }
     std::string str = strprintf("%d.%08d", quotient, remainder);
 
     // Right-trim excess zeros before the decimal point:

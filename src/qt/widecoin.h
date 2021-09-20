@@ -68,7 +68,7 @@ public:
     /// Create options model
     void createOptionsModel(bool resetSettings);
     /// Initialize prune setting
-    void InitializePruneSetting(bool prune);
+    void InitPruneSetting(int64_t prune_MiB);
     /// Create main window
     void createWindow(const NetworkStyle *networkStyle);
     /// Create splash screen
@@ -98,6 +98,12 @@ public Q_SLOTS:
     void shutdownResult();
     /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
     void handleRunawayException(const QString &message);
+
+    /**
+     * A helper function that shows a message box
+     * with details about a non-fatal exception.
+     */
+    void handleNonFatalException(const QString& message);
 
 Q_SIGNALS:
     void requestedInitialize();

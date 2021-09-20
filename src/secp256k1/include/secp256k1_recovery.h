@@ -71,17 +71,17 @@ SECP256K1_API int secp256k1_ecdsa_recoverable_signature_serialize_compact(
  *
  *  Returns: 1: signature created
  *           0: the nonce generation function failed, or the secret key was invalid.
- *  Args:    ctx:    pointer to a context object, initialized for signing (cannot be NULL)
- *  Out:     sig:    pointer to an array where the signature will be placed (cannot be NULL)
- *  In:      msg32:  the 32-byte message hash being signed (cannot be NULL)
- *           seckey: pointer to a 32-byte secret key (cannot be NULL)
- *           noncefp:pointer to a nonce generation function. If NULL, secp256k1_nonce_function_default is used
- *           ndata:  pointer to arbitrary data used by the nonce generation function (can be NULL)
+ *  Args:    ctx:       pointer to a context object, initialized for signing (cannot be NULL)
+ *  Out:     sig:       pointer to an array where the signature will be placed (cannot be NULL)
+ *  In:      msghash32: the 32-byte message hash being signed (cannot be NULL)
+ *           seckey:    pointer to a 32-byte secret key (cannot be NULL)
+ *           noncefp:   pointer to a nonce generation function. If NULL, secp256k1_nonce_function_default is used
+ *           ndata:     pointer to arbitrary data used by the nonce generation function (can be NULL)
  */
 SECP256K1_API int secp256k1_ecdsa_sign_recoverable(
     const secp256k1_context* ctx,
     secp256k1_ecdsa_recoverable_signature *sig,
-    const unsigned char *msg32,
+    const unsigned char *msghash32,
     const unsigned char *seckey,
     secp256k1_nonce_function noncefp,
     const void *ndata
@@ -91,16 +91,16 @@ SECP256K1_API int secp256k1_ecdsa_sign_recoverable(
  *
  *  Returns: 1: public key successfully recovered (which guarantees a correct signature).
  *           0: otherwise.
- *  Args:    ctx:        pointer to a context object, initialized for verification (cannot be NULL)
- *  Out:     pubkey:     pointer to the recovered public key (cannot be NULL)
- *  In:      sig:        pointer to initialized signature that supports pubkey recovery (cannot be NULL)
- *           msg32:      the 32-byte message hash assumed to be signed (cannot be NULL)
+ *  Args:    ctx:       pointer to a context object, initialized for verification (cannot be NULL)
+ *  Out:     pubkey:    pointer to the recovered public key (cannot be NULL)
+ *  In:      sig:       pointer to initialized signature that supports pubkey recovery (cannot be NULL)
+ *           msghash32: the 32-byte message hash assumed to be signed (cannot be NULL)
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_recover(
     const secp256k1_context* ctx,
     secp256k1_pubkey *pubkey,
     const secp256k1_ecdsa_recoverable_signature *sig,
-    const unsigned char *msg32
+    const unsigned char *msghash32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 #ifdef __cplusplus

@@ -6,13 +6,12 @@
 
 export LC_ALL=C.UTF-8
 
-export HOST=x86_64-apple-darwin16
-export PIP_PACKAGES="zmq"
+export HOST=x86_64-apple-darwin18
+export PIP_PACKAGES="zmq lief"
 export GOAL="install"
-export WIDECOIN_CONFIG="--with-gui --enable-reduce-exports --enable-werror --with-boost-process"
+export WIDECOIN_CONFIG="--with-gui --enable-reduce-exports"
 export CI_OS_NAME="macos"
 export NO_DEPENDS=1
 export OSX_SDK=""
 export CCACHE_SIZE=300M
-
 export RUN_SECURITY_TESTS="true"

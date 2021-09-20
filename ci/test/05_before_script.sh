@@ -19,7 +19,16 @@ OSX_SDK_BASENAME="Xcode-${XCODE_VERSION}-${XCODE_BUILD_ID}-extracted-SDK-with-li
 OSX_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${OSX_SDK_BASENAME}"
 
 if [ -n "$XCODE_VERSION" ] && [ ! -f "$OSX_SDK_PATH" ]; then
-  curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
+  DOCKER_EXEC curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
+fi
+
+if [ -n "$ANDROID_TOOLS_URL" ]; then
+  ANDROID_TOOLS_PATH=$DEPENDS_DIR/sdk-sources/android-tools.zip
+
+  DOCKER_EXEC curl --location --fail "${ANDROID_TOOLS_URL}" -o "$ANDROID_TOOLS_PATH"
+  DOCKER_EXEC mkdir -p "${ANDROID_HOME}/cmdline-tools"
+  DOCKER_EXEC unzip -o "$ANDROID_TOOLS_PATH" -d "${ANDROID_HOME}/cmdline-tools"
+  DOCKER_EXEC "yes | ${ANDROID_HOME}/cmdline-tools/tools/bin/sdkmanager --install \"build-tools;${ANDROID_BUILD_TOOLS_VERSION}\" \"platform-tools\" \"platforms;android-${ANDROID_API_LEVEL}\" \"ndk;${ANDROID_NDK_VERSION}\""
 fi
 
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
@@ -40,14 +49,12 @@ if [ -z "$NO_DEPENDS" ]; then
     # CentOS has problems building the depends if the config shell is not explicitly set
     # (i.e. for libevent a Makefile with an empty SHELL variable is generated, leading to
     #  an error as the first command is executed)
-    SHELL_OPTS="CONFIG_SHELL=/bin/bash"
+    SHELL_OPTS="LC_ALL=en_US.UTF-8 CONFIG_SHELL=/bin/bash"
   else
     SHELL_OPTS="CONFIG_SHELL="
   fi
   DOCKER_EXEC $SHELL_OPTS make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
 fi
 if [ -n "$PREVIOUS_RELEASES_TO_DOWNLOAD" ]; then
-  BEGIN_FOLD previous-versions
   DOCKER_EXEC test/get_previous_releases.py -b -t "$PREVIOUS_RELEASES_DIR" "${PREVIOUS_RELEASES_TO_DOWNLOAD}"
-  END_FOLD
 fi

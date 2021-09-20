@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The Widecoin Core developers
+# Copyright (c) 2014-2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,11 +8,11 @@
 
     Widecoin should be started with the command line arguments:
         widecoind -testnet -daemon \
-                -zmqpubrawtx=tcp://127.0.0.1:28552 \
-                -zmqpubrawblock=tcp://127.0.0.1:28552 \
-                -zmqpubhashtx=tcp://127.0.0.1:28552 \
-                -zmqpubhashblock=tcp://127.0.0.1:28552 \
-                -zmqpubsequence=tcp://127.0.0.1:28552
+                -zmqpubrawtx=tcp://127.0.0.1:28332 \
+                -zmqpubrawblock=tcp://127.0.0.1:28332 \
+                -zmqpubhashtx=tcp://127.0.0.1:28332 \
+                -zmqpubhashblock=tcp://127.0.0.1:28332 \
+                -zmqpubsequence=tcp://127.0.0.1:28332
 
     We use the asyncio library here.  `self.handle()` installs itself as a
     future at the end of the function.  Since it never returns with the event
@@ -35,7 +35,7 @@ if (sys.version_info.major, sys.version_info.minor) < (3, 5):
     print("This example only works with Python 3.5 and greater")
     sys.exit(1)
 
-port = 28552
+port = 28332
 
 class ZMQHandler():
     def __init__(self):

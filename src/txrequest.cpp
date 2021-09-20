@@ -9,7 +9,6 @@
 #include <primitives/transaction.h>
 #include <random.h>
 #include <uint256.h>
-#include <util/memory.h>
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
@@ -170,7 +169,7 @@ using ByTxHashView = std::tuple<const uint256&, State, Priority>;
 class ByTxHashViewExtractor {
     const PriorityComputer& m_computer;
 public:
-    ByTxHashViewExtractor(const PriorityComputer& computer) : m_computer(computer) {}
+    explicit ByTxHashViewExtractor(const PriorityComputer& computer) : m_computer(computer) {}
     using result_type = ByTxHashView;
     result_type operator()(const Announcement& ann) const
     {
@@ -487,7 +486,7 @@ private:
     }
 
     //! Make the data structure consistent with a given point in time:
-    //! - REQUESTED annoucements with expiry <= now are turned into COMPLETED.
+    //! - REQUESTED announcements with expiry <= now are turned into COMPLETED.
     //! - CANDIDATE_DELAYED announcements with reqtime <= now are turned into CANDIDATE_{READY,BEST}.
     //! - CANDIDATE_{READY,BEST} announcements with reqtime > now are turned into CANDIDATE_DELAYED.
     void SetTimePoint(std::chrono::microseconds now, std::vector<std::pair<NodeId, GenTxid>>* expired)
@@ -522,7 +521,7 @@ private:
     }
 
 public:
-    Impl(bool deterministic) :
+    explicit Impl(bool deterministic) :
         m_computer(deterministic),
         // Explicitly initialize m_index as we need to pass a reference to m_computer to ByTxHashViewExtractor.
         m_index(boost::make_tuple(
@@ -711,7 +710,7 @@ public:
 };
 
 TxRequestTracker::TxRequestTracker(bool deterministic) :
-    m_impl{MakeUnique<TxRequestTracker::Impl>(deterministic)} {}
+    m_impl{std::make_unique<TxRequestTracker::Impl>(deterministic)} {}
 
 TxRequestTracker::~TxRequestTracker() = default;
 

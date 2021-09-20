@@ -20,8 +20,10 @@ Tests correspond to code in rpc/blockchain.cpp.
 
 from decimal import Decimal
 import http.client
+import os
 import subprocess
 
+from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.blocktools import (
     create_block,
     create_coinbase,
@@ -29,7 +31,7 @@ from test_framework.blocktools import (
 )
 from test_framework.messages import (
     CBlockHeader,
-    FromHex,
+    from_hex,
     msg_block,
 )
 from test_framework.p2p import P2PInterface
@@ -42,7 +44,9 @@ from test_framework.util import (
     assert_raises_rpc_error,
     assert_is_hex_string,
     assert_is_hash_string,
+    get_datadir_path,
 )
+from test_framework.wallet import MiniWallet
 
 
 class BlockchainTest(WidecoinTestFramework):
@@ -63,15 +67,15 @@ class BlockchainTest(WidecoinTestFramework):
         self._test_getnetworkhashps()
         self._test_stopatheight()
         self._test_waitforblockheight()
+        self._test_getblock()
         assert self.nodes[0].verifychain(4, 0)
 
     def mine_chain(self):
         self.log.info('Create some old blocks')
-        address = self.nodes[0].get_deterministic_priv_key().address
         for t in range(TIME_GENESIS_BLOCK, TIME_GENESIS_BLOCK + 200 * 600, 600):
             # ten-minute steps from genesis block time
             self.nodes[0].setmocktime(t)
-            self.nodes[0].generatetoaddress(1, address)
+            self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_P2WSH_OP_TRUE)
         assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 200)
 
     def _test_getblockchaininfo(self):
@@ -145,6 +149,7 @@ class BlockchainTest(WidecoinTestFramework):
                         'count': 57,
                         'possible': True,
                     },
+                    'min_activation_height': 0,
                 },
                 'active': False
             },
@@ -154,7 +159,8 @@ class BlockchainTest(WidecoinTestFramework):
                     'status': 'active',
                     'start_time': -1,
                     'timeout': 9223372036854775807,
-                    'since': 0
+                    'since': 0,
+                    'min_activation_height': 0,
                 },
                 'height': 0,
                 'active': True
@@ -223,7 +229,7 @@ class BlockchainTest(WidecoinTestFramework):
         assert_equal(res['transactions'], 200)
         assert_equal(res['height'], 200)
         assert_equal(res['txouts'], 200)
-        assert_equal(res['bogosize'], 15000),
+        assert_equal(res['bogosize'], 16800),
         assert_equal(res['bestblock'], node.getblockhash(200))
         size = res['disk_size']
         assert size > 6400
@@ -264,6 +270,18 @@ class BlockchainTest(WidecoinTestFramework):
         res5 = node.gettxoutsetinfo(hash_type='none')
         assert 'hash_serialized_2' not in res5
 
+        # hash_type muhash should return a different UTXO set hash.
+        res6 = node.gettxoutsetinfo(hash_type='muhash')
+        assert 'muhash' in res6
+        assert(res['hash_serialized_2'] != res6['muhash'])
+
+        # muhash should not be returned unless requested.
+        for r in [res, res2, res3, res4, res5]:
+            assert 'muhash' not in r
+
+        # Unknown hash_type raises an error
+        assert_raises_rpc_error(-8, "foohash is not a valid hash_type", node.gettxoutsetinfo, "foohash")
+
     def _test_getblockheader(self):
         node = self.nodes[0]
 
@@ -296,9 +314,12 @@ class BlockchainTest(WidecoinTestFramework):
         header_hex = node.getblockheader(blockhash=besthash, verbose=False)
         assert_is_hex_string(header_hex)
 
-        header = FromHex(CBlockHeader(), header_hex)
+        header = from_hex(CBlockHeader(), header_hex)
         header.calc_sha256()
         assert_equal(header.hash, besthash)
+
+        assert 'previousblockhash' not in node.getblockheader(node.getblockhash(0))
+        assert 'nextblockhash' not in node.getblockheader(node.getbestblockhash())
 
     def _test_getdifficulty(self):
         difficulty = self.nodes[0].getdifficulty()
@@ -313,12 +334,12 @@ class BlockchainTest(WidecoinTestFramework):
 
     def _test_stopatheight(self):
         assert_equal(self.nodes[0].getblockcount(), 200)
-        self.nodes[0].generatetoaddress(6, self.nodes[0].get_deterministic_priv_key().address)
+        self.nodes[0].generatetoaddress(6, ADDRESS_BCRT1_P2WSH_OP_TRUE)
         assert_equal(self.nodes[0].getblockcount(), 206)
         self.log.debug('Node should not stop at this height')
         assert_raises(subprocess.TimeoutExpired, lambda: self.nodes[0].process.wait(timeout=3))
         try:
-            self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
+            self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_P2WSH_OP_TRUE)
         except (ConnectionError, http.client.BadStatusLine):
             pass  # The node already shut down before response
         self.log.debug('Node should stop at this height...')
@@ -363,6 +384,51 @@ class BlockchainTest(WidecoinTestFramework):
         assert_waitforheight(current_height - 1)
         assert_waitforheight(current_height)
         assert_waitforheight(current_height + 1)
+
+    def _test_getblock(self):
+        node = self.nodes[0]
+
+        miniwallet = MiniWallet(node)
+        miniwallet.scan_blocks(num=5)
+
+        fee_per_byte = Decimal('0.00000010')
+        fee_per_kb = 1000 * fee_per_byte
+
+        miniwallet.send_self_transfer(fee_rate=fee_per_kb, from_node=node)
+        blockhash = node.generate(1)[0]
+
+        self.log.info("Test that getblock with verbosity 1 doesn't include fee")
+        block = node.getblock(blockhash, 1)
+        assert 'fee' not in block['tx'][1]
+
+        self.log.info('Test that getblock with verbosity 2 includes expected fee')
+        block = node.getblock(blockhash, 2)
+        tx = block['tx'][1]
+        assert 'fee' in tx
+        assert_equal(tx['fee'], tx['vsize'] * fee_per_byte)
+
+        self.log.info("Test that getblock with verbosity 2 still works with pruned Undo data")
+        datadir = get_datadir_path(self.options.tmpdir, 0)
+
+        self.log.info("Test that getblock with invalid verbosity type returns proper error message")
+        assert_raises_rpc_error(-1, "JSON value is not an integer as expected", node.getblock, blockhash, "2")
+
+        def move_block_file(old, new):
+            old_path = os.path.join(datadir, self.chain, 'blocks', old)
+            new_path = os.path.join(datadir, self.chain, 'blocks', new)
+            os.rename(old_path, new_path)
+
+        # Move instead of deleting so we can restore chain state afterwards
+        move_block_file('rev00000.dat', 'rev_wrong')
+
+        block = node.getblock(blockhash, 2)
+        assert 'fee' not in block['tx'][1]
+
+        # Restore chain state
+        move_block_file('rev_wrong', 'rev00000.dat')
+
+        assert 'previousblockhash' not in node.getblock(node.getblockhash(0))
+        assert 'nextblockhash' not in node.getblock(node.getbestblockhash())
 
 
 if __name__ == '__main__':

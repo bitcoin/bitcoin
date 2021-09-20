@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(fees)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const CFeeRate minimal_incremental_fee{ConsumeMoney(fuzzed_data_provider)};

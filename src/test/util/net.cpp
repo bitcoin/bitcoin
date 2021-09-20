@@ -6,10 +6,13 @@
 
 #include <chainparams.h>
 #include <net.h>
+#include <span.h>
 
-void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, const char* pch, unsigned int nBytes, bool& complete) const
+#include <vector>
+
+void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const
 {
-    assert(node.ReceiveMsgBytes(pch, nBytes, complete));
+    assert(node.ReceiveMsgBytes(msg_bytes, complete));
     if (complete) {
         size_t nSizeAdded = 0;
         auto it(node.vRecvMsg.begin());
@@ -29,11 +32,33 @@ void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, const char* pch, unsigned 
 
 bool ConnmanTestMsg::ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) const
 {
-    std::vector<unsigned char> ser_msg_header;
+    std::vector<uint8_t> ser_msg_header;
     node.m_serializer->prepareForTransport(ser_msg, ser_msg_header);
 
     bool complete;
-    NodeReceiveMsgBytes(node, (const char*)ser_msg_header.data(), ser_msg_header.size(), complete);
-    NodeReceiveMsgBytes(node, (const char*)ser_msg.data.data(), ser_msg.data.size(), complete);
+    NodeReceiveMsgBytes(node, ser_msg_header, complete);
+    NodeReceiveMsgBytes(node, ser_msg.data, complete);
     return complete;
+}
+
+std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candidates, FastRandomContext& random_context)
+{
+    std::vector<NodeEvictionCandidate> candidates;
+    for (int id = 0; id < n_candidates; ++id) {
+        candidates.push_back({
+            /* id */ id,
+            /* nTimeConnected */ static_cast<int64_t>(random_context.randrange(100)),
+            /* m_min_ping_time */ std::chrono::microseconds{random_context.randrange(100)},
+            /* nLastBlockTime */ static_cast<int64_t>(random_context.randrange(100)),
+            /* nLastTXTime */ static_cast<int64_t>(random_context.randrange(100)),
+            /* fRelevantServices */ random_context.randbool(),
+            /* fRelayTxes */ random_context.randbool(),
+            /* fBloomFilter */ random_context.randbool(),
+            /* nKeyedNetGroup */ random_context.randrange(100),
+            /* prefer_evict */ random_context.randbool(),
+            /* m_is_local */ random_context.randbool(),
+            /* m_network */ ALL_NETWORKS[random_context.randrange(ALL_NETWORKS.size())],
+        });
+    }
+    return candidates;
 }

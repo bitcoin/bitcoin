@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Widecoin Core developers
+# Copyright (c) 2017-2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listsinceblock RPC."""
 
 from test_framework.address import key_to_p2wpkh
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.key import ECKey
 from test_framework.test_framework import WidecoinTestFramework
 from test_framework.messages import BIP125_SEQUENCE_NUMBER
@@ -29,7 +30,7 @@ class ListSinceBlockTest(WidecoinTestFramework):
         # All nodes are in IBD from genesis, so they'll need the miner (node2) to be an outbound connection, or have
         # only one connection. (See fPreferredDownload in net_processing)
         self.connect_nodes(1, 2)
-        self.nodes[2].generate(101)
+        self.nodes[2].generate(COINBASE_MATURITY + 1)
         self.sync_all()
 
         self.test_no_blockhash()

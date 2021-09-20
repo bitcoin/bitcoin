@@ -8,9 +8,9 @@ src/widecoin-cli
 src/widecoin-gui
 src/widecoin-node
 src/widecoin-tx
+src/widecoin-util
 src/widecoin-wallet
-src/test/fuzz/*
-!src/test/fuzz/*.*
+src/test/fuzz/fuzz
 src/test/test_widecoin
 src/qt/test/test_widecoin-qt
 
@@ -61,7 +61,7 @@ src/qt/widecoin-qt.includes
 .dirstamp
 .libs
 .*.swp
-*.*~*
+*~
 *.bak
 *.rej
 *.orig
@@ -76,6 +76,7 @@ src/qt/widecoin-qt.includes
 *.log
 *.trs
 *.dmg
+*.iso
 
 *.json.h
 *.raw.h
@@ -148,3 +149,5 @@ db4/
 osx_volname
 dist/
 *.background.tiff
+
+/guix-build-*

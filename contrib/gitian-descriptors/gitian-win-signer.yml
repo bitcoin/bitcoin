@@ -2,7 +2,7 @@
 name: "widecoin-win-signer"
 distro: "ubuntu"
 suites:
-- "bionic"
+- "focal"
 architectures:
 - "amd64"
 packages:

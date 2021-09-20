@@ -56,7 +56,7 @@ public:
     std::unordered_map<std::string, WalletDatabaseFileId> m_fileids;
     std::condition_variable_any m_db_in_use;
 
-    BerkeleyEnvironment(const fs::path& env_directory);
+    explicit BerkeleyEnvironment(const fs::path& env_directory);
     BerkeleyEnvironment();
     ~BerkeleyEnvironment();
     void Reset();
@@ -83,11 +83,8 @@ public:
     }
 };
 
-/** Get BerkeleyEnvironment and database filename given a wallet path. */
-std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, std::string& database_filename);
-
-/** Check format of database file */
-bool IsBDBFile(const fs::path& path);
+/** Get BerkeleyEnvironment given a directory path. */
+std::shared_ptr<BerkeleyEnvironment> GetBerkeleyEnv(const fs::path& env_directory);
 
 class BerkeleyBatch;
 
@@ -226,8 +223,9 @@ public:
 
 std::string BerkeleyDatabaseVersion();
 
-//! Check if Berkeley database exists at specified path.
-bool ExistsBerkeleyDatabase(const fs::path& path);
+/** Perform sanity check of runtime BDB version versus linked BDB version.
+ */
+bool BerkeleyDatabaseSanityCheck();
 
 //! Return object giving access to Berkeley database at specified path.
 std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);

@@ -13,15 +13,15 @@
 #include <string>
 #include <vector>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(fee_rate)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const CAmount satoshis_per_k = ConsumeMoney(fuzzed_data_provider);
     const CFeeRate fee_rate{satoshis_per_k};
 
     (void)fee_rate.GetFeePerK();
-    const size_t bytes = fuzzed_data_provider.ConsumeIntegral<size_t>();
-    if (!MultiplicationOverflow(static_cast<int64_t>(bytes), satoshis_per_k) && bytes <= static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
+    const auto bytes = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+    if (!MultiplicationOverflow(int64_t{bytes}, satoshis_per_k)) {
         (void)fee_rate.GetFee(bytes);
     }
     (void)fee_rate.ToString();

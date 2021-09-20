@@ -1,4 +1,34 @@
 [
+  { "exec": "./widecoin-util",
+    "args": ["foo"],
+    "return_code": 1,
+    "error_txt": "Error parsing command line arguments: Invalid command 'foo'",
+    "description": ""
+  },
+  { "exec": "./widecoin-util",
+    "args": ["help"],
+    "return_code": 1,
+    "error_txt": "Error parsing command line arguments: Invalid command 'help'",
+    "description": "`help` raises an error. Use `-help`"
+  },
+  { "exec": "./widecoin-util",
+    "args": ["grind"],
+    "return_code": 1,
+    "error_txt": "Must specify block header to grind",
+    "description": ""
+  },
+  { "exec": "./widecoin-util",
+    "args": ["grind", "1", "2"],
+    "return_code": 1,
+    "error_txt": "Must specify block header to grind",
+    "description": ""
+  },
+  { "exec": "./widecoin-util",
+    "args": ["grind", "aa"],
+    "return_code": 1,
+    "error_txt": "Could not decode block header",
+    "description": ""
+  },
   { "exec": "./widecoin-tx",
     "args": ["-create", "nversion=1"],
     "output_cmp": "blanktxv1.hex",
@@ -221,7 +251,7 @@
   { "exec": "./widecoin-tx",
     "args": ["-create", "outscript=0:123badscript"],
     "return_code": 1,
-    "error_txt": "error: script parse error",
+    "error_txt": "error: script parse error: unknown opcode",
     "description": "Create a new transaction with an invalid output script"
   },
   { "exec": "./widecoin-tx",

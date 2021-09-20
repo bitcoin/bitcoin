@@ -10,6 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\widecoind.cpp" />
+    <ClCompile Include="..\..\src\init\widecoind.cpp">
+      <ObjectFileName>$(IntDir)init_widecoind.obj</ObjectFileName>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libwidecoinconsensus\libwidecoinconsensus.vcxproj">
@@ -62,6 +65,10 @@
                    Replace="@EXEEXT@" By=".exe"></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@ENABLE_WALLET_TRUE@" By=""></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
+                  Replace="@USE_BDB_TRUE@" By=""></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
+                  Replace="@USE_SQLITE_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@BUILD_WIDECOIN_CLI_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"

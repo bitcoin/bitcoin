@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2019 The Widecoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,7 @@
 #include <script/script.h>
 #include <test/fuzz/fuzz.h>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(parse_script)
 {
     const std::string script_string(buffer.begin(), buffer.end());
     try {
