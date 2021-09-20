@@ -115,9 +115,6 @@ CMainParams::CMainParams()
     consensus.ZawyLWMAHeight = 100;
     consensus.nZawyLwmaAveragingWindow = 45;
     assert(consensus.ZawyLWMAHeight > consensus.nZawyLwmaAveragingWindow);
-    consensus.nZawyLwmaAdjustedWeight = 13772;
-    consensus.nZawyLwmaMinDenominator = 10;
-    consensus.bZawyLwmaSolvetimeLimitation = true;
 
     base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 0);
     base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 5);
@@ -208,9 +205,6 @@ CMainParams::CMainParams()
      consensus.ZawyLWMAHeight = 100;
      consensus.nZawyLwmaAveragingWindow = 45;
      assert(consensus.ZawyLWMAHeight > consensus.nZawyLwmaAveragingWindow);
-     consensus.nZawyLwmaAdjustedWeight = 13772;
-     consensus.nZawyLwmaMinDenominator = 10;
-     consensus.bZawyLwmaSolvetimeLimitation = false;
 
      base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 111);
      base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 196);
@@ -304,9 +298,6 @@ CRegTestParams::CRegTestParams(const ArgsManager& args)
         consensus.ZawyLWMAHeight = std::numeric_limits<int>::max();
         consensus.nZawyLwmaAveragingWindow = 45;
         assert(consensus.ZawyLWMAHeight > consensus.nZawyLwmaAveragingWindow);
-        consensus.nZawyLwmaAdjustedWeight = 13772;
-        consensus.nZawyLwmaMinDenominator = 10;
-        consensus.bZawyLwmaSolvetimeLimitation = true;
     }
 
     base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 111);
@@ -437,9 +428,6 @@ CDetRegTestParams::CDetRegTestParams(const ArgsManager& args)
         consensus.ZawyLWMAHeight = std::numeric_limits<int>::max();
         consensus.nZawyLwmaAveragingWindow = 45;
         assert(consensus.ZawyLWMAHeight > consensus.nZawyLwmaAveragingWindow);
-        consensus.nZawyLwmaAdjustedWeight = 13772;
-        consensus.nZawyLwmaMinDenominator = 10;
-        consensus.bZawyLwmaSolvetimeLimitation = true;
     }
 
     base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 111);
