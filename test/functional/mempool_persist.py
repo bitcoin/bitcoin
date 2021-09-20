@@ -94,7 +94,8 @@ class MempoolPersistTest(BitcoinTestFramework):
         assert_equal(total_fee_old, self.nodes[0].getmempoolinfo()['total_fee'])
         assert_equal(total_fee_old, sum(v['fees']['base'] for k, v in self.nodes[0].getrawmempool(verbose=True).items()))
 
-        tx_creation_time = self.nodes[0].getmempoolentry(txid=last_txid)['time']
+        last_entry = self.nodes[0].getmempoolentry(txid=last_txid)
+        tx_creation_time = last_entry['time']
         assert_greater_than_or_equal(tx_creation_time, tx_creation_time_lower)
         assert_greater_than_or_equal(tx_creation_time_higher, tx_creation_time)
 
@@ -122,8 +123,8 @@ class MempoolPersistTest(BitcoinTestFramework):
         fees = self.nodes[0].getmempoolentry(txid=last_txid)['fees']
         assert_equal(fees['base'] + Decimal('0.00001000'), fees['modified'])
 
-        self.log.debug('Verify time is loaded correctly')
-        assert_equal(tx_creation_time, self.nodes[0].getmempoolentry(txid=last_txid)['time'])
+        self.log.debug('Verify all fields are loaded correctly')
+        assert_equal(last_entry, self.nodes[0].getmempoolentry(txid=last_txid))
 
         # Verify accounting of mempool transactions after restart is correct
         if self.is_sqlite_compiled():
