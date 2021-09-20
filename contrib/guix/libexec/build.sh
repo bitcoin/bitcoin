@@ -240,10 +240,9 @@ mkdir -p "$OUTDIR"
 ###########################
 
 # SYSCOIN CONFIGFLAGS
-CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
-CONFIGFLAGS+=" --disable-debug"
+CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary --disable-debug"
 case "$HOST" in
-    *linux*)  CONFIGFLAGS+=" --enable-glibc-back-compat" ;;
+    *linux*) CONFIGFLAGS+=" --disable-threadlocal" ;;
 esac
 
 # CFLAGS
