@@ -103,7 +103,6 @@ class MempoolPersistTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getpeerinfo()), 0)
         assert_equal(len(self.nodes[0].p2ps), 0)
         self.mini_wallet.send_self_transfer(from_node=self.nodes[0])
-        self.connect_nodes(0, 2)
 
         self.log.debug("Stop-start the nodes. Verify that node0 has the transactions in its mempool and node1 does not. Verify that node2 calculates its balance correctly after loading wallet transactions.")
         self.stop_nodes()
