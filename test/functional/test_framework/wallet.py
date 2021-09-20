@@ -82,7 +82,7 @@ class MiniWallet:
     def rescan_utxos(self):
         """Drop all utxos and rescan the utxo set"""
         self._utxos = []
-        res = self._test_node.scantxoutset(action="start", scanobjects=[f'raw({self._scriptPubKey.hex()})'])
+        res = self._test_node.scantxoutset(action="start", scanobjects=[self.get_descriptor()])
         assert_equal(True, res['success'])
         for utxo in res['unspents']:
             self._utxos.append({'txid': utxo['txid'], 'vout': utxo['vout'], 'value': utxo['amount']})
@@ -117,11 +117,14 @@ class MiniWallet:
 
     def generate(self, num_blocks):
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
-        blocks = self._test_node.generatetodescriptor(num_blocks, f'raw({self._scriptPubKey.hex()})')
+        blocks = self._test_node.generatetodescriptor(num_blocks, self.get_descriptor())
         for b in blocks:
             cb_tx = self._test_node.getblock(blockhash=b, verbosity=2)['tx'][0]
             self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value']})
         return blocks
+
+    def get_descriptor(self):
+        return self._test_node.getdescriptorinfo(f'raw({self._scriptPubKey.hex()})')['descriptor']
 
     def get_address(self):
         return self._address
