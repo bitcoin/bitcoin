@@ -67,13 +67,12 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
         t = conflist.pop(0)
         total_in += t["amount"]
         tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), b""))
+    while total_in <= (amount + fee) and len(unconflist) > 0:
+        t = unconflist.pop(0)
+        total_in += t["amount"]
+        tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), b""))
     if total_in <= amount + fee:
-        while total_in <= (amount + fee) and len(unconflist) > 0:
-            t = unconflist.pop(0)
-            total_in += t["amount"]
-            tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), b""))
-        if total_in <= amount + fee:
-            raise RuntimeError(f"Insufficient funds: need {amount + fee}, have {total_in}")
+        raise RuntimeError(f"Insufficient funds: need {amount + fee}, have {total_in}")
     tx.vout.append(CTxOut(int((total_in - amount - fee) * COIN), P2SH_1))
     tx.vout.append(CTxOut(int(amount * COIN), P2SH_2))
     # These transactions don't need to be signed, but we still have to insert
