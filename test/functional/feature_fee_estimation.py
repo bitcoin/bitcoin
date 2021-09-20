@@ -17,7 +17,6 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     OP_1,
-    OP_2,
     OP_DROP,
     OP_TRUE,
 )
@@ -36,13 +35,9 @@ from test_framework.util import (
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them
 # So we can create many transactions without needing to spend
 # time signing.
-REDEEM_SCRIPT_1 = CScript([OP_1, OP_DROP])
-REDEEM_SCRIPT_2 = CScript([OP_2, OP_DROP])
-P2SH_1 = script_to_p2sh_script(REDEEM_SCRIPT_1)
-P2SH_2 = script_to_p2sh_script(REDEEM_SCRIPT_2)
-
-# Associated ScriptSig's to spend satisfy P2SH_1 and P2SH_2
-SCRIPT_SIG = [CScript([OP_TRUE, REDEEM_SCRIPT_1]), CScript([OP_TRUE, REDEEM_SCRIPT_2])]
+SCRIPT = CScript([OP_1, OP_DROP])
+P2SH = script_to_p2sh_script(SCRIPT)
+REDEEM_SCRIPT = CScript([OP_TRUE, SCRIPT])
 
 
 def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee_increment):
@@ -73,12 +68,12 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
         tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), b""))
     if total_in <= amount + fee:
         raise RuntimeError(f"Insufficient funds: need {amount + fee}, have {total_in}")
-    tx.vout.append(CTxOut(int((total_in - amount - fee) * COIN), P2SH_1))
-    tx.vout.append(CTxOut(int(amount * COIN), P2SH_2))
+    tx.vout.append(CTxOut(int((total_in - amount - fee) * COIN), P2SH))
+    tx.vout.append(CTxOut(int(amount * COIN), P2SH))
     # These transactions don't need to be signed, but we still have to insert
     # the ScriptSig that will satisfy the ScriptPubKey.
     for inp in tx.vin:
-        inp.scriptSig = SCRIPT_SIG[inp.prevout.n]
+        inp.scriptSig = REDEEM_SCRIPT
     txid = from_node.sendrawtransaction(hexstring=tx.serialize().hex(), maxfeerate=0)
     unconflist.append({"txid": txid, "vout": 0, "amount": total_in - amount - fee})
     unconflist.append({"txid": txid, "vout": 1, "amount": amount})
@@ -100,15 +95,15 @@ def split_inputs(from_node, txins, txouts, initial_split=False):
 
     half_change = satoshi_round(prevtxout["amount"] / 2)
     rem_change = prevtxout["amount"] - half_change - Decimal("0.00001000")
-    tx.vout.append(CTxOut(int(half_change * COIN), P2SH_1))
-    tx.vout.append(CTxOut(int(rem_change * COIN), P2SH_2))
+    tx.vout.append(CTxOut(int(half_change * COIN), P2SH))
+    tx.vout.append(CTxOut(int(rem_change * COIN), P2SH))
 
     # If this is the initial split we actually need to sign the transaction
     # Otherwise we just need to insert the proper ScriptSig
     if (initial_split):
         completetx = from_node.signrawtransactionwithwallet(tx.serialize().hex())["hex"]
     else:
-        tx.vin[0].scriptSig = SCRIPT_SIG[prevtxout["vout"]]
+        tx.vin[0].scriptSig = REDEEM_SCRIPT
         completetx = tx.serialize().hex()
     txid = from_node.sendrawtransaction(hexstring=completetx, maxfeerate=0)
     txouts.append({"txid": txid, "vout": 0, "amount": half_change})
@@ -163,8 +158,8 @@ def send_tx(node, utxo, feerate):
     fee = tx_size * feerate
 
     tx = CTransaction()
-    tx.vin = [CTxIn(COutPoint(int(utxo["txid"], 16), utxo["vout"]), SCRIPT_SIG[utxo["vout"]])]
-    tx.vout = [CTxOut(int(utxo["amount"] * COIN) - fee, P2SH_1)]
+    tx.vin = [CTxIn(COutPoint(int(utxo["txid"], 16), utxo["vout"]), REDEEM_SCRIPT)]
+    tx.vout = [CTxOut(int(utxo["amount"] * COIN) - fee, P2SH)]
     txid = node.sendrawtransaction(tx.serialize().hex())
 
     return txid
