@@ -1425,7 +1425,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                 chainman,
                                 Assert(node.mempool.get()),
                                 fPruneMode,
-                                chainparams,
+                                chainparams.GetConsensus(),
                                 fReindexChainState,
                                 nBlockTreeDBCache,
                                 nCoinDBCache,
@@ -1486,7 +1486,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 rv2 = VerifyLoadedChainstate(chainman,
                                              fReset,
                                              fReindexChainState,
-                                             chainparams,
+                                             chainparams.GetConsensus(),
                                              check_blocks,
                                              args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL),
                                              static_cast<int64_t(*)()>(GetTime));
