@@ -9,7 +9,7 @@
 
 class CTransaction;
 
-static const uint32_t MAX_BIP125_RBF_SEQUENCE = 0xfffffffd;
+static constexpr uint32_t MAX_BIP125_RBF_SEQUENCE{0xfffffffd};
 
 /** Check whether the sequence numbers on this transaction are signaling opt-in to replace-by-fee,
  * according to BIP 125.  Allow opt-out of transaction replacement by setting nSequence >
