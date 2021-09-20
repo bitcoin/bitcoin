@@ -11,7 +11,8 @@
 #include <algorithm>
 #include <array>
 #include <mutex>
-
+// SYSCOIN
+#include <util/system.h>
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 
 BCLog::Logger& LogInstance()
@@ -333,6 +334,40 @@ void BCLog::Logger::ShrinkDebugFile()
         fclose(file);
 
         file = fsbridge::fopen(m_file_path, "w");
+        if (file)
+        {
+            fwrite(vch.data(), 1, nBytes, file);
+            fclose(file);
+        }
+    }
+    else if (file != nullptr)
+        fclose(file);
+
+    // SYSCOIN
+    // Scroll sysgeth.log if it's getting too big
+    file = fsbridge::fopen(gArgs.GetDataDirNet() / "geth" / "sysgeth.log", "r");
+
+    // Special files (e.g. device nodes) may not have a size.
+    log_size = 0;
+    try {
+        log_size = fs::file_size(gArgs.GetDataDirNet() / "geth" / "sysgeth.log");
+    } catch (const fs::filesystem_error&) {}
+
+    // If debug.log file is more than 10% bigger the RECENT_DEBUG_HISTORY_SIZE
+    // trim it down by saving only the last RECENT_DEBUG_HISTORY_SIZE bytes
+    if (file && log_size > 11 * (RECENT_DEBUG_HISTORY_SIZE / 10))
+    {
+        // Restart the file with some of the end
+        std::vector<char> vch(RECENT_DEBUG_HISTORY_SIZE, 0);
+        if (fseek(file, -((long)vch.size()), SEEK_END)) {
+            LogPrintf("Failed to shrink debug log file: fseek(...) failed\n");
+            fclose(file);
+            return;
+        }
+        int nBytes = fread(vch.data(), 1, vch.size(), file);
+        fclose(file);
+
+        file = fsbridge::fopen(gArgs.GetDataDirNet() / "geth" / "sysgeth.log", "w");
         if (file)
         {
             fwrite(vch.data(), 1, nBytes, file);

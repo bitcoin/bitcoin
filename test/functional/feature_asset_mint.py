@@ -47,9 +47,11 @@ class AssetMintTest(SyscoinTestFramework):
         time.sleep(0.25)
         # cannot mint twice
         assert_raises_rpc_error(-4, 'mint-duplicate-transfer', self.nodes[0].assetallocationmint, self.asset, newaddress, 1, blockhash, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
+        assert_raises_rpc_error(-4, 'mint-duplicate-transfer', self.nodes[0].assetallocationmint, self.asset, newaddress, 1, blockhash, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
         self.generate(self.nodes[0], 1)
         self.sync_blocks()
         # after a block it should show a different exists error
+        assert_raises_rpc_error(-4, 'mint-exists', self.nodes[0].assetallocationmint, self.asset, newaddress, 1, blockhash, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
         assert_raises_rpc_error(-4, 'mint-exists', self.nodes[0].assetallocationmint, self.asset, newaddress, 1, blockhash, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes)
         # ensure you can lookup the mint from the NEVM txid
         mintres = self.nodes[0].syscoincheckmint('36994a0f617c8f5e6fe3197962a40c85fa4cb9b6ff51c4b533a9a25f74d04dd9')

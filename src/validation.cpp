@@ -79,6 +79,7 @@
 #include <zmq/zmqnotificationinterface.h>
 #include <zmq/zmqrpc.h>
 #endif
+#include <unistd.h>
 RecursiveMutex cs_geth;
 struct DescriptorDetails {
     std::string version;
@@ -737,9 +738,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     const auto& params = args.m_chainparams.GetConsensus();
     if(tx.HasAssets()) {
         isAssetTx = IsAssetTx(tx.nVersion);
-        TxValidationState tx_state;
-        if (!CheckSyscoinInputs(tx, params, hash, tx_state, m_active_chainstate.m_chain.Tip()->nHeight, m_active_chainstate.m_chain.Tip()->GetMedianTimePast(), mapMintKeysMempool, args.m_test_accept, mapAssetIn, mapAssetOut)) {
-            return state.Invalid(TxValidationResult::TX_CONFLICT, "bad-syscoin-tx", tx_state.ToString()); 
+        if (!CheckSyscoinInputs(tx, params, hash, state, m_active_chainstate.m_chain.Tip()->nHeight, m_active_chainstate.m_chain.Tip()->GetMedianTimePast(), mapMintKeysMempool, args.m_test_accept, mapAssetIn, mapAssetOut)) {
+            return false; // state filled in by CheckSyscoinInputs
         } 
     }  
     // Check for non-standard pay-to-script-hash in inputs
@@ -1136,11 +1136,15 @@ static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainp
             // SYSCOIN
             mapAssetAllocationConflicts.erase(hashTx);
         }
-        // remove nevm tx from mempool structure
-        if(IsSyscoinMintTx(tx->nVersion)) {
-            CMintSyscoin mintSyscoin(*tx);
-            if(!mintSyscoin.IsNull())
-                mapMintKeysMempool.erase(mintSyscoin.nTxHash);
+        // if we had duplicate mint's we don't want to remove the mint tx hash, but only if we had some other error not related to TX_MINT_DUPLICATE
+        if(result.m_state.GetResult() != TxValidationResult::TX_MINT_DUPLICATE) {
+            // remove nevm tx from mempool structure
+            if(IsSyscoinMintTx(tx->nVersion)) {
+                CMintSyscoin mintSyscoin(*tx);
+                if(!mintSyscoin.IsNull()) {
+                    mapMintKeysMempool.erase(mintSyscoin.nTxHash);
+                }
+            }
         }
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
@@ -5907,7 +5911,7 @@ std::vector<std::string> SanitizeGethCmdLine(const std::string& binaryURL, const
         cmdLineRet.push_back("--syscoin");
     }
     // Geth should subscribe to our publisher
-    const std::string &strPub = gArgs.GetArg("-zmqpubnevm", "");
+    const std::string &strPub = gArgs.GetArg("-zmqpubnevm", fRegTest? "": "tcp://127.0.0.1:1111");
     cmdLineRet.push_back("--nevmpub");
     cmdLineRet.push_back(strPub);
     return cmdLineRet;
@@ -5937,7 +5941,7 @@ bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const s
     return true;
 }
 bool CChainState::RestartGethNode() {
-    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", "");
+    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", fRegTest? "": "tcp://127.0.0.1:1111");
     if(NEVMSub.empty()) {
         LogPrintf("RestartGethNode: Could not start Geth. zmqpubnevm not defined\n");
         return false;
@@ -6007,7 +6011,7 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
 
     fs::path dataDir = gArgs.GetDataDirNet() / "geth";
     const std::vector<std::string> &vecCmdLineStr = SanitizeGethCmdLine(attempt1.string(), dataDir.string());
-    
+    fs::path log = gArgs.GetDataDirNet() / "geth" / "sysgeth.log";
     #ifndef WIN32
     // Prevent killed child-processes remaining as "defunct"
     struct sigaction sa;
@@ -6029,11 +6033,19 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
         std::vector<char*> commandVector;
         for(const std::string &cmdStr: vecCmdLineStr) {
             commandVector.push_back(const_cast<char*>(cmdStr.c_str()));
-        }
+        }  
+       
         // push NULL to the end of the vector (execvp expects NULL as last element)
         commandVector.push_back(NULL);
         char **command = commandVector.data();    
-        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]);                                                  
+        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]); 
+        int err = open(log.string().c_str(), O_RDWR|O_CREAT|O_APPEND, 0600);
+        if (err == -1) {
+            LogPrintf("Could not open sysgeth.log\n");
+            return false;
+        }
+        if (-1 == dup2(err, fileno(stderr))) { LogPrintf("Cannot redirect stderr for syssgeth\n"); return false; }   
+        fflush(stderr); close(err);                               
         execvp(command[0], &command[0]);
         if (errno != 0) {
             LogPrintf("Geth not found at %s\n", attempt1.string());

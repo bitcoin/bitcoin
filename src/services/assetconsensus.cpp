@@ -150,14 +150,14 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     // we care to ensure unique bridge id's in the mempool, not to emplace on test_accept
     if(bSanityCheck) {
         if(mapMintKeys.find(mintSyscoin.nTxHash) != mapMintKeys.end()) {
-            return FormatSyscoinErrorMessage(state, "mint-duplicate-transfer", bSanityCheck);
+            return state.Invalid(TxValidationResult::TX_MINT_DUPLICATE, "mint-duplicate-transfer");
         }
     }
     else {
         // ensure eth tx not already spent in current processing block or mempool(mapMintKeysMempool passed in)
         auto itMap = mapMintKeys.try_emplace(mintSyscoin.nTxHash, txHash);
         if(!itMap.second) {
-            return FormatSyscoinErrorMessage(state, "mint-duplicate-transfer", bSanityCheck);
+            return state.Invalid(TxValidationResult::TX_MINT_DUPLICATE, "mint-duplicate-transfer");
         }
     }
     // verify receipt proof
