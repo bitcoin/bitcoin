@@ -345,12 +345,12 @@ void BCLog::Logger::ShrinkDebugFile()
 
     // SYSCOIN
     // Scroll sysgeth.log if it's getting too big
-    file = fsbridge::fopen(gArgs.GetDataDirNet() / "geth" / "sysgeth.log", "r");
+    file = fsbridge::fopen(gArgs.GetDataDirNet() / "sysgeth.log", "r");
 
     // Special files (e.g. device nodes) may not have a size.
     log_size = 0;
     try {
-        log_size = fs::file_size(gArgs.GetDataDirNet() / "geth" / "sysgeth.log");
+        log_size = fs::file_size(gArgs.GetDataDirNet() / "sysgeth.log");
     } catch (const fs::filesystem_error&) {}
 
     // If debug.log file is more than 10% bigger the RECENT_DEBUG_HISTORY_SIZE
@@ -367,7 +367,7 @@ void BCLog::Logger::ShrinkDebugFile()
         int nBytes = fread(vch.data(), 1, vch.size(), file);
         fclose(file);
 
-        file = fsbridge::fopen(gArgs.GetDataDirNet() / "geth" / "sysgeth.log", "w");
+        file = fsbridge::fopen(gArgs.GetDataDirNet() / "sysgeth.log", "w");
         if (file)
         {
             fwrite(vch.data(), 1, nBytes, file);

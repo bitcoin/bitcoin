@@ -6011,7 +6011,7 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
 
     fs::path dataDir = gArgs.GetDataDirNet() / "geth";
     const std::vector<std::string> &vecCmdLineStr = SanitizeGethCmdLine(attempt1.string(), dataDir.string());
-    fs::path log = gArgs.GetDataDirNet() / "geth" / "sysgeth.log";
+    fs::path log = gArgs.GetDataDirNet() / "sysgeth.log";
     #ifndef WIN32
     // Prevent killed child-processes remaining as "defunct"
     struct sigaction sa;
