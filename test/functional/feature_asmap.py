@@ -14,9 +14,11 @@ Verify node behaviour and debug log when launching syscoind in these cases:
 
 4. `syscoind -asmap/-asmap=` with no file specified, using the default asmap
 
-5. `syscoind -asmap` with no file specified and a missing default asmap file
+5. `syscoind -asmap` restart with an addrman containing new and tried entries
 
-6. `syscoind -asmap` with an empty (unparsable) default asmap file
+6. `syscoind -asmap` with no file specified and a missing default asmap file
+
+7. `syscoind -asmap` with an empty (unparsable) default asmap file
 
 The tests are order-independent.
 
@@ -37,6 +39,12 @@ def expected_messages(filename):
 class AsmapTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.extra_args = [["-checkaddrman=1"]]  # Do addrman checks on all operations.
+
+    def fill_addrman(self, node_id):
+        """Add 2 tried addresses to the addrman, followed by 2 new addresses."""
+        for addr, tried in [[0, True], [1, True], [2, False], [3, False]]:
+            self.nodes[node_id].addpeeraddress(address=f"101.{addr}.0.0", tried=tried, port=8333)
 
     def test_without_asmap_arg(self):
         self.log.info('Test syscoind with no -asmap arg passed')
@@ -72,6 +80,22 @@ class AsmapTest(SyscoinTestFramework):
                 self.start_node(0, [arg])
         os.remove(self.default_asmap)
 
+    def test_asmap_interaction_with_addrman_containing_entries(self):
+        self.log.info("Test bitcoind -asmap restart with addrman containing new and tried entries")
+        self.stop_node(0)
+        shutil.copyfile(self.asmap_raw, self.default_asmap)
+        self.start_node(0, ["-asmap", "-checkaddrman=1"])
+        self.fill_addrman(node_id=0)
+        self.restart_node(0, ["-asmap", "-checkaddrman=1"])
+        with self.node.assert_debug_log(
+            expected_msgs=[
+                "Addrman checks started: new 2, tried 2, total 4",
+                "Addrman checks completed successfully",
+            ]
+        ):
+            self.node.getnodeaddresses()  # getnodeaddresses re-runs the addrman checks
+        os.remove(self.default_asmap)
+
     def test_default_asmap_with_missing_file(self):
         self.log.info('Test syscoind -asmap with missing default map file')
         self.stop_node(0)
@@ -97,6 +121,7 @@ class AsmapTest(SyscoinTestFramework):
         self.test_asmap_with_absolute_path()
         self.test_asmap_with_relative_path()
         self.test_default_asmap()
+        self.test_asmap_interaction_with_addrman_containing_entries()
         self.test_default_asmap_with_missing_file()
         self.test_empty_asmap()
 
