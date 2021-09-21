@@ -256,7 +256,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_nowallet.sh"
 
 task:
-  name: 'macOS 10.14 [gui, no tests] [focal]'
+  name: 'macOS 10.15 [gui, no tests] [focal]'
   << : *DEPENDS_SDK_CACHE_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   container:

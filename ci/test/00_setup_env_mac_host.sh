@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-export HOST=x86_64-apple-darwin18
+export HOST=x86_64-apple-darwin19
 export PIP_PACKAGES="zmq lief"
 export GOAL="install"
 export BITCOIN_CONFIG="--with-gui --enable-reduce-exports"
