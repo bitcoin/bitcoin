@@ -6,6 +6,7 @@
 #include <policy/policy.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <util/strencodings.h>
 #include <util/time.h>
 
 #include <test/util/setup_common.h>
@@ -178,6 +179,144 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     for (int i = 2; i < 9; i++) { // At 9, the original estimate was already at the bottom (b/c scale = 2)
         BOOST_CHECK(feeEst.estimateFee(i).GetFeePerK() < origFeeEst[i-1] - deltaFee);
     }
+}
+
+BOOST_AUTO_TEST_CASE(BlockPolicyEstimatesSegwitCpfp)
+{
+    CBlockPolicyEstimator fee_est;
+    CTxMemPool mpool(&fee_est);
+    LOCK2(cs_main, mpool.cs);
+
+    // A transaction template spending a P2WPKH and paying to a P2WPKH
+    CMutableTransaction tx;
+    tx.nVersion = 1;
+    tx.vin.resize(1);
+    tx.vin[0].prevout.SetNull();
+    tx.vin[0].scriptSig = CScript();
+    tx.vin[0].scriptWitness.stack.push_back(ParseHex("3045022100d743c23d7e5f8c9ee792533d333f60c03a5fda7b97d781dc042305e215e34d290220339ff8710fa0bc74e02b36cd960be8d42b0e542f1822659e46107054e243304601"));
+    tx.vin[0].scriptWitness.stack.push_back(ParseHex("0214c20e48bb2c90d880aa0c1acb65a666607c7b3f72da399b60da9eb91bcf787d"));
+    tx.vout.resize(1);
+    tx.vout[0].nValue = 0LL;
+    tx.vout[0].scriptPubKey = CScript() << OP_0 << ParseHex("ffffffffffffffffffffffffffffffffffffffff");
+    // Another template for a child that will spend 4 P2PWPKH instead
+    CMutableTransaction child_tx{tx};
+    child_tx.vin.resize(4);
+    for (CTxIn& txin : child_tx.vin) {
+        txin = tx.vin[0];
+    }
+
+    // We'll use low fee parents, higher fee standalone txs and child transactions
+    // bumping the low fee parents above the standalone tx feerate.
+    TestMemPoolEntryHelper entry;
+    CAmount fee_parents(1000), fee_childs(39000), fee_childless(10000);
+    CFeeRate feerate_parents(fee_parents, GetVirtualTransactionSize(CTransaction(tx)));
+    CFeeRate feerate_childs(fee_childs, GetVirtualTransactionSize(CTransaction(tx)));
+    CFeeRate feerate_package(fee_parents + fee_childs, GetVirtualTransactionSize(CTransaction(tx)) * 2);
+    CFeeRate feerate_childless(fee_childless, GetVirtualTransactionSize(CTransaction(tx)));
+
+    std::vector<CTransactionRef> block;
+    unsigned blocknum = 0;
+    std::vector<uint256> parents_hashes;
+
+    // Used to make parent and standalone txs uniques
+    unsigned txuid = 0;
+
+    // Mine 20 blocks where both low and higher fee txs are broadcast but only
+    // higher fees are mined.
+    while (blocknum < 20) {
+        for (unsigned i = 0; i < 10; i++) {
+            tx.vin[0].prevout.n = ++txuid;
+            mpool.addUnchecked(entry.Fee(fee_childless).Time(GetTime()).Height(blocknum).FromTx(tx));
+            block.push_back(mpool.get(tx.GetHash()));
+
+            for (unsigned j = 0; j < 2; j++) {
+                tx.vin[0].prevout.n = ++txuid;
+                mpool.addUnchecked(entry.Fee(fee_parents).Time(GetTime()).Height(blocknum).FromTx(tx));
+                parents_hashes.push_back(tx.GetHash());
+            }
+        }
+        mpool.removeForBlock(block, ++blocknum);
+        block.clear();
+    }
+    BOOST_CHECK(fee_est.estimateFee(10).GetFeePerK() == feerate_childless.GetFeePerK());
+
+    // Now continue mining higher fee transactions, but get the low fee tx to be included
+    // thanks to CPFP.
+    // Our estimate should increase toward the package feerate value.
+    while (blocknum < 60) {
+        for (unsigned i = 0; i < 50; i++) {
+            tx.vin[0].prevout.SetNull();
+            tx.vin[0].prevout.n = ++txuid;
+            mpool.addUnchecked(entry.Fee(fee_childless).Time(GetTime()).Height(blocknum).FromTx(tx));
+            block.push_back(mpool.get(tx.GetHash()));
+
+            for (unsigned j = 0; j < 2; j++) {
+                // Bump the parents' fees until there is no more.
+                uint256 parent_txid;
+                if (parents_hashes.size() > 0) {
+                    parent_txid = parents_hashes.back();
+                    parents_hashes.pop_back();
+                } else {
+                    tx.vin[0].prevout.SetNull();
+                    tx.vin[0].prevout.n = ++txuid;
+                    mpool.addUnchecked(entry.Fee(fee_parents).Time(GetTime()).Height(blocknum).FromTx(tx));
+                    block.push_back(mpool.get(tx.GetHash()));
+                    parent_txid = tx.GetHash();
+                }
+
+                tx.vin[0].prevout.n = 0;
+                tx.vin[0].prevout.hash = parent_txid;
+                CTxMemPool::txiter parent_iter = *mpool.GetIter(parent_txid);
+                CTxMemPool::setEntries parents_set{parent_iter};
+                // false as it has an unconfirmed parents, see `validForFeeEstimation`
+                // in validation.
+                mpool.addUnchecked(entry.Fee(fee_childs).Time(GetTime()).Height(blocknum).FromTx(tx), false);
+                block.push_back(mpool.get(tx.GetHash()));
+                block.push_back(mpool.get(parent_txid));
+            }
+        }
+        mpool.removeForBlock(block, ++blocknum);
+        block.clear();
+    }
+    BOOST_CHECK(fee_est.estimateFee(10).GetFeePerK() == feerate_package.GetFeePerK());
+
+    // Now do the same but with 4 parents spent by a low fee child (E) itself spent
+    // by a high-fee child (F) paying for the entire package:
+    //    F
+    //    E
+    // A B C D
+    // Our estimates should be decreased down to the low feerate of parent transactions
+    // as we'll account for a large feerate for AEF and 3 low feerate B, C, D that get
+    // immediately confirmed.
+    while (blocknum < 70) {
+        for (unsigned i = 0; i < 10; i++) {
+            tx.vin[0].prevout.SetNull();
+            tx.vin[0].prevout.n = ++txuid;
+            mpool.addUnchecked(entry.Fee(fee_childless).Time(GetTime()).Height(blocknum).FromTx(tx));
+            block.push_back(mpool.get(tx.GetHash()));
+
+            for (unsigned j = 0; j < 4; j++) {
+                tx.vin[0].prevout.n = ++txuid;
+                uint256 parent_txid = tx.GetHash();
+                mpool.addUnchecked(entry.Fee(fee_parents).Time(GetTime()).Height(blocknum).FromTx(tx));
+                block.push_back(mpool.get(parent_txid));
+
+                child_tx.vin[j].prevout.n = j;
+                child_tx.vin[j].prevout.hash = parent_txid;
+            }
+            uint256 first_child_txid{child_tx.GetHash()};
+            mpool.addUnchecked(entry.Fee(fee_parents).Time(GetTime()).Height(blocknum).FromTx(child_tx), false);
+            block.push_back(mpool.get(first_child_txid));
+
+            tx.vin[0].prevout.n = 0;
+            tx.vin[0].prevout.hash = first_child_txid;
+            mpool.addUnchecked(entry.Fee(fee_childs * 5).Time(GetTime()).Height(blocknum).FromTx(tx), false);
+            block.push_back(mpool.get(tx.GetHash()));
+        }
+        mpool.removeForBlock(block, ++blocknum);
+        block.clear();
+    }
+    BOOST_CHECK(fee_est.estimateFee(10).GetFeePerK() == feerate_parents.GetFeePerK());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

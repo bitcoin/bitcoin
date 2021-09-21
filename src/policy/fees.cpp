@@ -16,6 +16,10 @@ static const char* FEE_ESTIMATES_FILENAME = "fee_estimates.dat";
 
 static constexpr double INF_FEERATE = 1e99;
 
+// Same as CTxMemPoolEntry::[Parent, Children], not used to avoid confusion with actual
+// decendants and ancestors.
+typedef std::set<CTxMemPoolEntry::CTxMemPoolEntryRef, CompareIteratorByHash> setMemPoolEntry;
+
 std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
 {
     switch (horizon) {
@@ -591,8 +595,33 @@ void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
     longStats->Record(blocksToConfirm, (double)fee_rate.GetFeePerK());
 }
 
-void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
-                                         std::set<CTxMemPoolEntry::CTxMemPoolEntryRef, CompareIteratorByHash>& entries)
+std::pair<CAmount, uint64_t> FeeSizeWithDescendants(setMemPoolEntry& mined_entries,
+                                                    CTxMemPoolEntry::Children& accounted_descendants,
+                                                    const CTxMemPoolEntry& entry)
+{
+    std::pair<CAmount, uint64_t> entry_fee_size{entry.GetFee(), entry.GetTxSize()};
+
+    for (const CTxMemPoolEntry& child_entry : entry.GetMemPoolChildrenConst()) {
+        // If the child was not mined, don't account for it.
+        if (mined_entries.find(child_entry) == mined_entries.end()) {
+            continue;
+        }
+
+        // Don't account for it twice
+        if (accounted_descendants.find(child_entry) != accounted_descendants.end()) {
+            continue;
+        }
+
+        std::pair<CAmount, uint64_t> child_entry_fee_size{FeeSizeWithDescendants(mined_entries, accounted_descendants, child_entry)};
+        entry_fee_size.first += child_entry_fee_size.first;
+        entry_fee_size.second += child_entry_fee_size.second;
+        accounted_descendants.insert(child_entry);
+    }
+
+    return entry_fee_size;
+}
+
+void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight, setMemPoolEntry& mined_entries)
 {
     LOCK(m_cs_fee_estimator);
     if (nBlockHeight <= nBestSeenHeight) {
@@ -620,14 +649,30 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     longStats->UpdateMovingAverages();
 
     unsigned int countedTxs = 0;
-    // Update averages with data points from current block
-    for (const CTxMemPoolEntry& entry : entries) {
+    CTxMemPoolEntry::Children accounted_descendants;
+    // Update averages with data points from current block.
+    // We account for the feerate of a transaction with its descendants. Note this
+    // assigns the feerate of a child transaction to its first seen parent, ie for
+    // a transaction chain like:
+    //     -- C
+    //   /
+    // A ---- D -- E
+    //      /
+    //     /
+    // B -
+    // This would assign the feerate of the package ACDE to A and only assign B's own
+    // feerate to itself. It's a middleground between an expensive accurate tracking of
+    // all a descendants' ancestors and completely disregarding CPFP.
+    for (const CTxMemPoolEntry& entry : mined_entries) {
         if (!removeTx(entry.GetTx().GetHash(), true)) {
             // This transaction wasn't being tracked for fee estimation
             continue;
         }
-        // Feerates are stored and reported as BTC-per-kb:
-        CFeeRate fee_rate(entry.GetFee(), entry.GetTxSize());
+
+        // Note that we would never track transactions with unconfirmed ancestors,
+        // so we are good looking only for descendants.
+        std::pair<CAmount, uint64_t> fee_size{FeeSizeWithDescendants(mined_entries, accounted_descendants, entry)};
+        CFeeRate fee_rate(fee_size.first, fee_size.second);
         processBlockTx(nBlockHeight, entry, fee_rate);
         countedTxs++;
     }
@@ -639,7 +684,7 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
 
 
     LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy estimates updated by %u of %u block txs, since last block %u of %u tracked, mempool map size %u, max target %u from %s\n",
-             countedTxs, entries.size(), trackedTxs, trackedTxs + untrackedTxs, mapMemPoolTxs.size(),
+             countedTxs, mined_entries.size(), trackedTxs, trackedTxs + untrackedTxs, mapMemPoolTxs.size(),
              MaxUsableEstimate(), HistoricalBlockSpan() > BlockSpan() ? "historical" : "current");
 
     trackedTxs = 0;
