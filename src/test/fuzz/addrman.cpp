@@ -7,6 +7,7 @@
 #include <addrman_impl.h>
 #include <chainparams.h>
 #include <merkleblock.h>
+#include <random.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -50,7 +51,7 @@ public:
     /**
      * Generate a random address. Always returns a valid address.
      */
-    CNetAddr RandAddr() EXCLUSIVE_LOCKS_REQUIRED(m_impl->cs)
+    CNetAddr RandAddr(FastRandomContext& fast_random_context) EXCLUSIVE_LOCKS_REQUIRED(m_impl->cs)
     {
         CNetAddr addr;
         if (m_fuzzed_data_provider.remaining_bytes() > 1 && m_fuzzed_data_provider.ConsumeBool()) {
@@ -62,7 +63,7 @@ public:
                                                                    {4, ADDR_TORV3_SIZE},
                                                                    {5, ADDR_I2P_SIZE},
                                                                    {6, ADDR_CJDNS_SIZE}};
-            uint8_t net = m_impl->insecure_rand.randrange(5) + 1; // [1..5]
+            uint8_t net = fast_random_context.randrange(5) + 1; // [1..5]
             if (net == 3) {
                 net = 6;
             }
@@ -70,7 +71,7 @@ public:
             CDataStream s(SER_NETWORK, PROTOCOL_VERSION | ADDRV2_FORMAT);
 
             s << net;
-            s << m_impl->insecure_rand.randbytes(net_len_map.at(net));
+            s << fast_random_context.randbytes(net_len_map.at(net));
 
             s >> addr;
         }
@@ -99,15 +100,17 @@ public:
 
         const size_t num_sources = m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 50);
         CNetAddr prev_source;
-        // Use insecure_rand inside the loops instead of m_fuzzed_data_provider because when
-        // the latter is exhausted it just returns 0.
+        // Generate a FastRandomContext seed to use inside the loops instead of
+        // m_fuzzed_data_provider. When m_fuzzed_data_provider is exhausted it
+        // just returns 0.
+        FastRandomContext fast_random_context{ConsumeUInt256(m_fuzzed_data_provider)};
         for (size_t i = 0; i < num_sources; ++i) {
-            const auto source = RandAddr();
-            const size_t num_addresses = m_impl->insecure_rand.randrange(500) + 1; // [1..500]
+            const auto source = RandAddr(fast_random_context);
+            const size_t num_addresses = fast_random_context.randrange(500) + 1; // [1..500]
 
             for (size_t j = 0; j < num_addresses; ++j) {
-                const auto addr = CAddress{CService{RandAddr(), 8333}, NODE_NETWORK};
-                const auto time_penalty = m_impl->insecure_rand.randrange(100000001);
+                const auto addr = CAddress{CService{RandAddr(fast_random_context), 8333}, NODE_NETWORK};
+                const auto time_penalty = fast_random_context.randrange(100000001);
                 m_impl->Add_(addr, source, time_penalty);
 
                 if (n > 0 && m_impl->mapInfo.size() % n == 0) {
@@ -115,8 +118,8 @@ public:
                 }
 
                 // Add 10% of the addresses from more than one source.
-                if (m_impl->insecure_rand.randrange(10) == 0 && prev_source.IsValid()) {
-                    m_impl->Add_({addr}, prev_source, time_penalty);
+                if (fast_random_context.randrange(10) == 0 && prev_source.IsValid()) {
+                    m_impl->Add_(addr, prev_source, time_penalty);
                 }
             }
             prev_source = source;
