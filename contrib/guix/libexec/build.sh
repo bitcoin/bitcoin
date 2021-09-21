@@ -7,11 +7,10 @@ set -e -o pipefail
 export TZ=UTC
 
 # Build rust library
-ls /bitcoin/rust-build
-/bitcoin/rust-build/rust-build-script.sh /bitcoin/src/rusty /bitcoin/rust-build
+/bitcoin/rust-build/rust-build-script.sh /bitcoin/src/rusty/protocols/v2/ /bitcoin/rust-build
 
 SV2_FFI_LIB=/bitcoin/rust-build
-SV2_FFI_HEADER=/bitcoin/src/rusty/sv2-ffi/
+SV2_FFI_HEADER=/bitcoin/src/rusty/protocols/v2/sv2-ffi/
 
 # Although Guix _does_ set umask when building its own packages (in our case,
 # this is all packages in manifest.scm), it does not set it for `guix
