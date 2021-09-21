@@ -9,7 +9,6 @@
 #include <fs.h>
 #include <logging.h>
 #include <streams.h>
-#include <txmempool.h>
 #include <util/serfloat.h>
 #include <util/system.h>
 
@@ -574,12 +573,12 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     assert(bucketIndex == bucketIndex3);
 }
 
-void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry, CFeeRate fee_rate)
+void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry& entry, CFeeRate fee_rate)
 {
     // How many blocks did it take for miners to include this transaction?
     // blocksToConfirm is 1-based, so a transaction included in the earliest
     // possible block has confirmation count of 1
-    int blocksToConfirm = nBlockHeight - entry->GetHeight();
+    int blocksToConfirm = nBlockHeight - entry.GetHeight();
     if (blocksToConfirm <= 0) {
         // This can't happen because we don't process transactions from a block with a height
         // lower than our greatest seen height
@@ -593,7 +592,7 @@ void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
 }
 
 void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
-                                         std::vector<const CTxMemPoolEntry*>& entries)
+                                         std::set<CTxMemPoolEntry::CTxMemPoolEntryRef, CompareIteratorByHash>& entries)
 {
     LOCK(m_cs_fee_estimator);
     if (nBlockHeight <= nBestSeenHeight) {
@@ -622,13 +621,13 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
 
     unsigned int countedTxs = 0;
     // Update averages with data points from current block
-    for (const auto& entry : entries) {
-        if (!removeTx(entry->GetTx().GetHash(), true)) {
+    for (const CTxMemPoolEntry& entry : entries) {
+        if (!removeTx(entry.GetTx().GetHash(), true)) {
             // This transaction wasn't being tracked for fee estimation
             continue;
         }
         // Feerates are stored and reported as BTC-per-kb:
-        CFeeRate fee_rate(entry->GetFee(), entry->GetTxSize());
+        CFeeRate fee_rate(entry.GetFee(), entry.GetTxSize());
         processBlockTx(nBlockHeight, entry, fee_rate);
         countedTxs++;
     }

@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -48,12 +49,11 @@ FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
                     const CTransaction tx{*mtx};
                     mempool_entries.push_back(ConsumeTxMemPoolEntry(fuzzed_data_provider, tx));
                 }
-                std::vector<const CTxMemPoolEntry*> ptrs;
-                ptrs.reserve(mempool_entries.size());
+                std::set<CTxMemPoolEntry::CTxMemPoolEntryRef, CompareIteratorByHash> refs;
                 for (const CTxMemPoolEntry& mempool_entry : mempool_entries) {
-                    ptrs.push_back(&mempool_entry);
+                    refs.insert(mempool_entry);
                 }
-                block_policy_estimator.processBlock(fuzzed_data_provider.ConsumeIntegral<unsigned int>(), ptrs);
+                block_policy_estimator.processBlock(fuzzed_data_provider.ConsumeIntegral<unsigned int>(), refs);
             },
             [&] {
                 (void)block_policy_estimator.removeTx(ConsumeUInt256(fuzzed_data_provider), /* inBlock */ fuzzed_data_provider.ConsumeBool());
