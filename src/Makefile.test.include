@@ -232,7 +232,6 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/crypto_hkdf_hmac_sha256_l32.cpp \
  test/fuzz/crypto_poly1305.cpp \
  test/fuzz/cuckoocache.cpp \
- test/fuzz/data_stream.cpp \
  test/fuzz/decode_tx.cpp \
  test/fuzz/descriptor_parse.cpp \
  test/fuzz/deserialize.cpp \
