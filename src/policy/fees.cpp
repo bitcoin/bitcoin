@@ -574,7 +574,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     assert(bucketIndex == bucketIndex3);
 }
 
-void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry)
+void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry, CFeeRate fee_rate)
 {
     // How many blocks did it take for miners to include this transaction?
     // blocksToConfirm is 1-based, so a transaction included in the earliest
@@ -587,12 +587,9 @@ void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
         return;
     }
 
-    // Feerates are stored and reported as BTC-per-kb:
-    CFeeRate feeRate(entry->GetFee(), entry->GetTxSize());
-
-    feeStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
-    shortStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
-    longStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
+    feeStats->Record(blocksToConfirm, (double)fee_rate.GetFeePerK());
+    shortStats->Record(blocksToConfirm, (double)fee_rate.GetFeePerK());
+    longStats->Record(blocksToConfirm, (double)fee_rate.GetFeePerK());
 }
 
 void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
@@ -630,7 +627,9 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
             // This transaction wasn't being tracked for fee estimation
             continue;
         }
-        processBlockTx(nBlockHeight, entry);
+        // Feerates are stored and reported as BTC-per-kb:
+        CFeeRate fee_rate(entry->GetFee(), entry->GetTxSize());
+        processBlockTx(nBlockHeight, entry, fee_rate);
         countedTxs++;
     }
 
