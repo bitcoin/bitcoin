@@ -148,7 +148,7 @@ task:
     - python test\util\rpcauth-test.py
   functional_tests_script:
     # TODO enable '--extended' and drop '--exclude'.
-    - python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 --exclude %EXCLUDE_TESTS% --failfast
+    - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 --exclude %EXCLUDE_TESTS% --failfast
 
 task:
   name: 'ARM [unit tests, no functional tests] [bullseye]'
