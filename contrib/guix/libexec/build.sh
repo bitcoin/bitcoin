@@ -6,6 +6,13 @@ export LC_ALL=C
 set -e -o pipefail
 export TZ=UTC
 
+# Build rust library
+ls /bitcoin/rust-build
+/bitcoin/rust-build/rust-build-script.sh /bitcoin/src/rusty /bitcoin/rust-build
+
+SV2_FFI_LIB=/bitcoin/rust-build
+SV2_FFI_HEADER=/bitcoin/src/rusty/sv2-ffi/
+
 # Although Guix _does_ set umask when building its own packages (in our case,
 # this is all packages in manifest.scm), it does not set it for `guix
 # environment`. It does make sense for at least `guix environment --container`
@@ -91,9 +98,6 @@ case "$HOST" in
         prepend_to_search_env_var OBJC_INCLUDE_PATH "${zlib_store_path}/include"
         prepend_to_search_env_var OBJCPLUS_INCLUDE_PATH "${zlib_store_path}/include"
 esac
-
-# TODO should use store_path
-SV2_FFI_DIR=/gnu/store/`ls /gnu/store/ | grep rust-sv2` 
 
 # Set environment variables to point the CROSS toolchain to the right
 # includes/libs for $HOST
@@ -247,7 +251,7 @@ esac
 
 # CXXFLAGS
 HOST_CXXFLAGS="$HOST_CFLAGS"
-HOST_CXXFLAGS="${HOST_CXXFLAGS} -I ${SV2_FFI_DIR} ${SV2_FFI_DIR}/libsv2_ffi.a -lpthread -ldl"
+HOST_CXXFLAGS="${HOST_CXXFLAGS} -I ${SV2_FFI_HEADER} ${SV2_FFI_LIB}/libsv2_ffi.a -lpthread -ldl"
 
 case "$HOST" in
     arm-linux-gnueabihf) HOST_CXXFLAGS="${HOST_CXXFLAGS} -Wno-psabi" ;;

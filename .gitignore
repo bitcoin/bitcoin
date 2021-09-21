@@ -162,3 +162,4 @@ dist/
 /guix-build-*
 
 /ci/scratch/
+/deps
