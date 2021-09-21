@@ -63,19 +63,15 @@ def small_txpuzzle_randfee(
     while total_in <= (amount + fee) and len(conflist) > 0:
         t = conflist.pop(0)
         total_in += t["amount"]
-        tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), b""))
+        tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), REDEEM_SCRIPT))
     while total_in <= (amount + fee) and len(unconflist) > 0:
         t = unconflist.pop(0)
         total_in += t["amount"]
-        tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), b""))
+        tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), REDEEM_SCRIPT))
     if total_in <= amount + fee:
         raise RuntimeError(f"Insufficient funds: need {amount + fee}, have {total_in}")
     tx.vout.append(CTxOut(int((total_in - amount - fee) * COIN), P2SH))
     tx.vout.append(CTxOut(int(amount * COIN), P2SH))
-    # These transactions don't need to be signed, but we still have to insert
-    # the ScriptSig that will satisfy the ScriptPubKey.
-    for inp in tx.vin:
-        inp.scriptSig = REDEEM_SCRIPT
     txid = from_node.sendrawtransaction(hexstring=tx.serialize().hex(), maxfeerate=0)
     unconflist.append({"txid": txid, "vout": 0, "amount": total_in - amount - fee})
     unconflist.append({"txid": txid, "vout": 1, "amount": amount})
@@ -218,7 +214,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         change = Decimal("100") - splitted_amount * utxo_count - fee
         tx = CTransaction()
         tx.vin = [
-            CTxIn(COutPoint(int(cb["txid"], 16), cb["vout"]), b"")
+            CTxIn(COutPoint(int(cb["txid"], 16), cb["vout"]))
             for cb in node.listunspent()[:2]
         ]
         tx.vout = [CTxOut(int(splitted_amount * COIN), P2SH) for _ in range(utxo_count)]
