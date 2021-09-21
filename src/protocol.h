@@ -216,6 +216,42 @@ extern const char *GETBLOCKTXN;
  * @since protocol version 70209 as described by BIP 152
  */
 extern const char *BLOCKTXN;
+/**
+ * getcfilters requests compact filters for a range of blocks.
+ * Only available with service bit NODE_COMPACT_FILTERS as described by
+ * BIP 157 & 158.
+ */
+extern const char* GETCFILTERS;
+/**
+ * cfilter is a response to a getcfilters request containing a single compact
+ * filter.
+ */
+extern const char* CFILTER;
+/**
+ * getcfheaders requests a compact filter header and the filter hashes for a
+ * range of blocks, which can then be used to reconstruct the filter headers
+ * for those blocks.
+ * Only available with service bit NODE_COMPACT_FILTERS as described by
+ * BIP 157 & 158.
+ */
+extern const char* GETCFHEADERS;
+/**
+ * cfheaders is a response to a getcfheaders request containing a filter header
+ * and a vector of filter hashes for each subsequent block in the requested range.
+ */
+extern const char* CFHEADERS;
+/**
+ * getcfcheckpt requests evenly spaced compact filter headers, enabling
+ * parallelized download and validation of the headers between them.
+ * Only available with service bit NODE_COMPACT_FILTERS as described by
+ * BIP 157 & 158.
+ */
+extern const char *GETCFCHECKPT;
+/**
+ * cfcheckpt is a response to a getcfcheckpt request containing a vector of
+ * evenly spaced filter headers for blocks on the requested chain.
+ */
+extern const char *CFCHECKPT;
 
 // Dash message types
 // NOTE: do NOT declare non-implmented here, we don't want them to be exposed to the outside
@@ -263,6 +299,7 @@ const std::vector<std::string> &getAllNetMessageTypes();
 
 /** nServices flags */
 enum ServiceFlags : uint64_t {
+    // NOTE: When adding here, be sure to update serviceFlagToStr too
     // Nothing
     NODE_NONE = 0,
     // NODE_NETWORK means that the node is capable of serving the complete block chain. It is currently
@@ -279,6 +316,9 @@ enum ServiceFlags : uint64_t {
     // NODE_XTHIN means the node supports Xtreme Thinblocks
     // If this is turned off then the node will not service nor make xthin requests
     NODE_XTHIN = (1 << 4),
+    // NODE_COMPACT_FILTERS means the node will service basic block filter requests.
+    // See BIP157 and BIP158 for details on how this is implemented.
+    NODE_COMPACT_FILTERS = (1 << 6),
     // NODE_NETWORK_LIMITED means the same as NODE_NETWORK with the limitation of only
     // serving the last 288 blocks
     // See BIP159 for details on how this is implemented.
@@ -292,6 +332,8 @@ enum ServiceFlags : uint64_t {
     // do not actually support. Other service bits should be allocated via the
     // BIP process.
 };
+
+std::string serviceFlagToStr(uint64_t mask, int bit);
 
 /**
  * Gets the set of service flags which are "desirable" for a given peer.

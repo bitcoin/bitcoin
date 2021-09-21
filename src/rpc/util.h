@@ -7,6 +7,7 @@
 
 #include <node/transaction.h>
 #include <pubkey.h>
+#include <protocol.h>
 #include <rpc/protocol.h>
 #include <script/standard.h>
 #include <univalue.h>
@@ -27,6 +28,9 @@ UniValue DescribeAddress(const CTxDestination& dest);
 
 //! Parse a confirm target option and raise an RPC error if it is invalid.
 unsigned int ParseConfirmTarget(const UniValue& value);
+
+/** Returns, given services flags, a list of humanly readable (known) network services */
+UniValue GetServicesNames(ServiceFlags services);
 
 struct RPCArg {
     enum class Type {

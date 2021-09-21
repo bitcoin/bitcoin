@@ -1725,28 +1725,11 @@ QString formatServicesStr(quint64 mask)
 {
     QStringList strList;
 
-    // Just scan the last 8 bits for now.
-    for (int i = 0; i < 8; i++) {
-        uint64_t check = 1 << i;
+    for (int i = 0; i < 64; i++) {
+        uint64_t check = 1ull << i;
         if (mask & check)
         {
-            switch (check)
-            {
-            case NODE_NETWORK:
-                strList.append("NETWORK");
-                break;
-            case NODE_GETUTXO:
-                strList.append("GETUTXO");
-                break;
-            case NODE_BLOOM:
-                strList.append("BLOOM");
-                break;
-            case NODE_XTHIN:
-                strList.append("XTHIN");
-                break;
-            default:
-                strList.append(QString("%1[%2]").arg("UNKNOWN").arg(check));
-            }
+            strList.append(QString::fromStdString(serviceFlagToStr(mask, i)));
         }
     }
 

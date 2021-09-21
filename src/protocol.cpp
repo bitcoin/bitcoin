@@ -38,6 +38,12 @@ const char *SENDCMPCT="sendcmpct";
 const char *CMPCTBLOCK="cmpctblock";
 const char *GETBLOCKTXN="getblocktxn";
 const char *BLOCKTXN="blocktxn";
+const char *GETCFILTERS="getcfilters";
+const char *CFILTER="cfilter";
+const char *GETCFHEADERS="getcfheaders";
+const char *CFHEADERS="cfheaders";
+const char *GETCFCHECKPT="getcfcheckpt";
+const char *CFCHECKPT="cfcheckpt";
 // Dash message types
 const char *LEGACYTXLOCKREQUEST="ix";
 const char *SPORK="spork";
@@ -108,6 +114,12 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::CMPCTBLOCK,
     NetMsgType::GETBLOCKTXN,
     NetMsgType::BLOCKTXN,
+    NetMsgType::GETCFILTERS,
+    NetMsgType::CFILTER,
+    NetMsgType::GETCFHEADERS,
+    NetMsgType::CFHEADERS,
+    NetMsgType::GETCFCHECKPT,
+    NetMsgType::CFCHECKPT,
     // Dash message types
     // NOTE: do NOT include non-implmented here, we want them to be "Unknown command" in ProcessMessage()
     NetMsgType::LEGACYTXLOCKREQUEST,
@@ -304,4 +316,29 @@ std::string CInv::ToString() const
 const std::vector<std::string> &getAllNetMessageTypes()
 {
     return allNetMessageTypesVec;
+}
+
+std::string serviceFlagToStr(const uint64_t mask, const int bit)
+{
+    switch (ServiceFlags(mask)) {
+    case NODE_NONE: abort();  // impossible
+    case NODE_NETWORK:         return "NETWORK";
+    case NODE_GETUTXO:         return "GETUTXO";
+    case NODE_BLOOM:           return "BLOOM";
+    case NODE_XTHIN:           return "XTHIN";
+    case NODE_COMPACT_FILTERS: return "COMPACT_FILTERS";
+    case NODE_NETWORK_LIMITED: return "NETWORK_LIMITED";
+    // Not using default, so we get warned when a case is missing
+    }
+
+    std::ostringstream stream;
+    stream.imbue(std::locale::classic());
+    stream << "UNKNOWN[";
+    if (bit < 8) {
+        stream << mask;
+    } else {
+        stream << "2^" << bit;
+    }
+    stream << "]";
+    return stream.str();
 }
