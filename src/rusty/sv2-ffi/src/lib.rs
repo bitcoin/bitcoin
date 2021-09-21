@@ -121,21 +121,15 @@ impl<'a> CSv2Message {
     #[cfg(not(feature = "with_serde"))]
     pub fn to_rust_rep_mut(&'a mut self) -> Result<Sv2Message<'a>, Error> {
         match self {
-            //CSv2Message::CoinbaseOutputDataSize(v) => {Ok(Sv2Message::CoinbaseOutputDataSize(*v))}
             CSv2Message::NewTemplate(v) => Ok(Sv2Message::NewTemplate(v.to_rust_rep_mut()?)),
-            //CSv2Message::RequestTransactionData(v) => {Ok(Sv2Message::RequestTransactionData(*v))}
-            //CSv2Message::RequestTransactionDataError(mut v) => {Ok(Sv2Message::RequestTransactionDataError(v.to_rust_rep_mut()?))}
-            //CSv2Message::RequestTransactionDataSuccess(mut v) => {Ok(Sv2Message::RequestTransactionDataSuccess(v.to_rust_rep_mut()?))}
             CSv2Message::SetNewPrevHash(v) => Ok(Sv2Message::SetNewPrevHash(v.to_rust_rep_mut()?)),
             CSv2Message::SubmitSolution(v) => Ok(Sv2Message::SubmitSolution(v.to_rust_rep_mut()?)),
-            //CSv2Message::ChannelEndpointChanged(v) => {Ok(Sv2Message::ChannelEndpointChanged(*v))}
             CSv2Message::SetupConnection(v) => {
                 Ok(Sv2Message::SetupConnection(v.to_rust_rep_mut()?))
             }
             CSv2Message::SetupConnectionError(v) => {
                 Ok(Sv2Message::SetupConnectionError(v.to_rust_rep_mut()?))
             }
-            //CSv2Message::SetupConnectionSuccess(v) => {Ok(Sv2Message::SetupConnectionSuccess(*v))}
             _ => todo!(),
         }
     }

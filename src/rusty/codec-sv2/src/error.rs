@@ -6,13 +6,6 @@ pub enum Error {
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-//#[cfg(not(feature = "no_std"))]
-//impl From<std::io::Error> for Error {
-//    fn from(_: core::io::Error) -> Self {
-//        todo!()
-//    }
-//}
-
 impl From<()> for Error {
     fn from(_: ()) -> Self {
         Error::Todo
