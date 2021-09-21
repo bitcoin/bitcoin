@@ -1315,6 +1315,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         SetProxy(NET_IPV4, addrProxy);
         SetProxy(NET_IPV6, addrProxy);
         SetProxy(NET_ONION, addrProxy);
+        SetProxy(NET_CJDNS, addrProxy);
         SetNameProxy(addrProxy);
         SetReachable(NET_ONION, true); // by default, -proxy sets onion as reachable, unless -noonion later
     }
