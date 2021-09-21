@@ -180,8 +180,10 @@ class MiniWallet:
         return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex, 'tx': tx}
 
     def sendrawtransaction(self, *, from_node, tx_hex):
-        from_node.sendrawtransaction(tx_hex)
+        txid = from_node.sendrawtransaction(tx_hex)
         self.scan_tx(from_node.decoderawtransaction(tx_hex))
+        return txid
+
 
 def make_chain(node, address, privkeys, parent_txid, parent_value, n=0, parent_locking_script=None, fee=DEFAULT_FEE):
     """Build a transaction that spends parent_txid.vout[n] and produces one output with

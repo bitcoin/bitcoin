@@ -7,7 +7,6 @@
 from copy import deepcopy
 from decimal import Decimal
 
-from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import (
     BIP125_SEQUENCE_NUMBER,
     COIN,
@@ -18,9 +17,17 @@ from test_framework.messages import (
 )
 from test_framework.script import CScript, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_round
-from test_framework.script_util import DUMMY_P2WPKH_SCRIPT, DUMMY_2_P2WPKH_SCRIPT
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+    assert_raises_rpc_error,
+)
+from test_framework.script_util import (
+    DUMMY_P2WPKH_SCRIPT,
+    DUMMY_2_P2WPKH_SCRIPT,
+)
 from test_framework.wallet import MiniWallet
+
 
 MAX_REPLACEMENT_LIMIT = 100
 class ReplaceByFeeTest(BitcoinTestFramework):
@@ -89,29 +96,23 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def make_utxo(self, node, amount, confirmed=True, scriptPubKey=DUMMY_P2WPKH_SCRIPT):
         """Create a txout with a given amount and scriptPubKey
 
-        Mines coins as needed.
+        Assumes that MiniWallet has enough funds to cover the amount and the fixed fee
+        (from it's internal utxos, the one with the largest value is taken).
 
         confirmed - txouts created will be confirmed in the blockchain;
                     unconfirmed otherwise.
         """
-        fee = 1 * COIN
-        while node.getbalance() < satoshi_round((amount + fee) / COIN):
-            self.generate(node, COINBASE_MATURITY)
-
-        new_addr = node.getnewaddress()
-        txid = node.sendtoaddress(new_addr, satoshi_round((amount + fee) / COIN))
-        tx1 = node.getrawtransaction(txid, 1)
-        txid = int(txid, 16)
-        i, _ = next(filter(lambda vout: new_addr == vout[1]['scriptPubKey']['address'], enumerate(tx1['vout'])))
-
-        tx2 = CTransaction()
-        tx2.vin = [CTxIn(COutPoint(txid, i))]
-        tx2.vout = [CTxOut(amount, scriptPubKey)]
-        tx2.rehash()
-
-        signed_tx = node.signrawtransactionwithwallet(tx2.serialize().hex())
-
-        txid = node.sendrawtransaction(signed_tx['hex'], 0)
+        # MiniWallet only supports sweeping utxos to its own internal scriptPubKey, so in
+        # order to create an output with arbitrary amount/scriptPubKey, we have to add it
+        # manually after calling the create_self_transfer method. The MiniWallet output's
+        # nValue has to be adapted accordingly (amount and fee deduction). To keep things
+        # simple, we use a fixed fee of 1000 Satoshis here.
+        fee = 1000
+        tx = self.wallet.create_self_transfer(from_node=node, fee_rate=0, mempool_valid=False)['tx']
+        assert_greater_than(tx.vout[0].nValue, amount + fee)
+        tx.vout[0].nValue -= (amount + fee)           # change output -> MiniWallet
+        tx.vout.append(CTxOut(amount, scriptPubKey))  # desired output -> to be returned
+        txid = self.wallet.sendrawtransaction(from_node=node, tx_hex=tx.serialize().hex())
 
         # If requested, ensure txouts are confirmed.
         if confirmed:
@@ -124,7 +125,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 assert new_size < mempool_size
                 mempool_size = new_size
 
-        return COutPoint(int(txid, 16), 0)
+        return COutPoint(int(txid, 16), 1)
 
     def test_simple_doublespend(self):
         """Simple doublespend"""
@@ -161,14 +162,14 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def test_doublespend_chain(self):
         """Doublespend of a long chain"""
 
-        initial_nValue = 50 * COIN
+        initial_nValue = 5 * COIN
         tx0_outpoint = self.make_utxo(self.nodes[0], initial_nValue)
 
         prevout = tx0_outpoint
         remaining_value = initial_nValue
         chain_txids = []
-        while remaining_value > 10 * COIN:
-            remaining_value -= 1 * COIN
+        while remaining_value > 1 * COIN:
+            remaining_value -= int(0.1 * COIN)
             tx = CTransaction()
             tx.vin = [CTxIn(prevout, nSequence=0)]
             tx.vout = [CTxOut(remaining_value, CScript([1, OP_DROP] * 15 + [1]))]
@@ -178,10 +179,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             prevout = COutPoint(int(txid, 16), 0)
 
         # Whether the double-spend is allowed is evaluated by including all
-        # child fees - 40 BTC - so this attempt is rejected.
+        # child fees - 4 BTC - so this attempt is rejected.
         dbl_tx = CTransaction()
         dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        dbl_tx.vout = [CTxOut(initial_nValue - 30 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        dbl_tx.vout = [CTxOut(initial_nValue - 3 * COIN, DUMMY_P2WPKH_SCRIPT)]
         dbl_tx_hex = dbl_tx.serialize().hex()
 
         # This will raise an exception due to insufficient fee
@@ -190,7 +191,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # Accepted with sufficient fee
         dbl_tx = CTransaction()
         dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        dbl_tx.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        dbl_tx.vout = [CTxOut(int(0.1 * COIN), DUMMY_P2WPKH_SCRIPT)]
         dbl_tx_hex = dbl_tx.serialize().hex()
         self.nodes[0].sendrawtransaction(dbl_tx_hex, 0)
 
@@ -201,10 +202,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def test_doublespend_tree(self):
         """Doublespend of a big tree of transactions"""
 
-        initial_nValue = 50 * COIN
+        initial_nValue = 5 * COIN
         tx0_outpoint = self.make_utxo(self.nodes[0], initial_nValue)
 
-        def branch(prevout, initial_value, max_txs, tree_width=5, fee=0.0001 * COIN, _total_txs=None):
+        def branch(prevout, initial_value, max_txs, tree_width=5, fee=0.00001 * COIN, _total_txs=None):
             if _total_txs is None:
                 _total_txs = [0]
             if _total_txs[0] >= max_txs:
@@ -235,7 +236,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                                   _total_txs=_total_txs):
                     yield x
 
-        fee = int(0.0001 * COIN)
+        fee = int(0.00001 * COIN)
         n = MAX_REPLACEMENT_LIMIT
         tree_txs = list(branch(tx0_outpoint, initial_nValue, n, fee=fee))
         assert_equal(len(tree_txs), n)
@@ -248,10 +249,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # This will raise an exception due to insufficient fee
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
 
-        # 1 BTC fee is enough
+        # 0.1 BTC fee is enough
         dbl_tx = CTransaction()
         dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        dbl_tx.vout = [CTxOut(initial_nValue - fee * n - 1 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        dbl_tx.vout = [CTxOut(initial_nValue - fee * n - int(0.1 * COIN), DUMMY_P2WPKH_SCRIPT)]
         dbl_tx_hex = dbl_tx.serialize().hex()
         self.nodes[0].sendrawtransaction(dbl_tx_hex, 0)
 
@@ -264,7 +265,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # Try again, but with more total transactions than the "max txs
         # double-spent at once" anti-DoS limit.
         for n in (MAX_REPLACEMENT_LIMIT + 1, MAX_REPLACEMENT_LIMIT * 2):
-            fee = int(0.0001 * COIN)
+            fee = int(0.00001 * COIN)
             tx0_outpoint = self.make_utxo(self.nodes[0], initial_nValue)
             tree_txs = list(branch(tx0_outpoint, initial_nValue, n, fee=fee))
             assert_equal(len(tree_txs), n)
