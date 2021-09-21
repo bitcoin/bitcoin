@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test fee estimation code."""
 from decimal import Decimal
+import os
 import random
 
 from test_framework.messages import (
@@ -151,6 +152,22 @@ def check_estimates(node, fees_seen):
     check_raw_estimates(node, fees_seen)
     check_smart_estimates(node, fees_seen)
 
+
+def send_tx(node, utxo, feerate):
+    """Broadcast a 1in-1out transaction with a specific input and feerate (sat/vb)."""
+    overhead, op, scriptsig, nseq, value, spk = 10, 36, 5, 4, 8, 24
+    tx_size = overhead + op + scriptsig + nseq + value + spk
+    fee = tx_size * feerate
+
+    tx = CTransaction()
+    tx.vin = [CTxIn(COutPoint(int(utxo["txid"], 16), utxo["vout"]), SCRIPT_SIG[utxo["vout"]])]
+    tx.vout = [CTxOut(int(utxo["amount"] * COIN) - fee, P2SH_1)]
+    txid = node.sendrawtransaction(tx.serialize().hex())
+
+    new_utxo = {"amount": Decimal(tx.vout[-1].nValue) / COIN, "txid": txid, "vout": 0}
+    return new_utxo
+
+
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
@@ -263,6 +280,37 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb)
 
+    def sanity_check_cpfp_estimates(self, utxos):
+        """Broadcast and mine 5 batches of low fee transactions, simulating that
+        90% of them need a high fee-paying child to get mined. Make sure the
+        estimation reflects that miners considered the entire package feerate to
+        decide to include a pair of transactions.
+        """
+        # In sat/vb
+        low_feerate = 1
+        high_feerate = 10
+
+        assert len(utxos) >= 500
+        for _ in range(5):
+            # Broadcast 90 low fee transactions that need a fee-paying child
+            for _ in range(90):
+                utxo = send_tx(self.nodes[0], utxos.pop(0), low_feerate)
+                send_tx(self.nodes[0], utxo, high_feerate)
+            # Broadcast 10 low fee transaction which don't need one
+            for _ in range(10):
+                send_tx(self.nodes[0], utxos.pop(0), low_feerate)
+            # Mine the transactions on another node
+            self.sync_mempools(wait=.1)
+            while len(self.nodes[1].getrawmempool()) > 0:
+                self.generate(self.nodes[1], 1)
+            self.sync_blocks(wait=.1)
+
+        # Only 10% of the transactions were really confirmed with a low feerate,
+        # we must not return it.
+        low_feerate_kvb = Decimal(low_feerate) / COIN * 10**3
+        est_feerate = self.nodes[0].estimatesmartfee(2)["feerate"]
+        assert est_feerate > low_feerate_kvb
+
     def run_test(self):
         self.log.info("This test is time consuming, please be patient")
         self.log.info("Splitting inputs so we can generate tx's")
@@ -283,6 +331,17 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         self.log.info("Testing estimates with single transactions.")
         self.sanity_check_estimates_range()
+
+        self.log.info("Restarting node with fresh estimation")
+        self.stop_node(0)
+        fee_dat = os.path.join(self.nodes[0].datadir, self.chain, "fee_estimates.dat")
+        os.remove(fee_dat)
+        self.start_node(0)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(0, 2)
+
+        self.log.info("Testing estimates with CPFP.")
+        self.sanity_check_cpfp_estimates(self.confutxo + self.memutxo)
 
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])
