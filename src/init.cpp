@@ -34,6 +34,7 @@
 #include <net_processing.h>
 #include <netbase.h>
 #include <node/blockstorage.h>
+#include <node/caches.h> // for CalculateCacheSizes
 #include <node/chainstate.h> // for LoadChainstate
 #include <node/context.h>
 #include <node/miner.h>
@@ -1381,36 +1382,20 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     bool fReindexChainState = args.GetBoolArg("-reindex-chainstate", false);
 
     // cache size calculations
-    int64_t nTotalCache = (args.GetIntArg("-dbcache", nDefaultDbCache) << 20);
-    nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
-    nTotalCache = std::min(nTotalCache, nMaxDbCache << 20); // total cache cannot be greater than nMaxDbcache
-    int64_t nBlockTreeDBCache = std::min(nTotalCache / 8, nMaxBlockDBCache << 20);
-    nTotalCache -= nBlockTreeDBCache;
-    int64_t nTxIndexCache = std::min(nTotalCache / 8, args.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? nMaxTxIndexCache << 20 : 0);
-    nTotalCache -= nTxIndexCache;
-    int64_t filter_index_cache = 0;
-    if (!g_enabled_filter_types.empty()) {
-        size_t n_indexes = g_enabled_filter_types.size();
-        int64_t max_cache = std::min(nTotalCache / 8, max_filter_index_cache << 20);
-        filter_index_cache = max_cache / n_indexes;
-        nTotalCache -= filter_index_cache * n_indexes;
-    }
-    int64_t nCoinDBCache = std::min(nTotalCache / 2, (nTotalCache / 4) + (1 << 23)); // use 25%-50% of the remainder for disk cache
-    nCoinDBCache = std::min(nCoinDBCache, nMaxCoinsDBCache << 20); // cap total coins db cache
-    nTotalCache -= nCoinDBCache;
-    int64_t nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
+    CacheSizes cache_sizes = CalculateCacheSizes(args, g_enabled_filter_types.size());
+
     int64_t nMempoolSizeMax = args.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     LogPrintf("Cache configuration:\n");
-    LogPrintf("* Using %.1f MiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
+    LogPrintf("* Using %.1f MiB for block index database\n", cache_sizes.block_tree_db * (1.0 / 1024 / 1024));
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
-        LogPrintf("* Using %.1f MiB for transaction index database\n", nTxIndexCache * (1.0 / 1024 / 1024));
+        LogPrintf("* Using %.1f MiB for transaction index database\n", cache_sizes.tx_index * (1.0 / 1024 / 1024));
     }
     for (BlockFilterType filter_type : g_enabled_filter_types) {
         LogPrintf("* Using %.1f MiB for %s block filter index database\n",
-                  filter_index_cache * (1.0 / 1024 / 1024), BlockFilterTypeName(filter_type));
+                  cache_sizes.filter_index * (1.0 / 1024 / 1024), BlockFilterTypeName(filter_type));
     }
-    LogPrintf("* Using %.1f MiB for chain state database\n", nCoinDBCache * (1.0 / 1024 / 1024));
-    LogPrintf("* Using %.1f MiB for in-memory UTXO set (plus up to %.1f MiB of unused mempool space)\n", nCoinCacheUsage * (1.0 / 1024 / 1024), nMempoolSizeMax * (1.0 / 1024 / 1024));
+    LogPrintf("* Using %.1f MiB for chain state database\n", cache_sizes.coins_db * (1.0 / 1024 / 1024));
+    LogPrintf("* Using %.1f MiB for in-memory UTXO set (plus up to %.1f MiB of unused mempool space)\n", cache_sizes.coins * (1.0 / 1024 / 1024), nMempoolSizeMax * (1.0 / 1024 / 1024));
 
     bool fLoaded = false;
     while (!fLoaded && !ShutdownRequested()) {
@@ -1427,9 +1412,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                 fPruneMode,
                                 chainparams.GetConsensus(),
                                 fReindexChainState,
-                                nBlockTreeDBCache,
-                                nCoinDBCache,
-                                nCoinCacheUsage,
+                                cache_sizes.block_tree_db,
+                                cache_sizes.coins_db,
+                                cache_sizes.coins,
                                 ShutdownRequested,
                                 []() {
                                     uiInterface.ThreadSafeMessageBox(
@@ -1548,14 +1533,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             return InitError(*error);
         }
 
-        g_txindex = std::make_unique<TxIndex>(nTxIndexCache, false, fReindex);
+        g_txindex = std::make_unique<TxIndex>(cache_sizes.tx_index, false, fReindex);
         if (!g_txindex->Start(chainman.ActiveChainstate())) {
             return false;
         }
     }
 
     for (const auto& filter_type : g_enabled_filter_types) {
-        InitBlockFilterIndex(filter_type, filter_index_cache, false, fReindex);
+        InitBlockFilterIndex(filter_type, cache_sizes.filter_index, false, fReindex);
         if (!GetBlockFilterIndex(filter_type)->Start(chainman.ActiveChainstate())) {
             return false;
         }
