@@ -1,0 +1,27 @@
+[package]
+name = "sv2_ffi"
+version = "0.1.3"
+authors = ["fi3 <email@email.org>"]
+edition = "2018"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+codec_sv2 = { path = "../../../protocols/v2/codec-sv2", version = "0.1.*" }
+const_sv2 = { path = "../../../protocols/v2/const-sv2", version = "0.1.*" }
+binary_sv2 = { path = "../../../protocols/v2/binary-sv2/binary-sv2", version = "0.1.*" }
+common_messages_sv2 = { path = "../../../protocols/v2/subprotocols/common-messages", version = "0.1.*" }
+template_distribution_sv2 = { path = "../../../protocols/v2/subprotocols/template-distribution", version = "0.1.*"}
+
+[dev-dependencies]
+quickcheck = "1.0.3"
+quickcheck_macros = "1"
+
+[features]
+with_serde = []
+prop_test = ["binary_sv2/prop_test", "common_messages_sv2/prop_test", "template_distribution_sv2/prop_test"]
+
+[profile.release]
+panic = 'unwind'
+overflow-checks = true

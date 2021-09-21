@@ -1,0 +1,15 @@
+[package]
+name = "derive_codec_sv2"
+version = "0.1.2"
+authors = ["fi3 <email@email.org>"]
+edition = "2018"
+description = "Derive macro for Sv2 binary format serializer and deserializer"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+binary_codec_sv2 = {version = "0.1.*", path="../codec"}
+
+[lib]
+proc-macro = true

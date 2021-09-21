@@ -1,0 +1,18 @@
+[package]
+name = "binary_codec_sv2"
+version = "0.1.2"
+authors = ["fi3 <email@email.org>"]
+edition = "2018"
+description = "Sv2 data format"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+quickcheck = {version = "1.0.0", optional = true}
+
+
+[features]
+no_std = []
+deafult = ["no_std"]
+prop_test = ["quickcheck"]
