@@ -23,6 +23,17 @@ void initialize_addrman()
     SelectParams(CBaseChainParams::REGTEST);
 }
 
+FUZZ_TARGET_INIT(data_stream_addr_man, initialize_addrman)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    CDataStream data_stream = ConsumeDataStream(fuzzed_data_provider);
+    CAddrMan addr_man(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    try {
+        ReadFromStream(addr_man, data_stream);
+    } catch (const std::exception&) {
+    }
+}
+
 class CAddrManDeterministic : public CAddrMan
 {
 public:
