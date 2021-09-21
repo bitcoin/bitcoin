@@ -574,13 +574,8 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     assert(bucketIndex == bucketIndex3);
 }
 
-bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry)
+void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry)
 {
-    if (!removeTx(entry->GetTx().GetHash(), true)) {
-        // This transaction wasn't being tracked for fee estimation
-        return false;
-    }
-
     // How many blocks did it take for miners to include this transaction?
     // blocksToConfirm is 1-based, so a transaction included in the earliest
     // possible block has confirmation count of 1
@@ -589,7 +584,7 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
         // This can't happen because we don't process transactions from a block with a height
         // lower than our greatest seen height
         LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error Transaction had negative blocksToConfirm\n");
-        return false;
+        return;
     }
 
     // Feerates are stored and reported as BTC-per-kb:
@@ -598,7 +593,6 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
     feeStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
     shortStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
     longStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
-    return true;
 }
 
 void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
@@ -632,8 +626,12 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     unsigned int countedTxs = 0;
     // Update averages with data points from current block
     for (const auto& entry : entries) {
-        if (processBlockTx(nBlockHeight, entry))
-            countedTxs++;
+        if (!removeTx(entry->GetTx().GetHash(), true)) {
+            // This transaction wasn't being tracked for fee estimation
+            continue;
+        }
+        processBlockTx(nBlockHeight, entry);
+        countedTxs++;
     }
 
     if (firstRecordedHeight == 0 && countedTxs > 0) {
