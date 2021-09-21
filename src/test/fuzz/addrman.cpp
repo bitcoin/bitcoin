@@ -36,6 +36,44 @@ FUZZ_TARGET_INIT(data_stream_addr_man, initialize_addrman)
     }
 }
 
+/**
+ * Generate a random address. Always returns a valid address.
+ */
+CNetAddr RandAddr(FuzzedDataProvider& fuzzed_data_provider, FastRandomContext& fast_random_context)
+{
+    CNetAddr addr;
+    if (fuzzed_data_provider.remaining_bytes() > 1 && fuzzed_data_provider.ConsumeBool()) {
+        addr = ConsumeNetAddr(fuzzed_data_provider);
+    } else {
+        // The networks [1..6] correspond to CNetAddr::BIP155Network (private).
+        static const std::map<uint8_t, uint8_t> net_len_map = {{1, ADDR_IPV4_SIZE},
+                                                               {2, ADDR_IPV6_SIZE},
+                                                               {4, ADDR_TORV3_SIZE},
+                                                               {5, ADDR_I2P_SIZE},
+                                                               {6, ADDR_CJDNS_SIZE}};
+        uint8_t net = fast_random_context.randrange(5) + 1; // [1..5]
+        if (net == 3) {
+            net = 6;
+        }
+
+        CDataStream s(SER_NETWORK, PROTOCOL_VERSION | ADDRV2_FORMAT);
+
+        s << net;
+        s << fast_random_context.randbytes(net_len_map.at(net));
+
+        s >> addr;
+    }
+
+    // Return a dummy IPv4 5.5.5.5 if we generated an invalid address.
+    if (!addr.IsValid()) {
+        in_addr v4_addr = {};
+        v4_addr.s_addr = 0x05050505;
+        addr = CNetAddr{v4_addr};
+    }
+
+    return addr;
+}
+
 class AddrManDeterministic : public AddrMan
 {
 public:
@@ -43,45 +81,6 @@ public:
         : AddrMan(std::move(asmap), /* deterministic */ true, /* consistency_check_ratio */ 0)
     {
         WITH_LOCK(m_impl->cs, m_impl->insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
-    }
-
-    /**
-     * Generate a random address. Always returns a valid address.
-     */
-    CNetAddr RandAddr(FuzzedDataProvider& fuzzed_data_provider, FastRandomContext& fast_random_context)
-        EXCLUSIVE_LOCKS_REQUIRED(m_impl->cs)
-    {
-        CNetAddr addr;
-        if (fuzzed_data_provider.remaining_bytes() > 1 && fuzzed_data_provider.ConsumeBool()) {
-            addr = ConsumeNetAddr(fuzzed_data_provider);
-        } else {
-            // The networks [1..6] correspond to CNetAddr::BIP155Network (private).
-            static const std::map<uint8_t, uint8_t> net_len_map = {{1, ADDR_IPV4_SIZE},
-                                                                   {2, ADDR_IPV6_SIZE},
-                                                                   {4, ADDR_TORV3_SIZE},
-                                                                   {5, ADDR_I2P_SIZE},
-                                                                   {6, ADDR_CJDNS_SIZE}};
-            uint8_t net = fast_random_context.randrange(5) + 1; // [1..5]
-            if (net == 3) {
-                net = 6;
-            }
-
-            CDataStream s(SER_NETWORK, PROTOCOL_VERSION | ADDRV2_FORMAT);
-
-            s << net;
-            s << fast_random_context.randbytes(net_len_map.at(net));
-
-            s >> addr;
-        }
-
-        // Return a dummy IPv4 5.5.5.5 if we generated an invalid address.
-        if (!addr.IsValid()) {
-            in_addr v4_addr = {};
-            v4_addr.s_addr = 0x05050505;
-            addr = CNetAddr{v4_addr};
-        }
-
-        return addr;
     }
 
     /**
