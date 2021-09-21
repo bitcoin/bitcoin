@@ -77,8 +77,7 @@ CNetAddr RandAddr(FuzzedDataProvider& fuzzed_data_provider, FastRandomContext& f
 /** Fill addrman with lots of addresses from lots of sources.  */
 void FillAddrman(AddrMan& addrman, FuzzedDataProvider& fuzzed_data_provider)
 {
-    // Add some of the addresses directly to the "tried" table.
-
+    // Add a fraction of the addresses to the "tried" table.
     // 0, 1, 2, 3 corresponding to 0%, 100%, 50%, 33%
     const size_t n = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 3);
 
