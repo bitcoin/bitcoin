@@ -292,7 +292,7 @@ int compareForks(const CBlockIndex& leftForkTip, const CBlockIndex& rightForkTip
         return 0;
     }
 
-    if(leftForkTip.GetAncestor(rightForkTip.nHeight) == &rightForkTip) {
+    if (leftForkTip.GetAncestor(rightForkTip.nHeight) == &rightForkTip) {
         // do not run POP FR on blocks which are already in active chain
         return 1;
     }
@@ -349,15 +349,17 @@ bool isCrossedBootstrapBlock(int32_t height)
     return height >= block.getHeight();
 }
 
-bool isPopActive() {
+bool isPopActive()
+{
     auto* tip = ChainActive().Tip();
     if (tip != nullptr) {
         return isPopActive(tip->nHeight);
     }
     return false;
 }
-bool isPopActive(int32_t height) {
-    if(!isCrossedBootstrapBlock(height)) {
+bool isPopActive(int32_t height)
+{
+    if (!isCrossedBootstrapBlock(height)) {
         // if we didn't cross bootstrap block, then POP can't be active
         return false;
     }
