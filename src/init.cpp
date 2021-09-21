@@ -1415,6 +1415,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                 cache_sizes.block_tree_db,
                                 cache_sizes.coins_db,
                                 cache_sizes.coins,
+                                false,
+                                false,
                                 ShutdownRequested,
                                 []() {
                                     uiInterface.ThreadSafeMessageBox(
