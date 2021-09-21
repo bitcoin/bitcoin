@@ -49,14 +49,15 @@ void PSBTOperationsDialog::openWithPSBT(PartiallySignedTransaction psbtx)
 
     bool complete = FinalizePSBT(psbtx); // Make sure all existing signatures are fully combined before checking for completeness.
     if (m_wallet_model) {
-        size_t n_could_sign;
-        TransactionError err = m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, &n_could_sign, m_transaction_data, complete);
-        if (err != TransactionError::OK) {
-            showStatus(tr("Failed to load transaction: %1")
-                           .arg(QString::fromStdString(TransactionErrorString(err).translated)),
-                       StatusLevel::ERR);
-            return;
-        }
+
+    size_t n_could_sign;
+    TransactionError err = m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, &n_could_sign, m_transaction_data, complete);
+    if (err != TransactionError::OK) {
+        showStatus(tr("Failed to load transaction: %1")
+            .arg(QString::fromStdString(TransactionErrorString(err).translated)), StatusLevel::ERR);
+        return;
+    }
+
         m_ui->signTransactionButton->setEnabled(!complete && !m_wallet_model->wallet().privateKeysDisabled() && n_could_sign > 0);
     } else {
         m_ui->signTransactionButton->setEnabled(false);
@@ -257,7 +258,8 @@ void PSBTOperationsDialog::showTransactionStatus(const PartiallySignedTransactio
             if (!m_wallet_model) {
                 need_sig_text += " " + tr("(But no wallet is loaded.)");
                 level = StatusLevel::WARN;
-            } else if (m_wallet_model->wallet().privateKeysDisabled()) {
+            } else
+            if (m_wallet_model->wallet().privateKeysDisabled()) {
                 need_sig_text += " " + tr("(But this wallet cannot sign transactions.)");
                 level = StatusLevel::WARN;
             } else if (n_could_sign < 1) {

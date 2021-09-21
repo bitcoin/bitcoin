@@ -8,6 +8,7 @@
 #include <qt/askpassphrasedialog.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
+#include <qt/psbtoperationsdialog.h>
 #include <qt/optionsmodel.h>
 #include <qt/overviewpage.h>
 #include <qt/platformstyle.h>
@@ -20,10 +21,13 @@
 
 #include <interfaces/node.h>
 #include <node/ui_interface.h>
+#include <psbt.h>
 #include <util/strencodings.h>
 
 #include <QAction>
 #include <QActionGroup>
+#include <QApplication>
+#include <QClipboard>
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QProgressDialog>
