@@ -430,6 +430,6 @@ used.
 If you start `guix-daemon` using an init script, you can edit said script to
 supply this flag.
 
-[b17e]: http://bootstrappable.org/
+[b17e]: https://bootstrappable.org/
 [r12e/source-date-epoch]: https://reproducible-builds.org/docs/source-date-epoch/
 [env-vars-list]: #recognized-environment-variables
