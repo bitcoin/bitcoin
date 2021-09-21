@@ -349,7 +349,7 @@ make cov
 
 Profiling is a good way to get a precise idea of where time is being spent in
 code. One tool for doing profiling on Linux platforms is called
-[`perf`](http://www.brendangregg.com/perf.html), and has been integrated into
+[`perf`](https://www.brendangregg.com/perf.html), and has been integrated into
 the functional test framework. Perf can observe a running process and sample
 (at some frequency) where its execution is.
 
