@@ -96,6 +96,9 @@ enum Network ParseNetwork(const std::string& net_in) {
     if (net == "i2p") {
         return NET_I2P;
     }
+    if (net == "cjdns") {
+        return NET_CJDNS;
+    }
     return NET_UNROUTABLE;
 }
 

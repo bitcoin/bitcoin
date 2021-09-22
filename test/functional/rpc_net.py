@@ -228,8 +228,8 @@ class NetTest(BitcoinTestFramework):
         assert_equal(res[0]["port"], 8333)
         assert_equal(res[0]["services"], P2P_SERVICES)
 
-        # Test for the absence of onion and I2P addresses.
-        for network in ["onion", "i2p"]:
+        # Test for the absence of onion, I2P and CJDNS addresses.
+        for network in ["onion", "i2p", "cjdns"]:
             assert_equal(self.nodes[0].getnodeaddresses(0, network), [])
 
         # Test invalid arguments.
