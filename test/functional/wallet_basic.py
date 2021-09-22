@@ -121,13 +121,49 @@ class WalletTest(BitcoinTestFramework):
         # Exercise locking of unspent outputs
         unspent_0 = self.nodes[2].listunspent()[0]
         unspent_0 = {"txid": unspent_0["txid"], "vout": unspent_0["vout"]}
+        # Trying to unlock an output which isn't locked should error
         assert_raises_rpc_error(-8, "Invalid parameter, expected locked output", self.nodes[2].lockunspent, True, [unspent_0])
+
+        # Locking an already-locked output should error
         self.nodes[2].lockunspent(False, [unspent_0])
         assert_raises_rpc_error(-8, "Invalid parameter, output already locked", self.nodes[2].lockunspent, False, [unspent_0])
+
+        # Restarting the node should clear the lock
+        self.restart_node(2)
+        self.nodes[2].lockunspent(False, [unspent_0])
+
+        # Unloading and reloating the wallet should clear the lock
+        assert_equal(self.nodes[0].listwallets(), [self.default_wallet_name])
+        self.nodes[2].unloadwallet(self.default_wallet_name)
+        self.nodes[2].loadwallet(self.default_wallet_name)
+        assert_equal(len(self.nodes[2].listlockunspent()), 0)
+
+        # Locking non-persistently, then re-locking persistently, is allowed
+        self.nodes[2].lockunspent(False, [unspent_0])
+        self.nodes[2].lockunspent(False, [unspent_0], True)
+
+        # Restarting the node with the lock written to the wallet should keep the lock
+        self.restart_node(2)
+        assert_raises_rpc_error(-8, "Invalid parameter, output already locked", self.nodes[2].lockunspent, False, [unspent_0])
+
+        # Unloading and reloading the wallet with a persistent lock should keep the lock
+        self.nodes[2].unloadwallet(self.default_wallet_name)
+        self.nodes[2].loadwallet(self.default_wallet_name)
+        assert_raises_rpc_error(-8, "Invalid parameter, output already locked", self.nodes[2].lockunspent, False, [unspent_0])
+
+        # Locked outputs should not be used, even if they are the only available funds
         assert_raises_rpc_error(-6, "Insufficient funds", self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(), 20)
         assert_equal([unspent_0], self.nodes[2].listlockunspent())
+
+        # Unlocking should remove the persistent lock
         self.nodes[2].lockunspent(True, [unspent_0])
+        self.restart_node(2)
         assert_equal(len(self.nodes[2].listlockunspent()), 0)
+
+        # Reconnect node 2 after restarts
+        self.connect_nodes(1, 2)
+        self.connect_nodes(0, 2)
+
         assert_raises_rpc_error(-8, "txid must be of length 64 (not 34, for '0000000000000000000000000000000000')",
                                 self.nodes[2].lockunspent, False,
                                 [{"txid": "0000000000000000000000000000000000", "vout": 0}])
