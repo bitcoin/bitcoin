@@ -79,9 +79,13 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
     for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
         const PSBTInput& input = psbtx.inputs[i];
         for (const auto& entry : input.hd_keypaths) {
-            if (m_fingerprint == strprintf("%08x", ReadBE32(entry.second.fingerprint))) match = true;
+            if (m_fingerprint == strprintf("%08x", ReadBE32(entry.second.fingerprint))) {
+                match = true;
+                goto found_match;
+            }
         }
     }
+found_match: ;
 
     if (!match) {
         error = "Signer fingerprint " + m_fingerprint + " does not match any of the inputs:\n" + EncodeBase64(ssTx.str());
