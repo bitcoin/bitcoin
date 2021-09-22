@@ -45,10 +45,10 @@ enum class ChainstateLoadingError {
  *        differentiable by the specific enumerator.
  *
  *        Note that a return value of SHUTDOWN_PROBED means ONLY that "during
- *        this sequence, when we explicitly checked ShutdownRequested() at
+ *        this sequence, when we explicitly checked shutdown_requested() at
  *        arbitrary points, one of those calls returned true". Therefore, a
  *        return value other than SHUTDOWN_PROBED does not guarantee that
- *        ShutdownRequested() hasn't been called indirectly.
+ *        shutdown_requested() hasn't been called indirectly.
  *  - else
  *      - Success!
  */
@@ -61,6 +61,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      int64_t nBlockTreeDBCache,
                                                      int64_t nCoinDBCache,
                                                      int64_t nCoinCacheUsage,
+                                                     std::function<bool()> shutdown_requested = nullptr,
                                                      std::function<void()> coins_error_cb = nullptr);
 
 enum class ChainstateLoadVerifyError {

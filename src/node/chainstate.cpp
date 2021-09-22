@@ -6,7 +6,6 @@
 
 #include <chainparams.h> // for CChainParams
 #include <node/blockstorage.h> // for CleanupBlockRevFiles, fHavePruned, fReindex
-#include <shutdown.h> // for ShutdownRequested
 #include <validation.h> // for a lot of things
 
 std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
@@ -18,6 +17,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      int64_t nBlockTreeDBCache,
                                                      int64_t nCoinDBCache,
                                                      int64_t nCoinCacheUsage,
+                                                     std::function<bool()> shutdown_requested,
                                                      std::function<void()> coins_error_cb)
 {
     auto is_coinsview_empty = [&](CChainState* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
@@ -45,14 +45,14 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                 CleanupBlockRevFiles();
         }
 
-        if (ShutdownRequested()) return ChainstateLoadingError::SHUTDOWN_PROBED;
+        if (shutdown_requested && shutdown_requested()) return ChainstateLoadingError::SHUTDOWN_PROBED;
 
         // LoadBlockIndex will load fHavePruned if we've ever removed a
         // block file from disk.
         // Note that it also sets fReindex based on the disk flag!
         // From here on out fReindex and fReset mean something different!
         if (!chainman.LoadBlockIndex()) {
-            if (ShutdownRequested()) return ChainstateLoadingError::SHUTDOWN_PROBED;
+            if (shutdown_requested && shutdown_requested()) return ChainstateLoadingError::SHUTDOWN_PROBED;
             return ChainstateLoadingError::ERROR_LOADING_BLOCK_DB;
         }
 
