@@ -8,7 +8,7 @@
 
 #include <cassert>
 
-static constexpr auto MAX_DIGITS_BRS = 16;
+static constexpr auto MAX_DIGITS_BTR = 16;
 
 BitcoinUnits::BitcoinUnits(QObject *parent):
         QAbstractListModel(parent),
@@ -19,9 +19,9 @@ BitcoinUnits::BitcoinUnits(QObject *parent):
 QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
 {
     QList<BitcoinUnits::Unit> unitlist;
-    unitlist.append(BRS);
-    unitlist.append(mBRS);
-    unitlist.append(uBRS);
+    unitlist.append(BTR);
+    unitlist.append(mBTR);
+    unitlist.append(uBTR);
     unitlist.append(SAT);
     return unitlist;
 }
@@ -30,9 +30,9 @@ bool BitcoinUnits::valid(int unit)
 {
     switch(unit)
     {
-    case BRS:
-    case mBRS:
-    case uBRS:
+    case BTR:
+    case mBTR:
+    case uBTR:
     case SAT:
         return true;
     default:
@@ -44,9 +44,9 @@ QString BitcoinUnits::longName(int unit)
 {
     switch(unit)
     {
-    case BRS: return QString("BRS");
-    case mBRS: return QString("mBRS");
-    case uBRS: return QString::fromUtf8("µBRS (bits)");
+    case BTR: return QString("BTR");
+    case mBTR: return QString("mBTR");
+    case uBTR: return QString::fromUtf8("µBTR (bits)");
     case SAT: return QString("Satoshi (sat)");
     default: return QString("???");
     }
@@ -56,7 +56,7 @@ QString BitcoinUnits::shortName(int unit)
 {
     switch(unit)
     {
-    case uBRS: return QString::fromUtf8("bits");
+    case uBTR: return QString::fromUtf8("bits");
     case SAT: return QString("sat");
     default: return longName(unit);
     }
@@ -66,9 +66,9 @@ QString BitcoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case BRS: return QString("Bitcoins");
-    case mBRS: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
-    case uBRS: return QString("Micro-Bitcoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case BTR: return QString("Bitcoins");
+    case mBTR: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
+    case uBTR: return QString("Micro-Bitcoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     case SAT: return QString("Satoshi (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
@@ -78,9 +78,9 @@ qint64 BitcoinUnits::factor(int unit)
 {
     switch(unit)
     {
-    case BRS: return 100000000;
-    case mBRS: return 100000;
-    case uBRS: return 100;
+    case BTR: return 100000000;
+    case mBTR: return 100000;
+    case uBTR: return 100;
     case SAT: return 1;
     default: return 100000000;
     }
@@ -90,9 +90,9 @@ int BitcoinUnits::decimals(int unit)
 {
     switch(unit)
     {
-    case BRS: return 8;
-    case mBRS: return 5;
-    case uBRS: return 2;
+    case BTR: return 8;
+    case mBTR: return 5;
+    case uBTR: return 2;
     case SAT: return 0;
     default: return 0;
     }
@@ -111,7 +111,7 @@ QString BitcoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separator
     qint64 quotient = n_abs / coin;
     QString quotient_str = QString::number(quotient);
     if (justify) {
-        quotient_str = quotient_str.rightJustified(MAX_DIGITS_BRS - num_decimals, ' ');
+        quotient_str = quotient_str.rightJustified(MAX_DIGITS_BTR - num_decimals, ' ');
     }
 
     // Use SI-style thin space separators as these are locale independent and can't be

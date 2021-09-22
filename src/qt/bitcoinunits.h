@@ -40,9 +40,9 @@ public:
      */
     enum Unit
     {
-        BRS,
-        mBRS,
-        uBRS,
+        BTR,
+        mBTR,
+        uBTR,
         SAT
     };
 
