@@ -6,7 +6,6 @@
 
 #include <chainparams.h> // for CChainParams
 #include <deploymentstatus.h> // for DeploymentActiveAfter
-#include <util/time.h> // for GetTime
 #include <node/blockstorage.h> // for CleanupBlockRevFiles, fHavePruned, fReindex
 #include <shutdown.h> // for ShutdownRequested
 #include <validation.h> // for a lot of things
@@ -233,7 +232,8 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                                                                 bool fReindexChainState,
                                                                 const CChainParams& chainparams,
                                                                 unsigned int check_blocks,
-                                                                unsigned int check_level)
+                                                                unsigned int check_level,
+                                                                std::function<int64_t()> get_unix_time_seconds)
 {
     auto is_coinsview_empty = [&](CChainState* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         return fReset || fReindexChainState || chainstate->CoinsTip().GetBestBlock().IsNull();
@@ -245,7 +245,7 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
         for (CChainState* chainstate : chainman.GetAll()) {
             if (!is_coinsview_empty(chainstate)) {
                 const CBlockIndex* tip = chainstate->m_chain.Tip();
-                if (tip && tip->nTime > GetTime() + MAX_FUTURE_BLOCK_TIME) {
+                if (tip && tip->nTime > get_unix_time_seconds() + 2 * 60 * 60) {
                     return ChainstateLoadVerifyError::ERROR_BLOCK_FROM_FUTURE;
                 }
                 const bool v19active{DeploymentActiveAfter(tip, chainparams.GetConsensus(), Consensus::DEPLOYMENT_V19)};
