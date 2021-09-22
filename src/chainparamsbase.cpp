@@ -10,8 +10,10 @@
 
 #include <assert.h>
 
-const std::string CBaseChainParams::MAIN = "main";
-const std::string CBaseChainParams::TESTNET = "test";
+/* [[deprecated]] */ const std::string CBaseChainParams::MAIN = "main";
+const std::string CBaseChainParams::MAINNET = "mainnet";
+/* [[deprecated]] */ const std::string CBaseChainParams::TEST = "test";
+const std::string CBaseChainParams::TESTNET = "testnet";
 const std::string CBaseChainParams::SIGNET = "signet";
 const std::string CBaseChainParams::REGTEST = "regtest";
 
@@ -42,7 +44,7 @@ const CBaseChainParams& BaseParams()
  */
 std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain)
 {
-    if (chain == CBaseChainParams::MAIN) {
+    if (chain == CBaseChainParams::MAINNET) {
         return std::make_unique<CBaseChainParams>("", 8332, 8334);
     } else if (chain == CBaseChainParams::TESTNET) {
         return std::make_unique<CBaseChainParams>("testnet3", 18332, 18334);

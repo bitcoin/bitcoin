@@ -269,7 +269,9 @@ const std::set<std::string> ArgsManager::GetUnsuitableSectionOnlyArgs() const
     if (m_network.empty()) return std::set<std::string> {};
 
     // if it's okay to use the default section for this network, don't worry
-    if (m_network == CBaseChainParams::MAIN) return std::set<std::string> {};
+    if (m_network == CBaseChainParams::MAINNET) {
+        return std::set<std::string> {};
+    }
 
     for (const auto& arg : m_network_only_args) {
         if (OnlyHasDefaultSectionSetting(m_settings, m_network, SettingName(arg))) {
@@ -286,7 +288,7 @@ const std::list<SectionInfo> ArgsManager::GetUnrecognizedSections() const
         CBaseChainParams::REGTEST,
         CBaseChainParams::SIGNET,
         CBaseChainParams::TESTNET,
-        CBaseChainParams::MAIN
+        CBaseChainParams::MAINNET
     };
 
     LOCK(cs_args);
@@ -1011,12 +1013,22 @@ std::string ArgsManager::GetChainName() const
     if (fTestNet)
         return CBaseChainParams::TESTNET;
 
-    return GetArg("-chain", CBaseChainParams::MAIN);
+    auto chain_name = GetArg("-chain", CBaseChainParams::MAINNET);
+    if (chain_name == CBaseChainParams::MAIN) {
+        std::cout << "WARNING -chain=main is deprecated. Please switch to -chain=mainnet" << std::endl;  // XXX bitcoin logging
+        std::cerr << "WARNING -chain=main is deprecated. Please switch to -chain=mainnet" << std::endl;  // XXX bitcoin logging
+        return CBaseChainParams::MAINNET;
+    } else if (chain_name == CBaseChainParams::TEST) {
+        std::cout << "WARNING -chain=test is deprecated. Please switch to -testnet or to -chain=testnet" << std::endl;  // XXX bitcoin logging
+        std::cerr << "WARNING -chain=test is deprecated. Please switch to -testnet or to -chain=testnet" << std::endl;  // XXX bitcoin logging
+        return CBaseChainParams::TESTNET;
+    }
+    return chain_name;
 }
 
 bool ArgsManager::UseDefaultSection(const std::string& arg) const
 {
-    return m_network == CBaseChainParams::MAIN || m_network_only_args.count(arg) == 0;
+    return m_network == CBaseChainParams::MAINNET || m_network_only_args.count(arg) == 0;
 }
 
 util::SettingsValue ArgsManager::GetSetting(const std::string& arg) const

@@ -77,7 +77,8 @@ struct BasicTestingSetup {
     ECCVerifyHandle globalVerifyHandle;
     NodeContext m_node;
 
-    explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
+    explicit BasicTestingSetup(const std::string & chainName = CBaseChainParams::MAINNET,
+                               const std::vector<const char *> & extra_args = {});
     ~BasicTestingSetup();
 
     const fs::path m_path_root;
@@ -90,14 +91,16 @@ struct BasicTestingSetup {
  */
 struct ChainTestingSetup : public BasicTestingSetup {
 
-    explicit ChainTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
+    explicit ChainTestingSetup(const std::string & chainName = CBaseChainParams::MAINNET,
+                               const std::vector<const char *> & extra_args = {});
     ~ChainTestingSetup();
 };
 
 /** Testing setup that configures a complete environment.
  */
 struct TestingSetup : public ChainTestingSetup {
-    explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
+    explicit TestingSetup(const std::string & chainName = CBaseChainParams::MAINNET,
+                          const std::vector<const char *> & extra_args = {});
 };
 
 /** Identical to TestingSetup, but chain set to regtest */

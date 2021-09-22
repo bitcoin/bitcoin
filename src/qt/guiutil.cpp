@@ -489,8 +489,9 @@ bool LabelOutOfFocusEventFilter::eventFilter(QObject* watched, QEvent* event)
 fs::path static StartupShortcutPath()
 {
     std::string chain = gArgs.GetChainName();
-    if (chain == CBaseChainParams::MAIN)
+    if (chain == CBaseChainParams::MAINNET) {
         return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin.lnk";
+    }
     if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
         return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin (testnet).lnk";
     return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Bitcoin (%s).lnk", chain);
@@ -572,8 +573,9 @@ fs::path static GetAutostartDir()
 fs::path static GetAutostartFilePath()
 {
     std::string chain = gArgs.GetChainName();
-    if (chain == CBaseChainParams::MAIN)
+    if (chain == CBaseChainParams::MAINNET) {
         return GetAutostartDir() / "bitcoin.desktop";
+    }
     return GetAutostartDir() / strprintf("bitcoin-%s.desktop", chain);
 }
 
@@ -617,8 +619,9 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         // Write a bitcoin.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
-        if (chain == CBaseChainParams::MAIN)
+        if (chain == CBaseChainParams::MAINNET) {
             optionFile << "Name=Bitcoin\n";
+        }
         else
             optionFile << strprintf("Name=Bitcoin (%s)\n", chain);
         optionFile << "Exec=" << pszExePath << strprintf(" -min -chain=%s\n", chain);

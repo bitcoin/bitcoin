@@ -23,7 +23,7 @@
 
 void initialize_net()
 {
-    static const auto testing_setup = MakeNoLogFileContext<>(CBaseChainParams::MAIN);
+    static const auto testing_setup = MakeNoLogFileContext<>(CBaseChainParams::MAINNET);
 }
 
 FUZZ_TARGET_INIT(net, initialize_net)

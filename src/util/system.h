@@ -362,7 +362,7 @@ protected:
 
     /**
      * Returns the appropriate chain name from the program arguments.
-     * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
+     * @return CBaseChainParams::MAINNET by default; raises runtime error if an invalid combination is given.
      */
     std::string GetChainName() const;
 

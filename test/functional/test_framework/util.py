@@ -346,7 +346,7 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
     # Translate chain subdirectory name to config name
     if chain == 'testnet3':
         chain_name_conf_arg = 'testnet'
-        chain_name_conf_section = 'test'
+        chain_name_conf_section = 'testnet'
     else:
         chain_name_conf_arg = chain
         chain_name_conf_section = chain

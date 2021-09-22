@@ -3,7 +3,7 @@
         "1BShJZ8A5q53oJJfMJoEF1gfZCWdZqZwwD",
         "76a914728d4cc27d19707b0197cfcd7c412d43287864b588ac",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isPrivkey": false
         }
     ],
@@ -11,7 +11,7 @@
         "3L1YkZjdeNSqaZcNKZFXQfyokx3zVYm7r6",
         "a914c8f37c3cc21561296ad81f4bec6b5de10ebc185187",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isPrivkey": false
         }
     ],
@@ -19,7 +19,7 @@
         "mhJuoGLgnJC8gdBgBzEigsoyG4omQXejPT",
         "76a91413a92d1998e081354d36c13ce0c9dc04b865d40a88ac",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isPrivkey": false
         }
     ],
@@ -27,7 +27,7 @@
         "2N5VpzKEuYvZJbmg6eUNGnfrrD1ir92FWGu",
         "a91486648cc2faaf05660e72c04c7a837bcc3e986f1787",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isPrivkey": false
         }
     ],
@@ -67,7 +67,7 @@
         "5KcrFZvJ2p4dM6QVUPu53cKXcCfozA1PJLHm1mNAxkDYhgThLu4",
         "ed6c796e2f62377410766214f55aa81ac9a6590ad7ed57c509c983bf648409ac",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isCompressed": false,
             "isPrivkey": true
         }
@@ -76,7 +76,7 @@
         "L195WBrf2G3nCnun4CLxrb8XKk9LbCqH43THh4n4QrL5SzRzpq9j",
         "74f76c106e38d20514a99a86e4fe3bb28319e7dd2ad21dbc170cbb516a5358fa",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isCompressed": true,
             "isPrivkey": true
         }
@@ -85,7 +85,7 @@
         "92z6HnMQR4tWqjfVA3UaUN5EuUMgoVMdCa5rZFYZfmgyD7wxYCw",
         "b8511e1d74549e305517d48a1d394d1be2cfa5d0f3c0d83f9f450316ffa01276",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isCompressed": false,
             "isPrivkey": true
         }
@@ -94,7 +94,7 @@
         "cTPnaF52x4w4Tq6afPxRHux3wbYb86thS7S45A7r3oZc1AHTQ6Qm",
         "ad68c48d337181da125de9061933ececcdf7d917631af7d34f7e38082bff9a11",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isCompressed": true,
             "isPrivkey": true
         }
@@ -139,7 +139,7 @@
         "bc1q5cuatynjmk4szh40mmunszfzh7zrc5xm9w8ccy",
         "0014a639d59272ddab015eafdef9380922bf843c50db",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -148,7 +148,7 @@
         "bc1qkw7lz3ahms6e0ajv27mzh7g62tchjpmve4afc29u7w49tddydy2syv0087",
         "0020b3bdf147b7dc3597f64c57b62bf91a52f179076ccd7a9c28bcf3aa55b5a46915",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -157,7 +157,7 @@
         "bc1p5rgvqejqh9dh37t9g94dd9cm8vtqns7dndgj423egwggsggcdzmsspvr7j",
         "5120a0d0c06640b95b78f965416ad6971b3b1609c3cd9b512aaa39439088211868b7",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -166,7 +166,7 @@
         "bc1zr4pq63udck",
         "52021d42",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -175,7 +175,7 @@
         "tb1q74fxwnvhsue0l8wremgq66xzvn48jlc5zthsvz",
         "0014f552674d978732ff9dc3ced00d68c264ea797f14",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -184,7 +184,7 @@
         "tb1qpt7cqgq8ukv92dcraun9c3n0s3aswrt62vtv8nqmkfpa2tjfghesv9ln74",
         "00200afd802007e598553703ef265c466f847b070d7a5316c3cc1bb243d52e4945f3",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -193,7 +193,7 @@
         "tb1ph9v3e8nxct57hknlkhkz75p5pnxnkn05cw8ewpxu6tek56g29xgqydzfu7",
         "5120b9591c9e66c2e9ebda7fb5ec2f50340ccd3b4df4c38f9704dcd2f36a690a2990",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -202,7 +202,7 @@
         "tb1ray6e8gxfx49ers6c4c70l3c8lsxtcmlx",
         "5310e93593a0c9354b91c358ae3cffc707fc",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -283,7 +283,7 @@
         "16y3Q1XVRZqMR9T1XL1FkvNtD2E1bXBuYa",
         "76a9144171ec673aeb9fcf42af6094a3c82207e3b9a78188ac",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isPrivkey": false
         }
     ],
@@ -291,7 +291,7 @@
         "3CmZZnAiHVQgiAKSakf864oJMxN2BP1eLC",
         "a914798575fc1041b9440c4e63c28e57e597d00b7e4387",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isPrivkey": false
         }
     ],
@@ -299,7 +299,7 @@
         "mtCB3SoBo7EYUv8j54kUubGY4x3aJPY8nk",
         "76a9148b0c5f9ee714e0d1d24642ad63d9d5f398d9b56588ac",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isPrivkey": false
         }
     ],
@@ -307,7 +307,7 @@
         "2N5ymzzKpx6EdUR4UdMZ7t9hcuwqtpHwgw5",
         "a9148badb3c3b5c0d39f906f7618e0018b7eae4baf7387",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isPrivkey": false
         }
     ],
@@ -347,7 +347,7 @@
         "5JUHCgyxNSHg64wwju72eNsG6ajqo4Z2fHHw9iLDLfh69rSiL7w",
         "5644d06d88855dacf3192a31df8f4acd8e4c155c52a86d2c1fa48303f5cff053",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isCompressed": false,
             "isPrivkey": true
         }
@@ -356,7 +356,7 @@
         "L2kZaexG69VSriMe9T2m1jkS86iPe3xNbjcdfakRC1PHe7ay78Ji",
         "a50ee94aefcabf5a5d7c85be5b3844dee03c5604861dbfc77fe388c91e5a30f8",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isCompressed": true,
             "isPrivkey": true
         }
@@ -365,7 +365,7 @@
         "927JwT1ViCr5TD2ZX8CsMNhg17dXmou5xu4y2KiH54zD7i34UJq",
         "4502a54c0026b0150281d41f40860d1e23870c63cdc32645bbed688f2ee41f64",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isCompressed": false,
             "isPrivkey": true
         }
@@ -374,7 +374,7 @@
         "cTpGGNPVy2Eagawohbr4aGtRJzpLnjxGsGYh9DUcBM45f3KdKGF6",
         "ba005a0cb39587aab00bd54c848b59e8adaed47403228567ddc739c2a344ff59",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isCompressed": true,
             "isPrivkey": true
         }
@@ -419,7 +419,7 @@
         "bc1qz377zwe5awr68dnggengqx9vrjt05k98q3sw2n",
         "0014147de13b34eb87a3b66846668018ac1c96fa58a7",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -428,7 +428,7 @@
         "bc1qkmhskpdzg8kdkfywhu09kswwn9qan9vnkrf6mk40jvnr06s6sz5ssf82ya",
         "0020b6ef0b05a241ecdb248ebf1e5b41ce9941d99593b0d3addaaf932637ea1a80a9",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -437,7 +437,7 @@
         "bc1ps8cndas60cntk8x79sg9f5e5jz7x050z8agyugln2ukkks23rryqpejzkc",
         "512081f136f61a7e26bb1cde2c1054d33490bc67d1e23f504e23f3572d6b415118c8",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -446,7 +446,7 @@
         "bc1zn4tsczge9l",
         "52029d57",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -455,7 +455,7 @@
         "tb1q6xw0wwd9n9d7ge87dryz4vm5vtahzhvz6yett3",
         "0014d19cf739a5995be464fe68c82ab37462fb715d82",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -464,7 +464,7 @@
         "tb1qwn9zq9fu5uk35ykpgsc7rz4uawy4yh0r5m5er26768h5ur50su3qj6evun",
         "002074ca20153ca72d1a12c14431e18abceb89525de3a6e991ab5ed1ef4e0e8f8722",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -473,7 +473,7 @@
         "tb1pmcdc5d8gr92rtemfsnhpeqanvs0nr82upn5dktxluz9n0qcv34lqxke0wq",
         "5120de1b8a34e8195435e76984ee1c83b3641f319d5c0ce8db2cdfe08b37830c8d7e",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -482,7 +482,7 @@
         "tb1rgxjvtfzp0xczz6dlzqv8d5cmuykk4qkk",
         "531041a4c5a44179b02169bf101876d31be1",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isPrivkey": false,
             "tryCaseFlip": true
         }
@@ -563,7 +563,7 @@
         "12agZTajtRE3STSchwWNWnrm467zzTQ916",
         "76a9141156e00f70061e5faba8b71593a8c7554b47090c88ac",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isPrivkey": false
         }
     ],
@@ -571,7 +571,7 @@
         "3NXqB6iZiPYbKruNT3d9xNBTmtb73xMvvf",
         "a914e49decc9e5d97e0547d3642f3a4795b13ae62bca87",
         {
-            "chain": "main",
+            "chain": "mainnet",
             "isPrivkey": false
         }
     ],
@@ -579,7 +579,7 @@
         "mjgt4BoCYxjzWvJFoh68x7cj5GeaKDYhyx",
         "76a9142dc11fc7b8072f733f690ffb0591c00f4062295c88ac",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isPrivkey": false
         }
     ],
@@ -587,7 +587,7 @@
         "2NCT6FdQ5MxorHgnFxLeHyGwTGRdkHcrJDH",
         "a914d2a8ec992b0894a0d9391ca5d9c45c388c41be7e87",
         {
-            "chain": "test",
+            "chain": "testnet",
             "isPrivkey": false
         }
     ],

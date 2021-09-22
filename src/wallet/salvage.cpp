@@ -120,9 +120,9 @@ bool RecoverDatabaseFile(const fs::path& file_path, bilingual_str& error, std::v
     }
 
     std::unique_ptr<Db> pdbCopy = std::make_unique<Db>(env->dbenv.get(), 0);
-    int ret = pdbCopy->open(nullptr,               // Txn pointer
+    int ret = pdbCopy->open(nullptr,            // Txn pointer
                             filename.c_str(),   // Filename
-                            "main",             // Logical db name
+                            "mainnet",          // Logical db name
                             DB_BTREE,           // Database type
                             DB_CREATE,          // Flags
                             0);

@@ -17,7 +17,7 @@
 
 void initialize_pow()
 {
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(CBaseChainParams::MAINNET);
 }
 
 FUZZ_TARGET_INIT(pow, initialize_pow)

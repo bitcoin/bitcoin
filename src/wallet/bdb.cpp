@@ -344,7 +344,7 @@ void BerkeleyDatabase::Open()
 
             ret = pdb_temp->open(nullptr,                             // Txn pointer
                             fMockDb ? nullptr : strFile.c_str(),      // Filename
-                            fMockDb ? strFile.c_str() : "main",       // Logical db name
+                            fMockDb ? strFile.c_str() : "mainnet",    // Logical db name
                             DB_BTREE,                                 // Database type
                             nFlags,                                   // Flags
                             0);
@@ -464,9 +464,9 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
                     BerkeleyBatch db(*this, true);
                     std::unique_ptr<Db> pdbCopy = std::make_unique<Db>(env->dbenv.get(), 0);
 
-                    int ret = pdbCopy->open(nullptr,               // Txn pointer
+                    int ret = pdbCopy->open(nullptr,            // Txn pointer
                                             strFileRes.c_str(), // Filename
-                                            "main",             // Logical db name
+                                            "mainnet",          // Logical db name
                                             DB_BTREE,           // Database type
                                             DB_CREATE,          // Flags
                                             0);

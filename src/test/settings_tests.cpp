@@ -183,7 +183,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
         if (!out_file) throw std::system_error(errno, std::generic_category(), "fopen failed");
     }
 
-    const std::string& network = CBaseChainParams::MAIN;
+    const std::string & network = CBaseChainParams::MAINNET;
     ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions, bool force_set,
                           bool ignore_default_section_config) {
         std::string desc;
@@ -252,7 +252,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
     // Results file is formatted like:
     //
     //   <input> || GetSetting() | GetSettingsList() | OnlyHasDefaultSectionSetting()
-    BOOST_CHECK_EQUAL(out_sha_hex, "79db02d74e3e193196541b67c068b40ebd0c124a24b3ecbe9cbf7e85b1c4ba7a");
+    BOOST_CHECK_EQUAL(out_sha_hex, "1c148e00e7a4b6291162dd70687e82abc606e94d295acac5b6ff577195fb42a4");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
