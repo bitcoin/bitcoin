@@ -172,6 +172,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.test_package_rbf_rule5()
         self.test_package_rbf_conflicting_conflicts()
         self.test_cpfp()
+        self.test_package_ancestor_score()
 
     def test_package_rbf_basic(self):
         self.log.info("Test that packages can RBF")
@@ -345,6 +346,32 @@ class PackageRelayTest(BitcoinTestFramework):
         self.assert_mempool_contents(expected=package_txns1, unexpected=package_txns2)
         node.submitrawpackage(package_hex2)
         self.assert_mempool_contents(expected=package_txns2, unexpected=package_txns1)
+
+    def test_package_ancestor_score(self):
+        self.log.info("Test that packages with new unconfirmed inputs must have a sufficient ancestor score")
+        node = self.nodes[0]
+        num_parents = 2
+        parent_coins = self.coins[:num_parents]
+        del self.coins[:num_parents]
+        (package_hex1, package_txns1) = self.create_simple_package(parent_coins, DEFAULT_FEE)
+        node.submitrawpackage(package_hex1)
+        self.assert_mempool_contents(expected=package_txns1)
+
+        # Create a mempool transaction for additional unconfirmed input.
+        # This transaction has a very low fee, lowering the package ancestor score.
+        coin = self.coins.pop()
+        value = coin["amount"]
+        small_fee = Decimal("0.00001")
+        (tx, txhex, unconfirmed_value, _) = make_chain(node, self.address, self.privkeys, coin["txid"], value, 0, None, small_fee)
+        node.sendrawtransaction(txhex)
+        parent_coins.append({
+            "txid": tx.rehash(),
+            "amount": unconfirmed_value,
+            "scriptPubKey": tx.vout[0].scriptPubKey.hex(),
+        })
+        (package_hex2, package_txns2) = self.create_simple_package(parent_coins, Decimal("0.00011"))
+        assert_raises_rpc_error(-25, "package RBF failed: insufficient fees", node.submitrawpackage, package_hex2)
+        node.generate(1)
 
 
 if __name__ == "__main__":
