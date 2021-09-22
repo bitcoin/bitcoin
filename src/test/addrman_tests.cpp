@@ -47,21 +47,6 @@ public:
         m_impl->Delete(nId);
     }
 
-    // Used to test deserialization
-    std::pair<int, int> GetBucketAndEntry(const CAddress& addr)
-    {
-        LOCK(m_impl->cs);
-        int nId = m_impl->mapAddr[addr];
-        for (int bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; ++bucket) {
-            for (int entry = 0; entry < ADDRMAN_BUCKET_SIZE; ++entry) {
-                if (nId == m_impl->vvNew[bucket][entry]) {
-                    return std::pair<int, int>(bucket, entry);
-                }
-            }
-        }
-        return std::pair<int, int>(-1, -1);
-    }
-
     // Simulates connection failure so that we can test eviction of offline nodes
     void SimConnFail(const CService& addr)
     {
