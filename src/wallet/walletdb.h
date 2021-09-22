@@ -65,6 +65,7 @@ extern const std::string FLAGS;
 extern const std::string HDCHAIN;
 extern const std::string KEY;
 extern const std::string KEYMETA;
+extern const std::string LOCKED_UTXO;
 extern const std::string MASTER_KEY;
 extern const std::string MINVERSION;
 extern const std::string NAME;
@@ -249,6 +250,9 @@ public:
     bool WriteDescriptorParentCache(const CExtPubKey& xpub, const uint256& desc_id, uint32_t key_exp_index);
     bool WriteDescriptorLastHardenedCache(const CExtPubKey& xpub, const uint256& desc_id, uint32_t key_exp_index);
     bool WriteDescriptorCacheItems(const uint256& desc_id, const DescriptorCache& cache);
+
+    bool WriteLockedUTXO(const COutPoint& output);
+    bool EraseLockedUTXO(const COutPoint& output);
 
     /// Write destination data key,value tuple to database
     bool WriteDestData(const std::string &address, const std::string &key, const std::string &value);

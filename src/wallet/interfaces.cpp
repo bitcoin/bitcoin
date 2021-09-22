@@ -214,12 +214,12 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->DisplayAddress(dest);
     }
-    void lockCoin(const COutPoint& output) override
+    bool lockCoin(const COutPoint& output) override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->LockCoin(output);
     }
-    void unlockCoin(const COutPoint& output) override
+    bool unlockCoin(const COutPoint& output) override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->UnlockCoin(output);
