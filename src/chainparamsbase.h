@@ -25,6 +25,13 @@ public:
     static const std::string REGTEST;
     ///@}
 
+    ///@{
+    /** Chain name string aliases */
+    static const std::string MAINNET_ALIAS;
+    static const std::string TESTNET_ALIAS;
+    static const std::string TESTNET3_ALIAS;
+    ///@}
+
     const std::string& DataDir() const { return strDataDir; }
     uint16_t RPCPort() const { return m_rpc_port; }
     uint16_t OnionServiceTargetPort() const { return m_onion_service_target_port; }

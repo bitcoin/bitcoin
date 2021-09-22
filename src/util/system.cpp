@@ -1011,7 +1011,18 @@ std::string ArgsManager::GetChainName() const
     if (fTestNet)
         return CBaseChainParams::TESTNET;
 
-    return GetArg("-chain", CBaseChainParams::MAIN);
+    auto chain_name = GetArg("-chain", CBaseChainParams::MAIN);
+    std::string chain_name_post_alias;
+    if (chain_name == CBaseChainParams::MAINNET_ALIAS) {
+        chain_name_post_alias = CBaseChainParams::MAIN;
+    } else if (chain_name == CBaseChainParams::TESTNET_ALIAS) {
+        chain_name_post_alias = CBaseChainParams::TESTNET;
+    } else if (chain_name == CBaseChainParams::TESTNET3_ALIAS) {
+        chain_name_post_alias = CBaseChainParams::TESTNET;
+    } else {
+        chain_name_post_alias = chain_name;
+    }
+    return chain_name_post_alias;
 }
 
 bool ArgsManager::UseDefaultSection(const std::string& arg) const

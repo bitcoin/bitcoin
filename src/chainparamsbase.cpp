@@ -15,6 +15,10 @@ const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::SIGNET = "signet";
 const std::string CBaseChainParams::REGTEST = "regtest";
 
+const std::string CBaseChainParams::MAINNET_ALIAS = "mainnet";
+const std::string CBaseChainParams::TESTNET_ALIAS = "testnet";
+const std::string CBaseChainParams::TESTNET3_ALIAS = "testnet3";
+
 void SetupChainParamsBaseOptions(ArgsManager& argsman)
 {
     argsman.AddArg("-chain=<chain>", "Use the chain <chain> (default: main). Allowed values: main, test, signet, regtest", ArgsManager::ALLOW_ANY, OptionsCategory::CHAINPARAMS);
