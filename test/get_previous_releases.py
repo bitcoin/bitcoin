@@ -59,6 +59,14 @@ SHA256_SUMS = {
     "695fb624fa6423f5da4f443b60763dd1d77488bfe5ef63760904a7b54e91298d": "bitcoin-0.21.0-osx64.tar.gz",
     "f8b2adfeae021a672effbc7bd40d5c48d6b94e53b2dd660f787340bf1a52e4e9": "bitcoin-0.21.0-riscv64-linux-gnu.tar.gz",
     "da7766775e3f9c98d7a9145429f2be8297c2672fe5b118fd3dc2411fb48e0032": "bitcoin-0.21.0-x86_64-linux-gnu.tar.gz",
+
+    "ac718fed08570a81b3587587872ad85a25173afa5f9fbbd0c03ba4d1714cfa3e": "bitcoin-22.0-aarch64-linux-gnu.tar.gz",
+    "b8713c6c5f03f5258b54e9f436e2ed6d85449aa24c2c9972f91963d413e86311": "bitcoin-22.0-arm-linux-gnueabihf.tar.gz",
+    "2744d199c3343b2d94faffdfb2c94d75a630ba27301a70e47b0ad30a7e0155e9": "bitcoin-22.0-osx64.tar.gz",
+    "2cca5f99007d060aca9d8c7cbd035dfe2f040dd8200b210ce32cdf858479f70d": "bitcoin-22.0-powerpc64-linux-gnu.tar.gz",
+    "91b1e012975c5a363b5b5fcc81b5b7495e86ff703ec8262d4b9afcfec633c30d": "bitcoin-22.0-powerpc64le-linux-gnu.tar.gz",
+    "9cc3a62c469fe57e11485fdd32c916f10ce7a2899299855a2e479256ff49ff3c": "bitcoin-22.0-riscv64-linux-gnu.tar.gz",
+    "59ebd25dd82a51638b7a6bb914586201e67db67b919b2a1ff08925a7936d1b16": "bitcoin-22.0-x86_64-linux-gnu.tar.gz",
 }
 
 
