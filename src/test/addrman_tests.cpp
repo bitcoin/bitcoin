@@ -218,6 +218,38 @@ BOOST_AUTO_TEST_CASE(addrman_new_collisions)
     BOOST_CHECK_EQUAL(addrman->size(), num_addrs - collisions);
 }
 
+BOOST_AUTO_TEST_CASE(addrman_new_multiplicity)
+{
+    auto addrman = TestAddrMan();
+    CAddress addr{CAddress(ResolveService("253.3.3.3", 8333), NODE_NONE)};
+    int64_t start_time{GetAdjustedTime()};
+    addr.nTime = start_time;
+
+    // test that multiplicity stays at 1 if nTime doesn't increase
+    for (unsigned int i = 1; i < 20; ++i) {
+        std::string addr_ip{ToString(i % 256) + "." + ToString(i >> 8 % 256) + ".1.1"};
+        CNetAddr source{ResolveIP(addr_ip)};
+        addrman->Add({addr}, source);
+    }
+    AddressPosition addr_pos = addrman->FindAddressEntry(addr).value();
+    BOOST_CHECK_EQUAL(addr_pos.multiplicity, 1U);
+    BOOST_CHECK_EQUAL(addrman->size(), 1U);
+
+    // if nTime increases, an addr can occur in up to 8 buckets
+    // The acceptance probability decreases exponentially with existing multiplicity -
+    // choose number of iterations such that it gets to 8 with deterministic addrman.
+    for (unsigned int i = 1; i < 400; ++i) {
+        std::string addr_ip{ToString(i % 256) + "." + ToString(i >> 8 % 256) + ".1.1"};
+        CNetAddr source{ResolveIP(addr_ip)};
+        addr.nTime = start_time + i;
+        addrman->Add({addr}, source);
+    }
+    AddressPosition addr_pos_multi = addrman->FindAddressEntry(addr).value();
+    BOOST_CHECK_EQUAL(addr_pos_multi.multiplicity, 8U);
+    // multiplicity doesn't affect size
+    BOOST_CHECK_EQUAL(addrman->size(), 1U);
+}
+
 BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
 {
     auto addrman = TestAddrMan();
