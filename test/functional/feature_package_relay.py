@@ -241,7 +241,8 @@ class PackageRelayTest(BitcoinTestFramework):
             "scriptPubKey": tx.vout[0].scriptPubKey.hex(),
         })
         (package_hex2, package_txns2) = self.create_simple_package(parent_coins, DEFAULT_FEE * 2)
-        assert_raises_rpc_error(-25, "package RBF failed: replacement adds unconfirmed", node.submitrawpackage, package_hex2)
+        node.submitrawpackage(package_hex2)
+        self.assert_mempool_contents(expected=package_txns2, unexpected=package_txns1)
         node.generate(1)
 
     def test_package_rbf_rule3(self):

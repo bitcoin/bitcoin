@@ -504,7 +504,7 @@ public:
                             /* m_allow_bip125_replacement */ true,
                             /* m_package_submission */ true,
                             /* m_package_feerates */ true,
-                            /* m_enforce_bip125_rule2 */ true,
+                            /* m_enforce_bip125_rule2 */ false,
             };
         }
 
@@ -926,7 +926,7 @@ bool MemPoolAccept::MempoolChecks(const ATMPArgs& args, Workspace& ws)
                                                                      ws.m_ancestors, m_all_conflicts)}) {
                 // Bypass BIP125 Rule #2 under the condition that the replacement transaction has a higher
                 // ancestor score than that of all mempool transactions it is trying to replace.
-                return state.Invalid(TxValidationResult::TX_LOW_FEE, "insufficient fee", *err_string_anc);
+                return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string_anc);
             }
         }
 
@@ -1014,7 +1014,7 @@ bool MemPoolAccept::PackageMempoolChecks(const ATMPArgs& args,
                 // inputs = inputs of parents, outputs = outputs of child + UTXOs of parents.
                 // Bypass BIP125 Rule #2 under the condition that the package has a higher ancestor
                 // score than that of all mempool transactions it is trying to replace.
-                return ws.m_state.Invalid(TxValidationResult::TX_LOW_FEE,
+                return ws.m_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                                           "package RBF failed: insufficient fee", *err_string_anc);
             }
         }
