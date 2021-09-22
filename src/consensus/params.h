@@ -210,25 +210,20 @@ struct Params {
             return nSuperblockCycle*2.5;
         }
     }
-    double Seniority(int nHeight, int nDifferenceInBlocks) const { 
-        int nSeniorityAge1 = nSeniorityHeight1;
-        int nSeniorityAge2 = nSeniorityHeight2;
-        if(bTestnet == true) {
-            if(nDifferenceInBlocks >= nSeniorityAge2)
-                return nSeniorityLevel2;
-            else if(nDifferenceInBlocks >= nSeniorityAge1)
-                return nSeniorityLevel1;
-            return 0;
-        }
-        if (nHeight < nNEVMStartBlock) {
-            nSeniorityAge1 *= 2.5;
-            nSeniorityAge2 *= 2.5;
-        }
-        if(nDifferenceInBlocks >= nSeniorityAge2)
+    double Seniority(int nHeight, int nStartHeight) const {
+        unsigned int nSeniorityAge = 0;
+        if (nHeight > nNEVMStartBlock) {
+            const unsigned int nDifferenceInBlocksPreNEVM = std::max(nNEVMStartBlock - nStartHeight, 0);
+            const unsigned int nDifferenceInBlocksPostNEVM = nHeight - std::max(nStartHeight, nNEVMStartBlock);
+            nSeniorityAge = nDifferenceInBlocksPreNEVM + nDifferenceInBlocksPostNEVM*2.5;
+        } else {
+            nSeniorityAge = nHeight - nStartHeight;
+        } 
+        if(nSeniorityAge >= nSeniorityHeight2)
             return nSeniorityLevel2;
-        else if(nDifferenceInBlocks >= nSeniorityAge1)
+        else if(nSeniorityAge >= nSeniorityHeight1)
             return nSeniorityLevel1;
-        return 0;    
+        return 0;
     }
     int SubsidyHalvingInterval(int nHeight) const { 
         if (nHeight >= nNEVMStartBlock) {

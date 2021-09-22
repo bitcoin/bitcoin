@@ -162,7 +162,7 @@ public:
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 210240; 
         // 35% increase after ~1 year, 100% increase after sr level 2 (~2.5 years)
-        consensus.nSeniorityHeight1 = 210240; 
+        consensus.nSeniorityHeight1 = 525600; 
         consensus.nSeniorityLevel1 = 0.35;
         consensus.nSeniorityHeight2 = consensus.nSeniorityHeight1*2.5; 
         consensus.nSeniorityLevel2 = 1.0;        
