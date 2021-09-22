@@ -141,7 +141,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.log.debug("Stop nodes, make node1 use mempool.dat from node0. Verify it has 6 transactions")
         os.rename(mempooldat0, mempooldat1)
         self.stop_nodes()
-        self.start_node(1, extra_args=[])
+        self.start_node(1, extra_args=["-persistmempool"])
         assert self.nodes[1].getmempoolinfo()["loaded"]
         assert_equal(len(self.nodes[1].getrawmempool()), 6)
 
