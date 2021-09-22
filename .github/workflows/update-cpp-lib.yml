@@ -27,7 +27,7 @@ jobs:
         id: cpr
         uses: peter-evans/create-pull-request@v3
         with:
-          base: develop
+          base: master
           token: ${{ secrets.REPO_TOKEN }}
           commit-message: Update veriblock-pop-cpp
           title: "Update veriblock-pop-cpp to ${{ github.event.client_payload.sha }}"
@@ -35,7 +35,6 @@ jobs:
           assignees: ${{ github.event.client_payload.actor }}
           draft: false
           branch: veriblock-pop-cpp
-          push-to-fork: VeriBlock/vbk-ri-btc
           labels: |
             dependencies
             automated
