@@ -74,6 +74,7 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                                                                 bool fReindexChainState,
                                                                 const CChainParams& chainparams,
                                                                 unsigned int check_blocks,
-                                                                unsigned int check_level);
+                                                                unsigned int check_level,
+                                                                std::function<int64_t()> get_unix_time_seconds);
 
 #endif // BITCOIN_NODE_CHAINSTATE_H
