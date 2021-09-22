@@ -14,16 +14,10 @@
 #include <arith_uint256.h>
 #include <attributes.h>
 #include <chain.h>
-#include <coins.h>
-#include <consensus/validation.h>
-#include <crypto/common.h> // for ReadLE64
 #include <fs.h>
-#include <node/utxo_snapshot.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
-#include <protocol.h> // For CMessageHeader::MessageStartChars
 #include <script/script_error.h>
-#include <serialize.h>
 #include <sync.h>
 #include <txdb.h>
 #include <txmempool.h> // For CTxMemPool::cs
@@ -44,18 +38,13 @@
 #include <vector>
 
 class CChainState;
-class BlockValidationState;
 class CBlockTreeDB;
-class CBlockUndo;
 class CChainParams;
 struct CCheckpointData;
-class CInv;
-class CConnman;
-class CScriptCheck;
 class CTxMemPool;
 class ChainstateManager;
+class SnapshotMetadata;
 struct ChainTxData;
-
 struct DisconnectedBlockTransactions;
 struct PrecomputedTransactionData;
 struct LockPoints;
