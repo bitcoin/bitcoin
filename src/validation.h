@@ -13,14 +13,10 @@
 
 #include <amount.h>
 #include <attributes.h>
-#include <coins.h>
-#include <consensus/validation.h>
-#include <crypto/common.h> // for ReadLE64
+#include <chain.h>
 #include <fs.h>
-#include <node/utxo_snapshot.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
-#include <protocol.h> // For CMessageHeader::MessageStartChars
 #include <script/script_error.h>
 #include <sync.h>
 #include <txdb.h>
@@ -49,23 +45,18 @@ class CInstantSendManager;
 class CEvoDB;
 
 class CChainState;
-class BlockValidationState;
 class CBlockIndex;
 class CBlockTreeDB;
-class CBlockUndo;
 class CChainParams;
 struct CCheckpointData;
-class CInv;
-class CConnman;
 class CMNHFManager;
-class CScriptCheck;
 class CTxMemPool;
 class TxValidationState;
 class CChainstateHelper;
 class ChainstateManager;
 struct PrecomputedTransactionData;
+class SnapshotMetadata;
 struct ChainTxData;
-
 struct DisconnectedBlockTransactions;
 struct LockPoints;
 struct AssumeutxoData;
