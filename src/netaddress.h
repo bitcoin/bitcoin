@@ -386,6 +386,12 @@ private:
 
     /**
      * Unserialize from a pre-ADDRv2/BIP155 format from an array.
+     *
+     * This function is only called from UnserializeV1Stream() and is a wrapper
+     * for SetLegacyIPv6(); however, we keep it for symmetry with
+     * SerializeV1Array() to have pairs of ser/unser functions and to make clear
+     * that if one is altered, a corresponding reverse modification should be
+     * applied to the other.
      */
     void UnserializeV1Array(uint8_t (&arr)[V1_SERIALIZATION_SIZE])
     {
