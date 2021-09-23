@@ -148,7 +148,7 @@ static RPCHelpMan getrawtransaction()
                     RPCResult{"if verbose is set to true",
                         RPCResult::Type::OBJ, "", "",
                         {
-                            {RPCResult::Type::BOOL, "in_active_chain", "Whether specified block is in the active chain or not (only present with explicit \"blockhash\" argument)"},
+                            {RPCResult::Type::BOOL, "in_active_chain", /* optional */ true, "Whether specified block is in the active chain or not (only present with explicit \"blockhash\" argument)"},
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id (same as provided)"},
                             {RPCResult::Type::NUM, "size", "The serialized transaction size"},
                             {RPCResult::Type::NUM, "version", "The version"},
@@ -191,11 +191,11 @@ static RPCHelpMan getrawtransaction()
                             {RPCResult::Type::NUM, "extraPayloadSize", true /*optional*/, "Size of DIP2 extra payload. Only present if it's a special TX"},
                             {RPCResult::Type::STR_HEX, "extraPayload", true /*optional*/, "Hex-encoded DIP2 extra payload data. Only present if it's a special TX"},
                             {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded data for 'txid'"},
-                            {RPCResult::Type::STR_HEX, "blockhash", "the block hash"},
+                            {RPCResult::Type::STR_HEX, "blockhash", /* optional */ true, "the block hash"},
                             {RPCResult::Type::NUM, "height", "The block height"},
-                            {RPCResult::Type::NUM, "confirmations", "The confirmations"},
-                            {RPCResult::Type::NUM_TIME, "blocktime", "The block time expressed in " + UNIX_EPOCH_TIME},
-                            {RPCResult::Type::NUM, "time", "Same as \"blocktime\""},
+                            {RPCResult::Type::NUM, "confirmations", /* optional */ true, "The confirmations"},
+                            {RPCResult::Type::NUM_TIME, "blocktime", /* optional */ true, "The block time expressed in " + UNIX_EPOCH_TIME},
+                            {RPCResult::Type::NUM, "time", /* optional */ true, "Same as \"blocktime\""},
                             {RPCResult::Type::BOOL, "instantlock", "Current transaction lock state"},
                             {RPCResult::Type::BOOL, "instantlock_internal", "Current internal transaction lock state"},
                             {RPCResult::Type::BOOL, "chainlock", "The state of the corresponding block ChainLock"},
@@ -742,9 +742,10 @@ static RPCHelpMan decoderawtransaction()
                         {
                             {RPCResult::Type::OBJ, "", "",
                             {
-                                {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-                                {RPCResult::Type::NUM, "vout", "The output number"},
-                                {RPCResult::Type::OBJ, "scriptSig", "The script",
+                                {RPCResult::Type::STR_HEX, "coinbase", /* optional */ true, ""},
+                                {RPCResult::Type::STR_HEX, "txid", /* optional */ true, "The transaction id"},
+                                {RPCResult::Type::NUM, "vout", /* optional */ true, "The output number"},
+                                {RPCResult::Type::OBJ, "scriptSig", /* optional */ true, "The script",
                                 {
                                     {RPCResult::Type::STR, "asm", "asm"},
                                     {RPCResult::Type::STR_HEX, "hex", "hex"},
@@ -1125,15 +1126,15 @@ static RPCHelpMan testmempoolaccept()
                         {RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
-                            {RPCResult::Type::STR, "package-error", "Package validation error, if any (only possible if rawtxs had more than 1 transaction)."},
-                            {RPCResult::Type::BOOL, "allowed", "Whether this tx would be accepted to the mempool and pass client-specified maxfeerate."
+                            {RPCResult::Type::STR, "package-error", /* optional */ true, "Package validation error, if any (only possible if rawtxs had more than 1 transaction)."},
+                            {RPCResult::Type::BOOL, "allowed", /* optional */ true, "Whether this tx would be accepted to the mempool and pass client-specified maxfeerate. "
                                                                "If not present, the tx was not fully validated due to a failure in another tx in the list."},
-                            {RPCResult::Type::NUM, "vsize", "Virtual transaction size."},
-                            {RPCResult::Type::OBJ, "fees", "Transaction fees (only present if 'allowed' is true)",
+                            {RPCResult::Type::NUM, "vsize", /* optional */ true, "Transaction size."},
+                            {RPCResult::Type::OBJ, "fees", /* optional */ true, "Transaction fees (only present if 'allowed' is true)",
                             {
                                 {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
                             }},
-                            {RPCResult::Type::STR, "reject-reason", "Rejection string (only present when 'allowed' is false)"},
+                            {RPCResult::Type::STR, "reject-reason", /* optional */ true, "Rejection string (only present when 'allowed' is false)"},
                         }},
                     }
                 },
@@ -1300,13 +1301,14 @@ static RPCHelpMan decodepsbt()
                         }},
                         {RPCResult::Type::ARR, "bip32_derivs", /* optional */ true, "",
                         {
-                            {RPCResult::Type::OBJ, "pubkey", /* optional */ true, "The public key with the derivation path as the value.",
+                            {RPCResult::Type::OBJ, "", "",
                             {
+                                {RPCResult::Type::STR, "pubkey", "The public key with the derivation path as the value."},
                                 {RPCResult::Type::STR, "master_fingerprint", "The fingerprint of the master key"},
                                 {RPCResult::Type::STR, "path", "The path"},
                             }},
                         }},
-                        {RPCResult::Type::OBJ, "final_scriptsig", /* optional */ true, "",
+                        {RPCResult::Type::OBJ, "final_scriptSig", /* optional */ true, "",
                         {
                             {RPCResult::Type::STR, "asm", "The asm"},
                             {RPCResult::Type::STR, "hex", "The hex"},
@@ -1362,7 +1364,7 @@ static RPCHelpMan decodepsbt()
                                 {RPCResult::Type::STR, "path", "The path"},
                             }},
                         }},
-                        {RPCResult::Type::OBJ_DYN, "unknown", "The unknown global fields",
+                        {RPCResult::Type::OBJ_DYN, "unknown", /* optional */ true, "The unknown global fields",
                         {
                             {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
                         }},
@@ -1711,8 +1713,8 @@ static RPCHelpMan finalizepsbt()
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR, "psbt", "The base64-encoded partially signed transaction if not extracted"},
-                        {RPCResult::Type::STR_HEX, "hex", "The hex-encoded network transaction if extracted"},
+                        {RPCResult::Type::STR, "psbt", /* optional */ true, "The base64-encoded partially signed transaction if not extracted"},
+                        {RPCResult::Type::STR_HEX, "hex", /* optional */ true, "The hex-encoded network transaction if extracted"},
                         {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
                     }
                 },
@@ -2064,7 +2066,7 @@ static RPCHelpMan analyzepsbt()
     RPCResult {
         RPCResult::Type::OBJ, "", "",
         {
-            {RPCResult::Type::ARR, "inputs", "",
+            {RPCResult::Type::ARR, "inputs", /* optional */ true, "",
             {
                 {RPCResult::Type::OBJ, "", "",
                 {
