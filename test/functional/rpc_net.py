@@ -12,11 +12,10 @@ from itertools import product
 import time
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.p2p import P2PInterface
 import test_framework.messages
-from test_framework.messages import (
-    NODE_NETWORK,
-    NODE_WITNESS,
+from test_framework.p2p import (
+    P2PInterface,
+    P2P_SERVICES,
 )
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
@@ -189,7 +188,6 @@ class NetTest(SyscoinTestFramework):
     def test_getnodeaddresses(self):
         self.log.info("Test getnodeaddresses")
         self.nodes[0].add_p2p_connection(P2PInterface())
-        services = NODE_NETWORK | NODE_WITNESS
 
         # Add an IPv6 address to the address manager.
         ipv6_addr = "1233:3432:2434:2343:3234:2345:6546:4534"
@@ -218,7 +216,7 @@ class NetTest(SyscoinTestFramework):
         assert_greater_than(10000, len(node_addresses))
         for a in node_addresses:
             assert_greater_than(a["time"], 1527811200)  # 1st June 2018
-            assert_equal(a["services"], services)
+            assert_equal(a["services"], P2P_SERVICES)
             assert a["address"] in imported_addrs
             assert_equal(a["port"], 8369)
             assert_equal(a["network"], "ipv4")
@@ -229,7 +227,7 @@ class NetTest(SyscoinTestFramework):
         assert_equal(res[0]["address"], ipv6_addr)
         assert_equal(res[0]["network"], "ipv6")
         assert_equal(res[0]["port"], 8333)
-        assert_equal(res[0]["services"], services)
+        assert_equal(res[0]["services"], P2P_SERVICES)
 
         # Test for the absence of onion and I2P addresses.
         for network in ["onion", "i2p"]:
