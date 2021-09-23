@@ -472,7 +472,7 @@ static RPCHelpMan sendtoaddress()
                         RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
-                            {RPCResult::Type::STR, "fee reason", "The transaction fee reason."}
+                            {RPCResult::Type::STR, "fee_reason", "The transaction fee reason."}
                         },
                     },
                 },
@@ -899,7 +899,7 @@ static RPCHelpMan sendmany()
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of\n"
                 "the number of addresses."},
-                            {RPCResult::Type::STR, "fee reason", "The transaction fee reason."}
+                            {RPCResult::Type::STR, "fee_reason", "The transaction fee reason."}
                         },
                     },
                 },
@@ -1213,7 +1213,7 @@ static RPCHelpMan listreceivedbyaddress()
                     {
                         {RPCResult::Type::OBJ, "", "",
                         {
-                            {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction"},
+                            {RPCResult::Type::BOOL, "involvesWatchonly", /* optional */ true, "Only returns true if imported addresses were involved in transaction"},
                             {RPCResult::Type::STR, "address", "The receiving address"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " received by the address"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations of the most recent transaction included"},
@@ -1261,7 +1261,7 @@ static RPCHelpMan listreceivedbylabel()
                     {
                         {RPCResult::Type::OBJ, "", "",
                         {
-                            {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction"},
+                            {RPCResult::Type::BOOL, "involvesWatchonly", /* optional */ true, "Only returns true if imported addresses were involved in transaction"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "The total amount received by addresses with this label"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations of the most recent transaction included"},
                             {RPCResult::Type::STR, "label", "The label of the receiving address. The default label is \"\""},
@@ -1388,20 +1388,24 @@ static const std::vector<RPCResult> TransactionDescriptionString()
 {
     return{{RPCResult::Type::NUM, "confirmations", "The number of confirmations for the transaction. Negative confirmations means the\n"
                "transaction conflicted that many blocks ago."},
-           {RPCResult::Type::BOOL, "generated", "Only present if transaction only input is a coinbase one."},
-           {RPCResult::Type::BOOL, "trusted", "Only present if we consider transaction to be trusted and so safe to spend from."},
-           {RPCResult::Type::STR_HEX, "blockhash", "The block hash containing the transaction."},
-           {RPCResult::Type::NUM, "blockheight", "The block height containing the transaction."},
-           {RPCResult::Type::NUM, "blockindex", "The index of the transaction in the block that includes it."},
-           {RPCResult::Type::NUM_TIME, "blocktime", "The block time expressed in " + UNIX_EPOCH_TIME + "."},
+           {RPCResult::Type::BOOL, "generated", /* optional */ true, "Only present if transaction only input is a coinbase one."},
+           {RPCResult::Type::BOOL, "trusted", /* optional */ true, "Only present if we consider transaction to be trusted and so safe to spend from."},
+           {RPCResult::Type::STR_HEX, "blockhash", /* optional */ true, "The block hash containing the transaction."},
+           {RPCResult::Type::NUM, "blockheight", /* optional */ true, "The block height containing the transaction."},
+           {RPCResult::Type::NUM, "blockindex", /* optional */ true, "The index of the transaction in the block that includes it."},
+           {RPCResult::Type::NUM_TIME, "blocktime", /* optional */ true, "The block time expressed in " + UNIX_EPOCH_TIME + "."},
            {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
            {RPCResult::Type::ARR, "walletconflicts", "Conflicting transaction ids.",
            {
                {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
            }},
+           {RPCResult::Type::STR_HEX, "replaced_by_txid", /* optional */ true, "The txid if this tx was replaced."},
+           {RPCResult::Type::STR_HEX, "replaces_txid", /* optional */ true, "The txid if the tx replaces one."},
+           {RPCResult::Type::STR, "comment", /* optional */ true, ""},
+           {RPCResult::Type::STR, "to", /* optional */ true, "If a comment to is associated with the transaction."},
            {RPCResult::Type::NUM_TIME, "time", "The transaction time expressed in " + UNIX_EPOCH_TIME + "."},
            {RPCResult::Type::NUM_TIME, "timereceived", "The time received expressed in " + UNIX_EPOCH_TIME + "."},
-           {RPCResult::Type::STR, "comment", "If a comment is associated with the transaction, only present if not empty."},
+           {RPCResult::Type::STR, "comment", /* optional */ true, "If a comment is associated with the transaction, only present if not empty."},
            {RPCResult::Type::STR, "bip125-replaceable", "(\"yes|no|unknown\") Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
                "may be unknown for unconfirmed transactions not in the mempool"}};
 }
@@ -1423,7 +1427,7 @@ static RPCHelpMan listtransactions()
                     {
                         {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
                         {
-                            {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction."},
+                            {RPCResult::Type::BOOL, "involvesWatchonly", /* optional */ true, "Only returns true if imported addresses were involved in transaction."},
                             {RPCResult::Type::STR, "address", "The bitcoin address of the transaction."},
                             {RPCResult::Type::STR, "category", "The transaction category.\n"
                                 "\"send\"                  Transactions sent.\n"
@@ -1433,14 +1437,14 @@ static RPCHelpMan listtransactions()
                                 "\"orphan\"                Orphaned coinbase transactions received."},
                             {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
                                 "for all other categories"},
-                            {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any"},
+                            {RPCResult::Type::STR, "label", /* optional */ true, "A comment for the address/transaction, if any"},
                             {RPCResult::Type::NUM, "vout", "the vout value"},
-                            {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                            {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                  "'send' category of transactions."},
                         },
                         TransactionDescriptionString()),
                         {
-                            {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
+                            {RPCResult::Type::BOOL, "abandoned", /* optional */ true, "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
                                  "'send' category of transactions."},
                         })},
                     }
@@ -1537,7 +1541,7 @@ static RPCHelpMan listsinceblock()
                         {
                             {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
                             {
-                                {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction."},
+                                {RPCResult::Type::BOOL, "involvesWatchonly", /* optional */ true, "Only returns true if imported addresses were involved in transaction."},
                                 {RPCResult::Type::STR, "address", "The bitcoin address of the transaction."},
                                 {RPCResult::Type::STR, "category", "The transaction category.\n"
                                     "\"send\"                  Transactions sent.\n"
@@ -1548,18 +1552,17 @@ static RPCHelpMan listsinceblock()
                                 {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
                                     "for all other categories"},
                                 {RPCResult::Type::NUM, "vout", "the vout value"},
-                                {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                                {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                      "'send' category of transactions."},
                             },
                             TransactionDescriptionString()),
                             {
-                                {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
+                                {RPCResult::Type::BOOL, "abandoned", /* optional */ true, "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
                                      "'send' category of transactions."},
-                                {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any"},
-                                {RPCResult::Type::STR, "to", "If a comment to is associated with the transaction."},
+                                {RPCResult::Type::STR, "label", /* optional */ true, "A comment for the address/transaction, if any"},
                             })},
                         }},
-                        {RPCResult::Type::ARR, "removed", "<structure is the same as \"transactions\" above, only present if include_removed=true>\n"
+                        {RPCResult::Type::ARR, "removed", /* optional */ true, "<structure is the same as \"transactions\" above, only present if include_removed=true>\n"
                             "Note: transactions that were re-added in the active chain will appear as-is in this array, and may thus have a positive confirmation count."
                         , {{RPCResult::Type::ELISION, "", ""},}},
                         {RPCResult::Type::STR_HEX, "lastblock", "The hash of the block (target_confirmations-1) from the best block on the main chain, or the genesis hash if the referenced block does not exist yet. This is typically used to feed back into listsinceblock the next time you call it. So you would generally use a target_confirmations of say 6, so you will be continually re-notified of transactions until they've reached 6 confirmations plus any new ones"},
@@ -1672,7 +1675,7 @@ static RPCHelpMan gettransaction()
                     RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
                     {
                         {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
-                        {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                        {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                      "'send' category of transactions."},
                     },
                     TransactionDescriptionString()),
@@ -1681,8 +1684,8 @@ static RPCHelpMan gettransaction()
                         {
                             {RPCResult::Type::OBJ, "", "",
                             {
-                                {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction."},
-                                {RPCResult::Type::STR, "address", "The bitcoin address involved in the transaction."},
+                                {RPCResult::Type::BOOL, "involvesWatchonly", /* optional */ true, "Only returns true if imported addresses were involved in transaction."},
+                                {RPCResult::Type::STR, "address", /* optional */ true, "The bitcoin address involved in the transaction."},
                                 {RPCResult::Type::STR, "category", "The transaction category.\n"
                                     "\"send\"                  Transactions sent.\n"
                                     "\"receive\"               Non-coinbase transactions received.\n"
@@ -1690,16 +1693,16 @@ static RPCHelpMan gettransaction()
                                     "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
                                     "\"orphan\"                Orphaned coinbase transactions received."},
                                 {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
-                                {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any"},
+                                {RPCResult::Type::STR, "label", /* optional */ true, "A comment for the address/transaction, if any"},
                                 {RPCResult::Type::NUM, "vout", "the vout value"},
-                                {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
+                                {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
                                     "'send' category of transactions."},
-                                {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
+                                {RPCResult::Type::BOOL, "abandoned", /* optional */ true, "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
                                      "'send' category of transactions."},
                             }},
                         }},
                         {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
-                        {RPCResult::Type::OBJ, "decoded", "Optional, the decoded transaction (only present when `verbose` is passed)",
+                        {RPCResult::Type::OBJ, "decoded", /* optional */ true, "The decoded transaction (only present when `verbose` is passed)",
                         {
                             {RPCResult::Type::ELISION, "", "Equivalent to the RPC decoderawtransaction method, or the RPC getrawtransaction method when `verbose` is passed."},
                         }},
@@ -2362,9 +2365,9 @@ static RPCHelpMan getbalances()
                     {RPCResult::Type::STR_AMOUNT, "trusted", "trusted balance (outputs created by the wallet or confirmed outputs)"},
                     {RPCResult::Type::STR_AMOUNT, "untrusted_pending", "untrusted pending balance (outputs created by others that are in the mempool)"},
                     {RPCResult::Type::STR_AMOUNT, "immature", "balance from immature coinbase outputs"},
-                    {RPCResult::Type::STR_AMOUNT, "used", "(only present if avoid_reuse is set) balance from coins sent to addresses that were previously spent from (potentially privacy violating)"},
+                    {RPCResult::Type::STR_AMOUNT, "used", /* optional */ true, "(only present if avoid_reuse is set) balance from coins sent to addresses that were previously spent from (potentially privacy violating)"},
                 }},
-                {RPCResult::Type::OBJ, "watchonly", "watchonly balances (not present if wallet does not watch anything)",
+                {RPCResult::Type::OBJ, "watchonly", /* optional */ true, "watchonly balances (not present if wallet does not watch anything)",
                 {
                     {RPCResult::Type::STR_AMOUNT, "trusted", "trusted balance (outputs created by the wallet or confirmed outputs)"},
                     {RPCResult::Type::STR_AMOUNT, "untrusted_pending", "untrusted pending balance (outputs created by others that are in the mempool)"},
@@ -2431,9 +2434,9 @@ static RPCHelpMan getwalletinfo()
                         {RPCResult::Type::STR_AMOUNT, "unconfirmed_balance", "DEPRECATED. Identical to getbalances().mine.untrusted_pending"},
                         {RPCResult::Type::STR_AMOUNT, "immature_balance", "DEPRECATED. Identical to getbalances().mine.immature"},
                         {RPCResult::Type::NUM, "txcount", "the total number of transactions in the wallet"},
-                        {RPCResult::Type::NUM_TIME, "keypoololdest", "the " + UNIX_EPOCH_TIME + " of the oldest pre-generated key in the key pool. Legacy wallets only."},
+                        {RPCResult::Type::NUM_TIME, "keypoololdest", /* optional */ true, "the " + UNIX_EPOCH_TIME + " of the oldest pre-generated key in the key pool. Legacy wallets only."},
                         {RPCResult::Type::NUM, "keypoolsize", "how many new keys are pre-generated (only counts external keys)"},
-                        {RPCResult::Type::NUM, "keypoolsize_hd_internal", "how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used)"},
+                        {RPCResult::Type::NUM, "keypoolsize_hd_internal", /* optional */ true, "how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used)"},
                         {RPCResult::Type::NUM_TIME, "unlocked_until", /* optional */ true, "the " + UNIX_EPOCH_TIME + " until which the wallet is unlocked for transfers, or 0 if the wallet is locked (only present for passphrase-encrypted wallets)"},
                         {RPCResult::Type::STR_AMOUNT, "paytxfee", "the transaction fee configuration, set in " + CURRENCY_UNIT + "/kvB"},
                         {RPCResult::Type::STR_HEX, "hdseedid", /* optional */ true, "the Hash160 of the HD seed (only present when HD is enabled)"},
@@ -2955,20 +2958,20 @@ static RPCHelpMan listunspent()
                         {
                             {RPCResult::Type::STR_HEX, "txid", "the transaction id"},
                             {RPCResult::Type::NUM, "vout", "the vout value"},
-                            {RPCResult::Type::STR, "address", "the bitcoin address"},
-                            {RPCResult::Type::STR, "label", "The associated label, or \"\" for the default label"},
+                            {RPCResult::Type::STR, "address", /* optional */ true, "the bitcoin address"},
+                            {RPCResult::Type::STR, "label", /* optional */ true, "The associated label, or \"\" for the default label"},
                             {RPCResult::Type::STR, "scriptPubKey", "the script key"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
                             {RPCResult::Type::NUM, "ancestorcount", /* optional */ true, "The number of in-mempool ancestor transactions, including this one (if transaction is in the mempool)"},
                             {RPCResult::Type::NUM, "ancestorsize", /* optional */ true, "The virtual transaction size of in-mempool ancestors, including this one (if transaction is in the mempool)"},
                             {RPCResult::Type::STR_AMOUNT, "ancestorfees", /* optional */ true, "The total fees of in-mempool ancestors (including this one) with fee deltas used for mining priority in " + CURRENCY_ATOM + " (if transaction is in the mempool)"},
-                            {RPCResult::Type::STR_HEX, "redeemScript", "The redeemScript if scriptPubKey is P2SH"},
-                            {RPCResult::Type::STR, "witnessScript", "witnessScript if the scriptPubKey is P2WSH or P2SH-P2WSH"},
+                            {RPCResult::Type::STR_HEX, "redeemScript", /* optional */ true, "The redeemScript if scriptPubKey is P2SH"},
+                            {RPCResult::Type::STR, "witnessScript", /* optional */ true, "witnessScript if the scriptPubKey is P2WSH or P2SH-P2WSH"},
                             {RPCResult::Type::BOOL, "spendable", "Whether we have the private keys to spend this output"},
                             {RPCResult::Type::BOOL, "solvable", "Whether we know how to spend this output, ignoring the lack of keys"},
-                            {RPCResult::Type::BOOL, "reused", "(only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)"},
-                            {RPCResult::Type::STR, "desc", "(only when solvable) A descriptor for spending this output"},
+                            {RPCResult::Type::BOOL, "reused", /* optional */ true, "(only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)"},
+                            {RPCResult::Type::STR, "desc", /* optional */ true, "(only when solvable) A descriptor for spending this output"},
                             {RPCResult::Type::BOOL, "safe", "Whether this output is considered safe to spend. Unconfirmed transactions\n"
                                                             "from outside keys and unconfirmed replacement transactions are considered unsafe\n"
                                                             "and are not eligible for spending by fundrawtransaction and sendtoaddress."},
@@ -3442,6 +3445,10 @@ RPCHelpMan signrawtransactionwithwallet()
                             {
                                 {RPCResult::Type::STR_HEX, "txid", "The hash of the referenced, previous transaction"},
                                 {RPCResult::Type::NUM, "vout", "The index of the output to spent and used as input"},
+                                {RPCResult::Type::ARR, "witness", "",
+                                {
+                                    {RPCResult::Type::STR_HEX, "witness", ""},
+                                }},
                                 {RPCResult::Type::STR_HEX, "scriptSig", "The hex-encoded signature script"},
                                 {RPCResult::Type::NUM, "sequence", "Script sequence number"},
                                 {RPCResult::Type::STR, "error", "Verification or signing error related to the input"},
@@ -4188,9 +4195,9 @@ static RPCHelpMan send()
             RPCResult::Type::OBJ, "", "",
                 {
                     {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
-                    {RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of the number of addresses."},
-                    {RPCResult::Type::STR_HEX, "hex", "If add_to_wallet is false, the hex-encoded raw transaction with signature(s)"},
-                    {RPCResult::Type::STR, "psbt", "If more signatures are needed, or if add_to_wallet is false, the base64-encoded (partially) signed transaction"}
+                    {RPCResult::Type::STR_HEX, "txid", /* optional */ true, "The transaction id for the send. Only 1 transaction is created regardless of the number of addresses."},
+                    {RPCResult::Type::STR_HEX, "hex", /* optional */ true, "If add_to_wallet is false, the hex-encoded raw transaction with signature(s)"},
+                    {RPCResult::Type::STR, "psbt", /* optional */ true, "If more signatures are needed, or if add_to_wallet is false, the base64-encoded (partially) signed transaction"}
                 }
         },
         RPCExamples{""
