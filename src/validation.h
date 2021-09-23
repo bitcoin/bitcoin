@@ -107,6 +107,7 @@ typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 typedef std::unordered_multimap<uint256, CBlockIndex*, BlockHasher> PrevBlockMap;
 extern Mutex g_best_block_mutex;
 extern std::condition_variable g_best_block_cv;
+/** Used to notify getblocktemplate RPC of new tips. */
 extern uint256 g_best_block;
 // SYSCOIN
 extern std::atomic_bool fReindexGeth;
@@ -602,9 +603,15 @@ public:
     //! CChainState instances.
     BlockManager& m_blockman;
 
+    //! The chainstate manager that owns this chainstate. The reference is
+    //! necessary so that this instance can check whether it is the active
+    //! chainstate within deeply nested method calls.
+    ChainstateManager& m_chainman;
+
     explicit CChainState(
         CTxMemPool* mempool,
         BlockManager& blockman,
+        ChainstateManager& chainman,
         std::optional<uint256> from_snapshot_blockhash = std::nullopt);
 
     /**
@@ -641,9 +648,10 @@ public:
     const std::optional<uint256> m_from_snapshot_blockhash;
 
     /**
-     * The set of all CBlockIndex entries with BLOCK_VALID_TRANSACTIONS (for itself and all ancestors) and
-     * as good as our current tip or better. Entries may be failed, though, and pruning nodes may be
-     * missing the data for the block.
+     * The set of all CBlockIndex entries with either BLOCK_VALID_TRANSACTIONS (for
+     * itself and all ancestors) *or* BLOCK_ASSUMED_VALID (if using background
+     * chainstates) and as good as our current tip or better. Entries may be failed,
+     * though, and pruning nodes may be missing the data for the block.
      */
     std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexCandidates;
 
@@ -866,12 +874,6 @@ private:
  * *Background IBD chainstate*: an IBD chainstate for which the
  *    IBD process is happening in the background while use of the
  *    active (snapshot) chainstate allows the rest of the system to function.
- *
- * *Validated chainstate*: the most-work chainstate which has been validated
- *   locally via initial block download. This will be the snapshot chainstate
- *   if a snapshot was loaded and all blocks up to the snapshot starting point
- *   have been downloaded and validated (via background validation), otherwise
- *   it will be the IBD chainstate.
  */
 class ChainstateManager
 {
@@ -994,19 +996,6 @@ public:
 
     //! Is there a snapshot in use and has it been fully validated?
     bool IsSnapshotValidated() const { return m_snapshot_validated; }
-
-    //! @returns true if this chainstate is being used to validate an active
-    //!          snapshot in the background.
-    bool IsBackgroundIBD(CChainState* chainstate) const;
-
-    //! Return the most-work chainstate that has been fully validated.
-    //!
-    //! During background validation of a snapshot, this is the IBD chain. After
-    //! background validation has completed, this is the snapshot chain.
-    CChainState& ValidatedChainstate() const;
-
-    CChain& ValidatedChain() const { return ValidatedChainstate().m_chain; }
-    CBlockIndex* ValidatedTip() const { return ValidatedChain().Tip(); }
 
     /**
      * Process an incoming block. This only returns after the best known valid
