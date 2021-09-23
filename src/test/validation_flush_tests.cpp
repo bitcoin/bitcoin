@@ -9,7 +9,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(validation_flush_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(validation_flush_tests, ChainTestingSetup)
 
 //! Test utilities for detecting when we need to flush the coins cache based
 //! on estimated memory usage.
@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
 {
     CTxMemPool mempool;
     BlockManager blockman{};
-    CChainState chainstate{&mempool, blockman};
+    CChainState chainstate{&mempool, blockman, *Assert(m_node.chainman)};
     chainstate.InitCoinsDB(/*cache_size_bytes*/ 1 << 10, /*in_memory*/ true, /*should_wipe*/ false);
     WITH_LOCK(::cs_main, chainstate.InitCoinsCache(1 << 10));
 
