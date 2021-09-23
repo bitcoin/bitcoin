@@ -11,9 +11,11 @@ from typing import List
 from test_framework.messages import (
     CAddress,
     msg_addrv2,
-    NODE_NETWORK,
 )
-from test_framework.p2p import P2PInterface
+from test_framework.p2p import (
+    P2PInterface,
+    P2P_SERVICES,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
@@ -42,7 +44,7 @@ def calc_addrv2_msg_size(addrs):
     size = 1  # vector length byte
     for addr in addrs:
         size += 4  # time
-        size += 1  # services, COMPACTSIZE(P2P_SERVICES)
+        size += 3  # services, COMPACTSIZE(P2P_SERVICES)
         size += 1  # network id
         size += 1  # address length byte
         size += addr.ADDRV2_ADDRESS_LENGTH[addr.net]  # address
@@ -60,7 +62,7 @@ class AddrTest(BitcoinTestFramework):
             addr = CAddress()
             addr.time = int(self.mocktime) + i
             addr.port = 8333 + i
-            addr.nServices = NODE_NETWORK
+            addr.nServices = P2P_SERVICES
             # Add one I2P and one onion V3 address at an arbitrary position.
             if i == 5:
                 addr.net = addr.NET_I2P
