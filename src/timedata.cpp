@@ -11,6 +11,7 @@
 #include <netaddress.h>
 #include <node/ui_interface.h>
 #include <sync.h>
+#include <tinyformat.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <warnings.h>
@@ -98,11 +99,12 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
         }
 
         if (LogAcceptCategory(BCLog::NET)) {
+            std::string log_message{"time data samples: "};
             for (const int64_t n : vSorted) {
-                LogPrint(BCLog::NET, "%+d  ", n); /* Continued */
+                log_message += strprintf("%+d  ", n);
             }
-            LogPrint(BCLog::NET, "|  "); /* Continued */
-            LogPrint(BCLog::NET, "nTimeOffset = %+d  (%+d minutes)\n", nTimeOffset, nTimeOffset / 60);
+            log_message += strprintf("|  median offset = %+d  (%+d minutes)", nTimeOffset, nTimeOffset / 60);
+            LogPrint(BCLog::NET, "%s\n", log_message);
         }
     }
 }
