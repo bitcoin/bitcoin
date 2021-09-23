@@ -21,23 +21,23 @@
 #include <cmath>
 #include <optional>
 
-CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
-                                 int64_t _nTime, unsigned int _entryHeight,
-                                 bool _spendsCoinbase, int64_t _sigOpsCost, LockPoints lp)
-    : tx(_tx), nFee(_nFee), nTxWeight(GetTransactionWeight(*tx)), nUsageSize(RecursiveDynamicUsage(tx)), nTime(_nTime), entryHeight(_entryHeight),
-    spendsCoinbase(_spendsCoinbase), sigOpCost(_sigOpsCost), lockPoints(lp)
-{
-    nCountWithDescendants = 1;
-    nSizeWithDescendants = GetTxSize();
-    nModFeesWithDescendants = nFee;
-
-    feeDelta = 0;
-
-    nCountWithAncestors = 1;
-    nSizeWithAncestors = GetTxSize();
-    nModFeesWithAncestors = nFee;
-    nSigOpCostWithAncestors = sigOpCost;
-}
+CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
+                                 int64_t time, unsigned int entry_height,
+                                 bool spends_coinbase, int64_t sigops_cost, LockPoints lp)
+    : tx{tx},
+      nFee{fee},
+      nTxWeight(GetTransactionWeight(*tx)),
+      nUsageSize{RecursiveDynamicUsage(tx)},
+      nTime{time},
+      entryHeight{entry_height},
+      spendsCoinbase{spends_coinbase},
+      sigOpCost{sigops_cost},
+      lockPoints{lp},
+      nSizeWithDescendants{GetTxSize()},
+      nModFeesWithDescendants{nFee},
+      nSizeWithAncestors{GetTxSize()},
+      nModFeesWithAncestors{nFee},
+      nSigOpCostWithAncestors{sigOpCost} {}
 
 void CTxMemPoolEntry::UpdateFeeDelta(int64_t newFeeDelta)
 {

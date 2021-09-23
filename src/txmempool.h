@@ -37,19 +37,16 @@ extern RecursiveMutex cs_main;
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
-struct LockPoints
-{
+struct LockPoints {
     // Will be set to the blockchain height and median time past
     // values that would be necessary to satisfy all relative locktime
     // constraints (BIP68) of this tx given our view of block chain history
-    int height;
-    int64_t time;
+    int height{0};
+    int64_t time{0};
     // As long as the current chain descends from the highest height block
     // containing one of the inputs used in the calculation, then the cached
     // values are still valid even after a reorg.
-    CBlockIndex* maxInputBlock;
-
-    LockPoints() : height(0), time(0), maxInputBlock(nullptr) { }
+    CBlockIndex* maxInputBlock{nullptr};
 };
 
 struct CompareIteratorByHash {
@@ -98,27 +95,27 @@ private:
     const unsigned int entryHeight; //!< Chain height when entering the mempool
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     const int64_t sigOpCost;        //!< Total sigop cost
-    int64_t feeDelta;          //!< Used for determining the priority of the transaction for mining in a block
+    int64_t feeDelta{0};            //!< Used for determining the priority of the transaction for mining in a block
     LockPoints lockPoints;     //!< Track the height and time at which tx was final
 
     // Information about descendants of this transaction that are in the
     // mempool; if we remove this transaction we must remove all of these
     // descendants as well.
-    uint64_t nCountWithDescendants;  //!< number of descendant transactions
+    uint64_t nCountWithDescendants{1}; //!< number of descendant transactions
     uint64_t nSizeWithDescendants;   //!< ... and size
     CAmount nModFeesWithDescendants; //!< ... and total fees (all including us)
 
     // Analogous statistics for ancestor transactions
-    uint64_t nCountWithAncestors;
+    uint64_t nCountWithAncestors{1};
     uint64_t nSizeWithAncestors;
     CAmount nModFeesWithAncestors;
     int64_t nSigOpCostWithAncestors;
 
 public:
-    CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
-                    int64_t _nTime, unsigned int _entryHeight,
-                    bool spendsCoinbase,
-                    int64_t nSigOpsCost, LockPoints lp);
+    CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
+                    int64_t time, unsigned int entry_height,
+                    bool spends_coinbase,
+                    int64_t sigops_cost, LockPoints lp);
 
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
