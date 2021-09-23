@@ -66,7 +66,7 @@ public:
     /** The fee required to spend this output at the consolidation feerate. */
     CAmount long_term_fee{0};
 
-    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const std::optional<CFeeRate> feerate = std::nullopt)
+    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const std::optional<CFeeRate>& feerate = std::nullopt)
         : outpoint{outpoint},
           txout{txout},
           depth{depth},
@@ -147,8 +147,9 @@ struct CoinSelectionParams {
     bool m_avoid_partial_spends = false;
 
     CoinSelectionParams(FastRandomContext& rng_fast, size_t change_output_size, size_t change_spend_size,
-                        CAmount min_change_target, CFeeRate effective_feerate,
-                        CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial)
+                        CAmount min_change_target, const CFeeRate& effective_feerate,
+                        const CFeeRate& long_term_feerate, const CFeeRate& discard_feerate,
+                        size_t tx_noinputs_size, bool avoid_partial)
         : rng_fast{rng_fast},
           change_output_size(change_output_size),
           change_spend_size(change_spend_size),

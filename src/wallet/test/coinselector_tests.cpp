@@ -67,7 +67,7 @@ static void add_coin(const CAmount& nValue, int nInput, CoinSet& set, CAmount fe
     set.insert(coin);
 }
 
-static void add_coin(CoinsResult& available_coins, CWallet& wallet, const CAmount& nValue, CFeeRate feerate = CFeeRate(0), int nAge = 6*24, bool fIsFromMe = false, int nInput =0, bool spendable = false)
+static void add_coin(CoinsResult& available_coins, CWallet& wallet, const CAmount& nValue, const CFeeRate& feerate = CFeeRate(0), int nAge = 6*24, bool fIsFromMe = false, int nInput =0, bool spendable = false)
 {
     CMutableTransaction tx;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes

@@ -57,7 +57,7 @@ RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx);
  *                                  the start; any existing mempool entries will remain in the set.
  * @returns an error message if Rule #5 is broken, otherwise a std::nullopt.
  */
-std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx, CTxMemPool& pool,
+std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx, const CTxMemPool& pool,
                                                   const CTxMemPool::setEntries& iters_conflicting,
                                                   CTxMemPool::setEntries& all_conflicts)
     EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
@@ -88,7 +88,8 @@ std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries&
  * @returns error message if fees insufficient, otherwise std::nullopt.
  */
 std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& iters_conflicting,
-                                                 CFeeRate replacement_feerate, const uint256& txid);
+                                                 const CFeeRate& replacement_feerate,
+                                                 const uint256& txid);
 
 /** Enforce BIP125 Rule #3 "The replacement transaction pays an absolute fee of at least the sum
  * paid by the original transactions." Enforce BIP125 Rule #4 "The replacement transaction must also
@@ -103,7 +104,7 @@ std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& i
 std::optional<std::string> PaysForRBF(CAmount original_fees,
                                       CAmount replacement_fees,
                                       size_t replacement_vsize,
-                                      CFeeRate relay_fee,
+                                      const CFeeRate& relay_fee,
                                       const uint256& txid);
 
 #endif // BITCOIN_POLICY_RBF_H

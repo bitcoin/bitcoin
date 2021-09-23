@@ -14,7 +14,7 @@
 
 namespace wallet {
 
-static void AddCoin(const CAmount& value, int n_input, int n_input_bytes, int locktime, std::vector<COutput>& coins, CFeeRate fee_rate)
+static void AddCoin(const CAmount& value, int n_input, int n_input_bytes, int locktime, std::vector<COutput>& coins, const CFeeRate& fee_rate)
 {
     CMutableTransaction tx;
     tx.vout.resize(n_input + 1);

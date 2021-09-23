@@ -56,7 +56,7 @@ RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx)
 }
 
 std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
-                                                  CTxMemPool& pool,
+                                                  const CTxMemPool& pool,
                                                   const CTxMemPool::setEntries& iters_conflicting,
                                                   CTxMemPool::setEntries& all_conflicts)
 {
@@ -131,7 +131,7 @@ std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries&
 }
 
 std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& iters_conflicting,
-                                                 CFeeRate replacement_feerate,
+                                                 const CFeeRate& replacement_feerate,
                                                  const uint256& txid)
 {
     for (const auto& mi : iters_conflicting) {
@@ -159,7 +159,7 @@ std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& i
 std::optional<std::string> PaysForRBF(CAmount original_fees,
                                       CAmount replacement_fees,
                                       size_t replacement_vsize,
-                                      CFeeRate relay_fee,
+                                      const CFeeRate& relay_fee,
                                       const uint256& txid)
 {
     // BIP125 Rule #3: The replacement fees must be greater than or equal to fees of the

@@ -219,7 +219,7 @@ struct PackageMempoolAcceptResult
                                         std::map<const uint256, const MempoolAcceptResult>&& results)
         : m_state{state}, m_tx_results(std::move(results)) {}
 
-    explicit PackageMempoolAcceptResult(PackageValidationState state, CFeeRate feerate,
+    explicit PackageMempoolAcceptResult(PackageValidationState state, const CFeeRate& feerate,
                                         std::map<const uint256, const MempoolAcceptResult>&& results)
         : m_state{state}, m_tx_results(std::move(results)), m_package_feerate{feerate} {}
 
