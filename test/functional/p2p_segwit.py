@@ -43,6 +43,7 @@ from test_framework.messages import (
 from test_framework.p2p import (
     P2PInterface,
     p2p_lock,
+    P2P_SERVICES,
 )
 from test_framework.script import (
     CScript,
@@ -224,14 +225,14 @@ class SegWitTest(BitcoinTestFramework):
 
     def run_test(self):
         # Setup the p2p connections
-        # self.test_node sets NODE_WITNESS|NODE_NETWORK
-        self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK | NODE_WITNESS)
+        # self.test_node sets P2P_SERVICES, i.e. NODE_WITNESS | NODE_NETWORK
+        self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn(), services=P2P_SERVICES)
         # self.old_node sets only NODE_NETWORK
         self.old_node = self.nodes[0].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK)
         # self.std_node is for testing node1 (fRequireStandard=true)
-        self.std_node = self.nodes[1].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK | NODE_WITNESS)
+        self.std_node = self.nodes[1].add_p2p_connection(TestP2PConn(), services=P2P_SERVICES)
         # self.std_wtx_node is for testing node1 with wtxid relay
-        self.std_wtx_node = self.nodes[1].add_p2p_connection(TestP2PConn(wtxidrelay=True), services=NODE_NETWORK | NODE_WITNESS)
+        self.std_wtx_node = self.nodes[1].add_p2p_connection(TestP2PConn(wtxidrelay=True), services=P2P_SERVICES)
 
         assert self.test_node.nServices & NODE_WITNESS != 0
 
@@ -2017,8 +2018,8 @@ class SegWitTest(BitcoinTestFramework):
     @subtest  # type: ignore
     def test_wtxid_relay(self):
         # Use brand new nodes to avoid contamination from earlier tests
-        self.wtx_node = self.nodes[0].add_p2p_connection(TestP2PConn(wtxidrelay=True), services=NODE_NETWORK | NODE_WITNESS)
-        self.tx_node = self.nodes[0].add_p2p_connection(TestP2PConn(wtxidrelay=False), services=NODE_NETWORK | NODE_WITNESS)
+        self.wtx_node = self.nodes[0].add_p2p_connection(TestP2PConn(wtxidrelay=True), services=P2P_SERVICES)
+        self.tx_node = self.nodes[0].add_p2p_connection(TestP2PConn(wtxidrelay=False), services=P2P_SERVICES)
 
         # Check wtxidrelay feature negotiation message through connecting a new peer
         def received_wtxidrelay():
