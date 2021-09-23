@@ -146,6 +146,25 @@ class MiniWallet:
         self.sendrawtransaction(from_node=kwargs['from_node'], tx_hex=tx['hex'])
         return tx
 
+    def send_to(self, *, from_node, scriptPubKey, amount, fee=1000):
+        """
+        Create and send a tx with an output to a given scriptPubKey/amount,
+        plus a change output to our internal address. To keep things simple, a
+        fixed fee given in Satoshi is used.
+
+        Note that this method fails if there is no single internal utxo
+        available that can cover the cost for the amount and the fixed fee
+        (the utxo with the largest value is taken).
+
+        Returns a tuple (txid, n) referring to the created external utxo outpoint.
+        """
+        tx = self.create_self_transfer(from_node=from_node, fee_rate=0, mempool_valid=False)['tx']
+        assert_greater_than_or_equal(tx.vout[0].nValue, amount + fee)
+        tx.vout[0].nValue -= (amount + fee)           # change output -> MiniWallet
+        tx.vout.append(CTxOut(amount, scriptPubKey))  # arbitrary output -> to be returned
+        txid = self.sendrawtransaction(from_node=from_node, tx_hex=tx.serialize().hex())
+        return txid, 1
+
     def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
         """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
         self._utxos = sorted(self._utxos, key=lambda k: k['value'])

@@ -19,7 +19,6 @@ from test_framework.script import CScript, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
     assert_raises_rpc_error,
 )
 from test_framework.script_util import (
@@ -96,23 +95,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def make_utxo(self, node, amount, confirmed=True, scriptPubKey=DUMMY_P2WPKH_SCRIPT):
         """Create a txout with a given amount and scriptPubKey
 
-        Assumes that MiniWallet has enough funds to cover the amount and the fixed fee
-        (from it's internal utxos, the one with the largest value is taken).
-
         confirmed - txouts created will be confirmed in the blockchain;
                     unconfirmed otherwise.
         """
-        # MiniWallet only supports sweeping utxos to its own internal scriptPubKey, so in
-        # order to create an output with arbitrary amount/scriptPubKey, we have to add it
-        # manually after calling the create_self_transfer method. The MiniWallet output's
-        # nValue has to be adapted accordingly (amount and fee deduction). To keep things
-        # simple, we use a fixed fee of 1000 Satoshis here.
-        fee = 1000
-        tx = self.wallet.create_self_transfer(from_node=node, fee_rate=0, mempool_valid=False)['tx']
-        assert_greater_than(tx.vout[0].nValue, amount + fee)
-        tx.vout[0].nValue -= (amount + fee)           # change output -> MiniWallet
-        tx.vout.append(CTxOut(amount, scriptPubKey))  # desired output -> to be returned
-        txid = self.wallet.sendrawtransaction(from_node=node, tx_hex=tx.serialize().hex())
+        txid, n = self.wallet.send_to(from_node=node, scriptPubKey=scriptPubKey, amount=amount)
 
         # If requested, ensure txouts are confirmed.
         if confirmed:
@@ -125,7 +111,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 assert new_size < mempool_size
                 mempool_size = new_size
 
-        return COutPoint(int(txid, 16), 1)
+        return COutPoint(int(txid, 16), n)
 
     def test_simple_doublespend(self):
         """Simple doublespend"""
