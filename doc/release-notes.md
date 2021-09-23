@@ -1,9 +1,9 @@
-0.21.2rc2 Release Notes
+0.21.2 Release Notes
 ====================
 
-Bitcoin Core version 0.21.2rc2 is now available from:
+Bitcoin Core version 0.21.2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.21.2/test.rc2/>
+  <https://bitcoincore.org/bin/bitcoin-core-0.21.2/>
 
 This minor release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -42,7 +42,7 @@ longer supported. Additionally, Bitcoin Core does not yet change appearance
 when macOS "dark mode" is activated.
 
 
-0.21.2rc2 change log
+0.21.2 change log
 =================
 
 ### P2P protocol and network code
