@@ -772,39 +772,43 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // pathological case by making sure setConflicts and setAncestors don't
     // intersect.
     if (const auto err_string{EntriesAndTxidsDisjoint(setAncestors, setConflicts, hash)}) {
+        // We classify this as a consensus error because a transaction depending on something it
+        // conflicts with would be inconsistent.
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-spends-conflicting-tx", *err_string);
     }
 
 
-    // If we don't hold the lock allConflicting might be incomplete; the
-    // subsequent RemoveStaged() and addUnchecked() calls don't guarantee
-    // mempool consistency for us.
     fReplacementTransaction = setConflicts.size();
-    if (fReplacementTransaction)
-    {
+    if (fReplacementTransaction) {
         CFeeRate newFeeRate(nModifiedFees, nSize);
+        // It's possible that the replacement pays more fees than its direct conflicts but not more
+        // than all conflicts (i.e. the direct conflicts have high-fee descendants). However, if the
+        // replacement doesn't pay more fees than its direct conflicts, then we can be sure it's not
+        // more economically rational to mine. Before we go digging through the mempool for all
+        // transactions that would need to be removed (direct conflicts and all descendants), check
+        // that the replacement transaction pays more than its direct conflicts.
         if (const auto err_string{PaysMoreThanConflicts(setIterConflicting, newFeeRate, hash)}) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
         }
 
-        // Calculate all conflicting entries and enforce Rule #5.
+        // Calculate all conflicting entries and enforce BIP125 Rule #5.
         if (const auto err_string{GetEntriesForConflicts(tx, m_pool, setIterConflicting, allConflicting)}) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                                  "too many potential replacements", *err_string);
         }
-        // Enforce Rule #2.
+        // Enforce BIP125 Rule #2.
         if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, setIterConflicting)}) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                                  "replacement-adds-unconfirmed", *err_string);
         }
 
-        // Check if it's economically rational to mine this transaction rather
-        // than the ones it replaces. Enforce Rules #3 and #4.
+        // Check if it's economically rational to mine this transaction rather than the ones it
+        // replaces and pays for its own relay fees. Enforce BIP125 Rules #3 and #4.
         for (CTxMemPool::txiter it : allConflicting) {
             nConflictingFees += it->GetModifiedFee();
             nConflictingSize += it->GetTxSize();
         }
-        if (const auto err_string{PaysForRBF(nConflictingFees, nModifiedFees, nSize, hash)}) {
+        if (const auto err_string{PaysForRBF(nConflictingFees, nModifiedFees, nSize, ::incrementalRelayFee, hash)}) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
         }
     }
