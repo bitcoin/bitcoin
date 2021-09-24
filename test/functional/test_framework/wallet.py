@@ -28,6 +28,7 @@ from test_framework.script import (
     OP_NOP,
     SIGHASH_ALL,
 )
+from test_framework.script_util import key_to_p2wpkh_script
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
@@ -205,6 +206,14 @@ class MiniWallet:
         txid = from_node.sendrawtransaction(tx_hex)
         self.scan_tx(from_node.decoderawtransaction(tx_hex))
         return txid
+
+
+def random_p2wpkh():
+    """Generate a random P2WPKH scriptPubKey. Can be used when a random destination is needed,
+    but no compiled wallet is available (e.g. as replacement to the getnewaddress RPC)."""
+    key = ECKey()
+    key.generate()
+    return key_to_p2wpkh_script(key.get_pubkey().get_bytes())
 
 
 def make_chain(node, address, privkeys, parent_txid, parent_value, n=0, parent_locking_script=None, fee=DEFAULT_FEE):
