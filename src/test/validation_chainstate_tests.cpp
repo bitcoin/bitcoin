@@ -109,7 +109,7 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
 
     CChainState* background_cs;
 
-    BOOST_CHECK_EQUAL(chainman.GetAll().size(), 2);
+    BOOST_CHECK_EQUAL(chainman.GetAll().size(), 2U);
     for (CChainState* cs : chainman.GetAll()) {
         if (cs != &chainman.ActiveChainstate()) {
             background_cs = cs;
