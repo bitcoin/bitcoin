@@ -46,6 +46,7 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
 )
+from test_framework.wallet import MiniWallet
 
 
 class MempoolPersistTest(BitcoinTestFramework):
@@ -53,15 +54,26 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.num_nodes = 3
         self.extra_args = [[], ["-persistmempool=0"], []]
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def run_test(self):
+        self.mini_wallet = MiniWallet(self.nodes[2])
+        self.mini_wallet.rescan_utxos()
+        if self.is_sqlite_compiled():
+            self.nodes[2].createwallet(
+                wallet_name="watch",
+                descriptors=True,
+                disable_private_keys=True,
+                load_on_startup=False,
+            )
+            wallet_watch = self.nodes[2].get_wallet_rpc("watch")
+            assert_equal([{'success': True}], wallet_watch.importdescriptors([{'desc': self.mini_wallet.get_descriptor(), 'timestamp': 0}]))
+
         self.log.debug("Send 5 transactions from node2 (to its own address)")
         tx_creation_time_lower = int(time.time())
         for _ in range(5):
-            last_txid = self.nodes[2].sendtoaddress(self.nodes[2].getnewaddress(), Decimal("10"))
-        node2_balance = self.nodes[2].getbalance()
+            last_txid = self.mini_wallet.send_self_transfer(from_node=self.nodes[2])["txid"]
+        if self.is_sqlite_compiled():
+            self.nodes[2].syncwithvalidationinterfacequeue()  # Flush mempool to wallet
+            node2_balance = wallet_watch.getbalance()
         self.sync_all()
         tx_creation_time_higher = int(time.time())
 
@@ -82,16 +94,16 @@ class MempoolPersistTest(BitcoinTestFramework):
         assert_equal(total_fee_old, self.nodes[0].getmempoolinfo()['total_fee'])
         assert_equal(total_fee_old, sum(v['fees']['base'] for k, v in self.nodes[0].getrawmempool(verbose=True).items()))
 
-        tx_creation_time = self.nodes[0].getmempoolentry(txid=last_txid)['time']
+        last_entry = self.nodes[0].getmempoolentry(txid=last_txid)
+        tx_creation_time = last_entry['time']
         assert_greater_than_or_equal(tx_creation_time, tx_creation_time_lower)
         assert_greater_than_or_equal(tx_creation_time_higher, tx_creation_time)
 
         # disconnect nodes & make a txn that remains in the unbroadcast set.
         self.disconnect_nodes(0, 1)
-        assert(len(self.nodes[0].getpeerinfo()) == 0)
-        assert(len(self.nodes[0].p2ps) == 0)
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), Decimal("12"))
-        self.connect_nodes(0, 2)
+        assert_equal(len(self.nodes[0].getpeerinfo()), 0)
+        assert_equal(len(self.nodes[0].p2ps), 0)
+        self.mini_wallet.send_self_transfer(from_node=self.nodes[0])
 
         self.log.debug("Stop-start the nodes. Verify that node0 has the transactions in its mempool and node1 does not. Verify that node2 calculates its balance correctly after loading wallet transactions.")
         self.stop_nodes()
@@ -111,17 +123,19 @@ class MempoolPersistTest(BitcoinTestFramework):
         fees = self.nodes[0].getmempoolentry(txid=last_txid)['fees']
         assert_equal(fees['base'] + Decimal('0.00001000'), fees['modified'])
 
-        self.log.debug('Verify time is loaded correctly')
-        assert_equal(tx_creation_time, self.nodes[0].getmempoolentry(txid=last_txid)['time'])
+        self.log.debug('Verify all fields are loaded correctly')
+        assert_equal(last_entry, self.nodes[0].getmempoolentry(txid=last_txid))
 
         # Verify accounting of mempool transactions after restart is correct
-        self.nodes[2].syncwithvalidationinterfacequeue()  # Flush mempool to wallet
-        assert_equal(node2_balance, self.nodes[2].getbalance())
+        if self.is_sqlite_compiled():
+            self.nodes[2].loadwallet("watch")
+            wallet_watch = self.nodes[2].get_wallet_rpc("watch")
+            self.nodes[2].syncwithvalidationinterfacequeue()  # Flush mempool to wallet
+            assert_equal(node2_balance, wallet_watch.getbalance())
 
-        # start node0 with wallet disabled so wallet transactions don't get resubmitted
         self.log.debug("Stop-start node0 with -persistmempool=0. Verify that it doesn't load its mempool.dat file.")
         self.stop_nodes()
-        self.start_node(0, extra_args=["-persistmempool=0", "-disablewallet"])
+        self.start_node(0, extra_args=["-persistmempool=0"])
         assert self.nodes[0].getmempoolinfo()["loaded"]
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
 
@@ -164,18 +178,18 @@ class MempoolPersistTest(BitcoinTestFramework):
 
         # ensure node0 doesn't have any connections
         # make a transaction that will remain in the unbroadcast set
-        assert(len(node0.getpeerinfo()) == 0)
-        assert(len(node0.p2ps) == 0)
-        node0.sendtoaddress(self.nodes[1].getnewaddress(), Decimal("12"))
+        assert_equal(len(node0.getpeerinfo()), 0)
+        assert_equal(len(node0.p2ps), 0)
+        self.mini_wallet.send_self_transfer(from_node=node0)
 
         # shutdown, then startup with wallet disabled
-        self.stop_nodes()
-        self.start_node(0, extra_args=["-disablewallet"])
+        self.restart_node(0, extra_args=["-disablewallet"])
 
         # check that txn gets broadcast due to unbroadcast logic
         conn = node0.add_p2p_connection(P2PTxInvStore())
-        node0.mockscheduler(16*60) # 15 min + 1 for buffer
+        node0.mockscheduler(16 * 60)  # 15 min + 1 for buffer
         self.wait_until(lambda: len(conn.get_invs()) == 1)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     MempoolPersistTest().main()
