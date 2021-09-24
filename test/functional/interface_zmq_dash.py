@@ -16,8 +16,7 @@ try:
 finally:
     pass
 
-from test_framework.test_framework import (
-     DashTestFramework, skip_if_no_bitcoind_zmq, skip_if_no_py3_zmq)
+from test_framework.test_framework import DashTestFramework
 from test_framework.mininode import P2PInterface
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.messages import (
@@ -96,13 +95,15 @@ class DashZMQTest (DashTestFramework):
 
         self.set_dash_test_params(4, 3, fast_dip3_enforcement=True, extra_args=[node0_extra_args, [], [], []])
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_py3_zmq()
+        self.skip_if_no_bitcoind_zmq()
+        self.skip_if_no_wallet()
+
     def run_test(self):
         # Check that dashd has been built with ZMQ enabled.
         config = configparser.ConfigParser()
         config.read_file(open(self.options.configfile))
-
-        skip_if_no_py3_zmq()
-        skip_if_no_bitcoind_zmq(self)
 
         try:
             # Setup the ZMQ subscriber socket

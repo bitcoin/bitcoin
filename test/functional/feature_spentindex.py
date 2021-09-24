@@ -23,6 +23,9 @@ class SpentIndexTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 4
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_network(self):
         self.add_nodes(self.num_nodes)
         # Nodes 0/1 are "wallet" nodes

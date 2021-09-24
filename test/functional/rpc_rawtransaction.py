@@ -44,6 +44,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.num_nodes = 3
         self.extra_args = [["-txindex"], ["-txindex"], ["-txindex"]]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_network(self):
         super().setup_network()
         connect_nodes_bi(self.nodes, 0, 2)

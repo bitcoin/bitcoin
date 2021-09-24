@@ -23,6 +23,9 @@ class ReceivedByTest(BitcoinTestFramework):
         super().import_deterministic_coinbase_privkeys()
         self.num_cb_reward_addresses = len(self.nodes[1].listreceivedbyaddress(minconf=0, include_empty=True, include_watchonly=True))
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         # Generate block to get out of IBD
         self.nodes[0].generate(1)

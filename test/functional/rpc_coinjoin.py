@@ -16,6 +16,9 @@ class CoinJoinTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         self.test_coinjoin_start_stop()
         self.test_coinjoin_setamount()

@@ -27,7 +27,7 @@ import re
 import logging
 
 # Formatting. Default colors to empty strings.
-BOLD, BLUE, RED, GREY = ("", ""), ("", ""), ("", ""), ("", "")
+BOLD, GREEN, RED, GREY = ("", ""), ("", ""), ("", ""), ("", "")
 try:
     # Make sure python thinks it can write unicode to its stdout
     "\u2713".encode("utf_8").decode(sys.stdout.encoding)
@@ -39,11 +39,27 @@ except UnicodeDecodeError:
     CROSS = "x "
     CIRCLE = "o "
 
-if os.name == 'posix':
+if os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393):
+    if os.name == 'nt':
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        ENABLE_VIRTUAL_TERMINAL_PROCESSING = 4
+        STD_OUTPUT_HANDLE = -11
+        STD_ERROR_HANDLE = -12
+        # Enable ascii color control to stdout
+        stdout = kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+        stdout_mode = ctypes.c_int32()
+        kernel32.GetConsoleMode(stdout, ctypes.byref(stdout_mode))
+        kernel32.SetConsoleMode(stdout, stdout_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+        # Enable ascii color control to stderr
+        stderr = kernel32.GetStdHandle(STD_ERROR_HANDLE)
+        stderr_mode = ctypes.c_int32()
+        kernel32.GetConsoleMode(stderr, ctypes.byref(stderr_mode))
+        kernel32.SetConsoleMode(stderr, stderr_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
     # primitive formatting on supported
     # terminal via ANSI escape sequences:
     BOLD = ('\033[0m', '\033[1m')
-    BLUE = ('\033[0m', '\033[0;34m')
+    GREEN = ('\033[0m', '\033[0;32m')
     RED = ('\033[0m', '\033[0;31m')
     GREY = ('\033[0m', '\033[1;30m')
 
@@ -262,17 +278,20 @@ def main():
 
     # Create base test directory
     tmpdir = "%s/test_runner_∋_🏃_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
+
+    # If we fixed the command-line and filename encoding issue on Windows, these two lines could be removed
+    if config["environment"]["EXEEXT"] == ".exe":
+        tmpdir = "%s/test_runner_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
+
     os.makedirs(tmpdir)
 
     logging.debug("Temporary test directory at %s" % tmpdir)
 
-    enable_wallet = config["components"].getboolean("ENABLE_WALLET")
-    enable_utils = config["components"].getboolean("ENABLE_UTILS")
     enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
 
-    if not (enable_wallet and enable_utils and enable_bitcoind):
-        print("No functional tests to run. Wallet, utils, and dashd must all be enabled")
-        print("Rerun `configure` with -enable-wallet, -with-utils and -with-daemon and rerun make")
+    if not enable_bitcoind:
+        print("No functional tests to run.")
+        print("Rerun ./configure with --with-daemon and then make")
         sys.exit(0)
 
     # Build list of tests
@@ -306,11 +325,13 @@ def main():
 
     # Remove the test cases that the user has explicitly asked to exclude.
     if args.exclude:
-        exclude_tests = [re.sub("\.py$", "", test) + ".py" for test in args.exclude.split(',')]
+        exclude_tests = [test.split('.py')[0] for test in args.exclude.split(',')]
         for exclude_test in exclude_tests:
-            if exclude_test in test_list:
-                test_list.remove(exclude_test)
-            else:
+            # Remove <test_name>.py and <test_name>.py --arg from the test list
+            exclude_list = [test for test in test_list if test.split('.py')[0] == exclude_test]
+            for exclude_item in exclude_list:
+                test_list.remove(exclude_item)
+            if not exclude_list:
                 print("{}WARNING!{} Test '{}' not found in current test list.".format(BOLD[1], BOLD[0], exclude_test))
 
     if args.filter:
@@ -413,7 +434,10 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
                 print('\n============')
                 print('{}Combined log for {}:{}'.format(BOLD[1], testdir, BOLD[0]))
                 print('============\n')
-                combined_logs, _ = subprocess.Popen([sys.executable, os.path.join(tests_dir, 'combine_logs.py'), '-c', testdir], universal_newlines=True, stdout=subprocess.PIPE).communicate()
+                combined_logs_args = [sys.executable, os.path.join(tests_dir, 'combine_logs.py'), testdir]
+                if BOLD[0]:
+                    combined_logs_args += ['--color']
+                combined_logs, _ = subprocess.Popen(combined_logs_args, universal_newlines=True, stdout=subprocess.PIPE).communicate()
                 print("\n".join(deque(combined_logs.splitlines(), combined_logs_len)))
 
             if failfast:
@@ -562,7 +586,7 @@ class TestResult():
 
     def __repr__(self):
         if self.status == "Passed":
-            color = BLUE
+            color = GREEN
             glyph = TICK
         elif self.status == "Failed":
             color = RED

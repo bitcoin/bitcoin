@@ -40,6 +40,9 @@ class MaxUploadTest(BitcoinTestFramework):
         # Cache for utxos, as the listunspent may take a long time later in the test
         self.utxo_cache = []
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         # Advance all nodes 2 weeks in the future
         old_mocktime = self.mocktime

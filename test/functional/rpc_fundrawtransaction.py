@@ -30,6 +30,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.extra_args = [['-usehd=0']] * self.num_nodes
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_network(self):
         self.setup_nodes()
 

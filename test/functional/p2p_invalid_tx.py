@@ -72,7 +72,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         node.p2p.send_blocks_and_test([block1, block2], node, success=True)
 
         self.log.info("Mature the block.")
-        self.nodes[0].generate(100)
+        self.nodes[0].generatetoaddress(100, self.nodes[0].get_deterministic_priv_key().address)
 
         # b'\x64' is OP_NOTIF
         # Transaction will be rejected with code 16 (REJECT_INVALID)
@@ -88,18 +88,6 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         self.log.info('Test orphan transaction handling ... ')
         self.test_orphan_tx_handling(block1.vtx[0].sha256, False)
-
-        # restart node with sending BIP61 messages disabled, check that it disconnects without sending the reject message
-        self.log.info('Test a transaction that is rejected, with BIP61 disabled')
-        self.restart_node(0, ['-enablebip61=0', '-persistmempool=0'])
-        self.reconnect_p2p(num_connections=1)
-        with node.assert_debug_log(expected_msgs=[
-            "{} from peer=0 was not accepted: mandatory-script-verify-flag-failed (Invalid OP_IF construction) (code 16)".format(tx1.hash),
-            "disconnecting peer=0",
-        ]):
-            node.p2p.send_txs_and_test([tx1], node, success=False, expect_disconnect=True)
-        # send_txs_and_test will have waited for disconnect, so we can safely check that no reject has been received
-        assert_equal(node.p2p.reject_code_received, None)
 
         self.log.info('Test orphan transaction handling, resolve via block')
         self.restart_node(0, ['-persistmempool=0'])
@@ -158,8 +146,9 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             block.solve()
             node.p2p.send_blocks_and_test([block], node, success=True)
         else:
-            # Test orphan handling/resolution by publishing the withhold TX via the mempool
-            node.p2p.send_txs_and_test([tx_withhold], node, success=True)
+            with node.assert_debug_log(expected_msgs=["bad-txns-in-belowout"]):
+                # Test orphan handling/resolution by publishing the withhold TX via the mempool
+                node.p2p.send_txs_and_test([tx_withhold], node, success=True)
 
         # Transactions that should end up in the mempool
         expected_mempool = {
@@ -179,7 +168,6 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         wait_until(lambda: 1 == len(node.getpeerinfo()), timeout=12)  # p2ps[1] is no longer connected
         assert_equal(expected_mempool, set(node.getrawmempool()))
-
 
 
 if __name__ == '__main__':

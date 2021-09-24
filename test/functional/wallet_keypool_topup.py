@@ -26,6 +26,9 @@ class KeypoolRestoreTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [['-usehd=0'], ['-usehd=1', '-keypool=100']]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         wallet_path = os.path.join(self.nodes[1].datadir, self.chain, "wallets", "wallet.dat")
         wallet_backup_path = os.path.join(self.nodes[1].datadir, "wallet.bak")
