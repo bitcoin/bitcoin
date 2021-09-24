@@ -306,7 +306,7 @@ bool CTransactionBuilder::Commit(std::string& strResult)
     }
 
     CValidationState state;
-    if (!pwallet->CommitTransaction(tx, {}, {}, {}, dummyReserveKey, g_connman.get(), state)) {
+    if (!pwallet->CommitTransaction(tx, {}, {}, dummyReserveKey, g_connman.get(), state)) {
         strResult = state.GetRejectReason();
         return false;
     }

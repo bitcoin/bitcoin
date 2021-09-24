@@ -69,7 +69,7 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
     def check(self, txid=None, amount=None, confirmations=None):
         """Verify that listtransactions/listreceivedbyaddress return expected values."""
 
-        txs = self.node.listtransactions(label=self.label, count=10000, skip=0, include_watchonly=True)
+        txs = self.node.listtransactions(label=self.label, count=10000, include_watchonly=True)
         assert_equal(len(txs), self.expected_txs)
 
         addresses = self.node.listreceivedbyaddress(minconf=0, include_watchonly=True, address_filter=self.address['address'])
