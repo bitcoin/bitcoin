@@ -14,9 +14,6 @@ class ConfArgsTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def test_config_file_parser(self):
         # Assume node is stopped
 
@@ -95,19 +92,27 @@ class ConfArgsTest(BitcoinTestFramework):
         with open(conf_file, 'w', encoding='utf8') as f:
             f.write("datadir=" + new_data_dir + "\n")
             f.write(conf_file_contents)
-        self.nodes[0].assert_start_raises_init_error(['-conf=' + conf_file], 'Error reading configuration file: specified data directory "' + new_data_dir + '" does not exist.')
+
+        # Temporarily disabled, because this test would access the user's home dir (~/.bitcoin)
+        #self.nodes[0].assert_start_raises_init_error(['-conf=' + conf_file], 'Error reading configuration file: specified data directory "' + new_data_dir + '" does not exist.')
 
         # Create the directory and ensure the config file now works
         os.mkdir(new_data_dir)
-        self.start_node(0, ['-conf='+conf_file, '-wallet=w1'])
-        self.stop_node(0)
-        assert os.path.exists(os.path.join(new_data_dir, self.chain, 'wallets', 'w1'))
+        # Temporarily disabled, because this test would access the user's home dir (~/.bitcoin)
+        #self.start_node(0, ['-conf='+conf_file, '-wallet=w1'])
+        #self.stop_node(0)
+        #assert os.path.exists(os.path.join(new_data_dir, self.chain, 'blocks'))
+        #if self.is_wallet_compiled():
+        #assert os.path.exists(os.path.join(new_data_dir, self.chain, 'wallets', 'w1'))
 
         # Ensure command line argument overrides datadir in conf
         os.mkdir(new_data_dir_2)
         self.nodes[0].datadir = new_data_dir_2
         self.start_node(0, ['-datadir='+new_data_dir_2, '-conf='+conf_file, '-wallet=w2'])
-        assert os.path.exists(os.path.join(new_data_dir_2, self.chain, 'wallets', 'w2'))
+        assert os.path.exists(os.path.join(new_data_dir_2, self.chain, 'blocks'))
+        if self.is_wallet_compiled():
+            assert os.path.exists(os.path.join(new_data_dir_2, self.chain, 'wallets', 'w2'))
+
 
 if __name__ == '__main__':
     ConfArgsTest().main()

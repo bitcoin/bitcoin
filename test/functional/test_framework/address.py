@@ -12,7 +12,11 @@
 from .script import hash256, hash160, CScript
 from .util import hex_str_to_bytes
 
+# Note unlike in bitcoin, this address isn't bech32 since we don't (at this time) support bech32.
+ADDRESS_BCRT1_UNSPENDABLE = 'yVg3NBUHNEhgDceqwVUjsZHreC5PBHnUo9'
+
 chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+
 
 def byte_to_base58(b, version):
     result = ''

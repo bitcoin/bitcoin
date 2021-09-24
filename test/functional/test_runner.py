@@ -206,6 +206,7 @@ BASE_SCRIPTS = [
     'rpc_platform_filter.py',
     'feature_dip0020_activation.py',
     'feature_uacomment.py',
+    'feature_filelock.py',
     'p2p_unrequested_blocks.py',
     'p2p_blockfilters.py',
     'feature_asmap.py',
