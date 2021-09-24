@@ -874,9 +874,9 @@ void RPCConsole::clear(bool keep_prompt)
            "Type %5 for an overview of available commands.\n"
            "For more information on using this console, type %6.\n"
            "\n"
-           "%7WARNING: Scammers have been active, telling users to type"
+           "%7WARNING: Scammers have been actively telling users to type"
            " commands here, stealing their wallet contents. Do not use this console"
-           " without fully understanding the ramifications of a command.%8")
+           " without fully understanding the command.%8")
             .arg(PACKAGE_NAME,
                  "<b>" + ui->clearButton->shortcut().toString(QKeySequence::NativeText) + "</b>",
                  "<b>" + ui->fontBiggerButton->shortcut().toString(QKeySequence::NativeText) + "</b>",
