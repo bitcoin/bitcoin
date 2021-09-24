@@ -213,7 +213,7 @@ BitcoinApplication::~BitcoinApplication()
     if(coreThread)
     {
         qDebug() << __func__ << ": Stopping thread";
-        Q_EMIT stopThread();
+        coreThread->quit();
         coreThread->wait();
         qDebug() << __func__ << ": Stopped thread";
     }
@@ -223,6 +223,8 @@ BitcoinApplication::~BitcoinApplication()
 #ifdef ENABLE_WALLET
     delete paymentServer;
     paymentServer = nullptr;
+    delete m_wallet_controller;
+    m_wallet_controller = nullptr;
 #endif
     // Delete Qt-settings if user clicked on "Reset Options"
     QSettings settings;
@@ -284,8 +286,7 @@ void BitcoinApplication::startThread()
     connect(this, &BitcoinApplication::requestedShutdown, executor, &BitcoinCore::shutdown);
     connect(window, &BitcoinGUI::requestedRestart, executor, &BitcoinCore::restart);
     /*  make sure executor object is deleted in its own thread */
-    connect(this, &BitcoinApplication::stopThread, executor, &QObject::deleteLater);
-    connect(this, &BitcoinApplication::stopThread, coreThread, &QThread::quit);
+    connect(coreThread, &QThread::finished, executor, &QObject::deleteLater);
 
     coreThread->start();
 }
@@ -317,17 +318,19 @@ void BitcoinApplication::requestShutdown()
     qDebug() << __func__ << ": Requesting shutdown";
     startThread();
     window->hide();
+    // Must disconnect node signals otherwise current thread can deadlock since
+    // no event loop is running.
+    window->unsubscribeFromCoreSignals();
+    // Request node shutdown, which can interrupt long operations, like
+    // rescanning a wallet.
+    m_node.startShutdown();
+    // Unsetting the client model can cause the current thread to wait for node
+    // to complete an operation, like wait for a RPC execution to complate.
     window->setClientModel(nullptr);
     pollShutdownTimer->stop();
 
-#ifdef ENABLE_WALLET
-    delete m_wallet_controller;
-    m_wallet_controller = nullptr;
-#endif
     delete clientModel;
     clientModel = nullptr;
-
-    m_node.startShutdown();
 
     // Request shutdown from core thread
     Q_EMIT requestedShutdown();
@@ -434,7 +437,6 @@ static void SetupUIArgs()
     gArgs.AddArg("-windowtitle=<name>", _("Sets a window title which is appended to \"Dash Core - \""), false, OptionsCategory::GUI);
 }
 
-#ifndef BITCOIN_QT_TEST
 int GuiMain(int argc, char* argv[])
 {
     RegisterPrettyTerminateHander();
@@ -445,7 +447,7 @@ int GuiMain(int argc, char* argv[])
     std::tie(argc, argv) = winArgs.get();
 #endif
     SetupEnvironment();
-    util::ThreadRename("main");
+    util::ThreadSetInternalName("main");
 
     std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
 
@@ -464,9 +466,6 @@ int GuiMain(int argc, char* argv[])
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 #if QT_VERSION >= 0x050600
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-#endif
-#ifdef Q_OS_MAC
-    QApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
 #endif
 
     BitcoinApplication app(*node, argc, argv);
@@ -515,6 +514,9 @@ int GuiMain(int argc, char* argv[])
         help.showOrPrint();
         return EXIT_SUCCESS;
     }
+
+    // Install global event filter that makes sure that long tooltips can be word-wrapped
+    app.installEventFilter(new GUIUtil::ToolTipToRichTextFilter(TOOLTIP_WRAP_THRESHOLD, &app));
 
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
@@ -576,8 +578,8 @@ int GuiMain(int argc, char* argv[])
 #endif
 
     /// 9. Main GUI initialization
-    // Install global event filter that makes sure that long tooltips can be word-wrapped
-    app.installEventFilter(new GUIUtil::ToolTipToRichTextFilter(TOOLTIP_WRAP_THRESHOLD, &app));
+    // Install global event filter that makes sure that out-of-focus labels do not contain text cursor.
+    app.installEventFilter(new GUIUtil::LabelOutOfFocusEventFilter(&app));
 #if defined(Q_OS_WIN)
     // Install global event filter for processing Windows session related Windows messages (WM_QUERYENDSESSION and WM_ENDSESSION)
     qApp->installNativeEventFilter(new WinShutdownMonitor());
@@ -708,4 +710,3 @@ int GuiMain(int argc, char* argv[])
     }
     return rv;
 }
-#endif // BITCOIN_QT_TEST

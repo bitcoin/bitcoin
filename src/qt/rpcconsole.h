@@ -151,7 +151,6 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     // For RPC command executor
-    void stopExecutor();
     void cmdRequest(const QString &command, const WalletModel* wallet_model);
     /** Get restart command-line parameters and handle restart */
     void handleRestart(QStringList args);
