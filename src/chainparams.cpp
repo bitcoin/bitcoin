@@ -208,7 +208,7 @@ public:
         consensus.defaultAssumeValid = uint256S("0xe9599cf8d6462f63f17a8ec790803cf77028a380a1de84a976039914a45f5abb"); // 998000
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.nSYSXAsset = 1045909988;
+        consensus.nSYSXAsset = 123456;
         consensus.nNEVMChainID = 57;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
         consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
@@ -216,7 +216,7 @@ public:
         consensus.nBridgeStartBlock = 348000;
         consensus.nNEVMStartBlock = 1348000;
         consensus.nUTXOAssetsBlock = 1004200;
-        consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 10000;
+        consensus.nUTXOAssetsBlockProvisioning = consensus.nNEVMStartBlock + 10000;
         consensus.DIP0003Height = 1004200;
         consensus.DIP0003EnforcementHeight = 1004200;
         /**
@@ -371,9 +371,9 @@ public:
         consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
         consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");
         consensus.nBridgeStartBlock = 1000;
-        consensus.nNEVMStartBlock = 845000;
-        consensus.nUTXOAssetsBlock = 1348000;
-        consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 10000;
+        consensus.nNEVMStartBlock = 840000;
+        consensus.nUTXOAssetsBlock = 545000;
+        consensus.nUTXOAssetsBlockProvisioning = consensus.nNEVMStartBlock + 10000;
         consensus.DIP0003Height = 545000;
         consensus.DIP0003EnforcementHeight = 545000;
         pchMessageStart[0] = 0xce;
@@ -507,7 +507,7 @@ public:
         consensus.nMasternodeMinimumConfirmations = 1;
         consensus.nMinMNSubsidySats = 527500000;
 
-        consensus.nSYSXAsset = 1965866356;
+        consensus.nSYSXAsset = 123456;
         consensus.nNEVMChainID = 5700;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
         consensus.vchSYSXERC20Manager = ParseHex("443d9a14fb6ba2A45465bEC3767186f404Ccea25");
@@ -515,7 +515,7 @@ public:
         consensus.nBridgeStartBlock = 1000;
         consensus.nNEVMStartBlock = 1348000;
         consensus.nUTXOAssetsBlock = 0;
-        consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 10000;
+        consensus.nUTXOAssetsBlockProvisioning = consensus.nNEVMStartBlock + 10000;
         consensus.DIP0003Height = 200;
         consensus.DIP0003EnforcementHeight = 400;
         consensus.nAuxpowStartHeight = 1;
