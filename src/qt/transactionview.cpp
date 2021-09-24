@@ -230,7 +230,10 @@ void TransactionView::setModel(WalletModel *_model)
                 {
                     if (i == 0)
                         contextMenu->addSeparator();
-                    contextMenu->addAction(host, [this, url] { openThirdPartyTxUrl(url); });
+                    /*: Transactions table context menu action to show the
+                        selected transaction in a third-party block explorer.
+                        %1 is a stand-in argument for the URL of the explorer. */
+                    contextMenu->addAction(tr("Show in %1").arg(host), [this, url] { openThirdPartyTxUrl(url); });
                 }
             }
         }
