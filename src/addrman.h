@@ -150,88 +150,33 @@ public:
 
     explicit CAddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio);
 
-    ~CAddrMan()
-    {
-        nKey.SetNull();
-    }
+    ~CAddrMan();
 
     //! Return the number of (unique) addresses in all tables.
-    size_t size() const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs)
-    {
-        LOCK(cs); // TODO: Cache this in an atomic to avoid this overhead
-        return vRandom.size();
-    }
+    size_t size() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     //! Add addresses to addrman's new table.
     bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty = 0)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs)
-    {
-        LOCK(cs);
-        int nAdd = 0;
-        Check();
-        for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
-            nAdd += Add_(*it, source, nTimePenalty) ? 1 : 0;
-        Check();
-        if (nAdd) {
-            LogPrint(BCLog::ADDRMAN, "Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString(), nTried, nNew);
-        }
-        return nAdd > 0;
-    }
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     //! Mark an entry as accessible.
     void Good(const CService &addr, int64_t nTime = GetAdjustedTime())
-        EXCLUSIVE_LOCKS_REQUIRED(!cs)
-    {
-        LOCK(cs);
-        Check();
-        Good_(addr, /* test_before_evict */ true, nTime);
-        Check();
-    }
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     //! Mark an entry as connection attempted to.
     void Attempt(const CService &addr, bool fCountFailure, int64_t nTime = GetAdjustedTime())
-        EXCLUSIVE_LOCKS_REQUIRED(!cs)
-    {
-        LOCK(cs);
-        Check();
-        Attempt_(addr, fCountFailure, nTime);
-        Check();
-    }
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     //! See if any to-be-evicted tried table entries have been tested and if so resolve the collisions.
-    void ResolveCollisions()
-        EXCLUSIVE_LOCKS_REQUIRED(!cs)
-    {
-        LOCK(cs);
-        Check();
-        ResolveCollisions_();
-        Check();
-    }
+    void ResolveCollisions() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     //! Randomly select an address in tried that another address is attempting to evict.
-    CAddrInfo SelectTriedCollision()
-        EXCLUSIVE_LOCKS_REQUIRED(!cs)
-    {
-        LOCK(cs);
-        Check();
-        const CAddrInfo ret = SelectTriedCollision_();
-        Check();
-        return ret;
-    }
+    CAddrInfo SelectTriedCollision() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     /**
      * Choose an address to connect to.
      */
-    CAddrInfo Select(bool newOnly = false) const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs)
-    {
-        LOCK(cs);
-        Check();
-        const CAddrInfo addrRet = Select_(newOnly);
-        Check();
-        return addrRet;
-    }
+    CAddrInfo Select(bool newOnly = false) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     /**
      * Return all or many randomly selected addresses, optionally by network.
@@ -241,36 +186,16 @@ public:
      * @param[in] network        Select only addresses of this network (nullopt = all).
      */
     std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs)
-    {
-        LOCK(cs);
-        Check();
-        std::vector<CAddress> vAddr;
-        GetAddr_(vAddr, max_addresses, max_pct, network);
-        Check();
-        return vAddr;
-    }
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     //! Outer function for Connected_()
     void Connected(const CService &addr, int64_t nTime = GetAdjustedTime())
-        EXCLUSIVE_LOCKS_REQUIRED(!cs)
-    {
-        LOCK(cs);
-        Check();
-        Connected_(addr, nTime);
-        Check();
-    }
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void SetServices(const CService &addr, ServiceFlags nServices)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs)
-    {
-        LOCK(cs);
-        Check();
-        SetServices_(addr, nServices);
-        Check();
-    }
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    const std::vector<bool>& GetAsmap() const { return m_asmap; }
+    const std::vector<bool>& GetAsmap() const;
 
 private:
     //! A mutex to protect the inner data structures.
