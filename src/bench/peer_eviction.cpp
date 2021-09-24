@@ -20,19 +20,17 @@ static void EvictionProtectionCommon(
 {
     using Candidates = std::vector<NodeEvictionCandidate>;
     FastRandomContext random_context{true};
-    bench.warmup(100).epochIterations(1100);
 
     Candidates candidates{GetRandomNodeEvictionCandidates(num_candidates, random_context)};
     for (auto& c : candidates) {
         candidate_setup_fn(c);
     }
 
-    std::vector<Candidates> copies{
-        static_cast<size_t>(bench.epochs() * bench.epochIterations()), candidates};
-    size_t i{0};
+
     bench.run([&] {
-        ProtectEvictionCandidatesByRatio(copies.at(i));
-        ++i;
+        // creating a copy has an overhead of about 3%, so it does not influence the benchmark results much.
+        auto copy = candidates;
+        ProtectEvictionCandidatesByRatio(copy);
     });
 }
 

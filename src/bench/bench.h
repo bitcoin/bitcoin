@@ -42,11 +42,12 @@ using ankerl::nanobench::Bench;
 typedef std::function<void(Bench&)> BenchFunction;
 
 struct Args {
-    std::string regex_filter;
     bool is_list_only;
+    std::chrono::milliseconds min_time;
     std::vector<double> asymptote;
     fs::path output_csv;
     fs::path output_json;
+    std::string regex_filter;
 };
 
 class BenchRunner
