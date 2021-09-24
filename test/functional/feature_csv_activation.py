@@ -41,7 +41,6 @@ from itertools import product
 import time
 
 from test_framework.blocktools import (
-    CSV_ACTIVATION_HEIGHT,
     create_block,
     create_coinbase,
 )
@@ -89,12 +88,16 @@ def all_rlt_txs(txs):
     return [tx['tx'] for tx in txs]
 
 
+CSV_ACTIVATION_HEIGHT = 432
+
+
 class BIP68_112_113Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
         self.extra_args = [[
             '-whitelist=noban@127.0.0.1',
+            f'-testactivationheight=csv@{CSV_ACTIVATION_HEIGHT}',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]
         self.supports_cli = False

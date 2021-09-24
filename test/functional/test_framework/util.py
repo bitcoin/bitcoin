@@ -560,17 +560,6 @@ def mine_large_block(test_framework, node, utxos=None):
     test_framework.generate(node, 1)
 
 
-def generate_to_height(test_framework, node, target_height):
-    """Generates blocks until a given target block height has been reached.
-       To prevent timeouts, only up to 200 blocks are generated per RPC call.
-       Can be used to activate certain soft-forks (e.g. CSV, CLTV)."""
-    current_height = node.getblockcount()
-    while current_height < target_height:
-        nblocks = min(200, target_height - current_height)
-        current_height += len(test_framework.generate(node, nblocks))
-    assert_equal(node.getblockcount(), target_height)
-
-
 def find_vout_for_address(node, txid, addr):
     """
     Locate the vout index of the given transaction sending to the

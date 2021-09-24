@@ -6,7 +6,6 @@
 
 from test_framework.blocktools import (
     COINBASE_MATURITY,
-    CSV_ACTIVATION_HEIGHT,
 )
 from test_framework.address import (
     script_to_p2sh,
@@ -18,7 +17,6 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     find_vout_for_address,
-    generate_to_height,
 )
 from test_framework.messages import (
     CTxInWitness,
@@ -273,7 +271,6 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         getcontext().prec = 8
 
         # Make sure CSV is active
-        generate_to_height(self, self.nodes[0], CSV_ACTIVATION_HEIGHT)
         assert self.nodes[0].getblockchaininfo()['softforks']['csv']['active']
 
         # Create a P2WSH script with CSV
