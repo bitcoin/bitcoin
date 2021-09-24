@@ -19,6 +19,8 @@ namespace VeriBlock {
 
 namespace p2p {
 
+extern CCriticalSection cs_popstate;
+
 struct PopP2PState {
     uint32_t known_pop_data{0};
     uint32_t offered_pop_data{0};
@@ -60,6 +62,8 @@ template <typename PopDataType>
 void offerPopData(CNode* node, CConnman* connman, const CNetMsgMaker& msgMaker) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
+    LOCK(cs_popstate);
+
     auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<PopDataType>();
     auto& pop_mempool = VeriBlock::GetPop().getMemPool();
     std::vector<std::vector<uint8_t>> hashes;

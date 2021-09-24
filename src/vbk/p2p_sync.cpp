@@ -3,13 +3,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "vbk/p2p_sync.hpp"
 #include "validation.h"
+#include "vbk/p2p_sync.hpp"
 #include <veriblock/pop.hpp>
 
 
 namespace VeriBlock {
 namespace p2p {
+
+CCriticalSection cs_popstate;
 
 static std::map<NodeId, std::shared_ptr<PopDataNodeState>> mapPopDataNodeState;
 
@@ -31,9 +33,9 @@ std::map<altintegration::VbkBlock::id_t, PopP2PState>& PopDataNodeState::getMap<
     return vbk_blocks_state;
 }
 
-PopDataNodeState& getPopDataNodeState(const NodeId& id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+PopDataNodeState& getPopDataNodeState(const NodeId& id) EXCLUSIVE_LOCKS_REQUIRED(cs_popstate)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(cs_popstate);
     std::shared_ptr<PopDataNodeState>& val = mapPopDataNodeState[id];
     if (val == nullptr) {
         mapPopDataNodeState[id] = std::make_shared<PopDataNodeState>();
@@ -42,9 +44,9 @@ PopDataNodeState& getPopDataNodeState(const NodeId& id) EXCLUSIVE_LOCKS_REQUIRED
     return *val;
 }
 
-void erasePopDataNodeState(const NodeId& id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void erasePopDataNodeState(const NodeId& id) EXCLUSIVE_LOCKS_REQUIRED(cs_popstate)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(cs_popstate);
     mapPopDataNodeState.erase(id);
 }
 
@@ -56,12 +58,14 @@ bool processGetPopData(CNode* node, CConnman* connman, CDataStream& vRecv, altin
 
     if (requested_data.size() > MAX_POP_DATA_SENDING_AMOUNT) {
         LOCK(cs_main);
+
         LogPrint(BCLog::NET, "peer %d send oversized message getdata size() = %u \n", node->GetId(), requested_data.size());
         Misbehaving(node->GetId(), 20, strprintf("message getdata size() = %u", requested_data.size()));
         return false;
     }
-    
+
     LOCK(cs_main);
+    LOCK(cs_popstate);
     auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<pop_t>();
 
     const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
@@ -100,6 +104,7 @@ bool processOfferPopData(CNode* node, CConnman* connman, CDataStream& vRecv, alt
     }
 
     LOCK(cs_main);
+    LOCK(cs_popstate);
     auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<pop_t>();
 
     std::vector<std::vector<uint8_t>> requested_data;
@@ -139,7 +144,9 @@ bool processPopData(CNode* node, CDataStream& vRecv, altintegration::MemPool& po
         return false;
     }
 
+
     LOCK(cs_main);
+    LOCK(cs_popstate);
     auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<pop_t>();
     PopP2PState& pop_state = pop_state_map[data.getId()];
 
@@ -157,12 +164,14 @@ bool processPopData(CNode* node, CDataStream& vRecv, altintegration::MemPool& po
         return false;
     }
 
+
     auto result = pop_mempool.submit(data, state);
     if (!result && result.status == altintegration::MemPool::FAILED_STATELESS) {
         LogPrint(BCLog::NET, "peer %d sent statelessly invalid pop data: %s\n", node->GetId(), state.toString());
         Misbehaving(node->GetId(), 20, strprintf("statelessly invalid pop data getdata, reason: %s", state.toString()));
         return false;
     }
+
 
     return true;
 }

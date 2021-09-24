@@ -822,7 +822,10 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTim
 
     mapNodeState.erase(nodeid);
     // VeriBlock
-    VeriBlock::p2p::erasePopDataNodeState(nodeid);
+    {
+        LOCK(VeriBlock::p2p::cs_popstate);
+        VeriBlock::p2p::erasePopDataNodeState(nodeid);
+    }
 
     if (mapNodeState.empty()) {
         // Do a consistency check after the last peer is removed.
