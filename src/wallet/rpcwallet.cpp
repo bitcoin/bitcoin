@@ -1950,8 +1950,13 @@ static UniValue walletpassphrase(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already fully unlocked.");
     }
 
-    if (!pwallet->Unlock(strWalletPass, fForMixingOnly))
+    if (strWalletPass.empty()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
+    }
+
+    if (!pwallet->Unlock(strWalletPass, fForMixingOnly)) {
         throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+    }
 
     pwallet->TopUpKeyPool();
 
@@ -2011,10 +2016,9 @@ static UniValue walletpassphrasechange(const JSONRPCRequest& request)
     strNewWalletPass.reserve(100);
     strNewWalletPass = request.params[1].get_str().c_str();
 
-    if (strOldWalletPass.length() < 1 || strNewWalletPass.length() < 1)
-        throw std::runtime_error(
-            "walletpassphrasechange <oldpassphrase> <newpassphrase>\n"
-            "Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.");
+    if (strOldWalletPass.empty() || strNewWalletPass.empty()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
+    }
 
     if (!pwallet->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass)) {
         throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
@@ -2109,10 +2113,9 @@ static UniValue encryptwallet(const JSONRPCRequest& request)
     strWalletPass.reserve(100);
     strWalletPass = request.params[0].get_str().c_str();
 
-    if (strWalletPass.length() < 1)
-        throw std::runtime_error(
-            "encryptwallet <passphrase>\n"
-            "Encrypts the wallet with <passphrase>.");
+    if (strWalletPass.empty()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
+    }
 
     if (!pwallet->EncryptWallet(strWalletPass)) {
         throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");
