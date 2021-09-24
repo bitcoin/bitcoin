@@ -171,8 +171,6 @@ struct Params {
     int nSubsidyHalvingInterval;
     /* Block hash that is excepted from BIP16 enforcement */
     uint256 BIP16Exception;
-    /** Block height at with BIP16 becomes active */
-    int BIP16Height;
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
     uint256 BIP34Hash;

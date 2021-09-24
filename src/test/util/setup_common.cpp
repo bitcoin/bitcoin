@@ -230,7 +230,8 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     fRegTest = chainName == CBaseChainParams::REGTEST;
 }
 // SYSCOIN
-TestChain100Setup::TestChain100Setup(int count)
+TestChain100Setup::TestChain100Setup(int count, const std::vector<const char*>& extra_args)
+    : TestingSetup{CBaseChainParams::REGTEST, extra_args}
 {
     SetMockTime(1598887952);
     constexpr std::array<unsigned char, 32> vchKey = {
@@ -371,11 +372,6 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
     }
 
     return mempool_txn;
-}
-
-TestChain100Setup::~TestChain100Setup()
-{
-    gArgs.ForceSetArg("-segwitheight", "0");
 }
 
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx) const

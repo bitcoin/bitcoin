@@ -84,10 +84,6 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
-# The versionbit bit used to signal activation of SegWit
-VB_WITNESS_BIT = 1
-VB_TOP_BITS = 0x20000000
-
 MAX_SIGOP_COST = 80000
 
 SEGWIT_HEIGHT = 120
@@ -197,8 +193,8 @@ class SegWitTest(SyscoinTestFramework):
         self.num_nodes = 2
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
         self.extra_args = [
-            ["-acceptnonstdtxn=1", "-segwitheight={}".format(SEGWIT_HEIGHT), "-whitelist=noban@127.0.0.1"],
-            ["-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT)],
+            ["-acceptnonstdtxn=1", f"-testactivationheight=segwit@{SEGWIT_HEIGHT}", "-whitelist=noban@127.0.0.1"],
+            ["-acceptnonstdtxn=0", f"-testactivationheight=segwit@{SEGWIT_HEIGHT}"],
         ]
         self.supports_cli = False
 
@@ -207,14 +203,14 @@ class SegWitTest(SyscoinTestFramework):
 
     # Helper functions
 
-    def build_next_block(self, version=4):
+    def build_next_block(self):
         """Build a block on top of node0's tip."""
         tip = self.nodes[0].getbestblockhash()
         height = self.nodes[0].getblockcount() + 1
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
         # SYSCOIN
-        block.set_base_version(version)
+        block.set_base_version(4)
         block.rehash()
         return block
 
@@ -301,7 +297,7 @@ class SegWitTest(SyscoinTestFramework):
         # Mine a block with an anyone-can-spend coinbase,
         # let it mature, then try to spend it.
 
-        block = self.build_next_block(version=1)
+        block = self.build_next_block()
         block.solve()
         self.test_node.send_and_ping(msg_no_witness_block(block))  # make sure the block was processed
         txid = block.vtx[0].sha256
@@ -339,8 +335,8 @@ class SegWitTest(SyscoinTestFramework):
         tx.rehash()
         assert tx.sha256 != tx.calc_sha256(with_witness=True)
 
-        # Construct a segwit-signaling block that includes the transaction.
-        block = self.build_next_block(version=(VB_TOP_BITS | (1 << VB_WITNESS_BIT)))
+        # Construct a block that includes the transaction.
+        block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx])
         # Sending witness data before activation is not allowed (anti-spam
         # rule).
@@ -367,7 +363,7 @@ class SegWitTest(SyscoinTestFramework):
         # test_node has set NODE_WITNESS, so all getdata requests should be for
         # witness blocks.
         # Test announcing a block via inv results in a getdata, and that
-        # announcing a version 4 or random VB block with a header results in a getdata
+        # announcing a block with a header results in a getdata
         block1 = self.build_next_block()
         block1.solve()
 
@@ -375,18 +371,12 @@ class SegWitTest(SyscoinTestFramework):
         assert self.test_node.last_message["getdata"].inv[0].type == blocktype
         test_witness_block(self.nodes[0], self.test_node, block1, True)
 
-        block2 = self.build_next_block(version=4)
+        block2 = self.build_next_block()
         block2.solve()
 
         self.test_node.announce_block_and_wait_for_getdata(block2, use_header=True)
         assert self.test_node.last_message["getdata"].inv[0].type == blocktype
         test_witness_block(self.nodes[0], self.test_node, block2, True)
-
-        block3 = self.build_next_block(version=(VB_TOP_BITS | (1 << 15)))
-        block3.solve()
-        self.test_node.announce_block_and_wait_for_getdata(block3, use_header=True)
-        assert self.test_node.last_message["getdata"].inv[0].type == blocktype
-        test_witness_block(self.nodes[0], self.test_node, block3, True)
 
         # Check that we can getdata for witness blocks or regular blocks,
         # and the right thing happens.
@@ -432,7 +422,7 @@ class SegWitTest(SyscoinTestFramework):
             assert_equal(rpc_details["weight"], block.get_weight())
 
             # Upgraded node should not ask for blocks from unupgraded
-            block4 = self.build_next_block(version=4)
+            block4 = self.build_next_block()
             block4.solve()
             self.old_node.getdataset = set()
 
