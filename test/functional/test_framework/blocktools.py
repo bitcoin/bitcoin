@@ -35,11 +35,6 @@ TIME_GENESIS_BLOCK = 1417713337
 # Coinbase transaction outputs can only be spent after this number of new blocks (network rule)
 COINBASE_MATURITY = 100
 
-# Soft-fork activation heights
-DERSIG_HEIGHT = 102  # BIP 66
-CLTV_HEIGHT = 111  # BIP 65
-CSV_ACTIVATION_HEIGHT = 432
-
 NORMAL_GBT_REQUEST_PARAMS = {"rules": []} # type: ignore[var-annotated]
 
 VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4

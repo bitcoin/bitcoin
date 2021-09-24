@@ -306,6 +306,11 @@ TestingSetup::~TestingSetup()
     m_node.banman.reset();
 }
 
+TestChain100Setup::TestChain100Setup(const std::vector<const char*>& extra_args)
+    : TestChainSetup{100, extra_args}
+{
+}
+
 TestChainSetup::TestChainSetup(int num_blocks, const std::vector<const char*>& extra_args)
     : RegTestingSetup(extra_args)
 {
