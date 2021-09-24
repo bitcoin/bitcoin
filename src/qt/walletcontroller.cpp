@@ -9,8 +9,10 @@
 
 #include <algorithm>
 
+#include <QApplication>
 #include <QMutexLocker>
 #include <QThread>
+#include <QWindow>
 
 WalletController::WalletController(interfaces::Node& node, OptionsModel* options_model, QObject* parent)
     : QObject(parent)
@@ -61,7 +63,17 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     assert(called);
 
     connect(wallet_model, &WalletModel::unload, [this, wallet_model] {
-        removeAndDeleteWallet(wallet_model);
+        // Defer removeAndDeleteWallet when no modal widget is active.
+        // TODO: remove this workaround by removing usage of QDiallog::exec.
+        if (QApplication::activeModalWidget()) {
+            connect(qApp, &QApplication::focusWindowChanged, wallet_model, [this, wallet_model]() {
+                if (!QApplication::activeModalWidget()) {
+                    removeAndDeleteWallet(wallet_model);
+                }
+            }, Qt::QueuedConnection);
+        } else {
+            removeAndDeleteWallet(wallet_model);
+        }
     });
 
     // Re-emit coinsSent signal from wallet model.
@@ -73,7 +85,8 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     } else {
         // Handler callback runs in a different thread so fix wallet model thread affinity.
         wallet_model->moveToThread(thread());
-        QMetaObject::invokeMethod(this, "addWallet", Qt::QueuedConnection, Q_ARG(WalletModel*, wallet_model));
+        bool invoked = QMetaObject::invokeMethod(this, "addWallet", Qt::QueuedConnection, Q_ARG(WalletModel*, wallet_model));
+        assert(invoked);
     }
 
     return wallet_model;
