@@ -42,8 +42,8 @@ class AsmapTest(BitcoinTestFramework):
         self.extra_args = [["-checkaddrman=1"]]  # Do addrman checks on all operations.
 
     def fill_addrman(self, node_id):
-        """Add 2 tried addresses to the addrman, followed by 2 new addresses."""
-        for addr, tried in [[0, True], [1, True], [2, False], [3, False]]:
+        """Add 1 tried address to the addrman, followed by 1 new address."""
+        for addr, tried in [[0, True], [1, False]]:
             self.nodes[node_id].addpeeraddress(address=f"101.{addr}.0.0", tried=tried, port=8333)
 
     def test_without_asmap_arg(self):
@@ -89,7 +89,7 @@ class AsmapTest(BitcoinTestFramework):
         self.restart_node(0, ["-asmap", "-checkaddrman=1"])
         with self.node.assert_debug_log(
             expected_msgs=[
-                "Addrman checks started: new 2, tried 2, total 4",
+                "Addrman checks started: new 1, tried 1, total 2",
                 "Addrman checks completed successfully",
             ]
         ):
