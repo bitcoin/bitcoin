@@ -608,7 +608,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
             if(voutAsset.key != nBaseAsset && nBaseAssetInternal == nBaseAsset) {
                 vecNFTKeys.emplace_back(voutAsset.key);
                 auto result = mapAssetNFTSet.emplace(voutAsset.key);
-                const bool & mapAssetNFTNotFound = result.second;
+                const bool mapAssetNFTNotFound = result.second;
                 // check that the NFTID doesn't already exist
                 if (!mapAssetNFTNotFound || ExistsNFTAsset(voutAsset.key)) {
                     return FormatSyscoinErrorMessage(state, "asset-nft-duplicate", bSanityCheck);
@@ -620,7 +620,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
     CAsset emptyAsset;
     auto result = mapAssets.try_emplace(nBaseAsset,  std::make_pair(vecNFTKeys, std::move(emptyAsset))); 
     auto mapAsset = result.first;
-    const bool & mapAssetNotFound = result.second;    
+    const bool mapAssetNotFound = result.second;    
     if (mapAssetNotFound) {
         if (!GetAsset(nBaseAsset, dbAsset)) {
             if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
@@ -631,7 +631,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
         }
         else{
             if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-                return FormatSyscoinErrorMessage(state, "asset-already-existing", bSanityCheck);
+                return FormatSyscoinErrorMessage(state, "asset-already-existing1", bSanityCheck);
             }
             mapAsset->second.second = std::move(dbAsset);      
         }
