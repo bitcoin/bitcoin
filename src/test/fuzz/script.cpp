@@ -72,8 +72,8 @@ FUZZ_TARGET_INIT(script, initialize_script)
                    type_ret == TxoutType::NULL_DATA);
         }
     } else {
-        assert(required_ret >= 1 && required_ret <= 16);
-        assert((unsigned long)required_ret == addresses.size());
+        assert(required_ret >= 1 && required_ret <= 20);
+        assert((unsigned long)required_ret <= addresses.size());
         assert(type_ret == TxoutType::MULTISIG || required_ret == 1);
     }
     if (type_ret == TxoutType::NONSTANDARD || type_ret == TxoutType::NULL_DATA) {
