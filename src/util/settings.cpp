@@ -61,7 +61,8 @@ bool ReadSettings(const fs::path& path, std::map<std::string, SettingsValue>& va
     errors.clear();
 
     // Ok for file to not exist
-    if (!fs::exists(path)) return true;
+    // Also treat empty file as equivalent to not existing
+    if (!fs::exists(path) || fs::is_empty(path)) return true;
 
     fsbridge::ifstream file;
     file.open(path);
