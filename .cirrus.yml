@@ -93,7 +93,7 @@ task:
     QTBASEDIR: 'C:\Qt5.12.11_x64_static_vs2019_160900'
     x64_NATIVE_TOOLS: '"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"'
     IgnoreWarnIntDirInTempDetected: 'true'
-    EXCLUDE_TESTS: 'feature_addrman.py,feature_bip68_sequence.py,feature_fee_estimation.py,mining_prioritisetransaction.py,p2p_getaddr_caching.py,p2p_invalid_locator.py,p2p_invalid_tx.py,rpc_misc.py,rpc_net.py,wallet_avoidreuse.py,wallet_descriptor.py,wallet_groups.py,wallet_keypool.py'
+    EXCLUDE_TESTS: 'feature_addrman.py,feature_asmap.py'
   merge_script:
     - git config --global user.email "ci@ci.ci"
     - git config --global user.name "ci"
@@ -147,6 +147,10 @@ task:
     - python test\util\test_runner.py
     - python test\util\rpcauth-test.py
   functional_tests_script:
+    # Increase the dynamic port range to the maximum allowed value to mitigate "OSError: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted".
+    # See: https://docs.microsoft.com/en-us/biztalk/technical-guides/settings-that-can-be-modified-to-improve-network-performance
+    - netsh int ipv4 set dynamicport tcp start=1025 num=64511
+    - netsh int ipv6 set dynamicport tcp start=1025 num=64511
     # TODO enable '--extended' and drop '--exclude'.
     - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 --exclude %EXCLUDE_TESTS% --failfast
 
