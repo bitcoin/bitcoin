@@ -1892,6 +1892,33 @@ static RPCHelpMan keypoolrefill()
 }
 
 
+static RPCHelpMan newkeypool()
+{
+    return RPCHelpMan{"newkeypool",
+                "\nEntirely clears and refills the keypool."+
+            HELP_REQUIRING_PASSPHRASE,
+                {},
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+            HelpExampleCli("newkeypool", "")
+            + HelpExampleRpc("newkeypool", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
+
+    LOCK(pwallet->cs_wallet);
+
+    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet, true);
+    spk_man.NewKeyPool();
+
+    return NullUniValue;
+},
+    };
+}
+
+
 static RPCHelpMan walletpassphrase()
 {
     return RPCHelpMan{"walletpassphrase",
@@ -4773,6 +4800,7 @@ static const CRPCCommand commands[] =
     { "wallet",             &listwallets,                    },
     { "wallet",             &loadwallet,                     },
     { "wallet",             &lockunspent,                    },
+    { "wallet",             &newkeypool,                     },
     { "wallet",             &removeprunedfunds,              },
     { "wallet",             &rescanblockchain,               },
     { "wallet",             &send,                           },
