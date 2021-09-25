@@ -1853,7 +1853,7 @@ static RPCHelpMan keypoolrefill()
                 "\nFills the keypool."+
         HELP_REQUIRING_PASSPHRASE,
                 {
-                    {"newsize", RPCArg::Type::NUM, RPCArg::Default{100}, "The new keypool size"},
+                    {"newsize", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%u, or as set by -keypool", DEFAULT_KEYPOOL_SIZE)}, "The new keypool size"},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
