@@ -1028,6 +1028,7 @@ static void MaybeUpdateHeights(const ArgsManager& args, Consensus::Params& conse
         } else if (name == "dip0008") {
             consensus.DIP0008Height = int{height};
         } else if (name == "dip0024") {
+            consensus.DIP0024Height = int{height};
             consensus.DIP0024QuorumsHeight = int{height};
         } else if (name == "v19") {
             consensus.V19Height = int{height};
