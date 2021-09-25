@@ -162,6 +162,11 @@ bool IsValidDestination(const CTxDestination& dest);
 /** Get the name of a TxoutType as a string */
 std::string GetTxnOutputType(TxoutType t);
 
+constexpr bool IsPushdataOp(opcodetype opcode)
+{
+    return opcode > OP_FALSE && opcode <= OP_PUSHDATA4;
+}
+
 /**
  * Parse a scriptPubKey and identify script type for standard scripts. If
  * successful, returns script type and parsed pubkeys or hashes, depending on

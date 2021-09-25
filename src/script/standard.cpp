@@ -91,11 +91,6 @@ static constexpr bool IsSmallInteger(opcodetype opcode)
     return opcode >= OP_1 && opcode <= OP_16;
 }
 
-static constexpr bool IsPushdataOp(opcodetype opcode)
-{
-    return opcode > OP_FALSE && opcode <= OP_PUSHDATA4;
-}
-
 static constexpr bool IsValidMultisigKeyCount(int n_keys)
 {
     return n_keys > 0 && n_keys <= MAX_PUBKEYS_PER_MULTISIG;
