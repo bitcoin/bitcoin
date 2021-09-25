@@ -235,12 +235,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         seed_id = bytearray(seed_id)
         seed_id.reverse()
         old_kvs = new_kvs
-        # First 2 keys should still be non-HD
-        for i in range(0, 2):
-            info = wallet.getaddressinfo(wallet.getnewaddress())
-            assert 'hdkeypath' not in info
-            assert 'hdseedid' not in info
-        # Next key should be HD
+        # New keys should be HD (the two old keys have been flushed)
         info = wallet.getaddressinfo(wallet.getnewaddress())
         assert_equal(seed_id.hex(), info['hdseedid'])
         assert_equal('m/0\'/0\'/0\'', info['hdkeypath'])
@@ -291,14 +286,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         hd_chain_version, external_counter, seed_id, internal_counter = struct.unpack('<iI20sI', hd_chain)
         assert_equal(2, hd_chain_version)
         assert_equal(2, internal_counter)
-        # Drain the keypool by fetching one external key and one change key. Should still be the same keypool
-        info = wallet.getaddressinfo(wallet.getnewaddress())
-        assert 'hdseedid' not in info
-        assert 'hdkeypath' not in info
-        info = wallet.getaddressinfo(wallet.getrawchangeaddress())
-        assert 'hdseedid' not in info
-        assert 'hdkeypath' not in info
-        # The next addresses are HD and should be on different HD chains
+        # The next addresses are HD and should be on different HD chains (the one remaining key in each pool should have been flushed)
         info = wallet.getaddressinfo(wallet.getnewaddress())
         ext_id = info['hdseedid']
         assert_equal('m/0\'/0\'/0\'', info['hdkeypath'])
