@@ -202,10 +202,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000035e351a082cc5d82961caae");
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000479f5f70d88c3979e3fcd70"); // 1213640
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0xe9599cf8d6462f63f17a8ec790803cf77028a380a1de84a976039914a45f5abb"); // 998000
+        consensus.defaultAssumeValid = uint256S("0xbd9ff6428a7cc472d3813bbee6fb3ae1a9992b8b034deca1249487a4a1b8e51a"); // 1213640
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 123456;
@@ -292,6 +292,7 @@ public:
                 { 700000, uint256S("f5d72e57625c2af8cd5147e1e029e8353fea22fde1fcea06f67149d0af1fbf09")},
                 { 800000, uint256S("54bf4bd4b5c7d36323fed4b649e75e0ce4902261533d13a15c861fa2ab3c7362")},
                 { 998000, uint256S("e9599cf8d6462f63f17a8ec790803cf77028a380a1de84a976039914a45f5abb")},
+                { 1213640, uint256S("bd9ff6428a7cc472d3813bbee6fb3ae1a9992b8b034deca1249487a4a1b8e51a")},
             }
         };
 
@@ -300,10 +301,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from rpc: getchaintxstats at block 998364
-            /* nTime    */ 1619451547,
-            /* nTxCount */ 1876346,
-            /* dTxRate  */ 0.02035896492467413
+            // Data from rpc: getchaintxstats at block 1213640
+            /* nTime    */ 1632534583,
+            /* nTxCount */ 2140627,
+            /* dTxRate  */ 0.02015353703079101
         };
     }
 };
@@ -356,10 +357,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000004b8e46524f7"); // 550k
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000141f25d13472"); // 838467
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x0000013d53482bd69c5403f344643668619f77302910e57ffe7b1d375e73cc91"); // 550k
+        consensus.defaultAssumeValid = uint256S("0x0000003243223caf052c7e5e6710fae794dbdc10949a594550f073dbf5755bd4"); // 838467
         consensus.nAuxpowStartHeight = 1;
         consensus.nAuxpowChainId = 8;
         consensus.nAuxpowOldChainId = 4096;
@@ -430,6 +431,7 @@ public:
                 {360, uint256S("0x00000c04c5926f539074420b40088d4b099d748d07795df891ca391799b6e54c")},
                 {250000, uint256S("0x00000131e97a4cb713338f33b8fa6573c85f1772e4dd7d510ca2281cc0be86e2")},
                 {534114, uint256S("0x0000013d53482bd69c5403f344643668619f77302910e57ffe7b1d375e73cc91")},
+                {838467, uint256S("0x0000003243223caf052c7e5e6710fae794dbdc10949a594550f073dbf5755bd4")},
             }
         };
 
@@ -510,7 +512,7 @@ public:
         consensus.nSYSXAsset = 123456;
         consensus.nNEVMChainID = 5700;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
-        consensus.vchSYSXERC20Manager = ParseHex("443d9a14fb6ba2A45465bEC3767186f404Ccea25");
+        consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
         consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");
         consensus.nBridgeStartBlock = 1000;
         consensus.nNEVMStartBlock = 1348000;
