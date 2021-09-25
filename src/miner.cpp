@@ -64,7 +64,7 @@ BlockAssembler::BlockAssembler(CChainState& chainstate, const CTxMemPool& mempoo
 {
     blockMinFeeRate = options.blockMinFeeRate;
     // Limit weight to between 4K and MAX_BLOCK_WEIGHT-4K for sanity:
-    nBlockMaxWeight = std::max<size_t>(4000, std::min<size_t>(MAX_BLOCK_WEIGHT - 4000, options.nBlockMaxWeight));
+    nBlockMaxWeight = std::clamp<size_t>(options.nBlockMaxWeight, 4000, MAX_BLOCK_WEIGHT - 4000);
 }
 
 static BlockAssembler::Options DefaultOptions()

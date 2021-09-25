@@ -55,6 +55,7 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
+#include <algorithm>
 #include <numeric>
 #include <optional>
 #include <string>
@@ -1263,7 +1264,7 @@ void InitScriptExecutionCache() {
     g_scriptExecutionCacheHasher.Write(nonce.begin(), 32);
     // nMaxCacheSize is unsigned. If -maxsigcachesize is set to zero,
     // setup_bytes creates the minimum possible cache (2 elements).
-    size_t nMaxCacheSize = std::min(std::max((int64_t)0, gArgs.GetIntArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_SIZE) / 2), MAX_MAX_SIG_CACHE_SIZE) * ((size_t) 1 << 20);
+    size_t nMaxCacheSize = std::clamp<int>(gArgs.GetIntArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_SIZE) / 2, 0, MAX_MAX_SIG_CACHE_SIZE) * ((size_t)1 << 20);
     size_t nElems = g_scriptExecutionCache.setup_bytes(nMaxCacheSize);
     LogPrintf("Using %zu MiB out of %zu/2 requested for script execution cache, able to store %zu elements\n",
             (nElems*sizeof(uint256)) >>20, (nMaxCacheSize*2)>>20, nElems);
@@ -3789,7 +3790,7 @@ bool CVerifyDB::VerifyDB(
     // Verify blocks in the best chain
     if (nCheckDepth <= 0 || nCheckDepth > chainstate.m_chain.Height())
         nCheckDepth = chainstate.m_chain.Height();
-    nCheckLevel = std::max(0, std::min(4, nCheckLevel));
+    nCheckLevel = std::clamp(nCheckLevel, 0, 4);
     LogPrintf("Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
     CCoinsViewCache coins(&coinsview);
     CBlockIndex* pindex;
@@ -3802,7 +3803,7 @@ bool CVerifyDB::VerifyDB(
     const bool is_snapshot_cs{!chainstate.m_from_snapshot_blockhash};
 
     for (pindex = chainstate.m_chain.Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
-        const int percentageDone = std::max(1, std::min(99, (int)(((double)(chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * (nCheckLevel >= 4 ? 50 : 100))));
+        const int percentageDone = std::clamp<int>(((double)(chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * (nCheckLevel >= 4 ? 50 : 100), 1, 99);
         if (reportDone < percentageDone/10) {
             // report every 10% step
             LogPrintf("[%d%%]...", percentageDone); /* Continued */
@@ -3861,7 +3862,7 @@ bool CVerifyDB::VerifyDB(
     // check level 4: try reconnecting blocks
     if (nCheckLevel >= 4) {
         while (pindex != chainstate.m_chain.Tip()) {
-            const int percentageDone = std::max(1, std::min(99, 100 - (int)(((double)(chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * 50)));
+            const int percentageDone = std::clamp<int>(100 - (int)(((double)(chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * 50), 1, 99);
             if (reportDone < percentageDone/10) {
                 // report every 10% step
                 LogPrintf("[%d%%]...", percentageDone); /* Continued */

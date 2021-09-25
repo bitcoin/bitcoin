@@ -1617,7 +1617,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
             m_scanning_progress = 0;
         }
         if (block_height % 100 == 0 && progress_end - progress_begin > 0.0) {
-            ShowProgress(strprintf("%s " + _("Rescanning…").translated, GetDisplayName()), std::max(1, std::min(99, (int)(m_scanning_progress * 100))));
+            ShowProgress(strprintf("%s " + _("Rescanning…").translated, GetDisplayName()), std::clamp<int>(m_scanning_progress * 100, 1, 99));
         }
         if (GetTime() >= nNow + 60) {
             nNow = GetTime();

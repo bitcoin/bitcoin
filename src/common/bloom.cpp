@@ -163,7 +163,7 @@ CRollingBloomFilter::CRollingBloomFilter(const unsigned int nElements, const dou
     double logFpRate = log(fpRate);
     /* The optimal number of hash functions is log(fpRate) / log(0.5), but
      * restrict it to the range 1-50. */
-    nHashFuncs = std::max(1, std::min((int)round(logFpRate / log(0.5)), 50));
+    nHashFuncs = std::clamp<int>(round(logFpRate / log(0.5)), 1, 50);
     /* In this rolling bloom filter, we'll store between 2 and 3 generations of nElements / 2 entries. */
     nEntriesPerGeneration = (nElements + 1) / 2;
     uint32_t nMaxElements = nEntriesPerGeneration * 3;

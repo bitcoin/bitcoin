@@ -69,6 +69,7 @@
 #include <validationinterface.h>
 #include <walletinitinterface.h>
 
+#include <algorithm>
 #include <functional>
 #include <set>
 #include <stdint.h>
@@ -1254,7 +1255,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if (!ignores_incoming_txs) node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
 
     assert(!node.mempool);
-    int check_ratio = std::min<int>(std::max<int>(args.GetIntArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
+    int check_ratio = std::clamp<int>(args.GetIntArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0, 1000000);
     node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get(), check_ratio);
 
     assert(!node.chainman);

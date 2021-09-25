@@ -35,6 +35,8 @@
 #include <QSettings>
 #include <QTextDocument>
 
+#include <algorithm>
+
 static constexpr std::array confTargets{2, 4, 6, 12, 24, 48, 144, 504, 1008};
 int getConfTargetForIndex(int index) {
     if (index+1 > static_cast<int>(confTargets.size())) {
@@ -125,7 +127,7 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
         settings.setValue("nTransactionFee", (qint64)DEFAULT_PAY_TX_FEE);
     ui->groupFee->setId(ui->radioSmartFee, 0);
     ui->groupFee->setId(ui->radioCustomFee, 1);
-    ui->groupFee->button((int)std::max(0, std::min(1, settings.value("nFeeRadio").toInt())))->setChecked(true);
+    ui->groupFee->button(std::clamp<int>(settings.value("nFeeRadio").toInt(), 0, 1))->setChecked(true);
     ui->customFee->SetAllowEmpty(false);
     ui->customFee->setValue(settings.value("nTransactionFee").toLongLong());
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());

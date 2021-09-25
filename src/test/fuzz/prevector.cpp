@@ -6,11 +6,13 @@
 #include <test/fuzz/fuzz.h>
 
 #include <prevector.h>
-#include <vector>
 
 #include <reverse_iterator.h>
 #include <serialize.h>
 #include <streams.h>
+
+#include <algorithm>
+#include <vector>
 
 namespace {
 
@@ -216,7 +218,7 @@ FUZZ_TARGET(prevector)
             test.insert(prov.ConsumeIntegralInRange<size_t>(0, test.size()), prov.ConsumeIntegral<int>());
             break;
         case 1:
-            test.resize(std::max(0, std::min(30, (int)test.size() + prov.ConsumeIntegralInRange<int>(0, 4) - 2)));
+            test.resize(std::clamp((int)test.size() + prov.ConsumeIntegralInRange<int>(0, 4) - 2, 0, 30));
             break;
         case 2:
             test.insert(prov.ConsumeIntegralInRange<size_t>(0, test.size()), 1 + prov.ConsumeBool(), prov.ConsumeIntegral<int>());

@@ -20,6 +20,7 @@
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 
+#include <algorithm>
 #include <stdint.h>
 #include <tuple>
 
@@ -565,7 +566,7 @@ RPCHelpMan importwallet()
         std::vector<std::tuple<CKey, int64_t, bool, std::string>> keys;
         std::vector<std::pair<CScript, int64_t>> scripts;
         while (file.good()) {
-            pwallet->chain().showProgress("", std::max(1, std::min(50, (int)(((double)file.tellg() / (double)nFilesize) * 100))), false);
+            pwallet->chain().showProgress("", std::clamp<int>((double)file.tellg() / (double)nFilesize * 100, 1, 50), false);
             std::string line;
             std::getline(file, line);
             if (line.empty() || line[0] == '#')
@@ -609,7 +610,7 @@ RPCHelpMan importwallet()
         double total = (double)(keys.size() + scripts.size());
         double progress = 0;
         for (const auto& key_tuple : keys) {
-            pwallet->chain().showProgress("", std::max(50, std::min(75, (int)((progress / total) * 100) + 50)), false);
+            pwallet->chain().showProgress("", std::clamp<int>(progress / total * 100 + 50, 50, 75), false);
             const CKey& key = std::get<0>(key_tuple);
             int64_t time = std::get<1>(key_tuple);
             bool has_label = std::get<2>(key_tuple);
@@ -634,7 +635,7 @@ RPCHelpMan importwallet()
             progress++;
         }
         for (const auto& script_pair : scripts) {
-            pwallet->chain().showProgress("", std::max(50, std::min(75, (int)((progress / total) * 100) + 50)), false);
+            pwallet->chain().showProgress("", std::clamp<int>(progress / total * 100 + 50, 50, 75), false);
             const CScript& script = script_pair.first;
             int64_t time = script_pair.second;
 

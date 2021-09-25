@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <prevector.h>
-#include <vector>
 
 #include <reverse_iterator.h>
 #include <serialize.h>
@@ -12,6 +11,9 @@
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <algorithm>
+#include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(prevector_tests, TestingSetup)
 
@@ -226,7 +228,7 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
                 test.erase(InsecureRandRange(test.size()));
             }
             if (InsecureRandBits(3) == 2) {
-                int new_size = std::max(0, std::min(30, (int)test.size() + (int)InsecureRandRange(5) - 2));
+                int new_size = std::clamp((int)test.size() + (int)InsecureRandRange(5) - 2, 0, 30);
                 test.resize(new_size);
             }
             if (InsecureRandBits(3) == 3) {
