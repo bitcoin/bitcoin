@@ -61,14 +61,20 @@ bool ReadSettings(const fs::path& path, std::map<std::string, SettingsValue>& va
     errors.clear();
 
     // Ok for file to not exist
-    // Also treat empty file as equivalent to not existing
-    if (!fs::exists(path) || fs::is_empty(path)) return true;
+    if (!fs::exists(path)) return true;
 
     fsbridge::ifstream file;
     file.open(path);
     if (!file.is_open()) {
       errors.emplace_back(strprintf("%s. Please check permissions.", path.string()));
       return false;
+    }
+
+    // If the file is empty, still return true,
+    // which is the same behaviour as for an empty valid JSON file "{}"
+    if (file.peek() == std::ifstream::traits_type::eof()) {
+        file.close();
+        return true;
     }
 
     SettingsValue in;
