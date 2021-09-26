@@ -27,6 +27,13 @@ import re
 import logging
 import unittest
 
+# Should break the tests loop immediately stopping testing if free space
+# falls below this constant. At the time of writing, a node needs more
+# than this 66MiB free space in order to start. A minimum of 16 MiB is
+# requested by the node source code in order to start, and an additional
+# 50 MiB is currently ensured by the utility code checking the space.
+MIN_FREE_SPACE = (50 + 16) * 1024 * 1024
+
 # Formatting. Default colors to empty strings.
 BOLD, GREEN, RED, GREY = ("", ""), ("", ""), ("", ""), ("", "")
 try:
@@ -558,6 +565,18 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
                 logging.debug("Early exiting after test failure")
                 break
 
+            shutil_disk_usage_stat_ = shutil.disk_usage(testdir)
+            # Stop testing if free space in the drive is so low every subsequent test will fail,
+            # sometimes without even being able to properly write logs (when getting busiest down to 0 free bytes).
+            # If free space is larger than 0 but smaller than several MiB, nodes will fail to boot and log a message
+            # telling that disk space is too low.
+            if (shutil_disk_usage_stat_.free < MIN_FREE_SPACE
+                    # But last tests to run from the suite do not impose a post-failure space requirement on next tests,
+                    # because there aren't really next tests (in that exact run).
+                    and i < test_count - jobs):
+                logging.debug("Not enough free space left on device to continue testing")
+                break
+
     print_results(test_results, max_len_name, (int(time.time() - start_time)))
 
     if coverage:
@@ -574,7 +593,7 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
 
     all_passed = all(map(lambda test_result: test_result.was_successful, test_results)) and coverage_passed
 
-    # Clean up dangling processes if any. This may only happen with --failfast option.
+    # Clean up dangling processes if any. This may only happen with --failfast option (or disk full).
     # Killing the process group will also terminate the current process but that is
     # not an issue
     if len(job_queue.jobs):
