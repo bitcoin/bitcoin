@@ -13,9 +13,10 @@
 #include <QLineEdit>
 #include <QUrl>
 
-OpenURIDialog::OpenURIDialog(const PlatformStyle* platformStyle, QWidget* parent) : QDialog(parent, GUIUtil::dialog_flags),
-                                                                                    ui(new Ui::OpenURIDialog),
-                                                                                    m_platform_style(platformStyle)
+OpenURIDialog::OpenURIDialog(const PlatformStyle* platformStyle, QWidget* parent) :
+    QDialog(parent, GUIUtil::dialog_flags),
+    ui(new Ui::OpenURIDialog),
+    m_platform_style(platformStyle)
 {
     ui->setupUi(this);
     ui->pasteButton->setIcon(m_platform_style->SingleColorIcon(":/icons/editpaste"));
@@ -37,7 +38,8 @@ QString OpenURIDialog::getURI()
 void OpenURIDialog::accept()
 {
     SendCoinsRecipient rcp;
-    if (GUIUtil::parseBitcoinURI(getURI(), &rcp)) {
+    if(GUIUtil::parseBitcoinURI(getURI(), &rcp))
+    {
         /* Only accept value URIs */
         QDialog::accept();
     } else {

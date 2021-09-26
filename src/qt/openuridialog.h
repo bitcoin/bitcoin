@@ -28,7 +28,7 @@ protected Q_SLOTS:
     void changeEvent(QEvent* e) override;
 
 private:
-    Ui::OpenURIDialog* ui;
+    Ui::OpenURIDialog *ui;
 
     const PlatformStyle* m_platform_style;
 };
