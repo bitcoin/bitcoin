@@ -18,10 +18,10 @@
 #include <boost/algorithm/string/split.hpp>
 
 #include <algorithm>
-#include <atomic>
 #include <string>
 
 namespace {
+
 class OpCodeParser
 {
 private:
@@ -30,7 +30,8 @@ private:
 public:
     OpCodeParser()
     {
-        for (unsigned int op = 0; op <= MAX_OPCODE; op++) {
+        for (unsigned int op = 0; op <= MAX_OPCODE; op++)
+        {
             // Allow OP_RESERVED to get into mapOpNames
             if (op < OP_NOP && op != OP_RESERVED)
                 continue;
@@ -46,9 +47,11 @@ public:
         }
     }
     opcodetype Parse(const std::string& s) const {
-        auto it = mapOpNames.find(s);
-        if (it == mapOpNames.end()) throw std::runtime_error("script parse error: unknown opcode");
-        return it->second;
+
+    auto it = mapOpNames.find(s);
+    if (it == mapOpNames.end()) throw std::runtime_error("script parse error: unknown opcode");
+    return it->second;
+
     }
 };
 
