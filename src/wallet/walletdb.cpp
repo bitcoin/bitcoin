@@ -41,6 +41,7 @@ const std::string FLAGS{"flags"};
 const std::string HDCHAIN{"hdchain"};
 const std::string KEYMETA{"keymeta"};
 const std::string KEY{"key"};
+const std::string LOCKED_UTXO{"lockedutxo"};
 const std::string MASTER_KEY{"mkey"};
 const std::string MINVERSION{"minversion"};
 const std::string NAME{"name"};
@@ -290,6 +291,16 @@ bool WalletBatch::WriteDescriptorCacheItems(const uint256& desc_id, const Descri
         }
     }
     return true;
+}
+
+bool WalletBatch::WriteLockedUTXO(const COutPoint& output)
+{
+    return WriteIC(std::make_pair(DBKeys::LOCKED_UTXO, std::make_pair(output.hash, output.n)), uint8_t{'1'});
+}
+
+bool WalletBatch::EraseLockedUTXO(const COutPoint& output)
+{
+    return EraseIC(std::make_pair(DBKeys::LOCKED_UTXO, std::make_pair(output.hash, output.n)));
 }
 
 class CWalletScanState {
@@ -725,6 +736,12 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = "Invalid governance object: LoadGovernanceObject";
                 return false;
             }
+        } else if (strType == DBKeys::LOCKED_UTXO) {
+            uint256 hash;
+            uint32_t n;
+            ssKey >> hash;
+            ssKey >> n;
+            pwallet->LockCoin(COutPoint(hash, n));
         } else if (strType != DBKeys::BESTBLOCK && strType != DBKeys::BESTBLOCK_NOMERKLE &&
                    strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
                    strType != DBKeys::VERSION && strType != DBKeys::SETTINGS &&
