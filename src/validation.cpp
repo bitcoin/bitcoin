@@ -5864,7 +5864,7 @@ bool DownloadFile(const std::string &url, const std::string &dest, const std::st
         fclose(fp);
         if(fs::exists(destTmp) && mode == "wb")
             fs::permissions(destTmp,
-                    fs::perms::owner_exe | fs::perms::group_exe |
+                    fs::perms::owner_exe  | fs::perms::owner_write | fs::perms::group_exe |
                     fs::perms::others_exe | fs::perms::owner_read | fs::perms::group_read |
                     fs::perms::others_read);
     }
