@@ -1409,6 +1409,7 @@ bool PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationStat
     case TxValidationResult::TX_WITNESS_STRIPPED:
     case TxValidationResult::TX_CONFLICT:
     case TxValidationResult::TX_MEMPOOL_POLICY:
+    case TxValidationResult::TX_NO_MEMPOOL:
         break;
     }
     if (message != "") {
