@@ -267,7 +267,7 @@ CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider,
         const auto amount = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-10, 50 * COIN + 10);
         const auto script_pk = p2wsh_op_true ?
                                    P2WSH_OP_TRUE :
-                                   ConsumeScript(fuzzed_data_provider, /* max_length */ 128, /* maybe_p2wsh */ true);
+                                   ConsumeScript(fuzzed_data_provider, /*maybe_p2wsh=*/true);
         tx_mut.vout.emplace_back(amount, script_pk);
     }
     return tx_mut;
@@ -283,10 +283,63 @@ CScriptWitness ConsumeScriptWitness(FuzzedDataProvider& fuzzed_data_provider, co
     return ret;
 }
 
-CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length, const bool maybe_p2wsh) noexcept
+CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const bool maybe_p2wsh) noexcept
 {
-    const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
-    CScript r_script{b.begin(), b.end()};
+    CScript r_script{};
+    {
+        // Keep a buffer of bytes to allow the fuzz engine to produce smaller
+        // inputs to generate CScripts with repeated data.
+        static constexpr unsigned MAX_BUFFER_SZ{128};
+        std::vector<uint8_t> buffer(MAX_BUFFER_SZ, uint8_t{'a'});
+        while (fuzzed_data_provider.ConsumeBool()) {
+            CallOneOf(
+                fuzzed_data_provider,
+                [&] {
+                    // Insert byte vector directly to allow malformed or unparsable scripts
+                    r_script.insert(r_script.end(), buffer.begin(), buffer.begin() + fuzzed_data_provider.ConsumeIntegralInRange(0U, MAX_BUFFER_SZ));
+                },
+                [&] {
+                    // Push a byte vector from the buffer
+                    r_script << std::vector<uint8_t>{buffer.begin(), buffer.begin() + fuzzed_data_provider.ConsumeIntegralInRange(0U, MAX_BUFFER_SZ)};
+                },
+                [&] {
+                    // Push multisig
+                    // There is a special case for this to aid the fuzz engine
+                    // navigate the highly structured multisig format.
+                    r_script << fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, 22);
+                    int num_data{fuzzed_data_provider.ConsumeIntegralInRange(1, 22)};
+                    std::vector<uint8_t> pubkey_comp{buffer.begin(), buffer.begin() + CPubKey::COMPRESSED_SIZE};
+                    pubkey_comp.front() = fuzzed_data_provider.ConsumeIntegralInRange(2, 3); // Set first byte for GetLen() to pass
+                    std::vector<uint8_t> pubkey_uncomp{buffer.begin(), buffer.begin() + CPubKey::SIZE};
+                    pubkey_uncomp.front() = fuzzed_data_provider.ConsumeIntegralInRange(4, 7); // Set first byte for GetLen() to pass
+                    while (num_data--) {
+                        auto& pubkey{fuzzed_data_provider.ConsumeBool() ? pubkey_uncomp : pubkey_comp};
+                        if (fuzzed_data_provider.ConsumeBool()) {
+                            pubkey.back() = num_data; // Make each pubkey different
+                        }
+                        r_script << pubkey;
+                    }
+                    r_script << fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, 22);
+                },
+                [&] {
+                    // Mutate the buffer
+                    const auto vec{ConsumeRandomLengthByteVector(fuzzed_data_provider, /*max_length=*/MAX_BUFFER_SZ)};
+                    std::copy(vec.begin(), vec.end(), buffer.begin());
+                },
+                [&] {
+                    // Push an integral
+                    r_script << fuzzed_data_provider.ConsumeIntegral<int64_t>();
+                },
+                [&] {
+                    // Push an opcode
+                    r_script << ConsumeOpcodeType(fuzzed_data_provider);
+                },
+                [&] {
+                    // Push a scriptnum
+                    r_script << ConsumeScriptNum(fuzzed_data_provider);
+                });
+        }
+    }
     if (maybe_p2wsh && fuzzed_data_provider.ConsumeBool()) {
         uint256 script_hash;
         CSHA256().Write(r_script.data(), r_script.size()).Finalize(script_hash.begin());
