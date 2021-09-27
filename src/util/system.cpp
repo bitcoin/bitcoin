@@ -1229,6 +1229,21 @@ bool ExistsOldAssetDir()
     const fs::path p =  gArgs.GetDataDirNet() / "assets";
     return (fs::exists(p) && fs::is_directory(p));
 }
+bool ExistsOldEthDir()
+{
+    const fs::path p =  gArgs.GetDataDirNet() / "ethereumtxroots";
+    const fs::path p1 =  gArgs.GetDataDirNet() / "ethereumminttx";
+    return (fs::exists(p) && fs::is_directory(p)) || (fs::exists(p1) && fs::is_directory(p1));
+}
+void DeleteOldEthDir()
+{
+    const fs::path p =  gArgs.GetDataDirNet() / "ethereumtxroots";
+    const fs::path p1 =  gArgs.GetDataDirNet() / "ethereumminttx";
+    if(fs::exists(p) && fs::is_directory(p))
+        fs::remove_all(gArgs.GetDataDirNet() / "ethereumtxroots");
+    if(fs::exists(p1) && fs::is_directory(p1))
+        fs::remove_all(gArgs.GetDataDirNet() / "ethereumminttx");
+}
 void DeleteOldAssetDir()
 {
     fs::remove_all(gArgs.GetDataDirNet() / "assets");

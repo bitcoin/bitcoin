@@ -1614,6 +1614,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         delete oldAssetDB;
         DeleteOldAssetDir();
     }
+    if(ExistsOldEthDir()) {
+        LogPrintf("Transition to NEVM detected, reindexing to migrate...\n");
+        DeleteOldEthDir();
+        fReindex = true;
+    }
     fLoaded = false;
     for (BlockFilterType filter_type : g_enabled_filter_types) {
         LogPrintf("* Using %.1f MiB for %s block filter index database\n",

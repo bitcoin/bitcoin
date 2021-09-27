@@ -121,7 +121,9 @@ void ReleaseDirectoryLocks();
 
 bool TryCreateDirectories(const fs::path& p);
 bool ExistsOldAssetDir();
+bool ExistsOldEthDir();
 void DeleteOldAssetDir();
+void DeleteOldEthDir();
 fs::path GetDefaultDataDir();
 // SYSCOIN
 fs::path GetGethPidFile();
