@@ -1653,10 +1653,10 @@ bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &
 	int nOut;
 	if (!GetSyscoinData(*block.vtx[0], vchData, nOut))
 		return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-data-output");
-    auto pos = std::find(vchData.begin(), vchData.end(), *NEVM_MAGIC_BYTES);
+    auto pos = std::search(vchData.begin(), vchData.end(), std::begin(NEVM_MAGIC_BYTES), std::end(NEVM_MAGIC_BYTES));
     if(pos == vchData.end() )
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-tag");
-    pos += sizeof(NEVM_MAGIC_BYTES);
+    pos = std::next(pos, sizeof(NEVM_MAGIC_BYTES));
     vchData = std::vector<unsigned char>(pos, pos+sizeof(CNEVMHeader));
     CDataStream ds(vchData, SER_NETWORK, PROTOCOL_VERSION);
     try {
