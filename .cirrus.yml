@@ -93,7 +93,7 @@ task:
     QTBASEDIR: 'C:\Qt5.12.11_x64_static_vs2019_160900'
     x64_NATIVE_TOOLS: '"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"'
     IgnoreWarnIntDirInTempDetected: 'true'
-    EXCLUDE_TESTS: 'feature_addrman.py,feature_asmap.py'
+    EXCLUDE_TESTS: 'feature_asmap.py'
   merge_script:
     - git config --global user.email "ci@ci.ci"
     - git config --global user.name "ci"
