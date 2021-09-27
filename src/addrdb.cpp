@@ -183,7 +183,7 @@ void ReadFromStream(CAddrMan& addr, CDataStream& ssPeers)
 
 std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const ArgsManager& args, std::unique_ptr<CAddrMan>& addrman)
 {
-    auto check_addrman = std::clamp<int32_t>(args.GetArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
+    auto check_addrman = std::clamp<int32_t>(args.GetIntArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
     addrman = std::make_unique<CAddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
 
     int64_t nStart = GetTimeMillis();

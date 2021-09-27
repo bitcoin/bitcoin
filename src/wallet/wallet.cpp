@@ -2735,7 +2735,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
                            _("The wallet will avoid paying less than the minimum relay fee."));
     }
 
-    walletInstance->m_confirm_target = args.GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
+    walletInstance->m_confirm_target = args.GetIntArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
     walletInstance->m_spend_zero_conf_change = args.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
     walletInstance->m_signal_rbf = args.GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
 
