@@ -4420,7 +4420,7 @@ static RPCHelpMan walletprocesspsbt()
         HELP_REQUIRING_PASSPHRASE,
                 {
                     {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
-                    {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating"},
+                    {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating (requires wallet to be unlocked)"},
                     {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT"}, "The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
             "       \"DEFAULT\"\n"
             "       \"ALL\"\n"
@@ -4467,6 +4467,9 @@ static RPCHelpMan walletprocesspsbt()
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
     bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
     bool complete = true;
+
+    if (sign) EnsureWalletIsUnlocked(*pwallet);
+
     const TransactionError err{wallet.FillPSBT(psbtx, complete, nHashType, sign, bip32derivs)};
     if (err != TransactionError::OK) {
         throw JSONRPCTransactionError(err);
