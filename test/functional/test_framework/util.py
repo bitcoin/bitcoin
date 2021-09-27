@@ -366,7 +366,7 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
         f.write("listenonion=0\n")
         # Increase peertimeout to avoid disconnects while using mocktime.
         # peertimeout is measured in wall clock time, so setting it to the
-        # duration of the longest test is sufficient. It can be overriden in
+        # duration of the longest test is sufficient. It can be overridden in
         # tests.
         f.write("peertimeout=999999\n")
         f.write("printtoconsole=0\n")
