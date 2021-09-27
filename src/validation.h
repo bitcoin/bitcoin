@@ -206,9 +206,16 @@ struct PackageMempoolAcceptResult
 };
 
 /**
- * (Try to) add a transaction to the memory pool.
- * @param[in]  bypass_limits   When true, don't enforce mempool fee limits.
- * @param[in]  test_accept     When true, run validation checks but don't submit to mempool.
+ * Try to add a transaction to the mempool. This is an internal function and is
+ * exposed only for testing. Client code should use ChainstateManager::ProcessTransaction()
+ *
+ * @param[in]  active_chainstate  Reference to the active chainstate.
+ * @param[in]  pool               Reference to the node's mempool.
+ * @param[in]  tx                 The transaction to submit for mempool acceptance.
+ * @param[in]  bypass_limits      When true, don't enforce mempool fee and capacity limits.
+ * @param[in]  test_accept        When true, run validation checks but don't submit to mempool.
+ *
+ * @returns a MempoolAcceptResult indicating whether the transaction was accepted/rejected with reason.
  */
 MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, const CTransactionRef& tx,
                                        bool bypass_limits, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
