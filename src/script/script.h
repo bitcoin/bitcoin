@@ -587,4 +587,6 @@ struct CScriptWitness
 /** Test for OP_SUCCESSx opcodes as defined by BIP342. */
 bool IsOpSuccess(const opcodetype& opcode);
 
+bool CheckMinimalPush(const std::vector<unsigned char>& data, opcodetype opcode);
+
 #endif // BITCOIN_SCRIPT_SCRIPT_H
