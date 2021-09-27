@@ -1240,9 +1240,9 @@ void DeleteOldEthDir()
     const fs::path p =  gArgs.GetDataDirNet() / "ethereumtxroots";
     const fs::path p1 =  gArgs.GetDataDirNet() / "ethereumminttx";
     if(fs::exists(p) && fs::is_directory(p))
-        fs::remove_all(gArgs.GetDataDirNet() / "ethereumtxroots");
+        fs::remove_all(p);
     if(fs::exists(p1) && fs::is_directory(p1))
-        fs::remove_all(gArgs.GetDataDirNet() / "ethereumminttx");
+        fs::remove_all(p1);
 }
 void DeleteOldAssetDir()
 {
