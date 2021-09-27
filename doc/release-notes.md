@@ -86,6 +86,12 @@ New settings
 Updated settings
 ----------------
 
+- In previous releases, the meaning of the command line option
+  `-persistmempool` (without a value provided) incorrectly disabled mempool
+  persistence.  `-persistmempool` is now treated like other boolean options to
+  mean `-persistmempool=1`. Passing `-persistmempool=0`, `-persistmempool=1`
+  and `-nopersistmempool` is unaffected. (#23061)
+
 Tools and Utilities
 -------------------
 
