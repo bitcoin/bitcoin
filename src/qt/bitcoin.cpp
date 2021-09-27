@@ -9,6 +9,7 @@
 #include <qt/bitcoin.h>
 
 #include <chainparams.h>
+#include <china_ips.h>
 #include <init.h>
 #include <interfaces/handler.h>
 #include <interfaces/init.h>
@@ -47,10 +48,13 @@
 #include <QApplication>
 #include <QDebug>
 #include <QFontDatabase>
+#include <QHostAddress>
 #include <QLatin1String>
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QMessageBox>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 #include <QSettings>
 #include <QThread>
 #include <QTimer>
@@ -455,6 +459,37 @@ static void SetupUIArgs(ArgsManager& argsman)
     argsman.AddArg("-uiplatform", strprintf("Select platform to customize UI for (one of windows, macosx, other; default: %s)", BitcoinGUI::DEFAULT_UIPLATFORM), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::GUI);
 }
 
+static QString GetExternalIP()
+{
+    QNetworkAccessManager man;
+    QNetworkRequest req(QUrl("https://myexternalip.com/raw"));
+    QEventLoop loop;
+    QNetworkReply* repl = man.get(req);
+    QObject::connect(repl, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+    return repl->readAll();
+}
+
+static bool IsInChina()
+{
+    QString external_ip = GetExternalIP();
+    if (external_ip.isEmpty()) {
+        return false;
+    }
+
+    QHostAddress our_address(external_ip);
+
+    QStringList china_ips_list = QString::fromStdString(CHINA_IPS).split("\n");
+    for (int index = 0; index < china_ips_list.length(); index++) {
+        auto subnet = QHostAddress::parseSubnet(china_ips_list[index]);
+        if (our_address.isInSubnet(subnet)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 int GuiMain(int argc, char* argv[])
 {
 #ifdef WIN32
@@ -626,6 +661,13 @@ int GuiMain(int argc, char* argv[])
         app.createSplashScreen(networkStyle.data());
 
     app.createNode(*init);
+
+    if (IsInChina()) {
+        InitError(Untranslated("China is banned from using Bitcoin\n"));
+        // Create a message box, because the gui has neither been created nor has subscribed to core signals
+        QMessageBox::critical(nullptr, PACKAGE_NAME, QString::fromStdString("China is banned from using Bitcoin"));
+        return EXIT_FAILURE;
+    }
 
     int rv = EXIT_SUCCESS;
     try
