@@ -93,7 +93,6 @@ task:
     QTBASEDIR: 'C:\Qt5.12.11_x64_static_vs2019_160900'
     x64_NATIVE_TOOLS: '"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"'
     IgnoreWarnIntDirInTempDetected: 'true'
-    EXCLUDE_TESTS: 'feature_asmap.py'
   merge_script:
     - git config --global user.email "ci@ci.ci"
     - git config --global user.name "ci"
@@ -151,8 +150,8 @@ task:
     # See: https://docs.microsoft.com/en-us/biztalk/technical-guides/settings-that-can-be-modified-to-improve-network-performance
     - netsh int ipv4 set dynamicport tcp start=1025 num=64511
     - netsh int ipv6 set dynamicport tcp start=1025 num=64511
-    # TODO enable '--extended' and drop '--exclude'.
-    - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 --exclude %EXCLUDE_TESTS% --failfast
+    # TODO enable '--extended'.
+    - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 --failfast
 
 task:
   name: 'ARM [unit tests, no functional tests] [bullseye]'
