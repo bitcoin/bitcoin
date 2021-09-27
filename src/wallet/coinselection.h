@@ -174,7 +174,9 @@ struct OutputGroup
  * change_cost = effective_feerate * change_output_size + long_term_feerate * change_spend_size
  *
  * @param[in] inputs The selected inputs
- * @param[in] change_cost The cost of creating change and spending it in the future. Only used if there is change. Must be 0 if there is no change.
+ * @param[in] change_cost The cost of creating change and spending it in the future.
+ *                        Only used if there is change, in which case it must be positive.
+ *                        Must be 0 if there is no change.
  * @param[in] target The amount targeted by the coin selection algorithm.
  * @param[in] use_effective_value Whether to use the input's effective value (when true) or the real value (when false).
  * @return The waste
