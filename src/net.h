@@ -1015,7 +1015,7 @@ private:
 
     // Network stats
     void RecordBytesRecv(uint64_t bytes);
-    void RecordBytesSent(uint64_t bytes);
+    void RecordBytesSent(uint64_t bytes, bool increase_max_outbound);
 
     /**
      * Return vector of current BLOCK_RELAY peers.

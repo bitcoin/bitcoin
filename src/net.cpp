@@ -1601,7 +1601,7 @@ void CConnman::SocketHandler()
         if (sendSet) {
             // Send data
             size_t bytes_sent = WITH_LOCK(pnode->cs_vSend, return SocketSendData(*pnode));
-            if (bytes_sent) RecordBytesSent(bytes_sent);
+            if (bytes_sent) RecordBytesSent(bytes_sent, !pnode->HasPermission(NetPermissionFlags::Download));
         }
 
         if (InactivityCheck(*pnode)) pnode->fDisconnect = true;
@@ -2856,7 +2856,7 @@ void CConnman::RecordBytesRecv(uint64_t bytes)
     nTotalBytesRecv += bytes;
 }
 
-void CConnman::RecordBytesSent(uint64_t bytes)
+void CConnman::RecordBytesSent(uint64_t bytes, bool increase_max_outbound)
 {
     LOCK(cs_totalBytesSent);
     nTotalBytesSent += bytes;
@@ -2869,8 +2869,9 @@ void CConnman::RecordBytesSent(uint64_t bytes)
         nMaxOutboundTotalBytesSentInCycle = 0;
     }
 
-    // TODO, exclude peers with download permission
-    nMaxOutboundTotalBytesSentInCycle += bytes;
+    if (increase_max_outbound) {
+        nMaxOutboundTotalBytesSentInCycle += bytes;
+    }
 }
 
 uint64_t CConnman::GetMaxOutboundTarget() const
@@ -3026,7 +3027,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         // If write queue empty, attempt "optimistic write"
         if (optimisticSend) nBytesSent = SocketSendData(*pnode);
     }
-    if (nBytesSent) RecordBytesSent(nBytesSent);
+    if (nBytesSent) RecordBytesSent(nBytesSent, !pnode->HasPermission(NetPermissionFlags::Download));
 }
 
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
