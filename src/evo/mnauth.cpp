@@ -37,7 +37,7 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
     // This is ok as we only use MNAUTH as a DoS protection and not for sensitive stuff
     int nOurNodeVersion{PROTOCOL_VERSION};
     if (fRegTest && gArgs.IsArgSet("-pushversion")) {
-        nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
+        nOurNodeVersion = gArgs.GetIntArg("-pushversion", PROTOCOL_VERSION);
     }
     if (pnode->nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
         signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.blsPubKeyOperator, receivedMNAuthChallenge, pnode->IsInboundConn()));
@@ -103,7 +103,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         
         int nOurNodeVersion{PROTOCOL_VERSION};
         if (fRegTest && gArgs.IsArgSet("-pushversion")) {
-            nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
+            nOurNodeVersion = gArgs.GetIntArg("-pushversion", PROTOCOL_VERSION);
         }
         // See comment in PushMNAUTH (fInbound is negated here as we're on the other side of the connection)
         if (pnode->nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {

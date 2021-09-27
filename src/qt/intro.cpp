@@ -113,7 +113,7 @@ namespace {
 //! Return pruning size that will be used if automatic pruning is enabled.
 int GetPruneTargetGB()
 {
-    int64_t prune_target_mib = gArgs.GetArg("-prune", 0);
+    int64_t prune_target_mib = gArgs.GetIntArg("-prune", 0);
     // >1 means automatic pruning is enabled by config, 1 means manual pruning, 0 means no pruning.
     return prune_target_mib > 1 ? PruneMiBtoGB(prune_target_mib) : DEFAULT_PRUNE_TARGET_GB;
 }
@@ -142,7 +142,7 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
 
     const int min_prune_target_GB = std::ceil(MIN_DISK_SPACE_FOR_BLOCK_FILES / 1e9);
     ui->pruneGB->setRange(min_prune_target_GB, std::numeric_limits<int>::max());
-    if (gArgs.GetArg("-prune", 0) > 1) { // -prune=1 means enabled, above that it's a size in MiB
+    if (gArgs.GetIntArg("-prune", 0) > 1) { // -prune=1 means enabled, above that it's a size in MiB
         ui->prune->setChecked(true);
         ui->prune->setEnabled(false);
     }

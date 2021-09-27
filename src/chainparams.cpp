@@ -779,7 +779,7 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 {
     // SYSCOIN
     if (args.IsArgSet("-mncollateral")) {
-        uint32_t collateral = args.GetArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED);
+        uint32_t collateral = args.GetIntArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED);
         nMNCollateralRequired = collateral*COIN;
     }
     if (args.IsArgSet("-dip3params")) {

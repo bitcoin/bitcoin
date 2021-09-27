@@ -898,7 +898,7 @@ void CSigningManager::Cleanup()
         return;
     }
 
-    int64_t maxAge = gArgs.GetArg("-maxrecsigsage", DEFAULT_MAX_RECOVERED_SIGS_AGE);
+    int64_t maxAge = gArgs.GetIntArg("-maxrecsigsage", DEFAULT_MAX_RECOVERED_SIGS_AGE);
 
     db.CleanupOldRecoveredSigs(maxAge);
     db.CleanupOldVotes(maxAge);

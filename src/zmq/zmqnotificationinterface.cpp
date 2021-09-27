@@ -57,7 +57,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
         notifier->SetAddressSub(strPub);
         notifier->SetType(pubCmd);
         notifier->SetAddress(strPub);
-        notifier->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
+        notifier->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetIntArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
         notifiers.push_back(std::move(notifier));
 
         pubCmd = "pubnevmconnect";
@@ -67,7 +67,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
         notifier1->SetAddressSub(strPub);
         notifier1->SetType(pubCmd);
         notifier1->SetAddress(strPub);
-        notifier1->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
+        notifier1->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetIntArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
         notifiers.push_back(std::move(notifier1));
 
         pubCmd = "pubnevmdisconnect";
@@ -77,7 +77,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
         notifier2->SetAddressSub(strPub);
         notifier2->SetType(pubCmd);
         notifier2->SetAddress(strPub);
-        notifier2->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
+        notifier2->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetIntArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
         notifiers.push_back(std::move(notifier2));
 
         pubCmd = "pubnevmcomms";
@@ -87,7 +87,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
         notifier3->SetAddressSub(strPub);
         notifier3->SetType(pubCmd);
         notifier3->SetAddress(strPub);
-        notifier3->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
+        notifier3->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetIntArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
         notifiers.push_back(std::move(notifier3));
     }
     
@@ -100,7 +100,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
             std::unique_ptr<CZMQAbstractNotifier> notifier = factory();
             notifier->SetType(entry.first);
             notifier->SetAddress(address);
-            notifier->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
+            notifier->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetIntArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
             notifiers.push_back(std::move(notifier));
         }
     }
