@@ -13,7 +13,7 @@
         <TabState>
           <option name="title" value="Console" />
           <tab>
-            <model ref="9a1d89f7-8217-4ec9-b24d-25dc70f3a2d0/r:c39359c2-229c-4ad6-ad35-5a9fa47b5693(TempModule9a1d89f7-8217-4ec9-b24d-25dc70f3a2d0/ConsoleModel_1597533512113)">
+            <model ref="8036ee94-8bf1-4d95-97df-6f4e70558682/r:fbdcec01-b533-4de0-a141-72b810c9ecc6(TempModule8036ee94-8bf1-4d95-97df-6f4e70558682/ConsoleModel_1413655205670)">
               <persistence version="9" />
               <languages>
                 <devkit ref="70d3d6da-af63-483d-a75f-9c8acf8de332(jetbrains.mps.console.devkit)" />
@@ -33,11 +33,11 @@
                   <concept id="757553790980850366" name="jetbrains.mps.console.base.structure.History" flags="ng" index="3balQm" />
                 </language>
               </registry>
-              <node concept="aymSD" id="4rm1Z4_kpqF">
-                <node concept="3balQm" id="4rm1Z4_kpqG" role="aymYE" />
-                <node concept="2Clz$F" id="4rm1Z4_kpqH" role="aymYO" />
-                <node concept="2_V_lH" id="4rm1Z4_kpqI" role="1PhJh3">
-                  <ref role="2_V_lI" node="4rm1Z4_kpqH" resolve="CommandHolder" />
+              <node concept="aymSD" id="6oZVPN40DU0">
+                <node concept="3balQm" id="6oZVPN40DU1" role="aymYE" />
+                <node concept="2Clz$F" id="6oZVPN40DU2" role="aymYO" />
+                <node concept="2_V_lH" id="6oZVPN40DU3" role="1PhJh3">
+                  <ref role="2_V_lI" node="6oZVPN40DU2" resolve="CommandHolder" />
                 </node>
               </node>
             </model>
@@ -146,7 +146,6 @@
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1" />
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <SELECTED>
@@ -157,6 +156,7 @@
           </SELECTED>
         </subPane>
       </pane>
+      <pane id="Scope" />
       <pane id="FileSystem" />
     </panes>
   </component>
@@ -177,6 +177,50 @@
           <option name="myModelRef" />
           <option name="myModuleRef" />
           <option name="myInProcess" value="false" />
+          <option name="myReuseCaches" value="true" />
+          <option name="myOverrideCachesLocation" value="false" />
+          <option name="myDebug" value="false" />
+          <option name="myCachesPath" value="$USER_HOME$/Library/Application Support/JetBrains/MPSJUnitRC0" />
+          <option name="myTestCases">
+            <list />
+          </option>
+          <option name="myTestMethods">
+            <list />
+          </option>
+          <option name="myRunType" value="0" />
+        </MyState>
+      </myJUnitSettings>
+      <myJavaRunParameters>
+        <MyState>
+          <option name="myJavaParameters">
+            <JavaRunParameters>
+              <option name="jrePath" value="" />
+              <option name="programParameters" value="" />
+              <option name="useAlternativeJre" value="false" />
+              <option name="vmOptions" value="-ea" />
+              <option name="workingDirectory" value="/" />
+            </JavaRunParameters>
+          </option>
+        </MyState>
+      </myJavaRunParameters>
+      <myDeploySettings>
+        <MyState>
+          <option name="myPluginsToDeploy">
+            <list />
+          </option>
+        </MyState>
+      </myDeploySettings>
+      <method v="2">
+        <option name="jetbrains.mps.execution.configurations.pluginSolution.plugin.MakeNodePointers_BeforeTask" enabled="true" />
+        <option name="jetbrains.mps.execution.configurations.implementation.plugin.plugin.AssemblePluginsBeforeTask_BeforeTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="JUnit Tests" factoryName="JUnit Tests">
+      <myJUnitSettings>
+        <MyState>
+          <option name="myModelRef" />
+          <option name="myModuleRef" />
+          <option name="myInProcess" value="true" />
           <option name="myReuseCaches" value="true" />
           <option name="myOverrideCachesLocation" value="false" />
           <option name="myDebug" value="false" />
@@ -256,7 +300,14 @@
       <option name="project" value="LOCAL" />
       <updated>1631640561504</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="new">
+      <created>1632760506911</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1632760506911</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="UsagesViewTool">
