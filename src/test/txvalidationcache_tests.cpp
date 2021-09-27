@@ -37,7 +37,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, Dersig100Setup)
         LOCK(cs_main);
 
         const MempoolAcceptResult result = AcceptToMemoryPool(m_node.chainman->ActiveChainstate(), *m_node.mempool, MakeTransactionRef(tx),
-            true /* bypass_limits */);
+            false /* bypass_limits */);
         return result.m_result_type == MempoolAcceptResult::ResultType::VALID;
     };
 
