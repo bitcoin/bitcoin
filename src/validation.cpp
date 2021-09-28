@@ -763,7 +763,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     ws.m_iters_conflicting = m_pool.GetIterSet(ws.m_conflicts);
     // Calculate in-mempool ancestors, up to a limit.
-    if (ws.m_conflicts.size() == 1) {
+    if (ws.m_conflicts.size() == 1 && HasNoNewUnconfirmed(tx, m_pool, ws.m_iters_conflicting) == std::nullopt) {
         // In general, when we receive an RBF transaction with mempool conflicts, we want to know whether we
         // would meet the chain limits after the conflicts have been removed. However, there isn't a practical
         // way to do this short of calculating the ancestor and descendant sets with an overlay cache of
@@ -773,16 +773,13 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // the below carve-out are able to be RBF'ed, without impacting the security the carve-out provides
         // for off-chain contract systems (see link in the comment below).
         //
-        // Specifically, the subset of RBF transactions which we allow despite chain limits are those which
-        // conflict directly with exactly one other transaction (but may evict children of said transaction),
-        // and which are not adding any new mempool dependencies. Note that the "no new mempool dependencies"
-        // check is accomplished later, so we don't bother doing anything about it here, but if BIP 125 is
-        // amended, we may need to move that check to here instead of removing it wholesale.
-        //
-        // Such transactions are clearly not merging any existing packages, so we are only concerned with
-        // ensuring that (a) no package is growing past the package size (not count) limits and (b) we are
-        // not allowing something to effectively use the (below) carve-out spot when it shouldn't be allowed
-        // to.
+        // Specifically, the subset of RBF transactions which we allow despite chain limits are
+        // those which conflict directly with exactly one other transaction (but may evict children
+        // of said transaction), and which are not adding any new mempool dependencies. Such
+        // transactions are clearly not merging any existing packages, so we are only concerned with
+        // ensuring that (a) no package is growing past the package size (not count) limits and (b)
+        // we are not allowing something to effectively use the (below) carve-out spot when it
+        // shouldn't be allowed to.
         //
         // To check these we first check if we meet the RBF criteria, above, and increment the descendant
         // limits by the direct conflict and its descendants (as these are recalculated in
