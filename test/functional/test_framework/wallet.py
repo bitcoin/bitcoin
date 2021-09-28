@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """A limited-functionality wallet, which may replace a real wallet in tests"""
 
-from copy import deepcopy
 from decimal import Decimal
 from enum import Enum
 from random import choice
