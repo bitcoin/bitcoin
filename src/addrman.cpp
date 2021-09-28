@@ -753,108 +753,6 @@ CAddrInfo CAddrMan::Select_(bool newOnly) const
     }
 }
 
-void CAddrMan::Check() const
-{
-    AssertLockHeld(cs);
-
-    // Run consistency checks 1 in m_consistency_check_ratio times if enabled
-    if (m_consistency_check_ratio == 0) return;
-    if (insecure_rand.randrange(m_consistency_check_ratio) >= 1) return;
-
-    const int err{ForceCheckAddrman()};
-    if (err) {
-        LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
-        assert(false);
-    }
-}
-
-int CAddrMan::ForceCheckAddrman() const
-{
-    AssertLockHeld(cs);
-
-    LogPrint(BCLog::ADDRMAN, "Addrman checks started: new %i, tried %i, total %u\n", nNew, nTried, vRandom.size());
-
-    std::unordered_set<int> setTried;
-    std::unordered_map<int, int> mapNew;
-
-    if (vRandom.size() != (size_t)(nTried + nNew))
-        return -7;
-
-    for (const auto& entry : mapInfo) {
-        int n = entry.first;
-        const CAddrInfo& info = entry.second;
-        if (info.fInTried) {
-            if (!info.nLastSuccess)
-                return -1;
-            if (info.nRefCount)
-                return -2;
-            setTried.insert(n);
-        } else {
-            if (info.nRefCount < 0 || info.nRefCount > ADDRMAN_NEW_BUCKETS_PER_ADDRESS)
-                return -3;
-            if (!info.nRefCount)
-                return -4;
-            mapNew[n] = info.nRefCount;
-        }
-        const auto it{mapAddr.find(info)};
-        if (it == mapAddr.end() || it->second != n) {
-            return -5;
-        }
-        if (info.nRandomPos < 0 || (size_t)info.nRandomPos >= vRandom.size() || vRandom[info.nRandomPos] != n)
-            return -14;
-        if (info.nLastTry < 0)
-            return -6;
-        if (info.nLastSuccess < 0)
-            return -8;
-    }
-
-    if (setTried.size() != (size_t)nTried)
-        return -9;
-    if (mapNew.size() != (size_t)nNew)
-        return -10;
-
-    for (int n = 0; n < ADDRMAN_TRIED_BUCKET_COUNT; n++) {
-        for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
-            if (vvTried[n][i] != -1) {
-                if (!setTried.count(vvTried[n][i]))
-                    return -11;
-                const auto it{mapInfo.find(vvTried[n][i])};
-                if (it == mapInfo.end() || it->second.GetTriedBucket(nKey, m_asmap) != n) {
-                    return -17;
-                }
-                if (it->second.GetBucketPosition(nKey, false, n) != i) {
-                    return -18;
-                }
-                setTried.erase(vvTried[n][i]);
-            }
-        }
-    }
-
-    for (int n = 0; n < ADDRMAN_NEW_BUCKET_COUNT; n++) {
-        for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
-            if (vvNew[n][i] != -1) {
-                if (!mapNew.count(vvNew[n][i]))
-                    return -12;
-                const auto it{mapInfo.find(vvNew[n][i])};
-                if (it == mapInfo.end() || it->second.GetBucketPosition(nKey, true, n) != i) {
-                    return -19;
-                }
-                if (--mapNew[vvNew[n][i]] == 0)
-                    mapNew.erase(vvNew[n][i]);
-            }
-        }
-    }
-
-    if (setTried.size())
-        return -13;
-    if (mapNew.size())
-        return -15;
-    if (nKey.IsNull())
-        return -16;
-
-    LogPrint(BCLog::ADDRMAN, "Addrman checks completed successfully\n");
-    return 0;
-}
 
 void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size_t max_pct, std::optional<Network> network) const
 {
@@ -1021,6 +919,109 @@ CAddrInfo CAddrMan::SelectTriedCollision_()
     int id_old = vvTried[tried_bucket][tried_bucket_pos];
 
     return mapInfo[id_old];
+}
+
+void CAddrMan::Check() const
+{
+    AssertLockHeld(cs);
+
+    // Run consistency checks 1 in m_consistency_check_ratio times if enabled
+    if (m_consistency_check_ratio == 0) return;
+    if (insecure_rand.randrange(m_consistency_check_ratio) >= 1) return;
+
+    const int err{ForceCheckAddrman()};
+    if (err) {
+        LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
+        assert(false);
+    }
+}
+
+int CAddrMan::ForceCheckAddrman() const
+{
+    AssertLockHeld(cs);
+
+    LogPrint(BCLog::ADDRMAN, "Addrman checks started: new %i, tried %i, total %u\n", nNew, nTried, vRandom.size());
+
+    std::unordered_set<int> setTried;
+    std::unordered_map<int, int> mapNew;
+
+    if (vRandom.size() != (size_t)(nTried + nNew))
+        return -7;
+
+    for (const auto& entry : mapInfo) {
+        int n = entry.first;
+        const CAddrInfo& info = entry.second;
+        if (info.fInTried) {
+            if (!info.nLastSuccess)
+                return -1;
+            if (info.nRefCount)
+                return -2;
+            setTried.insert(n);
+        } else {
+            if (info.nRefCount < 0 || info.nRefCount > ADDRMAN_NEW_BUCKETS_PER_ADDRESS)
+                return -3;
+            if (!info.nRefCount)
+                return -4;
+            mapNew[n] = info.nRefCount;
+        }
+        const auto it{mapAddr.find(info)};
+        if (it == mapAddr.end() || it->second != n) {
+            return -5;
+        }
+        if (info.nRandomPos < 0 || (size_t)info.nRandomPos >= vRandom.size() || vRandom[info.nRandomPos] != n)
+            return -14;
+        if (info.nLastTry < 0)
+            return -6;
+        if (info.nLastSuccess < 0)
+            return -8;
+    }
+
+    if (setTried.size() != (size_t)nTried)
+        return -9;
+    if (mapNew.size() != (size_t)nNew)
+        return -10;
+
+    for (int n = 0; n < ADDRMAN_TRIED_BUCKET_COUNT; n++) {
+        for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
+            if (vvTried[n][i] != -1) {
+                if (!setTried.count(vvTried[n][i]))
+                    return -11;
+                const auto it{mapInfo.find(vvTried[n][i])};
+                if (it == mapInfo.end() || it->second.GetTriedBucket(nKey, m_asmap) != n) {
+                    return -17;
+                }
+                if (it->second.GetBucketPosition(nKey, false, n) != i) {
+                    return -18;
+                }
+                setTried.erase(vvTried[n][i]);
+            }
+        }
+    }
+
+    for (int n = 0; n < ADDRMAN_NEW_BUCKET_COUNT; n++) {
+        for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
+            if (vvNew[n][i] != -1) {
+                if (!mapNew.count(vvNew[n][i]))
+                    return -12;
+                const auto it{mapInfo.find(vvNew[n][i])};
+                if (it == mapInfo.end() || it->second.GetBucketPosition(nKey, true, n) != i) {
+                    return -19;
+                }
+                if (--mapNew[vvNew[n][i]] == 0)
+                    mapNew.erase(vvNew[n][i]);
+            }
+        }
+    }
+
+    if (setTried.size())
+        return -13;
+    if (mapNew.size())
+        return -15;
+    if (nKey.IsNull())
+        return -16;
+
+    LogPrint(BCLog::ADDRMAN, "Addrman checks completed successfully\n");
+    return 0;
 }
 
 size_t CAddrMan::size() const
