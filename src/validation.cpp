@@ -2355,6 +2355,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                 continue;
             }
             if (llmq::chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+                LogPrint(BCLog::ALL, "ConnectBlock(DASH): chain-locked transaction %s overrides islock %s\n", tx->GetHash().ToString(), ::SerializeHash(*conflictLock).ToString());
                 llmq::quorumInstantSendManager->RemoveConflictingLock(::SerializeHash(*conflictLock), *conflictLock);
                 assert(llmq::quorumInstantSendManager->GetConflictingLock(*tx) == nullptr);
             } else {
