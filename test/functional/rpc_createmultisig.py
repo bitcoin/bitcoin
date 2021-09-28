@@ -84,8 +84,9 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
                 assert_equal(legacy_addr, result['address'])
                 assert_equal(result['warnings'], ["Unable to make chosen address type, please ensure no uncompressed public keys are present."])
 
-            assert_equal(legacy_addr, wmulti0.addmultisigaddress(2, keys, '', 'bech32')['address'])
-            assert_equal(legacy_addr, wmulti0.addmultisigaddress(2, keys, '', 'p2sh-segwit')['address'])
+                result = wmulti0.addmultisigaddress(2, keys, '', addr_type)
+                assert_equal(legacy_addr, result['address'])
+                assert_equal(result['warnings'], ["Unable to make chosen address type, please ensure no uncompressed public keys are present."])
 
         self.log.info('Testing sortedmulti descriptors with BIP 67 test vectors')
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_bip67.json'), encoding='utf-8') as f:
