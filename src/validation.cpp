@@ -763,7 +763,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     ws.m_iters_conflicting = m_pool.GetIterSet(ws.m_conflicts);
     // Calculate in-mempool ancestors, up to a limit.
-    if (ws.m_conflicts.size() == 1 && HasNoNewUnconfirmed(tx, m_pool, ws.m_iters_conflicting) == std::nullopt) {
+    if (ws.m_conflicts.size() == 1 && HasNoNewUnconfirmed(tx, m_pool, ws.m_iters_conflicting)) {
         // In general, when we receive an RBF transaction with mempool conflicts, we want to know whether we
         // would meet the chain limits after the conflicts have been removed. However, there isn't a practical
         // way to do this short of calculating the ancestor and descendant sets with an overlay cache of
