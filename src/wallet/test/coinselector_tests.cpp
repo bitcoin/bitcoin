@@ -724,12 +724,25 @@ BOOST_AUTO_TEST_CASE(waste_test)
     BOOST_CHECK_LT(waste_nochange2, waste_nochange1);
     selection.clear();
 
-    // 0 Waste only when fee == long term fee, no change, and no excess
+    // No Waste when fee == long_term_fee, no change, and no excess
     add_coin(1 * COIN, 1, selection, fee, fee);
     add_coin(2 * COIN, 2, selection, fee, fee);
-    const CAmount exact_target = in_amt - 2 * fee;
-    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, 0, exact_target));
+    const CAmount exact_target{in_amt - fee * 2};
+    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, /* change_cost */ 0, exact_target));
+    selection.clear();
 
+    // No Waste when (fee - long_term_fee) == (-cost_of_change), and no excess
+    const CAmount new_change_cost{fee_diff * 2};
+    add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
+    add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
+    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, new_change_cost, target));
+    selection.clear();
+
+    // No Waste when (fee - long_term_fee) == (-excess), no change cost
+    const CAmount new_target{in_amt - fee * 2 - fee_diff * 2};
+    add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
+    add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
+    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, /* change cost */ 0, new_target));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
