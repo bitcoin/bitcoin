@@ -6087,7 +6087,7 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
     attempt1 = attempt1.make_preferred();
 
     fs::path dataDir = gArgs.GetDataDirNet() / "geth";
-    const std::vector<std::string> &vecCmdLineStr = SanitizeGethCmdLine(attempt1.string(), dataDir.string());
+    std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(attempt1.string(), dataDir.string());
     fs::path log = gArgs.GetDataDirNet() / "sysgeth.log";
     #ifndef WIN32
     // Prevent killed child-processes remaining as "defunct"
@@ -6133,6 +6133,8 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
     }
     #else
         std::string commandStr = "";
+        // the first cmd is the binary file which is not needed as attempt1 is that, in windows we only need params passed as commandStr
+        vecCmdLineStr.erase(vecCmdLineStr.begin());
         for(const std::string &cmdStr: vecCmdLineStr) {
             commandStr += cmdStr + " ";
         }
