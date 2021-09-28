@@ -21,6 +21,8 @@ class CBlockIndex;
 class CValidationState;
 class CSimplifiedMNListDiff;
 
+extern CCriticalSection cs_main;
+
 namespace llmq
 {
     class CFinalCommitment;
@@ -663,20 +665,22 @@ public:
 private:
     CEvoDB& evoDb;
 
-    std::unordered_map<uint256, CDeterministicMNList, StaticSaltedHasher> mnListsCache;
-    std::unordered_map<uint256, CDeterministicMNListDiff, StaticSaltedHasher> mnListDiffsCache;
-    const CBlockIndex* tipIndex{nullptr};
+    std::unordered_map<uint256, CDeterministicMNList, StaticSaltedHasher> mnListsCache GUARDED_BY(cs);
+    std::unordered_map<uint256, CDeterministicMNListDiff, StaticSaltedHasher> mnListDiffsCache GUARDED_BY(cs);
+    const CBlockIndex* tipIndex GUARDED_BY(cs) {nullptr};
 
 public:
     explicit CDeterministicMNManager(CEvoDB& _evoDb);
 
-    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, const CCoinsViewCache& view, bool fJustCheck);
+    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state,
+                      const CCoinsViewCache& view, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool UndoBlock(const CBlock& block, const CBlockIndex* pindex);
 
     void UpdatedBlockTip(const CBlockIndex* pindex);
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
-    bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CDeterministicMNList& mnListRet, bool debugLogs);
+    bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view,
+                               CDeterministicMNList& mnListRet, bool debugLogs) EXCLUSIVE_LOCKS_REQUIRED(cs);
     static void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs);
     static void DecreasePoSePenalties(CDeterministicMNList& mnList);
 
@@ -693,7 +697,7 @@ public:
     bool UpgradeDBIfNeeded();
 
 private:
-    void CleanupCache(int nHeight);
+    void CleanupCache(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
 extern std::unique_ptr<CDeterministicMNManager> deterministicMNManager;

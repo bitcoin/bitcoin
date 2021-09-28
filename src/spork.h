@@ -147,25 +147,25 @@ class CSporkManager
 private:
     static const std::string SERIALIZATION_VERSION_STRING;
 
-    std::unordered_map<SporkId, CSporkDef*> sporkDefsById;
-    std::unordered_map<std::string, CSporkDef*> sporkDefsByName;
-
-    mutable std::unordered_map<SporkId, bool> mapSporksCachedActive;
-    mutable std::unordered_map<SporkId, int64_t> mapSporksCachedValues;
-
     mutable CCriticalSection cs;
-    std::unordered_map<uint256, CSporkMessage> mapSporksByHash;
-    std::unordered_map<SporkId, std::map<CKeyID, CSporkMessage> > mapSporksActive;
+    std::unordered_map<SporkId, CSporkDef*> sporkDefsById GUARDED_BY(cs);
 
-    std::set<CKeyID> setSporkPubKeyIDs;
-    int nMinSporkKeys;
-    CKey sporkPrivKey;
+    std::unordered_map<std::string, CSporkDef*> sporkDefsByName GUARDED_BY(cs);
+    mutable std::unordered_map<SporkId, bool> mapSporksCachedActive GUARDED_BY(cs);
+
+    mutable std::unordered_map<SporkId, int64_t> mapSporksCachedValues GUARDED_BY(cs);
+    std::unordered_map<uint256, CSporkMessage> mapSporksByHash GUARDED_BY(cs);
+    std::unordered_map<SporkId, std::map<CKeyID, CSporkMessage> > mapSporksActive GUARDED_BY(cs);
+
+    std::set<CKeyID> setSporkPubKeyIDs GUARDED_BY(cs);
+    int nMinSporkKeys GUARDED_BY(cs);
+    CKey sporkPrivKey GUARDED_BY(cs);
 
     /**
      * SporkValueIsActive is used to get the value agreed upon by the majority
      * of signed spork messages for a given Spork ID.
      */
-    bool SporkValueIsActive(SporkId nSporkID, int64_t& nActiveValueRet) const;
+    bool SporkValueIsActive(SporkId nSporkID, int64_t& nActiveValueRet) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
 

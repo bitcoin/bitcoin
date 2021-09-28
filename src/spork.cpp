@@ -30,6 +30,7 @@ CSporkManager sporkManager;
 
 CSporkManager::CSporkManager()
 {
+    LOCK(cs);
     for (auto& sporkDef : sporkDefs) {
         sporkDefsById.emplace(sporkDef.sporkId, &sporkDef);
         sporkDefsByName.emplace(sporkDef.name, &sporkDef);
@@ -38,7 +39,7 @@ CSporkManager::CSporkManager()
 
 bool CSporkManager::SporkValueIsActive(SporkId nSporkID, int64_t &nActiveValueRet) const
 {
-    LOCK(cs);
+    AssertLockHeld(cs);
 
     if (!mapSporksActive.count(nSporkID)) return false;
 
@@ -143,7 +144,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
 
         CKeyID keyIDSigner;
 
-        if (!spork.GetSignerKeyID(keyIDSigner) || !setSporkPubKeyIDs.count(keyIDSigner)) {
+        if (!spork.GetSignerKeyID(keyIDSigner) || WITH_LOCK(cs, return !setSporkPubKeyIDs.count(keyIDSigner))) {
             LOCK(cs_main);
             LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: invalid signature\n");
             Misbehaving(pfrom->GetId(), 100);
@@ -194,21 +195,22 @@ bool CSporkManager::UpdateSpork(SporkId nSporkID, int64_t nValue, CConnman& conn
 {
     CSporkMessage spork = CSporkMessage(nSporkID, nValue, GetAdjustedTime());
 
-    if (!spork.Sign(sporkPrivKey)) {
-        LogPrintf("CSporkManager::%s -- ERROR: signing failed for spork %d\n", __func__, nSporkID);
-        return false;
-    }
-
-    CKeyID keyIDSigner;
-    if (!spork.GetSignerKeyID(keyIDSigner) || !setSporkPubKeyIDs.count(keyIDSigner)) {
-        LogPrintf("CSporkManager::UpdateSpork: failed to find keyid for private key\n");
-        return false;
-    }
-
-    LogPrintf("CSporkManager::%s -- signed %d %s\n", __func__, nSporkID, spork.GetHash().ToString());
-
     {
         LOCK(cs);
+
+        if (!spork.Sign(sporkPrivKey)) {
+            LogPrintf("CSporkManager::%s -- ERROR: signing failed for spork %d\n", __func__, nSporkID);
+            return false;
+        }
+
+        CKeyID keyIDSigner;
+        if (!spork.GetSignerKeyID(keyIDSigner) || !setSporkPubKeyIDs.count(keyIDSigner)) {
+            LogPrintf("CSporkManager::UpdateSpork: failed to find keyid for private key\n");
+            return false;
+        }
+
+        LogPrintf("CSporkManager::%s -- signed %d %s\n", __func__, nSporkID, spork.GetHash().ToString());
+
         mapSporksByHash[spork.GetHash()] = spork;
         mapSporksActive[nSporkID][keyIDSigner] = spork;
         // Clear cached values on new spork being processed
@@ -259,6 +261,7 @@ int64_t CSporkManager::GetSporkValue(SporkId nSporkID) const
 
 SporkId CSporkManager::GetSporkIDByName(const std::string& strName) const
 {
+    LOCK(cs);
     auto it = sporkDefsByName.find(strName);
     if (it == sporkDefsByName.end()) {
         LogPrint(BCLog::SPORK, "CSporkManager::GetSporkIDByName -- Unknown Spork name '%s'\n", strName);
@@ -269,6 +272,7 @@ SporkId CSporkManager::GetSporkIDByName(const std::string& strName) const
 
 std::string CSporkManager::GetSporkNameByID(SporkId nSporkID) const
 {
+    LOCK(cs);
     auto it = sporkDefsById.find(nSporkID);
     if (it == sporkDefsById.end()) {
         LogPrint(BCLog::SPORK, "CSporkManager::GetSporkNameByID -- Unknown Spork ID %d\n", nSporkID);
@@ -305,6 +309,7 @@ bool CSporkManager::SetSporkAddress(const std::string& strAddress) {
 
 bool CSporkManager::SetMinSporkKeys(int minSporkKeys)
 {
+    LOCK(cs);
     int maxKeysNumber = setSporkPubKeyIDs.size();
     if ((minSporkKeys <= maxKeysNumber / 2) || (minSporkKeys > maxKeysNumber)) {
         LogPrintf("CSporkManager::SetMinSporkKeys -- Invalid min spork signers number: %d\n", minSporkKeys);
@@ -323,6 +328,7 @@ bool CSporkManager::SetPrivKey(const std::string& strPrivKey)
         return false;
     }
 
+    LOCK(cs);
     if (setSporkPubKeyIDs.find(pubKey.GetID()) == setSporkPubKeyIDs.end()) {
         LogPrintf("CSporkManager::SetPrivKey -- New private key does not belong to spork addresses\n");
         return false;
@@ -335,7 +341,6 @@ bool CSporkManager::SetPrivKey(const std::string& strPrivKey)
     }
 
     // Test signing successful, proceed
-    LOCK(cs);
     LogPrintf("CSporkManager::SetPrivKey -- Successfully initialized as spork signer\n");
     sporkPrivKey = key;
     return true;
