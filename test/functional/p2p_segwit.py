@@ -72,6 +72,7 @@ from test_framework.script import (
     hash160,
 )
 from test_framework.script_util import (
+    key_to_p2pk_script,
     key_to_p2wpkh_script,
     keyhash_to_p2pkh_script,
     script_to_p2sh_script,
@@ -1455,7 +1456,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Now try to spend it. Send it to a P2WSH output, which we'll
         # use in the next test.
-        witness_script = CScript([pubkey, CScriptOp(OP_CHECKSIG)])
+        witness_script = key_to_p2pk_script(pubkey)
         script_wsh = script_to_p2wsh_script(witness_script)
 
         tx2 = CTransaction()
@@ -1533,7 +1534,7 @@ class SegWitTest(BitcoinTestFramework):
         key.generate()
         pubkey = key.get_pubkey().get_bytes()
 
-        witness_script = CScript([pubkey, CScriptOp(OP_CHECKSIG)])
+        witness_script = key_to_p2pk_script(pubkey)
         script_pubkey = script_to_p2wsh_script(witness_script)
 
         # First create a witness output for use in the tests.
