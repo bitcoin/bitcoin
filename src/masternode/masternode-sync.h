@@ -4,7 +4,7 @@
 #ifndef BITCOIN_MASTERNODE_MASTERNODE_SYNC_H
 #define BITCOIN_MASTERNODE_MASTERNODE_SYNC_H
 
-#include <sync.h>
+#include <atomic>
 
 class CMasternodeSync;
 class CBlockIndex;
@@ -31,35 +31,33 @@ extern CMasternodeSync masternodeSync;
 class CMasternodeSync
 {
 private:
-    mutable CCriticalSection cs;
-
     // Keep track of current asset
-    int nCurrentAsset GUARDED_BY(cs) {MASTERNODE_SYNC_BLOCKCHAIN};
+    std::atomic<int> nCurrentAsset{MASTERNODE_SYNC_BLOCKCHAIN};
     // Count peers we've requested the asset from
-    int nTriedPeerCount GUARDED_BY(cs) {0};
+    std::atomic<int> nTriedPeerCount{0};
 
     // Time when current masternode asset sync started
-    int64_t nTimeAssetSyncStarted GUARDED_BY(cs) {0};
+    std::atomic<int64_t> nTimeAssetSyncStarted{0};
     // ... last bumped
-    int64_t nTimeLastBumped GUARDED_BY(cs) {0};
+    std::atomic<int64_t> nTimeLastBumped{0};
 
     /// Set to true if best header is reached in CMasternodeSync::UpdatedBlockTip
-    bool fReachedBestHeader GUARDED_BY(cs) {false};
+    std::atomic<bool> fReachedBestHeader{false};
     /// Last time UpdateBlockTip has been called
-    int64_t nTimeLastUpdateBlockTip GUARDED_BY(cs) {0};
+    std::atomic<int64_t> nTimeLastUpdateBlockTip{0};
 
 public:
     CMasternodeSync();
 
     static void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
 
-    bool IsBlockchainSynced() const { LOCK(cs); return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }
-    bool IsSynced() const { LOCK(cs); return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
+    bool IsBlockchainSynced() const { return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }
+    bool IsSynced() const { return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
 
-    int GetAssetID() const { LOCK(cs); return nCurrentAsset; }
-    int GetAttempt() const { LOCK(cs); return nTriedPeerCount; }
+    int GetAssetID() const { return nCurrentAsset; }
+    int GetAttempt() const { return nTriedPeerCount; }
     void BumpAssetLastTime(const std::string& strFuncName);
-    int64_t GetAssetStartTime() const { LOCK(cs); return nTimeAssetSyncStarted; }
+    int64_t GetAssetStartTime() const { return nTimeAssetSyncStarted; }
     std::string GetAssetName() const;
     std::string GetSyncStatus() const;
 
