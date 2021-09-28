@@ -212,7 +212,6 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
     // don't call TrySignChainTip directly but instead let the scheduler call it. This way we ensure that cs_main is
     // never locked and TrySignChainTip is not called twice in parallel. Also avoids recursive calls due to
     // EnforceBestChainLock switching chains.
-    LOCK(cs);
     if (tryLockChainTipScheduled) {
         return;
     }
@@ -221,7 +220,6 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
         CheckActiveState();
         EnforceBestChainLock();
         TrySignChainTip();
-        LOCK(cs);
         tryLockChainTipScheduled = false;
     }, 0);
 }
@@ -234,7 +232,6 @@ void CChainLocksHandler::CheckActiveState()
         fDIP0008Active = chainActive.Tip() && chainActive.Tip()->pprev && chainActive.Tip()->pprev->nHeight >= Params().GetConsensus().DIP0008Height;
     }
 
-    LOCK(cs);
     bool oldIsEnforced = isEnforced;
     isEnabled = AreChainLocksEnabled();
     isEnforced = (fDIP0008Active && isEnabled);
@@ -243,6 +240,7 @@ void CChainLocksHandler::CheckActiveState()
         // ChainLocks got activated just recently, but it's possible that it was already running before, leaving
         // us with some stale values which we should not try to enforce anymore (there probably was a good reason
         // to disable spork19)
+        LOCK(cs);
         bestChainLockHash = uint256();
         bestChainLock = bestChainLockWithKnownBlock = CChainLockSig();
         bestChainLockBlockIndex = lastNotifyChainLockBlockIndex = nullptr;
@@ -258,6 +256,10 @@ void CChainLocksHandler::TrySignChainTip()
     }
 
     if (!masternodeSync.IsBlockchainSynced()) {
+        return;
+    }
+
+    if (!isEnabled) {
         return;
     }
 
@@ -278,10 +280,6 @@ void CChainLocksHandler::TrySignChainTip()
 
     {
         LOCK(cs);
-
-        if (!isEnabled) {
-            return;
-        }
 
         if (pindex->nHeight == lastSignedHeight) {
             // already signed this one
@@ -471,13 +469,13 @@ bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid) const
     if (!IsInstantSendEnabled()) {
         return true;
     }
+    if (!isEnabled || !isEnforced) {
+        return true;
+    }
 
     int64_t txAge = 0;
     {
         LOCK(cs);
-        if (!isEnabled || !isEnforced) {
-            return true;
-        }
         auto it = txFirstSeenTime.find(txid);
         if (it != txFirstSeenTime.end()) {
             txAge = GetAdjustedTime() - it->second;
@@ -577,13 +575,13 @@ void CChainLocksHandler::EnforceBestChainLock()
 
 void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
 {
+    if (!isEnabled) {
+        return;
+    }
+
     CChainLockSig clsig;
     {
         LOCK(cs);
-
-        if (!isEnabled) {
-            return;
-        }
 
         if (recoveredSig.id != lastSignedRequestId || recoveredSig.msgHash != lastSignedMsgHash) {
             // this is not what we signed, so lets not create a CLSIG for it

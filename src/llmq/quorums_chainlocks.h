@@ -56,9 +56,9 @@ private:
     CScheduler* scheduler;
     boost::thread* scheduler_thread;
     mutable CCriticalSection cs;
-    bool tryLockChainTipScheduled GUARDED_BY(cs) {false};
-    bool isEnabled GUARDED_BY(cs) {false};
-    bool isEnforced GUARDED_BY(cs) {false};
+    std::atomic<bool> tryLockChainTipScheduled{false};
+    std::atomic<bool> isEnabled{false};
+    std::atomic<bool> isEnforced{false};
 
     uint256 bestChainLockHash GUARDED_BY(cs);
     CChainLockSig bestChainLock GUARDED_BY(cs);
