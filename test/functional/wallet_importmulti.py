@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importmulti RPC."""
@@ -11,7 +11,6 @@ from test_framework.util import (
     assert_greater_than,
     assert_raises_rpc_error,
 )
-
 
 class ImportMultiTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -89,6 +88,19 @@ class ImportMultiTest(BitcoinTestFramework):
         assert_equal(address_assert['ismine'], False)
         assert_equal(address_assert['timestamp'], timestamp)
         assert_equal(address_assert['ischange'], True)
+
+        # ScriptPubKey + internal + label
+        self.log.info("Should not allow a label to be specified when internal is true")
+        address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": address['scriptPubKey'],
+            "timestamp": "now",
+            "internal": True,
+            "label": "Example label"
+        }])
+        assert_equal(result[0]['success'], False)
+        assert_equal(result[0]['error']['code'], -8)
+        assert_equal(result[0]['error']['message'], 'Internal addresses should not have a label')
 
         # Nonstandard scriptPubKey + !internal
         self.log.info("Should not import a nonstandard scriptPubKey without internal flag")
@@ -199,7 +211,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -8)
-        assert_equal(result[0]['error']['message'], 'Incompatibility found between watchonly and keys')
+        assert_equal(result[0]['error']['message'], 'Watch-only addresses should not include private keys')
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
@@ -340,7 +352,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -8)
-        assert_equal(result[0]['error']['message'], 'Incompatibility found between watchonly and keys')
+        assert_equal(result[0]['error']['message'], 'Watch-only addresses should not include private keys')
 
 
         # Address + Public key + !Internal + Wrong pubkey
@@ -356,7 +368,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -5)
-        assert_equal(result[0]['error']['message'], 'Consistency check failed')
+        assert_equal(result[0]['error']['message'], 'Key does not match address destination')
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
@@ -376,7 +388,7 @@ class ImportMultiTest(BitcoinTestFramework):
         result = self.nodes[1].importmulti(request)
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -5)
-        assert_equal(result[0]['error']['message'], 'Consistency check failed')
+        assert_equal(result[0]['error']['message'], 'Key does not match address destination')
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
@@ -396,7 +408,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -5)
-        assert_equal(result[0]['error']['message'], 'Consistency check failed')
+        assert_equal(result[0]['error']['message'], 'Key does not match address destination')
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
@@ -415,7 +427,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -5)
-        assert_equal(result[0]['error']['message'], 'Consistency check failed')
+        assert_equal(result[0]['error']['message'], 'Key does not match address destination')
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
