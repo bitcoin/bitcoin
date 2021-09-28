@@ -53,6 +53,8 @@ Dash Core is now available at `./src/dashd`
 
 Before running, you may create an empty configuration file:
 
+    mkdir -p "/Users/${USER}/Library/Application Support/DashCore"
+
     touch "/Users/${USER}/Library/Application Support/DashCore/dash.conf"
 
     chmod 600 "/Users/${USER}/Library/Application Support/DashCore/dash.conf"
