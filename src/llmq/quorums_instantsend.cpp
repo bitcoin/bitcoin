@@ -532,10 +532,7 @@ bool CInstantSendManager::TrySignInputLocks(const CTransaction& tx, bool fRetroa
     for (size_t i = 0; i < tx.vin.size(); i++) {
         auto& in = tx.vin[i];
         auto& id = ids[i];
-        {
-            LOCK(cs);
-            inputRequestIds.emplace(id);
-        }
+        WITH_LOCK(cs, inputRequestIds.emplace(id));
         LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: trying to vote on input %s with id %s. fRetroactive=%d\n", __func__,
                  tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString(), fRetroactive);
         if (quorumSigningManager->AsyncSignIfMember(llmqType, id, tx.GetHash(), {}, fRetroactive)) {
@@ -979,10 +976,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
     const CBlockIndex* pindexMined{nullptr};
     // we ignore failure here as we must be able to propagate the lock even if we don't have the TX locally
     if (GetTransaction(islock->txid, tx, Params().GetConsensus(), hashBlock) && !hashBlock.IsNull()) {
-        {
-            LOCK(cs_main);
-            pindexMined = LookupBlockIndex(hashBlock);
-        }
+        pindexMined = WITH_LOCK(cs_main, return LookupBlockIndex(hashBlock));
 
         // Let's see if the TX that was locked by this islock is already mined in a ChainLocked block. If yes,
         // we can simply ignore the islock, as the ChainLock implies locking of all TXs in that chain
@@ -1414,11 +1408,7 @@ void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const
 
     LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: Removing ISLOCK and its chained children\n", __func__,
               islock.txid.ToString(), islockHash.ToString());
-    int tipHeight;
-    {
-        LOCK(cs_main);
-        tipHeight = chainActive.Height();
-    }
+    int tipHeight = WITH_LOCK(cs_main, return chainActive.Height());
 
     LOCK(cs);
     auto removedIslocks = db.RemoveChainedInstantSendLocks(islockHash, islock.txid, tipHeight);

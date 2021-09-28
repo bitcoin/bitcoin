@@ -697,7 +697,6 @@ static UniValue ListObjects(const std::string& strCachedSignal, const std::strin
 
     std::vector<const CGovernanceObject*> objs = governance.GetAllNewerThan(nStartTime);
     governance.UpdateLastDiffTime(GetTime());
-
     // CREATE RESULTS FOR USER
 
     for (const auto& pGovObj : objs) {
@@ -830,9 +829,8 @@ static UniValue gobject_get(const JSONRPCRequest& request)
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    LOCK2(cs_main, governance.cs);
-
     // FIND THE GOVERNANCE OBJECT THE USER IS LOOKING FOR
+    LOCK2(cs_main, governance.cs);
     CGovernanceObject* pGovObj = governance.FindGovernanceObject(hash);
 
     if (pGovObj == nullptr) {
@@ -1126,10 +1124,8 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
             );
     }
 
-    LOCK(cs_main);
-
     int nLastSuperblock = 0, nNextSuperblock = 0;
-    int nBlockHeight = chainActive.Height();
+    int nBlockHeight = WITH_LOCK(cs_main, return chainActive.Height());
 
     CSuperblock::GetNearestSuperblocksHeights(nBlockHeight, nLastSuperblock, nNextSuperblock);
 

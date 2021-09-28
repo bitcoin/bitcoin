@@ -1094,7 +1094,7 @@ static void protx_diff_help()
     );
 }
 
-static uint256 ParseBlock(const UniValue& v, std::string strName)
+static uint256 ParseBlock(const UniValue& v, std::string strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
 

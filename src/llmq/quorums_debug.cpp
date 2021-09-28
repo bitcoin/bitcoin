@@ -25,11 +25,7 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
 
     std::vector<CDeterministicMNCPtr> dmnMembers;
     if (detailLevel == 2) {
-        const CBlockIndex* pindex = nullptr;
-        {
-            LOCK(cs_main);
-            pindex = LookupBlockIndex(quorumHash);
-        }
+        const CBlockIndex* pindex = WITH_LOCK(cs_main, return LookupBlockIndex(quorumHash));
         if (pindex != nullptr) {
             dmnMembers = CLLMQUtils::GetAllQuorumMembers( llmqType, pindex);
         }

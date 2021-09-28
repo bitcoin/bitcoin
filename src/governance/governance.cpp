@@ -657,9 +657,9 @@ void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
     if (!masternodeSync.IsSynced()) return;
 
     if (netfulfilledman.HasFulfilledRequest(pnode->addr, NetMsgType::MNGOVERNANCESYNC)) {
-        LOCK(cs_main);
         // Asking for the whole list multiple times in a short period of time is no good
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- peer already asked me for the list\n", __func__);
+        LOCK(cs_main);
         Misbehaving(pnode->GetId(), 20);
         return;
     }

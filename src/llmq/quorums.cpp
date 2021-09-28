@@ -422,11 +422,7 @@ bool CQuorumManager::RequestQuorumData(CNode* pFrom, Consensus::LLMQType llmqTyp
 
 std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqType, size_t nCountRequested) const
 {
-    const CBlockIndex* pindex;
-    {
-        LOCK(cs_main);
-        pindex = chainActive.Tip();
-    }
+    const CBlockIndex* pindex = WITH_LOCK(cs_main, return chainActive.Tip());
     return ScanQuorums(llmqType, pindex, nCountRequested);
 }
 
@@ -493,15 +489,10 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
 
 CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash) const
 {
-    CBlockIndex* pindexQuorum;
-    {
-        LOCK(cs_main);
-
-        pindexQuorum = LookupBlockIndex(quorumHash);
-        if (!pindexQuorum) {
-            LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- block %s not found\n", __func__, quorumHash.ToString());
-            return nullptr;
-        }
+    CBlockIndex* pindexQuorum = WITH_LOCK(cs_main, return LookupBlockIndex(quorumHash));
+    if (!pindexQuorum) {
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- block %s not found\n", __func__, quorumHash.ToString());
+        return nullptr;
     }
     return GetQuorum(llmqType, pindexQuorum);
 }
@@ -595,11 +586,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
             return;
         }
 
-        const CBlockIndex* pQuorumIndex{nullptr};
-        {
-            LOCK(cs_main);
-            pQuorumIndex = LookupBlockIndex(request.GetQuorumHash());
-        }
+        const CBlockIndex* pQuorumIndex = WITH_LOCK(cs_main, return LookupBlockIndex(request.GetQuorumHash()));
         if (pQuorumIndex == nullptr) {
             sendQDATA(CQuorumDataRequest::Errors::QUORUM_BLOCK_NOT_FOUND);
             return;
