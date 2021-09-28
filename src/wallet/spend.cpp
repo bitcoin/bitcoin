@@ -402,10 +402,9 @@ bool AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, const 
     // We include the minimum final change for SRD as we do want to avoid making really small change.
     // KnapsackSolver does not need this because it includes MIN_CHANGE internally.
     const CAmount srd_target = nTargetValue + coin_selection_params.m_change_fee + MIN_FINAL_CHANGE;
-    auto srd_result = SelectCoinsSRD(positive_groups, srd_target);
-    if (srd_result != std::nullopt) {
-        const auto waste = GetSelectionWaste(srd_result->first, coin_selection_params.m_cost_of_change, srd_target, !coin_selection_params.m_subtract_fee_outputs);
-        results.emplace_back(std::make_tuple(waste, std::move(srd_result->first), srd_result->second));
+    if (auto srd_result{SelectCoinsSRD(positive_groups, srd_target)}) {
+        srd_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
+        results.emplace_back(std::make_tuple(srd_result->GetWaste(), srd_result->GetInputSet(), srd_result->GetSelectedValue()));
     }
 
     if (results.size() == 0) {

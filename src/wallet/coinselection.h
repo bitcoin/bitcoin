@@ -241,9 +241,9 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
  *
  * @param[in]  utxo_pool    The positive effective value OutputGroups eligible for selection
  * @param[in]  target_value The target value to select for
- * @returns If successful, a pair of set of outputs and total selected value, otherwise, std::nullopt
+ * @returns If successful, a SelectionResult, otherwise, std::nullopt
  */
-std::optional<std::pair<std::set<CInputCoin>, CAmount>> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value);
+std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value);
 
 // Original coin selection algorithm as a fallback
 std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue);
