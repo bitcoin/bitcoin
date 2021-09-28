@@ -131,13 +131,8 @@ static RPCHelpMan getrawtransaction()
                                      {
                                          {RPCResult::Type::STR, "asm", "the asm"},
                                          {RPCResult::Type::STR, "hex", "the hex"},
-                                         {RPCResult::Type::NUM, "reqSigs", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Number of required signatures"},
                                          {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
-                                         {RPCResult::Type::STR, "address", /* optional */ true, "bitcoin address (only if a well-defined address exists)"},
-                                         {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of bitcoin addresses",
-                                         {
-                                             {RPCResult::Type::STR, "address", "bitcoin address"},
-                                         }},
+                                         {RPCResult::Type::STR, "address", /* optional */ true, "The Bitcoin address (only if a well-defined address exists)"},
                                      }},
                                  }},
                              }},
@@ -495,13 +490,8 @@ static RPCHelpMan decoderawtransaction()
                                 {
                                     {RPCResult::Type::STR, "asm", "the asm"},
                                     {RPCResult::Type::STR_HEX, "hex", "the hex"},
-                                    {RPCResult::Type::NUM, "reqSigs", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Number of required signatures"},
                                     {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
-                                    {RPCResult::Type::STR, "address", /* optional */ true, "bitcoin address (only if a well-defined address exists)"},
-                                    {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of bitcoin addresses",
-                                    {
-                                        {RPCResult::Type::STR, "address", "bitcoin address"},
-                                    }},
+                                    {RPCResult::Type::STR, "address", /* optional */ true, "The Bitcoin address (only if a well-defined address exists)"},
                                 }},
                             }},
                         }},
@@ -554,24 +544,14 @@ static RPCHelpMan decodescript()
                     {
                         {RPCResult::Type::STR, "asm", "Script public key"},
                         {RPCResult::Type::STR, "type", "The output type (e.g. "+GetAllOutputTypes()+")"},
-                        {RPCResult::Type::STR, "address", /* optional */ true, "bitcoin address (only if a well-defined address exists)"},
-                        {RPCResult::Type::NUM, "reqSigs", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Number of required signatures"},
-                        {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of bitcoin addresses",
-                        {
-                            {RPCResult::Type::STR, "address", "bitcoin address"},
-                        }},
+                        {RPCResult::Type::STR, "address", /* optional */ true, "The Bitcoin address (only if a well-defined address exists)"},
                         {RPCResult::Type::STR, "p2sh", /* optional */ true, "address of P2SH script wrapping this redeem script (not returned if the script is already a P2SH)"},
                         {RPCResult::Type::OBJ, "segwit", /* optional */ true, "Result of a witness script public key wrapping this redeem script (not returned if the script is a P2SH or witness)",
                         {
                             {RPCResult::Type::STR, "asm", "String representation of the script public key"},
                             {RPCResult::Type::STR_HEX, "hex", "Hex string of the script public key"},
                             {RPCResult::Type::STR, "type", "The type of the script public key (e.g. witness_v0_keyhash or witness_v0_scripthash)"},
-                            {RPCResult::Type::STR, "address", /* optional */ true, "bitcoin address (only if a well-defined address exists)"},
-                            {RPCResult::Type::NUM, "reqSigs", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Number of required signatures"},
-                            {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of bitcoin addresses",
-                            {
-                                {RPCResult::Type::STR, "address", "segwit address"},
-                            }},
+                            {RPCResult::Type::STR, "address", /* optional */ true, "The Bitcoin address (only if a well-defined address exists)"},
                             {RPCResult::Type::STR, "p2sh-segwit", "address of the P2SH script wrapping this witness redeem script"},
                         }},
                     }
@@ -592,7 +572,7 @@ static RPCHelpMan decodescript()
     } else {
         // Empty scripts are valid
     }
-    ScriptPubKeyToUniv(script, r, /* fIncludeHex */ false);
+    ScriptPubKeyToUniv(script, r, /* include_hex */ false);
 
     UniValue type;
     type = find_value(r, "type");
@@ -626,7 +606,7 @@ static RPCHelpMan decodescript()
                 // Newer segwit program versions should be considered when then become available.
                 segwitScr = GetScriptForDestination(WitnessV0ScriptHash(script));
             }
-            ScriptPubKeyToUniv(segwitScr, sr, /* fIncludeHex */ true);
+            ScriptPubKeyToUniv(segwitScr, sr, /* include_hex */ true);
             sr.pushKV("p2sh-segwit", EncodeDestination(ScriptHash(segwitScr)));
             r.pushKV("segwit", sr);
         }
@@ -1061,7 +1041,7 @@ static RPCHelpMan decodepsbt()
                                         {RPCResult::Type::STR, "asm", "The asm"},
                                         {RPCResult::Type::STR_HEX, "hex", "The hex"},
                                         {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
-                                        {RPCResult::Type::STR, "address", /*optional=*/true, "Bitcoin address if there is one"},
+                                        {RPCResult::Type::STR, "address", /* optional */ true, "The Bitcoin address (only if a well-defined address exists)"},
                                     }},
                                 }},
                                 {RPCResult::Type::OBJ_DYN, "partial_signatures", /* optional */ true, "",
@@ -1181,7 +1161,7 @@ static RPCHelpMan decodepsbt()
             txout = input.witness_utxo;
 
             UniValue o(UniValue::VOBJ);
-            ScriptToUniv(txout.scriptPubKey, o, true);
+            ScriptPubKeyToUniv(txout.scriptPubKey, o, /* include_hex */ true);
 
             UniValue out(UniValue::VOBJ);
             out.pushKV("amount", ValueFromAmount(txout.nValue));
@@ -1228,12 +1208,12 @@ static RPCHelpMan decodepsbt()
         // Redeem script and witness script
         if (!input.redeem_script.empty()) {
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(input.redeem_script, r, false);
+            ScriptToUniv(input.redeem_script, r);
             in.pushKV("redeem_script", r);
         }
         if (!input.witness_script.empty()) {
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(input.witness_script, r, false);
+            ScriptToUniv(input.witness_script, r);
             in.pushKV("witness_script", r);
         }
 
@@ -1288,12 +1268,12 @@ static RPCHelpMan decodepsbt()
         // Redeem script and witness script
         if (!output.redeem_script.empty()) {
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(output.redeem_script, r, false);
+            ScriptToUniv(output.redeem_script, r);
             out.pushKV("redeem_script", r);
         }
         if (!output.witness_script.empty()) {
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(output.witness_script, r, false);
+            ScriptToUniv(output.witness_script, r);
             out.pushKV("witness_script", r);
         }
 

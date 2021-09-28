@@ -304,7 +304,6 @@ BASE_SCRIPTS = [
     'feature_presegwit_node_upgrade.py',
     'feature_settings.py',
     'rpc_getdescriptorinfo.py',
-    'rpc_addresses_deprecation.py',
     'rpc_help.py',
     'feature_help.py',
     'feature_shutdown.py',
