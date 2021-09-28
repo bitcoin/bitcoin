@@ -110,6 +110,7 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     CTxMemPool::setEntries set_12_normal{entry1_normal, entry2_normal};
     CTxMemPool::setEntries set_34_cpfp{entry3_low, entry4_high};
     CTxMemPool::setEntries set_56_low{entry5_low, entry6_low_prioritised};
+    CTxMemPool::setEntries set_78_high{entry7_high, entry8_high};
     CTxMemPool::setEntries all_entries{entry1_normal, entry2_normal, entry3_low, entry4_high,
                                        entry5_low, entry6_low_prioritised, entry7_high, entry8_high};
     CTxMemPool::setEntries empty_set;
@@ -227,6 +228,59 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
 
     const auto spends_conflicting_confirmed = make_tx({m_coinbase_txns[0], m_coinbase_txns[1]}, {45 * CENT});
     BOOST_CHECK(HasNoNewUnconfirmed(*spends_conflicting_confirmed.get(), pool, {entry1_normal, entry3_low}) == std::nullopt);
+
+    // Tests for CheckMinerScores
+    // Don't allow replacements with a low ancestor feerate.
+    BOOST_CHECK(CheckMinerScores(/*replacement_fees=*/entry1_normal->GetFee(),
+                                 /*replacement_vsize=*/entry1_normal->GetTxSize(),
+                                 /*ancestors=*/{entry5_low},
+                                 /*direct_conflicts=*/{entry1_normal},
+                                 /*original_transactions=*/set_12_normal).has_value());
+
+    BOOST_CHECK(CheckMinerScores(entry3_low->GetFee() + entry4_high->GetFee() + 10000,
+                                 entry3_low->GetTxSize() + entry4_high->GetTxSize(),
+                                 {entry5_low},
+                                 {entry3_low},
+                                 set_34_cpfp).has_value());
+
+    // These tests use modified fees (including prioritisation), not base fees.
+    BOOST_CHECK(CheckMinerScores(entry5_low->GetFee() + entry6_low_prioritised->GetFee() + 1,
+                                 entry5_low->GetTxSize() + entry6_low_prioritised->GetTxSize(),
+                                 {empty_set},
+                                 {entry5_low},
+                                 set_56_low).has_value());
+    BOOST_CHECK(CheckMinerScores(entry5_low->GetModifiedFee() + entry6_low_prioritised->GetModifiedFee() + 1,
+                                 entry5_low->GetTxSize() + entry6_low_prioritised->GetTxSize(),
+                                 {empty_set},
+                                 {entry5_low},
+                                 set_56_low) == std::nullopt);
+
+    // High-feerate ancestors don't help raise the replacement's miner score.
+    BOOST_CHECK(CheckMinerScores(entry1_normal->GetFee() - 1,
+                                 entry1_normal->GetTxSize(),
+                                 empty_set,
+                                 set_12_normal,
+                                 set_12_normal).has_value());
+
+    BOOST_CHECK(CheckMinerScores(entry1_normal->GetFee() - 1,
+                                 entry1_normal->GetTxSize(),
+                                 set_78_high,
+                                 set_12_normal,
+                                 set_12_normal).has_value());
+
+    // Replacement must be higher than the individual feerate of direct conflicts.
+    // Note entry4_high's individual feerate is higher than its ancestor feerate
+    BOOST_CHECK(CheckMinerScores(entry4_high->GetFee() - 1,
+                                 entry4_high->GetTxSize(),
+                                 empty_set,
+                                 {entry4_high},
+                                 {entry4_high}).has_value());
+
+    BOOST_CHECK(CheckMinerScores(entry4_high->GetFee() - 1,
+                                 entry4_high->GetTxSize(),
+                                 empty_set,
+                                 {entry3_low},
+                                 set_34_cpfp) == std::nullopt);
 
 }
 
