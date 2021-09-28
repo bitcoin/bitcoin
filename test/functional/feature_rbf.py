@@ -66,9 +66,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.log.info("Running test spends of conflicting outputs...")
         self.test_spends_of_conflicting_outputs()
 
-        self.log.info("Running test new unconfirmed inputs...")
-        self.test_new_unconfirmed_inputs()
-
         self.log.info("Running test too many replacements...")
         self.test_too_many_replacements()
 
@@ -323,25 +320,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         # This will raise an exception
         assert_raises_rpc_error(-26, "bad-txns-spends-conflicting-tx", self.nodes[0].sendrawtransaction, tx2_hex, 0)
-
-    def test_new_unconfirmed_inputs(self):
-        """Replacements that add new unconfirmed inputs are rejected"""
-        confirmed_utxo = self.make_utxo(self.nodes[0], int(1.1 * COIN))
-        unconfirmed_utxo = self.make_utxo(self.nodes[0], int(0.1 * COIN), False)
-
-        tx1 = CTransaction()
-        tx1.vin = [CTxIn(confirmed_utxo)]
-        tx1.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
-        tx1_hex = tx1.serialize().hex()
-        self.nodes[0].sendrawtransaction(tx1_hex, 0)
-
-        tx2 = CTransaction()
-        tx2.vin = [CTxIn(confirmed_utxo), CTxIn(unconfirmed_utxo)]
-        tx2.vout = tx1.vout
-        tx2_hex = tx2.serialize().hex()
-
-        # This will raise an exception
-        assert_raises_rpc_error(-26, "replacement-adds-unconfirmed", self.nodes[0].sendrawtransaction, tx2_hex, 0)
 
     def test_too_many_replacements(self):
         """Replacements that evict too many transactions are rejected"""

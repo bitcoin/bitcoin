@@ -855,11 +855,6 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                              "too many potential replacements", *err_string);
     }
-    // Enforce BIP125 Rule #2.
-    if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, ws.m_iters_conflicting)}) {
-        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
-                             "replacement-adds-unconfirmed", *err_string);
-    }
     // Require that the replacement transaction have a higher ancestor score than that of all
     // transactions it's trying to replace.
     if (const auto err_string{CheckAncestorScores(ws.m_modified_fees, ws.m_vsize,
