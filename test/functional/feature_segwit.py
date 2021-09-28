@@ -55,11 +55,13 @@ NODE_2 = 2
 P2WPKH = 0
 P2WSH = 1
 
+
 def getutxo(txid):
     utxo = {}
     utxo["vout"] = 0
     utxo["txid"] = txid
     return utxo
+
 
 def find_spendable_utxo(node, min_value):
     for utxo in node.listunspent(query_options={'minimumAmount': min_value}):
@@ -68,7 +70,9 @@ def find_spendable_utxo(node, min_value):
 
     raise AssertionError(f"Unspent output equal or higher than {min_value} not found")
 
-txs_mined = {} # txindex from txid to blockhash
+
+txs_mined = {}  # txindex from txid to blockhash
+
 
 class SegWitTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -135,8 +139,8 @@ class SegWitTest(BitcoinTestFramework):
 
         balance_presetup = self.nodes[0].getbalance()
         self.pubkey = []
-        p2sh_ids = [] # p2sh_ids[NODE][TYPE] is an array of txids that spend to P2WPKH (TYPE=0) or P2WSH (TYPE=1) scripts to an address for NODE embedded in p2sh
-        wit_ids = [] # wit_ids[NODE][TYPE] is an array of txids that spend to P2WPKH (TYPE=0) or P2WSH (TYPE=1) scripts to an address for NODE via bare witness
+        p2sh_ids = []  # p2sh_ids[NODE][TYPE] is an array of txids that spend to P2WPKH (TYPE=0) or P2WSH (TYPE=1) scripts to an address for NODE embedded in p2sh
+        wit_ids = []  # wit_ids[NODE][TYPE] is an array of txids that spend to P2WPKH (TYPE=0) or P2WSH (TYPE=1) scripts to an address for NODE via bare witness
         for i in range(3):
             newaddress = self.nodes[i].getnewaddress()
             self.pubkey.append(self.nodes[i].getaddressinfo(newaddress)["pubkey"])
@@ -216,7 +220,7 @@ class SegWitTest(BitcoinTestFramework):
         witnesses = coinbase_tx["decoded"]["vin"][0]["txinwitness"]
         assert_equal(len(witnesses), 1)
         assert_is_hex_string(witnesses[0])
-        assert_equal(witnesses[0], '00'*32)
+        assert_equal(witnesses[0], '00' * 32)
 
         self.log.info("Verify witness txs without witness data are invalid after the fork")
         self.fail_accept(self.nodes[2], 'non-mandatory-script-verify-flag (Witness program hash mismatch)', wit_ids[NODE_2][P2WPKH][2], sign=False)
@@ -357,7 +361,7 @@ class SegWitTest(BitcoinTestFramework):
 
         for i in compressed_spendable_address:
             v = self.nodes[0].getaddressinfo(i)
-            if (v['isscript']):
+            if v['isscript']:
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
                 # p2sh multisig with compressed keys should always be spendable
                 spendable_anytime.extend([p2sh])
@@ -376,7 +380,7 @@ class SegWitTest(BitcoinTestFramework):
 
         for i in uncompressed_spendable_address:
             v = self.nodes[0].getaddressinfo(i)
-            if (v['isscript']):
+            if v['isscript']:
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
                 # p2sh multisig with uncompressed keys should always be spendable
                 spendable_anytime.extend([p2sh])
@@ -395,7 +399,7 @@ class SegWitTest(BitcoinTestFramework):
 
         for i in compressed_solvable_address:
             v = self.nodes[0].getaddressinfo(i)
-            if (v['isscript']):
+            if v['isscript']:
                 # Multisig without private is not seen after addmultisigaddress, but seen after importaddress
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
                 solvable_after_importaddress.extend([bare, p2sh, p2wsh, p2sh_p2wsh])
@@ -408,7 +412,7 @@ class SegWitTest(BitcoinTestFramework):
 
         for i in uncompressed_solvable_address:
             v = self.nodes[0].getaddressinfo(i)
-            if (v['isscript']):
+            if v['isscript']:
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
                 # Base uncompressed multisig without private is not seen after addmultisigaddress, but seen after importaddress
                 solvable_after_importaddress.extend([bare, p2sh])
@@ -447,7 +451,7 @@ class SegWitTest(BitcoinTestFramework):
         importlist = []
         for i in compressed_spendable_address + uncompressed_spendable_address + compressed_solvable_address + uncompressed_solvable_address:
             v = self.nodes[0].getaddressinfo(i)
-            if (v['isscript']):
+            if v['isscript']:
                 bare = bytes.fromhex(v['hex'])
                 importlist.append(bare.hex())
                 importlist.append(script_to_p2wsh_script(bare).hex())
@@ -510,7 +514,7 @@ class SegWitTest(BitcoinTestFramework):
 
         for i in compressed_spendable_address:
             v = self.nodes[0].getaddressinfo(i)
-            if (v['isscript']):
+            if v['isscript']:
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
                 premature_witaddress.append(script_to_p2sh(p2wsh))
             else:
@@ -520,7 +524,7 @@ class SegWitTest(BitcoinTestFramework):
 
         for i in uncompressed_spendable_address + uncompressed_solvable_address:
             v = self.nodes[0].getaddressinfo(i)
-            if (v['isscript']):
+            if v['isscript']:
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
                 # P2WSH and P2SH(P2WSH) multisig with uncompressed keys are never seen
                 unseen_anytime.extend([p2wsh, p2sh_p2wsh])
@@ -531,7 +535,7 @@ class SegWitTest(BitcoinTestFramework):
 
         for i in compressed_solvable_address:
             v = self.nodes[0].getaddressinfo(i)
-            if (v['isscript']):
+            if v['isscript']:
                 [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
                 premature_witaddress.append(script_to_p2sh(p2wsh))
             else:
@@ -598,13 +602,13 @@ class SegWitTest(BitcoinTestFramework):
         watchcount = 0
         spendcount = 0
         for i in self.nodes[0].listunspent():
-            if (i['txid'] == txid):
+            if i['txid'] == txid:
                 watchcount += 1
                 if i['spendable']:
                     spendcount += 1
-        if (ismine == 2):
+        if ismine == 2:
             assert_equal(spendcount, len(script_list))
-        elif (ismine == 1):
+        elif ismine == 1:
             assert_equal(watchcount, len(script_list))
             assert_equal(spendcount, 0)
         else:
@@ -616,7 +620,7 @@ class SegWitTest(BitcoinTestFramework):
         p2sh = CScript(bytes.fromhex(v['scriptPubKey']))
         p2wsh = script_to_p2wsh_script(bare)
         p2sh_p2wsh = script_to_p2sh_script(p2wsh)
-        return([bare, p2sh, p2wsh, p2sh_p2wsh])
+        return [bare, p2sh, p2wsh, p2sh_p2wsh]
 
     def p2pkh_address_to_script(self, v):
         pubkey = bytes.fromhex(v['pubkey'])
