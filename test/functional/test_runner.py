@@ -401,8 +401,9 @@ def main():
         for test in tests:
             script = test.split("/")[-1]
             script = script + ".py" if ".py" not in script else script
-            if script in ALL_SCRIPTS:
-                test_list.append(script)
+            matching_scripts = [s for s in ALL_SCRIPTS if s.startswith(script)]
+            if matching_scripts:
+                test_list.extend(matching_scripts)
             else:
                 print("{}WARNING!{} Test '{}' not found in full test list.".format(BOLD[1], BOLD[0], test))
     elif args.extended:
