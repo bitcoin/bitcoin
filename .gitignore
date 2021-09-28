@@ -149,3 +149,7 @@ db4/
 osx_volname
 dist/
 *.background.tiff
+
+# itcoin
+target
+infra/datadir
