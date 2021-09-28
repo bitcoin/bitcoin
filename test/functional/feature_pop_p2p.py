@@ -164,6 +164,6 @@ class PopP2P(BitcoinTestFramework):
         self.restart_node(0)
         self._run_sync_after_generating()
 
-
+# TODO: rewrite
 if __name__ == '__main__':
     PopP2P().main()

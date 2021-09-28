@@ -335,10 +335,15 @@ struct CNodeState {
      *   peers.
      */
     struct TxDownloadState {
+        // VeriBlock:
+        // first = tx,atv,vtb,vbk id
+        // second = typeIn (inventory type)
+        using IdTypePair = std::pair<uint256, uint32_t>;
+
         /* Track when to attempt download of announced transactions (process
          * time in micros -> txid)
          */
-        std::multimap<std::chrono::microseconds, uint256> m_tx_process_time;
+        std::multimap<std::chrono::microseconds, IdTypePair> m_tx_process_time;
 
         //! Store all the transactions a peer has recently announced
         std::set<uint256> m_tx_announced;
@@ -748,7 +753,7 @@ std::chrono::microseconds CalculateTxGetDataTime(const uint256& txid, std::chron
     return process_time;
 }
 
-void RequestTx(CNodeState* state, const uint256& txid, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void RequestTx(CNodeState* state, const uint256& txid, uint32_t typeIn, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     CNodeState::TxDownloadState& peer_download_state = state->m_tx_download;
     if (peer_download_state.m_tx_announced.size() >= MAX_PEER_TX_ANNOUNCEMENTS ||
@@ -764,7 +769,7 @@ void RequestTx(CNodeState* state, const uint256& txid, std::chrono::microseconds
     // fPreferredDownload as a proxy for outbound peers.
     const auto process_time = CalculateTxGetDataTime(txid, current_time, !state->fPreferredDownload);
 
-    peer_download_state.m_tx_process_time.emplace(process_time, txid);
+    peer_download_state.m_tx_process_time.emplace(process_time, std::make_pair(txid, typeIn));
 }
 
 } // namespace
@@ -795,6 +800,17 @@ void PeerLogicValidation::InitializeNode(CNode *pnode) {
     }
     if(!pnode->fInbound)
         PushNodeVersion(pnode, connman, GetTime());
+
+    // VeriBlock:
+    // relay whole POP mempool upon first connection
+    assert(g_rpc_node);
+    assert(g_rpc_node->connman);
+    {
+        LOCK(cs_main);
+        VeriBlock::p2p::RelayPopMempool<altintegration::ATV>(pnode);
+        VeriBlock::p2p::RelayPopMempool<altintegration::VTB>(pnode);
+        VeriBlock::p2p::RelayPopMempool<altintegration::VbkBlock>(pnode);
+    }
 }
 
 void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
@@ -821,11 +837,6 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTim
     assert(g_outbound_peers_with_protect_from_disconnect >= 0);
 
     mapNodeState.erase(nodeid);
-    // VeriBlock
-    {
-        LOCK(VeriBlock::p2p::cs_popstate);
-        VeriBlock::p2p::erasePopDataNodeState(nodeid);
-    }
 
     if (mapNodeState.empty()) {
         // Do a consistency check after the last peer is removed.
@@ -1324,6 +1335,7 @@ void PeerLogicValidation::BlockChecked(const CBlock& block, const BlockValidatio
 
 bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
+    auto& popmp = VeriBlock::GetPop().getMemPool();
     switch (inv.type)
     {
     case MSG_TX:
@@ -1354,6 +1366,12 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     case MSG_BLOCK:
     case MSG_WITNESS_BLOCK:
         return LookupBlockIndex(inv.hash) != nullptr;
+    case MSG_POP_ATV:
+        return popmp.isKnown<altintegration::ATV>(VeriBlock::Uint256ToId<altintegration::ATV>(inv.hash));
+    case MSG_POP_VTB:
+        return popmp.isKnown<altintegration::VTB>(VeriBlock::Uint256ToId<altintegration::VTB>(inv.hash));
+    case MSG_POP_VBK:
+        return popmp.isKnown<altintegration::VbkBlock>(VeriBlock::Uint256ToId<altintegration::VbkBlock>(inv.hash));
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -1612,6 +1630,10 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                 vNotFound.push_back(inv);
             }
         }
+
+        // VeriBlock:
+        VeriBlock::p2p::ProcessGetPopPayloads(it, pfrom, connman, interruptMsgProc, vNotFound);
+
     } // release cs_main
 
     if (it != pfrom->vRecvGetData.end() && !pfrom->fPauseSend) {
@@ -2298,7 +2320,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     pfrom->fDisconnect = true;
                     return true;
                 } else if (!fAlreadyHave && !fImporting && !fReindex && !::ChainstateActive().IsInitialBlockDownload()) {
-                    RequestTx(State(pfrom->GetId()), inv.hash, current_time);
+                    RequestTx(State(pfrom->GetId()), inv.hash, inv.type, current_time);
                 }
             }
         }
@@ -2509,6 +2531,31 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
+    if (VeriBlock::isPopActive()) {
+        // CNodeState is defined in cpp file, we can't use it in p2p_sync.cpp.
+        const auto onInv = [pfrom](const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+            AssertLockHeld(cs_main);
+            assert(pfrom != nullptr);
+            CNodeState* nodestate = State(pfrom->GetId());
+            nodestate->m_tx_download.m_tx_announced.erase(inv.hash);
+            nodestate->m_tx_download.m_tx_in_flight.erase(inv.hash);
+            EraseTxRequest(inv.hash);
+        };
+
+        if (strCommand == NetMsgType::POPATV) {
+            LOCK(cs_main);
+            return VeriBlock::p2p::ProcessPopPayload<altintegration::ATV>(pfrom, connman, vRecv, onInv);
+        }
+        if (strCommand == NetMsgType::POPVTB) {
+            LOCK(cs_main);
+            return VeriBlock::p2p::ProcessPopPayload<altintegration::VTB>(pfrom, connman, vRecv, onInv);
+        }
+        if (strCommand == NetMsgType::POPVBK) {
+            LOCK(cs_main);
+            return VeriBlock::p2p::ProcessPopPayload<altintegration::VbkBlock>(pfrom, connman, vRecv, onInv);
+        }
+    }
+
     if (strCommand == NetMsgType::TX) {
         // Stop processing the transaction early if
         // We are in blocks only mode and peer is either not whitelisted or whitelistrelay is off
@@ -2577,7 +2624,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 for (const CTxIn& txin : tx.vin) {
                     CInv _inv(MSG_TX | nFetchFlags, txin.prevout.hash);
                     pfrom->AddInventoryKnown(_inv);
-                    if (!AlreadyHave(_inv)) RequestTx(State(pfrom->GetId()), _inv.hash, current_time);
+                    if (!AlreadyHave(_inv)) RequestTx(State(pfrom->GetId()), _inv.hash, _inv.type, current_time);
                 }
                 AddOrphanTx(ptx, pfrom->GetId());
 
@@ -3275,20 +3322,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
         }
         return true;
-    }
-
-    // VeriBlock: if POP is not enabled, ignore POP-related P2P calls
-    if (VeriBlock::isPopActive()) {
-        // ignore all POP-related messages until sync is completed
-        if (ChainstateActive().IsInitialBlockDownload() 
-           || ChainActive().Height() < pfrom->nStartingHeight - 20 
-           || ChainActive().Height() < pindexBestHeader->nHeight - 20) {
-            return true;
-        }
-        int pop_res = VeriBlock::p2p::processPopData(pfrom, strCommand, vRecv, connman);
-        if (pop_res >= 0) {
-            return pop_res;
-        }
     }
 
     // Ignore unknown commands for extensibility
@@ -3993,21 +4026,18 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         }
                         pto->m_tx_relay->filterInventoryKnown.insert(hash);
                     }
+
+                    // VeriBlock: send offers for PoP related payloads
+                    assert(pto);
+                    assert(pto->m_tx_relay);
+                    VeriBlock::p2p::SendPopPayload(pto, connman, MSG_POP_ATV, pto->m_tx_relay->filterInventoryKnown, pto->m_tx_relay->setInventoryAtvToSend, vInv);
+                    VeriBlock::p2p::SendPopPayload(pto, connman, MSG_POP_VTB, pto->m_tx_relay->filterInventoryKnown, pto->m_tx_relay->setInventoryVtbToSend, vInv);
+                    VeriBlock::p2p::SendPopPayload(pto, connman, MSG_POP_VBK, pto->m_tx_relay->filterInventoryKnown, pto->m_tx_relay->setInventoryVbkToSend, vInv);
                 }
             }
         }
         if (!vInv.empty())
             connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
-
-        // VeriBlock offer Pop Data
-        if (VeriBlock::isPopActive()) {
-            auto index = ChainActive()[ChainActive().Height() - 5];
-            if (index != nullptr && PeerHasHeader(&state, index)) {
-                VeriBlock::p2p::offerPopData<altintegration::ATV>(pto, connman, msgMaker);
-                VeriBlock::p2p::offerPopData<altintegration::VTB>(pto, connman, msgMaker);
-                VeriBlock::p2p::offerPopData<altintegration::VbkBlock>(pto, connman, msgMaker);
-            }
-        }
 
         // Detect whether we're stalling
         current_time = GetTime<std::chrono::microseconds>();
@@ -4140,17 +4170,20 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
 
         auto& tx_process_time = state.m_tx_download.m_tx_process_time;
         while (!tx_process_time.empty() && tx_process_time.begin()->first <= current_time && state.m_tx_download.m_tx_in_flight.size() < MAX_PEER_TX_IN_FLIGHT) {
-            const uint256 txid = tx_process_time.begin()->second;
+            auto& pair = tx_process_time.begin()->second;
+            const uint256 txid = pair.first;
+            const uint32_t typeIn = pair.second;
             // Erase this entry from tx_process_time (it may be added back for
             // processing at a later time, see below)
             tx_process_time.erase(tx_process_time.begin());
-            CInv inv(MSG_TX | GetFetchFlags(pto), txid);
+            uint32_t flags = (typeIn == MSG_TX) ? (MSG_TX | GetFetchFlags(pto)) : typeIn;
+            CInv inv(flags, txid);
             if (!AlreadyHave(inv)) {
                 // If this transaction was last requested more than 1 minute ago,
                 // then request.
                 const auto last_request_time = GetTxRequestTime(inv.hash);
                 if (last_request_time <= current_time - GETDATA_TX_INTERVAL) {
-                    LogPrint(BCLog::NET, "Requesting %s peer=%d\n", inv.ToString(), pto->GetId());
+                    LogPrint(BCLog::NET, "requesting %s peer=%d\n", inv.ToString(), pto->GetId());
                     vGetData.push_back(inv);
                     if (vGetData.size() >= MAX_GETDATA_SZ) {
                         connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
@@ -4164,7 +4197,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     // (with a slight delay for inbound peers, to prefer
                     // requests to outbound peers).
                     const auto next_process_time = CalculateTxGetDataTime(txid, current_time, !state.fPreferredDownload);
-                    tx_process_time.emplace(next_process_time, txid);
+                    tx_process_time.emplace(next_process_time, std::make_pair(txid, flags));
                 }
             } else {
                 // We have already seen this transaction, no need to download.

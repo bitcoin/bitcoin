@@ -35,6 +35,39 @@ class PoPSync(BitcoinTestFramework):
             connect_nodes(self.nodes[i + 1], i)
         self.sync_all()
 
+    def _one_by_one(self):
+        for node in self.nodes:
+            # VBK block
+            self.log.info("Submitting VBK")
+            block = self.apm.mineVbkBlocks(1)
+            response = node.submitpopvbk(block.toVbkEncodingHex())
+            assert response['accepted'], response
+            self.log.info("VBK accepted to mempool")
+            sync_pop_mempools(self.nodes, timeout=30)
+
+            # VTB
+            self.log.info("Submitting VTB")
+            lastBtc = node.getbtcbestblockhash()
+            vtb = self.apm.endorseVbkBlock(
+                block,  # endorsed vbk block
+                lastBtc
+            )
+            response = node.submitpopvtb(vtb.toVbkEncodingHex())
+            assert response['accepted'], response
+            self.log.info("VTB accepted to mempool")
+            sync_pop_mempools(self.nodes, timeout=30)
+
+            # ATV
+            self.log.info("Submitting ATV")
+            tip = self.nodes[0].getbestblockhash()
+            altblock = self.nodes[0].getblock(tip)
+            endorse_block(self.nodes[0], self.apm, altblock['height'], self.nodes[0].getnewaddress())
+            self.log.info("ATV accepted to mempool")
+            sync_pop_mempools(self.nodes, timeout=30)
+
+            self.nodes[2].generate(nblocks=1)
+            self.sync_all()
+
     def _check_pop_sync(self):
         self.log.info("running _check_pop_sync()")
         height = self.nodes[0].getblockcount()
@@ -48,21 +81,21 @@ class PoPSync(BitcoinTestFramework):
             self.nodes[0].generate(nblocks=1)
             # endorse every block
             self.nodes[2].waitforblockheight(height)
-            self.log.info("node2 endorsing block {} by miner {}".format(height, addr2))
             node2_txid = endorse_block(self.nodes[2], self.apm, height, addr2)
+            self.log.info("node2 endorsing block {} by miner {}: {}".format(height, addr2, node2_txid))
 
             # endorse each keystone
             if height % keystoneInterval == 0:
                 self.nodes[0].waitforblockheight(height)
-                self.log.info("node0 endorsing block {} by miner {}".format(height, addr0))
                 node0_txid = endorse_block(self.nodes[0], self.apm, height, addr0)
+                self.log.info("node0 endorsing block {} by miner {}: {}".format(height, addr0, node0_txid))
 
                 self.nodes[1].waitforblockheight(height)
-                self.log.info("node1 endorsing block {} by miner {}".format(height, addr1))
                 node1_txid = endorse_block(self.nodes[1], self.apm, height, addr1)
+                self.log.info("node1 endorsing block {} by miner {}: {}".format(height, addr1, node1_txid))
 
                 # wait until node[1] gets relayed pop tx
-                self.sync_all(self.nodes, timeout=20)
+                self.sync_all(self.nodes, timeout=60)
                 self.log.info("transactions relayed")
 
                 # mine a block on node[1] with this pop tx
@@ -98,6 +131,7 @@ class PoPSync(BitcoinTestFramework):
         from pypoptools.pypopminer import MockMiner
         self.apm = MockMiner()
 
+        self._one_by_one()
         self._check_pop_sync()
 
 

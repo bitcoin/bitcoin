@@ -44,7 +44,7 @@ inline CBlockHeader headerFromBytes(const std::vector<uint8_t>& v)
     CDataStream stream(v, SER_NETWORK, PROTOCOL_VERSION);
     CBlockHeader header;
     stream >> header;
-    if(!stream.eof()) {
+    if (!stream.eof()) {
         throw std::runtime_error("stream is not empty");
     }
     return header;
@@ -117,6 +117,22 @@ inline bool FindPayloadInBlock(const CBlock& block, const altintegration::ATV::i
         }
     }
     return false;
+}
+
+template <typename T>
+inline uint256 IdToUint256(const typename T::id_t& id)
+{
+    std::vector<uint8_t> v(32);
+    std::copy(id.begin(), id.end(), v.begin());
+    return uint256(v);
+}
+
+template <typename T>
+inline typename T::id_t Uint256ToId(const uint256& u)
+{
+    auto size = T::id_t::size();
+    std::vector<uint8_t> v{u.begin(), u.begin() + size};
+    return typename T::id_t(v);
 }
 
 

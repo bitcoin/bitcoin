@@ -27,11 +27,23 @@
 
 namespace VeriBlock {
 
+template <typename T>
+void onAcceptedToMempool(const T& t) {
+    assert(g_rpc_node);
+    assert(g_rpc_node->connman);
+    p2p::RelayPopPayload(g_rpc_node->connman.get(), t);
+}
+
 void InitPopContext(CDBWrapper& db)
 {
     auto payloads_provider = std::make_shared<PayloadsProvider>(db);
     auto block_provider = std::make_shared<BlockReader>(db);
     SetPop(payloads_provider, block_provider);
+
+    auto& app = GetPop();
+    app.getMemPool().onAccepted<altintegration::ATV>(onAcceptedToMempool<altintegration::ATV>);
+    app.getMemPool().onAccepted<altintegration::VTB>(onAcceptedToMempool<altintegration::VTB>);
+    app.getMemPool().onAccepted<altintegration::VbkBlock>(onAcceptedToMempool<altintegration::VbkBlock>);
 }
 
 CBlockIndex* compareTipToBlock(CBlockIndex* candidate)

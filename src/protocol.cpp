@@ -40,6 +40,9 @@ const char *SENDCMPCT="sendcmpct";
 const char *CMPCTBLOCK="cmpctblock";
 const char *GETBLOCKTXN="getblocktxn";
 const char *BLOCKTXN="blocktxn";
+const char *POPATV="ATV";
+const char *POPVTB="VTB";
+const char *POPVBK="VBK";
 
 } // namespace NetMsgType
 
@@ -72,6 +75,9 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::CMPCTBLOCK,
     NetMsgType::GETBLOCKTXN,
     NetMsgType::BLOCKTXN,
+    NetMsgType::POPATV,
+    NetMsgType::POPVTB,
+    NetMsgType::POPVBK,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 
@@ -182,6 +188,9 @@ std::string CInv::GetCommand() const
     case MSG_BLOCK:          return cmd.append(NetMsgType::BLOCK);
     case MSG_FILTERED_BLOCK: return cmd.append(NetMsgType::MERKLEBLOCK);
     case MSG_CMPCT_BLOCK:    return cmd.append(NetMsgType::CMPCTBLOCK);
+    case MSG_POP_ATV:        return cmd.append(NetMsgType::POPATV);
+    case MSG_POP_VTB:        return cmd.append(NetMsgType::POPVTB);
+    case MSG_POP_VBK:        return cmd.append(NetMsgType::POPVBK);
     default:
         throw std::out_of_range(strprintf("CInv::GetCommand(): type=%d unknown type", type));
     }

@@ -236,6 +236,10 @@ UniValue submitpopIt(const JSONRPCRequest& request)
     logSubmitResult<Pop>(idhex, result, state);
 
     bool accepted = result.isAccepted();
+    if (accepted) {
+        // relay this pop payload
+        p2p::RelayPopPayload<Pop>(g_rpc_node->connman.get(), data);
+    }
     return altintegration::ToJSON<UniValue>(state, &accepted);
 }
 

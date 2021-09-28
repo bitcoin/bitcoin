@@ -50,7 +50,7 @@ class PoPMempoolSync(BitcoinTestFramework):
         tipheight = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['height']
         atvid = endorse_block(self.nodes[0], self.apm, tipheight - 5, addr0)
 
-        self.sync_pop_mempools(self.nodes, timeout=20)
+        self.sync_pop_mempools(self.nodes, timeout=60)
         self.log.info("nodes[0,1] have syncd pop mempools")
 
         rawpopmempool1 = self.nodes[1].getrawpopmempool()
@@ -66,7 +66,7 @@ class PoPMempoolSync(BitcoinTestFramework):
         connect_nodes(self.nodes[0], 1)
         self.log.info("node1 connect to node0")
 
-        self.sync_pop_mempools(self.nodes, timeout=20)
+        self.sync_pop_mempools(self.nodes, timeout=60)
         self.log.info("nodes[0,1] have syncd pop mempools")
 
         rawpopmempool1 = self.nodes[1].getrawpopmempool()

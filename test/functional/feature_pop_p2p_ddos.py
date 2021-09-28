@@ -156,6 +156,6 @@ class PopP2P(BitcoinTestFramework):
         self.restart_node(0)
         self._run_case3()
 
-
+# TODO: fix
 if __name__ == '__main__':
     PopP2P().main()

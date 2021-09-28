@@ -231,6 +231,11 @@ extern const char *GETBLOCKTXN;
  */
 extern const char *BLOCKTXN;
 
+// VeriBlock:
+extern const char *POPATV; // contains ATV
+extern const char *POPVTB; // contains VTB
+extern const char *POPVBK; // contains VBK block
+
 };
 
 /* Get a vector of all valid message types (see above) */
@@ -370,6 +375,11 @@ enum GetDataMsg
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144
     MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG,       //!< Defined in BIP144
     MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
+
+    // VeriBlock: start numbers after 1 + 2 + 4 = 7
+    MSG_POP_ATV = 8,
+    MSG_POP_VTB = 9,
+    MSG_POP_VBK = 10,
 };
 
 /** inv message data */

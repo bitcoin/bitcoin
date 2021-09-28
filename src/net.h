@@ -800,10 +800,17 @@ public:
         std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter) GUARDED_BY(cs_filter);
 
         mutable CCriticalSection cs_tx_inventory;
-        CRollingBloomFilter filterInventoryKnown GUARDED_BY(cs_tx_inventory){50000, 0.000001};
+        // VeriBlock: includes inventories for POP P2P sync. Increase size from 50k to 100k.
+        CRollingBloomFilter filterInventoryKnown GUARDED_BY(cs_tx_inventory){100000, 0.000001};
         // Set of transaction ids we still have to announce.
         // They are sorted by the mempool before relay, so the order is not important.
         std::set<uint256> setInventoryTxToSend;
+
+        // VeriBlock:
+        std::set<uint256> setInventoryAtvToSend;
+        std::set<uint256> setInventoryVtbToSend;
+        std::set<uint256> setInventoryVbkToSend;
+
         // Used for BIP35 mempool sending
         bool fSendMempool GUARDED_BY(cs_tx_inventory){false};
         // Last time a "MEMPOOL" request was serviced.
@@ -968,6 +975,22 @@ public:
         } else if (inv.type == MSG_BLOCK) {
             LOCK(cs_inventory);
             vInventoryBlockToSend.push_back(inv.hash);
+        }
+
+        // VeriBlock:
+        if (m_tx_relay != nullptr) {
+            LOCK(m_tx_relay->cs_tx_inventory);
+            LogPrint(BCLog::NET, "push inventory contains %s: %d\n", inv.ToString(), m_tx_relay->filterInventoryKnown.contains(inv.hash));
+
+            if (!m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
+                if (inv.type == MSG_POP_ATV) {
+                    m_tx_relay->setInventoryAtvToSend.insert(inv.hash);
+                } else if (inv.type == MSG_POP_VTB) {
+                    m_tx_relay->setInventoryVtbToSend.insert(inv.hash);
+                } else if (inv.type == MSG_POP_VBK) {
+                    m_tx_relay->setInventoryVbkToSend.insert(inv.hash);
+                }
+            }
         }
     }
 

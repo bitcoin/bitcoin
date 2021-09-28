@@ -13,85 +13,115 @@
 #include <node/context.h>
 #include <rpc/blockchain.h>
 #include <vbk/pop_common.hpp>
+#include <vbk/util.hpp>
 #include <veriblock/pop.hpp>
 
 namespace VeriBlock {
 
 namespace p2p {
 
-extern CCriticalSection cs_popstate;
+void SendPopPayload(
+    CNode* pto,
+    CConnman* connman,
+    int typeIn,
+    CRollingBloomFilter& filterInventoryKnown,
+    std::set<uint256>& toSend,
+    std::vector<CInv>& vInv) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-struct PopP2PState {
-    uint32_t known_pop_data{0};
-    uint32_t offered_pop_data{0};
-    uint32_t requested_pop_data{0};
-};
+void ProcessGetPopPayloads(
+    std::deque<CInv>::iterator& it,
+    CNode* pfrom,
+    CConnman* connman,
+    const std::atomic<bool>& interruptMsgProc,
+    std::vector<CInv>& vNotFound
 
-// The state of the Node that stores already known Pop Data
-struct PopDataNodeState {
-    // we use map to store DDoS prevention counter as a value in the map
-    std::map<altintegration::ATV::id_t, PopP2PState> atv_state{};
-    std::map<altintegration::VTB::id_t, PopP2PState> vtb_state{};
-    std::map<altintegration::VbkBlock::id_t, PopP2PState> vbk_blocks_state{};
+    ) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    template <typename T>
-    std::map<typename T::id_t, PopP2PState>& getMap();
-};
+// clang-format off
+template <typename T> static int GetType();
+template <> inline int GetType<altintegration::ATV>(){ return MSG_POP_ATV; }
+template <> inline int GetType<altintegration::VTB>(){ return MSG_POP_VTB; }
+template <> inline int GetType<altintegration::VbkBlock>(){ return MSG_POP_VBK; }
+// clang-format on
 
-PopDataNodeState& getPopDataNodeState(const NodeId& id);
-
-void erasePopDataNodeState(const NodeId& id);
-
-} // namespace p2p
-
-} // namespace VeriBlock
-
-
-namespace VeriBlock {
-
-namespace p2p {
-
-const static std::string get_prefix = "g";
-const static std::string offer_prefix = "of";
-
-const static uint32_t MAX_POP_DATA_SENDING_AMOUNT = 100;
-const static uint32_t MAX_POP_MESSAGE_SENDING_COUNT = 30;
-
-
-template <typename PopDataType>
-void offerPopData(CNode* node, CConnman* connman, const CNetMsgMaker& msgMaker) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-{
-    AssertLockHeld(cs_main);
-    LOCK(cs_popstate);
-
-    auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<PopDataType>();
-    auto& pop_mempool = VeriBlock::GetPop().getMemPool();
-    std::vector<std::vector<uint8_t>> hashes;
-
-    auto addhashes = [&](const std::unordered_map<typename PopDataType::id_t, std::shared_ptr<PopDataType>>& map) {
-        for (const auto& el : map) {
-            PopP2PState& pop_state = pop_state_map[el.first];
-            if (pop_state.offered_pop_data == 0 && pop_state.known_pop_data == 0) {
-                ++pop_state.offered_pop_data;
-                hashes.push_back(el.first.asVector());
-            }
-
-            if (hashes.size() == MAX_POP_DATA_SENDING_AMOUNT) {
-                connman->PushMessage(node, msgMaker.Make(offer_prefix + PopDataType::name(), hashes));
-                hashes.clear();
-            }
-        }
-    };
-
-    addhashes(pop_mempool.getMap<PopDataType>());
-    addhashes(pop_mempool.getInFlightMap<PopDataType>());
-
-    if (!hashes.empty()) {
-        connman->PushMessage(node, msgMaker.Make(offer_prefix + PopDataType::name(), hashes));
-    }
+template <typename T>
+CInv PayloadToInv(const typename T::id_t& id) {
+    return CInv(GetType<T>(), IdToUint256<T>(id));
 }
 
-int processPopData(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
+template <typename T>
+void RelayPopPayload(
+    CConnman* connman,
+    const T& t)
+{
+    auto inv = PayloadToInv<T>(t.getId());
+    connman->ForEachNode([&inv](CNode* pto) {
+        pto->PushInventory(inv);
+    });
+}
+
+template <typename T, typename F>
+bool ProcessPopPayload(CNode* pfrom, CConnman* connman, CDataStream& vRecv, F onInv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    AssertLockHeld(cs_main);
+    if ((!g_relay_txes && !pfrom->HasPermission(PF_RELAY)) || (pfrom->m_tx_relay == nullptr)) {
+        LogPrint(BCLog::NET, "%s sent in violation of protocol peer=%d\n", T::name(), pfrom->GetId());
+        pfrom->fDisconnect = true;
+        return true;
+    }
+
+    T data;
+    vRecv >> data;
+
+    LogPrint(BCLog::NET, "received %s from peer %d\n", data.toShortPrettyString(), pfrom->GetId());
+
+    uint256 id = IdToUint256<T>(data.getId());
+    CInv inv(GetType<T>(), id);
+    pfrom->AddInventoryKnown(inv);
+
+    // CNodeState is defined inside net_processing.cpp.
+    // we use that structure in this function onInv().
+    onInv(inv);
+
+    auto& mp = VeriBlock::GetPop().getMemPool();
+    altintegration::ValidationState state;
+    auto result = mp.submit(data, state);
+    if (result.isAccepted()) {
+        // relay this POP payload to other peers
+        RelayPopPayload(connman, data);
+    } else {
+        assert(result.isFailedStateless());
+        // peer sent us statelessly invalid payload.
+        Misbehaving(pfrom->GetId(), 1000, strprintf("peer %d sent us statelessly invalid %s, reason: %s", pfrom->GetId(), T::name(), state.toString()));
+        return false;
+    }
+
+    return true;
+}
+
+template <typename T>
+void RelayPopMempool(CNode* pto) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    AssertLockHeld(cs_main);
+    auto& mp = VeriBlock::GetPop().getMemPool();
+
+    size_t counter = 0;
+    for (const auto& p : mp.getMap<T>()) {
+        T& t = *p.second;
+        auto inv = PayloadToInv<T>(t.getId());
+        pto->PushInventory(inv);
+        counter++;
+    }
+
+    for (const auto& p : mp.template getInFlightMap<T>()) {
+        T& t = *p.second;
+        auto inv = PayloadToInv<T>(t.getId());
+        pto->PushInventory(inv);
+        counter++;
+    }
+
+    LogPrint(BCLog::NET, "relay %s=%u from POP mempool to peer=%d\n", T::name(), counter, pto->GetId());
+}
 
 } // namespace p2p
 } // namespace VeriBlock
