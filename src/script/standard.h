@@ -122,22 +122,10 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
 
 /**
  * Parse a standard scriptPubKey for the destination address. Assigns result to
- * the addressRet parameter and returns true if successful. For multisig
- * scripts, instead use ExtractDestinations. Currently only works for P2PK,
+ * the addressRet parameter and returns true if successful. Currently only works for P2PK,
  * P2PKH, and P2SH scripts.
  */
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet);
-
-/**
- * Parse a standard scriptPubKey with one or more destination addresses. For
- * multisig scripts, this populates the addressRet vector with the pubkey IDs
- * and nRequiredRet with the n required to spend. For other destinations,
- * addressRet is populated with a single value and nRequiredRet is set to 1.
- * Returns true if successful.
- *
- * TODO: from v21 ("addresses" and "reqSigs" deprecated) "ExtractDestinations" should be removed
- */
-bool ExtractDestinations(const CScript& scriptPubKey, TxoutType& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
 
 /**
  * Generate a Bitcoin scriptPubKey for the given CTxDestination. Returns a P2PKH
