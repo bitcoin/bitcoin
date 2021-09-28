@@ -17,7 +17,6 @@
 
 #include <compat.h>
 
-#pragma pack(push, 1)
 /** Implements a drop-in replacement for std::vector<T> which stores up to N
  *  elements directly (without heap allocation). The types Size and Diff are
  *  used to store element counts, and can be any unsigned + signed type.
@@ -149,14 +148,20 @@ public:
     };
 
 private:
-    size_type _size = 0;
+#pragma pack(push, 1)
     union direct_or_indirect {
         char direct[sizeof(T) * N];
         struct {
-            size_type capacity;
             char* indirect;
+            size_type capacity;
         };
-    } _union = {};
+    };
+#pragma pack(pop)
+    alignas(char*) direct_or_indirect _union = {};
+    size_type _size = 0;
+
+    static_assert(alignof(char*) % alignof(size_type) == 0 && sizeof(char*) % alignof(size_type) == 0, "size_type cannot have more restrictive alignment requirement than pointer");
+    static_assert(alignof(char*) % alignof(T) == 0, "value_type T cannot have more restrictive alignment requirement than pointer");
 
     T* direct_ptr(difference_type pos) { return reinterpret_cast<T*>(_union.direct) + pos; }
     const T* direct_ptr(difference_type pos) const { return reinterpret_cast<const T*>(_union.direct) + pos; }
@@ -560,13 +565,13 @@ public:
             if (v.size() != s) {
                 v.resize(s);
             }
-            ::memmove(v.data(), &*b, s);
+            if (!v.empty()) {
+                ::memmove(v.data(), &*b, s);
+            }
         } else {
             v.assign(&*b, &*e);
         }
     }
 };
-
-#pragma pack(pop)
 
 #endif // BITCOIN_PREVECTOR_H
