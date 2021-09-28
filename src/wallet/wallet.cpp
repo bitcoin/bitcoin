@@ -2007,10 +2007,7 @@ DBErrors CWallet::LoadWallet()
         assert(m_internal_spk_managers.empty());
     }
 
-    if (nLoadWalletRet != DBErrors::LOAD_OK)
-        return nLoadWalletRet;
-
-    return DBErrors::LOAD_OK;
+    return nLoadWalletRet;
 }
 
 DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut)
@@ -2542,6 +2539,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     // TODO: Can't use std::make_shared because we need a custom deleter but
     // should be possible to use std::allocate_shared.
     std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, std::move(database)), ReleaseWallet);
+    bool rescan_required = false;
     DBErrors nLoadWalletRet = walletInstance->LoadWallet();
     if (nLoadWalletRet != DBErrors::LOAD_OK) {
         if (nLoadWalletRet == DBErrors::CORRUPT) {
@@ -2562,6 +2560,10 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         {
             error = strprintf(_("Wallet needed to be rewritten: restart %s to complete"), PACKAGE_NAME);
             return nullptr;
+        } else if (nLoadWalletRet == DBErrors::RESCAN_REQUIRED) {
+            warnings.push_back(strprintf(_("Error reading %s! Transaction data may be missing or incorrect."
+                                           " Rescanning wallet."), walletFile));
+            rescan_required = true;
         }
         else {
             error = strprintf(_("Error loading %s"), walletFile);
@@ -2753,7 +2755,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 
     LOCK(walletInstance->cs_wallet);
 
-    if (chain && !AttachChain(walletInstance, *chain, error, warnings)) {
+    if (chain && !AttachChain(walletInstance, *chain, rescan_required, error, warnings)) {
         return nullptr;
     }
 
@@ -2775,7 +2777,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     return walletInstance;
 }
 
-bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interfaces::Chain& chain, bilingual_str& error, std::vector<bilingual_str>& warnings)
+bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interfaces::Chain& chain, const bool rescan_required, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     LOCK(walletInstance->cs_wallet);
     // allow setting the chain if it hasn't been set already but prevent changing it
@@ -2792,8 +2794,9 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
     // interface.
     walletInstance->m_chain_notifications_handler = walletInstance->chain().handleNotifications(walletInstance);
 
+    // If either rescan_required = true or -rescan is set, rescan_height remains equal to 0
     int rescan_height = 0;
-    if (!gArgs.GetBoolArg("-rescan", false))
+    if (!rescan_required && !gArgs.GetBoolArg("-rescan", false))
     {
         WalletBatch batch(walletInstance->GetDatabase());
         CBlockLocator locator;
