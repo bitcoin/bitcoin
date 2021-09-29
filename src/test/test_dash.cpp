@@ -116,6 +116,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
 TestingSetup::~TestingSetup()
 {
+    scheduler.stop();
     llmq::InterruptLLMQSystem();
     llmq::StopLLMQSystem();
     g_txindex->Interrupt();

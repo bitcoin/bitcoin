@@ -38,12 +38,12 @@ CChainLocksHandler::CChainLocksHandler()
 {
     scheduler = new CScheduler();
     CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler);
-    scheduler_thread = new boost::thread(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
+    scheduler_thread = new std::thread(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
 }
 
 CChainLocksHandler::~CChainLocksHandler()
 {
-    scheduler_thread->interrupt();
+    scheduler->stop();
     scheduler_thread->join();
     delete scheduler_thread;
     delete scheduler;
