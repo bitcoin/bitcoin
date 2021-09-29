@@ -1,8 +1,8 @@
 package=veriblock-pop-cpp
-$(package)_version=e9e298f63365ac4f6e7708514536b62451783ff2
+$(package)_version=e19ef5922c8d787310a976bbe1f6870ae4ace22c
 $(package)_download_path=https://github.com/VeriBlock/alt-integration-cpp/archive/
 $(package)_file_name=$($(package)_version).tar.gz
-$(package)_sha256_hash=ba11762fe92a021cba688a268717ba8664544bcd5dce4e5d226dd131ed0373ad
+$(package)_sha256_hash=afe86cac0df79126e1619b462dd9de76ee437ff249c8f94b60fd0b6dfd02fdd7
 $(package)_build_subdir=build
 $(package)_build_type=$(BUILD_TYPE)
 $(package)_asan=$(ASAN)
