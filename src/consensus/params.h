@@ -227,9 +227,9 @@ struct Params {
     int SubsidyHalvingIntervals(int nHeight) const { 
         if(bTestnet) {
             if (nHeight >= nNEVMStartBlock) {
-                return nSubsidyHalvingInterval;
+                return nHeight/nSubsidyHalvingInterval;
             } else {
-                return nSubsidyHalvingInterval*2.5;
+                return nHeight/(nSubsidyHalvingInterval*2.5);
             }
         }
         if (nHeight >= nNEVMStartBlock) {
