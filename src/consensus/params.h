@@ -234,7 +234,7 @@ struct Params {
         }
         if (nHeight >= nNEVMStartBlock) {
             static double forkIntervals = nNEVMStartBlock/(nSubsidyHalvingInterval*2.5);
-            return floor(forkIntervals + ((nHeight-nNEVMStartBlock)/nSubsidyHalvingInterval));
+            return floor(forkIntervals + (((double)(nHeight-nNEVMStartBlock))/((double)nSubsidyHalvingInterval)));
         } else {
             return nHeight/(nSubsidyHalvingInterval*2.5);
         }
