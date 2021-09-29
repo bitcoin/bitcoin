@@ -29,6 +29,12 @@
 extern const std::string UNIX_EPOCH_TIME;
 
 /**
+ * String used to describe the destination address parsed from a standard script in documentation, factored out to a
+ * constant for consistency.
+ */
+const std::string DESTINATION_ADDRESS{"The Bitcoin address (only if a well-defined address exists)"};
+
+/**
  * Example bech32 addresses for the RPCExamples help documentation. They are intentionally
  * invalid to prevent accidental transactions by users.
  */
