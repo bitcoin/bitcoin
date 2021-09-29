@@ -1271,7 +1271,7 @@ CAmount GetBlockSubsidy(unsigned int nHeight, const CChainParams& params, bool f
     // account for NEVM adjustment to 2.5 blocks
     if(nHeight >= (unsigned int)consensusParams.nNEVMStartBlock)
         nSubsidy *= 2.5;
-    int reductions = nHeight / consensusParams.SubsidyHalvingInterval(nHeight);
+    const int &reductions = consensusParams.SubsidyHalvingIntervals(nHeight);
     if (reductions >= 50) {
         return 0;
     }

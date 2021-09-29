@@ -10,6 +10,7 @@
 #include <limits>
 // SYSCOIN
 #include <map>
+#include <math.h>
 namespace Consensus {
 
 /**
@@ -223,11 +224,19 @@ struct Params {
             return nSeniorityLevel1;
         return 0;
     }
-    int SubsidyHalvingInterval(int nHeight) const { 
+    int SubsidyHalvingIntervals(int nHeight) const { 
+        if(bTestnet) {
+            if (nHeight >= nNEVMStartBlock) {
+                return nSubsidyHalvingInterval;
+            } else {
+                return nSubsidyHalvingInterval*2.5;
+            }
+        }
         if (nHeight >= nNEVMStartBlock) {
-            return nSubsidyHalvingInterval;
+            static double forkIntervals = nNEVMStartBlock/(nSubsidyHalvingInterval*2.5);
+            return floor(forkIntervals + ((nHeight-nNEVMStartBlock)/nSubsidyHalvingInterval));
         } else {
-            return nSubsidyHalvingInterval*2.5;
+            return nHeight/(nSubsidyHalvingInterval*2.5);
         }
     }
     int64_t PowTargetSpacing(int nHeight) const {
