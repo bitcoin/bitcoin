@@ -70,6 +70,7 @@ public:
         SpendZeroConfChange,    // bool
         ShowMasternodesTab,     // bool
         Listen,                 // bool
+        Server,                 // bool
         OptionIDRowCount,
     };
 
