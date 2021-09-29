@@ -38,7 +38,7 @@ MAX_BLOOM_FILTER_SIZE = 36000
 MAX_BLOOM_HASH_FUNCS = 50
 
 COIN = 100000000  # 1 sys in satoshis
-MAX_MONEY = 888000000 * COIN
+MAX_MONEY = (1000000000000000000 - 1) * COIN
 
 BIP125_SEQUENCE_NUMBER = 0xfffffffd  # Sequence number that is rbf-opt-in (BIP 125) and csv-opt-out (BIP 68)
 # SYSCOIN
@@ -741,7 +741,7 @@ class CTransaction:
     def is_valid(self):
         self.calc_sha256()
         for tout in self.vout:
-            if tout.nValue < 0 or tout.nValue > 888000000 * COIN:
+            if tout.nValue < 0 or tout.nValue > MAX_MONEY * COIN:
                 return False
         return True
 

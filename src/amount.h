@@ -26,7 +26,7 @@ static const CAmount COIN = 100000000;
  * critical; in unusual circumstances like a(nother) overflow bug that allowed
  * for the creation of coins out of thin air modification could lead to a fork.
  * */
-static const CAmount MAX_MONEY = 888000000 * COIN;
+static const CAmount MAX_MONEY = 10000000000LL * COIN;
 // SYSCOIN
 static const CAmount MAX_ASSET = 1000000000000000000LL - 1LL; // 10^18 - 1 max decimal value that will fit in CAmount
 static const CAmount COST_ASSET = COIN;
