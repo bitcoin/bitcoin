@@ -164,7 +164,7 @@ void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex, bool i
     out.pushKV("type", GetTxnOutputType(type));
 }
 
-void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo, TxVerbosity verbosity)
+void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo, TxVerbosity verbosity)
 {
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
@@ -253,8 +253,9 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         entry.pushKV("fee", ValueFromAmount(fee));
     }
 
-    if (!hashBlock.IsNull())
-        entry.pushKV("blockhash", hashBlock.GetHex());
+    if (!block_hash.IsNull()) {
+        entry.pushKV("blockhash", block_hash.GetHex());
+    }
 
     if (include_hex) {
         entry.pushKV("hex", EncodeHexTx(tx, serialize_flags)); // The hex-encoded transaction. Used the name "hex" to be consistent with the verbose output of "getrawtransaction".
