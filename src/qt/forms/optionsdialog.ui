@@ -739,10 +739,10 @@
          <item>
           <widget class="QLabel" name="thirdPartyTxUrlsLabel">
            <property name="toolTip">
-            <string>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
+            <string>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
            </property>
            <property name="text">
-            <string>&amp;Third party transaction URLs</string>
+            <string>&amp;Third-party transaction URLs</string>
            </property>
            <property name="buddy">
             <cstring>thirdPartyTxUrls</cstring>
@@ -752,7 +752,7 @@
          <item>
           <widget class="QLineEdit" name="thirdPartyTxUrls">
            <property name="toolTip">
-            <string>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
+            <string>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
            </property>
            <property name="placeholderText">
             <string notr="true">https://example.com/tx/%s</string>
