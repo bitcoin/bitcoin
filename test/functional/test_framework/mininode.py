@@ -53,16 +53,6 @@ from test_framework.messages import (
     NODE_NETWORK,
     NODE_WITNESS,
     sha256,
-    #VeriBlock
-    msg_offer_atv,
-    msg_offer_vtb,
-    msg_offer_vbk,
-    msg_atv,
-    msg_vtb,
-    msg_vbk,
-    msg_get_atv,
-    msg_get_vtb,
-    msg_get_vbk,
 )
 from test_framework.util import wait_until
 
@@ -90,16 +80,6 @@ MESSAGEMAP = {
     b"tx": msg_tx,
     b"verack": msg_verack,
     b"version": msg_version,
-    #VeriBlock
-    b"ofATV": msg_offer_atv,
-    b"ofVTB": msg_offer_vtb,
-    b"ofVBK": msg_offer_vbk,
-    b"ATV": msg_atv,
-    b"VTB": msg_vtb,
-    b"VBK": msg_vbk,
-    b"gATV": msg_get_atv,
-    b"gVTB": msg_get_vtb,
-    b"gVBK": msg_get_vbk,
 }
 
 # Edit these parameters to match src/chainparams.cpp
@@ -380,27 +360,6 @@ class P2PInterface(P2PConnection):
         assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
         self.send_message(msg_verack())
         self.nServices = message.nServices
-
-
-    #VeriBlock
-    def on_ofATV(self, message):
-        pass
-    def on_ofVTB(self, message):
-        pass
-    def on_ofVBK(self, message):
-        pass
-    def on_ATV(self, message):
-        pass
-    def on_VTB(self, message):
-        pass
-    def on_VBK(self, message):
-        pass
-    def on_gATV(self, message):
-        pass
-    def on_gVTB(self, message):
-        pass
-    def on_gVBK(self, message):
-        pass
 
     # Connection helper methods
 

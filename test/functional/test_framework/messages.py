@@ -237,7 +237,10 @@ class CInv:
         2: "Block",
         1|MSG_WITNESS_FLAG: "WitnessTx",
         2|MSG_WITNESS_FLAG : "WitnessBlock",
-        4: "CompactBlock"
+        4: "CompactBlock",
+        8: "ATV",
+        9: "VTB",
+        10: "VBK",
     }
 
     def __init__(self, t=0, h=0):

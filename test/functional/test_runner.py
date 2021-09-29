@@ -124,9 +124,7 @@ BASE_SCRIPTS = [
     'feature_pop_mempool_reorg.py',
     'feature_pop_mempool_sync.py',
     'feature_pop_merkleroot.py',
-    # TODO: fix these
-    #'feature_pop_p2p.py',
-    #'feature_pop_p2p_ddos.py',
+    'feature_pop_p2p.py',
     'feature_pop_params.py',
     'feature_pop_payout.py',
     'feature_pop_shutdown_sync.py',
