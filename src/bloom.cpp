@@ -82,7 +82,7 @@ bool CBloomFilter::contains(const COutPoint& outpoint) const
 {
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << outpoint;
-    return contains(MakeUCharSpan(stream));
+    return contains(stream);
 }
 
 bool CBloomFilter::IsWithinSizeConstraints() const
