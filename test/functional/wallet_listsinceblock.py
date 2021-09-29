@@ -44,6 +44,14 @@ class ListSinceBlockTest(BitcoinTestFramework):
     def test_no_blockhash(self):
         self.log.info("Test no blockhash")
         txid = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 1)
+        self.sync_all()
+        assert_array_result(self.nodes[0].listtransactions(), {"txid": txid}, {
+            "category": "receive",
+            "amount": 1,
+            "confirmations": 0,
+            "trusted": False,
+        })
+
         blockhash, = self.generate(self.nodes[2], 1)
         blockheight = self.nodes[2].getblockheader(blockhash)['height']
         self.sync_all()
@@ -56,6 +64,9 @@ class ListSinceBlockTest(BitcoinTestFramework):
             "blockheight": blockheight,
             "confirmations": 1,
         })
+        assert_equal(len(txs), 1)
+        assert "trusted" not in txs[0]
+
         assert_equal(
             self.nodes[0].listsinceblock(),
             {"lastblock": blockhash,
