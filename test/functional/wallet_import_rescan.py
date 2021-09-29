@@ -99,7 +99,7 @@ class Variant(collections.namedtuple("Variant", "call data address_type rescan p
             assert_equal(tx["label"], self.label)
             assert_equal(tx["txid"], txid)
             assert_equal(tx["confirmations"], 1 + current_height - confirmation_height)
-            assert_equal("trusted" not in tx, True)
+            assert "trusted" not in tx
 
             address, = [ad for ad in addresses if txid in ad["txids"]]
             assert_equal(address["address"], self.address["address"])

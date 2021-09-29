@@ -1389,7 +1389,8 @@ static const std::vector<RPCResult> TransactionDescriptionString()
     return{{RPCResult::Type::NUM, "confirmations", "The number of confirmations for the transaction. Negative confirmations means the\n"
                "transaction conflicted that many blocks ago."},
            {RPCResult::Type::BOOL, "generated", /* optional */ true, "Only present if transaction only input is a coinbase one."},
-           {RPCResult::Type::BOOL, "trusted", /* optional */ true, "Only present if we consider transaction to be trusted and so safe to spend from."},
+           {RPCResult::Type::BOOL, "trusted", /* optional */ true, "Whether we consider the transaction to be trusted and safe to spend from.\n"
+                "Only present when the transaction has 0 confirmations (or negative confirmations, if conflicted)."},
            {RPCResult::Type::STR_HEX, "blockhash", /* optional */ true, "The block hash containing the transaction."},
            {RPCResult::Type::NUM, "blockheight", /* optional */ true, "The block height containing the transaction."},
            {RPCResult::Type::NUM, "blockindex", /* optional */ true, "The index of the transaction in the block that includes it."},
@@ -1407,7 +1408,7 @@ static const std::vector<RPCResult> TransactionDescriptionString()
            {RPCResult::Type::NUM_TIME, "timereceived", "The time received expressed in " + UNIX_EPOCH_TIME + "."},
            {RPCResult::Type::STR, "comment", /* optional */ true, "If a comment is associated with the transaction, only present if not empty."},
            {RPCResult::Type::STR, "bip125-replaceable", "(\"yes|no|unknown\") Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
-               "may be unknown for unconfirmed transactions not in the mempool"}};
+               "may be unknown for unconfirmed transactions not in the mempool."}};
 }
 
 static RPCHelpMan listtransactions()
