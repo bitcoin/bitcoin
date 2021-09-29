@@ -102,7 +102,12 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
     (void)AreInputsStandard(tx, coins_view_cache, true);
     (void)IsWitnessStandard(tx, coins_view_cache);
 
+    bool block_hash{false};
+    bool include_hex{false};
+    try {
+        ds >> block_hash;
+        ds >> include_hex;
+    } catch (const std::ios_base::failure&) {}
     UniValue u(UniValue::VOBJ);
-    TxToUniv(tx, /* block_hash= */ uint256::ZERO, /* entry= */ u);
-    TxToUniv(tx, /* block_hash= */ uint256::ONE, /* entry= */ u);
+    TxToUniv(tx, /* block_hash= */ uint256{block_hash}, /* entry= */ u, include_hex);
 }
