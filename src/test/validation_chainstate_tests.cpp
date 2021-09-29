@@ -107,20 +107,21 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
 
     curr_tip = ::g_best_block;
 
-    CChainState* background_cs;
-
     BOOST_CHECK_EQUAL(chainman.GetAll().size(), 2);
-    for (CChainState* cs : chainman.GetAll()) {
-        if (cs != &chainman.ActiveChainstate()) {
-            background_cs = cs;
+
+    CChainState& background_cs{*[&] {
+        for (CChainState* cs : chainman.GetAll()) {
+            if (cs != &chainman.ActiveChainstate()) {
+                return cs;
+            }
         }
-    }
-    BOOST_CHECK(background_cs);
+        assert(false);
+    }()};
 
     // Create a block to append to the validation chain.
     std::vector<CMutableTransaction> noTxns;
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    CBlock validation_block = this->CreateBlock(noTxns, scriptPubKey, *background_cs);
+    CBlock validation_block = this->CreateBlock(noTxns, scriptPubKey, background_cs);
     auto pblock = std::make_shared<const CBlock>(validation_block);
     BlockValidationState state;
     CBlockIndex* pindex = nullptr;
@@ -133,15 +134,15 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
         LOCK(::cs_main);
         bool checked = CheckBlock(*pblock, state, chainparams.GetConsensus());
         BOOST_CHECK(checked);
-        bool accepted = background_cs->AcceptBlock(
+        bool accepted = background_cs.AcceptBlock(
             pblock, state, &pindex, true, nullptr, &newblock);
         BOOST_CHECK(accepted);
     }
     // UpdateTip is called here
-    bool block_added = background_cs->ActivateBestChain(state, pblock);
+    bool block_added = background_cs.ActivateBestChain(state, pblock);
 
     // Ensure tip is as expected
-    BOOST_CHECK_EQUAL(background_cs->m_chain.Tip()->GetBlockHash(), validation_block.GetHash());
+    BOOST_CHECK_EQUAL(background_cs.m_chain.Tip()->GetBlockHash(), validation_block.GetHash());
 
     // g_best_block should be unchanged after adding a block to the background
     // validation chain.
