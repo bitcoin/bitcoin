@@ -236,12 +236,14 @@ class SegWitTest(BitcoinTestFramework):
 
         self.log.info("Verify sigops are counted in GBT with BIP141 rules after the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
+        raw_tx = self.nodes[0].getrawtransaction(txid, True)
         tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit']})
         assert_greater_than_or_equal(tmpl['sizelimit'], 3999577)  # actual maximum size is lower due to minimum mandatory non-witness data
         assert_equal(tmpl['weightlimit'], 4000000)
         assert_equal(tmpl['sigoplimit'], 80000)
         assert_equal(tmpl['transactions'][0]['txid'], txid)
-        assert_equal(tmpl['transactions'][0]['sigops'], 8)
+        expected_sigops = 9 if 'txinwitness' in raw_tx["vin"][0] else 8
+        assert_equal(tmpl['transactions'][0]['sigops'], expected_sigops)
         assert '!segwit' in tmpl['rules']
 
         self.generate(self.nodes[0], 1)  # Mine a block to clear the gbt cache
