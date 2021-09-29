@@ -41,18 +41,42 @@ typedef std::shared_ptr<CInstantSendLock> CInstantSendLockPtr;
 class CInstantSendDb
 {
 private:
+    mutable CCriticalSection cs_db;
+
     static const int CURRENT_VERSION = 1;
 
-    int best_confirmed_height{0};
+    int best_confirmed_height GUARDED_BY(cs_db) {0};
 
-    std::unique_ptr<CDBWrapper> db{nullptr};
+    std::unique_ptr<CDBWrapper> db GUARDED_BY(cs_db) {nullptr};
+    mutable unordered_lru_cache<uint256, CInstantSendLockPtr, StaticSaltedHasher, 10000> islockCache GUARDED_BY(cs_db);
+    mutable unordered_lru_cache<uint256, uint256, StaticSaltedHasher, 10000> txidCache GUARDED_BY(cs_db);
 
-    mutable unordered_lru_cache<uint256, CInstantSendLockPtr, StaticSaltedHasher, 10000> islockCache;
-    mutable unordered_lru_cache<uint256, uint256, StaticSaltedHasher, 10000> txidCache;
-    mutable unordered_lru_cache<COutPoint, uint256, SaltedOutpointHasher, 10000> outpointCache;
+    mutable unordered_lru_cache<COutPoint, uint256, SaltedOutpointHasher, 10000> outpointCache GUARDED_BY(cs_db);
+    void WriteInstantSendLockMined(CDBBatch& batch, const uint256& hash, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs_db);
 
-    void WriteInstantSendLockMined(CDBBatch& batch, const uint256& hash, int nHeight);
-    void RemoveInstantSendLockMined(CDBBatch& batch, const uint256& hash, int nHeight);
+    void RemoveInstantSendLockMined(CDBBatch& batch, const uint256& hash, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs_db);
+
+    /**
+     * This method removes a InstantSend Lock from the database and is called when a tx with an IS lock is confirmed and Chainlocked
+     * @param batch Object used to batch many calls together
+     * @param hash The hash of the InstantSend Lock
+     * @param islock The InstantSend Lock object itself
+     * @param keep_cache Should we still keep corresponding entries in the cache or not
+     */
+    void RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, CInstantSendLockPtr islock, bool keep_cache = true) EXCLUSIVE_LOCKS_REQUIRED(cs_db);
+    /**
+     * Marks an InstantSend Lock as archived.
+     * @param batch Object used to batch many calls together
+     * @param hash The hash of the InstantSend Lock
+     * @param nHeight The height that the transaction was included at
+     */
+    void WriteInstantSendLockArchived(CDBBatch& batch, const uint256& hash, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs_db);
+    /**
+     * Gets a vector of IS Lock hashes of the IS Locks which rely on or are children of the parent IS Lock
+     * @param parent The hash of the parent IS Lock
+     * @return Returns a vector of IS Lock hashes
+     */
+    std::vector<uint256> GetInstantSendLocksByParent(const uint256& parent) const EXCLUSIVE_LOCKS_REQUIRED(cs_db);
 
 public:
     explicit CInstantSendDb(bool unitTests, bool fWipe);
@@ -66,27 +90,11 @@ public:
      */
     void WriteNewInstantSendLock(const uint256& hash, const CInstantSendLock& islock);
     /**
-     * This method removes a InstantSend Lock from the database and is called when a tx with an IS lock is confirmed and Chainlocked
-     * @param batch Object used to batch many calls together
-     * @param hash The hash of the InstantSend Lock
-     * @param islock The InstantSend Lock object itself
-     * @param keep_cache Should we still keep corresponding entries in the cache or not
-     */
-    void RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, CInstantSendLockPtr islock, bool keep_cache = true);
-
-    /**
      * This method updates a DB entry for an InstantSend Lock from being not included in a block to being included in a block
      * @param hash The hash of the InstantSend Lock
      * @param nHeight The height that the transaction was included at
      */
     void WriteInstantSendLockMined(const uint256& hash, int nHeight);
-    /**
-     * Marks an InstantSend Lock as archived.
-     * @param batch Object used to batch many calls together
-     * @param hash The hash of the InstantSend Lock
-     * @param nHeight The height that the transaction was included at
-     */
-    static void WriteInstantSendLockArchived(CDBBatch& batch, const uint256& hash, int nHeight);
     /**
      * Archives and deletes all IS Locks which were mined into a block before nUntilHeight
      * @param nUntilHeight Removes all IS Locks confirmed up until nUntilHeight
@@ -106,7 +114,6 @@ public:
      * @return size_t value of the number of IS Locks not confirmed by a block
      */
     size_t GetInstantSendLockCount() const;
-
     /**
      * Gets a pointer to the IS Lock based on the hash
      * @param hash The hash of the IS Lock
@@ -132,13 +139,6 @@ public:
      * @return IS Lock Pointer associated with that input.
      */
     CInstantSendLockPtr GetInstantSendLockByInput(const COutPoint& outpoint) const;
-
-    /**
-     * Gets a vector of IS Lock hashes of the IS Locks which rely on or are children of the parent IS Lock
-     * @param parent The hash of the parent IS Lock
-     * @return Returns a vector of IS Lock hashes
-     */
-    std::vector<uint256> GetInstantSendLocksByParent(const uint256& parent) const;
     /**
      * Called when a ChainLock invalidated a IS Lock, removes any chained/children IS Locks and the invalidated IS Lock
      * @param islockHash IS Lock hash which has been invalidated
@@ -216,7 +216,7 @@ private:
     std::unordered_set<uint256> ProcessPendingInstantSendLocks(int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban);
     void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLockPtr& islock);
 
-    void AddNonLockedTx(const CTransactionRef& tx, const CBlockIndex* pindexMined) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void AddNonLockedTx(const CTransactionRef& tx, const CBlockIndex* pindexMined);
     void RemoveNonLockedTx(const uint256& txid, bool retryChildren) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void RemoveConflictedTx(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void TruncateRecoveredSigsForInputs(const CInstantSendLock& islock) EXCLUSIVE_LOCKS_REQUIRED(cs);
