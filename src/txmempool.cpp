@@ -699,15 +699,12 @@ void CTxMemPool::check(CChainState& active_chainstate) const
     CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(&active_coins_tip));
     const int64_t spendheight = active_chainstate.m_chain.Height() + 1;
 
-    std::list<const CTxMemPoolEntry*> waitingOnDependants;
     for (const auto& it : GetSortedDepthAndScore()) {
-        unsigned int i = 0;
         checkTotal += it->GetTxSize();
         check_total_fee += it->GetFee();
         innerUsage += it->DynamicMemoryUsage();
         const CTransaction& tx = it->GetTx();
         innerUsage += memusage::DynamicUsage(it->GetMemPoolParentsConst()) + memusage::DynamicUsage(it->GetMemPoolChildrenConst());
-        bool fDependsWait = false;
         CTxMemPoolEntry::Parents setParentCheck;
         for (const CTxIn &txin : tx.vin) {
             // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
@@ -715,7 +712,10 @@ void CTxMemPool::check(CChainState& active_chainstate) const
             if (it2 != mapTx.end()) {
                 const CTransaction& tx2 = it2->GetTx();
                 assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
-                if (!mempoolDuplicate.HaveCoin(txin.prevout)) fDependsWait = true;
+                // We are iterating through the mempool entries sorted in order by ancestor count.
+                // All parents must have been checked before their children and their coins added to
+                // the mempoolDuplicate coins cache.
+                assert(mempoolDuplicate.HaveCoin(txin.prevout));
                 setParentCheck.insert(*it2);
             } else {
                 assert(active_coins_tip.HaveCoin(txin.prevout));
@@ -725,7 +725,6 @@ void CTxMemPool::check(CChainState& active_chainstate) const
             assert(it3 != mapNextTx.end());
             assert(it3->first == &txin.prevout);
             assert(it3->second == &tx);
-            i++;
         }
         auto comp = [](const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) -> bool {
             return a.GetTx().GetHash() == b.GetTx().GetHash();
@@ -773,24 +772,7 @@ void CTxMemPool::check(CChainState& active_chainstate) const
         // just a sanity check, not definitive that this calc is correct...
         assert(it->GetSizeWithDescendants() >= child_sizes + it->GetTxSize());
 
-        if (fDependsWait)
-            waitingOnDependants.push_back(&(*it));
-        else {
-            CheckInputsAndUpdateCoins(tx, mempoolDuplicate, spendheight);
-        }
-    }
-    unsigned int stepsSinceLastRemove = 0;
-    while (!waitingOnDependants.empty()) {
-        const CTxMemPoolEntry* entry = waitingOnDependants.front();
-        waitingOnDependants.pop_front();
-        if (!mempoolDuplicate.HaveInputs(entry->GetTx())) {
-            waitingOnDependants.push_back(entry);
-            stepsSinceLastRemove++;
-            assert(stepsSinceLastRemove < waitingOnDependants.size());
-        } else {
-            CheckInputsAndUpdateCoins(entry->GetTx(), mempoolDuplicate, spendheight);
-            stepsSinceLastRemove = 0;
-        }
+        CheckInputsAndUpdateCoins(tx, mempoolDuplicate, spendheight);
     }
     for (auto it = mapNextTx.cbegin(); it != mapNextTx.cend(); it++) {
         uint256 hash = it->second->GetHash();
