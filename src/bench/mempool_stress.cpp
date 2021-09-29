@@ -107,10 +107,11 @@ static void MempoolCheck(benchmark::Bench& bench)
     const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(CBaseChainParams::MAIN, {"-checkmempool=1"});
     CTxMemPool pool;
     LOCK2(cs_main, pool.cs);
+    const CCoinsViewCache& coins_tip = testing_setup.get()->m_node.chainman->ActiveChainstate().CoinsTip();
     for (auto& tx : ordered_coins) AddTx(tx, pool);
 
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
-        pool.check(testing_setup.get()->m_node.chainman->ActiveChainstate());
+        pool.check(coins_tip, /* spendheight */ 2);
     });
 }
 
