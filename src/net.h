@@ -7,7 +7,7 @@
 #define BITCOIN_NET_H
 
 #include <addrman.h>
-#include <bloom.h>
+#include <common/bloom.h>
 #include <chainparams.h>
 #include <compat.h>
 #include <consensus/amount.h>

@@ -9,7 +9,7 @@
 #include <serialize.h>
 #include <uint256.h>
 #include <primitives/block.h>
-#include <bloom.h>
+#include <common/bloom.h>
 
 #include <vector>
 
