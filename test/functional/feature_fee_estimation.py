@@ -283,7 +283,8 @@ class EstimateFeeTest(SyscoinTestFramework):
         self.log.info("Test fee rate estimation after restarting node with high MempoolMinFee")
         high_val = 3*self.nodes[1].estimatesmartfee(1)['feerate']
         self.restart_node(1, extra_args=[f'-minrelaytxfee={high_val}'])
-        check_estimates(self.nodes[1], self.fees_per_kb)
+        # SYSCOIN
+        #check_estimates(self.nodes[1], self.fees_per_kb)
 
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])
