@@ -878,6 +878,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 #else
     int fd_max = FD_SETSIZE;
 #endif
+    // Trim requested connection counts, to fit into system limitations
+    // <int> in std::min<int>(...) to work around FreeBSD compilation issue described in #2695
     nMaxConnections = std::max(std::min<int>(nMaxConnections, fd_max - nBind - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS - NUM_FDS_MESSAGE_CAPTURE), 0);
     if (nFD < MIN_CORE_FILEDESCRIPTORS)
         return InitError(_("Not enough file descriptors available."));
