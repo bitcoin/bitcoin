@@ -326,6 +326,53 @@ TorController::~TorController()
     }
 }
 
+void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlReply& reply)
+{
+    // NOTE: We can only get here if -onion is unset
+    std::string socks_location;
+    if (reply.code == 250) {
+        for (const auto& line : reply.lines) {
+            if (0 == line.compare(0, 20, "net/listeners/socks=")) {
+                const std::string port_list_str = line.substr(20);
+                std::vector<std::string> port_list;
+                boost::split(port_list, port_list_str, boost::is_any_of(" "));
+                for (auto& portstr : port_list) {
+                    if (portstr.empty()) continue;
+                    if ((portstr[0] == '"' || portstr[0] == '\'') && (*portstr.rbegin() == portstr[0])) {
+                        portstr = portstr.substr(1, portstr.size() - 2);
+                        if (portstr.empty()) continue;
+                    }
+                    socks_location = portstr;
+                    if (0 == portstr.compare(0, 10, "127.0.0.1:")) {
+                        // Prefer localhost - ignore other ports
+                        break;
+                    }
+                }
+            }
+        }
+        if (!socks_location.empty()) {
+            LogPrint(BCLog::TOR, "tor: Get SOCKS port command yielded %s\n", socks_location);
+        } else {
+            LogPrintf("tor: Get SOCKS port command returned nothing\n");
+        }
+    } else if (reply.code == 510) {  // 510 Unrecognized command
+        LogPrintf("tor: Get SOCKS port command failed with unrecognized command (You probably should upgrade Tor)\n");
+    } else {
+        LogPrintf("tor: Get SOCKS port command failed; error code %d\n", reply.code);
+    }
+
+    if (socks_location.empty()) {
+        // Fallback to old behaviour
+        socks_location = "127.0.0.1";
+    }
+
+    CService resolved(LookupNumeric(socks_location, 9050));
+    LogPrint(BCLog::TOR, "tor: Configuring onion proxy for %s\n", resolved.ToStringIPPort());
+    proxyType addrOnion = proxyType(resolved, true);
+    SetProxy(NET_ONION, addrOnion);
+    SetReachable(NET_ONION, true);
+}
+
 void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlReply& reply)
 {
     if (reply.code == 250) {
@@ -369,10 +416,7 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
         // Now that we know Tor is running setup the proxy for onion addresses
         // if -onion isn't set to something else.
         if (gArgs.GetArg("-onion", "") == "") {
-            CService resolved(LookupNumeric("127.0.0.1", 9050));
-            proxyType addrOnion = proxyType(resolved, true);
-            SetProxy(NET_ONION, addrOnion);
-            SetReachable(NET_ONION, true);
+            _conn.Command("GETINFO net/listeners/socks", std::bind(&TorController::get_socks_cb, this, std::placeholders::_1, std::placeholders::_2));
         }
 
         // Finally - now create the service
