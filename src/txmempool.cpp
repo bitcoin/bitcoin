@@ -16,7 +16,6 @@
 #include <util/moneystr.h>
 #include <util/system.h>
 #include <util/time.h>
-#include <validation.h>
 #include <validationinterface.h>
 
 #include <cmath>
@@ -634,42 +633,11 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
         RemoveStaged(setAllRemoves, false, reason);
 }
 
-void CTxMemPool::removeForReorg(CChainState& active_chainstate, int flags)
+void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check_final_and_mature)
 {
     // Remove transactions spending a coinbase which are now immature and no-longer-final transactions
     AssertLockHeld(cs);
     AssertLockHeld(::cs_main);
-
-    const auto check_final_and_mature = [this, &active_chainstate, flags](txiter it)
-        EXCLUSIVE_LOCKS_REQUIRED(cs, ::cs_main) {
-        bool should_remove = false;
-        AssertLockHeld(cs);
-        AssertLockHeld(::cs_main);
-        const CTransaction& tx = it->GetTx();
-        LockPoints lp = it->GetLockPoints();
-        const bool validLP = TestLockPointValidity(active_chainstate.m_chain, &lp);
-        CCoinsViewMemPool view_mempool(&active_chainstate.CoinsTip(), *this);
-        if (!CheckFinalTx(active_chainstate.m_chain.Tip(), tx, flags)
-            || !CheckSequenceLocks(active_chainstate.m_chain.Tip(), view_mempool, tx, flags, &lp, validLP)) {
-            // Note if CheckSequenceLocks fails the LockPoints may still be invalid
-            // So it's critical that we remove the tx and not depend on the LockPoints.
-            should_remove = true;
-        } else if (it->GetSpendsCoinbase()) {
-            for (const CTxIn& txin : tx.vin) {
-                indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
-                if (it2 != mapTx.end())
-                    continue;
-                const Coin &coin = active_chainstate.CoinsTip().AccessCoin(txin.prevout);
-                assert(!coin.IsSpent());
-                unsigned int nMemPoolHeight = active_chainstate.m_chain.Tip()->nHeight + 1;
-                if (coin.IsSpent() || (coin.IsCoinBase() && ((signed long)nMemPoolHeight) - coin.nHeight < COINBASE_MATURITY)) {
-                    should_remove = true;
-                    break;
-                }
-            }
-        }
-        return should_remove; 
-    };
 
     setEntries txToRemove;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
@@ -680,7 +648,6 @@ void CTxMemPool::removeForReorg(CChainState& active_chainstate, int flags)
         CalculateDescendants(it, setAllRemoves);
     }
     RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
-    auto chain = active_chainstate.m_chain;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         LockPoints lp = it->GetLockPoints();
         if (!TestLockPointValidity(chain, &lp)) {
