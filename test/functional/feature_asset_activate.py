@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from test_framework.test_framework import SyscoinTestFramework
 import random
+import time
 
 class AssetActivateTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -29,6 +30,7 @@ class AssetActivateTest(SyscoinTestFramework):
         for i in range(randblocks):
             randassets = random.randrange(1, numassets)
             for _ in range(randassets):
+                time.sleep(0.01)
                 self.newasset()
             self.generate(self.nodes[0], 1)
             self.log.info('{}/{} block generated with {} assets'.format(i+1, randblocks, randassets))
