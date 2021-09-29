@@ -212,7 +212,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
 
                 case TxVerbosity::SHOW_DETAILS_AND_PREVOUT:
                     UniValue o_script_pub_key(UniValue::VOBJ);
-                    ScriptToUniv(prev_txout.scriptPubKey, o_script_pub_key, /* includeHex */ true, /* include_address= */ true);
+                    ScriptToUniv(prev_txout.scriptPubKey, /* out= */ o_script_pub_key, /* include_hex= */ true, /* include_address= */ true);
 
                     UniValue p(UniValue::VOBJ);
                     p.pushKV("generated", bool(prev_coin.fCoinBase));
@@ -238,7 +238,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
         out.pushKV("n", (int64_t)i);
 
         UniValue o(UniValue::VOBJ);
-        ScriptToUniv(txout.scriptPubKey, o, true, /* include_address= */ true);
+        ScriptToUniv(txout.scriptPubKey, /* out= */ o, /* include_hex= */ true, /* include_address= */ true);
         out.pushKV("scriptPubKey", o);
         vout.push_back(out);
 
