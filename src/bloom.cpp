@@ -4,17 +4,19 @@
 
 #include <bloom.h>
 
-#include <primitives/transaction.h>
 #include <hash.h>
+#include <primitives/transaction.h>
+#include <random.h>
 #include <script/script.h>
 #include <script/standard.h>
-#include <random.h>
+#include <span.h>
 #include <streams.h>
 
-#include <math.h>
-#include <stdlib.h>
-
 #include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <limits>
+#include <vector>
 
 static constexpr double LN2SQUARED = 0.4804530139182014246671025263266649717305529515945455;
 static constexpr double LN2 = 0.6931471805599453094172321214581765680755001343602552;
