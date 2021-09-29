@@ -342,12 +342,42 @@ struct RPCExamples {
     std::string ToDescriptionString() const;
 };
 
+template <typename T>
+struct RPCParam
+{
+    const RPCArg& arg;
+    const UniValue& value;
+    T get() const {
+        if (!value.isNull()) return convert(value);
+        // if (m_defaults) return *m_defaults;
+        CHECK_NONFATAL(arg.m_fallback.index() == 2);
+        return convert(std::get<RPCArg::Default>(arg.m_fallback));
+    };
+    operator T() const { return get(); }
+    bool isNull() const { return value.isNull(); }
+    bool isNum() const { return value.isNum(); }
+    bool isStr() const { return value.isStr(); }
+    template <typename F>
+    void forEach(F fn) const {
+        if (value.isNull()) return;
+        for (const UniValue& elem : value.get_array().getValues()) {
+            fn(elem);
+        }
+    }
+private:
+    T convert(const UniValue& value) const;
+};
+
+struct RPCContext;
 class RPCHelpMan
 {
 public:
     RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples);
-    using RPCMethodImpl = std::function<UniValue(const RPCHelpMan&, const JSONRPCRequest&)>;
+    using RPCMethodImpl = std::function<UniValue(const RPCContext&)>;
+    using RPCLegacyMethodImpl = std::function<UniValue(const RPCHelpMan&, const JSONRPCRequest&)>;
     RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCMethodImpl fun);
+    RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCLegacyMethodImpl fun);
+
 
     UniValue HandleRequest(const JSONRPCRequest& request) const;
     std::string ToString() const;
@@ -365,6 +395,25 @@ private:
     const std::vector<RPCArg> m_args;
     const RPCResults m_results;
     const RPCExamples m_examples;
+    friend struct RPCContext;
+};
+
+struct RPCContext
+{
+    const RPCHelpMan& method;
+    const JSONRPCRequest& request;
+
+    template <typename T=UniValue>
+    RPCParam<T> param(size_t index) const
+    {
+        return {method.m_args[index], request.params[index]};
+    }
+
+    template <typename F>
+    auto param(size_t index, F fn) const -> decltype(fn(UniValue{}))
+    {
+        return fn(request.params[index]);
+    }
 };
 
 #endif // BITCOIN_RPC_UTIL_H

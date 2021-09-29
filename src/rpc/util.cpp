@@ -490,7 +490,13 @@ struct Sections {
 };
 
 RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples)
-    : RPCHelpMan{std::move(name), std::move(description), std::move(args), std::move(results), std::move(examples), nullptr} {}
+    : RPCHelpMan{std::move(name), std::move(description), std::move(args), std::move(results), std::move(examples), RPCMethodImpl{}} {}
+
+RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCLegacyMethodImpl fun)
+    : RPCHelpMan(std::move(name), std::move(description), std::move(args), std::move(results), std::move(examples), [fun](const RPCContext& ctx) -> UniValue {
+        return fun(ctx.method, ctx.request);
+    })
+{}
 
 RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCMethodImpl fun)
     : m_name{std::move(name)},
@@ -572,9 +578,50 @@ UniValue RPCHelpMan::HandleRequest(const JSONRPCRequest& request) const
     if (request.mode == JSONRPCRequest::GET_HELP || !IsValidNumArgs(request.params.size())) {
         throw std::runtime_error(ToString());
     }
-    const UniValue ret = m_fun(*this, request);
+    RPCContext ctx{*this, request};
+    const UniValue ret = m_fun(ctx);
     CHECK_NONFATAL(std::any_of(m_results.m_results.begin(), m_results.m_results.end(), [ret](const RPCResult& res) { return res.MatchesType(ret); }));
     return ret;
+}
+
+template <> UniValue RPCParam<UniValue>::convert(const UniValue& value) const
+{
+    return value;
+}
+
+template <> bool RPCParam<bool>::convert(const UniValue& value) const
+{
+    return value.get_bool();
+}
+
+template <> int RPCParam<int>::convert(const UniValue& value) const
+{
+    return value.get_int();
+}
+
+template <> uint64_t RPCParam<uint64_t>::convert(const UniValue& value) const
+{
+    return value.get_int64();
+}
+
+template <> int64_t RPCParam<int64_t>::convert(const UniValue& value) const
+{
+    return value.get_int64();
+}
+
+template <> double RPCParam<double>::convert(const UniValue& value) const
+{
+    return value.get_real();
+}
+
+template <> std::string RPCParam<std::string>::convert(const UniValue& value) const
+{
+    return value.get_str();
+}
+
+template <> uint256 RPCParam<uint256>::convert(const UniValue& value) const
+{
+    return ParseHashV(value, arg.GetName());
 }
 
 bool RPCHelpMan::IsValidNumArgs(size_t num_args) const
