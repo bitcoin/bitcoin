@@ -1043,7 +1043,7 @@ void SyscoinGUI::openOptionsDialogWithTab(OptionsDialog::Tab tab)
         return;
 
     auto dlg = new OptionsDialog(this, enableWallet);
-    connect(dlg, &OptionsDialog::quitOnReset, this, &BitcoinGUI::quitRequested);
+    connect(dlg, &OptionsDialog::quitOnReset, this, &SyscoinGUI::quitRequested);
     dlg->setCurrentTab(tab);
     dlg->setModel(clientModel->getOptionsModel());
     GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
