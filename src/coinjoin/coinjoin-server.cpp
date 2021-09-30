@@ -302,6 +302,8 @@ void CCoinJoinServer::CreateFinalTransaction(CConnman& connman)
 {
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CreateFinalTransaction -- FINALIZE TRANSACTIONS\n");
 
+    LOCK(cs_coinjoin);
+
     CMutableTransaction txNew;
 
     // make our new transaction
@@ -329,7 +331,7 @@ void CCoinJoinServer::CommitFinalTransaction(CConnman& connman)
 {
     if (!fMasternodeMode) return; // check and relay final tx only on masternode
 
-    CTransactionRef finalTransaction = MakeTransactionRef(finalMutableTransaction);
+    CTransactionRef finalTransaction = WITH_LOCK(cs_coinjoin, return MakeTransactionRef(finalMutableTransaction));
     uint256 hashTx = finalTransaction->GetHash();
 
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- finalTransaction=%s", finalTransaction->ToString()); /* Continued */
@@ -395,6 +397,7 @@ void CCoinJoinServer::ChargeFees(CConnman& connman) const
     std::vector<CTransactionRef> vecOffendersCollaterals;
 
     if (nState == POOL_STATE_ACCEPTING_ENTRIES) {
+        LOCK(cs_coinjoin);
         for (const auto& txCollateral : vecSessionCollaterals) {
             bool fFound = false;
             for (const auto& entry : vecEntries) {
@@ -414,6 +417,7 @@ void CCoinJoinServer::ChargeFees(CConnman& connman) const
 
     if (nState == POOL_STATE_SIGNING) {
         // who didn't sign?
+        LOCK(cs_coinjoin);
         for (const auto& entry : vecEntries) {
             for (const auto& txdsin : entry.vecTxDSIn) {
                 if (!txdsin.fHasSig) {
@@ -538,21 +542,23 @@ bool CCoinJoinServer::IsInputScriptSigValid(const CTxIn& txin) const
     int nTxInIndex = -1;
     CScript sigPubKey = CScript();
 
-    for (const auto& entry : vecEntries) {
-        for (const auto& txout : entry.vecTxOut) {
-            txNew.vout.push_back(txout);
-        }
-        for (const auto& txdsin : entry.vecTxDSIn) {
-            txNew.vin.push_back(txdsin);
-
-            if (txdsin.prevout == txin.prevout) {
-                nTxInIndex = i;
-                sigPubKey = txdsin.prevPubKey;
+    {
+        LOCK(cs_coinjoin);
+        for (const auto &entry: vecEntries) {
+            for (const auto &txout: entry.vecTxOut) {
+                txNew.vout.push_back(txout);
             }
-            i++;
+            for (const auto &txdsin: entry.vecTxDSIn) {
+                txNew.vin.push_back(txdsin);
+
+                if (txdsin.prevout == txin.prevout) {
+                    nTxInIndex = i;
+                    sigPubKey = txdsin.prevPubKey;
+                }
+                i++;
+            }
         }
     }
-
     if (nTxInIndex >= 0) { //might have to do this one input at a time?
         txNew.vin[nTxInIndex].scriptSig = txin.scriptSig;
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::IsInputScriptSigValid -- verifying scriptSig %s\n", ScriptToAsmStr(txin.scriptSig).substr(0, 24));
@@ -599,7 +605,7 @@ bool CCoinJoinServer::AddEntry(CConnman& connman, const CCoinJoinEntry& entry, P
     std::vector<CTxIn> vin;
     for (const auto& txin : entry.vecTxDSIn) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- txin=%s\n", __func__, txin.ToString());
-
+        LOCK(cs_coinjoin);
         for (const auto& inner_entry : vecEntries) {
             for (const auto& txdsin : inner_entry.vecTxDSIn) {
                 if (txdsin.prevout == txin.prevout) {
@@ -624,7 +630,7 @@ bool CCoinJoinServer::AddEntry(CConnman& connman, const CCoinJoinEntry& entry, P
         return false;
     }
 
-    vecEntries.push_back(entry);
+    WITH_LOCK(cs_coinjoin, vecEntries.push_back(entry));
 
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- adding entry %d of %d required\n", __func__, GetEntriesCount(), CCoinJoin::GetMaxPoolParticipants());
     nMessageIDRet = MSG_ENTRIES_ADDED;
@@ -636,6 +642,7 @@ bool CCoinJoinServer::AddScriptSig(const CTxIn& txinNew)
 {
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::AddScriptSig -- scriptSig=%s\n", ScriptToAsmStr(txinNew.scriptSig).substr(0, 24));
 
+    LOCK(cs_coinjoin);
     for (const auto& entry : vecEntries) {
         for (const auto& txdsin : entry.vecTxDSIn) {
             if (txdsin.scriptSig == txinNew.scriptSig) {
@@ -672,6 +679,7 @@ bool CCoinJoinServer::AddScriptSig(const CTxIn& txinNew)
 // Check to make sure everything is signed
 bool CCoinJoinServer::IsSignaturesComplete() const
 {
+    LOCK(cs_coinjoin);
     for (const auto& entry : vecEntries) {
         for (const auto& txdsin : entry.vecTxDSIn) {
             if (!txdsin.fHasSig) return false;
@@ -730,6 +738,7 @@ bool CCoinJoinServer::CreateNewSession(const CCoinJoinAccept& dsa, PoolMessage& 
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CreateNewSession -- signing and relaying new queue: %s\n", dsq.ToString());
         dsq.Sign();
         dsq.Relay(connman);
+        LOCK(cs_vecqueue);
         vecCoinJoinQueue.push_back(dsq);
     }
 
@@ -796,10 +805,11 @@ void CCoinJoinServer::RelayFinalTransaction(const CTransaction& txFinal, CConnma
         __func__, nSessionID, nSessionDenom, CCoinJoin::DenominationToString(nSessionDenom));
 
     // final mixing tx with empty signatures should be relayed to mixing participants only
+    LOCK(cs_coinjoin);
     for (const auto& entry : vecEntries) {
         bool fOk = connman.ForNode(entry.addr, [&txFinal, &connman, this](CNode* pnode) {
             CNetMsgMaker msgMaker(pnode->GetSendVersion());
-            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSFINALTX, nSessionID, txFinal));
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSFINALTX, nSessionID.load(), txFinal));
             return true;
         });
         if (!fOk) {
@@ -821,6 +831,7 @@ void CCoinJoinServer::RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman& conn
 {
     unsigned int nDisconnected{};
     // status updates should be relayed to mixing participants only
+    LOCK(cs_coinjoin);
     for (const auto& entry : vecEntries) {
         // make sure everyone is still connected
         bool fOk = connman.ForNode(entry.addr, [&nStatusUpdate, &nMessageID, &connman, this](CNode* pnode) {
@@ -859,10 +870,11 @@ void CCoinJoinServer::RelayCompletedTransaction(PoolMessage nMessageID, CConnman
         __func__, nSessionID, nSessionDenom, CCoinJoin::DenominationToString(nSessionDenom));
 
     // final mixing tx with empty signatures should be relayed to mixing participants only
+    LOCK(cs_coinjoin);
     for (const auto& entry : vecEntries) {
         bool fOk = connman.ForNode(entry.addr, [&nMessageID, &connman, this](CNode* pnode) {
             CNetMsgMaker msgMaker(pnode->GetSendVersion());
-            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSCOMPLETE, nSessionID, nMessageID));
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSCOMPLETE, nSessionID.load(), nMessageID));
             return true;
         });
         if (!fOk) {

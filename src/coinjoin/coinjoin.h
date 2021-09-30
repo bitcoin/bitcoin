@@ -337,14 +337,14 @@ class CCoinJoinBaseSession
 protected:
     mutable CCriticalSection cs_coinjoin;
 
-    std::vector<CCoinJoinEntry> vecEntries; // Masternode/clients entries
+    std::vector<CCoinJoinEntry> vecEntries GUARDED_BY(cs_coinjoin); // Masternode/clients entries
 
-    PoolState nState;                // should be one of the POOL_STATE_XXX values
-    int64_t nTimeLastSuccessfulStep; // the time when last successful mixing step was performed
+    std::atomic<PoolState> nState; // should be one of the POOL_STATE_XXX values
+    std::atomic<int64_t> nTimeLastSuccessfulStep; // the time when last successful mixing step was performed
 
-    int nSessionID; // 0 if no mixing session is active
+    std::atomic<int> nSessionID; // 0 if no mixing session is active
 
-    CMutableTransaction finalMutableTransaction; // the finalized transaction ready for signing
+    CMutableTransaction finalMutableTransaction GUARDED_BY(cs_coinjoin); // the finalized transaction ready for signing
 
     void SetNull();
 
@@ -366,7 +366,7 @@ public:
     int GetState() const { return nState; }
     std::string GetStateString() const;
 
-    int GetEntriesCount() const { return vecEntries.size(); }
+    int GetEntriesCount() const { LOCK(cs_coinjoin); return vecEntries.size(); }
 };
 
 // base class
@@ -376,7 +376,7 @@ protected:
     mutable CCriticalSection cs_vecqueue;
 
     // The current mixing sessions in progress on the network
-    std::vector<CCoinJoinQueue> vecCoinJoinQueue;
+    std::vector<CCoinJoinQueue> vecCoinJoinQueue GUARDED_BY(cs_vecqueue);
 
     void SetNull();
     void CheckQueue();
@@ -385,7 +385,7 @@ public:
     CCoinJoinBaseManager() :
         vecCoinJoinQueue() {}
 
-    int GetQueueSize() const { return vecCoinJoinQueue.size(); }
+    int GetQueueSize() const { LOCK(cs_vecqueue); return vecCoinJoinQueue.size(); }
     bool GetQueueItemAndTry(CCoinJoinQueue& dsqRet);
 };
 

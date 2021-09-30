@@ -174,9 +174,9 @@ private:
     // Keep track of the used Masternodes
     std::vector<COutPoint> vecMasternodesUsed;
 
-    // TODO: or map<denom, CCoinJoinClientSession> ??
-    std::deque<CCoinJoinClientSession> deqSessions;
     mutable CCriticalSection cs_deqsessions;
+    // TODO: or map<denom, CCoinJoinClientSession> ??
+    std::deque<CCoinJoinClientSession> deqSessions GUARDED_BY(cs_deqsessions);
 
     bool fMixing{false};
 
