@@ -130,7 +130,7 @@ public:
 public:
     CMasternodeMetaInfoPtr GetMetaInfo(const uint256& proTxHash, bool fCreate = true);
 
-    int64_t GetDsqCount() { LOCK(cs); return nDsqCount; }
+    int64_t GetDsqCount() const { LOCK(cs); return nDsqCount; }
     int64_t GetDsqThreshold(const uint256& proTxHash, int nMnCount);
 
     void AllowMixing(const uint256& proTxHash);
@@ -142,7 +142,8 @@ public:
     std::vector<uint256> GetAndClearDirtyGovernanceObjectHashes();
 
     void Clear();
-    void CheckAndRemove();
+    // Needed to avoid errors in flat-database.h
+    void CheckAndRemove() const {};
 
     std::string ToString() const;
 };

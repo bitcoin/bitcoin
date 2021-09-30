@@ -101,7 +101,7 @@ bool CMasternodeMetaMan::AddGovernanceVote(const uint256& proTxHash, const uint2
 void CMasternodeMetaMan::RemoveGovernanceObject(const uint256& nGovernanceObjectHash)
 {
     LOCK(cs);
-    for(auto& p : metaInfos) {
+    for(const auto& p : metaInfos) {
         p.second->RemoveGovernanceObject(nGovernanceObjectHash);
     }
 }
@@ -119,11 +119,6 @@ void CMasternodeMetaMan::Clear()
     LOCK(cs);
     metaInfos.clear();
     vecDirtyGovernanceObjectHashes.clear();
-}
-
-void CMasternodeMetaMan::CheckAndRemove()
-{
-
 }
 
 std::string CMasternodeMetaMan::ToString() const
