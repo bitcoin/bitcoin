@@ -36,7 +36,7 @@ def assert_approx(v, vexp, vspan=0.00001):
 
 def assert_fee_amount(fee, tx_size, fee_per_kB):
     """Assert the fee was in range"""
-    target_fee = round(tx_size * fee_per_kB / 1000, 8)
+    target_fee = satoshi_round(tx_size * fee_per_kB / 1000)
     if fee < target_fee:
         raise AssertionError("Fee of %s BTC too low! (Should be %s BTC)" % (str(fee), str(target_fee)))
     # allow the wallet's estimation to be at most 2 bytes off
