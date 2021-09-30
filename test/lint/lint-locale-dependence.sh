@@ -51,6 +51,7 @@ KNOWN_VIOLATIONS=(
     "src/torcontrol.cpp:.*atoi"
     "src/torcontrol.cpp:.*strtol"
     "src/util/strencodings.cpp:.*atoi"
+    "src/util/strencodings.cpp:.*strtoul"
     "src/util/strencodings.cpp:.*strtoll"
     "src/util/strencodings.h:.*atoi"
     "src/util/system.cpp:.*atoi"

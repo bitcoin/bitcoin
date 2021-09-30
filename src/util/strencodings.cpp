@@ -14,6 +14,8 @@
 #include <optional>
 // SYSCOIN
 #include <math.h>
+#include <errno.h>
+#include <limits>
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 static const std::string SAFE_CHARS[] =
@@ -343,7 +345,35 @@ bool ParseUInt32(const std::string& str, uint32_t* out)
 {
     return ParseIntegral<uint32_t>(str, out);
 }
+// SYSCOIN
+bool ParseUInt32FromHex(const std::string& str, uint32_t *out)
+{
+    if (!ParsePrechecks(str))
+        return false;
+    if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoul accepts these by default if they fit in the range
+        return false;
+    char *endp = nullptr;
+    errno = 0; // strtoul will not set errno if valid
+    unsigned long int n = strtoul(str.c_str(), &endp, 16);
+    if(out) *out = (uint32_t)n;
+    // Note that strtoul returns a *unsigned long int*, so even if it doesn't report an over/underflow
+    // we still have to check that the returned value is within the range of an *uint32_t*. On 64-bit
+    // platforms the size of these types may be different.
+    return endp && *endp == 0 && !errno &&
+        n <= std::numeric_limits<uint32_t>::max();
+}
 
+bool ParseUInt8FromHex(const std::string& str, uint8_t *out)
+{
+    uint32_t u32;
+    if (!ParseUInt32FromHex(str, &u32) || u32 > std::numeric_limits<uint8_t>::max()) {
+        return false;
+    }
+    if (out != nullptr) {
+        *out = static_cast<uint8_t>(u32);
+    }
+    return true;
+}
 bool ParseUInt64(const std::string& str, uint64_t* out)
 {
     return ParseIntegral<uint64_t>(str, out);
