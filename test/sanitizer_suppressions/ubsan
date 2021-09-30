@@ -34,6 +34,7 @@ unsigned-integer-overflow:crypto/
 unsigned-integer-overflow:FuzzedDataProvider.h
 unsigned-integer-overflow:hash.cpp
 unsigned-integer-overflow:leveldb/
+unsigned-integer-overflow:minisketch/
 unsigned-integer-overflow:policy/fees.cpp
 unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:pubkey.h
@@ -59,6 +60,7 @@ implicit-integer-sign-change:crypto/
 # implicit-integer-sign-change in FuzzedDataProvider's ConsumeIntegralInRange
 implicit-integer-sign-change:FuzzedDataProvider.h
 implicit-integer-sign-change:key.cpp
+implicit-integer-sign-change:minisketch/
 implicit-integer-sign-change:noui.cpp
 implicit-integer-sign-change:policy/fees.cpp
 implicit-integer-sign-change:prevector.h
@@ -104,6 +106,7 @@ shift-base:arith_uint256.cpp
 shift-base:crypto/
 shift-base:hash.cpp
 shift-base:leveldb/
+shift-base:minisketch/
 shift-base:net_processing.cpp
 shift-base:streams.h
 shift-base:util/bip32.cpp
