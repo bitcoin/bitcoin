@@ -103,6 +103,10 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     {
         strHTML += "<b>" + tr("Status") + ":</b> " + tr("Has withdraw") + " (" + FormatTxStatus(wtx, status, inMempool, numBlocks) + ")";
     }
+    else if ((rec->type == TransactionRecord::StakingSent || rec->type == TransactionRecord::StakingReceived || rec->type == TransactionRecord::SelfStaking) && rec->status.status == TransactionStatus::Disabled)
+    {
+        strHTML += "<b>" + tr("Status") + ":</b> " + tr("Has withdraw") + " (" + FormatTxStatus(wtx, status, inMempool, numBlocks) + ")";
+    }
     else if (rec->type == TransactionRecord::BindPlotter && (rec->status.status & TransactionStatus::Disabled))
     {
         strHTML += "<b>" + tr("Status") + ":</b> " + tr("Unbinded plotter") + " (" + FormatTxStatus(wtx, status, inMempool, numBlocks) + ")";
@@ -175,11 +179,11 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
 
     if (rec->type == TransactionRecord::BindPlotter || rec->type == TransactionRecord::UnbindPlotter)
     {
-        strHTML += "<b>" + tr("Plotter ID") + ":</b> " + QString::fromStdString(wtx.value_map["plotter_id"]) + "<br>";
+        strHTML += "<b>" + tr("Plotter ID") + ":</b> " + QString::fromStdString(wtx.value_map["id"]) + "<br>";
         if (rec->type == TransactionRecord::UnbindPlotter)
             strHTML += "<b>" + tr("Relevant transaction ID") + ":</b> " + QString::fromStdString(wtx.value_map["relevant_txid"]) + "<br>";
     }
-    else if (rec->type == TransactionRecord::WithdrawPoint)
+    else if (rec->type == TransactionRecord::WithdrawPoint || rec->type == TransactionRecord::WithdrawStaking)
     {
         strHTML += "<b>" + tr("Relevant transaction ID") + ":</b> " + QString::fromStdString(wtx.value_map["relevant_txid"]) + "<br>";
     }

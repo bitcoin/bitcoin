@@ -4540,7 +4540,7 @@ static UniValue unbindplotter(const JSONRPCRequest& request)
     uniformer::Result result;
 
     // Create transaction
-    result = uniformer::CreateUnfreezeTransaction(pwallet, COutPoint(txid, 0), coin_control, errors, txfee, mtx);
+    result = uniformer::CreateUnfreezeTransaction(pwallet, COutPoint(txid, COutPoint::NULL_INDEX), coin_control, errors, txfee, mtx);
     if (result != uniformer::Result::OK) {
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Create transaction error(%d): %s", (uint32_t)result, errors.empty() ? "Unknown" : errors[0]));
     }
@@ -4876,7 +4876,7 @@ static UniValue withdrawpoint(const JSONRPCRequest& request)
     uniformer::Result result;
 
     // Create transaction
-    result = uniformer::CreateUnfreezeTransaction(pwallet, COutPoint(txid, 0), coin_control, errors, txfee, mtx);
+    result = uniformer::CreateUnfreezeTransaction(pwallet, COutPoint(txid, COutPoint::NULL_INDEX), coin_control, errors, txfee, mtx);
     if (result != uniformer::Result::OK) {
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Create transaction error(%d): %s", (uint32_t)result, errors.empty() ? "Unknown" : errors[0]));
     }
@@ -5231,7 +5231,7 @@ static UniValue withdrawstaking(const JSONRPCRequest& request)
     uniformer::Result result;
 
     // Create transaction
-    result = uniformer::CreateUnfreezeTransaction(pwallet, COutPoint(txid, 0), coin_control, errors, txfee, mtx);
+    result = uniformer::CreateUnfreezeTransaction(pwallet, COutPoint(txid, COutPoint::NULL_INDEX), coin_control, errors, txfee, mtx);
     if (result != uniformer::Result::OK) {
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Create transaction error(%d): %s", (uint32_t)result, errors.empty() ? "Unknown" : errors[0]));
     }

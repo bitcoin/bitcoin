@@ -59,8 +59,12 @@ bool CoinCanBeUnfreeze(const CWallet* wallet, const COutPoint& outpoint)
     const CWalletTx* wtx = wallet->GetWalletTx(outpoint.hash);
     if (wtx == nullptr) return false;
 
+    COutPoint targetOutpoint = outpoint;
+    if (targetOutpoint.n == COutPoint::NULL_INDEX)
+        targetOutpoint.n = wtx->GetUnfrozenVoutN(*locked_chain);
+
     std::vector<std::string> errors_dummy;
-    Result res = PreconditionChecks(*locked_chain, wallet, outpoint, *wtx, errors_dummy);
+    Result res = PreconditionChecks(*locked_chain, wallet, targetOutpoint, *wtx, errors_dummy);
     return res == Result::OK;
 }
 
@@ -199,18 +203,22 @@ Result CreateUnfreezeTransaction(CWallet* wallet, const COutPoint& outpoint,
     auto locked_chain = wallet->chain().lock();
     LOCK(wallet->cs_wallet);
     const CWalletTx* wtx = wallet->GetWalletTx(outpoint.hash);
-    if (wtx == nullptr || outpoint.n != 0) {
+    if (wtx == nullptr) {
         errors.push_back("Can't unfreeze");
         return Result::INVALID_REQUEST;
     }
 
-    Result res = PreconditionChecks(*locked_chain, wallet, outpoint, *wtx, errors);
+    COutPoint targetOutpoint = outpoint;
+    if (targetOutpoint.n == COutPoint::NULL_INDEX)
+        targetOutpoint.n = wtx->GetUnfrozenVoutN(*locked_chain);
+
+    Result res = PreconditionChecks(*locked_chain, wallet, targetOutpoint, *wtx, errors);
     if (res != Result::OK) {
         return res;
     }
 
     // Check UTXO
-    const Coin &coin = wallet->chain().accessCoin(outpoint);
+    const Coin &coin = wallet->chain().accessCoin(targetOutpoint);
     if (coin.IsSpent() || coin.GetExtraDataType() == TXOUT_TYPE_UNKNOWN) {
         errors.push_back("Can't unfreeze");
         return Result::INVALID_REQUEST;
@@ -219,7 +227,7 @@ Result CreateUnfreezeTransaction(CWallet* wallet, const COutPoint& outpoint,
     // Check unbind limit
     if (coin.IsBindPlotter()) {
         int nSpendHeight = locked_chain->getHeight().get_value_or(0) + 1;
-        int nActiveHeight = wallet->chain().getUnbindPlotterLimitHeight(CBindPlotterInfo(outpoint, coin));
+        int nActiveHeight = wallet->chain().getUnbindPlotterLimitHeight(CBindPlotterInfo(targetOutpoint, coin));
         if (nSpendHeight < nActiveHeight) {
             errors.push_back(strprintf("Unbind plotter active on %d block height (%d blocks after, about %d minute)",
                     nActiveHeight,
@@ -232,7 +240,7 @@ Result CreateUnfreezeTransaction(CWallet* wallet, const COutPoint& outpoint,
     // Create transaction
     CMutableTransaction txNew;
     txNew.nLockTime = locked_chain->getHeight().get_value_or(0);
-    txNew.vin = { CTxIn(outpoint, CScript(), CTxIn::SEQUENCE_FINAL - 1) };
+    txNew.vin = { CTxIn(targetOutpoint, CScript(), CTxIn::SEQUENCE_FINAL - 1) };
     txNew.vout = { CTxOut(coin.out.nValue, coin.out.scriptPubKey) };
     int64_t nBytes = CalculateMaximumSignedTxSize(CTransaction(txNew), wallet, coin_control.fAllowWatchOnly);
     if (nBytes < 0) {
@@ -243,7 +251,7 @@ Result CreateUnfreezeTransaction(CWallet* wallet, const COutPoint& outpoint,
     txNew.vout[0].nValue -= txfee;
 
     // Check
-    if (txNew.vin.size() != 1 || txNew.vin[0].prevout != outpoint || txNew.vout.size() != 1 || txNew.vout[0].scriptPubKey != coin.out.scriptPubKey) {
+    if (txNew.vin.size() != 1 || txNew.vin[0].prevout != targetOutpoint || txNew.vout.size() != 1 || txNew.vout[0].scriptPubKey != coin.out.scriptPubKey) {
         errors.push_back("Error on create unfreeze transaction");
         return Result::WALLET_ERROR;
     }
