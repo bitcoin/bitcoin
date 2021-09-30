@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <atomic>
 #include <ios>
 #include <limits>
 #include <list>
@@ -879,6 +880,12 @@ template<typename Stream, typename T> void Unserialize(Stream& os, std::shared_p
 template<typename Stream, typename T> void Serialize(Stream& os, const std::unique_ptr<const T>& p);
 template<typename Stream, typename T> void Unserialize(Stream& os, std::unique_ptr<const T>& p);
 
+/**
+ * atomic
+ */
+template<typename Stream, typename T> void Serialize(Stream& os, const std::atomic<T>& a);
+template<typename Stream, typename T> void Unserialize(Stream& is, std::atomic<T>& a);
+
 
 
 /**
@@ -1307,6 +1314,25 @@ template<typename Stream, typename T>
 void Unserialize(Stream& is, std::shared_ptr<T>& p)
 {
     p = std::make_shared<T>(deserialize, is);
+}
+
+
+
+/**
+ * atomic
+ */
+template<typename Stream, typename T>
+void Serialize(Stream& os, const std::atomic<T>& a)
+{
+    Serialize(os, a.load());
+}
+
+template<typename Stream, typename T>
+void Unserialize(Stream& is, std::atomic<T>& a)
+{
+    T val;
+    Unserialize(is, val);
+    a.store(val);
 }
 
 
