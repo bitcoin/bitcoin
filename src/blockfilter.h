@@ -93,7 +93,7 @@ enum class BlockFilterType : uint8_t
 {
     BASIC = 0,
     // Filter 1 is reserved as an option to include all filters.
-    P2WPKH = 2,
+    V0 = 2,
     INVALID = 255,
 };
 
