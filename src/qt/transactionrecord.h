@@ -86,12 +86,19 @@ public:
         RecvWithAddress,
         RecvFromOther,
         SendToSelf,
+        // bind
         BindPlotter,
         UnbindPlotter,
+        // point
         PointSent,
         PointReceived,
         SelfPoint,
         WithdrawPoint,
+        // staking
+        StakingSent,
+        StakingReceived,
+        SelfStaking,
+        WithdrawStaking,
     };
 
     /** Number of confirmation recommended for accepting a transaction */
@@ -120,6 +127,10 @@ public:
      */
     static bool showTransaction();
     static QList<TransactionRecord> decomposeTransaction(const interfaces::WalletTx& wtx);
+
+    /** Update record from core wallet tx.
+     */
+    static bool updateTransactionRecord(const interfaces::WalletTx& wtx, unsigned int nOut, TransactionRecord &sub);
 
     /** @name Immutable transaction attributes
       @{*/

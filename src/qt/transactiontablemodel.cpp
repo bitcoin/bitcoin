@@ -286,6 +286,8 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
             status = tr("This bind plotter has unbinded");
         } else if (wtx->type == TransactionRecord::PointSent || wtx->type == TransactionRecord::PointReceived || wtx->type == TransactionRecord::SelfPoint) {
             status = tr("This point has withdraw");
+        } else if (wtx->type == TransactionRecord::StakingSent || wtx->type == TransactionRecord::StakingReceived || wtx->type == TransactionRecord::SelfStaking) {
+            status = tr("This staking has withdraw");
         }
     } else // normal tx status
     switch((TransactionStatus::Status) wtx->status.status & 0xffff)
@@ -376,6 +378,14 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Point to yourself");
     case TransactionRecord::WithdrawPoint:
         return tr("Withdraw point");
+    case TransactionRecord::StakingSent:
+        return tr("Staking sent");
+    case TransactionRecord::StakingReceived:
+        return tr("Staking received");
+    case TransactionRecord::SelfStaking:
+        return tr("Staking to yourself");
+    case TransactionRecord::WithdrawStaking:
+        return tr("Withdraw staking");
     default:
         return QString();
     }
@@ -401,21 +411,25 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     case TransactionRecord::UnbindPlotter:
         return QIcon(":/icons/tx_bindplotter_unbind");
     case TransactionRecord::PointReceived:
+    case TransactionRecord::StakingReceived:
         if (wtx->status.status & TransactionStatus::Disabled)
             return QIcon(":/icons/tx_point_withdraw");
         else
             return QIcon(":/icons/tx_point_in");
     case TransactionRecord::PointSent:
+    case TransactionRecord::StakingSent:
         if (wtx->status.status & TransactionStatus::Disabled)
             return QIcon(":/icons/tx_point_withdraw");
         else
             return QIcon(":/icons/tx_point_out");
     case TransactionRecord::SelfPoint:
+    case TransactionRecord::SelfStaking:
         if (wtx->status.status & TransactionStatus::Disabled)
             return QIcon(":/icons/tx_point_withdraw");
         else
             return QIcon(":/icons/tx_point_inout");
     case TransactionRecord::WithdrawPoint:
+    case TransactionRecord::WithdrawStaking:
         return QIcon(":/icons/tx_point_withdraw");
     default:
         return QIcon(":/icons/tx_inout");
@@ -551,7 +565,9 @@ QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
         rec->type==TransactionRecord::SendToAddress || rec->type==TransactionRecord::RecvWithAddress ||
         rec->type == TransactionRecord::BindPlotter || rec->type == TransactionRecord::UnbindPlotter ||
         rec->type == TransactionRecord::PointSent || rec->type == TransactionRecord::PointReceived ||
-        rec->type == TransactionRecord::SelfPoint || rec->type == TransactionRecord::WithdrawPoint)
+        rec->type == TransactionRecord::SelfPoint || rec->type == TransactionRecord::WithdrawPoint ||
+        rec->type == TransactionRecord::StakingSent || rec->type == TransactionRecord::StakingReceived ||
+        rec->type == TransactionRecord::SelfStaking || rec->type == TransactionRecord::WithdrawStaking)
     {
         tooltip += QString(" ") + formatTxToAddress(rec, true);
     }

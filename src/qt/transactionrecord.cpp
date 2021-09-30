@@ -69,6 +69,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                     sub.type = TransactionRecord::Generated;
                 }
 
+                updateTransactionRecord(wtx, i, sub);
                 parts.append(sub);
             }
         }
@@ -98,6 +99,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
             parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
                             -(nDebit - nChange), nCredit - nChange));
             parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
+            for (unsigned int nOut = 0; nOut < wtx.tx->vout.size(); nOut++)
+            {
+                if (updateTransactionRecord(wtx, nOut, parts.last()))
+                    break;
+            }
         }
         else if (fAllFromMe)
         {
@@ -142,6 +148,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                 }
                 sub.debit = -nValue;
 
+                updateTransactionRecord(wtx, nOut, sub);
                 parts.append(sub);
             }
         }
@@ -156,6 +163,79 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     }
 
     return parts;
+}
+
+bool TransactionRecord::updateTransactionRecord(const interfaces::WalletTx& wtx, unsigned int nOut, TransactionRecord &sub)
+{
+    std::map<std::string, std::string> mapValue = wtx.value_map;
+    if (!mapValue.count("payload_t"))
+        return false;
+
+    const std::string& type = mapValue["payload_t"];
+    if (type == "unbindplotter")
+    {
+        sub.type = TransactionRecord::UnbindPlotter;
+    }
+    else if (type == "point-withdraw")
+    {
+        sub.type = TransactionRecord::WithdrawPoint;
+    }
+    else if (type == "staking-withdraw")
+    {
+        sub.type = TransactionRecord::WithdrawStaking;
+    }
+    else if ((wtx.txout_payload_is_mine[nOut]&~ISMINE_PAYLOAD) & ISMINE_PAYLOAD_BINDPLOTTER)
+    {
+        sub.type = TransactionRecord::BindPlotter;
+    }
+    else if ((wtx.txout_payload_is_mine[nOut]&~ISMINE_PAYLOAD) & ISMINE_PAYLOAD_POINT)
+    {
+        auto payload = ExtractTxoutPayload(wtx.tx->vout[nOut]);
+        if (!payload)
+            return false;
+
+        if (wtx.txout_is_mine[nOut] && (wtx.txout_payload_is_mine[nOut] & ISMINE_ALL))
+        {
+            sub.type = TransactionRecord::SelfPoint;
+        }
+        else if (wtx.txout_payload_is_mine[nOut] & ISMINE_ALL)
+        {
+            sub.type = TransactionRecord::PointReceived;
+            sub.address = EncodeDestination(ScriptHash(PointPayload::As(payload)->GetReceiverID()));
+        }
+        else
+        {
+            sub.type = TransactionRecord::PointSent;
+            sub.debit = PointPayload::As(payload)->GetAmount();
+        }
+    }
+    else if ((wtx.txout_payload_is_mine[nOut]&~ISMINE_PAYLOAD) & ISMINE_PAYLOAD_STAKING)
+    {
+        auto payload = ExtractTxoutPayload(wtx.tx->vout[nOut]);
+        if (!payload)
+            return false;
+
+        if (wtx.txout_is_mine[nOut] && (wtx.txout_payload_is_mine[nOut] & ISMINE_ALL))
+        {
+            sub.type = TransactionRecord::SelfStaking;
+        }
+        else if (wtx.txout_payload_is_mine[nOut] & ISMINE_ALL)
+        {
+            sub.type = TransactionRecord::StakingReceived;
+            sub.address = EncodeDestination(ScriptHash(StakingPayload::As(payload)->GetReceiverID()));
+        }
+        else
+        {
+            sub.type = TransactionRecord::StakingSent;
+            sub.debit = StakingPayload::As(payload)->GetAmount();
+        }
+    }
+    else
+    {
+        return false;
+    }
+    
+    return true;
 }
 
 void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t block_time)

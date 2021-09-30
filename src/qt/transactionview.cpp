@@ -100,9 +100,14 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
         TransactionFilterProxy::TYPE(TransactionRecord::SelfPoint));
     typeWidget->addItem(tr("Point received"), TransactionFilterProxy::TYPE(TransactionRecord::PointReceived) |
         TransactionFilterProxy::TYPE(TransactionRecord::SelfPoint));
+    typeWidget->addItem(tr("Staking sent"), TransactionFilterProxy::TYPE(TransactionRecord::StakingSent) |
+        TransactionFilterProxy::TYPE(TransactionRecord::SelfStaking));
+    typeWidget->addItem(tr("Staking received"), TransactionFilterProxy::TYPE(TransactionRecord::StakingReceived) |
+        TransactionFilterProxy::TYPE(TransactionRecord::SelfStaking));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other) |
         TransactionFilterProxy::TYPE(TransactionRecord::UnbindPlotter) |
-        TransactionFilterProxy::TYPE(TransactionRecord::WithdrawPoint));
+        TransactionFilterProxy::TYPE(TransactionRecord::WithdrawPoint) |
+        TransactionFilterProxy::TYPE(TransactionRecord::WithdrawStaking));
 
     hlayout->addWidget(typeWidget);
 
@@ -412,7 +417,7 @@ void TransactionView::contextualMenu(const QPoint &point)
     hash.SetHex(selection.at(0).data(TransactionTableModel::TxHashRole).toString().toStdString());
     abandonAction->setEnabled(model->wallet().transactionCanBeAbandoned(hash));
     bumpFeeAction->setEnabled(model->wallet().transactionCanBeBumped(hash));
-    unfreezeAction->setEnabled(model->wallet().coinCanBeUnfreeze(COutPoint(hash, 0)));
+    unfreezeAction->setEnabled(model->wallet().coinCanBeUnfreeze(COutPoint(hash, COutPoint::NULL_INDEX)));
 
     if(index.isValid())
     {

@@ -2397,12 +2397,24 @@ CWalletTx::TxAction CWalletTx::GetTxAction() const
 
 bool CWalletTx::IsUnfrozen(interfaces::Chain::Lock& locked_chain, int n) const
 {
-    if (n == -1)
-        n = 1;
-    if (n >= tx->vout.size())
-        n = tx->vout.size() - 1;
+    if (n < 0 || n >= (int) tx->vout.size())
+        return true;
+
+    if (tx->vout[n].payload.empty())
+        return true;
 
     return pwallet->IsSpent(locked_chain, GetHash(), n);
+}
+
+uint32_t CWalletTx::GetUnfrozenVoutN(interfaces::Chain::Lock& locked_chain) const
+{
+    for (size_t i = 0; i < tx->vout.size(); ++i) {
+        if (!tx->vout[i].payload.empty()) {
+            return (uint32_t) i;
+        }
+    }
+
+    return COutPoint::NULL_INDEX;
 }
 
 uint64_t CWalletTx::GetBindPlotterId() const

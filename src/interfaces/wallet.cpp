@@ -51,26 +51,26 @@ WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, co
     result.txout_is_mine.reserve(wtx.tx->vout.size());
     result.txout_address.reserve(wtx.tx->vout.size());
     result.txout_address_is_mine.reserve(wtx.tx->vout.size());
-    result.txout_payload.reserve(wtx.tx->vout.size());
+    result.txout_payload_is_mine.reserve(wtx.tx->vout.size());
     for (const auto& txout : wtx.tx->vout) {
         result.txout_is_mine.emplace_back(wallet.IsMine(txout));
         result.txout_address.emplace_back();
         result.txout_address_is_mine.emplace_back(ExtractDestination(txout.scriptPubKey, result.txout_address.back()) ?
                                                     IsMine(wallet, result.txout_address.back()) :
                                                     ISMINE_NO);
+        result.txout_payload_is_mine.emplace_back(ISMINE_NO);
 
         // txout payload
         auto payload = ExtractTxoutPayload(txout, nTxInBlockHeight);
         if (payload && payload->type == TXOUT_TYPE_BINDPLOTTER) {
-            *result.txout_is_mine.rbegin() = (isminetype) (*result.txout_is_mine.rbegin() | ISMINE_PAYLOAD_BINDPLOTTER);
+            *result.txout_payload_is_mine.rbegin() = (isminetype) (ISMINE_PAYLOAD_BINDPLOTTER | *result.txout_address_is_mine.rbegin());
         }
         if (payload && payload->type == TXOUT_TYPE_POINT) {
-            *result.txout_is_mine.rbegin() = (isminetype) (*result.txout_is_mine.rbegin() | ISMINE_PAYLOAD_POINT | wallet.IsMine(PointPayload::As(payload)->GetReceiverID()));
+            *result.txout_payload_is_mine.rbegin() = (isminetype) (ISMINE_PAYLOAD_POINT | wallet.IsMine(PointPayload::As(payload)->GetReceiverID()));
         }
         if (payload && payload->type == TXOUT_TYPE_STAKING) {
-            *result.txout_is_mine.rbegin() = (isminetype) (*result.txout_is_mine.rbegin() | ISMINE_PAYLOAD_STAKING | wallet.IsMine(StakingPayload::As(payload)->GetReceiverID()));
+            *result.txout_payload_is_mine.rbegin() = (isminetype) (ISMINE_PAYLOAD_STAKING | wallet.IsMine(StakingPayload::As(payload)->GetReceiverID()));
         }
-        result.txout_payload.emplace_back(payload);
     }
     result.credit = wtx.GetCredit(locked_chain, ISMINE_ALL);
     result.debit = wtx.GetDebit(ISMINE_ALL);

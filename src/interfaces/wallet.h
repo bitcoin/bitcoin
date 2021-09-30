@@ -410,7 +410,7 @@ struct WalletTx
     bool is_coinbase;
 
     //! for Qitcoin
-    std::vector<CTxOutPayloadRef> txout_payload;
+    std::vector<isminetype> txout_payload_is_mine;
 
     //! for Omni
     CAmount available_credit;

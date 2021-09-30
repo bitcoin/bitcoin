@@ -711,6 +711,9 @@ public:
     // Return true if bindplotter or point invalid
     bool IsUnfrozen(interfaces::Chain::Lock& locked_chain, int n = -1) const;
 
+    // Return vout index. if not found return COutPoint::NULL_INDEX
+    uint32_t GetUnfrozenVoutN(interfaces::Chain::Lock& locked_chain) const;
+
     // Return plotter id or 0
     uint64_t GetBindPlotterId() const;
 };

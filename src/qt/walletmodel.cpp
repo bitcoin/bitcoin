@@ -593,7 +593,7 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
 
 bool WalletModel::unfreezeTransaction(uint256 hash)
 {
-    const COutPoint outpoint(hash, 0);
+    const COutPoint outpoint(hash, COutPoint::NULL_INDEX);
 
     std::vector<std::string> errors;
     CAmount total_fee;
@@ -604,18 +604,18 @@ bool WalletModel::unfreezeTransaction(uint256 hash)
         return false;
     }
     interfaces::WalletTx wtx = m_wallet->getWalletTx(hash);
-    if (!wtx.value_map.count("lock") || !wtx.value_map.count("type")) {
+    if (!wtx.value_map.count("frozen") || !wtx.value_map.count("payload_t")) {
         return false;
     }
 
     // Ask
-    if (wtx.value_map["type"] == "bindplotter") {
+    if (wtx.value_map["payload_t"] == "bindplotter") {
         QString questionString = tr("Are you sure you want to unbind plotter?");
         questionString.append("<br />");
         questionString.append("<table style=\"text-align: left;\">");
-        questionString.append("<tr><td width=100>").append(tr("Address:")).append("</td><td>").append(QString::fromStdString(wtx.value_map["from"]));
+        questionString.append("<tr><td width=100>").append(tr("Address:")).append("</td><td>").append(QString::fromStdString(wtx.value_map["to"]));
         questionString.append("</td></tr>");
-        questionString.append("<tr><td>").append(tr("Plotter ID:")).append("</td><td>").append(QString::fromStdString(wtx.value_map["plotter_id"])).append("</td></tr>");
+        questionString.append("<tr><td>").append(tr("Plotter ID:")).append("</td><td>").append(QString::fromStdString(wtx.value_map["id"])).append("</td></tr>");
         questionString.append("<tr><td>").append(tr("Return amount:")).append("</td><td>").append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), mtx.vout[0].nValue)).append("</td></tr>");
         questionString.append("<tr style='color:#aa0000;'><td>").append(tr("Transaction fee:")).append("</td><td>").append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), total_fee)).append("</td></tr>");
         questionString.append("</table>");
@@ -624,7 +624,7 @@ bool WalletModel::unfreezeTransaction(uint256 hash)
         if (confirmationDialog.exec() != QMessageBox::Yes) {
             return false;
         }
-    } else if (wtx.value_map["type"] == "pledge") {
+    } else if (wtx.value_map["payload_t"] == "point") {
         QString questionString = tr("Are you sure you want to withdraw point?");
         questionString.append("<br />");
         questionString.append("<table style=\"text-align: left;\">");
@@ -637,6 +637,22 @@ bool WalletModel::unfreezeTransaction(uint256 hash)
         questionString.append("</table>");
 
         SendConfirmationDialog confirmationDialog(tr("Withdraw point"), questionString);
+        if (confirmationDialog.exec() != QMessageBox::Yes) {
+            return false;
+        }
+    } else if (wtx.value_map["payload_t"] == "staking") {
+        QString questionString = tr("Are you sure you want to withdraw staking?");
+        questionString.append("<br />");
+        questionString.append("<table style=\"text-align: left;\">");
+        questionString.append("<tr><td width=100>").append(tr("From address:")).append("</td><td>").append(QString::fromStdString(wtx.value_map["from"]));
+        questionString.append("</td></tr>");
+        questionString.append("<tr><td>").append(tr("To address:")).append("</td><td>").append(QString::fromStdString(wtx.value_map["to"]));
+        questionString.append("</td></tr>");
+        questionString.append("<tr><td>").append(tr("Return amount:")).append("</td><td>").append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), mtx.vout[0].nValue)).append("</td></tr>");
+        questionString.append("<tr style='color:#aa0000;'><td>").append(tr("Transaction fee:")).append("</td><td>").append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), total_fee)).append("</td></tr>");
+        questionString.append("</table>");
+
+        SendConfirmationDialog confirmationDialog(tr("Withdraw staking"), questionString);
         if (confirmationDialog.exec() != QMessageBox::Yes) {
             return false;
         }
