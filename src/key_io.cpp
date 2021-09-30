@@ -76,7 +76,7 @@ public:
     std::string operator()(const CNoDestination& no) const { return {}; }
 };
 
-CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str)
+CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str, std::vector<int>* error_locations)
 {
     std::vector<unsigned char> data;
     uint160 hash;
@@ -184,8 +184,13 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         }
     }
 
-    //TODO: locate Bech32 errors
-    error_str = "Error in Bech32 encoding";
+    // Perform Bech32 error location
+    if (!error_locations) {
+        std::vector<int> dummy_errors;
+        error_str = bech32::LocateErrors(str, dummy_errors);
+    } else {
+        error_str = bech32::LocateErrors(str, *error_locations);
+    }
 
     return CNoDestination();
 }
@@ -274,9 +279,9 @@ std::string EncodeDestination(const CTxDestination& dest)
     return std::visit(DestinationEncoder(Params()), dest);
 }
 
-CTxDestination DecodeDestination(const std::string& str, std::string& error_msg)
+CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations)
 {
-    return DecodeDestination(str, Params(), error_msg);
+    return DecodeDestination(str, Params(), error_msg, error_locations);
 }
 
 CTxDestination DecodeDestination(const std::string& str)
@@ -288,7 +293,7 @@ CTxDestination DecodeDestination(const std::string& str)
 bool IsValidDestinationString(const std::string& str, const CChainParams& params)
 {
     std::string error_msg;
-    return IsValidDestination(DecodeDestination(str, params, error_msg));
+    return IsValidDestination(DecodeDestination(str, params, error_msg, nullptr));
 }
 
 bool IsValidDestinationString(const std::string& str)
