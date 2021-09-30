@@ -52,9 +52,6 @@ public:
     WalletController(ClientModel& client_model, const PlatformStyle* platform_style, QObject* parent);
     ~WalletController();
 
-    //! Returns wallet models currently open.
-    std::vector<WalletModel*> getOpenWallets() const;
-
     WalletModel* getOrCreateWallet(std::unique_ptr<interfaces::Wallet> wallet);
 
     //! Returns all wallet names in the wallet dir mapped to whether the wallet
@@ -90,7 +87,7 @@ class WalletControllerActivity : public QObject
 
 public:
     WalletControllerActivity(WalletController* wallet_controller, QWidget* parent_widget);
-    virtual ~WalletControllerActivity();
+    virtual ~WalletControllerActivity() = default;
 
 Q_SIGNALS:
     void finished();
@@ -100,11 +97,9 @@ protected:
     QObject* worker() const { return m_wallet_controller->m_activity_worker; }
 
     void showProgressDialog(const QString& label_text);
-    void destroyProgressDialog();
 
     WalletController* const m_wallet_controller;
     QWidget* const m_parent_widget;
-    QProgressDialog* m_progress_dialog{nullptr};
     WalletModel* m_wallet_model{nullptr};
     bilingual_str m_error_message;
     std::vector<bilingual_str> m_warning_message;
@@ -148,6 +143,16 @@ Q_SIGNALS:
 
 private:
     void finish();
+};
+
+class LoadWalletsActivity : public WalletControllerActivity
+{
+    Q_OBJECT
+
+public:
+    LoadWalletsActivity(WalletController* wallet_controller, QWidget* parent_widget);
+
+    void load();
 };
 
 #endif // BITCOIN_QT_WALLETCONTROLLER_H
