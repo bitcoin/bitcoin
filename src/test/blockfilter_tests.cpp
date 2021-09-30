@@ -132,18 +132,17 @@ BOOST_AUTO_TEST_CASE(blockfilter_v0_test)
 {
     CScript included_scripts[4], excluded_scripts[8];
 
-    included_scripts[0] = GetScriptForDestination(WitnessV0KeyHash());  // p2wpkh 
-    included_scripts[1] = GetScriptForDestination(WitnessV0KeyHash()); // p2wpkh 
+    included_scripts[0] = GetScriptForDestination(WitnessV0KeyHash());  // p2wpkh
+    included_scripts[1] = GetScriptForDestination(WitnessV0KeyHash()); // p2wpkh
     included_scripts[2] = GetScriptForDestination(WitnessV0ScriptHash()); // p2wsh
     included_scripts[3] = GetScriptForDestination(WitnessV0ScriptHash()); // p2wsh
 
-
-    excluded_scripts[0] << std::vector<unsigned char>(0, 65) << OP_CHECKSIG; // p2pk 
-    excluded_scripts[1] << OP_0 << OP_HASH160 << std::vector<unsigned char>(1, 20) << OP_EQUALVERIFY << OP_CHECKSIG; // p2pkh 
-    excluded_scripts[2] << OP_1 << std::vector<unsigned char>(2, 33) << OP_1 << OP_CHECKMULTISIG; // multisig 
-    excluded_scripts[3] << OP_0 << std::vector<unsigned char>(3, 32); // push data 
-    excluded_scripts[4] << OP_4 << OP_ADD << OP_8 << OP_EQUAL; // random script 
-    excluded_scripts[5] << OP_RETURN << std::vector<unsigned char>(4, 40); // opreturn 
+    excluded_scripts[0] << std::vector<unsigned char>(0, 65) << OP_CHECKSIG; // p2pk
+    excluded_scripts[1] << OP_0 << OP_HASH160 << std::vector<unsigned char>(1, 20) << OP_EQUALVERIFY << OP_CHECKSIG; // p2pkh
+    excluded_scripts[2] << OP_1 << std::vector<unsigned char>(2, 33) << OP_1 << OP_CHECKMULTISIG; // multisig
+    excluded_scripts[3] << OP_0 << std::vector<unsigned char>(3, 32); // push data
+    excluded_scripts[4] << OP_4 << OP_ADD << OP_8 << OP_EQUAL; // random script
+    excluded_scripts[5] << OP_RETURN << std::vector<unsigned char>(4, 40); // opreturn
     excluded_scripts[6] << OP_RETURN << OP_4 << OP_ADD << OP_8 << OP_EQUAL; // none standard opreturn
 
     CMutableTransaction tx_1;
