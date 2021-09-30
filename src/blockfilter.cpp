@@ -23,7 +23,7 @@ static constexpr int GCS_SER_VERSION = 0;
 
 static const std::map<BlockFilterType, std::string> g_filter_types = {
     {BlockFilterType::BASIC, "basic"},
-    {BlockFilterType::P2WPKH, "p2wpkh"},
+    {BlockFilterType::V0, "v0"},
 };
 
 // Map a value x that is uniformly distributed in the range [0, 2^64) to a
@@ -251,7 +251,7 @@ static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
     return elements;
 }
 
-static GCSFilter::ElementSet P2WPKHFilterElements(const CBlock& block,
+static GCSFilter::ElementSet V0FilterElements(const CBlock& block,
     const CBlockUndo& block_undo)
 {
     GCSFilter::ElementSet elements;
@@ -259,9 +259,10 @@ static GCSFilter::ElementSet P2WPKHFilterElements(const CBlock& block,
     for (const CTransactionRef& tx : block.vtx) {
         for (const CTxOut& txout : tx->vout) {
             const CScript& scriptPubKey = txout.scriptPubKey;
-            std::vector<std::vector<unsigned char>> solutions;
-            TxoutType script_type = Solver(txout.scriptPubKey, solutions);
-            if (scriptPubKey.empty() || script_type != TxoutType::WITNESS_V0_KEYHASH) continue;
+            int witnessversion;
+            std::vector<unsigned char> witnessprogram;
+            if (scriptPubKey.empty() || !scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) continue;
+            if (!(witnessversion == 0 && (witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE || witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE)))  continue;
             elements.emplace(scriptPubKey.begin(), scriptPubKey.end());
         }
     }
@@ -269,9 +270,10 @@ static GCSFilter::ElementSet P2WPKHFilterElements(const CBlock& block,
     for (const CTxUndo& tx_undo : block_undo.vtxundo) {
         for (const Coin& prevout : tx_undo.vprevout) {
             const CScript& scriptPubKey = prevout.out.scriptPubKey;
-            std::vector<std::vector<unsigned char>> solutions;
-            TxoutType script_type = Solver(scriptPubKey, solutions);
-            if (scriptPubKey.empty() || script_type != TxoutType::WITNESS_V0_KEYHASH) continue;
+            int witnessversion;
+            std::vector<unsigned char> witnessprogram;
+            if (scriptPubKey.empty() || !scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) continue;
+            if (!(witnessversion == 0 && (witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE || witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE))) continue;
             elements.emplace(scriptPubKey.begin(), scriptPubKey.end());
         }
     }
@@ -302,8 +304,8 @@ BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const
     case BlockFilterType::BASIC:
         m_filter = GCSFilter(params, BasicFilterElements(block, block_undo));
         break;
-    case BlockFilterType::P2WPKH:
-        m_filter = GCSFilter(params, P2WPKHFilterElements(block, block_undo));
+    case BlockFilterType::V0:
+        m_filter = GCSFilter(params, V0FilterElements(block, block_undo));
         break;
     }
 }
@@ -317,7 +319,7 @@ bool BlockFilter::BuildParams(GCSFilter::Params& params) const
         params.m_P = BASIC_FILTER_P;
         params.m_M = BASIC_FILTER_M;
         return true;
-    case BlockFilterType::P2WPKH:
+    case BlockFilterType::V0:
         params.m_siphash_k0 = m_block_hash.GetUint64(0);
         params.m_siphash_k1 = m_block_hash.GetUint64(1);
         // Using the same filter params as basic type.
