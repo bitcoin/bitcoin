@@ -259,7 +259,7 @@ void SyscoinApplication::createOptionsModel(bool resetSettings)
 void SyscoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
     window = new SyscoinGUI(node(), platformStyle, networkStyle, nullptr);
-    connect(window, &SyscoinGUI::quitRequested, this, &SYscoinApplication::requestShutdown);
+    connect(window, &SyscoinGUI::quitRequested, this, &SyscoinApplication::requestShutdown);
 
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, &QTimer::timeout, window, &SyscoinGUI::detectShutdown);
