@@ -11,8 +11,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
-#include <errno.h>
-#include <limits>
+#include <optional>
 
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -282,6 +281,32 @@ std::string DecodeBase32(const std::string& str, bool* pf_invalid)
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
 
+[[nodiscard]] static bool ParsePrechecks(const std::string&);
+
+namespace {
+template <typename T>
+bool ParseIntegral(const std::string& str, T* out)
+{
+    static_assert(std::is_integral<T>::value);
+    if (!ParsePrechecks(str)) {
+        return false;
+    }
+    // Replicate the exact behavior of strtol/strtoll/strtoul/strtoull when
+    // handling leading +/- for backwards compatibility.
+    if (str.length() >= 2 && str[0] == '+' && str[1] == '-') {
+        return false;
+    }
+    const std::optional<T> opt_int = ToIntegral<T>((!str.empty() && str[0] == '+') ? str.substr(1) : str);
+    if (!opt_int) {
+        return false;
+    }
+    if (out != nullptr) {
+        *out = *opt_int;
+    }
+    return true;
+}
+}; // namespace
+
 [[nodiscard]] static bool ParsePrechecks(const std::string& str)
 {
     if (str.empty()) // No empty string allowed
@@ -293,94 +318,35 @@ std::string DecodeBase32(const std::string& str, bool* pf_invalid)
     return true;
 }
 
-bool ParseInt32(const std::string& str, int32_t *out)
+bool ParseInt32(const std::string& str, int32_t* out)
 {
-    if (!ParsePrechecks(str))
-        return false;
-    char *endp = nullptr;
-    errno = 0; // strtol will not set errno if valid
-    long int n = strtol(str.c_str(), &endp, 10);
-    if(out) *out = (int32_t)n;
-    // Note that strtol returns a *long int*, so even if strtol doesn't report an over/underflow
-    // we still have to check that the returned value is within the range of an *int32_t*. On 64-bit
-    // platforms the size of these types may be different.
-    return endp && *endp == 0 && !errno &&
-        n >= std::numeric_limits<int32_t>::min() &&
-        n <= std::numeric_limits<int32_t>::max();
+    return ParseIntegral<int32_t>(str, out);
 }
 
-bool ParseInt64(const std::string& str, int64_t *out)
+bool ParseInt64(const std::string& str, int64_t* out)
 {
-    if (!ParsePrechecks(str))
-        return false;
-    char *endp = nullptr;
-    errno = 0; // strtoll will not set errno if valid
-    long long int n = strtoll(str.c_str(), &endp, 10);
-    if(out) *out = (int64_t)n;
-    // Note that strtoll returns a *long long int*, so even if strtol doesn't report an over/underflow
-    // we still have to check that the returned value is within the range of an *int64_t*.
-    return endp && *endp == 0 && !errno &&
-        n >= std::numeric_limits<int64_t>::min() &&
-        n <= std::numeric_limits<int64_t>::max();
+    return ParseIntegral<int64_t>(str, out);
 }
 
-bool ParseUInt8(const std::string& str, uint8_t *out)
+bool ParseUInt8(const std::string& str, uint8_t* out)
 {
-    uint32_t u32;
-    if (!ParseUInt32(str, &u32) || u32 > std::numeric_limits<uint8_t>::max()) {
-        return false;
-    }
-    if (out != nullptr) {
-        *out = static_cast<uint8_t>(u32);
-    }
-    return true;
+    return ParseIntegral<uint8_t>(str, out);
 }
 
 bool ParseUInt16(const std::string& str, uint16_t* out)
 {
-    uint32_t u32;
-    if (!ParseUInt32(str, &u32) || u32 > std::numeric_limits<uint16_t>::max()) {
-        return false;
-    }
-    if (out != nullptr) {
-        *out = static_cast<uint16_t>(u32);
-    }
-    return true;
+    return ParseIntegral<uint16_t>(str, out);
 }
 
-bool ParseUInt32(const std::string& str, uint32_t *out)
+bool ParseUInt32(const std::string& str, uint32_t* out)
 {
-    if (!ParsePrechecks(str))
-        return false;
-    if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoul accepts these by default if they fit in the range
-        return false;
-    char *endp = nullptr;
-    errno = 0; // strtoul will not set errno if valid
-    unsigned long int n = strtoul(str.c_str(), &endp, 10);
-    if(out) *out = (uint32_t)n;
-    // Note that strtoul returns a *unsigned long int*, so even if it doesn't report an over/underflow
-    // we still have to check that the returned value is within the range of an *uint32_t*. On 64-bit
-    // platforms the size of these types may be different.
-    return endp && *endp == 0 && !errno &&
-        n <= std::numeric_limits<uint32_t>::max();
+    return ParseIntegral<uint32_t>(str, out);
 }
 
-bool ParseUInt64(const std::string& str, uint64_t *out)
+bool ParseUInt64(const std::string& str, uint64_t* out)
 {
-    if (!ParsePrechecks(str))
-        return false;
-    if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoull accepts these by default if they fit in the range
-        return false;
-    char *endp = nullptr;
-    errno = 0; // strtoull will not set errno if valid
-    unsigned long long int n = strtoull(str.c_str(), &endp, 10);
-    if(out) *out = (uint64_t)n;
-    // Note that strtoull returns a *unsigned long long int*, so even if it doesn't report an over/underflow
-    // we still have to check that the returned value is within the range of an *uint64_t*.
-    return endp && *endp == 0 && !errno &&
-        n <= std::numeric_limits<uint64_t>::max();
+    return ParseIntegral<uint64_t>(str, out);
 }
-
 
 bool ParseDouble(const std::string& str, double *out)
 {
