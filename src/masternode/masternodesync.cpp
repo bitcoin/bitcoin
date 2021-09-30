@@ -21,15 +21,12 @@ void CMasternodeSync::Reset(bool fForce, bool fNotifyReset)
 {
     // Avoid resetting the sync process if we just "recently" received a new block
     if (fForce || (GetTime() - GetLastUpdateBlockTip() > MASTERNODE_SYNC_RESET_SECONDS)) {
-        {
-            LOCK(cs);
-            SetSyncMode(MASTERNODE_SYNC_BLOCKCHAIN);
-            nTriedPeerCount = 0;
-            nTimeAssetSyncStarted = GetTime();
-            nTimeLastBumped = GetTime();
-            nTimeLastUpdateBlockTip = 0;
-            fReachedBestHeader = false;
-        }
+        SetSyncMode(MASTERNODE_SYNC_BLOCKCHAIN);
+        nTriedPeerCount = 0;
+        nTimeAssetSyncStarted = GetTime();
+        nTimeLastBumped = GetTime();
+        nTimeLastUpdateBlockTip = 0;
+        fReachedBestHeader = false;
         if (fNotifyReset) {
             uiInterface.NotifyAdditionalDataSyncProgressChanged(-1);
         }
@@ -39,7 +36,6 @@ void CMasternodeSync::Reset(bool fForce, bool fNotifyReset)
 void CMasternodeSync::BumpAssetLastTime(const std::string& strFuncName)
 {
     if(IsSynced()) return;
-    LOCK(cs);
     nTimeLastBumped = GetTime();
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::BumpAssetLastTime -- %s\n", strFuncName);
 }
@@ -76,11 +72,8 @@ void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
 
             break;
     }
-    {
-        LOCK(cs);
-        nTriedPeerCount = 0;
-        nTimeAssetSyncStarted = GetTime();
-    }
+    nTriedPeerCount = 0;
+    nTimeAssetSyncStarted = GetTime();
     BumpAssetLastTime("CMasternodeSync::SwitchToNextAsset");
 }
 
@@ -141,8 +134,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
         return;
     }
 
-    {
-    LOCK(cs);
+
     // Calculate "progress" for LOG reporting / GUI notification
     double nSyncProgress = double(nTriedPeerCount + (nMode - 1) * 8) / (8*4);
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d nTriedPeerCount %d nSyncProgress %f\n", nTick, nMode, nTriedPeerCount, nSyncProgress);
@@ -263,10 +255,9 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
             }
         }
     }
-    } // cs
 
 
-    if (WITH_LOCK(cs, return nCurrentAsset != MASTERNODE_SYNC_GOVERNANCE)) {
+    if (nCurrentAsset != MASTERNODE_SYNC_GOVERNANCE) {
         // looped through all nodes and not syncing governance yet/already, release them
         connman.ReleaseNodeVector(vNodesCopy);
         return;
@@ -352,10 +343,8 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
 {
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
 
-    {
-        LOCK(cs);
-        nTimeLastUpdateBlockTip = GetAdjustedTime();
-    }
+
+    nTimeLastUpdateBlockTip = GetAdjustedTime();
     CBlockIndex* pindexTip = WITH_LOCK(cs_main, return pindexBestHeader);
 
     if (IsSynced() || !pindexTip || !pindexNew)
@@ -385,10 +374,7 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
         Reset(true);
     }
 
-    {
-        LOCK(cs);
-        fReachedBestHeader = fReachedBestHeaderNew;
-    }
+    fReachedBestHeader = fReachedBestHeaderNew;
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d pindexBestHeader->nHeight: %d fInitialDownload=%d fReachedBestHeader=%d\n",
                 pindexNew->nHeight, pindexTip->nHeight, fInitialDownload, ReachedBestHeader());
 }

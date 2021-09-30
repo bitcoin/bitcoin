@@ -31,21 +31,20 @@ extern CMasternodeSync masternodeSync;
 class CMasternodeSync
 {
 private:
-    mutable RecursiveMutex cs;
     // Keep track of current asset
-    int nCurrentAsset GUARDED_BY(cs) {MASTERNODE_SYNC_BLOCKCHAIN};
+    std::atomic<int> nCurrentAsset {MASTERNODE_SYNC_BLOCKCHAIN};
     // Count peers we've requested the asset from
-    int nTriedPeerCount GUARDED_BY(cs) {0};
+    std::atomic<int> nTriedPeerCount {0};
 
     // Time when current masternode asset sync started
-    int64_t nTimeAssetSyncStarted GUARDED_BY(cs) {0};
+    std::atomic<int64_t> nTimeAssetSyncStarted {0};
     // ... last bumped
-    int64_t nTimeLastBumped GUARDED_BY(cs) {0};
+    std::atomic<int64_t> nTimeLastBumped {0};
 
     /// Set to true if best header is reached in CMasternodeSync::UpdatedBlockTip
-    bool fReachedBestHeader GUARDED_BY(cs) {false};
+    std::atomic<bool> fReachedBestHeader {false};
     /// Last time UpdateBlockTip has been called
-    int64_t nTimeLastUpdateBlockTip GUARDED_BY(cs) {0};
+    std::atomic<int64_t> nTimeLastUpdateBlockTip {0};
 
 public:
     CMasternodeSync() = default;
@@ -53,17 +52,17 @@ public:
 
     static void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
 
-    bool IsBlockchainSynced() const {LOCK(cs); return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }
-    bool IsSynced() const { LOCK(cs); return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
-    void SetSyncMode(const int nMode) { LOCK(cs); nCurrentAsset = nMode; }
+    bool IsBlockchainSynced() const {return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }
+    bool IsSynced() const { return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
+    void SetSyncMode(const int nMode) { nCurrentAsset = nMode; }
 
-    int GetAssetID() const { LOCK(cs); return nCurrentAsset; }
-    int64_t GetLastUpdateBlockTip() const { LOCK(cs); return nTimeLastUpdateBlockTip; }
-    int GetAttempt() const { LOCK(cs); return nTriedPeerCount; }
+    int GetAssetID() const {  return nCurrentAsset; }
+    int64_t GetLastUpdateBlockTip() const { return nTimeLastUpdateBlockTip; }
+    int GetAttempt() const { return nTriedPeerCount; }
     void BumpAssetLastTime(const std::string& strFuncName);
-    int64_t GetAssetStartTime() { LOCK(cs); return nTimeAssetSyncStarted; }
-    int64_t GetTimeLastBumped() { LOCK(cs); return nTimeLastBumped; }
-    bool ReachedBestHeader() { LOCK(cs); return fReachedBestHeader;}
+    int64_t GetAssetStartTime() { return nTimeAssetSyncStarted; }
+    int64_t GetTimeLastBumped() { return nTimeLastBumped; }
+    bool ReachedBestHeader() { return fReachedBestHeader;}
     std::string GetAssetName() const;
     bilingual_str GetSyncStatus();
 
