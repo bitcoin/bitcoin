@@ -115,7 +115,8 @@ public:
     std::vector<uint256> GetAndClearDirtyGovernanceObjectHashes();
 
     void Clear();
-    void CheckAndRemove();
+    // Needed to avoid errors in flat-database.h
+    void CheckAndRemove() const {};
 
     std::string ToString() const;
 };
