@@ -861,7 +861,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     }
 
     if (rescan_required && result == DBErrors::LOAD_OK) {
-        result = DBErrors::RESCAN_REQUIRED;
+        result = DBErrors::NEED_RESCAN;
     } else if (fNoncriticalErrors && result == DBErrors::LOAD_OK) {
         result = DBErrors::NONCRITICAL_ERROR;
     }
