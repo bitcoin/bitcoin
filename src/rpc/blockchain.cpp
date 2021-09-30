@@ -1985,8 +1985,7 @@ static RPCHelpMan getchaintxstats()
     int blockcount = 30 * 24 * 60 * 60 / Params().GetConsensus().nPowTargetSpacing; // By default: 1 month
 
     if (request.params[1].isNull()) {
-        LOCK(cs_main);
-        pindex = chainman.ActiveChain().Tip();
+        pindex = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
     } else {
         uint256 hash(ParseHashV(request.params[1], "blockhash"));
         LOCK(cs_main);

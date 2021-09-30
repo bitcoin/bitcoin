@@ -129,7 +129,7 @@ static RPCHelpMan protx_info()
     };
 } 
 
-static uint256 ParseBlock(ChainstateManager& chainman, const UniValue& v, std::string strName)
+static uint256 ParseBlock(ChainstateManager& chainman, const UniValue& v, std::string strName) 
 {
     try {
         return ParseHashV(v, strName);

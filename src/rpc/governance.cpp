@@ -720,10 +720,9 @@ static RPCHelpMan getgovernanceinfo()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
-    LOCK(cs_main);
 
     int nLastSuperblock = 0, nNextSuperblock = 0;
-    int nBlockHeight = node.chainman->ActiveHeight();
+    int nBlockHeight = WITH_LOCK(cs_main, return node.chainman->ActiveHeight());
 
     CSuperblock::GetNearestSuperblocksHeights(nBlockHeight, nLastSuperblock, nNextSuperblock);
 

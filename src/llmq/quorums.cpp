@@ -283,11 +283,7 @@ bool CQuorumManager::HasQuorum(uint8_t llmqType, const uint256& quorumHash)
 
 void CQuorumManager::ScanQuorums(uint8_t llmqType, size_t nCountRequested, std::vector<CQuorumCPtr>& quorums) const
 {
-    const CBlockIndex* pindex;
-    {
-        LOCK(cs_main);
-        pindex = chainman.ActiveTip();
-    }
+    const CBlockIndex* pindex = WITH_LOCK(cs_main, return chainman.ActiveTip());
     ScanQuorums(llmqType, pindex, nCountRequested, quorums);
 }
 
@@ -353,15 +349,10 @@ void CQuorumManager::ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStar
 
 CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const uint256& quorumHash) const
 {
-    CBlockIndex* pindexQuorum;
-    {
-        LOCK(cs_main);
-
-        pindexQuorum = chainman.m_blockman.LookupBlockIndex(quorumHash);
-        if (!pindexQuorum) {
-            LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- block %s not found\n", __func__, quorumHash.ToString());
-            return nullptr;
-        }
+    CBlockIndex* pindexQuorum = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(quorumHash));
+    if (!pindexQuorum) {
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- block %s not found\n", __func__, quorumHash.ToString());
+        return nullptr;
     }
     return GetQuorum(llmqType, pindexQuorum);
 }

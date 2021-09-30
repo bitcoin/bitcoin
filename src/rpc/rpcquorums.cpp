@@ -44,11 +44,7 @@ static RPCHelpMan quorum_list()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "count can't be negative");
         }
     }
-    CBlockIndex* pindexTip;
-    {
-        LOCK(cs_main);
-        pindexTip = node.chainman->ActiveTip();
-    }
+    CBlockIndex* pindexTip = WITH_LOCK(cs_main, return node.chainman->ActiveTip());
     UniValue ret(UniValue::VOBJ);
 
     for (auto& p : Params().GetConsensus().llmqs) {
@@ -170,11 +166,7 @@ static RPCHelpMan quorum_dkgstatus()
     llmq::quorumDKGDebugManager->GetLocalDebugStatus(status);
 
     auto ret = status.ToJson(*node.chainman, detailLevel);
-    CBlockIndex* pindexTip;
-    {
-        LOCK(cs_main);
-        pindexTip = node.chainman->ActiveTip();
-    }
+    CBlockIndex* pindexTip = WITH_LOCK(cs_main, return node.chainman->ActiveTip());
     int tipHeight = pindexTip->nHeight;
 
     auto proTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
@@ -187,11 +179,7 @@ static RPCHelpMan quorum_dkgstatus()
         auto& params = p.second;
 
         if (fMasternodeMode) {
-            const CBlockIndex* pindexQuorum;
-            {
-                LOCK(cs_main);
-                pindexQuorum = node.chainman->ActiveChain()[tipHeight - (tipHeight % params.dkgInterval)];
-            }
+            const CBlockIndex* pindexQuorum = WITH_LOCK(cs_main, return node.chainman->ActiveChain()[tipHeight - (tipHeight % params.dkgInterval)]);
             if(!pindexQuorum)
                 continue;
             auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, proTxHash, false);
