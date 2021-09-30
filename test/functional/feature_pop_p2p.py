@@ -77,7 +77,7 @@ class PopP2P(BitcoinTestFramework):
 
         self.nodes[0].add_p2p_connection(bn)
 
-        time.sleep(2)
+        time.sleep(20)
 
         assert_equal(bn.executed_msg_atv, 0)
         assert_equal(bn.executed_msg_offer_atv, 1)
@@ -98,7 +98,7 @@ class PopP2P(BitcoinTestFramework):
 
         endorse_block(self.nodes[0], self.apm, tipheight - 5, addr)
 
-        time.sleep(5)
+        time.sleep(20)
 
         assert_equal(bn.executed_msg_offer_atv, 1)
         assert_equal(bn.executed_msg_offer_vbk, 2)
