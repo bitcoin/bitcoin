@@ -108,7 +108,6 @@ public Q_SLOTS:
     void setFontSize(int newSize);
 
     /** SYSCOIN Wallet repair options */
-    void walletRescan();
     void walletReindex();
 
     /** Append the message to the message widget */

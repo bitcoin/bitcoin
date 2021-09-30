@@ -57,7 +57,6 @@
 
 // SYSCOIN
 // Repair parameters
-const QString RESCAN("-rescan");
 const QString REINDEX("-reindex");
 
 const int CONSOLE_HISTORY = 50;
@@ -568,7 +567,6 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     ui->WalletSelectorLabel->setVisible(false);
 
     // SYSCOIN Wallet Repair Buttons
-    connect(ui->btn_rescan, &QPushButton::clicked, this, &RPCConsole::walletRescan);
     connect(ui->btn_reindex, &QPushButton::clicked, this, &RPCConsole::walletReindex);
 
     // Register RPC timer interface
@@ -860,11 +858,6 @@ void RPCConsole::setFontSize(int newSize)
     ui->messagesWidget->verticalScrollBar()->setValue(oldPosFactor * ui->messagesWidget->verticalScrollBar()->maximum());
 }
 // SYSCOIN
-/** Restart wallet with "-rescan" */
-void RPCConsole::walletRescan()
-{
-    buildParameterlist(RESCAN);
-}
 /** Restart wallet with "-reindex" */
 void RPCConsole::walletReindex()
 {
@@ -879,7 +872,6 @@ void RPCConsole::buildParameterlist(QString arg)
     args.removeFirst();
 
     // Remove existing repair-options
-    args.removeAll(RESCAN);
     args.removeAll(REINDEX);
 
     // Append repair parameter to command line.
