@@ -403,20 +403,6 @@ std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
     return out.str();
 }
 
-int64_t atoi64(const std::string& str)
-{
-#ifdef _MSC_VER
-    return _atoi64(str.c_str());
-#else
-    return strtoll(str.c_str(), nullptr, 10);
-#endif
-}
-
-int atoi(const std::string& str)
-{
-    return atoi(str.c_str());
-}
-
 /** Upper bound for mantissa.
  * 10^18-1 is the largest arbitrary decimal that will fit in a signed 64-bit integer.
  * Larger integers cannot consist of arbitrary combinations of 0-9:

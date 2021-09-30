@@ -85,7 +85,7 @@ void CleanupBlockRevFiles()
     // start removing block files.
     int nContigCounter = 0;
     for (const std::pair<const std::string, fs::path>& item : mapBlockFiles) {
-        if (atoi(item.first) == nContigCounter) {
+        if (LocaleIndependentAtoi<int>(item.first) == nContigCounter) {
             nContigCounter++;
             continue;
         }
