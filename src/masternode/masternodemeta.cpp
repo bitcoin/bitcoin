@@ -56,7 +56,6 @@ CMasternodeMetaInfoPtr CMasternodeMetaMan::GetMetaInfo(const uint256& proTxHash,
 
 bool CMasternodeMetaMan::AddGovernanceVote(const uint256& proTxHash, const uint256& nGovernanceObjectHash)
 {
-    LOCK(cs);
     auto mm = GetMetaInfo(proTxHash);
     mm->AddGovernanceVote(nGovernanceObjectHash);
     return true;
@@ -88,7 +87,7 @@ void CMasternodeMetaMan::Clear()
 std::string CMasternodeMetaMan::ToString() const
 {
     std::ostringstream info;
-
+    LOCK(cs);
     info << "Masternodes: meta infos object count: " << (int)metaInfos.size();
     return info.str();
 }

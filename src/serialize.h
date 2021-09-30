@@ -868,7 +868,11 @@ template<typename Stream, typename K, typename A> void Unserialize(Stream& is, s
  */
 template<typename Stream, typename K, typename T, typename Pred, typename A> void Serialize(Stream& os, const std::unordered_map<K, T, Pred, A>& m);
 template<typename Stream, typename K, typename T, typename Pred, typename A> void Unserialize(Stream& is, std::unordered_map<K, T, Pred, A>& m);
-
+/**
+ * atomic
+ */
+template<typename Stream, typename T> void Serialize(Stream& os, const std::atomic<T>& a);
+template<typename Stream, typename T> void Unserialize(Stream& is, std::atomic<T>& a);
 
 /**
  * If none of the specialized versions above matched, default to calling member function.
@@ -1268,6 +1272,25 @@ void Unserialize(Stream& is, std::shared_ptr<const T>& p)
 {
     p = std::make_shared<const T>(deserialize, is);
 }
+
+
+/**
+ * atomic
+ */
+template<typename Stream, typename T>
+void Serialize(Stream& os, const std::atomic<T>& a)
+{
+    Serialize(os, a.load());
+}
+
+template<typename Stream, typename T>
+void Unserialize(Stream& is, std::atomic<T>& a)
+{
+    T val;
+    Unserialize(is, val);
+    a.store(val);
+}
+
 
 
 /**
