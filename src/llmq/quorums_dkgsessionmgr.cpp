@@ -213,10 +213,11 @@ bool CDKGSessionManager::GetContribution(const uint256& hash, CDKGContribution& 
 
     for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
-        LOCK2(dkgType.cs, dkgType.curSession->invCs);
+        LOCK(dkgType.cs);
         if (dkgType.phase < QuorumPhase_Initialized || dkgType.phase > QuorumPhase_Contribute) {
             continue;
         }
+        LOCK(dkgType.curSession->invCs);
         auto it = dkgType.curSession->contributions.find(hash);
         if (it != dkgType.curSession->contributions.end()) {
             ret = it->second;
@@ -233,10 +234,11 @@ bool CDKGSessionManager::GetComplaint(const uint256& hash, CDKGComplaint& ret) c
 
     for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
-        LOCK2(dkgType.cs, dkgType.curSession->invCs);
+        LOCK(dkgType.cs);
         if (dkgType.phase < QuorumPhase_Contribute || dkgType.phase > QuorumPhase_Complain) {
             continue;
         }
+        LOCK(dkgType.curSession->invCs);
         auto it = dkgType.curSession->complaints.find(hash);
         if (it != dkgType.curSession->complaints.end()) {
             ret = it->second;
@@ -253,10 +255,11 @@ bool CDKGSessionManager::GetJustification(const uint256& hash, CDKGJustification
 
     for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
-        LOCK2(dkgType.cs, dkgType.curSession->invCs);
+        LOCK(dkgType.cs);
         if (dkgType.phase < QuorumPhase_Complain || dkgType.phase > QuorumPhase_Justify) {
             continue;
         }
+        LOCK(dkgType.curSession->invCs);
         auto it = dkgType.curSession->justifications.find(hash);
         if (it != dkgType.curSession->justifications.end()) {
             ret = it->second;
@@ -273,10 +276,11 @@ bool CDKGSessionManager::GetPrematureCommitment(const uint256& hash, CDKGPrematu
 
     for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
-        LOCK2(dkgType.cs, dkgType.curSession->invCs);
+        LOCK(dkgType.cs);
         if (dkgType.phase < QuorumPhase_Justify || dkgType.phase > QuorumPhase_Commit) {
             continue;
         }
+        LOCK(dkgType.curSession->invCs);
         auto it = dkgType.curSession->prematureCommitments.find(hash);
         if (it != dkgType.curSession->prematureCommitments.end() && dkgType.curSession->validCommitments.count(hash)) {
             ret = it->second;

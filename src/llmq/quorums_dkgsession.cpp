@@ -270,17 +270,15 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc
     cxxtimer::Timer t1(true);
     logger.Batch("received contribution from %s", qc.proTxHash.ToString());
 
-    {
-        // relay, no matter if further verification fails
-        // This ensures the whole quorum sees the bad behavior
-        LOCK(invCs);
+    // relay, no matter if further verification fails
+    // This ensures the whole quorum sees the bad behavior
 
-        if (member->contributions.size() >= 2) {
-            // only relay up to 2 contributions, that's enough to let the other members know about his bad behavior
-            return;
-        }
+    if (member->contributions.size() >= 2) {
+        // only relay up to 2 contributions, that's enough to let the other members know about his bad behavior
+        return;
+    }
 
-        contributions.try_emplace(hash, qc);
+        WITH_LOCK(invCs, contributions.emplace(hash, qc));
         member->contributions.emplace(hash);
 
         CInv inv(MSG_QUORUM_CONTRIB, hash);
@@ -291,13 +289,12 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc
             return true;
         });
 
-        if (member->contributions.size() > 1) {
-            // don't do any further processing if we got more than 1 contribution. we already relayed it,
-            // so others know about his bad behavior
-            MarkBadMember(member->idx);
-            logger.Batch("%s did send multiple contributions", member->dmn->proTxHash.ToString());
-            return;
-        }
+    if (member->contributions.size() > 1) {
+        // don't do any further processing if we got more than 1 contribution. we already relayed it,
+        // so others know about his bad behavior
+        MarkBadMember(member->idx);
+        logger.Batch("%s did send multiple contributions", member->dmn->proTxHash.ToString());
+        return;
     }
 
     receivedVvecs[member->idx] = qc.vvec;
@@ -589,15 +586,12 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGComplaint& qc, b
 
     auto member = GetMember(qc.proTxHash);
 
-    {
-        LOCK(invCs);
+    if (member->complaints.size() >= 2) {
+        // only relay up to 2 complaints, that's enough to let the other members know about his bad behavior
+        return;
+    }
 
-        if (member->complaints.size() >= 2) {
-            // only relay up to 2 complaints, that's enough to let the other members know about his bad behavior
-            return;
-        }
-
-        complaints.try_emplace(hash, qc);
+        WITH_LOCK(invCs, complaints.emplace(hash, qc));
         member->complaints.emplace(hash);
 
         CInv inv(MSG_QUORUM_COMPLAINT, hash);
@@ -608,13 +602,12 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGComplaint& qc, b
             return true;
         });
 
-        if (member->complaints.size() > 1) {
-            // don't do any further processing if we got more than 1 complaint. we already relayed it,
-            // so others know about his bad behavior
-            MarkBadMember(member->idx);
-            logger.Batch("%s did send multiple complaints", member->dmn->proTxHash.ToString());
-            return;
-        }
+    if (member->complaints.size() > 1) {
+        // don't do any further processing if we got more than 1 complaint. we already relayed it,
+        // so others know about his bad behavior
+        MarkBadMember(member->idx);
+        logger.Batch("%s did send multiple complaints", member->dmn->proTxHash.ToString());
+        return;
     }
 
     int receivedCount = 0;
@@ -672,12 +665,10 @@ void CDKGSession::VerifyAndJustify(CDKGPendingMessages& pendingMessages)
             MarkBadMember(m->idx);
             continue;
         }
-        {
-            LOCK(invCs);
-            auto& qc = complaints.at(*m->complaints.begin());
-            if (qc.complainForMembers[myIdx]) {
-                justifyFor.emplace(qc.proTxHash);
-            }
+
+        const auto& qc = WITH_LOCK(invCs, return std::move(complaints.at(*m->complaints.begin())));
+        if (qc.complainForMembers[myIdx]) {
+            justifyFor.emplace(qc.proTxHash);
         }
     }
 
@@ -804,39 +795,35 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGJustification& q
 
     auto member = GetMember(qj.proTxHash);
 
-    {
-        LOCK(invCs);
+    if (member->justifications.size() >= 2) {
+        // only relay up to 2 justifications, that's enough to let the other members know about his bad behavior
+        return;
+    }
 
-        if (member->justifications.size() >= 2) {
-            // only relay up to 2 justifications, that's enough to let the other members know about his bad behavior
-            return;
-        }
+    WITH_LOCK(invCs, justifications.emplace(hash, qj));
+    member->justifications.emplace(hash);
 
-        justifications.try_emplace(hash, qj);
-        member->justifications.emplace(hash);
+    // we always relay, even if further verification fails
+    CInv inv(MSG_QUORUM_JUSTIFICATION, hash);
+    RelayOtherInvToParticipants(inv);
 
-        // we always relay, even if further verification fails
-        CInv inv(MSG_QUORUM_JUSTIFICATION, hash);
-        RelayOtherInvToParticipants(inv);
+    quorumDKGDebugManager->UpdateLocalMemberStatus(params.type, member->idx, [&](CDKGDebugMemberStatus& status) {
+        status.statusBits.receivedJustification = true;
+        return true;
+    });
 
-        quorumDKGDebugManager->UpdateLocalMemberStatus(params.type, member->idx, [&](CDKGDebugMemberStatus& status) {
-            status.statusBits.receivedJustification = true;
-            return true;
-        });
+    if (member->justifications.size() > 1) {
+        // don't do any further processing if we got more than 1 justification. we already relayed it,
+        // so others know about his bad behavior
+        logger.Batch("%s did send multiple justifications", member->dmn->proTxHash.ToString());
+        MarkBadMember(member->idx);
+        return;
+    }
 
-        if (member->justifications.size() > 1) {
-            // don't do any further processing if we got more than 1 justification. we already relayed it,
-            // so others know about his bad behavior
-            logger.Batch("%s did send multiple justifications", member->dmn->proTxHash.ToString());
-            MarkBadMember(member->idx);
-            return;
-        }
-
-        if (member->bad) {
-            // we locally determined him to be bad (sent none or more then one contributions)
-            // don't give him a second chance (but we relay the justification in case other members disagree)
-            return;
-        }
+    if (member->bad) {
+        // we locally determined him to be bad (sent none or more then one contributions)
+        // don't give him a second chance (but we relay the justification in case other members disagree)
+        return;
     }
 
     for (const auto& p : qj.contributions) {
@@ -1176,8 +1163,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGPrematureCommitm
         }
     }
 
-    LOCK(invCs);
-    validCommitments.emplace(hash);
+    WITH_LOCK(invCs, validCommitments.emplace(hash));
 
     CInv inv(MSG_QUORUM_PREMATURE_COMMITMENT, hash);
     RelayOtherInvToParticipants(inv);
@@ -1323,7 +1309,6 @@ void CDKGSession::MarkBadMember(size_t idx)
 
 void CDKGSession::RelayOtherInvToParticipants(const CInv& inv) const
 {
-    LOCK(invCs);
     dkgManager.connman.ForEachNode([&](CNode* pnode) {
         bool relay = false;
         auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
