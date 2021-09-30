@@ -45,7 +45,7 @@ bool RecoverDatabaseFile(const fs::path& file_path, bilingual_str& error, std::v
     // Call Salvage with fAggressive=true to
     // get as much data as possible.
     // Rewrite salvaged data to fresh wallet file
-    // Set -rescan so any missing transactions will be
+    // Rescan so any missing transactions will be
     // found.
     int64_t now = GetTime();
     std::string newFilename = strprintf("%s.%d.bak", filename, now);

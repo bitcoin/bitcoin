@@ -42,7 +42,6 @@ class NotificationsTest(BitcoinTestFramework):
             f"-alertnotify=echo > {os.path.join(self.alertnotify_dir, '%s')}",
             f"-blocknotify=echo > {os.path.join(self.blocknotify_dir, '%s')}",
         ], [
-            "-rescan",
             f"-walletnotify=echo %h_%b > {os.path.join(self.walletnotify_dir, notify_outputname('%w', '%s'))}",
         ]]
         self.wallet_names = [self.default_wallet_name, self.wallet]
@@ -91,15 +90,14 @@ class NotificationsTest(BitcoinTestFramework):
 
             # directory content should equal the generated transaction hashes
             tx_details = list(map(lambda t: (t['txid'], t['blockheight'], t['blockhash']), self.nodes[1].listtransactions("*", block_count)))
-            self.stop_node(1)
             self.expect_wallet_notify(tx_details)
 
             self.log.info("test -walletnotify after rescan")
-            # restart node to rescan to force wallet notifications
-            self.start_node(1)
-            self.connect_nodes(0, 1)
-
+            # rescan to force wallet notifications
+            self.nodes[1].rescanblockchain()
             self.wait_until(lambda: len(os.listdir(self.walletnotify_dir)) == block_count, timeout=10)
+
+            self.connect_nodes(0, 1)
 
             # directory content should equal the generated transaction hashes
             tx_details = list(map(lambda t: (t['txid'], t['blockheight'], t['blockhash']), self.nodes[1].listtransactions("*", block_count)))
