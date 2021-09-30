@@ -3065,7 +3065,8 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
             break;
         }
     }
-    m_mempool.check(m_chainman.ActiveChainstate());
+    CChainState& active_chainstate = m_chainman.ActiveChainstate();
+    m_mempool.check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
 }
 
 bool PeerManagerImpl::PrepareBlockFilterRequest(CNode& node, Peer& peer,
@@ -4234,7 +4235,8 @@ void PeerManagerImpl::ProcessMessage(
                 m_cj_ctx->dstxman->AddDSTX(dstx);
             }
 
-            m_mempool.check(m_chainman.ActiveChainstate());
+            CChainState& active_chainstate = m_chainman.ActiveChainstate();
+            m_mempool.check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
             RelayTransaction(tx.GetHash());
             m_orphanage.AddChildrenToWorkSet(tx, peer->m_orphan_work_set);
 

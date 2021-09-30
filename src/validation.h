@@ -266,9 +266,6 @@ bool GetUTXOCoin(CChainState& active_chainstate, const COutPoint& outpoint, Coin
 int GetUTXOHeight(CChainState& active_chainstate, const COutPoint& outpoint);
 int GetUTXOConfirmations(CChainState& active_chainstate, const COutPoint& outpoint);
 
-/** Apply the effects of this transaction on the UTXO set represented by view */
-void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
-
 /** Transaction validation functions */
 
 /**
