@@ -390,13 +390,11 @@ void SyscoinGUI::createActions()
     m_mask_values_action->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_M));
     m_mask_values_action->setStatusTip(tr("Mask the values in the Overview tab"));
     m_mask_values_action->setCheckable(true);
-
     // SYSCOIN
     openRepairAction = new QAction(platformStyle->SingleColorIcon(":/icons/options"), tr("Wallet &Repair"), this);
     openRepairAction->setStatusTip(tr("Show wallet repair options"));
     openRepairAction->setEnabled(false);
-
-    connect(quitAction, &QAction::triggered, qApp, QApplication::quit);
+    connect(quitAction, &QAction::triggered, this, &SyscoinGUI::quitRequested);
     connect(aboutAction, &QAction::triggered, this, &SyscoinGUI::aboutClicked);
     connect(aboutQtAction, &QAction::triggered, qApp, QApplication::aboutQt);
     connect(optionsAction, &QAction::triggered, this, &SyscoinGUI::optionsClicked);
@@ -892,8 +890,8 @@ void SyscoinGUI::aboutClicked()
     if(!clientModel)
         return;
 
-    HelpMessageDialog dlg(this, true);
-    dlg.exec();
+    auto dlg = new HelpMessageDialog(this, /* about */ true);
+    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
 }
 
 void SyscoinGUI::showDebugWindow()
@@ -1048,10 +1046,11 @@ void SyscoinGUI::openOptionsDialogWithTab(OptionsDialog::Tab tab)
     if (!clientModel || !clientModel->getOptionsModel())
         return;
 
-    OptionsDialog dlg(this, enableWallet);
-    dlg.setCurrentTab(tab);
-    dlg.setModel(clientModel->getOptionsModel());
-    dlg.exec();
+    auto dlg = new OptionsDialog(this, enableWallet);
+    connect(dlg, &OptionsDialog::quitOnReset, this, &BitcoinGUI::quitRequested);
+    dlg->setCurrentTab(tab);
+    dlg->setModel(clientModel->getOptionsModel());
+    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
 }
 
 void SyscoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool header, SynchronizationState sync_state)
@@ -1322,7 +1321,7 @@ void SyscoinGUI::closeEvent(QCloseEvent *event)
             // close rpcConsole in case it was open to make some space for the shutdown window
             rpcConsole->close();
 
-            QApplication::quit();
+            Q_EMIT quitRequested();
         }
         else
         {
@@ -1517,7 +1516,7 @@ void SyscoinGUI::detectShutdown()
     {
         if(rpcConsole)
             rpcConsole->hide();
-        qApp->quit();
+        Q_EMIT quitRequested();
     }
 }
 
