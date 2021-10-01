@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
     for (int i = 0; i < 4; i++)
     {
         key[i].MakeNewKey(true);
-        keystore.AddKey(key[i]);
+        BOOST_CHECK(keystore.AddKey(key[i]));
     }
 
     CScript a_and_b;
