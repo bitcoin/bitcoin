@@ -134,15 +134,9 @@ bool CCoinJoinBroadcastTx::IsValidStructure() const
     if (tx->vin.size() > CCoinJoin::GetMaxPoolParticipants() * COINJOIN_ENTRY_MAX_SIZE) {
         return false;
     }
-    for (const auto& out : tx->vout) {
-        if (!CCoinJoin::IsDenominatedAmount(out.nValue)) {
-            return false;
-        }
-        if (!out.scriptPubKey.IsPayToPublicKeyHash()) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(tx->vout.cbegin(), tx->vout.cend(), [] (const auto& txOut){
+        return CCoinJoin::IsDenominatedAmount(txOut.nValue) && txOut.scriptPubKey.IsPayToPublicKeyHash();
+    });
 }
 
 void CCoinJoinBaseSession::SetNull()

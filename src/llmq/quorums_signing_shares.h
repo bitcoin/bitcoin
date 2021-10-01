@@ -24,6 +24,8 @@ namespace llmq
 // <signHash, quorumMember>
 typedef std::pair<uint256, uint16_t> SigShareKey;
 
+constexpr uint32_t UNINITIALIZED_SESSION_ID{std::numeric_limits<uint32_t>::max()};
+
 class CSigShare
 {
 public:
@@ -61,7 +63,7 @@ public:
 class CSigSesAnn
 {
 public:
-    uint32_t sessionId{(uint32_t)-1};
+    uint32_t sessionId{UNINITIALIZED_SESSION_ID};
     Consensus::LLMQType llmqType;
     uint256 quorumHash;
     uint256 id;
@@ -78,7 +80,7 @@ public:
 class CSigSharesInv
 {
 public:
-    uint32_t sessionId{(uint32_t)-1};
+    uint32_t sessionId{UNINITIALIZED_SESSION_ID};
     std::vector<bool> inv;
 
 public:
@@ -105,7 +107,7 @@ public:
 class CBatchedSigShares
 {
 public:
-    uint32_t sessionId{(uint32_t)-1};
+    uint32_t sessionId{UNINITIALIZED_SESSION_ID};
     std::vector<std::pair<uint16_t, CBLSLazySignature>> sigShares;
 
 public:
@@ -278,8 +280,8 @@ public:
     };
 
     struct Session {
-        uint32_t recvSessionId{(uint32_t)-1};
-        uint32_t sendSessionId{(uint32_t)-1};
+        uint32_t recvSessionId{UNINITIALIZED_SESSION_ID};
+        uint32_t sendSessionId{UNINITIALIZED_SESSION_ID};
 
         Consensus::LLMQType llmqType;
         uint256 quorumHash;

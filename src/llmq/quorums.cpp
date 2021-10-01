@@ -314,7 +314,7 @@ CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const Consensus::LLMQType l
     assert(qc->quorumHash == pindexQuorum->GetBlockHash());
 
     auto quorum = std::make_shared<CQuorum>(llmq::GetLLMQParams(llmqType), blsWorker);
-    auto members = CLLMQUtils::GetAllQuorumMembers((Consensus::LLMQType)qc->llmqType, pindexQuorum);
+    auto members = CLLMQUtils::GetAllQuorumMembers(qc->llmqType, pindexQuorum);
 
     quorum->Init(qc, pindexQuorum, minedBlockHash, members);
 

@@ -59,7 +59,7 @@ void CCoinJoinClientOptions::Init()
 void CCoinJoinClientOptions::GetJsonInfo(UniValue& obj)
 {
     assert(obj.isObject());
-    CCoinJoinClientOptions& options = CCoinJoinClientOptions::Get();
+    const CCoinJoinClientOptions& options = CCoinJoinClientOptions::Get();
     obj.pushKV("enabled", options.fEnableCoinJoin);
     obj.pushKV("multisession", options.fCoinJoinMultiSession);
     obj.pushKV("max_sessions", options.nCoinJoinSessions);

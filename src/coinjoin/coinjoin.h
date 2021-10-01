@@ -239,7 +239,7 @@ public:
 
     uint256 GetSignatureHash() const;
     /** Sign this mixing transaction
-     *  \return true if all conditions are met:
+     *  return true if all conditions are met:
      *     1) we have an active Masternode,
      *     2) we have a valid Masternode private key,
      *     3) we signed the message successfully, and

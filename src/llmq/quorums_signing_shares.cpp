@@ -322,7 +322,7 @@ bool CSigSharesManager::ProcessMessageSigSesAnn(CNode* pfrom, const CSigSesAnn& 
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
         return false;
     }
-    if (ann.sessionId == (uint32_t)-1 || ann.quorumHash.IsNull() || ann.id.IsNull() || ann.msgHash.IsNull()) {
+    if (ann.sessionId == UNINITIALIZED_SESSION_ID || ann.quorumHash.IsNull() || ann.id.IsNull() || ann.msgHash.IsNull()) {
         return false;
     }
 
@@ -1118,7 +1118,7 @@ bool CSigSharesManager::SendMessages()
         auto& nodeState = nodeStates[nodeId];
         auto session = nodeState.GetSessionBySignHash(signHash);
         assert(session);
-        if (session->sendSessionId == (uint32_t)-1) {
+        if (session->sendSessionId == UNINITIALIZED_SESSION_ID) {
             session->sendSessionId = nodeState.nextSendSessionId++;
 
             CSigSesAnn sigSesAnn;
@@ -1629,7 +1629,7 @@ void CSigSharesManager::ForceReAnnouncement(const CQuorumCPtr& quorum, Consensus
         // pretend that the other node doesn't know about any shares so that we re-announce everything
         session->knows.SetAll(false);
         // we need to use a new session id as we don't know if the other node has run into a timeout already
-        session->sendSessionId = (uint32_t)-1;
+        session->sendSessionId = UNINITIALIZED_SESSION_ID;
     }
 }
 

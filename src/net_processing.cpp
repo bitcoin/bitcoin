@@ -1683,7 +1683,7 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
 
             if (!push && inv.type == MSG_SPORK) {
                 CSporkMessage spork;
-                if(sporkManager.GetSporkByHash(inv.hash, spork)) {
+                if (sporkManager.GetSporkByHash(inv.hash, spork)) {
                     connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SPORK, spork));
                     push = true;
                 }
@@ -1692,15 +1692,13 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             if (!push && inv.type == MSG_GOVERNANCE_OBJECT) {
                 CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
                 bool topush = false;
-                {
-                    if(governance.HaveObjectForHash(inv.hash)) {
-                        ss.reserve(1000);
-                        if(governance.SerializeObjectForHash(inv.hash, ss)) {
-                            topush = true;
-                        }
+                if (governance.HaveObjectForHash(inv.hash)) {
+                    ss.reserve(1000);
+                    if (governance.SerializeObjectForHash(inv.hash, ss)) {
+                        topush = true;
                     }
                 }
-                if(topush) {
+                if (topush) {
                     connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
                     push = true;
                 }
@@ -1709,15 +1707,13 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             if (!push && inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
                 CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
                 bool topush = false;
-                {
-                    if(governance.HaveVoteForHash(inv.hash)) {
-                        ss.reserve(1000);
-                        if(governance.SerializeVoteForHash(inv.hash, ss)) {
-                            topush = true;
-                        }
+                if (governance.HaveVoteForHash(inv.hash)) {
+                    ss.reserve(1000);
+                    if (governance.SerializeVoteForHash(inv.hash, ss)) {
+                        topush = true;
                     }
                 }
-                if(topush) {
+                if (topush) {
                     connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
                     push = true;
                 }
