@@ -236,151 +236,6 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
     }
 }
 
-UniValue AddDestinationInfo(const CTxDestination& dest, const CWallet& pwallet, bool detailed)
-{
-    UniValue ret(UniValue::VOBJ);
-
-    std::string currentAddress = EncodeDestination(dest);
-    ret.pushKV("address", currentAddress);
-
-    CScript scriptPubKey = GetScriptForDestination(dest);
-    if (detailed) ret.pushKV("scriptPubKey", HexStr(scriptPubKey));
-
-    std::unique_ptr<SigningProvider> provider = pwallet.GetSolvingProvider(scriptPubKey);
-
-    if (provider) {
-        auto inferred = InferDescriptor(scriptPubKey, *provider);
-        bool solvable = inferred->IsSolvable() || IsSolvable(*provider, scriptPubKey);
-        ret.pushKV("solvable", solvable);
-        if (solvable) {
-            ret.pushKV("desc", inferred->ToString());
-        }
-    } else {
-        ret.pushKV("solvable", false);
-    }
-
-    ScriptPubKeyMan* spk_man = pwallet.GetScriptPubKeyMan(scriptPubKey);
-    if (spk_man) {
-        if (const std::unique_ptr<CKeyMetadata> meta = spk_man->GetMetadata(dest)) {
-            if (detailed) ret.pushKV("timestamp", meta->nCreateTime);
-            if (meta->has_key_origin) {
-                ret.pushKV("hdkeypath", WriteHDKeypath(meta->key_origin.path));
-                if (detailed) ret.pushKV("hdseedid", meta->hd_seed_id.GetHex());
-                if (detailed) ret.pushKV("hdmasterfingerprint", HexStr(meta->key_origin.fingerprint));
-            }
-        }
-    }
-
-    return ret;
-}
-
-static RPCHelpMan listaddresses()
-{
-    return RPCHelpMan{"listaddresses",
-                "\nLists wallet addresses\n"
-                "In legacy wallets, addresses may be displayed in any order \n"
-                "In descriptor wallets, addresses are displayed in the BIP32 derivation order.  \n",
-                {
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
-                },
-                RPCResult{
-                    RPCResult::Type::OBJ, "", "",{
-                    {
-                        RPCResult::Type::ARR, "", "",
-                        {
-                            {RPCResult::Type::OBJ, "", "", {
-                                {RPCResult::Type::STR, "address", "The bitcoin address"},
-                                {RPCResult::Type::STR, "hdkeypath", "The BIP 32 HD path of the address"},
-                                {RPCResult::Type::STR, "descriptor", "The address descriptor"},
-                                {RPCResult::Type::BOOL, "internal", "The address is internal (change) or external (receive)"},
-                                {RPCResult::Type::STR, "address_type", "The address type (legacy, p2sh-segwit, and bech32)"},
-                                {RPCResult::Type::NUM, "amount", "Available amount at address"},
-                                {RPCResult::Type::BOOL, "address_used", "This address has already received funds or not"}
-                            }},
-                        },
-                    }},
-                },
-                RPCExamples{
-                    HelpExampleCli("listaddresses", "")
-                    + HelpExampleCli("listaddresses", "\"legacy\"")
-            + HelpExampleRpc("listaddresses", "")
-                },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
-
-    pwallet->BlockUntilSyncedToCurrentChain();
-
-    LOCK(pwallet->cs_wallet);
-
-    if (!pwallet->CanGetAddresses()) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
-    }
-
-    OutputType output_type = pwallet->m_default_address_type;
-    if (!request.params[0].isNull()) {
-        std::optional<OutputType> parsed = ParseOutputType(request.params[0].get_str());
-        if (!parsed) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[1].get_str()));
-        } else if (parsed.value() == OutputType::BECH32M && pwallet->GetLegacyScriptPubKeyMan()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Legacy wallets cannot provide bech32m addresses");
-        }
-        output_type = parsed.value();
-    }
-
-    auto addressbalances = GetAddressBalances(*pwallet);
-
-    UniValue result(UniValue::VOBJ);
-
-    std::map<std::string, bool> used_addresses;
-
-    for (const std::pair<const uint256, CWalletTx>& wtx_pair : pwallet->mapWallet) {
-        const CWalletTx& wtx = wtx_pair.second;
-
-        for (const CTxOut& txout : wtx.tx->vout) {
-            CTxDestination address;
-            if (ExtractDestination(txout.scriptPubKey, address) && pwallet->IsMine(address)) {
-                used_addresses[EncodeDestination(address)] = true;
-                break;
-            }
-        }
-    }
-
-    bilingual_str error;
-    std::map<bool, std::vector<CTxDestination>> map_internal_destinations;
-    if (!pwallet->ListAddresses(output_type, map_internal_destinations, error)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
-    }
-
-    for (auto const& [internal, destinations] : map_internal_destinations)
-    {
-        UniValue list_address(UniValue::VARR);
-
-        for(auto destination : destinations) {
-            auto it = addressbalances.find(destination);
-            auto amount = (it != addressbalances.end()) ? it->second : 0;
-
-            UniValue item = AddDestinationInfo(destination, *pwallet, false);
-            item.pushKV("address_type", FormatOutputType(output_type));
-            item.pushKV("internal", internal);
-            item.pushKV("amount", ValueFromAmount(amount));
-            item.pushKV("address_used", used_addresses[item["address"].get_str()]);
-
-            list_address.push_back(item);
-        }
-
-        result.pushKV(
-            internal ? "change_addresses" : "receive_addresses",
-            list_address
-        );
-    }
-
-    return result;
-},
-    };
-}
-
 static RPCHelpMan getnewaddress()
 {
     return RPCHelpMan{"getnewaddress",
@@ -4031,6 +3886,67 @@ static UniValue AddressBookDataToJSON(const CAddressBookData& data, const bool v
     return ret;
 }
 
+UniValue AddDestinationInfo(const CTxDestination& dest, const CWallet& pwallet, bool detailed)
+{
+    LOCK(pwallet.cs_wallet);
+
+    UniValue ret(UniValue::VOBJ);
+
+    std::string currentAddress = EncodeDestination(dest);
+    ret.pushKV("address", currentAddress);
+
+    CScript scriptPubKey = GetScriptForDestination(dest);
+    if (detailed) ret.pushKV("scriptPubKey", HexStr(scriptPubKey));
+
+    std::unique_ptr<SigningProvider> provider = pwallet.GetSolvingProvider(scriptPubKey);
+
+    isminetype mine = pwallet.IsMine(dest);
+
+    if (detailed) ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
+
+    if (provider) {
+        auto inferred = InferDescriptor(scriptPubKey, *provider);
+        bool solvable = inferred->IsSolvable() || IsSolvable(*provider, scriptPubKey);
+        ret.pushKV("solvable", solvable);
+        if (solvable) {
+            ret.pushKV("desc", inferred->ToString());
+        }
+    } else {
+        ret.pushKV("solvable", false);
+    }
+
+    if (detailed) {
+        DescriptorScriptPubKeyMan* desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(pwallet.GetScriptPubKeyMan(scriptPubKey));
+        if (desc_spk_man) {
+            std::string desc_str;
+            if (desc_spk_man->GetDescriptorString(desc_str, /* priv */ false)) {
+                ret.pushKV("parent_desc", desc_str);
+            }
+        }
+
+        ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
+
+        UniValue detail = DescribeWalletAddress(pwallet, dest);
+        ret.pushKVs(detail);
+
+        ret.pushKV("ischange", ScriptIsChange(pwallet, scriptPubKey));
+    }
+
+    ScriptPubKeyMan* spk_man = pwallet.GetScriptPubKeyMan(scriptPubKey);
+    if (spk_man) {
+        if (const std::unique_ptr<CKeyMetadata> meta = spk_man->GetMetadata(dest)) {
+            if (detailed) ret.pushKV("timestamp", meta->nCreateTime);
+            if (meta->has_key_origin) {
+                ret.pushKV("hdkeypath", WriteHDKeypath(meta->key_origin.path));
+                if (detailed) ret.pushKV("hdseedid", meta->hd_seed_id.GetHex());
+                if (detailed) ret.pushKV("hdmasterfingerprint", HexStr(meta->key_origin.fingerprint));
+            }
+        }
+    }
+
+    return ret;
+}
+
 RPCHelpMan getaddressinfo()
 {
     return RPCHelpMan{"getaddressinfo",
@@ -4103,57 +4019,7 @@ RPCHelpMan getaddressinfo()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error_msg);
     }
 
-    UniValue ret(UniValue::VOBJ);
-
-    std::string currentAddress = EncodeDestination(dest);
-    ret.pushKV("address", currentAddress);
-
-    CScript scriptPubKey = GetScriptForDestination(dest);
-    ret.pushKV("scriptPubKey", HexStr(scriptPubKey));
-
-    std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(scriptPubKey);
-
-    isminetype mine = pwallet->IsMine(dest);
-    ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
-
-    if (provider) {
-        auto inferred = InferDescriptor(scriptPubKey, *provider);
-        bool solvable = inferred->IsSolvable() || IsSolvable(*provider, scriptPubKey);
-        ret.pushKV("solvable", solvable);
-        if (solvable) {
-            ret.pushKV("desc", inferred->ToString());
-        }
-    } else {
-        ret.pushKV("solvable", false);
-    }
-
-
-    DescriptorScriptPubKeyMan* desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(pwallet->GetScriptPubKeyMan(scriptPubKey));
-    if (desc_spk_man) {
-        std::string desc_str;
-        if (desc_spk_man->GetDescriptorString(desc_str, /* priv */ false)) {
-            ret.pushKV("parent_desc", desc_str);
-        }
-    }
-
-    ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
-
-    UniValue detail = DescribeWalletAddress(*pwallet, dest);
-    ret.pushKVs(detail);
-
-    ret.pushKV("ischange", ScriptIsChange(*pwallet, scriptPubKey));
-
-    ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan(scriptPubKey);
-    if (spk_man) {
-        if (const std::unique_ptr<CKeyMetadata> meta = spk_man->GetMetadata(dest)) {
-            ret.pushKV("timestamp", meta->nCreateTime);
-            if (meta->has_key_origin) {
-                ret.pushKV("hdkeypath", WriteHDKeypath(meta->key_origin.path));
-                ret.pushKV("hdseedid", meta->hd_seed_id.GetHex());
-                ret.pushKV("hdmasterfingerprint", HexStr(meta->key_origin.fingerprint));
-            }
-        }
-    }
+    UniValue ret = AddDestinationInfo(dest, *pwallet, true);
 
     // Return a `labels` array containing the label associated with the address,
     // equivalent to the `label` field above. Currently only one label can be
@@ -4168,6 +4034,113 @@ RPCHelpMan getaddressinfo()
     ret.pushKV("labels", std::move(labels));
 
     return ret;
+},
+    };
+}
+
+static RPCHelpMan listaddresses()
+{
+    return RPCHelpMan{"listaddresses",
+                "\nLists wallet addresses\n"
+                "In legacy wallets, addresses may be displayed in any order \n"
+                "In descriptor wallets, addresses are displayed in the BIP32 derivation order.  \n",
+                {
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",{
+                    {
+                        RPCResult::Type::ARR, "", "",
+                        {
+                            {RPCResult::Type::OBJ, "", "", {
+                                {RPCResult::Type::STR, "address", "The bitcoin address"},
+                                {RPCResult::Type::STR, "hdkeypath", "The BIP 32 HD path of the address"},
+                                {RPCResult::Type::STR, "descriptor", "The address descriptor"},
+                                {RPCResult::Type::BOOL, "internal", "The address is internal (change) or external (receive)"},
+                                {RPCResult::Type::STR, "address_type", "The address type (legacy, p2sh-segwit, and bech32)"},
+                                {RPCResult::Type::NUM, "amount", "Available amount at address"},
+                                {RPCResult::Type::BOOL, "address_used", "This address has already received funds or not"}
+                            }},
+                        },
+                    }},
+                },
+                RPCExamples{
+                    HelpExampleCli("listaddresses", "")
+                    + HelpExampleCli("listaddresses", "\"legacy\"")
+            + HelpExampleRpc("listaddresses", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
+
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    LOCK(pwallet->cs_wallet);
+
+    if (!pwallet->CanGetAddresses()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
+    }
+
+    OutputType output_type = pwallet->m_default_address_type;
+    if (!request.params[0].isNull()) {
+        std::optional<OutputType> parsed = ParseOutputType(request.params[0].get_str());
+        if (!parsed) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[1].get_str()));
+        } else if (parsed.value() == OutputType::BECH32M && pwallet->GetLegacyScriptPubKeyMan()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Legacy wallets cannot provide bech32m addresses");
+        }
+        output_type = parsed.value();
+    }
+
+    auto addressbalances = GetAddressBalances(*pwallet);
+
+    UniValue result(UniValue::VOBJ);
+
+    std::map<std::string, bool> used_addresses;
+
+    for (const std::pair<const uint256, CWalletTx>& wtx_pair : pwallet->mapWallet) {
+        const CWalletTx& wtx = wtx_pair.second;
+
+        for (const CTxOut& txout : wtx.tx->vout) {
+            CTxDestination address;
+            if (ExtractDestination(txout.scriptPubKey, address) && pwallet->IsMine(address)) {
+                used_addresses[EncodeDestination(address)] = true;
+                break;
+            }
+        }
+    }
+
+    bilingual_str error;
+    std::map<bool, std::vector<CTxDestination>> map_internal_destinations;
+    if (!pwallet->ListAddresses(output_type, map_internal_destinations, error)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
+    }
+
+    for (auto const& [internal, destinations] : map_internal_destinations)
+    {
+        UniValue list_address(UniValue::VARR);
+
+        for(auto destination : destinations) {
+            auto it = addressbalances.find(destination);
+            auto amount = (it != addressbalances.end()) ? it->second : 0;
+
+            UniValue item = AddDestinationInfo(destination, *pwallet, false);
+            item.pushKV("address_type", FormatOutputType(output_type));
+            item.pushKV("internal", internal);
+            item.pushKV("amount", ValueFromAmount(amount));
+            item.pushKV("address_used", used_addresses[item["address"].get_str()]);
+
+            list_address.push_back(item);
+        }
+
+        result.pushKV(
+            internal ? "change_addresses" : "receive_addresses",
+            list_address
+        );
+    }
+
+    return result;
 },
     };
 }
