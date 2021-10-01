@@ -2137,6 +2137,49 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     return res;
 }
 
+void CWallet::GetDestinationsFromAddressBook(std::vector<CTxDestination>& destinations, bool internal)
+{
+    LOCK(cs_wallet);
+    auto start = m_address_book.begin();
+    auto end = m_address_book.end();
+
+    for (auto item_it = start; item_it != end; ++item_it)
+    {
+        if (item_it->second.IsChange() != internal)
+            continue;
+
+        destinations.emplace_back(item_it->first);
+    }
+}
+
+bool CWallet::ListAddresses(const OutputType output_type, std::map<bool, std::vector<CTxDestination>>& map_internal_destinations, bilingual_str& error)
+{
+    LOCK(cs_wallet);
+    error.clear();
+
+    for (bool internal: { false, true }) {
+        auto spk_man = GetScriptPubKeyMan(output_type, internal);
+
+        if (spk_man) {
+
+            std::vector<CTxDestination> destinations;
+
+            if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+                GetDestinationsFromAddressBook(destinations, internal);
+            }
+
+            spk_man->ListAddresses(output_type, destinations, internal);
+
+            map_internal_destinations[internal] = destinations;
+        } else {
+            error = strprintf(_("Error: No %s addresses available."), FormatOutputType(output_type));
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool CWallet::GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, bilingual_str& error)
 {
     LOCK(cs_wallet);

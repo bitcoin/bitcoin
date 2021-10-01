@@ -221,6 +221,21 @@ struct CRecipient
     bool fSubtractFeeFromAmount;
 };
 
+struct AddressInfo
+{
+    CTxDestination destination;
+    std::string address;
+    std::string hdkeypath;
+    std::string descriptor;
+    bool internal;
+    std::string output_type;
+    bool address_used;
+
+    AddressInfo(
+        CTxDestination destination, std::string address, std::string hdkeypath, std::string descriptor, bool internal, std::string output_type, bool address_used)
+        : destination{destination}, address{address}, hdkeypath{hdkeypath}, descriptor{descriptor}, internal{internal}, output_type{output_type}, address_used{address_used} {}
+};
+
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.
@@ -338,6 +353,8 @@ private:
      * notifications about new blocks and transactions.
      */
     static bool AttachChain(const std::shared_ptr<CWallet>& wallet, interfaces::Chain& chain, bilingual_str& error, std::vector<bilingual_str>& warnings);
+
+    void GetDestinationsFromAddressBook(std::vector<CTxDestination>& destinations, bool internal);
 
 public:
     /**
@@ -641,6 +658,8 @@ public:
      */
     void MarkDestinationsDirty(const std::set<CTxDestination>& destinations) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    void GetAddressInfoFromDestinations(const OutputType output_type, ScriptPubKeyMan* spk_man, std::vector<CTxDestination>& destinations, std::vector<AddressInfo>& address_info_list, bool internal);
+    bool ListAddresses(const OutputType output_type, std::map<bool, std::vector<CTxDestination>>& map_internal_destinations, bilingual_str& error);
     bool GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, bilingual_str& error);
     bool GetNewChangeDestination(const OutputType type, CTxDestination& dest, bilingual_str& error);
 

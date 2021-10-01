@@ -1613,6 +1613,51 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
     return set_address;
 }
 
+void LegacyScriptPubKeyMan::ListAddresses(const OutputType type, std::vector<CTxDestination>& addresses, bool internal)
+{
+    LOCK(cs_KeyStore);
+
+    WalletBatch batch(m_storage.GetDatabase());
+    std::set<int64_t> *setKeyPool = internal ? &setInternalKeyPool : &setExternalKeyPool;
+
+    addresses.reserve(addresses.size() + setKeyPool->size());
+
+    auto it = setKeyPool->begin();
+    while (it != std::end(*setKeyPool)) {
+        CKeyPool keypool;
+        if (batch.ReadPool(*(it), keypool)) {
+            auto dest = GetDestinationForKey(keypool.vchPubKey, type);
+            addresses.emplace_back(dest);
+        }
+        ++it;
+    }
+}
+
+void DescriptorScriptPubKeyMan::ListAddresses(const OutputType type, std::vector<CTxDestination>& addresses, bool internal)
+{
+    LOCK(cs_desc_man);
+
+    addresses.reserve(m_map_script_pub_keys.size());
+
+    std::vector<std::pair<CScript, int32_t>> temp_m_map_script_pub_keys;
+
+    for (auto& it : m_map_script_pub_keys) {
+        temp_m_map_script_pub_keys.push_back(it);
+    }
+
+    sort(temp_m_map_script_pub_keys.begin(), temp_m_map_script_pub_keys.end(),
+        [](const std::pair<CScript, int32_t> & a, const std::pair<CScript, int32_t> & b) -> bool {
+        return a.second < b.second;
+    });
+
+    for (auto const& script_pub_key_item: temp_m_map_script_pub_keys) {
+        CTxDestination dest;
+        ExtractDestination(script_pub_key_item.first, dest);
+
+        addresses.emplace_back(dest);
+    }
+}
+
 bool DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, bilingual_str& error)
 {
     // Returns true if this descriptor supports getting new addresses. Conditions where we may be unable to fetch them (e.g. locked) are caught later
