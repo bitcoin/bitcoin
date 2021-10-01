@@ -11,7 +11,7 @@ Example usage:
     find ../path/to/binaries -type f -executable | xargs python3 contrib/devtools/symbol-check.py
 '''
 import sys
-from typing import List
+from typing import List, Dict
 
 import lief
 
@@ -61,6 +61,30 @@ IGNORE_EXPORTS = {
 '_edata', '_end', '__end__', '_init', '__bss_start', '__bss_start__', '_bss_end__',
 '__bss_end__', '_fini', '_IO_stdin_used', 'stdin', 'stdout', 'stderr',
 'environ', '_environ', '__environ',
+}
+
+# Expected linker-loader names can be found here:
+# https://sourceware.org/glibc/wiki/ABIList?action=recall&rev=16
+ELF_INTERPRETER_NAMES: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, str]] = {
+    lief.ELF.ARCH.i386:    {
+        lief.ENDIANNESS.LITTLE: "/lib/ld-linux.so.2",
+    },
+    lief.ELF.ARCH.x86_64:  {
+        lief.ENDIANNESS.LITTLE: "/lib64/ld-linux-x86-64.so.2",
+    },
+    lief.ELF.ARCH.ARM:     {
+        lief.ENDIANNESS.LITTLE: "/lib/ld-linux-armhf.so.3",
+    },
+    lief.ELF.ARCH.AARCH64: {
+        lief.ENDIANNESS.LITTLE: "/lib/ld-linux-aarch64.so.1",
+    },
+    lief.ELF.ARCH.PPC64:   {
+        lief.ENDIANNESS.BIG: "/lib64/ld64.so.1",
+        lief.ENDIANNESS.LITTLE: "/lib64/ld64.so.2",
+    },
+    LIEF_ELF_ARCH_RISCV:    {
+        lief.ENDIANNESS.LITTLE: "/lib/ld-linux-riscv64-lp64d.so.1",
+    },
 }
 
 # Allowed NEEDED libraries
@@ -215,11 +239,17 @@ def check_PE_subsystem_version(binary) -> bool:
         return True
     return False
 
+def check_ELF_interpreter(binary) -> bool:
+    expected_interpreter = ELF_INTERPRETER_NAMES[binary.header.machine_type][binary.abstract.header.endianness]
+
+    return binary.concrete.interpreter == expected_interpreter
+
 CHECKS = {
 'ELF': [
     ('IMPORTED_SYMBOLS', check_imported_symbols),
     ('EXPORTED_SYMBOLS', check_exported_symbols),
-    ('LIBRARY_DEPENDENCIES', check_ELF_libraries)
+    ('LIBRARY_DEPENDENCIES', check_ELF_libraries),
+    ('INTERPRETER_NAME', check_ELF_interpreter),
 ],
 'MACHO': [
     ('DYNAMIC_LIBRARIES', check_MACHO_libraries),
