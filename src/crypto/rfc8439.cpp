@@ -4,7 +4,6 @@
 
 #include <crypto/rfc8439.h>
 
-#include <crypto/chacha20.h>
 #include <crypto/common.h>
 
 #include <cstring>

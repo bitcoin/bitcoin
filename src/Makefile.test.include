@@ -294,6 +294,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/netbase_dns_lookup.cpp \
  test/fuzz/node_eviction.cpp \
  test/fuzz/p2p_transport_serialization.cpp \
+ test/fuzz/p2p_v2_transport_serialization.cpp \
  test/fuzz/parse_hd_keypath.cpp \
  test/fuzz/parse_numbers.cpp \
  test/fuzz/parse_script.cpp \
