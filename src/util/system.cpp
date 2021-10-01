@@ -1014,11 +1014,11 @@ std::string ArgsManager::GetChainName() const
         return CBaseChainParams::TESTNET;
 
     auto chain_name = GetArg("-chain", CBaseChainParams::MAINNET);
-    if (chain_name == CBaseChainParams::MAIN) {
+    if (chain_name == CBaseChainParams::MAINNET_OLD) {
         std::cout << "WARNING -chain=main is deprecated. Please switch to -chain=mainnet" << std::endl;  // XXX bitcoin logging
         std::cerr << "WARNING -chain=main is deprecated. Please switch to -chain=mainnet" << std::endl;  // XXX bitcoin logging
         return CBaseChainParams::MAINNET;
-    } else if (chain_name == CBaseChainParams::TEST) {
+    } else if (chain_name == CBaseChainParams::TESTNET_OLD) {
         std::cout << "WARNING -chain=test is deprecated. Please switch to -testnet or to -chain=testnet" << std::endl;  // XXX bitcoin logging
         std::cerr << "WARNING -chain=test is deprecated. Please switch to -testnet or to -chain=testnet" << std::endl;  // XXX bitcoin logging
         return CBaseChainParams::TESTNET;

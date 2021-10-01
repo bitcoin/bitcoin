@@ -10,10 +10,10 @@
 
 #include <assert.h>
 
-/* [[deprecated]] */ const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::MAINNET = "mainnet";
-/* [[deprecated]] */ const std::string CBaseChainParams::TEST = "test";
+const std::string CBaseChainParams::MAINNET_OLD = "main";
 const std::string CBaseChainParams::TESTNET = "testnet";
+const std::string CBaseChainParams::TESTNET_OLD = "test";
 const std::string CBaseChainParams::SIGNET = "signet";
 const std::string CBaseChainParams::REGTEST = "regtest";
 

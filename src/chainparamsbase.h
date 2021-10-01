@@ -19,10 +19,10 @@ class CBaseChainParams
 public:
     ///@{
     /** Chain name strings */
-    /* [[deprecated]] */ static const std::string MAIN;
     static const std::string MAINNET;
-    /* [[deprecated]] */ static const std::string TEST;
+    static const std::string MAINNET_OLD;
     static const std::string TESTNET;
+    static const std::string TESTNET_OLD;
     static const std::string SIGNET;
     static const std::string REGTEST;
     ///@}
