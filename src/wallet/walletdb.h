@@ -50,7 +50,7 @@ enum class DBErrors
     TOO_NEW,
     LOAD_FAIL,
     NEED_REWRITE,
-    RESCAN_REQUIRED
+    NEED_RESCAN
 };
 
 namespace DBKeys {

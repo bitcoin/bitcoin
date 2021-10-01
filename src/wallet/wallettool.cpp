@@ -76,7 +76,7 @@ static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::pa
         } else if (load_wallet_ret == DBErrors::NEED_REWRITE) {
             tfm::format(std::cerr, "Wallet needed to be rewritten: restart %s to complete", PACKAGE_NAME);
             return nullptr;
-        } else if (load_wallet_ret == DBErrors::RESCAN_REQUIRED) {
+        } else if (load_wallet_ret == DBErrors::NEED_RESCAN) {
             tfm::format(std::cerr, "Error reading %s! Some transaction data might be missing or"
                            " incorrect. Wallet requires a rescan.",
                 name);
