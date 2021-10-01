@@ -101,6 +101,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.supports_cli = True
         self.bind_to_localhost_only = True
         self.parse_args()
+        self.disable_syscall_sandbox = self.options.nosandbox
         self.default_wallet_name = "default_wallet" if self.options.descriptors else ""
         self.wallet_data_filename = "wallet.dat"
         # Optional list of wallet names that can be set in set_test_params to
@@ -159,6 +160,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         parser = argparse.ArgumentParser(usage="%(prog)s [options]")
         parser.add_argument("--nocleanup", dest="nocleanup", default=False, action="store_true",
                             help="Leave bitcoinds and test.* datadir on exit or error")
+        parser.add_argument("--nosandbox", dest="nosandbox", default=False, action="store_true",
+                            help="Don't use the syscall sandbox")
         parser.add_argument("--noshutdown", dest="noshutdown", default=False, action="store_true",
                             help="Don't stop bitcoinds after the test execution")
         parser.add_argument("--cachedir", dest="cachedir", default=os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../../cache"),
@@ -468,6 +471,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             extra_args = [[]] * num_nodes
         if versions is None:
             versions = [None] * num_nodes
+        if self.is_syscall_sandbox_compiled() and not self.disable_syscall_sandbox:
+            for i in range(len(extra_args)):
+                if versions[i] is None or versions[i] >= 219900:
+                    extra_args[i] = extra_args[i] + ["-sandbox=log-and-abort"]
         if binary is None:
             binary = [get_bin_from_version(v, 'bitcoind', self.options.bitcoind) for v in versions]
         if binary_cli is None:
@@ -886,3 +893,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_bdb_compiled(self):
         """Checks whether the wallet module was compiled with BDB support."""
         return self.config["components"].getboolean("USE_BDB")
+
+    def is_syscall_sandbox_compiled(self):
+        """Checks whether the syscall sandbox was compiled."""
+        return self.config["components"].getboolean("ENABLE_SYSCALL_SANDBOX")

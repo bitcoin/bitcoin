@@ -25,6 +25,7 @@
 #include <scheduler.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <util/thread.h>
 #include <util/trace.h>
@@ -1615,6 +1616,7 @@ void CConnman::SocketHandler()
 
 void CConnman::ThreadSocketHandler()
 {
+    SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET);
     while (!interruptNet)
     {
         DisconnectNodes();
@@ -1634,6 +1636,7 @@ void CConnman::WakeMessageHandler()
 
 void CConnman::ThreadDNSAddressSeed()
 {
+    SetSyscallSandboxPolicy(SyscallSandboxPolicy::INITIALIZATION_DNS_SEED);
     FastRandomContext rng;
     std::vector<std::string> seeds = Params().DNSSeeds();
     Shuffle(seeds.begin(), seeds.end(), rng);
@@ -1816,6 +1819,7 @@ int CConnman::GetExtraBlockRelayCount() const
 
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 {
+    SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET_OPEN_CONNECTION);
     // Connect to specific addresses
     if (!connect.empty())
     {
@@ -2155,6 +2159,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo() const
 
 void CConnman::ThreadOpenAddedConnections()
 {
+    SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET_ADD_CONNECTION);
     while (true)
     {
         CSemaphoreGrant grant(*semAddnode);
@@ -2218,6 +2223,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
 
 void CConnman::ThreadMessageHandler()
 {
+    SetSyscallSandboxPolicy(SyscallSandboxPolicy::MESSAGE_HANDLER);
     FastRandomContext rng;
     while (!flagInterruptMsgProc)
     {
