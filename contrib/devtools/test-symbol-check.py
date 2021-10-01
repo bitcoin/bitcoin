@@ -13,7 +13,16 @@ import unittest
 from utils import determine_wellknown_cmd
 
 def call_symbol_check(cc: List[str], source, executable, options):
-    subprocess.run([*cc,source,'-o',executable] + options, check=True)
+    # This should behave the same as AC_TRY_LINK, so arrange well-known flags
+    # in the same order as autoconf would.
+    #
+    # See the definitions for ac_link in autoconf's lib/autoconf/c.m4 file for
+    # reference.
+    env_flags: List[str] = []
+    for var in ['CFLAGS', 'CPPFLAGS', 'LDFLAGS']:
+        env_flags += filter(None, os.environ.get(var, '').split(' '))
+
+    subprocess.run([*cc,source,'-o',executable] + env_flags + options, check=True)
     p = subprocess.run(['./contrib/devtools/symbol-check.py',executable], stdout=subprocess.PIPE, universal_newlines=True)
     os.remove(source)
     os.remove(executable)
