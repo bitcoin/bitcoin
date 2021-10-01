@@ -237,8 +237,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
     // We start one block before DIP3 activation, so mining a block with a DIP3 transaction should be no-op
     auto block = std::make_shared<CBlock>(CreateAndProcessBlock(txns, GetScriptForRawPubKey(coinbaseKey.GetPubKey())));
  
-    BOOST_ASSERT(*m_node.chain->getHeight() == nHeight + 1);
-    BOOST_ASSERT(block->GetHash() == m_node.chain->getBlockHash(*m_node.chain->getHeight()));
+    BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
+    BOOST_CHECK_EQUAL(block->GetHash() , m_node.chain->getBlockHash(*m_node.chain->getHeight()));
     
     CDeterministicMNList mnList;
     if(deterministicMNManager)
@@ -253,8 +253,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
 
     if(deterministicMNManager)
         deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
-    BOOST_ASSERT(*m_node.chain->getHeight() == nHeight + 2);
-    BOOST_ASSERT(block->GetHash() == m_node.chain->getBlockHash(*m_node.chain->getHeight()));
+    BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 2);
+    BOOST_CHECK_EQUAL(block->GetHash() , m_node.chain->getBlockHash(*m_node.chain->getHeight()));
     
     if(deterministicMNManager)
         deterministicMNManager->GetListAtChainTip(mnList);
@@ -306,7 +306,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         if(deterministicMNManager)
             deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
 
-        BOOST_ASSERT(*m_node.chain->getHeight() == nHeight + 1);
+        BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
         
         CDeterministicMNList mnList;
         if(deterministicMNManager)
@@ -365,7 +365,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
             LOCK(cs_main);
             if(deterministicMNManager)
                 deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
-            BOOST_ASSERT(*m_node.chain->getHeight() == nHeight + 1);
+            BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
         }
 
         for (size_t j = 0; j < 3; j++) {
@@ -385,12 +385,12 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         LOCK(cs_main);
         deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
     }
-    BOOST_ASSERT(*m_node.chain->getHeight() == nHeight + 1);
+    BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
     nHeight++;
     CDeterministicMNList mnList;
     deterministicMNManager->GetListAtChainTip(mnList);
     auto dmn = mnList.GetMN(dmnHashes[0]);
-    BOOST_ASSERT(dmn != nullptr && dmn->pdmnState->addr.GetPort() == 1000);
+    BOOST_CHECK_EQUAL(dmn != nullptr && dmn->pdmnState->addr.GetPort() , 1000);
 
     // test ProUpRevTx
     tx = CreateProUpRevTx(m_node, utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], coinbaseKey);
@@ -400,7 +400,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         if(deterministicMNManager)
             deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
     }
-    BOOST_ASSERT(*m_node.chain->getHeight() == nHeight + 1);
+    BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
     
     nHeight++;
     if(deterministicMNManager)
@@ -454,7 +454,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         if(deterministicMNManager)
             deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
     }
-    BOOST_ASSERT(*m_node.chain->getHeight() == nHeight + 1);
+    BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
     nHeight++;
 
     tx = CreateProUpServTx(m_node, utxos, dmnHashes[0], newOperatorKey, 100, coinbaseKey);
@@ -464,7 +464,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         if(deterministicMNManager)
             deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
     }
-    BOOST_ASSERT(*m_node.chain->getHeight() == nHeight + 1);
+    BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
     nHeight++;
     if(deterministicMNManager)
         deterministicMNManager->GetListAtChainTip(mnList);
@@ -526,8 +526,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_reorg, TestChainDIP3Setup)
 
     auto block = CreateAndProcessBlock({tx_collateral}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
-    BOOST_ASSERT(*m_node.chain->getHeight() == nHeight + 1);
-    BOOST_ASSERT(block.GetHash() == m_node.chain->getBlockHash(*m_node.chain->getHeight()));
+    BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
+    BOOST_CHECK_EQUAL(block.GetHash() , m_node.chain->getBlockHash(*m_node.chain->getHeight()));
 
     CProRegTx payload;
     payload.addr = LookupNumeric("1.1.1.1", 1);
@@ -683,8 +683,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
 
     block = CreateAndProcessBlock({tx_reg}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
-    BOOST_ASSERT(*m_node.chain->getHeight() == nHeight + 2);
-    BOOST_ASSERT(block.GetHash() == m_node.chain->getBlockHash(*m_node.chain->getHeight()));
+    BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 2);
+    BOOST_CHECK_EQUAL(block.GetHash() , m_node.chain->getBlockHash(*m_node.chain->getHeight()));
     CDeterministicMNList mnList;
     if(deterministicMNManager)
         deterministicMNManager->GetListAtChainTip(mnList);
@@ -697,8 +697,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
 
     block = CreateAndProcessBlock({proUpRevTx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
-    BOOST_ASSERT(*m_node.chain->getHeight() == nHeight + 3);
-    BOOST_ASSERT(block.GetHash() == m_node.chain->getBlockHash(*m_node.chain->getHeight()));
+    BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 3);
+    BOOST_CHECK_EQUAL(block.GetHash() , m_node.chain->getBlockHash(*m_node.chain->getHeight()));
     if(deterministicMNManager)
         deterministicMNManager->GetListAtChainTip(mnList);
     BOOST_ASSERT(!mnList.HasMN(tx_reg_hash));

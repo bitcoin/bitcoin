@@ -27,10 +27,10 @@
 static const bool fLegacyDefault{true};
 
 // reversed BLS12-381
-#define BLS_CURVE_ID_SIZE 32
-#define BLS_CURVE_SECKEY_SIZE 32
-#define BLS_CURVE_PUBKEY_SIZE 48
-#define BLS_CURVE_SIG_SIZE 96
+constexpr int BLS_CURVE_ID_SIZE{32};
+constexpr int BLS_CURVE_SECKEY_SIZE{32};
+constexpr int BLS_CURVE_PUBKEY_SIZE{48};
+constexpr int BLS_CURVE_SIG_SIZE{96};
 
 class CBLSSignature;
 class CBLSPublicKey;
