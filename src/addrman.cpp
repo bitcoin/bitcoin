@@ -592,7 +592,7 @@ void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
     }
 }
 
-bool AddrManImpl::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty)
+bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty)
 {
     AssertLockHeld(cs);
 
@@ -1034,7 +1034,7 @@ bool AddrManImpl::Add(const std::vector<CAddress>& vAddr, const CNetAddr& source
     int nAdd = 0;
     Check();
     for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
-        nAdd += Add_(*it, source, nTimePenalty) ? 1 : 0;
+        nAdd += AddSingle(*it, source, nTimePenalty) ? 1 : 0;
     Check();
     if (nAdd) {
         LogPrint(BCLog::ADDRMAN, "Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString(), nTried, nNew);
