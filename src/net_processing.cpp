@@ -40,13 +40,13 @@
 
 #include <spork.h>
 #include <governance/governance.h>
-#include <masternode/masternode-payments.h>
-#include <masternode/masternode-sync.h>
-#include <masternode/masternode-meta.h>
+#include <masternode/payments.h>
+#include <masternode/sync.h>
+#include <masternode/meta.h>
 #ifdef ENABLE_WALLET
-#include <coinjoin/coinjoin-client.h>
+#include <coinjoin/client.h>
 #endif // ENABLE_WALLET
-#include <coinjoin/coinjoin-server.h>
+#include <coinjoin/server.h>
 
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>

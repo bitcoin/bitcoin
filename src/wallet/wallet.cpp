@@ -32,8 +32,8 @@
 #include <wallet/fees.h>
 #include <warnings.h>
 
-#include <coinjoin/coinjoin-client.h>
-#include <coinjoin/coinjoin-client-options.h>
+#include <coinjoin/client.h>
+#include <coinjoin/options.h>
 #include <governance/governance.h>
 #include <evo/deterministicmns.h>
 #include <keepass.h>

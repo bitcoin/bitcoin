@@ -14,8 +14,8 @@
 #include <util/moneystr.h>
 #include <validation.h>
 #include <bls/bls.h>
-#include <masternode/activemasternode.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/node.h>
+#include <masternode/sync.h>
 
 #include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_chainlocks.h>

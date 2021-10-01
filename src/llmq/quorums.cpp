@@ -12,9 +12,9 @@
 #include <evo/specialtx.h>
 #include <evo/deterministicmns.h>
 
-#include <masternode/activemasternode.h>
+#include <masternode/node.h>
 #include <chainparams.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/sync.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>

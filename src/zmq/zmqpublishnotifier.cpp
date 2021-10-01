@@ -12,8 +12,8 @@
 #include <validation.h>
 #include <zmq/zmqutil.h>
 
-#include <governance/governance-object.h>
-#include <governance/governance-vote.h>
+#include <governance/object.h>
+#include <governance/vote.h>
 
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_instantsend.h>

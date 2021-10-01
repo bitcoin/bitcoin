@@ -34,8 +34,8 @@
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_utils.h>
-#include <masternode/masternode-payments.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/payments.h>
+#include <masternode/sync.h>
 
 #include <algorithm>
 #include <queue>

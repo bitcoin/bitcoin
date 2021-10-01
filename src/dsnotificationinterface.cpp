@@ -5,11 +5,11 @@
 #include <chainparams.h>
 #include <coinjoin/coinjoin.h>
 #ifdef ENABLE_WALLET
-#include <coinjoin/coinjoin-client.h>
+#include <coinjoin/client.h>
 #endif // ENABLE_WALLET
 #include <dsnotificationinterface.h>
 #include <governance/governance.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/sync.h>
 #include <validation.h>
 
 #include <evo/deterministicmns.h>

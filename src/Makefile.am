@@ -137,10 +137,10 @@ BITCOIN_CORE_H = \
   checkqueue.h \
   clientversion.h \
   coinjoin/coinjoin.h \
-  coinjoin/coinjoin-client.h \
-  coinjoin/coinjoin-client-options.h \
-  coinjoin/coinjoin-server.h \
-  coinjoin/coinjoin-util.h \
+  coinjoin/client.h \
+  coinjoin/options.h \
+  coinjoin/server.h \
+  coinjoin/util.h \
   coins.h \
   compat.h \
   compat/assumptions.h \
@@ -164,12 +164,12 @@ BITCOIN_CORE_H = \
   evo/specialtx.h \
   dsnotificationinterface.h \
   governance/governance.h \
-  governance/governance-classes.h \
-  governance/governance-exceptions.h \
-  governance/governance-object.h \
-  governance/governance-validators.h \
-  governance/governance-vote.h \
-  governance/governance-votedb.h \
+  governance/classes.h \
+  governance/exceptions.h \
+  governance/object.h \
+  governance/validators.h \
+  governance/vote.h \
+  governance/votedb.h \
   flat-database.h \
   hdchain.h \
   flatfile.h \
@@ -206,11 +206,11 @@ BITCOIN_CORE_H = \
   llmq/quorums_utils.h \
   logging.h \
   logging/timer.h \
-  masternode/activemasternode.h \
-  masternode/masternode-meta.h \
-  masternode/masternode-payments.h \
-  masternode/masternode-sync.h \
-  masternode/masternode-utils.h \
+  masternode/node.h \
+  masternode/meta.h \
+  masternode/payments.h \
+  masternode/sync.h \
+  masternode/utils.h \
   memusage.h \
   merkleblock.h \
   messagesigner.h \
@@ -329,8 +329,8 @@ libdash_server_a_SOURCES = \
   chain.cpp \
   checkpoints.cpp \
   coinjoin/coinjoin.cpp \
-  coinjoin/coinjoin-client-options.cpp \
-  coinjoin/coinjoin-server.cpp \
+  coinjoin/options.cpp \
+  coinjoin/server.cpp \
   consensus/tx_verify.cpp \
   dsnotificationinterface.cpp \
   evo/cbtx.cpp \
@@ -351,11 +351,11 @@ libdash_server_a_SOURCES = \
   init.cpp \
   dbwrapper.cpp \
   governance/governance.cpp \
-  governance/governance-classes.cpp \
-  governance/governance-object.cpp \
-  governance/governance-validators.cpp \
-  governance/governance-vote.cpp \
-  governance/governance-votedb.cpp \
+  governance/classes.cpp \
+  governance/object.cpp \
+  governance/validators.cpp \
+  governance/vote.cpp \
+  governance/votedb.cpp \
   llmq/quorums.cpp \
   llmq/quorums_blockprocessor.cpp \
   llmq/quorums_commitment.cpp \
@@ -369,11 +369,11 @@ libdash_server_a_SOURCES = \
   llmq/quorums_signing.cpp \
   llmq/quorums_signing_shares.cpp \
   llmq/quorums_utils.cpp \
-  masternode/activemasternode.cpp \
-  masternode/masternode-meta.cpp \
-  masternode/masternode-payments.cpp \
-  masternode/masternode-sync.cpp \
-  masternode/masternode-utils.cpp \
+  masternode/node.cpp \
+  masternode/meta.cpp \
+  masternode/payments.cpp \
+  masternode/sync.cpp \
+  masternode/utils.cpp \
   merkleblock.cpp \
   messagesigner.cpp \
   miner.cpp \
@@ -437,9 +437,9 @@ endif
 libdash_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libdash_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libdash_wallet_a_SOURCES = \
-  coinjoin/coinjoin-client.cpp \
-  coinjoin/coinjoin-client-options.cpp \
-  coinjoin/coinjoin-util.cpp \
+  coinjoin/client.cpp \
+  coinjoin/options.cpp \
+  coinjoin/util.cpp \
   interfaces/wallet.cpp \
   keepass.cpp \
   wallet/coincontrol.cpp \

@@ -34,8 +34,8 @@
 #include <wallet/walletutil.h>
 #include <key_io.h>
 
-#include <coinjoin/coinjoin-client.h>
-#include <coinjoin/coinjoin-client-options.h>
+#include <coinjoin/client.h>
+#include <coinjoin/options.h>
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_instantsend.h>
 

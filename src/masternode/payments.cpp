@@ -4,10 +4,10 @@
 
 #include <evo/deterministicmns.h>
 #include <governance/governance.h>
-#include <governance/governance-classes.h>
-#include <masternode/activemasternode.h>
-#include <masternode/masternode-payments.h>
-#include <masternode/masternode-sync.h>
+#include <governance/classes.h>
+#include <masternode/node.h>
+#include <masternode/payments.h>
+#include <masternode/sync.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <validation.h>

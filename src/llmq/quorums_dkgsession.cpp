@@ -11,8 +11,8 @@
 #include <evo/deterministicmns.h>
 #include <evo/specialtx.h>
 
-#include <masternode/activemasternode.h>
-#include <masternode/masternode-meta.h>
+#include <masternode/node.h>
+#include <masternode/meta.h>
 #include <chainparams.h>
 #include <netmessagemaker.h>
 #include <univalue.h>

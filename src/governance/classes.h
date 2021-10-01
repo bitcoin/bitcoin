@@ -1,11 +1,11 @@
 // Copyright (c) 2014-2021 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_GOVERNANCE_GOVERNANCE_CLASSES_H
-#define BITCOIN_GOVERNANCE_GOVERNANCE_CLASSES_H
+#ifndef BITCOIN_GOVERNANCE_CLASSES_H
+#define BITCOIN_GOVERNANCE_CLASSES_H
 
 #include <amount.h>
-#include <governance/governance-object.h>
+#include <governance/object.h>
 #include <script/script.h>
 #include <script/standard.h>
 #include <uint256.h>
@@ -150,4 +150,4 @@ public:
     bool IsExpired() const;
 };
 
-#endif // BITCOIN_GOVERNANCE_GOVERNANCE_CLASSES_H
+#endif // BITCOIN_GOVERNANCE_CLASSES_H

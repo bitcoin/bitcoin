@@ -13,7 +13,7 @@
 #include <consensus/validation.h>
 #include <index/txindex.h>
 #include <txmempool.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/sync.h>
 #include <net_processing.h>
 #include <spork.h>
 #include <validation.h>

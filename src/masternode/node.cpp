@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <masternode/activemasternode.h>
+#include <masternode/node.h>
 
 #include <evo/deterministicmns.h>
 

@@ -7,7 +7,7 @@
 #include <rpc/server.h>
 #include <validation.h>
 
-#include <masternode/activemasternode.h>
+#include <masternode/node.h>
 #include <evo/deterministicmns.h>
 
 #include <llmq/quorums.h>

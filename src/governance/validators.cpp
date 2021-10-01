@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <governance/governance-object.h>
-#include <governance/governance-validators.h>
+#include <governance/object.h>
+#include <governance/validators.h>
 
 #include <key_io.h>
 #include <timedata.h>

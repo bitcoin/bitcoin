@@ -2,7 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <coinjoin/coinjoin-util.h>
+#include <coinjoin/util.h>
 #include <consensus/validation.h>
 #include <net.h>
 #include <policy/fees.h>

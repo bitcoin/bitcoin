@@ -8,7 +8,7 @@
 #include <llmq/quorums_utils.h>
 #include <llmq/quorums_signing_shares.h>
 
-#include <masternode/activemasternode.h>
+#include <masternode/node.h>
 #include <bls/bls_batchverifier.h>
 #include <chainparams.h>
 #include <cxxtimer.hpp>

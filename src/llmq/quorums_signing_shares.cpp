@@ -10,7 +10,7 @@
 
 
 #include <evo/deterministicmns.h>
-#include <masternode/activemasternode.h>
+#include <masternode/node.h>
 #include <bls/bls_batchverifier.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>

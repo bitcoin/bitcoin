@@ -5,7 +5,7 @@
 #include <test/test_dash.h>
 
 #include <amount.h>
-#include <coinjoin/coinjoin-util.h>
+#include <coinjoin/util.h>
 #include <coinjoin/coinjoin.h>
 #include <consensus/validation.h>
 #include <validation.h>

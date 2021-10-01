@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COINJOIN_COINJOIN_SERVER_H
-#define BITCOIN_COINJOIN_COINJOIN_SERVER_H
+#ifndef BITCOIN_COINJOIN_SERVER_H
+#define BITCOIN_COINJOIN_SERVER_H
 
 #include <coinjoin/coinjoin.h>
 #include <net.h>
@@ -87,4 +87,4 @@ public:
     void GetJsonInfo(UniValue& obj) const;
 };
 
-#endif // BITCOIN_COINJOIN_COINJOIN_SERVER_H
+#endif // BITCOIN_COINJOIN_SERVER_H

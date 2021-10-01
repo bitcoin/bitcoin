@@ -25,8 +25,8 @@
 #include <util/strencodings.h>
 #include <validation.h>
 
-#include <masternode/masternode-meta.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/meta.h>
+#include <masternode/sync.h>
 #include <coinjoin/coinjoin.h>
 #include <evo/deterministicmns.h>
 

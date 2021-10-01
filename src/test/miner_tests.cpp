@@ -9,7 +9,7 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <validation.h>
-#include <masternode/masternode-payments.h>
+#include <masternode/payments.h>
 #include <miner.h>
 #include <policy/policy.h>
 #include <pow.h>

@@ -2,11 +2,11 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <governance/governance-vote.h>
+#include <governance/vote.h>
 
 #include <bls/bls.h>
 #include <key.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/sync.h>
 #include <messagesigner.h>
 #include <net.h>
 #include <util/system.h>

@@ -57,14 +57,14 @@
 #include <util/validation.h>
 #include <validationinterface.h>
 
-#include <masternode/activemasternode.h>
-#include <coinjoin/coinjoin-server.h>
+#include <masternode/node.h>
+#include <coinjoin/server.h>
 #include <dsnotificationinterface.h>
 #include <flat-database.h>
 #include <governance/governance.h>
-#include <masternode/masternode-meta.h>
-#include <masternode/masternode-sync.h>
-#include <masternode/masternode-utils.h>
+#include <masternode/meta.h>
+#include <masternode/sync.h>
+#include <masternode/utils.h>
 #include <messagesigner.h>
 #include <netfulfilledman.h>
 #include <spork.h>

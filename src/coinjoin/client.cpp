@@ -2,14 +2,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <coinjoin/coinjoin-client.h>
-#include <coinjoin/coinjoin-client-options.h>
+#include <coinjoin/client.h>
+#include <coinjoin/options.h>
 
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <evo/deterministicmns.h>
-#include <masternode/masternode-sync.h>
-#include <masternode/masternode-meta.h>
+#include <masternode/sync.h>
+#include <masternode/meta.h>
 #include <netmessagemaker.h>
 #include <net_processing.h>
 #include <script/sign.h>

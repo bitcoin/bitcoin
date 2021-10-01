@@ -23,7 +23,7 @@
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
-#include <governance/governance-object.h>
+#include <governance/object.h>
 
 #include <algorithm>
 #include <atomic>

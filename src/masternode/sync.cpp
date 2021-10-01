@@ -4,7 +4,7 @@
 
 #include <governance/governance.h>
 #include <validation.h>
-#include <masternode/masternode-sync.h>
+#include <masternode/sync.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <shutdown.h>

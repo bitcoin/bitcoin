@@ -4,11 +4,11 @@
 
 #include <validation.h>
 #ifdef ENABLE_WALLET
-#include <coinjoin/coinjoin-client.h>
-#include <coinjoin/coinjoin-client-options.h>
+#include <coinjoin/client.h>
+#include <coinjoin/options.h>
 #include <wallet/rpcwallet.h>
 #endif // ENABLE_WALLET
-#include <coinjoin/coinjoin-server.h>
+#include <coinjoin/server.h>
 #include <rpc/server.h>
 #include <util/strencodings.h>
 

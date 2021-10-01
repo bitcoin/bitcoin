@@ -6,7 +6,7 @@
 
 #include <amount.h>
 #include <chain.h>
-#include <coinjoin/coinjoin-client.h>
+#include <coinjoin/client.h>
 #include <consensus/validation.h>
 #include <interfaces/handler.h>
 #include <net.h>

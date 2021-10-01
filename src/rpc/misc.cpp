@@ -24,7 +24,7 @@
 #include <util/validation.h>
 #include <warnings.h>
 
-#include <masternode/masternode-sync.h>
+#include <masternode/sync.h>
 #include <spork.h>
 
 #include <stdint.h>

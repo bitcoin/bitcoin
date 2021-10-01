@@ -12,7 +12,7 @@
 
 #include <evo/deterministicmns.h>
 
-#include <masternode/activemasternode.h>
+#include <masternode/node.h>
 #include <chainparams.h>
 #include <net_processing.h>
 #include <spork.h>

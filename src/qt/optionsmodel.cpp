@@ -20,7 +20,7 @@
 #include <txdb.h> // for -dbcache defaults
 
 #ifdef ENABLE_WALLET
-#include <coinjoin/coinjoin-client-options.h>
+#include <coinjoin/options.h>
 #endif
 
 #include <QNetworkProxy>
