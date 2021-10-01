@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
     //Test: tried table collision!
     CService addr1 = ResolveService("250.1.1." + ToString(++num_addrs));
     uint32_t collisions{1};
-    BOOST_CHECK(addrman.Add({CAddress(addr1, NODE_NONE)}, source));
+    BOOST_CHECK(!addrman.Add({CAddress(addr1, NODE_NONE)}, source));
     BOOST_CHECK_EQUAL(addrman.size(), num_addrs - collisions);
 
     CService addr2 = ResolveService("250.1.1." + ToString(++num_addrs));

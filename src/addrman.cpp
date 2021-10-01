@@ -599,7 +599,6 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
     if (!addr.IsRoutable())
         return false;
 
-    bool fNew = false;
     int nId;
     AddrInfo* pinfo = Find(addr, &nId);
 
@@ -640,13 +639,12 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
         pinfo = Create(addr, source, &nId);
         pinfo->nTime = std::max((int64_t)0, (int64_t)pinfo->nTime - nTimePenalty);
         nNew++;
-        fNew = true;
     }
 
     int nUBucket = pinfo->GetNewBucket(nKey, source, m_asmap);
     int nUBucketPos = pinfo->GetBucketPosition(nKey, true, nUBucket);
+    bool fInsert = vvNew[nUBucket][nUBucketPos] == -1;
     if (vvNew[nUBucket][nUBucketPos] != nId) {
-        bool fInsert = vvNew[nUBucket][nUBucketPos] == -1;
         if (!fInsert) {
             AddrInfo& infoExisting = mapInfo[vvNew[nUBucket][nUBucketPos]];
             if (infoExisting.IsTerrible() || (infoExisting.nRefCount > 1 && pinfo->nRefCount == 0)) {
@@ -666,7 +664,19 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
             }
         }
     }
-    return fNew;
+    return fInsert;
+}
+
+bool AddrManImpl::Add_(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty)
+{
+    int added{0};
+    for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++) {
+        added += AddSingle(*it, source, nTimePenalty) ? 1 : 0;
+    }
+    if (added > 0) {
+        LogPrint(BCLog::ADDRMAN, "Added %i addresses (of %i) from %s: %i tried, %i new\n", added, vAddr.size(), source.ToString(), nTried, nNew);
+    }
+    return added > 0;
 }
 
 void AddrManImpl::Attempt_(const CService& addr, bool fCountFailure, int64_t nTime)
@@ -1031,15 +1041,10 @@ size_t AddrManImpl::size() const
 bool AddrManImpl::Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty)
 {
     LOCK(cs);
-    int nAdd = 0;
     Check();
-    for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
-        nAdd += AddSingle(*it, source, nTimePenalty) ? 1 : 0;
+    auto ret = Add_(vAddr, source, nTimePenalty);
     Check();
-    if (nAdd) {
-        LogPrint(BCLog::ADDRMAN, "Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString(), nTried, nNew);
-    }
-    return nAdd > 0;
+    return ret;
 }
 
 void AddrManImpl::Good(const CService& addr, int64_t nTime)

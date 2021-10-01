@@ -76,7 +76,8 @@ public:
      * @param[in] source          The address of the node that sent us these addr records.
      * @param[in] nTimePenalty    A "time penalty" to apply to the address record's nTime. If a peer
      *                            sends us an address record with nTime=n, then we'll add it to our
-     *                            addrman with nTime=(n - nTimePenalty). */
+     *                            addrman with nTime=(n - nTimePenalty).
+     * @return    true if at least one address is successfully added. */
     bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty = 0);
 
     //! Mark an entry as accessible, possibly moving it from "new" to "tried".

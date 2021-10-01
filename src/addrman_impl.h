@@ -248,6 +248,8 @@ private:
      *  @see AddrMan::Add() for parameters. */
     bool AddSingle(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    bool Add_(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
     void Attempt_(const CService& addr, bool fCountFailure, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     std::pair<CAddress, int64_t> Select_(bool newOnly) const EXCLUSIVE_LOCKS_REQUIRED(cs);
