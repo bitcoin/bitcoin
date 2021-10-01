@@ -281,16 +281,11 @@ std::string DecodeBase32(const std::string& str, bool* pf_invalid)
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
 
-[[nodiscard]] static bool ParsePrechecks(const std::string&);
-
 namespace {
 template <typename T>
 bool ParseIntegral(const std::string& str, T* out)
 {
     static_assert(std::is_integral<T>::value);
-    if (!ParsePrechecks(str)) {
-        return false;
-    }
     // Replicate the exact behavior of strtol/strtoll/strtoul/strtoull when
     // handling leading +/- for backwards compatibility.
     if (str.length() >= 2 && str[0] == '+' && str[1] == '-') {

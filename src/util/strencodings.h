@@ -97,7 +97,9 @@ constexpr inline bool IsSpace(char c) noexcept {
 }
 
 /**
- * Convert string to integral type T.
+ * Convert string to integral type T. Leading whitespace, a leading +, or any
+ * trailing character fail the parsing. The required format expressed as regex
+ * is `-?[0-9]+`.
  *
  * @returns std::nullopt if the entire string could not be parsed, or if the
  *   parsed value is not in the range representable by the type T.
@@ -111,7 +113,7 @@ std::optional<T> ToIntegral(const std::string& str)
     if (first_nonmatching != str.data() + str.size() || error_condition != std::errc{}) {
         return std::nullopt;
     }
-    return {result};
+    return result;
 }
 
 /**

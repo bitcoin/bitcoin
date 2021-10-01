@@ -1474,6 +1474,35 @@ BOOST_AUTO_TEST_CASE(test_ParseInt32)
     BOOST_CHECK(!ParseInt32("32482348723847471234", nullptr));
 }
 
+template <typename T>
+static void RunToIntegralTests()
+{
+    BOOST_CHECK(!ToIntegral<T>(STRING_WITH_EMBEDDED_NULL_CHAR));
+    BOOST_CHECK(!ToIntegral<T>(" 1"));
+    BOOST_CHECK(!ToIntegral<T>("1 "));
+    BOOST_CHECK(!ToIntegral<T>("1a"));
+    BOOST_CHECK(!ToIntegral<T>("1.1"));
+    BOOST_CHECK(!ToIntegral<T>("1.9"));
+    BOOST_CHECK(!ToIntegral<T>("+01.9"));
+    BOOST_CHECK(!ToIntegral<T>("-"));
+    BOOST_CHECK(!ToIntegral<T>("+"));
+    BOOST_CHECK(!ToIntegral<T>(" -1"));
+    BOOST_CHECK(!ToIntegral<T>("-1 "));
+    BOOST_CHECK(!ToIntegral<T>(" -1 "));
+    BOOST_CHECK(!ToIntegral<T>("+1"));
+    BOOST_CHECK(!ToIntegral<T>(" +1"));
+    BOOST_CHECK(!ToIntegral<T>(" +1 "));
+    BOOST_CHECK(!ToIntegral<T>("+-1"));
+    BOOST_CHECK(!ToIntegral<T>("-+1"));
+    BOOST_CHECK(!ToIntegral<T>("++1"));
+    BOOST_CHECK(!ToIntegral<T>("--1"));
+    BOOST_CHECK(!ToIntegral<T>(""));
+    BOOST_CHECK(!ToIntegral<T>("aap"));
+    BOOST_CHECK(!ToIntegral<T>("0x1"));
+    BOOST_CHECK(!ToIntegral<T>("-32482348723847471234"));
+    BOOST_CHECK(!ToIntegral<T>("32482348723847471234"));
+}
+
 BOOST_AUTO_TEST_CASE(test_ToIntegral)
 {
     BOOST_CHECK_EQUAL(ToIntegral<int32_t>("1234").value(), 1'234);
@@ -1486,27 +1515,14 @@ BOOST_AUTO_TEST_CASE(test_ToIntegral)
     BOOST_CHECK_EQUAL(ToIntegral<int32_t>("-1234").value(), -1'234);
     BOOST_CHECK_EQUAL(ToIntegral<int32_t>("-1").value(), -1);
 
-    BOOST_CHECK(!ToIntegral<int32_t>(" 1"));
-    BOOST_CHECK(!ToIntegral<int32_t>("1 "));
-    BOOST_CHECK(!ToIntegral<int32_t>("1a"));
-    BOOST_CHECK(!ToIntegral<int32_t>("1.1"));
-    BOOST_CHECK(!ToIntegral<int32_t>("1.9"));
-    BOOST_CHECK(!ToIntegral<int32_t>("+01.9"));
-    BOOST_CHECK(!ToIntegral<int32_t>(" -1"));
-    BOOST_CHECK(!ToIntegral<int32_t>("-1 "));
-    BOOST_CHECK(!ToIntegral<int32_t>(" -1 "));
-    BOOST_CHECK(!ToIntegral<int32_t>("+1"));
-    BOOST_CHECK(!ToIntegral<int32_t>(" +1"));
-    BOOST_CHECK(!ToIntegral<int32_t>(" +1 "));
-    BOOST_CHECK(!ToIntegral<int32_t>("+-1"));
-    BOOST_CHECK(!ToIntegral<int32_t>("-+1"));
-    BOOST_CHECK(!ToIntegral<int32_t>("++1"));
-    BOOST_CHECK(!ToIntegral<int32_t>("--1"));
-    BOOST_CHECK(!ToIntegral<int32_t>(""));
-    BOOST_CHECK(!ToIntegral<int32_t>("aap"));
-    BOOST_CHECK(!ToIntegral<int32_t>("0x1"));
-    BOOST_CHECK(!ToIntegral<int32_t>("-32482348723847471234"));
-    BOOST_CHECK(!ToIntegral<int32_t>("32482348723847471234"));
+    RunToIntegralTests<uint64_t>();
+    RunToIntegralTests<int64_t>();
+    RunToIntegralTests<uint32_t>();
+    RunToIntegralTests<int32_t>();
+    RunToIntegralTests<uint16_t>();
+    RunToIntegralTests<int16_t>();
+    RunToIntegralTests<uint8_t>();
+    RunToIntegralTests<int8_t>();
 
     BOOST_CHECK(!ToIntegral<int64_t>("-9223372036854775809"));
     BOOST_CHECK_EQUAL(ToIntegral<int64_t>("-9223372036854775808").value(), -9'223'372'036'854'775'807LL - 1LL);
