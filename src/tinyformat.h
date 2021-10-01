@@ -1,6 +1,6 @@
 // tinyformat.h
 // Copyright (C) 2011, Chris Foster [chris42f (at) gmail (d0t) com]
-// Copyright (C) 2019-2020 Xenios SEZC
+// Copyright (C) 2019-2021 Xenios SEZC
 // https://www.veriblock.org
 //
 // Boost Software License - Version 1.0
