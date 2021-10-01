@@ -1,5 +1,6 @@
 ---
 name: "dash-win-signer"
+distro: "ubuntu"
 suites:
 - "bionic"
 architectures:

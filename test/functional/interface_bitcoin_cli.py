@@ -57,18 +57,16 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         assert_equal(cli_get_info['version'], network_info['version'])
         assert_equal(cli_get_info['protocolversion'], network_info['protocolversion'])
-        if self.is_wallet_compiled():
-            assert_equal(cli_get_info['walletversion'], wallet_info['walletversion'])
-            assert_equal(cli_get_info['balance'], wallet_info['balance'])
-            assert_equal(cli_get_info['coinjoin_balance'], wallet_info['coinjoin_balance'])
         assert_equal(cli_get_info['blocks'], blockchain_info['blocks'])
         assert_equal(cli_get_info['timeoffset'], network_info['timeoffset'])
         assert_equal(cli_get_info['connections'], network_info['connections'])
         assert_equal(cli_get_info['proxy'], network_info['networks'][0]['proxy'])
         assert_equal(cli_get_info['difficulty'], blockchain_info['difficulty'])
-        assert_equal(cli_get_info['testnet'], blockchain_info['chain'] == "test")
+        assert_equal(cli_get_info['chain'], blockchain_info['chain'])
         if self.is_wallet_compiled():
+            assert_equal(cli_get_info['walletversion'], wallet_info['walletversion'])
             assert_equal(cli_get_info['balance'], wallet_info['balance'])
+            assert_equal(cli_get_info['coinjoin_balance'], wallet_info['coinjoin_balance'])
             assert_equal(cli_get_info['keypoololdest'], wallet_info['keypoololdest'])
             assert_equal(cli_get_info['keypoolsize'], wallet_info['keypoolsize'])
             assert_equal(cli_get_info['paytxfee'], wallet_info['paytxfee'])
