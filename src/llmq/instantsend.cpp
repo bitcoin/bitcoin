@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <llmq/quorums_chainlocks.h>
+#include <llmq/chainlocks.h>
 #include <llmq/quorums.h>
-#include <llmq/quorums_instantsend.h>
-#include <llmq/quorums_utils.h>
-#include <llmq/quorums_commitment.h>
+#include <llmq/instantsend.h>
+#include <llmq/utils.h>
+#include <llmq/commitment.h>
 
 #include <bls/bls_batchverifier.h>
 #include <chainparams.h>

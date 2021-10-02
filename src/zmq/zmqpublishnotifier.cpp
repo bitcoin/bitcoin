@@ -15,9 +15,9 @@
 #include <governance/object.h>
 #include <governance/vote.h>
 
-#include <llmq/quorums_chainlocks.h>
-#include <llmq/quorums_instantsend.h>
-#include <llmq/quorums_signing.h>
+#include <llmq/chainlocks.h>
+#include <llmq/instantsend.h>
+#include <llmq/signing.h>
 
 #include <zmq.h>
 

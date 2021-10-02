@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/quorums.h>
-#include <llmq/quorums_commitment.h>
-#include <llmq/quorums_utils.h>
+#include <llmq/commitment.h>
+#include <llmq/utils.h>
 
 #include <bls/bls.h>
 #include <evo/deterministicmns.h>

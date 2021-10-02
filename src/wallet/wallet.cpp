@@ -40,8 +40,8 @@
 
 #include <evo/providertx.h>
 
-#include <llmq/quorums_instantsend.h>
-#include <llmq/quorums_chainlocks.h>
+#include <llmq/instantsend.h>
+#include <llmq/chainlocks.h>
 
 #include <assert.h>
 #include <future>

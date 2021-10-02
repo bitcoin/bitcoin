@@ -8,7 +8,7 @@
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 #include <evo/cbtx.h>
-#include <llmq/quorums_commitment.h>
+#include <llmq/commitment.h>
 #include <hash.h>
 #include <script/script.h>
 #include <script/standard.h>

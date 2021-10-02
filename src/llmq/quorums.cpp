@@ -3,11 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/quorums.h>
-#include <llmq/quorums_commitment.h>
-#include <llmq/quorums_blockprocessor.h>
-#include <llmq/quorums_dkgsession.h>
-#include <llmq/quorums_dkgsessionmgr.h>
-#include <llmq/quorums_utils.h>
+#include <llmq/commitment.h>
+#include <llmq/blockprocessor.h>
+#include <llmq/dkgsession.h>
+#include <llmq/dkgsessionmgr.h>
+#include <llmq/utils.h>
 
 #include <evo/specialtx.h>
 #include <evo/deterministicmns.h>

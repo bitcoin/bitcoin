@@ -7,7 +7,7 @@
 #include <util/system.h>
 #include <util/moneystr.h>
 
-#include <llmq/quorums_instantsend.h>
+#include <llmq/instantsend.h>
 #include <coinjoin/coinjoin.h>
 
 #include <boost/optional.hpp>

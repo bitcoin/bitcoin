@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_LLMQ_QUORUMS_UTILS_H
-#define BITCOIN_LLMQ_QUORUMS_UTILS_H
+#ifndef BITCOIN_LLMQ_UTILS_H
+#define BITCOIN_LLMQ_UTILS_H
 
 #include <consensus/params.h>
 
@@ -126,4 +126,4 @@ const Consensus::LLMQParams& GetLLMQParams(const Consensus::LLMQType llmqType);
 
 } // namespace llmq
 
-#endif // BITCOIN_LLMQ_QUORUMS_UTILS_H
+#endif // BITCOIN_LLMQ_UTILS_H

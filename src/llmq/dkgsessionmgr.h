@@ -2,11 +2,11 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_LLMQ_QUORUMS_DKGSESSIONMGR_H
-#define BITCOIN_LLMQ_QUORUMS_DKGSESSIONMGR_H
+#ifndef BITCOIN_LLMQ_DKGSESSIONMGR_H
+#define BITCOIN_LLMQ_DKGSESSIONMGR_H
 
-#include <llmq/quorums_dkgsessionhandler.h>
-#include <llmq/quorums_dkgsession.h>
+#include <llmq/dkgsessionhandler.h>
+#include <llmq/dkgsession.h>
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
 
@@ -81,4 +81,4 @@ extern CDKGSessionManager* quorumDKGSessionManager;
 
 } // namespace llmq
 
-#endif // BITCOIN_LLMQ_QUORUMS_DKGSESSIONMGR_H
+#endif // BITCOIN_LLMQ_DKGSESSIONMGR_H

@@ -2,10 +2,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_LLMQ_QUORUMS_COMMITMENT_H
-#define BITCOIN_LLMQ_QUORUMS_COMMITMENT_H
+#ifndef BITCOIN_LLMQ_COMMITMENT_H
+#define BITCOIN_LLMQ_COMMITMENT_H
 
-#include <llmq/quorums_utils.h>
+#include <llmq/utils.h>
 #include <bls/bls.h>
 
 #include <univalue.h>
@@ -135,4 +135,4 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
 
 } // namespace llmq
 
-#endif // BITCOIN_LLMQ_QUORUMS_COMMITMENT_H
+#endif // BITCOIN_LLMQ_COMMITMENT_H

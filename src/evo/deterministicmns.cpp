@@ -5,8 +5,8 @@
 #include <evo/deterministicmns.h>
 #include <evo/specialtx.h>
 #include <evo/simplifiedmns.h>
-#include <llmq/quorums_commitment.h>
-#include <llmq/quorums_utils.h>
+#include <llmq/commitment.h>
+#include <llmq/utils.h>
 
 #include <base58.h>
 #include <chainparams.h>

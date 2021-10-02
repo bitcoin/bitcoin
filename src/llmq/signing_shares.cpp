@@ -3,10 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/quorums.h>
-#include <llmq/quorums_commitment.h>
-#include <llmq/quorums_signing.h>
-#include <llmq/quorums_signing_shares.h>
-#include <llmq/quorums_utils.h>
+#include <llmq/commitment.h>
+#include <llmq/signing.h>
+#include <llmq/signing_shares.h>
+#include <llmq/utils.h>
 
 
 #include <evo/deterministicmns.h>

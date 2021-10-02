@@ -73,10 +73,10 @@
 
 #include <evo/deterministicmns.h>
 #include <llmq/quorums.h>
-#include <llmq/quorums_init.h>
-#include <llmq/quorums_blockprocessor.h>
-#include <llmq/quorums_signing.h>
-#include <llmq/quorums_utils.h>
+#include <llmq/init.h>
+#include <llmq/blockprocessor.h>
+#include <llmq/signing.h>
+#include <llmq/utils.h>
 
 #include <statsd_client.h>
 

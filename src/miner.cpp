@@ -31,9 +31,9 @@
 #include <evo/cbtx.h>
 #include <evo/simplifiedmns.h>
 #include <evo/deterministicmns.h>
-#include <llmq/quorums_blockprocessor.h>
-#include <llmq/quorums_chainlocks.h>
-#include <llmq/quorums_utils.h>
+#include <llmq/blockprocessor.h>
+#include <llmq/chainlocks.h>
+#include <llmq/utils.h>
 #include <masternode/payments.h>
 #include <masternode/sync.h>
 

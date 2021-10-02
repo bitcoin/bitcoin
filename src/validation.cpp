@@ -50,8 +50,8 @@
 #include <evo/specialtx.h>
 #include <evo/deterministicmns.h>
 
-#include <llmq/quorums_instantsend.h>
-#include <llmq/quorums_chainlocks.h>
+#include <llmq/instantsend.h>
+#include <llmq/chainlocks.h>
 
 #include <statsd_client.h>
 

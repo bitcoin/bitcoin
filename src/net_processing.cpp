@@ -52,13 +52,13 @@
 #include <evo/mnauth.h>
 #include <evo/simplifiedmns.h>
 #include <llmq/quorums.h>
-#include <llmq/quorums_blockprocessor.h>
-#include <llmq/quorums_commitment.h>
-#include <llmq/quorums_chainlocks.h>
-#include <llmq/quorums_dkgsessionmgr.h>
-#include <llmq/quorums_instantsend.h>
-#include <llmq/quorums_signing.h>
-#include <llmq/quorums_signing_shares.h>
+#include <llmq/blockprocessor.h>
+#include <llmq/commitment.h>
+#include <llmq/chainlocks.h>
+#include <llmq/dkgsessionmgr.h>
+#include <llmq/instantsend.h>
+#include <llmq/signing.h>
+#include <llmq/signing_shares.h>
 
 #include <statsd_client.h>
 

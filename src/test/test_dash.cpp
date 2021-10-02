@@ -28,7 +28,7 @@
 #include <evo/specialtx.h>
 #include <evo/deterministicmns.h>
 #include <evo/cbtx.h>
-#include <llmq/quorums_init.h>
+#include <llmq/init.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
