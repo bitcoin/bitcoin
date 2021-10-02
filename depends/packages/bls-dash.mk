@@ -7,7 +7,7 @@ $(package)_build_subdir=build
 $(package)_sha256_hash=276c8573104e5f18bb5b9fd3ffd49585dda5ba5f6de2de74759dda8ca5a9deac
 $(package)_dependencies=gmp cmake
 $(package)_patches=gcc_alignment_cast.patch
-$(package)_darwin_triplet=x86_64-apple-darwin18
+$(package)_darwin_triplet=x86_64-apple-darwin19
 
 $(package)_relic_version=3a23142be0a5510a3aa93cd6c76fc59d3fc732a5
 $(package)_relic_download_path=https://github.com/relic-toolkit/relic/archive

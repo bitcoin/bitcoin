@@ -26,13 +26,13 @@ $ tar -C depends/SDKs -xf depends/sdk-sources/Xcode-12.1-12A7403-extracted-SDK-w
 When building the dependencies, as described in [build-generic](build-generic.md), use
 
 ```bash
-$ make HOST=x86_64-apple-darwin18 -j4
+$ make HOST=x86_64-apple-darwin19 -j4
 ```
 
 When building Dash Core, use
 
 ```bash
-$ ./configure --prefix=`pwd`/depends/x86_64-apple-darwin18
+$ ./configure --prefix=`pwd`/depends/x86_64-apple-darwin19
 ```
 
 Windows 64bit Cross-compilation
