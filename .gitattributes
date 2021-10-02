@@ -1,4 +1,3 @@
-src/clientversion.cpp export-subst
 trace.info text merge=mps
 generated text merge=mps
 dependencies text merge=mps
