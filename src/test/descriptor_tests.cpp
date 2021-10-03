@@ -90,14 +90,13 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
     } else {
         parse_priv = Parse(prv, keys_priv, error);
     }
+    BOOST_CHECK_MESSAGE(parse_priv, error);
     if (replace_apostrophe_with_h_in_pub) {
         parse_pub = Parse(UseHInsteadOfApostrophe(pub), keys_pub, error);
     } else {
         parse_pub = Parse(pub, keys_pub, error);
     }
-
-    BOOST_CHECK(parse_priv);
-    BOOST_CHECK(parse_pub);
+    BOOST_CHECK_MESSAGE(parse_pub, error);
 
     // Check that the correct OutputType is inferred
     BOOST_CHECK(parse_priv->GetOutputType() == type);
@@ -110,8 +109,8 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
     // Check that both versions serialize back to the public version.
     std::string pub1 = parse_priv->ToString();
     std::string pub2 = parse_pub->ToString();
-    BOOST_CHECK(EqualDescriptor(pub, pub1));
-    BOOST_CHECK(EqualDescriptor(pub, pub2));
+    BOOST_CHECK_MESSAGE(EqualDescriptor(pub, pub1), "Private ser: " + pub1 + " Public desc: " + pub);
+    BOOST_CHECK_MESSAGE(EqualDescriptor(pub, pub2), "Public ser: " + pub2 + " Public desc: " + pub);
 
     // Check that both can be serialized with private key back to the private version, but not without private key.
     std::string prv1;
