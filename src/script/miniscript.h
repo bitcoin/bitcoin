@@ -771,6 +771,18 @@ public:
     //! Return the expression type.
     Type GetType() const { return typ; }
 
+    //! Find the first insane sub, at the highest depth possible.
+    std::optional<NodeRef<Key>> FindInsaneSub() const {
+        if (IsSaneTopLevel()) return std::nullopt;
+
+        for (const auto& sub : subs) {
+            if (const auto subsub = sub->FindInsaneSub()) return subsub;
+            if (!sub->IsSane()) return sub;
+        }
+
+        return std::nullopt;
+    }
+
     //! Check whether this node is valid at all.
     bool IsValid() const { return !(GetType() == ""_mst) && ScriptSize() <= MAX_STANDARD_P2WSH_SCRIPT_SIZE; }
 
