@@ -1217,30 +1217,30 @@ static void VBSoftForkDescPushBack(UniValue& softforks, const std::string &name,
     // Deployments that are never active are hidden.
     if (consensusParams.vDeployments[id].nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE) return;
 
-    UniValue bip9(UniValue::VOBJ);
+    UniValue version_bits(UniValue::VOBJ);
     const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
     switch (thresholdState) {
-    case ThresholdState::DEFINED: bip9.pushKV("status", "defined"); break;
-    case ThresholdState::STARTED: bip9.pushKV("status", "started"); break;
-    case ThresholdState::LOCKED_IN: bip9.pushKV("status", "locked_in"); break;
-    case ThresholdState::ACTIVE: bip9.pushKV("status", "active"); break;
-    case ThresholdState::FAILED: bip9.pushKV("status", "failed"); break;
+    case ThresholdState::DEFINED: version_bits.pushKV("status", "defined"); break;
+    case ThresholdState::STARTED: version_bits.pushKV("status", "started"); break;
+    case ThresholdState::LOCKED_IN: version_bits.pushKV("status", "locked_in"); break;
+    case ThresholdState::ACTIVE: version_bits.pushKV("status", "active"); break;
+    case ThresholdState::FAILED: version_bits.pushKV("status", "failed"); break;
     }
     if (ThresholdState::STARTED == thresholdState)
     {
-        bip9.pushKV("bit", consensusParams.vDeployments[id].bit);
+        version_bits.pushKV("bit", consensusParams.vDeployments[id].bit);
     }
     bool fHeightBased = consensusParams.vDeployments[id].nStartTime == 0 && consensusParams.vDeployments[id].nTimeout == 0;
     if (fHeightBased) {
-        bip9.pushKV("start_height", consensusParams.vDeployments[id].nStartHeight);
-        bip9.pushKV("timeout_height", consensusParams.vDeployments[id].nTimeoutHeight);
+        version_bits.pushKV("start_height", consensusParams.vDeployments[id].nStartHeight);
+        version_bits.pushKV("timeout_height", consensusParams.vDeployments[id].nTimeoutHeight);
     } else {
-        bip9.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
-        bip9.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
+        version_bits.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
+        version_bits.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
     }
 
     int64_t since_height = VersionBitsTipStateSinceHeight(consensusParams, id);
-    bip9.pushKV("since", since_height);
+    version_bits.pushKV("since", since_height);
     if (ThresholdState::STARTED == thresholdState)
     {
         UniValue statsUV(UniValue::VOBJ);
@@ -1250,12 +1250,12 @@ static void VBSoftForkDescPushBack(UniValue& softforks, const std::string &name,
         statsUV.pushKV("elapsed", statsStruct.elapsed);
         statsUV.pushKV("count", statsStruct.count);
         statsUV.pushKV("possible", statsStruct.possible);
-        bip9.pushKV("statistics", statsUV);
+        version_bits.pushKV("statistics", statsUV);
     }
 
     UniValue rv(UniValue::VOBJ);
     rv.pushKV("type", fHeightBased ? "bip8" : "bip9");
-    rv.pushKV(fHeightBased ? "bip8" : "bip9", bip9);
+    rv.pushKV(fHeightBased ? "bip8" : "bip9", version_bits);
     if (ThresholdState::ACTIVE == thresholdState) {
         rv.pushKV("height", since_height);
     }

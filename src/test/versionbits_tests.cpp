@@ -192,7 +192,7 @@ BOOST_FIXTURE_TEST_SUITE(versionbits_tests, TestingSetup)
 
 BOOST_AUTO_TEST_CASE(versionbits_test)
 {
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 64; i++) {
         // DEFINED -> STARTED after timeout reached -> FAILED
         VersionBitsTester().TestDefined().TestStateSinceHeight(0)
                            .Mine(1, TestTime(1), 0x100).TestDefined().TestStateSinceHeight(0)
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(versionbits_sanity)
         // Check start_height is 0 for ALWAYS_ACTIVE and never active deployments
         if (mainnetParams.vDeployments[i].nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE || mainnetParams.vDeployments[i].nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE) {
             BOOST_CHECK_EQUAL(mainnetParams.vDeployments[i].nStartHeight, 0);
-            BOOST_CHECK_EQUAL(mainnetParams.vDeployments[i].nStartHeight, 0);
+            BOOST_CHECK_EQUAL(mainnetParams.vDeployments[i].nTimeoutHeight, 0);
         }
 
         // Verify that the deployment windows of different deployment using the
