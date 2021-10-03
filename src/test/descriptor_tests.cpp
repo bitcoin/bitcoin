@@ -76,7 +76,7 @@ std::string UseHInsteadOfApostrophe(const std::string& desc)
 const std::set<std::vector<uint32_t>> ONLY_EMPTY{{}};
 
 void DoCheck(const std::string& prv, const std::string& pub, const std::string& norm_prv, const std::string& norm_pub, int flags, const std::vector<std::vector<std::string>>& scripts, const std::optional<OutputType>& type, const std::set<std::vector<uint32_t>>& paths = ONLY_EMPTY,
-    bool replace_apostrophe_with_h_in_prv=false, bool replace_apostrophe_with_h_in_pub=false)
+    bool replace_apostrophe_with_h_in_prv=false, bool replace_apostrophe_with_h_in_pub=false, bool mixed_pubkeys=false)
 {
     FlatSigningProvider keys_priv, keys_pub;
     std::set<std::vector<uint32_t>> left_paths = paths;
@@ -171,7 +171,7 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
             // Check whether keys are in the cache
             const auto& der_xpub_cache = desc_cache.GetCachedDerivedExtPubKeys();
             const auto& parent_xpub_cache = desc_cache.GetCachedParentExtPubKeys();
-            if ((flags & RANGE) && !(flags & DERIVE_HARDENED)) {
+            if (!mixed_pubkeys && (flags & RANGE) && !(flags & DERIVE_HARDENED)) {
                 // For ranged, unhardened derivation, None of the keys in origins should appear in the cache but the cache should have parent keys
                 // But we can derive one level from each of those parent keys and find them all
                 BOOST_CHECK(der_xpub_cache.empty());
@@ -187,7 +187,7 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
                     const CPubKey& pk = origin_pair.second.first;
                     BOOST_CHECK(pubkeys.count(pk) > 0);
                 }
-            } else if (pub1.find("xpub") != std::string::npos) {
+            } else if (!mixed_pubkeys && pub1.find("xpub") != std::string::npos) {
                 // For ranged, hardened derivation, or not ranged, but has an xpub, all of the keys should appear in the cache
                 BOOST_CHECK(der_xpub_cache.size() + parent_xpub_cache.size() == script_provider_cached.origins.size());
                 // Get all of the derived pubkeys
@@ -210,8 +210,8 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
                     const CPubKey& pk = origin_pair.second.first;
                     BOOST_CHECK(pubkeys.count(pk) > 0);
                 }
-            } else {
-                // No xpub, nothing should be cached
+            } else if (!mixed_pubkeys) {
+                // Only const pubkeys, nothing should be cached
                 BOOST_CHECK(der_xpub_cache.empty());
                 BOOST_CHECK(parent_xpub_cache.empty());
             }
@@ -268,29 +268,30 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
     BOOST_CHECK_MESSAGE(left_paths.empty(), "Not all expected key paths found: " + prv);
 }
 
-void Check(const std::string& prv, const std::string& pub, const std::string& norm_prv, const std::string& norm_pub, int flags, const std::vector<std::vector<std::string>>& scripts, const std::optional<OutputType>& type, const std::set<std::vector<uint32_t>>& paths = ONLY_EMPTY)
+void Check(const std::string& prv, const std::string& pub, const std::string& norm_prv, const std::string& norm_pub, int flags, const std::vector<std::vector<std::string>>& scripts, const std::optional<OutputType>& type, const std::set<std::vector<uint32_t>>& paths = ONLY_EMPTY, bool mixed_pubkeys=false)
 {
     bool found_apostrophes_in_prv = false;
     bool found_apostrophes_in_pub = false;
 
     // Do not replace apostrophes with 'h' in prv and pub
-    DoCheck(prv, pub, norm_prv, norm_pub, flags, scripts, type, paths);
+    DoCheck(prv, pub, norm_prv, norm_pub, flags, scripts, type, paths, /* replace_apostrophe_with_h_in_prv = */false,
+            /*replace_apostrophe_with_h_in_pub = */false, /*mixed_pubkeys = */mixed_pubkeys);
 
     // Replace apostrophes with 'h' in prv but not in pub, if apostrophes are found in prv
     if (prv.find('\'') != std::string::npos) {
         found_apostrophes_in_prv = true;
-        DoCheck(prv, pub, norm_prv, norm_pub, flags, scripts, type, paths, /* replace_apostrophe_with_h_in_prv = */true, /*replace_apostrophe_with_h_in_pub = */false);
+        DoCheck(prv, pub, norm_prv, norm_pub, flags, scripts, type, paths, /* replace_apostrophe_with_h_in_prv = */true, /*replace_apostrophe_with_h_in_pub = */false, /*mixed_pubkeys = */mixed_pubkeys);
     }
 
     // Replace apostrophes with 'h' in pub but not in prv, if apostrophes are found in pub
     if (pub.find('\'') != std::string::npos) {
         found_apostrophes_in_pub = true;
-        DoCheck(prv, pub, norm_prv, norm_pub, flags, scripts, type, paths, /* replace_apostrophe_with_h_in_prv = */false, /*replace_apostrophe_with_h_in_pub = */true);
+        DoCheck(prv, pub, norm_prv, norm_pub, flags, scripts, type, paths, /* replace_apostrophe_with_h_in_prv = */false, /*replace_apostrophe_with_h_in_pub = */true, /*mixed_pubkeys = */mixed_pubkeys);
     }
 
     // Replace apostrophes with 'h' both in prv and in pub, if apostrophes are found in both
     if (found_apostrophes_in_prv && found_apostrophes_in_pub) {
-        DoCheck(prv, pub, norm_prv, norm_pub, flags, scripts, type, paths, /* replace_apostrophe_with_h_in_prv = */true, /*replace_apostrophe_with_h_in_pub = */true);
+        DoCheck(prv, pub, norm_prv, norm_pub, flags, scripts, type, paths, /* replace_apostrophe_with_h_in_prv = */true, /*replace_apostrophe_with_h_in_pub = */true, /*mixed_pubkeys = */mixed_pubkeys);
     }
 }
 
