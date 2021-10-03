@@ -15,7 +15,7 @@
         <TabState>
           <option name="title" value="Console" />
           <tab>
-            <model ref="8c9a069b-ca10-4aac-9d28-330512e4d2b8/r:bdcee6ee-5ed8-40a5-b9cf-c366bc166e64(TempModule8c9a069b-ca10-4aac-9d28-330512e4d2b8/ConsoleModel_1707124713829)">
+            <model ref="ca8b8b24-3276-46dc-a5bc-c8a3eba0618b/r:7f3e9b63-1ecd-4df6-914c-73cf36f97283(TempModuleca8b8b24-3276-46dc-a5bc-c8a3eba0618b/ConsoleModel_3210651875805)">
               <persistence version="9" />
               <languages>
                 <devkit ref="70d3d6da-af63-483d-a75f-9c8acf8de332(jetbrains.mps.console.devkit)" />
@@ -35,11 +35,11 @@
                   <concept id="757553790980850366" name="jetbrains.mps.console.base.structure.History" flags="ng" index="3balQm" />
                 </language>
               </registry>
-              <node concept="aymSD" id="1bTaLWoChet">
-                <node concept="3balQm" id="1bTaLWoCheu" role="aymYE" />
-                <node concept="2Clz$F" id="1bTaLWoChev" role="aymYO" />
-                <node concept="2_V_lH" id="1bTaLWoChew" role="1PhJh3">
-                  <ref role="2_V_lI" node="1bTaLWoChev" resolve="CommandHolder" />
+              <node concept="aymSD" id="1kucCyhgv9L">
+                <node concept="3balQm" id="1kucCyhgv9M" role="aymYE" />
+                <node concept="2Clz$F" id="1kucCyhgv9N" role="aymYO" />
+                <node concept="2_V_lH" id="1kucCyhgv9O" role="1PhJh3">
+                  <ref role="2_V_lI" node="1kucCyhgv9N" resolve="CommandHolder" />
                 </node>
               </node>
             </model>
@@ -49,6 +49,7 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitSEFilterConfiguration">
@@ -319,7 +320,14 @@
       <option name="project" value="LOCAL" />
       <updated>1633182513922</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="new">
+      <created>1633257529324</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1633257529324</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="UsagesViewTool">
