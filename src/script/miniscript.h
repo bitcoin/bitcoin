@@ -429,6 +429,21 @@ private:
         ));
     }
 
+    /** Like TreeEval, but without downfn or State type.
+     *  upfn takes (const Node&, Span<Result>) and returns Result. */
+    template<typename Result, typename UpFn>
+    Result TreeEval(UpFn upfn) const
+    {
+        struct DummyState {};
+        return std::move(*TreeEvalMaybe<Result>(DummyState{},
+            [](DummyState, const Node&, size_t) { return DummyState{}; },
+            [&upfn](DummyState, const Node& node, Span<Result> subs) {
+                Result res{upfn(node, subs)};
+                return std::optional<Result>(std::move(res));
+            }
+        ));
+    }
+
     /** Compare two miniscript subtrees, using a non-recursive algorithm. */
     friend int Compare(const Node<Key>& node1, const Node<Key>& node2)
     {
@@ -817,6 +832,15 @@ public:
 
     //! Return the expression type.
     Type GetType() const { return typ; }
+
+    //! Find an insane subnode which has no insane children. Nullptr if there is none.
+    const Node* FindInsaneSub() const {
+        return TreeEval<const Node*>([](const Node& node, Span<const Node*> subs) -> const Node* {
+            for (auto& sub: subs) if (sub) return sub;
+            if (!node.IsSaneSubexpression()) return &node;
+            return nullptr;
+        });
+    }
 
     //! Check whether this node is valid at all.
     bool IsValid() const { return !(GetType() == ""_mst) && ScriptSize() <= MAX_STANDARD_P2WSH_SCRIPT_SIZE; }
