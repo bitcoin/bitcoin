@@ -57,12 +57,27 @@ Notable changes
 P2P and network changes
 -----------------------
 
-- A bitcoind node will no longer rumour addresses to inbound peers by default.
+- A syscoind node will no longer rumour addresses to inbound peers by default.
   They will become eligible for address gossip after sending an ADDR, ADDRV2,
   or GETADDR message. (#21528)
 
+Rescan startup parameter removed
+--------------------------------
+
+The `-rescan` startup parameter has been removed. Wallets which require
+rescanning due to corruption will still be rescanned on startup.
+Otherwise, please use the `rescanblockchain` RPC to trigger a rescan. (#23123)
+
 Updated RPCs
 ------------
+
+- `listunspent` now includes `ancestorcount`, `ancestorsize`, and
+  `ancestorfees` for each transaction output that is still in the mempool.
+  (#12677)
+
+- `lockunspent` now optionally takes a third parameter, `persistent`, which
+  causes the lock to be written persistently to the wallet database. This
+  allows UTXOs to remain locked even after node restarts or crashes. (#23065)
 
 New RPCs
 --------
@@ -74,9 +89,9 @@ Files
 -----
 
 * On startup, the list of banned hosts and networks (via `setban` RPC) in
-  `banlist.dat` is ignored and only `banlist.json` is considered. Bitcoin Core
-  version 22.x is the only version that can read `banlist.dat` and also write
-  it to `banlist.json`. If `banlist.json` already exists, version 22.x will not
+  `banlist.dat` is ignored and only `banlist.json` is considered. Syscoin Core
+  version 4.3 is the only version that can read `banlist.dat` and also write
+  it to `banlist.json`. If `banlist.json` already exists, version 4.3 will not
   try to translate the `banlist.dat` into json. After an upgrade, `listbanned`
   can be used to double check the parsed entries. (#22570)
 
@@ -99,13 +114,16 @@ Tools and Utilities
 
 - CLI `-addrinfo` now returns a single field for the number of `onion` addresses
   known to the node instead of separate `torv2` and `torv3` fields, as support
-  for Tor V2 addresses was removed from Bitcoin Core in 22.0. (#22544)
+  for Tor V2 addresses was removed from Syscoin Core in 4.3. (#22544)
 
 Wallet
 ------
 
 GUI changes
 -----------
+
+- UTXOs which are locked via the GUI are now stored persistently in the
+  wallet database, so are not lost on node shutdown or crash. (#23065)
 
 Low-level changes
 =================
