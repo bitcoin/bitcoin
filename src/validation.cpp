@@ -3220,12 +3220,12 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
         CBlockIndex* pindexPrev = nullptr;
         BlockMap::iterator mi = m_block_index.find(block.hashPrevBlock);
         if (mi == m_block_index.end()) {
-            LogPrintf("ERROR: %s: prev block not found\n", __func__);
+            LogPrintf("ERROR: %s: %s prev block not found\n", __func__, hash.ToString());
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "prev-blk-not-found");
         }
         pindexPrev = (*mi).second;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK) {
-            LogPrintf("ERROR: %s: prev block invalid\n", __func__);
+            LogPrintf("ERROR: %s: %s prev block invalid\n", __func__, hash.ToString());
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
         }
         if (!ContextualCheckBlockHeader(block, state, *this, chainparams, pindexPrev, GetAdjustedTime()))
@@ -3264,7 +3264,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
                         setDirtyBlockIndex.insert(invalid_walk);
                         invalid_walk = invalid_walk->pprev;
                     }
-                    LogPrintf("ERROR: %s: prev block invalid\n", __func__);
+                    LogPrintf("ERROR: %s: %s prev block invalid\n", __func__, hash.ToString());
                     return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
                 }
             }
