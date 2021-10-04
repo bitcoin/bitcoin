@@ -5,6 +5,7 @@
 
 #include <txmempool.h>
 
+#include <coins.h>
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
@@ -767,7 +768,8 @@ void CTxMemPool::check(CChainState& active_chainstate) const
         CAmount txfee = 0;
         bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, spendheight, txfee);
         assert(fCheckResult);
-        UpdateCoins(tx, mempoolDuplicate, std::numeric_limits<int>::max());
+        for (const auto& input: tx.vin) mempoolDuplicate.SpendCoin(input.prevout);
+        AddCoins(mempoolDuplicate, tx, std::numeric_limits<int>::max());
     }
     for (auto it = mapNextTx.cbegin(); it != mapNextTx.cend(); it++) {
         uint256 hash = it->second->GetHash();
