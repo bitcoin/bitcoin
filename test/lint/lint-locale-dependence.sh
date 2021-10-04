@@ -37,27 +37,19 @@ export LC_ALL=C
 # See https://doc.qt.io/qt-5/qcoreapplication.html#locale-settings and
 # https://stackoverflow.com/a/34878283 for more details.
 
+# TODO: Reduce KNOWN_VIOLATIONS by replacing uses of locale dependent stoul/strtol with locale
+#       independent ToIntegral<T>(...).
+# TODO: Reduce KNOWN_VIOLATIONS by replacing uses of locale dependent snprintf with strprintf.
 KNOWN_VIOLATIONS=(
     "src/syscoin-tx.cpp.*stoul"
     "src/dbwrapper.cpp.*stoul"
     "src/dbwrapper.cpp:.*vsnprintf"
-    "src/node/blockstorage.cpp:.*atoi"
-    "src/qt/rpcconsole.cpp:.*atoi"
     "src/rest.cpp:.*strtol"
     "src/test/dbwrapper_tests.cpp:.*snprintf"
     "src/test/fuzz/locale.cpp"
-    "src/test/fuzz/parse_numbers.cpp:.*atoi"
     "src/test/fuzz/string.cpp"
-    "src/torcontrol.cpp:.*atoi"
     "src/torcontrol.cpp:.*strtol"
-    "src/util/strencodings.cpp:.*atoi"
     "src/util/strencodings.cpp:.*strtoul"
-    "src/util/strencodings.cpp:.*strtoll"
-    "src/util/strencodings.h:.*atoi"
-    "src/util/system.cpp:.*atoi"
-    "src/nevm/nevm.cpp:.*strtol"
-    "src/nevm/nevm.cpp:.*stoul"
-    "src/util/system.cpp:.*strtol"
     "src/rpc/blockchain.cpp:.*fprintf"
 )
 

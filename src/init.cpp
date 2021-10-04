@@ -1271,12 +1271,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 	fMasternodeMode = !strMasterNodeBLSPrivKey.empty();
     CBLSSecretKey keyOperator;
     if(fMasternodeMode) {
-        if(!fRegTest && !fTestNet) {
-            std::string errorMessage = "";
-            if(!CheckSpecs(errorMessage)){
-                return InitError(Untranslated(errorMessage));
-            }
-        }
         if(!IsHex(strMasterNodeBLSPrivKey))
             return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
         auto binKey = ParseHex(strMasterNodeBLSPrivKey);

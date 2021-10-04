@@ -74,7 +74,6 @@
 
 #include <boost/algorithm/string/replace.hpp>
 #include <thread>
-#include <typeinfo>
 #include <univalue.h>
 // SYSCOIN only features
 bool fMasternodeMode = false;
@@ -173,16 +172,14 @@ std::streampos GetFileSize(const char* path, std::streamsize max) {
 /**
  * Interpret a string argument as a boolean.
  *
- * The definition of atoi() requires that non-numeric string values like "foo",
- * return 0. This means that if a user unintentionally supplies a non-integer
- * argument here, the return value is always false. This means that -foo=false
- * does what the user probably expects, but -foo=true is well defined but does
- * not do what they probably expected.
+ * The definition of LocaleIndependentAtoi<int>() requires that non-numeric string values
+ * like "foo", return 0. This means that if a user unintentionally supplies a
+ * non-integer argument here, the return value is always false. This means that
+ * -foo=false does what the user probably expects, but -foo=true is well defined
+ * but does not do what they probably expected.
  *
- * The return value of atoi() is undefined when given input not representable as
- * an int. On most systems this means string value between "-2147483648" and
- * "2147483647" are well defined (this method will return true). Setting
- * -txindex=2147483648 on most systems, however, is probably undefined.
+ * The return value of LocaleIndependentAtoi<int>(...) is zero when given input not
+ * representable as an int.
  *
  * For a more extensive discussion of this topic (and a wide range of opinions
  * on the Right Way to change this code), see PR12713.
@@ -191,7 +188,7 @@ static bool InterpretBool(const std::string& strValue)
 {
     if (strValue.empty())
         return true;
-    return (atoi(strValue) != 0);
+    return (LocaleIndependentAtoi<int>(strValue) != 0);
 }
 
 static std::string SettingName(const std::string& arg)
@@ -611,7 +608,7 @@ std::string ArgsManager::GetArg(const std::string& strArg, const std::string& st
 int64_t ArgsManager::GetIntArg(const std::string& strArg, int64_t nDefault) const
 {
     const util::SettingsValue value = GetSetting(strArg);
-    return value.isNull() ? nDefault : value.isFalse() ? 0 : value.isTrue() ? 1 : value.isNum() ? value.get_int64() : atoi64(value.get_str());
+    return value.isNull() ? nDefault : value.isFalse() ? 0 : value.isTrue() ? 1 : value.isNum() ? value.get_int64() : LocaleIndependentAtoi<int64_t>(value.get_str());
 }
 
 bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
@@ -1047,102 +1044,6 @@ std::string GetGethFilename(){
         // Linux
         return "sysgeth";
     #endif
-}
-bool CheckSpecs(std::string &errMsg, bool bMiner){
-    meminfo_t memInfo = parse_meminfo();
-    LogPrintf("Total Memory(MB) %d (Total Free %d) Swap Total(MB) %d (Total Free %d)\n", memInfo.MemTotalMiB, memInfo.MemAvailableMiB, memInfo.SwapTotalMiB, memInfo.SwapFreeMiB);
-    if(memInfo.MemTotalMiB < (bMiner? 8000: 3800))
-        errMsg = _("Insufficient memory, you need at least 4GB RAM to run a masternode and be running in a Unix OS. Please see documentation.").translated;
-    if(memInfo.MemTotalMiB < 7600 && memInfo.SwapTotalMiB < 3800)
-        errMsg = _("Insufficient swap memory, you need at least 4GB swap RAM to run a masternode and be running in a Unix OS. Please see documentation.").translated;           
-    LogPrintf("Total number of physical cores found %d\n", GetNumCores());
-    if(GetNumCores() < (bMiner? 4: 2))
-        errMsg = _("Insufficient CPU cores, you need at least 2 cores to run a masternode. Please see documentation.").translated;
-   return errMsg.empty();         
-}
-/* Parse the contents of /proc/meminfo (in buf), return value of "name"
- * (example: MemTotal) */
-static long get_entry(const char* name, const char* buf)
-{
-    const char* hit = strstr(buf, name);
-    if (hit == NULL) {
-        return -1;
-    }
-
-    errno = 0;
-    long val = strtol(hit + strlen(name), NULL, 10);
-    if (errno != 0) {
-        perror("get_entry: strtol() failed");
-        return -1;
-    }
-    return val;
-}
-
-/* Like get_entry(), but exit if the value cannot be found */
-static long get_entry_fatal(const char* name, const char* buf)
-{
-    long val = get_entry(name, buf);
-    
-    return val;
-}
-
-/* If the kernel does not provide MemAvailable (introduced in Linux 3.14),
- * approximate it using other data we can get */
-static long available_guesstimate(const char* buf)
-{
-    long Cached = get_entry_fatal("Cached:", buf);
-    long MemFree = get_entry_fatal("MemFree:", buf);
-    long Buffers = get_entry_fatal("Buffers:", buf);
-    long Shmem = get_entry_fatal("Shmem:", buf);
-
-    return MemFree + Cached + Buffers - Shmem;
-}
-
-meminfo_t parse_meminfo()
-{
-    static FILE* fd;
-    static char buf[8192];
-    meminfo_t m;
-
-    if (fd == NULL)
-        fd = fopen("/proc/meminfo", "r");
-    if (fd == NULL) {
-        return m;
-    }
-    rewind(fd);
-
-    size_t len = fread(buf, 1, sizeof(buf) - 1, fd);
-    if (len == 0) {
-       return m;
-    }
-    buf[len] = 0; // Make sure buf is zero-terminated
-
-    m.MemTotalKiB = get_entry_fatal("MemTotal:", buf);
-    m.SwapTotalKiB = get_entry_fatal("SwapTotal:", buf);
-    long SwapFree = get_entry_fatal("SwapFree:", buf);
-
-    long MemAvailable = get_entry("MemAvailable:", buf);
-    if (MemAvailable <= -1) {
-        MemAvailable = available_guesstimate(buf);
-        LogPrintf("Warning: Your kernel does not provide MemAvailable data (needs 3.14+)\n"
-                        "         Falling back to guesstimate\n");
-    }
-
-    // Calculate percentages
-    m.MemAvailablePercent = MemAvailable * 100 / m.MemTotalKiB;
-    if (m.SwapTotalKiB > 0) {
-        m.SwapFreePercent = SwapFree * 100 / m.SwapTotalKiB;
-    } else {
-        m.SwapFreePercent = 0;
-    }
-
-    // Convert kiB to MiB
-    m.MemTotalMiB = m.MemTotalKiB / 1024;
-    m.MemAvailableMiB = MemAvailable / 1024;
-    m.SwapTotalMiB = m.SwapTotalKiB / 1024;
-    m.SwapFreeMiB = SwapFree / 1024;
-
-    return m;
 }
 bool ArgsManager::UseDefaultSection(const std::string& arg) const
 {

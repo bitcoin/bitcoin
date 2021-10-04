@@ -616,11 +616,6 @@ static RPCHelpMan getblocktemplate()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
     LOCK(cs_main);
-    // SYSCOIN RPC_MISC_ERROR
-    std::string errorMessage = "";
-    if(!fRegTest && !fSigNet && !fTestNet && !CheckSpecs(errorMessage, true)){
-        throw JSONRPCError(RPC_MISC_ERROR, errorMessage);
-    }
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
     std::set<std::string> setClientRules;
@@ -730,7 +725,7 @@ static RPCHelpMan getblocktemplate()
             std::string lpstr = lpval.get_str();
 
             hashWatchedChain = ParseHashV(lpstr.substr(0, 64), "longpollid");
-            nTransactionsUpdatedLastLP = atoi64(lpstr.substr(64));
+            nTransactionsUpdatedLastLP = LocaleIndependentAtoi<int64_t>(lpstr.substr(64));
         }
         else
         {
