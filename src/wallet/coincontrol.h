@@ -9,9 +9,14 @@
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <primitives/transaction.h>
+#include <script/keyorigin.h>
+#include <script/signingprovider.h>
 #include <script/standard.h>
 
 #include <optional>
+#include <algorithm>
+#include <map>
+#include <set>
 
 const int DEFAULT_MIN_DEPTH = 0;
 const int DEFAULT_MAX_DEPTH = 9999999;
@@ -55,6 +60,8 @@ public:
     // SYSCOIN
     //! Asset info for filtering/selecting available coins
     std::optional<CAssetCoinInfo> assetInfo;
+    //! SigningProvider that has pubkeys and scripts to do spend size estimation for external inputs
+    FlatSigningProvider m_external_provider;
 
     CCoinControl();
 
@@ -68,9 +75,30 @@ public:
         return (setSelected.count(output) > 0);
     }
 
+    bool IsExternalSelected(const COutPoint& output) const
+    {
+        return (m_external_txouts.count(output) > 0);
+    }
+
+    bool GetExternalOutput(const COutPoint& outpoint, CTxOut& txout) const
+    {
+        const auto ext_it = m_external_txouts.find(outpoint);
+        if (ext_it == m_external_txouts.end()) {
+            return false;
+        }
+        txout = ext_it->second;
+        return true;
+    }
+
     void Select(const COutPoint& output)
     {
         setSelected.insert(output);
+    }
+
+    void Select(const COutPoint& outpoint, const CTxOut& txout)
+    {
+        setSelected.insert(outpoint);
+        m_external_txouts.emplace(outpoint, txout);
     }
 
     void UnSelect(const COutPoint& output)
@@ -90,6 +118,7 @@ public:
 
 private:
     std::set<COutPoint> setSelected;
+    std::map<COutPoint, CTxOut> m_external_txouts;
 };
 
 #endif // SYSCOIN_WALLET_COINCONTROL_H
