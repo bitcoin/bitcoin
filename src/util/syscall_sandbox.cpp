@@ -40,6 +40,10 @@ bool g_syscall_sandbox_log_violation_before_terminating{false};
 #error Syscall sandbox is an experimental feature currently available only under Linux x86-64.
 #endif // defined(__x86_64__)
 
+#ifndef SECCOMP_RET_KILL_PROCESS
+#define SECCOMP_RET_KILL_PROCESS 0x80000000U
+#endif
+
 // This list of syscalls in LINUX_SYSCALLS is only used to map syscall numbers to syscall names in
 // order to be able to print user friendly error messages which include the syscall name in addition
 // to the syscall number.
