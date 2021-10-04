@@ -119,14 +119,14 @@ void RandAddEvent(const uint32_t event_info) noexcept;
 class FastRandomContext
 {
 private:
-    bool requires_seed;
-    ChaCha20 rng;
+    bool requires_seed{true};
+    ChaCha20 rng{};
 
     unsigned char bytebuf[64];
-    int bytebuf_size;
+    int bytebuf_size{0};
 
     uint64_t bitbuf;
-    int bitbuf_size;
+    int bitbuf_size{0};
 
     void RandomSeed();
 

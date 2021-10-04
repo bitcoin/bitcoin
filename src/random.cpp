@@ -633,7 +633,7 @@ std::vector<unsigned char> FastRandomContext::randbytes(size_t len)
     return ret;
 }
 
-FastRandomContext::FastRandomContext(const uint256& seed) noexcept : requires_seed(false), bytebuf_size(0), bitbuf_size(0)
+FastRandomContext::FastRandomContext(const uint256& seed) noexcept : requires_seed(false)
 {
     rng.SetKey(seed.begin(), 32);
 }
@@ -684,7 +684,7 @@ bool Random_SanityCheck()
     return true;
 }
 
-FastRandomContext::FastRandomContext(bool fDeterministic) noexcept : requires_seed(!fDeterministic), bytebuf_size(0), bitbuf_size(0)
+FastRandomContext::FastRandomContext(bool fDeterministic) noexcept : requires_seed(!fDeterministic)
 {
     if (!fDeterministic) {
         return;
@@ -697,9 +697,13 @@ FastRandomContext& FastRandomContext::operator=(FastRandomContext&& from) noexce
 {
     requires_seed = from.requires_seed;
     rng = from.rng;
-    std::copy(std::begin(from.bytebuf), std::end(from.bytebuf), std::begin(bytebuf));
+    if (from.bytebuf_size != 0) {
+        std::copy(std::begin(from.bytebuf), std::end(from.bytebuf), std::begin(bytebuf));
+    }
     bytebuf_size = from.bytebuf_size;
-    bitbuf = from.bitbuf;
+    if (from.bitbuf_size != 0) {
+        bitbuf = from.bitbuf;
+    }
     bitbuf_size = from.bitbuf_size;
     from.requires_seed = true;
     from.bytebuf_size = 0;
