@@ -5988,7 +5988,7 @@ std::vector<std::string> SanitizeGethCmdLine(const std::string& binaryURL, const
         cmdLineRet.push_back("--syscoin");
     }
     // Geth should subscribe to our publisher
-    const std::string &strPub = gArgs.GetArg("-zmqpubnevm", fRegTest? "": "tcp://127.0.0.1:1111");
+    const std::string &strPub = gArgs.GetArg("-zmqpubnevm", GetDefaultPubNEVM());
     cmdLineRet.push_back("--nevmpub");
     cmdLineRet.push_back(strPub);
     return cmdLineRet;
@@ -6018,7 +6018,7 @@ bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const s
     return true;
 }
 bool CChainState::RestartGethNode() {
-    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", fRegTest? "": "tcp://127.0.0.1:1111");
+    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", GetDefaultPubNEVM());
     if(NEVMSub.empty()) {
         LogPrintf("RestartGethNode: Could not start Geth. zmqpubnevm not defined\n");
         return false;
@@ -6155,8 +6155,7 @@ void KillProcess(const pid_t& pid){
         return;
     LogPrintf("%s: Trying to kill pid %d\n", __func__, pid);
     #ifdef WIN32
-        HANDLE handy;
-        handy =OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, TRUE,pid);
+        HANDLE handy = OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, TRUE,pid);
         TerminateProcess(handy,0);
     #endif  
     #ifndef WIN32
@@ -6272,7 +6271,7 @@ bool StopGethNode(pid_t &pid)
     #ifndef WIN32
     if(pid == 0) {
         LogPrintf("Killing any sysgeth processes that may be already running...\n");
-        ::system("pkill -9 -f sysgeth"); 
+        ::system("pkill -9 -f sysgeth");
     }
     #endif
     pid = -1;

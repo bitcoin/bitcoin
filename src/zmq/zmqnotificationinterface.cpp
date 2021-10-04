@@ -47,8 +47,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     factories["pubrawgovernanceobject"] = CZMQAbstractNotifier::Create<CZMQPublishRawGovernanceObjectNotifier>;
     factories["pubsequence"] = CZMQAbstractNotifier::Create<CZMQPublishSequenceNotifier>;
     std::list<std::unique_ptr<CZMQAbstractNotifier>> notifiers;
-
-    const std::string &strPub = gArgs.GetArg("-zmqpubnevm", fRegTest? "": "tcp://127.0.0.1:1111");
+    const std::string &strPub = gArgs.GetArg("-zmqpubnevm", GetDefaultPubNEVM());
     if(!strPub.empty()) {
         std::string pubCmd = "pubnevmblock";
         CZMQNotifierFactory factory = CZMQAbstractNotifier::Create<CZMQPublishNEVMBlockNotifier>;

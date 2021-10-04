@@ -112,6 +112,7 @@ void DeleteOldAssetDir();
 void DeleteOldEthDir();
 fs::path GetDefaultDataDir();
 // SYSCOIN
+std::string GetDefaultPubNEVM();
 fs::path GetGethPidFile();
 std::string GetGethFilename();
 // Return true if -datadir option points to a valid directory or is not specified.
