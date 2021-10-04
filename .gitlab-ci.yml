@@ -61,7 +61,10 @@ builder-image:
     - make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
   cache:
     # Let all branches share the same cache, which is ok because the depends subsystem is able to handle this properly (it works with hashes of all scripts)
-    key: ${CI_JOB_NAME}
+    key:
+      files:
+        - $CI_PROJECT_DIR/ci/Dockerfile.builder
+      prefix: ${CI_JOB_NAME}
     paths:
       - $CI_PROJECT_DIR/depends/built
       - $CI_PROJECT_DIR/depends/sdk-sources
@@ -110,7 +113,10 @@ builder-image:
     - ./ci/test_unittests.sh # Run unit tests in build stage to avoid creating too many parallel jobs
   cache:
     # Let all branches share the same cache, which is ok because ccache is able to handle it
-    key: ${CI_JOB_NAME}
+    key:
+      files:
+        - $CI_PROJECT_DIR/ci/Dockerfile.builder
+      prefix: ${CI_JOB_NAME}
     paths:
       - $CI_PROJECT_DIR/cache/ccache
   artifacts:
