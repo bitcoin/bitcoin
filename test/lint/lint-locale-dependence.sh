@@ -37,23 +37,18 @@ export LC_ALL=C
 # See https://doc.qt.io/qt-5/qcoreapplication.html#locale-settings and
 # https://stackoverflow.com/a/34878283 for more details.
 
+# TODO: Reduce KNOWN_VIOLATIONS by replacing uses of locale dependent stoul/strtol with locale
+#       independent ToIntegral<T>(...).
+# TODO: Reduce KNOWN_VIOLATIONS by replacing uses of locale dependent snprintf with strprintf.
 KNOWN_VIOLATIONS=(
     "src/bitcoin-tx.cpp.*stoul"
     "src/dbwrapper.cpp.*stoul"
     "src/dbwrapper.cpp:.*vsnprintf"
-    "src/node/blockstorage.cpp:.*atoi"
-    "src/qt/rpcconsole.cpp:.*atoi"
     "src/rest.cpp:.*strtol"
     "src/test/dbwrapper_tests.cpp:.*snprintf"
     "src/test/fuzz/locale.cpp"
-    "src/test/fuzz/parse_numbers.cpp:.*atoi"
     "src/test/fuzz/string.cpp"
-    "src/torcontrol.cpp:.*atoi"
     "src/torcontrol.cpp:.*strtol"
-    "src/util/strencodings.cpp:.*atoi"
-    "src/util/strencodings.cpp:.*strtoll"
-    "src/util/strencodings.h:.*atoi"
-    "src/util/system.cpp:.*atoi"
 )
 
 REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/)"

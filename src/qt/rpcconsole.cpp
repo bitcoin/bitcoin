@@ -250,7 +250,7 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
                                     for(char argch: curarg)
                                         if (!IsDigit(argch))
                                             throw std::runtime_error("Invalid result query");
-                                    subelement = lastResult[atoi(curarg.c_str())];
+                                    subelement = lastResult[LocaleIndependentAtoi<int>(curarg)];
                                 }
                                 else if (lastResult.isObject())
                                     subelement = find_value(lastResult, curarg);

@@ -702,7 +702,7 @@ static RPCHelpMan getblocktemplate()
             std::string lpstr = lpval.get_str();
 
             hashWatchedChain = ParseHashV(lpstr.substr(0, 64), "longpollid");
-            nTransactionsUpdatedLastLP = atoi64(lpstr.substr(64));
+            nTransactionsUpdatedLastLP = LocaleIndependentAtoi<int64_t>(lpstr.substr(64));
         }
         else
         {
