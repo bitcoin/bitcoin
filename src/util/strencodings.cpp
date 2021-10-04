@@ -330,6 +330,16 @@ bool ParseUInt32(const std::string& str, uint32_t* out)
     return ParseIntegral<uint32_t>(str, out);
 }
 // SYSCOIN
+[[nodiscard]] static bool ParsePrechecks(const std::string& str)
+{
+    if (str.empty()) // No empty string allowed
+        return false;
+    if (str.size() >= 1 && (IsSpace(str[0]) || IsSpace(str[str.size()-1]))) // No padding allowed
+        return false;
+    if (!ValidAsCString(str)) // No embedded NUL characters allowed
+        return false;
+    return true;
+}
 bool ParseUInt32FromHex(const std::string& str, uint32_t *out)
 {
     if (!ParsePrechecks(str))
