@@ -281,16 +281,11 @@ std::string DecodeBase32(const std::string& str, bool* pf_invalid)
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
 
-[[nodiscard]] static bool ParsePrechecks(const std::string&);
-
 namespace {
 template <typename T>
 bool ParseIntegral(const std::string& str, T* out)
 {
     static_assert(std::is_integral<T>::value);
-    if (!ParsePrechecks(str)) {
-        return false;
-    }
     // Replicate the exact behavior of strtol/strtoll/strtoul/strtoull when
     // handling leading +/- for backwards compatibility.
     if (str.length() >= 2 && str[0] == '+' && str[1] == '-') {
@@ -306,17 +301,6 @@ bool ParseIntegral(const std::string& str, T* out)
     return true;
 }
 }; // namespace
-
-[[nodiscard]] static bool ParsePrechecks(const std::string& str)
-{
-    if (str.empty()) // No empty string allowed
-        return false;
-    if (str.size() >= 1 && (IsSpace(str[0]) || IsSpace(str[str.size()-1]))) // No padding allowed
-        return false;
-    if (!ValidAsCString(str)) // No embedded NUL characters allowed
-        return false;
-    return true;
-}
 
 bool ParseInt32(const std::string& str, int32_t* out)
 {
@@ -346,20 +330,6 @@ bool ParseUInt32(const std::string& str, uint32_t* out)
 bool ParseUInt64(const std::string& str, uint64_t* out)
 {
     return ParseIntegral<uint64_t>(str, out);
-}
-
-bool ParseDouble(const std::string& str, double *out)
-{
-    if (!ParsePrechecks(str))
-        return false;
-    if (str.size() >= 2 && str[0] == '0' && str[1] == 'x') // No hexadecimal floats allowed
-        return false;
-    std::istringstream text(str);
-    text.imbue(std::locale::classic());
-    double result;
-    text >> result;
-    if(out) *out = result;
-    return text.eof() && !text.fail();
 }
 
 std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
