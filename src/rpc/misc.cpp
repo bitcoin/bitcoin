@@ -22,6 +22,7 @@
 #include <util/check.h>
 #include <util/message.h> // For MessageSign(), MessageVerify()
 #include <util/strencodings.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 
 #include <optional>
@@ -580,6 +581,27 @@ static RPCHelpMan setmocktime()
     };
 }
 
+#if defined(USE_SYSCALL_SANDBOX)
+static RPCHelpMan invokedisallowedsyscall()
+{
+    return RPCHelpMan{
+        "invokedisallowedsyscall",
+        "\nInvoke a disallowed syscall to trigger a syscall sandbox violation. Used for testing purposes.\n",
+        {},
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+            HelpExampleCli("invokedisallowedsyscall", "") + HelpExampleRpc("invokedisallowedsyscall", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            if (!Params().IsTestChain()) {
+                throw std::runtime_error("invokedisallowedsyscall is used for testing only.");
+            }
+            TestDisallowedSandboxCall();
+            return NullUniValue;
+        },
+    };
+}
+#endif // USE_SYSCALL_SANDBOX
+
 static RPCHelpMan mockscheduler()
 {
     return RPCHelpMan{"mockscheduler",
@@ -944,6 +966,9 @@ static const CRPCCommand commands[] =
     { "syscoin",            &mnsync,                  },
     { "syscoin",            &spork,                   },
     { "hidden",             &echoipc,                 },
+#if defined(USE_SYSCALL_SANDBOX)
+    { "hidden",             &invokedisallowedsyscall, },
+#endif // USE_SYSCALL_SANDBOX
 };
 // clang-format on
     for (const auto& c : commands) {

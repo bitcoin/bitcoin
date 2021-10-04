@@ -13,4 +13,5 @@ export DEP_OPTS="DEBUG=1 MULTIPROCESS=1"
 export GOAL="install"
 export SYSCOIN_CONFIG="--enable-debug CC=clang CXX=clang++" # Use clang to avoid OOM
 export TEST_RUNNER_ENV="SYSCOIND=syscoin-node"
+export TEST_RUNNER_EXTRA="--nosandbox"
 export PIP_PACKAGES="lief"

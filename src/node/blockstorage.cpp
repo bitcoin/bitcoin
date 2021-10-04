@@ -16,6 +16,7 @@
 #include <signet.h>
 #include <streams.h>
 #include <undo.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <validation.h>
 // SYSCOIN
@@ -508,6 +509,7 @@ struct CImportingNow {
 
 void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args, CDSNotificationInterface* pdsNotificationInterface, std::unique_ptr<CDeterministicMNManager> &deterministicMNManager, const WalletInitInterface &g_wallet_init_interface, NodeContext& node)
 {
+    SetSyscallSandboxPolicy(SyscallSandboxPolicy::INITIALIZATION_LOAD_BLOCKS);
     ScheduleBatchPriority();
 
     {

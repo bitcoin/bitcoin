@@ -103,4 +103,4 @@ std::optional<std::string> PaysForRBF(CAmount original_fees,
                                       CFeeRate relay_fee,
                                       const uint256& txid);
 
-#endif // BITCOIN_POLICY_RBF_H
+#endif // SYSCOIN_POLICY_RBF_H
