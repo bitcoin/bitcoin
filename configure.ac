@@ -71,6 +71,12 @@ case $host in
   ;;
 esac
 
+AC_ARG_WITH([seccomp],
+  [AS_HELP_STRING([--with-seccomp],
+  [enable experimental syscall sandbox feature (-sandbox), default is yes if seccomp-bpf is detected under Linux x86_64])],
+  [seccomp_found=$withval],
+  [seccomp_found=auto])
+
 dnl Require C++17 compiler (no GNU extensions)
 AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
 
@@ -1432,6 +1438,36 @@ if test "x$use_external_signer" != xno; then
 fi
 AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "x$use_external_signer" = "xyes"])
 
+dnl Do not compile with syscall sandbox support when compiling under the sanitizers.
+dnl The sanitizers introduce use of syscalls that are not typically used in bitcoind
+dnl (such as execve when the sanitizers execute llvm-symbolizer).
+if test x$use_sanitizers != x; then
+  AC_MSG_WARN(Specifying --with-sanitizers forces --without-seccomp since the sanitizers introduce use of syscalls not allowed by the bitcoind syscall sandbox (-sandbox=<mode>).)
+  seccomp_found=no
+fi
+if test "x$seccomp_found" != "xno"; then
+  AC_MSG_CHECKING([for seccomp-bpf (Linux x86-64)])
+  AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
+      @%:@include <linux/seccomp.h>
+    ]], [[
+      #if !defined(__x86_64__)
+      #  error Syscall sandbox is an experimental feature currently available only under Linux x86-64.
+      #endif
+    ]])],[
+      AC_MSG_RESULT(yes)
+      seccomp_found="yes"
+      AC_DEFINE(USE_SYSCALL_SANDBOX, 1, [Define this symbol to build with syscall sandbox support.])
+    ],[
+      AC_MSG_RESULT(no)
+      seccomp_found="no"
+  ])
+fi
+dnl Currently only enable -sandbox=<mode> feature if seccomp is found.
+dnl In the future, sandboxing could be also be supported with other
+dnl sandboxing mechanisms besides seccomp.
+use_syscall_sandbox=$seccomp_found
+AM_CONDITIONAL([ENABLE_SYSCALL_SANDBOX], [test "x$use_syscall_sandbox" != "xno"])
+
 dnl Check for reduced exports
 if test x$use_reduce_exports = xyes; then
   AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[CXXFLAGS="$CXXFLAGS -fvisibility=hidden"],
@@ -1921,6 +1957,7 @@ echo
 echo "Options used to compile and link:"
 echo "  external signer = $use_external_signer"
 echo "  multiprocess    = $build_multiprocess"
+echo "  with experimental syscall sandbox support = $use_syscall_sandbox"
 echo "  with libs       = $build_bitcoin_libs"
 echo "  with wallet     = $enable_wallet"
 if test "x$enable_wallet" != "xno"; then
