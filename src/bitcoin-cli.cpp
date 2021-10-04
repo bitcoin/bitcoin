@@ -242,7 +242,7 @@ public:
 class AddrinfoRequestHandler : public BaseRequestHandler
 {
 private:
-    static constexpr std::array m_networks{"ipv4", "ipv6", "onion", "i2p"};
+    static constexpr std::array m_networks{"ipv4", "ipv6", "onion", "i2p", "cjdns"};
     int8_t NetworkStringToId(const std::string& str) const
     {
         for (size_t i = 0; i < m_networks.size(); ++i) {
@@ -363,7 +363,7 @@ class NetinfoRequestHandler : public BaseRequestHandler
 {
 private:
     static constexpr uint8_t MAX_DETAIL_LEVEL{4};
-    static constexpr std::array m_networks{"ipv4", "ipv6", "onion", "i2p"};
+    static constexpr std::array m_networks{"ipv4", "ipv6", "onion", "i2p", "cjdns"};
     std::array<std::array<uint16_t, m_networks.size() + 1>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total)
     uint8_t m_block_relay_peers_count{0};
     uint8_t m_manual_peers_count{0};
