@@ -390,7 +390,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     CDeterministicMNList mnList;
     deterministicMNManager->GetListAtChainTip(mnList);
     auto dmn = mnList.GetMN(dmnHashes[0]);
-    BOOST_CHECK_EQUAL(dmn != nullptr && dmn->pdmnState->addr.GetPort() , 1000);
+    BOOST_ASSERT(dmn != nullptr && dmn->pdmnState->addr.GetPort() == 1000);
 
     // test ProUpRevTx
     tx = CreateProUpRevTx(m_node, utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], coinbaseKey);
