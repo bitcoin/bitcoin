@@ -159,13 +159,6 @@ std::optional<T> ToIntegral(const std::string& str)
 [[nodiscard]] bool ParseUInt64(const std::string& str, uint64_t *out);
 
 /**
- * Convert string to double with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid double,
- *   false if not the entire string could be parsed or when overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseDouble(const std::string& str, double *out);
-
-/**
  * Convert a span of bytes to a lower-case hexadecimal string.
  */
 std::string HexStr(const Span<const uint8_t> s);

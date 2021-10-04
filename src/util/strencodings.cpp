@@ -302,17 +302,6 @@ bool ParseIntegral(const std::string& str, T* out)
 }
 }; // namespace
 
-[[nodiscard]] static bool ParsePrechecks(const std::string& str)
-{
-    if (str.empty()) // No empty string allowed
-        return false;
-    if (str.size() >= 1 && (IsSpace(str[0]) || IsSpace(str[str.size()-1]))) // No padding allowed
-        return false;
-    if (!ValidAsCString(str)) // No embedded NUL characters allowed
-        return false;
-    return true;
-}
-
 bool ParseInt32(const std::string& str, int32_t* out)
 {
     return ParseIntegral<int32_t>(str, out);
@@ -341,20 +330,6 @@ bool ParseUInt32(const std::string& str, uint32_t* out)
 bool ParseUInt64(const std::string& str, uint64_t* out)
 {
     return ParseIntegral<uint64_t>(str, out);
-}
-
-bool ParseDouble(const std::string& str, double *out)
-{
-    if (!ParsePrechecks(str))
-        return false;
-    if (str.size() >= 2 && str[0] == '0' && str[1] == 'x') // No hexadecimal floats allowed
-        return false;
-    std::istringstream text(str);
-    text.imbue(std::locale::classic());
-    double result;
-    text >> result;
-    if(out) *out = result;
-    return text.eof() && !text.fail();
 }
 
 std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
