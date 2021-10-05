@@ -536,31 +536,33 @@ public:
 
     void AllowFileSystem()
     {
-        allowed_syscalls.insert(__NR_access);     // check user's permissions for a file
-        allowed_syscalls.insert(__NR_chdir);      // change working directory
-        allowed_syscalls.insert(__NR_chmod);      // change permissions of a file
-        allowed_syscalls.insert(__NR_fallocate);  // manipulate file space
-        allowed_syscalls.insert(__NR_fchmod);     // change permissions of a file
-        allowed_syscalls.insert(__NR_fchown);     // change ownership of a file
-        allowed_syscalls.insert(__NR_fdatasync);  // synchronize a file's in-core state with storage device
-        allowed_syscalls.insert(__NR_flock);      // apply or remove an advisory lock on an open file
-        allowed_syscalls.insert(__NR_fstat);      // get file status
-        allowed_syscalls.insert(__NR_fsync);      // synchronize a file's in-core state with storage device
-        allowed_syscalls.insert(__NR_ftruncate);  // truncate a file to a specified length
-        allowed_syscalls.insert(__NR_getcwd);     // get current working directory
-        allowed_syscalls.insert(__NR_getdents);   // get directory entries
-        allowed_syscalls.insert(__NR_getdents64); // get directory entries
-        allowed_syscalls.insert(__NR_lstat);      // get file status
-        allowed_syscalls.insert(__NR_mkdir);      // create a directory
-        allowed_syscalls.insert(__NR_open);       // open and possibly create a file
-        allowed_syscalls.insert(__NR_openat);     // open and possibly create a file
-        allowed_syscalls.insert(__NR_readlink);   // read value of a symbolic link
-        allowed_syscalls.insert(__NR_rename);     // change the name or location of a file
-        allowed_syscalls.insert(__NR_rmdir);      // delete a directory
-        allowed_syscalls.insert(__NR_stat);       // get file status
-        allowed_syscalls.insert(__NR_statfs);     // get filesystem statistics
-        allowed_syscalls.insert(__NR_statx);      // get file status (extended)
-        allowed_syscalls.insert(__NR_unlink);     // delete a name and possibly the file it refers to
+        allowed_syscalls.insert(__NR_access);          // check user's permissions for a file
+        allowed_syscalls.insert(__NR_chdir);           // change working directory
+        allowed_syscalls.insert(__NR_chmod);           // change permissions of a file
+        allowed_syscalls.insert(__NR_copy_file_range); // copy a range of data from one file to another
+        allowed_syscalls.insert(__NR_fallocate);       // manipulate file space
+        allowed_syscalls.insert(__NR_fchmod);          // change permissions of a file
+        allowed_syscalls.insert(__NR_fchown);          // change ownership of a file
+        allowed_syscalls.insert(__NR_fdatasync);       // synchronize a file's in-core state with storage device
+        allowed_syscalls.insert(__NR_flock);           // apply or remove an advisory lock on an open file
+        allowed_syscalls.insert(__NR_fstat);           // get file status
+        allowed_syscalls.insert(__NR_newfstatat);      // get file status
+        allowed_syscalls.insert(__NR_fsync);           // synchronize a file's in-core state with storage device
+        allowed_syscalls.insert(__NR_ftruncate);       // truncate a file to a specified length
+        allowed_syscalls.insert(__NR_getcwd);          // get current working directory
+        allowed_syscalls.insert(__NR_getdents);        // get directory entries
+        allowed_syscalls.insert(__NR_getdents64);      // get directory entries
+        allowed_syscalls.insert(__NR_lstat);           // get file status
+        allowed_syscalls.insert(__NR_mkdir);           // create a directory
+        allowed_syscalls.insert(__NR_open);            // open and possibly create a file
+        allowed_syscalls.insert(__NR_openat);          // open and possibly create a file
+        allowed_syscalls.insert(__NR_readlink);        // read value of a symbolic link
+        allowed_syscalls.insert(__NR_rename);          // change the name or location of a file
+        allowed_syscalls.insert(__NR_rmdir);           // delete a directory
+        allowed_syscalls.insert(__NR_stat);            // get file status
+        allowed_syscalls.insert(__NR_statfs);          // get filesystem statistics
+        allowed_syscalls.insert(__NR_statx);           // get file status (extended)
+        allowed_syscalls.insert(__NR_unlink);          // delete a name and possibly the file it refers to
     }
 
     void AllowFutex()
