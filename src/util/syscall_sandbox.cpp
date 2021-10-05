@@ -272,15 +272,23 @@ const std::map<uint32_t, std::string> LINUX_SYSCALLS{
     {__NR_pipe, "pipe"},
     {__NR_pipe2, "pipe2"},
     {__NR_pivot_root, "pivot_root"},
+#ifdef __NR_pkey_alloc
     {__NR_pkey_alloc, "pkey_alloc"},
+#endif
+#ifdef __NR_pkey_free
     {__NR_pkey_free, "pkey_free"},
+#endif
+#ifdef __NR_pkey_mprotect
     {__NR_pkey_mprotect, "pkey_mprotect"},
+#endif
     {__NR_poll, "poll"},
     {__NR_ppoll, "ppoll"},
     {__NR_prctl, "prctl"},
     {__NR_pread64, "pread64"},
     {__NR_preadv, "preadv"},
+#ifdef __NR_preadv2
     {__NR_preadv2, "preadv2"},
+#endif
     {__NR_prlimit64, "prlimit64"},
     {__NR_process_vm_readv, "process_vm_readv"},
     {__NR_process_vm_writev, "process_vm_writev"},
@@ -289,7 +297,9 @@ const std::map<uint32_t, std::string> LINUX_SYSCALLS{
     {__NR_putpmsg, "putpmsg"},
     {__NR_pwrite64, "pwrite64"},
     {__NR_pwritev, "pwritev"},
+#ifdef __NR_pwritev2
     {__NR_pwritev2, "pwritev2"},
+#endif
     {__NR_query_module, "query_module"},
     {__NR_quotactl, "quotactl"},
     {__NR_read, "read"},
