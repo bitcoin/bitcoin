@@ -58,6 +58,8 @@
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                    Replace="@PACKAGE_NAME@" By="Bitcoin Core"></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
+                   Replace="@PACKAGE_BUGREPORT@" By="https://github.com/bitcoin/bitcoin/issues"></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
                    Replace="@abs_top_srcdir@" By="..\.." ToFullPath="true"></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                    Replace="@abs_top_builddir@" By="..\.." ToFullPath="true"></ReplaceInFile>
@@ -72,11 +74,15 @@
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@BUILD_BITCOIN_CLI_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
+                  Replace="@BUILD_BITCOIN_WALLET_TRUE@" By=""></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@BUILD_BITCOIND_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@ENABLE_FUZZ_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@ENABLE_ZMQ_TRUE@" By=""></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
+                  Replace="@ENABLE_EXTERNAL_SIGNER_TRUE@" By=""></ReplaceInFile>
   </Target>
   <Import Project="..\common.vcxproj" />
 </Project>

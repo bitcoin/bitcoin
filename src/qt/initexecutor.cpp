@@ -5,6 +5,7 @@
 #include <qt/initexecutor.h>
 
 #include <interfaces/node.h>
+#include <qt/guiutil.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 
@@ -18,7 +19,7 @@
 InitExecutor::InitExecutor(interfaces::Node& node)
     : QObject(), m_node(node)
 {
-    this->moveToThread(&m_thread);
+    m_context.moveToThread(&m_thread);
     m_thread.start();
 }
 
@@ -38,29 +39,33 @@ void InitExecutor::handleRunawayException(const std::exception* e)
 
 void InitExecutor::initialize()
 {
-    try {
-        util::ThreadRename("qt-init");
-        qDebug() << __func__ << ": Running initialization in thread";
-        interfaces::BlockAndHeaderTipInfo tip_info;
-        bool rv = m_node.appInitMain(&tip_info);
-        Q_EMIT initializeResult(rv, tip_info);
-    } catch (const std::exception& e) {
-        handleRunawayException(&e);
-    } catch (...) {
-        handleRunawayException(nullptr);
-    }
+    GUIUtil::ObjectInvoke(&m_context, [this] {
+        try {
+            util::ThreadRename("qt-init");
+            qDebug() << "Running initialization in thread";
+            interfaces::BlockAndHeaderTipInfo tip_info;
+            bool rv = m_node.appInitMain(&tip_info);
+            Q_EMIT initializeResult(rv, tip_info);
+        } catch (const std::exception& e) {
+            handleRunawayException(&e);
+        } catch (...) {
+            handleRunawayException(nullptr);
+        }
+    });
 }
 
 void InitExecutor::shutdown()
 {
-    try {
-        qDebug() << __func__ << ": Running Shutdown in thread";
-        m_node.appShutdown();
-        qDebug() << __func__ << ": Shutdown finished";
-        Q_EMIT shutdownResult();
-    } catch (const std::exception& e) {
-        handleRunawayException(&e);
-    } catch (...) {
-        handleRunawayException(nullptr);
-    }
+    GUIUtil::ObjectInvoke(&m_context, [this] {
+        try {
+            qDebug() << "Running Shutdown in thread";
+            m_node.appShutdown();
+            qDebug() << "Shutdown finished";
+            Q_EMIT shutdownResult();
+        } catch (const std::exception& e) {
+            handleRunawayException(&e);
+        } catch (...) {
+            handleRunawayException(nullptr);
+        }
+    });
 }

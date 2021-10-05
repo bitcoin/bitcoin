@@ -232,10 +232,10 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
                       "seconds of key creation, and could contain transactions pertaining to the key. As a result, "
                       "transactions and coins using this key may not appear in the wallet. This error could be caused "
                       "by pruning or data corruption (see bitcoind log for details) and could be dealt with by "
-                      "downloading and rescanning the relevant blocks (see -reindex and -rescan "
-                      "options).\"}},{\"success\":true}]",
+                      "downloading and rescanning the relevant blocks (see -reindex option and rescanblockchain "
+                      "RPC).\"}},{\"success\":true}]",
                               0, oldTip->GetBlockTimeMax(), TIMESTAMP_WINDOW));
-        RemoveWallet(context, wallet, /* load_on_startup= */ std::nullopt);
+        RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt);
     }
 }
 
@@ -280,7 +280,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         request.params.push_back(backup_file);
 
         ::dumpwallet().HandleRequest(request);
-        RemoveWallet(context, wallet, /* load_on_startup= */ std::nullopt);
+        RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt);
     }
 
     // Call importwallet RPC and verify all blocks with timestamps >= BLOCK_TIME
@@ -299,7 +299,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         AddWallet(context, wallet);
         wallet->SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
         ::importwallet().HandleRequest(request);
-        RemoveWallet(context, wallet, /* load_on_startup= */ std::nullopt);
+        RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt);
 
         BOOST_CHECK_EQUAL(wallet->mapWallet.size(), 3U);
         BOOST_CHECK_EQUAL(m_coinbase_txns.size(), 103U);

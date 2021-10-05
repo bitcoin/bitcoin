@@ -43,6 +43,7 @@ from test_framework.messages import (
 from test_framework.p2p import (
     P2PInterface,
     p2p_lock,
+    P2P_SERVICES,
 )
 from test_framework.script import (
     CScript,
@@ -82,10 +83,6 @@ from test_framework.util import (
     softfork_active,
     assert_raises_rpc_error,
 )
-
-# The versionbit bit used to signal activation of SegWit
-VB_WITNESS_BIT = 1
-VB_TOP_BITS = 0x20000000
 
 MAX_SIGOP_COST = 80000
 
@@ -196,8 +193,8 @@ class SegWitTest(BitcoinTestFramework):
         self.num_nodes = 2
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
         self.extra_args = [
-            ["-acceptnonstdtxn=1", "-segwitheight={}".format(SEGWIT_HEIGHT), "-whitelist=noban@127.0.0.1"],
-            ["-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT)],
+            ["-acceptnonstdtxn=1", f"-testactivationheight=segwit@{SEGWIT_HEIGHT}", "-whitelist=noban@127.0.0.1"],
+            ["-acceptnonstdtxn=0", f"-testactivationheight=segwit@{SEGWIT_HEIGHT}"],
         ]
         self.supports_cli = False
 
@@ -206,13 +203,13 @@ class SegWitTest(BitcoinTestFramework):
 
     # Helper functions
 
-    def build_next_block(self, version=4):
+    def build_next_block(self):
         """Build a block on top of node0's tip."""
         tip = self.nodes[0].getbestblockhash()
         height = self.nodes[0].getblockcount() + 1
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
-        block.nVersion = version
+        block.nVersion = 4
         block.rehash()
         return block
 
@@ -224,14 +221,14 @@ class SegWitTest(BitcoinTestFramework):
 
     def run_test(self):
         # Setup the p2p connections
-        # self.test_node sets NODE_WITNESS|NODE_NETWORK
-        self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK | NODE_WITNESS)
+        # self.test_node sets P2P_SERVICES, i.e. NODE_WITNESS | NODE_NETWORK
+        self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn(), services=P2P_SERVICES)
         # self.old_node sets only NODE_NETWORK
         self.old_node = self.nodes[0].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK)
         # self.std_node is for testing node1 (fRequireStandard=true)
-        self.std_node = self.nodes[1].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK | NODE_WITNESS)
+        self.std_node = self.nodes[1].add_p2p_connection(TestP2PConn(), services=P2P_SERVICES)
         # self.std_wtx_node is for testing node1 with wtxid relay
-        self.std_wtx_node = self.nodes[1].add_p2p_connection(TestP2PConn(wtxidrelay=True), services=NODE_NETWORK | NODE_WITNESS)
+        self.std_wtx_node = self.nodes[1].add_p2p_connection(TestP2PConn(wtxidrelay=True), services=P2P_SERVICES)
 
         assert self.test_node.nServices & NODE_WITNESS != 0
 
@@ -298,12 +295,12 @@ class SegWitTest(BitcoinTestFramework):
         # Mine a block with an anyone-can-spend coinbase,
         # let it mature, then try to spend it.
 
-        block = self.build_next_block(version=1)
+        block = self.build_next_block()
         block.solve()
         self.test_node.send_and_ping(msg_no_witness_block(block))  # make sure the block was processed
         txid = block.vtx[0].sha256
 
-        self.nodes[0].generate(99)  # let the block mature
+        self.generate(self.nodes[0], 99)  # let the block mature
 
         # Create a transaction that spends the coinbase
         tx = CTransaction()
@@ -319,7 +316,7 @@ class SegWitTest(BitcoinTestFramework):
         assert tx.hash in self.nodes[0].getrawmempool()
         # Save this transaction for later
         self.utxo.append(UTXO(tx.sha256, 0, 49 * 100000000))
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
 
     @subtest  # type: ignore
     def test_unnecessary_witness_before_segwit_activation(self):
@@ -336,8 +333,8 @@ class SegWitTest(BitcoinTestFramework):
         tx.rehash()
         assert tx.sha256 != tx.calc_sha256(with_witness=True)
 
-        # Construct a segwit-signaling block that includes the transaction.
-        block = self.build_next_block(version=(VB_TOP_BITS | (1 << VB_WITNESS_BIT)))
+        # Construct a block that includes the transaction.
+        block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx])
         # Sending witness data before activation is not allowed (anti-spam
         # rule).
@@ -364,7 +361,7 @@ class SegWitTest(BitcoinTestFramework):
         # test_node has set NODE_WITNESS, so all getdata requests should be for
         # witness blocks.
         # Test announcing a block via inv results in a getdata, and that
-        # announcing a version 4 or random VB block with a header results in a getdata
+        # announcing a block with a header results in a getdata
         block1 = self.build_next_block()
         block1.solve()
 
@@ -372,18 +369,12 @@ class SegWitTest(BitcoinTestFramework):
         assert self.test_node.last_message["getdata"].inv[0].type == blocktype
         test_witness_block(self.nodes[0], self.test_node, block1, True)
 
-        block2 = self.build_next_block(version=4)
+        block2 = self.build_next_block()
         block2.solve()
 
         self.test_node.announce_block_and_wait_for_getdata(block2, use_header=True)
         assert self.test_node.last_message["getdata"].inv[0].type == blocktype
         test_witness_block(self.nodes[0], self.test_node, block2, True)
-
-        block3 = self.build_next_block(version=(VB_TOP_BITS | (1 << 15)))
-        block3.solve()
-        self.test_node.announce_block_and_wait_for_getdata(block3, use_header=True)
-        assert self.test_node.last_message["getdata"].inv[0].type == blocktype
-        test_witness_block(self.nodes[0], self.test_node, block3, True)
 
         # Check that we can getdata for witness blocks or regular blocks,
         # and the right thing happens.
@@ -429,7 +420,7 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(rpc_details["weight"], block.get_weight())
 
             # Upgraded node should not ask for blocks from unupgraded
-            block4 = self.build_next_block(version=4)
+            block4 = self.build_next_block()
             block4.solve()
             self.old_node.getdataset = set()
 
@@ -555,7 +546,7 @@ class SegWitTest(BitcoinTestFramework):
         test_transaction_acceptance(self.nodes[0], self.test_node, tx, with_witness=False, accepted=True)
 
         # Cleanup: mine the first transaction and update utxo
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
 
         self.utxo.pop(0)
@@ -580,7 +571,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Mine it on test_node to create the confirmed output.
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_tx, with_witness=True, accepted=True)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
 
         # Now test standardness of v0 P2WSH outputs.
@@ -653,7 +644,7 @@ class SegWitTest(BitcoinTestFramework):
             )
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=True)
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
@@ -664,9 +655,9 @@ class SegWitTest(BitcoinTestFramework):
         """Mine enough blocks to activate segwit."""
         assert not softfork_active(self.nodes[0], 'segwit')
         height = self.nodes[0].getblockcount()
-        self.nodes[0].generate(SEGWIT_HEIGHT - height - 2)
+        self.generate(self.nodes[0], SEGWIT_HEIGHT - height - 2)
         assert not softfork_active(self.nodes[0], 'segwit')
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         assert softfork_active(self.nodes[0], 'segwit')
         self.segwit_active = True
 
@@ -1298,7 +1289,7 @@ class SegWitTest(BitcoinTestFramework):
         assert vsize != raw_tx["size"]
 
         # Cleanup: mine the transactions and update utxo for next test
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
 
         self.utxo.pop(0)
@@ -1348,7 +1339,7 @@ class SegWitTest(BitcoinTestFramework):
             self.utxo.pop(0)
             temp_utxo.append(UTXO(tx.sha256, 0, tx.vout[0].nValue))
 
-        self.nodes[0].generate(1)  # Mine all the transactions
+        self.generate(self.nodes[0], 1)  # Mine all the transactions
         self.sync_blocks()
         assert len(self.nodes[0].getrawmempool()) == 0
 
@@ -1419,14 +1410,14 @@ class SegWitTest(BitcoinTestFramework):
         spend_tx.rehash()
 
         # Now test a premature spend.
-        self.nodes[0].generate(98)
+        self.generate(self.nodes[0], 98)
         self.sync_blocks()
         block2 = self.build_next_block()
         self.update_witness_block_with_transactions(block2, [spend_tx])
         test_witness_block(self.nodes[0], self.test_node, block2, accepted=False)
 
         # Advancing one more block should allow the spend.
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         block2 = self.build_next_block()
         self.update_witness_block_with_transactions(block2, [spend_tx])
         test_witness_block(self.nodes[0], self.test_node, block2, accepted=True)
@@ -1733,7 +1724,7 @@ class SegWitTest(BitcoinTestFramework):
         tx.vout.append(CTxOut(self.utxo[0].nValue - 1000, script_pubkey))
         tx.rehash()
         test_transaction_acceptance(self.nodes[0], self.test_node, tx, False, True)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
 
         # We'll add an unnecessary witness to this transaction that would cause
@@ -1762,7 +1753,7 @@ class SegWitTest(BitcoinTestFramework):
         test_transaction_acceptance(self.nodes[0], self.test_node, tx2, False, True)
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, False, True)
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
 
         # Update our utxo list; we spent the first entry.
@@ -1797,7 +1788,7 @@ class SegWitTest(BitcoinTestFramework):
         txid = tx.sha256
         test_transaction_acceptance(self.nodes[0], self.test_node, tx, with_witness=False, accepted=True)
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
 
         # Creating transactions for tests
@@ -1860,7 +1851,7 @@ class SegWitTest(BitcoinTestFramework):
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[3], True, False, 'bad-witness-nonstandard')
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[3], True, True)
 
-        self.nodes[0].generate(1)  # Mine and clean up the mempool of non-standard node
+        self.generate(self.nodes[0], 1)  # Mine and clean up the mempool of non-standard node
         # Valid but non-standard transactions in a block should be accepted by standard node
         self.sync_blocks()
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
@@ -1998,7 +1989,7 @@ class SegWitTest(BitcoinTestFramework):
                 return serialize_with_bogus_witness(self.tx)
 
         self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(address_type='bech32'), 5)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         unspent = next(u for u in self.nodes[0].listunspent() if u['spendable'] and u['address'].startswith('bcrt'))
 
         raw = self.nodes[0].createrawtransaction([{"txid": unspent['txid'], "vout": unspent['vout']}], {self.nodes[0].getnewaddress(): 1})
@@ -2017,8 +2008,8 @@ class SegWitTest(BitcoinTestFramework):
     @subtest  # type: ignore
     def test_wtxid_relay(self):
         # Use brand new nodes to avoid contamination from earlier tests
-        self.wtx_node = self.nodes[0].add_p2p_connection(TestP2PConn(wtxidrelay=True), services=NODE_NETWORK | NODE_WITNESS)
-        self.tx_node = self.nodes[0].add_p2p_connection(TestP2PConn(wtxidrelay=False), services=NODE_NETWORK | NODE_WITNESS)
+        self.wtx_node = self.nodes[0].add_p2p_connection(TestP2PConn(wtxidrelay=True), services=P2P_SERVICES)
+        self.tx_node = self.nodes[0].add_p2p_connection(TestP2PConn(wtxidrelay=False), services=P2P_SERVICES)
 
         # Check wtxidrelay feature negotiation message through connecting a new peer
         def received_wtxidrelay():

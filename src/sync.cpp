@@ -9,7 +9,6 @@
 #include <sync.h>
 
 #include <logging.h>
-#include <logging/timer.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/threadnames.h>
@@ -23,11 +22,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-void LockContention(const char* pszName, const char* pszFile, int nLine)
-{
-    LOG_TIME_MICROS_WITH_CATEGORY(strprintf("%s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
-}
 
 #ifdef DEBUG_LOCKORDER
 //
@@ -103,27 +97,29 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
     LogPrintf("POTENTIAL DEADLOCK DETECTED\n");
     LogPrintf("Previous lock order was:\n");
     for (const LockStackItem& i : s1) {
+        std::string prefix{};
         if (i.first == mismatch.first) {
-            LogPrintf(" (1)"); /* Continued */
+            prefix = " (1)";
         }
         if (i.first == mismatch.second) {
-            LogPrintf(" (2)"); /* Continued */
+            prefix = " (2)";
         }
-        LogPrintf(" %s\n", i.second.ToString());
+        LogPrintf("%s %s\n", prefix, i.second.ToString());
     }
 
     std::string mutex_a, mutex_b;
     LogPrintf("Current lock order is:\n");
     for (const LockStackItem& i : s2) {
+        std::string prefix{};
         if (i.first == mismatch.first) {
-            LogPrintf(" (1)"); /* Continued */
+            prefix = " (1)";
             mutex_a = i.second.Name();
         }
         if (i.first == mismatch.second) {
-            LogPrintf(" (2)"); /* Continued */
+            prefix = " (2)";
             mutex_b = i.second.Name();
         }
-        LogPrintf(" %s\n", i.second.ToString());
+        LogPrintf("%s %s\n", prefix, i.second.ToString());
     }
     if (g_debug_lockorder_abort) {
         tfm::format(std::cerr, "Assertion failed: detected inconsistent lock order for %s, details in debug log.\n", s2.back().second.ToString());
@@ -137,10 +133,11 @@ static void double_lock_detected(const void* mutex, const LockStack& lock_stack)
     LogPrintf("DOUBLE LOCK DETECTED\n");
     LogPrintf("Lock order:\n");
     for (const LockStackItem& i : lock_stack) {
+        std::string prefix{};
         if (i.first == mutex) {
-            LogPrintf(" (*)"); /* Continued */
+            prefix = " (*)";
         }
-        LogPrintf(" %s\n", i.second.ToString());
+        LogPrintf("%s %s\n", prefix, i.second.ToString());
     }
     if (g_debug_lockorder_abort) {
         tfm::format(std::cerr,

@@ -27,6 +27,7 @@ from test_framework.script import (
     OP_NOP,
     SIGHASH_ALL,
 )
+from test_framework.script_util import key_to_p2wpkh_script
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
@@ -78,12 +79,13 @@ class MiniWallet:
             self._address = ADDRESS_BCRT1_P2WSH_OP_TRUE
             self._scriptPubKey = bytes.fromhex(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
-    def scan_blocks(self, *, start=1, num):
-        """Scan the blocks for self._address outputs and add them to self._utxos"""
-        for i in range(start, start + num):
-            block = self._test_node.getblock(blockhash=self._test_node.getblockhash(i), verbosity=2)
-            for tx in block['tx']:
-                self.scan_tx(tx)
+    def rescan_utxos(self):
+        """Drop all utxos and rescan the utxo set"""
+        self._utxos = []
+        res = self._test_node.scantxoutset(action="start", scanobjects=[self.get_descriptor()])
+        assert_equal(True, res['success'])
+        for utxo in res['unspents']:
+            self._utxos.append({'txid': utxo['txid'], 'vout': utxo['vout'], 'value': utxo['amount']})
 
     def scan_tx(self, tx):
         """Scan the tx for self._scriptPubKey outputs and add them to self._utxos"""
@@ -108,11 +110,14 @@ class MiniWallet:
 
     def generate(self, num_blocks):
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
-        blocks = self._test_node.generatetodescriptor(num_blocks, f'raw({self._scriptPubKey.hex()})')
+        blocks = self._test_node.generatetodescriptor(num_blocks, self.get_descriptor())
         for b in blocks:
             cb_tx = self._test_node.getblock(blockhash=b, verbosity=2)['tx'][0]
             self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value']})
         return blocks
+
+    def get_descriptor(self):
+        return self._test_node.getdescriptorinfo(f'raw({self._scriptPubKey.hex()})')['descriptor']
 
     def get_address(self):
         return self._address
@@ -140,6 +145,25 @@ class MiniWallet:
         tx = self.create_self_transfer(**kwargs)
         self.sendrawtransaction(from_node=kwargs['from_node'], tx_hex=tx['hex'])
         return tx
+
+    def send_to(self, *, from_node, scriptPubKey, amount, fee=1000):
+        """
+        Create and send a tx with an output to a given scriptPubKey/amount,
+        plus a change output to our internal address. To keep things simple, a
+        fixed fee given in Satoshi is used.
+
+        Note that this method fails if there is no single internal utxo
+        available that can cover the cost for the amount and the fixed fee
+        (the utxo with the largest value is taken).
+
+        Returns a tuple (txid, n) referring to the created external utxo outpoint.
+        """
+        tx = self.create_self_transfer(from_node=from_node, fee_rate=0, mempool_valid=False)['tx']
+        assert_greater_than_or_equal(tx.vout[0].nValue, amount + fee)
+        tx.vout[0].nValue -= (amount + fee)           # change output -> MiniWallet
+        tx.vout.append(CTxOut(amount, scriptPubKey))  # arbitrary output -> to be returned
+        txid = self.sendrawtransaction(from_node=from_node, tx_hex=tx.serialize().hex())
+        return txid, 1
 
     def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
         """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
@@ -178,8 +202,18 @@ class MiniWallet:
         return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex, 'tx': tx}
 
     def sendrawtransaction(self, *, from_node, tx_hex):
-        from_node.sendrawtransaction(tx_hex)
+        txid = from_node.sendrawtransaction(tx_hex)
         self.scan_tx(from_node.decoderawtransaction(tx_hex))
+        return txid
+
+
+def random_p2wpkh():
+    """Generate a random P2WPKH scriptPubKey. Can be used when a random destination is needed,
+    but no compiled wallet is available (e.g. as replacement to the getnewaddress RPC)."""
+    key = ECKey()
+    key.generate()
+    return key_to_p2wpkh_script(key.get_pubkey().get_bytes())
+
 
 def make_chain(node, address, privkeys, parent_txid, parent_value, parent_locking_script=None, fee=DEFAULT_FEE):
     """Build a transaction that spends parent_txid.vout[0] and produces one output with

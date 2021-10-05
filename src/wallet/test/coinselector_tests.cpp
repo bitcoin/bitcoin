@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <amount.h>
+#include <consensus/amount.h>
 #include <node/context.h>
 #include <primitives/transaction.h>
 #include <random.h>
@@ -40,7 +40,7 @@ CoinEligibilityFilter filter_standard_extra(6, 6, 0);
 CoinSelectionParams coin_selection_params(/* change_output_size= */ 0,
                                           /* change_spend_size= */ 0, /* effective_feerate= */ CFeeRate(0),
                                           /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
-                                          /* tx_no_inputs_size= */ 0, /* avoid_partial= */ false);
+                                          /* tx_noinputs_size= */ 0, /* avoid_partial= */ false);
 
 static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>& set)
 {
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     CoinSelectionParams coin_selection_params_bnb(/* change_output_size= */ 0,
                                                   /* change_spend_size= */ 0, /* effective_feerate= */ CFeeRate(3000),
                                                   /* long_term_feerate= */ CFeeRate(1000), /* discard_feerate= */ CFeeRate(1000),
-                                                  /* tx_no_inputs_size= */ 0, /* avoid_partial= */ false);
+                                                  /* tx_noinputs_size= */ 0, /* avoid_partial= */ false);
     CoinSet setCoinsRet;
     CAmount nValueRet;
     empty_wallet();
@@ -654,7 +654,7 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
         CoinSelectionParams cs_params(/* change_output_size= */ 34,
                                       /* change_spend_size= */ 148, /* effective_feerate= */ CFeeRate(0),
                                       /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
-                                      /* tx_no_inputs_size= */ 0, /* avoid_partial= */ false);
+                                      /* tx_noinputs_size= */ 0, /* avoid_partial= */ false);
         CoinSet out_set;
         CAmount out_value = 0;
         CCoinControl cc;
@@ -724,12 +724,25 @@ BOOST_AUTO_TEST_CASE(waste_test)
     BOOST_CHECK_LT(waste_nochange2, waste_nochange1);
     selection.clear();
 
-    // 0 Waste only when fee == long term fee, no change, and no excess
+    // No Waste when fee == long_term_fee, no change, and no excess
     add_coin(1 * COIN, 1, selection, fee, fee);
     add_coin(2 * COIN, 2, selection, fee, fee);
-    const CAmount exact_target = in_amt - 2 * fee;
-    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, 0, exact_target));
+    const CAmount exact_target{in_amt - fee * 2};
+    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, /* change_cost */ 0, exact_target));
+    selection.clear();
 
+    // No Waste when (fee - long_term_fee) == (-cost_of_change), and no excess
+    const CAmount new_change_cost{fee_diff * 2};
+    add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
+    add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
+    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, new_change_cost, target));
+    selection.clear();
+
+    // No Waste when (fee - long_term_fee) == (-excess), no change cost
+    const CAmount new_target{in_amt - fee * 2 - fee_diff * 2};
+    add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
+    add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
+    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, /* change cost */ 0, new_target));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

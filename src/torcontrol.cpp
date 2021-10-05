@@ -14,6 +14,7 @@
 #include <netbase.h>
 #include <util/readwritefile.h>
 #include <util/strencodings.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <util/thread.h>
 #include <util/time.h>
@@ -83,7 +84,7 @@ void TorControlConnection::readcb(struct bufferevent *bev, void *ctx)
         if (s.size() < 4) // Short line
             continue;
         // <status>(-|+| )<data><CRLF>
-        self->message.code = atoi(s.substr(0,3));
+        self->message.code = LocaleIndependentAtoi<int>(s.substr(0,3));
         self->message.lines.push_back(s.substr(4));
         char ch = s[3]; // '-','+' or ' '
         if (ch == ' ') {
@@ -585,6 +586,7 @@ static std::thread torControlThread;
 
 static void TorControlThread(CService onion_service_target)
 {
+    SetSyscallSandboxPolicy(SyscallSandboxPolicy::TOR_CONTROL);
     TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target);
 
     event_base_dispatch(gBase);

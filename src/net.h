@@ -6,12 +6,11 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
-#include <addrdb.h>
 #include <addrman.h>
-#include <amount.h>
 #include <bloom.h>
 #include <chainparams.h>
 #include <compat.h>
+#include <consensus/amount.h>
 #include <crypto/siphash.h>
 #include <hash.h>
 #include <i2p.h>
@@ -652,7 +651,7 @@ public:
 
     void CloseSocketDisconnect();
 
-    void copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap);
+    void CopyStats(CNodeStats& stats);
 
     ServiceFlags GetLocalServices() const
     {
@@ -768,7 +767,6 @@ public:
         bool m_use_addrman_outgoing = true;
         std::vector<std::string> m_specified_outgoing;
         std::vector<std::string> m_added_nodes;
-        std::vector<bool> m_asmap;
         bool m_i2p_accept_incoming;
     };
 
@@ -942,8 +940,6 @@ public:
         Variable intervals will result in privacy decrease.
     */
     std::chrono::microseconds PoissonNextSendInbound(std::chrono::microseconds now, std::chrono::seconds average_interval);
-
-    void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
     /** Return true if we should disconnect the peer for failing an inactivity check. */
     bool ShouldRunInactivityChecks(const CNode& node, std::optional<int64_t> now=std::nullopt) const;

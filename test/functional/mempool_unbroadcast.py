@@ -109,7 +109,7 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         # a block
         removal_reason = "Removed {} from set of unbroadcast txns before confirmation that txn was sent out".format(txhsh)
         with node.assert_debug_log([removal_reason]):
-            node.generate(1)
+            self.generate(node, 1)
 
 if __name__ == "__main__":
     MempoolUnbroadcastTest().main()

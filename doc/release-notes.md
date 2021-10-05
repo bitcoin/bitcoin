@@ -46,7 +46,7 @@ Compatibility
 ==============
 
 Bitcoin Core is supported and extensively tested on operating systems
-using the Linux kernel, macOS 10.14+, and Windows 7 and newer.  Bitcoin
+using the Linux kernel, macOS 10.15+, and Windows 7 and newer.  Bitcoin
 Core should also work on most other Unix-like systems but is not as
 frequently tested on them.  It is not recommended to use Bitcoin Core on
 unsupported systems.
@@ -61,8 +61,29 @@ P2P and network changes
   They will become eligible for address gossip after sending an ADDR, ADDRV2,
   or GETADDR message. (#21528)
 
+Rescan startup parameter removed
+--------------------------------
+
+The `-rescan` startup parameter has been removed. Wallets which require
+rescanning due to corruption will still be rescanned on startup.
+Otherwise, please use the `rescanblockchain` RPC to trigger a rescan. (#23123)
+
 Updated RPCs
 ------------
+
+- The `-deprecatedrpc=addresses` configuration option has been removed.  RPCs
+  `gettxout`, `getrawtransaction`, `decoderawtransaction`, `decodescript`,
+  `gettransaction verbose=true` and REST endpoints `/rest/tx`, `/rest/getutxos`,
+  `/rest/block` no longer return the `addresses` and `reqSigs` fields, which
+  were previously deprecated in 22.0. (#22650)
+
+- `listunspent` now includes `ancestorcount`, `ancestorsize`, and
+  `ancestorfees` for each transaction output that is still in the mempool.
+  (#12677)
+
+- `lockunspent` now optionally takes a third parameter, `persistent`, which
+  causes the lock to be written persistently to the wallet database. This
+  allows UTXOs to remain locked even after node restarts or crashes. (#23065)
 
 New RPCs
 --------
@@ -86,16 +107,29 @@ New settings
 Updated settings
 ----------------
 
+- In previous releases, the meaning of the command line option
+  `-persistmempool` (without a value provided) incorrectly disabled mempool
+  persistence.  `-persistmempool` is now treated like other boolean options to
+  mean `-persistmempool=1`. Passing `-persistmempool=0`, `-persistmempool=1`
+  and `-nopersistmempool` is unaffected. (#23061)
+
 Tools and Utilities
 -------------------
 
 - Update `-getinfo` to return data in a user-friendly format that also reduces vertical space. (#21832)
+
+- CLI `-addrinfo` now returns a single field for the number of `onion` addresses
+  known to the node instead of separate `torv2` and `torv3` fields, as support
+  for Tor V2 addresses was removed from Bitcoin Core in 22.0. (#22544)
 
 Wallet
 ------
 
 GUI changes
 -----------
+
+- UTXOs which are locked via the GUI are now stored persistently in the
+  wallet database, so are not lost on node shutdown or crash. (#23065)
 
 Low-level changes
 =================
@@ -109,10 +143,8 @@ Tests
 -----
 
 - For the `regtest` network the activation heights of several softforks were
-  changed.
-  * BIP 34 (blockheight in coinbase) from 500 to 2 (#16333)
-  * BIP 66 (DERSIG) from 1251 to 102 (#22632)
-  * BIP 65 (CLTV) from 1351 to 111 (#21862)
+  set to block height 1. They can be changed by the runtime setting
+  `-testactivationheight=name@height`. (#22818)
 
 Credits
 =======

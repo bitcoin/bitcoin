@@ -98,6 +98,7 @@ BASE_SCRIPTS = [
     'rpc_fundrawtransaction.py --legacy-wallet',
     'rpc_fundrawtransaction.py --descriptors',
     'p2p_compactblocks.py',
+    'p2p_compactblocks_blocksonly.py',
     'feature_segwit.py --legacy-wallet',
     # vv Tests less than 2m vv
     'wallet_basic.py --legacy-wallet',
@@ -170,11 +171,13 @@ BASE_SCRIPTS = [
     'rpc_users.py',
     'rpc_whitelist.py',
     'feature_proxy.py',
+    'feature_syscall_sandbox.py',
     'rpc_signrawtransaction.py --legacy-wallet',
     'rpc_signrawtransaction.py --descriptors',
     'rpc_rawtransaction.py --legacy-wallet',
     'rpc_rawtransaction.py --descriptors',
     'wallet_groups.py --legacy-wallet',
+    'wallet_transactiontime_rescan.py',
     'p2p_addrv2_relay.py',
     'wallet_groups.py --descriptors',
     'p2p_compactblocks_hb.py',
@@ -282,6 +285,7 @@ BASE_SCRIPTS = [
     'p2p_blockfilters.py',
     'p2p_message_capture.py',
     'feature_includeconf.py',
+    'feature_addrman.py',
     'feature_asmap.py',
     'mempool_unbroadcast.py',
     'mempool_compatibility.py',
@@ -303,7 +307,6 @@ BASE_SCRIPTS = [
     'feature_presegwit_node_upgrade.py',
     'feature_settings.py',
     'rpc_getdescriptorinfo.py',
-    'rpc_addresses_deprecation.py',
     'rpc_help.py',
     'feature_help.py',
     'feature_shutdown.py',
@@ -400,8 +403,9 @@ def main():
         for test in tests:
             script = test.split("/")[-1]
             script = script + ".py" if ".py" not in script else script
-            if script in ALL_SCRIPTS:
-                test_list.append(script)
+            matching_scripts = [s for s in ALL_SCRIPTS if s.startswith(script)]
+            if matching_scripts:
+                test_list.extend(matching_scripts)
             else:
                 print("{}WARNING!{} Test '{}' not found in full test list.".format(BOLD[1], BOLD[0], test))
     elif args.extended:

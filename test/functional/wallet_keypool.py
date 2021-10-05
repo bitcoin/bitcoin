@@ -156,7 +156,7 @@ class KeyPoolTest(BitcoinTestFramework):
         w1.walletpassphrase('test', 100)
 
         res = w1.sendtoaddress(address=address, amount=0.00010000)
-        nodes[0].generate(1)
+        self.generate(nodes[0], 1)
         destination = addr.pop()
 
         # Using a fee rate (10 sat / byte) well above the minimum relay rate

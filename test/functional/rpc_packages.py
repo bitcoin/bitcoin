@@ -51,7 +51,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         self.address = node.get_deterministic_priv_key().address
         self.coins = []
         # The last 100 coinbase transactions are premature
-        for b in node.generatetoaddress(200, self.address)[:100]:
+        for b in self.generatetoaddress(node, 200, self.address)[:100]:
             coinbase = node.getblock(blockhash=b, verbosity=2)["tx"][0]
             self.coins.append({
                 "txid": coinbase["txid"],
@@ -151,7 +151,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_equal(testres_single, testres_multiple)
 
         # Clean up by clearing the mempool
-        node.generate(1)
+        self.generate(node, 1)
 
     def test_multiple_children(self):
         node = self.nodes[0]

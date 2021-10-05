@@ -6,6 +6,8 @@
 #ifndef BITCOIN_SYNC_H
 #define BITCOIN_SYNC_H
 
+#include <logging.h>
+#include <logging/timer.h>
 #include <threadsafety.h>
 #include <util/macros.h>
 
@@ -126,9 +128,6 @@ using RecursiveMutex = AnnotatedMixin<std::recursive_mutex>;
 /** Wrapped mutex: supports waiting but not recursive locking */
 typedef AnnotatedMixin<std::mutex> Mutex;
 
-/** Prints a lock contention to the log */
-void LockContention(const char* pszName, const char* pszFile, int nLine);
-
 /** Wrapper around std::unique_lock style lock for Mutex. */
 template <typename Mutex, typename Base = typename Mutex::UniqueLock>
 class SCOPED_LOCKABLE UniqueLock : public Base
@@ -138,7 +137,7 @@ private:
     {
         EnterCritical(pszName, pszFile, nLine, Base::mutex());
         if (Base::try_lock()) return;
-        LockContention(pszName, pszFile, nLine); // log the contention
+        LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
         Base::lock();
     }
 

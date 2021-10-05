@@ -11,6 +11,7 @@
 #include <qt/psbtoperationsdialog.h>
 #include <qt/walletmodel.h>
 #include <qt/walletview.h>
+#include <util/system.h>
 
 #include <cassert>
 
@@ -64,14 +65,13 @@ void WalletFrame::setClientModel(ClientModel *_clientModel)
     }
 }
 
-bool WalletFrame::addWallet(WalletModel* walletModel, WalletView* walletView)
+bool WalletFrame::addView(WalletView* walletView)
 {
-    if (!clientModel || !walletModel) return false;
+    if (!clientModel) return false;
 
-    if (mapWalletViews.count(walletModel) > 0) return false;
+    if (mapWalletViews.count(walletView->getWalletModel()) > 0) return false;
 
     walletView->setClientModel(clientModel);
-    walletView->setWalletModel(walletModel);
     walletView->showOutOfSyncWarning(bOutOfSync);
 
     WalletView* current_wallet_view = currentWalletView();
@@ -82,7 +82,7 @@ bool WalletFrame::addWallet(WalletModel* walletModel, WalletView* walletView)
     }
 
     walletStack->addWidget(walletView);
-    mapWalletViews[walletModel] = walletView;
+    mapWalletViews[walletView->getWalletModel()] = walletView;
 
     return true;
 }
@@ -221,10 +221,9 @@ void WalletFrame::gotoLoadPSBT(bool from_clipboard)
         return;
     }
 
-    PSBTOperationsDialog* dlg = new PSBTOperationsDialog(this, currentWalletModel(), clientModel);
+    auto dlg = new PSBTOperationsDialog(this, currentWalletModel(), clientModel);
     dlg->openWithPSBT(psbtx);
-    dlg->setAttribute(Qt::WA_DeleteOnClose);
-    dlg->exec();
+    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
 }
 
 void WalletFrame::encryptWallet()

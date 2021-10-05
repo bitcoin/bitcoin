@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <amount.h>
+#include <consensus/amount.h>
 #include <core_io.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
@@ -43,6 +43,7 @@
 
 #include <univalue.h>
 
+#include <map>
 
 using interfaces::FoundBlock;
 
@@ -472,7 +473,7 @@ static RPCHelpMan sendtoaddress()
                         RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
-                            {RPCResult::Type::STR, "fee reason", "The transaction fee reason."}
+                            {RPCResult::Type::STR, "fee_reason", "The transaction fee reason."}
                         },
                     },
                 },
@@ -899,7 +900,7 @@ static RPCHelpMan sendmany()
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of\n"
                 "the number of addresses."},
-                            {RPCResult::Type::STR, "fee reason", "The transaction fee reason."}
+                            {RPCResult::Type::STR, "fee_reason", "The transaction fee reason."}
                         },
                     },
                 },
@@ -1213,7 +1214,7 @@ static RPCHelpMan listreceivedbyaddress()
                     {
                         {RPCResult::Type::OBJ, "", "",
                         {
-                            {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction"},
+                            {RPCResult::Type::BOOL, "involvesWatchonly", /* optional */ true, "Only returns true if imported addresses were involved in transaction"},
                             {RPCResult::Type::STR, "address", "The receiving address"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " received by the address"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations of the most recent transaction included"},
@@ -1261,7 +1262,7 @@ static RPCHelpMan listreceivedbylabel()
                     {
                         {RPCResult::Type::OBJ, "", "",
                         {
-                            {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction"},
+                            {RPCResult::Type::BOOL, "involvesWatchonly", /* optional */ true, "Only returns true if imported addresses were involved in transaction"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "The total amount received by addresses with this label"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations of the most recent transaction included"},
                             {RPCResult::Type::STR, "label", "The label of the receiving address. The default label is \"\""},
@@ -1388,20 +1389,24 @@ static const std::vector<RPCResult> TransactionDescriptionString()
 {
     return{{RPCResult::Type::NUM, "confirmations", "The number of confirmations for the transaction. Negative confirmations means the\n"
                "transaction conflicted that many blocks ago."},
-           {RPCResult::Type::BOOL, "generated", "Only present if transaction only input is a coinbase one."},
-           {RPCResult::Type::BOOL, "trusted", "Only present if we consider transaction to be trusted and so safe to spend from."},
-           {RPCResult::Type::STR_HEX, "blockhash", "The block hash containing the transaction."},
-           {RPCResult::Type::NUM, "blockheight", "The block height containing the transaction."},
-           {RPCResult::Type::NUM, "blockindex", "The index of the transaction in the block that includes it."},
-           {RPCResult::Type::NUM_TIME, "blocktime", "The block time expressed in " + UNIX_EPOCH_TIME + "."},
+           {RPCResult::Type::BOOL, "generated", /* optional */ true, "Only present if transaction only input is a coinbase one."},
+           {RPCResult::Type::BOOL, "trusted", /* optional */ true, "Only present if we consider transaction to be trusted and so safe to spend from."},
+           {RPCResult::Type::STR_HEX, "blockhash", /* optional */ true, "The block hash containing the transaction."},
+           {RPCResult::Type::NUM, "blockheight", /* optional */ true, "The block height containing the transaction."},
+           {RPCResult::Type::NUM, "blockindex", /* optional */ true, "The index of the transaction in the block that includes it."},
+           {RPCResult::Type::NUM_TIME, "blocktime", /* optional */ true, "The block time expressed in " + UNIX_EPOCH_TIME + "."},
            {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
            {RPCResult::Type::ARR, "walletconflicts", "Conflicting transaction ids.",
            {
                {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
            }},
+           {RPCResult::Type::STR_HEX, "replaced_by_txid", /* optional */ true, "The txid if this tx was replaced."},
+           {RPCResult::Type::STR_HEX, "replaces_txid", /* optional */ true, "The txid if the tx replaces one."},
+           {RPCResult::Type::STR, "comment", /* optional */ true, ""},
+           {RPCResult::Type::STR, "to", /* optional */ true, "If a comment to is associated with the transaction."},
            {RPCResult::Type::NUM_TIME, "time", "The transaction time expressed in " + UNIX_EPOCH_TIME + "."},
            {RPCResult::Type::NUM_TIME, "timereceived", "The time received expressed in " + UNIX_EPOCH_TIME + "."},
-           {RPCResult::Type::STR, "comment", "If a comment is associated with the transaction, only present if not empty."},
+           {RPCResult::Type::STR, "comment", /* optional */ true, "If a comment is associated with the transaction, only present if not empty."},
            {RPCResult::Type::STR, "bip125-replaceable", "(\"yes|no|unknown\") Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
                "may be unknown for unconfirmed transactions not in the mempool"}};
 }
@@ -1423,7 +1428,7 @@ static RPCHelpMan listtransactions()
                     {
                         {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
                         {
-                            {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction."},
+                            {RPCResult::Type::BOOL, "involvesWatchonly", /* optional */ true, "Only returns true if imported addresses were involved in transaction."},
                             {RPCResult::Type::STR, "address", "The bitcoin address of the transaction."},
                             {RPCResult::Type::STR, "category", "The transaction category.\n"
                                 "\"send\"                  Transactions sent.\n"
@@ -1433,14 +1438,14 @@ static RPCHelpMan listtransactions()
                                 "\"orphan\"                Orphaned coinbase transactions received."},
                             {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
                                 "for all other categories"},
-                            {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any"},
+                            {RPCResult::Type::STR, "label", /* optional */ true, "A comment for the address/transaction, if any"},
                             {RPCResult::Type::NUM, "vout", "the vout value"},
-                            {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                            {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                  "'send' category of transactions."},
                         },
                         TransactionDescriptionString()),
                         {
-                            {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
+                            {RPCResult::Type::BOOL, "abandoned", /* optional */ true, "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
                                  "'send' category of transactions."},
                         })},
                     }
@@ -1537,7 +1542,7 @@ static RPCHelpMan listsinceblock()
                         {
                             {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
                             {
-                                {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction."},
+                                {RPCResult::Type::BOOL, "involvesWatchonly", /* optional */ true, "Only returns true if imported addresses were involved in transaction."},
                                 {RPCResult::Type::STR, "address", "The bitcoin address of the transaction."},
                                 {RPCResult::Type::STR, "category", "The transaction category.\n"
                                     "\"send\"                  Transactions sent.\n"
@@ -1548,18 +1553,17 @@ static RPCHelpMan listsinceblock()
                                 {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
                                     "for all other categories"},
                                 {RPCResult::Type::NUM, "vout", "the vout value"},
-                                {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                                {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                      "'send' category of transactions."},
                             },
                             TransactionDescriptionString()),
                             {
-                                {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
+                                {RPCResult::Type::BOOL, "abandoned", /* optional */ true, "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
                                      "'send' category of transactions."},
-                                {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any"},
-                                {RPCResult::Type::STR, "to", "If a comment to is associated with the transaction."},
+                                {RPCResult::Type::STR, "label", /* optional */ true, "A comment for the address/transaction, if any"},
                             })},
                         }},
-                        {RPCResult::Type::ARR, "removed", "<structure is the same as \"transactions\" above, only present if include_removed=true>\n"
+                        {RPCResult::Type::ARR, "removed", /* optional */ true, "<structure is the same as \"transactions\" above, only present if include_removed=true>\n"
                             "Note: transactions that were re-added in the active chain will appear as-is in this array, and may thus have a positive confirmation count."
                         , {{RPCResult::Type::ELISION, "", ""},}},
                         {RPCResult::Type::STR_HEX, "lastblock", "The hash of the block (target_confirmations-1) from the best block on the main chain, or the genesis hash if the referenced block does not exist yet. This is typically used to feed back into listsinceblock the next time you call it. So you would generally use a target_confirmations of say 6, so you will be continually re-notified of transactions until they've reached 6 confirmations plus any new ones"},
@@ -1672,7 +1676,7 @@ static RPCHelpMan gettransaction()
                     RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
                     {
                         {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
-                        {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                        {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                      "'send' category of transactions."},
                     },
                     TransactionDescriptionString()),
@@ -1681,8 +1685,8 @@ static RPCHelpMan gettransaction()
                         {
                             {RPCResult::Type::OBJ, "", "",
                             {
-                                {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction."},
-                                {RPCResult::Type::STR, "address", "The bitcoin address involved in the transaction."},
+                                {RPCResult::Type::BOOL, "involvesWatchonly", /* optional */ true, "Only returns true if imported addresses were involved in transaction."},
+                                {RPCResult::Type::STR, "address", /* optional */ true, "The bitcoin address involved in the transaction."},
                                 {RPCResult::Type::STR, "category", "The transaction category.\n"
                                     "\"send\"                  Transactions sent.\n"
                                     "\"receive\"               Non-coinbase transactions received.\n"
@@ -1690,16 +1694,16 @@ static RPCHelpMan gettransaction()
                                     "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
                                     "\"orphan\"                Orphaned coinbase transactions received."},
                                 {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
-                                {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any"},
+                                {RPCResult::Type::STR, "label", /* optional */ true, "A comment for the address/transaction, if any"},
                                 {RPCResult::Type::NUM, "vout", "the vout value"},
-                                {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
+                                {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
                                     "'send' category of transactions."},
-                                {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
+                                {RPCResult::Type::BOOL, "abandoned", /* optional */ true, "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
                                      "'send' category of transactions."},
                             }},
                         }},
                         {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
-                        {RPCResult::Type::OBJ, "decoded", "Optional, the decoded transaction (only present when `verbose` is passed)",
+                        {RPCResult::Type::OBJ, "decoded", /* optional */ true, "The decoded transaction (only present when `verbose` is passed)",
                         {
                             {RPCResult::Type::ELISION, "", "Equivalent to the RPC decoderawtransaction method, or the RPC getrawtransaction method when `verbose` is passed."},
                         }},
@@ -1759,7 +1763,7 @@ static RPCHelpMan gettransaction()
 
     if (verbose) {
         UniValue decoded(UniValue::VOBJ);
-        TxToUniv(*wtx.tx, uint256(), pwallet->chain().rpcEnableDeprecated("addresses"), decoded, false);
+        TxToUniv(*wtx.tx, uint256(), decoded, false);
         entry.pushKV("decoded", decoded);
     }
 
@@ -2137,8 +2141,9 @@ static RPCHelpMan lockunspent()
                 "If no transaction outputs are specified when unlocking then all current locked transaction outputs are unlocked.\n"
                 "A locked transaction output will not be chosen by automatic coin selection, when spending bitcoins.\n"
                 "Manually selected coins are automatically unlocked.\n"
-                "Locks are stored in memory only. Nodes start with zero locked outputs, and the locked output list\n"
-                "is always cleared (by virtue of process exit) when a node stops or fails.\n"
+                "Locks are stored in memory only, unless persistent=true, in which case they will be written to the\n"
+                "wallet database and loaded on node start. Unwritten (persistent=false) locks are always cleared\n"
+                "(by virtue of process exit) when a node stops or fails. Unlocking will clear both persistent and not.\n"
                 "Also see the listunspent call\n",
                 {
                     {"unlock", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Whether to unlock (true) or lock (false) the specified transactions"},
@@ -2152,6 +2157,7 @@ static RPCHelpMan lockunspent()
                             },
                         },
                     },
+                    {"persistent", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to write/erase this lock in the wallet database, or keep the change in memory only. Ignored for unlocking."},
                 },
                 RPCResult{
                     RPCResult::Type::BOOL, "", "Whether the command was successful or not"
@@ -2165,6 +2171,8 @@ static RPCHelpMan lockunspent()
             + HelpExampleCli("listlockunspent", "") +
             "\nUnlock the transaction again\n"
             + HelpExampleCli("lockunspent", "true \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"") +
+            "\nLock the transaction persistently in the wallet database\n"
+            + HelpExampleCli("lockunspent", "false \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\" true") +
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("lockunspent", "false, \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"")
                 },
@@ -2183,9 +2191,13 @@ static RPCHelpMan lockunspent()
 
     bool fUnlock = request.params[0].get_bool();
 
+    const bool persistent{request.params[2].isNull() ? false : request.params[2].get_bool()};
+
     if (request.params[1].isNull()) {
-        if (fUnlock)
-            pwallet->UnlockAllCoins();
+        if (fUnlock) {
+            if (!pwallet->UnlockAllCoins())
+                throw JSONRPCError(RPC_WALLET_ERROR, "Unlocking coins failed");
+        }
         return true;
     }
 
@@ -2236,17 +2248,24 @@ static RPCHelpMan lockunspent()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected locked output");
         }
 
-        if (!fUnlock && is_locked) {
+        if (!fUnlock && is_locked && !persistent) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output already locked");
         }
 
         outputs.push_back(outpt);
     }
 
+    std::unique_ptr<WalletBatch> batch = nullptr;
+    // Unlock is always persistent
+    if (fUnlock || persistent) batch = std::make_unique<WalletBatch>(pwallet->GetDatabase());
+
     // Atomically set (un)locked status for the outputs.
     for (const COutPoint& outpt : outputs) {
-        if (fUnlock) pwallet->UnlockCoin(outpt);
-        else pwallet->LockCoin(outpt);
+        if (fUnlock) {
+            if (!pwallet->UnlockCoin(outpt, batch.get())) throw JSONRPCError(RPC_WALLET_ERROR, "Unlocking coin failed");
+        } else {
+            if (!pwallet->LockCoin(outpt, batch.get())) throw JSONRPCError(RPC_WALLET_ERROR, "Locking coin failed");
+        }
     }
 
     return true;
@@ -2362,9 +2381,9 @@ static RPCHelpMan getbalances()
                     {RPCResult::Type::STR_AMOUNT, "trusted", "trusted balance (outputs created by the wallet or confirmed outputs)"},
                     {RPCResult::Type::STR_AMOUNT, "untrusted_pending", "untrusted pending balance (outputs created by others that are in the mempool)"},
                     {RPCResult::Type::STR_AMOUNT, "immature", "balance from immature coinbase outputs"},
-                    {RPCResult::Type::STR_AMOUNT, "used", "(only present if avoid_reuse is set) balance from coins sent to addresses that were previously spent from (potentially privacy violating)"},
+                    {RPCResult::Type::STR_AMOUNT, "used", /* optional */ true, "(only present if avoid_reuse is set) balance from coins sent to addresses that were previously spent from (potentially privacy violating)"},
                 }},
-                {RPCResult::Type::OBJ, "watchonly", "watchonly balances (not present if wallet does not watch anything)",
+                {RPCResult::Type::OBJ, "watchonly", /* optional */ true, "watchonly balances (not present if wallet does not watch anything)",
                 {
                     {RPCResult::Type::STR_AMOUNT, "trusted", "trusted balance (outputs created by the wallet or confirmed outputs)"},
                     {RPCResult::Type::STR_AMOUNT, "untrusted_pending", "untrusted pending balance (outputs created by others that are in the mempool)"},
@@ -2431,9 +2450,9 @@ static RPCHelpMan getwalletinfo()
                         {RPCResult::Type::STR_AMOUNT, "unconfirmed_balance", "DEPRECATED. Identical to getbalances().mine.untrusted_pending"},
                         {RPCResult::Type::STR_AMOUNT, "immature_balance", "DEPRECATED. Identical to getbalances().mine.immature"},
                         {RPCResult::Type::NUM, "txcount", "the total number of transactions in the wallet"},
-                        {RPCResult::Type::NUM_TIME, "keypoololdest", "the " + UNIX_EPOCH_TIME + " of the oldest pre-generated key in the key pool. Legacy wallets only."},
+                        {RPCResult::Type::NUM_TIME, "keypoololdest", /* optional */ true, "the " + UNIX_EPOCH_TIME + " of the oldest pre-generated key in the key pool. Legacy wallets only."},
                         {RPCResult::Type::NUM, "keypoolsize", "how many new keys are pre-generated (only counts external keys)"},
-                        {RPCResult::Type::NUM, "keypoolsize_hd_internal", "how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used)"},
+                        {RPCResult::Type::NUM, "keypoolsize_hd_internal", /* optional */ true, "how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used)"},
                         {RPCResult::Type::NUM_TIME, "unlocked_until", /* optional */ true, "the " + UNIX_EPOCH_TIME + " until which the wallet is unlocked for transfers, or 0 if the wallet is locked (only present for passphrase-encrypted wallets)"},
                         {RPCResult::Type::STR_AMOUNT, "paytxfee", "the transaction fee configuration, set in " + CURRENCY_UNIT + "/kvB"},
                         {RPCResult::Type::STR_HEX, "hdseedid", /* optional */ true, "the Hash160 of the HD seed (only present when HD is enabled)"},
@@ -2614,7 +2633,7 @@ static RPCHelpMan loadwallet()
     return RPCHelpMan{"loadwallet",
                 "\nLoads a wallet from a wallet file or directory."
                 "\nNote that all wallet command-line options used when starting bitcoind will be"
-                "\napplied to the new wallet (eg -rescan, etc).\n",
+                "\napplied to the new wallet.\n",
                 {
                     {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file."},
                     {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
@@ -2955,17 +2974,20 @@ static RPCHelpMan listunspent()
                         {
                             {RPCResult::Type::STR_HEX, "txid", "the transaction id"},
                             {RPCResult::Type::NUM, "vout", "the vout value"},
-                            {RPCResult::Type::STR, "address", "the bitcoin address"},
-                            {RPCResult::Type::STR, "label", "The associated label, or \"\" for the default label"},
+                            {RPCResult::Type::STR, "address", /* optional */ true, "the bitcoin address"},
+                            {RPCResult::Type::STR, "label", /* optional */ true, "The associated label, or \"\" for the default label"},
                             {RPCResult::Type::STR, "scriptPubKey", "the script key"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
-                            {RPCResult::Type::STR_HEX, "redeemScript", "The redeemScript if scriptPubKey is P2SH"},
-                            {RPCResult::Type::STR, "witnessScript", "witnessScript if the scriptPubKey is P2WSH or P2SH-P2WSH"},
+                            {RPCResult::Type::NUM, "ancestorcount", /* optional */ true, "The number of in-mempool ancestor transactions, including this one (if transaction is in the mempool)"},
+                            {RPCResult::Type::NUM, "ancestorsize", /* optional */ true, "The virtual transaction size of in-mempool ancestors, including this one (if transaction is in the mempool)"},
+                            {RPCResult::Type::STR_AMOUNT, "ancestorfees", /* optional */ true, "The total fees of in-mempool ancestors (including this one) with fee deltas used for mining priority in " + CURRENCY_ATOM + " (if transaction is in the mempool)"},
+                            {RPCResult::Type::STR_HEX, "redeemScript", /* optional */ true, "The redeemScript if scriptPubKey is P2SH"},
+                            {RPCResult::Type::STR, "witnessScript", /* optional */ true, "witnessScript if the scriptPubKey is P2WSH or P2SH-P2WSH"},
                             {RPCResult::Type::BOOL, "spendable", "Whether we have the private keys to spend this output"},
                             {RPCResult::Type::BOOL, "solvable", "Whether we know how to spend this output, ignoring the lack of keys"},
-                            {RPCResult::Type::BOOL, "reused", "(only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)"},
-                            {RPCResult::Type::STR, "desc", "(only when solvable) A descriptor for spending this output"},
+                            {RPCResult::Type::BOOL, "reused", /* optional */ true, "(only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)"},
+                            {RPCResult::Type::STR, "desc", /* optional */ true, "(only when solvable) A descriptor for spending this output"},
                             {RPCResult::Type::BOOL, "safe", "Whether this output is considered safe to spend. Unconfirmed transactions\n"
                                                             "from outside keys and unconfirmed replacement transactions are considered unsafe\n"
                                                             "and are not eligible for spending by fundrawtransaction and sendtoaddress."},
@@ -3126,6 +3148,16 @@ static RPCHelpMan listunspent()
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey));
         entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
         entry.pushKV("confirmations", out.nDepth);
+        if (!out.nDepth) {
+            size_t ancestor_count, descendant_count, ancestor_size;
+            CAmount ancestor_fees;
+            pwallet->chain().getTransactionAncestry(out.tx->GetHash(), ancestor_count, descendant_count, &ancestor_size, &ancestor_fees);
+            if (ancestor_count) {
+                entry.pushKV("ancestorcount", uint64_t(ancestor_count));
+                entry.pushKV("ancestorsize", uint64_t(ancestor_size));
+                entry.pushKV("ancestorfees", uint64_t(ancestor_fees));
+            }
+        }
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);
         if (out.fSolvable) {
@@ -3182,6 +3214,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
                 {"fee_rate", UniValueType()}, // will be checked by AmountFromValue() in SetFeeEstimateMode()
                 {"feeRate", UniValueType()}, // will be checked by AmountFromValue() below
                 {"psbt", UniValueType(UniValue::VBOOL)},
+                {"solving_data", UniValueType(UniValue::VOBJ)},
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
                 {"subtract_fee_from_outputs", UniValueType(UniValue::VARR)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
@@ -3258,6 +3291,54 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
         coinControl.fAllowWatchOnly = ParseIncludeWatchonly(NullUniValue, wallet);
     }
 
+    if (options.exists("solving_data")) {
+        UniValue solving_data = options["solving_data"].get_obj();
+        if (solving_data.exists("pubkeys")) {
+            for (const UniValue& pk_univ : solving_data["pubkeys"].get_array().getValues()) {
+                const std::string& pk_str = pk_univ.get_str();
+                if (!IsHex(pk_str)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("'%s' is not hex", pk_str));
+                }
+                const std::vector<unsigned char> data(ParseHex(pk_str));
+                CPubKey pubkey(data.begin(), data.end());
+                if (!pubkey.IsFullyValid()) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("'%s' is not a valid public key", pk_str));
+                }
+                coinControl.m_external_provider.pubkeys.emplace(pubkey.GetID(), pubkey);
+                // Add witness script for pubkeys
+                const CScript wit_script = GetScriptForDestination(WitnessV0KeyHash(pubkey));
+                coinControl.m_external_provider.scripts.emplace(CScriptID(wit_script), wit_script);
+            }
+        }
+
+        if (solving_data.exists("scripts")) {
+            for (const UniValue& script_univ : solving_data["scripts"].get_array().getValues()) {
+                const std::string& script_str = script_univ.get_str();
+                if (!IsHex(script_str)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("'%s' is not hex", script_str));
+                }
+                std::vector<unsigned char> script_data(ParseHex(script_str));
+                const CScript script(script_data.begin(), script_data.end());
+                coinControl.m_external_provider.scripts.emplace(CScriptID(script), script);
+            }
+        }
+
+        if (solving_data.exists("descriptors")) {
+            for (const UniValue& desc_univ : solving_data["descriptors"].get_array().getValues()) {
+                const std::string& desc_str  = desc_univ.get_str();
+                FlatSigningProvider desc_out;
+                std::string error;
+                std::vector<CScript> scripts_temp;
+                std::unique_ptr<Descriptor> desc = Parse(desc_str, desc_out, error, true);
+                if (!desc) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unable to parse descriptor '%s': %s", desc_str, error));
+                }
+                desc->Expand(0, desc_out, scripts_temp, desc_out);
+                coinControl.m_external_provider = Merge(coinControl.m_external_provider, desc_out);
+            }
+        }
+    }
+
     if (tx.vout.size() == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
@@ -3275,6 +3356,19 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
         setSubtractFeeFromOutputs.insert(pos);
     }
 
+    // Fetch specified UTXOs from the UTXO set to get the scriptPubKeys and values of the outputs being selected
+    // and to match with the given solving_data. Only used for non-wallet outputs.
+    std::map<COutPoint, Coin> coins;
+    for (const CTxIn& txin : tx.vin) {
+        coins[txin.prevout]; // Create empty map entry keyed by prevout.
+    }
+    wallet.chain().findCoins(coins);
+    for (const auto& coin : coins) {
+        if (!coin.second.out.IsNull()) {
+            coinControl.Select(coin.first, coin.second.out);
+        }
+    }
+
     bilingual_str error;
 
     if (!FundTransaction(wallet, tx, fee_out, change_position, error, lockUnspents, setSubtractFeeFromOutputs, coinControl)) {
@@ -3290,8 +3384,9 @@ static RPCHelpMan fundrawtransaction()
                 "No existing outputs will be modified unless \"subtractFeeFromOutputs\" is specified.\n"
                 "Note that inputs which were signed may need to be resigned after completion since in/outputs have been added.\n"
                 "The inputs added will not be signed, use signrawtransactionwithkey\n"
-                " or signrawtransactionwithwallet for that.\n"
-                "Note that all existing inputs must have their previous output transaction be in the wallet.\n"
+                "or signrawtransactionwithwallet for that.\n"
+                "All existing inputs must either have their previous output transaction be in the wallet\n"
+                "or be in the UTXO set. Solving data must be provided for non-wallet inputs.\n"
                 "Note that all inputs selected must be of standard form and P2SH scripts must be\n"
                 "in the wallet using importaddress or addmultisigaddress (to calculate fees).\n"
                 "You can see whether this is the case by checking the \"solvable\" field in the listunspent output.\n"
@@ -3326,6 +3421,26 @@ static RPCHelpMan fundrawtransaction()
                             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
                             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                             "       \"" + FeeModes("\"\n\"") + "\""},
+                            {"solving_data", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "Keys and scripts needed for producing a final transaction with a dummy signature.\n"
+                                "Used for fee estimation during coin selection.",
+                                {
+                                    {"pubkeys", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Public keys involved in this transaction.",
+                                        {
+                                            {"pubkey", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A public key"},
+                                        },
+                                    },
+                                    {"scripts", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Scripts involved in this transaction.",
+                                        {
+                                            {"script", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A script"},
+                                        },
+                                    },
+                                    {"descriptors", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Descriptors that provide solving data for this transaction.",
+                                        {
+                                            {"descriptor", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A descriptor"},
+                                        },
+                                    }
+                                }
+                            },
                         },
                         "options"},
                     {"iswitness", RPCArg::Type::BOOL, RPCArg::DefaultHint{"depends on heuristic tests"}, "Whether the transaction hex is a serialized witness transaction.\n"
@@ -3429,6 +3544,10 @@ RPCHelpMan signrawtransactionwithwallet()
                             {
                                 {RPCResult::Type::STR_HEX, "txid", "The hash of the referenced, previous transaction"},
                                 {RPCResult::Type::NUM, "vout", "The index of the output to spent and used as input"},
+                                {RPCResult::Type::ARR, "witness", "",
+                                {
+                                    {RPCResult::Type::STR_HEX, "witness", ""},
+                                }},
                                 {RPCResult::Type::STR_HEX, "scriptSig", "The hex-encoded signature script"},
                                 {RPCResult::Type::NUM, "sequence", "Script sequence number"},
                                 {RPCResult::Type::STR, "error", "Verification or signing error related to the input"},
@@ -3764,7 +3883,6 @@ public:
             obj.pushKV("embedded", std::move(subobj));
         } else if (which_type == TxoutType::MULTISIG) {
             // Also report some information on multisig scripts (which do not have a corresponding address).
-            // TODO: abstract out the common functionality between this logic and ExtractDestinations.
             obj.pushKV("sigsrequired", solutions_data[0][0]);
             UniValue pubkeys(UniValue::VARR);
             for (size_t i = 1; i < solutions_data.size() - 1; ++i) {
@@ -4168,6 +4286,26 @@ static RPCHelpMan send()
                     },
                     {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Marks this transaction as BIP125 replaceable.\n"
                                                   "Allows this transaction to be replaced by a transaction with higher fees"},
+                    {"solving_data", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "Keys and scripts needed for producing a final transaction with a dummy signature.\n"
+                        "Used for fee estimation during coin selection.",
+                        {
+                            {"pubkeys", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Public keys involved in this transaction.",
+                                {
+                                    {"pubkey", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A public key"},
+                                },
+                            },
+                            {"scripts", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Scripts involved in this transaction.",
+                                {
+                                    {"script", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A script"},
+                                },
+                            },
+                            {"descriptors", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Descriptors that provide solving data for this transaction.",
+                                {
+                                    {"descriptor", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A descriptor"},
+                                },
+                            }
+                        }
+                    },
                 },
                 "options"},
         },
@@ -4175,9 +4313,9 @@ static RPCHelpMan send()
             RPCResult::Type::OBJ, "", "",
                 {
                     {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
-                    {RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of the number of addresses."},
-                    {RPCResult::Type::STR_HEX, "hex", "If add_to_wallet is false, the hex-encoded raw transaction with signature(s)"},
-                    {RPCResult::Type::STR, "psbt", "If more signatures are needed, or if add_to_wallet is false, the base64-encoded (partially) signed transaction"}
+                    {RPCResult::Type::STR_HEX, "txid", /* optional */ true, "The transaction id for the send. Only 1 transaction is created regardless of the number of addresses."},
+                    {RPCResult::Type::STR_HEX, "hex", /* optional */ true, "If add_to_wallet is false, the hex-encoded raw transaction with signature(s)"},
+                    {RPCResult::Type::STR, "psbt", /* optional */ true, "If more signatures are needed, or if add_to_wallet is false, the base64-encoded (partially) signed transaction"}
                 }
         },
         RPCExamples{""
@@ -4385,7 +4523,7 @@ static RPCHelpMan walletprocesspsbt()
         HELP_REQUIRING_PASSPHRASE,
                 {
                     {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
-                    {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating"},
+                    {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating (requires wallet to be unlocked)"},
                     {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT"}, "The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
             "       \"DEFAULT\"\n"
             "       \"ALL\"\n"
@@ -4432,6 +4570,9 @@ static RPCHelpMan walletprocesspsbt()
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
     bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
     bool complete = true;
+
+    if (sign) EnsureWalletIsUnlocked(*pwallet);
+
     const TransactionError err{wallet.FillPSBT(psbtx, complete, nHashType, sign, bip32derivs)};
     if (err != TransactionError::OK) {
         throw JSONRPCTransactionError(err);
@@ -4452,7 +4593,9 @@ static RPCHelpMan walletcreatefundedpsbt()
 {
     return RPCHelpMan{"walletcreatefundedpsbt",
                 "\nCreates and funds a transaction in the Partially Signed Transaction format.\n"
-                "Implements the Creator and Updater roles.\n",
+                "Implements the Creator and Updater roles.\n"
+                "All existing inputs must either have their previous output transaction be in the wallet\n"
+                "or be in the UTXO set. Solving data must be provided for non-wallet inputs.\n",
                 {
                     {"inputs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "Leave empty to add inputs automatically. See add_inputs option.",
                         {
@@ -4509,6 +4652,26 @@ static RPCHelpMan walletcreatefundedpsbt()
                             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
                             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                             "         \"" + FeeModes("\"\n\"") + "\""},
+                            {"solving_data", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "Keys and scripts needed for producing a final transaction with a dummy signature.\n"
+                                "Used for fee estimation during coin selection.",
+                                {
+                                    {"pubkeys", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Public keys involved in this transaction.",
+                                        {
+                                            {"pubkey", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A public key"},
+                                        },
+                                    },
+                                    {"scripts", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Scripts involved in this transaction.",
+                                        {
+                                            {"script", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A script"},
+                                        },
+                                    },
+                                    {"descriptors", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Descriptors that provide solving data for this transaction.",
+                                        {
+                                            {"descriptor", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A descriptor"},
+                                        },
+                                    }
+                                }
+                            },
                         },
                         "options"},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
@@ -4650,10 +4813,11 @@ static RPCHelpMan upgradewallet()
 #ifdef ENABLE_EXTERNAL_SIGNER
 static RPCHelpMan walletdisplayaddress()
 {
-    return RPCHelpMan{"walletdisplayaddress",
+    return RPCHelpMan{
+        "walletdisplayaddress",
         "Display address on an external signer for verification.",
         {
-            {"address",     RPCArg::Type::STR, RPCArg::Optional::NO, /* default_val */ "", "bitcoin address to display"},
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "bitcoin address to display"},
         },
         RPCResult{
             RPCResult::Type::OBJ,"","",

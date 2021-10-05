@@ -6,22 +6,22 @@
 Test addr relay
 """
 
+import random
+import time
+
 from test_framework.messages import (
     CAddress,
-    NODE_NETWORK,
-    NODE_WITNESS,
     msg_addr,
     msg_getaddr,
-    msg_verack
+    msg_verack,
 )
 from test_framework.p2p import (
     P2PInterface,
     p2p_lock,
+    P2P_SERVICES,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_greater_than
-import random
-import time
 
 
 class AddrReceiver(P2PInterface):
@@ -96,7 +96,7 @@ class AddrTest(BitcoinTestFramework):
         for i in range(num):
             addr = CAddress()
             addr.time = self.mocktime + i
-            addr.nServices = NODE_NETWORK | NODE_WITNESS
+            addr.nServices = P2P_SERVICES
             addr.ip = f"123.123.123.{self.counter % 256}"
             addr.port = 8333 + i
             addrs.append(addr)
@@ -111,7 +111,7 @@ class AddrTest(BitcoinTestFramework):
         for i in range(num):
             addr = CAddress()
             addr.time = self.mocktime + i
-            addr.nServices = NODE_NETWORK | NODE_WITNESS
+            addr.nServices = P2P_SERVICES
             addr.ip = f"{random.randrange(128,169)}.{random.randrange(1,255)}.{random.randrange(1,255)}.{random.randrange(1,255)}"
             addr.port = 8333
             addrs.append(addr)

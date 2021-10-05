@@ -5,10 +5,13 @@
 
 #include <addrman.h>
 
+#include <clientversion.h>
 #include <hash.h>
 #include <logging.h>
 #include <netaddress.h>
 #include <serialize.h>
+#include <streams.h>
+#include <util/check.h>
 
 #include <cmath>
 #include <optional>
@@ -98,10 +101,11 @@ double CAddrInfo::GetChance(int64_t nNow) const
     return fChance;
 }
 
-CAddrMan::CAddrMan(bool deterministic, int32_t consistency_check_ratio)
+CAddrMan::CAddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio)
     : insecure_rand{deterministic}
     , nKey{deterministic ? uint256{1} : insecure_rand.rand256()}
     , m_consistency_check_ratio{consistency_check_ratio}
+    , m_asmap{std::move(asmap)}
 {
     for (auto& bucket : vvNew) {
         for (auto& entry : bucket) {
@@ -242,9 +246,9 @@ void CAddrMan::Unserialize(Stream& s_)
     const uint8_t lowest_compatible = compat - INCOMPATIBILITY_BASE;
     if (lowest_compatible > FILE_FORMAT) {
         throw std::ios_base::failure(strprintf(
-                    "Unsupported format of addrman database: %u. It is compatible with formats >=%u, "
-                    "but the maximum supported by this version of %s is %u.",
-                    format, lowest_compatible, PACKAGE_NAME, static_cast<uint8_t>(FILE_FORMAT)));
+            "Unsupported format of addrman database: %u. It is compatible with formats >=%u, "
+            "but the maximum supported by this version of %s is %u.",
+            uint8_t{format}, uint8_t{lowest_compatible}, PACKAGE_NAME, uint8_t{FILE_FORMAT}));
     }
 
     s >> nKey;
@@ -382,7 +386,12 @@ void CAddrMan::Unserialize(Stream& s_)
         LogPrint(BCLog::ADDRMAN, "addrman lost %i new and %i tried addresses due to collisions or invalid addresses\n", nLostUnk, nLost);
     }
 
-    Check();
+    const int check_code{ForceCheckAddrman()};
+    if (check_code != 0) {
+        throw std::ios_base::failure(strprintf(
+            "Corrupt data. Consistency check failed with code %s",
+            check_code));
+    }
 }
 
 // explicit instantiation
@@ -485,11 +494,14 @@ void CAddrMan::MakeTried(CAddrInfo& info, int nId)
     AssertLockHeld(cs);
 
     // remove the entry from all new buckets
-    for (int bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
-        int pos = info.GetBucketPosition(nKey, true, bucket);
+    const int start_bucket{info.GetNewBucket(nKey, m_asmap)};
+    for (int n = 0; n < ADDRMAN_NEW_BUCKET_COUNT; ++n) {
+        const int bucket{(start_bucket + n) % ADDRMAN_NEW_BUCKET_COUNT};
+        const int pos{info.GetBucketPosition(nKey, true, bucket)};
         if (vvNew[bucket][pos] == nId) {
             vvNew[bucket][pos] = -1;
             info.nRefCount--;
+            if (info.nRefCount == 0) break;
         }
     }
     nNew--;
@@ -561,22 +573,10 @@ void CAddrMan::Good_(const CService& addr, bool test_before_evict, int64_t nTime
     if (info.fInTried)
         return;
 
-    // find a bucket it is in now
-    int nRnd = insecure_rand.randrange(ADDRMAN_NEW_BUCKET_COUNT);
-    int nUBucket = -1;
-    for (unsigned int n = 0; n < ADDRMAN_NEW_BUCKET_COUNT; n++) {
-        int nB = (n + nRnd) % ADDRMAN_NEW_BUCKET_COUNT;
-        int nBpos = info.GetBucketPosition(nKey, true, nB);
-        if (vvNew[nB][nBpos] == nId) {
-            nUBucket = nB;
-            break;
-        }
-    }
-
-    // if no bucket is found, something bad happened;
-    // TODO: maybe re-add the node, but for now, just bail out
-    if (nUBucket == -1)
+    // if it is not in new, something bad happened
+    if (!Assume(info.nRefCount > 0)) {
         return;
+    }
 
     // which tried bucket to move the entry to
     int tried_bucket = info.GetTriedBucket(nKey, m_asmap);
@@ -748,13 +748,24 @@ CAddrInfo CAddrMan::Select_(bool newOnly) const
     }
 }
 
-int CAddrMan::Check_() const
+void CAddrMan::Check() const
 {
     AssertLockHeld(cs);
 
     // Run consistency checks 1 in m_consistency_check_ratio times if enabled
-    if (m_consistency_check_ratio == 0) return 0;
-    if (insecure_rand.randrange(m_consistency_check_ratio) >= 1) return 0;
+    if (m_consistency_check_ratio == 0) return;
+    if (insecure_rand.randrange(m_consistency_check_ratio) >= 1) return;
+
+    const int err{ForceCheckAddrman()};
+    if (err) {
+        LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
+        assert(false);
+    }
+}
+
+int CAddrMan::ForceCheckAddrman() const
+{
+    AssertLockHeld(cs);
 
     LogPrint(BCLog::ADDRMAN, "Addrman checks started: new %i, tried %i, total %u\n", nNew, nTried, vRandom.size());
 
@@ -1005,31 +1016,4 @@ CAddrInfo CAddrMan::SelectTriedCollision_()
     int id_old = vvTried[tried_bucket][tried_bucket_pos];
 
     return mapInfo[id_old];
-}
-
-std::vector<bool> CAddrMan::DecodeAsmap(fs::path path)
-{
-    std::vector<bool> bits;
-    FILE *filestr = fsbridge::fopen(path, "rb");
-    CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
-    if (file.IsNull()) {
-        LogPrintf("Failed to open asmap file from disk\n");
-        return bits;
-    }
-    fseek(filestr, 0, SEEK_END);
-    int length = ftell(filestr);
-    LogPrintf("Opened asmap file %s (%d bytes) from disk\n", path, length);
-    fseek(filestr, 0, SEEK_SET);
-    uint8_t cur_byte;
-    for (int i = 0; i < length; ++i) {
-        file >> cur_byte;
-        for (int bit = 0; bit < 8; ++bit) {
-            bits.push_back((cur_byte >> bit) & 1);
-        }
-    }
-    if (!SanityCheckASMap(bits)) {
-        LogPrintf("Sanity check of asmap file %s failed\n", path);
-        return {};
-    }
-    return bits;
 }

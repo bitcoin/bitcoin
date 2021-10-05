@@ -6,6 +6,7 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <netbase.h>
 #include <node/blockstorage.h>
 #include <rpc/server.h>
 #include <streams.h>
@@ -73,6 +74,20 @@ static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
     return 0;
 }
 
+static bool IsZMQAddressIPV6(const std::string &zmq_address)
+{
+    const std::string tcp_prefix = "tcp://";
+    const size_t tcp_index = zmq_address.rfind(tcp_prefix);
+    const size_t colon_index = zmq_address.rfind(":");
+    if (tcp_index == 0 && colon_index != std::string::npos) {
+        const std::string ip = zmq_address.substr(tcp_prefix.length(), colon_index - tcp_prefix.length());
+        CNetAddr addr;
+        LookupHost(ip, addr, false);
+        if (addr.IsIPv6()) return true;
+    }
+    return false;
+}
+
 bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
 {
     assert(!psocket);
@@ -103,6 +118,15 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
         rc = zmq_setsockopt(psocket, ZMQ_TCP_KEEPALIVE, &so_keepalive_option, sizeof(so_keepalive_option));
         if (rc != 0) {
             zmqError("Failed to set SO_KEEPALIVE");
+            zmq_close(psocket);
+            return false;
+        }
+
+        // On some systems (e.g. OpenBSD) the ZMQ_IPV6 must not be enabled, if the address to bind isn't IPv6
+        const int enable_ipv6 { IsZMQAddressIPV6(address) ? 1 : 0};
+        rc = zmq_setsockopt(psocket, ZMQ_IPV6, &enable_ipv6, sizeof(enable_ipv6));
+        if (rc != 0) {
+            zmqError("Failed to set ZMQ_IPV6");
             zmq_close(psocket);
             return false;
         }

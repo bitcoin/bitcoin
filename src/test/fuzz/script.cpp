@@ -56,46 +56,8 @@ FUZZ_TARGET_INIT(script, initialize_script)
         assert(script == decompressed_script);
     }
 
-    CTxDestination address;
-    TxoutType type_ret;
-    std::vector<CTxDestination> addresses;
-    int required_ret;
-    bool extract_destinations_ret = ExtractDestinations(script, type_ret, addresses, required_ret);
-    bool extract_destination_ret = ExtractDestination(script, address);
-    if (!extract_destinations_ret) {
-        assert(!extract_destination_ret);
-        if (type_ret == TxoutType::MULTISIG) {
-            assert(addresses.empty() && required_ret == 0);
-        } else {
-            assert(type_ret == TxoutType::PUBKEY ||
-                   type_ret == TxoutType::NONSTANDARD ||
-                   type_ret == TxoutType::NULL_DATA);
-        }
-    } else {
-        assert(required_ret >= 1 && required_ret <= 16);
-        assert((unsigned long)required_ret == addresses.size());
-        assert(type_ret == TxoutType::MULTISIG || required_ret == 1);
-    }
-    if (type_ret == TxoutType::NONSTANDARD || type_ret == TxoutType::NULL_DATA) {
-        assert(!extract_destinations_ret);
-    }
-    if (!extract_destination_ret) {
-        assert(type_ret == TxoutType::PUBKEY ||
-               type_ret == TxoutType::NONSTANDARD ||
-               type_ret == TxoutType::NULL_DATA ||
-               type_ret == TxoutType::MULTISIG);
-    } else {
-        assert(address == addresses[0]);
-    }
-    if (type_ret == TxoutType::NONSTANDARD ||
-        type_ret == TxoutType::NULL_DATA ||
-        type_ret == TxoutType::MULTISIG) {
-        assert(!extract_destination_ret);
-    }
-
     TxoutType which_type;
     bool is_standard_ret = IsStandard(script, which_type);
-    assert(type_ret == which_type);
     if (!is_standard_ret) {
         assert(which_type == TxoutType::NONSTANDARD ||
                which_type == TxoutType::NULL_DATA ||
@@ -110,6 +72,20 @@ FUZZ_TARGET_INIT(script, initialize_script)
     if (script.IsUnspendable()) {
         assert(which_type == TxoutType::NULL_DATA ||
                which_type == TxoutType::NONSTANDARD);
+    }
+
+    CTxDestination address;
+    bool extract_destination_ret = ExtractDestination(script, address);
+    if (!extract_destination_ret) {
+        assert(which_type == TxoutType::PUBKEY ||
+               which_type == TxoutType::NONSTANDARD ||
+               which_type == TxoutType::NULL_DATA ||
+               which_type == TxoutType::MULTISIG);
+    }
+    if (which_type == TxoutType::NONSTANDARD ||
+        which_type == TxoutType::NULL_DATA ||
+        which_type == TxoutType::MULTISIG) {
+        assert(!extract_destination_ret);
     }
 
     const FlatSigningProvider signing_provider;
@@ -133,15 +109,11 @@ FUZZ_TARGET_INIT(script, initialize_script)
     (void)ScriptToAsmStr(script, true);
 
     UniValue o1(UniValue::VOBJ);
-    ScriptPubKeyToUniv(script, o1, true, true);
-    ScriptPubKeyToUniv(script, o1, true, false);
+    ScriptPubKeyToUniv(script, o1, true);
     UniValue o2(UniValue::VOBJ);
-    ScriptPubKeyToUniv(script, o2, false, true);
-    ScriptPubKeyToUniv(script, o2, false, false);
+    ScriptPubKeyToUniv(script, o2, false);
     UniValue o3(UniValue::VOBJ);
-    ScriptToUniv(script, o3, true);
-    UniValue o4(UniValue::VOBJ);
-    ScriptToUniv(script, o4, false);
+    ScriptToUniv(script, o3);
 
     {
         const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);

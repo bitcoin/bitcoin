@@ -35,7 +35,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Warning: this test will take about 70 seconds in the best case. Be patient.")
         self.log.info("Test that longpollid doesn't change between successive getblocktemplate() invocations if nothing else happens")
-        self.nodes[0].generate(10)
+        self.generate(self.nodes[0], 10)
         template = self.nodes[0].getblocktemplate({'rules': ['segwit']})
         longpollid = template['longpollid']
         template2 = self.nodes[0].getblocktemplate({'rules': ['segwit']})
@@ -63,7 +63,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         assert not thr.is_alive()
 
         # Add enough mature utxos to the wallets, so that all txs spend confirmed coins
-        self.nodes[0].generate(COINBASE_MATURITY)
+        self.generate(self.nodes[0], COINBASE_MATURITY)
         self.sync_blocks()
 
         self.log.info("Test that introducing a new transaction into the mempool will terminate the longpoll")
