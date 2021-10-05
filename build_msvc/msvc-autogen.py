@@ -6,6 +6,7 @@
 import os
 import re
 import argparse
+import fileinput
 from shutil import copyfile
 
 SOURCE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -57,6 +58,38 @@ def set_common_properties(toolset):
     with open(os.path.join(SOURCE_DIR, '../build_msvc/common.init.vcxproj'), 'w', encoding='utf-8',newline='\n') as wfile:
         wfile.write(s)
 
+def parse_config_into_btc_config():
+    def find_between( s, first, last ):
+        try:
+            start = s.index( first ) + len( first )
+            end = s.index( last, start )
+            return s[start:end]
+        except ValueError:
+            return ""
+
+    config_info = []
+    with open(os.path.join(SOURCE_DIR,'../configure.ac'), encoding="utf8") as f:
+        for line in f:
+            if line.startswith("define"):
+                config_info.append(find_between(line, "(_", ")"))
+
+    config_info = [c for c in config_info if not c.startswith("COPYRIGHT_HOLDERS")]
+
+    config_dict = dict(item.split(", ") for item in config_info)
+    config_dict["PACKAGE_VERSION"] = f"\"{config_dict['CLIENT_VERSION_MAJOR']}.{config_dict['CLIENT_VERSION_MINOR']}.{config_dict['CLIENT_VERSION_BUILD']}\""
+    version = config_dict["PACKAGE_VERSION"].strip('"')
+    config_dict["PACKAGE_STRING"] = f"\"Bitcoin Core {version}\""
+
+    for line in fileinput.input(os.path.join(SOURCE_DIR,'../build_msvc/bitcoin_config.h', ), inplace=True, encoding="utf8"):
+        header = ""
+        if line.startswith("#define"):
+            header = line.split(" ")[1]
+        if header in config_dict:
+            print(f"#define {header} {config_dict[header]}\n", end='')
+        else:
+            print(line, end='')
+
+
 def main():
     parser = argparse.ArgumentParser(description='Bitcoin-core msbuild configuration initialiser.')
     parser.add_argument('-toolset', nargs='?',help='Optionally sets the msbuild platform toolset, e.g. v142 for Visual Studio 2019.'
@@ -79,6 +112,8 @@ def main():
             with open(vcxproj_filename, 'w', encoding='utf-8') as vcxproj_file:
                 vcxproj_file.write(vcxproj_in_file.read().replace(
                     '@SOURCE_FILES@\n', content))
+                    
+    parse_config_into_btc_config()
     copyfile(os.path.join(SOURCE_DIR,'../build_msvc/bitcoin_config.h'), os.path.join(SOURCE_DIR, 'config/bitcoin-config.h'))
     copyfile(os.path.join(SOURCE_DIR,'../build_msvc/libsecp256k1_config.h'), os.path.join(SOURCE_DIR, 'secp256k1/src/libsecp256k1-config.h'))
 
