@@ -62,7 +62,7 @@ enum Network {
     NET_CJDNS,
 
     /// A set of addresses that represent the hash of a string or FQDN. We use
-    /// them in CAddrMan to keep track of which DNS seeds were used.
+    /// them in AddrMan to keep track of which DNS seeds were used.
     NET_INTERNAL,
 
     /// Dummy value to indicate the number of NET_* constants.

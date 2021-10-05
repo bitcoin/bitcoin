@@ -164,6 +164,7 @@ SYSCOIN_CORE_H = \
   cachemultimap.h \
   addrdb.h \
   addrman.h \
+  addrman_impl.h \
   attributes.h \
   auxpow.h \
   banman.h \

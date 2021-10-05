@@ -4,6 +4,7 @@
 
 #include <addrdb.h>
 #include <addrman.h>
+#include <addrman_impl.h>
 #include <blockencodings.h>
 #include <blockfilter.h>
 #include <chain.h>
@@ -104,7 +105,7 @@ FUZZ_TARGET_DESERIALIZE(block_filter_deserialize, {
     DeserializeFromFuzzingInput(buffer, block_filter);
 })
 FUZZ_TARGET_DESERIALIZE(addr_info_deserialize, {
-    CAddrInfo addr_info;
+    AddrInfo addr_info;
     DeserializeFromFuzzingInput(buffer, addr_info);
 })
 FUZZ_TARGET_DESERIALIZE(block_file_info_deserialize, {
@@ -188,7 +189,7 @@ FUZZ_TARGET_DESERIALIZE(blockmerkleroot, {
     BlockMerkleRoot(block, &mutated);
 })
 FUZZ_TARGET_DESERIALIZE(addrman_deserialize, {
-    CAddrMan am(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    AddrMan am(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
     DeserializeFromFuzzingInput(buffer, am);
 })
 FUZZ_TARGET_DESERIALIZE(blockheader_deserialize, {
