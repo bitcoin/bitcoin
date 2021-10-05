@@ -68,7 +68,7 @@ def parse_config_into_btc_conifg():
             return ""
 
     config_info = []
-    with open(os.path.join(SOURCE_DIR,'../configure.ac') as f:
+    with open(os.path.join(SOURCE_DIR,'../configure.ac')) as f:
         for line in f:
             if line.startswith("define"):
                 config_info.append(find_between(line, "(_", ")"))
