@@ -179,8 +179,8 @@ private:
     //! table with information about all nIds
     std::unordered_map<int, AddrInfo> mapInfo GUARDED_BY(cs);
 
-    //! find an nId based on its network address
-    std::unordered_map<CNetAddr, int, CNetAddrHash> mapAddr GUARDED_BY(cs);
+    //! find an nId based on its network address and port.
+    std::unordered_map<CService, int, CServiceHash> mapAddr GUARDED_BY(cs);
 
     //! randomly-ordered vector of all nIds
     //! This is mutable because it is unobservable outside the class, so any
@@ -225,7 +225,7 @@ private:
     const std::vector<bool> m_asmap;
 
     //! Find an entry.
-    AddrInfo* Find(const CNetAddr& addr, int* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    AddrInfo* Find(const CService& addr, int* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Create a new entry and add it to the internal data structures mapInfo, mapAddr and vRandom.
     AddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);

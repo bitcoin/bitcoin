@@ -401,7 +401,7 @@ void AddrManImpl::Unserialize(Stream& s_)
     }
 }
 
-AddrInfo* AddrManImpl::Find(const CNetAddr& addr, int* pnId)
+AddrInfo* AddrManImpl::Find(const CService& addr, int* pnId)
 {
     AssertLockHeld(cs);
 
@@ -556,10 +556,6 @@ void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
 
     AddrInfo& info = *pinfo;
 
-    // check whether we are talking about the exact same CService (including same port)
-    if (info != addr)
-        return;
-
     // update info
     info.nLastSuccess = nTime;
     info.nLastTry = nTime;
@@ -683,10 +679,6 @@ void AddrManImpl::Attempt_(const CService& addr, bool fCountFailure, int64_t nTi
 
     AddrInfo& info = *pinfo;
 
-    // check whether we are talking about the exact same CService (including same port)
-    if (info != addr)
-        return;
-
     // update info
     info.nLastTry = nTime;
     if (fCountFailure && info.nLastCountAttempt < nLastGood) {
@@ -796,10 +788,6 @@ void AddrManImpl::Connected_(const CService& addr, int64_t nTime)
 
     AddrInfo& info = *pinfo;
 
-    // check whether we are talking about the exact same CService (including same port)
-    if (info != addr)
-        return;
-
     // update info
     int64_t nUpdateInterval = 20 * 60;
     if (nTime - info.nTime > nUpdateInterval)
@@ -817,10 +805,6 @@ void AddrManImpl::SetServices_(const CService& addr, ServiceFlags nServices)
         return;
 
     AddrInfo& info = *pinfo;
-
-    // check whether we are talking about the exact same CService (including same port)
-    if (info != addr)
-        return;
 
     // update info
     info.nServices = nServices;

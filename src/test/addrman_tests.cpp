@@ -89,7 +89,7 @@ public:
         deterministic = makeDeterministic;
     }
 
-    AddrInfo* Find(const CNetAddr& addr, int* pnId = nullptr)
+    AddrInfo* Find(const CService& addr, int* pnId = nullptr)
     {
         LOCK(m_impl->cs);
         return m_impl->Find(addr, pnId);
@@ -222,15 +222,15 @@ BOOST_AUTO_TEST_CASE(addrman_ports)
     BOOST_CHECK_EQUAL(addrman.size(), 1U);
 
     CService addr1_port = ResolveService("250.1.1.1", 8334);
-    BOOST_CHECK(!addrman.Add({CAddress(addr1_port, NODE_NONE)}, source));
-    BOOST_CHECK_EQUAL(addrman.size(), 1U);
+    BOOST_CHECK(addrman.Add({CAddress(addr1_port, NODE_NONE)}, source));
+    BOOST_CHECK_EQUAL(addrman.size(), 2U);
     auto addr_ret2 = addrman.Select().first;
-    BOOST_CHECK_EQUAL(addr_ret2.ToString(), "250.1.1.1:8333");
+    BOOST_CHECK(addr_ret2.ToString() == "250.1.1.1:8333" || addr_ret2.ToString() == "250.1.1.1:8334");
 
-    // Test: Add same IP but diff port to tried table, it doesn't get added.
-    //  Perhaps this is not ideal behavior but it is the current behavior.
+    // Test: Add same IP but diff port to tried table; this converts the entry with
+    // the specified port to tried, but not the other.
     addrman.Good(CAddress(addr1_port, NODE_NONE));
-    BOOST_CHECK_EQUAL(addrman.size(), 1U);
+    BOOST_CHECK_EQUAL(addrman.size(), 2U);
     bool newOnly = true;
     auto addr_ret3 = addrman.Select(newOnly).first;
     BOOST_CHECK_EQUAL(addr_ret3.ToString(), "250.1.1.1:8333");
@@ -369,18 +369,18 @@ BOOST_AUTO_TEST_CASE(addrman_find)
     CNetAddr source2 = ResolveIP("250.1.2.2");
 
     BOOST_CHECK(addrman.Add({addr1}, source1));
-    BOOST_CHECK(!addrman.Add({addr2}, source2));
+    BOOST_CHECK(addrman.Add({addr2}, source2));
     BOOST_CHECK(addrman.Add({addr3}, source1));
 
-    // Test: ensure Find returns an IP matching what we searched on.
+    // Test: ensure Find returns an IP/port matching what we searched on.
     AddrInfo* info1 = addrman.Find(addr1);
     BOOST_REQUIRE(info1);
     BOOST_CHECK_EQUAL(info1->ToString(), "250.1.2.1:8333");
 
-    // Test 18; Find does not discriminate by port number.
+    // Test; Find discriminates by port number.
     AddrInfo* info2 = addrman.Find(addr2);
     BOOST_REQUIRE(info2);
-    BOOST_CHECK_EQUAL(info2->ToString(), info1->ToString());
+    BOOST_CHECK_EQUAL(info2->ToString(), "250.1.2.1:9999");
 
     // Test: Find returns another IP matching what we searched on.
     AddrInfo* info3 = addrman.Find(addr3);
