@@ -6267,6 +6267,7 @@ bool StopGethNode(pid_t &pid)
         }  
     }
     boost::filesystem::remove(GetGethPidFile());
+    #ifndef USE_SYSCALL_SANDBOX
     #if HAVE_SYSTEM
     if(pid == 0) {
         LogPrintf("Killing any sysgeth processes that may be already running...\n");
@@ -6278,6 +6279,7 @@ bool StopGethNode(pid_t &pid)
         if (t.joinable())
             t.join();
     }
+    #endif
     #endif
     pid = -1;
     return true;
