@@ -1198,7 +1198,7 @@ std::vector<CFinalCommitment> CDKGSession::FinalizeCommitments()
 
     CDKGLogger logger(*this, __func__);
 
-    typedef std::vector<bool> Key;
+    using Key = std::vector<bool>;
     std::map<Key, std::vector<CDKGPrematureCommitment>> commitmentsMap;
 
     {

@@ -24,9 +24,9 @@
 class CGovernanceObjectVoteFile
 {
 public: // Types
-    typedef std::list<CGovernanceVote> vote_l_t;
+    using vote_l_t = std::list<CGovernanceVote>;
 
-    typedef std::map<uint256, vote_l_t::iterator> vote_m_t;
+    using vote_m_t = std::map<uint256, vote_l_t::iterator>;
 
 private:
     int nMemoryVotes;

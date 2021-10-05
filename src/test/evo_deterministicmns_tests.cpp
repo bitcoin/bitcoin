@@ -23,7 +23,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-typedef std::map<COutPoint, std::pair<int, CAmount>> SimpleUTXOMap;
+using SimpleUTXOMap = std::map<COutPoint, std::pair<int, CAmount>>;
 
 static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)
 {

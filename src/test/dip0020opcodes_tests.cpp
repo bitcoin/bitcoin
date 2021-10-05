@@ -11,8 +11,8 @@
 
 #include <array>
 
-typedef std::vector<uint8_t> valtype;
-typedef std::vector<valtype> stacktype;
+using valtype = std::vector<uint8_t>;
+using stacktype = std::vector<valtype>;
 
 BOOST_FIXTURE_TEST_SUITE(dip0020opcodes_tests, BasicTestingSetup)
 

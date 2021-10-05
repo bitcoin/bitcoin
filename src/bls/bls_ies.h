@@ -69,8 +69,8 @@ public:
 class CBLSIESMultiRecipientBlobs
 {
 public:
-    typedef std::vector<unsigned char> Blob;
-    typedef std::vector<Blob> BlobVector;
+    using Blob = std::vector<unsigned char>;
+    using BlobVector = std::vector<Blob>;
 
     CBLSPublicKey ephemeralPubKey;
     uint256 ivSeed;
@@ -96,7 +96,7 @@ template <typename Object>
 class CBLSIESMultiRecipientObjects : public CBLSIESMultiRecipientBlobs
 {
 public:
-    typedef std::vector<Object> ObjectVector;
+    using ObjectVector = std::vector<Object>;
 
     bool Encrypt(const std::vector<CBLSPublicKey>& recipients, const ObjectVector& _objects, int nVersion)
     {

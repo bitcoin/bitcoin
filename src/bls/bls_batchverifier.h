@@ -21,9 +21,9 @@ private:
         CBLSPublicKey pubKey;
     };
 
-    typedef std::map<MessageId, Message> MessageMap;
-    typedef typename MessageMap::iterator MessageMapIterator;
-    typedef std::map<SourceId, std::vector<MessageMapIterator>> MessagesBySourceMap;
+    using MessageMap = std::map<MessageId, Message>;
+    using MessageMapIterator = typename MessageMap::iterator;
+    using MessagesBySourceMap = std::map<SourceId, std::vector<MessageMapIterator>>;
 
     bool secureVerification;
     bool perMessageFallback;

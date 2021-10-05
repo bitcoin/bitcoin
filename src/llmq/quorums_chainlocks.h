@@ -70,7 +70,7 @@ private:
     uint256 lastSignedMsgHash GUARDED_BY(cs);
 
     // We keep track of txids from recently received blocks so that we can check if all TXs got islocked
-    typedef std::unordered_map<uint256, std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> BlockTxs;
+    using BlockTxs = std::unordered_map<uint256, std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>>;
     BlockTxs blockTxs GUARDED_BY(cs);
     std::unordered_map<uint256, int64_t> txFirstSeenTime GUARDED_BY(cs);
 

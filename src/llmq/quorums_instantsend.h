@@ -53,7 +53,7 @@ struct CInstantSendLock
     bool IsDeterministic() const { return nVersion != islock_version; }
 };
 
-typedef std::shared_ptr<CInstantSendLock> CInstantSendLockPtr;
+using CInstantSendLockPtr = std::shared_ptr<CInstantSendLock>;
 
 class CInstantSendDb
 {

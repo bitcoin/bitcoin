@@ -27,7 +27,7 @@ namespace llmq
 {
 
 class CFinalCommitment;
-typedef std::shared_ptr<CFinalCommitment> CFinalCommitmentPtr;
+using CFinalCommitmentPtr = std::shared_ptr<CFinalCommitment>;
 
 class CQuorumBlockProcessor
 {

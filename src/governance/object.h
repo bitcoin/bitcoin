@@ -44,7 +44,7 @@ static const int SEEN_OBJECT_ERROR_INVALID = 1;
 static const int SEEN_OBJECT_EXECUTED = 3; //used for triggers
 static const int SEEN_OBJECT_UNKNOWN = 4;  // the default
 
-typedef std::pair<CGovernanceVote, int64_t> vote_time_pair_t;
+using vote_time_pair_t = std::pair<CGovernanceVote, int64_t>;
 
 inline bool operator<(const vote_time_pair_t& p1, const vote_time_pair_t& p2)
 {
@@ -72,7 +72,7 @@ struct vote_instance_t {
     }
 };
 
-typedef std::map<int, vote_instance_t> vote_instance_m_t;
+using vote_instance_m_t = std::map<int, vote_instance_t>;
 
 struct vote_rec_t {
     vote_instance_m_t mapInstances;
@@ -91,7 +91,7 @@ struct vote_rec_t {
 class CGovernanceObject
 {
 public: // Types
-    typedef std::map<COutPoint, vote_rec_t> vote_m_t;
+    using vote_m_t = std::map<COutPoint, vote_rec_t>;
 
 private:
     /// critical section to protect the inner data structures
