@@ -2010,17 +2010,18 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             if (nTries > 100)
                 break;
 
-            CAddrInfo addr;
+            CAddress addr;
+            int64_t addr_last_try{0};
 
             if (fFeeler) {
                 // First, try to get a tried table collision address. This returns
                 // an empty (invalid) address if there are no collisions to try.
-                addr = addrman.SelectTriedCollision();
+                std::tie(addr, addr_last_try) = addrman.SelectTriedCollision();
 
                 if (!addr.IsValid()) {
                     // No tried table collisions. Select a new table address
                     // for our feeler.
-                    addr = addrman.Select(true);
+                    std::tie(addr, addr_last_try) = addrman.Select(true);
                 } else if (AlreadyConnectedToAddress(addr)) {
                     // If test-before-evict logic would have us connect to a
                     // peer that we're already connected to, just mark that
@@ -2029,11 +2030,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     // a currently-connected peer.
                     addrman.Good(addr);
                     // Select a new table address for our feeler instead.
-                    addr = addrman.Select(true);
+                    std::tie(addr, addr_last_try) = addrman.Select(true);
                 }
             } else {
                 // Not a feeler
-                addr = addrman.Select();
+                std::tie(addr, addr_last_try) = addrman.Select();
             }
 
             // Require outbound connections, other than feelers, to be to distinct network groups
@@ -2050,7 +2051,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 continue;
 
             // only consider very recently tried nodes after 30 failed attempts
-            if (nANow - addr.nLastTry < 600 && nTries < 30)
+            if (nANow - addr_last_try < 600 && nTries < 30)
                 continue;
 
             // for non-feelers, require all the services we'll want,
@@ -2443,7 +2444,7 @@ void CConnman::SetNetworkActive(bool active)
     }
 }
 
-CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, CAddrMan& addrman_in, bool network_active)
+CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, AddrMan& addrman_in, bool network_active)
     : addrman(addrman_in), nSeed0(nSeed0In), nSeed1(nSeed1In)
 {
     SetTryNewOutboundPeer(false);
