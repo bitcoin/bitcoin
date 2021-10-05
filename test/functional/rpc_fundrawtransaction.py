@@ -4,8 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the fundrawtransaction RPC."""
 
+
 from decimal import Decimal
 from itertools import product
+from math import ceil
 
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey
@@ -1003,7 +1005,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         ext_utxo = self.nodes[0].listunspent(addresses=[addr])[0]
 
         # An external input without solving data should result in an error
-        raw_tx = wallet.createrawtransaction([ext_utxo], {self.nodes[0].getnewaddress(): 15})
+        raw_tx = wallet.createrawtransaction([ext_utxo], {self.nodes[0].getnewaddress(): ext_utxo["amount"] / 2})
         assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, raw_tx)
 
         # Error conditions
@@ -1011,6 +1013,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, "'01234567890a0b0c0d0e0f' is not a valid public key", wallet.fundrawtransaction, raw_tx, {"solving_data": {"pubkeys":["01234567890a0b0c0d0e0f"]}})
         assert_raises_rpc_error(-5, "'not a script' is not hex", wallet.fundrawtransaction, raw_tx, {"solving_data": {"scripts":["not a script"]}})
         assert_raises_rpc_error(-8, "Unable to parse descriptor 'not a descriptor'", wallet.fundrawtransaction, raw_tx, {"solving_data": {"descriptors":["not a descriptor"]}})
+        assert_raises_rpc_error(-8, "Invalid parameter, missing vout key", wallet.fundrawtransaction, raw_tx, {"input_weights": [{"txid": ext_utxo["txid"]}]})
+        assert_raises_rpc_error(-8, "Invalid parameter, vout cannot be negative", wallet.fundrawtransaction, raw_tx, {"input_weights": [{"txid": ext_utxo["txid"], "vout": -1}]})
+        assert_raises_rpc_error(-8, "Invalid parameter, missing weight key", wallet.fundrawtransaction, raw_tx, {"input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"]}]})
+        assert_raises_rpc_error(-8, "Invalid parameter, weight cannot be less than 165", wallet.fundrawtransaction, raw_tx, {"input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": 164}]})
+        assert_raises_rpc_error(-8, "Invalid parameter, weight cannot be less than 165", wallet.fundrawtransaction, raw_tx, {"input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": -1}]})
+        assert_raises_rpc_error(-8, "Invalid parameter, weight cannot be greater than", wallet.fundrawtransaction, raw_tx, {"input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": 400001}]})
 
         # But funding should work when the solving data is provided
         funded_tx = wallet.fundrawtransaction(raw_tx, {"solving_data": {"pubkeys": [addr_info['pubkey']], "scripts": [addr_info["embedded"]["scriptPubKey"]]}})
@@ -1020,10 +1028,45 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert signed_tx['complete']
 
         funded_tx = wallet.fundrawtransaction(raw_tx, {"solving_data": {"descriptors": [desc]}})
-        signed_tx = wallet.signrawtransactionwithwallet(funded_tx['hex'])
-        assert not signed_tx['complete']
-        signed_tx = self.nodes[0].signrawtransactionwithwallet(signed_tx['hex'])
-        assert signed_tx['complete']
+        signed_tx1 = wallet.signrawtransactionwithwallet(funded_tx['hex'])
+        assert not signed_tx1['complete']
+        signed_tx2 = self.nodes[0].signrawtransactionwithwallet(signed_tx1['hex'])
+        assert signed_tx2['complete']
+
+        unsigned_weight = self.nodes[0].decoderawtransaction(signed_tx1["hex"])["weight"]
+        signed_weight = self.nodes[0].decoderawtransaction(signed_tx2["hex"])["weight"]
+        # Input's weight is difference between weight of signed and unsigned,
+        # and the weight of stuff that didn't change (prevout, sequence, 1 byte of scriptSig)
+        input_weight = signed_weight - unsigned_weight + (41 * 4)
+        low_input_weight = input_weight // 2
+        high_input_weight = input_weight * 2
+
+        # Funding should also work if the input weight is provided
+        funded_tx = wallet.fundrawtransaction(raw_tx, {"input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": input_weight}]})
+        signed_tx = wallet.signrawtransactionwithwallet(funded_tx["hex"])
+        signed_tx = self.nodes[0].signrawtransactionwithwallet(signed_tx["hex"])
+        assert_equal(self.nodes[0].testmempoolaccept([signed_tx["hex"]])[0]["allowed"], True)
+        assert_equal(signed_tx["complete"], True)
+        # Reducing the weight should have a lower fee
+        funded_tx2 = wallet.fundrawtransaction(raw_tx, {"input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": low_input_weight}]})
+        assert_greater_than(funded_tx["fee"], funded_tx2["fee"])
+        # Increasing the weight should have a higher fee
+        funded_tx2 = wallet.fundrawtransaction(raw_tx, {"input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}]})
+        assert_greater_than(funded_tx2["fee"], funded_tx["fee"])
+        # The provided weight should override the calculated weight when solving data is provided
+        funded_tx3 = wallet.fundrawtransaction(raw_tx, {"solving_data": {"descriptors": [desc]}, "input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}]})
+        assert_equal(funded_tx2["fee"], funded_tx3["fee"])
+        # The feerate should be met
+        funded_tx4 = wallet.fundrawtransaction(raw_tx, {"input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}], "fee_rate": 10})
+        input_add_weight = high_input_weight - (41 * 4)
+        tx4_weight = wallet.decoderawtransaction(funded_tx4["hex"])["weight"] + input_add_weight
+        tx4_vsize = int(ceil(tx4_weight / 4))
+        assert_fee_amount(funded_tx4["fee"], tx4_vsize, Decimal(0.0001))
+
+        # Funding with weight at csuint boundaries should not cause problems
+        funded_tx = wallet.fundrawtransaction(raw_tx, {"input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": 255}]})
+        funded_tx = wallet.fundrawtransaction(raw_tx, {"input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": 65539}]})
+
         self.nodes[2].unloadwallet("extfund")
 
     def test_include_unsafe(self):
