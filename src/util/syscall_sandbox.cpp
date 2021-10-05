@@ -545,6 +545,7 @@ public:
         allowed_syscalls.insert(__NR_fdatasync);  // synchronize a file's in-core state with storage device
         allowed_syscalls.insert(__NR_flock);      // apply or remove an advisory lock on an open file
         allowed_syscalls.insert(__NR_fstat);      // get file status
+        allowed_syscalls.insert(__NR_newfstatat); // get file status
         allowed_syscalls.insert(__NR_fsync);      // synchronize a file's in-core state with storage device
         allowed_syscalls.insert(__NR_ftruncate);  // truncate a file to a specified length
         allowed_syscalls.insert(__NR_getcwd);     // get current working directory
