@@ -1281,6 +1281,11 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney)
     BOOST_CHECK(!ParseMoney(" 1.2 3 "));
     BOOST_CHECK(!ParseMoney(" 1 2.3 "));
 
+    // Embedded whitespace should fail
+    BOOST_CHECK(!ParseMoney(" -1 .2  "));
+    BOOST_CHECK(!ParseMoney("  1 .2  "));
+    BOOST_CHECK(!ParseMoney(" +1 .2  "));
+
     // Attempted 63 bit overflow should fail
     BOOST_CHECK(!ParseMoney("92233720368.54775808"));
 
