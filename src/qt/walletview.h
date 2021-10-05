@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_WALLETVIEW_H
 #define BITCOIN_QT_WALLETVIEW_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 
 #include <QStackedWidget>
 

@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_BITCOINAMOUNTFIELD_H
 #define BITCOIN_QT_BITCOINAMOUNTFIELD_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 
 #include <QWidget>
 

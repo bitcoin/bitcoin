@@ -10,12 +10,12 @@
 #include <init.h>
 
 #include <addrman.h>
-#include <amount.h>
 #include <banman.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <compat/sanity.h>
+#include <consensus/amount.h>
 #include <deploymentstatus.h>
 #include <fs.h>
 #include <hash.h>
