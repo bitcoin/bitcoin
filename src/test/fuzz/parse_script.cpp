@@ -5,12 +5,15 @@
 #include <core_io.h>
 #include <script/script.h>
 #include <test/fuzz/fuzz.h>
+#include <util/check.h>
 
 FUZZ_TARGET(parse_script)
 {
     const std::string script_string(buffer.begin(), buffer.end());
     try {
         (void)ParseScript(script_string);
+    } catch (const NonFatalCheckError&) {
+        assert(false); // fail on internal logic error
     } catch (const std::runtime_error&) {
     }
 }

@@ -7,6 +7,7 @@
 
 #include <consensus/amount.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -77,7 +78,7 @@ std::optional<CAmount> ParseMoney(const std::string& money_string)
         return std::nullopt;
     if (nUnits < 0 || nUnits > COIN)
         return std::nullopt;
-    int64_t nWhole = LocaleIndependentAtoi<int64_t>(strWhole);
+    const int64_t nWhole{*Assert(ToIntegral<int64_t>(strWhole))};
     CAmount value = nWhole * COIN + nUnits;
 
     if (!MoneyRange(value)) {

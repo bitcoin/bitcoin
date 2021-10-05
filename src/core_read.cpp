@@ -11,6 +11,7 @@
 #include <serialize.h>
 #include <streams.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <version.h>
 
@@ -69,7 +70,9 @@ CScript ParseScript(const std::string& s)
             (w->front() == '-' && w->size() > 1 && std::all_of(w->begin()+1, w->end(), ::IsDigit)))
         {
             // Number
-            int64_t n = LocaleIndependentAtoi<int64_t>(*w);
+            const auto parsed{ToIntegral<int64_t>(*w)};
+            CHECK_NONFATAL(parsed.has_value());
+            const int64_t n{*parsed};
 
             //limit the range of numbers ParseScript accepts in decimal
             //since numbers outside -0xFFFFFFFF...0xFFFFFFFF are illegal in scripts
