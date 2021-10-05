@@ -181,7 +181,7 @@ class MiniWallet:
         from_node.sendrawtransaction(tx_hex)
         self.scan_tx(from_node.decoderawtransaction(tx_hex))
 
-def create_child(node, address, privkeys, parent_txid, parent_value, parent_locking_script=None, fee=DEFAULT_FEE):
+def make_chain(node, address, privkeys, parent_txid, parent_value, parent_locking_script=None, fee=DEFAULT_FEE):
     """Build a transaction that spends parent_txid.vout[0] and produces one output with
     amount = parent_value with a fee deducted.
     Return tuple (CTransaction object, raw hex, nValue, scriptPubKey of the output created).
@@ -228,7 +228,7 @@ def create_raw_chain(node, first_coin, address, privkeys, chain_length):
     value = first_coin["amount"]
 
     for _ in range(chain_length):
-        (tx, txhex, value, parent_locking_script) = create_child(node, address, privkeys, txid, value, 0, parent_locking_script)
+        (tx, txhex, value, parent_locking_script) = make_chain(node, address, privkeys, txid, value, 0, parent_locking_script)
         txid = tx.rehash()
         chain_hex.append(txhex)
         chain_txns.append(tx)
