@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018 The Bitcoin Core developers
+# Copyright (c) 2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -13,7 +13,11 @@ if ! command -v vulture > /dev/null; then
     exit 0
 fi
 
-vulture \
-    --min-confidence 60 \
-    --ignore-names "argtypes,connection_lost,connection_made,converter,data_received,daemon,errcheck,get_ecdh_key,get_privkey,is_compressed,is_fullyvalid,msg_generic,on_*,optionxform,restype,set_privkey,*serialize_v2,profile_with_perf" \
-    $(git ls-files -- "*.py" ":(exclude)contrib/" ":(exclude)src/crc32c/" ":(exclude)test/functional/test_framework/address.py")
+# --min-confidence 100 will only report code that is guaranteed to be unused within the analyzed files.
+# Any value below 100 introduces the risk of false positives, which would create an unacceptable maintenance burden.
+if ! vulture \
+    --min-confidence 100 \
+    $(git ls-files -- "*.py"); then
+    echo "Python dead code detection found some issues"
+    exit 1
+fi

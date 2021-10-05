@@ -26,7 +26,7 @@ class UsedSizeCommand (gdb.Command):
     def get_type(cls, obj_name):
         return gdb.parse_and_eval(obj_name).type
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, arg, _from_tty):
         try:
             args = gdb.string_to_argv(arg)
             obj = gdb.parse_and_eval(args[1])

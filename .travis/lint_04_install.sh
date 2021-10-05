@@ -6,7 +6,11 @@
 
 export LC_ALL=C
 
-travis_retry pip install codespell==1.13.0
-travis_retry pip install flake8==3.5.0
-travis_retry pip install vulture==0.29
+travis_retry pip3 install codespell==1.17.1
+travis_retry pip3 install flake8==3.8.3
+travis_retry pip3 install vulture==2.3
 travis_retry pip3 install yq
+
+SHELLCHECK_VERSION=v0.7.1
+curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar --xz -xf - --directory /tmp/
+export PATH="/tmp/shellcheck-${SHELLCHECK_VERSION}:${PATH}"

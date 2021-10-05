@@ -19,7 +19,7 @@ class LogSizeCommand (gdb.Command):
     def __init__ (self):
         super (LogSizeCommand, self).__init__ ("logsize", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, arg, _from_tty):
         try:
             args = gdb.string_to_argv(arg)
             obj = gdb.parse_and_eval(args[0])

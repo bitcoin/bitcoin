@@ -38,7 +38,6 @@ enabled=(
     # E711 # comparison to None should be 'if cond is None:'
     E714 # test for object identity should be "is not"
     E721 # do not compare types, use "isinstance()"
-    # E741 # do not use variables named "l", "O", or "I"
     E742 # do not define classes named "l", "O", or "I"
     E743 # do not define functions named "l", "O", or "I"
     E901 # SyntaxError: invalid syntax
@@ -73,7 +72,6 @@ enabled=(
     W291 # trailing whitespace
     W292 # no newline at end of file
     W293 # blank line contains whitespace
-    # W504 # line break after binary operator
     W601 # .has_key() is deprecated, use "in"
     W602 # deprecated form of raising exception
     W603 # "<>" is deprecated, use "!="
