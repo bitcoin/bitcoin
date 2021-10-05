@@ -58,7 +58,7 @@ def set_common_properties(toolset):
     with open(os.path.join(SOURCE_DIR, '../build_msvc/common.init.vcxproj'), 'w', encoding='utf-8',newline='\n') as wfile:
         wfile.write(s)
 
-def parse_config_into_btc_conifg():
+def parse_config_into_btc_config():
     def find_between( s, first, last ):
         try:
             start = s.index( first ) + len( first )
