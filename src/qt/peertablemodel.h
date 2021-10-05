@@ -54,11 +54,11 @@ public:
         Direction,
         Address,
         ConnectionType,
-        Network,
         Ping,
         Sent,
         Received,
-        Subversion
+        Subversion,
+        Network,  // Not used, just kept at the end to avoid excessive code removal
     };
 
     enum {
@@ -100,9 +100,6 @@ private:
         /*: Title of Peers Table column which describes the type of
             peer connection. The "type" describes why the connection exists. */
         tr("Type"),
-        /*: Title of Peers Table column which states the network the peer
-            connected through. */
-        tr("Network"),
         /*: Title of Peers Table column which indicates the current latency
             of the connection with the peer. */
         tr("Ping"),
