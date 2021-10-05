@@ -10,15 +10,8 @@
 static const std::string DUMP_MAGIC = "BITCOIN_CORE_WALLET_DUMP";
 uint32_t DUMP_VERSION = 1;
 
-bool DumpWallet(CWallet& wallet, bilingual_str& error)
+bool DumpWallet(CWallet& wallet, bilingual_str& error, const std::string& dump_filename)
 {
-    // Get the dumpfile
-    std::string dump_filename = gArgs.GetArg("-dumpfile", "");
-    if (dump_filename.empty()) {
-        error = _("No dump file provided. To use dump, -dumpfile=<filename> must be provided.");
-        return false;
-    }
-
     fs::path path = dump_filename;
     path = fs::absolute(path);
     if (fs::exists(path)) {
