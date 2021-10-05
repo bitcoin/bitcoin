@@ -58,6 +58,10 @@ bool g_syscall_sandbox_log_violation_before_terminating{false};
 #define __NR_membarrier 324
 #endif
 
+#ifndef __NR_copy_file_range
+#define __NR_copy_file_range 326
+#endif
+
 // This list of syscalls in LINUX_SYSCALLS is only used to map syscall numbers to syscall names in
 // order to be able to print user friendly error messages which include the syscall name in addition
 // to the syscall number.
