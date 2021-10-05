@@ -237,7 +237,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "mint-zeroval-without-input");	
         }
     }
-
+    // the overflow amount must be only the amount we mint
     if(outputAmount != nTotal) {
         return FormatSyscoinErrorMessage(state, "mint-mismatch-value", bSanityCheck);  
     }

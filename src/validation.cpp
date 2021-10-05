@@ -6270,7 +6270,7 @@ bool StopGethNode(pid_t &pid)
     boost::filesystem::remove(GetGethPidFile());
     #ifndef USE_SYSCALL_SANDBOX
     #if HAVE_SYSTEM
-    if(pid == 0) {
+    if(pid == 0 && fNEVMConnection) {
         LogPrintf("Killing any sysgeth processes that may be already running...\n");
         std::string cmd = "pkill -9 -f sysgeth";
         #ifdef WIN32
