@@ -1580,7 +1580,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     fNEVMConnection = !NEVMSub.empty();
 #if ENABLE_ZMQ
     g_zmq_notification_interface = CZMQNotificationInterface::Create();
-    if((!fRegTest && !fSigNet && fMasternodeMode) || fNEVMConnection) {
+    if(fNEVMConnection) {
         if(!g_zmq_notification_interface) {
             return InitError(Untranslated("Could not establish ZMQ interface connections, check your ZMQ settings and try again..."));
         }
@@ -1590,7 +1590,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 #endif
     // SYSCOIN
-    if((!fRegTest && !fSigNet && fMasternodeMode) || fNEVMConnection) {
+    if(fNEVMConnection) {
         node.scheduler->scheduleFromNow([&] { DoGethMaintenance(); }, std::chrono::milliseconds{250});
     }
     pdsNotificationInterface = new CDSNotificationInterface(*node.connman);
@@ -1922,7 +1922,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
         }
     }
-    if((!fRegTest && !fSigNet && fMasternodeMode) || fNEVMConnection) {
+    if(fNEVMConnection) {
         uiInterface.InitMessage("Loading Geth...");
         UninterruptibleSleep(std::chrono::milliseconds{5000});
     }

@@ -6032,7 +6032,7 @@ bool CChainState::RestartGethNode() {
         g_zmq_notification_interface = nullptr;
     }
     g_zmq_notification_interface = CZMQNotificationInterface::Create();
-    if((!fRegTest && !fSigNet && fMasternodeMode) || fNEVMConnection) {
+    if(fNEVMConnection) {
         if(!g_zmq_notification_interface) {
             LogPrintf("RestartGethNode: Could not establish ZMQ interface connections, check your ZMQ settings and try again...\n");
         }
