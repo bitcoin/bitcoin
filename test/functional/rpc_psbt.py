@@ -627,7 +627,7 @@ class PSBTTest(BitcoinTestFramework):
         addr_info = self.nodes[0].getaddressinfo(addr)
 
         self.nodes[0].sendtoaddress(addr, 10)
-        self.nodes[0].generate(6)
+        self.generate(self.nodes[0], 6)
         ext_utxo = self.nodes[0].listunspent(addresses=[addr])[0]
 
         # An external input without solving data should result in an error

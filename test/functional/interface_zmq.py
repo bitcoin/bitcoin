@@ -583,7 +583,7 @@ class ZMQTest (BitcoinTestFramework):
         ], ipv6=True)
 
         # Generate 1 block in nodes[0]
-        self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)
+        self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)
 
         # Should receive the same block hash
         assert_equal(self.nodes[0].getbestblockhash(), subscribers[0].receive().hex())

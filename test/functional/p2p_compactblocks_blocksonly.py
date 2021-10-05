@@ -33,7 +33,7 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
         self.sync_all()
 
     def build_block_on_tip(self):
-        blockhash = self.nodes[2].generate(1)[0]
+        blockhash = self.generate(self.nodes[2], 1)[0]
         block_hex = self.nodes[2].getblock(blockhash=blockhash, verbosity=0)
         block = from_hex(CBlock(), block_hex)
         block.rehash()
