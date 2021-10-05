@@ -1034,9 +1034,9 @@ fs::path GetGethPidFile()
 }
 std::string GetDefaultPubNEVM() {
     std::string defaultPubNevm = fRegTest? "": "tcp://127.0.0.1:1111";
-    #ifdef WIN32
-        defaultPubNevm = "";
-    #endif
+    //#ifdef WIN32
+    //    defaultPubNevm = "";
+    //#endif
     return defaultPubNevm;
 }
 std::string GetGethFilename(){
