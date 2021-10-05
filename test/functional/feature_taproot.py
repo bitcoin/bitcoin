@@ -94,6 +94,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
     assert_equal,
+    assert_true,
     assert_greater_than,
     assert_greater_than_or_equal,
     random_bytes,
@@ -497,11 +498,11 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
 
     # Compute scriptPubKey and set useful defaults based on the inputs.
     if witv0:
-        assert tap is None
+        assert_equal(tap, None)
         conf["mode"] = "witv0"
         if pkh is not None:
             # P2WPKH
-            assert script is None
+            assert_equal(script, None)
             pubkeyhash = hash160(pkh)
             spk = key_to_p2wpkh_script(pkh)
             conf["scriptcode"] = keyhash_to_p2pkh_script(pubkeyhash)
@@ -518,7 +519,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
         conf["mode"] = "legacy"
         if pkh is not None:
             # P2PKH
-            assert script is None
+            assert_equal(script, None)
             pubkeyhash = hash160(pkh)
             spk = keyhash_to_p2pkh_script(pubkeyhash)
             conf["scriptcode"] = spk
@@ -530,7 +531,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
         else:
             assert False
     else:
-        assert script is None
+        assert_equal(script, None)
         conf["mode"] = "taproot"
         conf["tap"] = tap
         spk = tap.scriptPubKey
@@ -549,7 +550,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
         if valid:
             return spend(tx, idx, utxos, **conf)
         else:
-            assert failure is not None
+            assert_not_equal(failure, None)
             return spend(tx, idx, utxos, **{**conf, **failure})
 
     return Spender(script=spk, comment=comment, is_standard=standard, sat_function=sat_fn, err_msg=err_msg, sigops_weight=sigops_weight, no_fail=failure is None, need_vin_vout_mismatch=need_vin_vout_mismatch)
@@ -576,7 +577,7 @@ def bitflipper(expr):
     """Return a callable that evaluates expr and returns it with a random bitflip."""
     def fn(ctx):
         sub = deep_eval(ctx, expr)
-        assert isinstance(sub, bytes)
+        assert_true(isinstance(sub, bytes), message="It is not a bytes instance")
         return (int.from_bytes(sub, 'little') ^ (1 << random.randrange(len(sub) * 8))).to_bytes(len(sub), 'little')
     return fn
 
