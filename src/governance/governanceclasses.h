@@ -17,7 +17,7 @@ class CSuperblock;
 class CGovernanceTriggerManager;
 class CSuperblockManager;
 
-typedef std::shared_ptr<CSuperblock> CSuperblock_sptr;
+using CSuperblock_sptr = std::shared_ptr<CSuperblock>;
 
 // DECLARE GLOBAL VARIABLES FOR GOVERNANCE CLASSES
 extern CGovernanceTriggerManager triggerman;

@@ -25,7 +25,7 @@ class PeerMan;
 namespace llmq
 {
 // <signHash, quorumMember>
-typedef std::pair<uint256, uint16_t> SigShareKey;
+using SigShareKey = std::pair<uint256, uint16_t>;
 
 constexpr uint32_t UNINITIALIZED_SESSION_ID{std::numeric_limits<uint32_t>::max()};
 

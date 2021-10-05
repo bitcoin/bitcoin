@@ -37,8 +37,8 @@ public:
 private:
     CDBWrapper db;
 
-    typedef CDBTransaction<CDBWrapper, CDBBatch> RootTransaction;
-    typedef CDBTransaction<RootTransaction, RootTransaction> CurTransaction;
+    using RootTransaction = CDBTransaction<CDBWrapper, CDBBatch>;
+    using CurTransaction = CDBTransaction<RootTransaction, RootTransaction>;
 
     CDBBatch rootBatch;
     RootTransaction rootDBTransaction;

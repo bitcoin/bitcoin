@@ -128,8 +128,6 @@ bool CBLSWorker::GenerateContributions(size_t quorumThreshold, const BLSIdVector
 // input vector is stored. This means that the input vector must stay alive for the whole lifetime of the Aggregator
 template <typename T>
 struct Aggregator : public std::enable_shared_from_this<Aggregator<T>> {
-    typedef T ElementType;
-
     size_t batchSize{16};
     std::shared_ptr<std::vector<const T*> > inputVec;
 
@@ -145,7 +143,7 @@ struct Aggregator : public std::enable_shared_from_this<Aggregator<T>> {
     // keeps track of currently queued/in-progress batches. If it reaches 0, we are done
     std::atomic<size_t> waitCount{0};
 
-    typedef std::function<void(const T& agg)> DoneCallback;
+    using DoneCallback = std::function<void(const T& agg)>;
     DoneCallback doneCallback;
 
     // TP can either be a pointer or a reference
@@ -330,11 +328,11 @@ struct Aggregator : public std::enable_shared_from_this<Aggregator<T>> {
 // Same rules for the input vectors apply to the VectorAggregator as for the Aggregator (they must stay alive)
 template <typename T>
 struct VectorAggregator : public std::enable_shared_from_this<VectorAggregator<T>> {
-    typedef Aggregator<T> AggregatorType;
-    typedef std::vector<T> VectorType;
-    typedef std::shared_ptr<VectorType> VectorPtrType;
-    typedef std::vector<VectorPtrType> VectorVectorType;
-    typedef std::function<void(const VectorPtrType& agg)> DoneCallback;
+    using AggregatorType = Aggregator<T>;
+    using VectorType = std::vector<T>;
+    using VectorPtrType = std::shared_ptr<VectorType>;
+    using VectorVectorType = std::vector<VectorPtrType>;
+    using DoneCallback = std::function<void(const VectorPtrType& agg)>;
     DoneCallback doneCallback;
 
     const VectorVectorType& vecs;

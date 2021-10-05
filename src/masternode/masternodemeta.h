@@ -63,7 +63,7 @@ public:
     void SetLastOutboundSuccess(int64_t t) { lastOutboundSuccess = t; }
     int64_t GetLastOutboundSuccess() const { return lastOutboundSuccess; }
 };
-typedef std::shared_ptr<CMasternodeMetaInfo> CMasternodeMetaInfoPtr;
+using CMasternodeMetaInfoPtr = std::shared_ptr<CMasternodeMetaInfo>;
 
 class CMasternodeMetaMan
 {

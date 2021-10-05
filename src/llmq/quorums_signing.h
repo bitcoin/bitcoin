@@ -19,7 +19,7 @@
 #include <random.h>
 #include <streams.h>
 #include <threadsafety.h>
-typedef int64_t NodeId;
+using NodeId = int64_t;
 class CNode;
 class CConnman;
 class PeerManager;
@@ -28,7 +28,7 @@ namespace llmq
 {
 
 class CQuorum;
-typedef std::shared_ptr<const CQuorum> CQuorumCPtr;
+using CQuorumCPtr = std::shared_ptr<const CQuorum>;
 class CRecoveredSig
 {
 public:

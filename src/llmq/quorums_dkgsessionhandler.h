@@ -40,7 +40,7 @@ enum QuorumPhase {
 class CDKGPendingMessages
 {
 public:
-    typedef std::pair<NodeId, std::shared_ptr<CDataStream>> BinaryMessage;
+    using BinaryMessage = std::pair<NodeId, std::shared_ptr<CDataStream>>;
 
 private:
     mutable RecursiveMutex cs;
@@ -140,8 +140,8 @@ private:
 
     std::pair<QuorumPhase, uint256> GetPhaseAndQuorumHash() const;
 
-    typedef std::function<void()> StartPhaseFunc;
-    typedef std::function<bool()> WhileWaitFunc;
+    using StartPhaseFunc = std::function<void()>;
+    using WhileWaitFunc = std::function<bool()>;
     void WaitForNextPhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash, const WhileWaitFunc& runWhileWaiting) const;
     void WaitForNewQuorum(const uint256& oldQuorumHash) const;
     void SleepBeforePhase(QuorumPhase curPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const WhileWaitFunc& runWhileWaiting) const;

@@ -20,9 +20,9 @@
 class CBLSWorker
 {
 public:
-    typedef std::function<void(const CBLSSignature&)> SignDoneCallback;
-    typedef std::function<void(bool)> SigVerifyDoneCallback;
-    typedef std::function<bool()> CancelCond;
+    using SignDoneCallback = std::function<void(const CBLSSignature&)>;
+    using SigVerifyDoneCallback = std::function<void(bool)>;
+    using CancelCond = std::function<bool()>;
 
 private:
     ctpl::thread_pool workerPool;

@@ -19,7 +19,7 @@ class CConnman;
 class CBlockIndex;
 class CDeterministicMN;
 class ChainstateManager;
-typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
+using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 
 namespace llmq
@@ -38,10 +38,13 @@ class CDKGSessionManager;
  */
 
 class CQuorum;
-typedef std::shared_ptr<CQuorum> CQuorumPtr;
-typedef std::shared_ptr<const CQuorum> CQuorumCPtr;
+using CQuorumPtr = std::shared_ptr<CQuorum>;
+using CQuorumCPtr = std::shared_ptr<const CQuorum>;
+
 class CFinalCommitment;
-typedef std::shared_ptr<CFinalCommitment> CFinalCommitmentPtr;
+using CFinalCommitmentPtr = std::shared_ptr<CFinalCommitment>;
+
+
 class CQuorum
 {
     friend class CQuorumManager;
