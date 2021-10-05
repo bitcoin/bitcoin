@@ -1051,12 +1051,21 @@ bool CConnman::AttemptToEvictConnection()
                 peer_relay_txes = node->m_tx_relay->fRelayTxes;
                 peer_filter_not_null = node->m_tx_relay->pfilter != nullptr;
             }
-            NodeEvictionCandidate candidate = {node->GetId(), node->nTimeConnected, node->m_min_ping_time,
-                                               node->nLastBlockTime, node->nLastTXTime,
-                                               HasAllDesirableServiceFlags(node->nServices),
-                                               peer_relay_txes, peer_filter_not_null, node->nKeyedNetGroup,
-                                               node->m_prefer_evict, node->addr.IsLocal(),
-                                               node->ConnectedThroughNetwork()};
+            const NodeEvictionCandidate candidate{
+                .id = node->GetId(),
+                .nTimeConnected = node->nTimeConnected,
+                .m_min_ping_time = node->m_min_ping_time,
+                .nLastBlockTime = node->nLastBlockTime,
+                .nLastTXTime = node->nLastTXTime,
+                .fRelevantServices = HasAllDesirableServiceFlags(node->nServices),
+                .fRelayTxes = peer_relay_txes,
+                .fBloomFilter = peer_filter_not_null,
+                .nKeyedNetGroup = node->nKeyedNetGroup,
+                .prefer_evict = node->m_prefer_evict,
+                .m_is_local = node->addr.IsLocal(),
+                .m_network = node->ConnectedThroughNetwork(),
+            };
+
             vEvictionCandidates.push_back(candidate);
         }
     }
