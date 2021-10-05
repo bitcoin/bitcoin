@@ -12,7 +12,8 @@
 #include <any>
 #include <stdint.h>
 #include <vector>
-
+// SYSCOIN
+#include <core_io.h>
 extern RecursiveMutex cs_main;
 
 class CBlock;
