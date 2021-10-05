@@ -37,13 +37,13 @@ builder-image:
   image: $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
   variables:
     SDK_URL: https://bitcoincore.org/depends-sources/sdks
-    XCODE_VERSION: 11.3.1
-    XCODE_BUILD_ID: 11C505
+    XCODE_VERSION: "12.1"
+    XCODE_BUILD_ID: 12A7403
     MAKEJOBS: -j4
   before_script:
     - echo HOST=$HOST
     - |
-      if [ "$HOST" = "x86_64-apple-darwin18" ]; then
+      if [ "$HOST" = "x86_64-apple-darwin19" ]; then
         mkdir -p depends/SDKs
         mkdir -p depends/sdk-sources
         OSX_SDK_BASENAME="Xcode-${XCODE_VERSION}-${XCODE_BUILD_ID}-extracted-SDK-with-libcxx-headers.tar.gz"
@@ -200,12 +200,12 @@ x86_64-unknown-linux-gnu-release:
     HOST: x86_64-unknown-linux-gnu
     DEP_OPTS: "NO_UPNP=1"
 
-x86_64-apple-darwin18:
+x86_64-apple-darwin19:
   extends:
     - .build-depends-template
     - .skip-in-fast-mode-template
   variables:
-    HOST: x86_64-apple-darwin18
+    HOST: x86_64-apple-darwin19
 
 ###
 
@@ -271,7 +271,7 @@ mac-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-apple-darwin18
+    - x86_64-apple-darwin19
   variables:
     BUILD_TARGET: mac
 
