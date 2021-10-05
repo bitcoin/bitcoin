@@ -39,6 +39,8 @@ static const std::string DB_ARCHIVED_BY_HASH = "is_a2";
 static const std::string DB_VERSION = "is_v";
 
 const int CInstantSendDb::CURRENT_VERSION;
+const uint8_t CInstantSendLock::islock_version;
+const uint8_t CInstantSendLock::isdlock_version;
 
 CInstantSendManager* quorumInstantSendManager;
 
@@ -325,10 +327,14 @@ CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByHash(const uint256& hash
         return ret;
     }
 
-    ret = std::make_shared<CInstantSendLock>();
+    ret = std::make_shared<CInstantSendLock>(CInstantSendLock::isdlock_version);
     bool exists = db->Read(std::make_tuple(DB_ISLOCK_BY_HASH, hash), *ret);
     if (!exists) {
-        ret = nullptr;
+        ret = std::make_shared<CInstantSendLock>();
+        exists = db->Read(std::make_tuple(DB_ISLOCK_BY_HASH, hash), *ret);
+        if (!exists) {
+            ret = nullptr;
+        }
     }
     islockCache.insert(hash, ret);
     return ret;
@@ -686,7 +692,7 @@ void CInstantSendManager::HandleNewInputLockRecoveredSig(const CRecoveredSig& re
 
 void CInstantSendManager::TrySignInstantSendLock(const CTransaction& tx)
 {
-    auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
+    const auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
 
     for (auto& in : tx.vin) {
         auto id = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in.prevout));
@@ -698,10 +704,18 @@ void CInstantSendManager::TrySignInstantSendLock(const CTransaction& tx)
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: got all recovered sigs, creating CInstantSendLock\n", __func__,
             tx.GetHash().ToString());
 
-    CInstantSendLock islock;
+    CInstantSendLock islock(CInstantSendLock::isdlock_version);
     islock.txid = tx.GetHash();
     for (auto& in : tx.vin) {
         islock.inputs.emplace_back(in.prevout);
+    }
+
+    // compute cycle hash
+    {
+        LOCK(cs_main);
+        const auto dkgInterval = GetLLMQParams(llmqType).dkgInterval;
+        const auto quorumHeight = chainActive.Height() - (chainActive.Height() % dkgInterval);
+        islock.cycleHash = chainActive[quorumHeight]->GetBlockHash();
     }
 
     auto id = islock.GetRequestId();
@@ -760,8 +774,9 @@ void CInstantSendManager::ProcessMessage(CNode* pfrom, const std::string& strCom
         return;
     }
 
-    if (strCommand == NetMsgType::ISLOCK) {
-        auto islock = std::make_shared<CInstantSendLock>();
+    if (strCommand == NetMsgType::ISLOCK || strCommand == NetMsgType::ISDLOCK) {
+        const auto islock_version = strCommand == NetMsgType::ISLOCK ? CInstantSendLock::islock_version : CInstantSendLock::isdlock_version;
+        const auto islock = std::make_shared<CInstantSendLock>(islock_version);
         vRecv >> *islock;
         ProcessMessageInstantSendLock(pfrom, islock);
     }
@@ -775,13 +790,28 @@ void CInstantSendManager::ProcessMessageInstantSendLock(const CNode* pfrom, cons
 
     {
         LOCK(cs_main);
-        EraseObjectRequest(pfrom->GetId(), CInv(MSG_ISLOCK, hash));
+        EraseObjectRequest(pfrom->GetId(), CInv(islock->IsDeterministic() ? MSG_ISDLOCK : MSG_ISLOCK, hash));
     }
 
     if (!PreVerifyInstantSendLock(*islock)) {
         LOCK(cs_main);
         Misbehaving(pfrom->GetId(), 100);
         return;
+    }
+    if (islock->IsDeterministic()) {
+        const auto blockIndex = WITH_LOCK(cs_main, return LookupBlockIndex(islock->cycleHash));
+        if (blockIndex == nullptr) {
+            // Maybe we don't have the block yet or maybe some peer spams invalid values for cycleHash
+            WITH_LOCK(cs_main, Misbehaving(pfrom->GetId(), 1));
+            return;
+        }
+
+        const auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
+        const auto dkgInterval = GetLLMQParams(llmqType).dkgInterval;
+        if (blockIndex->nHeight % dkgInterval != 0) {
+            WITH_LOCK(cs_main, Misbehaving(pfrom->GetId(), 100));
+            return;
+        }
     }
 
     LOCK(cs);
@@ -901,7 +931,23 @@ std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(
             continue;
         }
 
-        auto quorum = llmq::CSigningManager::SelectQuorumForSigning(llmqType, id, -1, signOffset);
+        int nSignHeight{-1};
+        if (islock->IsDeterministic()) {
+            LOCK(cs_main);
+
+            const auto blockIndex = LookupBlockIndex(islock->cycleHash);
+            if (blockIndex == nullptr) {
+                batchVerifier.badSources.emplace(nodeId);
+                continue;
+            }
+
+            const auto dkgInterval = GetLLMQParams(Params().GetConsensus().llmqTypeInstantSend).dkgInterval;
+            if (blockIndex->nHeight + dkgInterval < chainActive.Height()) {
+                nSignHeight = blockIndex->nHeight + dkgInterval - 1;
+            }
+        }
+
+        auto quorum = llmq::CSigningManager::SelectQuorumForSigning(llmqType, id, nSignHeight, signOffset);
         if (!quorum) {
             // should not happen, but if one fails to select, all others will also fail to select
             return {};
@@ -1028,13 +1074,14 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
         TruncateRecoveredSigsForInputs(*islock);
     }
 
-    CInv inv(MSG_ISLOCK, hash);
+    const auto is_det = islock->IsDeterministic();
+    CInv inv(is_det ? MSG_ISDLOCK : MSG_ISLOCK, hash);
     if (tx != nullptr) {
-        g_connman->RelayInvFiltered(inv, *tx, LLMQS_PROTO_VERSION);
+        g_connman->RelayInvFiltered(inv, *tx, is_det ? ISDLOCK_PROTO_VERSION : LLMQS_PROTO_VERSION);
     } else {
         // we don't have the TX yet, so we only filter based on txid. Later when that TX arrives, we will re-announce
         // with the TX taken into account.
-        g_connman->RelayInvFiltered(inv, islock->txid, LLMQS_PROTO_VERSION);
+        g_connman->RelayInvFiltered(inv, islock->txid, is_det ? ISDLOCK_PROTO_VERSION : LLMQS_PROTO_VERSION);
     }
 
     ResolveBlockConflicts(hash, *islock);
@@ -1068,8 +1115,8 @@ void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
         }
         // In case the islock was received before the TX, filtered announcement might have missed this islock because
         // we were unable to check for filter matches deep inside the TX. Now we have the TX, so we should retry.
-        CInv inv(MSG_ISLOCK, ::SerializeHash(*islock));
-        g_connman->RelayInvFiltered(inv, *tx, LLMQS_PROTO_VERSION);
+        CInv inv(islock->IsDeterministic() ? MSG_ISDLOCK : MSG_ISLOCK, ::SerializeHash(*islock));
+        g_connman->RelayInvFiltered(inv, *tx, islock->IsDeterministic() ? ISDLOCK_PROTO_VERSION : LLMQS_PROTO_VERSION);
         // If the islock was received before the TX, we know we were not able to send
         // the notification at that time, we need to do it now.
         LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- notify about an earlier received lock for tx %s\n", __func__, tx->GetHash().ToString());

@@ -80,6 +80,7 @@ const char* QGETDATA = "qgetdata";
 const char* QDATA = "qdata";
 const char *CLSIG="clsig";
 const char *ISLOCK="islock";
+const char *ISDLOCK="isdlock";
 const char *MNAUTH="mnauth";
 }; // namespace NetMsgType
 
@@ -157,6 +158,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::QDATA,
     NetMsgType::CLSIG,
     NetMsgType::ISLOCK,
+    NetMsgType::ISDLOCK,
     NetMsgType::MNAUTH,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
@@ -289,6 +291,7 @@ const char* CInv::GetCommandInternal() const
         case MSG_QUORUM_RECOVERED_SIG:          return NetMsgType::QSIGREC;
         case MSG_CLSIG:                         return NetMsgType::CLSIG;
         case MSG_ISLOCK:                        return NetMsgType::ISLOCK;
+        case MSG_ISDLOCK:                       return NetMsgType::ISDLOCK;
         default:
             return nullptr;
     }

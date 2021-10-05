@@ -82,7 +82,7 @@ class RPCVerifyISLockTest(DashTestFramework):
                 break
         assert selected_hash == oldest_quorum_hash
         # Create the ISLOCK, then mine a quorum to move the signing quorum out of the active set
-        islock = self.create_islock(rawtx)
+        islock = self.create_islock(rawtx, True)
         # Mine one block to trigger the "signHeight + dkgInterval" verification for the ISLOCK
         self.mine_quorum()
         # Verify the ISLOCK for a transaction that is not yet known by the node

@@ -44,6 +44,7 @@ from test_framework.messages import (
     msg_headers,
     msg_inv,
     msg_islock,
+    msg_isdlock,
     msg_mempool,
     msg_mnlistdiff,
     msg_notfound,
@@ -102,6 +103,7 @@ MESSAGEMAP = {
     b"getsporks": None,
     b"govsync": None,
     b"islock": msg_islock,
+    b"isdlock": msg_isdlock,
     b"mnlistdiff": msg_mnlistdiff,
     b"notfound": msg_notfound,
     b"qfcommit": None,
@@ -408,6 +410,7 @@ class P2PInterface(P2PConnection):
     def on_mnlistdiff(self, message): pass
     def on_clsig(self, message): pass
     def on_islock(self, message): pass
+    def on_isdlock(self, message): pass
 
     def on_qgetdata(self, message): pass
     def on_qdata(self, message): pass

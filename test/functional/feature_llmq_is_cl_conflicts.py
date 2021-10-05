@@ -35,11 +35,11 @@ class TestP2PConn(P2PInterface):
         inv = msg_inv([CInv(29, hash)])
         self.send_message(inv)
 
-    def send_islock(self, islock):
+    def send_islock(self, islock, deterministic=False):
         hash = uint256_from_str(hash256(islock.serialize()))
         self.islocks[hash] = islock
 
-        inv = msg_inv([CInv(30, hash)])
+        inv = msg_inv([CInv(31 if deterministic else 30, hash)])
         self.send_message(inv)
 
     def on_getdata(self, message):
@@ -72,7 +72,8 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         self.test_chainlock_overrides_islock(False)
         self.test_chainlock_overrides_islock(True, False)
         self.test_chainlock_overrides_islock(True, True)
-        self.test_chainlock_overrides_islock_overrides_nonchainlock()
+        self.test_chainlock_overrides_islock_overrides_nonchainlock(False)
+        self.test_chainlock_overrides_islock_overrides_nonchainlock(True)
 
     def test_chainlock_overrides_islock(self, test_block_conflict, mine_confllicting=False):
         if not test_block_conflict:
@@ -191,7 +192,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
                 assert rawtx['instantlock']
                 assert not rawtx['instantlock_internal']
 
-    def test_chainlock_overrides_islock_overrides_nonchainlock(self):
+    def test_chainlock_overrides_islock_overrides_nonchainlock(self, deterministic):
         # create two raw TXs, they will conflict with each other
         rawtx1 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
         rawtx2 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
@@ -200,7 +201,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         rawtx2_txid = encode(hash256(hex_str_to_bytes(rawtx2))[::-1], 'hex_codec').decode('ascii')
 
         # Create an ISLOCK but don't broadcast it yet
-        islock = self.create_islock(rawtx2)
+        islock = self.create_islock(rawtx2, deterministic)
 
         # Disable ChainLocks to avoid accidental locking
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
@@ -229,7 +230,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         # Send the ISLOCK, which should result in the last 2 blocks to be invalidated, even though the nodes don't know
         # the locked transaction yet
-        self.test_node.send_islock(islock)
+        self.test_node.send_islock(islock, deterministic)
         time.sleep(5)
 
         assert self.nodes[0].getbestblockhash() == good_tip

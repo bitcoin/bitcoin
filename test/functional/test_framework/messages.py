@@ -32,7 +32,7 @@ from test_framework.util import hex_str_to_bytes
 import dash_hash
 
 MIN_VERSION_SUPPORTED = 60001
-MY_VERSION = 70219  # LLMQ_DATA_MESSAGES_VERSION
+MY_VERSION = 70220  # ISDLOCK_PROTO_VERSION
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3%s/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
@@ -1771,6 +1771,38 @@ class msg_islock:
 
     def __repr__(self):
         return "msg_islock(inputs=%s, txid=%064x)" % (repr(self.inputs), self.txid)
+
+
+class msg_isdlock:
+    __slots__ = ("nVersion", "inputs", "txid", "cycleHash", "sig")
+    command = b"isdlock"
+
+    def __init__(self, nVersion=1, inputs=[], txid=0, cycleHash=0, sig=b'\\x0' * 96):
+        self.nVersion = nVersion
+        self.inputs = inputs
+        self.txid = txid
+        self.cycleHash = cycleHash
+        self.sig = sig
+
+    def deserialize(self, f):
+        self.nVersion = struct.unpack("<B", f.read(1))[0]
+        self.inputs = deser_vector(f, COutPoint)
+        self.txid = deser_uint256(f)
+        self.cycleHash = deser_uint256(f)
+        self.sig = f.read(96)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.nVersion)
+        r += ser_vector(self.inputs)
+        r += ser_uint256(self.txid)
+        r += ser_uint256(self.cycleHash)
+        r += self.sig
+        return r
+
+    def __repr__(self):
+        return "msg_isdlock(nVersion=%d, inputs=%s, txid=%064x, cycleHash=%064x)" % \
+               (self.nVersion, repr(self.inputs), self.txid, self.cycleHash)
 
 
 class msg_qsigshare:

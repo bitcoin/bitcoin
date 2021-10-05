@@ -31,7 +31,7 @@ from test_framework.messages import (
     hash256,
     msg_clsig,
     msg_inv,
-    msg_islock,
+    msg_isdlock,
     msg_tx,
     ser_string,
     uint256_from_str,
@@ -266,7 +266,7 @@ class DashZMQTest (DashTestFramework):
         zmq_tx_lock_tx.deserialize(zmq_tx_lock_sig_stream)
         assert zmq_tx_lock_tx.is_valid()
         assert_equal(zmq_tx_lock_tx.hash, rpc_raw_tx_1['txid'])
-        zmq_tx_lock = msg_islock()
+        zmq_tx_lock = msg_isdlock()
         zmq_tx_lock.deserialize(zmq_tx_lock_sig_stream)
         assert_equal(uint256_to_string(zmq_tx_lock.txid), rpc_raw_tx_1['txid'])
         # Try to send the second transaction. This must throw an RPC error because it conflicts with rpc_raw_tx_1

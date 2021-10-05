@@ -20,20 +20,37 @@
 namespace llmq
 {
 
-class CInstantSendLock
+struct CInstantSendLock
 {
-public:
+    // This is the old format of instant send lock, it must be 0
+    static const uint8_t islock_version = 0;
+    // This is the new format of instant send deterministic lock, this should be incremented for new isdlock versions
+    static const uint8_t isdlock_version = 1;
+
+    uint8_t nVersion;
     std::vector<COutPoint> inputs;
     uint256 txid;
+    uint256 cycleHash;
     CBLSLazySignature sig;
 
-public:
+    CInstantSendLock() : CInstantSendLock(islock_version) {}
+    explicit CInstantSendLock(const uint8_t desiredVersion) : nVersion(desiredVersion) {}
+
     SERIALIZE_METHODS(CInstantSendLock, obj)
     {
-        READWRITE(obj.inputs, obj.txid, obj.sig);
+        if (s.GetVersion() >= ISDLOCK_PROTO_VERSION && obj.IsDeterministic()) {
+            READWRITE(obj.nVersion);
+        }
+        READWRITE(obj.inputs);
+        READWRITE(obj.txid);
+        if (s.GetVersion() >= ISDLOCK_PROTO_VERSION && obj.IsDeterministic()) {
+            READWRITE(obj.cycleHash);
+        }
+        READWRITE(obj.sig);
     }
 
     uint256 GetRequestId() const;
+    bool IsDeterministic() const { return nVersion != islock_version; }
 };
 
 typedef std::shared_ptr<CInstantSendLock> CInstantSendLockPtr;
