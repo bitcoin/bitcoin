@@ -5,6 +5,7 @@
 #ifndef SYSCOIN_WALLET_SPEND_H
 #define SYSCOIN_WALLET_SPEND_H
 
+#include <consensus/amount.h>
 #include <wallet/coinselection.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>

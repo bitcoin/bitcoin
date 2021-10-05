@@ -5,8 +5,7 @@
 #ifndef SYSCOIN_RPC_BLOCKCHAIN_H
 #define SYSCOIN_RPC_BLOCKCHAIN_H
 
-#include <amount.h>
-#include <core_io.h>
+#include <consensus/amount.h>
 #include <streams.h>
 #include <sync.h>
 

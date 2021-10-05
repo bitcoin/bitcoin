@@ -36,7 +36,7 @@
 #include <vector>
 
 // SYSCOIN
-#include <amount.h>
+#include <consensus/amount.h>
 class JSONRPCRequest;
 extern bool fMasternodeMode;
 extern bool fDisableGovernance;

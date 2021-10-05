@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_SERVICES_RPC_WALLET_ASSETWALLETRPC_H
 #define SYSCOIN_SERVICES_RPC_WALLET_ASSETWALLETRPC_H
 #include <string>
-#include <amount.h>
+#include <consensus/amount.h>
 class CAssetCoinInfo;
 class UniValue;
 class CWalletTx;

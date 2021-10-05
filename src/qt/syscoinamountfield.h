@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_QT_SYSCOINAMOUNTFIELD_H
 #define SYSCOIN_QT_SYSCOINAMOUNTFIELD_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 
 #include <QWidget>
 

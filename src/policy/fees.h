@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_POLICY_FEES_H
 #define SYSCOIN_POLICY_FEES_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 #include <policy/feerate.h>
 #include <uint256.h>
 #include <random.h>

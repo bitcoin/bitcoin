@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef SYSCOIN_GOVERNANCE_GOVERNANCECLASSES_H
 #define SYSCOIN_GOVERNANCE_GOVERNANCECLASSES_H
-#include <amount.h>
+#include <consensus/amount.h>
 #include <governance/governance.h>
 #include <script/script.h>
 #include <script/standard.h>

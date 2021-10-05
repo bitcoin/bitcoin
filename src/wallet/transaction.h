@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_WALLET_TRANSACTION_H
 #define SYSCOIN_WALLET_TRANSACTION_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <wallet/ismine.h>

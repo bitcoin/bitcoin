@@ -3,19 +3,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_AMOUNT_H
-#define SYSCOIN_AMOUNT_H
-
-#include <stdint.h>
-#include <limits>
-#include <unordered_map>
-#include <unordered_set>
+#ifndef SYSCOIN_CONSENSUS_AMOUNT_H
+#define SYSCOIN_CONSENSUS_AMOUNT_H
 // SYSCOIN
 #include <uint256.h>
+#include <unordered_map>
+#include <unordered_set>
+#include <cstdint>
+
 /** Amount in satoshis (Can be negative) */
 typedef int64_t CAmount;
 
-static const CAmount COIN = 100000000;
+static constexpr CAmount COIN = 100000000;
 
 /** No amount larger than this (in satoshi) is valid.
  *
@@ -51,4 +50,4 @@ struct AssetMapOutput {
 };
 typedef std::unordered_map<uint64_t, AssetMapOutput> CAssetsMap;
 typedef std::unordered_set<uint64_t> CAssetsSet;
-#endif //  SYSCOIN_AMOUNT_H
+#endif //  BITCOIN_CONSENSUS_AMOUNT_H

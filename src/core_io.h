@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_CORE_IO_H
 #define SYSCOIN_CORE_IO_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 #include <attributes.h>
 
 #include <string>

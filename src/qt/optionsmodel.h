@@ -5,7 +5,6 @@
 #ifndef SYSCOIN_QT_OPTIONSMODEL_H
 #define SYSCOIN_QT_OPTIONSMODEL_H
 
-#include <amount.h>
 #include <cstdint>
 #include <qt/guiconstants.h>
 

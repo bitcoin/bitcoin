@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_QT_SYSCOINUNITS_H
 #define SYSCOIN_QT_SYSCOINUNITS_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 
 #include <QAbstractListModel>
 #include <QString>

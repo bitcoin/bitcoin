@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_QT_WALLETVIEW_H
 #define SYSCOIN_QT_WALLETVIEW_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 // SYSCOIN
 #include <qt/masternodelist.h>
 #include <QStackedWidget>

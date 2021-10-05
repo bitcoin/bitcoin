@@ -6,7 +6,6 @@
 #ifndef SYSCOIN_RPC_SERVER_H
 #define SYSCOIN_RPC_SERVER_H
 
-#include <amount.h>
 #include <rpc/request.h>
 #include <rpc/util.h>
 

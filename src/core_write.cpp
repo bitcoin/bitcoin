@@ -4,6 +4,7 @@
 
 #include <core_io.h>
 
+#include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <key_io.h>

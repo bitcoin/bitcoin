@@ -4,7 +4,7 @@
 
 #ifndef SYSCOIN_SERVICES_ASSET_H
 #define SYSCOIN_SERVICES_ASSET_H
-#include <amount.h>
+#include <consensus/amount.h>
 class UniValue;
 class CTransaction;
 class TxValidationState;

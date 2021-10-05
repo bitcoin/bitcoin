@@ -14,8 +14,8 @@
 #include <utility>
 #include <vector>
 
-#include <amount.h>
 #include <coins.h>
+#include <consensus/amount.h>
 #include <indirectmap.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>

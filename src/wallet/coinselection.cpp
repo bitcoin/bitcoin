@@ -4,6 +4,7 @@
 
 #include <wallet/coinselection.h>
 
+#include <consensus/amount.h>
 #include <policy/feerate.h>
 #include <util/system.h>
 #include <util/moneystr.h>

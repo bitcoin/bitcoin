@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_QT_GUIUTIL_H
 #define SYSCOIN_QT_GUIUTIL_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 #include <fs.h>
 #include <net.h>
 #include <netaddress.h>

@@ -6,7 +6,7 @@
 #ifndef SYSCOIN_WALLET_WALLET_H
 #define SYSCOIN_WALLET_WALLET_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <outputtype.h>

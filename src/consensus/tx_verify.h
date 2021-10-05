@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_CONSENSUS_TX_VERIFY_H
 #define SYSCOIN_CONSENSUS_TX_VERIFY_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 
 #include <stdint.h>
 #include <vector>
