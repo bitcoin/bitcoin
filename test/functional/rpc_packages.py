@@ -25,7 +25,7 @@ from test_framework.util import (
 from test_framework.wallet import (
     create_child_with_parents,
     create_raw_chain,
-    make_chain,
+    create_child,
 )
 
 class RPCPackagesTest(BitcoinTestFramework):
@@ -173,7 +173,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         child_value = value - Decimal("0.0001")
 
         # Child A
-        (_, tx_child_a_hex, _, _) = make_chain(node, self.address, self.privkeys, parent_txid, child_value, 0, parent_locking_script_a)
+        (_, tx_child_a_hex, _, _) = create_child(node, self.address, self.privkeys, parent_txid, child_value, 0, parent_locking_script_a)
         assert not node.testmempoolaccept([tx_child_a_hex])[0]["allowed"]
 
         # Child B
@@ -212,7 +212,7 @@ class RPCPackagesTest(BitcoinTestFramework):
             for _ in range(num_parents):
                 parent_coin = self.coins.pop()
                 value = parent_coin["amount"]
-                (tx, txhex, value, parent_locking_script) = make_chain(node, self.address, self.privkeys, parent_coin["txid"], value)
+                (tx, txhex, value, parent_locking_script) = create_child(node, self.address, self.privkeys, parent_coin["txid"], value)
                 package_hex.append(txhex)
                 parents_tx.append(tx)
                 values.append(value)
