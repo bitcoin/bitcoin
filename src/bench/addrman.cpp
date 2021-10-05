@@ -53,14 +53,14 @@ static void CreateAddresses()
     }
 }
 
-static void AddAddressesToAddrMan(CAddrMan& addrman)
+static void AddAddressesToAddrMan(AddrMan& addrman)
 {
     for (size_t source_i = 0; source_i < NUM_SOURCES; ++source_i) {
         addrman.Add(g_addresses[source_i], g_sources[source_i]);
     }
 }
 
-static void FillAddrMan(CAddrMan& addrman)
+static void FillAddrMan(AddrMan& addrman)
 {
     CreateAddresses();
 
@@ -74,26 +74,26 @@ static void AddrManAdd(benchmark::Bench& bench)
     CreateAddresses();
 
     bench.run([&] {
-        CAddrMan addrman{/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0};
+        AddrMan addrman{/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0};
         AddAddressesToAddrMan(addrman);
     });
 }
 
 static void AddrManSelect(benchmark::Bench& bench)
 {
-    CAddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    AddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
 
     FillAddrMan(addrman);
 
     bench.run([&] {
         const auto& address = addrman.Select();
-        assert(address.GetPort() > 0);
+        assert(address.first.GetPort() > 0);
     });
 }
 
 static void AddrManGetAddr(benchmark::Bench& bench)
 {
-    CAddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    AddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
 
     FillAddrMan(addrman);
 
@@ -105,7 +105,7 @@ static void AddrManGetAddr(benchmark::Bench& bench)
 
 static void AddrManAddThenGood(benchmark::Bench& bench)
 {
-    auto markSomeAsGood = [](CAddrMan& addrman) {
+    auto markSomeAsGood = [](AddrMan& addrman) {
         for (size_t source_i = 0; source_i < NUM_SOURCES; ++source_i) {
             for (size_t addr_i = 0; addr_i < NUM_ADDRESSES_PER_SOURCE; ++addr_i) {
                 addrman.Good(g_addresses[source_i][addr_i]);
@@ -117,12 +117,12 @@ static void AddrManAddThenGood(benchmark::Bench& bench)
 
     bench.run([&] {
         // To make the benchmark independent of the number of evaluations, we always prepare a new addrman.
-        // This is necessary because CAddrMan::Good() method modifies the object, affecting the timing of subsequent calls
+        // This is necessary because AddrMan::Good() method modifies the object, affecting the timing of subsequent calls
         // to the same method and we want to do the same amount of work in every loop iteration.
         //
         // This has some overhead (exactly the result of AddrManAdd benchmark), but that overhead is constant so improvements in
-        // CAddrMan::Good() will still be noticeable.
-        CAddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+        // AddrMan::Good() will still be noticeable.
+        AddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
         AddAddressesToAddrMan(addrman);
 
         markSomeAsGood(addrman);
