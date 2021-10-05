@@ -44,6 +44,20 @@ bool g_syscall_sandbox_log_violation_before_terminating{false};
 #define SECCOMP_RET_KILL_PROCESS 0x80000000U
 #endif
 
+// Define system call numbers for x86_64 that are referenced in the system call profile
+// but not provided by the kernel headers used in the GUIX build.
+#ifndef __NR_statx
+#define __NR_statx 332
+#endif
+
+#ifndef __NR_getrandom
+#define __NR_getrandom 318
+#endif
+
+#ifndef __NR_membarrier
+#define __NR_membarrier 324
+#endif
+
 // This list of syscalls in LINUX_SYSCALLS is only used to map syscall numbers to syscall names in
 // order to be able to print user friendly error messages which include the syscall name in addition
 // to the syscall number.
@@ -162,9 +176,7 @@ const std::map<uint32_t, std::string> LINUX_SYSCALLS{
     {__NR_getpmsg, "getpmsg"},
     {__NR_getppid, "getppid"},
     {__NR_getpriority, "getpriority"},
-#if defined(__NR_getrandom)
     {__NR_getrandom, "getrandom"},
-#endif // defined(__NR_getrandom)
     {__NR_getresgid, "getresgid"},
     {__NR_getresuid, "getresuid"},
     {__NR_getrlimit, "getrlimit"},
@@ -212,9 +224,7 @@ const std::map<uint32_t, std::string> LINUX_SYSCALLS{
     {__NR_lstat, "lstat"},
     {__NR_madvise, "madvise"},
     {__NR_mbind, "mbind"},
-#if defined(__NR_membarrier)
     {__NR_membarrier, "membarrier"},
-#endif // defined(__NR_membarrier)
     {__NR_memfd_create, "memfd_create"},
     {__NR_migrate_pages, "migrate_pages"},
     {__NR_mincore, "mincore"},
@@ -515,9 +525,7 @@ public:
     {
         allowed_syscalls.insert(__NR_brk);     // change data segment size
         allowed_syscalls.insert(__NR_madvise); // give advice about use of memory
-#if defined(__NR_membarrier)
         allowed_syscalls.insert(__NR_membarrier); // issue memory barriers on a set of threads
-#endif // defined(__NR_membarrier)
         allowed_syscalls.insert(__NR_mlock);    // lock memory
         allowed_syscalls.insert(__NR_mmap);     // map files or devices into memory
         allowed_syscalls.insert(__NR_mprotect); // set protection on a region of memory
@@ -595,9 +603,7 @@ public:
 
     void AllowGetRandom()
     {
-#if defined(__NR_getrandom)
         allowed_syscalls.insert(__NR_getrandom); // obtain a series of random bytes
-#endif // defined(__NR_getrandom)
     }
 
     void AllowGetSimpleId()
