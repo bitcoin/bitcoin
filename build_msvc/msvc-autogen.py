@@ -68,7 +68,7 @@ def parse_config_into_btc_conifg():
             return ""
 
     config_info = []
-    with open(os.path.join(SOURCE_DIR,'../configure.ac')) as f:
+    with open(os.path.join(SOURCE_DIR,'../configure.ac'), encoding="utf8") as f:
         for line in f:
             if line.startswith("define"):
                 config_info.append(find_between(line, "(_", ")"))
@@ -80,7 +80,7 @@ def parse_config_into_btc_conifg():
     version = config_dict["PACKAGE_VERSION"].strip('"')
     config_dict["PACKAGE_STRING"] = f"\"Bitcoin Core {version}\""
 
-    for line in fileinput.input(os.path.join(SOURCE_DIR,'../build_msvc/bitcoin_config.h'), inplace=True):
+    for line in fileinput.input(os.path.join(SOURCE_DIR,'../build_msvc/bitcoin_config.h', ), inplace=True, encoding="utf8"):
         header = ""
         if line.startswith("#define"):
             header = line.split(" ")[1]
@@ -88,6 +88,7 @@ def parse_config_into_btc_conifg():
             print(f"#define {header} {config_dict[header]}\n", end='')
         else:
             print(line, end='')
+
 
 def main():
     parser = argparse.ArgumentParser(description='Bitcoin-core msbuild configuration initialiser.')
