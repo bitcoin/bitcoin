@@ -88,7 +88,7 @@ class BIP68Test(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(new_addr, 2) # send 2 BTC
 
         utxos = self.nodes[0].listunspent(0, 0)
-        assert len(utxos) > 0
+        assert_greater_than(len(utxos), 0)
 
         utxo = utxos[0]
 
