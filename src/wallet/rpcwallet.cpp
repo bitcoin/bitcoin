@@ -3292,7 +3292,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
     }
 
     if (options.exists("solving_data")) {
-        UniValue solving_data = options["solving_data"].get_obj();
+        const UniValue solving_data = options["solving_data"].get_obj();
         if (solving_data.exists("pubkeys")) {
             for (const UniValue& pk_univ : solving_data["pubkeys"].get_array().getValues()) {
                 const std::string& pk_str = pk_univ.get_str();
@@ -3300,7 +3300,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("'%s' is not hex", pk_str));
                 }
                 const std::vector<unsigned char> data(ParseHex(pk_str));
-                CPubKey pubkey(data.begin(), data.end());
+                const CPubKey pubkey(data.begin(), data.end());
                 if (!pubkey.IsFullyValid()) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("'%s' is not a valid public key", pk_str));
                 }
@@ -3365,7 +3365,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
     wallet.chain().findCoins(coins);
     for (const auto& coin : coins) {
         if (!coin.second.out.IsNull()) {
-            coinControl.Select(coin.first, coin.second.out);
+            coinControl.SelectExternal(coin.first, coin.second.out);
         }
     }
 

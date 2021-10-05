@@ -475,7 +475,7 @@ bool SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCo
 
         CInputCoin coin(outpoint, txout, input_bytes);
         nValueFromPresetInputs += coin.txout.nValue;
-        if (coin.m_input_bytes <= 0) {
+        if (coin.m_input_bytes == -1) {
             return false; // Not solvable, can't estimate size for fee
         }
         coin.effective_value = coin.txout.nValue - coin_selection_params.m_effective_feerate.GetFee(coin.m_input_bytes);
@@ -814,7 +814,7 @@ static bool CreateTransactionInternal(
     // Calculate the transaction fee
     TxSize tx_sizes = CalculateMaximumSignedTxSize(CTransaction(txNew), &wallet, &coin_control);
     int nBytes = tx_sizes.vsize;
-    if (nBytes < 0) {
+    if (nBytes == -1) {
         error = _("Missing solving data for estimating transaction size");
         return false;
     }
