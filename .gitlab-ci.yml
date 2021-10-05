@@ -63,17 +63,17 @@ builder-image:
     # Let all branches share the same cache, which is ok because the depends subsystem is able to handle this properly (it works with hashes of all scripts)
     key:
       files:
-        - $CI_PROJECT_DIR/ci/Dockerfile.builder
+        - ci/Dockerfile.builder
       prefix: ${CI_JOB_NAME}
     paths:
-      - $CI_PROJECT_DIR/depends/built
-      - $CI_PROJECT_DIR/depends/sdk-sources
+      - depends/built
+      - depends/sdk-sources
   artifacts:
     name: depends
     when: on_success
     paths:
-      - $CI_PROJECT_DIR/depends/$HOST
-      - $CI_PROJECT_DIR/depends/SDKs
+      - depends/$HOST
+      - depends/SDKs
 
 .base-template:
   image: $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
@@ -115,15 +115,15 @@ builder-image:
     # Let all branches share the same cache, which is ok because ccache is able to handle it
     key:
       files:
-        - $CI_PROJECT_DIR/ci/Dockerfile.builder
+        - ci/Dockerfile.builder
       prefix: ${CI_JOB_NAME}
     paths:
-      - $CI_PROJECT_DIR/cache/ccache
+      - cache/ccache
   artifacts:
     name: binaries
     when: always
     paths:
-      - $CI_PROJECT_DIR/build-ci
+      - build-ci
     # Exclude some less important binaries to reduce the size of the artifacts
     exclude:
       - build-ci/dashcore-$BUILD_TARGET/src/bench/bench_dash
@@ -148,7 +148,7 @@ builder-image:
     name: testlogs
     when: always
     paths:
-      - $CI_PROJECT_DIR/testlogs
+      - testlogs
     expire_in: 3 days
 
 .skip-in-fast-mode-template:
