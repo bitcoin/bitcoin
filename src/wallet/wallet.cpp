@@ -2253,16 +2253,15 @@ void ReserveDestination::ReturnDestination()
 bool CWallet::DisplayAddress(const CTxDestination& dest)
 {
     CScript scriptPubKey = GetScriptForDestination(dest);
-    const auto spk_man = GetScriptPubKeyMan(scriptPubKey);
-    if (spk_man == nullptr) {
-        return false;
+    for (const auto& spk_man : GetScriptPubKeyMans(scriptPubKey)) {
+        auto signer_spk_man = dynamic_cast<ExternalSignerScriptPubKeyMan *>(spk_man);
+        if (signer_spk_man == nullptr) {
+            continue;
+        }
+        ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
+        return signer_spk_man->DisplayAddress(scriptPubKey, signer);
     }
-    auto signer_spk_man = dynamic_cast<ExternalSignerScriptPubKeyMan*>(spk_man);
-    if (signer_spk_man == nullptr) {
-        return false;
-    }
-    ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
-    return signer_spk_man->DisplayAddress(scriptPubKey, signer);
+    return false;
 }
 
 bool CWallet::LockCoin(const COutPoint& output, WalletBatch* batch)
@@ -3035,26 +3034,16 @@ ScriptPubKeyMan* CWallet::GetScriptPubKeyMan(const OutputType& type, bool intern
     return it->second;
 }
 
-std::set<ScriptPubKeyMan*> CWallet::GetScriptPubKeyMans(const CScript& script, SignatureData& sigdata) const
+std::set<ScriptPubKeyMan*> CWallet::GetScriptPubKeyMans(const CScript& script) const
 {
     std::set<ScriptPubKeyMan*> spk_mans;
+    SignatureData sigdata;
     for (const auto& spk_man_pair : m_spk_managers) {
         if (spk_man_pair.second->CanProvide(script, sigdata)) {
             spk_mans.insert(spk_man_pair.second.get());
         }
     }
     return spk_mans;
-}
-
-ScriptPubKeyMan* CWallet::GetScriptPubKeyMan(const CScript& script) const
-{
-    SignatureData sigdata;
-    for (const auto& spk_man_pair : m_spk_managers) {
-        if (spk_man_pair.second->CanProvide(script, sigdata)) {
-            return spk_man_pair.second.get();
-        }
-    }
-    return nullptr;
 }
 
 ScriptPubKeyMan* CWallet::GetScriptPubKeyMan(const uint256& id) const

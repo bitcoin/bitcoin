@@ -805,13 +805,10 @@ public:
     //! Get the ScriptPubKeyMan for the given OutputType and internal/external chain.
     ScriptPubKeyMan* GetScriptPubKeyMan(const OutputType& type, bool internal) const;
 
-    //! Get the ScriptPubKeyMan for a script
-    ScriptPubKeyMan* GetScriptPubKeyMan(const CScript& script) const;
+    //! Get all the ScriptPubKeyMans for a script
+    std::set<ScriptPubKeyMan*> GetScriptPubKeyMans(const CScript& script) const;
     //! Get the ScriptPubKeyMan by id
     ScriptPubKeyMan* GetScriptPubKeyMan(const uint256& id) const;
-
-    //! Get all of the ScriptPubKeyMans for a script given additional information in sigdata (populated by e.g. a psbt)
-    std::set<ScriptPubKeyMan*> GetScriptPubKeyMans(const CScript& script, SignatureData& sigdata) const;
 
     //! Get the SigningProvider for a script
     std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const;
