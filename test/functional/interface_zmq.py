@@ -22,6 +22,7 @@ from test_framework.messages import (
 from test_framework.util import (
     assert_equal,
     assert_true,
+    assert_greater_than,
     assert_raises_rpc_error,
 )
 from test_framework.wallet import (
@@ -73,7 +74,7 @@ class ZMQSubscriber:
         if mempool_sequence is not None:
             assert_true(label == "A" or label == "R", message="{} different from A or C".format(label))
         else:
-            assert_true(label == "D" or label == "C", message="{} different from D or C".format(label)
+            assert_true(label == "D" or label == "C", message="{} different from D or C".format(label))
         return (hash, label, mempool_sequence)
 
 
@@ -379,7 +380,7 @@ class ZMQTest (BitcoinTestFramework):
 
             # Make sure getrawmempool mempool_sequence results aren't "queued" but immediately reflective
             # of the time they were gathered.
-            assert_assert_greater_than(self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"], seq_num)
+            assert_greater_than(self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"], seq_num)
 
         assert_equal((best_hash, "D", None), seq.receive_sequence())
         assert_equal((rbf_txid, "A", seq_num), seq.receive_sequence())

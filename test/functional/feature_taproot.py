@@ -94,6 +94,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
     assert_equal,
+    assert_not_equal,
     assert_true,
     assert_greater_than,
     assert_greater_than_or_equal,
