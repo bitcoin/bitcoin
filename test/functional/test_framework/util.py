@@ -219,6 +219,14 @@ def str_to_b64str(string):
 
 
 def satoshi_round(amount):
+    """ Doesn't accept floating point rational numbers. """
+    if type(amount) == type(0.1):
+        # For best predictabilty do not convert floating point rational
+        # numbers into fixed point rational numbers.
+        raise TypeError(
+            'contract transgression receiving {} of type {}'
+            ', try passing an integer or a string'.format(
+                amount, type(amount)))
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
 
 
