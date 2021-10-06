@@ -2648,7 +2648,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
     obj.pushKV("walletname", pwallet->GetName());
     obj.pushKV("walletversion", pwallet->GetVersion());
     obj.pushKV("balance", ValueFromAmount(bal.m_mine_trusted));
-    obj.pushKV("coinjoin_balance",       ValueFromAmount(pwallet->GetAnonymizedBalance()));
+    obj.pushKV("coinjoin_balance",       ValueFromAmount(bal.m_anonymized));
     obj.pushKV("unconfirmed_balance", ValueFromAmount(bal.m_mine_untrusted_pending));
     obj.pushKV("immature_balance", ValueFromAmount(bal.m_mine_immature));
     obj.pushKV("txcount",       (int)pwallet->mapWallet.size());

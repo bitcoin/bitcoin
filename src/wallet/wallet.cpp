@@ -2649,7 +2649,7 @@ std::unordered_set<const CWalletTx*, WalletTxHasher> CWallet::GetSpendableTXs() 
     return ret;
 }
 
-CWallet::Balance CWallet::GetBalance(const int min_depth, const bool fAddLocked) const
+CWallet::Balance CWallet::GetBalance(const int min_depth, const bool fAddLocked, const CCoinControl* coinControl) const
 {
     Balance ret;
     {
@@ -2669,6 +2669,11 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, const bool fAddLocked)
             }
             ret.m_mine_immature += pcoin->GetImmatureCredit();
             ret.m_watchonly_immature += pcoin->GetImmatureWatchOnlyCredit();
+            if (CCoinJoinClientOptions::IsEnabled()) {
+                ret.m_anonymized += pcoin->GetAnonymizedCredit(coinControl);
+                ret.m_denominated_trusted += pcoin->GetDenominatedCredit(false);
+                ret.m_denominated_untrusted_pending += pcoin->GetDenominatedCredit(true);
+            }
         }
     }
     return ret;
@@ -2691,21 +2696,6 @@ CAmount CWallet::GetAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfi
         // assume that the fee to create denoms should be mixing collateral at max
         if(item.nAmount >= nSmallestDenom + (fIsDenominated ? 0 : nMixingCollateral))
             nTotal += item.nAmount;
-    }
-
-    return nTotal;
-}
-
-CAmount CWallet::GetAnonymizedBalance(const CCoinControl* coinControl) const
-{
-    if (!CCoinJoinClientOptions::IsEnabled()) return 0;
-
-    CAmount nTotal = 0;
-
-    LOCK2(cs_main, cs_wallet);
-
-    for (auto pcoin : GetSpendableTXs()) {
-        nTotal += pcoin->GetAnonymizedCredit(coinControl);
     }
 
     return nTotal;
@@ -2752,21 +2742,6 @@ CAmount CWallet::GetNormalizedAnonymizedBalance() const
 
         int nRounds = GetCappedOutpointCoinJoinRounds(outpoint);
         nTotal += nValue * nRounds / CCoinJoinClientOptions::GetRounds();
-    }
-
-    return nTotal;
-}
-
-CAmount CWallet::GetDenominatedBalance(bool unconfirmed) const
-{
-    if (!CCoinJoinClientOptions::IsEnabled()) return 0;
-
-    CAmount nTotal = 0;
-
-    LOCK2(cs_main, cs_wallet);
-
-    for (auto pcoin : GetSpendableTXs()) {
-        nTotal += pcoin->GetDenominatedCredit(unconfirmed);
     }
 
     return nTotal;

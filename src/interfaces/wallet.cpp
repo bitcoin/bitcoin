@@ -388,7 +388,7 @@ public:
         result.balance = bal.m_mine_trusted;
         result.unconfirmed_balance = bal.m_mine_untrusted_pending;
         result.immature_balance = bal.m_mine_immature;
-        result.anonymized_balance = m_wallet->GetAnonymizedBalance();
+        result.anonymized_balance = bal.m_anonymized;
         result.have_watch_only = m_wallet->HaveWatchOnly();
         if (result.have_watch_only) {
             result.watch_only_balance = bal.m_watchonly_trusted;
@@ -419,11 +419,16 @@ public:
     }
     CAmount getAnonymizedBalance() override
     {
-        return m_wallet->GetAnonymizedBalance();
+        return m_wallet->GetBalance().m_anonymized;
     }
     CAmount getDenominatedBalance(bool unconfirmed) override
     {
-        return m_wallet->GetDenominatedBalance(unconfirmed);
+        const auto bal = m_wallet->GetBalance();
+        if (unconfirmed) {
+            return bal.m_denominated_untrusted_pending;
+        } else {
+            return bal.m_denominated_trusted;
+        }
     }
     CAmount getNormalizedAnonymizedBalance() override
     {
@@ -436,7 +441,7 @@ public:
     CAmount getAvailableBalance(const CCoinControl& coin_control) override
     {
         if (coin_control.IsUsingCoinJoin()) {
-            return m_wallet->GetAnonymizedBalance(&coin_control);
+            return m_wallet->GetBalance(0, false, &coin_control).m_anonymized;
         } else {
             return m_wallet->GetAvailableBalance(&coin_control);
         }
