@@ -31,7 +31,6 @@ from test_framework.script import (
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
-    satoshi_round,
 )
 
 DEFAULT_FEE = Decimal("0.0001")
@@ -162,13 +161,12 @@ class MiniWallet:
             vsize = Decimal(85)  # anyone-can-spend
         else:
             vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
-        send_value = satoshi_round(utxo_to_spend['value'] - fee_rate * (vsize / 1000))
-        fee = utxo_to_spend['value'] - send_value
+        send_value = int(COIN * (utxo_to_spend['value'] - fee_rate * (vsize / 1000)))
         assert send_value > 0
 
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=sequence)]
-        tx.vout = [CTxOut(int(send_value * COIN), self._scriptPubKey)]
+        tx.vout = [CTxOut(send_value, self._scriptPubKey)]
         tx.nLockTime = locktime
         if not self._address:
             # raw script
@@ -186,7 +184,7 @@ class MiniWallet:
         assert_equal(mempool_valid, tx_info['allowed'])
         if mempool_valid:
             assert_equal(len(tx_hex) // 2, vsize) # 1 byte = 2 character
-            assert_equal(tx_info['fees']['base'], fee)
+            assert_equal(tx_info['fees']['base'], utxo_to_spend['value'] - Decimal(send_value) / COIN)
         return {'txid': tx_info['txid'], 'hex': tx_hex, 'tx': tx}
 
     def sendrawtransaction(self, *, from_node, tx_hex):
