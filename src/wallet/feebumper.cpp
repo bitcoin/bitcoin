@@ -61,7 +61,7 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
 }
 
 //! Check if the user provided a valid feeRate
-static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wtx, const CFeeRate& newFeerate, const int64_t maxTxSize, std::vector<bilingual_str>& errors)
+static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wtx, const CFeeRate& newFeerate, const int64_t maxTxSize, CAmount old_fee, std::vector<bilingual_str>& errors)
 {
     // check that fee rate is higher than mempool's minimum fee
     // (no point in bumping fee if we know that the new tx won't be accepted to the mempool)
@@ -83,8 +83,6 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wt
     CFeeRate incrementalRelayFee = std::max(wallet.chain().relayIncrementalFee(), CFeeRate(WALLET_INCREMENTAL_RELAY_FEE));
 
     // Given old total fee and transaction size, calculate the old feeRate
-    isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
-    CAmount old_fee = CachedTxGetDebit(wallet, wtx, filter) - wtx.tx->GetValueOut();
     const int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
     CFeeRate nOldFeeRate(old_fee, txSize);
     // Min total fee is old fee + relay fee
@@ -169,13 +167,37 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     }
     const CWalletTx& wtx = it->second;
 
+    // Retrieve all of the UTXOs and add them to coin control
+    // While we're here, calculate the input amount
+    std::map<COutPoint, Coin> coins;
+    CAmount input_value = 0;
+    for (const CTxIn& txin : wtx.tx->vin) {
+        coins[txin.prevout]; // Create empty map entry keyed by prevout.
+    }
+    wallet.chain().findCoins(coins);
+    for (const CTxIn& txin : wtx.tx->vin) {
+        const Coin& coin = coins.at(txin.prevout);
+        if (coin.out.IsNull()) {
+            errors.push_back(Untranslated(strprintf("%s:%u is already spent", txin.prevout.hash.GetHex(), txin.prevout.n)));
+            return Result::MISC_ERROR;
+        }
+        if (wallet.IsMine(txin.prevout)) {
+            new_coin_control.Select(txin.prevout);
+        } else {
+            new_coin_control.SelectExternal(txin.prevout, coin.out);
+        }
+        input_value += coin.out.nValue;
+    }
+
     Result result = PreconditionChecks(wallet, wtx, errors);
     if (result != Result::OK) {
         return result;
     }
 
     // Fill in recipients(and preserve a single change key if there is one)
+    // While we're here, calculate the output amount
     std::vector<CRecipient> recipients;
+    CAmount output_value = 0;
     for (const auto& output : wtx.tx->vout) {
         if (!OutputIsChange(wallet, output)) {
             CRecipient recipient = {output.scriptPubKey, output.nValue, false};
@@ -185,16 +207,16 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
             ExtractDestination(output.scriptPubKey, change_dest);
             new_coin_control.destChange = change_dest;
         }
+        output_value += output.nValue;
     }
 
-    isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
-    old_fee = CachedTxGetDebit(wallet, wtx, filter) - wtx.tx->GetValueOut();
+    old_fee = input_value - output_value;
 
     if (coin_control.m_feerate) {
         // The user provided a feeRate argument.
         // We calculate this here to avoid compiler warning on the cs_wallet lock
-        const int64_t maxTxSize{CalculateMaximumSignedTxSize(*wtx.tx, &wallet).vsize};
-        Result res = CheckFeeRate(wallet, wtx, *new_coin_control.m_feerate, maxTxSize, errors);
+        const int64_t maxTxSize{CalculateMaximumSignedTxSize(*wtx.tx, &wallet, &new_coin_control).vsize};
+        Result res = CheckFeeRate(wallet, wtx, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
         if (res != Result::OK) {
             return res;
         }
