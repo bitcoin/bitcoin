@@ -335,6 +335,40 @@ AC_ARG_ENABLE([lto],
 
 AC_LANG_PUSH([C++])
 
+dnl Set RUSTC to yes if rustc is present and rustc version is at least 1.51
+AC_CHECK_PROG([RUSTC], rustc, checking, no)
+RUSTC_MIN_VERSION=1.51.0
+AS_IF([test $RUSTC = checking], 
+      dnl rustc --version return `rustc [verison] [hash]` split it at withe space and get the second
+      dnl value (version)
+      RUSTC_VERSION=m4_argn(2, m4_unquote(m4_split(esyscmd([rustc --version]), [[ ]+])))
+      AX_COMPARE_VERSION([${RUSTC_VERSION}],[ge],[${RUSTC_MIN_VERSION}],
+                         [
+                           AC_MSG_RESULT(found rustc)
+                           RUSTC=yes
+                         ],
+                         [
+                           AC_MSG_RESULT(rustc version is too old required version is ${RUSTC_MIN_VERSION})
+                           RUSTC=no
+                         ]
+                         )
+      )
+
+AC_ARG_ENABLE([template-provider],
+    [AS_HELP_STRING([--enable-template-provider],[compile template provider (default is no, requires rustc)])],
+    [AS_IF([test ${RUSTC} = yes],
+            [
+                AC_DEFINE([ENABLE_TMEPLATE_PROVIDER],[1],[Define if TP should be compiled in])
+                LDFLAGS="$LDFLAGS -lpthread -ldl"
+                add_template_provider=$enableval
+            ],
+            AC_MSG_ERROR(enable-template-provider set but rustc ${RUSTC_MIN_VERSION} or later is not avaiable)
+
+    )],
+    [add_template_provider=no])
+
+
+
 dnl Check for a flag to turn compiler warnings into errors. This is helpful for checks which may
 dnl appear to succeed because by default they merely emit warnings when they fail.
 dnl
@@ -1865,6 +1899,7 @@ AM_CONDITIONAL([USE_ASM], [test "$use_asm" = "yes"])
 AM_CONDITIONAL([WORDS_BIGENDIAN], [test "$ac_cv_c_bigendian" = "yes"])
 AM_CONDITIONAL([USE_NATPMP], [test "$use_natpmp" = "yes"])
 AM_CONDITIONAL([USE_UPNP], [test "$use_upnp" = "yes"])
+AM_CONDITIONAL([ENABLE_TMEPLATE_PROVIDER],[test "$add_template_provider" = "yes"])
 
 dnl for minisketch
 AM_CONDITIONAL([ENABLE_CLMUL], [test "$enable_clmul" = "yes"])
@@ -1944,6 +1979,7 @@ AC_SUBST(HAVE_MM_PREFETCH)
 AC_SUBST(HAVE_STRONG_GETAUXVAL)
 AC_SUBST(ANDROID_ARCH)
 AC_SUBST(HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR)
+AC_SUBST(ENABLE_TMEPLATE_PROVIDER)
 AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/config.ini])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
 AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([doc/Doxyfile])])

@@ -253,66 +253,83 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
     return fRet;
 }
 
-#include <sv2.h>
+
+#ifdef ENABLE_TMEPLATE_PROVIDER
+    #include <rusty/protocols/v2/sv2-ffi/sv2.h>
+    // It uses the sv2_ffi library to build a correct Sv2 message and an incorrect one.
+    // Then try to encode them, it print ok if the ecoding is possible it print err if not.
+    void test_template_provider()
+    {
+        EncoderWrapper * encoder = new_encoder();
+    
+        const char* error = "connection can not be created";
+        uint8_t* error_ = (uint8_t*) error;
+      
+        // Build a CSetupConnectionError message
+        CVec error_code = cvec_from_buffer(error_, strlen(error));
+        CSetupConnectionError message;
+        message.flags = 0;
+        message.error_code = error_code;
+      
+        CSv2Message response;
+        response.tag = CSv2Message::Tag::SetupConnectionError;
+        response.setup_connection_error._0 = message;
+      
+        // Put the message in a Sv2 frame and encode it
+        CResult<CVec, Sv2Error> encoded = encode(&response, encoder);
+        switch (encoded.tag) {
+      
+        // Print Ok as the message has been encoded without encoutering errors
+        case CResult < CVec, Sv2Error > ::Tag::Ok:
+          tfm::format(std::cout, "Ok \n");
+          break;
+        case CResult < CVec, Sv2Error > ::Tag::Err:
+          tfm::format(std::cout, "Err \n");
+          break;
+        };
+    
+        // Build an incorrect CSetupConnectionError message
+        CSv2Message response2;
+        response.tag = CSv2Message::Tag::SetNewPrevHash;
+        response.setup_connection_error._0 = message;
+      
+        // Put the message in a Sv2 frame and try to encode it
+        CResult<CVec, Sv2Error> encoded2 = encode(&response2, encoder);
+        switch (encoded2.tag) {
+      
+        // Print Err as is not possible to encode incorrect messages
+        case CResult < CVec, Sv2Error > ::Tag::Ok:
+          tfm::format(std::cout, "Ok \n");
+          break;
+        case CResult < CVec, Sv2Error > ::Tag::Err:
+          tfm::format(std::cout, "Err \n");
+          break;
+        };
+    };
+#endif
 
 int main(int argc, char* argv[])
 {
+#ifdef WIN32
+    util::WinCmdLineArgs winArgs;
+    std::tie(argc, argv) = winArgs.get();
+#endif
+#ifdef ENABLE_TMEPLATE_PROVIDER
+    test_template_provider();
+#else
 
-    EncoderWrapper * encoder = new_encoder();
+    NodeContext node;
+    int exit_status;
+    std::unique_ptr<interfaces::Init> init = interfaces::MakeNodeInit(node, argc, argv, exit_status);
+    if (!init) {
+        return exit_status;
+    }
 
-    const char* error = "connection can not be created";
-    uint8_t* error_ = (uint8_t*) error;
-  
-    CVec error_code = cvec_from_buffer(error_, strlen(error));
-    CSetupConnectionError message;
-    message.flags = 0;
-    message.error_code = error_code;
-  
-    CSv2Message response;
-    response.tag = CSv2Message::Tag::SetupConnectionError;
-    response.setup_connection_error._0 = message;
-  
-    CResult<CVec, Sv2Error> encoded = encode(&response, encoder);
-    switch (encoded.tag) {
-  
-    case CResult < CVec, Sv2Error > ::Tag::Ok:
-      tfm::format(std::cout, "Ok \n");
-      break;
-    case CResult < CVec, Sv2Error > ::Tag::Err:
-      tfm::format(std::cout, "Err \n");
-      break;
-    };
+    SetupEnvironment();
 
-    CSv2Message response2;
-    response.tag = CSv2Message::Tag::SetNewPrevHash;
-    response.setup_connection_error._0 = message;
-  
-    CResult<CVec, Sv2Error> encoded2 = encode(&response2, encoder);
-    switch (encoded2.tag) {
-  
-    case CResult < CVec, Sv2Error > ::Tag::Ok:
-      tfm::format(std::cout, "Ok \n");
-      break;
-    case CResult < CVec, Sv2Error > ::Tag::Err:
-      tfm::format(std::cout, "Err \n");
-      break;
-    };
-//#ifdef WIN32
-//    util::WinCmdLineArgs winArgs;
-//    std::tie(argc, argv) = winArgs.get();
-//#endif
+    noui_connect();
 
-    //NodeContext node;
-    //int exit_status;
-    //std::unique_ptr<interfaces::Init> init = interfaces::MakeNodeInit(node, argc, argv, exit_status);
-    //if (!init) {
-    //    return exit_status;
-    //}
+    return (AppInit(node, argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);
+#endif
 
-    //SetupEnvironment();
-
-    // Connect bitcoind signal handlers
-    //noui_connect();
-
-    //return (AppInit(node, argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);
-}
+};

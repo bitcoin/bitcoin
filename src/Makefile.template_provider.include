@@ -1,0 +1,159 @@
+ROOT=$(abs_srcdir)/rusty/protocols/v2
+TP_OUT_DIR=$(abs_top_builddir)/rust-build
+LIB_SV2_FFI=$(TP_OUT_DIR)/libsv2_ffi.a
+
+LDFLAGS += $(LIB_SV2_FFI)
+
+all-recursive: build-sv2 $(all-recursive)  
+
+DEPS=$(TP_OUT_DIR)/deps
+
+
+build-sv2:
+	${MAKE} clean-start
+	${MAKE} build-sv2-deps
+	${MAKE} build-sv2-ffi
+	${MAKE} clean-end
+
+# CLEAN TEMPORARY DEPENDECY DIRECTORY
+clean-start:
+	echo $(LDFLAGS)
+	@rm -rf $(DEPS)
+	@mkdir $(DEPS)
+
+# It build the sv2_ffi dependecy with rustc, the libs are build in the temporary directory
+# ./rust-build/deps (--out-dir) that is cleaned at the and of the process.
+#
+#  Most iomportant flag are:
+# --crate-type lib (it say to build a rust library)
+# -C opt-level=3 use all the optimization
+build-sv2-deps:
+	@rustc \
+        --crate-name binary_codec_sv2 \
+        --edition=2018 \
+        $(ROOT)/binary-sv2/no-serde-sv2/codec/src/lib.rs \
+        --crate-type lib \
+        --emit=dep-info,metadata,link \
+        -C opt-level=3 \
+        -C embed-bitcode=no \
+        --out-dir $(DEPS) \
+        -L dependency=$(DEPS)
+
+	@rustc \
+        --crate-name const_sv2 \
+        --edition=2018 \
+        $(ROOT)/const-sv2/src/lib.rs \
+        --crate-type lib \
+        --emit=dep-info,metadata,link \
+        -C opt-level=3 \
+        -C embed-bitcode=no \
+        --out-dir $(DEPS) \
+        -L dependency=$(DEPS)
+
+	@rustc \
+        --crate-name derive_codec_sv2 \
+        --edition=2018 \
+        $(ROOT)/binary-sv2/no-serde-sv2/derive_codec/src/lib.rs \
+        --crate-type proc-macro \
+        --emit=dep-info,link \
+        -C prefer-dynamic \
+        -C embed-bitcode=no \
+        -C debug-assertions=off \
+        --out-dir $(DEPS) \
+        -L dependency=$(DEPS) \
+        --extern binary_codec_sv2=$(DEPS)/libbinary_codec_sv2.rlib \
+        --extern proc_macro
+
+	@rustc \
+        --crate-name binary_sv2 \
+        --edition=2018 \
+        $(ROOT)/binary-sv2/binary-sv2/src/lib.rs \
+        --crate-type lib \
+        --emit=dep-info,metadata,link \
+        -C opt-level=3 \
+        -C embed-bitcode=no \
+        --cfg 'feature="binary_codec_sv2"' \
+        --cfg 'feature="core"' \
+        --cfg 'feature="default"' \
+        --cfg 'feature="derive_codec_sv2"' \
+        --out-dir $(DEPS) \
+        -L dependency=$(DEPS) \
+        --extern binary_codec_sv2=$(DEPS)/libbinary_codec_sv2.rmeta \
+        --extern derive_codec_sv2=$(DEPS)/libderive_codec_sv2.so
+
+	@rustc \
+        --crate-name framing_sv2 \
+        --edition=2018 \
+        $(ROOT)/framing-sv2/src/lib.rs \
+        --crate-type lib \
+        --emit=dep-info,metadata,link \
+        -C opt-level=3 \
+        -C embed-bitcode=no \
+        --out-dir $(DEPS) \
+        -L dependency=$(DEPS) \
+        --extern binary_sv2=$(DEPS)/libbinary_sv2.rmeta \
+        --extern const_sv2=$(DEPS)/libconst_sv2.rmeta
+
+	@rustc \
+        --crate-name common_messages_sv2 \
+        --edition=2018 \
+        $(ROOT)/subprotocols/common-messages/src/lib.rs \
+        --crate-type lib \
+        --emit=dep-info,metadata,link \
+        -C opt-level=3 \
+        -C embed-bitcode=no \
+        --out-dir $(DEPS) \
+        -L dependency=$(DEPS) \
+        --extern binary_sv2=$(DEPS)/libbinary_sv2.rmeta \
+        --extern const_sv2=$(DEPS)/libconst_sv2.rmeta
+
+	@rustc \
+        --crate-name template_distribution_sv2 \
+        --edition=2018 \
+        $(ROOT)/subprotocols/template-distribution/src/lib.rs \
+        --crate-type lib \
+        --emit=dep-info,metadata,link \
+        -C opt-level=3 \
+        -C embed-bitcode=no \
+        --out-dir $(DEPS) \
+        -L dependency=$(DEPS) \
+        --extern binary_sv2=$(DEPS)/libbinary_sv2.rmeta \
+        --extern const_sv2=$(DEPS)/libconst_sv2.rmeta
+
+	@rustc \
+        --crate-name codec_sv2 \
+        --edition=2018 \
+        $(ROOT)/codec-sv2/src/lib.rs \
+        --crate-type lib \
+        --emit=dep-info,metadata,link \
+        -C opt-level=3 \
+        -C embed-bitcode=no \
+        --out-dir $(DEPS) \
+        -L dependency=$(DEPS) \
+        --extern binary_sv2=$(DEPS)/libbinary_sv2.rmeta \
+        --extern const_sv2=$(DEPS)/libconst_sv2.rmeta \
+        --extern framing_sv2=$(DEPS)/libframing_sv2.rmeta
+
+# It build the sv2_ffi library with rustc, as a c static lib
+#
+#  Most iomportant flag are:
+# --crate-type staticlib (build as c staticlib)
+# -C opt-level=3 use all the optimization
+build-sv2-ffi:
+	@rustc \
+        --crate-name sv2_ffi \
+        --edition=2018 \
+        $(ROOT)/sv2-ffi/src/lib.rs \
+        --crate-type staticlib \
+        -C opt-level=3 \
+        -C embed-bitcode=no \
+        --out-dir $(TP_OUT_DIR)  \
+        -L dependency=$(DEPS) \
+        --extern binary_sv2=$(DEPS)/libbinary_sv2.rlib \
+        --extern codec_sv2=$(DEPS)/libcodec_sv2.rlib \
+        --extern common_messages_sv2=$(DEPS)/libcommon_messages_sv2.rlib \
+        --extern const_sv2=$(DEPS)/libconst_sv2.rlib \
+        --extern template_distribution_sv2=$(DEPS)/libtemplate_distribution_sv2.rlib
+
+clean-end:
+	@rm -rf $(DEPS)

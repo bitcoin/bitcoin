@@ -1072,3 +1072,6 @@ include Makefile.qttest.include
 endif
 
 include Makefile.univalue.include
+if ENABLE_TMEPLATE_PROVIDER
+include Makefile.template_provider.include
+endif

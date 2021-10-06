@@ -6,12 +6,6 @@ export LC_ALL=C
 set -e -o pipefail
 export TZ=UTC
 
-# Build rust library
-/bitcoin/rust-build/rust-build-script.sh /bitcoin/src/rusty/protocols/v2/ /bitcoin/rust-build
-
-SV2_FFI_LIB=/bitcoin/rust-build
-SV2_FFI_HEADER=/bitcoin/src/rusty/protocols/v2/sv2-ffi/
-
 # Although Guix _does_ set umask when building its own packages (in our case,
 # this is all packages in manifest.scm), it does not set it for `guix
 # environment`. It does make sense for at least `guix environment --container`
@@ -238,7 +232,10 @@ mkdir -p "$OUTDIR"
 ###########################
 
 # CONFIGFLAGS
-CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
+CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary --enable-template-provider"
+case "$HOST" in
+    *linux*) CONFIGFLAGS+=" --disable-threadlocal" ;;
+esac
 
 # CFLAGS
 HOST_CFLAGS="-O2 -g"
@@ -250,7 +247,7 @@ esac
 
 # CXXFLAGS
 HOST_CXXFLAGS="$HOST_CFLAGS"
-HOST_CXXFLAGS="${HOST_CXXFLAGS} -I ${SV2_FFI_HEADER} ${SV2_FFI_LIB}/libsv2_ffi.a -lpthread -ldl"
+HOST_CXXFLAGS="${HOST_CXXFLAGS} -lpthread -ldl"
 
 case "$HOST" in
     arm-linux-gnueabihf) HOST_CXXFLAGS="${HOST_CXXFLAGS} -Wno-psabi" ;;
