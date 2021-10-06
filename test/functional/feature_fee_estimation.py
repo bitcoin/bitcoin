@@ -57,7 +57,7 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
     # It's best to exponentially distribute our random fees
     # because the buckets are exponentially spaced.
     # Exponentially distributed from 1-128 * fee_increment
-    rand_fee = float(fee_increment) * (1.1892 ** random.randint(0, 28))
+    rand_fee = fee_increment * Decimal(1.1892 ** random.randint(0, 28))
     # Total fee ranges from min_fee to min_fee + 127*fee_increment
     fee = min_fee - fee_increment + satoshi_round(rand_fee)
     tx = CTransaction()

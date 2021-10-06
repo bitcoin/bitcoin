@@ -209,10 +209,10 @@ class MempoolPackagesTest(BitcoinTestFramework):
             entry = self.nodes[0].getmempoolentry(x)
             descendant_fees += entry['fee']
             if (x == chain[-1]):
-                assert_equal(entry['modifiedfee'], entry['fee']+satoshi_round(0.00002))
-                assert_equal(entry['fees']['modified'], entry['fee']+satoshi_round(0.00002))
+                assert_equal(entry['modifiedfee'], entry['fee']+satoshi_round('0.00002'))
+                assert_equal(entry['fees']['modified'], entry['fee']+satoshi_round('0.00002'))
             assert_equal(entry['descendantfees'], descendant_fees * COIN + 2000)
-            assert_equal(entry['fees']['descendant'], descendant_fees+satoshi_round(0.00002))
+            assert_equal(entry['fees']['descendant'], descendant_fees+satoshi_round('0.00002'))
 
         # Check that node1's mempool is as expected (-> custom ancestor limit)
         mempool0 = self.nodes[0].getrawmempool(False)
