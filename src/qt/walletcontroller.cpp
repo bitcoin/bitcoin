@@ -184,12 +184,13 @@ WalletControllerActivity::WalletControllerActivity(WalletController* wallet_cont
     connect(this, &WalletControllerActivity::finished, this, &QObject::deleteLater);
 }
 
-void WalletControllerActivity::showProgressDialog(const QString& label_text)
+void WalletControllerActivity::showProgressDialog(const QString& title_text, const QString& label_text)
 {
     auto progress_dialog = new QProgressDialog(m_parent_widget);
     progress_dialog->setAttribute(Qt::WA_DeleteOnClose);
     connect(this, &WalletControllerActivity::finished, progress_dialog, &QWidget::close);
 
+    progress_dialog->setWindowTitle(title_text);
     progress_dialog->setLabelText(label_text);
     progress_dialog->setRange(0, 0);
     progress_dialog->setCancelButton(nullptr);
@@ -231,7 +232,12 @@ void CreateWalletActivity::askPassphrase()
 
 void CreateWalletActivity::createWallet()
 {
-    showProgressDialog(tr("Creating Wallet <b>%1</b>…").arg(m_create_wallet_dialog->walletName().toHtmlEscaped()));
+    showProgressDialog(
+        //: Title of window indicating the progress of creation of a new wallet.
+        tr("Create Wallet"),
+        /*: Descriptive text of the create wallet progress window which indicates
+            to the user which wallet is currently being created. */
+        tr("Creating Wallet <b>%1</b>…").arg(m_create_wallet_dialog->walletName().toHtmlEscaped()));
 
     std::string name = m_create_wallet_dialog->walletName().toStdString();
     uint64_t flags = 0;
@@ -322,7 +328,12 @@ void OpenWalletActivity::open(const std::string& path)
 {
     QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
 
-    showProgressDialog(tr("Opening Wallet <b>%1</b>…").arg(name.toHtmlEscaped()));
+    showProgressDialog(
+        //: Title of window indicating the progress of opening of a wallet.
+        tr("Open Wallet"),
+        /*: Descriptive text of the open wallet progress window which indicates
+            to the user which wallet is currently being opened. */
+        tr("Opening Wallet <b>%1</b>…").arg(name.toHtmlEscaped()));
 
     QTimer::singleShot(0, worker(), [this, path] {
         std::unique_ptr<interfaces::Wallet> wallet = node().walletClient().loadWallet(path, m_error_message, m_warning_message);
@@ -340,7 +351,12 @@ LoadWalletsActivity::LoadWalletsActivity(WalletController* wallet_controller, QW
 
 void LoadWalletsActivity::load()
 {
-    showProgressDialog(tr("Loading wallets…"));
+    showProgressDialog(
+        //: Title of progress window which is displayed when wallets are being loaded.
+        tr("Load Wallets"),
+        /*: Descriptive text of the load wallets progress window which indicates to
+            the user that wallets are currently being loaded.*/
+        tr("Loading wallets…"));
 
     QTimer::singleShot(0, worker(), [this] {
         for (auto& wallet : node().walletClient().getWallets()) {
