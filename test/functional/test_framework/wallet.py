@@ -10,6 +10,7 @@ from enum import Enum
 from random import choice
 from typing import Optional
 from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
+from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey
 from test_framework.messages import (
     COIN,
@@ -118,7 +119,7 @@ class MiniWallet:
         return blocks
 
     def get_descriptor(self):
-        return self._test_node.getdescriptorinfo(f'raw({self._scriptPubKey.hex()})')['descriptor']
+        return descsum_create(f'raw({self._scriptPubKey.hex()})')
 
     def get_address(self):
         return self._address
