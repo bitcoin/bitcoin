@@ -20,7 +20,7 @@
 namespace wallet {
 //! Check whether transaction has descendant in wallet or mempool, or has been
 //! mined, or conflicts with a mined transaction. Return a feebumper::Result.
-static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWalletTx& wtx, std::vector<bilingual_str>& errors) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWalletTx& wtx, bool require_mine, std::vector<bilingual_str>& errors) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     if (wallet.HasWalletSpend(wtx.tx)) {
         errors.push_back(Untranslated("Transaction has descendants in the wallet"));
@@ -49,14 +49,15 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
         return feebumper::Result::WALLET_ERROR;
     }
 
-    // check that original tx consists entirely of our inputs
-    // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
-    isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
-    if (!AllInputsMine(wallet, *wtx.tx, filter)) {
-        errors.push_back(Untranslated("Transaction contains inputs that don't belong to this wallet"));
-        return feebumper::Result::WALLET_ERROR;
+    if (require_mine) {
+        // check that original tx consists entirely of our inputs
+        // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
+        isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
+        if (!AllInputsMine(wallet, *wtx.tx, filter)) {
+            errors.push_back(Untranslated("Transaction contains inputs that don't belong to this wallet"));
+            return feebumper::Result::WALLET_ERROR;
+        }
     }
-
 
     return feebumper::Result::OK;
 }
@@ -149,12 +150,12 @@ bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid)
     if (wtx == nullptr) return false;
 
     std::vector<bilingual_str> errors_dummy;
-    feebumper::Result res = PreconditionChecks(wallet, *wtx, errors_dummy);
+    feebumper::Result res = PreconditionChecks(wallet, *wtx, /* require_mine=*/ true, errors_dummy);
     return res == feebumper::Result::OK;
 }
 
 Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
-                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx)
+                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine)
 {
     // We are going to modify coin control later, copy to re-use
     CCoinControl new_coin_control(coin_control);
@@ -216,7 +217,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         }
     }
 
-    Result result = PreconditionChecks(wallet, wtx, errors);
+    Result result = PreconditionChecks(wallet, wtx, require_mine, errors);
     if (result != Result::OK) {
         return result;
     }
@@ -309,7 +310,7 @@ Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransacti
     const CWalletTx& oldWtx = it->second;
 
     // make sure the transaction still has no descendants and hasn't been mined in the meantime
-    Result result = PreconditionChecks(wallet, oldWtx, errors);
+    Result result = PreconditionChecks(wallet, oldWtx, /* require_mine=*/ false, errors);
     if (result != Result::OK) {
         return result;
     }

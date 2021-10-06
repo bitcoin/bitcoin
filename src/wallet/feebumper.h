@@ -33,14 +33,25 @@ enum class Result
 //! Return whether transaction can be bumped.
 bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid);
 
-//! Create bumpfee transaction based on feerate estimates.
+/** Create bumpfee transaction based on feerate estimates.
+ *
+ * @param[in] wallet The wallet to use for this bumping
+ * @param[in] txid The txid of the transaction to bump
+ * @param[in] coin_control A CCoinControl object which provides feerates and other information used for coin selection
+ * @param[out] errors Errors
+ * @param[out] old_fee The fee the original transaction pays
+ * @param[out] new_fee the fee that the bump transaction pays
+ * @param[out] mtx The bump transaction itself
+ * @param[in] require_mine Whether the original transaction must consist of inputs that can be spent by the wallet
+ */
 Result CreateRateBumpTransaction(CWallet& wallet,
     const uint256& txid,
     const CCoinControl& coin_control,
     std::vector<bilingual_str>& errors,
     CAmount& old_fee,
     CAmount& new_fee,
-    CMutableTransaction& mtx);
+    CMutableTransaction& mtx,
+    bool require_mine);
 
 //! Sign the new transaction,
 //! @return false if the tx couldn't be found or if it was
