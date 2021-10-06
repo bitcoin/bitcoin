@@ -449,7 +449,12 @@ LoadWalletsActivity::LoadWalletsActivity(WalletController* wallet_controller, QW
 
 void LoadWalletsActivity::load()
 {
-    showProgressDialog(tr("Loading wallets…"), tr("Loading wallets…"));
+    showProgressDialog(
+        //: Title of progress window which is displayed when wallets are being loaded.
+        tr("Load Wallets"),
+        /*: Descriptive text of the load wallets progress window which indicates to
+            the user that wallets are currently being loaded.*/
+        tr("Loading wallets…"));
 
     QTimer::singleShot(0, worker(), [this] {
         for (auto& wallet : node().walletLoader().getWallets()) {
