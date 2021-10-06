@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/validation.h>
 #include <interfaces/chain.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -171,6 +172,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // While we're here, calculate the input amount
     std::map<COutPoint, Coin> coins;
     CAmount input_value = 0;
+    std::vector<CTxOut> spent_outputs;
     for (const CTxIn& txin : wtx.tx->vin) {
         coins[txin.prevout]; // Create empty map entry keyed by prevout.
     }
@@ -187,6 +189,31 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
             new_coin_control.SelectExternal(txin.prevout, coin.out);
         }
         input_value += coin.out.nValue;
+        spent_outputs.push_back(coin.out);
+    }
+
+    // Figure out if we need to compute the input weight, and do so if necessary
+    PrecomputedTransactionData txdata;
+    txdata.Init(*wtx.tx, std::move(spent_outputs), /* force=*/ true);
+    for (unsigned int i = 0; i < wtx.tx->vin.size(); ++i) {
+        const CTxIn& txin = wtx.tx->vin.at(i);
+        const Coin& coin = coins.at(txin.prevout);
+
+        if (new_coin_control.IsExternalSelected(txin.prevout)) {
+            // For external inputs, we estimate the size using the size of this input
+            int64_t input_weight = GetTransactionInputWeight(txin);
+            // Because signatures can have different sizes, we need to figure out all of the
+            // signature sizes and replace them with the max sized signature.
+            // In order to do this, we verify the script with a special SignatureChecker which
+            // will observe the signatures verified and record their sizes.
+            SignatureWeights weights;
+            TransactionSignatureChecker tx_checker(wtx.tx.get(), i, coin.out.nValue, txdata, MissingDataBehavior::FAIL);
+            SignatureWeightChecker size_checker(weights, tx_checker);
+            VerifyScript(txin.scriptSig, coin.out.scriptPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, size_checker);
+            // Add the difference between max and current to input_weight so that it represents the largest the input could be
+            input_weight += weights.GetWeightDiffToMax();
+            new_coin_control.SetInputWeight(txin.prevout, input_weight);
+        }
     }
 
     Result result = PreconditionChecks(wallet, wtx, errors);

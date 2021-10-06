@@ -5,6 +5,8 @@
 #ifndef BITCOIN_WALLET_FEEBUMPER_H
 #define BITCOIN_WALLET_FEEBUMPER_H
 
+#include <consensus/consensus.h>
+#include <script/interpreter.h>
 #include <primitives/transaction.h>
 
 class uint256;
@@ -54,6 +56,55 @@ Result CommitTransaction(CWallet& wallet,
     CMutableTransaction&& mtx,
     std::vector<bilingual_str>& errors,
     uint256& bumped_txid);
+
+struct SignatureWeights
+{
+private:
+    int m_sigs_count{0};
+    int64_t m_sigs_weight{0};
+
+public:
+    void AddSigWeight(const size_t weight, const SigVersion sigversion)
+    {
+        switch (sigversion) {
+        case SigVersion::BASE:
+            m_sigs_weight += weight * WITNESS_SCALE_FACTOR;
+            m_sigs_count += 1 * WITNESS_SCALE_FACTOR;
+            break;
+        case SigVersion::WITNESS_V0:
+            m_sigs_weight += weight;
+            m_sigs_count++;
+            break;
+        case SigVersion::TAPROOT:
+        case SigVersion::TAPSCRIPT:
+            assert(false);
+        }
+    }
+
+    int64_t GetWeightDiffToMax() const
+    {
+        // Note: the witness scaling factor is already accounted for because the count is multiplied by it.
+        return (/* max signature size=*/ 72 * m_sigs_count) - m_sigs_weight;
+    }
+};
+
+class SignatureWeightChecker : public DeferringSignatureChecker
+{
+private:
+    SignatureWeights& m_weights;
+
+public:
+    SignatureWeightChecker(SignatureWeights& weights, const BaseSignatureChecker& checker) : DeferringSignatureChecker(checker), m_weights(weights) {}
+
+    bool CheckECDSASignature(const std::vector<unsigned char>& sig, const std::vector<unsigned char>& pubkey, const CScript& script, SigVersion sigversion) const override
+    {
+        if (m_checker.CheckECDSASignature(sig, pubkey, script, sigversion)) {
+            m_weights.AddSigWeight(sig.size(), sigversion);
+            return true;
+        }
+        return false;
+    }
+};
 
 } // namespace feebumper
 } // namespace wallet
