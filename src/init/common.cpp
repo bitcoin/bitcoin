@@ -148,6 +148,15 @@ bool StartLogging(const ArgsManager& args)
         LogPrintf("Config file: %s (not found, skipping)\n", config_file_path.string());
     }
 
+    fs::path rwconfig_file_path = GetRWConfigFile(gArgs.GetArg("-confrw", BITCOIN_RW_CONF_FILENAME));
+    if (fs::exists(rwconfig_file_path)) {
+        LogPrintf("R/W Config file: %s\n", rwconfig_file_path.string());
+    } else if (gArgs.IsArgSet("-confrw")) {
+        InitWarning(strprintf(_("The specified R/W config file %s does not exist\n"), rwconfig_file_path.string()));
+    } else {
+        LogPrintf("R/W Config file: %s (not found, skipping)\n", rwconfig_file_path.string());
+    }
+
     // Log the config arguments to debug.log
     args.LogArgs();
 
