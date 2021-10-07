@@ -87,9 +87,6 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
     }
 
     mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", DEFAULT_ACCEPT_NON_STD_TXN);
-    if (!chainparams.IsTestChain() && !mempool_opts.require_standard) {
-        return util::Error{strprintf(Untranslated("acceptnonstdtxn is not currently supported for %s chain"), chainparams.GetChainTypeString())};
-    }
 
     mempool_opts.full_rbf = argsman.GetBoolArg("-mempoolfullrbf", mempool_opts.full_rbf);
 
