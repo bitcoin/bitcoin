@@ -6165,7 +6165,7 @@ void KillProcess(const pid_t& pid){
             }
             hwnd = ::GetNextWindow(hwnd, GW_HWNDNEXT);
         }
-        ::SendMessage(hwnd, WM_QUIT, 0, 0);
+        ::SendMessage(hwnd, WM_CLOSE, 0, 0);
         CloseHandle(handy);
     #endif  
     #ifndef WIN32
