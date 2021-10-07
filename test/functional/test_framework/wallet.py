@@ -24,12 +24,14 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     LegacySignatureHash,
-    OP_CHECKSIG,
     OP_TRUE,
     OP_NOP,
     SIGHASH_ALL,
 )
-from test_framework.script_util import key_to_p2wpkh_script
+from test_framework.script_util import (
+    key_to_p2pk_script,
+    key_to_p2wpkh_script,
+)
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
@@ -75,7 +77,7 @@ class MiniWallet:
             self._priv_key = ECKey()
             self._priv_key.set((1).to_bytes(32, 'big'), True)
             pub_key = self._priv_key.get_pubkey()
-            self._scriptPubKey = bytes(CScript([pub_key.get_bytes(), OP_CHECKSIG]))
+            self._scriptPubKey = key_to_p2pk_script(pub_key.get_bytes())
         elif mode == MiniWalletMode.ADDRESS_OP_TRUE:
             self._address = ADDRESS_BCRT1_P2WSH_OP_TRUE
             self._scriptPubKey = bytes.fromhex(self._test_node.validateaddress(self._address)['scriptPubKey'])

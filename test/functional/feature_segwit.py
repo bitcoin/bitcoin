@@ -31,11 +31,11 @@ from test_framework.script import (
     OP_1,
     OP_2,
     OP_CHECKMULTISIG,
-    OP_CHECKSIG,
     OP_DROP,
     OP_TRUE,
 )
 from test_framework.script_util import (
+    key_to_p2pk_script,
     key_to_p2pkh_script,
     key_to_p2wpkh_script,
     script_to_p2sh_script,
@@ -459,7 +459,7 @@ class SegWitTest(BitcoinTestFramework):
                 importlist.append(script_to_p2wsh_script(bare).hex())
             else:
                 pubkey = bytes.fromhex(v['pubkey'])
-                p2pk = CScript([pubkey, OP_CHECKSIG])
+                p2pk = key_to_p2pk_script(pubkey)
                 p2pkh = key_to_p2pkh_script(pubkey)
                 importlist.append(p2pk.hex())
                 importlist.append(p2pkh.hex())
@@ -628,7 +628,7 @@ class SegWitTest(BitcoinTestFramework):
         pubkey = bytes.fromhex(v['pubkey'])
         p2wpkh = key_to_p2wpkh_script(pubkey)
         p2sh_p2wpkh = script_to_p2sh_script(p2wpkh)
-        p2pk = CScript([pubkey, OP_CHECKSIG])
+        p2pk = key_to_p2pk_script(pubkey)
         p2pkh = CScript(bytes.fromhex(v['scriptPubKey']))
         p2sh_p2pk = script_to_p2sh_script(p2pk)
         p2sh_p2pkh = script_to_p2sh_script(p2pkh)
