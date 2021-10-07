@@ -17,6 +17,7 @@ BreakBeforeBinaryOperators: false
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterClass: true
+  AfterControlStatement: MultiLine
   AfterFunction: true
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializersBeforeComma: false
