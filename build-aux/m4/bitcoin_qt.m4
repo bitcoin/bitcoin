@@ -36,9 +36,9 @@ dnl Output: $1 is set to the path of $2 if found. $2 are searched in order.
 AC_DEFUN([BITCOIN_QT_PATH_PROGS],[
   BITCOIN_QT_CHECK([
     if test "x$3" != x; then
-      AC_PATH_PROGS($1,$2,,$3)
+      AC_PATH_PROGS([$1], [$2], [], [$3])
     else
-      AC_PATH_PROGS($1,$2)
+      AC_PATH_PROGS([$1], [$2])
     fi
     if test "x$$1" = x && test "x$4" != xyes; then
       BITCOIN_QT_FAIL([$1 not found])

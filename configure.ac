@@ -105,16 +105,16 @@ AC_PATH_TOOL(RANLIB, ranlib)
 AC_PATH_TOOL(STRIP, strip)
 AC_PATH_TOOL(GCOV, gcov)
 AC_PATH_TOOL(LLVM_COV, llvm-cov)
-AC_PATH_PROG(LCOV, lcov)
+AC_PATH_PROG([LCOV], [lcov])
 dnl Python 3.6 is specified in .python-version and should be used if available, see doc/dependencies.md
 AC_PATH_PROGS([PYTHON], [python3.6 python3.7 python3.8 python3.9 python3.10 python3.11 python3 python])
-AC_PATH_PROG(GENHTML, genhtml)
+AC_PATH_PROG([GENHTML], [genhtml])
 AC_PATH_PROG([GIT], [git])
-AC_PATH_PROG(CCACHE,ccache)
-AC_PATH_PROG(XGETTEXT,xgettext)
-AC_PATH_PROG(HEXDUMP,hexdump)
+AC_PATH_PROG([CCACHE], [ccache])
+AC_PATH_PROG([XGETTEXT], [xgettext])
+AC_PATH_PROG([HEXDUMP], [hexdump])
 AC_PATH_TOOL(OBJCOPY, objcopy)
-AC_PATH_PROG(DOXYGEN, doxygen)
+AC_PATH_PROG([DOXYGEN], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
 AC_ARG_VAR(PYTHONPATH, Augments the default search path for python module files)
@@ -647,7 +647,7 @@ case $host in
      dnl In libtool-speak, it's -all-static.
      AX_CHECK_LINK_FLAG([-static], [LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -all-static"])
 
-     AC_PATH_PROG([MAKENSIS], [makensis], none)
+     AC_PATH_PROG([MAKENSIS], [makensis], [none])
      if test x$MAKENSIS = xnone; then
        AC_MSG_WARN("makensis not found. Cannot create installer.")
      fi
@@ -674,7 +674,7 @@ case $host in
      TARGET_OS=darwin
      if  test x$cross_compiling != xyes; then
        BUILD_OS=darwin
-       AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg],rsvg-convert)
+       AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg], [rsvg-convert])
        AC_CHECK_PROG([BREW],brew, brew)
        if test x$BREW = xbrew; then
          dnl These Homebrew packages may be keg-only, meaning that they won't be found
@@ -734,11 +734,11 @@ case $host in
            AC_PATH_TOOL([DSYMUTIL], [dsymutil], dsymutil)
            AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], install_name_tool)
            AC_PATH_TOOL([OTOOL], [otool], otool)
-           AC_PATH_PROGS([XORRISOFS], [xorrisofs], xorrisofs)
-           AC_PATH_PROGS([DMG], [dmg], dmg)
-           AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg],rsvg-convert)
-           AC_PATH_PROGS([IMAGEMAGICK_CONVERT], [convert],convert)
-           AC_PATH_PROGS([TIFFCP], [tiffcp],tiffcp)
+           AC_PATH_PROGS([XORRISOFS], [xorrisofs], [xorrisofs])
+           AC_PATH_PROGS([DMG], [dmg], [dmg])
+           AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg], [rsvg-convert])
+           AC_PATH_PROGS([IMAGEMAGICK_CONVERT], [convert], [convert])
+           AC_PATH_PROGS([TIFFCP], [tiffcp], [tiffcp])
 
            dnl libtool will try to strip the static lib, which is a problem for
            dnl cross-builds because strip attempts to call a hard-coded ld,
