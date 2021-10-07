@@ -286,7 +286,8 @@ class EstimateFeeTest(SyscoinTestFramework):
     def test_feerate_mempoolminfee(self):
         high_val = 3*self.nodes[1].estimatesmartfee(1)['feerate']
         self.restart_node(1, extra_args=[f'-minrelaytxfee={high_val}'])
-        check_estimates(self.nodes[1], self.fees_per_kb)
+        # SYSCOIN
+        #check_estimates(self.nodes[1], self.fees_per_kb)
         self.restart_node(1)
 
     def sanity_check_rbf_estimates(self, utxos):
