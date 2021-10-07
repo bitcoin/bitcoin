@@ -2920,6 +2920,12 @@ void CConnman::RecordBytesSent(uint64_t bytes)
     nMaxOutboundTotalBytesSentInCycle += bytes;
 }
 
+void CConnman::SetMaxOutboundTarget(uint64_t limit)
+{
+    LOCK(cs_totalBytesSent);
+    nMaxOutboundLimit = limit;
+}
+
 uint64_t CConnman::GetMaxOutboundTarget() const
 {
     LOCK(cs_totalBytesSent);
