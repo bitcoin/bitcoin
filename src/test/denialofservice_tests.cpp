@@ -52,6 +52,8 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 {
     const CChainParams& chainparams = Params();
     auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
+    // Disable inactivity checks for this test to avoid interference
+    static_cast<ConnmanTestMsg*>(connman.get())->SetPeerConnectTimeout(99999);
     auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr,
                                        *m_node.chainman, *m_node.mempool, false);
 
