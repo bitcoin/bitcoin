@@ -3731,6 +3731,13 @@ void CConnman::RecordBytesSent(uint64_t bytes)
     nMaxOutboundTotalBytesSentInCycle += bytes;
 }
 
+void CConnman::SetMaxOutboundTarget(uint64_t limit)
+{
+    AssertLockNotHeld(m_total_bytes_sent_mutex);
+    LOCK(m_total_bytes_sent_mutex);
+    nMaxOutboundLimit = limit;
+}
+
 uint64_t CConnman::GetMaxOutboundTarget() const
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
