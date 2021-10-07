@@ -21,6 +21,58 @@
 #include <cmath>
 #include <optional>
 
+// Helpers for modifying CTxMemPool::mapTx, which is a boost multi_index.
+struct update_descendant_state
+{
+    update_descendant_state(int64_t _modifySize, CAmount _modifyFee, int64_t _modifyCount) :
+        modifySize(_modifySize), modifyFee(_modifyFee), modifyCount(_modifyCount)
+    {}
+
+    void operator() (CTxMemPoolEntry &e)
+        { e.UpdateDescendantState(modifySize, modifyFee, modifyCount); }
+
+    private:
+        int64_t modifySize;
+        CAmount modifyFee;
+        int64_t modifyCount;
+};
+
+struct update_ancestor_state
+{
+    update_ancestor_state(int64_t _modifySize, CAmount _modifyFee, int64_t _modifyCount, int64_t _modifySigOpsCost) :
+        modifySize(_modifySize), modifyFee(_modifyFee), modifyCount(_modifyCount), modifySigOpsCost(_modifySigOpsCost)
+    {}
+
+    void operator() (CTxMemPoolEntry &e)
+        { e.UpdateAncestorState(modifySize, modifyFee, modifyCount, modifySigOpsCost); }
+
+    private:
+        int64_t modifySize;
+        CAmount modifyFee;
+        int64_t modifyCount;
+        int64_t modifySigOpsCost;
+};
+
+struct update_fee_delta
+{
+    explicit update_fee_delta(int64_t _feeDelta) : feeDelta(_feeDelta) { }
+
+    void operator() (CTxMemPoolEntry &e) { e.UpdateFeeDelta(feeDelta); }
+
+private:
+    int64_t feeDelta;
+};
+
+struct update_lock_points
+{
+    explicit update_lock_points(const LockPoints& _lp) : lp(_lp) { }
+
+    void operator() (CTxMemPoolEntry &e) { e.UpdateLockPoints(lp); }
+
+private:
+    const LockPoints& lp;
+};
+
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
                                  int64_t time, unsigned int entry_height,
                                  bool spends_coinbase, int64_t sigops_cost, LockPoints lp)
