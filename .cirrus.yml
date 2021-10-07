@@ -90,7 +90,7 @@ task:
     QT_DOWNLOAD_URL: 'https://download.qt.io/official_releases/qt/5.12/5.12.11/single/qt-everywhere-src-5.12.11.zip'
     QT_LOCAL_PATH: 'C:\qt-everywhere-src-5.12.11.zip'
     QT_SOURCE_DIR: 'C:\qt-everywhere-src-5.12.11'
-    QTBASEDIR: 'C:\Qt5.12.11_x64_static_vs2019_160900'
+    QTBASEDIR: 'C:\Qt_static'
     x64_NATIVE_TOOLS: '"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"'
     IgnoreWarnIntDirInTempDetected: 'true'
   merge_script:
