@@ -584,11 +584,6 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 if (llvalue > 1) {
                     settings.setValue("nPruneSize", PruneMiBtoGB(llvalue));
                 }
-                if (llvalue != 0 && gArgs.GetArg("-blockfilterindex", DEFAULT_BLOCKFILTERINDEX) != "0") {
-                    // Can't start with pruning if the index is enabled
-                    // This won't delete it, but will allow starting
-                    gArgs.ModifyRWConfigFile("blockfilterindex", "0");
-                }
                 setRestartRequired(true);
             }
             break;

@@ -46,12 +46,6 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     ui->pruneSize->setEnabled(false);
     connect(ui->prune, &QPushButton::toggled, ui->pruneSize, &QWidget::setEnabled);
-    connect(ui->prune, &QPushButton::toggled, [this](bool nv) {
-        ui->peerblockfilters->setEnabled(!nv);
-    });
-    connect(ui->peerblockfilters, &QPushButton::toggled, [this](bool nv) {
-        ui->prune->setEnabled(!nv);
-    });
 
     ui->networkPort->setValidator(new QIntValidator(1024, 65535, this));
     connect(ui->networkPort, SIGNAL(textChanged(const QString&)), this, SLOT(checkLineEdit()));
