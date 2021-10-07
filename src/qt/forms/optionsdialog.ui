@@ -33,7 +33,7 @@
           <string>Automatically start %1 after logging in to the system.</string>
          </property>
          <property name="text">
-          <string>Start %1 on system &amp;login</string>
+          <string>&amp;Start %1 on system login</string>
          </property>
         </widget>
        </item>
@@ -186,7 +186,7 @@
           <string extracomment="Tooltip text for Options window setting that enables the RPC server.">This allows you or a third party tool to communicate with the node through command-line and JSON-RPC commands.</string>
          </property>
          <property name="text">
-          <string extracomment="An Options window setting to enable the RPC server.">Enable RPC &amp;server</string>
+          <string extracomment="An Options window setting to enable the RPC server.">Enable R&amp;PC server</string>
          </property>
         </widget>
        </item>
