@@ -6158,14 +6158,14 @@ void KillProcess(const pid_t& pid){
         while(hwnd)
         {
             DWORD pidw;
-            DWORD dwThreadId = ::GetWindowThreadProcessId(hwnd, &pidw);
+            ::GetWindowThreadProcessId(hwnd, &pidw);
             if(pidw == pid)
             {    
                 break;
             }
             hwnd = ::GetNextWindow(hwnd, GW_HWNDNEXT);
         }
-        ::SendMessage(hwnd, WM_QUIT, NULL, NULL);
+        ::SendMessage(hwnd, WM_QUIT, 0, 0);
         CloseHandle(handy);
     #endif  
     #ifndef WIN32
