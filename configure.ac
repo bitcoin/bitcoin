@@ -100,11 +100,11 @@ dnl Libtool init checks.
 LT_INIT([pic-only])
 
 dnl Check/return PATH for base programs.
-AC_PATH_TOOL(AR, ar)
-AC_PATH_TOOL(RANLIB, ranlib)
-AC_PATH_TOOL(STRIP, strip)
-AC_PATH_TOOL(GCOV, gcov)
-AC_PATH_TOOL(LLVM_COV, llvm-cov)
+AC_PATH_TOOL([AR], [ar])
+AC_PATH_TOOL([RANLIB], [ranlib])
+AC_PATH_TOOL([STRIP], [strip])
+AC_PATH_TOOL([GCOV], [gcov])
+AC_PATH_TOOL([LLVM_COV], [llvm-cov])
 AC_PATH_PROG([LCOV], [lcov])
 dnl Python 3.6 is specified in .python-version and should be used if available, see doc/dependencies.md
 AC_PATH_PROGS([PYTHON], [python3.6 python3.7 python3.8 python3.9 python3.10 python3.11 python3 python])
@@ -113,7 +113,7 @@ AC_PATH_PROG([GIT], [git])
 AC_PATH_PROG([CCACHE], [ccache])
 AC_PATH_PROG([XGETTEXT], [xgettext])
 AC_PATH_PROG([HEXDUMP], [hexdump])
-AC_PATH_TOOL(OBJCOPY, objcopy)
+AC_PATH_TOOL([OBJCOPY], [objcopy])
 AC_PATH_PROG([DOXYGEN], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
@@ -652,7 +652,7 @@ case $host in
        AC_MSG_WARN("makensis not found. Cannot create installer.")
      fi
 
-     AC_PATH_TOOL(WINDRES, windres, none)
+     AC_PATH_TOOL([WINDRES], [windres], [none])
      if test x$WINDRES = xnone; then
        AC_MSG_ERROR("windres not found")
      fi
@@ -731,9 +731,9 @@ case $host in
            BUILD_OS=darwin
            ;;
          *)
-           AC_PATH_TOOL([DSYMUTIL], [dsymutil], dsymutil)
-           AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], install_name_tool)
-           AC_PATH_TOOL([OTOOL], [otool], otool)
+           AC_PATH_TOOL([DSYMUTIL], [dsymutil], [dsymutil])
+           AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], [install_name_tool])
+           AC_PATH_TOOL([OTOOL], [otool], [otool])
            AC_PATH_PROGS([XORRISOFS], [xorrisofs], [xorrisofs])
            AC_PATH_PROGS([DMG], [dmg], [dmg])
            AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg], [rsvg-convert])
