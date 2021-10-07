@@ -33,11 +33,11 @@ from .script import (
     CScriptOp,
     OP_1,
     OP_CHECKMULTISIG,
-    OP_CHECKSIG,
     OP_RETURN,
     OP_TRUE,
 )
 from .script_util import (
+    key_to_p2pk_script,
     key_to_p2wpkh_script,
     script_to_p2wsh_script,
 )
@@ -134,7 +134,7 @@ def create_coinbase(height, pubkey=None, extra_output_script=None, fees=0, nValu
         coinbaseoutput.nValue >>= halvings
         coinbaseoutput.nValue += fees
     if pubkey is not None:
-        coinbaseoutput.scriptPubKey = CScript([pubkey, OP_CHECKSIG])
+        coinbaseoutput.scriptPubKey = key_to_p2pk_script(pubkey)
     else:
         coinbaseoutput.scriptPubKey = CScript([OP_TRUE])
     coinbase.vout = [coinbaseoutput]

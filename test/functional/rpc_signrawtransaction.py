@@ -25,12 +25,12 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     OP_CHECKLOCKTIMEVERIFY,
-    OP_CHECKSIG,
     OP_CHECKSEQUENCEVERIFY,
     OP_DROP,
     OP_TRUE,
 )
 from test_framework.script_util import (
+    key_to_p2pk_script,
     key_to_p2pkh_script,
     script_to_p2sh_p2wsh_script,
     script_to_p2wsh_script,
@@ -229,7 +229,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         embedded_pubkey = eckey.get_pubkey().get_bytes().hex()
         witness_script = {
             'P2PKH': key_to_p2pkh_script(embedded_pubkey).hex(),
-            'P2PK': CScript([bytes.fromhex(embedded_pubkey), OP_CHECKSIG]).hex()
+            'P2PK': key_to_p2pk_script(embedded_pubkey).hex()
         }.get(tx_type, "Invalid tx_type")
         redeem_script = script_to_p2wsh_script(witness_script).hex()
         addr = script_to_p2sh(redeem_script)

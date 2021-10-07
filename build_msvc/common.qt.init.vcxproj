@@ -2,7 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup Label="QtGlobals">
-    <QtBaseDir>C:\Qt5.12.11_x64_static_vs2019_160900</QtBaseDir>
+    <QtBaseDir Condition="'$(QTBASEDIR)' == ''">C:\Qt_static</QtBaseDir>
     <QtPluginsLibraryDir>$(QtBaseDir)\plugins</QtPluginsLibraryDir>
     <QtLibraryDir>$(QtBaseDir)\lib</QtLibraryDir>
     <QtIncludeDir>$(QtBaseDir)\include</QtIncludeDir>
