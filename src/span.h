@@ -10,6 +10,10 @@
 #include <algorithm>
 #include <assert.h>
 
+#if defined(__cpp_lib_ranges) && __cpp_lib_ranges>= 201911L
+#include <ranges>
+#endif
+
 #ifdef DEBUG
 #define CONSTEXPR_IF_NOT_DEBUG
 #define ASSERT_IF_DEBUG(x) assert((x))
@@ -216,6 +220,18 @@ public:
 
     template <typename O> friend class Span;
 };
+
+#if defined(__cpp_lib_ranges) && __cpp_lib_ranges>= 201911L
+// Opt-in to modeling view because Span has constant time
+// move construction, move assignment, and destruction.
+template <typename T>
+inline constexpr bool std::ranges::enable_view<Span<T>> = true;
+
+// Opt-in to modeling borrowed_range because Span's iterators outlive
+// the span itself.
+template <typename T>
+inline constexpr bool std::ranges::enable_borrowed_range<Span<T>> = true;
+#endif
 
 // MakeSpan helps constructing a Span of the right type automatically.
 /** MakeSpan for arrays: */
