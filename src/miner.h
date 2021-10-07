@@ -132,10 +132,13 @@ private:
     // Configuration parameters for the block size
     bool fIncludeWitness;
     unsigned int nBlockMaxWeight;
+    uint64_t nBlockMaxSize;
+    bool fNeedSizeAccounting;
     CFeeRate blockMinFeeRate;
 
     // Information on the current status of the block
     uint64_t nBlockWeight;
+    uint64_t nBlockSize;
     uint64_t nBlockTx;
     uint64_t nBlockSigOpsCost;
     CAmount nFees;
@@ -152,6 +155,7 @@ public:
     struct Options {
         Options();
         size_t nBlockMaxWeight;
+        size_t nBlockMaxSize;
         CFeeRate blockMinFeeRate;
     };
 
@@ -163,6 +167,7 @@ public:
 
     inline static std::optional<int64_t> m_last_block_num_txs{};
     inline static std::optional<int64_t> m_last_block_weight{};
+    inline static std::optional<int64_t> m_last_block_size{};
 
 private:
     // utility functions
