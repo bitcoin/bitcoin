@@ -6056,8 +6056,6 @@ bool CChainState::RestartGethNode() {
 bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
 {
     LOCK(cs_geth);
-    // stop any geth nodes before starting
-    StopGethNode(pid);
 
     LogPrintf("%s: Downloading Geth descriptor from %s\n", __func__, gethDescriptorURL);
     fs::path descriptorPath = gArgs.GetDataDirBase() / "gethdescriptor.json";
@@ -6085,62 +6083,66 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
     fs::path dataDir = gArgs.GetDataDirNet() / "geth";
     std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(attempt1.string(), dataDir.string());
     fs::path log = gArgs.GetDataDirNet() / "sysgeth.log";
-    #ifndef WIN32
-    // Prevent killed child-processes remaining as "defunct"
-    struct sigaction sa;
-    sa.sa_handler = SIG_DFL;
-    sa.sa_flags = SA_NOCLDWAIT;
-        
-    sigaction( SIGCHLD, &sa, NULL ) ;
-        
-    // Duplicate ("fork") the process. Will return zero in the child
-    // process, and the child's PID in the parent (or negative on error).
-    pid = fork() ;
-    if( pid < 0 ) {
-        LogPrintf("Could not start Geth, pid < 0 %d\n", pid);
-        return false;
-    }
-	// TODO: sanitize environment variables as per
-	// https://wiki.sei.cmu.edu/confluence/display/c/ENV03-C.+Sanitize+the+environment+when+invoking+external+programs
-    if( pid == 0 ) {     
-        std::vector<char*> commandVector;
-        for(const std::string &cmdStr: vecCmdLineStr) {
-            commandVector.push_back(const_cast<char*>(cmdStr.c_str()));
-        }  
-       
-        // push NULL to the end of the vector (execvp expects NULL as last element)
-        commandVector.push_back(NULL);
-        char **command = commandVector.data();    
-        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]); 
-        int err = open(log.string().c_str(), O_RDWR|O_CREAT|O_APPEND, 0600);
-        if (err == -1) {
-            LogPrintf("Could not open sysgeth.log\n");
+    #ifndef USE_SYSCALL_SANDBOX
+    #if HAVE_SYSTEM
+        #ifndef WIN32
+        // Prevent killed child-processes remaining as "defunct"
+        struct sigaction sa;
+        sa.sa_handler = SIG_DFL;
+        sa.sa_flags = SA_NOCLDWAIT;
+            
+        sigaction( SIGCHLD, &sa, NULL ) ;
+            
+        // Duplicate ("fork") the process. Will return zero in the child
+        // process, and the child's PID in the parent (or negative on error).
+        pid = fork() ;
+        if( pid < 0 ) {
+            LogPrintf("Could not start Geth, pid < 0 %d\n", pid);
             return false;
-        }
-        if (-1 == dup2(err, fileno(stderr))) { LogPrintf("Cannot redirect stderr for syssgeth\n"); return false; }   
-        fflush(stderr); close(err);                               
-        execvp(command[0], &command[0]);
-        if (errno != 0) {
-            LogPrintf("Geth not found at %s\n", attempt1.string());
-        }
-    } else {
-        boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
-        ofs << pid;
-    }
-    #else
-        std::string commandStr = "";
-        // the first cmd is the binary file which is not needed as attempt1 is that, in windows we only need params passed as commandStr
-        vecCmdLineStr.erase(vecCmdLineStr.begin());
-        for(const std::string &cmdStr: vecCmdLineStr) {
-            commandStr += cmdStr + " ";
-        }
-        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, commandStr);   
-        pid = fork(attempt1.string(), commandStr);
-        if( pid <= 0 ) {
-            LogPrintf("Geth not found at %s\n", attempt1.string());
         }  
-        boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
-        ofs << pid;
+        // TODO: sanitize environment variables as per
+        // https://wiki.sei.cmu.edu/confluence/display/c/ENV03-C.+Sanitize+the+environment+when+invoking+external+programs
+        if( pid == 0 ) {  
+            std::vector<char*> commandVector;
+            for(const std::string &cmdStr: vecCmdLineStr) {
+                commandVector.push_back(const_cast<char*>(cmdStr.c_str()));
+            }  
+        
+            // push NULL to the end of the vector (execvp expects NULL as last element)
+            commandVector.push_back(NULL);
+            char **command = commandVector.data();    
+            LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]); 
+            int err = open(log.string().c_str(), O_RDWR|O_CREAT|O_APPEND, 0600);
+            if (err == -1) {
+                LogPrintf("Could not open sysgeth.log\n");
+            }
+            if (-1 == dup2(err, fileno(stderr))) { LogPrintf("Cannot redirect stderr for syssgeth\n"); return false; }   
+            fflush(stderr); close(err);                               
+            execvp(command[0], &command[0]);
+            if (errno != 0) {
+                LogPrintf("Geth not found at %s\n", attempt1.string());
+            }
+        } else {
+            boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
+            ofs << pid;
+        }
+        #else
+            std::string commandStr = "";
+            // the first cmd is the binary file which is not needed as attempt1 is that, in windows we only need params passed as commandStr
+            vecCmdLineStr.erase(vecCmdLineStr.begin());
+            for(const std::string &cmdStr: vecCmdLineStr) {
+                commandStr += cmdStr + " ";
+            } 
+            commandStr += " >\"" + log.string() + "\" 2>&1";
+            pid = fork(attempt1.string(), commandStr);
+            if( pid <= 0 ) {
+                LogPrintf("Geth not found at %s\n", attempt1.string());
+                return false;
+            }
+            boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
+            ofs << pid;
+        #endif
+    #endif
     #endif
     if(pid > 0)
         LogPrintf("%s: Geth Started with pid %d\n", __func__, pid);
@@ -6152,7 +6154,19 @@ void KillProcess(const pid_t& pid){
     LogPrintf("%s: Trying to kill pid %d\n", __func__, pid);
     #ifdef WIN32
         HANDLE handy = OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, TRUE,pid);
-        TerminateProcess(handy,0);
+        HWND hwnd = ::GetTopWindow(NULL);
+        while(hwnd)
+        {
+            DWORD pidw;
+            DWORD dwThreadId = ::GetWindowThreadProcessId(hwnd, &pidw);
+            if(pidw == pid)
+            {    
+                break;
+            }
+            hwnd = ::GetNextWindow(hwnd, GW_HWNDNEXT);
+        }
+        ::SendMessage(hwnd, WM_QUIT, NULL, NULL);
+        CloseHandle(handy);
     #endif  
     #ifndef WIN32
         LogPrintf("%s: Trying to kill with SIGINT\n", __func__);            
@@ -6226,15 +6240,15 @@ void KillProcess(const pid_t& pid){
             }  
             UninterruptibleSleep(std::chrono::milliseconds(1000));
         }
-        LogPrintf("%s: Done trying to kill with SIGINT-SIGTERM-SIGKILL\n", __func__);            
-    #endif 
+        LogPrintf("%s: Done trying to kill with SIGINT-SIGTERM-SIGKILL\n", __func__);         
+    #endif
 }
 bool StopGethNode(pid_t &pid)
 {
-    if(pid < 0) {
+    if(!fNEVMConnection || pid < 0) {
         return false;
     }
-    if(fNEVMConnection && pid > 0) {
+    if(pid > 0) {
         bool bResponse;
         GetMainSignals().NotifyNEVMComms("disconnect", bResponse);
     }
@@ -6263,20 +6277,19 @@ bool StopGethNode(pid_t &pid)
         }  
     }
     boost::filesystem::remove(GetGethPidFile());
-    #ifndef USE_SYSCALL_SANDBOX
-    #if HAVE_SYSTEM
-    if(pid == 0 && fNEVMConnection) {
+    if(pid == 0) {
+        #ifndef USE_SYSCALL_SANDBOX
+        #if HAVE_SYSTEM
         LogPrintf("Killing any sysgeth processes that may be already running...\n");
         std::string cmd = "pkill -9 -f sysgeth";
         #ifdef WIN32
             cmd = "taskkill /F /T /IM sysgeth.exe >nul 2>&1";
         #endif
         std::thread t(runCommand, cmd);
-        if (t.joinable())
-            t.join();
+        t.detach(); // thread runs free
+        #endif
+        #endif
     }
-    #endif
-    #endif
     pid = -1;
     return true;
 }
