@@ -523,14 +523,15 @@ public:
 
     void AllowAddressSpaceAccess()
     {
-        allowed_syscalls.insert(__NR_brk);     // change data segment size
-        allowed_syscalls.insert(__NR_madvise); // give advice about use of memory
+        allowed_syscalls.insert(__NR_brk);        // change data segment size
+        allowed_syscalls.insert(__NR_madvise);    // give advice about use of memory
         allowed_syscalls.insert(__NR_membarrier); // issue memory barriers on a set of threads
-        allowed_syscalls.insert(__NR_mlock);    // lock memory
-        allowed_syscalls.insert(__NR_mmap);     // map files or devices into memory
-        allowed_syscalls.insert(__NR_mprotect); // set protection on a region of memory
-        allowed_syscalls.insert(__NR_munlock);  // unlock memory
-        allowed_syscalls.insert(__NR_munmap);   // unmap files or devices into memory
+        allowed_syscalls.insert(__NR_mlock);      // lock memory
+        allowed_syscalls.insert(__NR_mmap);       // map files or devices into memory
+        allowed_syscalls.insert(__NR_mprotect);   // set protection on a region of memory
+        allowed_syscalls.insert(__NR_mremap);     // remap a file in memory
+        allowed_syscalls.insert(__NR_munlock);    // unlock memory
+        allowed_syscalls.insert(__NR_munmap);     // unmap files or devices into memory
     }
 
     void AllowEpoll()
