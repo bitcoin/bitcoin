@@ -88,7 +88,7 @@ task:
     - git config core.filemode false
     - git reset --hard
     - PowerShell -NoLogo -Command if ($env:CIRRUS_PR -ne $null) { git fetch $env:CIRRUS_REPO_CLONE_URL $env:CIRRUS_BASE_BRANCH; git merge FETCH_HEAD; }
-  msvc_qt_built_cache:
+  test_msvc_qt_built_cache:
     folder: "%QTBASEDIR%"
     reupload_on_changes: false
     fingerprint_script:
@@ -107,7 +107,7 @@ task:
       - ..\configure -release -silent -opensource -confirm-license -opengl desktop -no-shared -static -static-runtime -mp -qt-zlib -qt-pcre -qt-libpng -no-libjpeg -nomake examples -nomake tests -nomake tools -no-dbus -no-libudev -no-icu -no-gtk -no-opengles3 -no-angle -no-sql-sqlite -no-sql-odbc -no-sqlite -no-libudev -no-vulkan -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcanvas3d -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdeclarative -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquickcontrols -skip qtquickcontrols2 -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebsockets -skip qtwebview -skip qtx11extras -skip qtxmlpatterns -no-openssl -no-feature-sql -no-feature-sqlmodel -prefix %QTBASEDIR%
       - jom
       - jom install
-  vcpkg_cache:
+  test_vcpkg_cache:
     folder: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
   install_python_script:
     - choco install --yes --no-progress python3 --version=3.9.6
