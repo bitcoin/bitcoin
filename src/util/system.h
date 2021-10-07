@@ -330,6 +330,15 @@ protected:
     int64_t GetIntArg(const std::string& strArg, int64_t nDefault) const;
 
     /**
+     * Return bytes argument or default value or -1 if failed to parse
+     *
+     * @param strArg Argument to get (e.g. "-foo")
+     * @param nDefault (e.g. 1)
+     * @return command-line argument (-1 if invalid number) or default value
+     */
+    int64_t GetByteArg(const std::string& strArg, int64_t nDefault) const;
+
+    /**
      * Return boolean argument or default value
      *
      * @param strArg Argument to get (e.g. "-foo")

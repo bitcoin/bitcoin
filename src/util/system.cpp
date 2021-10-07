@@ -177,6 +177,44 @@ static bool InterpretBool(const std::string& strValue)
     return (LocaleIndependentAtoi<int>(strValue) != 0);
 }
 
+/**
+ * Parse a string argument from a suffix unit [k|K] [m|m] [g|G] [t|T] .
+ *
+ * Default is [m], MiB, if no unit specified.
+ * Examples: 9m,1M,3g,1T
+ *
+ * The return value is the amount in bytes, or -1 if failed to parse.
+ */
+static int64_t ParseByteUnits(const std::string& strValue)
+{
+    if (strValue.empty())
+        return 0;
+
+    auto v = strValue;
+    auto unit = v.back();
+    int64_t nBytes{0};
+
+    v.pop_back();
+    switch (ToLower(unit)) {
+        case 'k':
+            return ParseInt64(v, &nBytes) ? nBytes << 10 :-1;
+            break;
+        case 'm':
+            return ParseInt64(v, &nBytes) ? nBytes << 20 :-1;
+            break;
+        case 'g':
+            return ParseInt64(v, &nBytes) ? nBytes << 30 :-1;
+            break;
+        case 't':
+            return ParseInt64(v, &nBytes) ? nBytes << 40 :-1;
+            break;
+        default:
+            // no unit found, use MiB of strValue
+            return ParseInt64(strValue, &nBytes) ? nBytes << 20 :-1;
+            break;
+    }
+}
+
 static std::string SettingName(const std::string& arg)
 {
     return arg.size() > 0 && arg[0] == '-' ? arg.substr(1) : arg;
@@ -599,6 +637,12 @@ bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
 {
     const util::SettingsValue value = GetSetting(strArg);
     return value.isNull() ? fDefault : value.isBool() ? value.get_bool() : InterpretBool(value.get_str());
+}
+
+int64_t ArgsManager::GetByteArg(const std::string& strArg, int64_t nDefault) const
+{
+    const util::SettingsValue value = GetSetting(strArg);
+    return value.isNull() ? nDefault : value.isNum() ? value.get_int64() : ParseByteUnits(value.get_str());
 }
 
 bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strValue)

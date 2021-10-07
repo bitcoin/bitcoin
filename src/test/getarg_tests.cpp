@@ -220,4 +220,44 @@ BOOST_AUTO_TEST_CASE(logargs)
     BOOST_CHECK(str.find("private") == std::string::npos);
 }
 
+BOOST_AUTO_TEST_CASE(bytearg)
+{
+    const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_ANY);
+    const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_ANY);
+    SetupArgs({foo, bar});
+    ResetArgs("");
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-foo", 1), 1);
+
+    ResetArgs("-foo");
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-foo", 1), 0);
+
+    ResetArgs("-foo=N");
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-foo", 0), -1);
+
+    ResetArgs("-foo=NaN");
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-foo", 0), -1);
+
+    ResetArgs("-foo=1"); //default is MiB
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-foo", 0), 1 << 20);
+
+    ResetArgs("-foo=1k --bar=1K");
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-foo", 0), 1L << 10);
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-bar", 0), 1L << 10);
+
+    ResetArgs("-foo=1m --bar=1M");
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-foo", 0), 1L << 20);
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-bar", 0), 1L << 20);
+
+    ResetArgs("-foo=1g --bar=1g");
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-foo", 0), 1L << 30);
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-bar", 0), 1L << 30);
+
+    ResetArgs("-foo=1t --bar=1T");
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-foo", 0), 1L << 40);
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-bar", 0), 1L << 40);
+
+    ResetArgs("-foo=0.5t --bar=0.5T"); // fractions not allowed
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-foo", 0), -1);
+    BOOST_CHECK_EQUAL(m_local_args.GetByteArg("-bar", 0), -1);
+}
 BOOST_AUTO_TEST_SUITE_END()
