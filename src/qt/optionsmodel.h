@@ -69,6 +69,7 @@ public:
         ExternalSignerPath,     // QString
         SpendZeroConfChange,    // bool
         Listen,                 // bool
+        Server,                 // bool
         OptionIDRowCount,
     };
 

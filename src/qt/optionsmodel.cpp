@@ -150,6 +150,13 @@ void OptionsModel::Init(bool resetSettings)
     if (!gArgs.SoftSetBoolArg("-listen", settings.value("fListen").toBool()))
         addOverriddenOption("-listen");
 
+    if (!settings.contains("server")) {
+        settings.setValue("server", false);
+    }
+    if (!gArgs.SoftSetBoolArg("-server", settings.value("server").toBool())) {
+        addOverriddenOption("-server");
+    }
+
     if (!settings.contains("fUseProxy"))
         settings.setValue("fUseProxy", false);
     if (!settings.contains("addrProxy"))
@@ -367,6 +374,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nThreadsScriptVerif");
         case Listen:
             return settings.value("fListen");
+        case Server:
+            return settings.value("server");
         default:
             return QVariant();
         }
@@ -537,6 +546,12 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case Listen:
             if (settings.value("fListen") != value) {
                 settings.setValue("fListen", value);
+                setRestartRequired(true);
+            }
+            break;
+        case Server:
+            if (settings.value("server") != value) {
+                settings.setValue("server", value);
                 setRestartRequired(true);
             }
             break;
