@@ -581,7 +581,7 @@ bool SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCo
         }
         CInputCoin coin(outpoint, txout, input_bytes);
         nValueFromPresetInputs += coin.txout.nValue;
-        if (coin.m_input_bytes <= 0) {
+        if (coin.m_input_bytes == -1) {
             return false; // Not solvable, can't estimate size for fee
         }
         // SYSCOIN
