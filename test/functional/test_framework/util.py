@@ -220,7 +220,7 @@ def str_to_b64str(string):
 
 def satoshi_round(amount):
     """ Doesn't accept floating point rational numbers. """
-    if type(amount) == type(0.1):
+    if isinstance(amount, float):
         # For best predictabilty do not convert floating point rational
         # numbers into fixed point rational numbers.
         raise TypeError(
