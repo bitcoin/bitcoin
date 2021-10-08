@@ -20,6 +20,10 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
 
     explicit AltChainParamsVBTC(const CBlock& genesis)
     {
+        // if block time changes, update altchain id. see altchain id comment.
+        assert(altintegration::getMaxAtvsInVbkBlock(VeriBlock::ALT_CHAIN_ID) == 20);
+
+
         bootstrap.hash = genesis.GetHash().asVector();
         // intentionally leave prevHash empty
         bootstrap.height = 0;
@@ -61,7 +65,7 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
             0.02193952, 0.02134922};
 
         // altchain params
-        this->mMaxReorgDistance = 50000;             // blocks
+        this->mMaxReorgDistance = 2500;              // blocks
         this->mMaxAltchainFutureBlockTime = 10 * 60; // 10 min
         this->mKeystoneInterval = 5;
         this->mFinalityDelay = 100;

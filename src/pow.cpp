@@ -56,7 +56,7 @@ unsigned int LwmaCalculateNextWorkRequired(const CBlockIndex* pindexLast, const 
     assert(T == 120 && "come here and update N from 150");
 
     // For T=600, 300, 150 use approximately N=60, 90, 120
-    int64_t N = 150; // before fork_1 we used N=45, after - N=150
+    int64_t N = 150;
 
     // Define a k that will be used to get a proper average after weighting the solvetimes.
     const int64_t k = N * (N + 1) * T / 2;
