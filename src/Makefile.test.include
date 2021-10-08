@@ -149,6 +149,9 @@ BITCOIN_TESTS =\
   test/validationinterface_tests.cpp \
   test/versionbits_tests.cpp
 
+BITCOIN_TESTS += \
+  stats/test/stats_tests.cpp
+
 if ENABLE_WALLET
 BITCOIN_TESTS += \
   wallet/test/psbt_wallet_tests.cpp \
