@@ -42,6 +42,7 @@
 #include <walletinitinterface.h>
 
 #include <functional>
+#include <stdexcept>
 
 using node::BlockAssembler;
 using node::CalculateCacheSizes;
@@ -88,7 +89,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
       m_args{}
 {
     m_node.args = &gArgs;
-    const std::vector<const char*> arguments = Cat(
+    std::vector<const char*> arguments = Cat(
         {
             "dummy",
             "-printtoconsole=0",
@@ -100,6 +101,9 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
             "-debugexclude=leveldb",
         },
         extra_args);
+    if (G_TEST_COMMAND_LINE_ARGUMENTS) {
+        arguments = Cat(arguments, G_TEST_COMMAND_LINE_ARGUMENTS());
+    }
     util::ThreadRename("test");
     fs::create_directories(m_path_root);
     m_args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
@@ -108,9 +112,10 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     {
         SetupServerArgs(*m_node.args);
         std::string error;
-        const bool success{m_node.args->ParseParameters(arguments.size(), arguments.data(), error)};
-        assert(success);
-        assert(error.empty());
+        if (!m_node.args->ParseParameters(arguments.size(), arguments.data(), error)) {
+            m_node.args->ClearArgs();
+            throw std::runtime_error{error};
+        }
     }
     SelectParams(chainName);
     SeedInsecureRand();

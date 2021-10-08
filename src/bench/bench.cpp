@@ -19,6 +19,8 @@ using namespace std::chrono_literals;
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
+const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS{};
+
 namespace {
 
 void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& benchmarkResults, const std::string& filename, const char* tpl)

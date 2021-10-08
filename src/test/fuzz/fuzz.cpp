@@ -12,12 +12,15 @@
 
 #include <cstdint>
 #include <exception>
+#include <functional>
 #include <memory>
 #include <string>
 #include <unistd.h>
 #include <vector>
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
+
+const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS{};
 
 std::map<std::string_view, std::tuple<TypeTestOneInput, TypeInitialize, TypeHidden>>& FuzzTargets()
 {
