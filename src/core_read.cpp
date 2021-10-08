@@ -66,16 +66,16 @@ CScript ParseScript(const std::string& s)
                    (w.front() == '-' && w.size() > 1 && std::all_of(w.begin() + 1, w.end(), ::IsDigit)))
         {
             // Number
-            int64_t n = LocaleIndependentAtoi<int64_t>(w);
+            const auto num{ToIntegral<int64_t>(w)};
 
             // limit the range of numbers ParseScript accepts in decimal
             // since numbers outside -0xFFFFFFFF...0xFFFFFFFF are illegal in scripts
-            if (n > int64_t{0xffffffff} || n < -1 * int64_t{0xffffffff}) {
+            if (!num.has_value() || num > int64_t{0xffffffff} || num < -1 * int64_t{0xffffffff}) {
                 throw std::runtime_error("script parse error: decimal numeric value only allowed in the "
                                          "range -0xFFFFFFFF...0xFFFFFFFF");
             }
 
-            result << n;
+            result << num.value();
         } else if (w.substr(0, 2) == "0x" && w.size() > 2 && IsHex(std::string(w.begin() + 2, w.end()))) {
             // Raw hex data, inserted NOT pushed onto stack:
             std::vector<unsigned char> raw = ParseHex(std::string(w.begin() + 2, w.end()));
