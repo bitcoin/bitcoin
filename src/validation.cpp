@@ -6281,7 +6281,8 @@ bool StopGethNode(pid_t &pid)
             cmd = "taskkill /F /T /IM sysgeth.exe >nul 2>&1";
         #endif
         std::thread t(runCommand, cmd);
-        t.detach(); // thread runs free
+        if (t.joinable())
+            t.join();
         #endif
         #endif
     }
