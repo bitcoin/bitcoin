@@ -119,8 +119,9 @@ BITCOIN_TESTS =\
   test/sanity_tests.cpp \
   test/scheduler_tests.cpp \
   test/script_p2sh_tests.cpp \
-  test/script_tests.cpp \
+  test/script_parse_tests.cpp \
   test/script_standard_tests.cpp \
+  test/script_tests.cpp \
   test/scriptnum_tests.cpp \
   test/serfloat_tests.cpp \
   test/serialize_tests.cpp \
