@@ -27,8 +27,11 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
 
         // these parameters changed in comparison to default parameters
         this->mPopPayoutsParams->mPopPayoutDelay = 150;
-        this->mPopPayoutsParams->mDifficultyAveragingInterval = 30;
+        this->mPopPayoutsParams->mDifficultyAveragingInterval = 150;
         this->mEndorsementSettlementInterval = 150;
+        this->mMaxVbkBlocksInAltBlock = 100;
+        this->mMaxVTBsInAltBlock = 50;
+        this->mMaxATVsInAltBlock = 100;
         this->mPreserveBlocksBehindFinal = mEndorsementSettlementInterval;
 
         //! copying all parameters here to make sure that
@@ -63,9 +66,6 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
         this->mKeystoneInterval = 5;
         this->mFinalityDelay = 100;
         this->mMaxPopDataSize = altintegration::MAX_POPDATA_SIZE;
-        this->mMaxVbkBlocksInAltBlock = 200;
-        this->mMaxVTBsInAltBlock = 200;
-        this->mMaxATVsInAltBlock = 1000;
         this->mForkResolutionLookUpTable = {
             100, 100, 95, 89, 80, 69, 56, 40, 21};
     }
