@@ -6,21 +6,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-
 #include <chainparamsseeds.h>
 #include <consensus/merkle.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <versionbitsinfo.h>
-
 #include <assert.h>
-
 #include <vbk/genesis_common.hpp>
-
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-
 #include <veriblock/pop.hpp>
 
 static CBlock CreateGenesisBlockDefault(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
@@ -82,7 +77,7 @@ CMainParams::CMainParams()
     consensus.fPowAllowMinDifficultyBlocks = false;
     consensus.fPowNoRetargeting = false;
     consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
-    consensus.nMinerConfirmationWindow = 2016;       // nPowTargetTimespan / nPowTargetSpacing
+    consensus.nMinerConfirmationWindow = consensus.nPowTargetTimespan / consensus.nPowTargetSpacing;
     consensus.MinBIP9WarningHeight = consensus.SegwitHeight + consensus.nMinerConfirmationWindow; // segwit activation height + miner confirmation window
     consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
     consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
@@ -174,7 +169,7 @@ CMainParams::CMainParams()
      consensus.fPowAllowMinDifficultyBlocks = true;
      consensus.fPowNoRetargeting = false;
      consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
-     consensus.nMinerConfirmationWindow = 2016;       // nPowTargetTimespan / nPowTargetSpacing
+     consensus.nMinerConfirmationWindow = consensus.nPowTargetTimespan / consensus.nPowTargetSpacing;
      consensus.MinBIP9WarningHeight = consensus.SegwitHeight + consensus.nMinerConfirmationWindow;
      consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
      consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008

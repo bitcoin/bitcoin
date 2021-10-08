@@ -1,5 +1,6 @@
 *.tar.gz
 .vscode
+*.idx
 
 vbtc_state_test
 src/vbk/grpc_integration/*.pb.cc
