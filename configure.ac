@@ -490,7 +490,7 @@ fi
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $SSE42_CXXFLAGS"
-AC_MSG_CHECKING(for SSE4.2 intrinsics)
+AC_MSG_CHECKING([for SSE4.2 intrinsics])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <stdint.h>
     #if defined(_MSC_VER)
@@ -512,7 +512,7 @@ CXXFLAGS="$TEMP_CXXFLAGS"
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $SSE41_CXXFLAGS"
-AC_MSG_CHECKING(for SSE4.1 intrinsics)
+AC_MSG_CHECKING([for SSE4.1 intrinsics])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <stdint.h>
     #include <immintrin.h>
@@ -527,7 +527,7 @@ CXXFLAGS="$TEMP_CXXFLAGS"
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $AVX2_CXXFLAGS"
-AC_MSG_CHECKING(for AVX2 intrinsics)
+AC_MSG_CHECKING([for AVX2 intrinsics])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <stdint.h>
     #include <immintrin.h>
@@ -542,7 +542,7 @@ CXXFLAGS="$TEMP_CXXFLAGS"
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $SHANI_CXXFLAGS"
-AC_MSG_CHECKING(for SHA-NI intrinsics)
+AC_MSG_CHECKING([for SHA-NI intrinsics])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <stdint.h>
     #include <immintrin.h>
@@ -562,7 +562,7 @@ AX_CHECK_COMPILE_FLAG([-march=armv8-a+crc+crypto], [ARM_CRC_CXXFLAGS="-march=arm
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $ARM_CRC_CXXFLAGS"
-AC_MSG_CHECKING(for AArch64 CRC32 intrinsics)
+AC_MSG_CHECKING([for AArch64 CRC32 intrinsics])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <arm_acle.h>
     #include <arm_neon.h>
@@ -967,8 +967,7 @@ AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64],,,
                  #include <byteswap.h>
                  #endif])
 
-AC_MSG_CHECKING(for __builtin_clzl)
-
+AC_MSG_CHECKING([for __builtin_clzl])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
  (void) __builtin_clzl(0);
   ]])],
@@ -976,7 +975,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
  [ AC_MSG_RESULT(no); have_clzl=no;]
 )
 
-AC_MSG_CHECKING(for __builtin_clzll)
+AC_MSG_CHECKING([for __builtin_clzll])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
   (void) __builtin_clzll(0);
   ]])],
@@ -985,7 +984,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
 )
 
 dnl Check for malloc_info (for memory statistics information in getmemoryinfo)
-AC_MSG_CHECKING(for getmemoryinfo)
+AC_MSG_CHECKING([for getmemoryinfo])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
  [[ int f = malloc_info(0, NULL); ]])],
  [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MALLOC_INFO, 1,[Define this symbol if you have malloc_info]) ],
@@ -993,7 +992,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
 )
 
 dnl Check for mallopt(M_ARENA_MAX) (to set glibc arenas)
-AC_MSG_CHECKING(for mallopt M_ARENA_MAX)
+AC_MSG_CHECKING([for mallopt M_ARENA_MAX])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
  [[ mallopt(M_ARENA_MAX, 1); ]])],
  [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MALLOPT_ARENA_MAX, 1,[Define this symbol if you have mallopt with M_ARENA_MAX]) ],
@@ -1001,7 +1000,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
 )
 
 dnl Check for posix_fallocate
-AC_MSG_CHECKING(for posix_fallocate)
+AC_MSG_CHECKING([for posix_fallocate])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
                    // same as in src/util/system.cpp
                    #ifdef __linux__
@@ -1089,12 +1088,12 @@ fi
 
 dnl check for gmtime_r(), fallback to gmtime_s() if that is unavailable
 dnl fail if neither are available.
-AC_MSG_CHECKING(for gmtime_r)
+AC_MSG_CHECKING([for gmtime_r])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ctime>]],
   [[ gmtime_r((const time_t *) nullptr, (struct tm *) nullptr); ]])],
   [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_GMTIME_R, 1, [Define this symbol if gmtime_r is available]) ],
   [ AC_MSG_RESULT(no);
-    AC_MSG_CHECKING(for gmtime_s);
+    AC_MSG_CHECKING([for gmtime_s]);
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ctime>]],
        [[ gmtime_s((struct tm *) nullptr, (const time_t *) nullptr); ]])],
        [ AC_MSG_RESULT(yes)],
@@ -1104,7 +1103,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ctime>]],
 )
 
 dnl Check for different ways of gathering OS randomness
-AC_MSG_CHECKING(for Linux getrandom syscall)
+AC_MSG_CHECKING([for Linux getrandom syscall])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>
   #include <sys/syscall.h>
   #include <linux/random.h>]],
@@ -1113,14 +1112,14 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>
  [ AC_MSG_RESULT(no)]
 )
 
-AC_MSG_CHECKING(for getentropy)
+AC_MSG_CHECKING([for getentropy])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],
  [[ getentropy(nullptr, 32) ]])],
  [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_GETENTROPY, 1,[Define this symbol if the BSD getentropy system call is available]) ],
  [ AC_MSG_RESULT(no)]
 )
 
-AC_MSG_CHECKING(for getentropy via random.h)
+AC_MSG_CHECKING([for getentropy via random.h])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>
  #include <sys/random.h>]],
  [[ getentropy(nullptr, 32) ]])],
@@ -1128,7 +1127,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>
  [ AC_MSG_RESULT(no)]
 )
 
-AC_MSG_CHECKING(for sysctl)
+AC_MSG_CHECKING([for sysctl])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
   #include <sys/sysctl.h>]],
  [[ #ifdef __linux__
@@ -1139,7 +1138,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
  [ AC_MSG_RESULT(no)]
 )
 
-AC_MSG_CHECKING(for sysctl KERN_ARND)
+AC_MSG_CHECKING([for sysctl KERN_ARND])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
   #include <sys/sysctl.h>]],
  [[ #ifdef __linux__
@@ -1151,7 +1150,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
  [ AC_MSG_RESULT(no)]
 )
 
-AC_MSG_CHECKING(for if type char equals int8_t)
+AC_MSG_CHECKING([for if type char equals int8_t])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdint.h>
   #include <type_traits>]],
  [[ static_assert(std::is_same<int8_t, char>::value, ""); ]])],
@@ -1159,7 +1158,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdint.h>
  [ AC_MSG_RESULT(no)]
 )
 
-AC_MSG_CHECKING(for fdatasync)
+AC_MSG_CHECKING([for fdatasync])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],
  [[ fdatasync(0); ]])],
  [ AC_MSG_RESULT(yes); HAVE_FDATASYNC=1 ],
@@ -1167,14 +1166,14 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],
 )
 AC_DEFINE_UNQUOTED([HAVE_FDATASYNC], [$HAVE_FDATASYNC], [Define to 1 if fdatasync is available.])
 
-AC_MSG_CHECKING(for F_FULLFSYNC)
+AC_MSG_CHECKING([for F_FULLFSYNC])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <fcntl.h>]],
  [[ fcntl(0, F_FULLFSYNC, 0); ]])],
  [ AC_MSG_RESULT(yes); HAVE_FULLFSYNC=1 ],
  [ AC_MSG_RESULT(no); HAVE_FULLFSYNC=0 ]
 )
 
-AC_MSG_CHECKING(for O_CLOEXEC)
+AC_MSG_CHECKING([for O_CLOEXEC])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <fcntl.h>]],
  [[ open("", O_CLOEXEC); ]])],
  [ AC_MSG_RESULT(yes); HAVE_O_CLOEXEC=1 ],
@@ -1183,7 +1182,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <fcntl.h>]],
 AC_DEFINE_UNQUOTED([HAVE_O_CLOEXEC], [$HAVE_O_CLOEXEC], [Define to 1 if O_CLOEXEC flag is available.])
 
 dnl crc32c platform checks
-AC_MSG_CHECKING(for __builtin_prefetch)
+AC_MSG_CHECKING([for __builtin_prefetch])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
   char data = 0;
   const char* address = &data;
@@ -1193,7 +1192,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
  [ AC_MSG_RESULT(no); HAVE_BUILTIN_PREFETCH=0 ]
 )
 
-AC_MSG_CHECKING(for _mm_prefetch)
+AC_MSG_CHECKING([for _mm_prefetch])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <xmmintrin.h>]], [[
   char data = 0;
   const char* address = &data;
@@ -1203,7 +1202,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <xmmintrin.h>]], [[
  [ AC_MSG_RESULT(no); HAVE_MM_PREFETCH=0 ]
 )
 
-AC_MSG_CHECKING(for strong getauxval support in the system headers)
+AC_MSG_CHECKING([for strong getauxval support in the system headers])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <sys/auxv.h>
   ]], [[
@@ -1598,7 +1597,7 @@ AC_MSG_RESULT($build_bitcoin_libs)
 AC_LANG_POP
 
 if test "x$use_ccache" != "xno"; then
-  AC_MSG_CHECKING(if ccache should be used)
+  AC_MSG_CHECKING([if ccache should be used])
   if test x$CCACHE = x; then
     if test "x$use_ccache" = "xyes"; then
       AC_MSG_ERROR([ccache not found.]);
