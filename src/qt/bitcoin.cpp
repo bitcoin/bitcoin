@@ -514,10 +514,6 @@ int GuiMain(int argc, char* argv[])
 
     // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
-        //TODO: Remove before mainnet launch.
-        if(gArgs.GetChainName() == CBaseChainParams::MAIN) {
-            throw std::runtime_error("Mainnet is disabled. Use testnet.");
-        }
         node->selectParams(gArgs.GetChainName());
     } catch(std::exception &e) {
         node->initError(strprintf("%s\n", e.what()));
