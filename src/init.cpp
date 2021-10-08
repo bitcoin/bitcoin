@@ -1572,6 +1572,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         LogPrintf("* Flushing caches if available system memory drops below %s MiB\n", g_low_memory_threshold / 1024 / 1024);
     }
 
+    if (mempool_opts.full_rbf) {
+        nLocalServices = ServiceFlags(nLocalServices | NODE_REPLACE_BY_FEE);
+    }
+
     for (bool fLoaded = false; !fLoaded && !ShutdownRequested(node);) {
         bilingual_str mempool_error;
         node.mempool = std::make_unique<CTxMemPool>(mempool_opts, mempool_error);
