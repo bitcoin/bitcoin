@@ -1,201 +1,202 @@
-                                 Apache License
-                           Version 2.0, January 2004
+ @@ -0,0 +1,201 @@
+ Apache-licentie
+ Versie 2.0, januari 2004
                         http://www.apache.org/licenses/
 
-   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+ ALGEMENE VOORWAARDEN VOOR GEBRUIK, REPRODUCTIE EN DISTRIBUTIE
 
-   1. Definitions.
+ 1. Definities.
 
-      "License" shall mean the terms and conditions for use, reproduction,
-      and distribution as defined by Sections 1 through 9 of this document.
+ "Licentie" betekent de algemene voorwaarden voor gebruik, reproductie,
+ en distributie zoals gedefinieerd in secties 1 tot en met 9 van dit document.
 
-      "Licensor" shall mean the copyright owner or entity authorized by
-      the copyright owner that is granting the License.
+ "Licentiegever" betekent de eigenaar van het auteursrecht of de entiteit die is geautoriseerd door
+ de eigenaar van het auteursrecht die de licentie verleent.
 
-      "Legal Entity" shall mean the union of the acting entity and all
-      other entities that control, are controlled by, or are under common
-      control with that entity. For the purposes of this definition,
-      "control" means (i) the power, direct or indirect, to cause the
-      direction or management of such entity, whether by contract or
-      otherwise, or (ii) ownership of fifty percent (50%) or more of the
-      outstanding shares, or (iii) beneficial ownership of such entity.
+ "Juridische entiteit" betekent de vereniging van de handelende entiteit en alle
+ andere entiteiten die zeggenschap hebben over, onder zeggenschap staan van of onder gemeenschappelijkheid staan
+ zeggenschap met die entiteit. Voor de toepassing van deze definitie wordt verstaan onder:
+ "controle": i) het vermogen, direct of indirect, om de
+ leiding of beheer van een dergelijke entiteit, hetzij contractueel, hetzij
+ anderszins, of (ii) eigendom van vijftig procent (50%) of meer van de
+ uitstaande aandelen, of (iii) economisch eigendom van een dergelijke entiteit.
 
-      "You" (or "Your") shall mean an individual or Legal Entity
-      exercising permissions granted by this License.
+ "U" (of "Uw") betekent een natuurlijke persoon of rechtspersoon
+ het uitoefenen van toestemmingen verleend door deze Licentie.
 
-      "Source" form shall mean the preferred form for making modifications,
-      including but not limited to software source code, documentation
-      source, and configuration files.
+ "bronformulier": de voorkeursvorm voor het aanbrengen van wijzigingen;
+ inclusief maar niet beperkt tot software broncode, documentatie
+ bron- en configuratiebestanden.
 
-      "Object" form shall mean any form resulting from mechanical
-      transformation or translation of a Source form, including but
-      not limited to compiled object code, generated documentation,
-      and conversions to other media types.
+ Onder "object"-formulier wordt verstaan elke vorm die voortvloeit uit mechanische
+ transformatie of vertaling van een Bronvorm, met inbegrip van maar
+ niet beperkt tot gecompileerde objectcode, gegenereerde documentatie,
+ en conversies naar andere mediatypen.
 
-      "Work" shall mean the work of authorship, whether in Source or
-      Object form, made available under the License, as indicated by a
-      copyright notice that is included in or attached to the work
-      (an example is provided in the Appendix below).
+ Onder "werk" wordt verstaan het werk van auteurschap, hetzij in bron of in bron.
+ Objectformulier, beschikbaar gesteld onder de Licentie, zoals aangegeven door een
+ auteursrechtvermelding die is opgenomen in of gehecht aan het werk
+ (een voorbeeld is te zien in de bijlage hieronder).
 
-      "Derivative Works" shall mean any work, whether in Source or Object
-      form, that is based on (or derived from) the Work and for which the
-      editorial revisions, annotations, elaborations, or other modifications
-      represent, as a whole, an original work of authorship. For the purposes
-      of this License, Derivative Works shall not include works that remain
-      separable from, or merely link (or bind by name) to the interfaces of,
-      the Work and Derivative Works thereof.
+ "Afgeleide werken" betekent elk werk, hetzij in bron of object
+ vorm, die is gebaseerd op (of afgeleid van) het Werk en waarvoor de
+ redactionele revisies, annotaties, uitwerkingen of andere wijzigingen
+ vertegenwoordigen, als geheel, een origineel werk van auteurschap. Voor de doeleinden
+ van deze Licentie, afgeleide werken omvatten geen werken die blijven bestaan
+ scheidbaar van, of slechts linken (of binden door naam) naar de interfaces van,
+ het Werk en afgeleide werken daarvan.
 
-      "Contribution" shall mean any work of authorship, including
-      the original version of the Work and any modifications or additions
-      to that Work or Derivative Works thereof, that is intentionally
-      submitted to Licensor for inclusion in the Work by the copyright owner
-      or by an individual or Legal Entity authorized to submit on behalf of
-      the copyright owner. For the purposes of this definition, "submitted"
-      means any form of electronic, verbal, or written communication sent
-      to the Licensor or its representatives, including but not limited to
-      communication on electronic mailing lists, source code control systems,
-      and issue tracking systems that are managed by, or on behalf of, the
-      Licensor for the purpose of discussing and improving the Work, but
-      excluding communication that is conspicuously marked or otherwise
-      designated in writing by the copyright owner as "Not a Contribution."
+ Onder "bijdrage" wordt verstaan elk werk van auteurschap, met inbegrip van
+ de oorspronkelijke versie van het Werk en eventuele wijzigingen of toevoegingen
+ op dat Werk of Afgeleide Werken daarvan, dat is opzettelijk
+ ingediend bij Licentiegever voor opname in het Werk door de eigenaar van het auteursrecht
+ of door een persoon of rechtspersoon die gemachtigd is om namens
+ de eigenaar van het auteursrecht. Voor de toepassing van deze definitie wordt onder "ingediend" verstaan:
+ betekent elke vorm van elektronische, mondelinge of schriftelijke communicatie verzonden
+ aan de Licentiegever of zijn vertegenwoordigers, inclusief maar niet beperkt tot
+ communicatie op elektronische mailinglijsten, broncodecontrolesystemen,
+ en probleemvolgsystemen die worden beheerd door of namens de
+ Licentiegever met het oog op het bespreken en verbeteren van het Werk, maar
+ met uitzondering van communicatie die opvallend is gemarkeerd of anderszins
+ schriftelijk door de eigenaar van het auteursrecht aangeduid als 'Geen bijdrage'.
 
-      "Contributor" shall mean Licensor and any individual or Legal Entity
-      on behalf of whom a Contribution has been received by Licensor and
-      subsequently incorporated within the Work.
+ "Contribuant" betekent Licentiegever en elke natuurlijke of rechtspersoon
+ namens wie een Bijdrage is ontvangen door Licentiegever en
+ vervolgens opgenomen in het Werk.
 
-   2. Grant of Copyright License. Subject to the terms and conditions of
-      this License, each Contributor hereby grants to You a perpetual,
-      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-      copyright license to reproduce, prepare Derivative Works of,
-      publicly display, publicly perform, sublicense, and distribute the
-      Work and such Derivative Works in Source or Object form.
+ 2. Verlening van auteursrechtlicentie. Onderworpen aan de algemene voorwaarden van
+ deze Licentie, verleent elke Contribuant u hierbij een eeuwigdurende,
+ wereldwijd, niet-exclusief, gratis, royaltyvrij, onherroepelijk
+ copyright licentie om te reproduceren, afgeleide werken voor te bereiden van,
+ de
+ Werk en dergelijke afgeleide werken in bron- of objectvorm.
 
-   3. Grant of Patent License. Subject to the terms and conditions of
-      this License, each Contributor hereby grants to You a perpetual,
-      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-      (except as stated in this section) patent license to make, have made,
-      use, offer to sell, sell, import, and otherwise transfer the Work,
-      where such license applies only to those patent claims licensable
-      by such Contributor that are necessarily infringed by their
-      Contribution(s) alone or by combination of their Contribution(s)
-      with the Work to which such Contribution(s) was submitted. If You
-      institute patent litigation against any entity (including a
-      cross-claim or counterclaim in a lawsuit) alleging that the Work
-      or a Contribution incorporated within the Work constitutes direct
-      or contributory patent infringement, then any patent licenses
-      granted to You under this License for that Work shall terminate
-      as of the date such litigation is filed.
+ 3. Verlening van octrooilicentie. Onderworpen aan de algemene voorwaarden van
+ deze Licentie, verleent elke Contribuant u hierbij een eeuwigdurende,
+ wereldwijd, niet-exclusief, gratis, royaltyvrij, onherroepelijk
+ (behalve zoals vermeld in deze sectie) octrooilicentie te maken, te hebben gemaakt,
+ het Werk te gebruiken, aan te bieden om het te verkopen, te verkopen, te importeren en anderszins over te dragen,
+ wanneer een dergelijke licentie alleen van toepassing is op octrooiclaims die in licentie kunnen worden verleend
+ door een dergelijke Contribuant die noodzakelijkerwijs worden geschonden door hun
+ Bijdrage(s) alleen of in combinatie van hun Bijdrage(s)
+ met het Werk waarvoor een dergelijke Bijdrage(s) is(en) ingediend. Als u
+ octrooigeschillen in te stellen tegen een entiteit (met inbegrip van een
+ cross-claim of tegenvordering in een rechtszaak) waarin wordt beweerd dat het Werk
+ of een Bijdrage die in het Werk is opgenomen, vormt een directe
+ of medeplichtige octrooi-inbreuk, dan eventuele octrooilicenties
+ aan u verleend onder deze licentie voor dat werk zal eindigen
+ vanaf de datum waarop een dergelijk geschil wordt ingediend.
 
-   4. Redistribution. You may reproduce and distribute copies of the
-      Work or Derivative Works thereof in any medium, with or without
-      modifications, and in Source or Object form, provided that You
-      meet the following conditions:
+ 4. Herverdeling. U mag kopieën van de
+ Werken of afgeleide werken daarvan, in welk medium dan ook, met of zonder
+ wijzigingen, en in bron- of objectvorm, op voorwaarde dat u
+ voldoen aan de volgende voorwaarden:
 
-      (a) You must give any other recipients of the Work or
-          Derivative Works a copy of this License; and
+ (a) U moet andere ontvangers van het Werk of
+ Derivative Works een kopie van deze Licentie; en
 
-      (b) You must cause any modified files to carry prominent notices
-          stating that You changed the files; and
+ (b) U moet ervoor zorgen dat gewijzigde bestanden opvallende kennisgevingen bevatten
+ waarin staat dat u de bestanden hebt gewijzigd; en
 
-      (c) You must retain, in the Source form of any Derivative Works
-          that You distribute, all copyright, patent, trademark, and
-          attribution notices from the Source form of the Work,
-          excluding those notices that do not pertain to any part of
-          the Derivative Works; and
+ (c) U moet, in de bronvorm, afgeleide werken bewaren
+ dat u alle auteursrechten, patenten, handelsmerken en
+ toeschrijvingsberichten van de Bronvorm van het Werk,
+ met uitzondering van kennisgevingen die geen betrekking hebben op enig deel van
+ de afgeleide werken; en
 
-      (d) If the Work includes a "NOTICE" text file as part of its
-          distribution, then any Derivative Works that You distribute must
-          include a readable copy of the attribution notices contained
-          within such NOTICE file, excluding those notices that do not
-          pertain to any part of the Derivative Works, in at least one
-          of the following places: within a NOTICE text file distributed
-          as part of the Derivative Works; within the Source form or
-          documentation, if provided along with the Derivative Works; or,
-          within a display generated by the Derivative Works, if and
-          wherever such third-party notices normally appear. The contents
-          of the NOTICE file are for informational purposes only and
-          do not modify the License. You may add Your own attribution
-          notices within Derivative Works that You distribute, alongside
-          or as an addendum to the NOTICE text from the Work, provided
-          that such additional attribution notices cannot be construed
-          as modifying the License.
+ (d) Als het Werk een "KENNISGEVING" tekstbestand bevat als onderdeel van zijn
+ distributie, dan moeten alle afgeleide werken die u distribueert
+ voeg een leesbare kopie van de toeschrijvingskennisgevingen toe
+ in een dergelijk KENNISGEVINGSBESTAND, met uitzondering van kennisgevingen die dat niet doen
+ betrekking hebben op enig deel van de afgeleide werken, in ten minste één
+ aantal van de volgende plaatsen: in een KENNISGEVING tekstbestand dat wordt verspreid
+ als onderdeel van de Afgeleide Werken; in het formulier Bron of
+ documentatie, indien verstrekt samen met de afgeleide werken; of
+ binnen een door de afgeleide werken gegenereerde weergave, indien en
+ overal waar dergelijke kennisgevingen van derden gewoonlijk worden weergegeven. De inhoud
+ van het NOTICE-bestand uitsluitend voor informatieve doeleinden zijn en
+ wijzig de Licentie niet. U kunt uw eigen naamsvermelding toevoegen
+ kennisgevingen binnen Afgeleide Werken die U verspreidt, naast
+ of als addendum bij de KENNISGEVINGstekst van het Werk, verstrekt
+ dat dergelijke aanvullende toeschrijvingskennisgevingen niet kunnen worden geïnterpreteerd
+ als het wijzigen van de Licentie.
 
-      You may add Your own copyright statement to Your modifications and
-      may provide additional or different license terms and conditions
-      for use, reproduction, or distribution of Your modifications, or
-      for any such Derivative Works as a whole, provided Your use,
-      reproduction, and distribution of the Work otherwise complies with
-      the conditions stated in this License.
+ U kunt uw eigen copyrightverklaring toevoegen aan uw wijzigingen en
+ kan aanvullende of andere licentievoorwaarden en -bepalingen verstrekken
+ voor gebruik, reproductie of distributie van uw wijzigingen, of
+ voor dergelijke afgeleide werken als geheel, mits uw gebruik,
+ reproductie en distributie van het Werk voldoet anderszins aan
+ de voorwaarden vermeld in deze Licentie.
 
-   5. Submission of Contributions. Unless You explicitly state otherwise,
-      any Contribution intentionally submitted for inclusion in the Work
-      by You to the Licensor shall be under the terms and conditions of
-      this License, without any additional terms or conditions.
-      Notwithstanding the above, nothing herein shall supersede or modify
-      the terms of any separate license agreement you may have executed
-      with Licensor regarding such Contributions.
+ 5. Indiening van bijdragen. Tenzij u uitdrukkelijk anders aangeeft,
+ elke Bijdrage die opzettelijk is ingediend voor opname in het Werk
+ door u aan de Licentiegever zal onder de voorwaarden van
+ deze Licentie, zonder aanvullende voorwaarden of bepalingen.
+ Niettegenstaande het bovenstaande zal niets in dit alles de plaats in de plaats komen van of wijzigen
+ de voorwaarden van een afzonderlijke licentieovereenkomst die u mogelijk hebt uitgevoerd
+ met Licentiegever met betrekking tot dergelijke Bijdragen.
 
-   6. Trademarks. This License does not grant permission to use the trade
-      names, trademarks, service marks, or product names of the Licensor,
-      except as required for reasonable and customary use in describing the
-      origin of the Work and reproducing the content of the NOTICE file.
+ 6. Handelsmerken. Deze licentie geeft geen toestemming om de handel te gebruiken
+ namen, handelsmerken, dienstmerken of productnamen van de Licentiegever,
+ behalve zoals vereist voor redelijk en gebruikelijk gebruik bij het beschrijven van de
+ oorsprong van het Werk en reproductie van de inhoud van het NOTICE-bestand.
 
-   7. Disclaimer of Warranty. Unless required by applicable law or
-      agreed to in writing, Licensor provides the Work (and each
-      Contributor provides its Contributions) on an "AS IS" BASIS,
-      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-      implied, including, without limitation, any warranties or conditions
-      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-      PARTICULAR PURPOSE. You are solely responsible for determining the
-      appropriateness of using or redistributing the Work and assume any
-      risks associated with Your exercise of permissions under this License.
+ 7. Afwijzing van garantie. Tenzij vereist door de toepasselijke wetgeving of
+ Schriftelijk overeengekomen, levert Licentiegever het Werk (en elk
+ Contribuant levert zijn bijdragen) op een "AS IS" BASIS,
+ ZONDER GARANTIES OF VOORWAARDEN VAN WELKE AARD DAN OOK, hetzij uitdrukkelijk of
+ impliciet, inclusief, zonder beperking, garanties of voorwaarden
+ van TITEL, NIET-INBREUK, VERKOOPBAARHEID of GESCHIKTHEID VOOR A
+ BIJZONDER DOEL. U bent als enige verantwoordelijk voor het bepalen van de
+ geschiktheid van het gebruik of de herdistributie van het Werk en neem aan dat
+ risico's verbonden aan uw uitoefening van toestemmingen onder deze licentie.
 
-   8. Limitation of Liability. In no event and under no legal theory,
-      whether in tort (including negligence), contract, or otherwise,
-      unless required by applicable law (such as deliberate and grossly
-      negligent acts) or agreed to in writing, shall any Contributor be
-      liable to You for damages, including any direct, indirect, special,
-      incidental, or consequential damages of any character arising as a
-      result of this License or out of the use or inability to use the
-      Work (including but not limited to damages for loss of goodwill,
-      work stoppage, computer failure or malfunction, or any and all
-      other commercial damages or losses), even if such Contributor
-      has been advised of the possibility of such damages.
+ 8. Beperking van aansprakelijkheid. In geen geval en onder geen enkele juridische theorie,
+ hetzij uit onrechtmatige daad (met inbegrip van nalatigheid), contract of anderszins,
+ tenzij vereist door de toepasselijke wetgeving (zoals opzettelijk en grof
+ nalatige handelingen) of schriftelijk overeengekomen, zal elke Contribuant
+ aansprakelijk jegens u voor schade, inclusief directe, indirecte, speciale,
+ incidentele of gevolgschade van welke aard dan ook ontstaan als een
+ resultaat van deze Licentie of uit het gebruik of de onmogelijkheid om de
+ Werkzaamheden (inclusief maar niet beperkt tot schade door verlies van goodwill,
+ werkonderbreking, computerstoring of -storing, of alles en iedereen
+ andere commerciële schade of verliezen), zelfs als een dergelijke Contribuant
+ op de hoogte is gesteld van de mogelijkheid van dergelijke schade.
 
-   9. Accepting Warranty or Additional Liability. While redistributing
-      the Work or Derivative Works thereof, You may choose to offer,
-      and charge a fee for, acceptance of support, warranty, indemnity,
-      or other liability obligations and/or rights consistent with this
-      License. However, in accepting such obligations, You may act only
-      on Your own behalf and on Your sole responsibility, not on behalf
-      of any other Contributor, and only if You agree to indemnify,
-      defend, and hold each Contributor harmless for any liability
-      incurred by, or claims asserted against, such Contributor by reason
-      of your accepting any such warranty or additional liability.
+ 9. Het accepteren van garantie of aanvullende aansprakelijkheid. Tijdens de herverdeling
+ het Werk of Afgeleide Werken daarvan, Kunt U ervoor kiezen om aan te bieden,
+ en een vergoeding in rekening brengen voor, acceptatie van ondersteuning, garantie, schadeloosstelling,
+ of andere aansprakelijkheidsverplichtingen en/of -rechten die hiermee in overeenstemming zijn
+ Licentie. Bij het aanvaarden van dergelijke verplichtingen mag u echter alleen handelen
+ namens verantwoordelijkheid en op uw eigen verantwoordelijkheid, niet namens
+ van elke andere Bijdrager, en alleen als u ermee instemt om schadeloos te stellen,
+ elke Contribuant te verdedigen en te vrijwaren voor elke aansprakelijkheid
+ opgelopen door, of claims ingediend tegen, een dergelijke Contribuant door reden
+ van het accepteren van een dergelijke garantie of aanvullende aansprakelijkheid.
 
-   END OF TERMS AND CONDITIONS
+ EINDE VAN DE ALGEMENE VOORWAARDEN
 
-   APPENDIX: How to apply the Apache License to your work.
+ BIJLAGE: Hoe u de Apache-licentie op uw werk kunt toepassen.
 
-      To apply the Apache License to your work, attach the following
-      boilerplate notice, with the fields enclosed by brackets "[]"
-      replaced with your own identifying information. (Don't include
-      the brackets!)  The text should be enclosed in the appropriate
-      comment syntax for the file format. We also recommend that a
-      file or class name and description of purpose be included on the
-      same "printed page" as the copyright notice for easier
-      identification within third-party archives.
+ Als u de Apache-licentie op uw werk wilt toepassen, voegt u het volgende toe:
+ boilerplate notice, met de velden tussen haakjes "[]"
+ vervangen door uw eigen identificerende informatie. (Niet opnemen
+ de beugels!) De tekst moet worden ingesloten in de desbetreffende
+ commentaarsyntaxis voor de bestandsindeling. We raden ook aan dat een
+ bestands- of klassenaam en beschrijving van het doel worden opgenomen op de
+ dezelfde "afgedrukte pagina" als de auteursrechtvermelding voor eenvoudiger
+ identificatie in archieven van derden.
 
-   Copyright [yyyy] [name of copyright owner]
+ Copyright [2007-2021] [Bram Darras]
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+ Gelicentieerd onder de Apache-licentie, versie 2.0 (de "Licentie");
+ u mag dit bestand alleen gebruiken in overeenstemming met de Licentie.
+ U kunt een kopie van de Licentie verkrijgen op
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+ Tenzij vereist door de toepasselijke wetgeving of schriftelijk overeengekomen, software
+ gedistribueerd onder de Licentie wordt gedistribueerd op een "AS IS" BASIS,
+ ZONDER GARANTIES OF VOORWAARDEN VAN WELKE AARD DAN OOK, expliciet of impliciet.
+ Zie de licentie voor de specifieke taal die van toepassing is op machtigingen en
+ beperkingen onder de Licentie.
