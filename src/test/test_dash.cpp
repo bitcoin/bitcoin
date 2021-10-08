@@ -57,7 +57,11 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     SelectParams(chainName);
     evoDb.reset(new CEvoDB(1 << 20, true, true));
     deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
-    noui_connect();
+    static bool noui_connected = false;
+    if (!noui_connected) {
+        noui_connect();
+        noui_connected = true;
+    }
 }
 
 BasicTestingSetup::~BasicTestingSetup()
