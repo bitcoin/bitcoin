@@ -621,12 +621,18 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 // check all unconfirmed ancestors; otherwise an opt-in ancestor
                 // might be replaced, causing removal of this descendant.
                 bool fReplacementOptOut = true;
-                for (const CTxIn &_txin : ptxConflicting->vin)
-                {
-                    if (_txin.nSequence <= MAX_BIP125_RBF_SEQUENCE)
-                    {
+                if (fEnableReplacement) {
+                    if (fReplacementHonourOptOut) {
+                        for (const CTxIn &_txin : ptxConflicting->vin)
+                        {
+                            if (_txin.nSequence <= MAX_BIP125_RBF_SEQUENCE)
+                            {
+                                fReplacementOptOut = false;
+                                break;
+                            }
+                        }
+                    } else {
                         fReplacementOptOut = false;
-                        break;
                     }
                 }
                 if (fReplacementOptOut) {
