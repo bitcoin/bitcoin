@@ -4,7 +4,11 @@
 
 #include <llmq/params.h>
 
-// this one is for testing only
+/**
+ * llmq_test
+ * This quorum is only used for testing
+ *
+ */
 Consensus::LLMQParams llmq_test = {
     .type = Consensus::LLMQ_TEST,
     .name = "llmq_test",
@@ -24,7 +28,11 @@ Consensus::LLMQParams llmq_test = {
     .recoveryMembers = 3,
 };
 
-// this one is for testing only
+/**
+ * llmq_test (Dash Core 0.17) aka llmq_test_v17
+ * This quorum is only used for testing
+ *
+ */
 Consensus::LLMQParams llmq_test_v17 = {
     .type = Consensus::LLMQ_TEST_V17,
     .name = "llmq_test_v17",
@@ -44,7 +52,11 @@ Consensus::LLMQParams llmq_test_v17 = {
     .recoveryMembers = 3,
 };
 
-// this one is for devnets only
+/**
+ * llmq_devnet
+ * This quorum is only used for testing on devnets
+ *
+ */
 Consensus::LLMQParams llmq_devnet = {
     .type = Consensus::LLMQ_DEVNET,
     .name = "llmq_devnet",
@@ -64,6 +76,12 @@ Consensus::LLMQParams llmq_devnet = {
     .recoveryMembers = 6,
 };
 
+/**
+ * llmq50_60
+ * This quorum is deployed on mainnet and requires
+ * 40 - 50 participants
+ *
+ */
 Consensus::LLMQParams llmq50_60 = {
     .type = Consensus::LLMQ_50_60,
     .name = "llmq_50_60",
@@ -83,6 +101,12 @@ Consensus::LLMQParams llmq50_60 = {
     .recoveryMembers = 25,
 };
 
+/**
+ * llmq400_60
+ * This quorum is deployed on mainnet and requires
+ * 300 - 400 participants
+ *
+ */
 Consensus::LLMQParams llmq400_60 = {
     .type = Consensus::LLMQ_400_60,
     .name = "llmq_400_60",
@@ -102,7 +126,13 @@ Consensus::LLMQParams llmq400_60 = {
     .recoveryMembers = 100,
 };
 
-// Used for deployment and min-proto-version signalling, so it needs a higher threshold
+/**
+ * llmq400_85
+ * This quorum is deployed on mainnet and requires
+ * 300 - 400 participants _with_ a supermajority
+ *
+ * Used for deployment and min-proto-version signalling
+ */
 Consensus::LLMQParams llmq400_85 = {
     .type = Consensus::LLMQ_400_85,
     .name = "llmq_400_85",
@@ -122,7 +152,13 @@ Consensus::LLMQParams llmq400_85 = {
     .recoveryMembers = 100,
 };
 
-// Used for Platform
+/**
+ * llmq100_67
+ * This quorum is deployed on mainnet and requires
+ * 80 - 100 participants
+ *
+ * Used by Dash Platform
+ */
 Consensus::LLMQParams llmq100_67 = {
     .type = Consensus::LLMQ_100_67,
     .name = "llmq_100_67",
