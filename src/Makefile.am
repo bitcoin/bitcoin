@@ -204,6 +204,7 @@ BITCOIN_CORE_H = \
   llmq/signing.h \
   llmq/signing_shares.h \
   llmq/utils.h \
+  llmq/params.h \
   logging.h \
   logging/timer.h \
   masternode/node.h \
@@ -592,6 +593,7 @@ libdash_common_a_SOURCES = \
   key.cpp \
   key_io.cpp \
   keystore.cpp \
+  llmq/params.cpp \
   netaddress.cpp \
   netbase.cpp \
   net_permissions.cpp \
