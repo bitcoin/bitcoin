@@ -2860,7 +2860,7 @@ static UniValue upgradetohd(const JSONRPCRequest& request)
     SecureString secureMnemonic;
     secureMnemonic.reserve(256);
     if (!generate_mnemonic) {
-        if (IsInitialBlockDownload()) {
+        if (::ChainstateActive().IsInitialBlockDownload()) {
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Cannot set mnemonic while still in Initial Block Download");
         }
         secureMnemonic = request.params[0].get_str().c_str();
