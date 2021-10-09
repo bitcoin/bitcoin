@@ -491,7 +491,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
         ui->splitter->restoreState(settings.value("RPCConsoleWidgetPeersTabSplitterSizes_Knots21").toByteArray());
     }
 
-    m_peer_widget_header_state = settings.value("PeersTabPeerHeaderState").toByteArray();
+    m_peer_widget_header_state = settings.value("PeersTabPeerHeaderState_Knots21").toByteArray();
     m_banlist_widget_header_state = settings.value("PeersTabBanlistHeaderState").toByteArray();
 
     constexpr QChar nonbreaking_hyphen(8209);
@@ -579,7 +579,7 @@ RPCConsole::~RPCConsole()
         settings.setValue("RPCConsoleWidgetPeersTabSplitterSizes_Knots21", ui->splitter->saveState());
     }
 
-    settings.setValue("PeersTabPeerHeaderState", m_peer_widget_header_state);
+    settings.setValue("PeersTabPeerHeaderState_Knots21", m_peer_widget_header_state);
     settings.setValue("PeersTabBanlistHeaderState", m_banlist_widget_header_state);
 
     m_node.rpcUnsetTimerInterface(rpcTimerInterface);
