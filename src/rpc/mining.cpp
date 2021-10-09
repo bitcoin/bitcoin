@@ -1190,7 +1190,7 @@ static UniValue decodebindplotterdata(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "decodebindplotterdata \"address\" \"hexdata\"\n"
+            "decodebindplotterdata \"hexdata\"\n"
             "\nDecode bind plotter hex data.\n"
             "\nArguments:\n"
             "1. hexdata             (string, required) The bind hex data\n"

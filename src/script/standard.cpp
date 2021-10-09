@@ -417,15 +417,13 @@ bool IsValidPlotterID(const std::string& strPlotterId, uint64_t *id) {
 static const unsigned char bindPlotterSalt[] = {'Q', 'I', 'T', 'C', 'O', 'I', 'N'};
 
 CScript GetBindPlotterScriptForDestination(const CTxDestination& dest, const std::string& passphrase, int lastActiveHeight) {
-    CScript script;
-
     if (lastActiveHeight <= 0 || !IsValidPassphrase(passphrase))
-        return script;
+        return CScript();
 
     // Check destination type is P2SH
     const ScriptHash *scriptID = boost::get<ScriptHash>(&dest);
     if (scriptID == nullptr)
-        return script;
+        return CScript();
 
     unsigned char data[32], signature[64], publicKey[32];
     CSHA256().
@@ -434,11 +432,12 @@ CScript GetBindPlotterScriptForDestination(const CTxDestination& dest, const std
         Write(bindPlotterSalt, sizeof(bindPlotterSalt)).
         Finalize(data);
     if (!PocLegacy::Sign(passphrase, data, signature, publicKey))
-        return script;
+        return CScript();
     assert(PocLegacy::Verify(publicKey, data, signature));
     if (PocLegacy::ToPlotterId(publicKey) == 0)
-        return script;
+        return CScript();
 
+    CScript script;
     script << ToByteVector(TXOUT_TYPE_BINDPLOTTER);
     script << ToByteVector((uint32_t) lastActiveHeight);
     script << std::vector<unsigned char>(publicKey, publicKey+32);

@@ -159,7 +159,11 @@ static UniValue addSignPrivkey(const JSONRPCRequest& request)
         );
     }
 
-    CTxDestination dest = poc::AddMiningSignaturePrivkey(DecodeSecret(request.params[0].get_str()));
+    CKey key = DecodeSecret(request.params[0].get_str());
+    if (!key.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+
+    CTxDestination dest = poc::AddMiningSignaturePrivkey(key);
     if (!IsValidDestination(dest))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
     return EncodeDestination(dest);
