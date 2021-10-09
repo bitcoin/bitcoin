@@ -1640,20 +1640,6 @@ bool AppInitMain(InitInterfaces& interfaces)
                 break;
             }
 
-            try {
-                if (!is_coinsview_empty) {
-                    if (fCoinDBUpgraded) {
-                        LogPrintf("Upgrading UTXO database");
-
-                        // Doing upgrade
-                    }
-                }
-            } catch (const std::exception& e) {
-                LogPrintf("%s\n", e.what());
-                strLoadError = _("Error opening block database").translated;
-                break;
-            }
-
             if (!fReset) {
                 // Note that RewindBlockIndex MUST run even if we're about to -reindex-chainstate.
                 // It both disconnects blocks based on ::ChainActive(), and drops block data in

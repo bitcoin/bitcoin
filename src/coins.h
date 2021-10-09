@@ -43,30 +43,32 @@ public:
     uint32_t nHeight : 30;
 
     //! memory only. Ref from out
-    CAccountID refOutAccountID;
+    CAccountID outAccountID;
 
     //! memory only. Ref from out
     CTxOutPayloadRef payload;
 
     //! construct a Coin from a CTxOut and height/coinbase information.
     Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {
-        refOutAccountID = ExtractAccountID(out.scriptPubKey);
-        payload = ExtractTxoutPayload(out, nHeight);
+        OnUpdated();
     }
     Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {
-        refOutAccountID = ExtractAccountID(out.scriptPubKey);
-        payload = ExtractTxoutPayload(out, nHeight);
+        OnUpdated();
     }
     //! empty constructor
     Coin() : fCoinBase(false), nHeight(0) {}
 
     void Clear() {
         out.scriptPubKey.clear();
-        out.payload.clear();
     }
 
     bool IsCoinBase() const {
         return fCoinBase;
+    }
+    
+    void OnUpdated() {
+        outAccountID = ExtractAccountID(out.scriptPubKey);
+        payload = ExtractTxoutPayload(out, nHeight);
     }
 
     template<typename Stream>
@@ -85,8 +87,7 @@ public:
         fCoinBase = code & 1;
         ::Unserialize(s, CTxOutCompressor(out));
 
-        refOutAccountID = ExtractAccountID(out.scriptPubKey);
-        payload = ExtractTxoutPayload(out, nHeight);
+        OnUpdated();
     }
 
     bool IsSpent() const {
@@ -171,7 +172,7 @@ struct CBindPlotterCoinInfo
 
     CBindPlotterCoinInfo() : nHeight(-1), accountID(), plotterId(0) {}
     explicit CBindPlotterCoinInfo(const Coin& coin) : nHeight((int)coin.nHeight),
-        accountID(coin.refOutAccountID),
+        accountID(coin.outAccountID),
         plotterId(BindPlotterPayload::As(coin.payload)->GetId()) {}
 };
 
@@ -194,7 +195,7 @@ public:
         plotterId(pair.second.plotterId) {}
     CBindPlotterInfo(const COutPoint &o, const Coin &coin) : outpoint(o),
         nHeight((int)coin.nHeight),
-        accountID(coin.refOutAccountID),
+        accountID(coin.outAccountID),
         plotterId(BindPlotterPayload::As(coin.payload)->GetId()) {}
 };
 

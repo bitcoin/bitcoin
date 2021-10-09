@@ -17,9 +17,6 @@
    <bool>false</bool>
   </property>
   <widget class="QFrame" name="SendCoins">
-   <property name="toolTip">
-    <string>This is a normal payment.</string>
-   </property>
    <property name="frameShape">
     <enum>QFrame::NoFrame</enum>
    </property>

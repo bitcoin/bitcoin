@@ -27,6 +27,10 @@
 #include <boost/thread.hpp>
 
 /** UTXO version flag */
+static const char DB_COIN_VERSION = 'V';
+static const uint32_t DB_VERSION = 0x01;
+
+/** UTXO version flag */
 static const char DB_COIN = 'C';
 static const char DB_BLOCK_FILES = 'f';
 static const char DB_BLOCK_INDEX = 'b';
@@ -390,38 +394,38 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
             if (it->second.coin.IsSpent()) {
                 batch.Erase(entry);
 
-                // payload
-                if (!it->second.coin.refOutAccountID.IsNull()) {
-                    batch.Erase(CoinIndexEntry(&it->first, &it->second.coin.refOutAccountID));
+                // erase payload
+                if (!it->second.coin.outAccountID.IsNull()) {
+                    batch.Erase(CoinIndexEntry(&it->first, &it->second.coin.outAccountID));
                     if (it->second.coin.IsBindPlotter()) {
-                        batch.Erase(BindPlotterEntry(&it->first, &it->second.coin.refOutAccountID));
+                        batch.Erase(BindPlotterEntry(&it->first, &it->second.coin.outAccountID));
                     } else if (it->second.coin.IsPoint()) {
                         auto payload = PointPayload::As(it->second.coin.payload);
-                        batch.Erase(PointSendEntry(&it->first, &it->second.coin.refOutAccountID));
+                        batch.Erase(PointSendEntry(&it->first, &it->second.coin.outAccountID));
                         batch.Erase(PointReceiveEntry(&it->first, &payload->GetReceiverID()));
                     } else if (it->second.coin.IsStaking()) {
                         auto payload = StakingPayload::As(it->second.coin.payload);
-                        batch.Erase(StakingSendEntry(&it->first, &it->second.coin.refOutAccountID));
+                        batch.Erase(StakingSendEntry(&it->first, &it->second.coin.outAccountID));
                         batch.Erase(StakingReceiveEntry(&it->first, &payload->GetReceiverID()));
                     }
                 }
             } else {
                 batch.Write(entry, it->second.coin);
 
-                // payload
-                if (!it->second.coin.refOutAccountID.IsNull()) {
-                    batch.Write(CoinIndexEntry(&it->first, &it->second.coin.refOutAccountID), VARINT(it->second.coin.out.nValue, VarIntMode::NONNEGATIVE_SIGNED));
+                // write payload
+                if (!it->second.coin.outAccountID.IsNull()) {
+                    batch.Write(CoinIndexEntry(&it->first, &it->second.coin.outAccountID), VARINT(it->second.coin.out.nValue, VarIntMode::NONNEGATIVE_SIGNED));
                     if (it->second.coin.IsBindPlotter()) {
                         auto payload = BindPlotterPayload::As(it->second.coin.payload);
                         uint32_t nHeight = it->second.coin.nHeight;
-                        batch.Write(BindPlotterEntry(&it->first, &it->second.coin.refOutAccountID), BindPlotterValue(&payload->GetId(), &nHeight));
+                        batch.Write(BindPlotterEntry(&it->first, &it->second.coin.outAccountID), BindPlotterValue(&payload->GetId(), &nHeight));
                     } else if (it->second.coin.IsPoint()) {
                         auto payload = PointPayload::As(it->second.coin.payload);
-                        batch.Write(PointSendEntry(&it->first, &it->second.coin.refOutAccountID), VARINT(it->second.coin.out.nValue, VarIntMode::NONNEGATIVE_SIGNED));
+                        batch.Write(PointSendEntry(&it->first, &it->second.coin.outAccountID), VARINT(it->second.coin.out.nValue, VarIntMode::NONNEGATIVE_SIGNED));
                         batch.Write(PointReceiveEntry(&it->first, &payload->GetReceiverID()), VARINT(payload->GetAmount(), VarIntMode::NONNEGATIVE_SIGNED));
                     } else if (it->second.coin.IsStaking()) {
                         auto payload = StakingPayload::As(it->second.coin.payload);
-                        batch.Write(StakingSendEntry(&it->first, &it->second.coin.refOutAccountID), VARINT(it->second.coin.out.nValue, VarIntMode::NONNEGATIVE_SIGNED));
+                        batch.Write(StakingSendEntry(&it->first, &it->second.coin.outAccountID), VARINT(it->second.coin.out.nValue, VarIntMode::NONNEGATIVE_SIGNED));
                         batch.Write(StakingReceiveEntry(&it->first, &payload->GetReceiverID()), VARINT(payload->GetAmount(), VarIntMode::NONNEGATIVE_SIGNED));
                     }
                 }
@@ -560,12 +564,12 @@ CAmount CCoinsViewDB::GetAccountBalance(const CAccountID &accountID, CAmount *ba
             if (!(it->second.flags & CCoinsCacheEntry::DIRTY))
                 continue;
 
-            if (it->second.coin.refOutAccountID == accountID) {
+            if (it->second.coin.outAccountID == accountID) {
                 if (it->second.coin.IsSpent()) {
-                    if (db.Exists(CoinIndexEntry(&it->first, &it->second.coin.refOutAccountID)))
+                    if (db.Exists(CoinIndexEntry(&it->first, &it->second.coin.outAccountID)))
                         availableBalance -= it->second.coin.out.nValue;
                 } else {
-                    if (!db.Exists(CoinIndexEntry(&it->first, &it->second.coin.refOutAccountID)))
+                    if (!db.Exists(CoinIndexEntry(&it->first, &it->second.coin.outAccountID)))
                         availableBalance += it->second.coin.out.nValue;
                 }
             }
@@ -605,7 +609,7 @@ CAmount CCoinsViewDB::GetAccountBalance(const CAccountID &accountID, CAmount *ba
                 if (it->second.coin.IsSpent()) {
                     *balanceBindPlotter -= PROTOCOL_BINDPLOTTER_LOCKAMOUNT;
                 }
-            } else if (it->second.coin.refOutAccountID == accountID && !it->second.coin.IsSpent()) {
+            } else if (it->second.coin.outAccountID == accountID && !it->second.coin.IsSpent()) {
                 *balanceBindPlotter += PROTOCOL_BINDPLOTTER_LOCKAMOUNT;
             }
         }
@@ -646,7 +650,7 @@ CAmount CCoinsViewDB::GetAccountBalance(const CAccountID &accountID, CAmount *ba
                     if (it->second.coin.IsSpent()) {
                         balancePoint[0] -= itSelected->second;
                     }
-                } else if (it->second.coin.refOutAccountID == accountID && !it->second.coin.IsSpent()) {
+                } else if (it->second.coin.outAccountID == accountID && !it->second.coin.IsSpent()) {
                     balancePoint[0] += it->second.coin.out.nValue;
                 }
             }
@@ -728,7 +732,7 @@ CAmount CCoinsViewDB::GetAccountBalance(const CAccountID &accountID, CAmount *ba
                     if (it->second.coin.IsSpent()) {
                         balanceStaking[0] -= itSelected->second;
                     }
-                } else if (it->second.coin.refOutAccountID == accountID && !it->second.coin.IsSpent()) {
+                } else if (it->second.coin.outAccountID == accountID && !it->second.coin.IsSpent()) {
                     balanceStaking[0] += it->second.coin.out.nValue;
                 }
             }
@@ -990,5 +994,107 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
 /** Upgrade the database from older formats */
 bool CCoinsViewDB::Upgrade(bool &fUpgraded) {
     fUpgraded = false;
+    // Check coin database version
+    uint32_t coinDbVersion = 0;
+    if (db.Read(DB_COIN_VERSION, REF(VARINT(coinDbVersion))) && coinDbVersion == DB_VERSION)
+        return true;
+    db.Erase(DB_COIN_VERSION);
+    fUpgraded = true;
+
+    // Reindex UTXO for address
+    uiInterface.ShowProgress(_("Upgrading UTXO database").translated, 0, true);
+    LogPrintf("Upgrading UTXO database to %08x: [0%%]...", DB_VERSION);
+
+    size_t batch_size = (size_t) gArgs.GetArg("-dbbatchsize", nDefaultDbBatchSize);
+    int remove = 0, add = 0;
+    std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
+
+    // Clear old data
+    pcursor->SeekToFirst();
+    if (pcursor->Valid()) {
+        CDBBatch batch(db);
+        for (; pcursor->Valid(); pcursor->Next()) {
+            const leveldb::Slice key = pcursor->GetKey();
+            if (key.size() > 32 && (key[0] == DB_COIN_INDEX || key[0] == DB_COIN_BINDPLOTTER
+                || key[0] == DB_COIN_POINT_SEND || key[0] == DB_COIN_POINT_RECEIVE
+                || key[0] == DB_COIN_STAKING_SEND || key[0] == DB_COIN_STAKING_RECEIVE)) {
+                batch.EraseSlice(key);
+                remove++;
+
+                if (batch.SizeEstimate() > batch_size) {
+                    db.WriteBatch(batch);
+                    batch.Clear();
+                }
+            }
+        }
+        db.WriteBatch(batch);
+    }
+
+    // Update bind plotter index
+    pcursor->Seek(DB_COIN);
+    if (pcursor->Valid()) {
+        int utxo_bucket = 145000 / 100;
+        int indexProgress = -1;
+        CDBBatch batch(db);
+        COutPoint outpoint;
+        CoinEntry entry(&outpoint);
+        for (; pcursor->Valid(); pcursor->Next()) {
+            if (pcursor->GetKey(entry) && entry.key == DB_COIN) {
+                Coin coin;
+                if (!pcursor->GetValue(coin))
+                    return error("%s: cannot parse coin record", __func__);
+
+                if (!coin.outAccountID.IsNull()) {
+                    batch.Write(CoinIndexEntry(&outpoint, &coin.outAccountID), VARINT(coin.out.nValue, VarIntMode::NONNEGATIVE_SIGNED));
+                    add++;
+
+                    // payload
+                    if (coin.IsBindPlotter()) {
+                        auto payload = BindPlotterPayload::As(coin.payload);
+                        uint32_t nHeight = coin.nHeight;
+                        batch.Write(BindPlotterEntry(&outpoint, &coin.outAccountID), BindPlotterValue(&payload->GetId(), &nHeight));
+                        add++;
+                    } else if (coin.IsPoint()) {
+                        auto payload = PointPayload::As(coin.payload);
+                        batch.Write(PointSendEntry(&outpoint, &coin.outAccountID), VARINT(coin.out.nValue, VarIntMode::NONNEGATIVE_SIGNED));
+                        batch.Write(PointReceiveEntry(&outpoint, &payload->GetReceiverID()), VARINT(payload->GetAmount(), VarIntMode::NONNEGATIVE_SIGNED));
+                        add+=2;
+                    } else if (coin.IsStaking()) {
+                        auto payload = StakingPayload::As(coin.payload);
+                        batch.Write(StakingSendEntry(&outpoint, &coin.outAccountID), VARINT(coin.out.nValue, VarIntMode::NONNEGATIVE_SIGNED));
+                        batch.Write(StakingReceiveEntry(&outpoint, &payload->GetReceiverID()), VARINT(payload->GetAmount(), VarIntMode::NONNEGATIVE_SIGNED));
+                        add+=2;
+                    }
+
+                    if (batch.SizeEstimate() > batch_size) {
+                        db.WriteBatch(batch);
+                        batch.Clear();
+                    }
+
+                    if (add % (utxo_bucket/10) == 0) {
+                        int newProgress = std::min(90, add / utxo_bucket);
+                        if (newProgress/10 != indexProgress/10) {
+                            indexProgress = newProgress;
+                            uiInterface.ShowProgress(_("Upgrading UTXO database").translated, indexProgress, true);
+                            LogPrintf("[%d%%]...", indexProgress);
+                        }
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+        db.WriteBatch(batch);
+    }
+
+    // Update coin version
+    if (!db.Write(DB_COIN_VERSION, VARINT(DB_VERSION)))
+        return error("%s: cannot write UTXO version", __func__);
+
+    uiInterface.ShowProgress("", 100, false);
+    LogPrintf("[%s]. remove utxo %d, add utxo %d\n", ShutdownRequested() ? "CANCELLED" : "DONE", remove, add);
+
+    return !ShutdownRequested();
+
     return true;
 }

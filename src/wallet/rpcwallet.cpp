@@ -4683,7 +4683,7 @@ static UniValue listbindplotters(const JSONRPCRequest& request)
     return ret;
 }
 
-static UniValue sendpointoaddress(const JSONRPCRequest& request)
+static UniValue sendpointtoaddress(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -4694,13 +4694,13 @@ static UniValue sendpointoaddress(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 9)
         throw std::runtime_error(
-            RPCHelpMan{"sendpointoaddress",
+            RPCHelpMan{"sendpointtoaddress",
                 "\nSend an amount for point to a given address from wallet." +
                     HelpRequiringPassphrase(pwallet) + "\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The Qitcoin address to send to."},
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
-                    {"lock_blocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "The lock blocks."},
+                    {"lock_blocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "The lock blocks. Only support 172800,259200."},
                     {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment used to store what the transaction is for.\n"
             "                             This is not part of the transaction, just kept in your wallet."},
                     {"comment_to", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment to store the name of the person or organization\n"
@@ -4719,10 +4719,10 @@ static UniValue sendpointoaddress(const JSONRPCRequest& request)
             "\"txid\"                  (string) The transaction id.\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("sendpointoaddress", "\"" + Params().GetConsensus().FundAddress + "\" 0.1")
-            + HelpExampleCli("sendpointoaddress", "\"" + Params().GetConsensus().FundAddress + "\" 0.1 \"donation\" \"seans outpost\"")
-            + HelpExampleCli("sendpointoaddress", "\"" + Params().GetConsensus().FundAddress + "\" 0.1 \"\" \"\" true")
-            + HelpExampleRpc("sendpointoaddress", "\"" + Params().GetConsensus().FundAddress + "\", 0.1, \"donation\", \"seans outpost\"")
+                    HelpExampleCli("sendpointtoaddress", "\"" + Params().GetConsensus().FundAddress + "\" 0.1")
+            + HelpExampleCli("sendpointtoaddress", "\"" + Params().GetConsensus().FundAddress + "\" 0.1 \"donation\" \"seans outpost\"")
+            + HelpExampleCli("sendpointtoaddress", "\"" + Params().GetConsensus().FundAddress + "\" 0.1 \"\" \"\" true")
+            + HelpExampleRpc("sendpointtoaddress", "\"" + Params().GetConsensus().FundAddress + "\", 0.1, \"donation\", \"seans outpost\"")
                 },
             }.ToString());
 
@@ -4744,7 +4744,7 @@ static UniValue sendpointoaddress(const JSONRPCRequest& request)
 
     // Lock blocks
     int nLockBlocks = request.params[2].get_int();
-    if (nLockBlocks <= 0)
+    if (nLockBlocks <= 0 || GetPointAmount(nAmount, nLockBlocks) == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid lock blocks");
 
     // Wallet comments
@@ -5038,7 +5038,7 @@ static UniValue listpoints(const JSONRPCRequest& request)
     return ret;
 }
 
-static UniValue sendstakingoaddress(const JSONRPCRequest& request)
+static UniValue sendstakingtoaddress(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -5049,13 +5049,13 @@ static UniValue sendstakingoaddress(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 9)
         throw std::runtime_error(
-            RPCHelpMan{"sendstakingoaddress",
+            RPCHelpMan{"sendstakingtoaddress",
                 "\nSend an amount for staking to a given address from wallet." +
                     HelpRequiringPassphrase(pwallet) + "\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The Qitcoin address to send to."},
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
-                    {"lock_blocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "The lock blocks."},
+                    {"lock_blocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "The lock blocks. Only support 172800,259200."},
                     {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment used to store what the transaction is for.\n"
             "                             This is not part of the transaction, just kept in your wallet."},
                     {"comment_to", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment to store the name of the person or organization\n"
@@ -5074,10 +5074,10 @@ static UniValue sendstakingoaddress(const JSONRPCRequest& request)
             "\"txid\"                  (string) The transaction id.\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("sendstakingoaddress", "\"" + Params().GetConsensus().FundAddress + "\" 0.1")
-            + HelpExampleCli("sendstakingoaddress", "\"" + Params().GetConsensus().FundAddress + "\" 0.1 \"donation\" \"seans outpost\"")
-            + HelpExampleCli("sendstakingoaddress", "\"" + Params().GetConsensus().FundAddress + "\" 0.1 \"\" \"\" true")
-            + HelpExampleRpc("sendstakingoaddress", "\"" + Params().GetConsensus().FundAddress + "\", 0.1, \"donation\", \"seans outpost\"")
+                    HelpExampleCli("sendstakingtoaddress", "\"" + Params().GetConsensus().FundAddress + "\" 0.1")
+            + HelpExampleCli("sendstakingtoaddress", "\"" + Params().GetConsensus().FundAddress + "\" 0.1 \"donation\" \"seans outpost\"")
+            + HelpExampleCli("sendstakingtoaddress", "\"" + Params().GetConsensus().FundAddress + "\" 0.1 \"\" \"\" true")
+            + HelpExampleRpc("sendstakingtoaddress", "\"" + Params().GetConsensus().FundAddress + "\", 0.1, \"donation\", \"seans outpost\"")
                 },
             }.ToString());
 
@@ -5099,7 +5099,7 @@ static UniValue sendstakingoaddress(const JSONRPCRequest& request)
 
     // Lock blocks
     int nLockBlocks = request.params[2].get_int();
-    if (nLockBlocks <= 0)
+    if (nLockBlocks <= 0 || GetStakingAmount(nAmount, nLockBlocks) == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid lock blocks");
 
     // Wallet comments
@@ -5470,10 +5470,10 @@ static const CRPCCommand commands[] =
     { "wallet",             "bindplotter",                      &bindplotter,                   {"address","passphrase_or_hex","allow_high_fee","comment","comment_to","replaceable","conf_target","estimate_mode"} },
     { "wallet",             "unbindplotter",                    &unbindplotter,                 {"txid","comment","comment_to","replaceable","conf_target","estimate_mode"} },
     { "wallet",             "listbindplotters",                 &listbindplotters,              {"count","skip","include_watchonly"} },
-    { "wallet",             "sendpointoaddress",                &sendpointoaddress,             {"address","amount","lock_blocks","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode"} },
+    { "wallet",             "sendpointtoaddress",               &sendpointtoaddress,            {"address","amount","lock_blocks","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode"} },
     { "wallet",             "withdrawpoint",                    &withdrawpoint,                 {"txid","comment","comment_to","replaceable","conf_target","estimate_mode"} },
     { "wallet",             "listpoints",                       &listpoints,                    {"count","skip","include_watchonly"} },
-    { "wallet",             "sendstakingoaddress",              &sendstakingoaddress,           {"address","amount","lock_blocks","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode"} },
+    { "wallet",             "sendstakingtoaddress",             &sendstakingtoaddress,          {"address","amount","lock_blocks","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode"} },
     { "wallet",             "withdrawstaking",                  &withdrawstaking,               {"txid","comment","comment_to","replaceable","conf_target","estimate_mode"} },
     { "wallet",             "liststakings",                     &liststakings,                  {"count","skip","include_watchonly"} },
 };

@@ -58,7 +58,7 @@ public:
         }
         ::Unserialize(s, CTxOutCompressor(REF(txout->out)));
 
-        txout->refOutAccountID = ExtractAccountID(txout->out.scriptPubKey);
+        txout->outAccountID = ExtractAccountID(txout->out.scriptPubKey);
         txout->payload = ExtractTxoutPayload(txout->out, txout->nHeight);
     }
 
