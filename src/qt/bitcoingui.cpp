@@ -582,9 +582,8 @@ void BitcoinGUI::createMenuBar()
         window_menu->addAction(usedReceivingAddressesAction);
     }
 
-    window_menu->addAction(m_show_netwatch_action);
-
     window_menu->addSeparator();
+    window_menu->addAction(m_show_netwatch_action);
     window_menu->addAction(showMempoolStatsAction);
 
     window_menu->addSeparator();
