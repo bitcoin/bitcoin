@@ -9,12 +9,14 @@
 #include <net.h>
 
 #include <QAbstractTableModel>
+#include <QIcon>
 #include <QList>
 #include <QModelIndex>
 #include <QStringList>
 #include <QVariant>
 
 class PeerTablePriv;
+class PlatformStyle;
 
 namespace interfaces {
 class Node;
@@ -40,13 +42,15 @@ class PeerTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit PeerTableModel(interfaces::Node& node, QObject* parent);
+    explicit PeerTableModel(interfaces::Node& node, const PlatformStyle&, QObject* parent);
     ~PeerTableModel();
     void startAutoRefresh();
     void stopAutoRefresh();
 
+    // See also RPCConsole::ColumnWidths in rpcconsole.h
     enum ColumnIndex {
         NetNodeId = 0,
+        Direction,
         Address,
         ConnectionType,
         Network,
@@ -72,15 +76,20 @@ public:
 
 public Q_SLOTS:
     void refresh();
+    void updatePalette();
 
 private:
     //! Internal peer data structure.
     QList<CNodeCombinedStats> m_peers_data{};
     interfaces::Node& m_node;
+    const PlatformStyle& m_platform_style;
+    void DrawIcons();
+    QIcon m_icon_conn_in, m_icon_conn_out;
     const QStringList columns{
         /*: Title of Peers Table column which contains a
             unique number used to identify a connection. */
         tr("Peer"),
+        "",  // Direction column has no title
         /*: Title of Peers Table column which contains the
             IP/Onion/I2P address of the connected peer. */
         tr("Address"),

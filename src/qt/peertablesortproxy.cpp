@@ -24,6 +24,8 @@ bool PeerTableSortProxy::lessThan(const QModelIndex& left_index, const QModelInd
     switch (static_cast<PeerTableModel::ColumnIndex>(left_index.column())) {
     case PeerTableModel::NetNodeId:
         return left_stats.nodeid < right_stats.nodeid;
+    case PeerTableModel::Direction:
+        return left_stats.fInbound > right_stats.fInbound;  // default sort Inbound, then Outbound
     case PeerTableModel::Address:
         return left_stats.addrName.compare(right_stats.addrName) < 0;
     case PeerTableModel::ConnectionType:
