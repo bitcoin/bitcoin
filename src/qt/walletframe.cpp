@@ -221,10 +221,9 @@ void WalletFrame::gotoLoadPSBT(bool from_clipboard)
         return;
     }
 
-    PSBTOperationsDialog* dlg = new PSBTOperationsDialog(this, currentWalletModel(), clientModel);
+    auto dlg = new PSBTOperationsDialog(this, currentWalletModel(), clientModel);
     dlg->openWithPSBT(psbtx);
-    dlg->setAttribute(Qt::WA_DeleteOnClose);
-    dlg->exec();
+    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
 }
 
 void WalletFrame::encryptWallet()

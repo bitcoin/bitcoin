@@ -33,11 +33,11 @@ from .script import (
     CScriptOp,
     OP_1,
     OP_CHECKMULTISIG,
-    OP_CHECKSIG,
     OP_RETURN,
     OP_TRUE,
 )
 from .script_util import (
+    key_to_p2pk_script,
     key_to_p2wpkh_script,
     script_to_p2wsh_script,
 )
@@ -52,11 +52,6 @@ TIME_GENESIS_BLOCK = 1296688602
 
 # Coinbase transaction outputs can only be spent after this number of new blocks (network rule)
 COINBASE_MATURITY = 100
-
-# Soft-fork activation heights
-DERSIG_HEIGHT = 102  # BIP 66
-CLTV_HEIGHT = 111  # BIP 65
-CSV_ACTIVATION_HEIGHT = 432
 
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
@@ -139,7 +134,7 @@ def create_coinbase(height, pubkey=None, extra_output_script=None, fees=0, nValu
         coinbaseoutput.nValue >>= halvings
         coinbaseoutput.nValue += fees
     if pubkey is not None:
-        coinbaseoutput.scriptPubKey = CScript([pubkey, OP_CHECKSIG])
+        coinbaseoutput.scriptPubKey = key_to_p2pk_script(pubkey)
     else:
         coinbaseoutput.scriptPubKey = CScript([OP_TRUE])
     coinbase.vout = [coinbaseoutput]

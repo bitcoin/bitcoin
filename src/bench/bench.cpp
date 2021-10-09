@@ -4,11 +4,18 @@
 
 #include <bench/bench.h>
 
-#include <chainparams.h>
 #include <test/util/setup_common.h>
-#include <validation.h>
 
+#include <chrono>
+#include <fstream>
+#include <functional>
+#include <iostream>
+#include <map>
 #include <regex>
+#include <string>
+#include <vector>
+
+using namespace std::chrono_literals;
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
@@ -61,6 +68,12 @@ void benchmark::BenchRunner::RunAll(const Args& args)
 
         Bench bench;
         bench.name(p.first);
+        if (args.min_time > 0ms) {
+            // convert to nanos before dividing to reduce rounding errors
+            std::chrono::nanoseconds min_time_ns = args.min_time;
+            bench.minEpochTime(min_time_ns / bench.epochs());
+        }
+
         if (args.asymptote.empty()) {
             p.second(bench);
         } else {

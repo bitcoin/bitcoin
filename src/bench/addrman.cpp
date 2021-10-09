@@ -53,14 +53,14 @@ static void CreateAddresses()
     }
 }
 
-static void AddAddressesToAddrMan(CAddrMan& addrman)
+static void AddAddressesToAddrMan(AddrMan& addrman)
 {
     for (size_t source_i = 0; source_i < NUM_SOURCES; ++source_i) {
         addrman.Add(g_addresses[source_i], g_sources[source_i]);
     }
 }
 
-static void FillAddrMan(CAddrMan& addrman)
+static void FillAddrMan(AddrMan& addrman)
 {
     CreateAddresses();
 
@@ -74,26 +74,26 @@ static void AddrManAdd(benchmark::Bench& bench)
     CreateAddresses();
 
     bench.run([&] {
-        CAddrMan addrman{/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0};
+        AddrMan addrman{/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0};
         AddAddressesToAddrMan(addrman);
     });
 }
 
 static void AddrManSelect(benchmark::Bench& bench)
 {
-    CAddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    AddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
 
     FillAddrMan(addrman);
 
     bench.run([&] {
         const auto& address = addrman.Select();
-        assert(address.GetPort() > 0);
+        assert(address.first.GetPort() > 0);
     });
 }
 
 static void AddrManGetAddr(benchmark::Bench& bench)
 {
-    CAddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    AddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
 
     FillAddrMan(addrman);
 
@@ -103,41 +103,33 @@ static void AddrManGetAddr(benchmark::Bench& bench)
     });
 }
 
-static void AddrManGood(benchmark::Bench& bench)
+static void AddrManAddThenGood(benchmark::Bench& bench)
 {
-    /* Create many CAddrMan objects - one to be modified at each loop iteration.
-     * This is necessary because the CAddrMan::Good() method modifies the
-     * object, affecting the timing of subsequent calls to the same method and
-     * we want to do the same amount of work in every loop iteration. */
-
-    bench.epochs(5).epochIterations(1);
-    const uint64_t addrman_count{bench.epochs() * bench.epochIterations()};
-    Assert(addrman_count == 5U);
-
-    std::vector<std::unique_ptr<CAddrMan>> addrmans(addrman_count);
-    for (size_t i{0}; i < addrman_count; ++i) {
-        addrmans[i] = std::make_unique<CAddrMan>(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
-        FillAddrMan(*addrmans[i]);
-    }
-
-    auto markSomeAsGood = [](CAddrMan& addrman) {
+    auto markSomeAsGood = [](AddrMan& addrman) {
         for (size_t source_i = 0; source_i < NUM_SOURCES; ++source_i) {
             for (size_t addr_i = 0; addr_i < NUM_ADDRESSES_PER_SOURCE; ++addr_i) {
-                if (addr_i % 32 == 0) {
-                    addrman.Good(g_addresses[source_i][addr_i]);
-                }
+                addrman.Good(g_addresses[source_i][addr_i]);
             }
         }
     };
 
-    uint64_t i = 0;
+    CreateAddresses();
+
     bench.run([&] {
-        markSomeAsGood(*addrmans.at(i));
-        ++i;
+        // To make the benchmark independent of the number of evaluations, we always prepare a new addrman.
+        // This is necessary because AddrMan::Good() method modifies the object, affecting the timing of subsequent calls
+        // to the same method and we want to do the same amount of work in every loop iteration.
+        //
+        // This has some overhead (exactly the result of AddrManAdd benchmark), but that overhead is constant so improvements in
+        // AddrMan::Good() will still be noticeable.
+        AddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+        AddAddressesToAddrMan(addrman);
+
+        markSomeAsGood(addrman);
     });
 }
 
 BENCHMARK(AddrManAdd);
 BENCHMARK(AddrManSelect);
 BENCHMARK(AddrManGetAddr);
-BENCHMARK(AddrManGood);
+BENCHMARK(AddrManAddThenGood);

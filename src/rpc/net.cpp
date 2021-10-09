@@ -116,10 +116,10 @@ static RPCHelpMan getpeerinfo()
                             {
                             {RPCResult::Type::NUM, "id", "Peer index"},
                             {RPCResult::Type::STR, "addr", "(host:port) The IP address and port of the peer"},
-                            {RPCResult::Type::STR, "addrbind", "(ip:port) Bind address of the connection to the peer"},
-                            {RPCResult::Type::STR, "addrlocal", "(ip:port) Local address as reported by the peer"},
+                            {RPCResult::Type::STR, "addrbind", /* optional */ true, "(ip:port) Bind address of the connection to the peer"},
+                            {RPCResult::Type::STR, "addrlocal", /* optional */ true, "(ip:port) Local address as reported by the peer"},
                             {RPCResult::Type::STR, "network", "Network (" + Join(GetNetworkNames(/* append_unroutable */ true), ", ") + ")"},
-                            {RPCResult::Type::NUM, "mapped_as", "The AS in the BGP route to the peer used for diversifying\n"
+                            {RPCResult::Type::NUM, "mapped_as", /* optional */ true, "The AS in the BGP route to the peer used for diversifying\n"
                                                                 "peer selection (only available if the asmap config flag is set)"},
                             {RPCResult::Type::STR_HEX, "services", "The services offered"},
                             {RPCResult::Type::ARR, "servicesnames", "the services offered, in human-readable form",
@@ -135,9 +135,9 @@ static RPCHelpMan getpeerinfo()
                             {RPCResult::Type::NUM, "bytesrecv", "The total bytes received"},
                             {RPCResult::Type::NUM_TIME, "conntime", "The " + UNIX_EPOCH_TIME + " of the connection"},
                             {RPCResult::Type::NUM, "timeoffset", "The time offset in seconds"},
-                            {RPCResult::Type::NUM, "pingtime", "ping time (if available)"},
-                            {RPCResult::Type::NUM, "minping", "minimum observed ping time (if any at all)"},
-                            {RPCResult::Type::NUM, "pingwait", "ping wait (if non-zero)"},
+                            {RPCResult::Type::NUM, "pingtime", /* optional */ true, "ping time (if available)"},
+                            {RPCResult::Type::NUM, "minping", /* optional */ true, "minimum observed ping time (if any at all)"},
+                            {RPCResult::Type::NUM, "pingwait", /* optional */ true, "ping wait (if non-zero)"},
                             {RPCResult::Type::NUM, "version", "The peer version, such as 70001"},
                             {RPCResult::Type::STR, "subver", "The string version"},
                             {RPCResult::Type::BOOL, "inbound", "Inbound (true) or Outbound (false)"},
@@ -921,6 +921,7 @@ static RPCHelpMan addpeeraddress()
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address of the peer"},
             {"port", RPCArg::Type::NUM, RPCArg::Optional::NO, "The port of the peer"},
+            {"tried", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, attempt to add the peer to the tried addresses table"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -929,8 +930,8 @@ static RPCHelpMan addpeeraddress()
             },
         },
         RPCExamples{
-            HelpExampleCli("addpeeraddress", "\"1.2.3.4\" 8333")
-    + HelpExampleRpc("addpeeraddress", "\"1.2.3.4\", 8333")
+            HelpExampleCli("addpeeraddress", "\"1.2.3.4\" 8333 true")
+    + HelpExampleRpc("addpeeraddress", "\"1.2.3.4\", 8333, true")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -941,6 +942,7 @@ static RPCHelpMan addpeeraddress()
 
     const std::string& addr_string{request.params[0].get_str()};
     const uint16_t port{static_cast<uint16_t>(request.params[1].get_int())};
+    const bool tried{request.params[2].isTrue()};
 
     UniValue obj(UniValue::VOBJ);
     CNetAddr net_addr;
@@ -951,7 +953,13 @@ static RPCHelpMan addpeeraddress()
         address.nTime = GetAdjustedTime();
         // The source address is set equal to the address. This is equivalent to the peer
         // announcing itself.
-        if (node.addrman->Add({address}, address)) success = true;
+        if (node.addrman->Add({address}, address)) {
+            success = true;
+            if (tried) {
+                // Attempt to move the address to the tried addresses table.
+                node.addrman->Good(address);
+            }
+        }
     }
 
     obj.pushKV("success", success);

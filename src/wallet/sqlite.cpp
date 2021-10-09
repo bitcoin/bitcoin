@@ -212,6 +212,10 @@ void SQLiteDatabase::Open()
         if (ret != SQLITE_OK) {
             throw std::runtime_error(strprintf("SQLiteDatabase: Failed to open database: %s\n", sqlite3_errstr(ret)));
         }
+        ret = sqlite3_extended_result_codes(m_db, 1);
+        if (ret != SQLITE_OK) {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to enable extended result codes: %s\n", sqlite3_errstr(ret)));
+        }
     }
 
     if (sqlite3_db_readonly(m_db, "main") != 0) {

@@ -300,9 +300,9 @@ public:
         }
 
         if (expect.default_int) {
-            BOOST_CHECK_EQUAL(test.GetArg("-value", 99999), 99999);
+            BOOST_CHECK_EQUAL(test.GetIntArg("-value", 99999), 99999);
         } else if (expect.int_value) {
-            BOOST_CHECK_EQUAL(test.GetArg("-value", 99999), *expect.int_value);
+            BOOST_CHECK_EQUAL(test.GetIntArg("-value", 99999), *expect.int_value);
         } else {
             BOOST_CHECK(!success);
         }
@@ -432,8 +432,8 @@ static void TestParse(const std::string& str, bool expected_bool, int64_t expect
     BOOST_CHECK(test.ParseParameters(2, (char**)argv, error));
     BOOST_CHECK_EQUAL(test.GetBoolArg("-value", false), expected_bool);
     BOOST_CHECK_EQUAL(test.GetBoolArg("-value", true), expected_bool);
-    BOOST_CHECK_EQUAL(test.GetArg("-value", 99998), expected_int);
-    BOOST_CHECK_EQUAL(test.GetArg("-value", 99999), expected_int);
+    BOOST_CHECK_EQUAL(test.GetIntArg("-value", 99998), expected_int);
+    BOOST_CHECK_EQUAL(test.GetIntArg("-value", 99999), expected_int);
 }
 
 // Test bool and int parsing.
@@ -784,9 +784,9 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
 
     BOOST_CHECK_EQUAL(testArgs.GetArg("strtest1", "default"), "string...");
     BOOST_CHECK_EQUAL(testArgs.GetArg("strtest2", "default"), "default");
-    BOOST_CHECK_EQUAL(testArgs.GetArg("inttest1", -1), 12345);
-    BOOST_CHECK_EQUAL(testArgs.GetArg("inttest2", -1), 81985529216486895LL);
-    BOOST_CHECK_EQUAL(testArgs.GetArg("inttest3", -1), -1);
+    BOOST_CHECK_EQUAL(testArgs.GetIntArg("inttest1", -1), 12345);
+    BOOST_CHECK_EQUAL(testArgs.GetIntArg("inttest2", -1), 81985529216486895LL);
+    BOOST_CHECK_EQUAL(testArgs.GetIntArg("inttest3", -1), -1);
     BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest1", false), true);
     BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest2", false), false);
     BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest3", false), false);
@@ -1239,6 +1239,11 @@ BOOST_AUTO_TEST_CASE(util_FormatMoney)
 BOOST_AUTO_TEST_CASE(util_ParseMoney)
 {
     BOOST_CHECK_EQUAL(ParseMoney("0.0").value(), 0);
+    BOOST_CHECK_EQUAL(ParseMoney(".").value(), 0);
+    BOOST_CHECK_EQUAL(ParseMoney("0.").value(), 0);
+    BOOST_CHECK_EQUAL(ParseMoney(".0").value(), 0);
+    BOOST_CHECK_EQUAL(ParseMoney(".6789").value(), 6789'0000);
+    BOOST_CHECK_EQUAL(ParseMoney("12345.").value(), COIN * 12345);
 
     BOOST_CHECK_EQUAL(ParseMoney("12345.6789").value(), (COIN/10000)*123456789);
 
@@ -1276,10 +1281,17 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney)
     BOOST_CHECK(!ParseMoney("  "));
 
     // Parsing two numbers should fail
+    BOOST_CHECK(!ParseMoney(".."));
+    BOOST_CHECK(!ParseMoney("0..0"));
     BOOST_CHECK(!ParseMoney("1 2"));
     BOOST_CHECK(!ParseMoney(" 1 2 "));
     BOOST_CHECK(!ParseMoney(" 1.2 3 "));
     BOOST_CHECK(!ParseMoney(" 1 2.3 "));
+
+    // Embedded whitespace should fail
+    BOOST_CHECK(!ParseMoney(" -1 .2  "));
+    BOOST_CHECK(!ParseMoney("  1 .2  "));
+    BOOST_CHECK(!ParseMoney(" +1 .2  "));
 
     // Attempted 63 bit overflow should fail
     BOOST_CHECK(!ParseMoney("92233720368.54775808"));
@@ -1474,6 +1486,168 @@ BOOST_AUTO_TEST_CASE(test_ParseInt32)
     BOOST_CHECK(!ParseInt32("32482348723847471234", nullptr));
 }
 
+template <typename T>
+static void RunToIntegralTests()
+{
+    BOOST_CHECK(!ToIntegral<T>(STRING_WITH_EMBEDDED_NULL_CHAR));
+    BOOST_CHECK(!ToIntegral<T>(" 1"));
+    BOOST_CHECK(!ToIntegral<T>("1 "));
+    BOOST_CHECK(!ToIntegral<T>("1a"));
+    BOOST_CHECK(!ToIntegral<T>("1.1"));
+    BOOST_CHECK(!ToIntegral<T>("1.9"));
+    BOOST_CHECK(!ToIntegral<T>("+01.9"));
+    BOOST_CHECK(!ToIntegral<T>("-"));
+    BOOST_CHECK(!ToIntegral<T>("+"));
+    BOOST_CHECK(!ToIntegral<T>(" -1"));
+    BOOST_CHECK(!ToIntegral<T>("-1 "));
+    BOOST_CHECK(!ToIntegral<T>(" -1 "));
+    BOOST_CHECK(!ToIntegral<T>("+1"));
+    BOOST_CHECK(!ToIntegral<T>(" +1"));
+    BOOST_CHECK(!ToIntegral<T>(" +1 "));
+    BOOST_CHECK(!ToIntegral<T>("+-1"));
+    BOOST_CHECK(!ToIntegral<T>("-+1"));
+    BOOST_CHECK(!ToIntegral<T>("++1"));
+    BOOST_CHECK(!ToIntegral<T>("--1"));
+    BOOST_CHECK(!ToIntegral<T>(""));
+    BOOST_CHECK(!ToIntegral<T>("aap"));
+    BOOST_CHECK(!ToIntegral<T>("0x1"));
+    BOOST_CHECK(!ToIntegral<T>("-32482348723847471234"));
+    BOOST_CHECK(!ToIntegral<T>("32482348723847471234"));
+}
+
+BOOST_AUTO_TEST_CASE(test_ToIntegral)
+{
+    BOOST_CHECK_EQUAL(ToIntegral<int32_t>("1234").value(), 1'234);
+    BOOST_CHECK_EQUAL(ToIntegral<int32_t>("0").value(), 0);
+    BOOST_CHECK_EQUAL(ToIntegral<int32_t>("01234").value(), 1'234);
+    BOOST_CHECK_EQUAL(ToIntegral<int32_t>("00000000000000001234").value(), 1'234);
+    BOOST_CHECK_EQUAL(ToIntegral<int32_t>("-00000000000000001234").value(), -1'234);
+    BOOST_CHECK_EQUAL(ToIntegral<int32_t>("00000000000000000000").value(), 0);
+    BOOST_CHECK_EQUAL(ToIntegral<int32_t>("-00000000000000000000").value(), 0);
+    BOOST_CHECK_EQUAL(ToIntegral<int32_t>("-1234").value(), -1'234);
+    BOOST_CHECK_EQUAL(ToIntegral<int32_t>("-1").value(), -1);
+
+    RunToIntegralTests<uint64_t>();
+    RunToIntegralTests<int64_t>();
+    RunToIntegralTests<uint32_t>();
+    RunToIntegralTests<int32_t>();
+    RunToIntegralTests<uint16_t>();
+    RunToIntegralTests<int16_t>();
+    RunToIntegralTests<uint8_t>();
+    RunToIntegralTests<int8_t>();
+
+    BOOST_CHECK(!ToIntegral<int64_t>("-9223372036854775809"));
+    BOOST_CHECK_EQUAL(ToIntegral<int64_t>("-9223372036854775808").value(), -9'223'372'036'854'775'807LL - 1LL);
+    BOOST_CHECK_EQUAL(ToIntegral<int64_t>("9223372036854775807").value(), 9'223'372'036'854'775'807);
+    BOOST_CHECK(!ToIntegral<int64_t>("9223372036854775808"));
+
+    BOOST_CHECK(!ToIntegral<uint64_t>("-1"));
+    BOOST_CHECK_EQUAL(ToIntegral<uint64_t>("0").value(), 0U);
+    BOOST_CHECK_EQUAL(ToIntegral<uint64_t>("18446744073709551615").value(), 18'446'744'073'709'551'615ULL);
+    BOOST_CHECK(!ToIntegral<uint64_t>("18446744073709551616"));
+
+    BOOST_CHECK(!ToIntegral<int32_t>("-2147483649"));
+    BOOST_CHECK_EQUAL(ToIntegral<int32_t>("-2147483648").value(), -2'147'483'648LL);
+    BOOST_CHECK_EQUAL(ToIntegral<int32_t>("2147483647").value(), 2'147'483'647);
+    BOOST_CHECK(!ToIntegral<int32_t>("2147483648"));
+
+    BOOST_CHECK(!ToIntegral<uint32_t>("-1"));
+    BOOST_CHECK_EQUAL(ToIntegral<uint32_t>("0").value(), 0U);
+    BOOST_CHECK_EQUAL(ToIntegral<uint32_t>("4294967295").value(), 4'294'967'295U);
+    BOOST_CHECK(!ToIntegral<uint32_t>("4294967296"));
+
+    BOOST_CHECK(!ToIntegral<int16_t>("-32769"));
+    BOOST_CHECK_EQUAL(ToIntegral<int16_t>("-32768").value(), -32'768);
+    BOOST_CHECK_EQUAL(ToIntegral<int16_t>("32767").value(), 32'767);
+    BOOST_CHECK(!ToIntegral<int16_t>("32768"));
+
+    BOOST_CHECK(!ToIntegral<uint16_t>("-1"));
+    BOOST_CHECK_EQUAL(ToIntegral<uint16_t>("0").value(), 0U);
+    BOOST_CHECK_EQUAL(ToIntegral<uint16_t>("65535").value(), 65'535U);
+    BOOST_CHECK(!ToIntegral<uint16_t>("65536"));
+
+    BOOST_CHECK(!ToIntegral<int8_t>("-129"));
+    BOOST_CHECK_EQUAL(ToIntegral<int8_t>("-128").value(), -128);
+    BOOST_CHECK_EQUAL(ToIntegral<int8_t>("127").value(), 127);
+    BOOST_CHECK(!ToIntegral<int8_t>("128"));
+
+    BOOST_CHECK(!ToIntegral<uint8_t>("-1"));
+    BOOST_CHECK_EQUAL(ToIntegral<uint8_t>("0").value(), 0U);
+    BOOST_CHECK_EQUAL(ToIntegral<uint8_t>("255").value(), 255U);
+    BOOST_CHECK(!ToIntegral<uint8_t>("256"));
+}
+
+BOOST_AUTO_TEST_CASE(test_LocaleIndependentAtoi)
+{
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("1234"), 1'234);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("0"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("01234"), 1'234);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("-1234"), -1'234);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>(" 1"), 1);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("1 "), 1);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("1a"), 1);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("1.1"), 1);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("1.9"), 1);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("+01.9"), 1);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("-1"), -1);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>(" -1"), -1);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("-1 "), -1);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>(" -1 "), -1);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("+1"), 1);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>(" +1"), 1);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>(" +1 "), 1);
+
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("+-1"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("-+1"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("++1"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("--1"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>(""), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("aap"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("0x1"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("-32482348723847471234"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("32482348723847471234"), 0);
+
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int64_t>("-9223372036854775809"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int64_t>("-9223372036854775808"), -9'223'372'036'854'775'807LL - 1LL);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int64_t>("9223372036854775807"), 9'223'372'036'854'775'807);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int64_t>("9223372036854775808"), 0);
+
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint64_t>("-1"), 0U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint64_t>("0"), 0U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint64_t>("18446744073709551615"), 18'446'744'073'709'551'615ULL);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint64_t>("18446744073709551616"), 0U);
+
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("-2147483649"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("-2147483648"), -2'147'483'648LL);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("2147483647"), 2'147'483'647);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("2147483648"), 0);
+
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint32_t>("-1"), 0U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint32_t>("0"), 0U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint32_t>("4294967295"), 4'294'967'295U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint32_t>("4294967296"), 0U);
+
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int16_t>("-32769"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int16_t>("-32768"), -32'768);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int16_t>("32767"), 32'767);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int16_t>("32768"), 0);
+
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint16_t>("-1"), 0U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint16_t>("0"), 0U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint16_t>("65535"), 65'535U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint16_t>("65536"), 0U);
+
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int8_t>("-129"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int8_t>("-128"), -128);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int8_t>("127"), 127);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int8_t>("128"), 0);
+
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("-1"), 0U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("0"), 0U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("255"), 255U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("256"), 0U);
+}
+
 BOOST_AUTO_TEST_CASE(test_ParseInt64)
 {
     int64_t n;
@@ -1637,32 +1811,6 @@ BOOST_AUTO_TEST_CASE(test_ParseUInt64)
     BOOST_CHECK(!ParseUInt64("-2147483648", &n));
     BOOST_CHECK(!ParseUInt64("-9223372036854775808", &n));
     BOOST_CHECK(!ParseUInt64("-1234", &n));
-}
-
-BOOST_AUTO_TEST_CASE(test_ParseDouble)
-{
-    double n;
-    // Valid values
-    BOOST_CHECK(ParseDouble("1234", nullptr));
-    BOOST_CHECK(ParseDouble("0", &n) && n == 0.0);
-    BOOST_CHECK(ParseDouble("1234", &n) && n == 1234.0);
-    BOOST_CHECK(ParseDouble("01234", &n) && n == 1234.0); // no octal
-    BOOST_CHECK(ParseDouble("2147483647", &n) && n == 2147483647.0);
-    BOOST_CHECK(ParseDouble("-2147483648", &n) && n == -2147483648.0);
-    BOOST_CHECK(ParseDouble("-1234", &n) && n == -1234.0);
-    BOOST_CHECK(ParseDouble("1e6", &n) && n == 1e6);
-    BOOST_CHECK(ParseDouble("-1e6", &n) && n == -1e6);
-    // Invalid values
-    BOOST_CHECK(!ParseDouble("", &n));
-    BOOST_CHECK(!ParseDouble(" 1", &n)); // no padding inside
-    BOOST_CHECK(!ParseDouble("1 ", &n));
-    BOOST_CHECK(!ParseDouble("1a", &n));
-    BOOST_CHECK(!ParseDouble("aap", &n));
-    BOOST_CHECK(!ParseDouble("0x1", &n)); // no hex
-    BOOST_CHECK(!ParseDouble(STRING_WITH_EMBEDDED_NULL_CHAR, &n));
-    // Overflow and underflow
-    BOOST_CHECK(!ParseDouble("-1e10000", nullptr));
-    BOOST_CHECK(!ParseDouble("1e10000", nullptr));
 }
 
 BOOST_AUTO_TEST_CASE(test_FormatParagraph)

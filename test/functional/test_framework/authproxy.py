@@ -113,10 +113,8 @@ class AuthServiceProxy():
             self.__conn.request(method, path, postdata, headers)
             return self._get_response()
         except OSError as e:
-            retry = (
-                '[WinError 10053] An established connection was aborted by the software in your host machine' in str(e))
             # Workaround for a bug on macOS. See https://bugs.python.org/issue33450
-            retry = retry or ('[Errno 41] Protocol wrong type for socket' in str(e))
+            retry = '[Errno 41] Protocol wrong type for socket' in str(e)
             if retry:
                 self.__conn.close()
                 self.__conn.request(method, path, postdata, headers)

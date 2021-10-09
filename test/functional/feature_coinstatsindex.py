@@ -164,7 +164,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # Generate and send another tx with an OP_RETURN output (which is unspendable)
         tx2 = CTransaction()
         tx2.vin.append(CTxIn(COutPoint(int(tx1_txid, 16), n), b''))
-        tx2.vout.append(CTxOut(int(20.99 * COIN), CScript([OP_RETURN] + [OP_FALSE]*30)))
+        tx2.vout.append(CTxOut(int(Decimal('20.99') * COIN), CScript([OP_RETURN] + [OP_FALSE]*30)))
         tx2_hex = self.nodes[0].signrawtransactionwithwallet(tx2.serialize().hex())['hex']
         self.nodes[0].sendrawtransaction(tx2_hex)
 
@@ -175,16 +175,16 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         for hash_option in index_hash_options:
             # Check all amounts were registered correctly
             res6 = index_node.gettxoutsetinfo(hash_option, 108)
-            assert_equal(res6['total_unspendable_amount'], Decimal('70.98999999'))
+            assert_equal(res6['total_unspendable_amount'], Decimal('70.99000000'))
             assert_equal(res6['block_info'], {
-                'unspendable': Decimal('20.98999999'),
+                'unspendable': Decimal('20.99000000'),
                 'prevout_spent': 111,
                 'new_outputs_ex_coinbase': Decimal('89.99993620'),
-                'coinbase': Decimal('50.01006381'),
+                'coinbase': Decimal('50.01006380'),
                 'unspendables': {
                     'genesis_block': 0,
                     'bip30': 0,
-                    'scripts': Decimal('20.98999999'),
+                    'scripts': Decimal('20.99000000'),
                     'unclaimed_rewards': 0
                 }
             })
@@ -206,7 +206,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         for hash_option in index_hash_options:
             res7 = index_node.gettxoutsetinfo(hash_option, 109)
-            assert_equal(res7['total_unspendable_amount'], Decimal('80.98999999'))
+            assert_equal(res7['total_unspendable_amount'], Decimal('80.99000000'))
             assert_equal(res7['block_info'], {
                 'unspendable': 10,
                 'prevout_spent': 0,

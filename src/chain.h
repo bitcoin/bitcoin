@@ -126,7 +126,15 @@ enum BlockStatus: uint32_t {
     BLOCK_FAILED_CHILD       =   64, //!< descends from failed block
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
 
-    BLOCK_OPT_WITNESS       =   128, //!< block data in blk*.data was received with a witness-enforcing client
+    BLOCK_OPT_WITNESS        =   128, //!< block data in blk*.dat was received with a witness-enforcing client
+
+    /**
+     * If set, this indicates that the block index entry is assumed-valid.
+     * Certain diagnostics will be skipped in e.g. CheckBlockIndex().
+     * It almost certainly means that the block's full validation is pending
+     * on a background chainstate. See `doc/assumeutxo.md`.
+     */
+    BLOCK_ASSUMED_VALID      =   256,
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -300,14 +308,24 @@ public:
         return ((nStatus & BLOCK_VALID_MASK) >= nUpTo);
     }
 
+    //! @returns true if the block is assumed-valid; this means it is queued to be
+    //!   validated by a background chainstate.
+    bool IsAssumedValid() const { return nStatus & BLOCK_ASSUMED_VALID; }
+
     //! Raise the validity level of this block index entry.
     //! Returns true if the validity was changed.
     bool RaiseValidity(enum BlockStatus nUpTo)
     {
         assert(!(nUpTo & ~BLOCK_VALID_MASK)); // Only validity flags allowed.
-        if (nStatus & BLOCK_FAILED_MASK)
-            return false;
+        if (nStatus & BLOCK_FAILED_MASK) return false;
+
         if ((nStatus & BLOCK_VALID_MASK) < nUpTo) {
+            // If this block had been marked assumed-valid and we're raising
+            // its validity to a certain point, there is no longer an assumption.
+            if (nStatus & BLOCK_ASSUMED_VALID && nUpTo >= BLOCK_VALID_SCRIPTS) {
+                nStatus &= ~BLOCK_ASSUMED_VALID;
+            }
+
             nStatus = (nStatus & ~BLOCK_VALID_MASK) | nUpTo;
             return true;
         }

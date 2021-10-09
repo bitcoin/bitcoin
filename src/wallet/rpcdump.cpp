@@ -1439,7 +1439,7 @@ RPCHelpMan importmulti()
                                       "and coins using this key may not appear in the wallet. This error could be "
                                       "caused by pruning or data corruption (see bitcoind log for details) and could "
                                       "be dealt with by downloading and rescanning the relevant blocks (see -reindex "
-                                      "and -rescan options).",
+                                      "option and rescanblockchain RPC).",
                                 GetImportTimestamp(request, now), scannedTime - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)));
                     response.push_back(std::move(result));
                 }
@@ -1488,7 +1488,7 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             } else {
                 warnings.push_back("Range not given, using default keypool range");
                 range_start = 0;
-                range_end = gArgs.GetArg("-keypool", DEFAULT_KEYPOOL_SIZE);
+                range_end = gArgs.GetIntArg("-keypool", DEFAULT_KEYPOOL_SIZE);
             }
             next_index = range_start;
 
@@ -1744,7 +1744,7 @@ RPCHelpMan importdescriptors()
                                       "and coins using this desc may not appear in the wallet. This error could be "
                                       "caused by pruning or data corruption (see bitcoind log for details) and could "
                                       "be dealt with by downloading and rescanning the relevant blocks (see -reindex "
-                                      "and -rescan options).",
+                                      "option and rescanblockchain RPC).",
                                 GetImportTimestamp(request, now), scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)));
                     response.push_back(std::move(result));
                 }

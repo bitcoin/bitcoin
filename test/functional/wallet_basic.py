@@ -13,6 +13,7 @@ from test_framework.util import (
     assert_equal,
     assert_fee_amount,
     assert_raises_rpc_error,
+    find_vout_for_address,
 )
 from test_framework.wallet_util import test_address
 
@@ -121,13 +122,49 @@ class WalletTest(BitcoinTestFramework):
         # Exercise locking of unspent outputs
         unspent_0 = self.nodes[2].listunspent()[0]
         unspent_0 = {"txid": unspent_0["txid"], "vout": unspent_0["vout"]}
+        # Trying to unlock an output which isn't locked should error
         assert_raises_rpc_error(-8, "Invalid parameter, expected locked output", self.nodes[2].lockunspent, True, [unspent_0])
+
+        # Locking an already-locked output should error
         self.nodes[2].lockunspent(False, [unspent_0])
         assert_raises_rpc_error(-8, "Invalid parameter, output already locked", self.nodes[2].lockunspent, False, [unspent_0])
+
+        # Restarting the node should clear the lock
+        self.restart_node(2)
+        self.nodes[2].lockunspent(False, [unspent_0])
+
+        # Unloading and reloating the wallet should clear the lock
+        assert_equal(self.nodes[0].listwallets(), [self.default_wallet_name])
+        self.nodes[2].unloadwallet(self.default_wallet_name)
+        self.nodes[2].loadwallet(self.default_wallet_name)
+        assert_equal(len(self.nodes[2].listlockunspent()), 0)
+
+        # Locking non-persistently, then re-locking persistently, is allowed
+        self.nodes[2].lockunspent(False, [unspent_0])
+        self.nodes[2].lockunspent(False, [unspent_0], True)
+
+        # Restarting the node with the lock written to the wallet should keep the lock
+        self.restart_node(2)
+        assert_raises_rpc_error(-8, "Invalid parameter, output already locked", self.nodes[2].lockunspent, False, [unspent_0])
+
+        # Unloading and reloading the wallet with a persistent lock should keep the lock
+        self.nodes[2].unloadwallet(self.default_wallet_name)
+        self.nodes[2].loadwallet(self.default_wallet_name)
+        assert_raises_rpc_error(-8, "Invalid parameter, output already locked", self.nodes[2].lockunspent, False, [unspent_0])
+
+        # Locked outputs should not be used, even if they are the only available funds
         assert_raises_rpc_error(-6, "Insufficient funds", self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(), 20)
         assert_equal([unspent_0], self.nodes[2].listlockunspent())
+
+        # Unlocking should remove the persistent lock
         self.nodes[2].lockunspent(True, [unspent_0])
+        self.restart_node(2)
         assert_equal(len(self.nodes[2].listlockunspent()), 0)
+
+        # Reconnect node 2 after restarts
+        self.connect_nodes(1, 2)
+        self.connect_nodes(0, 2)
+
         assert_raises_rpc_error(-8, "txid must be of length 64 (not 34, for '0000000000000000000000000000000000')",
                                 self.nodes[2].lockunspent, False,
                                 [{"txid": "0000000000000000000000000000000000", "vout": 0}])
@@ -427,6 +464,9 @@ class WalletTest(BitcoinTestFramework):
             # 1. Send some coins to generate new UTXO
             address_to_import = self.nodes[2].getnewaddress()
             txid = self.nodes[0].sendtoaddress(address_to_import, 1)
+            self.sync_mempools(self.nodes[0:3])
+            vout = find_vout_for_address(self.nodes[2], txid, address_to_import)
+            self.nodes[2].lockunspent(False, [{"txid": txid, "vout": vout}])
             self.generate(self.nodes[0], 1)
             self.sync_all(self.nodes[0:3])
 
@@ -542,23 +582,17 @@ class WalletTest(BitcoinTestFramework):
                 assert label in self.nodes[0].listlabels()
         self.nodes[0].rpc.ensure_ascii = True  # restore to default
 
-        # maintenance tests
-        maintenance = [
-            '-rescan',
-            '-reindex',
-        ]
+        # -reindex tests
         chainlimit = 6
-        for m in maintenance:
-            self.log.info("Test " + m)
-            self.stop_nodes()
-            # set lower ancestor limit for later
-            self.start_node(0, [m, "-limitancestorcount=" + str(chainlimit)])
-            self.start_node(1, [m, "-limitancestorcount=" + str(chainlimit)])
-            self.start_node(2, [m, "-limitancestorcount=" + str(chainlimit)])
-            if m == '-reindex':
-                # reindex will leave rpc warm up "early"; Wait for it to finish
-                self.wait_until(lambda: [block_count] * 3 == [self.nodes[i].getblockcount() for i in range(3)])
-            assert_equal(balance_nodes, [self.nodes[i].getbalance() for i in range(3)])
+        self.log.info("Test -reindex")
+        self.stop_nodes()
+        # set lower ancestor limit for later
+        self.start_node(0, ['-reindex', "-limitancestorcount=" + str(chainlimit)])
+        self.start_node(1, ['-reindex', "-limitancestorcount=" + str(chainlimit)])
+        self.start_node(2, ['-reindex', "-limitancestorcount=" + str(chainlimit)])
+        # reindex will leave rpc warm up "early"; Wait for it to finish
+        self.wait_until(lambda: [block_count] * 3 == [self.nodes[i].getblockcount() for i in range(3)])
+        assert_equal(balance_nodes, [self.nodes[i].getbalance() for i in range(3)])
 
         # Exercise listsinceblock with the last two blocks
         coinbase_tx_1 = self.nodes[0].listsinceblock(blocks[0])

@@ -40,6 +40,7 @@ const std::string FLAGS{"flags"};
 const std::string HDCHAIN{"hdchain"};
 const std::string KEYMETA{"keymeta"};
 const std::string KEY{"key"};
+const std::string LOCKED_UTXO{"lockedutxo"};
 const std::string MASTER_KEY{"mkey"};
 const std::string MINVERSION{"minversion"};
 const std::string NAME{"name"};
@@ -284,6 +285,16 @@ bool WalletBatch::WriteDescriptorCacheItems(const uint256& desc_id, const Descri
     return true;
 }
 
+bool WalletBatch::WriteLockedUTXO(const COutPoint& output)
+{
+    return WriteIC(std::make_pair(DBKeys::LOCKED_UTXO, std::make_pair(output.hash, output.n)), uint8_t{'1'});
+}
+
+bool WalletBatch::EraseLockedUTXO(const COutPoint& output)
+{
+    return EraseIC(std::make_pair(DBKeys::LOCKED_UTXO, std::make_pair(output.hash, output.n)));
+}
+
 class CWalletScanState {
 public:
     unsigned int nKeys{0};
@@ -300,6 +311,7 @@ public:
     std::map<std::pair<uint256, CKeyID>, CKey> m_descriptor_keys;
     std::map<std::pair<uint256, CKeyID>, std::pair<CPubKey, std::vector<unsigned char>>> m_descriptor_crypt_keys;
     std::map<uint160, CHDChain> m_hd_chains;
+    bool tx_corrupt{false};
 
     CWalletScanState() {
     }
@@ -334,7 +346,13 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             // LoadToWallet call below creates a new CWalletTx that fill_wtx
             // callback fills with transaction metadata.
             auto fill_wtx = [&](CWalletTx& wtx, bool new_tx) {
-                assert(new_tx);
+                if(!new_tx) {
+                    // There's some corruption here since the tx we just tried to load was already in the wallet.
+                    // We don't consider this type of corruption critical, and can fix it by removing tx data and
+                    // rescanning.
+                    wss.tx_corrupt = true;
+                    return false;
+                }
                 ssValue >> wtx;
                 if (wtx.GetHash() != hash)
                     return false;
@@ -701,6 +719,12 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 
             wss.m_descriptor_crypt_keys.insert(std::make_pair(std::make_pair(desc_id, pubkey.GetID()), std::make_pair(pubkey, privkey)));
             wss.fIsEncrypted = true;
+        } else if (strType == DBKeys::LOCKED_UTXO) {
+            uint256 hash;
+            uint32_t n;
+            ssKey >> hash;
+            ssKey >> n;
+            pwallet->LockCoin(COutPoint(hash, n));
         } else if (strType != DBKeys::BESTBLOCK && strType != DBKeys::BESTBLOCK_NOMERKLE &&
                    strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
                    strType != DBKeys::VERSION && strType != DBKeys::SETTINGS &&
@@ -738,6 +762,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 {
     CWalletScanState wss;
     bool fNoncriticalErrors = false;
+    bool rescan_required = false;
     DBErrors result = DBErrors::LOAD_OK;
 
     LOCK(pwallet->cs_wallet);
@@ -801,12 +826,17 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
                 } else if (strType == DBKeys::FLAGS) {
                     // reading the wallet flags can only fail if unknown flags are present
                     result = DBErrors::TOO_NEW;
+                } else if (wss.tx_corrupt) {
+                    pwallet->WalletLogPrintf("Error: Corrupt transaction found. This can be fixed by removing transactions from wallet and rescanning.\n");
+                    // Set tx_corrupt back to false so that the error is only printed once (per corrupt tx)
+                    wss.tx_corrupt = false;
+                    result = DBErrors::CORRUPT;
                 } else {
                     // Leave other errors alone, if we try to fix them we might make things worse.
                     fNoncriticalErrors = true; // ... but do warn the user there is something wrong.
                     if (strType == DBKeys::TX)
                         // Rescan if there is a bad transaction record:
-                        gArgs.SoftSetBoolArg("-rescan", true);
+                        rescan_required = true;
                 }
             }
             if (!strErr.empty())
@@ -842,8 +872,11 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         ((DescriptorScriptPubKeyMan*)spk_man)->AddCryptedKey(desc_key_pair.first.second, desc_key_pair.second.first, desc_key_pair.second.second);
     }
 
-    if (fNoncriticalErrors && result == DBErrors::LOAD_OK)
+    if (rescan_required && result == DBErrors::LOAD_OK) {
+        result = DBErrors::NEED_RESCAN;
+    } else if (fNoncriticalErrors && result == DBErrors::LOAD_OK) {
         result = DBErrors::NONCRITICAL_ERROR;
+    }
 
     // Any wallet corruption at all: skip any rewriting or
     // upgrading, we don't want to make it worse.

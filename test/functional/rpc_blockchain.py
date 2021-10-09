@@ -27,8 +27,6 @@ import subprocess
 
 from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.blocktools import (
-    CLTV_HEIGHT,
-    DERSIG_HEIGHT,
     create_block,
     create_coinbase,
     TIME_GENESIS_BLOCK,
@@ -129,7 +127,29 @@ class BlockchainTest(BitcoinTestFramework):
         # should have exact keys
         assert_equal(sorted(res.keys()), keys)
 
-        self.restart_node(0, ['-stopatheight=207', '-prune=550'])
+        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=['-testactivationheight=name@2'],
+            expected_msg='Error: Invalid name (name@2) for -testactivationheight=name@height.',
+        )
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=['-testactivationheight=bip34@-2'],
+            expected_msg='Error: Invalid height value (bip34@-2) for -testactivationheight=name@height.',
+        )
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=['-testactivationheight='],
+            expected_msg='Error: Invalid format () for -testactivationheight=name@height.',
+        )
+        self.start_node(0, extra_args=[
+            '-stopatheight=207',
+            '-prune=550',
+            '-testactivationheight=bip34@2',
+            '-testactivationheight=dersig@3',
+            '-testactivationheight=cltv@4',
+            '-testactivationheight=csv@5',
+            '-testactivationheight=segwit@6',
+        ])
+
         res = self.nodes[0].getblockchaininfo()
         # result should have these additional pruning keys if prune=550
         assert_equal(sorted(res.keys()), sorted(['pruneheight', 'automatic_pruning', 'prune_target_size'] + keys))
@@ -143,10 +163,10 @@ class BlockchainTest(BitcoinTestFramework):
 
         assert_equal(res['softforks'], {
             'bip34': {'type': 'buried', 'active': True, 'height': 2},
-            'bip66': {'type': 'buried', 'active': True, 'height': DERSIG_HEIGHT},
-            'bip65': {'type': 'buried', 'active': True, 'height': CLTV_HEIGHT},
-            'csv': {'type': 'buried', 'active': False, 'height': 432},
-            'segwit': {'type': 'buried', 'active': True, 'height': 0},
+            'bip66': {'type': 'buried', 'active': True, 'height': 3},
+            'bip65': {'type': 'buried', 'active': True, 'height': 4},
+            'csv': {'type': 'buried', 'active': True, 'height': 5},
+            'segwit': {'type': 'buried', 'active': True, 'height': 6},
             'testdummy': {
                 'type': 'bip9',
                 'bip9': {
@@ -406,7 +426,7 @@ class BlockchainTest(BitcoinTestFramework):
         node = self.nodes[0]
 
         miniwallet = MiniWallet(node)
-        miniwallet.scan_blocks(num=5)
+        miniwallet.rescan_utxos()
 
         fee_per_byte = Decimal('0.00000010')
         fee_per_kb = 1000 * fee_per_byte
