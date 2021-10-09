@@ -4508,10 +4508,11 @@ bool CChainState::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
 static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 static constexpr uint64_t MEMPOOL_KNOTS_DUMP_VERSION = 0;
 
-bool LoadMempoolKnots(CTxMemPool& pool)
+bool LoadMempoolKnots(CTxMemPool& pool, FopenFn mockable_fopen_function)
 {
     const auto knots_filepath = gArgs.GetDataDirNet() / "mempool-knots.dat";
-    CAutoFile file(fsbridge::fopen(knots_filepath, "rb"), SER_DISK, CLIENT_VERSION);
+    FILE* filestr{mockable_fopen_function(knots_filepath, "rb")};
+    CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
     if (file.IsNull()) {
         // Typically missing if there's nothing to save
         return false;
@@ -4621,7 +4622,7 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mocka
         return false;
     }
 
-    LoadMempoolKnots(pool);
+    LoadMempoolKnots(pool, mockable_fopen_function);
 
     LogPrintf("Imported mempool transactions from disk: %i succeeded, %i failed, %i expired, %i already there, %i waiting for initial broadcast\n", count, failed, expired, already_there, unbroadcast);
     return true;
@@ -4687,7 +4688,10 @@ bool DumpMempool(const CTxMemPool& pool, FopenFn mockable_fopen_function, bool s
         if (priority_deltas.size()) {
             auto knots_tmppath = knots_filepath;
             knots_tmppath += ".new";
-            CAutoFile file(fsbridge::fopen(knots_tmppath, "wb"), SER_DISK, CLIENT_VERSION);
+
+            FILE* filestr{mockable_fopen_function(knots_tmppath, "wb")};
+            if (!filestr) return false;
+            CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
 
             uint64_t version = MEMPOOL_KNOTS_DUMP_VERSION;
             file << version;
