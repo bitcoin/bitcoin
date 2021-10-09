@@ -114,6 +114,11 @@ namespace GUIUtil
     void setClipboard(const QString& str);
 
     /**
+     * Loads the font from the file specified by file_name, aborts if it fails.
+     */
+    void LoadFont(const QString& file_name);
+
+    /**
      * Determine default data directory for operating system.
      */
     QString getDefaultDataDirectory();

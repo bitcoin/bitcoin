@@ -46,7 +46,6 @@
 
 #include <QApplication>
 #include <QDebug>
-#include <QFontDatabase>
 #include <QLatin1String>
 #include <QLibraryInfo>
 #include <QLocale>
@@ -493,7 +492,7 @@ int GuiMain(int argc, char* argv[])
 #endif
 
     SyscoinApplication app;
-    QFontDatabase::addApplicationFont(":/fonts/monospace");
+    GUIUtil::LoadFont(QStringLiteral(":/fonts/monospace"));
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
