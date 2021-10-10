@@ -11,7 +11,9 @@
 
 #include <attributes.h>
 #include <compat.h>
+#include <crypto/siphash.h>
 #include <prevector.h>
+#include <random.h>
 #include <serialize.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
@@ -109,6 +111,9 @@ static constexpr size_t ADDR_CJDNS_SIZE = 16;
 
 /// Size of "internal" (NET_INTERNAL) address (in bytes).
 static constexpr size_t ADDR_INTERNAL_SIZE = 10;
+
+/// SAM 3.1 and earlier do not support specifying ports and force the port to 0.
+static constexpr uint16_t I2P_SAM31_PORT{0};
 
 /**
  * Network address.
@@ -222,7 +227,7 @@ class CNetAddr
          */
         bool IsRelayable() const
         {
-            return IsIPv4() || IsIPv6() || IsTor();
+            return IsIPv4() || IsIPv6() || IsTor() || IsI2P();
         }
 
         /**
@@ -251,6 +256,7 @@ class CNetAddr
             }
         }
 
+        friend class CNetAddrHash;
         friend class CSubNet;
 
     private:
@@ -462,6 +468,22 @@ class CNetAddr
             m_net = NET_IPV6;
             m_addr.assign(ADDR_IPV6_SIZE, 0x0);
         }
+};
+
+class CNetAddrHash
+{
+public:
+    size_t operator()(const CNetAddr& a) const noexcept
+    {
+        CSipHasher hasher(m_salt_k0, m_salt_k1);
+        hasher.Write(a.m_net);
+        hasher.Write(a.m_addr.data(), a.m_addr.size());
+        return static_cast<size_t>(hasher.Finalize());
+    }
+
+private:
+    const uint64_t m_salt_k0 = GetRand(std::numeric_limits<uint64_t>::max());
+    const uint64_t m_salt_k1 = GetRand(std::numeric_limits<uint64_t>::max());
 };
 
 class CSubNet

@@ -111,10 +111,8 @@ public:
     //! Disconnect node by id.
     virtual bool disconnectById(NodeId id) = 0;
 
-#ifdef ENABLE_EXTERNAL_SIGNER
     //! List external signers
     virtual std::vector<ExternalSigner> externalSigners() = 0;
-#endif
 
     //! Get total bytes recv.
     virtual int64_t getTotalBytesRecv() = 0;

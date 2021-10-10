@@ -340,7 +340,6 @@ void BaseIndex::Interrupt()
 
 bool BaseIndex::Start(CChainState& active_chainstate)
 {
-    assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
     m_chainstate = &active_chainstate;
     // Need to register this ValidationInterface before running Init(), so that
     // callbacks are not missed if Init sets m_synced to true.

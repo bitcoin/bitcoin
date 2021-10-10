@@ -25,7 +25,6 @@ static void DuplicateInputs(benchmark::Bench& bench)
     CMutableTransaction naughtyTx{};
 
     LOCK(cs_main);
-    assert(std::addressof(::ChainActive()) == std::addressof(testing_setup->m_node.chainman->ActiveChain()));
     CBlockIndex* pindexPrev = testing_setup->m_node.chainman->ActiveChain().Tip();
     assert(pindexPrev != nullptr);
     block.nBits = GetNextWorkRequired(pindexPrev, &block, chainparams.GetConsensus());

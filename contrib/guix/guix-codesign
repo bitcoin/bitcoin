@@ -226,14 +226,14 @@ SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 # across time.
 time-machine() {
     # shellcheck disable=SC2086
-    guix time-machine --url=https://github.com/dongcarl/guix.git \
-         --commit=490e39ff303f4f6873a04bfb8253755bdae1b29c \
-         --cores="$JOBS" \
-         --keep-failed \
-         --fallback \
-         ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
-         ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS} \
-         -- "$@"
+    guix time-machine --url=https://git.savannah.gnu.org/git/guix.git \
+                      --commit=aa34d4d28dfe25ba47d5800d05000fb7221788c0 \
+                      --cores="$JOBS" \
+                      --keep-failed \
+                      --fallback \
+                      ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
+                      ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS} \
+                      -- "$@"
 }
 
 # Make sure an output directory exists for our builds

@@ -200,12 +200,14 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         ui->optInRBF->setCheckState(Qt::Checked);
 
         if (model->wallet().hasExternalSigner()) {
+            //: "device" usually means a hardware wallet
             ui->sendButton->setText(tr("Sign on device"));
             if (gArgs.GetArg("-signer", "") != "") {
                 ui->sendButton->setEnabled(true);
                 ui->sendButton->setToolTip(tr("Connect your hardware wallet first."));
             } else {
                 ui->sendButton->setEnabled(false);
+                //: "External signer" means using devices such as hardware wallets.
                 ui->sendButton->setToolTip(tr("Set external signer script path in Options -> Wallet"));
             }
         } else if (model->wallet().privateKeysDisabled()) {
@@ -414,23 +416,25 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
         bool complete = false;
         // Always fill without signing first. This prevents an external signer
         // from being called prematurely and is not expensive.
-        TransactionError err = model->wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, psbtx, complete, nullptr);
+        TransactionError err = model->wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, nullptr, psbtx, complete);
         assert(!complete);
         assert(err == TransactionError::OK);
         if (model->wallet().hasExternalSigner()) {
             try {
-                err = model->wallet().fillPSBT(SIGHASH_ALL, true /* sign */, true /* bip32derivs */, psbtx, complete, nullptr);
+                err = model->wallet().fillPSBT(SIGHASH_ALL, true /* sign */, true /* bip32derivs */, nullptr, psbtx, complete);
             } catch (const std::runtime_error& e) {
                 QMessageBox::critical(nullptr, tr("Sign failed"), e.what());
                 send_failure = true;
                 return;
             }
             if (err == TransactionError::EXTERNAL_SIGNER_NOT_FOUND) {
+                //: "External signer" means using devices such as hardware wallets.
                 QMessageBox::critical(nullptr, tr("External signer not found"), "External signer not found");
                 send_failure = true;
                 return;
             }
             if (err == TransactionError::EXTERNAL_SIGNER_FAILED) {
+                //: "External signer" means using devices such as hardware wallets.
                 QMessageBox::critical(nullptr, tr("External signer failure"), "External signer failure");
                 send_failure = true;
                 return;

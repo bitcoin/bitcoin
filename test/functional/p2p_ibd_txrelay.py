@@ -15,7 +15,7 @@ from test_framework.messages import (
         CInv,
         COIN,
         CTransaction,
-        FromHex,
+        from_hex,
         msg_inv,
         msg_tx,
         MSG_WTX,
@@ -66,7 +66,7 @@ class P2PIBDTxRelayTest(BitcoinTestFramework):
             "1a33eb60996631bf6bf5bc0a0682c4db743ce7ca2b01ffffffff0140420f00000000001976a914660d4ef3a743e3e696a" + \
             "d990364e555c271ad504b88ac00000000"
         assert self.nodes[1].decoderawtransaction(rawhex) # returns a dict, should not throw
-        tx = FromHex(CTransaction(), rawhex)
+        tx = from_hex(CTransaction(), rawhex)
         peer_txer = self.nodes[0].add_p2p_connection(P2PInterface())
         with self.nodes[0].assert_debug_log(expected_msgs=["received: tx"], unexpected_msgs=["was not accepted"]):
             peer_txer.send_and_ping(msg_tx(tx))

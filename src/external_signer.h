@@ -11,8 +11,6 @@
 #include <string>
 #include <vector>
 
-#ifdef ENABLE_EXTERNAL_SIGNER
-
 struct PartiallySignedTransaction;
 
 //! Enables interaction with an external signing device or service, such as
@@ -23,23 +21,23 @@ private:
     //! The command which handles interaction with the external signer.
     std::string m_command;
 
+    //! Bitcoin mainnet, testnet, etc
+    std::string m_chain;
+
+    const std::string NetworkArg() const;
+
 public:
     //! @param[in] command      the command which handles interaction with the external signer
     //! @param[in] fingerprint  master key fingerprint of the signer
     //! @param[in] chain        "main", "test", "regtest" or "signet"
     //! @param[in] name         device name
-    ExternalSigner(const std::string& command, const std::string& fingerprint, const std::string chain, const std::string name);
+    ExternalSigner(const std::string& command, const std::string chain, const std::string& fingerprint, const std::string name);
 
     //! Master key fingerprint of the signer
     std::string m_fingerprint;
 
-    //! Bitcoin mainnet, testnet, etc
-    std::string m_chain;
-
     //! Name of signer
     std::string m_name;
-
-    const std::string NetworkArg() const;
 
     //! Obtain a list of signers. Calls `<command> enumerate`.
     //! @param[in]              command the command which handles interaction with the external signer
@@ -64,7 +62,5 @@ public:
     //! @param[in,out] psbt  PartiallySignedTransaction to be signed
     bool SignTransaction(PartiallySignedTransaction& psbt, std::string& error);
 };
-
-#endif // ENABLE_EXTERNAL_SIGNER
 
 #endif // BITCOIN_EXTERNAL_SIGNER_H

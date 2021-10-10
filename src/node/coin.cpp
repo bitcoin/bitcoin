@@ -13,7 +13,6 @@ void FindCoins(const NodeContext& node, std::map<COutPoint, Coin>& coins)
     assert(node.mempool);
     assert(node.chainman);
     LOCK2(cs_main, node.mempool->cs);
-    assert(std::addressof(::ChainstateActive()) == std::addressof(node.chainman->ActiveChainstate()));
     CCoinsViewCache& chain_view = node.chainman->ActiveChainstate().CoinsTip();
     CCoinsViewMemPool mempool_view(&chain_view, *node.mempool);
     for (auto& coin : coins) {

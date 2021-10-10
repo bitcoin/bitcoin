@@ -19,7 +19,6 @@ import unittest
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
-from io import BytesIO
 from typing import Callable, Optional
 
 logger = logging.getLogger("TestFramework.utils")
@@ -481,6 +480,28 @@ def create_confirmed_utxos(fee, node, count):
     return utxos
 
 
+def chain_transaction(node, parent_txids, vouts, value, fee, num_outputs):
+    """Build and send a transaction that spends the given inputs (specified
+    by lists of parent_txid:vout each), with the desired total value and fee,
+    equally divided up to the desired number of outputs.
+
+    Returns a tuple with the txid and the amount sent per output.
+    """
+    send_value = satoshi_round((value - fee)/num_outputs)
+    inputs = []
+    for (txid, vout) in zip(parent_txids, vouts):
+        inputs.append({'txid' : txid, 'vout' : vout})
+    outputs = {}
+    for _ in range(num_outputs):
+        outputs[node.getnewaddress()] = send_value
+    rawtx = node.createrawtransaction(inputs, outputs, 0, True)
+    signedtx = node.signrawtransactionwithwallet(rawtx)
+    txid = node.sendrawtransaction(signedtx['hex'])
+    fulltx = node.getrawtransaction(txid, 1)
+    assert len(fulltx['vout']) == num_outputs  # make sure we didn't generate a change output
+    return (txid, send_value)
+
+
 # Create large OP_RETURN txouts that can be appended to a transaction
 # to make it large (helper for constructing large transactions).
 def gen_return_txouts():
@@ -506,7 +527,7 @@ def gen_return_txouts():
 def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
     addr = node.getnewaddress()
     txids = []
-    from .messages import CTransaction
+    from .messages import tx_from_hex
     for _ in range(num):
         t = utxos.pop()
         inputs = [{"txid": t["txid"], "vout": t["vout"]}]
@@ -514,8 +535,7 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
         change = t['amount'] - fee
         outputs[addr] = satoshi_round(change)
         rawtx = node.createrawtransaction(inputs, outputs)
-        tx = CTransaction()
-        tx.deserialize(BytesIO(hex_str_to_bytes(rawtx)))
+        tx = tx_from_hex(rawtx)
         for txout in txouts:
             tx.vout.append(txout)
         newtx = tx.serialize().hex()

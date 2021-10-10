@@ -5,7 +5,6 @@
 """Test mempool acceptance of raw transactions."""
 
 from decimal import Decimal
-from io import BytesIO
 import math
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -14,26 +13,27 @@ from test_framework.messages import (
     BIP125_SEQUENCE_NUMBER,
     COIN,
     COutPoint,
-    CTransaction,
+    CTxIn,
     CTxOut,
     MAX_BLOCK_BASE_SIZE,
     MAX_MONEY,
+    tx_from_hex,
 )
 from test_framework.script import (
-    hash160,
     CScript,
     OP_0,
     OP_2,
     OP_3,
     OP_CHECKMULTISIG,
-    OP_EQUAL,
     OP_HASH160,
     OP_RETURN,
+)
+from test_framework.script_util import (
+    script_to_p2sh_script,
 )
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    hex_str_to_bytes,
 )
 
 
@@ -91,8 +91,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             inputs=[{"txid": txid_in_block, "vout": 0, "sequence": BIP125_SEQUENCE_NUMBER}],  # RBF is used later
             outputs=[{node.getnewaddress(): Decimal('0.3') - fee}],
         ))['hex']
-        tx = CTransaction()
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
+        tx = tx_from_hex(raw_tx_0)
         txid_0 = tx.rehash()
         self.check_mempool_result(
             result_expected=[{'txid': txid_0, 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': fee}}],
@@ -107,7 +106,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             outputs=[{node.getnewaddress(): output_amount}],
             locktime=node.getblockcount() + 2000,  # Can be anything
         ))['hex']
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_final)))
+        tx = tx_from_hex(raw_tx_final)
         fee_expected = coin['amount'] - output_amount
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': fee_expected}}],
@@ -126,11 +125,11 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
 
         self.log.info('A transaction that replaces a mempool transaction')
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
+        tx = tx_from_hex(raw_tx_0)
         tx.vout[0].nValue -= int(fee * COIN)  # Double the fee
         tx.vin[0].nSequence = BIP125_SEQUENCE_NUMBER + 1  # Now, opt out of RBF
         raw_tx_0 = node.signrawtransactionwithwallet(tx.serialize().hex())['hex']
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
+        tx = tx_from_hex(raw_tx_0)
         txid_0 = tx.rehash()
         self.check_mempool_result(
             result_expected=[{'txid': txid_0, 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': (2 * fee)}}],
@@ -141,7 +140,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         # Send the transaction that replaces the mempool transaction and opts out of replaceability
         node.sendrawtransaction(hexstring=tx.serialize().hex(), maxfeerate=0)
         # take original raw_tx_0
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
+        tx = tx_from_hex(raw_tx_0)
         tx.vout[0].nValue -= int(4 * fee * COIN)  # Set more fee
         # skip re-signing the tx
         self.check_mempool_result(
@@ -151,7 +150,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
 
         self.log.info('A transaction with missing inputs, that never existed')
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
+        tx = tx_from_hex(raw_tx_0)
         tx.vin[0].prevout = COutPoint(hash=int('ff' * 32, 16), n=14)
         # skip re-signing the tx
         self.check_mempool_result(
@@ -160,7 +159,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
 
         self.log.info('A transaction with missing inputs, that existed once in the past')
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
+        tx = tx_from_hex(raw_tx_0)
         tx.vin[0].prevout.n = 1  # Set vout to 1, to spend the other outpoint (49 coins) of the in-chain-tx we want to double spend
         raw_tx_1 = node.signrawtransactionwithwallet(tx.serialize().hex())['hex']
         txid_1 = node.sendrawtransaction(hexstring=raw_tx_1, maxfeerate=0)
@@ -190,7 +189,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             inputs=[{'txid': txid_spend_both, 'vout': 0}],
             outputs=[{node.getnewaddress(): 0.05}],
         ))['hex']
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         # Reference tx should be valid on itself
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': { 'base': Decimal('0.1') - Decimal('0.05')}}],
@@ -199,17 +198,17 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
 
         self.log.info('A transaction with no outputs')
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         tx.vout = []
         # Skip re-signing the transaction for context independent checks from now on
-        # tx.deserialize(BytesIO(hex_str_to_bytes(node.signrawtransactionwithwallet(tx.serialize().hex())['hex'])))
+        # tx = tx_from_hex(node.signrawtransactionwithwallet(tx.serialize().hex())['hex'])
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-vout-empty'}],
             rawtxs=[tx.serialize().hex()],
         )
 
         self.log.info('A really large transaction')
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         tx.vin = [tx.vin[0]] * math.ceil(MAX_BLOCK_BASE_SIZE / len(tx.vin[0].serialize()))
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-oversize'}],
@@ -217,7 +216,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
 
         self.log.info('A transaction with negative output value')
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         tx.vout[0].nValue *= -1
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-vout-negative'}],
@@ -226,7 +225,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
 
         # The following two validations prevent overflow of the output amounts (see CVE-2010-5139).
         self.log.info('A transaction with too large output value')
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         tx.vout[0].nValue = MAX_MONEY + 1
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-vout-toolarge'}],
@@ -234,7 +233,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
 
         self.log.info('A transaction with too large sum of output values')
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         tx.vout = [tx.vout[0]] * 2
         tx.vout[0].nValue = MAX_MONEY
         self.check_mempool_result(
@@ -243,36 +242,44 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
 
         self.log.info('A transaction with duplicate inputs')
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         tx.vin = [tx.vin[0]] * 2
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-inputs-duplicate'}],
             rawtxs=[tx.serialize().hex()],
         )
 
+        self.log.info('A non-coinbase transaction with coinbase-like outpoint')
+        tx = tx_from_hex(raw_tx_reference)
+        tx.vin.append(CTxIn(COutPoint(hash=0, n=0xffffffff)))
+        self.check_mempool_result(
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-prevout-null'}],
+            rawtxs=[tx.serialize().hex()],
+        )
+
         self.log.info('A coinbase transaction')
         # Pick the input of the first tx we signed, so it has to be a coinbase tx
         raw_tx_coinbase_spent = node.getrawtransaction(txid=node.decoderawtransaction(hexstring=raw_tx_in_block)['vin'][0]['txid'])
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_coinbase_spent)))
+        tx = tx_from_hex(raw_tx_coinbase_spent)
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'coinbase'}],
             rawtxs=[tx.serialize().hex()],
         )
 
         self.log.info('Some nonstandard transactions')
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         tx.nVersion = 3  # A version currently non-standard
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'version'}],
             rawtxs=[tx.serialize().hex()],
         )
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         tx.vout[0].scriptPubKey = CScript([OP_0])  # Some non-standard script
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'scriptpubkey'}],
             rawtxs=[tx.serialize().hex()],
         )
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         key = ECKey()
         key.generate()
         pubkey = key.get_pubkey().get_bytes()
@@ -281,34 +288,34 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bare-multisig'}],
             rawtxs=[tx.serialize().hex()],
         )
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         tx.vin[0].scriptSig = CScript([OP_HASH160])  # Some not-pushonly scriptSig
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'scriptsig-not-pushonly'}],
             rawtxs=[tx.serialize().hex()],
         )
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         tx.vin[0].scriptSig = CScript([b'a' * 1648]) # Some too large scriptSig (>1650 bytes)
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'scriptsig-size'}],
             rawtxs=[tx.serialize().hex()],
         )
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
-        output_p2sh_burn = CTxOut(nValue=540, scriptPubKey=CScript([OP_HASH160, hash160(b'burn'), OP_EQUAL]))
+        tx = tx_from_hex(raw_tx_reference)
+        output_p2sh_burn = CTxOut(nValue=540, scriptPubKey=script_to_p2sh_script(b'burn'))
         num_scripts = 100000 // len(output_p2sh_burn.serialize())  # Use enough outputs to make the tx too large for our policy
         tx.vout = [output_p2sh_burn] * num_scripts
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'tx-size'}],
             rawtxs=[tx.serialize().hex()],
         )
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         tx.vout[0] = output_p2sh_burn
         tx.vout[0].nValue -= 1  # Make output smaller, such that it is dust for our policy
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'dust'}],
             rawtxs=[tx.serialize().hex()],
         )
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'\xff'])
         tx.vout = [tx.vout[0]] * 2
         self.check_mempool_result(
@@ -317,7 +324,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
 
         self.log.info('A timelocked transaction')
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         tx.vin[0].nSequence -= 1  # Should be non-max, so locktime is not ignored
         tx.nLockTime = node.getblockcount() + 1
         self.check_mempool_result(
@@ -326,7 +333,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
 
         self.log.info('A transaction that is locked by BIP68 sequence logic')
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        tx = tx_from_hex(raw_tx_reference)
         tx.vin[0].nSequence = 2  # We could include it in the second block mined from now, but not the very next one
         # Can skip re-signing the tx because of early rejection
         self.check_mempool_result(

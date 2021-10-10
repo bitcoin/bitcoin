@@ -88,7 +88,7 @@ code.
     separate words (snake_case).
     - Class member variables have a `m_` prefix.
     - Global variables have a `g_` prefix.
-  - Compile-time constant names are all uppercase, and use `_` to separate words.
+  - Constant names are all uppercase, and use `_` to separate words.
   - Class names, function names, and method names are UpperCamelCase
     (PascalCase). Do not prefix class names with `C`.
   - Test suite naming convention: The Boost test suite in file

@@ -9,9 +9,8 @@ Test that permissions are correctly calculated and applied
 
 from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.messages import (
-    CTransaction,
     CTxInWitness,
-    FromHex,
+    tx_from_hex,
 )
 from test_framework.p2p import P2PDataStore
 from test_framework.script import (
@@ -105,8 +104,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         p2p_rebroadcast_wallet = self.nodes[1].add_p2p_connection(P2PDataStore())
 
         self.log.debug("Send a tx from the wallet initially")
-        tx = FromHex(
-            CTransaction(),
+        tx = tx_from_hex(
             self.nodes[0].createrawtransaction(
                 inputs=[{
                     'txid': block_op_true['tx'][0],

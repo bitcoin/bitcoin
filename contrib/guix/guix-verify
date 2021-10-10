@@ -56,58 +56,87 @@ cmd_usage
 exit 1
 fi
 
-################
-# We should be able to find at least one output
-################
-
-OUTSIGDIR_BASE="${GUIX_SIGS_REPO}/${VERSION}"
-echo "Looking for output signature directories in '${OUTSIGDIR_BASE}'"
-
-shopt -s nullglob
-OUTSIGDIRS=( "$OUTSIGDIR_BASE"/* ) # This expands to an array of directories...
-shopt -u nullglob
-
-if (( ${#OUTSIGDIRS[@]} )); then
-    echo "Found output signature directories:"
-    for outsigdir in "${OUTSIGDIRS[@]}"; do
-        echo "    '$outsigdir'"
-    done
-    echo
-else
-    echo "ERR: Could not find any output signature directories in ${OUTSIGDIR_BASE}"
-    exit 1
-fi
-
-
 ##############
 ##  Verify  ##
 ##############
 
-# MAIN LOGIC: Loop through each output for VERSION and check that the SHA256SUMS
-#             and SHA256SUMS.asc file match between signers, using the first
-#             available signer as the arbitrary comparison base.
-for outsigdir in "${OUTSIGDIRS[@]}"; do
-    echo "BEGIN: Checking output signatures for $(basename "$outsigdir")"
-    echo ""
-    signer_dirs=( "$outsigdir"/* ) # This expands to an array of directories...
-    compare_signer_dir="${signer_dirs[0]}" # ...we just want the first one
-    for current_signer_dir in "${signer_dirs[@]}"; do
-        if ! gpg --quiet --batch --verify "$current_signer_dir"/SHA256SUMS.asc "$current_signer_dir"/SHA256SUMS; then
-            echo "ERR: Failed to verify GPG signature in '${current_signer_dir}/SHA256SUMS.asc'"
-            echo ""
-            echo "Hint: Either the signature is invalid or the public key is missing"
-            echo ""
-        elif ! diff --report-identical "$compare_signer_dir"/SHA256SUMS "$current_signer_dir"/SHA256SUMS; then
-            echo "ERR: The SHA256SUMS attestation in these two directories differ:"
-            echo "    '${compare_signer_dir}'"
-            echo "    '${current_signer_dir}'"
-            echo ""
-        else
-            echo "Verified: '${current_signer_dir}'"
-            echo ""
-        fi
+OUTSIGDIR_BASE="${GUIX_SIGS_REPO}/${VERSION}"
+echo "Looking for signature directories in '${OUTSIGDIR_BASE}'"
+echo ""
+
+# Usage: verify compare_manifest current_manifest
+verify() {
+    local compare_manifest="$1"
+    local current_manifest="$2"
+    if ! gpg --quiet --batch --verify "$current_manifest".asc "$current_manifest" 1>&2; then
+        echo "ERR: Failed to verify GPG signature in '${current_manifest}'"
+        echo ""
+        echo "Hint: Either the signature is invalid or the public key is missing"
+        echo ""
+    elif ! diff --report-identical "$compare_manifest" "$current_manifest" 1>&2; then
+        echo "ERR: The SHA256SUMS attestation in these two directories differ:"
+        echo "    '${compare_manifest}'"
+        echo "    '${current_manifest}'"
+        echo ""
+    else
+        echo "Verified: '${current_manifest}'"
+        echo ""
+    fi
+}
+
+shopt -s nullglob
+all_noncodesigned=( "$OUTSIGDIR_BASE"/*/noncodesigned.SHA256SUMS )
+shopt -u nullglob
+
+echo "--------------------"
+echo ""
+if (( ${#all_noncodesigned[@]} )); then
+    compare_noncodesigned="${all_noncodesigned[0]}"
+
+    for current_manifest in "${all_noncodesigned[@]}"; do
+        verify "$compare_noncodesigned" "$current_manifest"
     done
-    echo "DONE: Checking output signatures for $(basename "$outsigdir")"
+
+    echo "DONE: Checking output signatures for noncodesigned.SHA256SUMS"
     echo ""
+else
+    echo "WARN: No signature directories with noncodesigned.SHA256SUMS found"
     echo ""
-done
+fi
+
+shopt -s nullglob
+all_all=( "$OUTSIGDIR_BASE"/*/all.SHA256SUMS )
+shopt -u nullglob
+
+echo "--------------------"
+echo ""
+if (( ${#all_all[@]} )); then
+    compare_all="${all_all[0]}"
+
+    for current_manifest in "${all_all[@]}"; do
+        verify "$compare_all" "$current_manifest"
+    done
+
+    # Sanity check: there should be no entries that exist in
+    # noncodesigned.SHA256SUMS that doesn't exist in all.SHA256SUMS
+    if [[ "$(comm -23 <(sort "$compare_noncodesigned") <(sort "$compare_all") | wc -c)" -ne 0 ]]; then
+        echo "ERR: There are unique lines in noncodesigned.SHA256SUMS which"
+        echo "     do not exist in all.SHA256SUMS, something went very wrong."
+        exit 1
+    fi
+
+    echo "DONE: Checking output signatures for all.SHA256SUMS"
+    echo ""
+else
+    echo "WARN: No signature directories with all.SHA256SUMS found"
+    echo ""
+fi
+
+echo "===================="
+echo ""
+if (( ${#all_noncodesigned[@]} + ${#all_all[@]} == 0 )); then
+    echo "ERR: Unable to perform any verifications as no signature directories"
+    echo "     were found"
+    echo ""
+    exit 1
+fi

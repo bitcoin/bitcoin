@@ -84,6 +84,12 @@ Run all possible tests with
 test/functional/test_runner.py --extended
 ```
 
+In order to run backwards compatibility tests, download the previous node binaries:
+
+```
+test/get_previous_releases.py -b v0.20.1 v0.19.1 v0.18.1 v0.17.2 v0.16.3 v0.15.2
+```
+
 By default, up to 4 tests will be run in parallel by test_runner. To specify
 how many jobs to run, append `--jobs=n`
 
