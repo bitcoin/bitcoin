@@ -2590,7 +2590,7 @@ static void AppendWarning(std::string& res, const std::string& warn)
 }
 
 /** Check warning conditions and do some notifications on new chain tip set. */
-void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainParams) 
+void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainParams)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     // New best block
