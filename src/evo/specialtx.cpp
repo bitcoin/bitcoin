@@ -12,8 +12,8 @@
 #include <evo/deterministicmns.h>
 #include <evo/specialtx.h>
 
-#include <llmq/quorums_commitment.h>
-#include <llmq/quorums_blockprocessor.h>
+#include <llmq/commitment.h>
+#include <llmq/blockprocessor.h>
 
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
 {

@@ -36,8 +36,8 @@
 
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
-#include <llmq/quorums_chainlocks.h>
-#include <llmq/quorums_instantsend.h>
+#include <llmq/chainlocks.h>
+#include <llmq/instantsend.h>
 
 #include <stdint.h>
 

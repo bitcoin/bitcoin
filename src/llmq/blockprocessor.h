@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_LLMQ_QUORUMS_BLOCKPROCESSOR_H
-#define BITCOIN_LLMQ_QUORUMS_BLOCKPROCESSOR_H
+#ifndef BITCOIN_LLMQ_BLOCKPROCESSOR_H
+#define BITCOIN_LLMQ_BLOCKPROCESSOR_H
 
 #include <unordered_lru_cache.h>
 
@@ -75,4 +75,4 @@ extern CQuorumBlockProcessor* quorumBlockProcessor;
 
 } // namespace llmq
 
-#endif // BITCOIN_LLMQ_QUORUMS_BLOCKPROCESSOR_H
+#endif // BITCOIN_LLMQ_BLOCKPROCESSOR_H

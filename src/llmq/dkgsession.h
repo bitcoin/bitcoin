@@ -2,15 +2,15 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_LLMQ_QUORUMS_DKGSESSION_H
-#define BITCOIN_LLMQ_QUORUMS_DKGSESSION_H
+#ifndef BITCOIN_LLMQ_DKGSESSION_H
+#define BITCOIN_LLMQ_DKGSESSION_H
 
 #include <batchedlogger.h>
 
 #include <bls/bls_ies.h>
 #include <bls/bls_worker.h>
 
-#include <llmq/quorums_utils.h>
+#include <llmq/utils.h>
 
 class UniValue;
 
@@ -338,4 +338,4 @@ void SetSimulatedDKGErrorRate(const std::string& type, double rate);
 
 } // namespace llmq
 
-#endif // BITCOIN_LLMQ_QUORUMS_DKGSESSION_H
+#endif // BITCOIN_LLMQ_DKGSESSION_H

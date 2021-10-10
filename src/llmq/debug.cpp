@@ -2,14 +2,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <llmq/quorums_debug.h>
+#include <llmq/debug.h>
 
 #include <chainparams.h>
 #include <timedata.h>
 #include <validation.h>
 
 #include <evo/deterministicmns.h>
-#include <llmq/quorums_utils.h>
+#include <llmq/utils.h>
 
 namespace llmq
 {

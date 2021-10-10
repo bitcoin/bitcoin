@@ -16,9 +16,9 @@
 #include <evo/mnauth.h>
 
 #include <llmq/quorums.h>
-#include <llmq/quorums_chainlocks.h>
-#include <llmq/quorums_instantsend.h>
-#include <llmq/quorums_dkgsessionmgr.h>
+#include <llmq/chainlocks.h>
+#include <llmq/instantsend.h>
+#include <llmq/dkgsessionmgr.h>
 
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {

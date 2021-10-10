@@ -11,12 +11,12 @@
 #include <evo/deterministicmns.h>
 
 #include <llmq/quorums.h>
-#include <llmq/quorums_commitment.h>
-#include <llmq/quorums_blockprocessor.h>
-#include <llmq/quorums_debug.h>
-#include <llmq/quorums_dkgsession.h>
-#include <llmq/quorums_signing.h>
-#include <llmq/quorums_signing_shares.h>
+#include <llmq/commitment.h>
+#include <llmq/blockprocessor.h>
+#include <llmq/debug.h>
+#include <llmq/dkgsession.h>
+#include <llmq/signing.h>
+#include <llmq/signing_shares.h>
 
 namespace llmq {
 extern const std::string CLSIG_REQUESTID_PREFIX;

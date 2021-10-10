@@ -16,7 +16,7 @@
 #include <univalue.h>
 #include <util/system.h>
 
-#include <llmq/quorums_init.h>
+#include <llmq/init.h>
 
 #include <QDir>
 #include <QtGlobal>

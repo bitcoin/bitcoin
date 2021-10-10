@@ -5,7 +5,7 @@
 #include <evo/mnauth.h>
 
 #include <evo/deterministicmns.h>
-#include <llmq/quorums_utils.h>
+#include <llmq/utils.h>
 #include <masternode/node.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>

@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_LLMQ_QUORUMS_INSTANTSEND_H
-#define BITCOIN_LLMQ_QUORUMS_INSTANTSEND_H
+#ifndef BITCOIN_LLMQ_INSTANTSEND_H
+#define BITCOIN_LLMQ_INSTANTSEND_H
 
-#include <llmq/quorums_signing.h>
+#include <llmq/signing.h>
 #include <unordered_lru_cache.h>
 
 #include <chain.h>
@@ -286,4 +286,4 @@ bool RejectConflictingBlocks();
 
 } // namespace llmq
 
-#endif // BITCOIN_LLMQ_QUORUMS_INSTANTSEND_H
+#endif // BITCOIN_LLMQ_INSTANTSEND_H

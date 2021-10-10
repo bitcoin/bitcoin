@@ -5,8 +5,8 @@
 #include <evo/cbtx.h>
 #include <core_io.h>
 #include <evo/deterministicmns.h>
-#include <llmq/quorums_blockprocessor.h>
-#include <llmq/quorums_commitment.h>
+#include <llmq/blockprocessor.h>
+#include <llmq/commitment.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
 

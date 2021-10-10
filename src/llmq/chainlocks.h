@@ -2,11 +2,11 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
-#define BITCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
+#ifndef BITCOIN_LLMQ_CHAINLOCKS_H
+#define BITCOIN_LLMQ_CHAINLOCKS_H
 
 #include <bls/bls.h>
-#include <llmq/quorums_signing.h>
+#include <llmq/signing.h>
 
 #include <chainparams.h>
 #include <net.h>
@@ -122,4 +122,4 @@ bool AreChainLocksEnabled();
 
 } // namespace llmq
 
-#endif // BITCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
+#endif // BITCOIN_LLMQ_CHAINLOCKS_H

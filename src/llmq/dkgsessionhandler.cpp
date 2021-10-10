@@ -2,13 +2,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <llmq/quorums_dkgsessionhandler.h>
+#include <llmq/dkgsessionhandler.h>
 
-#include <llmq/quorums_commitment.h>
-#include <llmq/quorums_dkgsession.h>
-#include <llmq/quorums_blockprocessor.h>
-#include <llmq/quorums_debug.h>
-#include <llmq/quorums_utils.h>
+#include <llmq/commitment.h>
+#include <llmq/dkgsession.h>
+#include <llmq/blockprocessor.h>
+#include <llmq/debug.h>
+#include <llmq/utils.h>
 
 #include <evo/deterministicmns.h>
 

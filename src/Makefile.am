@@ -195,18 +195,19 @@ BITCOIN_CORE_H = \
   dbwrapper.h \
   limitedmap.h \
   llmq/quorums.h \
-  llmq/quorums_blockprocessor.h \
-  llmq/quorums_commitment.h \
-  llmq/quorums_chainlocks.h \
-  llmq/quorums_debug.h \
-  llmq/quorums_dkgsessionhandler.h \
-  llmq/quorums_dkgsessionmgr.h \
-  llmq/quorums_dkgsession.h \
-  llmq/quorums_init.h \
-  llmq/quorums_instantsend.h \
-  llmq/quorums_signing.h \
-  llmq/quorums_signing_shares.h \
-  llmq/quorums_utils.h \
+  llmq/blockprocessor.h \
+  llmq/commitment.h \
+  llmq/chainlocks.h \
+  llmq/debug.h \
+  llmq/dkgsessionhandler.h \
+  llmq/dkgsessionmgr.h \
+  llmq/dkgsession.h \
+  llmq/init.h \
+  llmq/instantsend.h \
+  llmq/signing.h \
+  llmq/signing_shares.h \
+  llmq/utils.h \
+  llmq/params.h \
   logging.h \
   logging/timer.h \
   masternode/node.h \
@@ -360,18 +361,18 @@ libdash_server_a_SOURCES = \
   governance/vote.cpp \
   governance/votedb.cpp \
   llmq/quorums.cpp \
-  llmq/quorums_blockprocessor.cpp \
-  llmq/quorums_commitment.cpp \
-  llmq/quorums_chainlocks.cpp \
-  llmq/quorums_debug.cpp \
-  llmq/quorums_dkgsessionhandler.cpp \
-  llmq/quorums_dkgsessionmgr.cpp \
-  llmq/quorums_dkgsession.cpp \
-  llmq/quorums_init.cpp \
-  llmq/quorums_instantsend.cpp \
-  llmq/quorums_signing.cpp \
-  llmq/quorums_signing_shares.cpp \
-  llmq/quorums_utils.cpp \
+  llmq/blockprocessor.cpp \
+  llmq/commitment.cpp \
+  llmq/chainlocks.cpp \
+  llmq/debug.cpp \
+  llmq/dkgsessionhandler.cpp \
+  llmq/dkgsessionmgr.cpp \
+  llmq/dkgsession.cpp \
+  llmq/init.cpp \
+  llmq/instantsend.cpp \
+  llmq/signing.cpp \
+  llmq/signing_shares.cpp \
+  llmq/utils.cpp \
   masternode/node.cpp \
   masternode/meta.cpp \
   masternode/payments.cpp \
@@ -595,6 +596,7 @@ libdash_common_a_SOURCES = \
   key.cpp \
   key_io.cpp \
   keystore.cpp \
+  llmq/params.cpp \
   netaddress.cpp \
   netbase.cpp \
   net_permissions.cpp \
