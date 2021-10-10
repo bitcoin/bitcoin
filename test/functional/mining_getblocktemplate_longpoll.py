@@ -10,7 +10,7 @@ import threading
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import get_rpc_proxy, assert_true
+from test_framework.util import get_rpc_proxy, assert_equal
 from test_framework.wallet import MiniWallet
 
 
