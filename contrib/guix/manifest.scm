@@ -9,6 +9,8 @@
              (gnu packages file)
              (gnu packages gawk)
              (gnu packages gcc)
+             (gnu packages image)
+             (gnu packages imagemagick)
              ((gnu packages installers) #:select (nsis-x86_64))
              ((gnu packages linux) #:select (linux-libre-headers-6.1))
              (gnu packages llvm)
@@ -548,6 +550,9 @@ inspecting signatures in Mach-O binaries.")
         cmake-minimal
         gnu-make
         pkg-config
+        imagemagick
+        libicns
+        librsvg
         ;; Scripting
         python-minimal ;; (3.10)
         ;; Git
