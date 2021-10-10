@@ -43,12 +43,12 @@ bin/gbuild --commit bitcoin=<version> --allow-sudo ../bitcoin/guix-in-gitian/con
 bin/gbuild --commit bitcoin=<version> --allow-sudo ../bitcoin/guix-in-gitian/contrib/gitian-descriptors/gitian-guix-mac.yml
 ```
 
-Note that this comamnd includes `--allow-sudo`.
+Note that this command includes `--allow-sudo`.
 This is required in order for guix to work inside of the container.
 
 ### Attesting (signing)
 
-With gitian, the binaries would be commited to (signed) using `gsign`.
+With gitian, the binaries would be committed to (signed) using `gsign`.
 However this is no longer necessary with guix.
 The `guix-attest` script is used for making and signing the sha256 hashes of the build results.
 This script does not require guix, and should be run on the build host.
