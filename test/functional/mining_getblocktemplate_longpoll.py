@@ -10,7 +10,7 @@ import threading
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import get_rpc_proxy
+from test_framework.util import get_rpc_proxy, assert_true
 from test_framework.wallet import MiniWallet
 
 
@@ -39,7 +39,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         template = self.nodes[0].getblocktemplate({'rules': ['segwit']})
         longpollid = template['longpollid']
         template2 = self.nodes[0].getblocktemplate({'rules': ['segwit']})
-        assert template2['longpollid'] == longpollid
+        assert_equal(template2['longpollid'], longpollid)
 
         self.log.info("Test that longpoll waits if we do nothing")
         thr = LongpollThread(self.nodes[0])
