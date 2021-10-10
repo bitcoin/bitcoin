@@ -10,6 +10,8 @@
              (gnu packages file)
              (gnu packages gawk)
              (gnu packages gcc)
+             (gnu packages image)
+             (gnu packages imagemagick)
              ((gnu packages installers) #:select (nsis-x86_64))
              ((gnu packages linux) #:select (linux-libre-headers-6.1 util-linux))
              (gnu packages llvm)
@@ -526,6 +528,9 @@ inspecting signatures in Mach-O binaries.")
         autoconf-2.71
         automake
         pkg-config
+        imagemagick
+        libicns
+        librsvg
         ;; Scripting
         python-minimal ;; (3.10)
         ;; Git
