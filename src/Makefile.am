@@ -495,7 +495,8 @@ libbitcoin_common_a_SOURCES = \
   vbk/pop_common.hpp \
   vbk/pop_common.cpp \
   vbk/params.cpp \
-  vbk/bootstraps.cpp \
+  vbk/bootstraps-testnet.cpp \
+  vbk/bootstraps-mainnet.cpp \
   pow_common.cpp \
   base58.cpp \
   bech32.cpp \

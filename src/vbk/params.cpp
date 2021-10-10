@@ -103,14 +103,12 @@ void selectPopConfig(const std::string& network)
     altintegration::Config popconfig;
 
     if (network == CBaseChainParams::MAIN) {
-        throw std::runtime_error("Bootstrap with mainnet BTC/VBK blocks!");
-        // TODO
-//        auto btcparam = std::make_shared<altintegration::BtcChainParamsMain>();
-//        popconfig.setBTC(testnetBTCstartHeight, testnetBTCblocks, btcparam);
-//        auto vbkparam = std::make_shared<altintegration::VbkChainParamsMain>();
-//        popconfig.setVBK(testnetVBKstartHeight, testnetVBKblocks, vbkparam);
-//        auto altparam = std::make_shared<VeriBlock::AltChainParamsVBTC>(Params().GenesisBlock(), /*mainnet=*/true);
-//        popconfig.alt = altparam;
+        auto btcparam = std::make_shared<altintegration::BtcChainParamsMain>();
+        popconfig.setBTC(mainnetBTCstartHeight, mainnetBTCblocks, btcparam);
+        auto vbkparam = std::make_shared<altintegration::VbkChainParamsMain>();
+        popconfig.setVBK(mainnetVBKstartHeight, mainnetVBKblocks, vbkparam);
+        auto altparam = std::make_shared<VeriBlock::AltChainParamsVBTC>(Params().GenesisBlock());
+        popconfig.alt = altparam;
     } else if (network == CBaseChainParams::TESTNET) {
         auto btcparam = std::make_shared<altintegration::BtcChainParamsTest>();
         popconfig.setBTC(testnetBTCstartHeight, testnetBTCblocks, btcparam);
