@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <netaddress.h>
+#include <netbase.h>
 
 #include <string>
 #include <type_traits>
@@ -35,9 +36,14 @@ enum class NetPermissionFlags : uint32_t {
     // unlimited amounts of addrs.
     Addr = (1U << 7),
 
+    // Can query compact filters even if -peerblockfilters is false
+    BlockFilters = (1U << 8),
+    // Used to avoid an error when All is used to set BlockFilters
+    BlockFilters_Explicit = BlockFilters | (1U << 9),
+
     // True if the user did not specifically set fine grained permissions
     Implicit = (1U << 31),
-    All = BloomFilter | ForceRelay | Relay | NoBan | Mempool | Download | Addr,
+    All = BloomFilter | ForceRelay | Relay | NoBan | Mempool | Download | Addr | BlockFilters,
 };
 static inline constexpr NetPermissionFlags operator|(NetPermissionFlags a, NetPermissionFlags b)
 {
@@ -82,7 +88,11 @@ public:
 class NetWhitelistPermissions : public NetPermissions
 {
 public:
-    static bool TryParse(const std::string& str, NetWhitelistPermissions& output, bilingual_str& error);
+    static bool TryParse(const std::string& str, NetWhitelistPermissions& output, ConnectionDirection& output_connection_direction, bilingual_str& error);
+    static inline bool TryParse(const std::string& str, NetWhitelistPermissions& output, bilingual_str& error) {
+        ConnectionDirection connection_direction_ignored;
+        return TryParse(str, output, connection_direction_ignored, error);
+    }
     CSubNet m_subnet;
 };
 

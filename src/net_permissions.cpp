@@ -10,6 +10,7 @@
 
 const std::vector<std::string> NET_PERMISSIONS_DOC{
     "bloomfilter (allow requesting BIP37 filtered blocks and transactions)",
+    "blockfilters (serve compact block filters to peers per BIP157)"
     "noban (do not ban for misbehavior; implies download)",
     "forcerelay (relay transactions that are already in the mempool; implies relay)",
     "relay (relay even in -blocksonly mode, and unlimited transaction announcements)",
@@ -21,9 +22,10 @@ const std::vector<std::string> NET_PERMISSIONS_DOC{
 namespace {
 
 // Parse the following format: "perm1,perm2@xxxxxx"
-bool TryParsePermissionFlags(const std::string& str, NetPermissionFlags& output, size_t& readen, bilingual_str& error)
+bool TryParsePermissionFlags(const std::string& str, NetPermissionFlags& output, ConnectionDirection* output_connection_direction, size_t& readen, bilingual_str& error)
 {
     NetPermissionFlags flags = NetPermissionFlags::None;
+    ConnectionDirection connection_direction = ConnectionDirection::None;
     const auto atSeparator = str.find('@');
 
     // if '@' is not found (ie, "xxxxx"), the caller should apply implicit permissions
@@ -45,6 +47,7 @@ bool TryParsePermissionFlags(const std::string& str, NetPermissionFlags& output,
             if (commaSeparator != std::string::npos) readen++; // We read ","
 
             if (permission == "bloomfilter" || permission == "bloom") NetPermissions::AddFlag(flags, NetPermissionFlags::BloomFilter);
+            else if (permission == "blockfilters" || permission == "compactfilters" || permission == "cfilters") NetPermissions::AddFlag(flags, NetPermissionFlags::BlockFilters_Explicit);
             else if (permission == "noban") NetPermissions::AddFlag(flags, NetPermissionFlags::NoBan);
             else if (permission == "forcerelay") NetPermissions::AddFlag(flags, NetPermissionFlags::ForceRelay);
             else if (permission == "mempool") NetPermissions::AddFlag(flags, NetPermissionFlags::Mempool);
@@ -52,6 +55,14 @@ bool TryParsePermissionFlags(const std::string& str, NetPermissionFlags& output,
             else if (permission == "all") NetPermissions::AddFlag(flags, NetPermissionFlags::All);
             else if (permission == "relay") NetPermissions::AddFlag(flags, NetPermissionFlags::Relay);
             else if (permission == "addr") NetPermissions::AddFlag(flags, NetPermissionFlags::Addr);
+            else if (permission == "in") connection_direction |= ConnectionDirection::In;
+            else if (permission == "out") {
+                if (!output_connection_direction) {
+                    error = _("whitebind is only used for incoming connections");
+                    return false;
+                }
+                connection_direction |= ConnectionDirection::Out;
+            }
             else if (permission.length() == 0); // Allow empty entries
             else {
                 error = strprintf(_("Invalid P2P permission: '%s'"), permission);
@@ -61,7 +72,11 @@ bool TryParsePermissionFlags(const std::string& str, NetPermissionFlags& output,
         readen++;
     }
 
+    // By default, whitelist applies to all connections
+    if (connection_direction == ConnectionDirection::None) connection_direction = ConnectionDirection::Both;
+
     output = flags;
+    if (output_connection_direction) *output_connection_direction = connection_direction;
     error = Untranslated("");
     return true;
 }
@@ -71,6 +86,7 @@ bool TryParsePermissionFlags(const std::string& str, NetPermissionFlags& output,
 std::vector<std::string> NetPermissions::ToStrings(NetPermissionFlags flags)
 {
     std::vector<std::string> strings;
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::BlockFilters)) strings.push_back("blockfilters");
     if (NetPermissions::HasFlag(flags, NetPermissionFlags::BloomFilter)) strings.push_back("bloomfilter");
     if (NetPermissions::HasFlag(flags, NetPermissionFlags::NoBan)) strings.push_back("noban");
     if (NetPermissions::HasFlag(flags, NetPermissionFlags::ForceRelay)) strings.push_back("forcerelay");
@@ -85,7 +101,7 @@ bool NetWhitebindPermissions::TryParse(const std::string& str, NetWhitebindPermi
 {
     NetPermissionFlags flags;
     size_t offset;
-    if (!TryParsePermissionFlags(str, flags, offset, error)) return false;
+    if (!TryParsePermissionFlags(str, flags, nullptr, offset, error)) return false;
 
     const std::string strBind = str.substr(offset);
     CService addrBind;
@@ -104,11 +120,11 @@ bool NetWhitebindPermissions::TryParse(const std::string& str, NetWhitebindPermi
     return true;
 }
 
-bool NetWhitelistPermissions::TryParse(const std::string& str, NetWhitelistPermissions& output, bilingual_str& error)
+bool NetWhitelistPermissions::TryParse(const std::string& str, NetWhitelistPermissions& output, ConnectionDirection& output_connection_direction, bilingual_str& error)
 {
     NetPermissionFlags flags;
     size_t offset;
-    if (!TryParsePermissionFlags(str, flags, offset, error)) return false;
+    if (!TryParsePermissionFlags(str, flags, &output_connection_direction, offset, error)) return false;
 
     const std::string net = str.substr(offset);
     CSubNet subnet;
