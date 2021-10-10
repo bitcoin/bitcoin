@@ -150,7 +150,7 @@ public:
     // when selecting a quorum for signing and verification, we use CQuorumManager::SelectQuorum with this offset as
     // starting height for scanning. This is because otherwise the resulting signatures would not be verifiable by nodes
     // which are not 100% at the chain tip.
-    static const int SIGN_HEIGHT_OFFSET = 8;
+    static constexpr int SIGN_HEIGHT_OFFSET{8};
     CSigningManager(bool fMemory, CConnman& _connman, PeerManager& _peerman, ChainstateManager& _chainman, bool fWipe);
 
     bool AlreadyHave(const uint256& hash) const;

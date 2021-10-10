@@ -23,7 +23,7 @@ class CCoinsViewCache;
 class CCbTx
 {
 public:
-    static const uint16_t CURRENT_VERSION = 2;
+    static constexpr uint16_t CURRENT_VERSION = 2;
 
 public:
     uint16_t nVersion{CURRENT_VERSION};
