@@ -28,8 +28,8 @@ script: |
   if test -n "$GBUILD_CACHE_ENABLED"; then
     export SOURCES_PATH=${GBUILD_COMMON_CACHE}
     export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
-    mkdir -p "${BASE_CACHE}" "${SOURCES_PATH}"
     GUIX_CACHE="${GBUILD_COMMON_CACHE}/guix"
+    mkdir -p "${BASE_CACHE}" "${GUIX_CACHE}" "${SOURCES_PATH}"
 
     GUIX_SCRIPT="${GUIX_CACHE}/guix-install.sh"
     if [[ -f "${GUIX_SCRIPT}" ]]; then
@@ -49,6 +49,7 @@ script: |
 
   # Install guix with the installer script
   if [[ ! -f "guix-install.sh" ]]; then
+    # NOTE: When bumping the version here, also change cache filenames above
     wget -nc -O "guix-install.sh" "https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh?h=version-1.3.0&id=aa34d4d28dfe25ba47d5800d05000fb7221788c0"
   fi
   echo "bcdeaa757cd42d2c9de4791272737e9ee0d518398403955f113611f4a893380a  guix-install.sh" | sha256sum -c -
