@@ -31,7 +31,7 @@ extern CCoinJoinClientQueueManager coinJoinClientQueueManager;
 class CPendingDsaRequest
 {
 private:
-    static const int TIMEOUT = 15;
+    static constexpr int TIMEOUT = 15;
 
     CService addr;
     CCoinJoinAccept dsa;

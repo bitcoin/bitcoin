@@ -20,7 +20,7 @@ class CGovernanceVote;
 
 extern CGovernanceManager governance;
 
-static const int RATE_BUFFER_SIZE = 5;
+static constexpr int RATE_BUFFER_SIZE = 5;
 
 class CDeterministicMNList;
 using CDeterministicMNListPtr = std::shared_ptr<CDeterministicMNList>;
@@ -154,7 +154,7 @@ public: // Types
     using hash_s_t = std::set<uint256>;
 
 private:
-    static const int MAX_CACHE_SIZE = 1000000;
+    static constexpr int MAX_CACHE_SIZE = 1000000;
 
     static const std::string SERIALIZATION_VERSION_STRING;
 

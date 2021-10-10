@@ -11,24 +11,24 @@
 
 class UniValue;
 
-static const int MIN_COINJOIN_SESSIONS = 1;
-static const int MIN_COINJOIN_ROUNDS = 2;
-static const int MIN_COINJOIN_AMOUNT = 2;
-static const int MIN_COINJOIN_DENOMS_GOAL = 10;
-static const int MIN_COINJOIN_DENOMS_HARDCAP = 10;
-static const int MAX_COINJOIN_SESSIONS = 10;
-static const int MAX_COINJOIN_ROUNDS = 16;
-static const int MAX_COINJOIN_DENOMS_GOAL = 100000;
-static const int MAX_COINJOIN_DENOMS_HARDCAP = 100000;
-static const int MAX_COINJOIN_AMOUNT = MAX_MONEY / COIN;
-static const int DEFAULT_COINJOIN_SESSIONS = 4;
-static const int DEFAULT_COINJOIN_ROUNDS = 4;
-static const int DEFAULT_COINJOIN_AMOUNT = 1000;
-static const int DEFAULT_COINJOIN_DENOMS_GOAL = 50;
-static const int DEFAULT_COINJOIN_DENOMS_HARDCAP = 300;
+static constexpr int MIN_COINJOIN_SESSIONS = 1;
+static constexpr int MIN_COINJOIN_ROUNDS = 2;
+static constexpr int MIN_COINJOIN_AMOUNT = 2;
+static constexpr int MIN_COINJOIN_DENOMS_GOAL = 10;
+static constexpr int MIN_COINJOIN_DENOMS_HARDCAP = 10;
+static constexpr int MAX_COINJOIN_SESSIONS = 10;
+static constexpr int MAX_COINJOIN_ROUNDS = 16;
+static constexpr int MAX_COINJOIN_DENOMS_GOAL = 100000;
+static constexpr int MAX_COINJOIN_DENOMS_HARDCAP = 100000;
+static constexpr int MAX_COINJOIN_AMOUNT = MAX_MONEY / COIN;
+static constexpr int DEFAULT_COINJOIN_SESSIONS = 4;
+static constexpr int DEFAULT_COINJOIN_ROUNDS = 4;
+static constexpr int DEFAULT_COINJOIN_AMOUNT = 1000;
+static constexpr int DEFAULT_COINJOIN_DENOMS_GOAL = 50;
+static constexpr int DEFAULT_COINJOIN_DENOMS_HARDCAP = 300;
 
-static const bool DEFAULT_COINJOIN_AUTOSTART = false;
-static const bool DEFAULT_COINJOIN_MULTISESSION = false;
+static constexpr bool DEFAULT_COINJOIN_AUTOSTART = false;
+static constexpr bool DEFAULT_COINJOIN_MULTISESSION = false;
 
 // How many new denom outputs to create before we consider the "goal" loop in CreateDenominated
 // a final one and start creating an actual tx. Same limit applies for the "hard cap" part of the algo.
@@ -42,11 +42,11 @@ static const int COINJOIN_DENOM_OUTPUTS_THRESHOLD = 500;
 
 // Warn user if mixing in gui or try to create backup if mixing in daemon mode
 // when we have only this many keys left
-static const int COINJOIN_KEYS_THRESHOLD_WARNING = 100;
+static constexpr int COINJOIN_KEYS_THRESHOLD_WARNING = 100;
 // Stop mixing completely, it's too dangerous to continue when we have only this many keys left
-static const int COINJOIN_KEYS_THRESHOLD_STOP = 50;
+static constexpr int COINJOIN_KEYS_THRESHOLD_STOP = 50;
 // Pseudorandomly mix up to this many times in addition to base round count
-static const int COINJOIN_RANDOM_ROUNDS = 3;
+static constexpr int COINJOIN_RANDOM_ROUNDS = 3;
 
 /* Application wide mixing options */
 class CCoinJoinClientOptions

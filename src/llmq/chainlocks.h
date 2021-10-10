@@ -44,11 +44,11 @@ public:
 
 class CChainLocksHandler : public CRecoveredSigsListener
 {
-    static const int64_t CLEANUP_INTERVAL = 1000 * 30;
-    static const int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
+    static constexpr int64_t CLEANUP_INTERVAL = 1000 * 30;
+    static constexpr int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
 
     // how long to wait for islocks until we consider a block with non-islocked TXs to be safe to sign
-    static const int64_t WAIT_FOR_ISLOCK_TIMEOUT = 10 * 60;
+    static constexpr int64_t WAIT_FOR_ISLOCK_TIMEOUT = 10 * 60;
 
 private:
     CScheduler* scheduler;

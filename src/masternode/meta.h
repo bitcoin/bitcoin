@@ -15,7 +15,7 @@
 
 class CConnman;
 
-static const int MASTERNODE_MAX_MIXING_TXES             = 5;
+static constexpr int MASTERNODE_MAX_MIXING_TXES{5};
 
 // Holds extra (non-deterministic) information about masternodes
 // This is mostly local information, e.g. about mixing and governance

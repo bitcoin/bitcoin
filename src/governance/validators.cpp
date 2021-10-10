@@ -98,7 +98,7 @@ bool CProposalValidator::ValidateName()
         return false;
     }
 
-    static const std::string strAllowedChars = "-_abcdefghijklmnopqrstuvwxyz0123456789";
+    static constexpr std::string_view strAllowedChars{"-_abcdefghijklmnopqrstuvwxyz0123456789"};
 
     std::transform(strName.begin(), strName.end(), strName.begin(), ToLower);
 
@@ -324,7 +324,7 @@ bool CProposalValidator::CheckURL(const std::string& strURLIn)
 
     // Process netloc
     if ((strRest.size() > 2) && (strRest.substr(0, 2) == "//")) {
-        static const std::string strNetlocDelimiters = "/?#";
+        static constexpr std::string_view strNetlocDelimiters{"/?#"};
 
         strRest = strRest.substr(2);
 

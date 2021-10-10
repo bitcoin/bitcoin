@@ -13,8 +13,8 @@
 #include <cassert>
 #include <cstring>
 
-static const std::unique_ptr<bls::CoreMPL> pSchemeLegacy(new bls::LegacySchemeMPL);
-static const std::unique_ptr<bls::CoreMPL> pScheme(new bls::BasicSchemeMPL);
+static const std::unique_ptr<bls::CoreMPL> pSchemeLegacy{std::make_unique<bls::LegacySchemeMPL>()};
+static const std::unique_ptr<bls::CoreMPL> pScheme(std::make_unique<bls::BasicSchemeMPL>());
 
 static const std::unique_ptr<bls::CoreMPL>& Scheme(const bool fLegacy)
 {

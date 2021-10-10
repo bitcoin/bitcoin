@@ -19,12 +19,12 @@ class CBLSPublicKey;
 class CBlockIndex;
 
 // timeouts
-static const int COINJOIN_AUTO_TIMEOUT_MIN = 5;
-static const int COINJOIN_AUTO_TIMEOUT_MAX = 15;
-static const int COINJOIN_QUEUE_TIMEOUT = 30;
-static const int COINJOIN_SIGNING_TIMEOUT = 15;
+static constexpr int COINJOIN_AUTO_TIMEOUT_MIN = 5;
+static constexpr int COINJOIN_AUTO_TIMEOUT_MAX = 15;
+static constexpr int COINJOIN_QUEUE_TIMEOUT = 30;
+static constexpr int COINJOIN_SIGNING_TIMEOUT = 15;
 
-static const size_t COINJOIN_ENTRY_MAX_SIZE = 9;
+static constexpr size_t COINJOIN_ENTRY_MAX_SIZE = 9;
 
 // pool responses
 enum PoolMessage : int32_t {

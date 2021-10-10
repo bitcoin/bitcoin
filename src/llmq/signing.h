@@ -28,7 +28,7 @@ class CQuorum;
 using CQuorumCPtr = std::shared_ptr<const CQuorum>;
 
 // Keep recovered signatures for a week. This is a "-maxrecsigsage" option default.
-static const int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7;
+static constexpr int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE{60 * 60 * 24 * 7};
 
 
 class CRecoveredSig
@@ -117,7 +117,7 @@ class CSigningManager
     // when selecting a quorum for signing and verification, we use CQuorumManager::SelectQuorum with this offset as
     // starting height for scanning. This is because otherwise the resulting signatures would not be verifiable by nodes
     // which are not 100% at the chain tip.
-    static const int SIGN_HEIGHT_OFFSET = 8;
+    static constexpr int SIGN_HEIGHT_OFFSET{8};
 
 private:
     mutable CCriticalSection cs;

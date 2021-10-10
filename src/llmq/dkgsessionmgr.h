@@ -18,7 +18,7 @@ namespace llmq
 
 class CDKGSessionManager
 {
-    static const int64_t MAX_CONTRIBUTION_CACHE_TIME = 60 * 1000;
+    static constexpr int64_t MAX_CONTRIBUTION_CACHE_TIME = 60 * 1000;
 
 private:
     std::unique_ptr<CDBWrapper> db{nullptr};

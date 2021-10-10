@@ -23,9 +23,9 @@ namespace llmq
 struct CInstantSendLock
 {
     // This is the old format of instant send lock, it must be 0
-    static const uint8_t islock_version = 0;
+    static constexpr uint8_t islock_version{0};
     // This is the new format of instant send deterministic lock, this should be incremented for new isdlock versions
-    static const uint8_t isdlock_version = 1;
+    static constexpr uint8_t isdlock_version{1};
 
     uint8_t nVersion;
     std::vector<COutPoint> inputs;
@@ -60,7 +60,7 @@ class CInstantSendDb
 private:
     mutable CCriticalSection cs_db;
 
-    static const int CURRENT_VERSION = 1;
+    static constexpr int CURRENT_VERSION{1};
 
     int best_confirmed_height GUARDED_BY(cs_db) {0};
 

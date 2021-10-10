@@ -655,9 +655,9 @@ public:
 
 class CDeterministicMNManager
 {
-    static const int DISK_SNAPSHOT_PERIOD = 576; // once per day
-    static const int DISK_SNAPSHOTS = 3; // keep cache for 3 disk snapshots to have 2 full days covered
-    static const int LIST_DIFFS_CACHE_SIZE = DISK_SNAPSHOT_PERIOD * DISK_SNAPSHOTS;
+    static constexpr int DISK_SNAPSHOT_PERIOD = 576; // once per day
+    static constexpr int DISK_SNAPSHOTS = 3; // keep cache for 3 disk snapshots to have 2 full days covered
+    static constexpr int LIST_DIFFS_CACHE_SIZE = DISK_SNAPSHOT_PERIOD * DISK_SNAPSHOTS;
 
 public:
     CCriticalSection cs;

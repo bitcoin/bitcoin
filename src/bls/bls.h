@@ -24,7 +24,7 @@
 #include <mutex>
 #include <unistd.h>
 
-static const bool fLegacyDefault{true};
+static constexpr bool fLegacyDefault{true};
 
 // reversed BLS12-381
 constexpr int BLS_CURVE_ID_SIZE{32};
@@ -52,7 +52,7 @@ protected:
     inline constexpr size_t GetSerSize() const { return SerSize; }
 
 public:
-    static const size_t SerSize = _SerSize;
+    static constexpr size_t SerSize = _SerSize;
 
     explicit CBLSWrapper(const bool fLegacyIn = fLegacyDefault) : fLegacy(fLegacyIn)
     {
