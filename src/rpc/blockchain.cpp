@@ -2570,6 +2570,7 @@ static UniValue getblockfilter(const JSONRPCRequest& request)
     return ret;
 }
 
+// clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
@@ -2611,6 +2612,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "waitforblockheight",     &waitforblockheight,     {"height","timeout"} },
     { "hidden",             "syncwithvalidationinterfacequeue", &syncwithvalidationinterfacequeue, {} },
 };
+// clang-format on
 
 void RegisterBlockchainRPCCommands(CRPCTable &t)
 {

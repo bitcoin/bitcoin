@@ -130,13 +130,13 @@ def escape_cdata(text):
     return text
 
 def contains_bitcoin_addr(text, errors):
-    if text != None and ADDRESS_REGEXP.search(text) != None:
+    if text is not None and ADDRESS_REGEXP.search(text) is not None:
         errors.append('Translation "%s" contains a bitcoin address. This will be removed.' % (text))
         return True
     return False
 
 def contains_dash_addr(text, errors):
-    if text != None and ADDRESS_REGEXP_DASH.search(text) != None:
+    if text is not None and ADDRESS_REGEXP_DASH.search(text) is not None:
         errors.append('Translation "%s" contains a Dash address. This will be removed.' % (text))
         return True
     return False

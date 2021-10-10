@@ -756,6 +756,7 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
     return ret;
 }
 
+// clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
@@ -773,6 +774,7 @@ static const CRPCCommand commands[] =
     { "network",            "setnetworkactive",       &setnetworkactive,       {"state"} },
     { "network",            "getnodeaddresses",       &getnodeaddresses,       {"count"} },
 };
+// clang-format on
 
 void RegisterNetRPCCommands(CRPCTable &t)
 {
