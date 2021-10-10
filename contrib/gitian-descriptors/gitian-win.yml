@@ -180,7 +180,7 @@ script: |
     make ${MAKEOPTS} -C src check-security
     make deploy
     make install DESTDIR=${INSTALLPATH}
-    rename 's/-setup\.exe$/-setup-unsigned.exe/' *-setup.exe
+    rename 's/-setup\.exe$/-setup-unsigned.exe/' "*-setup.exe"
     cp -f dashcore-*setup*.exe $OUTDIR/
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/

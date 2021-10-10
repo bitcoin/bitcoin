@@ -180,7 +180,7 @@ script: |
     find . -name "lib*.la" -delete
     find . -name "lib*.a" -delete
     rm -rf ${DISTNAME}/lib/pkgconfig
-    find .. -name *.dSYM -exec cp -ra {} ${DISTNAME}/bin \;
+    find .. -name "*.dSYM" -exec cp -ra {} ${DISTNAME}/bin \;
     find ${DISTNAME} -not -path '*.dSYM*' | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
     find ${DISTNAME} -path '*.dSYM*' | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}-debug.tar.gz
     cd ../../

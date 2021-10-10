@@ -50,6 +50,11 @@ if ! command -v shellcheck > /dev/null; then
     exit $EXIT_CODE
 fi
 
+if ! command -v gawk > /dev/null; then
+    echo "Skipping shell linting since gawk is not installed."
+    exit $EXIT_CODE
+fi
+
 EXCLUDE="--exclude=$(IFS=','; echo "${disabled[*]}")"
 SOURCED_FILES=$(git ls-files | xargs gawk '/^# shellcheck shell=/ {print FILENAME} {nextfile}')  # Check shellcheck directive used for sourced files
 if ! shellcheck "$EXCLUDE" $SOURCED_FILES $(git ls-files -- '*.sh' | grep -vE 'src/(leveldb|secp256k1|univalue)/'); then
@@ -58,6 +63,11 @@ fi
 
 if ! command -v yq > /dev/null; then
     echo "Skipping Gitian desriptor scripts checking since yq is not installed."
+    exit $EXIT_CODE
+fi
+
+if ! command -v jq > /dev/null; then
+    echo "Skipping Gitian descriptor scripts checking since jq is not installed."
     exit $EXIT_CODE
 fi
 
