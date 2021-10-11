@@ -42,7 +42,7 @@ CScript CKeyHolder::GetScriptForDestination() const
 
 CScript CKeyHolderStorage::AddKey(CWallet* pwallet)
 {
-    auto keyHolderPtr = std::unique_ptr<CKeyHolder>(new CKeyHolder(pwallet));
+    auto keyHolderPtr = std::make_unique<CKeyHolder>(pwallet);
     auto script = keyHolderPtr->GetScriptForDestination();
 
     LOCK(cs_storage);
