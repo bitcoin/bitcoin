@@ -691,7 +691,7 @@ void PaymentServer::fetchPaymentACK(WalletModel* walletModel, const SendCoinsRec
         qWarning() << "PaymentServer::fetchPaymentACK: Error getting refund key, refund_to not set";
     }
 
-    int length = payment.ByteSize();
+    int length = payment.ByteSizeLong();
     netRequest.setHeader(QNetworkRequest::ContentLengthHeader, length);
     QByteArray serData(length, '\0');
     if (payment.SerializeToArray(serData.data(), length)) {
