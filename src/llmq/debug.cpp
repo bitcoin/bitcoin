@@ -120,7 +120,7 @@ UniValue CDKGDebugStatus::ToJson(int detailLevel) const
         if (!Params().GetConsensus().llmqs.count(p.first)) {
             continue;
         }
-        sessionsJson.pushKV(GetLLMQParams(p.first).name, p.second.ToJson(detailLevel));
+        sessionsJson.pushKV(std::string(GetLLMQParams(p.first).name), p.second.ToJson(detailLevel));
     }
 
     ret.pushKV("session", sessionsJson);

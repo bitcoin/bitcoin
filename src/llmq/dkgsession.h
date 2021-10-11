@@ -25,8 +25,8 @@ class CDKGPendingMessages;
 class CDKGLogger : public CBatchedLogger
 {
 public:
-    CDKGLogger(const CDKGSession& _quorumDkg, const std::string& _func);
-    CDKGLogger(const std::string& _llmqTypeName, const uint256& _quorumHash, int _height, bool _areWeMember, const std::string& _func);
+    CDKGLogger(const CDKGSession& _quorumDkg, std::string_view _func);
+    CDKGLogger(std::string_view _llmqTypeName, const uint256& _quorumHash, int _height, bool _areWeMember, std::string_view _func);
 };
 
 class CDKGContribution

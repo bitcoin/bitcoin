@@ -70,7 +70,7 @@ static UniValue quorum_list(const JSONRPCRequest& request)
             v.push_back(q->qc->quorumHash.ToString());
         }
 
-        ret.pushKV(llmq_params.name, v);
+        ret.pushKV(std::string(llmq_params.name), v);
     }
 
 
@@ -94,7 +94,7 @@ static UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMem
     UniValue ret(UniValue::VOBJ);
 
     ret.pushKV("height", quorum->pindexQuorum->nHeight);
-    ret.pushKV("type", quorum->params.name);
+    ret.pushKV("type", std::string(quorum->params.name));
     ret.pushKV("quorumHash", quorum->qc->quorumHash.ToString());
     ret.pushKV("minedBlock", quorum->minedBlockHash.ToString());
 
@@ -213,7 +213,7 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request)
                 obj.pushKV("outbound", outboundConnections.count(ec) != 0);
                 arr.push_back(obj);
             }
-            quorumConnections.pushKV(llmq_params.name, arr);
+            quorumConnections.pushKV(std::string(llmq_params.name), arr);
         }
 
         LOCK(cs_main);
@@ -222,7 +222,7 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request)
                                                               tipHeight, fqc)) {
             UniValue obj(UniValue::VOBJ);
             fqc.ToJson(obj);
-            minableCommitments.pushKV(llmq_params.name, obj);
+            minableCommitments.pushKV(std::string(llmq_params.name), obj);
         }
     }
 

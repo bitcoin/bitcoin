@@ -61,12 +61,12 @@ bool CDKGSession::ShouldSimulateError(const std::string& type) const
     return GetRandBool(rate);
 }
 
-CDKGLogger::CDKGLogger(const CDKGSession& _quorumDkg, const std::string& _func) :
+CDKGLogger::CDKGLogger(const CDKGSession& _quorumDkg, std::string_view _func) :
     CDKGLogger(_quorumDkg.params.name, _quorumDkg.pindexQuorum->GetBlockHash(), _quorumDkg.pindexQuorum->nHeight, _quorumDkg.AreWeMember(), _func)
 {
 }
 
-CDKGLogger::CDKGLogger(const std::string& _llmqTypeName, const uint256& _quorumHash, int _height, bool _areWeMember, const std::string& _func) :
+CDKGLogger::CDKGLogger(std::string_view _llmqTypeName, const uint256& _quorumHash, int _height, bool _areWeMember, std::string_view _func) :
     CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%s, height=%d, member=%d, func=%s)", _llmqTypeName, _height, _areWeMember, _func))
 {
 }
