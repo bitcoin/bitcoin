@@ -363,10 +363,10 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
     CAmount value = ExtractAndValidateValue(vStrInputParts[0]);
 
     // Extract REQUIRED
-    uint32_t required = stoul(vStrInputParts[1]);
+    const uint32_t required{TrimAndParse<uint32_t>(vStrInputParts.at(1), "invalid multisig required number")};
 
     // Extract NUMKEYS
-    uint32_t numkeys = stoul(vStrInputParts[2]);
+    const uint32_t numkeys{TrimAndParse<uint32_t>(vStrInputParts.at(2), "invalid multisig total number")};
 
     // Validate there are the correct number of pubkeys
     if (vStrInputParts.size() < numkeys + 3)

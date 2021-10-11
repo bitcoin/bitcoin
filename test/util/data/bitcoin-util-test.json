@@ -580,6 +580,18 @@
     "description": "Adds a new input with sequence number to a transaction (output in json)"
   },
   { "exec": "./bitcoin-tx",
+    "args": ["-create", "outmultisig=1:-2:3:02a5:021:02df", "nversion=1"],
+    "return_code": 1,
+    "error_txt": "error: invalid multisig required number '-2'",
+    "description": "Try to parse a multisig number outside the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outmultisig=1:2:3a:02a5:021:02df", "nversion=1"],
+    "return_code": 1,
+    "error_txt": "error: invalid multisig total number '3a'",
+    "description": "Try to parse a multisig number outside the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
     "args": ["-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485", "nversion=1"],
     "output_cmp": "txcreatemultisig1.hex",
     "description": "Creates a new transaction with a single 2-of-3 multisig output"
