@@ -197,13 +197,15 @@ bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
     return true;
 }
 
-size_t CDBWrapper::DynamicMemoryUsage() const {
+size_t CDBWrapper::DynamicMemoryUsage() const
+{
     std::string memory;
-    if (!pdb->GetProperty("leveldb.approximate-memory-usage", &memory)) {
+    std::optional<size_t> parsed;
+    if (!pdb->GetProperty("leveldb.approximate-memory-usage", &memory) || !(parsed = ToIntegral<size_t>(memory))) {
         LogPrint(BCLog::LEVELDB, "Failed to get approximate-memory-usage property\n");
         return 0;
     }
-    return stoul(memory);
+    return parsed.value();
 }
 
 // Prefixed with null character to avoid collisions with other keys
