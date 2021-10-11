@@ -108,13 +108,13 @@ CAmount CTransaction::GetValueOut() const
     CAmount nValueOut = 0;
     bool bFirstOutput = true;
     for (const auto& tx_out : vout) {
+        if (!MoneyRange(tx_out.nValue) || !MoneyRange(nValueOut + tx_out.nValue))
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
         // SYSCOIN
         if(bFirstOutput && (nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)){
             bFirstOutput = false;
             continue;
         }
-        if (!MoneyRange(tx_out.nValue) || !MoneyRange(nValueOut + tx_out.nValue))
-            throw std::runtime_error(std::string(__func__) + ": value out of range");
         nValueOut += tx_out.nValue;
     }
     assert(MoneyRange(nValueOut));
