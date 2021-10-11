@@ -188,7 +188,11 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
     }
     {
         // TODO: Ideally, we would include actual margins here (instead of extra digits), but this seems non-trivial
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 11, 0))
+        const int text_width = ui->assumevalidBlock->fontMetrics().horizontalAdvance("4") * (64 + 4);
+#else
         const int text_width = ui->assumevalidBlock->fontMetrics().width("4") * (64 + 4);
+#endif
         ui->assumevalidBlock->setFixedWidth(text_width);
     }
 
