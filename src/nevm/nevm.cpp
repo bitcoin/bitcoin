@@ -155,15 +155,8 @@ bool parseNEVMMethodInputData(const std::vector<unsigned char>& vchInputExpected
     outputAmount = (CAmount)outputAmountArith.GetLow64();
     
     // convert the vch into a uint64_t (nAsset)
-    // should be in position 68 walking backwards
-    nAsset = static_cast<uint64_t>(vchInputData[67]);
-    nAsset |= static_cast<uint64_t>(vchInputData[66]) << 8;
-    nAsset |= static_cast<uint64_t>(vchInputData[65]) << 16;
-    nAsset |= static_cast<uint64_t>(vchInputData[64]) << 24;
-    nAsset |= static_cast<uint64_t>(vchInputData[63]) << 32;
-    nAsset |= static_cast<uint64_t>(vchInputData[62]) << 40;
-    nAsset |= static_cast<uint64_t>(vchInputData[61]) << 48;
-    nAsset |= static_cast<uint64_t>(vchInputData[60]) << 56;
+    // should be in position 60 as big endian
+    nAsset = ReadBE64(&(vchInputData[60]));
 
     // skip data field marker (32 bytes) + 31 bytes offset to the varint _byte
     const unsigned char &dataLength = vchInputData[131];
