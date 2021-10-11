@@ -538,12 +538,12 @@ bool CCoinJoinServer::IsInputScriptSigValid(const CTxIn& txin) const
     txNew.vin.clear();
     txNew.vout.clear();
 
-    int i = 0;
     int nTxInIndex = -1;
     CScript sigPubKey = CScript();
 
     {
         LOCK(cs_coinjoin);
+        int i = 0;
         for (const auto &entry: vecEntries) {
             for (const auto &txout: entry.vecTxOut) {
                 txNew.vout.push_back(txout);

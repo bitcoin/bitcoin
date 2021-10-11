@@ -36,7 +36,7 @@ public:
         QTableWidgetItem(text, type),
         itemData(data) {}
 
-    bool operator<(const QTableWidgetItem& other) const
+    bool operator<(const QTableWidgetItem& other) const override
     {
         return itemData < ((CMasternodeListWidgetItem*)&other)->itemData;
     }

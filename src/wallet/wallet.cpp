@@ -5284,10 +5284,10 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, std::string& strBack
     // Create backup of the ...
     struct tm ts;
     time_t time_val = GetTime();
-#ifdef _MSC_VER
-    gmtime_s(&ts, &time_val);
-#else
+#ifdef HAVE_GMTIME_R
     gmtime_r(&time_val, &ts);
+#else
+    gmtime_s(&ts, &time_val);
 #endif
     std::string dateTimeStr = strprintf(".%04i-%02i-%02i-%02i-%02i",
             ts.tm_year + 1900, ts.tm_mon + 1, ts.tm_mday, ts.tm_hour, ts.tm_min);
