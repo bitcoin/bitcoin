@@ -34,10 +34,20 @@ struct CSporkDef
 {
     int32_t sporkId{SPORK_INVALID};
     int64_t defaultValue{0};
-    std::string name;
+    std::string_view name;
 };
 
-extern std::vector<CSporkDef> sporkDefs;
+#define MAKE_SPORK_DEF(name, defaultValue) CSporkDef{name, defaultValue, #name}
+[[maybe_unused]] static constexpr std::array sporkDefs = {
+        MAKE_SPORK_DEF(SPORK_9_SUPERBLOCKS_ENABLED,            0), // ON
+        MAKE_SPORK_DEF(SPORK_17_QUORUM_DKG_ENABLED,            4070908800ULL), // OFF
+        MAKE_SPORK_DEF(SPORK_19_CHAINLOCKS_ENABLED,            4070908800ULL), // OFF
+        MAKE_SPORK_DEF(SPORK_21_QUORUM_ALL_CONNECTED,          4070908800ULL), // OFF
+        MAKE_SPORK_DEF(SPORK_23_QUORUM_POSE,                   4070908800ULL), // OFF
+        MAKE_SPORK_DEF(SPORK_TEST,                             4070908800ULL), // OFF
+        MAKE_SPORK_DEF(SPORK_TEST1,                            4070908800ULL), // OFF
+};
+#undef MAKE_SPORK_DEF
 extern CSporkManager sporkManager;
 
 /**
@@ -131,13 +141,11 @@ class CSporkManager
 private:
     static const std::string SERIALIZATION_VERSION_STRING;
 
-    std::unordered_map<int32_t, CSporkDef*> sporkDefsById;
-    std::unordered_map<std::string, CSporkDef*> sporkDefsByName;
-
-    mutable std::unordered_map<int32_t, bool> mapSporksCachedActive;
-    mutable std::unordered_map<int32_t, int64_t> mapSporksCachedValues;
-
     mutable RecursiveMutex cs;
+
+    mutable std::unordered_map<int32_t, bool> mapSporksCachedActive GUARDED_BY(cs);
+
+    mutable std::unordered_map<int32_t, int64_t> mapSporksCachedValues GUARDED_BY(cs);
     std::unordered_map<uint256, CSporkMessage, StaticSaltedHasher> mapSporksByHash;
     std::unordered_map<int32_t, std::map<CKeyID, CSporkMessage> > mapSporksActive;
 
@@ -153,7 +161,7 @@ private:
 
 public:
 
-    CSporkManager();
+    CSporkManager() = default;
 
 
     template<typename Stream>
@@ -241,12 +249,7 @@ public:
     /**
      * GetSporkIDByName returns the internal Spork ID given the spork name.
      */
-    int32_t GetSporkIDByName(const std::string& strName) const;
-
-    /**
-     * GetSporkNameByID returns the spork name as a string, given a Spork ID.
-     */
-    std::string GetSporkNameByID(int32_t nSporkID) const;
+    static int32_t GetSporkIDByName(const std::string& strName) ;
 
     /**
      * GetSporkByHash returns a spork message given a hash of the spork message.

@@ -116,7 +116,7 @@ static RPCHelpMan spork()
     if(strCommand != "show" && strCommand != "active") {
         NodeContext& node = EnsureAnyNodeContext(request.context);
         // advanced mode, update spork values
-        int nSporkID = sporkManager.GetSporkIDByName(request.params[0].get_str());
+        int nSporkID = CSporkManager::GetSporkIDByName(request.params[0].get_str());
         if(nSporkID == SPORK_INVALID)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
 
@@ -135,13 +135,13 @@ static RPCHelpMan spork()
         if (strCommand == "show") {
             UniValue ret(UniValue::VOBJ);
             for (const auto& sporkDef : sporkDefs) {
-                ret.pushKV(sporkDef.name, sporkManager.GetSporkValue(sporkDef.sporkId));
+                ret.pushKV(std::string(sporkDef.name), sporkManager.GetSporkValue(sporkDef.sporkId));
             }
             return ret;
         } else if(strCommand == "active"){
             UniValue ret(UniValue::VOBJ);
             for (const auto& sporkDef : sporkDefs) {
-                ret.pushKV(sporkDef.name, sporkManager.IsSporkActive(sporkDef.sporkId));
+                ret.pushKV(std::string(sporkDef.name), sporkManager.IsSporkActive(sporkDef.sporkId));
             }
             return ret;
         }
