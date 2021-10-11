@@ -491,7 +491,7 @@ bool CCoinJoinClientSession::SendDenominate(const std::vector<std::pair<CTxDSIn,
 
     // store our entry for later use
     LOCK(cs_coinjoin);
-    vecEntries.emplace_back(vecTxDSInTmp, vecTxOutTmp, txMyCollateral);
+    vecEntries.emplace_back(vecTxDSInTmp, vecTxOutTmp, CTransaction(txMyCollateral));
     RelayIn(vecEntries.back(), connman);
     nTimeLastSuccessfulStep = GetTime();
 
@@ -923,7 +923,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
                 return false;
             }
         } else {
-            if (!CCoinJoin::IsCollateralValid(txMyCollateral)) {
+            if (!CCoinJoin::IsCollateralValid(CTransaction(txMyCollateral))) {
                 LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::DoAutomaticDenominating -- invalid collateral, recreating...\n");
                 if (!CreateCollateralTransaction(txMyCollateral, strReason)) {
                     LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::DoAutomaticDenominating -- create collateral error: %s\n", strReason);

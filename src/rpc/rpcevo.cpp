@@ -234,7 +234,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
 template<typename SpecialTxPayload>
 static void UpdateSpecialTxInputsHash(const CMutableTransaction& tx, SpecialTxPayload& payload)
 {
-    payload.inputsHash = CalcTxInputsHash(tx);
+    payload.inputsHash = CalcTxInputsHash(CTransaction(tx));
 }
 
 template<typename SpecialTxPayload>
@@ -276,7 +276,7 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx, bool fSub
     LOCK(cs_main);
 
     CValidationState state;
-    if (!CheckSpecialTx(tx, chainActive.Tip(), state, *pcoinsTip.get())) {
+    if (!CheckSpecialTx(CTransaction(tx), chainActive.Tip(), state, *pcoinsTip.get())) {
         throw std::runtime_error(FormatStateMessage(state));
     }
     } // cs_main
@@ -549,7 +549,7 @@ static UniValue protx_register(const JSONRPCRequest& request)
             SetTxPayload(tx, ptx);
 
             UniValue ret(UniValue::VOBJ);
-            ret.pushKV("tx", EncodeHexTx(tx));
+            ret.pushKV("tx", EncodeHexTx(CTransaction(tx)));
             ret.pushKV("collateralAddress", EncodeDestination(txDest));
             ret.pushKV("signMessage", ptx.MakeSignString());
             return ret;

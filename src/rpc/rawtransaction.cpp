@@ -543,7 +543,7 @@ static UniValue createrawtransaction(const JSONRPCRequest& request)
 
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2]);
 
-    return EncodeHexTx(rawTx);
+    return EncodeHexTx(CTransaction(rawTx));
 }
 
 static UniValue decoderawtransaction(const JSONRPCRequest& request)
@@ -765,7 +765,7 @@ static UniValue combinerawtransaction(const JSONRPCRequest& request)
         UpdateInput(txin, sigdata);
     }
 
-    return EncodeHexTx(mergedTx);
+    return EncodeHexTx(CTransaction(mergedTx));
 }
 
 UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival, CBasicKeyStore *keystore, bool is_temp_keystore, const UniValue& hashType)
@@ -891,7 +891,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
     bool fComplete = vErrors.empty();
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("hex", EncodeHexTx(mtx));
+    result.pushKV("hex", EncodeHexTx(CTransaction(mtx)));
     result.pushKV("complete", fComplete);
     if (!vErrors.empty()) {
         result.pushKV("errors", vErrors);

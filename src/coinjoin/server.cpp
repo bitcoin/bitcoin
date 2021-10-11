@@ -324,7 +324,7 @@ void CCoinJoinServer::CreateFinalTransaction(CConnman& connman)
 
     // request signatures from clients
     SetState(POOL_STATE_SIGNING);
-    RelayFinalTransaction(finalMutableTransaction, connman);
+    RelayFinalTransaction(CTransaction(finalMutableTransaction), connman);
 }
 
 void CCoinJoinServer::CommitFinalTransaction(CConnman& connman)
@@ -701,7 +701,7 @@ bool CCoinJoinServer::IsAcceptableDSA(const CCoinJoinAccept& dsa, PoolMessage& n
     }
 
     // check collateral
-    if (!fUnitTest && !CCoinJoin::IsCollateralValid(dsa.txCollateral)) {
+    if (!fUnitTest && !CCoinJoin::IsCollateralValid(CTransaction(dsa.txCollateral))) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- collateral not valid!\n", __func__);
         nMessageIDRet = ERR_INVALID_COLLATERAL;
         return false;
