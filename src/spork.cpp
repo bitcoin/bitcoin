@@ -15,27 +15,7 @@
 
 const std::string CSporkManager::SERIALIZATION_VERSION_STRING = "CSporkManager-Version-2";
 
-#define MAKE_SPORK_DEF(name, defaultValue) CSporkDef{name, defaultValue, #name}
-std::vector<CSporkDef> sporkDefs = {
-    MAKE_SPORK_DEF(SPORK_2_INSTANTSEND_ENABLED,            4070908800ULL), // OFF
-    MAKE_SPORK_DEF(SPORK_3_INSTANTSEND_BLOCK_FILTERING,    4070908800ULL), // OFF
-    MAKE_SPORK_DEF(SPORK_9_SUPERBLOCKS_ENABLED,            4070908800ULL), // OFF
-    MAKE_SPORK_DEF(SPORK_17_QUORUM_DKG_ENABLED,            4070908800ULL), // OFF
-    MAKE_SPORK_DEF(SPORK_19_CHAINLOCKS_ENABLED,            4070908800ULL), // OFF
-    MAKE_SPORK_DEF(SPORK_21_QUORUM_ALL_CONNECTED,          4070908800ULL), // OFF
-    MAKE_SPORK_DEF(SPORK_23_QUORUM_POSE,                   4070908800ULL), // OFF
-};
-
 CSporkManager sporkManager;
-
-CSporkManager::CSporkManager()
-{
-    LOCK(cs);
-    for (auto& sporkDef : sporkDefs) {
-        sporkDefsById.emplace(sporkDef.sporkId, &sporkDef);
-        sporkDefsByName.emplace(sporkDef.name, &sporkDef);
-    }
-}
 
 bool CSporkManager::SporkValueIsActive(SporkId nSporkID, int64_t &nActiveValueRet) const
 {
@@ -250,35 +230,26 @@ int64_t CSporkManager::GetSporkValue(SporkId nSporkID) const
         return nSporkValue;
     }
 
-    auto it = sporkDefsById.find(nSporkID);
-    if (it != sporkDefsById.end()) {
-        return it->second->defaultValue;
+    for (const auto& sporkDef : sporkDefs) {
+        if (sporkDef.sporkId == nSporkID) {
+            return sporkDef.defaultValue;
+        }
     }
 
     LogPrint(BCLog::SPORK, "CSporkManager::GetSporkValue -- Unknown Spork ID %d\n", nSporkID);
     return -1;
 }
 
-SporkId CSporkManager::GetSporkIDByName(const std::string& strName) const
+SporkId CSporkManager::GetSporkIDByName(const std::string& strName)
 {
-    LOCK(cs);
-    auto it = sporkDefsByName.find(strName);
-    if (it == sporkDefsByName.end()) {
-        LogPrint(BCLog::SPORK, "CSporkManager::GetSporkIDByName -- Unknown Spork name '%s'\n", strName);
-        return SPORK_INVALID;
+    for (const auto& sporkDef : sporkDefs) {
+        if (sporkDef.name == strName) {
+            return sporkDef.sporkId;
+        }
     }
-    return it->second->sporkId;
-}
 
-std::string CSporkManager::GetSporkNameByID(SporkId nSporkID) const
-{
-    LOCK(cs);
-    auto it = sporkDefsById.find(nSporkID);
-    if (it == sporkDefsById.end()) {
-        LogPrint(BCLog::SPORK, "CSporkManager::GetSporkNameByID -- Unknown Spork ID %d\n", nSporkID);
-        return "Unknown";
-    }
-    return it->second->name;
+    LogPrint(BCLog::SPORK, "CSporkManager::GetSporkIDByName -- Unknown Spork name '%s'\n", strName);
+    return SPORK_INVALID;
 }
 
 bool CSporkManager::GetSporkByHash(const uint256& hash, CSporkMessage &sporkRet) const
