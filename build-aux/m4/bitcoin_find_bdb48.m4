@@ -48,15 +48,22 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
     if test "x$bdbpath" = "xX"; then
       use_bdb=no
       AC_MSG_RESULT([no])
-      AC_MSG_ERROR([libdb_cxx headers missing, ]AC_PACKAGE_NAME[ requires this library for BDB wallet support (--without-bdb to disable BDB wallet support)])
+      AC_MSG_WARN([libdb_cxx headers missing])
+      AC_MSG_WARN(AC_PACKAGE_NAME[ requires this library for BDB (legacy) wallet support])
+      AC_MSG_WARN([Passing --without-bdb will suppress this warning])
     elif test "x$bdb48path" = "xX"; then
       BITCOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdbpath}],db_cxx)
       AC_ARG_WITH([incompatible-bdb],[AS_HELP_STRING([--with-incompatible-bdb], [allow using a bdb version other than 4.8])],[
-        AC_MSG_WARN([Found Berkeley DB other than 4.8; BDB wallets opened by this build will not be portable!])
+        AC_MSG_WARN([Found Berkeley DB other than 4.8])
+        AC_MSG_WARN([BDB (legacy) wallets opened by this build will not be portable!])
+        use_bdb=yes
       ],[
-        AC_MSG_ERROR([Found Berkeley DB other than 4.8, required for portable BDB wallets (--with-incompatible-bdb to ignore or --without-bdb to disable BDB wallet support)])
+        AC_MSG_WARN([Found Berkeley DB other than 4.8])
+        AC_MSG_WARN([BDB (legacy) wallets opened by this build would not be portable!])
+        AC_MSG_WARN([If this is intended, pass --with-incompatible-bdb])
+        AC_MSG_WARN([Passing --without-bdb will suppress this warning])
+        use_bdb=no
       ])
-      use_bdb=yes
     else
       BITCOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdb48path}],db_cxx)
       bdbpath="${bdb48path}"
@@ -78,7 +85,9 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
       ])
     done
     if test "x$BDB_LIBS" = "x"; then
-        AC_MSG_ERROR([libdb_cxx missing, ]AC_PACKAGE_NAME[ requires this library for BDB wallet support (--without-bdb to disable BDB wallet support)])
+        AC_MSG_WARN([libdb_cxx headers missing])
+        AC_MSG_WARN(AC_PACKAGE_NAME[ requires this library for BDB (legacy) wallet support])
+        AC_MSG_WARN([Passing --without-bdb will suppress this warning])
     fi
   fi
   if test "x$use_bdb" != "xno"; then
