@@ -204,6 +204,15 @@ class ListTransactionsTest(BitcoinTestFramework):
             assert_equal(n.gettransaction(txid_3b)["bip125-replaceable"], "yes")
             assert_equal(n.gettransaction(txid_4)["bip125-replaceable"], "unknown")
 
+        self.log.info("Test bip125-replaceable status with listsinceblock")
+        for n in self.nodes[0:2]:
+            txs = {tx['txid']: tx['bip125-replaceable'] for tx in n.listsinceblock()['transactions']}
+            assert_equal(txs[txid_1], "no")
+            assert_equal(txs[txid_2], "no")
+            assert_equal(txs[txid_3], "yes")
+            assert_equal(txs[txid_3b], "yes")
+            assert_equal(txs[txid_4], "unknown")
+
         self.log.info("Test mined transactions are no longer bip125-replaceable")
         self.generate(self.nodes[0], 1)
         assert txid_3b not in self.nodes[0].getrawmempool()
