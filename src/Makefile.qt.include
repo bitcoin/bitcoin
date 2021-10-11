@@ -169,7 +169,7 @@ BITCOIN_QT_H = \
   qt/winshutdownmonitor.h
 
 RES_FONTS = \
-  qt/res/fonts/RobotoMono-Bold.ttf
+  $(RES_MONOSPACE_FONT)
 
 RES_ICONS = $(RES_RENDERED_ICONS) \
   qt/res/icons/add.png \
@@ -371,7 +371,7 @@ $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	@rm $(@D)/temp_$(<F)
 
 $(QT_QRC_BUILD): $(QT_QRC)
-	$(SED) -e 's:\(res\/\(icons\|animation\|fonts\)/\):$(abs_srcdir)/qt/\1:' <"$<" >"$@"
+	$(SED) -e 's:\(res\/\(icons\|animation\)/\):$(abs_srcdir)/qt/\1:' <"$<" >"$@"
 
 $(QT_QRC_CPP): $(QT_QRC_BUILD) $(QT_FORMS_H) $(RES_FONTS) $(RES_ICONS) $(RES_ANIMATION)
 	@test -f $(RCC)

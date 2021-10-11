@@ -922,6 +922,19 @@ if ENABLE_BENCH
 include Makefile.bench.include
 endif
 
+# Font handling must be here, not in Makefile.qt.include, since the output is distributed with the source tarball
+RES_MONOSPACE_FONT_INPUT = qt/res/fonts/RobotoTonalMono-Bold.ttf.in
+RES_MONOSPACE_FONT = qt/res/fonts/RobotoTonalMono-Bold.ttf
+EXTRA_DIST += $(RES_MONOSPACE_FONT_INPUT) $(RES_MONOSPACE_FONT)
+
+if HAVE_PYTHON
+
+$(RES_MONOSPACE_FONT): $(RES_MONOSPACE_FONT_INPUT)
+	@$(MKDIR_P) "$(@D)"
+	$(AM_V_GEN) $(PYTHON) -c 'import base64, lzma, sys; sys.stdout.buffer.write(lzma.decompress(base64.b85decode(sys.stdin.read())))' <"$<" >"$@.new" && mv "$@.new" "$@"
+
+endif
+
 if ENABLE_QT
 include Makefile.qt.include
 endif
