@@ -21,6 +21,7 @@ bool font_supports_tonal(const QFont& font)
     const QSize sz = fm.size(0, s);
     for (const auto& c : tonal_digits) {
         if (!fm.inFont(c)) return false;
+        s[0] = s[1] = s[2] = c;
         if (sz != fm.size(0, s)) return false;
     }
     return true;
