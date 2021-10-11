@@ -9,6 +9,7 @@
 #include <masternode/payments.h>
 #include <net.h>
 #include <netbase.h>
+#include <rpc/util.h>
 #include <rpc/server.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
@@ -26,8 +27,13 @@ static UniValue masternodelist(const JSONRPCRequest& request);
 static void masternode_list_help()
 {
     throw std::runtime_error(
-            "masternodelist ( \"mode\" \"filter\" )\n"
-            "Get a list of masternodes in different modes. This call is identical to 'masternode list' call.\n"
+            RPCHelpMan{"masternodelist",
+                "Get a list of masternodes in different modes. This call is identical to 'masternode list' call.\n",
+                {
+                    {"mode", RPCArg::Type::STR, true},
+                    {"filter", RPCArg::Type::STR, true},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. \"mode\"      (string, optional/required to use filter, defaults = json) The mode to run list in\n"
             "2. \"filter\"    (string, optional) Filter results. Partial match by outpoint by default in all modes,\n"
@@ -67,11 +73,14 @@ static UniValue masternode_list(const JSONRPCRequest& request)
 static void masternode_connect_help()
 {
     throw std::runtime_error(
-            "masternode connect \"address\"\n"
-            "Connect to given masternode\n"
-            "\nArguments:\n"
-            "1. \"address\"      (string, required) The address of the masternode to connect\n"
-        );
+        RPCHelpMan{"masternode connect",
+            "Connect to given masternode\n",
+            {
+                {"address", RPCArg::Type::STR, false},
+            }}
+            .ToString() +
+        "\nArguments:\n"
+        "1. \"address\"      (string, required) The address of the masternode to connect\n");
 }
 
 static UniValue masternode_connect(const JSONRPCRequest& request)
@@ -96,9 +105,9 @@ static UniValue masternode_connect(const JSONRPCRequest& request)
 static void masternode_count_help()
 {
     throw std::runtime_error(
-            "masternode count\n"
-            "Get information about number of masternodes.\n"
-        );
+        RPCHelpMan{"masternode count",
+            "Get information about number of masternodes.\n",
+        {}}.ToString());
 }
 
 static UniValue masternode_count(const JSONRPCRequest& request)
@@ -145,9 +154,9 @@ static void masternode_winner_help()
     }
 
     throw std::runtime_error(
-            "masternode winner\n"
-            "Print info on next masternode winner to vote for\n"
-        );
+        RPCHelpMan{"masternode winner",
+            "Print info on next masternode winner to vote for\n",
+        {}}.ToString());
 }
 
 static UniValue masternode_winner(const JSONRPCRequest& request)
@@ -165,9 +174,9 @@ static void masternode_current_help()
     }
 
     throw std::runtime_error(
-            "masternode current\n"
-            "Print info on current masternode winner to be paid the next block (calculated locally)\n"
-        );
+        RPCHelpMan{"masternode current",
+            "Print info on current masternode winner to be paid the next block (calculated locally)\n",
+            {}}.ToString());
 }
 
 static UniValue masternode_current(const JSONRPCRequest& request)
@@ -182,9 +191,9 @@ static UniValue masternode_current(const JSONRPCRequest& request)
 static void masternode_outputs_help()
 {
     throw std::runtime_error(
-            "masternode outputs\n"
-            "Print masternode compatible outputs\n"
-        );
+        RPCHelpMan{"masternode outputs",
+            "Print masternode compatible outputs\n",
+            {}}.ToString());
 }
 
 static UniValue masternode_outputs(const JSONRPCRequest& request)
@@ -220,9 +229,9 @@ static UniValue masternode_outputs(const JSONRPCRequest& request)
 static void masternode_status_help()
 {
     throw std::runtime_error(
-            "masternode status\n"
-            "Print masternode status information\n"
-        );
+        RPCHelpMan{"masternode status",
+            "Print masternode status information\n",
+            {}}.ToString());
 }
 
 static UniValue masternode_status(const JSONRPCRequest& request)
@@ -297,12 +306,15 @@ static std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterminis
 static void masternode_winners_help()
 {
     throw std::runtime_error(
-            "masternode winners ( count \"filter\" )\n"
-            "Print list of masternode winners\n"
-            "\nArguments:\n"
-            "1. count        (numeric, optional) number of last winners to return\n"
-            "2. filter       (string, optional) filter for returned winners\n"
-        );
+        RPCHelpMan{"masternode winners",
+            "Print list of masternode winners\n",
+            {
+                {"count", RPCArg::Type::NUM, true},
+                {"filter", RPCArg::Type::STR, true},
+            }}.ToString() +
+        "\nArguments:\n"
+        "1. count        (numeric, optional) number of last winners to return\n"
+        "2. filter       (string, optional) filter for returned winners\n");
 }
 
 static UniValue masternode_winners(const JSONRPCRequest& request)
@@ -353,35 +365,39 @@ static UniValue masternode_winners(const JSONRPCRequest& request)
 static void masternode_payments_help()
 {
     throw std::runtime_error(
-            "masternode payments ( \"blockhash\" count )\n"
-            "\nReturns an array of deterministic masternodes and their payments for the specified block\n"
-            "\nArguments:\n"
-            "1. \"blockhash\"                       (string, optional, default=tip) The hash of the starting block\n"
-            "2. count                             (numeric, optional, default=1) The number of blocks to return.\n"
-            "                                     Will return <count> previous blocks if <count> is negative.\n"
-            "                                     Both 1 and -1 correspond to the chain tip.\n"
-            "\nResult:\n"
-            "  [                                  (array) Blocks\n"
-            "    {\n"
-            "       \"height\" : n,                 (numeric) The height of the block\n"
-            "       \"blockhash\" : \"hash\",         (string) The hash of the block\n"
-            "       \"amount\": n                   (numeric) Amount received in this block by all masternodes\n"
-            "       \"masternodes\": [              (array) Masternodes that received payments in this block\n"
-            "          {\n"
-            "             \"proTxHash\": \"xxxx\",    (string) The hash of the corresponding ProRegTx\n"
-            "             \"amount\": n             (numeric) Amount received by this masternode\n"
-            "             \"payees\": [             (array) Payees who received a share of this payment\n"
-            "                {\n"
-            "                  \"address\" : \"xxx\", (string) Payee address\n"
-            "                  \"script\" : \"xxx\",  (string) Payee scriptPubKey\n"
-            "                  \"amount\": n        (numeric) Amount received by this payee\n"
-            "                },...\n"
-            "             ]\n"
-            "          },...\n"
-            "       ]\n"
-            "    },...\n"
-            "  ]\n"
-        );
+        RPCHelpMan{"masternode payments",
+            "\nReturns an array of deterministic masternodes and their payments for the specified block\n",
+            {
+                {"blockhash", RPCArg::Type::STR, true},
+                {"count", RPCArg::Type::NUM, true},
+            }}
+            .ToString() +
+        "\nArguments:\n"
+        "1. \"blockhash\"                       (string, optional, default=tip) The hash of the starting block\n"
+        "2. count                             (numeric, optional, default=1) The number of blocks to return.\n"
+        "                                     Will return <count> previous blocks if <count> is negative.\n"
+        "                                     Both 1 and -1 correspond to the chain tip.\n"
+        "\nResult:\n"
+        "  [                                  (array) Blocks\n"
+        "    {\n"
+        "       \"height\" : n,                 (numeric) The height of the block\n"
+        "       \"blockhash\" : \"hash\",         (string) The hash of the block\n"
+        "       \"amount\": n                   (numeric) Amount received in this block by all masternodes\n"
+        "       \"masternodes\": [              (array) Masternodes that received payments in this block\n"
+        "          {\n"
+        "             \"proTxHash\": \"xxxx\",    (string) The hash of the corresponding ProRegTx\n"
+        "             \"amount\": n             (numeric) Amount received by this masternode\n"
+        "             \"payees\": [             (array) Payees who received a share of this payment\n"
+        "                {\n"
+        "                  \"address\" : \"xxx\", (string) Payee address\n"
+        "                  \"script\" : \"xxx\",  (string) Payee scriptPubKey\n"
+        "                  \"amount\": n        (numeric) Amount received by this payee\n"
+        "                },...\n"
+        "             ]\n"
+        "          },...\n"
+        "       ]\n"
+        "    },...\n"
+        "  ]\n");
 }
 
 static UniValue masternode_payments(const JSONRPCRequest& request)
@@ -497,8 +513,10 @@ static UniValue masternode_payments(const JSONRPCRequest& request)
 [[ noreturn ]] static void masternode_help()
 {
     throw std::runtime_error(
-        "masternode \"command\" ...\n"
-        "Set of commands to execute masternode related actions\n"
+        RPCHelpMan{"masternode",
+            "Set of commands to execute masternode related actions\n",
+            {}}
+            .ToString() +
         "\nArguments:\n"
         "1. \"command\"        (string or set of strings, required) The command to execute\n"
         "\nAvailable commands:\n"
