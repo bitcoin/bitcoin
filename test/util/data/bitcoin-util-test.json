@@ -295,6 +295,12 @@
     "description": "Create a new transaction with a single output script (OP_DROP) in a P2SH, wrapped in a P2SH (output as json)"
   },
   { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:999999999999999999999999999999"],
+    "return_code": 1,
+    "error_txt": "error: script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF",
+    "description": "Try to parse an output script with a decimal number above the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
     "args": ["-create", "outscript=0:9999999999"],
     "return_code": 1,
     "error_txt": "error: script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF",
