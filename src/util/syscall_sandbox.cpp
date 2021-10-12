@@ -46,6 +46,12 @@ bool g_syscall_sandbox_log_violation_before_terminating{false};
 
 // Define system call numbers for x86_64 that are referenced in the system call profile
 // but not provided by the kernel headers used in the GUIX build.
+// Usually, they can be found via "grep name /usr/include/x86_64-linux-gnu/asm/unistd_64.h"
+
+#ifndef __NR_clone3
+#define __NR_clone3 435
+#endif
+
 #ifndef __NR_statx
 #define __NR_statx 332
 #endif
@@ -115,6 +121,7 @@ const std::map<uint32_t, std::string> LINUX_SYSCALLS{
     {__NR_clock_nanosleep, "clock_nanosleep"},
     {__NR_clock_settime, "clock_settime"},
     {__NR_clone, "clone"},
+    {__NR_clone3, "clone3"},
     {__NR_close, "close"},
     {__NR_connect, "connect"},
     {__NR_copy_file_range, "copy_file_range"},
@@ -540,6 +547,7 @@ public:
         allowed_syscalls.insert(__NR_brk);        // change data segment size
         allowed_syscalls.insert(__NR_madvise);    // give advice about use of memory
         allowed_syscalls.insert(__NR_membarrier); // issue memory barriers on a set of threads
+        allowed_syscalls.insert(__NR_mincore);    // check if virtual memory is in RAM
         allowed_syscalls.insert(__NR_mlock);      // lock memory
         allowed_syscalls.insert(__NR_mmap);       // map files or devices into memory
         allowed_syscalls.insert(__NR_mprotect);   // set protection on a region of memory
@@ -705,6 +713,7 @@ public:
     void AllowProcessStartOrDeath()
     {
         allowed_syscalls.insert(__NR_clone);      // create a child process
+        allowed_syscalls.insert(__NR_clone3);     // create a child process
         allowed_syscalls.insert(__NR_exit);       // terminate the calling process
         allowed_syscalls.insert(__NR_exit_group); // exit all threads in a process
         allowed_syscalls.insert(__NR_fork);       // create a child process
