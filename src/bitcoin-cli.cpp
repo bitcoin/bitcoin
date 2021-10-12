@@ -255,7 +255,7 @@ public:
         if (!reply["error"].isNull()) return reply;
         const std::vector<UniValue>& nodes{reply["result"].getValues()};
         if (!nodes.empty() && nodes.at(0)["network"].isNull()) {
-            throw std::runtime_error("-addrinfo requires bitcoind server to be running v22.0 and up");
+            throw std::runtime_error("-addrinfo requires bitcoind server to be running v0.21.1.knots or newer");
         }
         // Count the number of peers we know by network, including torv2 versus torv3.
         std::array<uint64_t, m_networks.size()> counts{{}};
