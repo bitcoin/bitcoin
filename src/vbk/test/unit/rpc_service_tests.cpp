@@ -174,5 +174,38 @@ BOOST_FIXTURE_TEST_CASE(getblock_finalized_test, E2eFixture)
     BOOST_CHECK_NE(blockBeforeFinalization.write(), blockAfterFinalization.write());
 }
 
+BOOST_FIXTURE_TEST_CASE(extractblockinfo_inavlid_test, E2eFixture)
+{
+    CBlock block;
+    bool read = ReadBlockFromDisk(block, ChainActive().Tip(), Params().GetConsensus());
+    assert(read && "expected to read endorsed block from disk");
+
+    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    stream << ChainActive().Tip()->GetBlockHeader();
+    std::vector<uint8_t> header{stream.begin(), stream.end()};
+
+    altintegration::ContextInfoContainer container;
+    container.height = 100;
+    container.keystones.firstPreviousKeystone.resize(33);
+    container.keystones.secondPreviousKeystone.resize(32);
+
+    altintegration::PublicationData pubData{};
+    pubData.identifier = 1000;
+    pubData.header = header;
+    auto serializedContext = altintegration::SerializeToVbkEncoding(container);
+    pubData.contextInfo = serializedContext;
+
+    auto result = CallRPC(std::string("extractblockinfo [\"") + altintegration::SerializeToHex(pubData) + "\"]");
+    BOOST_CHECK_NE(find_value(result, "code").get_int64(), 0);
+
+    container.keystones.firstPreviousKeystone.resize(32);
+    container.keystones.secondPreviousKeystone.resize(33);
+
+    serializedContext = altintegration::SerializeToVbkEncoding(container);
+    pubData.contextInfo = serializedContext;
+
+    result = CallRPC(std::string("extractblockinfo [\"") + altintegration::SerializeToHex(pubData) + "\"]");
+    BOOST_CHECK_NE(find_value(result, "code").get_int64(), 0);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

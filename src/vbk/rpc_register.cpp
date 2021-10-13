@@ -527,10 +527,12 @@ bool GetPayload(
     containingBlocks.reserve(containing.size());
     std::transform(
         containing.begin(), containing.end(), std::back_inserter(containingBlocks), [](const decltype(*containing.begin())& blockHash) {
+            assert(blockHash.size() == uint256().size() && "unexpected containing block hash size in the payloads index");
             return uint256(blockHash);
         });
 
     for (const auto& blockHash : containing) {
+        assert(blockHash.size() == uint256().size() && "unexpected containing block hash size in the payloads index");
         auto* index = LookupBlockIndex(uint256(blockHash));
         assert(index && "state and index mismatch");
 
@@ -771,6 +773,13 @@ UniValue extractblockinfo(const JSONRPCRequest& req)
             altintegration::ReadStream stream(pubData.contextInfo);
             if (!altintegration::DeserializeFromVbkEncoding(stream, container, state)) {
                 return JSONRPCError(RPC_INVALID_PARAMETER, "can not deserialize ContextInfoContainer err: " + state.toString());
+            }
+
+            if (container.keystones.firstPreviousKeystone.size() != uint256().size()) {
+                return JSONRPCError(RPC_INVALID_PARAMETER, "can not deserialize ContextInfoContainer err: unexpected firstPreviousKeystone size");
+            }
+            if (container.keystones.secondPreviousKeystone.size() != uint256().size()) {
+                return JSONRPCError(RPC_INVALID_PARAMETER, "can not deserialize ContextInfoContainer err: unexpected secondPreviousKeystone size");
             }
         }
 
