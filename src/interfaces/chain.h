@@ -289,7 +289,7 @@ public:
     virtual void requestMempoolTransactions(Notifications& notifications) = 0;
 
     //! Check if Taproot has activated
-    virtual bool isTaprootActive() const = 0;
+    virtual bool isTaprootActive() = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for

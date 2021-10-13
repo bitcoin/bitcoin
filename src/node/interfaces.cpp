@@ -698,7 +698,7 @@ public:
             notifications.transactionAddedToMempool(entry.GetSharedTx(), 0 /* mempool_sequence */);
         }
     }
-    bool isTaprootActive() const override
+    bool isTaprootActive() override
     {
         LOCK(::cs_main);
         const CBlockIndex* tip = Assert(m_node.chainman)->ActiveChain().Tip();
