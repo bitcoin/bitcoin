@@ -3681,7 +3681,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
 
                 auto calculateFee = [&](CAmount& nFee) -> bool {
                     AssertLockHeld(cs_wallet);
-                    nBytes = CalculateMaximumSignedTxSize(txNew, this, coin_control.fAllowWatchOnly);
+                    nBytes = CalculateMaximumSignedTxSize(CTransaction(txNew), this, coin_control.fAllowWatchOnly);
                     if (nBytes < 0) {
                         strFailReason = _("Signing transaction failed");
                         return false;

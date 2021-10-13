@@ -137,7 +137,7 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
         dummyBatch.TxnAbort();
         dummyScript = ::GetScriptForDestination(dummyPubkey.GetID());
         // Calculate required bytes for the dummy signed tx with tallyItem's inputs only
-        nBytesBase = CalculateMaximumSignedTxSize(dummyTx, pwallet.get(), false);
+        nBytesBase = CalculateMaximumSignedTxSize(CTransaction(dummyTx), pwallet.get(), false);
     }
     // Calculate the output size
     nBytesOutput = ::GetSerializeSize(CTxOut(0, dummyScript), SER_NETWORK, PROTOCOL_VERSION);
