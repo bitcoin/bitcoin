@@ -415,9 +415,6 @@ if test "x$enable_werror" = "xyes"; then
   AX_CHECK_COMPILE_FLAG([-Werror=return-type], [], [ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Wno-error=return-type"], [$CXXFLAG_WERROR],
                         [AC_LANG_SOURCE([[#include <cassert>
                                           int f(){ assert(false); }]])])
-  if test x$suppress_external_warnings = xno ; then
-    AX_CHECK_COMPILE_FLAG([-Werror=documentation],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=documentation"],,[[$CXXFLAG_WERROR]])
-  fi
 fi
 
 if test "x$CXXFLAGS_overridden" = "xno"; then
