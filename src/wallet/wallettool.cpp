@@ -193,10 +193,15 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         DatabaseOptions options;
         ReadDatabaseArgs(args, options);
         options.require_existing = true;
-        const std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
-        if (!wallet_instance) return false;
+        DatabaseStatus status;
         bilingual_str error;
-        bool ret = DumpWallet(args, *wallet_instance, error);
+        std::unique_ptr<WalletDatabase> database = MakeDatabase(path, options, status, error);
+        if (!database) {
+            tfm::format(std::cerr, "%s\n", error.original);
+            return false;
+        }
+
+        bool ret = DumpWallet(args, *database, error);
         if (!ret && !error.empty()) {
             tfm::format(std::cerr, "%s\n", error.original);
             return ret;
