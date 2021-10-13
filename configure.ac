@@ -429,7 +429,6 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
   AX_CHECK_COMPILE_FLAG([-Wthread-safety],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wthread-safety"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wloop-analysis],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wloop-analysis"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wredundant-decls],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wredundant-decls"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wunused-variable],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunused-variable"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wunused-member-function],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunused-member-function"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wdate-time],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wdate-time"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wconditional-uninitialized],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wconditional-uninitialized"],,[[$CXXFLAG_WERROR]])
