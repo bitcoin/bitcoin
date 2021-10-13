@@ -33,6 +33,8 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
         CCoinControl coin_control;
         coin_control.m_feerate.emplace(10000);
         coin_control.fOverrideFeeRate = true;
+        // We need to use a change type with high cost of change so that the leftover amount will be dropped to fee instead of added as a change output
+        coin_control.m_change_type = OutputType::LEGACY;
         FeeCalculation fee_calc;
         BOOST_CHECK(CreateTransaction(*wallet, {recipient}, tx, fee, change_pos, error, coin_control, fee_calc));
         BOOST_CHECK_EQUAL(tx->vout.size(), 1);
