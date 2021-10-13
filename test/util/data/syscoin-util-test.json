@@ -551,7 +551,7 @@
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0: 4294967293 ",
-     "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o"],
+     "outaddr=0.18:SQBuL8zZknsNP5U8TXHXALnRJMwRQtes9B"],
     "output_cmp": "txcreatedata_seq0.hex",
     "description": "Creates a new transaction with one input with sequence number (+whitespace) and one address output"
   },
