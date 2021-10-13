@@ -1591,7 +1591,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 #endif
     // SYSCOIN
     if(fNEVMConnection) {
-        node.scheduler->scheduleFromNow([&] { DoGethMaintenance(); }, std::chrono::milliseconds{250});
+        DoGethMaintenance();
     }
     pdsNotificationInterface = new CDSNotificationInterface(*node.connman);
     RegisterValidationInterface(pdsNotificationInterface);
