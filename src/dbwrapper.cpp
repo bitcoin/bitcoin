@@ -138,7 +138,7 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
     }
     leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
     dbwrapper_private::HandleError(status);
-    LogPrintf("Opened LevelDB successfully\n");
+    // LogPrintf("Opened LevelDB successfully\n");
 
     if (gArgs.GetBoolArg("-forcecompactdb", false)) {
         LogPrintf("Starting database compaction of %s\n", path.string());
@@ -163,7 +163,7 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
         LogPrintf("Wrote new obfuscate key for %s: %s\n", path.string(), HexStr(obfuscate_key));
     }
 
-    LogPrintf("Using obfuscation key for %s: %s\n", path.string(), HexStr(obfuscate_key));
+    // LogPrintf("Using obfuscation key for %s: %s\n", path.string(), HexStr(obfuscate_key));
 }
 
 CDBWrapper::~CDBWrapper()
