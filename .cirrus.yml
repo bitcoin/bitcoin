@@ -64,7 +64,7 @@ task:
   name: 'lint [bionic]'
   << : *BASE_TEMPLATE
   container:
-    image: ubuntu:bionic  # For python 3.6, oldest supported version according to doc/dependencies.md
+    image: ubuntu:bionic  # For python 3.7, oldest supported version according to doc/dependencies.md
     cpu: 1
     memory: 1G
   # For faster CI feedback, immediately schedule the linters
