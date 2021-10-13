@@ -350,7 +350,7 @@ static void protx_register_help(CWallet* const pwallet)
             "transaction output spendable by this wallet. It must also not be used by any other masternode.\n"
             + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                {"collateralHash", RPCArg::Type::STR, false},
+                {"collateralHash", RPCArg::Type::STR_HEX, false},
                 {"collateralAddress", RPCArg::Type::STR, false},
                 {"ipAndPort", RPCArg::Type::STR, false},
                 {"ownerAddress", RPCArg::Type::STR, false},
@@ -390,7 +390,7 @@ static void protx_register_prepare_help()
             "with the private key that corresponds to collateralAddress to prove collateral ownership.\n"
             "The prepared transaction will also contain inputs and outputs to cover fees.\n",
             {
-                {"collateralHash", RPCArg::Type::STR, false},
+                {"collateralHash", RPCArg::Type::STR_HEX, false},
                 {"collateralAddress", RPCArg::Type::STR, false},
                 {"ipAndPort", RPCArg::Type::STR, false},
                 {"ownerAddress", RPCArg::Type::STR, false},
@@ -432,7 +432,7 @@ static void protx_register_submit_help(CWallet* const pwallet)
             "Note: See \"help protx register_prepare\" for more info about creating a ProTx and a message to sign.\n"
             + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                {"tx", RPCArg::Type::STR, false},
+                {"tx", RPCArg::Type::STR_HEX, false},
                 {"sig", RPCArg::Type::STR, false},
             }}
             .ToString() +
@@ -652,7 +652,7 @@ static void protx_update_service_help(CWallet* const pwallet)
             "If this is done for a masternode that got PoSe-banned, the ProUpServTx will also revive this masternode.\n"
             + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                {"proTxHash", RPCArg::Type::STR, false},
+                {"proTxHash", RPCArg::Type::STR_HEX, false},
                 {"ipAndPort", RPCArg::Type::STR, false},
                 {"operatorKey", RPCArg::Type::STR, false},
                 {"operatorPayoutAddress", RPCArg::Type::STR, true},
@@ -756,10 +756,10 @@ static void protx_update_registrar_help(CWallet* const pwallet)
             "The owner key of the masternode must be known to your wallet.\n"
             + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                {"proTxHash", RPCArg::Type::STR, false},
+                {"proTxHash", RPCArg::Type::STR_HEX, false},
                 {"operatorPubKey_update", RPCArg::Type::STR, false},
                 {"votingAddress_update", RPCArg::Type::STR, false},
-                {"payoutAddress_update", RPCArg::Type::STR, true},
+                {"payoutAddress_update", RPCArg::Type::STR, false},
                 {"feeSourceAddress", RPCArg::Type::STR, true},
             }}
             .ToString() +
@@ -854,18 +854,12 @@ static void protx_revoke_help(CWallet* const pwallet)
             "to the masternode owner.\n"
             + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                {"proTxHash", RPCArg::Type::STR, false},
+                {"proTxHash", RPCArg::Type::STR_HEX, false},
                 {"operatorKey", RPCArg::Type::STR, false},
                 {"reason", RPCArg::Type::NUM, true},
                 {"feeSourceAddress", RPCArg::Type::STR, true},
             }}
             .ToString() +
-            "protx revoke \"proTxHash\" \"operatorKey\" ( reason \"feeSourceAddress\")\n"
-            "\nCreates and sends a ProUpRevTx to the network. This will revoke the operator key of the masternode and\n"
-            "put it into the PoSe-banned state. It will also set the service field of the masternode\n"
-            "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
-            "to the masternode owner.\n"
-            + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
             + GetHelpString(2, "operatorKey")
@@ -950,7 +944,7 @@ static void protx_list_help()
         RPCHelpMan{"protx list",
             "\nLists all ProTxs in your wallet or on-chain, depending on the given type.\n",
             {
-                {"type", RPCArg::Type::STR, false},
+                {"type", RPCArg::Type::STR, true},
                 {"detailed", RPCArg::Type::BOOL, true},
                 {"height", RPCArg::Type::NUM, true},
             }}
@@ -1126,7 +1120,7 @@ static void protx_info_help()
         RPCHelpMan{"protx info",
             "\nReturns detailed information about a deterministic masternode.\n",
             {
-                {"proTxHash", RPCArg::Type::STR, false},
+                {"proTxHash", RPCArg::Type::STR_HEX, false},
             }}
             .ToString() +
         "\nArguments:\n"
@@ -1222,7 +1216,10 @@ static UniValue protx_diff(const JSONRPCRequest& request)
         RPCHelpMan{"protx",
             "Set of commands to execute ProTx related actions.\n"
             "To get help on individual commands, use \"help protx command\".\n",
-            {}} .ToString() +
+            {
+                {"command", RPCArg::Type::STR, false},
+            }}
+            .ToString() +
         "\nArguments:\n"
         "1. \"command\"        (string, required) The command to execute\n"
         "\nAvailable commands:\n"

@@ -89,7 +89,7 @@ static void quorum_info_help()
             "Return information about a quorum\n",
             {
                 {"llmqType", RPCArg::Type::NUM, false},
-                {"quorumHash", RPCArg::Type::STR, false},
+                {"quorumHash", RPCArg::Type::STR_HEX, false},
                 {"includeSkShare", RPCArg::Type::BOOL, true},
             }}
             .ToString() +
@@ -253,7 +253,7 @@ static void quorum_memberof_help()
         RPCHelpMan{"quorum memberof",
             "Checks which quorums the given masternode is a member of.\n",
             {
-                {"proTxHash", RPCArg::Type::STR, false},
+                {"proTxHash", RPCArg::Type::STR_HEX, false},
                 {"scanQuorumsCount", RPCArg::Type::NUM, true},
             }}
             .ToString() +
@@ -316,9 +316,9 @@ static void quorum_sign_help()
             "Threshold-sign a message\n",
             {
                 {"llmqType", RPCArg::Type::NUM, false},
-                {"id", RPCArg::Type::STR, false},
-                {"msgHash", RPCArg::Type::STR, false},
-                {"quorumHash", RPCArg::Type::STR, true},
+                {"id", RPCArg::Type::STR_HEX, false},
+                {"msgHash", RPCArg::Type::STR_HEX, false},
+                {"quorumHash", RPCArg::Type::STR_HEX, true},
                 {"submit", RPCArg::Type::BOOL, true},
             }}
             .ToString() +
@@ -339,10 +339,10 @@ static void quorum_verify_help()
             "Test if a quorum signature is valid for a request id and a message hash\n",
             {
                 {"llmqType", RPCArg::Type::NUM, false},
-                {"id", RPCArg::Type::STR, false},
-                {"msgHash", RPCArg::Type::STR, false},
+                {"id", RPCArg::Type::STR_HEX, false},
+                {"msgHash", RPCArg::Type::STR_HEX, false},
                 {"signature", RPCArg::Type::STR, false},
-                {"quorumHash", RPCArg::Type::STR, true},
+                {"quorumHash", RPCArg::Type::STR_HEX, true},
                 {"signHeight", RPCArg::Type::NUM, true},
             }}
             .ToString() +
@@ -365,8 +365,8 @@ static void quorum_hasrecsig_help()
             "Test if a valid recovered signature is present\n",
             {
                 {"llmqType", RPCArg::Type::NUM, false},
-                {"id", RPCArg::Type::STR, false},
-                {"msgHash", RPCArg::Type::STR, false},
+                {"id", RPCArg::Type::STR_HEX, false},
+                {"msgHash", RPCArg::Type::STR_HEX, false},
             }}
             .ToString() +
         "\nArguments:\n"
@@ -383,8 +383,8 @@ static void quorum_getrecsig_help()
             "Get a recovered signature\n",
             {
                 {"llmqType", RPCArg::Type::NUM, false},
-                {"id", RPCArg::Type::STR, false},
-                {"msgHash", RPCArg::Type::STR, false},
+                {"id", RPCArg::Type::STR_HEX, false},
+                {"msgHash", RPCArg::Type::STR_HEX, false},
             }}
             .ToString() +
         "\nArguments:\n"
@@ -401,8 +401,8 @@ static void quorum_isconflicting_help()
             "Test if a conflict exists\n",
             {
                 {"llmqType", RPCArg::Type::NUM, false},
-                {"id", RPCArg::Type::STR, false},
-                {"msgHash", RPCArg::Type::STR, false},
+                {"id", RPCArg::Type::STR_HEX, false},
+                {"msgHash", RPCArg::Type::STR_HEX, false},
             }}
             .ToString() +
         "\nArguments:\n"
@@ -538,7 +538,7 @@ static void quorum_selectquorum_help()
             "Returns the quorum that would/should sign a request\n",
             {
                 {"llmqType", RPCArg::Type::NUM, false},
-                {"id", RPCArg::Type::STR, false},
+                {"id", RPCArg::Type::STR_HEX, false},
             }}
             .ToString() +
         "\nArguments:\n"
@@ -621,9 +621,9 @@ static void quorum_getdata_help()
             {
                 {"nodeId", RPCArg::Type::NUM, false},
                 {"llmqType", RPCArg::Type::NUM, false},
-                {"quorumHash", RPCArg::Type::STR, false},
+                {"quorumHash", RPCArg::Type::STR_HEX, false},
                 {"dataMask", RPCArg::Type::NUM, false},
-                {"proTxHash", RPCArg::Type::STR, true},
+                {"proTxHash", RPCArg::Type::STR_HEX, true},
             }}
             .ToString() +
         "\nArguments:\n"
@@ -735,7 +735,7 @@ static void verifychainlock_help()
         RPCHelpMan{"verifychainlock",
             "Test if a quorum signature is valid for a ChainLock.\n",
             {
-                {"blockHash", RPCArg::Type::STR, false},
+                {"blockHash", RPCArg::Type::STR_HEX, false},
                 {"signature", RPCArg::Type::STR, false},
                 {"blockHeight", RPCArg::Type::NUM, true},
             }}
@@ -782,8 +782,8 @@ static void verifyislock_help()
         RPCHelpMan{"verifyislock",
             "Test if a quorum signature is valid for an InstantSend Lock\n",
             {
-                {"id", RPCArg::Type::STR, false},
-                {"txid", RPCArg::Type::STR, false},
+                {"id", RPCArg::Type::STR_HEX, false},
+                {"txid", RPCArg::Type::STR_HEX, false},
                 {"signature", RPCArg::Type::STR, false},
                 {"maxHeight", RPCArg::Type::NUM, true},
             }}

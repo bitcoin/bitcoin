@@ -2029,7 +2029,7 @@ static UniValue walletpassphrase(const JSONRPCRequest& request)
                 {
                     {"passphrase", RPCArg::Type::STR, false},
                     {"timeout", RPCArg::Type::NUM, false},
-                    {"mixingonly", RPCArg::Type::BOOL, false},
+                    {"mixingonly", RPCArg::Type::BOOL, true},
                 }}
                 .ToString() +
             "\nArguments:\n"

@@ -903,7 +903,7 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
                 "\nIf verbose is false, each item is a string that is serialized, hex-encoded data for a single blockheader.\n"
                 "If verbose is true, each item is an Object with information about a single blockheader.\n",
                 {
-                    {"hash", RPCArg::Type::STR, false},
+                    {"hash", RPCArg::Type::STR_HEX, false},
                     {"count", RPCArg::Type::NUM, true},
                     {"verbose", RPCArg::Type::BOOL, true},
                 }}
@@ -1016,8 +1016,8 @@ static UniValue getmerkleblocks(const JSONRPCRequest& request)
             RPCHelpMan{"getmerkleblocks",
                 "\nReturns an array of hex-encoded merkleblocks for <count> blocks starting from <hash> which match <filter>.\n",
                 {
-                    {"filter", RPCArg::Type::STR, false},
-                    {"hash", RPCArg::Type::STR, false},
+                    {"filter", RPCArg::Type::STR_HEX, false},
+                    {"hash", RPCArg::Type::STR_HEX, false},
                     {"count", RPCArg::Type::NUM, true},
             }}
             .ToString() +
@@ -2294,7 +2294,7 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
                 "If verbosity is 1, returns hex-encoded data for each transaction.\n"
                 "If verbosity is 2, returns an Object with information for each transaction.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR, false},
+                    {"blockhash", RPCArg::Type::STR_HEX, false},
                     {"type", RPCArg::Type::NUM, true},
                     {"count", RPCArg::Type::NUM, true},
                     {"skip", RPCArg::Type::NUM, true},

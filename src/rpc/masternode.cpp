@@ -368,7 +368,7 @@ static void masternode_payments_help()
         RPCHelpMan{"masternode payments",
             "\nReturns an array of deterministic masternodes and their payments for the specified block\n",
             {
-                {"blockhash", RPCArg::Type::STR, true},
+                {"blockhash", RPCArg::Type::STR_HEX, true},
                 {"count", RPCArg::Type::NUM, true},
             }}
             .ToString() +
@@ -515,7 +515,9 @@ static UniValue masternode_payments(const JSONRPCRequest& request)
     throw std::runtime_error(
         RPCHelpMan{"masternode",
             "Set of commands to execute masternode related actions\n",
-            {}}
+            {
+                {"command", RPCArg::Type::STR, false},
+            }}
             .ToString() +
         "\nArguments:\n"
         "1. \"command\"        (string or set of strings, required) The command to execute\n"
