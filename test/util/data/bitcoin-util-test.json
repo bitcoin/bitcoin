@@ -518,10 +518,42 @@
   { "exec": "./bitcoin-tx",
     "args":
     ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:11aa"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX sequence id '11aa'",
+    "description": "Try to parse a sequence number outside the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:-1"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX sequence id '-1'",
+    "description": "Try to parse a sequence number outside the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:4294967296"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX sequence id '4294967296'",
+    "description": "Try to parse a sequence number outside the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:4294967293",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o"],
     "output_cmp": "txcreatedata_seq0.hex",
     "description": "Creates a new transaction with one input with sequence number and one address output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0: 4294967293 ",
+     "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o"],
+    "output_cmp": "txcreatedata_seq0.hex",
+    "description": "Creates a new transaction with one input with sequence number (+whitespace) and one address output"
   },
   { "exec": "./bitcoin-tx",
     "args":
@@ -548,14 +580,26 @@
     "description": "Adds a new input with sequence number to a transaction (output in json)"
   },
   { "exec": "./bitcoin-tx",
+    "args": ["-create", "outmultisig=1:-2:3:02a5:021:02df", "nversion=1"],
+    "return_code": 1,
+    "error_txt": "error: invalid multisig required number '-2'",
+    "description": "Try to parse a multisig number outside the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outmultisig=1:2:3a:02a5:021:02df", "nversion=1"],
+    "return_code": 1,
+    "error_txt": "error: invalid multisig total number '3a'",
+    "description": "Try to parse a multisig number outside the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
     "args": ["-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485", "nversion=1"],
     "output_cmp": "txcreatemultisig1.hex",
     "description": "Creates a new transaction with a single 2-of-3 multisig output"
   },
   { "exec": "./bitcoin-tx",
-    "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485", "nversion=1"],
+    "args": ["-json", "-create", "outmultisig=1: 2 : 3 :02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485", "nversion=1"],
     "output_cmp": "txcreatemultisig1.json",
-    "description": "Creates a new transaction with a single 2-of-3 multisig output (output in json)"
+    "description": "Creates a new transaction with a single 2-of-3 multisig output (with whitespace, output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:S", "nversion=1"],

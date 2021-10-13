@@ -41,7 +41,6 @@ export LC_ALL=C
 #       independent ToIntegral<T>(...) or the ParseInt*() functions.
 # TODO: Reduce KNOWN_VIOLATIONS by replacing uses of locale dependent snprintf with strprintf.
 KNOWN_VIOLATIONS=(
-    "src/bitcoin-tx.cpp.*stoul"
     "src/dbwrapper.cpp:.*vsnprintf"
     "src/test/dbwrapper_tests.cpp:.*snprintf"
     "src/test/fuzz/locale.cpp"
