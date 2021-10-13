@@ -523,7 +523,7 @@
     "error_txt": "error: invalid TX sequence id '11aa'",
     "description": "Try to parse a sequence number outside the allowed range"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./syscoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:-1"],
@@ -531,7 +531,7 @@
     "error_txt": "error: invalid TX sequence id '-1'",
     "description": "Try to parse a sequence number outside the allowed range"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./syscoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:4294967296"],
@@ -539,7 +539,7 @@
     "error_txt": "error: invalid TX sequence id '4294967296'",
     "description": "Try to parse a sequence number outside the allowed range"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./syscoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:4294967293",
@@ -555,7 +555,7 @@
     "output_cmp": "txcreatedata_seq0.hex",
     "description": "Creates a new transaction with one input with sequence number (+whitespace) and one address output"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./syscoin-tx",
     "args":
     ["-json",
      "-create",
