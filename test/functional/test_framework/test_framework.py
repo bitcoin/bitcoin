@@ -65,6 +65,7 @@ TEST_EXIT_FAILED = 1
 TEST_EXIT_SKIPPED = 77
 
 GENESISTIME = 1417713337
+TMPDIR_PREFIX = "dash_func_test_"
 
 class SkipTest(Exception):
     """This exception is raised to skip a test"""
@@ -194,7 +195,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.options.tmpdir = os.path.abspath(self.options.tmpdir)
             os.makedirs(self.options.tmpdir, exist_ok=False)
         else:
-            self.options.tmpdir = tempfile.mkdtemp(prefix="test")
+            self.options.tmpdir = tempfile.mkdtemp(prefix=TMPDIR_PREFIX)
         self._start_logging()
 
         # Seed the PRNG. Note that test runs are reproducible if and only if
