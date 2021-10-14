@@ -234,13 +234,13 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_equal(1, hd_chain_version)
         seed_id = bytearray(seed_id)
         seed_id.reverse()
-        old_kvs = new_kvs
-        # New keys should be HD (the two old keys have been flushed)
+
+        # New keys (including change) should be HD (the two old keys have been flushed)
         info = wallet.getaddressinfo(wallet.getnewaddress())
         assert_equal(seed_id.hex(), info['hdseedid'])
         assert_equal('m/0\'/0\'/0\'', info['hdkeypath'])
         prev_seed_id = info['hdseedid']
-        # Change key should be the same keypool
+        # Change key should be HD and from the same keypool
         info = wallet.getaddressinfo(wallet.getrawchangeaddress())
         assert_equal(prev_seed_id, info['hdseedid'])
         assert_equal('m/0\'/0\'/1\'', info['hdkeypath'])
