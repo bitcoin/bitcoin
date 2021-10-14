@@ -193,8 +193,8 @@ static bool rest_headers(const std::any& context,
         return RESTERR(req, HTTP_BAD_REQUEST, "No header count specified. Use /rest/headers/<count>/<hash>.<ext>.");
 
     long count = strtol(path[0].c_str(), nullptr, 10);
-    if (count < 1 || count > MAX_REST_HEADERS_RESULTS)
-        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count out of acceptable range (1-%u): %s",  MAX_REST_HEADERS_RESULTS, path[0]));
+    if (count < 1 || count > 2000)
+        return RESTERR(req, HTTP_BAD_REQUEST, "Header count out of range: " + path[0]);
 
     std::string hashStr = path[1];
     uint256 hash;
@@ -255,7 +255,7 @@ static bool rest_headers(const std::any& context,
         return true;
     }
     default: {
-        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: .bin, .hex, .json)");
     }
     }
 }
