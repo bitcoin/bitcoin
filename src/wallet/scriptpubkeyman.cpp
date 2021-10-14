@@ -375,11 +375,15 @@ void LegacyScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
         if (it != mapKeyMetadata.end()){
             CKeyMetadata meta = it->second;
             if (!meta.hd_seed_id.IsNull() && meta.hd_seed_id != m_hd_chain.seed_id) {
-                bool internal = (meta.key_origin.path[1] & ~BIP32_HARDENED_KEY_LIMIT) != 0;
-                int64_t index = meta.key_origin.path[2] & ~BIP32_HARDENED_KEY_LIMIT;
+                if (meta.key_origin.path.size() < 3) {
+                    WalletLogPrintf("%s: Adding inactive seed keys failed, insufficient path size: %d\n", __func__, meta.key_origin.path.size());
+                } else {
+                    bool internal = (meta.key_origin.path[1] & ~BIP32_HARDENED_KEY_LIMIT) != 0;
+                    int64_t index = meta.key_origin.path[2] & ~BIP32_HARDENED_KEY_LIMIT;
 
-                if (!TopUpInactiveHDChain(meta.hd_seed_id, index, internal)) {
-                    WalletLogPrintf("%s: Adding inactive seed keys failed\n", __func__);
+                    if (!TopUpInactiveHDChain(meta.hd_seed_id, index, internal)) {
+                        WalletLogPrintf("%s: Adding inactive seed keys failed\n", __func__);
+                    }
                 }
             }
         }
