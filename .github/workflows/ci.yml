@@ -8,6 +8,7 @@ on:
       - release/*
       - mainnet
       - trunk/*
+      - phase2
 
   pull_request:
     branches:
