@@ -376,7 +376,10 @@ void LegacyScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
             CKeyMetadata meta = it->second;
             if (!meta.hd_seed_id.IsNull() && meta.hd_seed_id != m_hd_chain.seed_id) {
                 if (meta.key_origin.path.size() < 3) {
-                    WalletLogPrintf("%s: Adding inactive seed keys failed, insufficient path size: %d\n", __func__, meta.key_origin.path.size());
+                    WalletLogPrintf("%s: Adding inactive seed keys failed, insufficient path size: %d, has_key_origin: %s\n",
+                                    __func__,
+                                    meta.key_origin.path.size(),
+                                    meta.has_key_origin);
                 } else {
                     bool internal = (meta.key_origin.path[1] & ~BIP32_HARDENED_KEY_LIMIT) != 0;
                     int64_t index = meta.key_origin.path[2] & ~BIP32_HARDENED_KEY_LIMIT;
