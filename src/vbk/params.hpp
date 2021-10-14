@@ -20,6 +20,10 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
 
     explicit AltChainParamsVBTC(const CBlock& genesis)
     {
+        // if block time changes, update altchain id. see altchain id comment.
+        assert(altintegration::getMaxAtvsInVbkBlock(VeriBlock::ALT_CHAIN_ID) == 20);
+
+
         bootstrap.hash = genesis.GetHash().asVector();
         // intentionally leave prevHash empty
         bootstrap.height = 0;
@@ -27,8 +31,11 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
 
         // these parameters changed in comparison to default parameters
         this->mPopPayoutsParams->mPopPayoutDelay = 150;
-        this->mPopPayoutsParams->mDifficultyAveragingInterval = 30;
+        this->mPopPayoutsParams->mDifficultyAveragingInterval = 150;
         this->mEndorsementSettlementInterval = 150;
+        this->mMaxVbkBlocksInAltBlock = 100;
+        this->mMaxVTBsInAltBlock = 50;
+        this->mMaxATVsInAltBlock = 100;
         this->mPreserveBlocksBehindFinal = mEndorsementSettlementInterval;
 
         //! copying all parameters here to make sure that
@@ -58,14 +65,11 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
             0.02193952, 0.02134922};
 
         // altchain params
-        this->mMaxReorgDistance = 50000;             // blocks
+        this->mMaxReorgDistance = 2500;              // blocks
         this->mMaxAltchainFutureBlockTime = 10 * 60; // 10 min
         this->mKeystoneInterval = 5;
         this->mFinalityDelay = 100;
         this->mMaxPopDataSize = altintegration::MAX_POPDATA_SIZE;
-        this->mMaxVbkBlocksInAltBlock = 200;
-        this->mMaxVTBsInAltBlock = 200;
-        this->mMaxATVsInAltBlock = 1000;
         this->mForkResolutionLookUpTable = {
             100, 100, 95, 89, 80, 69, 56, 40, 21};
     }
@@ -99,7 +103,10 @@ struct AltChainParamsVBTCRegTest : public AltChainParamsVBTC {
 
     explicit AltChainParamsVBTCRegTest(const CBlock& genesis) : AltChainParamsVBTC(genesis)
     {
-        mMaxReorgDistance = 1000;
+        this->mMaxReorgDistance = 1000;
+        this->mMaxVbkBlocksInAltBlock = 200;
+        this->mMaxVTBsInAltBlock = 200;
+        this->mMaxATVsInAltBlock = 1000;
     }
 };
 

@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
 
 BOOST_AUTO_TEST_CASE(LwmaCalculateNextWorkRequired_test)
 {
-    const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+    const auto chainParams = CreateChainParams(CBaseChainParams::TESTNET);
     std::vector<CBlockIndex> blocks(50);
     for (int i = 0; i < 50; i++) {
         blocks[i].pprev = i ? &blocks[i - 1] : nullptr;
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(LwmaCalculateNextWorkRequired_test)
     int bits = LwmaCalculateNextWorkRequired(&blocks.back(), chainParams->GetConsensus());
     // Bogdan: incorrect case, because higher than powLimit
 //    BOOST_CHECK_EQUAL(bits, 0x1d010084);
-    BOOST_CHECK_EQUAL(bits, 0x1d00fffe);
+    BOOST_CHECK_EQUAL(bits, 0x1e07ffff);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

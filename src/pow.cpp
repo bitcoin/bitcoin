@@ -31,19 +31,10 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     return lwma;
 }
 
-#define VBK_FORK_1_HEIGHT 40000
-
 unsigned int LwmaGetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params)
 {
-    // TODO(warchant): remove this condition when restart the network
     static const int sixHours = 6 * 60 * 60;
     int timeOffset = sixHours;
-
-    // if height < 40k, then we allow 4 min timeOffset.
-    // otherwise, use 6 hours timeOffset.
-    if(pindexLast->nHeight < VBK_FORK_1_HEIGHT) {
-        timeOffset = params.nPowTargetSpacing * 2;
-    }
 
     // Special difficulty rule for testnet:
     // If the new block's timestamp is more than `timeOffset` minutes
@@ -65,10 +56,7 @@ unsigned int LwmaCalculateNextWorkRequired(const CBlockIndex* pindexLast, const 
     assert(T == 120 && "come here and update N from 150");
 
     // For T=600, 300, 150 use approximately N=60, 90, 120
-    int64_t N = 150; // before fork_1 we used N=45, after - N=150
-    if(pindexLast->nHeight < VBK_FORK_1_HEIGHT) {
-        N = 45;
-    }
+    int64_t N = 150;
 
     // Define a k that will be used to get a proper average after weighting the solvetimes.
     const int64_t k = N * (N + 1) * T / 2;
