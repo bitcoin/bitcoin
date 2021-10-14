@@ -71,6 +71,7 @@ namespace BCLog {
         IPC         = (uint64_t)(1ULL << 32),
         LOCK        = (uint64_t)(1ULL << 33),
         UTIL        = (uint64_t)(1ULL << 34),
+        BLOCKSTORE  = (uint64_t)(1ULL << 35),
         ALL         = ~(uint64_t)0,
     };
 

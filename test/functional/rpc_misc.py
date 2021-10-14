@@ -57,7 +57,7 @@ class RpcMiscTest(SyscoinTestFramework):
         self.log.info("test logging rpc and help")
 
         # SYSCOIN Test logging RPC returns the expected number of logging categories.
-        assert_equal(len(node.logging()), 35)
+        assert_equal(len(node.logging()), 36)
 
         # Test toggling a logging category on/off/on with the logging RPC.
         assert_equal(node.logging()['qt'], True)
