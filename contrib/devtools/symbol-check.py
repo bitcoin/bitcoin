@@ -63,6 +63,9 @@ IGNORE_EXPORTS = {
 '__bss_end__', '_fini', '_IO_stdin_used', 'stdin', 'stdout', 'stderr',
 'environ', '_environ', '__environ',
 }
+IGNORE_IMPORTS = {
+'fmemopen',
+}
 
 # Expected linker-loader names can be found here:
 # https://sourceware.org/glibc/wiki/ABIList?action=recall&rev=16
@@ -175,6 +178,9 @@ def check_imported_symbols(binary) -> bool:
 
     for symbol in binary.imported_symbols:
         if not symbol.imported:
+            continue
+
+        if symbol.name in IGNORE_IMPORTS:
             continue
 
         version = symbol.symbol_version if symbol.has_version else None
