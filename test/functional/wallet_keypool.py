@@ -138,6 +138,20 @@ class KeyPoolTest(BitcoinTestFramework):
             assert_equal(wi['keypoolsize_hd_internal'], 100)
             assert_equal(wi['keypoolsize'], 100)
 
+        if not self.options.descriptors:
+            # Check that newkeypool entirely flushes the keypool
+            start_keypath = nodes[0].getaddressinfo(nodes[0].getnewaddress())['hdkeypath']
+            start_change_keypath = nodes[0].getaddressinfo(nodes[0].getrawchangeaddress())['hdkeypath']
+            # flush keypool and get new addresses
+            nodes[0].newkeypool()
+            end_keypath = nodes[0].getaddressinfo(nodes[0].getnewaddress())['hdkeypath']
+            end_change_keypath = nodes[0].getaddressinfo(nodes[0].getrawchangeaddress())['hdkeypath']
+            # The new keypath index should be 100 more than the old one
+            new_index = int(start_keypath.rsplit('/',  1)[1][:-1]) + 100
+            new_change_index = int(start_change_keypath.rsplit('/',  1)[1][:-1]) + 100
+            assert_equal(end_keypath, "m/0'/0'/" + str(new_index) + "'")
+            assert_equal(end_change_keypath, "m/0'/1'/" + str(new_change_index) + "'")
+
         # create a blank wallet
         nodes[0].createwallet(wallet_name='w2', blank=True, disable_private_keys=True)
         w2 = nodes[0].get_wallet_rpc('w2')

@@ -1854,7 +1854,7 @@ static RPCHelpMan keypoolrefill()
                 "\nFills the keypool."+
         HELP_REQUIRING_PASSPHRASE,
                 {
-                    {"newsize", RPCArg::Type::NUM, RPCArg::Default{100}, "The new keypool size"},
+                    {"newsize", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%u, or as set by -keypool", DEFAULT_KEYPOOL_SIZE)}, "The new keypool size"},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
@@ -1886,6 +1886,33 @@ static RPCHelpMan keypoolrefill()
     if (pwallet->GetKeyPoolSize() < kpSize) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
     }
+
+    return NullUniValue;
+},
+    };
+}
+
+
+static RPCHelpMan newkeypool()
+{
+    return RPCHelpMan{"newkeypool",
+                "\nEntirely clears and refills the keypool."+
+            HELP_REQUIRING_PASSPHRASE,
+                {},
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+            HelpExampleCli("newkeypool", "")
+            + HelpExampleRpc("newkeypool", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
+
+    LOCK(pwallet->cs_wallet);
+
+    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet, true);
+    spk_man.NewKeyPool();
 
     return NullUniValue;
 },
@@ -4875,6 +4902,7 @@ static const CRPCCommand commands[] =
     { "wallet",             &listwallets,                    },
     { "wallet",             &loadwallet,                     },
     { "wallet",             &lockunspent,                    },
+    { "wallet",             &newkeypool,                     },
     { "wallet",             &removeprunedfunds,              },
     { "wallet",             &rescanblockchain,               },
     { "wallet",             &send,                           },

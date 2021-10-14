@@ -489,7 +489,7 @@ bool LegacyScriptPubKeyMan::Upgrade(int prev_version, int new_version, bilingual
     }
     // Regenerate the keypool if upgraded to HD
     if (hd_upgrade) {
-        if (!TopUp()) {
+        if (!NewKeyPool()) {
             error = _("Unable to generate keys");
             return false;
         }
