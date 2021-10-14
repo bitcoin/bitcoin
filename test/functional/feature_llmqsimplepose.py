@@ -19,14 +19,17 @@ Checks simple PoSe system based on LLMQ commitments
 class LLMQSimplePoSeTest(DashTestFramework):
     def set_test_params(self):
         self.bind_to_localhost_only = False
-        self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
+        self.set_dash_test_params(6, 5, [["-whitelist=noban@127.0.0.1"]] * 6, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(5, 3)
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
     def run_test(self):
-
+        self.sync_blocks(self.nodes, timeout=60*5)
+        self.confirm_mns()
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
@@ -46,13 +49,15 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         # Make sure no banning happens with spork21 enabled
         self.test_no_banning()
-
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         # Lets restart masternodes with closed ports and verify that they get banned even though they are connected to other MNs (via outbound connections)
         self.test_banning(self.close_mn_port, 3)
 
         self.repair_masternodes(True)
         self.reset_probe_timeouts()
-
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         self.test_banning(self.force_old_mn_proto, 3)
 
         # With PoSe off there should be no punishing for non-reachable and outdated nodes
@@ -114,6 +119,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             t = time.time()
             while (not self.check_banned(mn)) and (time.time() - t) < 120:
                 self.reset_probe_timeouts()
+                self.generate(self.nodes[0], 1)
                 self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
 
             assert(self.check_banned(mn))
@@ -131,11 +137,12 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 self.nodes[0].protx_update_service(mn.proTxHash, '127.0.0.1:%d' % p2p_port(mn.node.index), mn.keyOperator, "", addr)
                 # Make sure this tx "safe" to mine even when InstantSend and ChainLocks are no longer functional
                 self.bump_mocktime(60 * 10 + 1)
-                self.nodes[0].generate(1)
+                self.generate(self.nodes[0], 1)
                 assert(not self.check_banned(mn))
 
                 if restart:
                     self.stop_node(mn.node.index)
+                    time.sleep(0.5)
                     self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime)])
                 else:
                     mn.node.setnetworkactive(True)
@@ -155,6 +162,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.bump_mocktime(50 * 60 + 1)
         # Sleep a couple of seconds to let mn sync tick to happen
         time.sleep(2)
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
 
     def check_punished(self, mn):
         info = self.nodes[0].protx_info(mn.proTxHash)

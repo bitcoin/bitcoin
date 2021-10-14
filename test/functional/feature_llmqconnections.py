@@ -18,7 +18,7 @@ Checks intra quorum connections
 
 class LLMQConnections(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(15, 14, fast_dip3_enforcement=True)
+        self.set_dash_test_params(15, 14, [["-whitelist=noban@127.0.0.1"]] * 15, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(5, 3)
 
     def skip_test_if_missing_module(self):
@@ -27,6 +27,8 @@ class LLMQConnections(DashTestFramework):
     def run_test(self):
         self.sync_blocks(self.nodes, timeout=60*5)
         self.confirm_mns()
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
@@ -107,6 +109,7 @@ class LLMQConnections(DashTestFramework):
         return count
 
     def get_mn_probe_count(self, node, q, check_peers):
+        self.bump_mocktime(1)
         count = 0
         mnList = node.protx_list('registered', True)
         peerList = node.getpeerinfo()
