@@ -117,7 +117,6 @@ BASE_SCRIPTS = [
     'feature_llmqchainlocks.py',
     'feature_llmqconnections.py',
     'feature_llmqdkgerrors.py',
-    'feature_llmq_is_retroactive.py',
     'feature_deterministicmns.py',
     'feature_coinbasemerkleroots.py',
     'feature_asset.py',
