@@ -5819,9 +5819,9 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
     #include <errno.h>
     #include <assert.h>
     #include <process.h>
-    pid_t fork(std::string app, std::string arg)
+    pid_t fork(fs::path app, std::string arg)
     {
-        std::string appQuoted = "\"" + app + "\"";
+        std::string appQuoted = fs::quoted(fs::PathToString(app));
         PROCESS_INFORMATION pi;
         STARTUPINFOW si;
         ZeroMemory(&pi, sizeof(pi));
@@ -5859,14 +5859,14 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t written = fwrite(ptr, size, nmemb, stream);
     return written;
 }
-bool DownloadFile(const std::string &url, const std::string &dest, const std::string &mode="wb", const std::string &checksum="", const std::string &signature="") {
+bool DownloadFile(const std::string &url, const fs::path &dest, const std::string &mode="wb", const std::string &checksum="", const std::string &signature="") {
     CURL *curl;
     FILE *fp;
     CURLcode res;
-    const std::string destTmp = dest + "tmp";
+    const fs::path destTmp = dest + "tmp";
     curl = curl_easy_init();
     if (curl) {
-        fp = fopen(destTmp.c_str(),mode.c_str());
+        fp = fopen(fs::PathToString(destTmp).c_str(),mode.c_str());
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
         curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
@@ -5889,7 +5889,7 @@ bool DownloadFile(const std::string &url, const std::string &dest, const std::st
                     fs::perms::others_read);
     }
     if(!checksum.empty()) {
-        LogPrintf("%s: Checking file checksum of %s\n", __func__, destTmp);
+        LogPrintf("%s: Checking file checksum of %s\n", __func__, fs::PathToString(destTmp));
         fsbridge::ifstream file(destTmp, std::ios_base::binary);
         if (!file.is_open())
             return false;
@@ -5993,15 +5993,15 @@ bool GetDescriptorStats(const fs::path filePath, DescriptorDetails& details) {
     }
     return false;
 }
-std::vector<std::string> SanitizeGethCmdLine(const std::string& binaryURL, const std::string& dataDir) {
+std::vector<std::string> SanitizeGethCmdLine(const fs::path& binaryURL, const fs::path& dataDir) {
     const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
     std::vector<std::string> cmdLineRet;
-    cmdLineRet.push_back(binaryURL);
+    cmdLineRet.push_back(fs::PathToString(binaryURL));
     for(const auto &cmd: cmdLine){
         cmdLineRet.push_back(cmd);
     }
     cmdLineRet.push_back("--datadir");
-    cmdLineRet.push_back(dataDir);
+    cmdLineRet.push_back(fs::PathToString(dataDir));
     if(fTestNet || fRegTest) {
         cmdLineRet.push_back("--tanenbaum");
     } else {
@@ -6013,7 +6013,7 @@ std::vector<std::string> SanitizeGethCmdLine(const std::string& binaryURL, const
     cmdLineRet.push_back(strPub);
     return cmdLineRet;
 }
-bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const std::string& binaryDestPath, const std::string& descriptorURL) {
+bool DownloadBinaryFromDescriptor(const fs::path &descriptorDestPath, const fs::path& binaryDestPath, const std::string& descriptorURL) {
     DescriptorDetails descriptorDetailsLocal, descriptorDetailsRemote;
     GetDescriptorStats(descriptorDestPath, descriptorDetailsLocal);
     // always download remote descriptor to check checksum, if remote doesn't exist use local. Both local and remote cannot be missing.
@@ -6028,7 +6028,7 @@ bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const s
         return false;
     }
     if(descriptorDetailsLocal.sha256Sum.empty() || descriptorDetailsLocal.sha256Sum != descriptorDetailsRemote.sha256Sum) {
-         LogPrintf("%s: Checksum mismatch, version local (%s) vs remote version (%s)! Downloading from %s and saving to %s\n", __func__, descriptorDetailsLocal.version, descriptorDetailsRemote.version, descriptorDetailsRemote.binURL, binaryDestPath);
+         LogPrintf("%s: Checksum mismatch, version local (%s) vs remote version (%s)! Downloading from %s and saving to %s\n", __func__, descriptorDetailsLocal.version, descriptorDetailsRemote.version, descriptorDetailsRemote.binURL, fs::PathToString(binaryDestPath));
          if(!DownloadFile(descriptorDetailsRemote.binURL, binaryDestPath, "wb", descriptorDetailsRemote.sha256Sum, descriptorDetailsRemote.signature)) {
              LogPrintf("%s: Could not download binary %s or checksum failed\n", __func__, descriptorDetailsRemote.binURL);
              return false;
@@ -6085,27 +6085,27 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
     fs::path descriptorPath = gArgs.GetDataDirBase() / "gethdescriptor.json";
     fs::path binaryURL = gArgs.GetDataDirBase() / GetGethFilename();
     // if either bin or descriptor not existing remove both files to download from scratch
-    if (!fs::exists(binaryURL.string()) || !fs::exists(descriptorPath.string())) {
-        if(fs::exists(binaryURL.string()))
-            fs::remove(binaryURL.string());
-        if(fs::exists(descriptorPath.string()))
-            fs::remove(descriptorPath.string());          
+    if (!fs::exists(binaryURL) || !fs::exists(descriptorPath)) {
+        if(fs::exists(binaryURL))
+            fs::remove(binaryURL);
+        if(fs::exists(descriptorPath))
+            fs::remove(descriptorPath);          
     }
-    if(!DownloadBinaryFromDescriptor(descriptorPath.string(), binaryURL.string(), gethDescriptorURL)) {
-        if (fs::exists(descriptorPath.string())) {
-            fs::remove(descriptorPath.string());
+    if(!DownloadBinaryFromDescriptor(descriptorPath, binaryURL, gethDescriptorURL)) {
+        if (fs::exists(descriptorPath)) {
+            fs::remove(descriptorPath);
         }
-        if (fs::exists(binaryURL.string())) {
-            fs::remove(binaryURL.string());
+        if (fs::exists(binaryURL)) {
+            fs::remove(binaryURL);
         }
         return false;
     }
 
-    fs::path attempt1 = binaryURL.string();
+    fs::path attempt1 = binaryURL;
     attempt1 = attempt1.make_preferred();
 
     fs::path dataDir = gArgs.GetDataDirNet() / "geth";
-    std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(attempt1.string(), dataDir.string());
+    std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(attempt1, dataDir);
     fs::path log = gArgs.GetDataDirNet() / "sysgeth.log";
 
     #ifndef WIN32
@@ -6135,7 +6135,7 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
         commandVector.push_back(NULL);
         char **command = commandVector.data();    
         LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]); 
-        int err = open(log.string().c_str(), O_RDWR|O_CREAT|O_APPEND, 0600);
+        int err = open(fs::PathToString(log).c_str(), O_RDWR|O_CREAT|O_APPEND, 0600);
         if (err == -1) {
             LogPrintf("Could not open sysgeth.log\n");
         }
@@ -6143,7 +6143,7 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
         fflush(stderr); close(err);                               
         execvp(command[0], &command[0]);
         if (errno != 0) {
-            LogPrintf("Geth not found at %s\n", attempt1.string());
+            LogPrintf("Geth not found at %s\n", fs::PathToString(attempt1));
         }
     } else {
         boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
@@ -6156,10 +6156,10 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
         for(const std::string &cmdStr: vecCmdLineStr) {
             commandStr += cmdStr + " ";
         } 
-        commandStr += " >\"" + log.string() + "\" 2>&1";
-        pid = fork(attempt1.string(), commandStr);
+        commandStr += " >" + fs::quoted(fs::PathToString(log)) + " 2>&1";
+        pid = fork(attempt1, commandStr);
         if( pid <= 0 ) {
-            LogPrintf("Geth not found at %s\n", attempt1.string());
+            LogPrintf("Geth not found at %s\n", fs::PathToString(attempt1));
             return false;
         }
         boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);

@@ -1614,7 +1614,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     uiInterface.InitMessage(_("Loading sporks cache...").translated);
     CFlatDB<CSporkManager> flatdb6(strDBName, "magicSporkCache");
     if (!flatdb6.Load(sporkManager)) {
-        return InitError(strprintf(_("Failed to load sporks cache from %s\n"), (gArgs.GetDataDirNet() / strDBName).string()));
+        return InitError(strprintf(_("Failed to load sporks cache from %s\n"), fs::PathToString((gArgs.GetDataDirNet() / strDBName))));
     }
     
     
@@ -2085,12 +2085,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     CFlatDB<CMasternodeMetaMan> flatdb1(strDBName, "magicMasternodeCache");
     if (fLoadCacheFiles) {
         if(!flatdb1.Load(mmetaman)) {
-            return InitError(strprintf(_("Failed to load masternode cache from %s\n"), (pathDB / strDBName).string()));
+            return InitError(strprintf(_("Failed to load masternode cache from %s\n"), fs::PathToString((pathDB / strDBName))));
         }
     } else {
         CMasternodeMetaMan mmetamanTmp, mmetamanTmp1;
         if(!flatdb1.Dump(mmetamanTmp, mmetamanTmp1)) {
-            return InitError(strprintf(_("Failed to clear masternode cache at %s\n"), (pathDB / strDBName).string()));
+            return InitError(strprintf(_("Failed to clear masternode cache at %s\n"), fs::PathToString((pathDB / strDBName))));
         }
     }
 
@@ -2099,14 +2099,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
     if (fLoadCacheFiles && !fDisableGovernance) {
         if(!flatdb3.Load(*governance)) {
-            return InitError(strprintf(_("Failed to load governance cache from %s\n"), (pathDB / strDBName).string()));
+            return InitError(strprintf(_("Failed to load governance cache from %s\n"), fs::PathToString((pathDB / strDBName))));
         }
         governance->InitOnLoad();
     } else {
         CGovernanceManager governanceTmp(*node.chainman);
         CGovernanceManager governanceTmp1(*node.chainman);
         if(!flatdb3.Dump(governanceTmp, governanceTmp1)) {
-            return InitError(strprintf(_("Failed to clear governance cache at %s\n"), (pathDB / strDBName).string()));
+            return InitError(strprintf(_("Failed to clear governance cache at %s\n"), fs::PathToString((pathDB / strDBName))));
         }
     }
 
@@ -2115,12 +2115,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
     if (fLoadCacheFiles) {
         if(!flatdb4.Load(netfulfilledman)) {
-            return InitError(strprintf(_("Failed to load fulfilled requests cache from %s\n"), (pathDB / strDBName).string()));
+            return InitError(strprintf(_("Failed to load fulfilled requests cache from %s\n"), fs::PathToString((pathDB / strDBName))));
         }
     } else {
         CNetFulfilledRequestManager netfulfilledmanTmp, netfulfilledmanTmp1;
         if(!flatdb4.Dump(netfulfilledmanTmp, netfulfilledmanTmp1)) {
-            return InitError(strprintf(_("Failed to clear fulfilled requests cache at %s\n"), (pathDB / strDBName).string()));
+            return InitError(strprintf(_("Failed to clear fulfilled requests cache at %s\n"), fs::PathToString((pathDB / strDBName))));
         }
     } 
     if (ShutdownRequested()) {
