@@ -131,16 +131,15 @@ def check_estimates(node, fees_seen):
 
 def send_tx(node, utxo, feerate):
     """Broadcast a 1in-1out transaction with a specific input and feerate (sat/vb)."""
-    overhead, op, scriptsig, nseq, value, spk = 10, 36, 5, 4, 8, 24
-    tx_size = overhead + op + scriptsig + nseq + value + spk
-    fee = tx_size * feerate
-
     tx = CTransaction()
     tx.vin = [CTxIn(COutPoint(int(utxo["txid"], 16), utxo["vout"]), REDEEM_SCRIPT)]
-    tx.vout = [CTxOut(int(utxo["amount"] * COIN) - fee, P2SH)]
-    txid = node.sendrawtransaction(tx.serialize().hex())
+    tx.vout = [CTxOut(int(utxo["amount"] * COIN), P2SH)]
 
-    return txid
+    # vbytes == bytes as we are using legacy transactions
+    fee = tx.get_vsize() * feerate
+    tx.vout[0].nValue -= fee
+
+    return node.sendrawtransaction(tx.serialize().hex())
 
 
 class EstimateFeeTest(BitcoinTestFramework):
@@ -297,12 +296,9 @@ class EstimateFeeTest(BitcoinTestFramework):
                 miner.prioritisetransaction(txid=txid, fee_delta=-COIN)
             self.generate(miner, 1)
             # RBF the low-fee transactions
-            while True:
-                try:
-                    u = utxos_to_respend.pop(0)
-                    send_tx(node, u, high_feerate)
-                except IndexError:
-                    break
+            while len(utxos_to_respend) > 0:
+                u = utxos_to_respend.pop(0)
+                send_tx(node, u, high_feerate)
 
         # Mine the last replacement txs
         self.sync_mempools(wait=0.1, nodes=[node, miner])
