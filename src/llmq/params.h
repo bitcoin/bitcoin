@@ -5,12 +5,13 @@
 #ifndef BITCOIN_LLMQ_PARAMS_H
 #define BITCOIN_LLMQ_PARAMS_H
 
+#include <array>
 #include <cstdint>
 #include <string_view>
 
 namespace Consensus {
 
-enum LLMQType : uint8_t
+enum class LLMQType : uint8_t
 {
     LLMQ_NONE = 0xff,
 
@@ -94,13 +95,15 @@ struct LLMQParams {
 };
 
 
-/**
- * llmq_test
- * This quorum is only used for testing
- *
- */
-static constexpr LLMQParams llmq_test = {
-        .type = LLMQ_TEST,
+static constexpr std::array<LLMQParams, 7> available_llmqs = {
+
+    /**
+     * llmq_test
+     * This quorum is only used for testing
+     *
+     */
+    LLMQParams{
+        .type = LLMQType::LLMQ_TEST,
         .name = "llmq_test",
         .size = 3,
         .minSize = 2,
@@ -116,15 +119,15 @@ static constexpr LLMQParams llmq_test = {
 
         .keepOldConnections = 3,
         .recoveryMembers = 3,
-};
+    },
 
-/**
- * llmq_test (Dash Core 0.17) aka llmq_test_v17
- * This quorum is only used for testing
- *
- */
-static constexpr LLMQParams llmq_test_v17 = {
-        .type = LLMQ_TEST_V17,
+    /**
+     * llmq_test (Dash Core 0.17) aka llmq_test_v17
+     * This quorum is only used for testing
+     *
+     */
+    LLMQParams{
+        .type = LLMQType::LLMQ_TEST_V17,
         .name = "llmq_test_v17",
         .size = 3,
         .minSize = 2,
@@ -140,15 +143,15 @@ static constexpr LLMQParams llmq_test_v17 = {
 
         .keepOldConnections = 3,
         .recoveryMembers = 3,
-};
+    },
 
-/**
- * llmq_devnet
- * This quorum is only used for testing on devnets
- *
- */
-static constexpr LLMQParams llmq_devnet = {
-        .type = LLMQ_DEVNET,
+    /**
+     * llmq_devnet
+     * This quorum is only used for testing on devnets
+     *
+     */
+    LLMQParams{
+        .type = LLMQType::LLMQ_DEVNET,
         .name = "llmq_devnet",
         .size = 10,
         .minSize = 7,
@@ -164,16 +167,16 @@ static constexpr LLMQParams llmq_devnet = {
 
         .keepOldConnections = 4,
         .recoveryMembers = 6,
-};
+    },
 
 /**
- * llmq50_60
- * This quorum is deployed on mainnet and requires
- * 40 - 50 participants
- *
- */
-static constexpr LLMQParams llmq50_60 = {
-        .type = LLMQ_50_60,
+     * llmq_50_60
+     * This quorum is deployed on mainnet and requires
+     * 40 - 50 participants
+     *
+     */
+    LLMQParams{
+        .type = LLMQType::LLMQ_50_60,
         .name = "llmq_50_60",
         .size = 50,
         .minSize = 40,
@@ -186,19 +189,18 @@ static constexpr LLMQParams llmq50_60 = {
         .dkgBadVotesThreshold = 40,
 
         .signingActiveQuorumCount = 24, // a full day worth of LLMQs
-
         .keepOldConnections = 25,
         .recoveryMembers = 25,
-};
+    },
 
-/**
- * llmq400_60
- * This quorum is deployed on mainnet and requires
- * 300 - 400 participants
- *
- */
-static constexpr LLMQParams llmq400_60 = {
-        .type = LLMQ_400_60,
+    /**
+     * llmq_400_60
+     * This quorum is deployed on mainnet and requires
+     * 300 - 400 participants
+     *
+     */
+    LLMQParams{
+        .type = LLMQType::LLMQ_400_60,
         .name = "llmq_400_60",
         .size = 400,
         .minSize = 300,
@@ -214,17 +216,17 @@ static constexpr LLMQParams llmq400_60 = {
 
         .keepOldConnections = 5,
         .recoveryMembers = 100,
-};
+    },
 
-/**
- * llmq400_85
- * This quorum is deployed on mainnet and requires
- * 300 - 400 participants _with_ a supermajority
- *
- * Used for deployment and min-proto-version signalling
- */
-static constexpr LLMQParams llmq400_85 = {
-        .type = LLMQ_400_85,
+    /**
+     * llmq_400_85
+     * This quorum is deployed on mainnet and requires
+     * 300 - 400 participants _with_ a supermajority
+     *
+     * Used for deployment and min-proto-version signalling
+     */
+    LLMQParams{
+        .type = LLMQType::LLMQ_400_85,
         .name = "llmq_400_85",
         .size = 400,
         .minSize = 350,
@@ -240,17 +242,17 @@ static constexpr LLMQParams llmq400_85 = {
 
         .keepOldConnections = 5,
         .recoveryMembers = 100,
-};
+    },
 
-/**
- * llmq100_67
- * This quorum is deployed on mainnet and requires
- * 80 - 100 participants
- *
- * Used by Dash Platform
- */
-static constexpr LLMQParams llmq100_67 = {
-        .type = LLMQ_100_67,
+    /**
+     * llmq_100_67
+     * This quorum is deployed on mainnet and requires
+     * 80 - 100 participants
+     *
+     * Used by Dash Platform
+     */
+    LLMQParams{
+        .type = LLMQType::LLMQ_100_67,
         .name = "llmq_100_67",
         .size = 100,
         .minSize = 80,
@@ -266,8 +268,15 @@ static constexpr LLMQParams llmq100_67 = {
 
         .keepOldConnections = 25,
         .recoveryMembers = 50,
-};
+    },
 
-}
+}; // available_llmqs
+
+} // namespace Consensus
+
+// This must be outside of all namespaces. We must also duplicate the forward declaration of is_serializable_enum to
+// avoid inclusion of serialize.h here.
+template<typename T> struct is_serializable_enum;
+template<> struct is_serializable_enum<Consensus::LLMQType> : std::true_type {};
 
 #endif // BITCOIN_LLMQ_PARAMS_H

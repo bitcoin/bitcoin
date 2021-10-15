@@ -476,7 +476,7 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
             }
 
             UniValue obj(UniValue::VOBJ);
-            obj.pushKV("llmqType", llmqType);
+            obj.pushKV("llmqType", static_cast<uint8_t>(llmqType));
             obj.pushKV("quorumHash", sigShare.quorumHash.ToString());
             obj.pushKV("quorumMember", sigShare.quorumMember);
             obj.pushKV("id", id.ToString());

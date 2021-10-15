@@ -59,7 +59,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
 
         if (!Params().GetConsensus().llmqs.count(qc.llmqType)) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- invalid commitment type %d from peer=%d\n", __func__,
-                     qc.llmqType, pfrom->GetId());
+                     static_cast<uint8_t>(qc.llmqType), pfrom->GetId());
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
             return;
@@ -109,14 +109,14 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
 
         if (!qc.Verify(pquorumIndex, true)) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid, peer=%d\n", __func__,
-                      qc.quorumHash.ToString(), qc.llmqType, pfrom->GetId());
+                      qc.quorumHash.ToString(), static_cast<uint8_t>(qc.llmqType), pfrom->GetId());
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
             return;
         }
 
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- received commitment for quorum %s:%d, validMembers=%d, signers=%d, peer=%d\n", __func__,
-                  qc.quorumHash.ToString(), qc.llmqType, qc.CountValidMembers(), qc.CountSigners(), pfrom->GetId());
+                  qc.quorumHash.ToString(), static_cast<uint8_t>(qc.llmqType), qc.CountValidMembers(), qc.CountSigners(), pfrom->GetId());
 
         AddMineableCommitment(qc);
     }
@@ -245,7 +245,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     }
 
     LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- processed commitment from block. type=%d, quorumHash=%s, signers=%s, validMembers=%d, quorumPublicKey=%s\n", __func__,
-              qc.llmqType, quorumHash.ToString(), qc.CountSigners(), qc.CountValidMembers(), qc.quorumPublicKey.ToString());
+              static_cast<uint8_t>(qc.llmqType), quorumHash.ToString(), qc.CountSigners(), qc.CountValidMembers(), qc.quorumPublicKey.ToString());
 
     return true;
 }

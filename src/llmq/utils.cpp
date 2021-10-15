@@ -76,7 +76,7 @@ static bool EvalSpork(Consensus::LLMQType llmqType, int64_t spork_value)
     if (spork_value == 0) {
         return true;
     }
-    if (spork_value == 1 && llmqType != Consensus::LLMQ_100_67 && llmqType != Consensus::LLMQ_400_60 && llmqType != Consensus::LLMQ_400_85) {
+    if (spork_value == 1 && llmqType != Consensus::LLMQType::LLMQ_100_67 && llmqType != Consensus::LLMQType::LLMQ_400_60 && llmqType != Consensus::LLMQType::LLMQ_400_85) {
         return true;
     }
     return false;
@@ -306,21 +306,21 @@ bool CLLMQUtils::IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockI
 
     switch (llmqType)
     {
-        case Consensus::LLMQ_50_60:
-        case Consensus::LLMQ_400_60:
-        case Consensus::LLMQ_400_85:
+        case Consensus::LLMQType::LLMQ_50_60:
+        case Consensus::LLMQType::LLMQ_400_60:
+        case Consensus::LLMQType::LLMQ_400_85:
             break;
-        case Consensus::LLMQ_100_67:
-        case Consensus::LLMQ_TEST_V17:
+        case Consensus::LLMQType::LLMQ_100_67:
+        case Consensus::LLMQType::LLMQ_TEST_V17:
             if (!f_dip0020_Active) {
                 return false;
             }
             break;
-        case Consensus::LLMQ_TEST:
-        case Consensus::LLMQ_DEVNET:
+        case Consensus::LLMQType::LLMQ_TEST:
+        case Consensus::LLMQType::LLMQ_DEVNET:
             break;
         default:
-            throw std::runtime_error(strprintf("%s: Unknown LLMQ type %d", __func__, llmqType));
+            throw std::runtime_error(strprintf("%s: Unknown LLMQ type %d", __func__, static_cast<uint8_t>(llmqType)));
     }
 
     return true;
@@ -352,7 +352,7 @@ std::map<Consensus::LLMQType, QvvecSyncMode> CLLMQUtils::GetEnabledQuorumVvecSyn
 {
     std::map<Consensus::LLMQType, QvvecSyncMode> mapQuorumVvecSyncEntries;
     for (const auto& strEntry : gArgs.GetArgs("-llmq-qvvec-sync")) {
-        Consensus::LLMQType llmqType = Consensus::LLMQ_NONE;
+        Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
         QvvecSyncMode mode{QvvecSyncMode::Invalid};
         std::istringstream ssEntry(strEntry);
         std::string strLLMQType, strMode, strTest;
@@ -368,7 +368,7 @@ std::map<Consensus::LLMQType, QvvecSyncMode> CLLMQUtils::GetEnabledQuorumVvecSyn
                 break;
             }
         }
-        if (llmqType == Consensus::LLMQ_NONE) {
+        if (llmqType == Consensus::LLMQType::LLMQ_NONE) {
             throw std::invalid_argument(strprintf("Invalid llmqType in -llmq-qvvec-sync: %s", strEntry));
         }
         if (mapQuorumVvecSyncEntries.count(llmqType) > 0) {

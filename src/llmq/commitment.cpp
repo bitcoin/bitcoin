@@ -34,7 +34,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) c
     }
 
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
-        LogPrintfFinalCommitment("invalid llmqType=%d\n", llmqType);
+        LogPrintfFinalCommitment("invalid llmqType=%d\n", static_cast<uint8_t>(llmqType));
         return false;
     }
     const auto& llmq_params = GetLLMQParams(llmqType);
@@ -109,7 +109,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) c
 bool CFinalCommitment::VerifyNull() const
 {
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
-        LogPrintfFinalCommitment("invalid llmqType=%d\n", llmqType);
+        LogPrintfFinalCommitment("invalid llmqType=%d\n", static_cast<uint8_t>(llmqType));
         return false;
     }
 

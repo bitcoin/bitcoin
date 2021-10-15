@@ -113,14 +113,9 @@ struct Params {
 
     std::map<LLMQType, LLMQParams> llmqs;
     LLMQType llmqTypeChainLocks;
-    LLMQType llmqTypeInstantSend{LLMQ_NONE};
-    LLMQType llmqTypePlatform{LLMQ_NONE};
+    LLMQType llmqTypeInstantSend{LLMQType::LLMQ_NONE};
+    LLMQType llmqTypePlatform{LLMQType::LLMQ_NONE};
 };
 } // namespace Consensus
-
-// This must be outside of all namespaces. We must also duplicate the forward declaration of is_serializable_enum to
-// avoid inclusion of serialize.h here.
-template<typename T> struct is_serializable_enum;
-template<> struct is_serializable_enum<Consensus::LLMQType> : std::true_type {};
 
 #endif // BITCOIN_CONSENSUS_PARAMS_H

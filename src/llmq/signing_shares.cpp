@@ -33,7 +33,7 @@ void CSigShare::UpdateKey()
 std::string CSigSesAnn::ToString() const
 {
     return strprintf("sessionId=%d, llmqType=%d, quorumHash=%s, id=%s, msgHash=%s",
-                     sessionId, llmqType, quorumHash.ToString(), id.ToString(), msgHash.ToString());
+                     sessionId, static_cast<uint8_t>(llmqType), quorumHash.ToString(), id.ToString(), msgHash.ToString());
 }
 
 void CSigSharesInv::Merge(const CSigSharesInv& inv2)
@@ -1599,7 +1599,7 @@ CSigShare CSigSharesManager::CreateSigShare(const CQuorumCPtr& quorum, const uin
     sigShare.UpdateKey();
 
     LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- created sigShare. signHash=%s, id=%s, msgHash=%s, llmqType=%d, quorum=%s, time=%s\n", __func__,
-              signHash.ToString(), sigShare.id.ToString(), sigShare.msgHash.ToString(), quorum->params.type, quorum->qc->quorumHash.ToString(), t.count());
+              signHash.ToString(), sigShare.id.ToString(), sigShare.msgHash.ToString(), static_cast<uint8_t>(quorum->params.type), quorum->qc->quorumHash.ToString(), t.count());
 
     return sigShare;
 }

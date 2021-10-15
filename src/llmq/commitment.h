@@ -25,7 +25,7 @@ public:
 
 public:
     uint16_t nVersion{CURRENT_VERSION};
-    Consensus::LLMQType llmqType{Consensus::LLMQ_NONE};
+    Consensus::LLMQType llmqType{Consensus::LLMQType::LLMQ_NONE};
     uint256 quorumHash;
     std::vector<bool> signers;
     std::vector<bool> validMembers;

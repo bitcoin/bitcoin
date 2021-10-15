@@ -487,7 +487,7 @@ void CInstantSendManager::ProcessTx(const CTransaction& tx, bool fRetroactive, c
     }
 
     auto llmqType = params.llmqTypeInstantSend;
-    if (llmqType == Consensus::LLMQ_NONE) {
+    if (llmqType == Consensus::LLMQType::LLMQ_NONE) {
         return;
     }
 
@@ -642,7 +642,7 @@ void CInstantSendManager::HandleNewRecoveredSig(const CRecoveredSig& recoveredSi
     }
 
     auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
-    if (llmqType == Consensus::LLMQ_NONE) {
+    if (llmqType == Consensus::LLMQType::LLMQ_NONE) {
         return;
     }
 

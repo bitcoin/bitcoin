@@ -31,7 +31,7 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
         }
     }
 
-    ret.pushKV("llmqType", llmqType);
+    ret.pushKV("llmqType", static_cast<uint8_t>(llmqType));
     ret.pushKV("quorumHash", quorumHash.ToString());
     ret.pushKV("quorumHeight", (int)quorumHeight);
     ret.pushKV("phase", (int)phase);
