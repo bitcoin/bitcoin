@@ -279,7 +279,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         utxos_to_respend = []
         txids_to_replace = []
 
-        assert len(utxos) >= 250
+        assert_greater_than_or_equal(len(utxos), 250)
         for _ in range(5):
             # Broadcast 45 low fee transactions that will need to be RBF'd
             for _ in range(45):
@@ -308,7 +308,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         # the rest needed to be RBF'd. We must return the 90% conf rate feerate.
         high_feerate_kvb = Decimal(high_feerate) / COIN * 10 ** 3
         est_feerate = node.estimatesmartfee(2)["feerate"]
-        assert est_feerate == high_feerate_kvb
+        assert_equal(est_feerate, high_feerate_kvb)
 
     def run_test(self):
         self.log.info("This test is time consuming, please be patient")
