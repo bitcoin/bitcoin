@@ -72,6 +72,7 @@
 #include <messagesigner.h>
 #include <rpc/request.h>
 #include <signal.h>
+#include <node/transaction.h>
 #ifndef WIN32
 #include <sys/wait.h>
 #endif
@@ -1912,7 +1913,6 @@ static int64_t nBlocksTotal = 0;
 // SYSCOIN
 bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                   CCoinsViewCache& view, bool fJustCheck, bool bReverify) {
-
     AssetMap mapAssets;
     NEVMMintTxMap mapMintKeys;
     NEVMTxRootMap mapNEVMTxRoots;
@@ -5729,24 +5729,46 @@ bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > 
     LogPrint(BCLog::SYS, "Flush writing %d block indexes\n", blockIndex.size());	
     return WriteBatch(batch);	
 }
-
+bool CBlockIndexDB::GetMissingTxs(ChainstateManager& chainman, std::vector<uint256> &vecTXIDs) {
+    AssertLockHeld(cs_main);
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    pcursor->SeekToFirst();
+    uint32_t nValue = 0;
+    uint256 nKey;
+    uint256 nBlockHash;
+    while (pcursor->Valid()) {
+        try {
+            if(pcursor->GetKey(nKey) && pcursor->GetKey(nValue)) {
+                if(!GetBlockHash(chainman, nBlockHash, nValue) || !GetTransaction(chainman.ActiveChain()[nValue], nullptr, nKey, Params().GetConsensus(), nBlockHash)) {
+                    vecTXIDs.emplace_back(nKey);
+                }
+            }
+            pcursor->Next();
+        }
+        catch (std::exception &e) {
+            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+        }
+    }
+    return true;
+}
 bool CBlockIndexDB::PruneIndex(ChainstateManager& chainman) {
     AssertLockHeld(cs_main);
-    if(MAX_BLOCK_INDEX > (uint32_t)chainman.ActiveHeight())
+    if(MAX_BLOCK_INDEX > (uint32_t)chainman.ActiveHeight()) {
+        LogPrintf("PruneIndex not enough blocks, not pruning\n");
         return true;
+    }
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
     uint32_t nValue = 0;
     uint32_t cutoffHeight = chainman.ActiveHeight() - MAX_BLOCK_INDEX;
     std::vector<uint256> vecTXIDs;
     uint256 nKey;
+    int index = 0;
     while (pcursor->Valid()) {
+        index++;
         try {
-            if(pcursor->GetKey(nValue)) {
-                if (nValue < cutoffHeight) {
-                    if(pcursor->GetKey(nKey))
-                        vecTXIDs.emplace_back(nKey);
-                }
+            if(pcursor->GetValue(nValue) && nValue < cutoffHeight && pcursor->GetKey(nKey)) {
+                vecTXIDs.emplace_back(nKey);
             }
             pcursor->Next();
         }
