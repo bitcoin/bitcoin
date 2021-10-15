@@ -1590,6 +1590,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 #endif
     // SYSCOIN
+    if(ExistsOldEthDir()) {
+        LogPrintf("Transition to NEVM detected, reindexing to migrate...\n");
+        DeleteOldEthDir();
+        fReindex = true;
+    }
+    fReindex = args.GetBoolArg("-reindex", false);
+    bool fReindexChainState = args.GetBoolArg("-reindex-chainstate", false);
+    fReindexGeth = fReindex || fReindexChainState; 
     if(fNEVMConnection) {
         DoGethMaintenance();
     }
@@ -1609,8 +1617,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         return InitError(strprintf(_("Failed to load sporks cache from %s\n"), (gArgs.GetDataDirNet() / strDBName).string()));
     }
     
-    fReindex = args.GetBoolArg("-reindex", false);
-    bool fReindexChainState = args.GetBoolArg("-reindex-chainstate", false);
+    
     // cache size calculations
     int64_t nTotalCache = (args.GetIntArg("-dbcache", nDefaultDbCache) << 20);
     nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
@@ -1636,21 +1643,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     LogPrintf("* Using %.1f MiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         LogPrintf("* Using %.1f MiB for transaction index database\n", nTxIndexCache * (1.0 / 1024 / 1024));
-    }
-    // SYSCOIN
-    if(ExistsOldAssetDir()) {
-        CAssetOldDB* oldAssetDB = new CAssetOldDB(nCoinDBCache, false, fReindex || fReindexChainState);
-        if(oldAssetDB && !oldAssetDB->IsEmpty()) {
-            LogPrintf("Legacy SPTs exist, reindexing to migrate to new SPT database...\n");
-            fReindex = true;
-        }
-        delete oldAssetDB;
-        DeleteOldAssetDir();
-    }
-    if(ExistsOldEthDir()) {
-        LogPrintf("Transition to NEVM detected, reindexing to migrate...\n");
-        DeleteOldEthDir();
-        fReindex = true;
     }
     fLoaded = false;
     for (BlockFilterType filter_type : g_enabled_filter_types) {
@@ -1684,7 +1676,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     LogPrintf("Asset Index enabled, allowing for an asset aware spending policy\n");
                 }
                 LogPrintf("Creating LLMQ and asset databases...\n");
-                fReindexGeth = fReindex || fReindexChainState; 
                 passetdb.reset();
                 passetnftdb.reset();
                 pnevmtxrootsdb.reset();
