@@ -61,6 +61,12 @@ P2P and network changes
   They will become eligible for address gossip after sending an ADDR, ADDRV2,
   or GETADDR message. (#21528)
 
+Fee estimation changes
+----------------------
+
+- Fee estimation now takes the feerate of replacement (RBF) transactions into
+  account. (#22539)
+
 Rescan startup parameter removed
 --------------------------------
 
