@@ -5729,28 +5729,6 @@ bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > 
     LogPrint(BCLog::SYS, "Flush writing %d block indexes\n", blockIndex.size());	
     return WriteBatch(batch);	
 }
-bool CBlockIndexDB::GetMissingTxs(ChainstateManager& chainman, std::vector<uint256> &vecTXIDs) {
-    AssertLockHeld(cs_main);
-    std::unique_ptr<CDBIterator> pcursor(NewIterator());
-    pcursor->SeekToFirst();
-    uint32_t nValue = 0;
-    uint256 nKey;
-    uint256 nBlockHash;
-    while (pcursor->Valid()) {
-        try {
-            if(pcursor->GetKey(nKey) && pcursor->GetKey(nValue)) {
-                if(!GetBlockHash(chainman, nBlockHash, nValue) || !GetTransaction(chainman.ActiveChain()[nValue], nullptr, nKey, Params().GetConsensus(), nBlockHash)) {
-                    vecTXIDs.emplace_back(nKey);
-                }
-            }
-            pcursor->Next();
-        }
-        catch (std::exception &e) {
-            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
-        }
-    }
-    return true;
-}
 bool CBlockIndexDB::PruneIndex(ChainstateManager& chainman) {
     AssertLockHeld(cs_main);
     if(MAX_BLOCK_INDEX > (uint32_t)chainman.ActiveHeight()) {
