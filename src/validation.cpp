@@ -5821,7 +5821,7 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
     #include <process.h>
     pid_t fork(fs::path app, std::string arg)
     {
-        std::string appQuoted = fs::quoted(fs::PathToString(app));
+        std::string appQuoted = strprintf("%s", fs::quoted(fs::PathToString(app)));
         PROCESS_INFORMATION pi;
         STARTUPINFOW si;
         ZeroMemory(&pi, sizeof(pi));
@@ -6156,7 +6156,8 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
         for(const std::string &cmdStr: vecCmdLineStr) {
             commandStr += cmdStr + " ";
         } 
-        commandStr += " >" + fs::quoted(fs::PathToString(log)) + " 2>&1";
+        std::string logQuoted = strprintf("%s", fs::quoted(fs::PathToString(log)));
+        commandStr += " >" + logQuoted + " 2>&1";
         pid = fork(attempt1, commandStr);
         if( pid <= 0 ) {
             LogPrintf("Geth not found at %s\n", fs::PathToString(attempt1));
