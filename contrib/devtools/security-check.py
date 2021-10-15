@@ -111,6 +111,17 @@ def check_ELF_separate_code(binary):
                 return False
     return True
 
+def check_ELF_control_flow(binary) -> bool:
+    '''
+    Check for control flow instrumentation
+    '''
+    main = binary.get_function_address('main')
+    content = binary.get_content_from_virtual_address(main, 4, lief.Binary.VA_TYPES.AUTO)
+
+    if content == [243, 15, 30, 250]: # endbr64
+        return True
+    return False
+
 def check_PE_DYNAMIC_BASE(binary) -> bool:
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
     return lief.PE.DLL_CHARACTERISTICS.DYNAMIC_BASE in binary.optional_header.dll_characteristics_lists
@@ -210,7 +221,7 @@ BASE_MACHO = [
 
 CHECKS = {
     lief.EXE_FORMATS.ELF: {
-        lief.ARCHITECTURES.X86: BASE_ELF,
+        lief.ARCHITECTURES.X86: BASE_ELF + [('CONTROL_FLOW', check_ELF_control_flow)],
         lief.ARCHITECTURES.ARM: BASE_ELF,
         lief.ARCHITECTURES.ARM64: BASE_ELF,
         lief.ARCHITECTURES.PPC: BASE_ELF,
