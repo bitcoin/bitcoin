@@ -22,4 +22,4 @@ export ANDROID_HOME="${DEPENDS_DIR}/SDKs/android"
 export ANDROID_NDK_HOME="${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}"
 export DEP_OPTS="ANDROID_SDK=${ANDROID_HOME} ANDROID_NDK=${ANDROID_NDK_HOME} ANDROID_API_LEVEL=${ANDROID_API_LEVEL} ANDROID_TOOLCHAIN_BIN=${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/"
 
-export BITCOIN_CONFIG="--disable-ccache"
+export BITCOIN_CONFIG="--disable-ccache --disable-tests --enable-gui-tests --disable-bench --disable-fuzz-binary --without-utils --without-libs --without-daemon"
