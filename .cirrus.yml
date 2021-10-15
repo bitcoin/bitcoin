@@ -79,7 +79,7 @@ task:
   << : *FILTER_TEMPLATE
   windows_container:
     cpu: 4
-    memory: 16G
+    memory: 8G
     image: cirrusci/windowsservercore:visualstudio2019
   timeout_in: 120m
   env:
