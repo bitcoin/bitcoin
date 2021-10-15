@@ -5819,9 +5819,10 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
     #include <errno.h>
     #include <assert.h>
     #include <process.h>
-    pid_t fork(fs::path app, std::string arg)
+    pid_t fork(fs::path appIn, std::string arg)
     {
-        std::string appQuoted = strprintf("%s", fs::quoted(fs::PathToString(app)));
+        std::string app = fs::PathToString(appIn);
+        std::string appQuoted = strprintf("%s", fs::quoted(app));
         PROCESS_INFORMATION pi;
         STARTUPINFOW si;
         ZeroMemory(&pi, sizeof(pi));
