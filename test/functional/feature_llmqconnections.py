@@ -6,7 +6,7 @@
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_greater_than_or_equal
+from test_framework.util import assert_greater_than_or_equal, force_finish_mnsync
 
 '''
 feature_llmqconnections.py
