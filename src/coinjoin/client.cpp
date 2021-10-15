@@ -812,8 +812,10 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
             return false;
         }
 
+        const auto bal = mixingWallet.GetBalance();
+
         // check if there is anything left to do
-        CAmount nBalanceAnonymized = mixingWallet.GetAnonymizedBalance();
+        CAmount nBalanceAnonymized = bal.m_anonymized;
         nBalanceNeedsAnonymized = CCoinJoinClientOptions::GetAmount() * COIN - nBalanceAnonymized;
 
         if (nBalanceNeedsAnonymized < 0) {
@@ -843,8 +845,8 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
         // excluding denoms
         CAmount nBalanceAnonimizableNonDenom = mixingWallet.GetAnonymizableBalance(true);
         // denoms
-        CAmount nBalanceDenominatedConf = mixingWallet.GetDenominatedBalance();
-        CAmount nBalanceDenominatedUnconf = mixingWallet.GetDenominatedBalance(true);
+        CAmount nBalanceDenominatedConf = bal.m_denominated_trusted;
+        CAmount nBalanceDenominatedUnconf = bal.m_denominated_untrusted_pending;
         CAmount nBalanceDenominated = nBalanceDenominatedConf + nBalanceDenominatedUnconf;
         CAmount nBalanceToDenominate = CCoinJoinClientOptions::GetAmount() * COIN - nBalanceDenominated;
 

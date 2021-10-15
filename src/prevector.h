@@ -15,8 +15,6 @@
 #include <iterator>
 #include <type_traits>
 
-#include <compat.h>
-
 /** Implements a drop-in replacement for std::vector<T> which stores up to N
  *  elements directly (without heap allocation). The types Size and Diff are
  *  used to store element counts, and can be any unsigned + signed type.
@@ -203,11 +201,7 @@ private:
     T* item_ptr(difference_type pos) { return is_direct() ? direct_ptr(pos) : indirect_ptr(pos); }
     const T* item_ptr(difference_type pos) const { return is_direct() ? direct_ptr(pos) : indirect_ptr(pos); }
 
-    void fill(T* dst, ptrdiff_t count) {
-        std::fill_n(dst, count, T{});
-    }
-
-    void fill(T* dst, ptrdiff_t count, const T& value) {
+    void fill(T* dst, ptrdiff_t count, const T& value = T{}) {
         std::fill_n(dst, count, value);
     }
 
@@ -226,7 +220,7 @@ private:
     }
 
     void fill(T* dst, const T* src, ptrdiff_t count) {
-        if (IS_TRIVIALLY_CONSTRUCTIBLE<T>::value) {
+        if (std::is_trivially_constructible<T>::value) {
             ::memmove(dst, src, count * sizeof(T));
         } else {
             for (ptrdiff_t i = 0; i < count; i++) {
@@ -560,7 +554,7 @@ public:
     static void assign_to(const_iterator b, const_iterator e, V& v) {
         // We know that internally the iterators are pointing to continues memory, so we can directly use the pointers here
         // This avoids internal use of std::copy and operator++ on the iterators and instead allows efficient memcpy/memmove
-        if (IS_TRIVIALLY_CONSTRUCTIBLE<T>::value) {
+        if (std::is_trivially_constructible<T>::value) {
             auto s = e - b;
             if (v.size() != s) {
                 v.resize(s);

@@ -183,7 +183,8 @@ public:
 
     //! Try to get updated status for a particular transaction, if possible without blocking.
     virtual bool tryGetTxStatus(const uint256& txid,
-        WalletTxStatus& tx_status) = 0;
+        WalletTxStatus& tx_status,
+        int64_t& block_time) = 0;
 
     //! Get transaction details.
     virtual WalletTx getWalletTxDetails(const uint256& txid,

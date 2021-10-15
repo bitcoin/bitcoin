@@ -343,7 +343,8 @@ public:
         return result;
     }
     bool tryGetTxStatus(const uint256& txid,
-        interfaces::WalletTxStatus& tx_status) override
+        interfaces::WalletTxStatus& tx_status,
+        int64_t& block_time) override
     {
         TRY_LOCK(::cs_main, locked_chain);
         if (!locked_chain) {
@@ -358,6 +359,7 @@ public:
             return false;
         }
         tx_status = MakeWalletTxStatus(mi->second);
+        block_time = ::chainActive.Tip()->GetBlockTime();
         return true;
     }
     WalletTx getWalletTxDetails(const uint256& txid,
@@ -381,16 +383,17 @@ public:
     bool isFullyMixed(const COutPoint& outpoint) override { return m_wallet->IsFullyMixed(outpoint); }
     WalletBalances getBalances() override
     {
+        const auto bal = m_wallet->GetBalance();
         WalletBalances result;
-        result.balance = m_wallet->GetBalance();
-        result.unconfirmed_balance = m_wallet->GetUnconfirmedBalance();
-        result.immature_balance = m_wallet->GetImmatureBalance();
-        result.anonymized_balance = m_wallet->GetAnonymizedBalance();
+        result.balance = bal.m_mine_trusted;
+        result.unconfirmed_balance = bal.m_mine_untrusted_pending;
+        result.immature_balance = bal.m_mine_immature;
+        result.anonymized_balance = bal.m_anonymized;
         result.have_watch_only = m_wallet->HaveWatchOnly();
         if (result.have_watch_only) {
-            result.watch_only_balance = m_wallet->GetBalance(ISMINE_WATCH_ONLY);
-            result.unconfirmed_watch_only_balance = m_wallet->GetUnconfirmedWatchOnlyBalance();
-            result.immature_watch_only_balance = m_wallet->GetImmatureWatchOnlyBalance();
+            result.watch_only_balance = bal.m_watchonly_trusted;
+            result.unconfirmed_watch_only_balance = bal.m_watchonly_untrusted_pending;
+            result.immature_watch_only_balance = bal.m_watchonly_immature;
         }
         return result;
     }
@@ -408,7 +411,7 @@ public:
     }
     CAmount getBalance() override
     {
-        return m_wallet->GetBalance();
+        return m_wallet->GetBalance().m_mine_trusted;
     }
     CAmount getAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfirmed) override
     {
@@ -416,11 +419,16 @@ public:
     }
     CAmount getAnonymizedBalance() override
     {
-        return m_wallet->GetAnonymizedBalance();
+        return m_wallet->GetBalance().m_anonymized;
     }
     CAmount getDenominatedBalance(bool unconfirmed) override
     {
-        return m_wallet->GetDenominatedBalance(unconfirmed);
+        const auto bal = m_wallet->GetBalance();
+        if (unconfirmed) {
+            return bal.m_denominated_untrusted_pending;
+        } else {
+            return bal.m_denominated_trusted;
+        }
     }
     CAmount getNormalizedAnonymizedBalance() override
     {
@@ -433,7 +441,7 @@ public:
     CAmount getAvailableBalance(const CCoinControl& coin_control) override
     {
         if (coin_control.IsUsingCoinJoin()) {
-            return m_wallet->GetAnonymizedBalance(&coin_control);
+            return m_wallet->GetBalance(0, false, &coin_control).m_anonymized;
         } else {
             return m_wallet->GetAvailableBalance(&coin_control);
         }

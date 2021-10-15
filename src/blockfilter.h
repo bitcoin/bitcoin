@@ -85,9 +85,10 @@ public:
 constexpr uint8_t BASIC_FILTER_P = 19;
 constexpr uint32_t BASIC_FILTER_M = 784931;
 
-enum BlockFilterType : uint8_t
+enum class BlockFilterType : uint8_t
 {
     BASIC_FILTER = 0,
+    INVALID = 255,
 };
 
 /** Get the human-readable name for a filter type. Returns empty string for unknown types. */
@@ -109,7 +110,7 @@ const std::string& ListBlockFilterTypes();
 class BlockFilter
 {
 private:
-    BlockFilterType m_filter_type;
+    BlockFilterType m_filter_type = BlockFilterType::INVALID;
     uint256 m_block_hash;
     GCSFilter m_filter;
 

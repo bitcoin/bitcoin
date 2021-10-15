@@ -29,6 +29,7 @@
 #include <qt/macdockiconhandler.h>
 #endif
 
+#include <chain.h>
 #include <chainparams.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
@@ -37,6 +38,7 @@
 #include <qt/masternodelist.h>
 
 #include <iostream>
+#include <memory>
 
 #include <QAction>
 #include <QApplication>
@@ -46,6 +48,7 @@
 #include <QDesktopWidget>
 #include <QDragEnterEvent>
 #include <QListWidget>
+#include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QMimeData>
@@ -55,6 +58,7 @@
 #include <QStackedWidget>
 #include <QStatusBar>
 #include <QStyle>
+#include <QSystemTrayIcon>
 #include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
@@ -76,7 +80,8 @@ const std::string BitcoinGUI::DEFAULT_UIPLATFORM =
 BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle, QWidget* parent) :
     QMainWindow(parent),
     m_node(node),
-    m_network_style(networkStyle)
+    m_network_style(networkStyle),
+    trayIconMenu{new QMenu()}
 {
     GUIUtil::loadTheme(true);
 
@@ -692,9 +697,8 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         // while the client has not yet fully loaded
         if (trayIcon) {
             // do so only if trayIcon is already set
-            trayIconMenu = new QMenu(this);
-            trayIcon->setContextMenu(trayIconMenu);
-            createIconMenu(trayIconMenu);
+            trayIcon->setContextMenu(trayIconMenu.get());
+            createIconMenu(trayIconMenu.get());
 
 #ifndef Q_OS_MAC
             // Show main window on tray icon click
@@ -1318,16 +1322,12 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
 
     // Set icon state: spinning if catching up, tick otherwise
 #ifdef ENABLE_WALLET
-    if (walletFrame)
-    {
-        if(secs < 25*60) // 90*60 in bitcoin
-        {
+    if (walletFrame) {
+        if(secs < MAX_BLOCK_TIME_GAP) {
             modalOverlay->showHide(true, true);
             // TODO instead of hiding it forever, we should add meaningful information about MN sync to the overlay
             modalOverlay->hideForever();
-        }
-        else
-        {
+        } else {
             modalOverlay->showHide();
         }
     }

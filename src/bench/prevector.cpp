@@ -17,11 +17,11 @@ struct nontrivial_t {
 };
 typedef prevector<28, unsigned char> prevec;
 
-static_assert(!IS_TRIVIALLY_CONSTRUCTIBLE<nontrivial_t>::value,
+static_assert(!std::is_trivially_default_constructible<nontrivial_t>::value,
               "expected nontrivial_t to not be trivially constructible");
 
 typedef unsigned char trivial_t;
-static_assert(IS_TRIVIALLY_CONSTRUCTIBLE<trivial_t>::value,
+static_assert(std::is_trivially_default_constructible<trivial_t>::value,
               "expected trivial_t to be trivially constructible");
 
 template <typename T>
