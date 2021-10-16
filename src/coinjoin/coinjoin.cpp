@@ -211,6 +211,8 @@ std::string CCoinJoinBaseSession::GetStateString() const
 
 bool CCoinJoinBaseSession::IsValidInOuts(const std::vector<CTxIn>& vin, const std::vector<CTxOut>& vout, PoolMessage& nMessageIDRet, bool* fConsumeCollateralRet) const
 {
+    AssertLockHeld(cs_main);
+
     std::set<CScript> setScripPubKeys;
     nMessageIDRet = MSG_NOERR;
     if (fConsumeCollateralRet) *fConsumeCollateralRet = false;

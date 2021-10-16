@@ -558,6 +558,7 @@ bool CCoinJoinClientSession::SignFinalTransaction(const CTransaction& finalTrans
     if (fMasternodeMode || pnode == nullptr) return false;
     if (!mixingMasternode) return false;
 
+    LOCK(cs_main);
     LOCK2(mempool.cs, mixingWallet.cs_wallet);
     LOCK(cs_coinjoin);
 
