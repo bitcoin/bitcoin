@@ -521,7 +521,7 @@ void CChainLocksHandler::EnforceBestChainLock()
         // and mark all of them as conflicting.
         while (pindex && !::ChainActive().Contains(pindex)) {
             // Mark all blocks that have the same prevBlockHash but are not equal to blockHash as conflicting
-            auto itp = mapPrevBlockIndex.equal_range(pindex->pprev->GetBlockHash());
+            auto itp = ::PrevBlockIndex().equal_range(pindex->pprev->GetBlockHash());
             for (auto jt = itp.first; jt != itp.second; ++jt) {
                 if (jt->second == pindex) {
                     continue;

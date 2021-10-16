@@ -252,7 +252,7 @@ static UniValue getbestchainlock(const JSONRPCRequest& request)
     result.pushKV("signature", clsig.sig.ToString());
 
     LOCK(cs_main);
-    result.pushKV("known_block", mapBlockIndex.count(clsig.blockHash) > 0);
+    result.pushKV("known_block", ::BlockIndex().count(clsig.blockHash) > 0);
     return result;
 }
 
@@ -947,7 +947,7 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
     std::string strHash = request.params[0].get_str();
     uint256 hash(uint256S(strHash));
 
-    if (mapBlockIndex.count(hash) == 0)
+    if (::BlockIndex().count(hash) == 0)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
     int nCount = MAX_HEADERS_RESULTS;
@@ -961,7 +961,7 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
     if (!request.params[2].isNull())
         fVerbose = request.params[2].get_bool();
 
-    CBlockIndex* pblockindex = mapBlockIndex[hash];
+    CBlockIndex* pblockindex = ::BlockIndex()[hash];
 
     UniValue arrHeaders(UniValue::VARR);
 
@@ -1049,7 +1049,7 @@ static UniValue getmerkleblocks(const JSONRPCRequest& request)
     std::string strHash = request.params[1].get_str();
     uint256 hash(uint256S(strHash));
 
-    if (mapBlockIndex.count(hash) == 0) {
+    if (::BlockIndex().count(hash) == 0) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
 
@@ -1061,7 +1061,7 @@ static UniValue getmerkleblocks(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Count is out of range");
     }
 
-    CBlockIndex* pblockindex = mapBlockIndex[hash];
+    CBlockIndex* pblockindex = ::BlockIndex()[hash];
     CBlock block = GetBlockChecked(pblockindex);
 
     UniValue arrMerkleBlocks(UniValue::VARR);
@@ -1642,7 +1642,7 @@ static UniValue getchaintips(const JSONRPCRequest& request)
     /*
      * Idea:  the set of chain tips is ::ChainActive().tip, plus orphan blocks which do not have another orphan building off of them.
      * Algorithm:
-     *  - Make one pass through mapBlockIndex, picking out the orphan blocks, and also storing a set of the orphan block's pprev pointers.
+     *  - Make one pass through g_blockman.m_block_index, picking out the orphan blocks, and also storing a set of the orphan block's pprev pointers.
      *  - Iterate through the orphan blocks. If the block isn't pointed to by another orphan, it is a chain tip.
      *  - add ::ChainActive().Tip()
      */
@@ -1650,7 +1650,7 @@ static UniValue getchaintips(const JSONRPCRequest& request)
     std::set<const CBlockIndex*> setOrphans;
     std::set<const CBlockIndex*> setPrevs;
 
-    for (const std::pair<const uint256, CBlockIndex*>& item : mapBlockIndex)
+    for (const std::pair<const uint256, CBlockIndex*>& item : ::BlockIndex())
     {
         if (!::ChainActive().Contains(item.second)) {
             setOrphans.insert(item.second);
@@ -2116,9 +2116,9 @@ static UniValue getblockstats(const JSONRPCRequest& request)
         pindex = ::ChainActive()[height];
     } else {
         const uint256 hash = ParseHashV(request.params[0], "parameter 1");
-        if (mapBlockIndex.count(hash) == 0)
+        if (::BlockIndex().count(hash) == 0)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-        pindex = mapBlockIndex[hash];
+        pindex = ::BlockIndex()[hash];
         // pindex = LookupBlockIndex(hash);
         // if (!pindex) {
         //     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
@@ -2356,10 +2356,10 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
         }
     }
 
-    if (mapBlockIndex.count(hash) == 0)
+    if (::BlockIndex().count(hash) == 0)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
-    CBlockIndex* pblockindex = mapBlockIndex[hash];
+    CBlockIndex* pblockindex = ::BlockIndex()[hash];
     const CBlock block = GetBlockChecked(pblockindex);
 
     int nTxNum = 0;
