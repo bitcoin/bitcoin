@@ -665,7 +665,7 @@ void SetupServerArgs()
     hidden_args.emplace_back("-zmqpubrawtxlocksighwm=<n>");
 #endif
 
-    gArgs.AddArg("-checkblockindex", strprintf("Do a full consistency check for mapBlockIndex, setBlockIndexCandidates, chainActive and mapBlocksUnlinked occasionally. (default: %u, regtest: %u)", defaultChainParams->DefaultConsistencyChecks(), regtestChainParams->DefaultConsistencyChecks()), true, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-checkblockindex", strprintf("Do a full consistency check for mapBlockIndex, setBlockIndexCandidates, ::ChainActive() and mapBlocksUnlinked occasionally. (default: %u, regtest: %u)", defaultChainParams->DefaultConsistencyChecks(), regtestChainParams->DefaultConsistencyChecks()), true, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-checkblocks=<n>", strprintf("How many blocks to check at startup (default: %u, 0 = all)", DEFAULT_CHECKBLOCKS), true, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-checklevel=<n>", strprintf("How thorough the block verification of -checkblocks is: "
         "level 0 reads the blocks from disk, "
@@ -949,7 +949,7 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
 
     // force UpdatedBlockTip to initialize nCachedBlockHeight for DS, MN payments and budgets
     // but don't call it directly to prevent triggering of other listeners like zmq etc.
-    // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
+    // GetMainSignals().UpdatedBlockTip(::ChainActive().Tip());
     pdsNotificationInterface->InitializeCurrentBlockTip();
 
     {
@@ -971,7 +971,7 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
         const CBlockIndex* pindexTip;
         {
             LOCK(cs_main);
-            pindexTip = chainActive.Tip();
+            pindexTip = ::ChainActive().Tip();
         }
         activeMasternodeManager->Init(pindexTip);
     }
@@ -1004,7 +1004,7 @@ void PeriodicStats()
     CBlockIndex *tip;
     {
         LOCK(cs_main);
-        tip = chainActive.Tip();
+        tip = ::ChainActive().Tip();
         assert(tip);
     }
     CBlockIndex *pindex = tip;
@@ -2114,12 +2114,12 @@ bool AppInitMain(InitInterfaces& interfaces)
 
                 bool is_coinsview_empty = fReset || fReindexChainState || pcoinsTip->GetBestBlock().IsNull();
                 if (!is_coinsview_empty) {
-                    // LoadChainTip sets chainActive based on pcoinsTip's best block
+                    // LoadChainTip sets ::ChainActive() based on pcoinsTip's best block
                     if (!LoadChainTip(chainparams)) {
                         strLoadError = _("Error initializing block database");
                         break;
                     }
-                    assert(chainActive.Tip() != NULL);
+                    assert(::ChainActive().Tip() != NULL);
                 }
 
                 if (is_coinsview_empty && !evoDb->IsEmpty()) {
@@ -2140,7 +2140,7 @@ bool AppInitMain(InitInterfaces& interfaces)
                             MIN_BLOCKS_TO_KEEP);
                     }
 
-                    CBlockIndex* tip = chainActive.Tip();
+                    CBlockIndex* tip = ::ChainActive().Tip();
                     RPCNotifyBlockChange(true, tip);
                     if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
                         strLoadError = _("The block database contains a block which appears to be from the future. "
@@ -2298,7 +2298,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     {
         LOCK(cs_main);
         // was blocks/chainstate deleted?
-        if (chainActive.Tip() == nullptr) {
+        if (::ChainActive().Tip() == nullptr) {
             fLoadCacheFiles = false;
         }
     }
@@ -2382,7 +2382,7 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     // No locking, as this happens before any background thread is started.
-    if (chainActive.Tip() == nullptr) {
+    if (::ChainActive().Tip() == nullptr) {
         uiInterface.NotifyBlockTip_connect(BlockNotifyGenesisWait);
     } else {
         fHaveGenesis = true;
@@ -2425,9 +2425,9 @@ bool AppInitMain(InitInterfaces& interfaces)
     {
         LOCK(cs_main);
         LogPrintf("mapBlockIndex.size() = %u\n", mapBlockIndex.size());
-        chain_active_height = chainActive.Height();
+        chain_active_height = ::ChainActive().Height();
     }
-    LogPrintf("chainActive.Height() = %d\n",   chain_active_height);
+    LogPrintf("::ChainActive().Height() = %d\n",   chain_active_height);
     if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
         StartTorControl();
 

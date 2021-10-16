@@ -68,7 +68,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
     block = CreateAndProcessBlock(spends, scriptPubKey);
     {
         LOCK(cs_main);
-        BOOST_CHECK(chainActive.Tip()->GetBlockHash() != block.GetHash());
+        BOOST_CHECK(::ChainActive().Tip()->GetBlockHash() != block.GetHash());
     }
 
     // Test 2: ... and should be rejected if spend1 is in the memory pool
@@ -76,7 +76,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
     block = CreateAndProcessBlock(spends, scriptPubKey);
     {
         LOCK(cs_main);
-        BOOST_CHECK(chainActive.Tip()->GetBlockHash() != block.GetHash());
+        BOOST_CHECK(::ChainActive().Tip()->GetBlockHash() != block.GetHash());
     }
     mempool.clear();
 
@@ -85,7 +85,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
     block = CreateAndProcessBlock(spends, scriptPubKey);
     {
         LOCK(cs_main);
-        BOOST_CHECK(chainActive.Tip()->GetBlockHash() != block.GetHash());
+        BOOST_CHECK(::ChainActive().Tip()->GetBlockHash() != block.GetHash());
     }
     mempool.clear();
 
@@ -96,7 +96,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
     block = CreateAndProcessBlock(oneSpend, scriptPubKey);
     {
         LOCK(cs_main);
-        BOOST_CHECK(chainActive.Tip()->GetBlockHash() == block.GetHash());
+        BOOST_CHECK(::ChainActive().Tip()->GetBlockHash() == block.GetHash());
     }
     // spends[1] should have been removed from the mempool when the
     // block with spends[0] is accepted:
@@ -227,7 +227,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
 
     block = CreateAndProcessBlock({spend_tx}, p2pk_scriptPubKey);
     LOCK(cs_main);
-    BOOST_CHECK(chainActive.Tip()->GetBlockHash() == block.GetHash());
+    BOOST_CHECK(::ChainActive().Tip()->GetBlockHash() == block.GetHash());
     BOOST_CHECK(pcoinsTip->GetBestBlock() == block.GetHash());
 
     // Test P2SH: construct a transaction that is valid without P2SH, and

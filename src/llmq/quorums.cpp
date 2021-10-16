@@ -422,7 +422,7 @@ bool CQuorumManager::RequestQuorumData(CNode* pFrom, Consensus::LLMQType llmqTyp
 
 std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqType, size_t nCountRequested) const
 {
-    const CBlockIndex* pindex = WITH_LOCK(cs_main, return chainActive.Tip());
+    const CBlockIndex* pindex = WITH_LOCK(cs_main, return ::ChainActive().Tip());
     return ScanQuorums(llmqType, pindex, nCountRequested);
 }
 

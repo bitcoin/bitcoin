@@ -42,10 +42,10 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
 
     // Cap last block file size, and mine new block in a new block file.
     const CBlockIndex* const null_block = nullptr;
-    CBlockIndex* oldTip = chainActive.Tip();
+    CBlockIndex* oldTip = ::ChainActive().Tip();
     GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    CBlockIndex* newTip = chainActive.Tip();
+    CBlockIndex* newTip = ::ChainActive().Tip();
 
     LockAnnotation lock(::cs_main); // for PruneOneBlockFile
     auto locked_chain = chain->lock();
@@ -132,7 +132,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 
     // Create two blocks with same timestamp to verify that importwallet rescan
     // will pick up both blocks, not just the first.
-    const int64_t BLOCK_TIME = chainActive.Tip()->GetBlockTimeMax() + 5;
+    const int64_t BLOCK_TIME = ::ChainActive().Tip()->GetBlockTimeMax() + 5;
     SetMockTime(BLOCK_TIME);
     m_coinbase_txns.emplace_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
     m_coinbase_txns.emplace_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
@@ -200,7 +200,7 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     CWalletTx wtx(&wallet, m_coinbase_txns.back());
     auto locked_chain = chain->lock();
     LOCK(wallet.cs_wallet);
-    wtx.hashBlock = chainActive.Tip()->GetBlockHash();
+    wtx.hashBlock = ::ChainActive().Tip()->GetBlockHash();
     wtx.nIndex = 0;
 
     // Call GetImmatureCredit() once before adding the key to the wallet to
@@ -299,8 +299,8 @@ public:
         reserver.reserve();
         const CBlockIndex* const null_block = nullptr;
         const CBlockIndex *stop_block, *failed_block;
-        BOOST_CHECK_EQUAL(wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
-        BOOST_CHECK_EQUAL(stop_block, chainActive.Tip());
+        BOOST_CHECK_EQUAL(wallet->ScanForWalletTransactions(::ChainActive().Genesis(), nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
+        BOOST_CHECK_EQUAL(stop_block, ::ChainActive().Tip());
         BOOST_CHECK_EQUAL(failed_block, null_block);
     }
 
@@ -330,7 +330,7 @@ public:
         LOCK(wallet->cs_wallet);
         auto it = wallet->mapWallet.find(tx->GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
-        it->second.SetMerkleBranch(chainActive.Tip(), 1);
+        it->second.SetMerkleBranch(::ChainActive().Tip(), 1);
         return it->second;
     }
 
@@ -434,7 +434,7 @@ public:
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
         const CBlockIndex *stop_block, *failed_block;
-        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block);
+        wallet->ScanForWalletTransactions(::ChainActive().Genesis(), nullptr, reserver, failed_block, stop_block);
     }
 
     std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain();
@@ -536,7 +536,7 @@ public:
         LOCK2(cs_main, wallet->cs_wallet);
         auto it = wallet->mapWallet.find(tx->GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
-        it->second.SetMerkleBranch(chainActive.Tip(), 1);
+        it->second.SetMerkleBranch(::ChainActive().Tip(), 1);
 
         std::vector<COutPoint> vecOutpoints;
         size_t n;
@@ -881,7 +881,7 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
     WalletRescanReserver reserver(wallet.get());
     reserver.reserve();
     const CBlockIndex *stop_block, *failed_block;
-    BOOST_CHECK_EQUAL(wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
+    BOOST_CHECK_EQUAL(wallet->ScanForWalletTransactions(::ChainActive().Genesis(), nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
     {
         LOCK(wallet->cs_wallet);
         const auto& conflicts = wallet->GetConflicts(tx2->GetHash());

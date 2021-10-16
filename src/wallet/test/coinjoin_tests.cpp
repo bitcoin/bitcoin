@@ -48,7 +48,7 @@ public:
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
         const CBlockIndex *stop_block, *failed_block;
-        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block);
+        wallet->ScanForWalletTransactions(::ChainActive().Genesis(), nullptr, reserver, failed_block, stop_block);
     }
 
     ~CTransactionBuilderTestSetup()
@@ -71,7 +71,7 @@ public:
         }
         CreateAndProcessBlock({blocktx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
         LOCK2(cs_main, wallet->cs_wallet);
-        it->second.SetMerkleBranch(chainActive.Tip(), 1);
+        it->second.SetMerkleBranch(::ChainActive().Tip(), 1);
         return it->second;
     }
     CompactTallyItem GetTallyItem(const std::vector<CAmount>& vecAmounts)

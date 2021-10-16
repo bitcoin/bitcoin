@@ -98,7 +98,7 @@ static const bool DEFAULT_SYNC_MEMPOOL = true;
 
 /** Default for -stopatheight */
 static const int DEFAULT_STOPATHEIGHT = 0;
-/** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of chainActive.Tip() will not be pruned. */
+/** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of ::ChainActive().Tip() will not be pruned. */
 static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
 static const signed int DEFAULT_CHECKBLOCKS = 6;
 static const unsigned int DEFAULT_CHECKLEVEL = 3;
@@ -423,8 +423,8 @@ bool MarkConflictingBlock(CValidationState& state, const CChainParams& chainpara
 /** Remove invalidity status from a block and its descendants. */
 void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-/** The currently-connected chain of blocks (protected by cs_main). */
-extern CChain& chainActive;
+/** @returns the most-work chain. */
+CChain& ChainActive();
 
 /** Global variable that points to the coins database (protected by cs_main) */
 extern std::unique_ptr<CCoinsViewDB> pcoinsdbview;
@@ -450,8 +450,8 @@ extern VersionBitsCache versionbitscache;
 int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params, bool fCheckMasternodesUpgraded = false);
 
 /**
- * Return true if hash can be found in chainActive at nBlockHeight height.
- * Fills hashRet with found hash, if no nBlockHeight is specified - chainActive.Height() is used.
+ * Return true if hash can be found in ::ChainActive() at nBlockHeight height.
+ * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.
  */
 bool GetBlockHash(uint256& hashRet, int nBlockHeight = -1);
 

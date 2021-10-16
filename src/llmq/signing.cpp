@@ -1007,13 +1007,13 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
     {
         LOCK(cs_main);
         if (signHeight == -1) {
-            signHeight = chainActive.Height();
+            signHeight = ::ChainActive().Height();
         }
         int startBlockHeight = signHeight - signOffset;
-        if (startBlockHeight > chainActive.Height() || startBlockHeight < 0) {
+        if (startBlockHeight > ::ChainActive().Height() || startBlockHeight < 0) {
             return {};
         }
-        pindexStart = chainActive[startBlockHeight];
+        pindexStart = ::ChainActive()[startBlockHeight];
     }
 
     auto quorums = quorumManager->ScanQuorums(llmqType, pindexStart, poolSize);
