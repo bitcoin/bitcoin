@@ -738,7 +738,7 @@ public:
 
     // Block (dis)connection on a given view:
     // SYSCOIN
-    DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::vector<uint256> &vecNEVMBlocks, std::vector<uint256>& vecTXIDs, bool bReverify = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::vector<uint256> &vecNEVMBlocks, std::vector<std::pair<uint256,uint32_t> >& vecTXIDPairs, bool bReverify = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                     CCoinsViewCache& view, bool fJustCheck = false, bool bReverify = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -845,7 +845,7 @@ private:
     void UpdateTip(const CBlockIndex* pindexNew)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     // SYSCOIN
-    bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     friend ChainstateManager;
 };
 /**
@@ -1056,13 +1056,17 @@ public:
 static const uint32_t MAX_BLOCK_INDEX = 43800*12; // 2.5 year of blocks
 // SYSCOIN
 class CBlockIndexDB : public CDBWrapper {
+    const char LAST_KNOWN_HEIGHT_TAG = 'L';
 public:
     explicit CBlockIndexDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     bool ReadBlockHeight(const uint256& txid, uint32_t& nHeight) {
         return Read(txid, nHeight);
     }  
+    bool ReadLastKnownHeight(uint32_t& nHeight) {
+        return Read(LAST_KNOWN_HEIGHT_TAG, nHeight);
+    } 
     bool PruneIndex(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    bool FlushErase(const std::vector<uint256> &vecTXIDs);
+    bool FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs, bool bDisconnect = true);
     bool FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs);
 };
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;

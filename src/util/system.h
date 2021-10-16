@@ -52,6 +52,7 @@ extern bool fAssetIndex;
 extern int32_t DEFAULT_MN_COLLATERAL_REQUIRED;
 extern int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE;
 extern CAmount nMNCollateralRequired;
+extern uint32_t nLastKnownHeightOnStart;
 class UniValue;
 
 // Application startup time (used for uptime calculation)

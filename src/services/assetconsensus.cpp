@@ -21,7 +21,7 @@ std::unique_ptr<CNEVMTxRootsDB> pnevmtxrootsdb;
 std::unique_ptr<CNEVMMintedTxDB> pnevmtxmintdb;
 RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
-bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, NEVMMintTxMap &mapMintKeys, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
+bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const uint32_t& nHeight, const int64_t& nTime, const uint256& blockhash, NEVMMintTxMap &mapMintKeys, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
     if (!bSanityCheck)
         LogPrint(BCLog::SYS,"*** ASSET MINT %d %s %s bSanityCheck=%d\n", nHeight,
             txHash.ToString().c_str(),
@@ -42,7 +42,8 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     {
         LOCK(cs_setethstatus);
         if(!pnevmtxrootsdb || !pnevmtxrootsdb->ReadTxRoots(mintSyscoin.nBlockHash, txRootDB)) {
-            return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
+            if(nHeight > nLastKnownHeightOnStart)
+                return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
         }
     }
      
@@ -143,7 +144,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     dev::RLP rlpTxValue(&vchTxValue);
     const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
     // ensure eth tx not already spent in a previous block
-    if(pnevmtxmintdb->Exists(mintSyscoin.nTxHash)) {
+    if(pnevmtxmintdb->Exists(mintSyscoin.nTxHash) && nHeight > nLastKnownHeightOnStart) {
         return FormatSyscoinErrorMessage(state, "mint-exists", bSanityCheck);
     } 
     // sanity check is set in mempool during m_test_accept and when miner validates block
@@ -256,8 +257,8 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }               
     return true;
 }
-bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, NEVMMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
-    if(!fRegTest && nHeight < params.nUTXOAssetsBlock)
+bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState& state, const uint32_t &nHeight, const int64_t& nTime, NEVMMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
+    if(!fRegTest && nHeight < (uint32_t)params.nUTXOAssetsBlock)
         return !IsSyscoinTx(tx.nVersion);
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)
         return false;
@@ -265,7 +266,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params,
     return CheckSyscoinInputs(false, params, tx, txHash, state, true, nHeight, nTime, uint256(), bSanityCheck, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut);
 }
 
-bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
+bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const uint32_t &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
     bool good = true;
     try{
         if(IsSyscoinMintTx(tx.nVersion)) {
@@ -334,7 +335,7 @@ uint256 GetNotarySigHash(const CTransaction&tx, const CAssetOut &vecOut) {
 }
 
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state,
-        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
+        const bool &fJustCheck, const uint32_t &nHeight, const uint256& blockhash, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
     if (!bSanityCheck)
         LogPrint(BCLog::SYS,"*** ASSET ALLOCATION %d %s %s bSanityCheck=%d\n", nHeight,
             txHash.ToString().c_str(),
@@ -567,7 +568,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
 }
 
 bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, const uint256& txHash, TxValidationState &state,
-        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap& mapAssets, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
+        const bool &fJustCheck, const uint32_t &nHeight, const uint256& blockhash, AssetMap& mapAssets, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
     if (!passetdb)
         return false;
     if (!bSanityCheck)
@@ -601,7 +602,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
         return FormatSyscoinErrorMessage(state, "asset-output-zeroval", bSanityCheck);
     }
     std::vector<uint64_t> vecNFTKeys;
-    if(nHeight >= params.nNEVMStartBlock) {
+    if(nHeight >= (uint32_t)params.nNEVMStartBlock) {
         CAssetsSet mapAssetNFTSet;
         for(auto &voutAsset: tx.voutAssets) {
             const uint32_t& nBaseAssetInternal = GetBaseAssetID(voutAsset.key);
@@ -611,7 +612,8 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                 const bool mapAssetNFTNotFound = result.second;
                 // check that the NFTID doesn't already exist
                 if (!mapAssetNFTNotFound || ExistsNFTAsset(voutAsset.key)) {
-                    return FormatSyscoinErrorMessage(state, "asset-nft-duplicate", bSanityCheck);
+                    if(nHeight > nLastKnownHeightOnStart)
+                        return FormatSyscoinErrorMessage(state, "asset-nft-duplicate", bSanityCheck);
                 }
             }
         }
@@ -630,12 +632,12 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                 mapAsset->second.second = std::move(theAsset);      
         }
         else{
-            if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+            if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE && nHeight > nLastKnownHeightOnStart) {
                 return FormatSyscoinErrorMessage(state, "asset-already-existing1", bSanityCheck);
             }
             mapAsset->second.second = std::move(dbAsset);      
         }
-    } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE && !mapAsset->second.second.IsNull()) {
+    } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE && !mapAsset->second.second.IsNull() && nHeight > nLastKnownHeightOnStart) {
         return FormatSyscoinErrorMessage(state, "asset-already-existing", bSanityCheck);
     }
     CAsset &storedAssetRef = mapAsset->second.second; 
@@ -653,7 +655,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
             if(itOut->second.nAmount != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-zeroval", bSanityCheck);
             }
-            if (nHeight < Params().GetConsensus().nNEVMStartBlock) {
+            if (nHeight < (uint32_t)Params().GetConsensus().nNEVMStartBlock) {
                 if (tx.vout[nOut].nValue < COST_ASSET) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
                 }
@@ -740,7 +742,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
             if (!MoneyRangeAsset(storedAssetRef.nMaxSupply)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bSanityCheck);
             }
-            if (nHeight >= Params().GetConsensus().nUTXOAssetsBlockProvisioning) {
+            if (nHeight >= (uint32_t)Params().GetConsensus().nUTXOAssetsBlockProvisioning) {
                 if (nBaseAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
                     return FormatSyscoinErrorMessage(state, "asset-guid-not-deterministic", bSanityCheck);
                 }

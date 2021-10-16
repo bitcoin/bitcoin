@@ -89,6 +89,7 @@ bool fGethSynced = true;
 bool fLoaded = false;
 int32_t DEFAULT_MN_COLLATERAL_REQUIRED = 100000;
 int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
+uint32_t nLastKnownHeightOnStart = 0;
 CAmount nMNCollateralRequired = DEFAULT_MN_COLLATERAL_REQUIRED*COIN;
 
 // Application startup time (used for uptime calculation)
