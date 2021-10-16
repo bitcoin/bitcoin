@@ -2,27 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <arith_uint256.h>
 #include <compressor.h>
-#include <consensus/amount.h>
 #include <consensus/merkle.h>
 #include <core_io.h>
 #include <crypto/common.h>
 #include <crypto/siphash.h>
 #include <key_io.h>
 #include <memusage.h>
-#include <netbase.h>
 #include <policy/settings.h>
 #include <pow.h>
 #include <protocol.h>
 #include <pubkey.h>
-#include <script/standard.h>
-#include <serialize.h>
-#include <streams.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-#include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
 #include <util/moneystr.h>
@@ -30,14 +21,11 @@
 #include <util/string.h>
 #include <util/system.h>
 #include <util/time.h>
-#include <version.h>
 
 #include <cassert>
 #include <chrono>
 #include <ctime>
-#include <limits>
 #include <set>
-#include <vector>
 
 void initialize_integer()
 {

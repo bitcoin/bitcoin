@@ -4,17 +4,12 @@
 
 #include <chainparams.h>
 #include <key_io.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/message.h>
 #include <util/strencodings.h>
 
 #include <cassert>
-#include <cstdint>
 #include <iostream>
-#include <string>
-#include <vector>
 
 void initialize_message()
 {

@@ -7,8 +7,6 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 
-#include <limits>
-
 void initialize_eval_script()
 {
     static const ECCVerifyHandle verify_handle;

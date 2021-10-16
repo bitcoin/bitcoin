@@ -6,7 +6,6 @@
 #include <test/fuzz/fuzz.h>
 
 #include <prevector.h>
-#include <vector>
 
 #include <reverse_iterator.h>
 #include <serialize.h>

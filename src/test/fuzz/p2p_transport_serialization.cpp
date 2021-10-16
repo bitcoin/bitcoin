@@ -11,10 +11,7 @@
 #include <test/fuzz/fuzz.h>
 
 #include <cassert>
-#include <cstdint>
-#include <limits>
 #include <optional>
-#include <vector>
 
 void initialize_p2p_transport_serialization()
 {

@@ -4,32 +4,22 @@
 
 #include <banman.h>
 #include <chainparams.h>
-#include <consensus/consensus.h>
-#include <net.h>
 #include <net_processing.h>
 #include <protocol.h>
 #include <scheduler.h>
-#include <script/script.h>
-#include <streams.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/mining.h>
-#include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
 #include <txorphanage.h>
 #include <validationinterface.h>
-#include <version.h>
 
 #include <atomic>
 #include <cassert>
 #include <chrono>
-#include <cstdint>
 #include <iosfwd>
 #include <iostream>
 #include <memory>
-#include <string>
 
 namespace {
 const TestingSetup* g_setup;

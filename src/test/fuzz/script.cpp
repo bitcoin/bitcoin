@@ -12,23 +12,13 @@
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/interpreter.h>
-#include <script/script.h>
 #include <script/script_error.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
-#include <streams.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <univalue.h>
 
-#include <algorithm>
 #include <cassert>
-#include <cstdint>
-#include <optional>
-#include <string>
-#include <vector>
 
 void initialize_script()
 {

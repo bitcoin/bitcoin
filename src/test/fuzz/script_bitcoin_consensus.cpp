@@ -4,13 +4,7 @@
 
 #include <script/bitcoinconsensus.h>
 #include <script/interpreter.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-
-#include <cstdint>
-#include <string>
-#include <vector>
 
 FUZZ_TARGET(script_bitcoin_consensus)
 {

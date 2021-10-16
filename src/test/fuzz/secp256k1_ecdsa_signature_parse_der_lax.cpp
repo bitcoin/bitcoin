@@ -4,12 +4,7 @@
 
 #include <key.h>
 #include <secp256k1.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-
-#include <cstdint>
-#include <vector>
 
 bool SigHasLowR(const secp256k1_ecdsa_signature* sig);
 int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1_ecdsa_signature* sig, const unsigned char* input, size_t inputlen);

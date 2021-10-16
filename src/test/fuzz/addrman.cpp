@@ -6,19 +6,12 @@
 #include <addrman.h>
 #include <addrman_impl.h>
 #include <chainparams.h>
-#include <merkleblock.h>
 #include <random.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <time.h>
 #include <util/asmap.h>
 
 #include <cassert>
-#include <cstdint>
-#include <optional>
-#include <string>
-#include <vector>
 
 void initialize_addrman()
 {

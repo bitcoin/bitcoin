@@ -3,20 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blockfilter.h>
-#include <serialize.h>
-#include <streams.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/bytevectorhash.h>
 #include <util/golombrice.h>
 
-#include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <iosfwd>
 #include <unordered_set>
-#include <vector>
 
 namespace {
 uint64_t MapIntoRange(const uint64_t x, const uint64_t n)

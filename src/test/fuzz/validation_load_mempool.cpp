@@ -2,17 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparamsbase.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
-#include <txmempool.h>
 #include <util/time.h>
 #include <validation.h>
-
-#include <cstdint>
-#include <vector>
 
 namespace {
 const TestingSetup* g_setup;

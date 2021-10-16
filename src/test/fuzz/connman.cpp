@@ -3,18 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <chainparamsbase.h>
-#include <net.h>
-#include <netaddress.h>
 #include <protocol.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
 #include <util/translation.h>
-
-#include <cstdint>
-#include <vector>
 
 void initialize_connman()
 {

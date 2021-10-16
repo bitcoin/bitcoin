@@ -7,9 +7,6 @@
 #include <util/time.h>
 
 #include <cassert>
-#include <cstdint>
-#include <string>
-#include <vector>
 
 FUZZ_TARGET(parse_iso8601)
 {

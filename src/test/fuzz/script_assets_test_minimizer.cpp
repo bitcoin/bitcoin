@@ -13,7 +13,6 @@
 #include <util/strencodings.h>
 
 #include <boost/algorithm/string.hpp>
-#include <cstdint>
 #include <string>
 #include <vector>
 

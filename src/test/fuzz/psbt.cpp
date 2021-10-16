@@ -13,10 +13,7 @@
 #include <util/check.h>
 #include <version.h>
 
-#include <cstdint>
 #include <optional>
-#include <string>
-#include <vector>
 
 void initialize_psbt()
 {

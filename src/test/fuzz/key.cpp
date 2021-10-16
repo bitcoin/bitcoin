@@ -20,7 +20,6 @@
 #include <util/strencodings.h>
 
 #include <cassert>
-#include <cstdint>
 #include <numeric>
 #include <string>
 #include <vector>

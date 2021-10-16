@@ -10,7 +10,6 @@
 #include <txrequest.h>
 
 #include <bitset>
-#include <cstdint>
 #include <queue>
 #include <vector>
 

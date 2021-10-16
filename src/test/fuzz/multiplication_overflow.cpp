@@ -6,13 +6,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-
-#include <cstdint>
-#include <string>
-#include <vector>
 
 namespace {
 template <typename T>

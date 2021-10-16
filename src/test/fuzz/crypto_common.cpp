@@ -3,15 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <crypto/common.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 
-#include <array>
 #include <cassert>
-#include <cstdint>
-#include <cstring>
-#include <vector>
 
 FUZZ_TARGET(crypto_common)
 {

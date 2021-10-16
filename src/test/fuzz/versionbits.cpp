@@ -9,14 +9,9 @@
 #include <util/system.h>
 #include <versionbits.h>
 
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 
-#include <cstdint>
-#include <limits>
 #include <memory>
-#include <vector>
 
 namespace {
 class TestConditionChecker : public AbstractThresholdConditionChecker

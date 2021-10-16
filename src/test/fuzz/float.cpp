@@ -3,15 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <memusage.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/serfloat.h>
-#include <version.h>
 
 #include <cassert>
 #include <cmath>
-#include <limits>
 
 FUZZ_TARGET(float)
 {

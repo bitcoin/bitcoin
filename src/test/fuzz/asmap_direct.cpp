@@ -6,7 +6,6 @@
 #include <util/asmap.h>
 #include <test/fuzz/fuzz.h>
 
-#include <cstdint>
 #include <optional>
 #include <vector>
 

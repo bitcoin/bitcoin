@@ -3,17 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bloom.h>
-#include <primitives/transaction.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-#include <uint256.h>
 
 #include <cassert>
-#include <cstdint>
-#include <optional>
-#include <string>
-#include <vector>
 
 FUZZ_TARGET(bloom_filter)
 {

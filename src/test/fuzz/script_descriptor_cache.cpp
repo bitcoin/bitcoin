@@ -4,14 +4,7 @@
 
 #include <pubkey.h>
 #include <script/descriptor.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-
-#include <cstdint>
-#include <optional>
-#include <string>
-#include <vector>
 
 FUZZ_TARGET(script_descriptor_cache)
 {

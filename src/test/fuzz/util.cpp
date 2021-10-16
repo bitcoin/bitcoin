@@ -2,13 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <consensus/amount.h>
 #include <pubkey.h>
 #include <test/fuzz/util.h>
 #include <test/util/script.h>
 #include <util/rbf.h>
 #include <util/time.h>
-#include <version.h>
 
 FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider)
     : m_fuzzed_data_provider{fuzzed_data_provider}

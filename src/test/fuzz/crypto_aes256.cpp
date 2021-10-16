@@ -3,13 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <crypto/aes.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 
 #include <cassert>
-#include <cstdint>
-#include <vector>
 
 FUZZ_TARGET(crypto_aes256)
 {

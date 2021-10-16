@@ -2,17 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <streams.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 
-#include <array>
-#include <cstdint>
 #include <iostream>
-#include <optional>
-#include <string>
-#include <vector>
 
 FUZZ_TARGET(buffered_file)
 {

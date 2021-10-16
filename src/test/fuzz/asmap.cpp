@@ -6,7 +6,6 @@
 #include <test/fuzz/fuzz.h>
 #include <util/asmap.h>
 
-#include <cstdint>
 #include <vector>
 
 //! asmap code that consumes nothing

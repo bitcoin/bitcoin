@@ -10,10 +10,7 @@
 
 #include <cassert>
 #include <clocale>
-#include <cstdint>
 #include <locale>
-#include <string>
-#include <vector>
 
 namespace {
 const std::string locale_identifiers[] = {

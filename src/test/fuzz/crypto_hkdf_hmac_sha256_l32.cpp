@@ -3,13 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <crypto/hkdf_sha256_32.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-
-#include <cstdint>
-#include <string>
-#include <vector>
 
 FUZZ_TARGET(crypto_hkdf_hmac_sha256_l32)
 {

@@ -5,19 +5,12 @@
 #include <blockfilter.h>
 #include <clientversion.h>
 #include <logging.h>
-#include <netaddress.h>
-#include <netbase.h>
 #include <outputtype.h>
 #include <rpc/client.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
-#include <script/script.h>
-#include <serialize.h>
-#include <streams.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/error.h>
 #include <util/fees.h>
@@ -28,12 +21,8 @@
 #include <util/system.h>
 #include <util/translation.h>
 #include <util/url.h>
-#include <version.h>
 
-#include <cstdint>
 #include <cstdlib>
-#include <string>
-#include <vector>
 
 namespace {
 bool LegacyParsePrechecks(const std::string& str)

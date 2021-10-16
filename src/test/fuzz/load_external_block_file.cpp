@@ -4,14 +4,9 @@
 
 #include <chainparams.h>
 #include <flatfile.h>
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
-
-#include <cstdint>
-#include <vector>
 
 namespace {
 const TestingSetup* g_setup;

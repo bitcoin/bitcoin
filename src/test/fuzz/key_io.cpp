@@ -7,7 +7,6 @@
 #include <test/fuzz/fuzz.h>
 
 #include <cassert>
-#include <cstdint>
 #include <string>
 #include <vector>
 

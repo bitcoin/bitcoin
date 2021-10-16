@@ -10,7 +10,6 @@
 #include <util/check.h>
 #include <util/sock.h>
 
-#include <cstdint>
 #include <exception>
 #include <memory>
 #include <string>
