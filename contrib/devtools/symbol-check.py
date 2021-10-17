@@ -13,7 +13,7 @@ Example usage:
 import sys
 from typing import List, Dict
 
-import lief
+import lief #type:ignore
 
 # temporary constant, to be replaced with lief.ELF.ARCH.RISCV
 # https://github.com/lief-project/LIEF/pull/562
