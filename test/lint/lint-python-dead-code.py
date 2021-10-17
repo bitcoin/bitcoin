@@ -34,7 +34,6 @@ def main():
     except CalledProcessError as e:
         print(e.output.decode("utf-8"), end="")
         print("Python dead code detection found some issues")
-        exit(1)
 
 
 if __name__ == "__main__":
