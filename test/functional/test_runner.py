@@ -40,7 +40,7 @@ except UnicodeDecodeError:
     CROSS = "x "
     CIRCLE = "o "
 
-if os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393):
+if os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393): #type:ignore
     if os.name == 'nt':
         import ctypes
         kernel32 = ctypes.windll.kernel32  # type: ignore
