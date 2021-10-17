@@ -43,7 +43,10 @@ public:
         BTC,
         mBTC,
         uBTC,
-        SAT
+        SAT,
+        bTBC,
+        sTBC,
+        TBC,
     };
 
     enum class SeparatorStyle
@@ -61,6 +64,10 @@ public:
     static QList<Unit> availableUnits();
     //! Is unit ID valid?
     static bool valid(int unit);
+    //! String for setting(s)
+    static QString toSetting(int unit);
+    //! Convert setting(s) string to unit
+    static int fromSetting(const QString&);
     //! Long name
     static QString longName(int unit);
     //! Short name
@@ -69,8 +76,16 @@ public:
     static QString description(int unit);
     //! Number of Satoshis (1e-8) per unit
     static qint64 factor(int unit);
-    //! Number of decimals left
+    //! Number of fractional places
     static int decimals(int unit);
+    //! Radix
+    static int radix(int unit);
+    //! Number system
+    static int numsys(int unit);
+    //! Number of digits total in maximum value
+    static qint64 max_digits(int unit);
+    //! "Single step" amount, in satoshis
+    static qint64 singlestep(int unit);
     //! Format as string
     static QString format(int unit, const CAmount& amount, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD, bool justify = false);
     //! Format as string (with unit)
