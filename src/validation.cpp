@@ -36,6 +36,7 @@
 #include <script/sigcache.h>
 #include <shutdown.h>
 #include <signet.h>
+#include <stats/stats.h>
 #include <timedata.h>
 #include <tinyformat.h>
 #include <txdb.h>
@@ -620,6 +621,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 // check all unconfirmed ancestors; otherwise an opt-in ancestor
                 // might be replaced, causing removal of this descendant.
                 bool fReplacementOptOut = true;
+                if (fEnableReplacement) {
+                    if (fReplacementHonourOptOut) {
+
                 for (const CTxIn &_txin : ptxConflicting->vin)
                 {
                     if (_txin.nSequence <= MAX_BIP125_RBF_SEQUENCE)
@@ -628,6 +632,11 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                         break;
                     }
                 }
+
+                    } else {  // !fReplacementHonourOptOut
+                        fReplacementOptOut = false;
+                    }
+                }  // fEnableReplacement
                 if (fReplacementOptOut) {
                     return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
                 }
@@ -1023,6 +1032,8 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     AssertLockHeld(cs_main);
     LOCK(m_pool.cs); // mempool "read lock" (held through GetMainSignals().TransactionAddedToMempool())
 
+    const CFeeRate mempool_min_fee_rate = m_pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+
     Workspace ws(ptx);
 
     if (!PreChecks(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
@@ -1045,6 +1056,9 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     if (!Finalize(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
     GetMainSignals().TransactionAddedToMempool(ptx, m_pool.GetAndIncrementSequence());
+
+    // update mempool stats cache
+    CStats::DefaultStats()->addMempoolSample(m_pool.size(), m_pool.DynamicMemoryUsage(), mempool_min_fee_rate.GetFeePerK());
 
     return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_base_fees);
 }
@@ -2298,6 +2312,12 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     GetMainSignals().BlockDisconnected(pblock, pindexDelete);
+
+    if (m_mempool) {
+        // add mempool stats sample
+        CStats::DefaultStats()->addMempoolSample(m_mempool->size(), m_mempool->DynamicMemoryUsage(), m_mempool->GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK());
+    }
+
     return true;
 }
 
@@ -2407,6 +2427,11 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
     // Update m_chain & related variables.
     m_chain.SetTip(pindexNew);
     UpdateTip(pindexNew);
+
+    if (m_mempool) {
+        // add mempool stats sample
+        CStats::DefaultStats()->addMempoolSample(m_mempool->size(), m_mempool->DynamicMemoryUsage(), m_mempool->GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK());
+    }
 
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
     LogPrint(BCLog::BENCH, "  - Connect postprocess: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime6 - nTime5) * MILLI, nTimePostConnect * MICRO, nTimePostConnect * MILLI / nBlocksTotal);

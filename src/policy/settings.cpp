@@ -8,6 +8,8 @@
 #include <policy/feerate.h>
 #include <policy/policy.h>
 
+bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
+bool fReplacementHonourOptOut = DEFAULT_REPLACEMENT_HONOUR_OPTOUT;
 bool fIsBareMultisigStd = DEFAULT_PERMIT_BAREMULTISIG;
 CFeeRate incrementalRelayFee = CFeeRate(DEFAULT_INCREMENTAL_RELAY_FEE);
 CFeeRate dustRelayFee = CFeeRate(DUST_RELAY_TX_FEE);
