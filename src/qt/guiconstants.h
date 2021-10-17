@@ -20,6 +20,8 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 
 /* Invalid field background style */
 #define STYLE_INVALID "background:#FF8080"
+/* "Warning" field background style */
+#define STYLE_INCORRECT "background:#FFFF80"
 
 /* Transaction list -- unconfirmed transaction */
 #define COLOR_UNCONFIRMED QColor(128, 128, 128)

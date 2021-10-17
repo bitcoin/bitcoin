@@ -15,20 +15,38 @@ QValidatedLineEdit::QValidatedLineEdit(QWidget *parent) :
     connect(this, &QValidatedLineEdit::textChanged, this, &QValidatedLineEdit::markValid);
 }
 
-void QValidatedLineEdit::setValid(bool _valid)
+QValidatedLineEdit::~QValidatedLineEdit()
+{
+    delete m_warning_validator;
+}
+
+void QValidatedLineEdit::setText(const QString& text)
+{
+    QLineEdit::setText(text);
+    checkValidity();
+}
+
+void QValidatedLineEdit::setValid(bool _valid, bool with_warning)
 {
     if(_valid == this->valid)
     {
-        return;
+        if (with_warning == m_has_warning || !valid) {
+            return;
+        }
     }
 
     if(_valid)
     {
-        setStyleSheet("");
+        m_has_warning = with_warning;
+        if (with_warning) {
+            setStyleSheet("QValidatedLineEdit { " STYLE_INCORRECT "}");
+        } else {
+            setStyleSheet("");
+        }
     }
     else
     {
-        setStyleSheet(STYLE_INVALID);
+        setStyleSheet("QValidatedLineEdit { " STYLE_INVALID "}");
     }
     this->valid = _valid;
 }
@@ -78,13 +96,14 @@ void QValidatedLineEdit::setEnabled(bool enabled)
 
 void QValidatedLineEdit::checkValidity()
 {
+    const bool has_warning = checkWarning();
     if (text().isEmpty())
     {
         setValid(true);
     }
     else if (hasAcceptableInput())
     {
-        setValid(true);
+        setValid(true, has_warning);
 
         // Check contents on focus out
         if (checkValidator)
@@ -92,7 +111,7 @@ void QValidatedLineEdit::checkValidity()
             QString address = text();
             int pos = 0;
             if (checkValidator->validate(address, pos) == QValidator::Acceptable)
-                setValid(true);
+                setValid(true, has_warning);
             else
                 setValid(false);
         }
@@ -106,6 +125,7 @@ void QValidatedLineEdit::checkValidity()
 void QValidatedLineEdit::setCheckValidator(const QValidator *v)
 {
     checkValidator = v;
+    checkValidity();
 }
 
 bool QValidatedLineEdit::isValid()
@@ -120,4 +140,29 @@ bool QValidatedLineEdit::isValid()
     }
 
     return valid;
+}
+
+void QValidatedLineEdit::setWarningValidator(const QValidator *v)
+{
+    delete m_warning_validator;
+    m_warning_validator = v;
+    checkValidity();
+}
+
+bool QValidatedLineEdit::checkWarning() const
+{
+    if (m_warning_validator && !text().isEmpty()) {
+        QString address = text();
+        int pos = 0;
+        if (m_warning_validator->validate(address, pos) != QValidator::Acceptable) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool QValidatedLineEdit::hasWarning() const
+{
+    return m_has_warning;
 }

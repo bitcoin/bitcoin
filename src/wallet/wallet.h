@@ -38,6 +38,7 @@
 #include <stdint.h>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <boost/signals2/signal.hpp>
@@ -198,6 +199,7 @@ private:
     std::string m_label;
 public:
     std::string purpose;
+    bool m_used{false};
 
     CAddressBookData() : purpose("unknown") {}
 
@@ -256,6 +258,9 @@ private:
     TxSpends mapTxSpends GUARDED_BY(cs_wallet);
     void AddToSpends(const COutPoint& outpoint, const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void AddToSpends(const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    void UpdateAddressBookUsed(const CWalletTx&) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void InitialiseAddressBookUsed() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Add a transaction to the wallet, or update it.  pIndex and posInBlock should
@@ -465,6 +470,8 @@ public:
     void UnlockCoin(const COutPoint& output) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void UnlockAllCoins() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void ListLockedCoins(std::vector<COutPoint>& vOutpts) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    bool FindScriptPubKeyUsed(const std::set<CScript>& keys, const std::variant<std::monostate, std::function<void(const CWalletTx&)>, std::function<void(const CWalletTx&, uint32_t)>>& callback = std::monostate()) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /*
      * Rescan abort properties
