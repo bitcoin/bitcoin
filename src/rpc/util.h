@@ -18,6 +18,7 @@
 #include <univalue.h>
 #include <util/check.h>
 
+#include <algorithm>
 #include <string>
 #include <variant>
 #include <vector>
@@ -94,7 +95,7 @@ std::string HelpExampleRpcNamed(const std::string& methodname, const RPCArgList&
 
 CPubKey HexToPubKey(const std::string& hex_in);
 CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string& addr_in);
-CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, FillableSigningProvider& keystore, CScript& script_out);
+CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, FillableSigningProvider& keystore, CScript& script_out, bool sort);
 
 UniValue DescribeAddress(const CTxDestination& dest);
 
@@ -157,6 +158,7 @@ struct RPCArg {
     using Fallback = std::variant<Optional, /* hint for default value */ DefaultHint, /* default constant value */ Default>;
     const std::string m_names; //!< The name of the arg (can be empty for inner args, can contain multiple aliases separated by | for named request arguments)
     const Type m_type;
+    const std::vector<Type> m_type_per_name;
     const bool m_hidden;
     const std::vector<RPCArg> m_inner; //!< Only used for arrays or dicts
     const Fallback m_fallback;
@@ -181,6 +183,27 @@ struct RPCArg {
           m_type_str{std::move(type_str)}
     {
         CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ && type != Type::OBJ_USER_KEYS);
+    }
+
+    RPCArg(
+        const std::string name,
+        const std::vector<Type> types,
+        const Fallback fallback,
+        const std::string description,
+        const std::vector<RPCArg> inner,
+        const std::string oneline_description = "",
+        const std::vector<std::string> type_str = {},
+        const bool hidden = false)
+        : m_names{std::move(name)},
+          m_type{types.at(0)},
+          m_type_per_name{std::move(types)},
+          m_hidden{hidden},
+          m_fallback{std::move(fallback)},
+          m_description{std::move(description)},
+          m_oneline_description{std::move(oneline_description)},
+          m_type_str{std::move(type_str)}
+    {
+        CHECK_NONFATAL(m_type_per_name.size() == size_t(std::count(m_names.begin(), m_names.end(), '|')) + 1);
     }
 
     RPCArg(

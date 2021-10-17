@@ -222,7 +222,7 @@ CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string&
 }
 
 // Creates a multisig address from a given list of public keys, number of signatures required, and the address type
-CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, FillableSigningProvider& keystore, CScript& script_out)
+CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, FillableSigningProvider& keystore, CScript& script_out, bool sort)
 {
     // Gather public keys
     if (required < 1) {
@@ -235,7 +235,7 @@ CTxDestination AddAndGetMultisigDestination(const int required, const std::vecto
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Number of keys involved in the multisignature address creation > %d\nReduce the number", MAX_PUBKEYS_PER_MULTISIG));
     }
 
-    script_out = GetScriptForMultisig(required, pubkeys);
+    script_out = GetScriptForMultisig(required, pubkeys, sort);
 
     // Check if any keys are uncompressed. If so, the type is legacy
     for (const CPubKey& pk : pubkeys) {
@@ -657,13 +657,20 @@ UniValue RPCHelpMan::GetArgMap() const
         const auto& arg = m_args.at(i);
         std::vector<std::string> arg_names;
         boost::split(arg_names, arg.m_names, boost::is_any_of("|"));
+        RPCArg::Type argtype = arg.m_type;
+        size_t arg_num = 0;
         for (const auto& arg_name : arg_names) {
+            if (!arg.m_type_per_name.empty()) {
+                argtype = arg.m_type_per_name.at(arg_num++);
+            }
+
             UniValue map{UniValue::VARR};
             map.push_back(m_name);
             map.push_back(i);
             map.push_back(arg_name);
-            map.push_back(arg.m_type == RPCArg::Type::STR ||
-                          arg.m_type == RPCArg::Type::STR_HEX);
+            // NOTE: push_back(bool) converts the bool to Number, so explicitly make a boolean UniValue first
+            map.push_back(UniValue(argtype == RPCArg::Type::STR ||
+                          argtype == RPCArg::Type::STR_HEX));
             arr.push_back(map);
         }
     }
