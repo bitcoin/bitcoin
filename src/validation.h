@@ -19,6 +19,7 @@
 #include <node/utxo_snapshot.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
+#include <policy/policy.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
 #include <script/script_error.h>
 #include <sync.h>
@@ -224,13 +225,21 @@ struct PackageMempoolAcceptResult
         : m_tx_results{ {wtxid, result} } {}
 };
 
+static const std::string rejectmsg_lowfee_mempool = "mempool min fee not met";
+static const std::string rejectmsg_lowfee_relay = "min relay fee not met";
+static const std::string rejectmsg_mempoolfull = "mempool full";
+
 /**
  * (Try to) add a transaction to the memory pool.
- * @param[in]  bypass_limits   When true, don't enforce mempool fee limits.
  * @param[in]  test_accept     When true, run validation checks but don't submit to mempool.
  */
 MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, const CTransactionRef& tx,
-                                       bool bypass_limits, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                                       const ignore_rejects_type&, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+static inline MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, const CTransactionRef& tx, bool bypass_limits, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+    static const ignore_rejects_type ignore_rejects_legacy{rejectmsg_lowfee_mempool, rejectmsg_lowfee_relay, rejectmsg_mempoolfull};
+    return AcceptToMemoryPool(active_chainstate, pool, tx, (bypass_limits ? ignore_rejects_legacy : empty_ignore_rejects), test_accept);
+}
 
 /**
 * Atomically test acceptance of a package. If the package only contains one tx, package rules still

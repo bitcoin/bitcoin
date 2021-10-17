@@ -277,7 +277,8 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                 assert(expected_code_path);
             },
             [&] {
-                (void)IsWitnessStandard(CTransaction{random_mutable_transaction}, coins_view_cache);
+                std::string reason;
+                (void)IsWitnessStandard(CTransaction{random_mutable_transaction}, coins_view_cache, "bad-witness-", reason);
             });
     }
 }

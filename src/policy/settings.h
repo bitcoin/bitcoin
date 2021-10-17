@@ -19,9 +19,9 @@ extern bool fIsBareMultisigStd;
 extern bool fEnableReplacement;
 extern bool fReplacementHonourOptOut;
 
-static inline bool IsStandardTx(const CTransaction& tx, std::string& reason)
+static inline bool IsStandardTx(const CTransaction& tx, std::string& reason, const ignore_rejects_type& ignore_rejects=empty_ignore_rejects)
 {
-    return IsStandardTx(tx, ::fIsBareMultisigStd, ::dustRelayFee, reason);
+    return IsStandardTx(tx, ::fIsBareMultisigStd, ::dustRelayFee, reason, ignore_rejects);
 }
 
 static inline int64_t GetVirtualTransactionSize(int64_t weight, int64_t sigop_cost)
