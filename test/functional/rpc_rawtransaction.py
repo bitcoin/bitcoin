@@ -484,12 +484,22 @@ class RawTransactionsTest(BitcoinTestFramework):
         testres = self.nodes[2].testmempoolaccept([rawTxSigned['hex']], 0.00001000)[0]
         assert_equal(testres['allowed'], False)
         assert_equal(testres['reject-reason'], 'max-fee-exceeded')
+        testres = self.nodes[2].testmempoolaccept([rawTxSigned['hex']], 0.00001000, ['foobar'])[0]
+        assert_equal(testres['allowed'], False)
+        assert_equal(testres['reject-reason'], 'max-fee-exceeded')
+        # unless ignored explicitly
+        testres = self.nodes[2].testmempoolaccept([rawTxSigned['hex']], 0.00001000, ['max-fee-exceeded'])[0]
+        assert_equal(testres['allowed'], True)
+        assert('reject-reason' not in testres)
+        testres = self.nodes[2].testmempoolaccept([rawTxSigned['hex']], 0.00001000, ['absurdly-high-fee'])[0]
+        assert_equal(testres['allowed'], True)
+        assert('reject-reason' not in testres)
         # and sendrawtransaction should throw
         assert_raises_rpc_error(-25, 'Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)', self.nodes[2].sendrawtransaction, rawTxSigned['hex'], 0.00001000)
         # and the following calls should both succeed
         testres = self.nodes[2].testmempoolaccept(rawtxs=[rawTxSigned['hex']])[0]
         assert_equal(testres['allowed'], True)
-        self.nodes[2].sendrawtransaction(hexstring=rawTxSigned['hex'])
+        self.nodes[2].sendrawtransaction(hexstring=rawTxSigned['hex'], maxfeerate=0.00001000, ignore_rejects=['max-fee-exceeded'])
 
         # Test a transaction with a large fee.
         txId = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.0)
