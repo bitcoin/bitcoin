@@ -74,14 +74,24 @@ void ForceActivation();
 
 namespace GUIUtil {
 
+QString dateStr(const QDate &date)
+{
+    return QLocale::system().toString(date, QLocale::ShortFormat);
+}
+
+QString dateStr(qint64 nTime)
+{
+    return dateStr(QDateTime::fromMSecsSinceEpoch(nTime*1000).date());
+}
+
 QString dateTimeStr(const QDateTime &date)
 {
-    return QLocale::system().toString(date.date(), QLocale::ShortFormat) + QString(" ") + date.toString("hh:mm");
+    return dateStr(date.date()) + QString(" ") + date.toString("hh:mm");
 }
 
 QString dateTimeStr(qint64 nTime)
 {
-    return dateTimeStr(QDateTime::fromTime_t((qint32)nTime));
+    return dateTimeStr(QDateTime::fromMSecsSinceEpoch(nTime*1000));
 }
 
 QFont fixedPitchFont(bool use_embedded_font)

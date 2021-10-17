@@ -21,6 +21,8 @@ void RegisterMiningRPCCommands(CRPCTable &tableRPC);
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 /** Register raw transaction RPC commands */
 void RegisterSignerRPCCommands(CRPCTable &tableRPC);
+/** Register stats RPC commands */
+void RegisterStatsRPCCommands(CRPCTable &tableRPC);
 
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 {
@@ -32,6 +34,7 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 #ifdef ENABLE_EXTERNAL_SIGNER
     RegisterSignerRPCCommands(t);
 #endif // ENABLE_EXTERNAL_SIGNER
+    RegisterStatsRPCCommands(t);
 }
 
 #endif // BITCOIN_RPC_REGISTER_H
