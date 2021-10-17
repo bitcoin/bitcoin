@@ -33,6 +33,7 @@
 #include <node/context.h>
 #include <node/ui_interface.h>
 #include <noui.h>
+#include <stats/stats.h>
 #include <uint256.h>
 #include <util/system.h>
 #include <util/threadnames.h>
@@ -618,6 +619,9 @@ int GuiMain(int argc, char* argv[])
         // Store intro dialog settings other than datadir (network specific)
         app.InitPruneSetting(prune_MiB);
     }
+
+    // Enable mempool stats by default
+    gArgs.SoftSetBoolArg("-statsenable", true);
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());
