@@ -8,14 +8,14 @@ This is meant to be documentation as much as functional tests, so it is kept as 
 """
 
 from test_framework.address import base58_to_byte
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     assert_approx,
     assert_equal,
 )
 
 
-class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
+class WalletMultisigDescriptorPSBTTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.setup_clean_chain = True
@@ -85,7 +85,7 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
             # This wallet will be the participant's `signer` for the resulting multisig. Avoid reusing this wallet for any other purpose (for privacy reasons).
             "signers": [node.get_wallet_rpc(node.createwallet(wallet_name=f"participant_{self.nodes.index(node)}", descriptors=True)["name"]) for node in self.nodes],
             # After participants generate and exchange their xpubs they will each create their own watch-only multisig.
-            # Note: these multisigs are all the same, this justs highlights that each participant can independently verify everything on their own node.
+            # Note: these multisigs are all the same, this just highlights that each participant can independently verify everything on their own node.
             "multisigs": []
         }
 
