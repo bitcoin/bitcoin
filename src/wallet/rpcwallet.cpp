@@ -1038,8 +1038,8 @@ static RPCHelpMan addmultisigaddress()
     result.pushKV("descriptor", descriptor->ToString());
 
     UniValue warnings(UniValue::VARR);
-    std::optional<OutputType> created_output_type = OutputTypeFromDestination(dest);
-    if (!created_output_type || created_output_type.value() != output_type) {
+    if (!request.params[3].isNull() && OutputTypeFromDestination(dest) != output_type) {
+        // Only warns if the user has explicitly chosen an address type we cannot generate
         warnings.push_back("Unable to make chosen address type, please ensure no uncompressed public keys are present.");
     }
     if (warnings.size()) result.pushKV("warnings", warnings);
