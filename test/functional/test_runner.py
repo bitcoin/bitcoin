@@ -207,6 +207,7 @@ BASE_SCRIPTS = [
     'feature_assumevalid.py',
     'example_test.py',
     'wallet_txn_doublespend.py --legacy-wallet',
+    'wallet_multisig_descriptor_psbt.py',
     'wallet_txn_doublespend.py --descriptors',
     'feature_backwards_compatibility.py --legacy-wallet',
     'feature_backwards_compatibility.py --descriptors',
