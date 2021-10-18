@@ -382,14 +382,22 @@ std::vector<WalletDestination> LegacyScriptPubKeyMan::MarkUnusedAddresses(const 
         if (it != mapKeyMetadata.end()){
             CKeyMetadata meta = it->second;
             if (!meta.hd_seed_id.IsNull() && meta.hd_seed_id != m_hd_chain.seed_id) {
-                if (meta.key_origin.path.size() < 3) {
-                    WalletLogPrintf("%s: Adding inactive seed keys failed, insufficient path size: %d, has_key_origin: %s\n",
+                std::vector<uint32_t> path;
+                if (meta.has_key_origin) {
+                    path = meta.key_origin.path;
+                } else if (!ParseHDKeypath(meta.hdKeypath, path)) {
+                    WalletLogPrintf("%s: Adding inactive seed keys failed, invalid hdKeypath: %s\n",
                                     __func__,
-                                    meta.key_origin.path.size(),
+                                    meta.hdKeypath);
+                }
+                if (path.size() != 3) {
+                    WalletLogPrintf("%s: Adding inactive seed keys failed, invalid path size: %d, has_key_origin: %s\n",
+                                    __func__,
+                                    path.size(),
                                     meta.has_key_origin);
                 } else {
-                    bool internal = (meta.key_origin.path[1] & ~BIP32_HARDENED_KEY_LIMIT) != 0;
-                    int64_t index = meta.key_origin.path[2] & ~BIP32_HARDENED_KEY_LIMIT;
+                    bool internal = (path[1] & ~BIP32_HARDENED_KEY_LIMIT) != 0;
+                    int64_t index = path[2] & ~BIP32_HARDENED_KEY_LIMIT;
 
                     if (!TopUpInactiveHDChain(meta.hd_seed_id, index, internal)) {
                         WalletLogPrintf("%s: Adding inactive seed keys failed\n", __func__);
