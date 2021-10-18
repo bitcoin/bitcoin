@@ -244,7 +244,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
             assert_equal(txres["package-error"], "package-mempool-limits")
 
         # Clear mempool and check that the package passes now
-        node.generate(1)
+        self.generate(node, 1)
         assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=package_hex)])
 
     def test_anc_count_limits(self):
