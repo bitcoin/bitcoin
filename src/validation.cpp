@@ -2303,14 +2303,13 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     statsClient.gauge("blocks.tip.NumTransactions", block.vtx.size(), 1.0f);
     statsClient.gauge("blocks.tip.SigOps", nSigOps, 1.0f);
 
-    TRACE7(validation, block_connected,
-        block.GetHash().ToString().c_str(),
+    TRACE6(validation, block_connected,
+        block.GetHash().data(),
         pindex->nHeight,
         block.vtx.size(),
         nInputs,
         nSigOps,
-        GetTimeMicros() - nTimeStart, // in microseconds (µs)
-        block.GetHash().data()
+        GetTimeMicros() - nTimeStart // in microseconds (µs)
     );
 
     return true;
