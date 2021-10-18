@@ -1,9 +1,9 @@
-0.20.2rc3 Release Notes
+0.20.2 Release Notes
 ====================
 
-Bitcoin Core version 0.20.2rc3 is now available from:
+Bitcoin Core version 0.20.2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.20.2/test.rc3>
+  <https://bitcoincore.org/bin/bitcoin-core-0.20.2/>
 
 This minor release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -101,7 +101,7 @@ requiring the full previous transaction for segwit inputs. The witness utxo
 is still provided to maintain compatibility with software which relied on its
 existence to determine whether an input was segwit.
 
-0.20.2rc3 change log
+0.20.2 change log
 =================
 
 ### P2P protocol and network code
