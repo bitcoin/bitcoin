@@ -104,13 +104,13 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
 
         self.log.info("Get a mature utxo to send to the multisig...")
         coordinator_wallet = participants["signers"][0]
-        coordinator_wallet.generatetoaddress(101, coordinator_wallet.getnewaddress())
+        self.generatetoaddress(self.nodes[0], 101, coordinator_wallet.getnewaddress())
 
         deposit_amount = 6.15
         multisig_receiving_address = participants["multisigs"][0].getnewaddress()
         self.log.info("Send funds to the resulting multisig receiving address...")
         coordinator_wallet.sendtoaddress(multisig_receiving_address, deposit_amount)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
         for participant in participants["multisigs"]:
             assert_approx(participant.getbalance(), deposit_amount, vspan=0.001)
@@ -136,7 +136,7 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         coordinator_wallet.sendrawtransaction(finalized["hex"])
 
         self.log.info("Check that balances are correct after the transaction has been included in a block.")
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
         assert_approx(participants["multisigs"][0].getbalance(), deposit_amount - value, vspan=0.001)
         assert_equal(participants["signers"][self.N - 1].getbalance(), value)
@@ -153,7 +153,7 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         coordinator_wallet.sendrawtransaction(finalized["hex"])
 
         self.log.info("Check that balances are correct after the transaction has been included in a block.")
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
         assert_approx(participants["multisigs"][0].getbalance(), deposit_amount - (value * 2), vspan=0.001)
         assert_equal(participants["signers"][self.N - 1].getbalance(), value * 2)
