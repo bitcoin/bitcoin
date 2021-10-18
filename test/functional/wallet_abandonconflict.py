@@ -120,6 +120,14 @@ class AbandonConflictTest(BitcoinTestFramework):
         assert_equal(newbalance, balance + Decimal("30"))
         balance = newbalance
 
+        self.log.info("Check abandoned transactions in listsinceblock")
+        listsinceblock = self.nodes[0].listsinceblock()
+        txAB1_listsinceblock = [d for d in listsinceblock['transactions'] if d['txid'] == txAB1 and d['category'] == 'send']
+        for tx in txAB1_listsinceblock:
+            assert_equal(tx['abandoned'], True)
+            assert_equal(tx['confirmations'], 0)
+            assert_equal(tx['trusted'], False)
+
         # Verify that even with a low min relay fee, the tx is not reaccepted from wallet on startup once abandoned
         self.restart_node(0, extra_args=["-minrelaytxfee=0.00001"])
         assert self.nodes[0].getmempoolinfo()['loaded']
