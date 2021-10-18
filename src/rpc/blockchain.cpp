@@ -2485,11 +2485,28 @@ static RPCHelpMan scanblocks()
                     {"stop_height", RPCArg::Type::NUM, RPCArg::DefaultHint{"<tip>"}, "height to stop to scan"},
                     {"filtertype", RPCArg::Type::STR, RPCArg::Default{"basic"}, "The type name of the filter"}
                 },
-                RPCResult{
-                    RPCResult::Type::ARR, "", "",
-                    {
-                        {RPCResult::Type::STR_HEX, "", "The blockhash"},
-                    }},
+                {
+
+                    RPCResult{"if action is start (only returns after scan completes)",
+                        RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::NUM, "from_height", "The height of the first block scanned."},
+                            {RPCResult::Type::NUM, "to_height", "The height of the last block scanned."},
+                            {RPCResult::Type::ARR, "relevant_blocks", "Blocks that may have matched a scanobject.", {
+                                {RPCResult::Type::STR_HEX, "hash", "The blockhash."},
+                            }},
+                        },
+                    },
+                    RPCResult{"if action is abort", RPCResult::Type::BOOL, "success", "True if scan will be aborted (not necessarily before this RPC call returns), or false if there is no scan to abort."},
+                    RPCResult{"if action is status, and a scan is currently in progress",
+                        RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::NUM, "progress", "Approximate percent complete."},
+                            {RPCResult::Type::NUM, "current_height", "Height of the block currently being scanned."}
+                        },
+                    },
+                    RPCResult{"if action is status, and there is no scan running (possibly already completed)", RPCResult::Type::NONE, "", ""},
+                },
                 RPCExamples{
                     HelpExampleCli("scanblocks", "\"[\"addr(bcrt1q4u4nsgk6ug0sqz7r3rj9tykjxrsl0yy4d0wwte)\"]\" 300000") +
                     HelpExampleRpc("scanblocks", "\"[\"addr(bcrt1q4u4nsgk6ug0sqz7r3rj9tykjxrsl0yy4d0wwte)\"]\" 300000")
