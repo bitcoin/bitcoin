@@ -32,13 +32,13 @@ from .script import (
     CScriptNum,
     CScriptOp,
     OP_1,
-    OP_CHECKMULTISIG,
     OP_RETURN,
     OP_TRUE,
 )
 from .script_util import (
     key_to_p2pk_script,
     key_to_p2wpkh_script,
+    keys_to_multisig_script,
     script_to_p2wsh_script,
 )
 from .util import assert_equal
@@ -209,7 +209,7 @@ def witness_script(use_p2wsh, pubkey):
         pkscript = key_to_p2wpkh_script(pubkey)
     else:
         # 1-of-1 multisig
-        witness_script = CScript([OP_1, bytes.fromhex(pubkey), OP_1, OP_CHECKMULTISIG])
+        witness_script = keys_to_multisig_script([pubkey])
         pkscript = script_to_p2wsh_script(witness_script)
     return pkscript.hex()
 
@@ -218,7 +218,7 @@ def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
 
     Optionally wrap the segwit output using P2SH."""
     if use_p2wsh:
-        program = CScript([OP_1, bytes.fromhex(pubkey), OP_1, OP_CHECKMULTISIG])
+        program = keys_to_multisig_script([pubkey])
         addr = script_to_p2sh_p2wsh(program) if encode_p2sh else script_to_p2wsh(program)
     else:
         addr = key_to_p2sh_p2wpkh(pubkey) if encode_p2sh else key_to_p2wpkh(pubkey)
