@@ -221,6 +221,7 @@ BASE_SCRIPTS = [
     'feature_assumevalid.py',
     'example_test.py',
     'wallet_txn_doublespend.py --legacy-wallet',
+    'wallet_multisig_descriptor_psbt.py',
     'wallet_txn_doublespend.py --descriptors',
     'wallet_txn_clone.py --mineblock',
     'feature_notifications.py',
