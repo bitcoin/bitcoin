@@ -289,7 +289,7 @@ static bool rest_headers(const CoreContext& context,
 static bool rest_block(const CoreContext& context,
                        HTTPRequest* req,
                        const std::string& strURIPart,
-                       bool showTxDetails)
+                       TxVerbosity tx_verbosity)
 {
     if (!CheckWarmup(req))
         return false;
@@ -344,7 +344,7 @@ static bool rest_block(const CoreContext& context,
         const LLMQContext* llmq_ctx = GetLLMQContext(context, req);
         if (!llmq_ctx) return false;
 
-        UniValue objBlock = blockToJSON(chainman.m_blockman, block, tip, pblockindex, *llmq_ctx->clhandler, *llmq_ctx->isman, showTxDetails);
+        UniValue objBlock = blockToJSON(chainman.m_blockman, block, tip, pblockindex, *llmq_ctx->clhandler, *llmq_ctx->isman, tx_verbosity);
         std::string strJSON = objBlock.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);
@@ -359,12 +359,12 @@ static bool rest_block(const CoreContext& context,
 
 static bool rest_block_extended(const CoreContext& context, HTTPRequest* req, const std::string& strURIPart)
 {
-    return rest_block(context, req, strURIPart, true);
+    return rest_block(context, req, strURIPart, TxVerbosity::SHOW_DETAILS_AND_PREVOUT);
 }
 
 static bool rest_block_notxdetails(const CoreContext& context, HTTPRequest* req, const std::string& strURIPart)
 {
-    return rest_block(context, req, strURIPart, false);
+    return rest_block(context, req, strURIPart, TxVerbosity::SHOW_TXID);
 }
 
 static bool rest_filter_header(const CoreContext& context, HTTPRequest* req, const std::string& strURIPart)
