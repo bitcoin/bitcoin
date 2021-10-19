@@ -5867,6 +5867,7 @@ bool DownloadFile(const std::string &url, const fs::path &dest, const std::strin
         /* always cleanup */
         curl_easy_cleanup(curl);
         fclose(fp);
+        UninterruptibleSleep(std::chrono::milliseconds{100});
         if(fs::exists(destTmp) && mode == "wb")
             fs::permissions(destTmp,
                     fs::perms::owner_exe  | fs::perms::owner_write | fs::perms::group_exe |
@@ -5919,7 +5920,21 @@ bool DownloadFile(const std::string &url, const fs::path &dest, const std::strin
             if(fs::exists(dest)) {
                 fs::remove(dest);
             }
-            fs::rename(destTmp, dest);
+            if (!fs::exists(dest) && fs::exists(destTmp)) {
+                try {
+                     fs::rename(destTmp, dest);
+                } catch (...) {
+                     LogPrintf("%s: Failed renaming File %s\n", __func__, fs::PathToString(destTmp));
+                     LogPrintf("%s: Trying again in 1s\n", __func__);
+                     UninterruptibleSleep(std::chrono::milliseconds{1000});
+                     try {
+                          fs::rename(destTmp, dest);
+                     } catch (...) {
+                          LogPrintf("%s: Failed again renaming File %s\n", __func__, fs::PathToString(destTmp));
+                          return false;
+                     }
+                }
+            }
             return true;
         }
         // was an issue verifying so delete temporary
