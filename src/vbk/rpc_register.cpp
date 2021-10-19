@@ -16,7 +16,9 @@
 #include <fstream>
 #include <set>
 
+#include "consensus/validation.h"
 #include "rpc_register.hpp"
+#include "vbk/pop_common.hpp"
 #include <vbk/merkle.hpp>
 #include <vbk/pop_service.hpp>
 #include <veriblock/pop.hpp>
@@ -466,7 +468,9 @@ UniValue getrawpopmempool(const JSONRPCRequest& request)
     RPCHelpMan{
         cmdname,
         "\nReturns the list of VBK blocks, ATVs and VTBs stored in POP mempool.\n",
-        {},
+        {
+            {"verbosity", RPCArg::Type::NUM, /* default */ "0", "0 for lists of ids, 1 for lists of entities, 2 for validity status"},
+        },
         RPCResult{"TODO"},
         RPCExamples{
             HelpExampleCli(cmdname, "") +
@@ -476,8 +480,52 @@ UniValue getrawpopmempool(const JSONRPCRequest& request)
 
     EnsurePopEnabled();
 
+    int verbosity = 0;
+    if (!request.params[0].isNull()) {
+        verbosity = request.params[0].get_int();
+    }
+
     auto& mp = VeriBlock::GetPop().getMemPool();
-    return altintegration::ToJSON<UniValue>(mp);
+
+    if (verbosity == 0) {
+        return altintegration::ToJSON<UniValue>(mp, false);
+    } else if (verbosity == 1) {
+        return altintegration::ToJSON<UniValue>(mp, true);
+    } else {
+        // returns pairs {"id": "...", "state": {...validation state...}} in order
+        // that would have been used for POW mining.
+        UniValue result(UniValue::VOBJ);
+        UniValue atvs(UniValue::VARR);
+        UniValue vtbs(UniValue::VARR);
+        UniValue vbkblocks(UniValue::VARR);
+
+        // intentionally ignore return value
+        mp.generatePopData(
+            [&](const altintegration::ATV& p, const altintegration::ValidationState& state){
+                UniValue j(UniValue::VOBJ);
+                j.pushKV("id", altintegration::HexStr(p.getId()));
+                j.pushKV("validity", altintegration::ToJSON<UniValue>(state));
+                atvs.push_back(j);
+            },
+            [&](const altintegration::VTB& p, const altintegration::ValidationState& state){
+                UniValue j(UniValue::VOBJ);
+                j.pushKV("id", altintegration::HexStr(p.getId()));
+                j.pushKV("validity", altintegration::ToJSON<UniValue>(state));
+                vtbs.push_back(j);
+            },
+            [&](const altintegration::VbkBlock& p, const altintegration::ValidationState& state){
+                UniValue j(UniValue::VOBJ);
+                j.pushKV("id", altintegration::HexStr(p.getId()));
+                j.pushKV("validity", altintegration::ToJSON<UniValue>(state));
+                vbkblocks.push_back(j);
+            }
+        );
+
+        result.pushKV("atvs", atvs);
+        result.pushKV("vtbs", vtbs);
+        result.pushKV("vbkblocks", vbkblocks);
+        return result;
+    }
 }
 
 } // namespace
@@ -841,7 +889,7 @@ const CRPCCommand commands[] = {
     {"pop_mining", "getrawatv", &getrawatv, {"id"}},
     {"pop_mining", "getrawvtb", &getrawvtb, {"id"}},
     {"pop_mining", "getrawvbkblock", &getrawvbkblock, {"id"}},
-    {"pop_mining", "getrawpopmempool", &getrawpopmempool, {}},
+    {"pop_mining", "getrawpopmempool", &getrawpopmempool, {"verbosity"}},
     {"pop_mining", "setmempooldostalledcheck", &setmempooldostalledcheck, {"flag"}},
     {"pop_mining", "extractblockinfo", &extractblockinfo, {"data_array"}}};
 
