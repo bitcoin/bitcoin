@@ -10,6 +10,7 @@
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/system.h>
 #include <util/translation.h>
 
 #include <tuple>
@@ -1035,4 +1036,34 @@ UniValue GetServicesNames(ServiceFlags services)
     }
 
     return servicesNames;
+}
+
+bool GetWalletRestrictionFromJSONRPCRequest(const JSONRPCRequest& request, std::string& out_wallet_allowed)
+{
+    for (const std::string& rpcauth_arg : gArgs.GetArgs("-rpcauth")) {
+        // Search for multi-user login/pass "rpcauth" from config
+        std::vector<std::string> fields;
+        boost::split(fields, rpcauth_arg, boost::is_any_of(":$"));
+        if (fields.size() < 3 || fields.size() > 4) {
+            // Incorrect formatting in config file
+            continue;
+        }
+
+        if (fields[0] != request.authUser) continue;
+
+        if (fields.size() > 3) {
+            out_wallet_allowed = fields[3];
+            return true;
+        }
+    }
+    return false;
+}
+
+void EnsureNotWalletRestricted(const JSONRPCRequest& request)
+{
+    std::string authorized_wallet_name;
+    const bool have_wallet_restriction = GetWalletRestrictionFromJSONRPCRequest(request, authorized_wallet_name);
+    if (have_wallet_restriction) {
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not available for wallet-restricted RPC users");
+    }
 }

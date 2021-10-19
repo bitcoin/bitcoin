@@ -251,17 +251,31 @@ static bool InitRPCAuthentication()
         LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
         strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
     }
-    if (gArgs.GetArg("-rpcauth","") != "")
-    {
+    if (gArgs.GetArg("-rpcauth", "") != "" || gArgs.GetArg("-rpcauthfile", "") != "") {
         LogPrintf("Using rpcauth authentication.\n");
+    }
+    if (gArgs.GetArg("-rpcauth", "") != "") {
         for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
             std::vector<std::string> fields;
             boost::split(fields, rpcauth, boost::is_any_of(":$"));
-            if (fields.size() == 3) {
+            if (fields.size() >= 3 && fields.size() <= 4) {
                 g_rpcauth.push_back(fields);
             } else {
                 LogPrintf("Invalid -rpcauth argument.\n");
                 return false;
+            }
+        }
+    }
+    if (gArgs.GetArg("-rpcauthfile", "") != "") {
+        for (std::string path : gArgs.GetArgs("-rpcauthfile")) {
+            fsbridge::ifstream file;
+            file.open(path);
+            if (!file.is_open()) continue;
+            std::string rpcauth;
+            while (std::getline(file, rpcauth)) {
+                std::vector<std::string> fields;
+                boost::split(fields, rpcauth, boost::is_any_of(":$"));
+                if (fields.size() >= 3 && fields.size() <= 4) g_rpcauth.push_back(fields);
             }
         }
     }
