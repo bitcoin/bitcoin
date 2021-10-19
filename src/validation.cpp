@@ -6184,7 +6184,7 @@ void KillProcess(const pid_t& pid){
             }
             hwnd = ::GetNextWindow(hwnd, GW_HWNDNEXT);
         }
-        ::PostMessage(hwnd, WM_CLOSE, 0, 0);
+        ::SendMessage(hwnd, WM_KEYDOWN, VK_CONTROL, 0x43);
     #endif  
     #ifndef WIN32
         LogPrintf("%s: Trying to kill with SIGINT\n", __func__);            
