@@ -17,6 +17,7 @@ from test_framework.blocktools import (
     send_to_witness,
     witness_script,
 )
+from test_framework.descriptors import descsum_create
 from test_framework.messages import (
     COIN,
     COutPoint,
@@ -48,6 +49,9 @@ from test_framework.util import (
     assert_is_hex_string,
     assert_raises_rpc_error,
     try_rpc,
+)
+from test_framework.wallet_util import (
+    get_generate_key,
 )
 
 NODE_0 = 0
@@ -142,13 +146,39 @@ class SegWitTest(BitcoinTestFramework):
         p2sh_ids = []  # p2sh_ids[NODE][TYPE] is an array of txids that spend to P2WPKH (TYPE=0) or P2WSH (TYPE=1) scripts to an address for NODE embedded in p2sh
         wit_ids = []  # wit_ids[NODE][TYPE] is an array of txids that spend to P2WPKH (TYPE=0) or P2WSH (TYPE=1) scripts to an address for NODE via bare witness
         for i in range(3):
-            newaddress = self.nodes[i].getnewaddress()
-            self.pubkey.append(self.nodes[i].getaddressinfo(newaddress)["pubkey"])
+            key = get_generate_key()
+            self.pubkey.append(key.pubkey)
+
             multiscript = CScript([OP_1, bytes.fromhex(self.pubkey[-1]), OP_1, OP_CHECKMULTISIG])
-            p2sh_ms_addr = self.nodes[i].addmultisigaddress(1, [self.pubkey[-1]], '', 'p2sh-segwit')['address']
-            bip173_ms_addr = self.nodes[i].addmultisigaddress(1, [self.pubkey[-1]], '', 'bech32')['address']
+            p2sh_ms_addr = self.nodes[i].createmultisig(1, [self.pubkey[-1]], 'p2sh-segwit')['address']
+            bip173_ms_addr = self.nodes[i].createmultisig(1, [self.pubkey[-1]], 'bech32')['address']
             assert_equal(p2sh_ms_addr, script_to_p2sh_p2wsh(multiscript))
             assert_equal(bip173_ms_addr, script_to_p2wsh(multiscript))
+
+            p2sh_ms_desc = descsum_create(f"sh(wsh(multi(1,{key.privkey})))")
+            bip173_ms_desc = descsum_create(f"wsh(multi(1,{key.privkey}))")
+            assert_equal(self.nodes[i].deriveaddresses(p2sh_ms_desc)[0], p2sh_ms_addr)
+            assert_equal(self.nodes[i].deriveaddresses(bip173_ms_desc)[0], bip173_ms_addr)
+
+            sh_wpkh_desc = descsum_create(f"sh(wpkh({key.privkey}))")
+            wpkh_desc = descsum_create(f"wpkh({key.privkey})")
+            assert_equal(self.nodes[i].deriveaddresses(sh_wpkh_desc)[0], key.p2sh_p2wpkh_addr)
+            assert_equal(self.nodes[i].deriveaddresses(wpkh_desc)[0], key.p2wpkh_addr)
+
+            if self.options.descriptors:
+                res = self.nodes[i].importdescriptors([
+                {"desc": p2sh_ms_desc, "timestamp": "now"},
+                {"desc": bip173_ms_desc, "timestamp": "now"},
+                {"desc": sh_wpkh_desc, "timestamp": "now"},
+                {"desc": wpkh_desc, "timestamp": "now"},
+            ])
+            else:
+                # The nature of the legacy wallet is that this import results in also adding all of the necessary scripts
+                res = self.nodes[i].importmulti([
+                    {"desc": p2sh_ms_desc, "timestamp": "now"},
+                ])
+            assert all([r["success"] for r in res])
+
             p2sh_ids.append([])
             wit_ids.append([])
             for _ in range(2):
