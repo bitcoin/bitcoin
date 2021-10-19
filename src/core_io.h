@@ -20,6 +20,15 @@ class uint256;
 class UniValue;
 class CTxUndo;
 
+/**
+ * Verbose level for block's transaction
+ */
+enum class TxVerbosity {
+    SHOW_TXID,                //!< Only TXID for each block's transaction
+    SHOW_DETAILS,             //!< Include TXID, inputs, outputs, and other common block's transaction information
+    SHOW_DETAILS_AND_PREVOUT  //!< The same as previous option with information about prevouts if available
+};
+
 // core_read.cpp
 CScript ParseScript(const std::string& s);
 std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode = false);
@@ -45,8 +54,9 @@ UniValue ValueFromAmount(const CAmount amount, const uint32_t &nBaseAsset=0);
 std::string FormatScript(const CScript& script);
 std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 std::string SighashToStr(unsigned char sighash_type);
+void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex, bool include_addresses);
 void ScriptToUniv(const CScript& script, UniValue& out, bool include_address);
-void TxToUniv(const CTransaction& tx, const uint256& hashBlock, bool include_addresses, UniValue& entry, bool include_hex = true, int serialize_flags = 0, const CTxUndo* txundo = nullptr);
+void TxToUniv(const CTransaction& tx, const uint256& hashBlock, bool include_addresses, UniValue& entry, bool include_hex = true, int serialize_flags = 0, const CTxUndo* txundo = nullptr, TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS);
 
 #endif // SYSCOIN_CORE_IO_H
