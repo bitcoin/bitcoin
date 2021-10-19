@@ -50,11 +50,9 @@ static UniValue debug(const JSONRPCRequest& request)
                 " - \"none\" (or \"0\") deactivates all categories at once.\n"
                 "Note: If specified category doesn't match any of the above, no error is thrown.\n",
                 {
-                    {"category", RPCArg::Type::STR, false},
+                    {"category", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The name of the debug category to turn on."},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"category\"          (string, required) The name of the debug category to turn on.\n"
             "\nResult:\n"
             "  result               (string) \"Debug mode: \" followed by the specified category.\n"
             "\nExamples:\n"
@@ -84,11 +82,9 @@ static UniValue mnsync(const JSONRPCRequest& request)
             RPCHelpMan{"mnsync",
                 "Returns the sync status, updates to the next step or resets it entirely.\n",
                 {
-                    {"mode", RPCArg::Type::STR, false},
+                    {"mode", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "[status|next|reset]"},
                 }}
-                .ToString() +
-            "\nArguments:\n"
-            "1. mode     (string, required) [status|next|reset]\n"
+                .ToString()
         );
 
     std::string strMode = request.params[0].get_str();
@@ -147,11 +143,9 @@ static UniValue spork(const JSONRPCRequest& request)
             RPCHelpMan{"spork",
                 "\nShows information about current state of sporks\n",
                 {
-                    {"command", RPCArg::Type::STR, false},
+                    {"command", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "'show' to show all current spork values, 'active' to show which sporks are active"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"command\"                     (string, required) 'show' to show all current spork values, 'active' to show which sporks are active\n"
             "\nResult:\n"
             "For 'show':\n"
             "{\n"
@@ -186,13 +180,10 @@ static UniValue spork(const JSONRPCRequest& request)
                 RPCHelpMan{"spork",
                     "\nUpdate the value of the specific spork. Requires \"-sporkkey\" to be set to sign the message.\n",
                     {
-                        {"name", RPCArg::Type::STR, false},
-                        {"value", RPCArg::Type::NUM, false},
+                        {"name", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The name of the spork to update"},
+                        {"value", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The new desired value of the spork"},
                     }}
                     .ToString() +
-                "\nArguments:\n"
-                "1. \"name\"              (string, required) The name of the spork to update\n"
-                "2. value               (number, required) The new desired value of the spork\n"
                 "\nResult:\n"
                 "  result               (string) \"success\" if spork value was updated or this help otherwise\n"
                 "\nExamples:\n"
@@ -434,16 +425,11 @@ static UniValue mnauth(const JSONRPCRequest& request)
             RPCHelpMan{"mnauth",
                 "\nOverride MNAUTH processing results for the specified node with a user provided data (-regtest only).\n",
                 {
-                    {"nodeId", RPCArg::Type::NUM, false},
-                    {"proTxHash", RPCArg::Type::STR, false},
-                    {"publicKey", RPCArg::Type::STR, false},
+                    {"nodeId", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "Internal peer id of the node the mock data gets added to."},
+                    {"proTxHash", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The authenticated proTxHash as hex string."},
+                    {"publicKey", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The authenticated public key as hex string."},
                 }}
-                .ToString() +
-            "\nArguments:\n"
-            "1. nodeId          (integer, required) Internal peer id of the node the mock data gets added to.\n"
-            "2. \"proTxHash\"     (string, required) The authenticated proTxHash as hex string.\n"
-            "3. \"publicKey\"     (string, required) The authenticated public key as hex string.\n"
-            );
+                .ToString());
 
     if (!Params().MineBlocksOnDemand())
         throw std::runtime_error("mnauth for regression testing (-regtest mode) only");
@@ -545,20 +531,12 @@ static UniValue getaddressmempool(const JSONRPCRequest& request)
             RPCHelpMan{"getaddressmempool",
                 "\nReturns all mempool deltas for an address (requires addressindex to be enabled).\n",
                 {
-                    {"addresses", RPCArg::Type::ARR,
+                    {"addresses", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "",
                         {
-                            {"address", RPCArg::Type::STR, true},
+                            {"address", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The base58check encoded address"},
                         },
-                    true},
+                    },
                 }}.ToString() +
-            "\nArguments:\n"
-            "{\n"
-            "  \"addresses\"\n"
-            "    [\n"
-            "      \"address\"  (string) The base58check encoded address\n"
-            "      ,...\n"
-            "    ]\n"
-            "}\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -623,20 +601,12 @@ static UniValue getaddressutxos(const JSONRPCRequest& request)
             RPCHelpMan{"getaddressutxos",
                 "\nReturns all unspent outputs for an address (requires addressindex to be enabled).\n",
                 {
-                    {"addresses", RPCArg::Type::ARR,
+                    {"addresses", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "",
                         {
-                            {"address", RPCArg::Type::STR, true},
+                            {"address", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The base58check encoded address"},
                         },
-                    true},
+                    },
                 }}.ToString() +
-            "\nArguments:\n"
-            "{\n"
-            "  \"addresses\"\n"
-            "    [\n"
-            "      \"address\"  (string) The base58check encoded address\n"
-            "      ,...\n"
-            "    ]\n"
-            "}\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -697,22 +667,12 @@ static UniValue getaddressdeltas(const JSONRPCRequest& request)
             RPCHelpMan{"getaddressdeltas",
                 "\nReturns all changes for an address (requires addressindex to be enabled).\n",
                 {
-                    {"addresses", RPCArg::Type::ARR,
+                    {"addresses", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "",
                         {
-                            {"address", RPCArg::Type::STR, true},
+                            {"address", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The base58check encoded address"},
                         },
-                    true},
+                    },
                 }}.ToString() +
-            "\nArguments:\n"
-            "{\n"
-            "  \"addresses\"\n"
-            "    [\n"
-            "      \"address\"  (string) The base58check encoded address\n"
-            "      ,...\n"
-            "    ]\n"
-            "  \"start\" (number) The start block height\n"
-            "  \"end\" (number) The end block height\n"
-            "}\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -792,20 +752,12 @@ static UniValue getaddressbalance(const JSONRPCRequest& request)
             RPCHelpMan{"getaddressbalance",
                 "\nReturns the balance for an address(es) (requires addressindex to be enabled).\n",
                 {
-                    {"addresses", RPCArg::Type::ARR,
+                    {"addresses", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "",
                         {
-                            {"address", RPCArg::Type::STR, true},
+                            {"address", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The base58check encoded address"},
                         },
-                    true},
+                    },
                 }}.ToString() +
-            "\nArguments:\n"
-            "{\n"
-            "  \"addresses\"\n"
-            "    [\n"
-            "      \"address\"  (string) The base58check encoded address\n"
-            "      ,...\n"
-            "    ]\n"
-            "}\n"
             "\nResult:\n"
             "{\n"
             "  \"balance\": xxxxx,              (numeric) The current total balance in duffs\n"
@@ -868,22 +820,12 @@ static UniValue getaddresstxids(const JSONRPCRequest& request)
             RPCHelpMan{"getaddresstxids",
                 "\nReturns the txids for an address(es) (requires addressindex to be enabled).\n",
                 {
-                    {"addresses", RPCArg::Type::ARR,
+                    {"addresses", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "",
                         {
-                            {"address", RPCArg::Type::STR, true},
+                            {"address", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The base58check encoded address"},
                         },
-                    true},
+                    },
                 }}.ToString() +
-            "\nArguments:\n"
-            "{\n"
-            "  \"addresses\"\n"
-            "    [\n"
-            "      \"address\"  (string) The base58check encoded address\n"
-            "      ,...\n"
-            "    ]\n"
-            "  \"start\" (number) The start block height\n"
-            "  \"end\" (number) The end block height\n"
-            "}\n"
             "\nResult:\n"
             "[\n"
             "  \"transactionid\"  (string) The transaction id\n"
@@ -958,18 +900,13 @@ static UniValue getspentinfo(const JSONRPCRequest& request)
             RPCHelpMan{"getspentinfo",
                 "\nReturns the txid and index where an output is spent.\n",
                 {
-                    {"request", RPCArg::Type::OBJ,
+                    {"request", RPCArg::Type::OBJ, /* opt */ true, /* default_val */ "", "",
                         {
-                            {"txid", RPCArg::Type::STR, true},
-                            {"index", RPCArg::Type::NUM, true},
+                            {"txid", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "", "The hex string of the txid"},
+                            {"index", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "The start block height"},
                         },
-                    true},
+                    },
                 }}.ToString() +
-            "\nArguments:\n"
-            "{\n"
-            "  \"txid\" (string) The hex string of the txid\n"
-            "  \"index\" (number) The start block height\n"
-            "}\n"
             "\nResult:\n"
             "{\n"
             "  \"txid\"  (string) The transaction id\n"

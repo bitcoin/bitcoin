@@ -747,13 +747,10 @@ static UniValue getblockhashes(const JSONRPCRequest& request)
             RPCHelpMan{"getblockhashes",
                 "\nReturns array of hashes of blocks within the timestamp range provided.\n",
                 {
-                    {"high", RPCArg::Type::NUM, false},
-                    {"low", RPCArg::Type::NUM, false},
+                    {"high", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The newer block timestamp"},
+                    {"low", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The older block timestamp"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. high         (numeric, required) The newer block timestamp\n"
-            "2. low          (numeric, required) The older block timestamp\n"
             "\nResult:\n"
             "[\n"
             "  \"hash\"         (string) The block hash\n"
@@ -882,15 +879,11 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
                 "\nIf verbose is false, each item is a string that is serialized, hex-encoded data for a single blockheader.\n"
                 "If verbose is true, each item is an Object with information about a single blockheader.\n",
                 {
-                    {"hash", RPCArg::Type::STR_HEX, false},
-                    {"count", RPCArg::Type::NUM, true},
-                    {"verbose", RPCArg::Type::BOOL, true},
+                    {"hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The block hash"},
+                    {"count", RPCArg::Type::NUM, /* opt */ true, /* default_val */ strprintf("%s", MAX_HEADERS_RESULTS), ""},
+                    {"verbose", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "true", "true for a json object, false for the hex-encoded data"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"hash\"          (string, required) The block hash\n"
-            "2. count           (numeric, optional, default/max=" + strprintf("%s", MAX_HEADERS_RESULTS) +")\n"
-            "3. verbose         (boolean, optional, default=true) true for a json object, false for the hex-encoded data\n"
             "\nResult (for verbose = true):\n"
             "[ {\n"
             "  \"hash\" : \"hash\",               (string)  The block hash\n"
@@ -995,15 +988,11 @@ static UniValue getmerkleblocks(const JSONRPCRequest& request)
             RPCHelpMan{"getmerkleblocks",
                 "\nReturns an array of hex-encoded merkleblocks for <count> blocks starting from <hash> which match <filter>.\n",
                 {
-                    {"filter", RPCArg::Type::STR_HEX, false},
-                    {"hash", RPCArg::Type::STR_HEX, false},
-                    {"count", RPCArg::Type::NUM, true},
+                    {"filter", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The hex-encoded bloom filter"},
+                    {"hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The block hash"},
+                    {"count", RPCArg::Type::NUM, /* opt */ true, /* default_val */ strprintf("%s", MAX_HEADERS_RESULTS), ""},
             }}
             .ToString() +
-            "\nArguments:\n"
-            "1. \"filter\"        (string, required) The hex-encoded bloom filter\n"
-            "2. \"hash\"          (string, required) The block hash\n"
-            "3. count           (numeric, optional, default/max=" + strprintf("%s", MAX_HEADERS_RESULTS) +")\n"
             "\nResult:\n"
             "[\n"
             "  \"data\",                        (string)  A string that is serialized, hex-encoded data for a merkleblock.\n"
@@ -1564,13 +1553,10 @@ static UniValue getchaintips(const JSONRPCRequest& request)
                 "Return information about all known tips in the block tree,"
                 " including the main chain as well as orphaned branches.\n",
                 {
-                    {"count", RPCArg::Type::NUM, true},
-                    {"branchlen", RPCArg::Type::NUM, true},
+                    {"count", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "only show this much of latest tips"},
+                    {"branchlen", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "only show tips that have equal or greater length of branch"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. count       (numeric, optional) only show this much of latest tips\n"
-            "2. branchlen   (numeric, optional) only show tips that have equal or greater length of branch\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -2243,19 +2229,13 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
                 "If verbosity is 1, returns hex-encoded data for each transaction.\n"
                 "If verbosity is 2, returns an Object with information for each transaction.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, false},
-                    {"type", RPCArg::Type::NUM, true},
-                    {"count", RPCArg::Type::NUM, true},
-                    {"skip", RPCArg::Type::NUM, true},
-                    {"verbosity", RPCArg::Type::NUM, true},
+                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The block hash"},
+                    {"type", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "-1", "Filter special txes by type, -1 means all types"},
+                    {"count", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "10", "The number of transactions to return"},
+                    {"skip", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "0", "The number of transactions to skip"},
+                    {"verbosity", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "0", "0 for hashes, 1 for hex-encoded data, and 2 for json object"},
             }}
             .ToString() +
-            "\nArguments:\n"
-            "1. \"blockhash\"          (string, required) The block hash\n"
-            "2. type                 (numeric, optional, default=-1) Filter special txes by type, -1 means all types\n"
-            "3. count                (numeric, optional, default=10) The number of transactions to return\n"
-            "4. skip                 (numeric, optional, default=0) The number of transactions to skip\n"
-            "5. verbosity            (numeric, optional, default=0) 0 for hashes, 1 for hex-encoded data, and 2 for json object\n"
             "\nResult (for verbosity = 0):\n"
             "[\n"
             "  \"txid\" : \"xxxx\",    (string) The transaction id\n"
@@ -2589,13 +2569,10 @@ static UniValue getblockfilter(const JSONRPCRequest& request)
             RPCHelpMan{"getblockfilter",
                 "\nRetrieve a BIP 157 content filter for a particular block.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR, false},
-                    {"filtertype", RPCArg::Type::STR, true},
+                    {"blockhash", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The hash of the block"},
+                    {"filtertype", RPCArg::Type::STR, /* opt */ true, /* default_val */ "basic", "The type name of the filter"},
             }}
             .ToString() +
-            "\nArguments:\n"
-            "\n1. blockhash           (string, required) The hash of the block"
-            "\n2. filtertype          (string, optional) The type name of the filter (default: basic)"
             "\nResult:\n"
             "{\n"
             "  \"filter\" : (string) the hex-encoded filter data\n"

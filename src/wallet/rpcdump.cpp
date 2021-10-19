@@ -665,13 +665,10 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
             RPCHelpMan{"importselectrumwallet",
                 "\nImports keys from an Electrum wallet export file (.csv or .json)\n",
                 {
-                    {"filename", RPCArg::Type::STR, false},
-                    {"index", RPCArg::Type::NUM, true},
+                    {"filename", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The Electrum wallet export file, should be in csv or json format"},
+                    {"index", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "0", "Rescan the wallet for transactions starting from this block index"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"filename\"    (string, required) The Electrum wallet export file, should be in csv or json format\n"
-            "2. index         (numeric, optional, default=0) Rescan the wallet for transactions starting from this block index\n"
             "\nExamples:\n"
             "\nImport the wallet\n"
             + HelpExampleCli("importelectrumwallet", "\"test.csv\"")
