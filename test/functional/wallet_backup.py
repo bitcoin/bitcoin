@@ -135,9 +135,9 @@ class WalletBackupTest(BitcoinTestFramework):
         assert os.path.exists(wallet_file)
 
     def init_three(self):
-        self.init_wallet(0)
-        self.init_wallet(1)
-        self.init_wallet(2)
+        self.init_wallet(node=0)
+        self.init_wallet(node=1)
+        self.init_wallet(node=2)
 
     def run_test(self):
         self.log.info("Generating initial blockchain")

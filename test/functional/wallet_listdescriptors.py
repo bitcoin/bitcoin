@@ -23,7 +23,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
         self.skip_if_no_sqlite()
 
     # do not create any wallet by default
-    def init_wallet(self, i):
+    def init_wallet(self, *, node):
         return
 
     def run_test(self):
