@@ -782,7 +782,6 @@ public:
         }
         return (mapTx.count(gtxid.GetHash()) != 0);
     }
-    bool exists(const uint256& txid) const { return exists(GenTxid{false, txid}); }
 
     CTransactionRef get(const uint256& hash) const;
     txiter get_iter_from_wtxid(const uint256& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
@@ -802,7 +801,7 @@ public:
         LOCK(cs);
         // Sanity check the transaction is in the mempool & insert into
         // unbroadcast set.
-        if (exists(txid)) m_unbroadcast_txids.insert(txid);
+        if (exists(GenTxid::Txid(txid))) m_unbroadcast_txids.insert(txid);
     };
 
     /** Removes a transaction from the unbroadcast set */
