@@ -194,3 +194,18 @@ poly1305_donna_finish:
     f3 += (f2 >> 32);
     U32TO8_LE(&out[12], f3);
 }
+
+FUZZ_TARGET(crypto_diff_fuzz_poly1305)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+
+    const std::vector<uint8_t> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, POLY1305_KEYLEN);
+    const std::vector<uint8_t> in = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+
+    std::vector<uint8_t> tag_out(POLY1305_TAGLEN);
+    std::vector<uint8_t> tag_out_floodyberry(POLY1305_TAGLEN);
+    poly1305_auth(tag_out.data(), in.data(), in.size(), key.data());
+    poly1305_auth_floodyberry(tag_out_floodyberry.data(), in.data(), in.size(), key.data());
+
+    assert(memcmp(tag_out.data(), tag_out_floodyberry.data(), POLY1305_TAGLEN) == 0);
+}
