@@ -86,6 +86,7 @@ task:
     PATH: 'C:\jom;C:\Python39;C:\Python39\Scripts;C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin;%PATH%'
     PYTHONUTF8: 1
     CI_VCPKG_TAG: '2021.05.12'
+    VCPKG_DEFAULT_BINARY_CACHE: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
     QT_DOWNLOAD_URL: 'https://download.qt.io/official_releases/qt/5.12/5.12.11/single/qt-everywhere-src-5.12.11.zip'
     QT_LOCAL_PATH: 'C:\qt-everywhere-src-5.12.11.zip'
     QT_SOURCE_DIR: 'C:\qt-everywhere-src-5.12.11'
@@ -121,7 +122,13 @@ task:
       - jom
       - jom install
   vcpkg_binary_cache:
-    folder: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
+    folder: '%VCPKG_DEFAULT_BINARY_CACHE%'
+    reupload_on_changes: true
+    fingerprint_script:
+      - echo %CI_VCPKG_TAG%
+      - msbuild -version
+    populate_script:
+      - mkdir %VCPKG_DEFAULT_BINARY_CACHE%
   install_python_script:
     - choco install --yes --no-progress python3 --version=3.9.6
     - pip install zmq
