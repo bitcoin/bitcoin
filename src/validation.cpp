@@ -1924,11 +1924,16 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
     assert(hashPrevBlock == view.GetBestBlock());
 
-    // Special case for the genesis block, skipping connection of its transactions
-    // (its coinbase is unspendable)
+    // Special case for the genesis block
     if (block.GetHash() == chainparams.GetConsensus().hashGenesisBlock) {
         if (!fJustCheck)
             view.SetBestBlock(pindex->GetBlockHash());
+
+        // VeriBlock: make coinbase spendable
+        assert(block.vtx.size() == 1);
+        const CTransaction& tx = *(block.vtx[0]);
+        CTxUndo undoDummy;
+        UpdateCoins(tx, view, undoDummy, pindex->nHeight);
         return true;
     }
 

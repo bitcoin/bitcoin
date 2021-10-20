@@ -266,10 +266,13 @@ CRegTestParams::CRegTestParams(const ArgsManager& args)
 
     UpdateActivationParametersFromArgs(args);
 
-    genesis = CreateGenesisBlockDefault(1296688602, 2, 0x207fffff, 1, 50 * COIN);
+    // coinbase pays 5 vBTC to this addr:
+    // address: bcrt1qgfmtskhnyknjaqk0v9qmksssdrkg427rw4ppxd
+    // privkey: cQ6npZ7QAGxHe48VKrzQ1pNTWTvm1cMbLXULMEE7ysQANC1rePtg
+    genesis = VeriBlock::CreateGenesisBlock(1631200000, 0, 0x207fffff, 1, "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff4104ffff7f2001043956657269426c6f636b20426974636f696e205265666572656e636520496d706c656d656e746174696f6e2c20536570742031332c2032303231ffffffff010065cd1d000000001600144276b85af325a72e82cf6141bb421068ec8aabc300000000");
     consensus.hashGenesisBlock = genesis.GetHash();
-    assert(consensus.hashGenesisBlock == uint256S("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
-    assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+    assert(consensus.hashGenesisBlock == uint256S("0x1f552b7cf73fc3411ff886b5b158840ffd4b564bc6f33de141e5892aef5baa9f"));
+    assert(genesis.hashMerkleRoot == uint256S("0xded0f057cab4fc3d55188c4b7e5812fdd138f243379ead016c153cb310870e65"));
 
     vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
     vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.

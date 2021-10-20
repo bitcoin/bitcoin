@@ -131,6 +131,7 @@ BASE_SCRIPTS = [
     'feature_pop_sync.py',
     'feature_pop_verifydb.py',
     'feature_pop_stratum_compat.py',
+    'feature_pop_spend_gb_coinbase.py',
     ## end VeriBlock tests
     'wallet_keypool_topup.py',
     'feature_fee_estimation.py',
