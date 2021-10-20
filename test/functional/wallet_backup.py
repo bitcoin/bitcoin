@@ -124,9 +124,8 @@ class WalletBackupTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Wallet name already exists.", node.restorewallet, wallet_name, wallet_file)
 
     def init_three(self):
-        self.init_wallet(node=0)
-        self.init_wallet(node=1)
-        self.init_wallet(node=2)
+        for n in range(3):
+            self.init_wallet(node=n)
 
     def run_test(self):
         self.log.info("Generating initial blockchain")
