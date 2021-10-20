@@ -85,8 +85,7 @@ task:
   env:
     PATH: 'C:\jom;C:\Python39;C:\Python39\Scripts;C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin;%PATH%'
     PYTHONUTF8: 1
-    VCPKG_TAG: '75522bb1f2e7d863078bcd06322348f053a9e33f'
-    VCPKG_FEATURE_FLAGS: 'manifests'
+    VCPKG_TAG: '2021.05.12'
     QT_DOWNLOAD_URL: 'https://download.qt.io/official_releases/qt/5.12/5.12.11/single/qt-everywhere-src-5.12.11.zip'
     QT_LOCAL_PATH: 'C:\qt-everywhere-src-5.12.11.zip'
     QT_SOURCE_DIR: 'C:\qt-everywhere-src-5.12.11'
