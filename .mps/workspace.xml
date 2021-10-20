@@ -13,7 +13,7 @@
         <TabState>
           <option name="title" value="Console" />
           <tab>
-            <model ref="ca8b8b24-3276-46dc-a5bc-c8a3eba0618b/r:7f3e9b63-1ecd-4df6-914c-73cf36f97283(TempModuleca8b8b24-3276-46dc-a5bc-c8a3eba0618b/ConsoleModel_3210651875805)">
+            <model ref="94b5bd97-48f2-4c48-80ec-de9b2ab84d47/r:cba49243-d6eb-43ef-9c7c-1d2ef48045d9(TempModule94b5bd97-48f2-4c48-80ec-de9b2ab84d47/ConsoleModel_2366614504431)">
               <persistence version="9" />
               <languages>
                 <devkit ref="70d3d6da-af63-483d-a75f-9c8acf8de332(jetbrains.mps.console.devkit)" />
@@ -33,11 +33,11 @@
                   <concept id="757553790980850366" name="jetbrains.mps.console.base.structure.History" flags="ng" index="3balQm" />
                 </language>
               </registry>
-              <node concept="aymSD" id="1kucCyhgv9L">
-                <node concept="3balQm" id="1kucCyhgv9M" role="aymYE" />
-                <node concept="2Clz$F" id="1kucCyhgv9N" role="aymYO" />
-                <node concept="2_V_lH" id="1kucCyhgv9O" role="1PhJh3">
-                  <ref role="2_V_lI" node="1kucCyhgv9N" resolve="CommandHolder" />
+              <node concept="aymSD" id="2DpLRo7WXsl">
+                <node concept="3balQm" id="2DpLRo7WXsm" role="aymYE" />
+                <node concept="2Clz$F" id="2DpLRo7WXsn" role="aymYO" />
+                <node concept="2_V_lH" id="2DpLRo7WXso" role="1PhJh3">
+                  <ref role="2_V_lI" node="2DpLRo7WXsn" resolve="CommandHolder" />
                 </node>
               </node>
             </model>
@@ -87,26 +87,6 @@
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectPluginManager">
     <option name="pluginsState">
-      <option name="jetbrains.mps.baseLanguage.lightweightdsl.pluginSolution.plugin.PluginSolution_ProjectPlugin">
-        <value>
-          <PluginState />
-        </value>
-      </option>
-      <option name="jetbrains.mps.editor.contextActionsTool.pluginSolution.plugin.PluginSolution_ProjectPlugin">
-        <value>
-          <PluginState />
-        </value>
-      </option>
-      <option name="jetbrains.mps.execution.configurations.implementation.plugin.plugin.Plugin_ProjectPlugin">
-        <value>
-          <PluginState />
-        </value>
-      </option>
-      <option name="jetbrains.mps.execution.configurations.pluginSolution.plugin.PluginSolution_ProjectPlugin">
-        <value>
-          <PluginState />
-        </value>
-      </option>
       <option name="jetbrains.mps.ide.actions.Ide_ProjectPlugin">
         <value>
           <PluginState>
@@ -125,36 +105,24 @@
           </PluginState>
         </value>
       </option>
-      <option name="jetbrains.mps.ide.devkit.actions.Mpsdevkit_ProjectPlugin">
-        <value>
-          <PluginState />
-        </value>
-      </option>
-      <option name="jetbrains.mps.ide.devkit.editor.Editor_ProjectPlugin">
-        <value>
-          <PluginState />
-        </value>
-      </option>
-      <option name="jetbrains.mps.ide.make.actions.Make_ProjectPlugin">
-        <value>
-          <PluginState />
-        </value>
-      </option>
-      <option name="jetbrains.mps.lang.editor.tooltips.runtime.plugin.Runtime_ProjectPlugin">
-        <value>
-          <PluginState />
-        </value>
-      </option>
-      <option name="jetbrains.mps.migration.workbench.plugin.Workbench_ProjectPlugin">
-        <value>
-          <PluginState />
-        </value>
-      </option>
     </option>
   </component>
   <component name="ProjectView">
-    <navigator proportions="" version="1" />
-    <panes />
+    <navigator currentView="ProjectPane" proportions="" version="1" />
+    <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <SELECTED>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="bitcoin" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+          </SELECTED>
+        </subPane>
+      </pane>
+      <pane id="FileSystem" />
+      <pane id="Scope" />
+    </panes>
   </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -332,7 +300,14 @@
       <option name="project" value="LOCAL" />
       <updated>1633258632944</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="new">
+      <created>1634747620319</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1634747620319</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="UsagesViewTool">
