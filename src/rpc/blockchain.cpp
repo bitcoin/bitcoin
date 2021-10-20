@@ -229,6 +229,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
                 TxToUniv(*tx, uint256(), objTx, true, RPCSerializationFlags(), txundo, verbosity);
                 txs.push_back(objTx);
             }
+            break;
     }
 
     result.pushKV("tx", txs);
