@@ -85,7 +85,7 @@ task:
   env:
     PATH: 'C:\jom;C:\Python39;C:\Python39\Scripts;C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin;%PATH%'
     PYTHONUTF8: 1
-    VCPKG_TAG: '2021.05.12'
+    CI_VCPKG_TAG: '2021.05.12'
     QT_DOWNLOAD_URL: 'https://download.qt.io/official_releases/qt/5.12/5.12.11/single/qt-everywhere-src-5.12.11.zip'
     QT_LOCAL_PATH: 'C:\qt-everywhere-src-5.12.11.zip'
     QT_SOURCE_DIR: 'C:\qt-everywhere-src-5.12.11'
@@ -120,7 +120,7 @@ task:
       - ..\configure -release -silent -opensource -confirm-license -opengl desktop -no-shared -static -static-runtime -mp -qt-zlib -qt-pcre -qt-libpng -no-libjpeg -nomake examples -nomake tests -nomake tools -no-dbus -no-libudev -no-icu -no-gtk -no-opengles3 -no-angle -no-sql-sqlite -no-sql-odbc -no-sqlite -no-libudev -no-vulkan -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcanvas3d -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdeclarative -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquickcontrols -skip qtquickcontrols2 -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebsockets -skip qtwebview -skip qtx11extras -skip qtxmlpatterns -no-openssl -no-feature-sql -no-feature-sqlmodel -prefix %QTBASEDIR%
       - jom
       - jom install
-  vcpkg_cache:
+  vcpkg_binary_cache:
     folder: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
   install_python_script:
     - choco install --yes --no-progress python3 --version=3.9.6
@@ -130,7 +130,7 @@ task:
     - cd ..
     - git clone --quiet https://github.com/microsoft/vcpkg.git
     - cd vcpkg
-    - git -c advice.detachedHead=false checkout %VCPKG_TAG%
+    - git -c advice.detachedHead=false checkout %CI_VCPKG_TAG%
     - .\bootstrap-vcpkg -disableMetrics
     - echo set(VCPKG_BUILD_TYPE release) >> triplets\x64-windows-static.cmake
     - .\vcpkg integrate install
