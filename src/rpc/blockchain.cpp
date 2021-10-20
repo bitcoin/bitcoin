@@ -840,9 +840,10 @@ static RPCHelpMan getblockheader()
                 {
                     {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
                     {"verbose", RPCArg::Type::BOOL, RPCArg::Default{true}, "true for a json object, false for the hex-encoded data"},
+                    {"count", RPCArg::Type::NUM, RPCArg::Default{0}, "Number of headers to retrieve (backwards including blockhash), stops at genesis. If 0, one header will be returned not in an array. Max Value = 2000."},
                 },
                 {
-                    RPCResult{"for verbose = true",
+                    RPCResult{"for verbose = true, count = 0",
                         RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::STR_HEX, "hash", "the block hash (same as provided)"},
@@ -860,9 +861,35 @@ static RPCHelpMan getblockheader()
                             {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
                             {RPCResult::Type::STR_HEX, "previousblockhash", /* optional */ true, "The hash of the previous block (if available)"},
                             {RPCResult::Type::STR_HEX, "nextblockhash", /* optional */ true, "The hash of the next block (if available)"},
-                        }},
-                    RPCResult{"for verbose=false",
+                        }
+                    },
+                    RPCResult{"for verbose=false, count = 0",
                         RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for block 'hash'"},
+                    RPCResult{"for verbose = true, count > 0",
+                        RPCResult::Type::ARR, "", "",
+                        {
+                            RPCResult{RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::STR_HEX, "hash", "the block hash (same as provided)"},
+                                {RPCResult::Type::NUM, "confirmations", "The number of confirmations, or -1 if the block is not on the main chain"},
+                                {RPCResult::Type::NUM, "height", "The block height or index"},
+                                {RPCResult::Type::NUM, "version", "The block version"},
+                                {RPCResult::Type::STR_HEX, "versionHex", "The block version formatted in hexadecimal"},
+                                {RPCResult::Type::STR_HEX, "merkleroot", "The merkle root"},
+                                {RPCResult::Type::NUM_TIME, "time", "The block time expressed in " + UNIX_EPOCH_TIME},
+                                {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
+                                {RPCResult::Type::NUM, "nonce", "The nonce"},
+                                {RPCResult::Type::STR_HEX, "bits", "The bits"},
+                                {RPCResult::Type::NUM, "difficulty", "The difficulty"},
+                                {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the current chain"},
+                                {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
+                                {RPCResult::Type::STR_HEX, "previousblockhash", /* optional */ true, "The hash of the previous block (if available)"},
+                                {RPCResult::Type::STR_HEX, "nextblockhash", /* optional */ true, "The hash of the next block (if available)"},
+                            }}
+                        },
+                    },
+                    RPCResult{"for verbose=false, count > 0",
+                         RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for blocks 'hash' and count prior"},
                 },
                 RPCExamples{
                     HelpExampleCli("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
@@ -875,6 +902,14 @@ static RPCHelpMan getblockheader()
     bool fVerbose = true;
     if (!request.params[1].isNull())
         fVerbose = request.params[1].get_bool();
+
+    int count = 0;
+    if (!request.params[2].isNull())
+        count = request.params[2].get_int();
+    if (count < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Count must be >= 0");
+    if (count > 2000)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Count must be <= 2000");
 
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
@@ -889,15 +924,33 @@ static RPCHelpMan getblockheader()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
 
-    if (!fVerbose)
-    {
-        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
-        ssBlock << pblockindex->GetBlockHeader();
-        std::string strHex = HexStr(ssBlock);
-        return strHex;
+    if (count == 0) {
+        if (!fVerbose)
+        {
+            CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+            ssBlock << pblockindex->GetBlockHeader();
+            std::string strHex = HexStr(ssBlock);
+            return strHex;
+        } else {
+            return blockheaderToJSON(tip, pblockindex);
+        }
+    } else {
+        if (!fVerbose) {
+            CDataStream ssBlocks(SER_NETWORK, PROTOCOL_VERSION);
+            for (int i = 0; i < count && pblockindex != nullptr; ++i, pblockindex = pblockindex->pprev) {
+                ssBlocks << pblockindex->GetBlockHeader();
+            }
+            std::string strHex = HexStr(ssBlocks);
+            return strHex;
+        } else {
+            UniValue res(UniValue::VARR);
+            for (int i = 0; i < count && pblockindex != nullptr; ++i, pblockindex = pblockindex->pprev){
+                res.push_back(blockheaderToJSON(tip, pblockindex));
+            }
+            return res;
+        }
     }
 
-    return blockheaderToJSON(tip, pblockindex);
 },
     };
 }
