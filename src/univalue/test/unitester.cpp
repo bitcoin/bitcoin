@@ -1,6 +1,6 @@
 // Copyright 2014 BitPay Inc.
 // Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://opensource.org/licenses/mit-license.php.
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -58,7 +58,7 @@ static void runtest_file(const char *filename_)
         std::string basename(filename_);
         std::string filename = srcdir + "/" + basename;
         FILE *f = fopen(filename.c_str(), "r");
-        assert(f != NULL);
+        assert(f != nullptr);
 
         std::string jdata;
 

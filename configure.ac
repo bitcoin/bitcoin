@@ -261,12 +261,6 @@ if test "x$use_asm" = xyes; then
   AC_DEFINE(USE_ASM, 1, [Define this symbol to build in assembly routines])
 fi
 
-AC_ARG_WITH([system-univalue],
-  [AS_HELP_STRING([--with-system-univalue],
-  [Build with system UniValue (default is no)])],
-  [system_univalue=$withval],
-  [system_univalue=no]
-)
 AC_ARG_ENABLE([zmq],
   [AS_HELP_STRING([--disable-zmq],
   [disable ZMQ notifications])],
@@ -1542,34 +1536,6 @@ if test "x$use_zmq" = xyes; then
   esac
 fi
 
-dnl univalue check
-
-need_bundled_univalue=yes
-if test x$build_syscoin_wallet$build_syscoin_cli$build_syscoin_tx$build_syscoin_util$build_syscoind$syscoin_enable_qt$use_tests$use_bench = xnononononononono; then
-  need_bundled_univalue=no
-else
-  if test x$system_univalue != xno; then
-    PKG_CHECK_MODULES([UNIVALUE], [libunivalue >= 1.0.4], [found_univalue=yes], [found_univalue=no])
-    if test x$found_univalue = xyes; then
-      system_univalue=yes
-      need_bundled_univalue=no
-    elif test x$system_univalue = xyes; then
-      AC_MSG_ERROR([univalue not found])
-    else
-      system_univalue=no
-    fi
-  fi
-
-  if test x$need_bundled_univalue = xyes; then
-    UNIVALUE_CFLAGS='-I$(srcdir)/univalue/include'
-    UNIVALUE_LIBS='univalue/libunivalue.la'
-  fi
-fi
-
-AM_CONDITIONAL([EMBEDDED_UNIVALUE],[test x$need_bundled_univalue = xyes])
-AC_SUBST(UNIVALUE_CFLAGS)
-AC_SUBST(UNIVALUE_LIBS)
-
 dnl chiabls check
 
 AC_CHECK_LIB([bls-dash],[main],[need_bundled_chiabls=no;],[need_bundled_chiabls=yes;])
@@ -1959,10 +1925,6 @@ dnl check if libgmp is present
 AC_CHECK_HEADER([gmp.h],, AC_MSG_ERROR(libgmp headers missing))
 AC_CHECK_LIB([gmp],  [__gmpz_init],GMP_LIBS=-lgmp, AC_MSG_ERROR(libgmp3-dev missing))
 AC_SUBST(GMP_LIBS)
-
-if test x$need_bundled_univalue = xyes; then
-  AC_CONFIG_SUBDIRS([src/univalue])
-fi
 
 if test x$need_bundled_chiabls = xyes; then
   AC_CONFIG_SUBDIRS([src/bls-dash/build])

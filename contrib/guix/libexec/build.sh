@@ -303,7 +303,7 @@ mkdir -p "$DISTSRC"
                     ${HOST_CXXFLAGS:+CXXFLAGS="${HOST_CXXFLAGS}"} \
                     ${HOST_LDFLAGS:+LDFLAGS="${HOST_LDFLAGS}"}
 
-    sed -i.old 's/-lstdc++ //g' config.status libtool src/univalue/config.status src/univalue/libtool
+    sed -i.old 's/-lstdc++ //g' config.status libtool
 
     # Build Syscoin Core
     # Sycoin: add '-O --no-print-directory' (see Depends Building)
