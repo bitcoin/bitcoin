@@ -1535,10 +1535,10 @@ dnl libmultiprocess library check
 
 libmultiprocess_found=no
 if test "$with_libmultiprocess" = "yes" || test "$with_libmultiprocess" = "auto"; then
-  m4_ifdef([PKG_CHECK_MODULES], [PKG_CHECK_MODULES([LIBMULTIPROCESS], [libmultiprocess], [
+  PKG_CHECK_MODULES([LIBMULTIPROCESS], [libmultiprocess], [
      libmultiprocess_found=yes;
      libmultiprocess_prefix=`$PKG_CONFIG --variable=prefix libmultiprocess`;
-  ], [true])])
+  ], [true])
 elif test "$with_libmultiprocess" != "no"; then
   AC_MSG_ERROR([--with-libmultiprocess=$with_libmultiprocess value is not yes, auto, or no])
 fi
