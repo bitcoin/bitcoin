@@ -321,7 +321,7 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain() const
 
     {
         // Skip the queue-draining stuff if we know we're caught up with
-        // ::ChainActive().Tip().
+        // m_chain.Tip().
         LOCK(cs_main);
         const CBlockIndex* chain_tip = m_chainstate->m_chain.Tip();
         const CBlockIndex* best_block_index = m_best_block_index.load();
