@@ -219,7 +219,7 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp)
     // If there are relative lock times then the maxInputBlock will be set
     // If there are no relative lock times, the LockPoints don't depend on the chain
     if (lp->maxInputBlock) {
-        // Check whether ::ChainActive() is an extension of the block at which the LockPoints
+        // Check whether active_chain is an extension of the block at which the LockPoints
         // calculation was valid.  If not LockPoints are no longer valid
         if (!active_chain.Contains(lp->maxInputBlock)) {
             return false;

@@ -542,7 +542,7 @@ public:
      * By design, it is guaranteed that:
      *
      * 1. Locking both `cs_main` and `mempool.cs` will give a view of mempool
-     *    that is consistent with current chain tip (`::ChainActive()` and
+     *    that is consistent with current chain tip (`ActiveChain()` and
      *    `CoinsTip()`) and is fully populated. Fully populated means that if the
      *    current active chain is missing transactions that were present in a
      *    previously active chain, all the missing transactions will have been
