@@ -539,7 +539,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(json1["vin"][0]["sequence"], 4294967295)
 
         if self.is_wallet_compiled():
-            self.init_wallet(0)
+            self.init_wallet(node=0)
             rawtx2 = self.nodes[0].createrawtransaction([], outs)
             frawtx2a = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": True})
             frawtx2b = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": False})

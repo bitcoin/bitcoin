@@ -185,7 +185,7 @@ class WalletTaprootTest(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
-    def init_wallet(self, i):
+    def init_wallet(self, *, node):
         pass
 
     @staticmethod

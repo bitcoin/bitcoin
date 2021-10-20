@@ -90,7 +90,7 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
         self.test_validateaddress()
 
         if self.is_wallet_compiled():
-            self.init_wallet(0)
+            self.init_wallet(node=0)
             self.test_getaddressinfo()
 
 
