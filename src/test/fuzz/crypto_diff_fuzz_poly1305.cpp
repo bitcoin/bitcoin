@@ -22,7 +22,11 @@ static INLINE void fU32TO8_LE_FAST(uint8_t* p, const uint32_t v) { *(uint32_t*)p
 #define U8TO32_LE(p) fU8TO32_LE_FAST(p)
 #define U32TO8_LE(p, v) fU32TO8_LE_FAST(p, v)
 
-void poly1305_auth(unsigned char out[16], const unsigned char* m, size_t inlen, const unsigned char key[32])
+/*
+Same function name in both bitcoin core implementation and floodyberry's implementation
+So changing the function name "poly1305_auth" to "poly1305_auth_floodyberry" in reference implementation
+*/
+void poly1305_auth_floodyberry(unsigned char out[16], const unsigned char* m, size_t inlen, const unsigned char key[32])
 {
     uint32_t t0, t1, t2, t3;
     uint32_t h0, h1, h2, h3, h4;
