@@ -975,15 +975,19 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
             storedAssetRef.nUpdateMask |= ASSET_UPDATE_SUPPLY;
             // this can go negative, inputing an asset without change and not issuing the equivalent will effectively "burn" out of existence but also reduce the supply so it can issue more in the future
             // for this you can issue an assetSend inputing assets from user wishing to burn, as well as zero val input of asset from owner and no output
+            const CAmount &nTotal = outAmount - inAmount;
+            if (nTotal < -MAX_ASSET || nTotal > MAX_ASSET) {
+                return FormatSyscoinErrorMessage(state, "asset-supply-outofrange", bSanityCheck);
+            }
             if(nHeight > nLastKnownHeightOnStart) {
-                const CAmount &nTotal = outAmount - inAmount;
                 storedAssetRef.nTotalSupply += nTotal;
-                if (nTotal < -MAX_ASSET || nTotal > MAX_ASSET || !MoneyRangeAsset(storedAssetRef.nTotalSupply)) {
-                    return FormatSyscoinErrorMessage(state, "asset-supply-outofrange", bSanityCheck);
-                }
-                if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply) {
+                if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply || !MoneyRangeAsset(storedAssetRef.nTotalSupply)) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
                 }  
+            } else {
+                if ((storedAssetRef.nTotalSupply + nTotal) > storedAssetRef.nMaxSupply || !MoneyRangeAsset(storedAssetRef.nTotalSupply + nTotal)) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
+                }
             }
         }         
         break;  

@@ -150,7 +150,6 @@ class AssetTest(SyscoinTestFramework):
         self.generate(self.nodes[1], 1)
         self.sync_blocks()
         res = self.nodes[1].assetsendmany(asset,[])
-        self.log.info('decoded {}'.format(self.nodes[1].getrawtransaction(res['txid'], True)))
         self.generate(self.nodes[1], 1)
         self.sync_blocks()
         assetInfo = self.nodes[0].assetinfo(asset)
@@ -227,7 +226,7 @@ class AssetTest(SyscoinTestFramework):
         assert_equal(assetInfo['asset_guid'], asset)
         assert_equal(assetInfo['total_supply'], maxUint)
         assert_equal(assetInfo['max_supply'], maxUint)
-        assert_raises_rpc_error(-4, 'asset-supply-outofrange', self.nodes[0].assetsend, asset, self.nodes[0].getnewaddress(), 1)
+        assert_raises_rpc_error(-4, 'asset-invalid-supply', self.nodes[0].assetsend, asset, self.nodes[0].getnewaddress(), 1)
         assert_raises_rpc_error(-4, 'asset-invalid-maxsupply', self.nodes[0].assetnew, '1', 'TST', gooddata, '0x', 0, maxUint+1, 127, '', {}, {})
 
     def asset_transfer(self):
