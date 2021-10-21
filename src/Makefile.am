@@ -1051,11 +1051,8 @@ nodist_libsyscoin_ipc_a_SOURCES = $(libsyscoin_ipc_mpgen_output)
 CLEANFILES += $(libsyscoin_ipc_mpgen_output)
 endif
 
-if EMBEDDED_LEVELDB
 include Makefile.crc32c.include
 include Makefile.leveldb.include
-endif
-
 include Makefile.test_util.include
 include Makefile.test_fuzz.include
 
