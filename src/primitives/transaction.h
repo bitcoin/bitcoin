@@ -947,7 +947,7 @@ public:
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-    // set precision to an invalid amount so isnull will identity this asset as invalid state
+    // set precision to an invalid amount so isnull will identify this asset as invalid state
     inline void SetNull() { ClearAsset(); nPrecision = 9; }
     inline bool IsNull() const { return nPrecision == 9; }
     bool UnserializeFromTx(const CTransaction &tx);

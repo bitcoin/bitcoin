@@ -632,13 +632,23 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                 mapAsset->second.second = std::move(theAsset);      
         }
         else{
-            if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE && nHeight > nLastKnownHeightOnStart) {
-                return FormatSyscoinErrorMessage(state, "asset-already-existing1", bSanityCheck);
+            if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+                if(nHeight <= nLastKnownHeightOnStart) {
+                    dbAsset.SetNull();
+                }
+                else {
+                    return FormatSyscoinErrorMessage(state, "asset-already-existing1", bSanityCheck);
+                }
             }
             mapAsset->second.second = std::move(dbAsset);      
         }
-    } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE && !mapAsset->second.second.IsNull() && nHeight > nLastKnownHeightOnStart) {
-        return FormatSyscoinErrorMessage(state, "asset-already-existing", bSanityCheck);
+    } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE && !mapAsset->second.second.IsNull()) {
+        if(nHeight <= nLastKnownHeightOnStart) {
+            mapAsset->second.second.SetNull();
+        } 
+        else {
+            return FormatSyscoinErrorMessage(state, "asset-already-existing", bSanityCheck);
+        }
     }
     CAsset &storedAssetRef = mapAsset->second.second; 
     switch (tx.nVersion) {
@@ -791,14 +801,14 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                 return FormatSyscoinErrorMessage(state, "asset-invalid-mask", bSanityCheck);
             }
             if(theAsset.nUpdateMask & ASSET_UPDATE_DATA) {
-                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_DATA)) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_DATA) && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-pubdata-privileges", bSanityCheck);
                 }
                 if (theAsset.strPubData.size() > MAX_VALUE_LENGTH) {
                     return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bSanityCheck);
                 } 
                 // ensure prevdata is set to what db is now to be able to undo in disconnectblock
-                if(theAsset.strPrevPubData != storedAssetRef.strPubData) {
+                if(theAsset.strPrevPubData != storedAssetRef.strPubData && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevdata", bSanityCheck);
                 }
                 // replace db data with new data
@@ -815,13 +825,13 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
             }
                                         
             if(theAsset.nUpdateMask & ASSET_UPDATE_CONTRACT) {
-                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_CONTRACT)) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_CONTRACT) && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-contract-privileges", bSanityCheck);
                 }
                 if (!theAsset.vchContract.empty() && theAsset.vchContract.size() != MAX_GUID_LENGTH) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
                 }
-                if(theAsset.vchPrevContract != storedAssetRef.vchContract) {
+                if(theAsset.vchPrevContract != storedAssetRef.vchContract && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
                 }
                 storedAssetRef.vchContract = std::move(theAsset.vchContract);
@@ -837,13 +847,13 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
             }
 
             if(theAsset.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
-                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_NOTARY_KEY)) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_NOTARY_KEY) && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-notary-key-privileges", bSanityCheck);
                 }
                 if (!theAsset.vchNotaryKeyID.empty() && theAsset.vchNotaryKeyID.size() != MAX_GUID_LENGTH) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-notary-key", bSanityCheck);
                 }  
-                if(theAsset.vchPrevNotaryKeyID != storedAssetRef.vchNotaryKeyID) {
+                if(theAsset.vchPrevNotaryKeyID != storedAssetRef.vchNotaryKeyID && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevnotary-key", bSanityCheck);
                 }
                 storedAssetRef.vchNotaryKeyID = std::move(theAsset.vchNotaryKeyID);
@@ -859,13 +869,13 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
             }
 
             if(theAsset.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
-                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_NOTARY_DETAILS)) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_NOTARY_DETAILS) && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-notary-privileges", bSanityCheck);
                 }
                 if (theAsset.notaryDetails.strEndPoint.size() > MAX_VALUE_LENGTH) {
                     return FormatSyscoinErrorMessage(state, "asset-notary-too-big", bSanityCheck);
                 }
-                if(theAsset.prevNotaryDetails != storedAssetRef.notaryDetails) {
+                if(theAsset.prevNotaryDetails != storedAssetRef.notaryDetails && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevnotary", bSanityCheck);
                 }
                 storedAssetRef.notaryDetails = std::move(theAsset.notaryDetails);
@@ -881,7 +891,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
             }
 
             if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE) {
-                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_AUXFEE)) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_AUXFEE) && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-auxfee-key-privileges", bSanityCheck);
                 }
                 if(!theAsset.auxFeeDetails.vchAuxFeeKeyID.empty() && theAsset.auxFeeDetails.vchAuxFeeKeyID.size() != MAX_GUID_LENGTH) {
@@ -890,7 +900,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                 if (theAsset.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES) {
                     return FormatSyscoinErrorMessage(state, "asset-auxfees-too-big", bSanityCheck);
                 }
-                if(theAsset.prevAuxFeeDetails != storedAssetRef.auxFeeDetails) {
+                if(theAsset.prevAuxFeeDetails != storedAssetRef.auxFeeDetails && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevauxfees", bSanityCheck);
                 }
                 storedAssetRef.auxFeeDetails = std::move(theAsset.auxFeeDetails);
@@ -907,10 +917,10 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
             }
 
             if(theAsset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
-                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_CAPABILITYFLAGS)) {
+                if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_CAPABILITYFLAGS) && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-flags-privileges", bSanityCheck);
                 }
-                if(theAsset.nPrevUpdateCapabilityFlags != storedAssetRef.nUpdateCapabilityFlags) {
+                if(theAsset.nPrevUpdateCapabilityFlags != storedAssetRef.nUpdateCapabilityFlags && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
                 }
                 if(theAsset.nUpdateCapabilityFlags > ASSET_CAPABILITY_ALL) {
@@ -936,7 +946,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
             if (!itIn->second.bZeroVal) {
                 return FormatSyscoinErrorMessage(state, "asset-input-zeroval", bSanityCheck);
             }
-            if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_SUPPLY)) {
+            if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_SUPPLY) && nHeight > nLastKnownHeightOnStart) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-supply-privileges", bSanityCheck);
             }
             // get all output assets and get base ID and whichever ones match nBaseAsset should be added to input map
@@ -965,14 +975,16 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
             storedAssetRef.nUpdateMask |= ASSET_UPDATE_SUPPLY;
             // this can go negative, inputing an asset without change and not issuing the equivalent will effectively "burn" out of existence but also reduce the supply so it can issue more in the future
             // for this you can issue an assetSend inputing assets from user wishing to burn, as well as zero val input of asset from owner and no output
-            const CAmount &nTotal = outAmount - inAmount;
-            storedAssetRef.nTotalSupply += nTotal;
-            if (nTotal < -MAX_ASSET || nTotal > MAX_ASSET || !MoneyRangeAsset(storedAssetRef.nTotalSupply)) {
-                return FormatSyscoinErrorMessage(state, "asset-supply-outofrange", bSanityCheck);
+            if(nHeight > nLastKnownHeightOnStart) {
+                const CAmount &nTotal = outAmount - inAmount;
+                storedAssetRef.nTotalSupply += nTotal;
+                if (nTotal < -MAX_ASSET || nTotal > MAX_ASSET || !MoneyRangeAsset(storedAssetRef.nTotalSupply)) {
+                    return FormatSyscoinErrorMessage(state, "asset-supply-outofrange", bSanityCheck);
+                }
+                if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
+                }  
             }
-            if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
-            }  
         }         
         break;  
         default:
