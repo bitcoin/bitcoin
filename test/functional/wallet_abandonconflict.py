@@ -213,7 +213,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         #assert_equal(newbalance, balance - Decimal("10"))
         self.log.info("If balance has not declined after invalidateblock then out of mempool wallet tx which is no longer")
         self.log.info("conflicted has not resumed causing its inputs to be seen as spent.  See Issue #7315")
-        self.log.info(str(balance) + " -> " + str(newbalance) + " ?")
+        assert_equal(balance, newbalance)
 
 
 if __name__ == '__main__':
