@@ -337,6 +337,8 @@ bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(const std::string &commMessag
 }
 bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nSYSBlockHash)
 {
+    // clear state so subsequent calls can rely on new state being set if error
+    state = BlockValidationState();
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;
