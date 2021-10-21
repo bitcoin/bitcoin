@@ -1170,19 +1170,6 @@ void InitParameterInteraction()
     if (gArgs.IsArgSet("-masternodeblsprivkey") && gArgs.SoftSetBoolArg("-disablewallet", true)) {
         LogPrintf("%s: parameter interaction: -masternodeblsprivkey set -> setting -disablewallet=1\n", __func__);
     }
-
-    // Warn if network-specific options (-addnode, -connect, etc) are
-    // specified in default section of config file, but not overridden
-    // on the command line or in this network's section of the config file.
-    std::string network = gArgs.GetChainName();
-    for (const auto& arg : gArgs.GetUnsuitableSectionOnlyArgs()) {
-        InitWarning(strprintf(_("Config setting for %s only applied on %s network when in [%s] section."), arg, network, network));
-    }
-
-    // Warn if unrecognized section name are present in the config file.
-    for (const auto& section : gArgs.GetUnrecognizedSections()) {
-        InitWarning(strprintf(_("Section [%s] is not recognized."), section));
-    }
 }
 
 static std::string ResolveErrMsg(const char * const optname, const std::string& strBind)
@@ -1296,6 +1283,19 @@ bool AppInitParameterInteraction()
     // ********************************************************* Step 2: parameter interactions
 
     // also see: InitParameterInteraction()
+
+    // Warn if network-specific options (-addnode, -connect, etc) are
+    // specified in default section of config file, but not overridden
+    // on the command line or in this network's section of the config file.
+    std::string network = gArgs.GetChainName();
+    for (const auto& arg : gArgs.GetUnsuitableSectionOnlyArgs()) {
+        return InitError(strprintf(_("Config setting for %s only applied on %s network when in [%s] section."), arg, network, network));
+    }
+
+    // Warn if unrecognized section name are present in the config file.
+    for (const auto& section : gArgs.GetUnrecognizedSections()) {
+        InitWarning(strprintf("%s:%i " + _("Section [%s] is not recognized."), section.m_file, section.m_line, section.m_name));
+    }
 
     if (!fs::is_directory(GetBlocksDir())) {
         return InitError(strprintf(_("Specified blocks directory \"%s\" does not exist."), gArgs.GetArg("-blocksdir", "").c_str()));
