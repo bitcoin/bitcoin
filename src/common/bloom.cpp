@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bloom.h>
+#include <common/bloom.h>
 
 #include <hash.h>
 #include <primitives/transaction.h>
@@ -82,7 +82,7 @@ bool CBloomFilter::contains(const COutPoint& outpoint) const
 {
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << outpoint;
-    return contains(MakeUCharSpan(stream));
+    return contains(stream);
 }
 
 bool CBloomFilter::IsWithinSizeConstraints() const

@@ -4,7 +4,7 @@
 
 
 #include <bench/bench.h>
-#include <bloom.h>
+#include <common/bloom.h>
 
 static void RollingBloom(benchmark::Bench& bench)
 {
