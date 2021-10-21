@@ -170,6 +170,10 @@ if USE_BDB
 BITCOIN_TESTS += wallet/test/db_tests.cpp
 endif
 
+if USE_SQLITE
+FUZZ_WALLET_SRC = \
+ wallet/test/fuzz/notifications.cpp
+endif # USE_SQLITE
 
 BITCOIN_TEST_SUITE += \
   wallet/test/util.cpp \
@@ -178,7 +182,7 @@ BITCOIN_TEST_SUITE += \
   wallet/test/wallet_test_fixture.h \
   wallet/test/init_test_fixture.cpp \
   wallet/test/init_test_fixture.h
-endif
+endif # ENABLE_WALLET
 
 test_test_bitcoin_SOURCES = $(BITCOIN_TEST_SUITE) $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 test_test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS)
@@ -205,6 +209,7 @@ test_fuzz_fuzz_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_fuzz_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_fuzz_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS) $(RUNTIME_LDFLAGS)
 test_fuzz_fuzz_SOURCES = \
+ $(FUZZ_WALLET_SRC) \
  test/fuzz/addition_overflow.cpp \
  test/fuzz/addrman.cpp \
  test/fuzz/asmap.cpp \

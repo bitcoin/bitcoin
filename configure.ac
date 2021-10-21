@@ -1244,7 +1244,6 @@ if test "x$enable_fuzz" = "xyes"; then
   bitcoin_enable_qt=no
   bitcoin_enable_qt_test=no
   bitcoin_enable_qt_dbus=no
-  enable_wallet=no
   use_bench=no
   use_external_signer=no
   use_upnp=no
