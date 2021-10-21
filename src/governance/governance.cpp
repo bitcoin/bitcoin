@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <governance/governance.h>
-#include <bloom.h>
+#include <common/bloom.h>
 #include <chain.h>
 #include <consensus/validation.h>
 #include <governance/governanceclasses.h>
