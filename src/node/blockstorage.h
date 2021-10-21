@@ -7,11 +7,14 @@
 
 #include <fs.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
+#include <sync.h>
 #include <txdb.h>
 
 #include <atomic>
 #include <cstdint>
 #include <vector>
+
+extern RecursiveMutex cs_main;
 
 class ArgsManager;
 class BlockValidationState;
@@ -146,7 +149,8 @@ public:
     /** Get block file info entry for one block file */
     CBlockFileInfo* GetBlockFileInfo(size_t n);
 
-    bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex* pindex, const CChainParams& chainparams);
+    bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex* pindex, const CChainParams& chainparams)
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp);
 
