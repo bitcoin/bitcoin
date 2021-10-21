@@ -7,8 +7,8 @@
 #define SYSCOIN_NET_H
 
 #include <addrman.h>
-#include <bloom.h>
 #include <chainparams.h>
+#include <common/bloom.h>
 #include <compat.h>
 #include <consensus/amount.h>
 #include <crypto/siphash.h>

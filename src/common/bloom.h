@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_BLOOM_H
-#define SYSCOIN_BLOOM_H
+#ifndef SYSCOIN_COMMON_BLOOM_H
+#define SYSCOIN_COMMON_BLOOM_H
 
 #include <serialize.h>
 #include <span.h>
@@ -130,4 +130,4 @@ private:
     int nHashFuncs;
 };
 
-#endif // SYSCOIN_BLOOM_H
+#endif // SYSCOIN_COMMON_BLOOM_H
