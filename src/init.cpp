@@ -967,7 +967,7 @@ void PeriodicStats()
     assert(gArgs.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE));
     CCoinsStats stats;
     ::ChainstateActive().ForceFlushStateToDisk();
-    if (GetUTXOStats(&::ChainstateActive().CoinsDB(), stats)) {
+    if (WITH_LOCK(cs_main, return GetUTXOStats(&::ChainstateActive().CoinsDB(), stats))) {
         statsClient.gauge("utxoset.tx", stats.nTransactions, 1.0f);
         statsClient.gauge("utxoset.txOutputs", stats.nTransactionOutputs, 1.0f);
         statsClient.gauge("utxoset.dbSizeBytes", stats.nDiskSize, 1.0f);
@@ -1005,7 +1005,7 @@ void PeriodicStats()
     // No need for cs_main, we never use null tip here
     statsClient.gaugeDouble("network.difficulty", (double)GetDifficulty(tip));
 
-    statsClient.gauge("transactions.txCacheSize", ::ChainstateActive().CoinsTip().GetCacheSize(), 1.0f);
+    statsClient.gauge("transactions.txCacheSize", WITH_LOCK(cs_main, return ::ChainstateActive().CoinsTip().GetCacheSize()), 1.0f);
     statsClient.gauge("transactions.totalTransactions", tip->nChainTx, 1.0f);
 
     statsClient.gauge("transactions.mempool.totalTransactions", mempool.size(), 1.0f);
