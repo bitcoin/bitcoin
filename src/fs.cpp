@@ -16,6 +16,7 @@
 #define NOMINMAX
 #endif
 #include <codecvt>
+#include <limits>
 #include <windows.h>
 #endif
 
