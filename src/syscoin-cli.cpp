@@ -551,15 +551,26 @@ public:
         }
 
         // Report peer connection totals by type.
-        result += "        ipv4    ipv6   onion";
-        const bool any_i2p_peers = m_counts.at(2).at(3); // false if total i2p peers count is 0, otherwise true
-        if (any_i2p_peers) result += "     i2p";
+        result += "     ";
+        std::vector<int8_t> reachable_networks;
+        for (const UniValue& network : networkinfo["networks"].getValues()) {
+            if (network["reachable"].get_bool()) {
+                const std::string& network_name{network["name"].get_str()};
+                const int8_t network_id{NetworkStringToId(network_name)};
+                if (network_id == UNKNOWN_NETWORK) continue;
+                result += strprintf("%8s", network_name); // column header
+                reachable_networks.push_back(network_id);
+            }
+        };
         result += "   total   block";
         if (m_manual_peers_count) result += "  manual";
+
         const std::array rows{"in", "out", "total"};
-        for (uint8_t i = 0; i < 3; ++i) {
-            result += strprintf("\n%-5s  %5i   %5i   %5i", rows.at(i), m_counts.at(i).at(0), m_counts.at(i).at(1), m_counts.at(i).at(2)); // ipv4/ipv6/onion peers counts
-            if (any_i2p_peers) result += strprintf("   %5i", m_counts.at(i).at(3)); // i2p peers count
+        for (size_t i = 0; i < rows.size(); ++i) {
+            result += strprintf("\n%-5s", rows[i]); // row header
+            for (int8_t n : reachable_networks) {
+                result += strprintf("%8i", m_counts.at(i).at(n)); // network peers count
+            }
             result += strprintf("   %5i", m_counts.at(i).at(m_networks.size())); // total peers count
             if (i == 1) { // the outbound row has two extra columns for block relay and manual peer counts
                 result += strprintf("   %5i", m_block_relay_peers_count);
