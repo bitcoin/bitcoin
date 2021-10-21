@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BreakpointViewSettings">
+    <option name="myTreeState">
+      <TreeState />
+    </option>
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b47273c-112e-4d2f-b017-b7a1176fe837" name="Default Changelist" comment="new" />
+    <list default="true" id="2b47273c-112e-4d2f-b017-b7a1176fe837" name="Default Changelist" comment="new">
+      <change beforePath="$PROJECT_DIR$/.mps/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.mps/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -13,7 +20,7 @@
         <TabState>
           <option name="title" value="Console" />
           <tab>
-            <model ref="94b5bd97-48f2-4c48-80ec-de9b2ab84d47/r:cba49243-d6eb-43ef-9c7c-1d2ef48045d9(TempModule94b5bd97-48f2-4c48-80ec-de9b2ab84d47/ConsoleModel_2366614504431)">
+            <model ref="ccb7e6fc-95d1-4caf-886a-46031da0fbdb/r:7d7658d1-22bf-4471-8a15-d9ffc43c1e65(TempModuleccb7e6fc-95d1-4caf-886a-46031da0fbdb/ConsoleModel_2154428940708)">
               <persistence version="9" />
               <languages>
                 <devkit ref="70d3d6da-af63-483d-a75f-9c8acf8de332(jetbrains.mps.console.devkit)" />
@@ -33,11 +40,11 @@
                   <concept id="757553790980850366" name="jetbrains.mps.console.base.structure.History" flags="ng" index="3balQm" />
                 </language>
               </registry>
-              <node concept="aymSD" id="2DpLRo7WXsl">
-                <node concept="3balQm" id="2DpLRo7WXsm" role="aymYE" />
-                <node concept="2Clz$F" id="2DpLRo7WXsn" role="aymYO" />
-                <node concept="2_V_lH" id="2DpLRo7WXso" role="1PhJh3">
-                  <ref role="2_V_lI" node="2DpLRo7WXsn" resolve="CommandHolder" />
+              <node concept="aymSD" id="44XcgX7oZ0S">
+                <node concept="3balQm" id="44XcgX7oZ0T" role="aymYE" />
+                <node concept="2Clz$F" id="44XcgX7oZ0U" role="aymYO" />
+                <node concept="2_V_lH" id="44XcgX7oZ0V" role="1PhJh3">
+                  <ref role="2_V_lI" node="44XcgX7oZ0U" resolve="CommandHolder" />
                 </node>
               </node>
             </model>
@@ -108,21 +115,8 @@
     </option>
   </component>
   <component name="ProjectView">
-    <navigator currentView="ProjectPane" proportions="" version="1" />
-    <panes>
-      <pane id="ProjectPane">
-        <subPane>
-          <SELECTED>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="bitcoin" />
-              <option name="myItemType" value="" />
-            </PATH_ELEMENT>
-          </SELECTED>
-        </subPane>
-      </pane>
-      <pane id="FileSystem" />
-      <pane id="Scope" />
-    </panes>
+    <navigator proportions="" version="1" />
+    <panes />
   </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -136,50 +130,6 @@
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RunManager">
-    <configuration name="All Tests in Project" type="JUnit Tests" factoryName="JUnit Tests">
-      <myJUnitSettings>
-        <MyState>
-          <option name="myModelRef" />
-          <option name="myModuleRef" />
-          <option name="myInProcess" value="false" />
-          <option name="myReuseCaches" value="true" />
-          <option name="myOverrideCachesLocation" value="false" />
-          <option name="myDebug" value="false" />
-          <option name="myCachesPath" value="$USER_HOME$/Library/Application Support/JetBrains/MPSJUnitRC0" />
-          <option name="myTestCases">
-            <list />
-          </option>
-          <option name="myTestMethods">
-            <list />
-          </option>
-          <option name="myRunType" value="0" />
-        </MyState>
-      </myJUnitSettings>
-      <myJavaRunParameters>
-        <MyState>
-          <option name="myJavaParameters">
-            <JavaRunParameters>
-              <option name="jrePath" value="" />
-              <option name="programParameters" value="" />
-              <option name="useAlternativeJre" value="false" />
-              <option name="vmOptions" value="-ea" />
-              <option name="workingDirectory" value="/" />
-            </JavaRunParameters>
-          </option>
-        </MyState>
-      </myJavaRunParameters>
-      <myDeploySettings>
-        <MyState>
-          <option name="myPluginsToDeploy">
-            <list />
-          </option>
-        </MyState>
-      </myDeploySettings>
-      <method v="2">
-        <option name="jetbrains.mps.execution.configurations.pluginSolution.plugin.MakeNodePointers_BeforeTask" enabled="true" />
-        <option name="jetbrains.mps.execution.configurations.implementation.plugin.plugin.AssemblePluginsBeforeTask_BeforeTask" enabled="true" />
-      </method>
-    </configuration>
     <configuration default="true" type="JUnit Tests" factoryName="JUnit Tests">
       <myJUnitSettings>
         <MyState>
@@ -307,7 +257,14 @@
       <option name="project" value="LOCAL" />
       <updated>1634747620319</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="new">
+      <created>1634747971410</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1634747971410</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="UsagesViewTool">
