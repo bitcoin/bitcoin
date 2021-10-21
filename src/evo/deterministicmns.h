@@ -6,6 +6,7 @@
 #define BITCOIN_EVO_DETERMINISTICMNS_H
 
 #include <arith_uint256.h>
+#include <crypto/common.h>
 #include <evo/evodb.h>
 #include <evo/providertx.h>
 #include <saltedhasher.h>
@@ -300,10 +301,16 @@ inline void SerReadWrite(Stream& s, immer::map<K, T, Hash, Equal>& obj, CSerActi
 
 class CDeterministicMNList
 {
+private:
+    struct ImmerHasher
+    {
+        size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
+    };
+
 public:
-    using MnMap = immer::map<uint256, CDeterministicMNCPtr>;
+    using MnMap = immer::map<uint256, CDeterministicMNCPtr, ImmerHasher>;
     using MnInternalIdMap = immer::map<uint64_t, uint256>;
-    using MnUniquePropertyMap = immer::map<uint256, std::pair<uint256, uint32_t> >;
+    using MnUniquePropertyMap = immer::map<uint256, std::pair<uint256, uint32_t>, ImmerHasher>;
 
 private:
     uint256 blockHash;

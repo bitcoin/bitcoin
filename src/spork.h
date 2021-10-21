@@ -7,6 +7,7 @@
 
 #include <hash.h>
 #include <net.h>
+#include <saltedhasher.h>
 #include <util/strencodings.h>
 #include <key.h>
 
@@ -162,7 +163,7 @@ private:
     mutable std::unordered_map<const SporkId, bool> mapSporksCachedActive GUARDED_BY(cs);
 
     mutable std::unordered_map<SporkId, int64_t> mapSporksCachedValues GUARDED_BY(cs);
-    std::unordered_map<uint256, CSporkMessage> mapSporksByHash GUARDED_BY(cs);
+    std::unordered_map<uint256, CSporkMessage, StaticSaltedHasher> mapSporksByHash GUARDED_BY(cs);
     std::unordered_map<SporkId, std::map<CKeyID, CSporkMessage> > mapSporksActive GUARDED_BY(cs);
 
     std::set<CKeyID> setSporkPubKeyIDs GUARDED_BY(cs);

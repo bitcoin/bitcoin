@@ -991,7 +991,7 @@ void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<No
 {
     AssertLockHeld(cs);
 
-    std::unordered_map<uint256, CNode*> proTxToNode;
+    std::unordered_map<uint256, CNode*, StaticSaltedHasher> proTxToNode;
     for (const auto& pnode : vNodes) {
         auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
         if (verifiedProRegTxHash.IsNull()) {
