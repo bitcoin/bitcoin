@@ -65,8 +65,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
             value = sent_value
             chain.append(txid)
             # We need the wtxids to check P2P announcements
-            fulltx = self.nodes[0].getrawtransaction(txid)
-            witnesstx = self.nodes[0].decoderawtransaction(fulltx, True)
+            witnesstx = self.nodes[0].gettransaction(txid=txid, verbose=True)['decoded']
             witness_chain.append(witnesstx['hash'])
 
             # Check that listunspent ancestor{count, size, fees} yield the correct results
