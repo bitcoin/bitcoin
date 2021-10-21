@@ -149,7 +149,7 @@ class AssetTest(SyscoinTestFramework):
         self.nodes[1].assetallocationsend(asset, self.nodes[1].getnewaddress(), 1.1)
         self.generate(self.nodes[1], 1)
         self.sync_blocks()
-        res = self.nodes[1].assetsendmany(asset,[])
+        self.nodes[1].assetsendmany(asset,[])
         self.generate(self.nodes[1], 1)
         self.sync_blocks()
         assetInfo = self.nodes[0].assetinfo(asset)
