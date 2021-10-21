@@ -632,23 +632,13 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                 mapAsset->second.second = std::move(theAsset);      
         }
         else{
-            if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-                if(nHeight <= nLastKnownHeightOnStart) {
-                    dbAsset.SetNull();
-                }
-                else {
-                    return FormatSyscoinErrorMessage(state, "asset-already-existing1", bSanityCheck);
-                }
+            if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE && nHeight > nLastKnownHeightOnStart) {
+                return FormatSyscoinErrorMessage(state, "asset-already-existing1", bSanityCheck);
             }
             mapAsset->second.second = std::move(dbAsset);      
         }
-    } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE && !mapAsset->second.second.IsNull()) {
-        if(nHeight <= nLastKnownHeightOnStart) {
-            mapAsset->second.second.SetNull();
-        } 
-        else {
-            return FormatSyscoinErrorMessage(state, "asset-already-existing", bSanityCheck);
-        }
+    } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE && !mapAsset->second.second.IsNull() && nHeight > nLastKnownHeightOnStart) {
+        return FormatSyscoinErrorMessage(state, "asset-already-existing", bSanityCheck);
     }
     CAsset &storedAssetRef = mapAsset->second.second; 
     switch (tx.nVersion) {
@@ -680,10 +670,10 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
             }
             // must be init and cannot update supply (only when doing assetsend)
-            if(!(storedAssetRef.nUpdateMask & ASSET_INIT) || (storedAssetRef.nUpdateMask & ASSET_UPDATE_SUPPLY)) {
+            if((!(storedAssetRef.nUpdateMask & ASSET_INIT) || (storedAssetRef.nUpdateMask & ASSET_UPDATE_SUPPLY)) && nHeight > nLastKnownHeightOnStart) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-mask", bSanityCheck);
             }
-            if(!storedAssetRef.vchPrevContract.empty()) {
+            if(!storedAssetRef.vchPrevContract.empty() && nHeight > nLastKnownHeightOnStart) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prev-contract", bSanityCheck);
             }
             if(storedAssetRef.nUpdateMask & ASSET_UPDATE_CONTRACT) {
@@ -694,7 +684,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                 return FormatSyscoinErrorMessage(state, "asset-empty-contract", bSanityCheck); 
             }
 
-            if(!storedAssetRef.strPrevPubData.empty()) {
+            if(!storedAssetRef.strPrevPubData.empty() && nHeight > nLastKnownHeightOnStart) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prev-pubdata", bSanityCheck);
             }
             if(storedAssetRef.nUpdateMask & ASSET_UPDATE_DATA) {
@@ -708,7 +698,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                 return FormatSyscoinErrorMessage(state, "asset-empty-pubdata", bSanityCheck);
             }
 
-            if(!storedAssetRef.vchPrevNotaryKeyID.empty()) {
+            if(!storedAssetRef.vchPrevNotaryKeyID.empty() && nHeight > nLastKnownHeightOnStart) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prev-notary-key", bSanityCheck);
             }
             if(storedAssetRef.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
@@ -719,7 +709,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                 return FormatSyscoinErrorMessage(state, "asset-empty-notary-key", bSanityCheck);
             }
 
-            if(!storedAssetRef.prevNotaryDetails.IsNull()) {
+            if(!storedAssetRef.prevNotaryDetails.IsNull() && nHeight > nLastKnownHeightOnStart) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prev-notary", bSanityCheck);
             }
             if(storedAssetRef.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
@@ -733,7 +723,7 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                 return FormatSyscoinErrorMessage(state, "asset-empty-notary", bSanityCheck);
             }
 
-            if(!storedAssetRef.prevAuxFeeDetails.IsNull()) {
+            if(!storedAssetRef.prevAuxFeeDetails.IsNull() && nHeight > nLastKnownHeightOnStart) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prev-auxfee", bSanityCheck);
             }
             if(storedAssetRef.nUpdateMask & ASSET_UPDATE_AUXFEE) {
