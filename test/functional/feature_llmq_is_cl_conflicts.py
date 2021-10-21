@@ -13,13 +13,12 @@ Checks conflict handling between ChainLocks and InstantSend
 from codecs import encode
 from decimal import Decimal
 import struct
-import time
 
 from test_framework.blocktools import get_masternode_payment, create_coinbase, create_block
 from test_framework.messages import CCbTx, CInv, COIN, CTransaction, FromHex, hash256, msg_clsig, msg_inv, ser_string, ToHex, uint256_from_str, uint256_to_string
 from test_framework.mininode import P2PInterface
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes, get_bip9_status
+from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes, get_bip9_status, wait_until
 
 
 class TestP2PConn(P2PInterface):
@@ -115,6 +114,8 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         if mine_confllicting:
             islock_tip = self.nodes[0].generate(1)[-1]
+            # Make sure we won't sent clsig too early
+            self.sync_blocks()
 
         self.test_node.send_clsig(cl)
 
@@ -203,8 +204,11 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         # Create an ISLOCK but don't broadcast it yet
         islock = self.create_islock(rawtx2, deterministic)
 
+        # Ensure spork uniqueness in multiple function runs
+        self.bump_mocktime(1)
         # Disable ChainLocks to avoid accidental locking
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
+        self.wait_for_sporks_same()
 
         # Send tx1, which will later conflict with the ISLOCK
         self.nodes[0].sendrawtransaction(rawtx1)
@@ -231,22 +235,18 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         # Send the ISLOCK, which should result in the last 2 blocks to be invalidated, even though the nodes don't know
         # the locked transaction yet
         self.test_node.send_islock(islock, deterministic)
-        time.sleep(5)
-
-        assert self.nodes[0].getbestblockhash() == good_tip
-        assert self.nodes[1].getbestblockhash() == good_tip
+        for node in self.nodes:
+            wait_until(lambda: node.getbestblockhash() == good_tip, timeout=10, sleep=0.5)
 
         # Send the actual transaction and mine it
         self.nodes[0].sendrawtransaction(rawtx2)
-        self.nodes[0].generate(1)
+        islock_tip = self.nodes[0].generate(1)[0]
         self.sync_all()
 
-        assert self.nodes[0].getrawtransaction(rawtx2_txid, True)['confirmations'] > 0
-        assert self.nodes[1].getrawtransaction(rawtx2_txid, True)['confirmations'] > 0
-        assert self.nodes[0].getrawtransaction(rawtx2_txid, True)['instantlock']
-        assert self.nodes[1].getrawtransaction(rawtx2_txid, True)['instantlock']
-        assert self.nodes[0].getbestblockhash() != good_tip
-        assert self.nodes[1].getbestblockhash() != good_tip
+        for node in self.nodes:
+            self.wait_for_instantlock(rawtx2_txid, node)
+            assert_equal(node.getrawtransaction(rawtx2_txid, True)['confirmations'], 1)
+            assert_equal(node.getbestblockhash(), islock_tip)
 
         # Check that the CL-ed block overrides the one with islocks
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)  # Re-enable ChainLocks to accept clsig
@@ -254,6 +254,8 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         self.wait_for_sporks_same()
         for node in self.nodes:
             self.wait_for_chainlocked_block(node, cl_block.hash)
+            # Previous tip should be marked as conflicting now
+            assert_equal(node.getchaintips(2)[1]["status"], "conflicting")
 
     def create_block(self, node, vtx=[]):
         bt = node.getblocktemplate()
