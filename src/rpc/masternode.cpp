@@ -212,10 +212,10 @@ static UniValue masternode_outputs(const JSONRPCRequest& request)
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_MASTERNODE_COLLATERAL;
     {
-        LOCK2(cs_main, pwallet->cs_wallet);
-        pwallet->AvailableCoins(vPossibleCoins, true, &coin_control);
+        auto locked_chain = pwallet->chain().lock();
+        LOCK(pwallet->cs_wallet);
+        pwallet->AvailableCoins(*locked_chain, vPossibleCoins, true, &coin_control);
     }
-
     UniValue obj(UniValue::VOBJ);
     for (const auto& out : vPossibleCoins) {
         obj.pushKV(out.tx->GetHash().ToString(), strprintf("%d", out.i));
