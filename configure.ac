@@ -1333,7 +1333,6 @@ if test "$enable_fuzz" = "yes"; then
   bitcoin_enable_qt=no
   bitcoin_enable_qt_test=no
   bitcoin_enable_qt_dbus=no
-  enable_wallet=no
   use_bench=no
   use_upnp=no
   use_natpmp=no
