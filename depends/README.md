@@ -35,6 +35,11 @@ No other options are needed, the paths are automatically configured.
 
     sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools libtinfo5
 
+Note: You must obtain the macOS SDK before proceeding with a cross-compile.
+Under the depends directory, create a subdirectory named `SDKs`.
+Then, place the extracted SDK under this new directory.
+For more information, see [SDK Extraction](../contrib/macdeploy/README.md#sdk-extraction).
+
 #### For Win64 cross compilation
 
 - see [build-windows.md](../doc/build-windows.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
