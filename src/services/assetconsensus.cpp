@@ -974,10 +974,6 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                 if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply || !MoneyRangeAsset(storedAssetRef.nTotalSupply)) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
                 }  
-            } else {
-                if ((storedAssetRef.nTotalSupply + nTotal) > storedAssetRef.nMaxSupply || !MoneyRangeAsset(storedAssetRef.nTotalSupply + nTotal)) {
-                    return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
-                }
             }
         }         
         break;  
