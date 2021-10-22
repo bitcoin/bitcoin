@@ -184,8 +184,8 @@ static void InitMessage(SplashScreen *splash, const std::string &message)
 static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible)
 {
     InitMessage(splash, title + std::string("\n") +
-            (resume_possible ? _("(press q to shutdown and continue later)").translated
-                                : _("press q to shutdown").translated) +
+            (resume_possible ? SplashScreen::tr("(press q to shutdown and continue later)").toStdString()
+                                : SplashScreen::tr("press q to shutdown").toStdString()) +
             strprintf("\n%d", nProgress) + "%");
 }
 
