@@ -9,6 +9,7 @@
 #include <util/system.h>
 #include <external_signer.h>
 
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -75,15 +76,14 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
     ssTx << psbtx;
 
     // Check if signer fingerprint matches any input master key fingerprint
-    bool match = false;
-    for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
-        const PSBTInput& input = psbtx.inputs[i];
+    auto matches_signer_fingerprint = [&](const PSBTInput& input) {
         for (const auto& entry : input.hd_keypaths) {
-            if (m_fingerprint == strprintf("%08x", ReadBE32(entry.second.fingerprint))) match = true;
+            if (m_fingerprint == strprintf("%08x", ReadBE32(entry.second.fingerprint))) return true;
         }
-    }
+        return false;
+    };
 
-    if (!match) {
+    if (!std::any_of(psbtx.inputs.begin(), psbtx.inputs.end(), matches_signer_fingerprint)) {
         error = "Signer fingerprint " + m_fingerprint + " does not match any of the inputs:\n" + EncodeBase64(ssTx.str());
         return false;
     }
