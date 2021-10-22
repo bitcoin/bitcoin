@@ -120,6 +120,10 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         tfm::format(std::cerr, "The -descriptors option can only be used with the 'create' command.\n");
         return false;
     }
+    if (args.IsArgSet("-legacy") && command != "create") {
+        tfm::format(std::cerr, "The -legacy option can only be used with the 'create' command.\n");
+        return false;
+    }
     if (command == "create" && !args.IsArgSet("-wallet")) {
         tfm::format(std::cerr, "Wallet name must be provided when creating a new wallet.\n");
         return false;
@@ -130,7 +134,19 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
     if (command == "create") {
         DatabaseOptions options;
         options.require_create = true;
-        if (args.GetBoolArg("-descriptors", false)) {
+        // If -legacy is set, use it. Otherwise default to false.
+        bool make_legacy = args.GetBoolArg("-legacy", false);
+        // If neither -legacy nor -descriptors is set, default to true. If -descriptors is set, use its value.
+        bool make_descriptors = (!args.IsArgSet("-descriptors") && !args.IsArgSet("-legacy")) || (args.IsArgSet("-descriptors") && args.GetBoolArg("-descriptors", true));
+        if (make_legacy && make_descriptors) {
+            tfm::format(std::cerr, "Only one of -legacy or -descriptors can be set to true, not both\n");
+            return false;
+        }
+        if (!make_legacy && !make_descriptors) {
+            tfm::format(std::cerr, "One of -legacy or -descriptors must be set to true (or omitted)\n");
+            return false;
+        }
+        if (make_descriptors) {
             options.create_flags |= WALLET_FLAG_DESCRIPTORS;
             options.require_format = DatabaseFormat::SQLITE;
         }
