@@ -355,7 +355,7 @@ void CChainState::MaybeUpdateMempoolForReorg(
             // If the transaction doesn't make it in to the mempool, remove any
             // transactions that depend on it (which would now be orphans).
             m_mempool->removeRecursive(**it, MemPoolRemovalReason::REORG);
-        } else if (m_mempool->exists((*it)->GetHash())) {
+        } else if (m_mempool->exists(GenTxid::Txid((*it)->GetHash()))) {
             vHashUpdate.push_back((*it)->GetHash());
         }
         ++it;
@@ -908,7 +908,7 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
     // trim mempool and check if tx was trimmed
     if (!bypass_limits) {
         LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip(), gArgs.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, std::chrono::hours{gArgs.GetIntArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY)});
-        if (!m_pool.exists(hash))
+        if (!m_pool.exists(GenTxid::Txid(hash)))
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool full");
     }
     return true;
@@ -4500,7 +4500,7 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mocka
                     // wallet(s) having loaded it while we were processing
                     // mempool transactions; consider these as valid, instead of
                     // failed, but mark them as 'already there'
-                    if (pool.exists(tx->GetHash())) {
+                    if (pool.exists(GenTxid::Txid(tx->GetHash()))) {
                         ++already_there;
                     } else {
                         ++failed;
