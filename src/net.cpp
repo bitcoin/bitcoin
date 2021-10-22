@@ -585,8 +585,8 @@ void CNode::CopyStats(CNodeStats& stats)
     } else {
         stats.fRelayTxes = false;
     }
-    X(nLastSend);
-    X(nLastRecv);
+    X(m_last_send);
+    X(m_last_recv);
     X(nLastTXTime);
     X(nLastBlockTime);
     X(nTimeConnected);
@@ -633,7 +633,7 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
     complete = false;
     const auto time = GetTime<std::chrono::microseconds>();
     LOCK(cs_vRecv);
-    nLastRecv = std::chrono::duration_cast<std::chrono::seconds>(time).count();
+    m_last_recv = std::chrono::duration_cast<std::chrono::seconds>(time).count();
     nRecvBytes += msg_bytes.size();
     while (msg_bytes.size() > 0) {
         // absorb network data
@@ -804,7 +804,7 @@ size_t CConnman::SocketSendData(CNode& node) const
             nBytes = send(node.hSocket, reinterpret_cast<const char*>(data.data()) + node.nSendOffset, data.size() - node.nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
         }
         if (nBytes > 0) {
-            node.nLastSend = GetTimeSeconds();
+            node.m_last_send = GetTimeSeconds();
             node.nSendBytes += nBytes;
             node.nSendOffset += nBytes;
             nSentSize += nBytes;
@@ -1330,18 +1330,18 @@ bool CConnman::InactivityCheck(const CNode& node) const
 
     if (!ShouldRunInactivityChecks(node, now)) return false;
 
-    if (node.nLastRecv == 0 || node.nLastSend == 0) {
-        LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d peer=%d\n", m_peer_connect_timeout, node.nLastRecv != 0, node.nLastSend != 0, node.GetId());
+    if (node.m_last_recv == 0 || node.m_last_send == 0) {
+        LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d peer=%d\n", m_peer_connect_timeout, node.m_last_recv != 0, node.m_last_send != 0, node.GetId());
         return true;
     }
 
-    if (now > node.nLastSend + TIMEOUT_INTERVAL) {
-        LogPrint(BCLog::NET, "socket sending timeout: %is peer=%d\n", now - node.nLastSend, node.GetId());
+    if (now > node.m_last_send + TIMEOUT_INTERVAL) {
+        LogPrint(BCLog::NET, "socket sending timeout: %is peer=%d\n", now - node.m_last_send, node.GetId());
         return true;
     }
 
-    if (now > node.nLastRecv + TIMEOUT_INTERVAL) {
-        LogPrint(BCLog::NET, "socket receive timeout: %is peer=%d\n", now - node.nLastRecv, node.GetId());
+    if (now > node.m_last_recv + TIMEOUT_INTERVAL) {
+        LogPrint(BCLog::NET, "socket receive timeout: %is peer=%d\n", now - node.m_last_recv, node.GetId());
         return true;
     }
 

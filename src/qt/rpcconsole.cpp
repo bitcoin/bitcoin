@@ -1172,8 +1172,8 @@ void RPCConsole::updateDetailWidget()
     ui->peerConnTime->setText(GUIUtil::formatDurationStr(time_now - stats->nodeStats.nTimeConnected));
     ui->peerLastBlock->setText(TimeDurationField(time_now, stats->nodeStats.nLastBlockTime));
     ui->peerLastTx->setText(TimeDurationField(time_now, stats->nodeStats.nLastTXTime));
-    ui->peerLastSend->setText(TimeDurationField(time_now, stats->nodeStats.nLastSend));
-    ui->peerLastRecv->setText(TimeDurationField(time_now, stats->nodeStats.nLastRecv));
+    ui->peerLastSend->setText(TimeDurationField(time_now, stats->nodeStats.m_last_send));
+    ui->peerLastRecv->setText(TimeDurationField(time_now, stats->nodeStats.m_last_recv));
     ui->peerBytesSent->setText(GUIUtil::formatBytes(stats->nodeStats.nSendBytes));
     ui->peerBytesRecv->setText(GUIUtil::formatBytes(stats->nodeStats.nRecvBytes));
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.m_last_ping_time));

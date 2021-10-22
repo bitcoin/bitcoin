@@ -241,8 +241,8 @@ public:
     NodeId nodeid;
     ServiceFlags nServices;
     bool fRelayTxes;
-    int64_t nLastSend;
-    int64_t nLastRecv;
+    int64_t m_last_send;
+    int64_t m_last_recv;
     int64_t nLastTXTime;
     int64_t nLastBlockTime;
     int64_t nTimeConnected;
@@ -420,8 +420,8 @@ public:
 
     uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
 
-    std::atomic<int64_t> nLastSend{0};
-    std::atomic<int64_t> nLastRecv{0};
+    std::atomic<int64_t> m_last_send{0};
+    std::atomic<int64_t> m_last_recv{0};
     //! Unix epoch time at peer connection, in seconds.
     const int64_t nTimeConnected;
     std::atomic<int64_t> nTimeOffset{0};
