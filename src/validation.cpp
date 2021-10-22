@@ -585,10 +585,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (!CheckFinalTx(m_active_chainstate.m_chain.Tip(), tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-final");
 
-    if (m_pool.exists(GenTxid(true, tx.GetWitnessHash()))) {
+    if (m_pool.exists(GenTxid::Wtxid(tx.GetWitnessHash()))) {
         // Exact transaction already exists in the mempool.
         return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-already-in-mempool");
-    } else if (m_pool.exists(GenTxid(false, tx.GetHash()))) {
+    } else if (m_pool.exists(GenTxid::Txid(tx.GetHash()))) {
         // Transaction with the same non-witness data but different witness (same txid, different
         // wtxid) already exists in the mempool.
         return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-same-nonwitness-data-in-mempool");
