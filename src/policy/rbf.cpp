@@ -53,7 +53,7 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool, C
 
     // If this transaction is not in our mempool, then we can't be sure
     // we will know about all its inputs.
-    if (!pool.exists(tx.GetHash())) {
+    if (!pool.exists(GenTxid::Txid(tx.GetHash()))) {
         return RBFTransactionState::UNKNOWN;
     }
 
