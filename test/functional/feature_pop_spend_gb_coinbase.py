@@ -64,5 +64,12 @@ class SpendGenesisCoinbase(BitcoinTestFramework):
 
         assert_approx(float(self.nodes[0].getbalance()), 2., vspan=0.001)
 
+        balance = self.nodes[1].getbalance()
+        txid = self.nodes[1].sendtoaddress(addr, balance - 1)
+        self.nodes[1].generate(nblocks=confirmations)
+
+        node0balance = self.nodes[0].getbalance()
+        assert_approx(float(node0balance), float(balance + -1 + 2), vspan=0.001)
+
 if __name__ == '__main__':
     SpendGenesisCoinbase().main()
