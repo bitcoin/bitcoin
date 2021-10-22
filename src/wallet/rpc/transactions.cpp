@@ -425,7 +425,9 @@ static std::vector<RPCResult> TransactionDescriptionString()
             {RPCResult::Type::BOOL, "instantlock", "Current transaction lock state. Available for 'send' and 'receive' category of transactions"},
             {RPCResult::Type::BOOL, "instantlock-internal", "Current internal transaction lock state. Available for 'send' and 'receive' category of transactions"},
             {RPCResult::Type::BOOL, "chainlock", "The state of the corresponding block ChainLock"},
-            {RPCResult::Type::BOOL, "trusted", /*optional=*/true, "Whether we consider the outputs of this unconfirmed transaction safe to spend."},
+            {RPCResult::Type::BOOL, "generated", /*optional=*/true, "Only present if the transaction's only input is a coinbase one."},
+            {RPCResult::Type::BOOL, "trusted", /*optional=*/true, "Whether we consider the transaction to be trusted and safe to spend from.\n"
+                "Only present when the transaction has 0 confirmations (or negative confirmations, if conflicted)."},
             {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "The block hash containing the transaction. Available for 'send' and 'receive'\n"
                                                    "category of transactions."},
             {RPCResult::Type::STR_HEX, "blockheight", /*optional=*/true, "The block height containing the transaction."},
