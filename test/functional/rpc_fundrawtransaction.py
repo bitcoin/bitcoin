@@ -16,6 +16,7 @@ from test_framework.util import (
     assert_fee_amount,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_less_than_or_equal,
     assert_raises_rpc_error,
     count_bytes,
     find_vout_for_address,
@@ -421,7 +422,8 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
-        assert feeDelta >= 0 and feeDelta <= self.fee_tolerance
+        assert_greater_than_or_equal(feeDelta, 0)
+        assert_less_than_or_equal(feeDelta, self.fee_tolerance)
 
         self.unlock_utxos(self.nodes[0])
 

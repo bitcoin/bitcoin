@@ -19,6 +19,7 @@ from test_framework.script import CScript, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_less_than,
     assert_raises_rpc_error,
 )
 from test_framework.script_util import (
@@ -105,7 +106,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 new_size = len(node.getrawmempool())
                 # Error out if we have something stuck in the mempool, as this
                 # would likely be a bug.
-                assert new_size < mempool_size
+                assert_less_than(new_size, mempool_size)
                 mempool_size = new_size
 
         return COutPoint(int(txid, 16), n)
@@ -205,7 +206,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             tx.vout = vout
             tx_hex = tx.serialize().hex()
 
-            assert len(tx.serialize()) < 100000
+            assert_less_than(len(tx.serialize()), 100000)
             txid = self.nodes[0].sendrawtransaction(tx_hex, 0)
             yield tx
             _total_txs[0] += 1

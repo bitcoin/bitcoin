@@ -14,6 +14,8 @@ from test_framework.descriptors import descsum_create, drop_origins
 from test_framework.key import ECPubKey, ECKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_greater_than,
+    assert_less_than,
     assert_raises_rpc_error,
     assert_equal,
 )
@@ -124,7 +126,8 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         bal2 = node2.getbalance()
 
         height = node0.getblockchaininfo()["blocks"]
-        assert 150 < height < 350
+        assert_greater_than(height, 150)
+        assert_less_than(height, 350)
         total = 149 * 50 + (height - 149 - 100) * 25
         assert bal1 == 0
         assert bal2 == self.moved

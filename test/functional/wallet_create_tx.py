@@ -6,6 +6,8 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
+    assert_less_than_or_equal,
     assert_raises_rpc_error,
 )
 from test_framework.blocktools import (
@@ -41,7 +43,8 @@ class CreateTxWalletTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         tx = self.nodes[0].gettransaction(txid=txid, verbose=True)['decoded']
-        assert 0 < tx['locktime'] <= 201
+        assert_greater_than(tx['locktime'], 0)
+        assert_less_than_or_equal(tx['locktime'], 201)
 
     def test_tx_size_too_large(self):
         # More than 10kB of outputs, so that we hit -maxtxfee with a high feerate

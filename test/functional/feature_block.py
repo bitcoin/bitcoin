@@ -50,7 +50,7 @@ from test_framework.script_util import (
     script_to_p2sh_script,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_less_than, assert_less_than_or_equal
 from data import invalid_txs
 
 #  Use this class for tests that require behavior other than normal p2p behavior.
@@ -525,7 +525,7 @@ class FullBlockTest(BitcoinTestFramework):
         b40 = self.next_block(40, spend=out[12])
         sigops = get_legacy_sigopcount_block(b40)
         numTxes = (MAX_BLOCK_SIGOPS - sigops) // b39_sigops_per_output
-        assert_equal(numTxes <= b39_outputs, True)
+        assert_less_than_or_equal(numTxes, b39_outputs)
 
         lastOutpoint = COutPoint(b40.vtx[1].sha256, 0)
         new_txs = []
@@ -801,7 +801,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(57)
         b58 = self.next_block(58, spend=out[17])
         tx = CTransaction()
-        assert len(out[17].vout) < 42
+        assert_less_than(len(out[17].vout), 42)
         tx.vin.append(CTxIn(COutPoint(out[17].sha256, 42), CScript([OP_TRUE]), 0xffffffff))
         tx.vout.append(CTxOut(0, b""))
         tx.calc_sha256()
@@ -877,7 +877,7 @@ class FullBlockTest(BitcoinTestFramework):
         tx.nLockTime = 0xffffffff  # this locktime is non-final
         tx.vin.append(CTxIn(COutPoint(out[18].sha256, 0)))  # don't set nSequence
         tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
-        assert tx.vin[0].nSequence < 0xffffffff
+        assert_less_than(tx.vin[0].nSequence, 0xffffffff)
         tx.calc_sha256()
         b62 = self.update_block(62, [tx])
         self.send_blocks([b62], success=False, reject_reason='bad-txns-nonfinal', reconnect=True)

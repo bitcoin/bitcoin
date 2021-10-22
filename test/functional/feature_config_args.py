@@ -9,6 +9,7 @@ import time
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework import util
+from test_framework.util import assert_less_than
 
 
 class ConfArgsTest(BitcoinTestFramework):
@@ -189,7 +190,7 @@ class ConfArgsTest(BitcoinTestFramework):
                 "Adding fixed seeds as -dnsseed=0, -addnode is not provided and all -seednode(s) attempted\n",
         ]):
             self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=1'])
-        assert time.time() - start < 60
+        assert_less_than(time.time() - start, 60)
         self.stop_node(0)
 
         # No peers.dat exists and dns seeds are disabled.
@@ -202,7 +203,7 @@ class ConfArgsTest(BitcoinTestFramework):
                 "Fixed seeds are disabled",
         ]):
             self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=0'])
-        assert time.time() - start < 60
+        assert_less_than(time.time() - start, 60)
         self.stop_node(0)
 
         # No peers.dat exists and -dnsseed=0, but a -addnode is provided

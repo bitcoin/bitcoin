@@ -60,6 +60,16 @@ def assert_greater_than_or_equal(thing1, thing2):
         raise AssertionError("%s < %s" % (str(thing1), str(thing2)))
 
 
+def assert_less_than(thing1, thing2):
+    if thing1 >= thing2:
+        raise AssertionError("%s >= %s" % (str(thing1), str(thing2)))
+
+
+def assert_less_than_or_equal(thing1, thing2):
+    if thing1 > thing2:
+        raise AssertionError("%s > %s" % (str(thing1), str(thing2)))
+
+
 def assert_raises(exc, fun, *args, **kwds):
     assert_raises_message(exc, None, fun, *args, **kwds)
 
@@ -308,7 +318,7 @@ def get_rpc_proxy(url: str, node_number: int, *, timeout: int=None, coveragedir:
 
 
 def p2p_port(n):
-    assert n <= MAX_NODES
+    assert_less_than_or_equal(n, MAX_NODES)
     return PORT_MIN + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
 
 
