@@ -1926,14 +1926,12 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     // Special case for the genesis block
     if (block.GetHash() == chainparams.GetConsensus().hashGenesisBlock) {
-        if (!fJustCheck)
-            view.SetBestBlock(pindex->GetBlockHash());
-
         // VeriBlock: make coinbase spendable
         assert(block.vtx.size() == 1);
         const CTransaction& tx = *(block.vtx[0]);
-        CTxUndo undoDummy;
-        UpdateCoins(tx, view, undoDummy, pindex->nHeight);
+        UpdateCoins(tx, view, pindex->nHeight);
+        if (!fJustCheck)
+            view.SetBestBlock(pindex->GetBlockHash());
         return true;
     }
 

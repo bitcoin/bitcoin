@@ -38,16 +38,17 @@ class SpendGenesisCoinbase(BitcoinTestFramework):
     def run_test(self):
         """Main test logic"""
         assert_equal(self.nodes[0].getbalance(), 0)
-        addr = 'bcrt1qgfmtskhnyknjaqk0v9qmksssdrkg427rw4ppxd'
-        priv = 'cQ6npZ7QAGxHe48VKrzQ1pNTWTvm1cMbLXULMEE7ysQANC1rePtg'
-        
-        self.log.info("Improrting priv key")
-        self.nodes[0].importprivkey(priv)
-        assert_equal(self.nodes[0].getbalance(), 5)
+        self.log.info("Improrting priv keys")
+        self.nodes[0].importprivkey("cPpSkxEXoBHU9acsY7g6cGuaE3hGpykaFXDnRQgW3LqAwUc42Eqj")
+        self.nodes[0].importprivkey("cVcEjKTCz2px6oBhW95Mb9XHTgaPT5XGyJdsmzhcFQsA7sQYXwE7")
+        self.nodes[0].importprivkey("cUPeA8u6pqbR3Z2PK1rA88uevY8nbJSp8B1ucbXmNn2ivx6jLuFR")
+        expectedAmount = 30
+        remaining = 1
+        assert_equal(self.nodes[0].getbalance(), expectedAmount)
 
         node2addr = self.nodes[1].getnewaddress()
         self.log.info("attempt to spend coinbase in genesis block")
-        amount = 3
+        amount = expectedAmount - remaining
         txid = self.nodes[0].sendtoaddress(node2addr, amount)
 
         self.log.info("node0 sent {} to node1 in tx={}".format(amount, txid))
@@ -62,14 +63,12 @@ class SpendGenesisCoinbase(BitcoinTestFramework):
         except:
             raise Exception("node1 does not know about tx={}. it's a sign that coinbase tx can not be spent.".format(txid))
 
-        assert_approx(float(self.nodes[0].getbalance()), 2., vspan=0.001)
+        assert_approx(float(self.nodes[0].getbalance()), remaining, vspan=0.001)
 
         balance = self.nodes[1].getbalance()
-        txid = self.nodes[1].sendtoaddress(addr, balance - 1)
+        txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), balance - remaining)
         self.nodes[1].generate(nblocks=confirmations)
-
-        node0balance = self.nodes[0].getbalance()
-        assert_approx(float(node0balance), float(balance + -1 + 2), vspan=0.001)
+        assert_approx(float(self.nodes[0].getbalance()), float((balance - remaining) + remaining), vspan=0.001)
 
 if __name__ == '__main__':
     SpendGenesisCoinbase().main()
