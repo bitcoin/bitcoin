@@ -252,6 +252,10 @@ cat "$VERSION"/*/all.SHA256SUMS.asc > SHA256SUMS.asc
   - syscoincore.org maintained versions update:
     [table](https://github.com/syscoin-core/syscoincore.org/commits/master/_includes/posts/maintenance-table.md)
 
+  - Delete post-EOL [release branches](https://github.com/bitcoin/bitcoin/branches/all) and create a tag `v${branch_name}-final`.
+
+  - Delete ["Needs backport" labels](https://github.com/bitcoin/bitcoin/labels?q=backport) for non-existing branches.
+
   - syscoincore.org RPC documentation update
 
       - Install [golang](https://golang.org/doc/install)
