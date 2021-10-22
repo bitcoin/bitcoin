@@ -305,7 +305,7 @@ std::map<uint256, TxHashInfo> ComputeTxHashInfo(const Index& index, const Priori
 GenTxid ToGenTxid(const Announcement& ann)
 {
     // SYSCOIN
-    return {ann.m_is_wtxid, ann.m_txhash, ann.m_type};
+    return ann.m_is_wtxid ? GenTxid::Wtxid(ann.m_txhash, ann.m_type) : GenTxid::Txid(ann.m_txhash, ann.m_type);
 }
 
 }  // namespace

@@ -287,5 +287,5 @@ GenTxid ToGenTxid(const CInv& inv)
 {
     assert(inv.IsGenTxMsg());
     // SYSCOIN
-    return {inv.IsMsgWtx(), inv.hash, inv.type};
+    return inv.IsMsgWtx() ? GenTxid::Wtxid(inv.hash, inv.type) : GenTxid::Txid(inv.hash, inv.type);
 }
