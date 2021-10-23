@@ -79,7 +79,7 @@ script: |
   fi
 
   # We include the GCC version in all wrappers so that ccache can detect compiler upgrades when hashing the wrappers
-  GCCVERSION=`gcc --version | head -1`
+  GCCVERSION=$(gcc --version | head -1)
 
   # Use $LIB in LD_PRELOAD to avoid hardcoding the dir (See `man ld.so`)
   function create_global_faketime_wrappers {
