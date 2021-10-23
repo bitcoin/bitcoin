@@ -5,6 +5,8 @@
 #ifndef BITCOIN_DBWRAPPER_H
 #define BITCOIN_DBWRAPPER_H
 
+#include <kernel/dbwrapper_options.h>
+
 #include <clientversion.h>
 #include <fs.h>
 #include <logging.h>
@@ -220,15 +222,12 @@ private:
     std::vector<unsigned char> CreateObfuscateKey() const;
 
 public:
-    /**
-     * @param[in] path        Location in the filesystem where leveldb data will be stored.
-     * @param[in] nCacheSize  Configures various leveldb cache settings.
-     * @param[in] fMemory     If true, use leveldb's memory environment.
-     * @param[in] fWipe       If true, remove all existing data.
-     * @param[in] obfuscate   If true, store data obfuscated via simple XOR. If false, XOR
-     *                        with a zero'd byte array.
-     */
+    using Options = kernel::DBWrapperOpts;
+
+    // REVIEW-ONLY: This particular constructor will be removed by the end of
+    //              the patchset.
     CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false, bool obfuscate = false);
+    CDBWrapper(const Options& opts);
     ~CDBWrapper();
 
     CDBWrapper(const CDBWrapper&) = delete;
