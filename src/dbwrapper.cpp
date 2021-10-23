@@ -137,6 +137,7 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
             .in_memory = fMemory,
             .wipe_existing = fWipe,
             .obfuscate_data = obfuscate,
+            .do_compact = gArgs.GetBoolArg("-forcecompactdb", false),
         }} {}
 
 CDBWrapper::CDBWrapper(const Options& opts)
@@ -172,7 +173,7 @@ CDBWrapper::CDBWrapper(const Options& opts)
     dbwrapper_private::HandleError(status);
     LogPrintf("Opened LevelDB successfully\n");
 
-    if (gArgs.GetBoolArg("-forcecompactdb", false)) {
+    if (opts.do_compact) {
         LogPrintf("Starting database compaction of %s\n", fs::PathToString(opts.db_path));
         pdb->CompactRange(nullptr, nullptr);
         LogPrintf("Finished database compaction of %s\n", fs::PathToString(opts.db_path));

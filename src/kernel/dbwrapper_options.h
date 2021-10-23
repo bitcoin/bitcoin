@@ -22,6 +22,7 @@ struct DBWrapperOpts {
     bool wipe_existing = false;
     //! If true, store data obfuscated via simple XOR. If false, XOR with a zero'd byte array.
     bool obfuscate_data = false;
+    bool do_compact = false;
 };
 
 } // namespace kernel
