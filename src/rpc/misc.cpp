@@ -852,7 +852,7 @@ static UniValue getaddressbalance(const JSONRPCRequest& request)
         }
     }
 
-    int nHeight = WITH_LOCK(cs_main, return chainActive.Height());
+    int nHeight = WITH_LOCK(cs_main, return ::ChainActive().Height());
 
     CAmount balance = 0;
     CAmount balance_spendable = 0;

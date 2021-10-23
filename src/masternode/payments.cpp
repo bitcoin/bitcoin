@@ -270,7 +270,7 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, 
 
     {
         LOCK(cs_main);
-        pindex = chainActive[nBlockHeight - 1];
+        pindex = ::ChainActive()[nBlockHeight - 1];
 
         const Consensus::Params& consensusParams = Params().GetConsensus();
         if (VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_REALLOC, versionbitscache) == ThresholdState::ACTIVE) {

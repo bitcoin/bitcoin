@@ -125,9 +125,9 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
         std::vector<BlockFilter> filters;
         std::vector<uint256> filter_hashes;
 
-        for (const CBlockIndex* block_index = chainActive.Genesis();
+        for (const CBlockIndex* block_index = ::ChainActive().Genesis();
              block_index != nullptr;
-             block_index = chainActive.Next(block_index)) {
+             block_index = ::ChainActive().Next(block_index)) {
             BOOST_CHECK(!filter_index.LookupFilter(block_index, filter));
             BOOST_CHECK(!filter_index.LookupFilterHeader(block_index, filter_header));
             BOOST_CHECK(!filter_index.LookupFilterRange(block_index->nHeight, block_index, filters));
@@ -153,9 +153,9 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     {
         LOCK(cs_main);
         const CBlockIndex* block_index;
-        for (block_index = chainActive.Genesis();
+        for (block_index = ::ChainActive().Genesis();
              block_index != nullptr;
-             block_index = chainActive.Next(block_index)) {
+             block_index = ::ChainActive().Next(block_index)) {
             CheckFilterLookups(filter_index, block_index, last_header);
         }
     }
@@ -164,7 +164,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     const CBlockIndex* tip;
     {
         LOCK(cs_main);
-        tip = chainActive.Tip();
+        tip = ::ChainActive().Tip();
     }
     CScript coinbase_script_pub_key = GetScriptForDestination(coinbaseKey.GetPubKey().GetID());
     std::vector<std::shared_ptr<CBlock>> chainA, chainB;
@@ -250,7 +250,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
 
     {
         LOCK(cs_main);
-        tip = chainActive.Tip();
+        tip = ::ChainActive().Tip();
     }
     BOOST_CHECK(filter_index.LookupFilterRange(0, tip, filters));
     BOOST_CHECK(filter_index.LookupFilterHashRange(0, tip, filter_hashes));

@@ -124,9 +124,9 @@ void TestGUI()
         const CBlockIndex* const null_block = nullptr;
         const CBlockIndex *stop_block, *failed_block;
         QCOMPARE(
-            wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block, true /* fUpdate */),
+            wallet->ScanForWalletTransactions(::ChainActive().Genesis(), nullptr, reserver, failed_block, stop_block, true /* fUpdate */),
             CWallet::ScanResult::SUCCESS);
-        QCOMPARE(stop_block, chainActive.Tip());
+        QCOMPARE(stop_block, ::ChainActive().Tip());
         QCOMPARE(failed_block, null_block);
     }
     wallet->SetBroadcastTransactions(true);

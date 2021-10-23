@@ -18,6 +18,8 @@ class CConnman;
 class CBLSPublicKey;
 class CBlockIndex;
 
+extern CCriticalSection cs_main;
+
 // timeouts
 static constexpr int COINJOIN_AUTO_TIMEOUT_MIN = 5;
 static constexpr int COINJOIN_AUTO_TIMEOUT_MAX = 15;
@@ -348,7 +350,7 @@ protected:
 
     void SetNull();
 
-    bool IsValidInOuts(const std::vector<CTxIn>& vin, const std::vector<CTxOut>& vout, PoolMessage& nMessageIDRet, bool* fConsumeCollateralRet) const;
+    bool IsValidInOuts(const std::vector<CTxIn>& vin, const std::vector<CTxOut>& vout, PoolMessage& nMessageIDRet, bool* fConsumeCollateralRet) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 public:
     int nSessionDenom; // Users must submit a denom matching this

@@ -78,7 +78,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 // fully synced
                 return;
             }
-            if (chainActive.Tip()->GetAncestor(pquorumIndex->nHeight) != pquorumIndex) {
+            if (::ChainActive().Tip()->GetAncestor(pquorumIndex->nHeight) != pquorumIndex) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s not in active chain, peer=%d\n", __func__,
                           qc.quorumHash.ToString(), pfrom->GetId());
                 // same, can't punish
@@ -143,7 +143,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
     // Note: must only check quorums that were enabled at the _previous_ block height to match mining logic
     for (const auto& type : CLLMQUtils::GetEnabledQuorumTypes(pindex->pprev)) {
         // skip these checks when replaying blocks after the crash
-        if (!chainActive.Tip()) {
+        if (!::ChainActive().Tip()) {
             break;
         }
 
@@ -194,7 +194,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     uint256 quorumHash = GetQuorumBlockHash(qc.llmqType, nHeight);
 
     // skip `bad-qc-block` checks below when replaying blocks after the crash
-    if (!chainActive.Tip()) {
+    if (!::ChainActive().Tip()) {
         quorumHash = qc.quorumHash;
     }
 
@@ -287,20 +287,20 @@ bool CQuorumBlockProcessor::UpgradeDB()
 {
     LOCK(cs_main);
 
-    if (chainActive.Tip() == nullptr) {
+    if (::ChainActive().Tip() == nullptr) {
         // should have no records
         return evoDb.IsEmpty();
     }
 
     uint256 bestBlock;
-    if (evoDb.GetRawDB().Read(DB_BEST_BLOCK_UPGRADE, bestBlock) && bestBlock == chainActive.Tip()->GetBlockHash()) {
+    if (evoDb.GetRawDB().Read(DB_BEST_BLOCK_UPGRADE, bestBlock) && bestBlock == ::ChainActive().Tip()->GetBlockHash()) {
         return true;
     }
 
     LogPrintf("CQuorumBlockProcessor::%s -- Upgrading DB...\n", __func__);
 
-    if (chainActive.Height() >= Params().GetConsensus().DIP0003EnforcementHeight) {
-        auto pindex = chainActive[Params().GetConsensus().DIP0003EnforcementHeight];
+    if (::ChainActive().Height() >= Params().GetConsensus().DIP0003EnforcementHeight) {
+        auto pindex = ::ChainActive()[Params().GetConsensus().DIP0003EnforcementHeight];
         while (pindex) {
             if (fPruneMode && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
                 // Too late, we already pruned blocks we needed to reprocess commitments
@@ -326,7 +326,7 @@ bool CQuorumBlockProcessor::UpgradeDB()
 
             evoDb.GetRawDB().Write(DB_BEST_BLOCK_UPGRADE, pindex->GetBlockHash());
 
-            pindex = chainActive.Next(pindex);
+            pindex = ::ChainActive().Next(pindex);
         }
     }
 

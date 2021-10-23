@@ -23,8 +23,8 @@
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
     LOCK(cs_main);
-    SynchronousUpdatedBlockTip(chainActive.Tip(), nullptr, IsInitialBlockDownload());
-    UpdatedBlockTip(chainActive.Tip(), nullptr, IsInitialBlockDownload());
+    SynchronousUpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
+    UpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
 }
 
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)

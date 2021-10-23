@@ -621,7 +621,7 @@ bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebu
     {
         LOCK(cs_main);
         pindexMined = LookupBlockIndex(hashBlock);
-        nTxAge = chainActive.Height() - pindexMined->nHeight + 1;
+        nTxAge = ::ChainActive().Height() - pindexMined->nHeight + 1;
     }
 
     if (nTxAge < nInstantSendConfirmationsRequired && !llmq::chainLocksHandler->HasChainLock(pindexMined->nHeight, pindexMined->GetBlockHash())) {
@@ -714,8 +714,8 @@ void CInstantSendManager::TrySignInstantSendLock(const CTransaction& tx)
     {
         LOCK(cs_main);
         const auto dkgInterval = GetLLMQParams(llmqType).dkgInterval;
-        const auto quorumHeight = chainActive.Height() - (chainActive.Height() % dkgInterval);
-        islock.cycleHash = chainActive[quorumHeight]->GetBlockHash();
+        const auto quorumHeight = ::ChainActive().Height() - (::ChainActive().Height() % dkgInterval);
+        islock.cycleHash = ::ChainActive()[quorumHeight]->GetBlockHash();
     }
 
     auto id = islock.GetRequestId();
@@ -942,7 +942,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
             }
 
             const auto dkgInterval = GetLLMQParams(Params().GetConsensus().llmqTypeInstantSend).dkgInterval;
-            if (blockIndex->nHeight + dkgInterval < chainActive.Height()) {
+            if (blockIndex->nHeight + dkgInterval < ::ChainActive().Height()) {
                 nSignHeight = blockIndex->nHeight + dkgInterval - 1;
             }
         }
@@ -1459,7 +1459,7 @@ void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const
 
     LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: Removing ISLOCK and its chained children\n", __func__,
               islock.txid.ToString(), islockHash.ToString());
-    int tipHeight = WITH_LOCK(cs_main, return chainActive.Height());
+    int tipHeight = WITH_LOCK(cs_main, return ::ChainActive().Height());
 
     auto removedIslocks = db.RemoveChainedInstantSendLocks(islockHash, islock.txid, tipHeight);
     for (const auto& h : removedIslocks) {

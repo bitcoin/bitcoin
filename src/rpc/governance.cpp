@@ -1202,7 +1202,7 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
     }
 
     int nLastSuperblock = 0, nNextSuperblock = 0;
-    int nBlockHeight = WITH_LOCK(cs_main, return chainActive.Height());
+    int nBlockHeight = WITH_LOCK(cs_main, return ::ChainActive().Height());
 
     CSuperblock::GetNearestSuperblocksHeights(nBlockHeight, nLastSuperblock, nNextSuperblock);
 
