@@ -2486,7 +2486,7 @@ static RPCHelpMan getwalletinfo()
     obj.pushKV("unconfirmed_balance", ValueFromAmount(bal.m_mine_untrusted_pending));
     obj.pushKV("immature_balance", ValueFromAmount(bal.m_mine_immature));
     obj.pushKV("txcount",       (int)pwallet->mapWallet.size());
-    if (kp_oldest > 0) {
+    if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
         obj.pushKV("keypoololdest", kp_oldest);
     }
     obj.pushKV("keypoolsize", (int64_t)kpExternalSize);
