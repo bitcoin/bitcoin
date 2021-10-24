@@ -30,6 +30,11 @@ fi
 
 export P_CI_DIR="$PWD"
 
+DOCKER_EXEC () {
+  $DOCKER_CI_CMD_PREFIX bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $P_CI_DIR && $*"
+}
+export -f DOCKER_EXEC
+
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   echo "Creating $DOCKER_NAME_TAG container to run in"
   ${CI_RETRY_EXE} docker pull "$DOCKER_NAME_TAG"
@@ -37,6 +42,14 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
     echo "Restart docker before run to stop and clear all containers started with --rm"
     systemctl restart docker
+  fi
+
+  # detect if  $CONTAINER_NAME is already running, return if so
+  DOCKER_ID=$(docker ps -q  --filter name=${CONTAINER_NAME})
+  if [ -n "$DOCKER_ID" ]; then
+    echo "Using pre-built docker image $DOCKER_ID ($CONTAINER_NAME). Skipping install"
+    export DOCKER_CI_CMD_PREFIX="docker exec $DOCKER_ID"
+    return
   fi
 
   DOCKER_ID=$(docker run $DOCKER_ADMIN --rm --interactive --detach --tty \
@@ -52,11 +65,6 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
 else
   echo "Running on host system without docker wrapper"
 fi
-
-DOCKER_EXEC () {
-  $DOCKER_CI_CMD_PREFIX bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $P_CI_DIR && $*"
-}
-export -f DOCKER_EXEC
 
 if [ -n "$DPKG_ADD_ARCH" ]; then
   DOCKER_EXEC dpkg --add-architecture "$DPKG_ADD_ARCH"
