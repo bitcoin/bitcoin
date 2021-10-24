@@ -158,9 +158,9 @@ The basic steps are:
      the participant's signer wallet. Avoid reusing this wallet for any purpose other than signing transactions from the
      corresponding multisig we are about to create. Hint: extract the wallet's xpubs using `listdescriptors` and pick the one from the
      `pkh` descriptor since it's least likely to be accidentally reused (legacy addresses)
-  2. Create a watch-only descriptor wallet (blank, private keys disabled). Now the multisig is created by importing the two descriptors:
-     `wsh(sortedmulti(<M>,XPUB1/0/*,XPUB2/0/*,…,XPUBN/0/*))` and `wsh(sortedmulti(<M>,XPUB1/1/*,XPUB2/1/*,…,XPUBN/1/*))`
-     (one descriptor w/ `0` for receiving addresses and another w/ `1` for change). Every participant does this
+  2. Create a watch-only descriptor wallet (blank, private keys disabled). Now the multisig is created by importing the descriptor:
+     `wsh(sortedmulti(<M>,XPUB1/<0;1>/*,XPUB2/<0;1>/*,…,XPUBN/<0;1>/*))` (this multipath descriptor specifies both receiving and change
+     addresses in a single string). Every participant does this
   3. A receiving address is generated for the multisig. As a check to ensure step 2 was done correctly, every participant
      should verify they get the same addresses
   4. Funds are sent to the resulting address

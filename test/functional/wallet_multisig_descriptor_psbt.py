@@ -55,19 +55,12 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         for i, node in enumerate(self.nodes):
             node.createwallet(wallet_name=f"{self.name}_{i}", blank=True, descriptors=True, disable_private_keys=True)
             multisig = node.get_wallet_rpc(f"{self.name}_{i}")
-            external = multisig.getdescriptorinfo(f"wsh(sortedmulti({self.M},{f'/0/*,'.join(xpubs)}/0/*))")
-            internal = multisig.getdescriptorinfo(f"wsh(sortedmulti({self.M},{f'/1/*,'.join(xpubs)}/1/*))")
+            descriptor = f"wsh(sortedmulti({self.M},{f'/<0;1>/*,'.join(xpubs)}/<0;1>/*))"
+            checksum = multisig.getdescriptorinfo(descriptor)["checksum"]
             result = multisig.importdescriptors([
-                {  # receiving addresses (internal: False)
-                    "desc": external["descriptor"],
+                {
+                    "desc": f"{descriptor}#{checksum}",
                     "active": True,
-                    "internal": False,
-                    "timestamp": "now",
-                },
-                {  # change addresses (internal: True)
-                    "desc": internal["descriptor"],
-                    "active": True,
-                    "internal": True,
                     "timestamp": "now",
                 },
             ])
