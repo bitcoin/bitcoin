@@ -63,7 +63,7 @@ int main(int argc, char** argv)
     SetupBenchArgs();
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
+        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
         return EXIT_FAILURE;
     }
 

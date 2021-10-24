@@ -526,7 +526,7 @@ static void PrintCrashInfo(const crash_info& ci)
 {
     auto str = GetCrashInfoStr(ci);
     LogPrintf("%s", str); /* Continued */
-    fprintf(stderr, "%s", str.c_str());
+    tfm::format(std::cerr, "%s", str.c_str());
     fflush(stderr);
 }
 

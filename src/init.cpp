@@ -146,10 +146,9 @@ static fs::path GetPidFile()
 
 [[nodiscard]] static bool CreatePidFile()
 {
-    FILE* file = fsbridge::fopen(GetPidFile(), "w");
+    fsbridge::ofstream file{GetPidFile()};
     if (file) {
-        fprintf(file, "%d\n", getpid());
-        fclose(file);
+        tfm::format(file, "%d\n", getpid());
         return true;
     } else {
         return InitError(strprintf(_("Unable to create the PID file '%s': %s"), GetPidFile().string(), std::strerror(errno)));

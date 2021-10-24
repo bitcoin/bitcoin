@@ -61,7 +61,7 @@ struct CLockLocation {
 
     std::string ToString() const
     {
-        return tfm::format(
+        return strprintf(
             "'%s' in %s:%s%s (in thread '%s')",
             mutexName, sourceFile, itostr(sourceLine), (fTry ? " (TRY)" : ""), m_thread_name);
     }
@@ -135,7 +135,7 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
     LogPrintf("%s\n", strOutput.c_str());
 
     if (g_debug_lockorder_abort) {
-        fprintf(stderr, "Assertion failed: detected inconsistent lock order for %s, details in debug log.\n", s2.back().second.ToString().c_str());
+        tfm::format(std::cerr, "Assertion failed: detected inconsistent lock order for %s, details in debug log.\n", s2.back().second.ToString().c_str());
         abort();
     }
     throw std::logic_error(strprintf("potential deadlock detected: %s -> %s -> %s", mutex_b, mutex_a, mutex_b));
@@ -238,7 +238,7 @@ template <typename MutexType>
 void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs)
 {
     if (LockHeld(cs)) return;
-    fprintf(stderr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
+    tfm::format(std::cerr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
     abort();
 }
 template void AssertLockHeldInternal(const char*, const char*, int, Mutex*);
@@ -247,7 +247,7 @@ template void AssertLockHeldInternal(const char*, const char*, int, CCriticalSec
 void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
 {
     if (!LockHeld(cs)) return;
-    fprintf(stderr, "Assertion failed: lock %s held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
+    tfm::format(std::cerr, "Assertion failed: lock %s held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
     abort();
 }
 

@@ -1159,7 +1159,6 @@ std::string format(const std::string &fmt, const Args&... args)
 
 } // namespace tinyformat
 
-// Added for Dash Core:
 /** Format arguments and return the string or write to given std::ostream (see tinyformat::format doc for details) */
 #define strprintf tfm::format
 

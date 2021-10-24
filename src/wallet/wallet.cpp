@@ -897,8 +897,8 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
             assert(GetHDChain(hdChainCrypted));
 
             DBG(
-                printf("EncryptWallet -- current seed: '%s'\n", HexStr(hdChainCurrent.GetSeed()).c_str());
-                printf("EncryptWallet -- crypted seed: '%s'\n", HexStr(hdChainCrypted.GetSeed()).c_str());
+                tfm::format(std::cout, "EncryptWallet -- current seed: '%s'\n", HexStr(hdChainCurrent.GetSeed()).c_str());
+                tfm::format(std::cout, "EncryptWallet -- crypted seed: '%s'\n", HexStr(hdChainCrypted.GetSeed()).c_str());
             );
 
             // ids should match, seed hashes should not
@@ -1769,8 +1769,8 @@ bool CWallet::GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, co
         assert(res);
 
         DBG(
-            printf("GenerateNewHDChainEncrypted -- current seed: '%s'\n", HexStr(hdChainTmp.GetSeed()).c_str());
-            printf("GenerateNewHDChainEncrypted -- crypted seed: '%s'\n", HexStr(hdChainCrypted.GetSeed()).c_str());
+            tfm::format(std::cout, "GenerateNewHDChainEncrypted -- current seed: '%s'\n", HexStr(hdChainTmp.GetSeed()).c_str());
+            tfm::format(std::cout, "GenerateNewHDChainEncrypted -- crypted seed: '%s'\n", HexStr(hdChainCrypted.GetSeed()).c_str());
         );
 
         // ids should match, seed hashes should not
