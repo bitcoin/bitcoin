@@ -3,12 +3,20 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <fs.h>
+#include <tinyformat.h>
+#include <univalue.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <wallet/dump.h>
 #include <wallet/salvage.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
+
+#include <cassert>
+#include <string>
+
+UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, const int64_t timestamp)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 namespace WalletTool {
 
@@ -102,14 +110,40 @@ static void WalletShowInfo(CWallet* wallet_instance)
     tfm::format(std::cout, "Address Book: %zu\n", wallet_instance->m_address_book.size());
 }
 
+static bool ReadAndParseColdcardFile(const fs::path& path, UniValue& decriptors)
+{
+    fsbridge::ifstream file;
+    file.open(path);
+    if (!file.is_open()) {
+        tfm::format(std::cerr, "%s. Please check permissions.\n", path.string());
+        return false;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        if (line.substr(0, 22) == "importdescriptors \'[{\"") break;
+    }
+
+    file.close();
+
+    decriptors.clear();
+    if (!decriptors.read(line.substr(19, line.size() - 20))) {
+        tfm::format(std::cerr, "Unable to parse %s\n", path.string());
+        return false;
+    }
+
+    assert(decriptors.isArray());
+    return true;
+}
+
 bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
 {
     if (args.IsArgSet("-format") && command != "createfromdump") {
         tfm::format(std::cerr, "The -format option can only be used with the \"createfromdump\" command.\n");
         return false;
     }
-    if (args.IsArgSet("-dumpfile") && command != "dump" && command != "createfromdump") {
-        tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\" and \"createfromdump\" commands.\n");
+    if (args.IsArgSet("-dumpfile") && command != "dump" && command != "createfromdump" && command != "importfromcoldcard") {
+        tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\", \"createfromdump\" and \"importfromcoldcard\" commands.\n");
         return false;
     }
     if (args.IsArgSet("-descriptors") && command != "create") {
@@ -185,6 +219,49 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
             tfm::format(std::cerr, "%s\n", error.original);
         }
         return ret;
+    } else if (command == "importfromcoldcard") {
+        std::string filename = gArgs.GetArg("-dumpfile", "");
+        if (filename.empty()) {
+            tfm::format(std::cerr, "To use importfromcoldcard, -dumpfile=<filename> must be provided.\n");
+            return false;
+        }
+
+        const fs::path import_file_path{fs::absolute(fs::path(filename))};
+        if (!fs::exists(import_file_path)) {
+            tfm::format(std::cerr, "File %s does not exist.\n", import_file_path.string());
+            return false;
+        }
+
+        UniValue descriptors;
+        if (!ReadAndParseColdcardFile(import_file_path, descriptors)) {
+            return false;
+        }
+
+        DatabaseOptions options;
+        options.require_create = false;  // we do this manually
+        options.create_flags |= WALLET_FLAG_DESCRIPTORS;
+        options.create_flags |= WALLET_FLAG_DISABLE_PRIVATE_KEYS;
+        options.create_flags |= WALLET_FLAG_BLANK_WALLET;
+        options.require_format = DatabaseFormat::SQLITE;
+        std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
+        if (!wallet_instance) {
+            return false;
+        }
+
+        LOCK(wallet_instance->cs_wallet);
+
+        {   // This is WalletCreate, but using FEATURE_LATEST and not setting up descriptors (ie, BLANK_WALLET)
+            wallet_instance->SetMinVersion(FEATURE_LATEST);
+            wallet_instance->AddWalletFlags(options.create_flags);
+        }
+
+        for (const UniValue& descriptor : descriptors.getValues()) {
+            const UniValue result = ::ProcessDescriptorImport(*wallet_instance, descriptor, 0);
+            tfm::format(std::cerr, "%s\n", result.write(2));
+        }
+
+        WalletShowInfo(wallet_instance.get());
+        wallet_instance->Close();
     } else {
         tfm::format(std::cerr, "Invalid command: %s\n", command);
         return false;
