@@ -6,6 +6,8 @@ Dynamo is built upon the effort of many individuals who, for over a decade, have
 
 All things Dynamo can be found at https://www.dynamocoin.org
 
+Please pull v1.0 production tag code.  The master branch contains work in progress virtual machine development for v2.0 and is unstable/incompatible with current production.
+
 Building for windows:
 
 Clone using Visual Studio 2019 community and build.  There are package dependencies which can be most easily installed using VCPKG.  If you build the QT client you will also need runtime libs.  Alot more docs are needed on the build process - please connect with us on Discord for help if you want to build core.
