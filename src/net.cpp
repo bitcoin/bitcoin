@@ -1340,38 +1340,36 @@ bool CConnman::GenerateSelectSet(const std::vector<CNode*>& nodes,
         recv_set.insert(hListenSocket.socket);
     }
 
-    {
-        for (CNode* pnode : nodes) {
-            // Implement the following logic:
-            // * If there is data to send, select() for sending data. As this only
-            //   happens when optimistic write failed, we choose to first drain the
-            //   write buffer in this case before receiving more. This avoids
-            //   needlessly queueing received data, if the remote peer is not themselves
-            //   receiving data. This means properly utilizing TCP flow control signalling.
-            // * Otherwise, if there is space left in the receive buffer, select() for
-            //   receiving data.
-            // * Hand off all complete messages to the processor, to be handled without
-            //   blocking here.
+    for (CNode* pnode : nodes) {
+        // Implement the following logic:
+        // * If there is data to send, select() for sending data. As this only
+        //   happens when optimistic write failed, we choose to first drain the
+        //   write buffer in this case before receiving more. This avoids
+        //   needlessly queueing received data, if the remote peer is not themselves
+        //   receiving data. This means properly utilizing TCP flow control signalling.
+        // * Otherwise, if there is space left in the receive buffer, select() for
+        //   receiving data.
+        // * Hand off all complete messages to the processor, to be handled without
+        //   blocking here.
 
-            bool select_recv = !pnode->fPauseRecv;
-            bool select_send;
-            {
-                LOCK(pnode->cs_vSend);
-                select_send = !pnode->vSendMsg.empty();
-            }
+        bool select_recv = !pnode->fPauseRecv;
+        bool select_send;
+        {
+            LOCK(pnode->cs_vSend);
+            select_send = !pnode->vSendMsg.empty();
+        }
 
-            LOCK(pnode->cs_hSocket);
-            if (pnode->hSocket == INVALID_SOCKET)
-                continue;
+        LOCK(pnode->cs_hSocket);
+        if (pnode->hSocket == INVALID_SOCKET)
+            continue;
 
-            error_set.insert(pnode->hSocket);
-            if (select_send) {
-                send_set.insert(pnode->hSocket);
-                continue;
-            }
-            if (select_recv) {
-                recv_set.insert(pnode->hSocket);
-            }
+        error_set.insert(pnode->hSocket);
+        if (select_send) {
+            send_set.insert(pnode->hSocket);
+            continue;
+        }
+        if (select_recv) {
+            recv_set.insert(pnode->hSocket);
         }
     }
 
