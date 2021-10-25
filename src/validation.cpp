@@ -2638,6 +2638,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
     AssetMap mapAssets;
     NEVMMintTxMap mapMintKeys;
     NEVMTxRootMap mapNEVMTxRoots;
+    const bool ibd = IsInitialBlockDownload();
     std::vector<std::pair<uint256, uint32_t> > vecTXIDPairs;
     {
         // SYSCOIN
@@ -2661,7 +2662,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
     }
     // SYSCOIN
     if(passetdb){
-        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushWrite(mapMintKeys) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs)){
+        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushWrite(mapMintKeys) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs, ibd)){
             return error("Error flushing to Asset DBs: %s", pindexNew->GetBlockHash().ToString());
         }
     } 
@@ -4620,6 +4621,7 @@ bool CChainState::ReplayBlocks()
     }
     // SYSCOIN
     auto dbTx = evoDb->BeginTransaction();
+    const bool ibd = IsInitialBlockDownload();
     // Rollback along the old branch.
     while (pindexOld != pindexFork) {
         if (pindexOld->nHeight > 0) { // Never disconnect the genesis block.
@@ -4663,7 +4665,7 @@ bool CChainState::ReplayBlocks()
     evoDb->WriteBestBlock(pindexNew->GetBlockHash());
     cache.Flush();
     if(passetdb != nullptr){
-        if(!passetdb->Flush(mapAssetsConnect) || !passetnftdb->Flush(mapAssetsConnect) || !pnevmtxmintdb->FlushWrite(mapMintKeysConnect) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs)){
+        if(!passetdb->Flush(mapAssetsConnect) || !passetnftdb->Flush(mapAssetsConnect) || !pnevmtxmintdb->FlushWrite(mapMintKeysConnect) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs, ibd)){
             return error("RollbackBlock(): Error flushing to asset dbs on roll forward %s", pindexOld->GetBlockHash().ToString());
         }
     }
@@ -5715,12 +5717,9 @@ bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &
     LogPrint(BCLog::SYS, "Flushing %d block index removals\n", vecTXIDPairs.size());	
     return WriteBatch(batch, true);	
 }	
-bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &blockIndex){	
+bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &blockIndex, bool ibd){	
     if(blockIndex.empty())	
         return true;
-    const auto nNow = GetTime<std::chrono::microseconds>();
-    static std::chrono::microseconds nLastWrite{nNow};
-    static constexpr std::chrono::seconds WRITE_INTERVAL{120};
     CDBBatch batch(*this);	
     uint32_t nLastHeight = 0;
     for (const auto &pair : blockIndex) {	
@@ -5729,10 +5728,8 @@ bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > 
             nLastHeight = pair.second;	
     }
     batch.Write(LAST_KNOWN_HEIGHT_TAG, nLastHeight);
-    bool bFlush = nNow > (nLastWrite + WRITE_INTERVAL);
-    LogPrint(BCLog::SYS, "Flush writing %d block indexes, flush to disk: %d\n", blockIndex.size(), bFlush? 1: 0);	
-    nLastWrite = nNow;
-    return WriteBatch(batch, bFlush);	
+    LogPrint(BCLog::SYS, "Flush writing %d block indexes, flush to disk: %d\n", blockIndex.size(), !ibd? 1: 0);	
+    return WriteBatch(batch, !ibd);	
 }
 bool CBlockIndexDB::PruneIndex(ChainstateManager& chainman) {
     AssertLockHeld(cs_main);

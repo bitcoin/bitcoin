@@ -1064,7 +1064,7 @@ public:
     } 
     bool PruneIndex(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs, bool bDisconnect = true);
-    bool FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs);
+    bool FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs, bool ibd);
 };
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 bool PruneSyscoinDBs(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
