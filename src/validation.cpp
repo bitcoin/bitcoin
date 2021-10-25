@@ -5717,7 +5717,10 @@ bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &
 }	
 bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &blockIndex){	
     if(blockIndex.empty())	
-        return true;	
+        return true;
+    const auto nNow = GetTime<std::chrono::microseconds>();
+    static std::chrono::microseconds nLastWrite{nNow};
+    static constexpr std::chrono::seconds WRITE_INTERVAL{120};
     CDBBatch batch(*this);	
     uint32_t nLastHeight = 0;
     for (const auto &pair : blockIndex) {	
@@ -5726,8 +5729,10 @@ bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > 
             nLastHeight = pair.second;	
     }
     batch.Write(LAST_KNOWN_HEIGHT_TAG, nLastHeight);
-    LogPrint(BCLog::SYS, "Flush writing %d block indexes\n", blockIndex.size());	
-    return WriteBatch(batch, true);	
+    bool bFlush = nNow > (nLastWrite + WRITE_INTERVAL);
+    LogPrint(BCLog::SYS, "Flush writing %d block indexes, flush to disk: %d\n", blockIndex.size(), bFlush? 1: 0);	
+    nLastWrite = nNow;
+    return WriteBatch(batch, bFlush);	
 }
 bool CBlockIndexDB::PruneIndex(ChainstateManager& chainman) {
     AssertLockHeld(cs_main);
