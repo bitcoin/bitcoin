@@ -1,6 +1,6 @@
 #include <qt/test/addressbooktests.h>
 #include <qt/test/util.h>
-#include <test/test_dash.h>
+#include <test/setup_common.h>
 
 #include <interfaces/chain.h>
 #include <interfaces/node.h>

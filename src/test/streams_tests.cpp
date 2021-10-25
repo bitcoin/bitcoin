@@ -5,7 +5,7 @@
 #include <random.h>
 #include <streams.h>
 #include <support/allocators/zeroafterfree.h>
-#include <test/test_dash.h>
+#include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 

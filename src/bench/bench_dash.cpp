@@ -9,7 +9,6 @@
 #include <stacktraces.h>
 #include <util/strencodings.h>
 #include <util/system.h>
-#include <validation.h>
 
 #include <boost/lexical_cast.hpp>
 
@@ -17,20 +16,11 @@
 
 #include <bls/bls.h>
 
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
-
 static const char* DEFAULT_BENCH_FILTER = ".*";
 
 void InitBLSTests();
 void CleanupBLSTests();
 
-static fs::path SetDataDir()
-{
-    fs::path ret = fs::temp_directory_path() / "bench_dash" / fs::unique_path();
-    fs::create_directories(ret);
-    gArgs.ForceSetArg("-datadir", ret.string());
-    return ret;
-}
 static void SetupBenchArgs()
 {
     gArgs.AddArg("-?", "Print this help message and exit", false, OptionsCategory::OPTIONS);
@@ -72,21 +62,6 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
-    // Set the datadir after parsing the bench options
-    const fs::path bench_datadir{SetDataDir()};
-
-    SHA256AutoDetect();
-
-    RegisterPrettySignalHandlers();
-    RegisterPrettyTerminateHander();
-
-    ECC_Start();
-    ECCVerifyHandle verifyHandle;
-
-    BLSInit();
-    InitBLSTests();
-    SetupEnvironment();
-
     benchmark::Args args;
     args.regex_filter = gArgs.GetArg("-filter", DEFAULT_BENCH_FILTER);
     args.is_list_only = gArgs.GetBoolArg("-list", false);
@@ -95,13 +70,6 @@ int main(int argc, char** argv)
     args.output_json = gArgs.GetArg("-output_json", "");
 
     benchmark::BenchRunner::RunAll(args);
-
-    fs::remove_all(bench_datadir);
-
-    // need to be called before global destructors kick in (PoolAllocator is needed due to many BLSSecretKeys)
-    CleanupBLSTests();
-
-    ECC_Stop();
 
     return EXIT_SUCCESS;
 }
