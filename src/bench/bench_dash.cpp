@@ -18,9 +18,6 @@
 
 static const char* DEFAULT_BENCH_FILTER = ".*";
 
-void InitBLSTests();
-void CleanupBLSTests();
-
 static void SetupBenchArgs()
 {
     gArgs.AddArg("-?", "Print this help message and exit", false, OptionsCategory::OPTIONS);
