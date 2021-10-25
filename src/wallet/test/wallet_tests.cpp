@@ -38,8 +38,6 @@ static void AddKey(CWallet& wallet, const CKey& key)
 
 BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
 {
-    auto chain = interfaces::MakeChain();
-
     // Cap last block file size, and mine new block in a new block file.
     const CBlockIndex* const null_block = nullptr;
     CBlockIndex* oldTip = ::ChainActive().Tip();
@@ -47,8 +45,9 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     CBlockIndex* newTip = ::ChainActive().Tip();
 
-    LockAnnotation lock(::cs_main); // for PruneOneBlockFile
+    auto chain = interfaces::MakeChain();
     auto locked_chain = chain->lock();
+    LockAnnotation lock(::cs_main); // for PruneOneBlockFile
 
     // Verify ScanForWalletTransactions picks up transactions in both the old
     // and new block files.
@@ -128,8 +127,6 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
 // than or equal to key birthday.
 BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 {
-    auto chain = interfaces::MakeChain();
-
     // Create two blocks with same timestamp to verify that importwallet rescan
     // will pick up both blocks, not just the first.
     const int64_t BLOCK_TIME = ::ChainActive().Tip()->GetBlockTimeMax() + 5;
@@ -143,7 +140,9 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     SetMockTime(KEY_TIME);
     m_coinbase_txns.emplace_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
 
+    auto chain = interfaces::MakeChain();
     auto locked_chain = chain->lock();
+    LockAnnotation lock(::cs_main);
 
     std::string backup_file = (SetDataDir("importwallet_rescan") / "wallet.backup").string();
 
@@ -196,10 +195,14 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
 {
     auto chain = interfaces::MakeChain();
+
     CWallet wallet(*chain, WalletLocation(), WalletDatabase::CreateDummy());
     CWalletTx wtx(&wallet, m_coinbase_txns.back());
+
     auto locked_chain = chain->lock();
+    LockAnnotation lock(::cs_main);
     LOCK(wallet.cs_wallet);
+
     wtx.hashBlock = ::ChainActive().Tip()->GetBlockHash();
     wtx.nIndex = 0;
 
@@ -326,6 +329,7 @@ public:
             blocktx = CMutableTransaction(*wallet->mapWallet.at(tx->GetHash()).tx);
         }
         CreateAndProcessBlock({CMutableTransaction(blocktx)}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+
         LOCK(cs_main);
         LOCK(wallet->cs_wallet);
         auto it = wallet->mapWallet.find(tx->GetHash());

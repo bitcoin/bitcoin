@@ -364,6 +364,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
     if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) == merkleBlock.header.hashMerkleRoot) {
 
         auto locked_chain = pwallet->chain().lock();
+        LockAnnotation lock(::cs_main);
         const CBlockIndex* pindex = LookupBlockIndex(merkleBlock.header.GetHash());
         if (!pindex || !::ChainActive().Contains(pindex)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
@@ -384,6 +385,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
     wtx.hashBlock = merkleBlock.header.GetHash();
 
     auto locked_chain = pwallet->chain().lock();
+    LockAnnotation lock(::cs_main);
     LOCK(pwallet->cs_wallet);
 
     if (pwallet->IsMine(*wtx.tx)) {
@@ -950,6 +952,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         );
 
     auto locked_chain = pwallet->chain().lock();
+    LockAnnotation lock(::cs_main);
     LOCK(pwallet->cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);

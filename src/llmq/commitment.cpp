@@ -148,7 +148,7 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-height");
     }
 
-    const CBlockIndex* pindexQuorum = LookupBlockIndex(qcTx.commitment.quorumHash);
+    const CBlockIndex* pindexQuorum = WITH_LOCK(cs_main, return LookupBlockIndex(qcTx.commitment.quorumHash));
     if (!pindexQuorum) {
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-quorum-hash");
     }

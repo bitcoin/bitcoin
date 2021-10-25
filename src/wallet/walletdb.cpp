@@ -517,7 +517,9 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     bool fNoncriticalErrors = false;
     DBErrors result = DBErrors::LOAD_OK;
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    auto locked_chain = pwallet->chain().lock();
+    LockAnnotation lock(::cs_main);
+    LOCK(pwallet->cs_wallet);
     try {
         int nMinVersion = 0;
         if (m_batch.Read((std::string)"minversion", nMinVersion))

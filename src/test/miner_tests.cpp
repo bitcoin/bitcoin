@@ -8,7 +8,6 @@
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
-#include <validation.h>
 #include <masternode/payments.h>
 #include <miner.h>
 #include <policy/policy.h>
@@ -17,8 +16,9 @@
 #include <script/standard.h>
 #include <txmempool.h>
 #include <uint256.h>
-#include <util/system.h>
 #include <util/strencodings.h>
+#include <util/system.h>
+#include <validation.h>
 
 #include <test/test_dash.h>
 
@@ -75,7 +75,7 @@ struct {
     {0, 0xa00891b5}, {0, 0x60007854}, {0, 0x60021730}
 };
 
-static CBlockIndex CreateBlockIndex(int nHeight)
+static CBlockIndex CreateBlockIndex(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     CBlockIndex index;
     index.nHeight = nHeight;
