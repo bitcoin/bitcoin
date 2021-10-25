@@ -36,7 +36,7 @@ static void AddKey(CWallet& wallet, const CKey& key)
     wallet.AddKeyPubKey(key, key.GetPubKey());
 }
 
-BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
+BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
 {
     // Cap last block file size, and mine new block in a new block file.
     const CBlockIndex* const null_block = nullptr;
@@ -49,6 +49,19 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     auto locked_chain = chain->lock();
     LockAnnotation lock(::cs_main); // for PruneOneBlockFile
 
+    // Verify ScanForWalletTransactions accomodates a null start block.
+    {
+        CWallet wallet(*chain, WalletLocation(), WalletDatabase::CreateDummy());
+        AddKey(wallet, coinbaseKey);
+        WalletRescanReserver reserver(&wallet);
+        reserver.reserve();
+        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
+        BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(nullptr, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
+        BOOST_CHECK_EQUAL(failed_block, null_block);
+        BOOST_CHECK_EQUAL(stop_block, null_block);
+        BOOST_CHECK_EQUAL(wallet.GetBalance().m_mine_immature, 0);
+    }
+
     // Verify ScanForWalletTransactions picks up transactions in both the old
     // and new block files.
     {
@@ -56,7 +69,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
-        const CBlockIndex *stop_block, *failed_block;
+        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
         BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(oldTip, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
         BOOST_CHECK_EQUAL(failed_block, null_block);
         BOOST_CHECK_EQUAL(stop_block, newTip);
@@ -74,12 +87,47 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
-        const CBlockIndex *stop_block, *failed_block;
+        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
         BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(oldTip, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::FAILURE);
         BOOST_CHECK_EQUAL(failed_block, oldTip);
         BOOST_CHECK_EQUAL(stop_block, newTip);
         BOOST_CHECK_EQUAL(wallet.GetBalance().m_mine_immature, 500 * COIN);
     }
+
+    // Prune the remaining block file.
+    PruneOneBlockFile(newTip->GetBlockPos().nFile);
+    UnlinkPrunedFiles({newTip->GetBlockPos().nFile});
+
+    // Verify ScanForWalletTransactions scans no blocks.
+    {
+        CWallet wallet(*chain, WalletLocation(), WalletDatabase::CreateDummy());
+        AddKey(wallet, coinbaseKey);
+        WalletRescanReserver reserver(&wallet);
+        reserver.reserve();
+        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
+        BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(oldTip, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::FAILURE);
+        BOOST_CHECK_EQUAL(failed_block, newTip);
+        BOOST_CHECK_EQUAL(stop_block, null_block);
+        BOOST_CHECK_EQUAL(wallet.GetBalance().m_mine_immature, 0);
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
+{
+    auto chain = interfaces::MakeChain();
+
+    // Cap last block file size, and mine new block in a new block file.
+    CBlockIndex* oldTip = ::ChainActive().Tip();
+    GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
+    CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    CBlockIndex* newTip = ::ChainActive().Tip();
+
+    LockAnnotation lock(::cs_main);
+    auto locked_chain = chain->lock();
+
+    // Prune the older block file.
+    PruneOneBlockFile(oldTip->GetBlockPos().nFile);
+    UnlinkPrunedFiles({oldTip->GetBlockPos().nFile});
 
     // Verify importmulti RPC returns failure for a key whose creation time is
     // before the missing block, and success for a key whose creation time is
@@ -301,7 +349,7 @@ public:
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
         const CBlockIndex* const null_block = nullptr;
-        const CBlockIndex *stop_block, *failed_block;
+        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
         BOOST_CHECK_EQUAL(wallet->ScanForWalletTransactions(::ChainActive().Genesis(), nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
         BOOST_CHECK_EQUAL(stop_block, ::ChainActive().Tip());
         BOOST_CHECK_EQUAL(failed_block, null_block);
