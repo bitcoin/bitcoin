@@ -157,6 +157,7 @@ private:
         V1_DETERMINISTIC = 1, //!< for pre-asmap files
         V2_ASMAP = 2,         //!< for files including asmap version
         V3_BIP155 = 3,        //!< same as V2_ASMAP plus addresses are in BIP155 format
+        V4_MULTIPORT = 4,     //!< adds support for multiple ports per IP
     };
 
     //! The maximum format this software knows it can unserialize. Also, we always serialize
@@ -164,7 +165,7 @@ private:
     //! The format (first byte in the serialized stream) can be higher than this and
     //! still this software may be able to unserialize the file - if the second byte
     //! (see `lowest_compatible` in `Unserialize()`) is less or equal to this.
-    static constexpr Format FILE_FORMAT = Format::V3_BIP155;
+    static constexpr Format FILE_FORMAT = Format::V4_MULTIPORT;
 
     //! The initial value of a field that is incremented every time an incompatible format
     //! change is made (such that old software versions would not be able to parse and
