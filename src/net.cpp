@@ -2458,11 +2458,9 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (!pszDest) {
         bool banned_or_discouraged = m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect));
         if (IsLocal(addrConnect) || banned_or_discouraged || AlreadyConnectedToAddress(addrConnect)) {
-            LogPrintf("OpenNetworkConnection failed\n");
             return;
         }
     } else if (FindNode(std::string(pszDest))) {
-        LogPrintf("OpenNetworkConnection failed1\n");
         return;
     }
 
