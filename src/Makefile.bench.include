@@ -21,6 +21,7 @@ bench_bench_dash_SOURCES = \
   bench/bls_dkg.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
+  bench/duplicate_inputs.cpp \
   bench/ecdsa.cpp \
   bench/examples.cpp \
   bench/rollingbloom.cpp \
