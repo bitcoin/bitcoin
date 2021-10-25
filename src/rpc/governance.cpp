@@ -30,11 +30,9 @@ static void gobject_count_help()
         RPCHelpMan{"gobject count",
             "Count governance objects and votes\n",
             {
-                {"mode", RPCArg::Type::STR, true},
+                {"mode", RPCArg::Type::STR, /* opt */ true, /* default_val */ "json", "Output format: json (\"json\") or string in free form (\"all\")"},
             }}
-            .ToString() +
-        "\nArguments:\n"
-        "1. \"mode\"   (string, optional, default: \"json\") Output format: json (\"json\") or string in free form (\"all\")\n");
+            .ToString());
 }
 
 static UniValue gobject_count(const JSONRPCRequest& request)
@@ -60,11 +58,9 @@ static void gobject_deserialize_help()
         RPCHelpMan {"gobject deserialize",
             "Deserialize governance object from hex string to JSON\n",
             {
-                {"hex_data", RPCArg::Type::STR_HEX, false},
+                {"hex_data", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "data in hex string form"},
             }}
-            .ToString() +
-        "\nArguments:\n"
-        "1. \"hex_data\"   (string, required) data in hex string form\n");
+            .ToString());
 }
 
 static UniValue gobject_deserialize(const JSONRPCRequest& request)
@@ -89,11 +85,9 @@ static void gobject_check_help()
         RPCHelpMan{"gobject check",
             "Validate governance object data (proposal only)\n",
             {
-                {"hex_data", RPCArg::Type::STR_HEX, false},
+                {"hex_data", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "data in hex string format"},
             }}
-            .ToString() +
-        "\nArguments:\n"
-        "1. \"hex_data\"   (string, required) data in hex string form\n");
+            .ToString());
 }
 
 static UniValue gobject_check(const JSONRPCRequest& request)
@@ -136,23 +130,15 @@ static void gobject_prepare_help(CWallet* const pwallet)
             "Prepare governance object by signing and creating tx\n"
             + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                {"parent-hash", RPCArg::Type::STR_HEX, false},
-                {"revision", RPCArg::Type::NUM, false},
-                {"time", RPCArg::Type::NUM, false},
-                {"data-hex", RPCArg::Type::STR_HEX, false},
-                {"use-IS", RPCArg::Type::BOOL, true},
-                {"outputHash", RPCArg::Type::STR_HEX, true},
-                {"outputIndex", RPCArg::Type::NUM, true},
+                {"parent-hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "hash of the parent object, \"0\" is root"},
+                {"revision", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "object revision in the system"},
+                {"time", RPCArg::Type::NUM, /* opt */ false, /* default_val */"", "time this object was created"},
+                {"data-hex", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "data in hex string form"},
+                {"use-IS", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "Deprecated and ignored"},
+                {"outputHash", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "", "the single output to submit the proposal fee from"},
+                {"outputIndex", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "The output index."},
             }}
-            .ToString() +
-        "\nArguments:\n"
-        "1. parent-hash   (string, required) hash of the parent object, \"0\" is root\n"
-        "2. revision      (numeric, required) object revision in the system\n"
-        "3. time          (numeric, required) time this object was created\n"
-        "4. data-hex      (string, required)  data in hex string form\n"
-        "5. use-IS        (boolean, optional, default=false) Deprecated and ignored\n"
-        "6. outputHash    (string, optional) the single output to submit the proposal fee from\n"
-        "7. outputIndex   (numeric, optional) The output index.\n");
+            .ToString());
 }
 
 static UniValue gobject_prepare(const JSONRPCRequest& request)
@@ -266,11 +252,9 @@ static void gobject_list_prepared_help(CWallet* const pwallet)
             "Returns a list of governance objects prepared by this wallet with \"gobject prepare\" sorted by their creation time.\n"
             + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                {"count", RPCArg::Type::NUM, true},
+                {"count", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "10", "Maximum number of objects to return."},
             }}
-            .ToString() +
-        "\nArguments:\n"
-        "1. count (numeric, optional, default=10) Maximum number of objects to return.\n");
+            .ToString());
 }
 
 static UniValue gobject_list_prepared(const JSONRPCRequest& request)
@@ -317,19 +301,13 @@ static void gobject_submit_help()
         RPCHelpMan{"gobject submit",
             "Submit governance object to network\n",
             {
-                {"parent-hash", RPCArg::Type::STR_HEX, false},
-                {"revision", RPCArg::Type::NUM, false},
-                {"time", RPCArg::Type::NUM, false},
-                {"data-hex", RPCArg::Type::STR_HEX, false},
-                {"fee-txid", RPCArg::Type::STR_HEX, true},
+                {"parent-hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "hash of the parent object, \"0\" is root"},
+                {"revision", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "object revision in the system"},
+                {"time", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "time this object was created"},
+                {"data-hex", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "data in hex string form"},
+                {"fee-txid", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "", "fee-tx id, required for all objects except triggers"},
             }}
-            .ToString() +
-        "\nArguments:\n"
-        "1. parent-hash   (string, required) hash of the parent object, \"0\" is root\n"
-        "2. revision      (numeric, required) object revision in the system\n"
-        "3. time          (numeric, required) time this object was created\n"
-        "4. data-hex      (string, required) data in hex string form\n"
-        "5. fee-txid      (string, optional) fee-tx id, required for all objects except triggers");
+            .ToString());
 }
 
 static UniValue gobject_submit(const JSONRPCRequest& request)
@@ -436,15 +414,11 @@ static void gobject_vote_conf_help()
         RPCHelpMan{"gobject vote-conf",
             "Vote on a governance object by masternode configured in dash.conf\n",
             {
-                {"governance-hash", RPCArg::Type::STR_HEX, false},
-                {"vote", RPCArg::Type::STR, false},
-                {"vote-outcome", RPCArg::Type::STR, false},
+                {"governance-hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "hash of the governance object"},
+                {"vote", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "vote, possible values: [funding|valid|delete|endorsed]"},
+                {"vote-outcome", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "vote outcome, possible values: [yes|no|abstain]"},
             }}
-            .ToString() +
-        "\nArguments:\n"
-        "1. governance-hash   (string, required) hash of the governance object\n"
-        "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
-        "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n");
+            .ToString());
 }
 
 static UniValue gobject_vote_conf(const JSONRPCRequest& request)
@@ -613,15 +587,11 @@ static void gobject_vote_many_help(CWallet* const pwallet)
             "Vote on a governance object by all masternodes for which the voting key is present in the local wallet\n"
             + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                {"governance-hash", RPCArg::Type::STR_HEX, false},
-                {"vote", RPCArg::Type::STR, false},
-                {"vote-outcome", RPCArg::Type::STR, false},
+                {"governance-hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "hash of the governance object"},
+                {"vote", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "vote, possible values: [funding|valid|delete|endorsed]"},
+                {"vote-outcome", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "vote outcome, possible values: [yes|no|abstain]"},
             }}
-            .ToString() +
-        "\nArguments:\n"
-        "1. governance-hash   (string, required) hash of the governance object\n"
-        "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
-        "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n");
+            .ToString());
 }
 
 static UniValue gobject_vote_many(const JSONRPCRequest& request)
@@ -672,17 +642,12 @@ static void gobject_vote_alias_help(CWallet* const pwallet)
             "Vote on a governance object by masternode's voting key (if present in local wallet)\n"
             + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                {"governance-hash", RPCArg::Type::STR_HEX, false},
-                {"vote", RPCArg::Type::STR, false},
-                {"vote-outcome", RPCArg::Type::STR, false},
-                {"protx-hash", RPCArg::Type::STR_HEX, false},
+                {"governance-hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "hash of the governance object"},
+                {"vote", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "vote, possible values: [funding|valid|delete|endorsed]"},
+                {"vote-outcome", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "vote outcome, possible values: [yes|no|abstain]"},
+                {"protx-hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "masternode's proTxHash"},
             }}
-            .ToString() +
-        "\nArguments:\n"
-        "1. governance-hash   (string, required) hash of the governance object\n"
-        "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
-        "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n"
-        "4. protx-hash        (string, required) masternode's proTxHash");
+            .ToString());
 }
 
 static UniValue gobject_vote_alias(const JSONRPCRequest& request)
@@ -795,13 +760,10 @@ static void gobject_list_help()
         RPCHelpMan{"gobject list",
             "List governance objects (can be filtered by signal and/or object type)\n",
             {
-                {"signal", RPCArg::Type::STR, true},
-                {"type", RPCArg::Type::STR, true},
+                {"signal", RPCArg::Type::STR, /* opt */ true, /* default_val */ "valid", "cached signal, possible values: [valid|funding|delete|endorsed|all]"},
+                {"type", RPCArg::Type::STR, /* opt */ true, /* default_val */ "all", "object type, possible values: [proposals|triggers|all]"},
             }}
-            .ToString() +
-        "\nArguments:\n"
-        "1. signal   (string, optional, default=valid) cached signal, possible values: [valid|funding|delete|endorsed|all]\n"
-        "2. type     (string, optional, default=all) object type, possible values: [proposals|triggers|all]\n");
+            .ToString());
 }
 
 static UniValue gobject_list(const JSONRPCRequest& request)
@@ -832,13 +794,10 @@ static void gobject_diff_help()
         RPCHelpMan{"gobject diff",
             "List differences since last diff or list\n",
             {
-                {"signal", RPCArg::Type::STR, true},
-                {"type", RPCArg::Type::STR, true},
+                {"signal", RPCArg::Type::STR, /* opt */ true, /* default_val */ "valid", "cached signal, possible values: [valid|funding|delete|endorsed|all]"},
+                {"type", RPCArg::Type::STR, /* opt */ true, /* default_val */ "all", "object type, possible values: [proposals|triggers|all]"},
             }}
-            .ToString() +
-        "\nArguments:\n"
-        "1. signal   (string, optional, default=valid) cached signal, possible values: [valid|funding|delete|endorsed|all]\n"
-        "2. type     (string, optional, default=all) object type, possible values: [proposals|triggers|all]\n");
+            .ToString());
 }
 
 static UniValue gobject_diff(const JSONRPCRequest& request)
@@ -869,11 +828,9 @@ static void gobject_get_help()
         RPCHelpMan{"gobject get",
             "Get governance object by hash\n",
             {
-                {"governance-hash", RPCArg::Type::STR_HEX, false},
+                {"governance-hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "object id"},
             }}
-            .ToString() +
-        "\nArguments:\n"
-        "1. governance-hash   (string, required) object id\n");
+            .ToString());
 }
 
 static UniValue gobject_get(const JSONRPCRequest& request)
@@ -961,15 +918,11 @@ static void gobject_getcurrentvotes_help()
         RPCHelpMan{"gobject getcurrentvotes",
             "Get only current (tallying) votes for a governance object hash (does not include old votes)\n",
             {
-                {"governance-hash", RPCArg::Type::STR_HEX, false},
-                {"txid", RPCArg::Type::STR_HEX, true},
-                {"vout", RPCArg::Type::STR, true},
+                {"governance-hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "object id"},
+                {"txid", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "", "masternode collateral txid"},
+                {"vout", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "masternode collateral output index, required if <txid> presents"},
             }}
-            .ToString() +
-        "\nArguments:\n"
-        "1. governance-hash   (string, required) object id\n"
-        "2. txid              (string, optional) masternode collateral txid\n"
-        "3. vout              (string, optional) masternode collateral output index, required if <txid> presents\n");
+            .ToString());
 }
 
 static UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
@@ -1106,13 +1059,13 @@ static UniValue voteraw(const JSONRPCRequest& request)
             RPCHelpMan{"voteraw",
                 "Compile and relay a governance vote with provided external signature instead of signing vote internally\n",
                 {
-                    {"mn-collateral-tx-hash", RPCArg::Type::STR_HEX, false},
-                    {"mn-collateral-tx-index", RPCArg::Type::NUM, false},
-                    {"governance-hash", RPCArg::Type::STR_HEX, false},
-                    {"vote-signal", RPCArg::Type::STR, false},
-                    {"vote-outcome", RPCArg::Type::STR, false},
-                    {"time", RPCArg::Type::NUM, false},
-                    {"vote-sig", RPCArg::Type::STR_HEX, false},
+                    {"mn-collateral-tx-hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", ""},
+                    {"mn-collateral-tx-index", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", ""},
+                    {"governance-hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", ""},
+                    {"vote-signal", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", ""},
+                    {"vote-outcome", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "yes|no|abstain"},
+                    {"time", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", ""},
+                    {"vote-sig", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", ""},
                 }}
                 .ToString());
 
@@ -1223,11 +1176,9 @@ static UniValue getsuperblockbudget(const JSONRPCRequest& request)
             RPCHelpMan{"getsuperblockbudget",
                 "\nReturns the absolute maximum sum of superblock payments allowed.\n",
                 {
-                    {"index", RPCArg::Type::NUM, false},
+                    {"index", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The block index"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. index         (numeric, required) The block index\n"
             "\nResult:\n"
             "n                (numeric) The absolute maximum sum of superblock payments allowed, in " + CURRENCY_UNIT + "\n"
             "\nExamples:\n"

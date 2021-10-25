@@ -28,11 +28,9 @@ static UniValue coinjoin(const JSONRPCRequest& request)
             RPCHelpMan{"coinjoin",
                 "",
                 {
-                    {"command", RPCArg::Type::STR, false},
+                    {"command", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The command to execute"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"command\"        (string or set of strings, required) The command to execute\n"
             "\nAvailable commands:\n"
             "  start       - Start mixing\n"
             "  stop        - Stop mixing\n"
