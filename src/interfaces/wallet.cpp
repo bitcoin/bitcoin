@@ -544,6 +544,10 @@ public:
     bool hdEnabled() override { return m_wallet->IsHDEnabled(); }
     bool IsWalletFlagSet(uint64_t flag) override { return m_wallet->IsWalletFlagSet(flag); }
     CoinJoin::Client& coinJoin() override { return m_coinjoin; }
+    void remove() override
+    {
+        RemoveWallet(m_wallet);
+    }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {
         return MakeHandler(m_wallet->NotifyUnload.connect(fn));
@@ -610,7 +614,7 @@ public:
 
 } // namespace
 
-std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return MakeUnique<WalletImpl>(wallet); }
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? MakeUnique<WalletImpl>(wallet) : nullptr; }
 
 std::unique_ptr<ChainClient> MakeWalletClient(Chain& chain, std::vector<std::string> wallet_filenames)
 {

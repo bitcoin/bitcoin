@@ -479,7 +479,7 @@ int GuiMain(int argc, char* argv[])
     //   IMPORTANT if it is no longer a typedef use the normal variant above
     qRegisterMetaType< CAmount >("CAmount");
     qRegisterMetaType< std::function<void()> >("std::function<void()>");
-
+    qRegisterMetaType<QMessageBox::Icon>("QMessageBox::Icon");
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
     node->setupServerArgs();

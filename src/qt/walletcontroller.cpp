@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include <QApplication>
+#include <QMessageBox>
 #include <QMutexLocker>
 #include <QThread>
 #include <QWindow>
@@ -26,16 +27,57 @@ WalletController::WalletController(interfaces::Node& node, OptionsModel* options
     for (std::unique_ptr<interfaces::Wallet>& wallet : m_node.getWallets()) {
         getOrCreateWallet(std::move(wallet));
     }
+
+    m_activity_thread.start();
 }
 
 // Not using the default destructor because not all member types definitions are
 // available in the header, just forward declared.
-WalletController::~WalletController() {}
+WalletController::~WalletController()
+{
+    m_activity_thread.quit();
+    m_activity_thread.wait();
+}
 
 std::vector<WalletModel*> WalletController::getWallets() const
 {
     QMutexLocker locker(&m_mutex);
     return m_wallets;
+}
+
+std::vector<std::string> WalletController::getWalletsAvailableToOpen() const
+{
+    QMutexLocker locker(&m_mutex);
+    std::vector<std::string> wallets = m_node.listWalletDir();
+    for (WalletModel* wallet_model : m_wallets) {
+        auto it = std::remove(wallets.begin(), wallets.end(), wallet_model->wallet().getWalletName());
+        if (it != wallets.end()) wallets.erase(it);
+    }
+    return wallets;
+}
+
+OpenWalletActivity* WalletController::openWallet(const std::string& name, QWidget* parent)
+{
+    OpenWalletActivity* activity = new OpenWalletActivity(this, name);
+    activity->moveToThread(&m_activity_thread);
+    QMetaObject::invokeMethod(activity, "open", Qt::QueuedConnection);
+    return activity;
+}
+
+void WalletController::closeWallet(WalletModel* wallet_model, QWidget* parent)
+{
+    QMessageBox box(parent);
+    box.setWindowTitle(tr("Close wallet"));
+    box.setText(tr("Are you sure you wish to close wallet <i>%1</i>?").arg(wallet_model->getDisplayName()));
+    box.setInformativeText(tr("Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled."));
+    box.setStandardButtons(QMessageBox::Yes|QMessageBox::Cancel);
+    box.setDefaultButton(QMessageBox::Yes);
+    if (box.exec() != QMessageBox::Yes) return;
+
+    // First remove wallet from node.
+    wallet_model->wallet().remove();
+    // Now release the model.
+    removeAndDeleteWallet(wallet_model);
 }
 
 WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wallet> wallet)
@@ -110,4 +152,25 @@ void WalletController::removeAndDeleteWallet(WalletModel* wallet_model)
     // Currently this can trigger the unload since the model can hold the last
     // CWallet shared pointer.
     delete wallet_model;
+}
+
+
+OpenWalletActivity::OpenWalletActivity(WalletController* wallet_controller, const std::string& name)
+    : m_wallet_controller(wallet_controller)
+    , m_name(name)
+{}
+
+void OpenWalletActivity::open()
+{
+    std::string error, warning;
+    std::unique_ptr<interfaces::Wallet> wallet = m_wallet_controller->m_node.loadWallet(m_name, error, warning);
+    if (!warning.empty()) {
+        Q_EMIT message(QMessageBox::Warning, QString::fromStdString(warning));
+    }
+    if (wallet) {
+        Q_EMIT opened(m_wallet_controller->getOrCreateWallet(std::move(wallet)));
+    } else {
+        Q_EMIT message(QMessageBox::Critical, QString::fromStdString(error));
+    }
+    Q_EMIT finished();
 }
