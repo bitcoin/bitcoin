@@ -1502,28 +1502,33 @@ void CConnman::SocketEvents(const std::vector<CNode*>& nodes,
 
 void CConnman::SocketHandler()
 {
-    const NodesSnapshot snap{*this, /*shuffle=*/false};
+    std::set<SOCKET> recv_set;
+    std::set<SOCKET> send_set;
+    std::set<SOCKET> error_set;
 
-    std::set<SOCKET> recv_set, send_set, error_set;
-    SocketEvents(snap.Nodes(), recv_set, send_set, error_set);
-
-    if (interruptNet) return;
-
-    //
-    // Accept new connections
-    //
-    for (const ListenSocket& hListenSocket : vhListenSocket)
     {
-        if (hListenSocket.socket != INVALID_SOCKET && recv_set.count(hListenSocket.socket) > 0)
-        {
-            AcceptConnection(hListenSocket);
-        }
+        const NodesSnapshot snap{*this, /*shuffle=*/false};
+
+        // Check for the readiness of the already connected sockets and the
+        // listening sockets in one call ("readiness" as in poll(2) or
+        // select(2)). If none are ready, wait for a short while and return
+        // empty sets.
+        SocketEvents(snap.Nodes(), recv_set, send_set, error_set);
+
+        // Service (send/receive) each of the already connected nodes.
+        SocketHandlerConnected(snap.Nodes(), recv_set, send_set, error_set);
     }
 
-    //
-    // Service each socket
-    //
-    for (CNode* pnode : snap.Nodes()) {
+    // Accept new connections from listening sockets.
+    SocketHandlerListening(recv_set);
+}
+
+void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
+                                      const std::set<SOCKET>& recv_set,
+                                      const std::set<SOCKET>& send_set,
+                                      const std::set<SOCKET>& error_set)
+{
+    for (CNode* pnode : nodes) {
         if (interruptNet)
             return;
 
@@ -1604,6 +1609,18 @@ void CConnman::SocketHandler()
         }
 
         if (InactivityCheck(*pnode)) pnode->fDisconnect = true;
+    }
+}
+
+void CConnman::SocketHandlerListening(const std::set<SOCKET>& recv_set)
+{
+    for (const ListenSocket& listen_socket : vhListenSocket) {
+        if (interruptNet) {
+            return;
+        }
+        if (listen_socket.socket != INVALID_SOCKET && recv_set.count(listen_socket.socket) > 0) {
+            AcceptConnection(listen_socket);
+        }
     }
 }
 

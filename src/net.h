@@ -1010,7 +1010,30 @@ private:
                       std::set<SOCKET>& send_set,
                       std::set<SOCKET>& error_set);
 
+    /**
+     * Check connected and listening sockets for IO readiness and process them accordingly.
+     */
     void SocketHandler();
+
+    /**
+     * Do the read/write for connected sockets that are ready for IO.
+     * @param[in] nodes Nodes to process. The socket of each node is checked against
+     * `recv_set`, `send_set` and `error_set`.
+     * @param[in] recv_set Sockets that are ready for read.
+     * @param[in] send_set Sockets that are ready for send.
+     * @param[in] error_set Sockets that have an exceptional condition (error).
+     */
+    void SocketHandlerConnected(const std::vector<CNode*>& nodes,
+                                const std::set<SOCKET>& recv_set,
+                                const std::set<SOCKET>& send_set,
+                                const std::set<SOCKET>& error_set);
+
+    /**
+     * Accept incoming connections, one from each read-ready listening socket.
+     * @param[in] recv_set Sockets that are ready for read.
+     */
+    void SocketHandlerListening(const std::set<SOCKET>& recv_set);
+
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
 
