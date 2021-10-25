@@ -13,6 +13,7 @@
 #include <llmq/utils.h>
 
 class UniValue;
+class CInv;
 
 namespace llmq
 {

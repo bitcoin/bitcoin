@@ -2,12 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <evo/simplifiedmns.h>
+
 #include <evo/cbtx.h>
 #include <core_io.h>
 #include <evo/deterministicmns.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/commitment.h>
-#include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
 
 #include <pubkey.h>

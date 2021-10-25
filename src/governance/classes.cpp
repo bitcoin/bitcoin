@@ -4,6 +4,7 @@
 
 #include <governance/classes.h>
 
+#include <chainparams.h>
 #include <core_io.h>
 #include <governance/governance.h>
 #include <key_io.h>

@@ -5,7 +5,16 @@
 #ifndef BITCOIN_MASTERNODE_PAYMENTS_H
 #define BITCOIN_MASTERNODE_PAYMENTS_H
 
+#include <amount.h>
+
+#include <string>
+#include <vector>
+
 class CMasternodePayments;
+class CBlock;
+class CTransaction;
+class CMutableTransaction;
+class CTxOut;
 
 /// TODO: all 4 functions do not belong here really, they should be refactored/moved somewhere (main.cpp ?)
 bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet);

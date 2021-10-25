@@ -2,15 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <evo/deterministicmns.h>
 #include <evo/providertx.h>
-#include <evo/specialtx.h>
-#include <messagesigner.h>
 
 #include <chainparams.h>
 #include <coins.h>
 #include <consensus/validation.h>
+#include <evo/deterministicmns.h>
+#include <evo/specialtx.h>
 #include <hash.h>
+#include <messagesigner.h>
 #include <script/standard.h>
 #include <validation.h>
 

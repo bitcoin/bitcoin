@@ -8,6 +8,7 @@
 #include <llmq/utils.h>
 
 #include <chain.h>
+#include <chainparams.h>
 #include <consensus/validation.h>
 #include <masternode/sync.h>
 #include <net_processing.h>

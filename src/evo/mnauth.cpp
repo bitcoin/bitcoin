@@ -4,10 +4,11 @@
 
 #include <evo/mnauth.h>
 
+#include <chainparams.h>
 #include <evo/deterministicmns.h>
 #include <llmq/utils.h>
-#include <masternode/node.h>
 #include <masternode/meta.h>
+#include <masternode/node.h>
 #include <masternode/sync.h>
 #include <net.h>
 #include <net_processing.h>

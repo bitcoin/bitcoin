@@ -2,9 +2,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <llmq/signing.h>
+
 #include <llmq/quorums.h>
 #include <llmq/commitment.h>
-#include <llmq/signing.h>
 #include <llmq/utils.h>
 #include <llmq/signing_shares.h>
 

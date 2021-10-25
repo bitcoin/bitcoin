@@ -3,12 +3,20 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <base58.h>
+#include <bls/bls.h>
+#include <chainparams.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <evo/providertx.h>
+#include <evo/deterministicmns.h>
+#include <evo/simplifiedmns.h>
+#include <evo/specialtx.h>
 #include <index/txindex.h>
+#include <masternode/meta.h>
 #include <messagesigner.h>
-#include <rpc/util.h>
+#include <netbase.h>
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <txmempool.h>
 #include <util/moneystr.h>
 #include <util/validation.h>
@@ -16,20 +24,9 @@
 
 #ifdef ENABLE_WALLET
 #include <wallet/coincontrol.h>
-#include <wallet/wallet.h>
 #include <wallet/rpcwallet.h>
+#include <wallet/wallet.h>
 #endif//ENABLE_WALLET
-
-#include <netbase.h>
-
-#include <evo/specialtx.h>
-#include <evo/providertx.h>
-#include <evo/deterministicmns.h>
-#include <evo/simplifiedmns.h>
-
-#include <bls/bls.h>
-
-#include <masternode/meta.h>
 
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);

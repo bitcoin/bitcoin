@@ -5,6 +5,7 @@
 #define BITCOIN_MASTERNODE_SYNC_H
 
 #include <atomic>
+#include <string>
 
 class CMasternodeSync;
 class CBlockIndex;

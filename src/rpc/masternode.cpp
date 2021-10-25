@@ -2,6 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chainparams.h>
 #include <evo/deterministicmns.h>
 #include <governance/classes.h>
 #include <index/txindex.h>
@@ -9,8 +10,9 @@
 #include <masternode/payments.h>
 #include <net.h>
 #include <netbase.h>
-#include <rpc/util.h>
 #include <rpc/server.h>
+#include <rpc/util.h>
+#include <univalue.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/rpcwallet.h>
@@ -20,7 +22,6 @@
 
 #include <fstream>
 #include <iomanip>
-#include <univalue.h>
 
 static UniValue masternodelist(const JSONRPCRequest& request);
 

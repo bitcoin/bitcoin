@@ -2,14 +2,21 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <evo/deterministicmns.h>
-#include <governance/governance.h>
-#include <governance/classes.h>
-#include <masternode/node.h>
 #include <masternode/payments.h>
+
+#include <amount.h>
+#include <chain.h>
+#include <chainparams.h>
+#include <evo/deterministicmns.h>
+#include <governance/classes.h>
+#include <governance/governance.h>
+#include <key_io.h>
+#include <logging.h>
 #include <masternode/sync.h>
-#include <netfulfilledman.h>
-#include <netmessagemaker.h>
+#include <primitives/block.h>
+#include <script/standard.h>
+#include <tinyformat.h>
+#include <util/system.h>
 #include <validation.h>
 
 #include <string>

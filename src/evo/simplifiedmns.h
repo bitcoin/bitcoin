@@ -6,11 +6,12 @@
 #define BITCOIN_EVO_SIMPLIFIEDMNS_H
 
 #include <bls/bls.h>
-
 #include <merkleblock.h>
+#include <netaddress.h>
 #include <pubkey.h>
 
 class UniValue;
+class CBlockIndex;
 class CDeterministicMNList;
 class CDeterministicMN;
 

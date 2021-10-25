@@ -2,20 +2,22 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <llmq/quorums.h>
-#include <llmq/commitment.h>
 #include <llmq/utils.h>
 
+#include <llmq/quorums.h>
+#include <llmq/commitment.h>
+
 #include <bls/bls.h>
+#include <chainparams.h>
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
-#include <chainparams.h>
+#include <masternode/meta.h>
+#include <net.h>
 #include <random.h>
 #include <spork.h>
+#include <timedata.h>
 #include <validation.h>
 #include <versionbits.h>
-
-#include <masternode/meta.h>
 
 namespace llmq
 {
@@ -396,6 +398,18 @@ std::map<Consensus::LLMQType, QvvecSyncMode> CLLMQUtils::GetEnabledQuorumVvecSyn
     }
     return mapQuorumVvecSyncEntries;
 }
+
+template <typename CacheType>
+void CLLMQUtils::InitQuorumsCache(CacheType& cache)
+{
+    for (auto& llmq : Params().GetConsensus().llmqs) {
+        cache.emplace(std::piecewise_construct, std::forward_as_tuple(llmq.first),
+                      std::forward_as_tuple(llmq.second.signingActiveQuorumCount + 1));
+    }
+}
+template void CLLMQUtils::InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>>>(std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>>& cache);
+template void CLLMQUtils::InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>>>(std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>>& cache);
+template void CLLMQUtils::InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>, std::less<Consensus::LLMQType>, std::allocator<std::pair<Consensus::LLMQType const, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>>>>>(std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>, std::less<Consensus::LLMQType>, std::allocator<std::pair<Consensus::LLMQType const, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>>>>&);
 
 const Consensus::LLMQParams& GetLLMQParams(Consensus::LLMQType llmqType)
 {

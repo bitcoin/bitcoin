@@ -101,11 +101,10 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "evo/deterministicmns -> validationinterface -> txmempool -> evo/deterministicmns"
     "llmq/chainlocks -> llmq/instantsend -> validation -> llmq/chainlocks"
     "evo/deterministicmns -> evo/simplifiedmns -> llmq/blockprocessor -> net_processing -> masternode/payments -> evo/deterministicmns"
-    "evo/deterministicmns -> evo/simplifiedmns -> llmq/blockprocessor -> net_processing -> masternode/payments -> masternode/node -> evo/deterministicmns"
-    "evo/deterministicmns -> evo/simplifiedmns -> llmq/blockprocessor -> net -> masternode/sync -> evo/deterministicmns"
     "governance/governance -> net_processing -> masternode/payments -> governance/governance"
-    "evo/deterministicmns -> evo/simplifiedmns -> llmq/blockprocessor -> net -> evo/deterministicmns"
     "coinjoin/coinjoin -> llmq/chainlocks -> net -> coinjoin/coinjoin"
+    "evo/deterministicmns -> llmq/utils -> net -> evo/deterministicmns"
+    "evo/deterministicmns -> llmq/utils -> net -> masternode/sync -> evo/deterministicmns"
 )
 
 EXIT_CODE=0

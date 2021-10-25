@@ -4,18 +4,19 @@
 
 #include <test/test_dash.h>
 
-#include <consensus/validation.h>
-#include <script/interpreter.h>
-#include <script/standard.h>
-#include <script/sign.h>
-#include <validation.h>
 #include <base58.h>
-#include <netbase.h>
-#include <messagesigner.h>
-#include <policy/policy.h>
+#include <chainparams.h>
+#include <consensus/validation.h>
 #include <keystore.h>
+#include <messagesigner.h>
+#include <netbase.h>
+#include <policy/policy.h>
+#include <script/interpreter.h>
+#include <script/sign.h>
+#include <script/standard.h>
 #include <spork.h>
 #include <txmempool.h>
+#include <validation.h>
 
 #include <evo/specialtx.h>
 #include <evo/providertx.h>

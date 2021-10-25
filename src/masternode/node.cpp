@@ -6,6 +6,7 @@
 
 #include <evo/deterministicmns.h>
 
+#include <chainparams.h>
 #include <net.h>
 #include <netbase.h>
 #include <protocol.h>

@@ -5,7 +5,6 @@
 #ifndef BITCOIN_FLAT_DATABASE_H
 #define BITCOIN_FLAT_DATABASE_H
 
-#include <chainparams.h>
 #include <clientversion.h>
 #include <fs.h>
 #include <hash.h>

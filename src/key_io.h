@@ -6,12 +6,13 @@
 #ifndef BITCOIN_KEY_IO_H
 #define BITCOIN_KEY_IO_H
 
-#include <chainparams.h>
 #include <key.h>
 #include <pubkey.h>
 #include <script/standard.h>
 
 #include <string>
+
+class CChainParams;
 
 CKey DecodeSecret(const std::string& str);
 std::string EncodeSecret(const CKey& key);

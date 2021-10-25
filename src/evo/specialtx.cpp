@@ -2,16 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <evo/specialtx.h>
+
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <hash.h>
 #include <primitives/block.h>
 #include <validation.h>
-
 #include <evo/cbtx.h>
 #include <evo/deterministicmns.h>
-#include <evo/specialtx.h>
-
 #include <llmq/commitment.h>
 #include <llmq/blockprocessor.h>
 

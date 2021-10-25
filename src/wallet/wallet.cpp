@@ -7,6 +7,7 @@
 #include <wallet/wallet.h>
 
 #include <chain.h>
+#include <chainparams.h>
 #include <wallet/coinselection.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>

@@ -18,6 +18,7 @@
 #include <qt/optionsmodel.h>
 #include <qt/sendcoinsentry.h>
 
+#include <chainparams.h>
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <wallet/coincontrol.h>

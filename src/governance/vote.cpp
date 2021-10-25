@@ -5,6 +5,7 @@
 #include <governance/vote.h>
 
 #include <bls/bls.h>
+#include <chainparams.h>
 #include <key.h>
 #include <masternode/sync.h>
 #include <messagesigner.h>
