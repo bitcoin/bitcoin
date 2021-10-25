@@ -11,7 +11,6 @@
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
-#include <checkpoints.h>
 #include <coins.h>
 #include <node/coinstats.h>
 #include <core_io.h>

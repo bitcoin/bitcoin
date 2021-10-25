@@ -99,7 +99,7 @@ AddressBookPage::AddressBookPage(Mode _mode, Tabs _tab, QWidget* parent) :
         ui->newAddress->setVisible(true);
         break;
     case ReceivingTab:
-        ui->labelExplanation->setText(tr("These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction."));
+        ui->labelExplanation->setText(tr("These are your Dash addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses."));
         ui->deleteAddress->setVisible(false);
         ui->newAddress->setVisible(false);
         break;
