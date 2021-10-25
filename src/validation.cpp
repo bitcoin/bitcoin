@@ -5713,6 +5713,7 @@ bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &
     }
     if(bDisconnect) {
         batch.Write(LAST_KNOWN_HEIGHT_TAG, nLastHeight-1);
+        nLastKnownHeightOnStart = 0;
     }
     LogPrint(BCLog::SYS, "Flushing %d block index removals\n", vecTXIDPairs.size());	
     return WriteBatch(batch, true);	
