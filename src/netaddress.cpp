@@ -1038,11 +1038,6 @@ std::string CService::ToString() const
 {
     return ToStringIPPort();
 }
-// SYSCOIN
-void CService::SetPort(uint16_t portIn)
-{
-    port = portIn;
-}
 CSubNet::CSubNet():
     valid(false)
 {

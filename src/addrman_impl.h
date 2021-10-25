@@ -99,7 +99,7 @@ public:
 class AddrManImpl
 {
 public:
-    AddrManImpl(std::vector<bool>&& asmap, bool deterministic, int32_t consistency_check_ratio, bool _discriminatePorts = false);
+    AddrManImpl(std::vector<bool>&& asmap, bool deterministic, int32_t consistency_check_ratio);
 
     ~AddrManImpl();
 
@@ -179,8 +179,8 @@ private:
     //! table with information about all nIds
     std::unordered_map<int, AddrInfo> mapInfo GUARDED_BY(cs);
 
-    //! find an nId based on its network address
-    std::unordered_map<CNetAddr, int, CNetAddrHash> mapAddr GUARDED_BY(cs);
+    //! find an nId based on its network address and port.
+    std::unordered_map<CService, int, CServiceHash> mapAddr GUARDED_BY(cs);
 
     //! randomly-ordered vector of all nIds
     //! This is mutable because it is unobservable outside the class, so any
@@ -201,10 +201,6 @@ private:
 
     //! last time Good was called (memory only). Initially set to 1 so that "never" is strictly worse.
     int64_t nLastGood GUARDED_BY(cs){1};
-
-    // SYSCOIN
-    //! discriminate entries based on port. Should be false on mainnet/testnet and can be true on regtest
-    bool discriminatePorts;
 
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;

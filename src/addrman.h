@@ -57,7 +57,7 @@ class AddrMan
 
 public:
     // SYSCOIN
-    explicit AddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio, bool _discriminatePorts = false);
+    explicit AddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio);
 
     ~AddrMan();
 

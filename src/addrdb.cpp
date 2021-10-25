@@ -185,7 +185,7 @@ std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const A
 {
     auto check_addrman = std::clamp<int32_t>(args.GetIntArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
     // SYSCOIN
-    addrman = std::make_unique<AddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman, Params().AllowMultiplePorts());
+    addrman = std::make_unique<AddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
 
     int64_t nStart = GetTimeMillis();
     const auto path_addr{args.GetDataDirNet() / "peers.dat"};

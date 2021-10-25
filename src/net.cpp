@@ -308,6 +308,10 @@ bool SeenLocal(const CService& addr)
 /** check whether a given address is potentially local */
 bool IsLocal(const CService& addr)
 {
+    // SYSCOIN
+    if(fRegTest) {
+        return false;
+    }
     LOCK(cs_mapLocalHost);
     return mapLocalHost.count(addr) > 0;
 }
@@ -358,7 +362,8 @@ CNode* CConnman::FindNode(const CService& addr)
 
 bool CConnman::AlreadyConnectedToAddress(const CAddress& addr)
 {
-    return FindNode(static_cast<CNetAddr>(addr)) || FindNode(addr.ToStringIPPort());
+    // SYSCOIN if not regtest search for IP-only match otherwise search for IP:PORT match
+    return (!fRegTest && FindNode(static_cast<CNetAddr>(addr))) || FindNode(addr.ToStringIPPort());
 }
 
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
@@ -392,9 +397,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     assert(conn_type != ConnectionType::INBOUND);
 
     if (pszDest == nullptr) {
-        // SYSCOIN
-        bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
-        if (!fAllowLocal && IsLocal(addrConnect)) {
+        if (IsLocal(addrConnect)) {
             return nullptr;
         }
 
@@ -2128,7 +2131,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             bool isMasternode = dmn != nullptr;
             // don't try to connect to masternodes that we already have a connection to (most likely inbound)
             if (isMasternode && setConnectedMasternodes.count(dmn->proTxHash))
-
+                break;
             // Require outbound connections, other than feelers, to be to distinct network groups
             if (!fFeeler && setConnected.count(addr.GetGroup(addrman.GetAsmap()))) {
                 break;
@@ -2138,14 +2141,16 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
             }
                      
-            // SYSCOIN if we selected a local address, restart (local addresses are allowed in regtest and devnet)
-            bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
-            if (!addr.IsValid() || (!fAllowLocal && IsLocal(addr)))
-                break;
             // Require outbound connections, other than feelers, to be to distinct network groups
             if (!fFeeler && setConnected.count(addr.GetGroup(addrman.GetAsmap()))) {
                 break;
             }
+
+            // if we selected an invalid or local address, restart
+            if (!addr.IsValid() || IsLocal(addr)) {
+                break;
+            }
+
             if (!IsReachable(addr))
                 continue;
 
@@ -2156,10 +2161,12 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             // for non-feelers, require all the services we'll want,
             // for feelers, only require they be a full node (only because most
             // SPV clients don't have a good address DB available)
-            if (!isMasternode && !fFeeler && !HasAllDesirableServiceFlags(addr.nServices)) {
-                continue;
-            } else if (!isMasternode && fFeeler && !MayHaveUsefulAddressDB(addr.nServices)) {
-                continue;
+            if(!isMasternode) {
+                if (!fFeeler && !HasAllDesirableServiceFlags(addr.nServices)) {
+                    continue;
+                } else if (fFeeler && !MayHaveUsefulAddressDB(addr.nServices)) {
+                    continue;
+                }
             }
 
             // SYSCOIN Do not allow non-default ports, unless after 50 invalid
@@ -2167,7 +2174,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             // from advertising themselves as a service on another host and
             // port, causing a DoS attack as nodes around the network attempt
             // to connect to it fruitlessly.
-            if ((!isMasternode || !Params().AllowMultiplePorts()) && addr.GetPort() != Params().GetDefaultPort(addr.GetNetwork()) && addr.GetPort() != GetListenPort() && nTries < 50) {
+            if (!isMasternode && addr.GetPort() != Params().GetDefaultPort(addr.GetNetwork()) && nTries < 50) {
                 continue;
             }
 
@@ -2449,21 +2456,16 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         return;
     }
     if (!pszDest) {
-        // SYSCOIN
         bool banned_or_discouraged = m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect));
-        if (IsLocal(addrConnect) || banned_or_discouraged || FindNode(addrConnect.ToStringIPPort()))
+        if (IsLocal(addrConnect) || banned_or_discouraged || AlreadyConnectedToAddress(addrConnect)) {
+            LogPrintf("OpenNetworkConnection failed\n");
             return;
-        // local and not a connection to itself?
-        bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
-        if (!fAllowLocal && IsLocal(addrConnect))
-            return;
-        // if multiple ports for same IP are allowed, search for IP:PORT match, otherwise search for IP-only match
-        if ((!Params().AllowMultiplePorts() && FindNode(static_cast<CNetAddr>(addrConnect))) ||
-            (Params().AllowMultiplePorts() && FindNode(static_cast<CService>(addrConnect))))
-            return;
-    }
-    else if (FindNode(std::string(pszDest)))
+        }
+    } else if (FindNode(std::string(pszDest))) {
+        LogPrintf("OpenNetworkConnection failed1\n");
         return;
+    }
+
     CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, conn_type);
 
     if (!pnode)

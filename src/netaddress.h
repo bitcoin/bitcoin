@@ -253,7 +253,6 @@ public:
         }
     }
 
-    friend class CNetAddrHash;
     friend class CSubNet;
 
 private:
@@ -467,22 +466,6 @@ private:
     }
 };
 
-class CNetAddrHash
-{
-public:
-    size_t operator()(const CNetAddr& a) const noexcept
-    {
-        CSipHasher hasher(m_salt_k0, m_salt_k1);
-        hasher.Write(a.m_net);
-        hasher.Write(a.m_addr.data(), a.m_addr.size());
-        return static_cast<size_t>(hasher.Finalize());
-    }
-
-private:
-    const uint64_t m_salt_k0 = GetRand(std::numeric_limits<uint64_t>::max());
-    const uint64_t m_salt_k1 = GetRand(std::numeric_limits<uint64_t>::max());
-};
-
 class CSubNet
 {
 protected:
@@ -546,8 +529,6 @@ public:
     CService(const CNetAddr& ip, uint16_t port);
     CService(const struct in_addr& ipv4Addr, uint16_t port);
     explicit CService(const struct sockaddr_in& addr);
-    // SYSCOIN
-    void SetPort(uint16_t portIn);
     uint16_t GetPort() const;
     bool GetSockAddr(struct sockaddr* paddr, socklen_t* addrlen) const;
     bool SetSockAddr(const struct sockaddr* paddr);
@@ -567,6 +548,25 @@ public:
         READWRITEAS(CNetAddr, obj);
         READWRITE(Using<BigEndianFormatter<2>>(obj.port));
     }
+
+    friend class CServiceHash;
+};
+
+class CServiceHash
+{
+public:
+    size_t operator()(const CService& a) const noexcept
+    {
+        CSipHasher hasher(m_salt_k0, m_salt_k1);
+        hasher.Write(a.m_net);
+        hasher.Write(a.port);
+        hasher.Write(a.m_addr.data(), a.m_addr.size());
+        return static_cast<size_t>(hasher.Finalize());
+    }
+
+private:
+    const uint64_t m_salt_k0 = GetRand(std::numeric_limits<uint64_t>::max());
+    const uint64_t m_salt_k1 = GetRand(std::numeric_limits<uint64_t>::max());
 };
 
 #endif // SYSCOIN_NETADDRESS_H

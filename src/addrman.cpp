@@ -96,11 +96,10 @@ double AddrInfo::GetChance(int64_t nNow) const
 
     return fChance;
 }
-// SYSCOIN
-AddrManImpl::AddrManImpl(std::vector<bool>&& asmap, bool deterministic, int32_t consistency_check_ratio, bool _discriminatePorts)
+
+AddrManImpl::AddrManImpl(std::vector<bool>&& asmap, bool deterministic, int32_t consistency_check_ratio)
     : insecure_rand{deterministic}
     , nKey{deterministic ? uint256{1} : insecure_rand.rand256()}
-    , discriminatePorts{_discriminatePorts}
     , m_consistency_check_ratio{consistency_check_ratio}
     , m_asmap{std::move(asmap)}
 {
@@ -396,15 +395,9 @@ void AddrManImpl::Unserialize(Stream& s_)
     }
 }
 
-// SYSCOIN
 AddrInfo* AddrManImpl::Find(const CService& addr, int* pnId)
 {
     AssertLockHeld(cs);
-    // SYSCOIN
-    CService addr2 = addr;
-    if (!discriminatePorts) {
-        addr2.SetPort(0);
-    }
     const auto it = mapAddr.find(addr);
     if (it == mapAddr.end())
         return nullptr;
@@ -419,14 +412,9 @@ AddrInfo* AddrManImpl::Find(const CService& addr, int* pnId)
 AddrInfo* AddrManImpl::Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId)
 {
     AssertLockHeld(cs);
-    // SYSCOIN
-    CService addr2 = addr;
-    if (!discriminatePorts) {
-        addr2.SetPort(0);
-    }
     int nId = nIdCount++;
     mapInfo[nId] = AddrInfo(addr, addrSource);
-    mapAddr[addr2] = nId;
+    mapAddr[addr] = nId;
     mapInfo[nId].nRandomPos = vRandom.size();
     vRandom.push_back(nId);
     if (pnId)
@@ -467,15 +455,10 @@ void AddrManImpl::Delete(int nId)
     assert(!info.fInTried);
     assert(info.nRefCount == 0);
 
-    // SYSCOIN
-    CService addr = info;
-    if (!discriminatePorts) {
-        addr.SetPort(0);
-    }
 
     SwapRandom(info.nRandomPos, vRandom.size() - 1);
     vRandom.pop_back();
-    mapAddr.erase(addr);
+    mapAddr.erase(info);
     mapInfo.erase(nId);
     nNew--;
 }
@@ -568,10 +551,6 @@ void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
         return;
 
     AddrInfo& info = *pinfo;
-
-    // check whether we are talking about the exact same CService (including same port)
-    if (info != addr)
-        return;
 
     // update info
     info.nLastSuccess = nTime;
@@ -701,10 +680,6 @@ void AddrManImpl::Attempt_(const CService& addr, bool fCountFailure, int64_t nTi
 
     AddrInfo& info = *pinfo;
 
-    // check whether we are talking about the exact same CService (including same port)
-    if (info != addr)
-        return;
-
     // update info
     info.nLastTry = nTime;
     if (fCountFailure && info.nLastCountAttempt < nLastGood) {
@@ -832,10 +807,6 @@ void AddrManImpl::Connected_(const CService& addr, int64_t nTime)
 
     AddrInfo& info = *pinfo;
 
-    // check whether we are talking about the exact same CService (including same port)
-    if (info != addr)
-        return;
-
     // update info
     int64_t nUpdateInterval = 20 * 60;
     if (nTime - info.nTime > nUpdateInterval)
@@ -853,10 +824,6 @@ void AddrManImpl::SetServices_(const CService& addr, ServiceFlags nServices)
         return;
 
     AddrInfo& info = *pinfo;
-
-    // check whether we are talking about the exact same CService (including same port)
-    if (info != addr)
-        return;
 
     // update info
     info.nServices = nServices;
@@ -1145,9 +1112,8 @@ const std::vector<bool>& AddrManImpl::GetAsmap() const
 {
     return m_asmap;
 }
-// SYSCOIN
-AddrMan::AddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio, bool _discriminatePorts)
-    : m_impl(std::make_unique<AddrManImpl>(std::move(asmap), deterministic, consistency_check_ratio, _discriminatePorts)) {}
+AddrMan::AddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio)
+    : m_impl(std::make_unique<AddrManImpl>(std::move(asmap), deterministic, consistency_check_ratio)) {}
 
 AddrMan::~AddrMan() = default;
 
