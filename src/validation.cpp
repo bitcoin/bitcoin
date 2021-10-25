@@ -3337,6 +3337,41 @@ bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, C
     return ::ChainstateActive().InvalidateBlock(state, chainparams, pindex);
 }
 
+void CChainState::EnforceBlock(CValidationState& state, const CChainParams& chainparams, const CBlockIndex *pindex)
+{
+    AssertLockNotHeld(::cs_main);
+
+    LOCK2(m_cs_chainstate, ::cs_main);
+
+    const CBlockIndex* pindex_walk = pindex;
+
+    while (pindex_walk && !::ChainActive().Contains(pindex_walk)) {
+        // Mark all blocks that have the same prevBlockHash but are not equal to blockHash as conflicting
+        auto itp = ::PrevBlockIndex().equal_range(pindex_walk->pprev->GetBlockHash());
+        for (auto jt = itp.first; jt != itp.second; ++jt) {
+            if (jt->second == pindex_walk) {
+                continue;
+            }
+            if (!MarkConflictingBlock(state, chainparams, jt->second)) {
+                LogPrintf("CChainState::%s -- MarkConflictingBlock failed: %s\n", __func__, FormatStateMessage(state));
+                // This should not have happened and we are in a state were it's not safe to continue anymore
+                assert(false);
+            }
+            LogPrintf("CChainState::%s -- marked block %s as conflicting\n",
+                      __func__, jt->second->GetBlockHash().ToString());
+        }
+        pindex_walk = pindex_walk->pprev;
+    }
+    // In case blocks from the enforced chain are invalid at the moment, reconsider them.
+    if (!pindex->IsValid()) {
+        ResetBlockFailureFlags(LookupBlockIndex(pindex->GetBlockHash()));
+    }
+}
+
+void EnforceBlock(CValidationState& state, const CChainParams& chainparams, const CBlockIndex *pindex) {
+    return ::ChainstateActive().EnforceBlock(state, chainparams, pindex);
+}
+
 bool CChainState::MarkConflictingBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex)
 {
     AssertLockHeld(cs_main);
@@ -3402,10 +3437,6 @@ bool CChainState::MarkConflictingBlock(CValidationState& state, const CChainPara
         uiInterface.NotifyBlockTip(IsInitialBlockDownload(), pindex->pprev);
     }
     return true;
-}
-
-bool MarkConflictingBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex) {
-    return ::ChainstateActive().MarkConflictingBlock(state, chainparams, pindex);
 }
 
 void CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {

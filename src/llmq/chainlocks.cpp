@@ -509,43 +509,16 @@ void CChainLocksHandler::EnforceBestChainLock()
         }
     }
 
-    bool activateNeeded;
     CValidationState state;
     const auto &params = Params();
-    {
-        LOCK(cs_main);
 
-        // Go backwards through the chain referenced by clsig until we find a block that is part of the main chain.
-        // For each of these blocks, check if there are children that are NOT part of the chain referenced by clsig
-        // and mark all of them as conflicting.
-        while (pindex && !::ChainActive().Contains(pindex)) {
-            // Mark all blocks that have the same prevBlockHash but are not equal to blockHash as conflicting
-            auto itp = ::PrevBlockIndex().equal_range(pindex->pprev->GetBlockHash());
-            for (auto jt = itp.first; jt != itp.second; ++jt) {
-                if (jt->second == pindex) {
-                    continue;
-                }
-                if (!MarkConflictingBlock(state, params, jt->second)) {
-                    LogPrintf("CChainLocksHandler::%s -- MarkConflictingBlock failed: %s\n", __func__, FormatStateMessage(state));
-                    // This should not have happened and we are in a state were it's not safe to continue anymore
-                    assert(false);
-                }
-                LogPrintf("CChainLocksHandler::%s -- CLSIG (%s) marked block %s as conflicting\n",
-                          __func__, clsig->ToString(), jt->second->GetBlockHash().ToString());
-            }
+    // Go backwards through the chain referenced by clsig until we find a block that is part of the main chain.
+    // For each of these blocks, check if there are children that are NOT part of the chain referenced by clsig
+    // and mark all of them as conflicting.
+    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- enforcing block %s via CLSIG (%s)\n", __func__, pindex->GetBlockHash().ToString(), clsig->ToString());
+    EnforceBlock(state, params, pindex);
 
-            pindex = pindex->pprev;
-        }
-        // In case blocks from the correct chain are invalid at the moment, reconsider them. The only case where this
-        // can happen right now is when missing superblock triggers caused the main chain to be dismissed first. When
-        // the trigger later appears, this should bring us to the correct chain eventually. Please note that this does
-        // NOT enforce invalid blocks in any way, it just causes re-validation.
-        if (!currentBestChainLockBlockIndex->IsValid()) {
-            ResetBlockFailureFlags(LookupBlockIndex(currentBestChainLockBlockIndex->GetBlockHash()));
-        }
-
-        activateNeeded = ::ChainActive().Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) != currentBestChainLockBlockIndex;
-    }
+    bool activateNeeded = WITH_LOCK(::cs_main, return ::ChainActive().Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight)) != currentBestChainLockBlockIndex;
 
     if (activateNeeded) {
         if(!ActivateBestChain(state, params)) {
