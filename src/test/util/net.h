@@ -10,6 +10,7 @@
 #include <net_permissions.h>
 #include <net_processing.h>
 #include <netaddress.h>
+#include <netmessagemaker.h>
 #include <node/connection_types.h>
 #include <node/eviction.h>
 #include <sync.h>
@@ -78,6 +79,12 @@ struct ConnmanTestMsg : public CConnman {
     void NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const;
 
     bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg) const;
+
+    template <typename... Args>
+    void ReceiveMsgFrom(CNode& node, std::string type, Args&&... payload)
+    {
+        assert(ReceiveMsgFrom(node, NetMsg::Make(std::move(type), std::forward<Args>(payload)...)));
+    }
     void FlushSendBuffer(CNode& node) const;
 
     bool AlreadyConnectedPublic(const CAddress& addr) { return AlreadyConnectedToAddress(addr); };

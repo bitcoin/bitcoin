@@ -60,6 +60,14 @@ std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const
     return ret;
 }
 
+void SolvePow(CBlock& block)
+{
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus())) {
+        ++block.nNonce;
+        assert(block.nNonce);
+    }
+}
+
 COutPoint MineBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
 {
     auto block = PrepareBlock(node, coinbase_scriptPubKey);
@@ -86,10 +94,7 @@ protected:
 
 COutPoint MineBlock(const NodeContext& node, std::shared_ptr<CBlock>& block)
 {
-    while (!CheckProofOfWork(block->GetHash(), block->nBits, Params().GetConsensus())) {
-        ++block->nNonce;
-        assert(block->nNonce);
-    }
+    SolvePow(*block);
 
     auto& chainman{*Assert(node.chainman)};
     const auto old_height = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight());

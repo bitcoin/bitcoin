@@ -9,10 +9,14 @@
 #include <common/args.h>
 #include <net.h>
 #include <net_processing.h>
+#include <netmessagemaker.h>
+#include <pow.h>
 #include <pubkey.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <serialize.h>
+#include <test/util/logging.h>
+#include <test/util/mining.h>
 #include <test/util/net.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
@@ -33,7 +37,7 @@ static CService ip(uint32_t i)
     return CService(CNetAddr(s), Params().GetDefaultPort());
 }
 
-BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, RegTestingSetup)
 
 // Test eviction of an outbound peer whose chain never advances
 // Mock a node connection, and use mocktime to simulate a peer
@@ -148,6 +152,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     constexpr int max_outbound_full_relay = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS;
     CConnman::Options options;
     options.m_max_automatic_connections = DEFAULT_MAX_PEER_CONNECTIONS;
+    options.m_msgproc = peerLogic.get();
 
     const auto time_init{GetTime<std::chrono::seconds>()};
     SetMockTime(time_init);
@@ -171,7 +176,11 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 
     // Now tip should definitely be stale, and we should look for an extra
     // outbound peer
-    peerLogic->CheckForStaleTipAndEvictPeers();
+    {
+        ASSERT_DEBUG_LOG("Potential stale tip detected, will try using extra outbound peer (last tip update: 1801 seconds ago)");
+        ASSERT_DEBUG_LOG("setting try another outbound peer=true");
+        peerLogic->CheckForStaleTipAndEvictPeers();
+    }
     BOOST_CHECK(connman->GetTryNewOutboundPeer());
 
     // Still no peers should be marked for disconnection
@@ -186,7 +195,11 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
     SetMockTime(time_later);
 
-    peerLogic->CheckForStaleTipAndEvictPeers();
+    {
+        ASSERT_DEBUG_LOG("disconnecting extra outbound peer=8 (last block announcement received at time 0)");
+        ASSERT_DEBUG_LOG("setting try another outbound peer=false");
+        peerLogic->CheckForStaleTipAndEvictPeers();
+    }
     for (int i = 0; i < max_outbound_full_relay; ++i) {
         BOOST_CHECK(vNodes[i]->fDisconnect == false);
     }
@@ -199,7 +212,11 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     // peer, and check that the next newest node gets evicted.
     peerLogic->UpdateLastBlockAnnounceTime(vNodes.back()->GetId(), GetTime());
 
-    peerLogic->CheckForStaleTipAndEvictPeers();
+    {
+        ASSERT_DEBUG_LOG("disconnecting extra outbound peer=7 (last block announcement received at time 0)");
+        ASSERT_DEBUG_LOG("setting try another outbound peer=false");
+        peerLogic->CheckForStaleTipAndEvictPeers();
+    }
     for (int i = 0; i < max_outbound_full_relay - 1; ++i) {
         BOOST_CHECK(vNodes[i]->fDisconnect == false);
     }
@@ -229,6 +246,46 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     peerLogic->CheckForStaleTipAndEvictPeers();
 
     BOOST_CHECK(vNodes.back()->fDisconnect == true);
+
+    vNodes[max_outbound_full_relay - 1]->fDisconnect = false;
+    peerLogic->UpdateLastBlockAnnounceTime(vNodes.back()->GetId(), 0);
+
+    // Last node pretends to send a block
+    {
+        std::vector<CBlock> headers;
+        {
+            LOCK(cs_main);
+            const auto tip = m_node.chainman->ActiveChain().Tip();
+            CBlock dummy{tip->GetBlockHeader()};
+            dummy.nVersion = VERSIONBITS_LAST_OLD_BLOCK_VERSION;
+            dummy.hashPrevBlock = tip->GetBlockHash();
+            dummy.nTime = count_seconds(time_later + 1s);
+            SolvePow(dummy);
+
+            headers.emplace_back(dummy);
+        }
+
+        connman->ReceiveMsgFrom(*vNodes.back(), NetMsgType::HEADERS, TX_WITH_WITNESS(headers));
+
+        vNodes.back()->fPauseSend = false;
+        vNodes.back()->nVersion = PROTOCOL_VERSION;
+    }
+    {
+        // Check that node is protected when it pretends to have a block
+        ASSERT_DEBUG_LOG("received: headers (82 bytes) peer=8");
+        ASSERT_DEBUG_LOG("Protecting outbound peer=8 from eviction");
+        LOCK(NetEventsInterface::g_msgproc_mutex);
+        connman->ProcessMessagesOnce(*vNodes.back());
+    }
+    {
+        ASSERT_DEBUG_LOG("disconnecting extra outbound peer=7 (last block announcement received at time 0)");
+        ASSERT_DEBUG_LOG("setting try another outbound peer=false");
+        peerLogic->CheckForStaleTipAndEvictPeers();
+    }
+    for (int i = 0; i < max_outbound_full_relay; ++i) {
+        const bool is_8th{i == 7};
+        BOOST_CHECK(vNodes[i]->fDisconnect == is_8th);
+    }
 
     for (const CNode *node : vNodes) {
         peerLogic->FinalizeNode(*node);
