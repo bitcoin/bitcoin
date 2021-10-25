@@ -101,6 +101,7 @@ BASE_SCRIPTS = [
     'feature_llmqsimplepose.py',
     'p2p_compactblocks_blocksonly.py',
     'feature_segwit.py --legacy-wallet',
+    'feature_segwit.py --descriptors',
     # vv Tests less than 2m vv
     'wallet_basic.py --legacy-wallet',
     'wallet_basic.py --descriptors',
