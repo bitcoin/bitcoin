@@ -6,8 +6,6 @@
 #include <random.h>
 #include <bls/bls_worker.h>
 
-extern CBLSWorker blsWorker;
-
 struct Member {
     CBLSId id;
 
@@ -24,6 +22,7 @@ private:
 
     BLSSecretKeyVector receivedSkShares;
     BLSVerificationVectorPtr quorumVvec;
+    CBLSWorker blsWorker;
 
     void ReceiveVvecs()
     {
@@ -67,9 +66,14 @@ public:
             ids.emplace_back(id);
         }
 
+        blsWorker.Start();
         for (int i = 0; i < quorumSize; i++) {
             blsWorker.GenerateContributions(quorumSize / 2 + 1, ids, members[i].vvec, members[i].skShares);
         }
+    }
+    ~DKG()
+    {
+        blsWorker.Stop();
     }
 
     void Bench_BuildQuorumVerificationVectors(benchmark::Bench& bench, uint32_t epoch_iters)

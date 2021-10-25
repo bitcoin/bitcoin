@@ -11,7 +11,7 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/moneystr.h>
-#include <test/test_dash.h>
+#include <test/setup_common.h>
 #include <util/vector.h>
 
 #include <stdint.h>

@@ -5,7 +5,7 @@
 #include <bls/bls.h>
 #include <bls/bls_batchverifier.h>
 #include <random.h>
-#include <test/test_dash.h>
+#include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 

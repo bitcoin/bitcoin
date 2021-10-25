@@ -5,8 +5,14 @@
 #include <bench/bench.h>
 
 #include <chainparams.h>
+#include <test/setup_common.h>
 #include <validation.h>
 
+#include <algorithm>
+#include <assert.h>
+#include <iomanip>
+#include <iostream>
+#include <numeric>
 #include <regex>
 
 namespace {
@@ -47,6 +53,11 @@ void benchmark::BenchRunner::RunAll(const Args& args)
 
     std::vector<ankerl::nanobench::Result> benchmarkResults;
     for (const auto& p : benchmarks()) {
+        TestingSetup test{CBaseChainParams::REGTEST};
+        {
+            assert(::ChainActive().Height() == 0);
+        }
+
         if (!std::regex_match(p.first, baseMatch, reFilter)) {
             continue;
         }

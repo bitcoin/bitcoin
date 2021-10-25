@@ -16,10 +16,12 @@ bench_bench_dash_SOURCES = \
   bench/bench_dash.cpp \
   bench/bench.cpp \
   bench/bench.h \
+  bench/block_assemble.cpp \
   bench/bls.cpp \
   bench/bls_dkg.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
+  bench/duplicate_inputs.cpp \
   bench/ecdsa.cpp \
   bench/examples.cpp \
   bench/rollingbloom.cpp \
@@ -32,13 +34,18 @@ bench_bench_dash_SOURCES = \
   bench/mempool_eviction.cpp \
   bench/nanobench.h \
   bench/nanobench.cpp \
+  bench/rpc_mempool.cpp \
   bench/util_time.cpp \
   bench/base58.cpp \
   bench/bech32.cpp \
   bench/lockedpool.cpp \
   bench/poly1305.cpp \
   bench/prevector.cpp \
-  bench/string_cast.cpp
+  bench/string_cast.cpp \
+  test/setup_common.cpp \
+  test/setup_common.h \
+  test/util.cpp \
+  test/util.h
 
 nodist_bench_bench_dash_SOURCES = $(GENERATED_BENCH_FILES)
 
@@ -56,7 +63,9 @@ bench_bench_dash_LDADD = \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
-  $(LIBUNIVALUE)
+  $(LIBUNIVALUE) \
+  $(EVENT_PTHREADS_LIBS) \
+  $(EVENT_LIBS)
 
 if ENABLE_ZMQ
 bench_bench_dash_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
@@ -64,6 +73,7 @@ endif
 
 if ENABLE_WALLET
 bench_bench_dash_SOURCES += bench/coin_selection.cpp
+bench_bench_dash_SOURCES += bench/wallet_balance.cpp
 endif
 
 bench_bench_dash_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS) $(GMP_LIBS)

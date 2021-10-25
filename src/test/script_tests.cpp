@@ -12,7 +12,7 @@
 #include <script/sign.h>
 #include <util/system.h>
 #include <util/strencodings.h>
-#include <test/test_dash.h>
+#include <test/setup_common.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
 #include <script/dashconsensus.h>

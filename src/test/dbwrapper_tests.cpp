@@ -5,7 +5,7 @@
 #include <dbwrapper.h>
 #include <uint256.h>
 #include <random.h>
-#include <test/test_dash.h>
+#include <test/setup_common.h>
 
 #include <memory>
 

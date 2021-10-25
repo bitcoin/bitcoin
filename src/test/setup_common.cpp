@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/test_dash.h>
+#include <test/setup_common.h>
 
 #include <banman.h>
 #include <chainparams.h>
@@ -41,7 +41,7 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
 }
 
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
-    : m_path_root(fs::temp_directory_path() / "test_dash" / strprintf("%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(1 << 30))))
+    : m_path_root(fs::temp_directory_path() / "test_common_" PACKAGE_NAME / strprintf("%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(1 << 30))))
 {
     SHA256AutoDetect();
     ECC_Start();
@@ -52,8 +52,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     InitScriptExecutionCache();
     CCoinJoin::InitStandardDenominations();
     fCheckBlockIndex = true;
-    // Make sure CreateAndProcessBlock() support building <deployment_name> blocks before activating it in these tests.
-    //gArgs.ForceSetArg("-vbparams", strprintf("deployment_name:0:%d", (int64_t)Consensus::BIP9Deployment::NO_TIMEOUT));
     SelectParams(chainName);
     evoDb.reset(new CEvoDB(1 << 20, true, true));
     deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
@@ -145,6 +143,10 @@ TestingSetup::~TestingSetup()
 
 TestChainSetup::TestChainSetup(int blockCount) : TestingSetup(CBaseChainParams::REGTEST)
 {
+    // Make sure CreateAndProcessBlock() support building <deployment_name> blocks before activating it in these tests.
+    //gArgs.ForceSetArg("-vbparams", strprintf("deployment_name:0:%d", (int64_t)Consensus::BIP9Deployment::NO_TIMEOUT));
+    SelectParams(CBaseChainParams::REGTEST);
+
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;

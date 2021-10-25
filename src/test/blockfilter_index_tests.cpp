@@ -8,7 +8,7 @@
 #include <index/blockfilterindex.h>
 #include <miner.h>
 #include <pow.h>
-#include <test/test_dash.h>
+#include <test/setup_common.h>
 #include <script/standard.h>
 #include <validation.h>
 
