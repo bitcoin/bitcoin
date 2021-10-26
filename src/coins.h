@@ -307,6 +307,7 @@ public:
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;
 
+private:
     //! Force a reallocation of the cache map. This is required when downsizing
     //! the cache because the map's allocator may be hanging onto a lot of
     //! memory despite having called .clear().
@@ -314,7 +315,6 @@ public:
     //! See: https://stackoverflow.com/questions/42114044/how-to-release-unordered-map-memory
     void ReallocateCache();
 
-private:
     /**
      * @note this is marked const, but may actually append to `cacheCoins`, increasing
      * memory usage.
