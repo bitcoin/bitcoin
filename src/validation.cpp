@@ -3032,11 +3032,6 @@ bool CChainState::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex
 }
 void CChainState::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex)
 {
-    TRY_LOCK(m_cs_chainstate, lockChainState);
-    if(!lockChainState) {
-        LogPrint(BCLog::SYS, "Could not lock EnforceBestChainLock, skipping enforcement\n");
-        return;
-    }
     if (!bestChainLockBlockIndex) {
         // we don't have the header/block, so we can't do anything right now
         return;
@@ -3084,8 +3079,16 @@ void CChainState::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockInde
         activateNeeded = m_chain.Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) != currentBestChainLockBlockIndex;
     }
     // no cs_main allowed
-    if (activateNeeded && !ActivateBestChain(state, nullptr)) {
-        LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
+
+    if (activateNeeded) {
+        TRY_LOCK(m_cs_chainstate, lockChainState);
+        if(!lockChainState) {
+            LogPrint(BCLog::SYS, "Could not lock EnforceBestChainLock, skipping enforcement\n");
+            return;
+        }
+        if(!ActivateBestChain(state, nullptr)) {
+            LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
+        }
     }
 }
 bool CChainState::InvalidateBlock(BlockValidationState& state, CBlockIndex *pindex)
