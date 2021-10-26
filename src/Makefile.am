@@ -317,6 +317,7 @@ BITCOIN_CORE_H = \
   wallet/feebumper.h \
   wallet/fees.h \
   wallet/ismine.h \
+  wallet/keyman.h \
   wallet/load.h \
   wallet/receive.h \
   wallet/rpc/util.h \
@@ -467,6 +468,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/feebumper.cpp \
   wallet/fees.cpp \
   wallet/interfaces.cpp \
+  wallet/keyman.cpp \
   wallet/load.cpp \
   wallet/receive.cpp \
   wallet/rpc/addresses.cpp \
