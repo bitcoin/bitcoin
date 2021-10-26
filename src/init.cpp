@@ -238,7 +238,7 @@ void Shutdown(NodeContext& node)
     StopRPC();
     StopHTTPServer();
     // SYSCOIN
-    // Adding sleep after several steps to avoid occational problems on windows
+    // Adding sleep after several steps to avoid occasional problems on windows
     llmq::StopLLMQSystem();
     UninterruptibleSleep(std::chrono::milliseconds{200});
     for (const auto& client : node.chain_clients) {
