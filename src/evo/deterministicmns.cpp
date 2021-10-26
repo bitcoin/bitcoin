@@ -928,11 +928,11 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     return true;
 }
 
-void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs)
+void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pQuorumBaseBlockIndex, CDeterministicMNList& mnList, bool debugLogs)
 {
     // The commitment has already been validated at this point, so it's safe to use members of it
     std::vector<CDeterministicMNCPtr> members;
-    llmq::CLLMQUtils::GetAllQuorumMembers(qc.llmqType, pindexQuorum, members);
+    llmq::CLLMQUtils::GetAllQuorumMembers(qc.llmqType, pQuorumBaseBlockIndex, members);
 
     for (size_t i = 0; i < members.size(); i++) {
         if (!mnList.HasMN(members[i]->proTxHash)) {

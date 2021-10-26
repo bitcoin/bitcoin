@@ -47,10 +47,10 @@ CQuorum::CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker) :
 
 CQuorum::~CQuorum() = default;
 
-void CQuorum::Init(const CFinalCommitmentPtr& _qc, const CBlockIndex* _pindexQuorum, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members)
+void CQuorum::Init(const CFinalCommitmentPtr& _qc, const CBlockIndex* _pQuorumBaseBlockIndex, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members)
 {
     qc = _qc;
-    pindexQuorum = _pindexQuorum;
+    m_quorum_base_block_index = _pQuorumBaseBlockIndex;
     members = _members;
     minedBlockHash = _minedBlockHash;
 }
@@ -193,7 +193,7 @@ void CQuorumManager::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex
     auto curDkgBlock = pindexNew->GetAncestor(curDkgHeight)->GetBlockHash();
     connmanQuorumsToDelete.erase(curDkgBlock);
     for (const auto& quorum : lastQuorums) {
-        if (CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->pindexQuorum, WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash), dkgManager.connman)) {
+        if (CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->m_quorum_base_block_index, WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash), dkgManager.connman)) {
             continue;
         }
         if (connmanQuorumsToDelete.count(quorum->qc->quorumHash) > 0) {
@@ -203,22 +203,22 @@ void CQuorumManager::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex
     }
 }
 
-bool CQuorumManager::BuildQuorumFromCommitment(const uint8_t llmqType, const CBlockIndex* pindexQuorum, std::shared_ptr<CQuorum>& quorum) const
+bool CQuorumManager::BuildQuorumFromCommitment(const uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex, std::shared_ptr<CQuorum>& quorum) const
 {
-    assert(pindexQuorum);
+    assert(pQuorumBaseBlockIndex);
 
-    const uint256& quorumHash{pindexQuorum->GetBlockHash()};
+    const uint256& quorumHash{pQuorumBaseBlockIndex->GetBlockHash()};
     uint256 minedBlockHash;
     CFinalCommitmentPtr qc = quorumBlockProcessor->GetMinedCommitment(llmqType, quorumHash, minedBlockHash);
     if (qc == nullptr) {
         return false;
     }
-    assert(qc->quorumHash == pindexQuorum->GetBlockHash());
+    assert(qc->quorumHash == pQuorumBaseBlockIndex->GetBlockHash());
 
     std::vector<CDeterministicMNCPtr> members;
-    CLLMQUtils::GetAllQuorumMembers(qc->llmqType, pindexQuorum, members);
+    CLLMQUtils::GetAllQuorumMembers(qc->llmqType, pQuorumBaseBlockIndex, members);
 
-    quorum->Init(qc, pindexQuorum, minedBlockHash, members);
+    quorum->Init(qc, pQuorumBaseBlockIndex, minedBlockHash, members);
 
     bool hasValidVvec = false;
     if (quorum->ReadContributions()) {
@@ -248,7 +248,7 @@ bool CQuorumManager::BuildQuorumContributions(const CFinalCommitmentPtr& fqc, co
     std::vector<uint16_t> memberIndexes;
     std::vector<BLSVerificationVectorPtr> vvecs;
     BLSSecretKeyVector skContributions;
-    if (!dkgManager.GetVerifiedContributions(fqc->llmqType, quorum->pindexQuorum, fqc->validMembers, memberIndexes, vvecs, skContributions)) {
+    if (!dkgManager.GetVerifiedContributions(fqc->llmqType, quorum->m_quorum_base_block_index, fqc->validMembers, memberIndexes, vvecs, skContributions)) {
         return false;
     }
 
@@ -315,7 +315,7 @@ void CQuorumManager::ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStar
             // scanning for the rests
             if(vecResultQuorums.size() > 0) {
                 nScanCommitments -= vecResultQuorums.size();
-                pIndexScanCommitments = (void*)vecResultQuorums.back()->pindexQuorum->pprev;
+                pIndexScanCommitments = (void*)vecResultQuorums.back()->m_quorum_base_block_index->pprev;
             }
         } else {
             // If there is nothing in cache request at least cache.max_size() because this gets cached then later
@@ -323,13 +323,13 @@ void CQuorumManager::ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStar
         }
     }
     // Get the block indexes of the mined commitments to build the required quorums from
-    std::vector<const CBlockIndex*> quorumIndexes;
-    quorumBlockProcessor->GetMinedCommitmentsUntilBlock(llmqType, static_cast<const CBlockIndex*>(pIndexScanCommitments), nScanCommitments, quorumIndexes);
-    vecResultQuorums.reserve(vecResultQuorums.size() + quorumIndexes.size());
+    std::vector<const CBlockIndex*> pQuorumBaseBlockIndexes;
+    quorumBlockProcessor->GetMinedCommitmentsUntilBlock(llmqType, static_cast<const CBlockIndex*>(pIndexScanCommitments), nScanCommitments, pQuorumBaseBlockIndexes);
+    vecResultQuorums.reserve(vecResultQuorums.size() + pQuorumBaseBlockIndexes.size());
 
-    for (auto& quorumIndex : quorumIndexes) {
-        assert(quorumIndex);
-        auto quorum = GetQuorum(llmqType, quorumIndex);
+    for (auto& pQuorumBaseBlockIndex : pQuorumBaseBlockIndexes) {
+        assert(pQuorumBaseBlockIndex);
+        auto quorum = GetQuorum(llmqType, pQuorumBaseBlockIndex);
         assert(quorum != nullptr);
         vecResultQuorums.emplace_back(quorum);
     }
@@ -349,20 +349,20 @@ void CQuorumManager::ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStar
 
 CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const uint256& quorumHash) const
 {
-    CBlockIndex* pindexQuorum = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(quorumHash));
-    if (!pindexQuorum) {
+    CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(quorumHash));
+    if (!pQuorumBaseBlockIndex) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- block %s not found\n", __func__, quorumHash.ToString());
         return nullptr;
     }
-    return GetQuorum(llmqType, pindexQuorum);
+    return GetQuorum(llmqType, pQuorumBaseBlockIndex);
 }
 
 
-CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const CBlockIndex* pindexQuorum) const
+CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex) const
 {
-    assert(pindexQuorum);
+    assert(pQuorumBaseBlockIndex);
 
-    auto quorumHash = pindexQuorum->GetBlockHash();
+    auto quorumHash = pQuorumBaseBlockIndex->GetBlockHash();
 
     // we must check this before we look into the cache. Reorgs might have happened which would mean we might have
     // cached quorums which are not in the active chain anymore
@@ -379,7 +379,7 @@ CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const CBlockIndex* pinde
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
     auto quorum = std::make_shared<CQuorum>(params, blsWorker);
-    if(!BuildQuorumFromCommitment(llmqType, pindexQuorum, quorum)) {
+    if(!BuildQuorumFromCommitment(llmqType, pQuorumBaseBlockIndex, quorum)) {
         return nullptr;
     }
     return quorum;

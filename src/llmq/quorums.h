@@ -51,7 +51,7 @@ class CQuorum
 public:
     const Consensus::LLMQParams& params;
     CFinalCommitmentPtr qc;
-    const CBlockIndex* pindexQuorum;
+    const CBlockIndex* m_quorum_base_block_index;
     uint256 minedBlockHash;
     std::vector<CDeterministicMNCPtr> members;
 
@@ -68,7 +68,7 @@ private:
 public:
     CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker);
     ~CQuorum();
-    void Init(const CFinalCommitmentPtr& _qc, const CBlockIndex* _pindexQuorum, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
+    void Init(const CFinalCommitmentPtr& _qc, const CBlockIndex* _pQuorumBaseBlockIndex, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
     bool HasVerificationVector() const;
     bool IsMember(const uint256& proTxHash) const;
     bool IsValidMember(const uint256& proTxHash) const;
@@ -124,7 +124,7 @@ private:
     // all private methods here are cs_main-free
     void EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pindexNew);
 
-    bool BuildQuorumFromCommitment(const uint8_t llmqType, const CBlockIndex* pindexQuorum, std::shared_ptr<CQuorum>& quorum) const EXCLUSIVE_LOCKS_REQUIRED(quorumsCacheCs);
+    bool BuildQuorumFromCommitment(const uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex, std::shared_ptr<CQuorum>& quorum) const EXCLUSIVE_LOCKS_REQUIRED(quorumsCacheCs);
     bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, const std::shared_ptr<CQuorum>& quorum) const;
 
     CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindex) const;

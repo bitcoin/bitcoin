@@ -74,25 +74,25 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         auto type = qc.llmqType;
         const auto& params = Params().GetConsensus().llmqs.at(type);
         // Verify that quorumHash is part of the active chain and that it's the first block in the DKG interval
-        const CBlockIndex* pquorumIndex;
+        const CBlockIndex* pQuorumBaseBlockIndex;
         {
             LOCK(cs_main);
-            pquorumIndex = chainman.m_blockman.LookupBlockIndex(qc.quorumHash);
-            if (!pquorumIndex) {
+            pQuorumBaseBlockIndex = chainman.m_blockman.LookupBlockIndex(qc.quorumHash);
+            if (!pQuorumBaseBlockIndex) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- unknown block %s in commitment, peer=%d\n", __func__,
                         qc.quorumHash.ToString(), pfrom->GetId());
                 // can't really punish the node here, as we might simply be the one that is on the wrong chain or not
                 // fully synced
                 return;
             }
-            if (chainman.ActiveTip()->GetAncestor(pquorumIndex->nHeight) != pquorumIndex) {
+            if (chainman.ActiveTip()->GetAncestor(pQuorumBaseBlockIndex->nHeight) != pQuorumBaseBlockIndex) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s not in active chain, peer=%d\n", __func__,
                           qc.quorumHash.ToString(), pfrom->GetId());
                 // same, can't punish
                 return;
             }
-            int quorumHeight = pquorumIndex->nHeight - (pquorumIndex->nHeight % params.dkgInterval);
-            if (quorumHeight != pquorumIndex->nHeight) {
+            int quorumHeight = pQuorumBaseBlockIndex->nHeight - (pQuorumBaseBlockIndex->nHeight % params.dkgInterval);
+            if (quorumHeight != pQuorumBaseBlockIndex->nHeight) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
                             qc.quorumHash.ToString(), pfrom->GetId());
                 peerman.ForgetTxHash(pfrom->GetId(), hash);
@@ -119,7 +119,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             peerman.ForgetTxHash(pfrom->GetId(), hash);
         }
 
-       if (!qc.Verify(pquorumIndex, true)) {
+       if (!qc.Verify(pQuorumBaseBlockIndex, true)) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid, peer=%d\n", __func__,
                     qc.quorumHash.ToString(), qc.llmqType, pfrom->GetId());
             {
@@ -248,11 +248,11 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-height");
     }
 
-    auto quorumIndex = chainman.m_blockman.LookupBlockIndex(qc.quorumHash);
-    if(!quorumIndex) {
+    auto pQuorumBaseBlockIndex = chainman.m_blockman.LookupBlockIndex(qc.quorumHash);
+    if(!pQuorumBaseBlockIndex) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-block-index");
     }
-    if (!qc.Verify(quorumIndex, true)) {
+    if (!qc.Verify(pQuorumBaseBlockIndex, true)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-invalid");
     }
 
@@ -263,7 +263,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     // Store commitment in DB
     auto cacheKey = std::make_pair(params.type, quorumHash);
     evoDb->Write(std::make_pair(DB_MINED_COMMITMENT, cacheKey), std::make_pair(qc, blockHash));
-    evoDb->Write(BuildInversedHeightKey(params.type, nHeight), quorumIndex->nHeight);
+    evoDb->Write(BuildInversedHeightKey(params.type, nHeight), pQuorumBaseBlockIndex->nHeight);
 
     {
         LOCK(minableCommitmentsCs);
@@ -443,9 +443,9 @@ void CQuorumBlockProcessor::GetMinedCommitmentsUntilBlock(uint8_t llmqType, cons
         if (!dbIt->GetValue(quorumHeight)) {
             break;
         }
-        auto quorumIndex = pindex->GetAncestor(quorumHeight);
-        assert(quorumIndex);
-        ret.emplace_back(quorumIndex);
+        auto pQuorumBaseBlockIndex = pindex->GetAncestor(quorumHeight);
+        assert(pQuorumBaseBlockIndex);
+        ret.emplace_back(pQuorumBaseBlockIndex);
         dbIt->Next();
     }
 }

@@ -28,7 +28,7 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
     LogInstance().LogPrintStr(strprintf("CFinalCommitment::%s -- %s", __func__, tinyformat::format(__VA_ARGS__)), __func__, "", 0); \
 } while(0)
 
-bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) const
+bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const
 {
     if (nVersion == 0 || nVersion > CURRENT_VERSION) {
         return false;
@@ -69,7 +69,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) c
         return false;
     }
     std::vector<CDeterministicMNCPtr> members;
-    CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumIndex, members);
+    CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex, members);
 
     for (size_t i = members.size(); i < (size_t)params.size; i++) {
         if (validMembers[i]) {
@@ -152,11 +152,11 @@ bool CheckLLMQCommitment(BlockManager &blockman, const CTransaction& tx, const C
         return FormatSyscoinErrorMessage(state, "bad-qc-cbtx", fJustCheck);
     }
     for(const auto& commitment: qcTx.commitments) {
-        const CBlockIndex* pindexQuorum = blockman.LookupBlockIndex(commitment.quorumHash);
-        if(!pindexQuorum) {
+        const CBlockIndex* pQuorumBaseBlockIndex = blockman.LookupBlockIndex(commitment.quorumHash);
+        if(!pQuorumBaseBlockIndex) {
             return FormatSyscoinErrorMessage(state, "bad-qc-quorum-hash", fJustCheck);
         }
-        if (pindexQuorum != pindexPrev->GetAncestor(pindexQuorum->nHeight)) {
+        if (pQuorumBaseBlockIndex != pindexPrev->GetAncestor(pQuorumBaseBlockIndex->nHeight)) {
             // not part of active chain
             return FormatSyscoinErrorMessage(state, "bad-qc-quorum-hash", fJustCheck);
         }
@@ -179,7 +179,7 @@ bool CheckLLMQCommitment(BlockManager &blockman, const CTransaction& tx, const C
             }
             return true;
         }
-        if (!commitment.Verify(pindexQuorum, false)) {
+        if (!commitment.Verify(pQuorumBaseBlockIndex, false)) {
             return FormatSyscoinErrorMessage(state, "bad-qc-invalid", fJustCheck);
         }
     }

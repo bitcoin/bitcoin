@@ -136,7 +136,7 @@ public:
     const char* GetName() {return m_threadName.c_str();}
 
 private:
-    bool InitNewQuorum(const CBlockIndex* pindexQuorum);
+    bool InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex);
 
     std::pair<QuorumPhase, uint256> GetPhaseAndQuorumHash() const;
 

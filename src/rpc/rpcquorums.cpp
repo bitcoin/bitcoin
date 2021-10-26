@@ -68,7 +68,7 @@ UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMembers, b
 {
     UniValue ret(UniValue::VOBJ);
 
-    ret.pushKV("height", quorum->pindexQuorum->nHeight);
+    ret.pushKV("height", quorum->m_quorum_base_block_index->nHeight);
     ret.pushKV("type", quorum->params.name);
     ret.pushKV("quorumHash", quorum->qc->quorumHash.ToString());
     ret.pushKV("minedBlock", quorum->minedBlockHash.ToString());
@@ -179,11 +179,11 @@ static RPCHelpMan quorum_dkgstatus()
         auto& params = p.second;
 
         if (fMasternodeMode) {
-            const CBlockIndex* pindexQuorum = WITH_LOCK(cs_main, return node.chainman->ActiveChain()[tipHeight - (tipHeight % params.dkgInterval)]);
-            if(!pindexQuorum)
+            const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return node.chainman->ActiveChain()[tipHeight - (tipHeight % params.dkgInterval)]);
+            if(!pQuorumBaseBlockIndex)
                 continue;
-            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, proTxHash, false);
-            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, proTxHash, true);
+            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pQuorumBaseBlockIndex, proTxHash, false);
+            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pQuorumBaseBlockIndex, proTxHash, true);
             std::map<uint256, CAddress> foundConnections;
             node.connman->ForEachNode([&](CNode* pnode) {
                 auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
