@@ -155,10 +155,10 @@ static fs::path GetPidFile(const ArgsManager& args)
                 catch(...){
                     LogPrintf("%s: Syscoind failed to exit from pid %d(from syscoind.pid)\n", __func__, pidFile);
                 }
-            } 
-        } 
+            }
+        }
         ifs.close();
-        boost::filesystem::remove(GetPidFile(args)); 
+        boost::filesystem::remove(GetPidFile(args));
     }
     fsbridge::ofstream file{GetPidFile(args)};
     if (file) {
@@ -238,10 +238,13 @@ void Shutdown(NodeContext& node)
     StopRPC();
     StopHTTPServer();
     // SYSCOIN
+    // Adding sleep after several steps to avoid occasional problems on windows
     llmq::StopLLMQSystem();
+    UninterruptibleSleep(std::chrono::milliseconds{200});
     for (const auto& client : node.chain_clients) {
         client->flush();
     }
+    UninterruptibleSleep(std::chrono::milliseconds{100});
     StopMapPort();
 
     // Because these depend on each-other, we make sure that neither can be
@@ -250,12 +253,14 @@ void Shutdown(NodeContext& node)
     if (node.connman) node.connman->Stop();
 
     StopTorControl();
+    UninterruptibleSleep(std::chrono::milliseconds{100});
 
     // After everything has been shut down, but before things get flushed, stop the
     // CScheduler/checkqueue, scheduler and load block thread.
     if (node.scheduler) node.scheduler->stop();
     if (node.chainman && node.chainman->m_load_block.joinable()) node.chainman->m_load_block.join();
     StopScriptCheckWorkerThreads();
+    UninterruptibleSleep(std::chrono::milliseconds{100});
 
     // After the threads that potentially access these pointers have been stopped,
     // destruct and reset all to nullptr.
@@ -298,6 +303,7 @@ void Shutdown(NodeContext& node)
             }
         }
     }
+    UninterruptibleSleep(std::chrono::milliseconds{100});
 
     // After there are no more peers/RPC left to give us new data which may generate
     // CValidationInterface callbacks, flush them...
@@ -314,6 +320,7 @@ void Shutdown(NodeContext& node)
     }
     ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Stop(); });
     DestroyAllBlockFilterIndexes();
+    UninterruptibleSleep(std::chrono::milliseconds{100});
 
     // Any future callbacks will be dropped. This should absolutely be safe - if
     // missing a callback results in an unrecoverable situation, unclean shutdown
@@ -333,7 +340,8 @@ void Shutdown(NodeContext& node)
                 }
             }
         }
-       
+        UninterruptibleSleep(std::chrono::milliseconds{200});
+
         passetdb.reset();
         passetnftdb.reset();
         pnevmtxrootsdb.reset();
@@ -388,6 +396,7 @@ void Shutdown(NodeContext& node)
     } catch (const fs::filesystem_error& e) {
         LogPrintf("%s: Unable to remove PID file: %s\n", __func__, fsbridge::get_filesystem_error_message(e));
     }
+    UninterruptibleSleep(std::chrono::milliseconds{200});
 
     node.args = nullptr;
     curl_global_cleanup();
@@ -511,14 +520,14 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-gethcommandline=<port>", strprintf("Geth command line parameters (default: %s)", ""), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-gethDescriptorURL", strprintf("Geth descriptor URL where to do versioning checks and binary downloads for Geth (default: https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-disablegovernance=<n>", strprintf("Disable governance validation (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS); 
+    argsman.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-maxrecsigsage=<n>", strprintf("Number of seconds to keep LLMQ recovery sigs (default: %u)", DEFAULT_MAX_RECOVERED_SIGS_AGE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-masternodeblsprivkey=<n>", "Set the masternode private key", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-minsporkkeys=<n>", "Overrides minimum spork signers to change spork value. Only useful for regtest. Using this on mainnet or testnet will ban you.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-assetindex=<n>", strprintf("Wallet is Asset aware, won't spend assets when sending only Syscoin (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);		
-    argsman.AddArg("-dip3params=<n:m>", "DIP3 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);	
+    argsman.AddArg("-assetindex=<n>", strprintf("Wallet is Asset aware, won't spend assets when sending only Syscoin (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-dip3params=<n:m>", "DIP3 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-llmqtestparams=<n:m>", "LLMQ params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mncollateral=<n>", strprintf("Masternode Collateral required, used for testing only (default: %u)", DEFAULT_MN_COLLATERAL_REQUIRED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1304,7 +1313,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     fSigNet = args.GetBoolArg("-signet", false);
     fTestNet = args.GetBoolArg("-testnet", false);
     std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
-	fMasternodeMode = !strMasterNodeBLSPrivKey.empty();
+    fMasternodeMode = !strMasterNodeBLSPrivKey.empty();
     CBLSSecretKey keyOperator;
     if(fMasternodeMode) {
         if(!IsHex(strMasterNodeBLSPrivKey))
@@ -1357,7 +1366,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         g_parallel_script_checks = true;
         StartScriptCheckWorkerThreads(script_threads);
     }
-    
+
     // SYSCOIN
     std::vector<std::string> vSporkAddresses;
     if (args.IsArgSet("-sporkaddr")) {
@@ -1597,7 +1606,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
     fReindex = args.GetBoolArg("-reindex", false);
     bool fReindexChainState = args.GetBoolArg("-reindex-chainstate", false);
-    fReindexGeth = fReindex || fReindexChainState; 
+    fReindexGeth = fReindex || fReindexChainState;
     if(fNEVMConnection) {
         DoGethMaintenance();
     }
@@ -1607,7 +1616,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if(fRegTest) {
         nMNCollateralRequired = args.GetIntArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED)*COIN;
     }
-    
+
     std::string strDBName;
 
     strDBName = "sporks.dat";
@@ -1616,8 +1625,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if (!flatdb6.Load(sporkManager)) {
         return InitError(strprintf(_("Failed to load sporks cache from %s\n"), fs::PathToString((gArgs.GetDataDirNet() / strDBName))));
     }
-    
-    
+
+
     // cache size calculations
     int64_t nTotalCache = (args.GetIntArg("-dbcache", nDefaultDbCache) << 20);
     nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
@@ -1668,8 +1677,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 chainman.InitializeChainstate(Assert(node.mempool.get()));
                 chainman.m_total_coinstip_cache = nCoinCacheUsage;
                 chainman.m_total_coinsdb_cache = nCoinDBCache;
-                UnloadBlockIndex(node.mempool.get(), chainman); 
-                auto& pblocktree{chainman.m_blockman.m_block_tree_db};                
+                UnloadBlockIndex(node.mempool.get(), chainman);
+                auto& pblocktree{chainman.m_blockman.m_block_tree_db};
                 // SYSCOIN
                 fAssetIndex = args.GetBoolArg("-assetindex", false);
                 if(fAssetIndex) {
@@ -1689,8 +1698,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 governance.reset();
                 governance.reset(new CGovernanceManager(*node.chainman));
                 llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, *node.chainman, fReindexGeth);
-                passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReindexGeth));    
-                passetnftdb.reset(new CAssetNFTDB(nCoinDBCache*16, false, fReindexGeth));    
+                passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReindexGeth));
+                passetnftdb.reset(new CAssetNFTDB(nCoinDBCache*16, false, fReindexGeth));
                 pnevmtxrootsdb.reset(new CNEVMTxRootsDB(nCoinDBCache, false, fReindexGeth));
                 pnevmtxmintdb.reset(new CNEVMMintedTxDB(nCoinDBCache, false, fReindexGeth));
                 pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReindexGeth));
@@ -1811,8 +1820,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     evoDb.reset();
                     evoDb.reset(new CEvoDB(nEvoDbCache, false, coinsViewEmpty));
                     llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, *node.chainman, coinsViewEmpty);
-                    passetdb.reset(new CAssetDB(nCoinDBCache*16, false, coinsViewEmpty));    
-                    passetnftdb.reset(new CAssetNFTDB(nCoinDBCache*16, false, coinsViewEmpty));    
+                    passetdb.reset(new CAssetDB(nCoinDBCache*16, false, coinsViewEmpty));
+                    passetnftdb.reset(new CAssetNFTDB(nCoinDBCache*16, false, coinsViewEmpty));
                     pnevmtxrootsdb.reset(new CNEVMTxRootsDB(nCoinDBCache, false, coinsViewEmpty));
                     pnevmtxmintdb.reset(new CNEVMMintedTxDB(nCoinDBCache, false, coinsViewEmpty));
                     pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, coinsViewEmpty));
@@ -2031,7 +2040,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if(fDisableGovernance) {
         LogPrintf("You are starting with governance validation disabled.\n");
     }
-    
+
 
     if(fDisableGovernance && fMasternodeMode) {
         return InitError(Untranslated("You can not disable governance validation on a masternode."));
@@ -2048,7 +2057,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             activeMasternodeInfo.blsKeyOperator.reset(new CBLSSecretKey(keyOperator));
             activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey(activeMasternodeInfo.blsKeyOperator->GetPublicKey()));
         }
-       
+
 
         LogPrintf("MASTERNODE:\n");
         LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
@@ -2122,7 +2131,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if(!flatdb4.Dump(netfulfilledmanTmp, netfulfilledmanTmp1)) {
             return InitError(strprintf(_("Failed to clear fulfilled requests cache at %s\n"), fs::PathToString((pathDB / strDBName))));
         }
-    } 
+    }
     if (ShutdownRequested()) {
         return false;
     }
@@ -2265,7 +2274,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // ********************************************************* Step 13: finished
 
     SetRPCWarmupFinished();
-    
+
     uiInterface.InitMessage(_("Done loading").translated);
 
     for (const auto& client : node.chain_clients) {
