@@ -805,20 +805,20 @@ def taproot_tree_helper(scripts):
         h = TaggedHash("TapLeaf", bytes([version]) + ser_string(code))
         if name is None:
             return ([], h)
-        return ([(name, version, code, bytes())], h)
+        return ([(name, version, code, bytes(), h)], h)
     elif len(scripts) == 2 and callable(scripts[1]):
         # Two entries, and the right one is a function
         left, left_h = taproot_tree_helper(scripts[0:1])
         right_h = scripts[1](left_h)
-        left = [(name, version, script, control + right_h) for name, version, script, control in left]
+        left = [(name, version, script, control + right_h, leaf) for name, version, script, control, leaf in left]
         right = []
     else:
         # Two or more entries: descend into each side
         split_pos = len(scripts) // 2
         left, left_h = taproot_tree_helper(scripts[0:split_pos])
         right, right_h = taproot_tree_helper(scripts[split_pos:])
-        left = [(name, version, script, control + right_h) for name, version, script, control in left]
-        right = [(name, version, script, control + left_h) for name, version, script, control in right]
+        left = [(name, version, script, control + right_h, leaf) for name, version, script, control, leaf in left]
+        right = [(name, version, script, control + left_h, leaf) for name, version, script, control, leaf in right]
     if right_h < left_h:
         right_h, left_h = left_h, right_h
     h = TaggedHash("TapBranch", left_h + right_h)
@@ -830,13 +830,14 @@ def taproot_tree_helper(scripts):
 # - negflag: whether the pubkey in the scriptPubKey was negated from internal_pubkey+tweak*G (bool).
 # - tweak: the tweak (32 bytes)
 # - leaves: a dict of name -> TaprootLeafInfo objects for all known leaves
-TaprootInfo = namedtuple("TaprootInfo", "scriptPubKey,internal_pubkey,negflag,tweak,leaves")
+# - merkle_root: the script tree's Merkle root, or bytes() if no leaves are present
+TaprootInfo = namedtuple("TaprootInfo", "scriptPubKey,internal_pubkey,negflag,tweak,leaves,merkle_root,output_pubkey")
 
 # A TaprootLeafInfo object has the following fields:
 # - script: the leaf script (CScript or bytes)
 # - version: the leaf version (0xc0 for BIP342 tapscript)
 # - merklebranch: the merkle branch to use for this leaf (32*N bytes)
-TaprootLeafInfo = namedtuple("TaprootLeafInfo", "script,version,merklebranch")
+TaprootLeafInfo = namedtuple("TaprootLeafInfo", "script,version,merklebranch,leaf_hash")
 
 def taproot_construct(pubkey, scripts=None):
     """Construct a tree of Taproot spending conditions
@@ -858,8 +859,8 @@ def taproot_construct(pubkey, scripts=None):
     ret, h = taproot_tree_helper(scripts)
     tweak = TaggedHash("TapTweak", pubkey + h)
     tweaked, negated = tweak_add_pubkey(pubkey, tweak)
-    leaves = dict((name, TaprootLeafInfo(script, version, merklebranch)) for name, version, script, merklebranch in ret)
-    return TaprootInfo(CScript([OP_1, tweaked]), pubkey, negated + 0, tweak, leaves)
+    leaves = dict((name, TaprootLeafInfo(script, version, merklebranch, leaf)) for name, version, script, merklebranch, leaf in ret)
+    return TaprootInfo(CScript([OP_1, tweaked]), pubkey, negated + 0, tweak, leaves, h, tweaked)
 
 def is_op_success(o):
     return o == 0x50 or o == 0x62 or o == 0x89 or o == 0x8a or o == 0x8d or o == 0x8e or (o >= 0x7e and o <= 0x81) or (o >= 0x83 and o <= 0x86) or (o >= 0x95 and o <= 0x99) or (o >= 0xbb and o <= 0xfe)
