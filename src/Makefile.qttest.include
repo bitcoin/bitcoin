@@ -28,7 +28,7 @@ qt_test_test_syscoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(SYSCOIN_
   $(QT_INCLUDES) $(QT_TEST_INCLUDES)
 
 qt_test_test_syscoin_qt_SOURCES = \
-  init/syscoind.cpp \
+  init/syscoin-qt.cpp \
   qt/test/apptests.cpp \
   qt/test/rpcnestedtests.cpp \
   qt/test/test_main.cpp \

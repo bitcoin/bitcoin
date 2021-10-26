@@ -10,6 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\syscoin-wallet.cpp" />
+    <ClCompile Include="..\..\src\init\syscoin-wallet.cpp">
+      <ObjectFileName>$(IntDir)syscoin-wallet.obj</ObjectFileName>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libsyscoinconsensus\libsyscoinconsensus.vcxproj">

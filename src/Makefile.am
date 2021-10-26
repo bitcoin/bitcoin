@@ -901,6 +901,7 @@ syscoin_tx_LDADD += $(BOOST_LIBS)
 
 # syscoin-wallet binary #
 syscoin_wallet_SOURCES = syscoin-wallet.cpp
+syscoin_wallet_SOURCES += init/syscoin-wallet.cpp
 syscoin_wallet_CPPFLAGS = $(syscoin_bin_cppflags)
 syscoin_wallet_CXXFLAGS = $(syscoin_bin_cxxflags)
 syscoin_wallet_LDFLAGS = $(syscoin_bin_ldflags)
