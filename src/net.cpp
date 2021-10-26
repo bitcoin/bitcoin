@@ -2174,7 +2174,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             // from advertising themselves as a service on another host and
             // port, causing a DoS attack as nodes around the network attempt
             // to connect to it fruitlessly.
-            if (!isMasternode && addr.GetPort() != Params().GetDefaultPort(addr.GetNetwork()) && nTries < 50) {
+            if ((!isMasternode || !fRegTest) && addr.GetPort() != Params().GetDefaultPort(addr.GetNetwork()) && addr.GetPort() != GetListenPort() && nTries < 50) {
                 continue;
             }
 
