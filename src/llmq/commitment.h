@@ -49,7 +49,7 @@ public:
         return (int)std::count(validMembers.begin(), validMembers.end(), true);
     }
 
-    bool Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) const;
+    bool Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const;
     bool VerifyNull() const;
     bool VerifySizes(const Consensus::LLMQParams& params) const;
 

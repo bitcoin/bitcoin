@@ -237,7 +237,7 @@ private:
     CBLSWorkerCache cache;
     CDKGSessionManager& dkgManager;
 
-    const CBlockIndex* pindexQuorum{nullptr};
+    const CBlockIndex* m_quorum_base_block_index{nullptr};
 
 private:
     std::vector<std::unique_ptr<CDKGMember>> members;
@@ -277,7 +277,7 @@ public:
     CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
         params(_params), blsWorker(_blsWorker), cache(_blsWorker), dkgManager(_dkgManager) {}
 
-    bool Init(const CBlockIndex* pindexQuorum, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash);
+    bool Init(const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash);
 
     size_t GetMyMemberIndex() const { return myIdx; }
 

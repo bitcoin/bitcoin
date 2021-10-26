@@ -27,7 +27,7 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
     LogInstance().LogPrintStr(strprintf("CFinalCommitment::%s -- %s", __func__, tinyformat::format(__VA_ARGS__))); \
 } while(0)
 
-bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) const
+bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const
 {
     if (nVersion == 0 || nVersion > CURRENT_VERSION) {
         return false;
@@ -68,7 +68,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) c
         return false;
     }
 
-    auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumIndex);
+    auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex);
     for (size_t i = members.size(); i < llmq_params.size; i++) {
         if (validMembers[i]) {
             LogPrintfFinalCommitment("invalid validMembers bitset. bit %d should not be set\n", i);
@@ -148,13 +148,13 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-height");
     }
 
-    const CBlockIndex* pindexQuorum = WITH_LOCK(cs_main, return LookupBlockIndex(qcTx.commitment.quorumHash));
-    if (!pindexQuorum) {
+    const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return LookupBlockIndex(qcTx.commitment.quorumHash));
+    if (!pQuorumBaseBlockIndex) {
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-quorum-hash");
     }
 
 
-    if (pindexQuorum != pindexPrev->GetAncestor(pindexQuorum->nHeight)) {
+    if (pQuorumBaseBlockIndex != pindexPrev->GetAncestor(pQuorumBaseBlockIndex->nHeight)) {
         // not part of active chain
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-quorum-hash");
     }
@@ -170,7 +170,7 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
         return true;
     }
 
-    if (!qcTx.commitment.Verify(pindexQuorum, false)) {
+    if (!qcTx.commitment.Verify(pQuorumBaseBlockIndex, false)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-invalid");
     }
 
