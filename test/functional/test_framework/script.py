@@ -619,16 +619,15 @@ def FindAndDelete(script, sig):
         r += script[last_sop_idx:]
     return CScript(r)
 
-def LegacySignatureHash(script, txTo, inIdx, hashtype):
-    """Consensus-correct SignatureHash
+def LegacySignatureMsg(script, txTo, inIdx, hashtype):
+    """Preimage of the signature hash, if it exists.
 
-    Returns (hash, err) to precisely match the consensus-critical behavior of
-    the SIGHASH_SINGLE bug. (inIdx is *not* checked for validity)
+    Returns either (None, err) to indicate error (which translates to sighash 1),
+    or (msg, None).
     """
-    HASH_ONE = b'\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
 
     if inIdx >= len(txTo.vin):
-        return (HASH_ONE, "inIdx %d out of range (%d)" % (inIdx, len(txTo.vin)))
+        return (None, "inIdx %d out of range (%d)" % (inIdx, len(txTo.vin)))
     txtmp = CTransaction(txTo)
 
     for txin in txtmp.vin:
@@ -645,7 +644,7 @@ def LegacySignatureHash(script, txTo, inIdx, hashtype):
     elif (hashtype & 0x1f) == SIGHASH_SINGLE:
         outIdx = inIdx
         if outIdx >= len(txtmp.vout):
-            return (HASH_ONE, "outIdx %d out of range (%d)" % (outIdx, len(txtmp.vout)))
+            return (None, "outIdx %d out of range (%d)" % (outIdx, len(txtmp.vout)))
 
         tmp = txtmp.vout[outIdx]
         txtmp.vout = []
@@ -665,15 +664,27 @@ def LegacySignatureHash(script, txTo, inIdx, hashtype):
     s = txtmp.serialize_without_witness()
     s += struct.pack(b"<I", hashtype)
 
-    hash = hash256(s)
+    return (s, None)
 
-    return (hash, None)
+def LegacySignatureHash(*args, **kwargs):
+    """Consensus-correct SignatureHash
+
+    Returns (hash, err) to precisely match the consensus-critical behavior of
+    the SIGHASH_SINGLE bug. (inIdx is *not* checked for validity)
+    """
+
+    HASH_ONE = b'\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+    msg, err = LegacySignatureMsg(*args, **kwargs)
+    if msg is None:
+        return (HASH_ONE, err)
+    else:
+        return (hash256(msg), err)
 
 # TODO: Allow cached hashPrevouts/hashSequence/hashOutputs to be provided.
 # Performance optimization probably not necessary for python tests, however.
 # Note that this corresponds to sigversion == 1 in EvalScript, which is used
 # for version 0 witnesses.
-def SegwitV0SignatureHash(script, txTo, inIdx, hashtype, amount):
+def SegwitV0SignatureMsg(script, txTo, inIdx, hashtype, amount):
 
     hashPrevouts = 0
     hashSequence = 0
@@ -711,8 +722,10 @@ def SegwitV0SignatureHash(script, txTo, inIdx, hashtype, amount):
     ss += ser_uint256(hashOutputs)
     ss += struct.pack("<i", txTo.nLockTime)
     ss += struct.pack("<I", hashtype)
+    return ss
 
-    return hash256(ss)
+def SegwitV0SignatureHash(*args, **kwargs):
+    return hash256(SegwitV0SignatureMsg(*args, **kwargs))
 
 class TestFrameworkScript(unittest.TestCase):
     def test_bn2vch(self):
@@ -742,7 +755,7 @@ class TestFrameworkScript(unittest.TestCase):
         for value in values:
             self.assertEqual(CScriptNum.decode(CScriptNum.encode(CScriptNum(value))), value)
 
-def TaprootSignatureHash(txTo, spent_utxos, hash_type, input_index = 0, scriptpath = False, script = CScript(), codeseparator_pos = -1, annex = None, leaf_ver = LEAF_VERSION_TAPSCRIPT):
+def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index = 0, scriptpath = False, script = CScript(), codeseparator_pos = -1, annex = None, leaf_ver = LEAF_VERSION_TAPSCRIPT):
     assert (len(txTo.vin) == len(spent_utxos))
     assert (input_index < len(txTo.vin))
     out_type = SIGHASH_ALL if hash_type == 0 else hash_type & 3
@@ -783,7 +796,10 @@ def TaprootSignatureHash(txTo, spent_utxos, hash_type, input_index = 0, scriptpa
         ss += bytes([0])
         ss += struct.pack("<i", codeseparator_pos)
     assert len(ss) ==  175 - (in_type == SIGHASH_ANYONECANPAY) * 49 - (out_type != SIGHASH_ALL and out_type != SIGHASH_SINGLE) * 32 + (annex is not None) * 32 + scriptpath * 37
-    return TaggedHash("TapSighash", ss)
+    return ss
+
+def TaprootSignatureHash(*args, **kwargs):
+    return TaggedHash("TapSighash", TaprootSignatureMsg(*args, **kwargs))
 
 def taproot_tree_helper(scripts):
     if len(scripts) == 0:

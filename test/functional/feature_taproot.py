@@ -25,8 +25,9 @@ from test_framework.script import (
     CScript,
     CScriptNum,
     CScriptOp,
+    hash256,
     LEAF_VERSION_TAPSCRIPT,
-    LegacySignatureHash,
+    LegacySignatureMsg,
     LOCKTIME_THRESHOLD,
     MAX_SCRIPT_ELEMENT_SIZE,
     OP_0,
@@ -70,8 +71,9 @@ from test_framework.script import (
     SIGHASH_NONE,
     SIGHASH_SINGLE,
     SIGHASH_ANYONECANPAY,
-    SegwitV0SignatureHash,
-    TaprootSignatureHash,
+    SegwitV0SignatureMsg,
+    TaggedHash,
+    TaprootSignatureMsg,
     is_op_success,
     taproot_construct,
 )
@@ -194,8 +196,8 @@ def default_controlblock(ctx):
     """Default expression for "controlblock": combine leafversion, negflag, pubkey_internal, merklebranch."""
     return bytes([get(ctx, "leafversion") + get(ctx, "negflag")]) + get(ctx, "pubkey_internal") + get(ctx, "merklebranch")
 
-def default_sighash(ctx):
-    """Default expression for "sighash": depending on mode, compute BIP341, BIP143, or legacy sighash."""
+def default_sigmsg(ctx):
+    """Default expression for "sigmsg": depending on mode, compute BIP341, BIP143, or legacy sigmsg."""
     tx = get(ctx, "tx")
     idx = get(ctx, "idx")
     hashtype = get(ctx, "hashtype_actual")
@@ -208,18 +210,30 @@ def default_sighash(ctx):
             codeseppos = get(ctx, "codeseppos")
             leaf_ver = get(ctx, "leafversion")
             script = get(ctx, "script_taproot")
-            return TaprootSignatureHash(tx, utxos, hashtype, idx, scriptpath=True, script=script, leaf_ver=leaf_ver, codeseparator_pos=codeseppos, annex=annex)
+            return TaprootSignatureMsg(tx, utxos, hashtype, idx, scriptpath=True, script=script, leaf_ver=leaf_ver, codeseparator_pos=codeseppos, annex=annex)
         else:
-            return TaprootSignatureHash(tx, utxos, hashtype, idx, scriptpath=False, annex=annex)
+            return TaprootSignatureMsg(tx, utxos, hashtype, idx, scriptpath=False, annex=annex)
     elif mode == "witv0":
         # BIP143 signature hash
         scriptcode = get(ctx, "scriptcode")
         utxos = get(ctx, "utxos")
-        return SegwitV0SignatureHash(scriptcode, tx, idx, hashtype, utxos[idx].nValue)
+        return SegwitV0SignatureMsg(scriptcode, tx, idx, hashtype, utxos[idx].nValue)
     else:
         # Pre-segwit signature hash
         scriptcode = get(ctx, "scriptcode")
-        return LegacySignatureHash(scriptcode, tx, idx, hashtype)[0]
+        return LegacySignatureMsg(scriptcode, tx, idx, hashtype)[0]
+
+def default_sighash(ctx):
+    """Default expression for "sighash": depending on mode, compute tagged hash or dsha256 of sigmsg."""
+    msg = get(ctx, "sigmsg")
+    mode = get(ctx, "mode")
+    if mode == "taproot":
+        return TaggedHash("TapSighash", msg)
+    else:
+        if msg is None:
+            return (1).to_bytes(32, 'little')
+        else:
+            return hash256(msg)
 
 def default_tweak(ctx):
     """Default expression for "tweak": None if a leaf is specified, tap[0] otherwise."""
@@ -340,6 +354,8 @@ DEFAULT_CONTEXT = {
     "key_tweaked": default_key_tweaked,
     # The tweak to use (None for script path spends, the actual tweak for key path spends).
     "tweak": default_tweak,
+    # The sigmsg value (preimage of sighash)
+    "sigmsg": default_sigmsg,
     # The sighash value (32 bytes)
     "sighash": default_sighash,
     # The information about the chosen script path spend (TaprootLeafInfo object).
