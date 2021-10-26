@@ -22,6 +22,11 @@ from test_framework.messages import (
 )
 from test_framework.script import (
     ANNEX_TAG,
+    BIP341_sha_amounts,
+    BIP341_sha_outputs,
+    BIP341_sha_prevouts,
+    BIP341_sha_scriptpubkeys,
+    BIP341_sha_sequences,
     CScript,
     CScriptNum,
     CScriptOp,
@@ -79,6 +84,7 @@ from test_framework.script import (
 )
 from test_framework.script_util import (
     key_to_p2pk_script,
+    key_to_p2pkh_script,
     key_to_p2wpkh_script,
     keyhash_to_p2pkh_script,
     script_to_p2sh_script,
@@ -89,6 +95,7 @@ from test_framework.util import assert_raises_rpc_error, assert_equal
 from test_framework.key import generate_privkey, compute_xonly_pubkey, sign_schnorr, tweak_add_privkey, ECKey
 from test_framework.address import (
     hash160,
+    program_to_witness
 )
 from collections import OrderedDict, namedtuple
 from io import BytesIO
@@ -96,6 +103,9 @@ import json
 import hashlib
 import os
 import random
+
+# Whether or not to output generated test vectors, in JSON format.
+GEN_TEST_VECTORS = False
 
 # === Framework for building spending transactions. ===
 #
@@ -417,6 +427,7 @@ def flatten(lst):
         else:
             ret.append(elem)
     return ret
+
 
 def spend(tx, idx, utxos, **kwargs):
     """Sign transaction input idx of tx, provided utxos is the list of outputs being spent.
@@ -1276,6 +1287,14 @@ class TaprootTest(BitcoinTestFramework):
         else:
             assert node.getbestblockhash() == self.lastblockhash, "Failed to reject: " + msg
 
+    def init_blockinfo(self, node):
+        # Initialize variables used by block_submit().
+        self.lastblockhash = node.getbestblockhash()
+        self.tip = int(self.lastblockhash, 16)
+        block = node.getblock(self.lastblockhash)
+        self.lastblockheight = block['height']
+        self.lastblocktime = block['time']
+
     def test_spenders(self, node, spenders, input_counts):
         """Run randomized tests with a number of "spenders".
 
@@ -1302,12 +1321,7 @@ class TaprootTest(BitcoinTestFramework):
             host_spks.append(spk)
             host_pubkeys.append(bytes.fromhex(info['pubkey']))
 
-        # Initialize variables used by block_submit().
-        self.lastblockhash = node.getbestblockhash()
-        self.tip = int(self.lastblockhash, 16)
-        block = node.getblock(self.lastblockhash)
-        self.lastblockheight = block['height']
-        self.lastblocktime = block['time']
+        self.init_blockinfo(node)
 
         # Create transactions spending up to 50 of the wallet's inputs, with one output for each spender, and
         # one change output at the end. The transaction is constructed on the Python side to enable
@@ -1481,10 +1495,239 @@ class TaprootTest(BitcoinTestFramework):
         assert len(mismatching_utxos) == 0
         self.log.info("  - Done")
 
+    def gen_test_vectors(self):
+        """Run a scenario that corresponds (and optionally produces) to BIP341 test vectors."""
+
+        self.log.info("Unit test scenario...")
+
+        # Deterministically mine coins to OP_TRUE in block 1
+        assert self.nodes[1].getblockcount() == 0
+        coinbase = CTransaction()
+        coinbase.nVersion = 1
+        coinbase.vin = [CTxIn(COutPoint(0, 0xffffffff), CScript([OP_1, OP_1]), 0xffffffff)]
+        coinbase.vout = [CTxOut(5000000000, CScript([OP_1]))]
+        coinbase.nLockTime = 0
+        coinbase.rehash()
+        assert coinbase.hash == "f60c73405d499a956d3162e3483c395526ef78286458a4cb17b125aa92e49b20"
+        # Mine it
+        block = create_block(hashprev=int(self.nodes[1].getbestblockhash(), 16), coinbase=coinbase)
+        block.rehash()
+        block.solve()
+        self.nodes[1].submitblock(block.serialize().hex())
+        assert self.nodes[1].getblockcount() == 1
+        self.generate(self.nodes[1], COINBASE_MATURITY)
+
+        SEED = 317
+        VALID_LEAF_VERS = list(range(0xc0, 0x100, 2)) + [0x66, 0x7e, 0x80, 0x84, 0x96, 0x98, 0xba, 0xbc, 0xbe]
+        # Generate private keys
+        prvs = [hashlib.sha256(SEED.to_bytes(2, 'big') + bytes([i])).digest() for i in range(100)]
+        # Generate corresponding public x-only pubkeys
+        pubs = [compute_xonly_pubkey(prv)[0] for prv in prvs]
+        # Generate taproot objects
+        inner_keys = [pubs[i] for i in range(7)]
+
+        script_lists = [
+            None,
+            [("0", CScript([pubs[50], OP_CHECKSIG]), 0xc0)],
+            [("0", CScript([pubs[51], OP_CHECKSIG]), 0xc0)],
+            [("0", CScript([pubs[52], OP_CHECKSIG]), 0xc0), ("1", CScript([b"BIP341"]), VALID_LEAF_VERS[pubs[99][0] % 41])],
+            [("0", CScript([pubs[53], OP_CHECKSIG]), 0xc0), ("1", CScript([b"Taproot"]), VALID_LEAF_VERS[pubs[99][1] % 41])],
+            [("0", CScript([pubs[54], OP_CHECKSIG]), 0xc0), [("1", CScript([pubs[55], OP_CHECKSIG]), 0xc0), ("2", CScript([pubs[56], OP_CHECKSIG]), 0xc0)]],
+            [("0", CScript([pubs[57], OP_CHECKSIG]), 0xc0), [("1", CScript([pubs[58], OP_CHECKSIG]), 0xc0), ("2", CScript([pubs[59], OP_CHECKSIG]), 0xc0)]],
+        ]
+        taps = [taproot_construct(inner_keys[i], script_lists[i]) for i in range(len(inner_keys))]
+
+        # Require negated taps[0]
+        assert taps[0].negflag
+        # Require one negated and one non-negated in taps 1 and 2.
+        assert taps[1].negflag != taps[2].negflag
+        # Require one negated and one non-negated in taps 3 and 4.
+        assert taps[3].negflag != taps[4].negflag
+        # Require one negated and one non-negated in taps 5 and 6.
+        assert taps[5].negflag != taps[6].negflag
+
+        cblks = [{leaf: get({**DEFAULT_CONTEXT, 'tap': taps[i], 'leaf': leaf}, 'controlblock') for leaf in taps[i].leaves} for i in range(7)]
+        # Require one swapped and one unswapped in taps 3 and 4.
+        assert (cblks[3]['0'][33:65] < cblks[3]['1'][33:65]) != (cblks[4]['0'][33:65] < cblks[4]['1'][33:65])
+        # Require one swapped and one unswapped in taps 5 and 6, both at the top and child level.
+        assert (cblks[5]['0'][33:65] < cblks[5]['1'][65:]) != (cblks[6]['0'][33:65] < cblks[6]['1'][65:])
+        assert (cblks[5]['1'][33:65] < cblks[5]['2'][33:65]) != (cblks[6]['1'][33:65] < cblks[6]['2'][33:65])
+        # Require within taps 5 (and thus also 6) that one level is swapped and the other is not.
+        assert (cblks[5]['0'][33:65] < cblks[5]['1'][65:]) != (cblks[5]['1'][33:65] < cblks[5]['2'][33:65])
+
+        # Compute a deterministic set of scriptPubKeys
+        tap_spks = []
+        old_spks = []
+        spend_info = {}
+        # First, taproot scriptPubKeys, for the tap objects constructed above
+        for i, tap in enumerate(taps):
+            tap_spks.append(tap.scriptPubKey)
+            d = {'key': prvs[i], 'tap': tap, 'mode': 'taproot'}
+            spend_info[tap.scriptPubKey] = d
+        # Then, a number of deterministically generated (keys 0x1,0x2,0x3) with 2x P2PKH, 1x P2WPKH spks.
+        for i in range(1, 4):
+            prv = ECKey()
+            prv.set(i.to_bytes(32, 'big'), True)
+            pub = prv.get_pubkey().get_bytes()
+            d = {"key": prv}
+            d["scriptcode"] = key_to_p2pkh_script(pub)
+            d["inputs"] = [getter("sign"), pub]
+            if i < 3:
+                # P2PKH
+                d['spk'] = key_to_p2pkh_script(pub)
+                d['mode'] = 'legacy'
+            else:
+                # P2WPKH
+                d['spk'] = key_to_p2wpkh_script(pub)
+                d['mode'] = 'witv0'
+            old_spks.append(d['spk'])
+            spend_info[d['spk']] = d
+
+        # Construct a deterministic chain of transactions creating UTXOs to the test's spk's (so that they
+        # come from distinct txids).
+        txn = []
+        lasttxid = coinbase.sha256
+        amount = 5000000000
+        for i, spk in enumerate(old_spks + tap_spks):
+            val = 42000000 * (i + 7)
+            tx = CTransaction()
+            tx.nVersion = 1
+            tx.vin = [CTxIn(COutPoint(lasttxid, i & 1), CScript([]), 0xffffffff)]
+            tx.vout = [CTxOut(val, spk), CTxOut(amount - val, CScript([OP_1]))]
+            if i & 1:
+                tx.vout = list(reversed(tx.vout))
+            tx.nLockTime = 0
+            tx.rehash()
+            amount -= val
+            lasttxid = tx.sha256
+            txn.append(tx)
+            spend_info[spk]['prevout'] = COutPoint(tx.sha256, i & 1)
+            spend_info[spk]['utxo'] = CTxOut(val, spk)
+        # Mine those transactions
+        self.init_blockinfo(self.nodes[1])
+        self.block_submit(self.nodes[1], txn, "Crediting txn", None, sigops_weight=10, accept=True)
+
+        # scriptPubKey computation
+        tests = {"version": 1}
+        spk_tests = tests.setdefault("scriptPubKey", [])
+        for i, tap in enumerate(taps):
+            test_case = {}
+            given = test_case.setdefault("given", {})
+            given['internalPubkey'] = tap.internal_pubkey.hex()
+
+            def pr(node):
+                if node is None:
+                    return None
+                elif isinstance(node, tuple):
+                    return {"id": int(node[0]), "script": node[1].hex(), "leafVersion": node[2]}
+                elif len(node) == 1:
+                    return pr(node[0])
+                elif len(node) == 2:
+                    return [pr(node[0]), pr(node[1])]
+                else:
+                    assert False
+
+            given['scriptTree'] = pr(script_lists[i])
+            intermediary = test_case.setdefault("intermediary", {})
+            if len(tap.leaves):
+                leafhashes = intermediary.setdefault('leafHashes', [None] * len(tap.leaves))
+                for leaf in tap.leaves:
+                    leafhashes[int(leaf)] = tap.leaves[leaf].leaf_hash.hex()
+            intermediary['merkleRoot'] = tap.merkle_root.hex() if tap.merkle_root else None
+            intermediary['tweak'] = tap.tweak.hex()
+            intermediary['tweakedPubkey'] = tap.output_pubkey.hex()
+            expected = test_case.setdefault("expected", {})
+            expected['scriptPubKey'] = tap.scriptPubKey.hex()
+            expected['bip350Address'] = program_to_witness(1, bytes(tap.output_pubkey), True)
+            if len(tap.leaves):
+                control_blocks = expected.setdefault("scriptPathControlBlocks", [None] * len(tap.leaves))
+                for leaf in tap.leaves:
+                    ctx = {**DEFAULT_CONTEXT, 'tap': tap, 'leaf': leaf}
+                    control_blocks[int(leaf)] = get(ctx, "controlblock").hex()
+            spk_tests.append(test_case)
+
+        # Construct a deterministic transaction spending all outputs created above.
+        tx = CTransaction()
+        tx.nVersion = 2
+        tx.vin = []
+        inputs = []
+        input_spks = [tap_spks[0], tap_spks[1], old_spks[0], tap_spks[2], tap_spks[5], old_spks[2], tap_spks[6], tap_spks[3], tap_spks[4]]
+        sequences = [0, 0xffffffff, 0xffffffff, 0xfffffffe, 0xfffffffe, 0, 0, 0xffffffff, 0xffffffff]
+        hashtypes = [SIGHASH_SINGLE, SIGHASH_SINGLE|SIGHASH_ANYONECANPAY, SIGHASH_ALL, SIGHASH_ALL, SIGHASH_DEFAULT, SIGHASH_ALL, SIGHASH_NONE, SIGHASH_NONE|SIGHASH_ANYONECANPAY, SIGHASH_ALL|SIGHASH_ANYONECANPAY]
+        for i, spk in enumerate(input_spks):
+            tx.vin.append(CTxIn(spend_info[spk]['prevout'], CScript(), sequences[i]))
+            inputs.append(spend_info[spk]['utxo'])
+        tx.vout.append(CTxOut(1000000000, old_spks[1]))
+        tx.vout.append(CTxOut(3410000000, pubs[98]))
+        tx.nLockTime = 500000000
+        precomputed = {
+            "hashAmounts": BIP341_sha_amounts(inputs),
+            "hashPrevouts": BIP341_sha_prevouts(tx),
+            "hashScriptPubkeys": BIP341_sha_scriptpubkeys(inputs),
+            "hashSequences": BIP341_sha_sequences(tx),
+            "hashOutputs": BIP341_sha_outputs(tx)
+        }
+        keypath_tests = tests.setdefault("keyPathSpending", [])
+        tx_test = {}
+        global_given = tx_test.setdefault("given", {})
+        global_given['rawUnsignedTx'] = tx.serialize().hex()
+        utxos_spent = global_given.setdefault("utxosSpent", [])
+        for i in range(len(input_spks)):
+            utxos_spent.append({"scriptPubKey": inputs[i].scriptPubKey.hex(), "amountSats": inputs[i].nValue})
+        global_intermediary = tx_test.setdefault("intermediary", {})
+        for key in sorted(precomputed.keys()):
+            global_intermediary[key] = precomputed[key].hex()
+        test_list = tx_test.setdefault('inputSpending', [])
+        for i in range(len(input_spks)):
+            ctx = {
+                **DEFAULT_CONTEXT,
+                **spend_info[input_spks[i]],
+                'tx': tx,
+                'utxos': inputs,
+                'idx': i,
+                'hashtype': hashtypes[i],
+                'deterministic': True
+            }
+            if ctx['mode'] == 'taproot':
+                test_case = {}
+                given = test_case.setdefault("given", {})
+                given['txinIndex'] = i
+                given['internalPrivkey'] = get(ctx, 'key').hex()
+                if get(ctx, "tap").merkle_root != bytes():
+                    given['merkleRoot'] = get(ctx, "tap").merkle_root.hex()
+                else:
+                    given['merkleRoot'] = None
+                given['hashType'] = get(ctx, "hashtype")
+                intermediary = test_case.setdefault("intermediary", {})
+                intermediary['internalPubkey'] = get(ctx, "tap").internal_pubkey.hex()
+                intermediary['tweak'] = get(ctx, "tap").tweak.hex()
+                intermediary['tweakedPrivkey'] = get(ctx, "key_tweaked").hex()
+                sigmsg = get(ctx, "sigmsg")
+                intermediary['sigMsg'] = sigmsg.hex()
+                intermediary['precomputedUsed'] = [key for key in sorted(precomputed.keys()) if sigmsg.count(precomputed[key])]
+                intermediary['sigHash'] = get(ctx, "sighash").hex()
+                expected = test_case.setdefault("expected", {})
+                expected['witness'] = [get(ctx, "sign").hex()]
+                test_list.append(test_case)
+            tx.wit.vtxinwit.append(CTxInWitness())
+            tx.vin[i].scriptSig = CScript(flatten(get(ctx, "scriptsig")))
+            tx.wit.vtxinwit[i].scriptWitness.stack = flatten(get(ctx, "witness"))
+        aux = tx_test.setdefault("auxiliary", {})
+        aux['fullySignedTx'] = tx.serialize().hex()
+        keypath_tests.append(tx_test)
+        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "24bab662cb55a7f3bae29b559f651674c62bcc1cd442d44715c0133939107b38")
+        # Mine the spending transaction
+        self.block_submit(self.nodes[1], [tx], "Spending txn", None, sigops_weight=10000, accept=True, witness=True)
+
+        if GEN_TEST_VECTORS:
+            print(json.dumps(tests, indent=4, sort_keys=False))
+
+
     def run_test(self):
+        self.gen_test_vectors()
+
         # Post-taproot activation tests go first (pre-taproot tests' blocks are invalid post-taproot).
         self.log.info("Post-activation tests...")
-        self.generate(self.nodes[1], COINBASE_MATURITY + 1)
         self.test_spenders(self.nodes[1], spenders_taproot_active(), input_counts=[1, 2, 2, 2, 2, 3])
 
         # Re-connect nodes in case they have been disconnected
