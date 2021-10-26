@@ -1090,6 +1090,7 @@ dash_tx_LDADD += $(BACKTRACE_LIBS) $(GMP_LIBS)
 
 # dash-wallet binary #
 dash_wallet_SOURCES = bitcoin-wallet.cpp
+dash_wallet_SOURCES += init/bitcoin-wallet.cpp
 dash_wallet_CPPFLAGS = $(bitcoin_bin_cppflags)
 dash_wallet_CXXFLAGS = $(bitcoin_bin_cxxflags)
 dash_wallet_LDFLAGS = $(bitcoin_bin_ldflags)
