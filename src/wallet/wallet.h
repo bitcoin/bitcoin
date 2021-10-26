@@ -309,9 +309,9 @@ private:
     mutable std::map<COutPoint, int> mapOutpointRoundsCache GUARDED_BY(cs_wallet);
 
     /**
-     * Add a transaction to the wallet, or update it.  pIndex and posInBlock should
+     * Add a transaction to the wallet, or update it.  confirm.block_* should
      * be set when the transaction was known to be included in a block.  When
-     * pIndex == nullptr, then wallet state is not updated in AddToWallet, but
+     * block_hash.IsNull(), then wallet state is not updated in AddToWallet, but
      * notifications happen and cached balances are marked dirty.
      *
      * If fUpdate is true, existing transactions will be updated.
@@ -319,7 +319,7 @@ private:
      * assumption that any further notification of a transaction that was considered
      * abandoned is an indication that it is not safe to be considered abandoned.
      * Abandoned state should probably be more carefully tracked via different
-     * posInBlock signals or by checking mempool presence when necessary.
+     * chain notifications or by checking mempool presence when necessary.
      */
     bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, CWalletTx::Confirmation confirm, WalletBatch& batch, bool fUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
@@ -331,8 +331,6 @@ private:
 
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    /* Used by TransactionAddedToMemorypool/BlockConnected/Disconnected/ScanForWalletTransactions.
-     * Should be called with non-zero block_hash and posInBlock if this is for a transaction that is included in a block. */
     void SyncTransaction(const CTransactionRef& tx, CWalletTx::Confirmation confirm, WalletBatch& batch, bool update_tx = true) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** WalletFlags set on this wallet. */

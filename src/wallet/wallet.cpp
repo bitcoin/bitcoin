@@ -1257,7 +1257,7 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, CWalletTx::Confirmatio
 
 void CWallet::transactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime, uint64_t mempool_sequence) {
     LOCK(cs_wallet);
-    CWalletTx::Confirmation confirm(CWalletTx::Status::UNCONFIRMED, /* block_height */ 0, {}, /* nIndex */ 0);
+    CWalletTx::Confirmation confirm(CWalletTx::Status::UNCONFIRMED, /*block_height=*/ 0, {}, /*block_index=*/ 0);
     WalletBatch batch(GetDatabase());
     SyncTransaction(tx, confirm, batch);
 
@@ -1304,7 +1304,7 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
         // https://github.com/bitcoin-core/bitcoin-devwiki/wiki/Wallet-Transaction-Conflict-Tracking
         LOCK(cs_wallet);
         WalletBatch batch(GetDatabase());
-        SyncTransaction(tx, {CWalletTx::Status::UNCONFIRMED, /* block height */ 0, /* block hash */ {}, /* index */ 0}, batch);
+        SyncTransaction(tx, {CWalletTx::Status::UNCONFIRMED, /*block_height=*/0, /*block_hash=*/{}, /*block_index=*/0}, batch);
     }
 }
 
@@ -1338,7 +1338,7 @@ void CWallet::blockDisconnected(const CBlock& block, int height)
     m_last_block_processed = block.hashPrevBlock;
     WalletBatch batch(GetDatabase());
     for (const CTransactionRef& ptx : block.vtx) {
-        SyncTransaction(ptx, {CWalletTx::Status::UNCONFIRMED, /* block height */ 0, /* block hash */ {}, /* index */ 0}, batch);
+        SyncTransaction(ptx, {CWalletTx::Status::UNCONFIRMED, /*block_height=*/0, /*block_hash=*/{}, /*block_index=*/0}, batch);
     }
 
     // reset cache to make sure no longer mature coins are excluded
