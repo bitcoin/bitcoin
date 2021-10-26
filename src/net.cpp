@@ -306,10 +306,10 @@ bool SeenLocal(const CService& addr)
 
 
 /** check whether a given address is potentially local */
-bool IsLocal(const CService& addr)
+bool IsLocal(const CService& addr, bool bOverrideNetwork)
 {
     // SYSCOIN
-    if(fRegTest) {
+    if(fRegTest && !bOverrideNetwork) {
         return false;
     }
     LOCK(cs_mapLocalHost);

@@ -699,7 +699,7 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
     BOOST_CHECK(!IsLocal(addr));
     BOOST_CHECK(AddLocal(addr, 1000));
     // SYSCOIN
-    //BOOST_CHECK(IsLocal(addr));
+    BOOST_CHECK(IsLocal(addr, true));
 
     RemoveLocal(addr);
     BOOST_CHECK(!IsLocal(addr));
