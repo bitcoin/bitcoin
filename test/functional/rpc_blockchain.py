@@ -26,7 +26,6 @@ import http.client
 import os
 import subprocess
 
-from test_framework.address import ADDRESS_BCRT1_P2SH_OP_TRUE
 from test_framework.blocktools import (
     MAX_FUTURE_BLOCK_TIME,
     TIME_GENESIS_BLOCK,
@@ -69,6 +68,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.supports_cli = False
 
     def run_test(self):
+        self.wallet = MiniWallet(self.nodes[0])
         self.mine_chain()
         self._test_max_future_block_time()
         self.restart_node(
@@ -99,7 +99,7 @@ class BlockchainTest(BitcoinTestFramework):
         for t in range(TIME_GENESIS_BLOCK, TIME_RANGE_END, TIME_RANGE_STEP):
             # 156 sec steps from genesis block time
             self.nodes[0].setmocktime(t)
-            self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_P2SH_OP_TRUE)
+            self.generate(self.wallet, 1)
         assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 200)
 
     def _test_max_future_block_time(self):
@@ -391,12 +391,12 @@ class BlockchainTest(BitcoinTestFramework):
 
     def _test_stopatheight(self):
         assert_equal(self.nodes[0].getblockcount(), HEIGHT)
-        self.generatetoaddress(self.nodes[0], 6, ADDRESS_BCRT1_P2SH_OP_TRUE)
+        self.generate(self.wallet, 6)
         assert_equal(self.nodes[0].getblockcount(), HEIGHT + 6)
         self.log.debug('Node should not stop at this height')
         assert_raises(subprocess.TimeoutExpired, lambda: self.nodes[0].process.wait(timeout=3))
         try:
-            self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_P2SH_OP_TRUE, sync_fun=self.no_op)
+            self.generatetoaddress(self.nodes[0], 1,self.wallet.get_address(), sync_fun=self.no_op)
         except (ConnectionError, http.client.BadStatusLine):
             pass  # The node already shut down before response
         self.log.debug('Node should stop at this height...')
@@ -444,14 +444,10 @@ class BlockchainTest(BitcoinTestFramework):
 
     def _test_getblock(self):
         node = self.nodes[0]
-
-        miniwallet = MiniWallet(node)
-        miniwallet.scan_blocks(num=5)
-
         fee_per_byte = Decimal('0.00000010')
         fee_per_kb = 1000 * fee_per_byte
 
-        miniwallet.send_self_transfer(fee_rate=fee_per_kb, from_node=node)
+        self.wallet.send_self_transfer(fee_rate=fee_per_kb, from_node=node)
         blockhash = self.generate(node, 1)[0]
 
         self.log.info("Test getblock with verbosity 1 doesn't include fee")
