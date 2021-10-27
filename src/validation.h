@@ -1069,8 +1069,8 @@ public:
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 bool PruneSyscoinDBs(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 void DoGethMaintenance();
-bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid);
-bool StopGethNode(pid_t &pid);
+bool StartGethNode(const std::string &gethDescriptorURL);
+bool StopGethNode(bool bOnStart = false);
 void KillProcess(const pid_t& pid);
 
 // SYSCOIN

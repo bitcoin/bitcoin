@@ -6048,7 +6048,7 @@ bool CChainState::RestartGethNode() {
         LogPrintf("RestartGethNode: Could not start Geth. zmqpubnevm not defined\n");
         return false;
     }
-    StopGethNode(gethPID);
+    StopGethNode();
 #if ENABLE_ZMQ
     if (g_zmq_notification_interface) {
         UnregisterValidationInterface(g_zmq_notification_interface);
@@ -6066,7 +6066,7 @@ bool CChainState::RestartGethNode() {
     }
 #endif
     const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-    if(!StartGethNode(gethDescriptorURL, gethPID)) {
+    if(!StartGethNode(gethDescriptorURL)) {
         LogPrintf("RestartGethNode: Could not start Geth\n");
         return false;
     }
@@ -6082,7 +6082,7 @@ bool CChainState::RestartGethNode() {
     }
     return true;
 }
-bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
+bool StartGethNode(const std::string &gethDescriptorURL)
 {
     LOCK(cs_geth);
 
@@ -6123,7 +6123,7 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
         
     // Duplicate ("fork") the process. Will return zero in the child
     // process, and the child's PID in the parent (or negative on error).
-    pid = fork() ;
+    pid_t pid = fork() ;
     if( pid < 0 ) {
         LogPrintf("Could not start Geth, pid < 0 %d\n", pid);
         return false;
@@ -6150,9 +6150,6 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
         if (errno != 0) {
             LogPrintf("Geth not found at %s\n", fs::PathToString(attempt1));
         }
-    } else {
-        boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
-        ofs << pid;
     }
     #else
         std::string commandStr = "";
@@ -6166,8 +6163,6 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid)
             LogPrintf("Geth not found at %s\n", fs::PathToString(attempt1));
             return false;
         }
-        boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
-        ofs << pid;
     #endif
     if(pid > 0)
         LogPrintf("%s: Geth Started with pid %d\n", __func__, pid);
@@ -6189,7 +6184,7 @@ void KillProcess(const pid_t& pid){
             }
             hwnd = ::GetNextWindow(hwnd, GW_HWNDNEXT);
         }
-        ::SendMessage(hwnd, WM_KEYDOWN, VK_CONTROL, 0x43);
+        ::SendMessage(hwnd, WM_CLOSE, 0, 0);
     #endif  
     #ifndef WIN32
         LogPrintf("%s: Trying to kill with SIGINT\n", __func__);            
@@ -6266,41 +6261,16 @@ void KillProcess(const pid_t& pid){
         LogPrintf("%s: Done trying to kill with SIGINT-SIGTERM-SIGKILL\n", __func__);         
     #endif
 }
-bool StopGethNode(pid_t &pid)
+bool StopGethNode(bool bOnStart)
 {
-    if(!fNEVMConnection || pid < 0) {
+    if(!fNEVMConnection) {
         return false;
     }
-    if(pid > 0) {
+    if(!bOnStart) {
         bool bResponse;
         GetMainSignals().NotifyNEVMComms("disconnect", bResponse);
     }
-    if(pid){
-        try{
-            KillProcess(pid);
-            LogPrintf("%s: Geth successfully exited from pid %d\n", __func__, pid);
-        }
-        catch(...){
-            LogPrintf("%s: Geth failed to exit from pid %d\n", __func__, pid);
-        }
-    }
-    {
-        boost::filesystem::ifstream ifs(GetGethPidFile(), std::ios::in);
-        pid_t pidFile = 0;
-        while(ifs >> pidFile){
-            if(pidFile && pidFile != pid){
-                try{
-                    KillProcess(pidFile);
-                    LogPrintf("%s: Geth successfully exited from pid %d(from geth.pid)\n", __func__, pidFile);
-                }
-                catch(...){
-                    LogPrintf("%s: Geth failed to exit from pid %d(from geth.pid)\n", __func__, pidFile);
-                }
-            } 
-        }  
-    }
-    boost::filesystem::remove(GetGethPidFile());
-    if(pid == 0) {
+    else {
         #ifndef USE_SYSCALL_SANDBOX
         #if HAVE_SYSTEM
         LogPrintf("Killing any sysgeth processes that may be already running...\n");
@@ -6314,7 +6284,6 @@ bool StopGethNode(pid_t &pid)
         #endif
         #endif
     }
-    pid = -1;
     return true;
 }
 void DoGethMaintenance() {
@@ -6322,20 +6291,18 @@ void DoGethMaintenance() {
         return;
     }
     // hasn't started yet so start
-    if(!fReindexGeth && gethPID == 0) {
-        gethPID = -1;
-        pid_t temp = 0;
+    if(!fReindexGeth ) {
         LogPrintf("%s: Stopping Geth\n", __func__); 
-        StopGethNode(temp);
+        StopGethNode(true);
         LogPrintf("%s: Starting Geth because PID's were uninitialized\n", __func__);
         const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-        if(!StartGethNode(gethDescriptorURL, gethPID)) {
+        if(!StartGethNode(gethDescriptorURL)) {
             LogPrintf("%s: Failed to start Geth\n", __func__); 
         }
-    } else if(fReindexGeth){
+    } else {
         fReindexGeth = false;
         LogPrintf("%s: Stopping Geth\n", __func__); 
-        StopGethNode(gethPID);
+        StopGethNode(true);
         // copy wallet dir if exists
         fs::path dataDir = gArgs.GetDataDirNet();
         fs::path gethDir = dataDir / "geth";
@@ -6395,7 +6362,7 @@ void DoGethMaintenance() {
         }
         LogPrintf("%s: Restarting Geth \n", __func__);
         const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-        if(!StartGethNode(gethDescriptorURL, gethPID))
+        if(!StartGethNode(gethDescriptorURL))
             LogPrintf("%s: Failed to start Geth\n", __func__); 
         // set flag that geth is resyncing
         fGethSynced = false;

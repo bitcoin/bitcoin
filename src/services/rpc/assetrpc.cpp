@@ -704,7 +704,7 @@ static RPCHelpMan syscoinstopgeth()
     },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if(!StopGethNode(gethPID))
+    if(!StopGethNode())
         throw JSONRPCError(RPC_MISC_ERROR, "Could not stop Geth");
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", "success");

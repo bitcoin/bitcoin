@@ -47,7 +47,6 @@ extern std::string fGethSyncStatus;
 extern bool fNEVMConnection;
 extern bool fGethSynced;
 extern bool fLoaded;
-extern pid_t gethPID;
 extern bool fAssetIndex;
 extern int32_t DEFAULT_MN_COLLATERAL_REQUIRED;
 extern int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE;
@@ -114,7 +113,6 @@ void DeleteOldEthDir();
 fs::path GetDefaultDataDir();
 // SYSCOIN
 std::string GetDefaultPubNEVM();
-fs::path GetGethPidFile();
 std::string GetGethFilename();
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption();

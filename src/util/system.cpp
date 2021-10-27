@@ -83,7 +83,6 @@ bool fSigNet = false;
 bool fAssetIndex = false;
 uint32_t fGethCurrentHeight = 0;
 bool fNEVMConnection = false;
-pid_t gethPID = 0;
 std::string fGethSyncStatus = "waiting to sync...";
 bool fGethSynced = true;
 bool fLoaded = false;
@@ -1029,15 +1028,8 @@ std::string ArgsManager::GetChainName() const
     return GetArg("-chain", CBaseChainParams::MAIN);
 }
 // SYSCOIN
-fs::path GetGethPidFile()
-{
-    return AbsPathForConfigVal(fs::path("geth.pid"));
-}
 std::string GetDefaultPubNEVM() {
     std::string defaultPubNevm = (!fRegTest && !fSigNet)? "tcp://127.0.0.1:1111": "";
-    //#ifdef WIN32
-    //    defaultPubNevm = "";
-    //#endif
     return defaultPubNevm;
 }
 std::string GetGethFilename(){
