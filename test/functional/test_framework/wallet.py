@@ -84,7 +84,7 @@ class MiniWallet:
         res = self._test_node.scantxoutset(action="start", scanobjects=[f'raw({self._scriptPubKey.hex()})'])
         assert_equal(True, res['success'])
         for utxo in res['unspents']:
-            self._utxos.append({'txid': utxo['txid'], 'vout': utxo['vout'], 'value': utxo['amount']})
+            self._utxos.append({'txid': utxo['txid'], 'vout': utxo['vout'], 'value': utxo['amount'], 'height': utxo['height']})
 
     def scan_blocks(self, *, start=1, num):
         """Scan the blocks for self._address outputs and add them to self._utxos"""
@@ -97,7 +97,7 @@ class MiniWallet:
         """Scan the tx for self._scriptPubKey outputs and add them to self._utxos"""
         for out in tx['vout']:
             if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
-                self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value']})
+                self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value'], 'height': 0})
 
     def sign_tx(self, tx, fixed_length=True):
         """Sign tx that has been created by MiniWallet in P2PK mode"""
@@ -118,8 +118,9 @@ class MiniWallet:
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
         blocks = self._test_node.generatetodescriptor(num_blocks, f'raw({self._scriptPubKey.hex()})')
         for b in blocks:
-            cb_tx = self._test_node.getblock(blockhash=b, verbosity=2)['tx'][0]
-            self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value']})
+            block_info = self._test_node.getblock(blockhash=b, verbosity=2)
+            cb_tx = block_info['tx'][0]
+            self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value'], 'height': block_info['height']})
         return blocks
 
     def get_address(self):
@@ -151,7 +152,7 @@ class MiniWallet:
 
     def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
         """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
-        self._utxos = sorted(self._utxos, key=lambda k: k['value'])
+        self._utxos = sorted(self._utxos, key=lambda k: (k['value'], -k['height']))
         utxo_to_spend = utxo_to_spend or self._utxos.pop()  # Pick the largest utxo (if none provided) and hope it covers the fee
         if self._priv_key is None:
             vsize = Decimal(85)  # anyone-can-spend
