@@ -2164,6 +2164,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     if (VeriBlock::isCrossedBootstrapBlock()) {
         altintegration::ValidationState _state;
         if (!VeriBlock::setState(pindex->GetBlockHash(), _state)) {
+            pindex->nStatus |= VERIBLOCK_BLOCK_FAILED_POP;
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop",
                                  strprintf("Block %s is POP invalid: %s", pindex->GetBlockHash().ToString(),
                                            _state.toString()));
@@ -3794,6 +3795,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
 
     if (VeriBlock::isCrossedBootstrapBlock(pindex->nHeight)) {
         if (!VeriBlock::acceptBlock(*pindex, state)) {
+            pindex->nStatus |= VERIBLOCK_BLOCK_FAILED_POP;
             return error("%s: ALT tree could not accept block ALT:%d:%s, reason: %s", __func__, pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
         }
     }
@@ -3905,6 +3907,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
     if (VeriBlock::isCrossedBootstrapBlock()) {
         if (!VeriBlock::addAllBlockPayloads(block, state)) {
+            pindex->nStatus |= VERIBLOCK_BLOCK_FAILED_POP;
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-payloads",
                 strprintf("Can not add POP payloads to block height: %d , hash: %s: %s",
                     pindex->nHeight, block.GetHash().ToString(),
