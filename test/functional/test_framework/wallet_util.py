@@ -11,14 +11,9 @@ from test_framework.address import (
     script_to_p2sh,
 )
 from test_framework.key import ECKey
-from test_framework.script import (
-    CScript,
-    OP_2,
-    OP_3,
-    OP_CHECKMULTISIG,
-)
 from test_framework.script_util import (
     key_to_p2pkh_script,
+    keys_to_multisig_script,
     script_to_p2sh_script,
 )
 
@@ -67,7 +62,7 @@ def get_multisig(node):
         addr = node.getaddressinfo(node.getnewaddress())
         addrs.append(addr['address'])
         pubkeys.append(addr['pubkey'])
-    script_code = CScript([OP_2] + [bytes.fromhex(pubkey) for pubkey in pubkeys] + [OP_3, OP_CHECKMULTISIG])
+    script_code = keys_to_multisig_script(pubkeys, k=2)
     return Multisig(privkeys=[node.dumpprivkey(addr) for addr in addrs],
                     pubkeys=pubkeys,
                     p2sh_script=script_to_p2sh_script(script_code).hex(),
