@@ -526,6 +526,7 @@ private:
     using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
     using KeyMap = std::map<CKeyID, CKey>;
 
+    std::set<CKeyID> m_set_stored_keys GUARDED_BY(cs_desc_man); // Set of keys this DescriptorSPKM needs
     ScriptPubKeyMap m_map_script_pub_keys GUARDED_BY(cs_desc_man);
     PubKeyMap m_map_pubkeys GUARDED_BY(cs_desc_man);
     int32_t m_max_cached_index = -1;
