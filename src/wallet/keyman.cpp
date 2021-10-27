@@ -235,6 +235,28 @@ bool KeyManager::Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch)
     return true;
 }
 
+std::map<CKeyID, CKey> KeyManager::GetKeys() const
+{
+    AssertLockHeld(cs_keyman);
+    if (m_storage.HasEncryptionKeys() && !m_storage.IsLocked()) {
+        std::map<CKeyID, CKey> keys;
+        for (const auto& [id, key_pair] : m_map_crypted_keys) {
+            const auto& [pubkey, crypted_secret] = key_pair;
+            CKey key;
+            DecryptKey(m_storage.GetEncryptionKey(), crypted_secret, pubkey, key);
+            keys[id] = key;
+        }
+        return keys;
+    }
+    return m_map_keys;
+}
+
+bool KeyManager::HavePrivateKeys() const
+{
+    LOCK(cs_keyman);
+    return !m_map_keys.empty() || !m_map_crypted_keys.empty();
+}
+
 std::optional<std::pair<CPubKey, std::vector<unsigned char>>> KeyManager::GetCryptedKey(const CKeyID& id) const
 {
     AssertLockHeld(cs_keyman);

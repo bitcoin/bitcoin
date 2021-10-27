@@ -52,6 +52,7 @@ public:
     bool AddHDKey(WalletBatch& batch, const CExtKey& extkey, const CExtPubKey& extpub);
 
     std::optional<CExtKey> GetActiveHDKey() const EXCLUSIVE_LOCKS_REQUIRED(cs_keyman);
+    std::map<CKeyID, CKey> GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_keyman);
     std::optional<std::pair<CPubKey, std::vector<unsigned char>>> GetCryptedKey(const CKeyID& id) const EXCLUSIVE_LOCKS_REQUIRED(cs_keyman);
 
     void LoadKey(const CKeyID&, const CKey& key);
@@ -61,6 +62,7 @@ public:
 
     bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys);
     bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch);
+    bool HavePrivateKeys() const;
 };
 } // namespace wallet
 

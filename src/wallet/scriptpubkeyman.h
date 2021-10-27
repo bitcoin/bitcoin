@@ -15,6 +15,7 @@
 #include <util/time.h>
 #include <wallet/crypter.h>
 #include <wallet/ismine.h>
+#include <wallet/keyman.h>
 #include <wallet/storage.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
@@ -531,13 +532,8 @@ private:
     PubKeyMap m_map_pubkeys GUARDED_BY(cs_desc_man);
     int32_t m_max_cached_index = -1;
 
-    KeyMap m_map_keys GUARDED_BY(cs_desc_man);
-    CryptedKeyMap m_map_crypted_keys GUARDED_BY(cs_desc_man);
-
     //! keeps track of whether Unlock has run a thorough check before
     bool m_decryption_thoroughly_checked = false;
-
-    bool AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
     KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
@@ -550,16 +546,20 @@ private:
     // Fetch the SigningProvider for a given index and optionally include private keys. Called by the above functions.
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(int32_t index, bool include_private = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
+    KeyManager m_keyman;
+
 protected:
   WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
 
 public:
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor)
         :   ScriptPubKeyMan(storage),
+            m_keyman(storage),
             m_wallet_descriptor(descriptor)
         {}
     DescriptorScriptPubKeyMan(WalletStorage& storage)
-        :   ScriptPubKeyMan(storage)
+        :   ScriptPubKeyMan(storage),
+            m_keyman(storage)
         {}
 
     mutable RecursiveMutex cs_desc_man;
