@@ -967,30 +967,24 @@ public:
 
     void PushInventory(const CInv& inv)
     {
-        if (inv.type == MSG_TX && m_tx_relay != nullptr) {
+        // VeriBlock:
+        if ((inv.type == MSG_TX || inv.type == MSG_POP_ATV || inv.type == MSG_POP_VTB || inv.type == MSG_POP_VBK) && m_tx_relay != nullptr) {
             LOCK(m_tx_relay->cs_tx_inventory);
-            if (!m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
+            if (inv.type == MSG_TX && !m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
                 m_tx_relay->setInventoryTxToSend.insert(inv.hash);
+            }
+            if (inv.type == MSG_POP_ATV && !m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
+                m_tx_relay->setInventoryAtvToSend.insert(inv.hash);
+            }
+            if (inv.type == MSG_POP_VTB && !m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
+                m_tx_relay->setInventoryVtbToSend.insert(inv.hash);
+            }
+            if (inv.type == MSG_POP_VBK && !m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
+                m_tx_relay->setInventoryVbkToSend.insert(inv.hash);
             }
         } else if (inv.type == MSG_BLOCK) {
             LOCK(cs_inventory);
             vInventoryBlockToSend.push_back(inv.hash);
-        }
-
-        // VeriBlock:
-        if (m_tx_relay != nullptr) {
-            LOCK(m_tx_relay->cs_tx_inventory);
-            LogPrint(BCLog::NET, "push inventory contains %s: %d\n", inv.ToString(), m_tx_relay->filterInventoryKnown.contains(inv.hash));
-
-            if (!m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
-                if (inv.type == MSG_POP_ATV) {
-                    m_tx_relay->setInventoryAtvToSend.insert(inv.hash);
-                } else if (inv.type == MSG_POP_VTB) {
-                    m_tx_relay->setInventoryVtbToSend.insert(inv.hash);
-                } else if (inv.type == MSG_POP_VBK) {
-                    m_tx_relay->setInventoryVbkToSend.insert(inv.hash);
-                }
-            }
         }
     }
 
