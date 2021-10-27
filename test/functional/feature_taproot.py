@@ -253,14 +253,18 @@ def default_key_tweaked(ctx):
 def default_signature(ctx):
     """Default expression for "signature": BIP340 signature or ECDSA signature depending on mode."""
     sighash = get(ctx, "sighash")
+    deterministic = get(ctx, "deterministic")
     if get(ctx, "mode") == "taproot":
         key = get(ctx, "key_tweaked")
         flip_r = get(ctx, "flag_flip_r")
         flip_p = get(ctx, "flag_flip_p")
-        return sign_schnorr(key, sighash, flip_r=flip_r, flip_p=flip_p)
+        aux = bytes([0] * 32)
+        if not deterministic:
+            aux = random.getrandbits(256).to_bytes(32, 'big')
+        return sign_schnorr(key, sighash, flip_r=flip_r, flip_p=flip_p, aux=aux)
     else:
         key = get(ctx, "key")
-        return key.sign_ecdsa(sighash)
+        return key.sign_ecdsa(sighash, rfc6979=deterministic)
 
 def default_hashtype_actual(ctx):
     """Default expression for "hashtype_actual": hashtype, unless mismatching SIGHASH_SINGLE in taproot."""
@@ -392,6 +396,8 @@ DEFAULT_CONTEXT = {
     "leaf": None,
     # The input arguments to provide to the executed script
     "inputs": [],
+    # Use deterministic signing nonces
+    "deterministic": False,
 
     # == Parameters to be set before evaluation: ==
     # - mode: what spending style to use ("taproot", "witv0", or "legacy").
