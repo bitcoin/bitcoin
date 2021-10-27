@@ -2032,24 +2032,19 @@ bool DescriptorScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master
 
 bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch)
 {
-    LOCK(cs_desc_man);
-    if (!m_keyman.m_map_crypted_keys.empty()) {
+    LOCK2(cs_desc_man, m_keyman.cs_keyman);
+
+    if (!m_keyman.Encrypt(master_key, batch)) {
         return false;
     }
 
-    for (const KeyMap::value_type& key_in : m_keyman.m_map_keys)
-    {
-        const CKey &key = key_in.second;
-        CPubKey pubkey = key.GetPubKey();
-        CKeyingMaterial secret(key.begin(), key.end());
-        std::vector<unsigned char> crypted_secret;
-        if (!EncryptSecret(master_key, secret, pubkey.GetHash(), crypted_secret)) {
-            return false;
-        }
-        m_keyman.m_map_crypted_keys[pubkey.GetID()] = make_pair(pubkey, crypted_secret);
-        batch->WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret);
+    for (const CKeyID& id : m_set_stored_keys) {
+        const auto& ckey_pair = m_keyman.GetCryptedKey(id);
+        assert(ckey_pair != std::nullopt);
+        const auto& [pubkey, ckey] = *ckey_pair;
+        batch->WriteCryptedDescriptorKey(GetID(), pubkey, ckey);
     }
-    m_keyman.m_map_keys.clear();
+
     return true;
 }
 
