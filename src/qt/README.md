@@ -1,4 +1,4 @@
-This directory contains the vBitcoinQT graphical user interface (GUI). It uses the cross-platform framework [Qt](https://www1.qt.io/developers/).
+This directory contains the BTCSQQT graphical user interface (GUI). It uses the cross-platform framework [Qt](https://www1.qt.io/developers/).
 
 The current precise version for Qt 5 is specified in [qt.mk](/depends/packages/qt.mk).
 
@@ -9,7 +9,7 @@ See build instructions ([macOS](/doc/build-osx.md), [Windows](/doc/build-windows
 To run:
 
 ```sh
-./src/qt/vbitcoin-qt
+./src/qt/btcsq-qt
 ```
 
 ## Files and directories
@@ -60,7 +60,7 @@ Represents the view to a single wallet.
 
 * UI elements like BitcoinAmountField, which inherit from QWidget.
 * `bitcoinstrings.cpp`: automatically generated
-* `bitcoinunits.(h/cpp)`: vBTC / mvBTC / etc handling
+* `bitcoinunits.(h/cpp)`: BTCSQ / mBTCSQ / etc handling
 * `callback.h`
 * `guiconstants.h`: UI colors, app name, etc
 * `guiutil.h`: several helper functions

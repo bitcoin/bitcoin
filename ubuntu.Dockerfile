@@ -41,11 +41,11 @@ RUN if [ ${BUILD_TYPE} = "Release" ]; then \
 RUN make -j4 install
 # remove source files to decrease image size
 RUN rm -rf /app
-ENV DATA_DIR=/home/vbitcoin/.vbitcoin
-RUN groupadd -r --gid 1001 vbitcoin
-RUN useradd --no-log-init -r --uid 1001 --gid 1001 --create-home --shell /bin/bash vbitcoin
+ENV DATA_DIR=/home/btcsq/.btcsq
+RUN groupadd -r --gid 1001 btcsq
+RUN useradd --no-log-init -r --uid 1001 --gid 1001 --create-home --shell /bin/bash btcsq
 RUN mkdir -p ${DATA_DIR}
 RUN chown -R 1001:1001 ${DATA_DIR}
-USER vbitcoin
+USER btcsq
 
 WORKDIR $DATA_DIR

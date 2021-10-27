@@ -47,16 +47,16 @@ rpcport=4000
 
 ## Configuration File Path
 
-The configuration file is not automatically created; you can create it using your favorite text editor. By default, the configuration file name is `vbitcoin.conf` and it is located in the vBitcoin data directory, but both the vBitcoin data directory and the configuration file path may be changed using the `-datadir` and `-conf` command-line options.
+The configuration file is not automatically created; you can create it using your favorite text editor. By default, the configuration file name is `btcsq.conf` and it is located in the BTCSQ data directory, but both the BTCSQ data directory and the configuration file path may be changed using the `-datadir` and `-conf` command-line options.
 
-The `includeconf=<file>` option in the `vbitcoin.conf` file can be used to include additional configuration files.
+The `includeconf=<file>` option in the `btcsq.conf` file can be used to include additional configuration files.
 
 ### Default configuration file locations
 
 Operating System | Data Directory | Example Path
 -- | -- | --
-Windows | `%APPDATA%\vBitcoin\` | `C:\Users\username\AppData\Roaming\vBitcoin\vbitcoin.conf`
-Linux | `$HOME/.vbitcoin/` | `/home/username/.vbitcoin/vbitcoin.conf`
-macOS | `$HOME/Library/Application Support/vBitcoin/` | `/Users/username/Library/Application Support/vBitcoin/vbitcoin.conf`
+Windows | `%APPDATA%\BTCSQ\` | `C:\Users\username\AppData\Roaming\BTCSQ\btcsq.conf`
+Linux | `$HOME/.btcsq/` | `/home/username/.btcsq/btcsq.conf`
+macOS | `$HOME/Library/Application Support/BTCSQ/` | `/Users/username/Library/Application Support/BTCSQ/btcsq.conf`
 
-You can find an example vbitcoin.conf file in [share/examples/vbitcoin.conf](../share/examples/vbitcoin.conf).
+You can find an example btcsq.conf file in [share/examples/btcsq.conf](../share/examples/btcsq.conf).

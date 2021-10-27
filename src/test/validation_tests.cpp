@@ -66,9 +66,9 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
         nSum += nSubsidy * 1000;
         BOOST_CHECK(MoneyRange(nSum));
     }
-    // with 50 vBTC payout:
+    // with 50 BTCSQ payout:
 //    BOOST_CHECK_EQUAL(nSum, CAmount{2099999997690000});
-    // with 50*20% vBTC payout and RegTest
+    // with 50*20% BTCSQ payout and RegTest
     BOOST_CHECK_EQUAL(nSum, CAmount{3937008000});
 }
 

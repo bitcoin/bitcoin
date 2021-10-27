@@ -392,7 +392,7 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
     # Warn if bitcoind is already running
     # pidof might fail or return an empty string if bitcoind is not running
     try:
-        if subprocess.check_output(["pidof", "vbitcoind"]) not in [b'']:
+        if subprocess.check_output(["pidof", "btcsqd"]) not in [b'']:
             print("%sWARNING!%s There is already a bitcoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
     except (OSError, subprocess.SubprocessError):
         pass

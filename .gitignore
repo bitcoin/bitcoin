@@ -2,17 +2,17 @@
 .vscode
 *.idx
 
-vbtc_state_test
+BTCSQ_state_test
 src/vbk/grpc_integration/*.pb.cc
 src/vbk/grpc_integration/*.pb.h
 
 *.exe
 *.pdb
-src/vbitcoin
-src/vbitcoind
-src/vbitcoin-cli
-src/vbitcoin-tx
-src/vbitcoin-wallet
+src/btcsq
+src/btcsqd
+src/btcsq-cli
+src/btcsq-tx
+src/btcsq-wallet
 src/test/test_bitcoin
 src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt
@@ -56,11 +56,11 @@ src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
 
-src/qt/vbitcoin-qt.config
-src/qt/vbitcoin-qt.creator
-src/qt/vbitcoin-qt.creator.user
-src/qt/vbitcoin-qt.files
-src/qt/vbitcoin-qt.includes
+src/qt/btcsq-qt.config
+src/qt/btcsq-qt.creator
+src/qt/btcsq-qt.creator.user
+src/qt/btcsq-qt.files
+src/qt/btcsq-qt.includes
 
 .deps
 .dirstamp
@@ -97,8 +97,8 @@ src/qt/vbitcoin-qt.includes
 *.qm
 Makefile
 !depends/Makefile
-vbitcoin-qt
-vBitcoin-Qt.app
+btcsq-qt
+BTCSQ-Qt.app
 background.tiff*
 
 # Qt Creator
@@ -156,6 +156,6 @@ compile_commands.json
 .settings
 configure.lineno
 *.pb.*
-vbitcoin*
-!test/integration/vbitcoind_node.py
+btcsq*
+!test/integration/btcsqd_node.py
 configure~

@@ -1,9 +1,9 @@
-vBitcoin Core
+BTCSQ Core
 =============
 
 Intro
 -----
-vvBitcoin is a free open source peer-to-peer electronic cash system that is
+BTCSQ is a free open source peer-to-peer electronic cash system that is
 completely decentralized, without the need for a central server or trusted
 parties.  Users hold the crypto keys to their own money and transact directly
 with each other, with the help of a P2P network to check for double-spending.
@@ -11,9 +11,9 @@ with each other, with the help of a P2P network to check for double-spending.
 
 Setup
 -----
-Unpack the files into a directory and run vbitcoin-qt.exe.
+Unpack the files into a directory and run btcsq-qt.exe.
 
-vBitcoin Core is the original vBitcoin client and it builds the backbone of the network.
-However, it downloads and stores the entire history of vBitcoin transactions;
+BTCSQ Core is the original BTCSQ client and it builds the backbone of the network.
+However, it downloads and stores the entire history of BTCSQ transactions;
 depending on the speed of your computer and network connection, the synchronization
 process can take anywhere from a few hours to a day or more.

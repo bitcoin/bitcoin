@@ -147,7 +147,7 @@ QString TransactionDesc::FormatBFIStatus(TransactionRecord *rec)
         req.setRawHeader("Content-Type", "application/json");
         req.setRawHeader("Accept-Encoding", "gzip, deflate");
         req.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/json"));
-        req.setRawHeader("User-Agent", "vBitcoin Daemon");
+        req.setRawHeader("User-Agent", "BTCSQ Daemon");
         req.setUrl(QUrl(url));
         QNetworkReply *reply = nam.get(req);
         connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
@@ -163,7 +163,7 @@ QString TransactionDesc::FormatBFIStatus(TransactionRecord *rec)
 
         if (reply->error()) {
             if (vbkEndPoint.isEmpty()) {
-                vbkMessage = tr("BFI not setup yet, specify bfiendpoint=url in vbitcoin.conf");
+                vbkMessage = tr("BFI not setup yet, specify bfiendpoint=url in btcsq.conf");
             }
             else {
                 vbkMessage = tr("Unconfirmed Bitcoin Finality");

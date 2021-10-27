@@ -131,7 +131,7 @@ CMainParams::CMainParams()
 
     chainTxData = ChainTxData{
         /**
-         * vbitcoin-cli getchaintxstats                                                                                                                                                                                                                                                                                                        bogdan@big
+         * btcsq-cli getchaintxstats                                                                                                                                                                                                                                                                                                        bogdan@big
          * {
          *    "time": 1630388498,
          *    "txcount": 51731,

@@ -35,7 +35,7 @@ jobs:
           BUILD_TYPE: ${{ matrix.build }}
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
-          name: veriblock/vbitcoin
+          name: veriblock/btcsq
           username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
           password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
           dockerfile: ubuntu.Dockerfile
@@ -62,7 +62,7 @@ jobs:
           BUILD_TYPE: ${{ matrix.build }}
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
-          name: veriblock/vbitcoin
+          name: veriblock/btcsq
           username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
           password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
           dockerfile: ubuntu-asan.Dockerfile
@@ -89,7 +89,7 @@ jobs:
           BUILD_TYPE: ${{ matrix.build }}
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
-          name: veriblock/vbitcoin
+          name: veriblock/btcsq
           username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
           password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
           dockerfile: ubuntu-valgrind.Dockerfile
@@ -115,7 +115,7 @@ jobs:
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
           dockerfile: alpine.Dockerfile
-          name: veriblock/vbitcoin
+          name: veriblock/btcsq
           username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
           password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
           tags: "${{ env.BRANCH }}-${{ env.GIT_HASH }},${{ github.sha }}"

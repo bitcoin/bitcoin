@@ -10,7 +10,7 @@ assignees: ''
 
 #### Useful skills:
 
-<!-- (For example, “C++11 std::thread”, “Qt5 GUI and async GUI design” or “basic understanding of vBitcoin mining and the vBitcoin Core RPC interface”.) -->
+<!-- (For example, “C++11 std::thread”, “Qt5 GUI and async GUI design” or “basic understanding of BTCSQ mining and the BTCSQ Core RPC interface”.) -->
 
 #### Want to work on this issue?
 

@@ -5,11 +5,11 @@ src/vbk/grpc_integration/*.pb.h
 
 *.exe
 *.pdb
-src/vbitcoin
-src/vbitcoind
-src/vbitcoin-cli
-src/vbitcoin-tx
-src/vbitcoin-wallet
+src/btcsq
+src/btcsqd
+src/btcsq-cli
+src/btcsq-tx
+src/btcsq-wallet
 src/test/test_bitcoin
 src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt
@@ -91,8 +91,8 @@ src/qt/bitcoin-qt.includes
 *.qm
 Makefile
 !depends/Makefile
-vbitcoin-qt
-vBitcoin-Qt.app
+btcsq-qt
+BTCSQ-Qt.app
 background.tiff*
 
 # Qt Creator

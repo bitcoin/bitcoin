@@ -1,12 +1,12 @@
 UNIX BUILD NOTES
 ====================
-Some notes on how to build vBitcoin Core in Unix.
+Some notes on how to build BTCSQ Core in Unix.
 
 (For BSD specific instructions, see `build-*bsd.md` in this directory.)
 
 Note
 ---------------------
-Always use absolute paths to configure and compile vBitcoin Core and the dependencies.
+Always use absolute paths to configure and compile BTCSQ Core and the dependencies.
 For example, when specifying the path of the dependency:
 
 	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
@@ -24,7 +24,7 @@ make
 make install # optional
 ```
 
-This will build vbitcoin-qt as well, if the dependencies are met.
+This will build btcsq-qt as well, if the dependencies are met.
 
 Dependencies
 ---------------------
@@ -54,7 +54,7 @@ Memory Requirements
 --------------------
 
 C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
-memory available when compiling vBitcoin Core. On systems with less, gcc can be
+memory available when compiling BTCSQ Core. On systems with less, gcc can be
 tuned to conserve memory with additional CXXFLAGS:
 
 
@@ -118,7 +118,7 @@ ZMQ dependencies (provides ZMQ API):
 
 GUI dependencies:
 
-If you want to build vbitcoin-qt, make sure that the required packages for Qt development
+If you want to build btcsq-qt, make sure that the required packages for Qt development
 are installed. Qt 5 is necessary to build the GUI.
 To build without GUI pass `--without-gui`.
 
@@ -160,7 +160,7 @@ libqrencode (optional) can be installed with:
 
 Notes
 -----
-The release is built with GCC and then "strip vbitcoind" to strip the debug
+The release is built with GCC and then "strip btcsqd" to strip the debug
 symbols, which reduces the executable size by about 90%.
 
 
@@ -223,7 +223,7 @@ Hardening enables the following features:
 
     To test that you have built PIE executable, install scanelf, part of paxutils, and use:
 
-    	scanelf -e ./vbitcoin
+    	scanelf -e ./btcsq
 
     The output should contain:
 
@@ -231,13 +231,13 @@ Hardening enables the following features:
     ET_DYN
 
 * _Non-executable Stack_: If the stack is executable then trivial stack-based buffer overflow exploits are possible if
-    vulnerable buffers are found. By default, vBitcoin Core should be built with a non-executable stack,
+    vulnerable buffers are found. By default, BTCSQ Core should be built with a non-executable stack,
     but if one of the libraries it uses asks for an executable stack or someone makes a mistake
     and uses a compiler extension which requires an executable stack, it will silently build an
     executable without the non-executable stack protection.
 
     To verify that the stack is non-executable after compiling use:
-    `scanelf -e ./vbitcoin`
+    `scanelf -e ./btcsq`
 
     The output should contain:
 	STK/REL/PTL
@@ -247,7 +247,7 @@ Hardening enables the following features:
 
 Disable-wallet mode
 --------------------
-When the intention is to run only a P2P node without a wallet, vBitcoin Core may be compiled in
+When the intention is to run only a P2P node without a wallet, BTCSQ Core may be compiled in
 disable-wallet mode with:
 
     ./configure --disable-wallet
@@ -278,7 +278,7 @@ Note:
 Enabling wallet support requires either compiling against a Berkeley DB newer than 4.8 (package `db`) using `--with-incompatible-bdb`,
 or building and depending on a local version of Berkeley DB 4.8. The readily available Arch Linux packages are currently built using
 `--with-incompatible-bdb` according to the [PKGBUILD](https://projects.archlinux.org/svntogit/community.git/tree/bitcoin/trunk/PKGBUILD).
-As mentioned above, when maintaining portability of the wallet between the standard vBitcoin Core distributions and independently built
+As mentioned above, when maintaining portability of the wallet between the standard BTCSQ Core distributions and independently built
 node software is desired, Berkeley DB 4.8 must be used.
 
 

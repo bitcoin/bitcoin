@@ -106,7 +106,7 @@ static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 /**
  * The PID file facilities.
  */
-static const char* BITCOIN_PID_FILENAME = "vbitcoind.pid";
+static const char* BITCOIN_PID_FILENAME = "btcsqd.pid";
 
 static fs::path GetPidFile()
 {
@@ -846,7 +846,7 @@ void InitLogging()
     LogInstance().EnableCategory(BCLog::POP);
 
     std::string poplogverbosity = gArgs.GetArg("-poplogverbosity", "error");
-    altintegration::SetLogger<VeriBlock::VBTCLogger>();
+    altintegration::SetLogger<VeriBlock::BTCSQLogger>();
     altintegration::GetLogger().level = altintegration::StringToLevel(poplogverbosity);
 
     fLogIPs = gArgs.GetBoolArg("-logips", DEFAULT_LOGIPS);

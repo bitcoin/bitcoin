@@ -11,8 +11,8 @@
 
 namespace VeriBlock {
 
-struct VBTCLogger : public altintegration::Logger {
-    ~VBTCLogger() override = default;
+struct BTCSQLogger : public altintegration::Logger {
+    ~BTCSQLogger() override = default;
 
     void log(altintegration::LogLevel l, const std::string& msg) override
     {

@@ -245,7 +245,7 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(overviewAction);
 
     sendCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/send"), tr("&Send"), this);
-    sendCoinsAction->setStatusTip(tr("Send coins to a vBitcoin address"));
+    sendCoinsAction->setStatusTip(tr("Send coins to a BTCSQ address"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
@@ -318,7 +318,7 @@ void BitcoinGUI::createActions()
     signMessageAction = new QAction(tr("Sign &message..."), this);
     signMessageAction->setStatusTip(tr("Sign messages with your Bitcoin addresses to prove you own them"));
     verifyMessageAction = new QAction(tr("&Verify message..."), this);
-    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified vBitcoin addresses"));
+    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified BTCSQ addresses"));
 
     openRPCConsoleAction = new QAction(tr("&Debug window"), this);
     openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
@@ -348,7 +348,7 @@ void BitcoinGUI::createActions()
 
     showHelpMessageAction = new QAction(tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
-    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible vBitcoin command-line options").arg(PACKAGE_NAME));
+    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible BTCSQ command-line options").arg(PACKAGE_NAME));
 
     connect(quitAction, &QAction::triggered, qApp, QApplication::quit);
     connect(aboutAction, &QAction::triggered, this, &BitcoinGUI::aboutClicked);
@@ -870,7 +870,7 @@ void BitcoinGUI::updateNetworkState()
     QString tooltip;
 
     if (m_node.getNetworkActive()) {
-        tooltip = tr("%n active connection(s) to vBitcoin network", "", count) + QString(".<br>") + tr("Click to disable network activity.");
+        tooltip = tr("%n active connection(s) to BTCSQ network", "", count) + QString(".<br>") + tr("Click to disable network activity.");
     } else {
         tooltip = tr("Network activity disabled.") + QString("<br>") + tr("Click to enable network activity again.");
         icon = ":/icons/network_disabled";

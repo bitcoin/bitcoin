@@ -9,7 +9,7 @@
 
 #include <tinyformat.h>
 
-const std::string CURRENCY_UNIT = "vBTC";
+const std::string CURRENCY_UNIT = "BTCSQ";
 
 CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nBytes_)
 {

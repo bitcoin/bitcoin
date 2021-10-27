@@ -1,5 +1,5 @@
 ---
-name: "vbitcoin-core-win-0.0.3"
+name: "btcsq-core-win-0.0.3"
 enable_cache: true
 distro: "ubuntu"
 suites:
@@ -114,14 +114,14 @@ script: |
   ./autogen.sh
   CONFIG_SITE=${BASEPREFIX}/$(echo "${HOSTS}" | awk '{print $1;}')/share/config.site ./configure --prefix=/
   make dist
-  SOURCEDIST=$(echo vbitcoin-*.tar.gz)
+  SOURCEDIST=$(echo btcsq-*.tar.gz)
   DISTNAME=${SOURCEDIST/%.tar.gz}
 
   # Correct tar file order
   mkdir -p temp
   pushd temp
   tar -xf ../$SOURCEDIST
-  find vbitcoin-* | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
+  find btcsq-* | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
   popd
 
   # Workaround for tarball not building with the bare tag version (prep)
@@ -147,7 +147,7 @@ script: |
     make ${MAKEOPTS} -C src check-security
     make deploy
     make install DESTDIR=${INSTALLPATH}
-    cp -f --target-directory="${OUTDIR}" ./vbitcoin-*-setup-unsigned.exe
+    cp -f --target-directory="${OUTDIR}" ./btcsq-*-setup-unsigned.exe
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
     find . -name "lib*.la" -delete
@@ -166,5 +166,5 @@ script: |
   cp -rf contrib/windeploy $BUILD_DIR
   cd $BUILD_DIR/windeploy
   mkdir unsigned
-  cp $OUTDIR/vbitcoin-*setup-unsigned.exe unsigned/
+  cp $OUTDIR/btcsq-*setup-unsigned.exe unsigned/
   find . | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz

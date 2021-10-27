@@ -44,7 +44,7 @@ static bool WalletAppInit(int argc, char* argv[])
     }
     if (argc < 2 || HelpRequested(gArgs)) {
         std::string usage = strprintf("%s bitcoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n\n" +
-                                      "bitcoin-wallet is an offline tool for creating and interacting with vBitcoin Core wallet files.\n" +
+                                      "bitcoin-wallet is an offline tool for creating and interacting with BTCSQ Core wallet files.\n" +
                                       "By default bitcoin-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n" +
                                       "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n" +
                                       "Usage:\n" +

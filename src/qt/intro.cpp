@@ -128,7 +128,7 @@ Intro::Intro(QWidget *parent, uint64_t blockchain_size, uint64_t chain_state_siz
         .arg(PACKAGE_NAME)
         .arg(m_blockchain_size)
         .arg(2009)
-        .arg(tr("vBitcoin"))
+        .arg(tr("BTCSQ"))
     );
     ui->lblExplanation2->setText(ui->lblExplanation2->text().arg(PACKAGE_NAME));
 
@@ -152,7 +152,7 @@ Intro::Intro(QWidget *parent, uint64_t blockchain_size, uint64_t chain_state_siz
     }
     requiredSpace += m_chain_state_size;
     ui->sizeWarningLabel->setText(
-        tr("%1 will download and store a copy of the vBitcoin block chain.").arg(PACKAGE_NAME) + " " +
+        tr("%1 will download and store a copy of the BTCSQ block chain.").arg(PACKAGE_NAME) + " " +
         storageRequiresMsg.arg(requiredSpace) + " " +
         tr("The wallet will also be stored in this directory.")
     );
@@ -247,7 +247,7 @@ bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& pru
     }
     /* Only override -datadir if different from the default, to make it possible to
      * override -datadir in the bitcoin.conf file in the default data directory
-     * (to be consistent with vbitcoind behavior)
+     * (to be consistent with btcsqd behavior)
      */
     if(dataDir != GUIUtil::getDefaultDataDirectory()) {
         node.softSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting

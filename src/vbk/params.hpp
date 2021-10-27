@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef INTEGRATION_REFERENCE_BTC_VBTC_PARAMS_HPP
-#define INTEGRATION_REFERENCE_BTC_VBTC_PARAMS_HPP
+#ifndef INTEGRATION_REFERENCE_BTC_BTCSQ_PARAMS_HPP
+#define INTEGRATION_REFERENCE_BTC_BTCSQ_PARAMS_HPP
 
 #include <primitives/block.h>
 #include <veriblock/pop.hpp>
@@ -14,11 +14,11 @@ class ArgsManager;
 
 namespace VeriBlock {
 
-struct AltChainParamsVBTC : public altintegration::AltChainParams {
-    ~AltChainParamsVBTC() override = default;
-    AltChainParamsVBTC() = default;
+struct AltChainParamsBTCSQ : public altintegration::AltChainParams {
+    ~AltChainParamsBTCSQ() override = default;
+    AltChainParamsBTCSQ() = default;
 
-    explicit AltChainParamsVBTC(const CBlock& genesis)
+    explicit AltChainParamsBTCSQ(const CBlock& genesis)
     {
         // if block time changes, update altchain id. see altchain id comment.
         assert(altintegration::getMaxAtvsInVbkBlock(VeriBlock::ALT_CHAIN_ID) == 20);
@@ -40,7 +40,7 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
 
         //! copying all parameters here to make sure that
         //! if anyone changes them in alt-int-cpp, they
-        //! won't be changed in vBTC.
+        //! won't be changed in BTCSQ.
 
         // pop payout params
         this->mPopPayoutsParams->mStartOfSlope = 1.0;
@@ -98,10 +98,10 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
     altintegration::AltBlock bootstrap;
 };
 
-struct AltChainParamsVBTCRegTest : public AltChainParamsVBTC {
-    ~AltChainParamsVBTCRegTest() override = default;
+struct AltChainParamsBTCSQRegTest : public AltChainParamsBTCSQ {
+    ~AltChainParamsBTCSQRegTest() override = default;
 
-    explicit AltChainParamsVBTCRegTest(const CBlock& genesis) : AltChainParamsVBTC(genesis)
+    explicit AltChainParamsBTCSQRegTest(const CBlock& genesis) : AltChainParamsBTCSQ(genesis)
     {
         this->mMaxReorgDistance = 1000;
         this->mMaxVbkBlocksInAltBlock = 200;
@@ -110,10 +110,10 @@ struct AltChainParamsVBTCRegTest : public AltChainParamsVBTC {
     }
 };
 
-struct AltChainParamsVBTCDetRegTest : public AltChainParamsVBTC {
-    ~AltChainParamsVBTCDetRegTest() override = default;
+struct AltChainParamsBTCSQDetRegTest : public AltChainParamsBTCSQ {
+    ~AltChainParamsBTCSQDetRegTest() override = default;
 
-    AltChainParamsVBTCDetRegTest()
+    AltChainParamsBTCSQDetRegTest()
     {
         bootstrap.hash = uint256S("393e1fea789a3ac750921d6d9f6aa7e84df9e031ecd63fca22dc3adc0632025c").asVector();
         bootstrap.previousBlock = uint256S("42b16a400669ab1403410585e793cec350baa53ff3fddc2414be92f03f1b12f2").asVector();
@@ -127,4 +127,4 @@ void selectPopConfig(const std::string& network = "test");
 
 } // namespace VeriBlock
 
-#endif //INTEGRATION_REFERENCE_BTC_VBTC_PARAMS_HPP
+#endif //INTEGRATION_REFERENCE_BTC_BTCSQ_PARAMS_HPP

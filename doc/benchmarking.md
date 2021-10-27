@@ -13,7 +13,7 @@ benchmarking by unlatching log printers and lock analysis.
 
     make -C src bitcoin_bench
 
-After compiling vbitcoin-core, the benchmarks can be run with:
+After compiling btcsq-core, the benchmarks can be run with:
 
     src/bench/bench_bitcoin
 

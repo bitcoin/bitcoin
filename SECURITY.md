@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-See our website for versions of vBitcoin Core that are currently supported with
+See our website for versions of BTCSQ Core that are currently supported with
 security updates: https://veriblock.org
 
 ## Reporting a Vulnerability

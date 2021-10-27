@@ -16,14 +16,14 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "vBitcoin"
-            VALUE "FileDescription",    "vbitcoin-wallet (CLI tool for " PACKAGE_NAME " wallets)"
+            VALUE "CompanyName",        "BTCSQ"
+            VALUE "FileDescription",    "btcsq-wallet (CLI tool for " PACKAGE_NAME " wallets)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
-            VALUE "InternalName",       "vbitcoin-wallet"
+            VALUE "InternalName",       "btcsq-wallet"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
-            VALUE "OriginalFilename",   "vbitcoin-wallet.exe"
-            VALUE "ProductName",        "vbitcoin-wallet"
+            VALUE "OriginalFilename",   "btcsq-wallet.exe"
+            VALUE "ProductName",        "btcsq-wallet"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END

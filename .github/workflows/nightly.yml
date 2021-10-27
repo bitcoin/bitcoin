@@ -70,8 +70,8 @@ jobs:
       - name: create artifacts
         if: success()
         run: |
-          mv ./release vBitcoin--${{ steps.extract_branch.outputs.branch }}.-${{ steps.extract_branch.outputs.git_hash }}
-          tar czvf vBitcoin-nightly-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64-qt.tar.gz vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}/
+          mv ./release BTCSQ--${{ steps.extract_branch.outputs.branch }}.-${{ steps.extract_branch.outputs.git_hash }}
+          tar czvf BTCSQ-nightly-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64-qt.tar.gz BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}/
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -80,7 +80,7 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vBitcoin-nightly-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64-qt.tar.gz
+          source: BTCSQ-nightly-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64-qt.tar.gz
           target: ${{ secrets.ARTIFACT_PATH }}
       - name: make check
         timeout-minutes: 20
@@ -318,7 +318,7 @@ jobs:
 #      - name: vcpkg integration
 #        run: C:/vcpkg/vcpkg.exe integrate install
 #      - name: Build
-#        run: msbuild build_msvc\vbitcoin.sln /m /v:n /p:Configuration=Release
+#        run: msbuild build_msvc\btcsq.sln /m /v:n /p:Configuration=Release
 #      - name: Run test_bitcoin
 #        shell: cmd
 #        run: src\test_bitcoin.exe -k stdout -e stdout 2> NUL
@@ -428,10 +428,10 @@ jobs:
       - name: create artifacts
         if: success()
         run: |
-          mv ./vBitcoin-Qt.app release/
-          mv ./vBitcoin-Core.dmg release/
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vBitcoin-nightly-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
+          mv ./BTCSQ-Qt.app release/
+          mv ./BTCSQ-Core.dmg release/
+          mv ./release BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 BTCSQ-nightly-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -440,7 +440,7 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vBitcoin-nightly-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
+          source: BTCSQ-nightly-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
           target: ${{ secrets.ARTIFACT_PATH }}
 
   cc:
@@ -516,14 +516,14 @@ jobs:
       - name: create artifacts
         if: matrix.host == 'x86_64-w64-mingw32'
         run: |
-          mv ./vbitcoin-0.19.99-win64-setup-unsigned.exe release/
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vBitcoin-nightly-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
+          mv ./btcsq-0.19.99-win64-setup-unsigned.exe release/
+          mv ./release BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 BTCSQ-nightly-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
       - name: create artifacts
         if: matrix.host != 'x86_64-w64-mingw32'
         run: |
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vBitcoin-nightly-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-${{ matrix.host }}-qt.zip vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
+          mv ./release BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 BTCSQ-nightly-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-${{ matrix.host }}-qt.zip BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
       - name: upload artifacts
         if: matrix.host == 'x86_64-w64-mingw32'
         uses: appleboy/scp-action@master
@@ -532,6 +532,6 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vBitcoin-nightly-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
+          source: BTCSQ-nightly-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
           target: ${{ secrets.ARTIFACT_PATH }}
           

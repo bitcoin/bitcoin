@@ -86,8 +86,8 @@ jobs:
       - name: create artifacts
         if: success()
         run: |
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
-          tar czvf vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}/
+          mv ./release BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
+          tar czvf BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}/
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -96,7 +96,7 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz
+          source: BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz
           target: ${{ secrets.ARTIFACT_PATH }}
       - name: upload artifacts to public mirrors
         if: success()
@@ -105,8 +105,8 @@ jobs:
           host: "mirror1.veriblock.org, mirror2.veriblock.org"
           username: ${{ secrets.MIRROR_ARTIFACTS_USER }}
           key: ${{ secrets.MIRROR_ARTIFACTS_KEY }}
-          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz
-          target: "artifacts/vbtc"
+          source: BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz
+          target: "artifacts/btcsq"
       - name: make check
         timeout-minutes: 60
         run: make check
@@ -124,13 +124,13 @@ jobs:
         if: always()
         timeout-minutes: 60
         env:
-          VBITCOIND_PATH: './src/vbitcoind'
+          BTCSQD_PATH: './src/btcsqd'
         run: python3 test/integration/test_runner.py
       # - name: run pop integration benchmark
       #   if: always()
       #   timeout-minutes: 60
       #   env:
-      #     VBITCOIND_PATH: './src/vbitcoind'
+      #     BTCSQD_PATH: './src/btcsqd'
       #   run: python3 test/integration/benchmark_runner.py
 
   x86_64-w64-mingw32:
@@ -196,9 +196,9 @@ jobs:
       - name: create artifacts
         if: success()
         run: |
-          mv ./vbitcoin-0.19.99-win64-setup-unsigned.exe release/
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
+          mv ./btcsq-0.19.99-win64-setup-unsigned.exe release/
+          mv ./release BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -207,7 +207,7 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
+          source: BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
           target: ${{ secrets.ARTIFACT_PATH }}
       - name: upload artifacts to public mirrors
         if: success()
@@ -216,8 +216,8 @@ jobs:
           host: "mirror1.veriblock.org, mirror2.veriblock.org"
           username: ${{ secrets.MIRROR_ARTIFACTS_USER }}
           key: ${{ secrets.MIRROR_ARTIFACTS_KEY }}
-          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
-          target: "artifacts/vbtc"
+          source: BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
+          target: "artifacts/btcsq"
 
 
   x86_64-apple-darwin16:
@@ -289,10 +289,10 @@ jobs:
       - name: create artifacts
         if: success()
         run: |
-          mv ./vBitcoin-Qt.app release/
-          mv ./vBitcoin-Core.dmg release/
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
+          mv ./BTCSQ-Qt.app release/
+          mv ./BTCSQ-Core.dmg release/
+          mv ./release BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -301,7 +301,7 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
+          source: BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
           target: ${{ secrets.ARTIFACT_PATH }}
       - name: upload artifacts to public mirrors
         if: success()
@@ -310,8 +310,8 @@ jobs:
           host: "mirror1.veriblock.org, mirror2.veriblock.org"
           username: ${{ secrets.MIRROR_ARTIFACTS_USER }}
           key: ${{ secrets.MIRROR_ARTIFACTS_KEY }}
-          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
-          target: "artifacts/vbtc"
+          source: BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
+          target: "artifacts/btcsq"
 
 
   macos-native:
@@ -386,7 +386,7 @@ jobs:
         if: always()
         timeout-minutes: 60
         env:
-          VBITCOIND_PATH: './src/vbitcoind'
+          BTCSQD_PATH: './src/btcsqd'
         run: python3 test/integration/test_runner.py
 
   linux-asan:
@@ -489,5 +489,5 @@ jobs:
         if: always()
         timeout-minutes: 60
         env:
-          VBITCOIND_PATH: './src/vbitcoind'
+          BTCSQD_PATH: './src/btcsqd'
         run: python3 test/integration/test_runner.py

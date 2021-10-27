@@ -17,9 +17,9 @@ BitcoinUnits::BitcoinUnits(QObject *parent):
 QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
 {
     QList<BitcoinUnits::Unit> unitlist;
-    unitlist.append(vBTC);
-    unitlist.append(mvBTC);
-    unitlist.append(uvBTC);
+    unitlist.append(BTCSQ);
+    unitlist.append(mBTCSQ);
+    unitlist.append(uBTCSQ);
     unitlist.append(SAT);
     return unitlist;
 }
@@ -28,9 +28,9 @@ bool BitcoinUnits::valid(int unit)
 {
     switch(unit)
     {
-    case vBTC:
-    case mvBTC:
-    case uvBTC:
+    case BTCSQ:
+    case mBTCSQ:
+    case uBTCSQ:
     case SAT:
         return true;
     default:
@@ -42,9 +42,9 @@ QString BitcoinUnits::longName(int unit)
 {
     switch(unit)
     {
-    case vBTC: return QString("vBTC");
-    case mvBTC: return QString("mvBTC");
-    case uvBTC: return QString::fromUtf8("µvBTC (bits)");
+    case BTCSQ: return QString("BTCSQ");
+    case mBTCSQ: return QString("mBTCSQ");
+    case uBTCSQ: return QString::fromUtf8("µBTCSQ (bits)");
     case SAT: return QString("Satoshi (sat)");
     default: return QString("???");
     }
@@ -54,7 +54,7 @@ QString BitcoinUnits::shortName(int unit)
 {
     switch(unit)
     {
-    case uvBTC: return QString::fromUtf8("bits");
+    case uBTCSQ: return QString::fromUtf8("bits");
     case SAT: return QString("sat");
     default: return longName(unit);
     }
@@ -64,9 +64,9 @@ QString BitcoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case vBTC: return QString("vBitcoins");
-    case mvBTC: return QString("Milli-vBitcoins (1 / 1" THIN_SP_UTF8 "000)");
-    case uvBTC: return QString("Micro-vBitcoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case BTCSQ: return QString("BTCSQs");
+    case mBTCSQ: return QString("Milli-BTCSQs (1 / 1" THIN_SP_UTF8 "000)");
+    case uBTCSQ: return QString("Micro-BTCSQs (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     case SAT: return QString("Satoshi (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
@@ -76,9 +76,9 @@ qint64 BitcoinUnits::factor(int unit)
 {
     switch(unit)
     {
-    case vBTC: return 100000000;
-    case mvBTC: return 100000;
-    case uvBTC: return 100;
+    case BTCSQ: return 100000000;
+    case mBTCSQ: return 100000;
+    case uBTCSQ: return 100;
     case SAT: return 1;
     default: return 100000000;
     }
@@ -88,9 +88,9 @@ int BitcoinUnits::decimals(int unit)
 {
     switch(unit)
     {
-    case vBTC: return 8;
-    case mvBTC: return 5;
-    case uvBTC: return 2;
+    case BTCSQ: return 8;
+    case mBTCSQ: return 5;
+    case uBTCSQ: return 2;
     case SAT: return 0;
     default: return 0;
     }

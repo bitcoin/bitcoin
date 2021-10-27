@@ -3,11 +3,11 @@ import sys
 
 from pypoptools.pypoptesting.framework.node import Node
 from pypoptools.pypoptesting.test_runner import benchmark_running
-from vbitcoind_node import VBitcoindNode
+from btcsqd_node import BTCSQdNode
 
 
 def create_node(number: int, path: pathlib.Path) -> Node:
-    return VBitcoindNode(number=number, datadir=path)
+    return BTCSQdNode(number=number, datadir=path)
 
 
 if __name__ == '__main__':

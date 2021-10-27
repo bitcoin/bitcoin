@@ -1,30 +1,30 @@
-vBitcoin Core
+BTCSQ Core
 =============
 
 Setup
 ---------------------
-vBitcoin Core is the original vBitcoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of vBitcoin transactions, which requires a few gigabytes of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+BTCSQ Core is the original BTCSQ client and it builds the backbone of the network. It downloads and, by default, stores the entire history of BTCSQ transactions, which requires a few gigabytes of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
 
-To download vBitcoin Core, visit [veriblock.org](https://veriblock.org/).
+To download BTCSQ Core, visit [veriblock.org](https://veriblock.org/).
 
 Running
 ---------------------
-The following are some helpful notes on how to run vBitcoin Core on your native platform.
+The following are some helpful notes on how to run BTCSQ Core on your native platform.
 
 ### Unix
 
 Unpack the files into a directory and run:
 
-- `bin/vbitcoin-qt` (GUI) or
-- `bin/vbitcoind` (headless)
+- `bin/btcsq-qt` (GUI) or
+- `bin/btcsqd` (headless)
 
 ### Windows
 
-Unpack the files into a directory, and then run vbitcoin-qt.exe.
+Unpack the files into a directory, and then run btcsq-qt.exe.
 
 ### macOS
 
-Drag vBitcoin Core to your applications folder, and then run vBitcoin Core.
+Drag BTCSQ Core to your applications folder, and then run BTCSQ Core.
 
 ### Need Help?
 
@@ -38,7 +38,7 @@ for help and more information.
 
 Building
 ---------------------
-The following are developer notes on how to build vBitcoin Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following are developer notes on how to build BTCSQ Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
 - [Dependencies](dependencies.md)
 - [macOS Build Notes](build-osx.md)
@@ -51,7 +51,7 @@ The following are developer notes on how to build vBitcoin Core on your native p
 
 Development
 ---------------------
-The vBitcoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
+The BTCSQ repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
 - [Productivity Notes](productivity.md)
@@ -69,7 +69,7 @@ The vBitcoin repo's [root README](/README.md) contains relevant information on t
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
-- [vbitcoin.conf Configuration File](vbitcoin-conf.md)
+- [btcsq.conf Configuration File](btcsq-conf.md)
 - [Files](files.md)
 - [Fuzz-testing](fuzzing.md)
 - [Reduce Memory](reduce-memory.md)

@@ -66,7 +66,7 @@
         <translation>Адресе за примање</translation>
     </message>
     <message>
-        <source>These are your vBitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your BTCSQ addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Ово су ваше Биткоин адресе за слање уплата. Увек добро проверите износ и адресу на коју шаљете пре него што пошаљете уплату.</translation>
     </message>
     <message>
@@ -322,7 +322,7 @@
         <translation>Прокси је &lt;b&gt;омогућен&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a vBitcoin address</source>
+        <source>Send coins to a BTCSQ address</source>
         <translation>Пошаљите новац на Биткоин адресу</translation>
     </message>
     <message>
@@ -366,11 +366,11 @@
         <translation>Шифрирај приватни клуљ који припада новчанику.</translation>
     </message>
     <message>
-        <source>Sign messages with your vBitcoin addresses to prove you own them</source>
+        <source>Sign messages with your BTCSQ addresses to prove you own them</source>
         <translation>Потписуј поруку са своје Биткоин адресе као доказ да си њихов власник</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified vBitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified BTCSQ addresses</source>
         <translation>Верификуј поруке и утврди да ли су потписане од стране спецификованих Биткоин адреса</translation>
     </message>
     <message>
@@ -410,7 +410,7 @@
         <translation>&amp;Опције командне линије</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to vBitcoin network</source>
+        <source>%n active connection(s) to BTCSQ network</source>
         <translation><numerusform>%n aктивна веза са Биткоин мрежом</numerusform><numerusform>%n aктивних веза са Биткоин мрежом</numerusform><numerusform>%n aктивних веза са Биткоин мрежом</numerusform></translation>
     </message>
     <message>
@@ -454,7 +454,7 @@
         <translation>Ажурно</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible vBitcoin command-line options</source>
+        <source>Show the %1 help message to get a list with possible BTCSQ command-line options</source>
         <translation>Прикажи  поруку помоћи %1 за листу са могућим опцијама Биткоин командне линије</translation>
     </message>
     <message>
@@ -530,7 +530,7 @@
         <translation>Новчаник јс &lt;b&gt;шифрован&lt;/b&gt; и тренутно &lt;b&gt;закључан&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. vBitcoin can no longer continue safely and will quit.</source>
+        <source>A fatal error occurred. BTCSQ can no longer continue safely and will quit.</source>
         <translation>Дошло је до критичне грешке. Биткоин не може безбедно да настави са радом и искључиће се.</translation>
     </message>
 </context>
@@ -707,7 +707,7 @@
         <translation>Измени адресу за слање</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid vBitcoin address.</source>
+        <source>The entered address "%1" is not a valid BTCSQ address.</source>
         <translation>Унета адреса "%1" није важећа Биткоин адреса.</translation>
     </message>
     <message>

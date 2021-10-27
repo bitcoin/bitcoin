@@ -14,8 +14,8 @@ const static int32_t POP_BLOCK_VERSION_BIT = 0x80000UL;
 
 // We want to set a limit of ATVs per VBK block by setting 2 last bytes 
 // of altchain ID with specific value.
-// VBK block time is 30 sec, vBTC block time is 2 min. 
-// vBTC maximum can contain 100 ATVs per block, so we set this limit 
+// VBK block time is 30 sec, BTCSQ block time is 2 min. 
+// BTCSQ maximum can contain 100 ATVs per block, so we set this limit 
 // to be around 25. We set it to be 20.
 // 0x26ff are bytes that control this behavior:
 // 0x26 is 0b100110 in bits, which translates into 

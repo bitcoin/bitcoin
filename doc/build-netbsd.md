@@ -47,7 +47,7 @@ from the root of the repository. Then set `BDB_PREFIX` for the next section:
 export BDB_PREFIX="$PWD/db4"
 ```
 
-### Building vBitcoin Core
+### Building BTCSQ Core
 
 **Important**: Use `gmake` (the non-GNU `make` will exit with an error).
 

@@ -126,7 +126,7 @@
         <translation>Повторно индексирање на блокови од дискот...</translation>
     </message>
     <message>
-        <source>Send coins to a vBitcoin address</source>
+        <source>Send coins to a BTCSQ address</source>
         <translation>Испрати биткоини на Биткоин адреса</translation>
     </message>
     <message>

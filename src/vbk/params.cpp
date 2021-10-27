@@ -17,7 +17,7 @@
 
 namespace VeriBlock {
 
-bool AltChainParamsVBTC::checkBlockHeader(const std::vector<uint8_t>& bytes, const std::vector<uint8_t>& root, altintegration::ValidationState& state) const noexcept
+bool AltChainParamsBTCSQ::checkBlockHeader(const std::vector<uint8_t>& bytes, const std::vector<uint8_t>& root, altintegration::ValidationState& state) const noexcept
 {
     const CChainParams& params = Params();
 
@@ -42,7 +42,7 @@ bool AltChainParamsVBTC::checkBlockHeader(const std::vector<uint8_t>& bytes, con
     }
 }
 
-std::vector<uint8_t> AltChainParamsVBTC::getHash(const std::vector<uint8_t>& bytes) const noexcept
+std::vector<uint8_t> AltChainParamsBTCSQ::getHash(const std::vector<uint8_t>& bytes) const noexcept
 {
     try {
         return VeriBlock::headerFromBytes(bytes).GetHash().asVector();
@@ -107,28 +107,28 @@ void selectPopConfig(const std::string& network)
         popconfig.setBTC(mainnetBTCstartHeight, mainnetBTCblocks, btcparam);
         auto vbkparam = std::make_shared<altintegration::VbkChainParamsMain>();
         popconfig.setVBK(mainnetVBKstartHeight, mainnetVBKblocks, vbkparam);
-        auto altparam = std::make_shared<VeriBlock::AltChainParamsVBTC>(Params().GenesisBlock());
+        auto altparam = std::make_shared<VeriBlock::AltChainParamsBTCSQ>(Params().GenesisBlock());
         popconfig.alt = altparam;
     } else if (network == CBaseChainParams::TESTNET) {
         auto btcparam = std::make_shared<altintegration::BtcChainParamsTest>();
         popconfig.setBTC(testnetBTCstartHeight, testnetBTCblocks, btcparam);
         auto vbkparam = std::make_shared<altintegration::VbkChainParamsTest>();
         popconfig.setVBK(testnetVBKstartHeight, testnetVBKblocks, vbkparam);
-        auto altparam = std::make_shared<VeriBlock::AltChainParamsVBTC>(Params().GenesisBlock());
+        auto altparam = std::make_shared<VeriBlock::AltChainParamsBTCSQ>(Params().GenesisBlock());
         popconfig.alt = altparam;
     } else if (network == CBaseChainParams::REGTEST) {
         auto btcparam = std::make_shared<altintegration::BtcChainParamsRegTest>();
         popconfig.setBTC(0, {}, btcparam);
         auto vbkparam = std::make_shared<altintegration::VbkChainParamsRegTest>();
         popconfig.setVBK(0, {}, vbkparam);
-        auto altparam = std::make_shared<VeriBlock::AltChainParamsVBTCRegTest>(Params().GenesisBlock());
+        auto altparam = std::make_shared<VeriBlock::AltChainParamsBTCSQRegTest>(Params().GenesisBlock());
         popconfig.alt = altparam;
     } else if (network == CBaseChainParams::DETREGTEST) {
         auto btcparam = std::make_shared<altintegration::BtcChainParamsRegTest>();
         popconfig.setBTC(0, {}, btcparam);
         auto vbkparam = std::make_shared<altintegration::VbkChainParamsRegTest>();
         popconfig.setVBK(0, {}, vbkparam);
-        auto altparam = std::make_shared<VeriBlock::AltChainParamsVBTCDetRegTest>();
+        auto altparam = std::make_shared<VeriBlock::AltChainParamsBTCSQDetRegTest>();
         popconfig.alt = altparam;
     } else {
         throw std::invalid_argument("currently only supports main/test/regtest/detregtest");

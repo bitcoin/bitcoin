@@ -252,7 +252,7 @@
        <item>
         <widget class="QCheckBox" name="mapPortUpnp">
          <property name="toolTip">
-          <string>Automatically open the vBitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</string>
+          <string>Automatically open the BTCSQ client port on the router. This only works when your router supports UPnP and it is enabled.</string>
          </property>
          <property name="text">
           <string>Map port using &amp;UPnP</string>
@@ -272,7 +272,7 @@
        <item>
         <widget class="QCheckBox" name="connectSocks">
          <property name="toolTip">
-          <string>Connect to the vBitcoin network through a SOCKS5 proxy.</string>
+          <string>Connect to the BTCSQ network through a SOCKS5 proxy.</string>
          </property>
          <property name="text">
           <string>&amp;Connect through SOCKS5 proxy (default proxy):</string>
@@ -459,7 +459,7 @@
        <item>
         <widget class="QCheckBox" name="connectSocksTor">
          <property name="toolTip">
-          <string>Connect to the vBitcoin network through a separate SOCKS5 proxy for Tor hidden services.</string>
+          <string>Connect to the BTCSQ network through a separate SOCKS5 proxy for Tor hidden services.</string>
          </property>
          <property name="text">
           <string>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</string>
@@ -729,7 +729,7 @@
            </property>
          
            <property name="text">
-           <string>Bitcoin Finality Indicator (BFI) indicates when a transaction on an altchain network has as much security as a transaction on Bitcoin itself.&lt;br&gt;See here for more details: &lt;a href='https://wiki.veriblock.org/index.php/How_VeriBlock_PoP_BFI_Protects_Altchains'&gt;https://wiki.veriblock.org/index.php/How_VeriBlock_PoP_BFI_Protects_Altchains&lt;/a&gt;.&lt;br&gt;The BFI service can be run locally, or for convenience, directly pulled from a hosted website (like looking up transactions in an altchain web explorer).&lt;br&gt;&lt;br&gt;Check the -bfiendpoint in the vbitcoin.conf file to set the BFI endpoint.&lt;br&gt;</string>
+           <string>Bitcoin Finality Indicator (BFI) indicates when a transaction on an altchain network has as much security as a transaction on Bitcoin itself.&lt;br&gt;See here for more details: &lt;a href='https://wiki.veriblock.org/index.php/How_VeriBlock_PoP_BFI_Protects_Altchains'&gt;https://wiki.veriblock.org/index.php/How_VeriBlock_PoP_BFI_Protects_Altchains&lt;/a&gt;.&lt;br&gt;The BFI service can be run locally, or for convenience, directly pulled from a hosted website (like looking up transactions in an altchain web explorer).&lt;br&gt;&lt;br&gt;Check the -bfiendpoint in the btcsq.conf file to set the BFI endpoint.&lt;br&gt;</string>
            </property>
            
           </widget>

@@ -5,49 +5,49 @@
 # See "man systemd.service" for details.
 
 # Note that almost all daemon options could be specified in
-# /etc/vbitcoin/vbitcoin.conf, but keep in mind those explicitly
+# /etc/btcsq/btcsq.conf, but keep in mind those explicitly
 # specified as arguments in ExecStart= will override those in the
 # config file.
 
 [Unit]
-Description=vBitcoin daemon
+Description=BTCSQ daemon
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/vbitcoind -daemon \
-                            -pid=/run/vbitcoind/vbitcoind.pid \
-                            -conf=/etc/vbitcoin/vbitcoin.conf \
-                            -datadir=/var/lib/vbitcoind
+ExecStart=/usr/bin/btcsqd -daemon \
+                            -pid=/run/btcsqd/btcsqd.pid \
+                            -conf=/etc/btcsq/btcsq.conf \
+                            -datadir=/var/lib/btcsqd
 
 # Make sure the config directory is readable by the service user
 PermissionsStartOnly=true
-ExecStartPre=/bin/chgrp vbitcoin /etc/vbitcoin
+ExecStartPre=/bin/chgrp btcsq /etc/btcsq
 
 # Process management
 ####################
 
 Type=forking
-PIDFile=/run/vbitcoind/vbitcoind.pid
+PIDFile=/run/btcsqd/btcsqd.pid
 Restart=on-failure
 TimeoutStopSec=600
 
 # Directory creation and permissions
 ####################################
 
-# Run as vbitcoin:vbitcoin
-User=vbitcoin
-Group=vbitcoin
+# Run as btcsq:btcsq
+User=btcsq
+Group=btcsq
 
-# /run/vbitcoind
-RuntimeDirectory=vbitcoind
+# /run/btcsqd
+RuntimeDirectory=btcsqd
 RuntimeDirectoryMode=0710
 
-# /etc/vbitcoin
-ConfigurationDirectory=vbitcoin
+# /etc/btcsq
+ConfigurationDirectory=btcsq
 ConfigurationDirectoryMode=0710
 
-# /var/lib/vbitcoind
-StateDirectory=vbitcoind
+# /var/lib/btcsqd
+StateDirectory=btcsqd
 StateDirectoryMode=0710
 
 # Hardening measures

@@ -66,8 +66,8 @@
         <translation>Direcciones de recepción</translation>
     </message>
     <message>
-        <source>These are your vBitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Estas son sus direcciones vBitcoin para enviar pagos. Compruebe siempre la cantidad y la dirección de recibo antes de transferir monedas.</translation>
+        <source>These are your BTCSQ addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Estas son sus direcciones BTCSQ para enviar pagos. Compruebe siempre la cantidad y la dirección de recibo antes de transferir monedas.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -242,7 +242,7 @@
         <translation>Reindexando bloques en disco...</translation>
     </message>
     <message>
-        <source>Send coins to a vBitcoin address</source>
+        <source>Send coins to a BTCSQ address</source>
         <translation>Enviar monedas a una dirección Bitcoin</translation>
     </message>
     <message>
@@ -286,12 +286,12 @@
         <translation>Cifrar las claves privadas de su monedero</translation>
     </message>
     <message>
-        <source>Sign messages with your vBitcoin addresses to prove you own them</source>
-        <translation>Firmar mensajes con sus direcciones vBitcoin para demostrar la propiedad</translation>
+        <source>Sign messages with your BTCSQ addresses to prove you own them</source>
+        <translation>Firmar mensajes con sus direcciones BTCSQ para demostrar la propiedad</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified vBitcoin addresses</source>
-        <translation>Verificar mensajes comprobando que están firmados con direcciones vBitcoin concretas</translation>
+        <source>Verify messages to ensure they were signed with specified BTCSQ addresses</source>
+        <translation>Verificar mensajes comprobando que están firmados con direcciones BTCSQ concretas</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -647,8 +647,8 @@
         <translation>Experto</translation>
     </message>
     <message>
-        <source>Automatically open the vBitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Abrir automáticamente el puerto del cliente vBitcoin en el router. Esta opción solo funciona si el router admite UPnP y está activado.</translation>
+        <source>Automatically open the BTCSQ client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Abrir automáticamente el puerto del cliente BTCSQ en el router. Esta opción solo funciona si el router admite UPnP y está activado.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -746,8 +746,8 @@
         <translation>Desde</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the vBitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>La información mostrada puede estar desactualizada. Su monedero se sincroniza automáticamente con la red vBitcoin después de que se haya establecido una conexión, pero este proceso aún no se ha completado.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BTCSQ network after a connection is established, but this process has not completed yet.</source>
+        <translation>La información mostrada puede estar desactualizada. Su monedero se sincroniza automáticamente con la red BTCSQ después de que se haya establecido una conexión, pero este proceso aún no se ha completado.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1225,7 +1225,7 @@
         <translation>Copiar la firma actual al portapapeles del sistema</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this vBitcoin address</source>
+        <source>Sign the message to prove you own this BTCSQ address</source>
         <translation>Firmar el mensaje para demostrar que se posee esta dirección Bitcoin</translation>
     </message>
     <message>
@@ -1245,8 +1245,8 @@
         <translation>&amp;Verificar mensaje</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified vBitcoin address</source>
-        <translation>Verificar el mensaje para comprobar que fue firmado con la dirección vBitcoin indicada</translation>
+        <source>Verify the message to ensure it was signed with the specified BTCSQ address</source>
+        <translation>Verificar el mensaje para comprobar que fue firmado con la dirección BTCSQ indicada</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
