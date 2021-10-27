@@ -131,21 +131,20 @@ CMainParams::CMainParams()
 
     chainTxData = ChainTxData{
         /**
-         * btcsq-cli getchaintxstats                                                                                                                                                                                                                                                                                                        bogdan@big
-         * {
-         *    "time": 1630388498,
-         *    "txcount": 51731,
-         *    "window_final_block_hash": "0000000f6c2dd40ebc89b81848934657e1acb9e74441ae6fc337b2da990573c0",
-         *    "window_final_block_height": 51627,
-         *    "window_block_count": 4320,
-         *    "window_tx_count": 4324,
-         *    "window_interval": 964989,
-         *    "txrate": 0.004480880092933702
-         *  }
-         */
-        /* nTime    */ 1630388498,
-        /* nTxCount */ 1,
-        /* dTxRate  */ 0.004480880092933702,
+         * vbitcoin-cli getchaintxstats
+        {
+            "time": 1635181381,
+            "txcount": 8862,
+            "window_final_block_hash": "000000000000004c3fe25e8bcaeb46dba8d6860f8c91c0a611bb41f933c4808a",
+            "window_final_block_height": 7862,
+            "window_block_count": 7861,
+            "window_tx_count": 8860,
+            "window_interval": 963544,
+            "txrate": 0.009195220975897313
+        } */
+        /* nTime    */ 1635181381,
+        /* nTxCount */ 8860,
+        /* dTxRate  */ 0.009195220975897313,
     };
  }
 

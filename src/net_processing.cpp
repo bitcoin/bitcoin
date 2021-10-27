@@ -633,7 +633,10 @@ static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vec
 
     vBlocks.reserve(vBlocks.size() + count);
 
-    if (bestBlock == nullptr || bestBlock->nChainWork < nMinimumChainWork) {
+    if (bestBlock == nullptr
+    // VeriBlock: 
+    // || bestBlock->nChainWork < nMinimumChainWork
+    ) {
         // This peer has nothing interesting.
         return;
     }
@@ -4030,9 +4033,11 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     // VeriBlock: send offers for PoP related payloads
                     assert(pto);
                     assert(pto->m_tx_relay);
-                    VeriBlock::p2p::SendPopPayload(pto, connman, MSG_POP_ATV, pto->m_tx_relay->filterInventoryKnown, pto->m_tx_relay->setInventoryAtvToSend, vInv);
-                    VeriBlock::p2p::SendPopPayload(pto, connman, MSG_POP_VTB, pto->m_tx_relay->filterInventoryKnown, pto->m_tx_relay->setInventoryVtbToSend, vInv);
-                    VeriBlock::p2p::SendPopPayload(pto, connman, MSG_POP_VBK, pto->m_tx_relay->filterInventoryKnown, pto->m_tx_relay->setInventoryVbkToSend, vInv);
+                    if (fSendTrickle) {
+                        VeriBlock::p2p::SendPopPayload(pto, connman, MSG_POP_ATV, pto->m_tx_relay->filterInventoryKnown, pto->m_tx_relay->setInventoryAtvToSend, vInv);
+                        VeriBlock::p2p::SendPopPayload(pto, connman, MSG_POP_VTB, pto->m_tx_relay->filterInventoryKnown, pto->m_tx_relay->setInventoryVtbToSend, vInv);
+                        VeriBlock::p2p::SendPopPayload(pto, connman, MSG_POP_VBK, pto->m_tx_relay->filterInventoryKnown, pto->m_tx_relay->setInventoryVbkToSend, vInv);
+                    }
                 }
             }
         }
