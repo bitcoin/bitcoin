@@ -5,7 +5,9 @@
 """Useful Script constants and utils."""
 from test_framework.script import (
     CScript,
+    CScriptOp,
     OP_0,
+    OP_CHECKMULTISIG,
     OP_CHECKSIG,
     OP_DUP,
     OP_EQUAL,
@@ -39,6 +41,17 @@ DUMMY_2_P2WPKH_SCRIPT = CScript([b'b' * 21])
 def key_to_p2pk_script(key):
     key = check_key(key)
     return CScript([key, OP_CHECKSIG])
+
+
+def keys_to_multisig_script(keys, *, k=None):
+    n = len(keys)
+    if k is None:  # n-of-n multisig by default
+        k = n
+    assert k <= n
+    op_k = CScriptOp.encode_op_n(k)
+    op_n = CScriptOp.encode_op_n(n)
+    checked_keys = [check_key(key) for key in keys]
+    return CScript([op_k] + checked_keys + [op_n, OP_CHECKMULTISIG])
 
 
 def keyhash_to_p2pkh_script(hash):
