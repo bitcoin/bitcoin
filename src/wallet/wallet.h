@@ -24,6 +24,7 @@
 #include <validationinterface.h>
 #include <wallet/crypter.h>
 #include <wallet/scriptpubkeyman.h>
+#include <wallet/storage.h>
 #include <wallet/transaction.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
