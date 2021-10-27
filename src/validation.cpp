@@ -3275,8 +3275,13 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
     // VeriBlock: if pindexNew is a successor of pindexBestHeader, and pindexNew has higher chainwork, then update pindexBestHeader
     if (pindexBestHeader == nullptr || ((pindexBestHeader->nChainWork < pindexNew->nChainWork) &&
-                                           (pindexNew->GetAncestor(pindexBestHeader->nHeight) == pindexBestHeader)))
-        pindexBestHeader = pindexNew;
+                                           (pindexNew->GetAncestor(pindexBestHeader->nHeight) == pindexBestHeader))) {
+        auto *alt = VeriBlock::GetPop().getAltBlockTree().getBlockIndex(pindexNew->GetBlockHash().asVector());
+        assert(alt);
+        if (pindexBestHeader->IsValid() && alt->isValid()) {
+            pindexBestHeader = pindexNew;
+        }
+    }
 
     setDirtyBlockIndex.insert(pindexNew);
 
