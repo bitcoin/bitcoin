@@ -2951,9 +2951,7 @@ bool CChainState::ActivateBestChain(BlockValidationState& state, const CChainPar
                 // VeriBlock: if pindexBestHeader is a direct successor of pindexBestChain, pindexBestHeader is still best.
                 // otherwise pindexBestChain is new best pindexBestHeader
                 if (pindexBestHeader == nullptr || pindexBestHeader->GetAncestor(pindexBestChain->nHeight) != pindexBestChain) {
-                    auto *alt = VeriBlock::GetPop().getAltBlockTree().getBlockIndex(pindexBestChain->GetBlockHash().asVector());
-                    assert(alt);
-                    if (pindexBestChain->IsValid() && alt->isValid()) {
+                    if (pindexBestChain->IsValid()) {
                         pindexBestHeader = pindexBestChain;
                     }
                 }
