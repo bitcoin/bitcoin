@@ -2547,20 +2547,16 @@ void DescriptorScriptPubKeyMan::SetCache(const DescriptorCache& cache)
 
 bool DescriptorScriptPubKeyMan::AddKey(const CKeyID& key_id, const CKey& key)
 {
-    LOCK(cs_desc_man);
-    m_keyman.m_map_keys[key_id] = key;
+    m_keyman.LoadKey(key_id, key);
     m_set_stored_keys.insert(key_id);
     return true;
 }
 
 bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key)
 {
-    LOCK(cs_desc_man);
-    if (!m_keyman.m_map_keys.empty()) {
+    if (!m_keyman.LoadCryptedKey(key_id, pubkey, crypted_key)) {
         return false;
     }
-
-    m_keyman.m_map_crypted_keys[key_id] = make_pair(pubkey, crypted_key);
     m_set_stored_keys.insert(key_id);
     return true;
 }
