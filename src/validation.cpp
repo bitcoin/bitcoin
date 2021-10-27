@@ -2952,7 +2952,7 @@ bool CChainState::ActivateBestChain(BlockValidationState& state, const CChainPar
                 if (pindexBestHeader == nullptr || pindexBestHeader->GetAncestor(pindexBestChain->nHeight) != pindexBestChain) {
                     auto *alt = VeriBlock::GetPop().getAltBlockTree().getBlockIndex(pindexBestChain->GetBlockHash().asVector());
                     assert(alt);
-                    if (pindexBestHeader->IsValid() && alt->isValid()) {
+                    if (pindexBestChain->IsValid() && alt->isValid()) {
                         pindexBestHeader = pindexBestChain;
                     }
                 }
@@ -3276,9 +3276,7 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
     // VeriBlock: if pindexNew is a successor of pindexBestHeader, and pindexNew has higher chainwork, then update pindexBestHeader
     if (pindexBestHeader == nullptr || ((pindexBestHeader->nChainWork < pindexNew->nChainWork) &&
                                            (pindexNew->GetAncestor(pindexBestHeader->nHeight) == pindexBestHeader))) {
-        auto *alt = VeriBlock::GetPop().getAltBlockTree().getBlockIndex(pindexNew->GetBlockHash().asVector());
-        assert(alt);
-        if (pindexBestHeader->IsValid() && alt->isValid()) {
+        if (pindexNew->IsValid()) {
             pindexBestHeader = pindexNew;
         }
     }
