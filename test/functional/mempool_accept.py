@@ -22,13 +22,11 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     OP_0,
-    OP_2,
-    OP_3,
-    OP_CHECKMULTISIG,
     OP_HASH160,
     OP_RETURN,
 )
 from test_framework.script_util import (
+    keys_to_multisig_script,
     script_to_p2sh_script,
 )
 from test_framework.util import (
@@ -283,7 +281,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         key = ECKey()
         key.generate()
         pubkey = key.get_pubkey().get_bytes()
-        tx.vout[0].scriptPubKey = CScript([OP_2, pubkey, pubkey, pubkey, OP_3, OP_CHECKMULTISIG])  # Some bare multisig script (2-of-3)
+        tx.vout[0].scriptPubKey = keys_to_multisig_script([pubkey] * 3, k=2)  # Some bare multisig script (2-of-3)
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bare-multisig'}],
             rawtxs=[tx.serialize().hex()],

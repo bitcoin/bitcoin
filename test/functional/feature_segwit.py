@@ -30,8 +30,6 @@ from test_framework.script import (
     CScript,
     OP_0,
     OP_1,
-    OP_2,
-    OP_CHECKMULTISIG,
     OP_DROP,
     OP_TRUE,
 )
@@ -39,6 +37,7 @@ from test_framework.script_util import (
     key_to_p2pk_script,
     key_to_p2pkh_script,
     key_to_p2wpkh_script,
+    keys_to_multisig_script,
     script_to_p2sh_script,
     script_to_p2wsh_script,
 )
@@ -149,7 +148,7 @@ class SegWitTest(BitcoinTestFramework):
             key = get_generate_key()
             self.pubkey.append(key.pubkey)
 
-            multiscript = CScript([OP_1, bytes.fromhex(self.pubkey[-1]), OP_1, OP_CHECKMULTISIG])
+            multiscript = keys_to_multisig_script([self.pubkey[-1]])
             p2sh_ms_addr = self.nodes[i].createmultisig(1, [self.pubkey[-1]], 'p2sh-segwit')['address']
             bip173_ms_addr = self.nodes[i].createmultisig(1, [self.pubkey[-1]], 'bech32')['address']
             assert_equal(p2sh_ms_addr, script_to_p2sh_p2wsh(multiscript))
@@ -389,7 +388,7 @@ class SegWitTest(BitcoinTestFramework):
             # Money sent to P2SH of multisig of this should only be seen after importaddress with the BASE58 P2SH address.
 
             multisig_without_privkey_address = self.nodes[0].addmultisigaddress(2, [pubkeys[3], pubkeys[4]])['address']
-            script = CScript([OP_2, bytes.fromhex(pubkeys[3]), bytes.fromhex(pubkeys[4]), OP_2, OP_CHECKMULTISIG])
+            script = keys_to_multisig_script([pubkeys[3], pubkeys[4]])
             solvable_after_importaddress.append(script_to_p2sh_script(script))
 
             for i in compressed_spendable_address:
