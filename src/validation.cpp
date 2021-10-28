@@ -498,6 +498,7 @@ private:
     struct Workspace {
         explicit Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()) {}
         std::set<uint256> m_conflicts;
+        CTxMemPool::setEntries m_iters_conflicting;
         CTxMemPool::setEntries m_all_conflicting;
         CTxMemPool::setEntries m_ancestors;
         std::unique_ptr<CTxMemPoolEntry> m_entry;
@@ -745,7 +746,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // blocks
     if (!bypass_limits && !CheckFeeRate(ws.m_vsize, nModifiedFees, state)) return false;
 
-    const CTxMemPool::setEntries setIterConflicting = m_pool.GetIterSet(setConflicts);
+    ws.m_iters_conflicting = m_pool.GetIterSet(setConflicts);
     // Calculate in-mempool ancestors, up to a limit.
     if (setConflicts.size() == 1) {
         // In general, when we receive an RBF transaction with mempool conflicts, we want to know whether we
@@ -775,8 +776,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // the ancestor limits should be the same for both our new transaction and any conflicts).
         // We don't bother incrementing m_limit_descendants by the full removal count as that limit never comes
         // into force here (as we're only adding a single transaction).
-        assert(setIterConflicting.size() == 1);
-        CTxMemPool::txiter conflict = *setIterConflicting.begin();
+        assert(ws.m_iters_conflicting.size() == 1);
+        CTxMemPool::txiter conflict = *ws.m_iters_conflicting.begin();
 
         m_limit_descendants += 1;
         m_limit_descendant_size += conflict->GetSizeWithDescendants();
@@ -823,17 +824,17 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // more economically rational to mine. Before we go digging through the mempool for all
         // transactions that would need to be removed (direct conflicts and all descendants), check
         // that the replacement transaction pays more than its direct conflicts.
-        if (const auto err_string{PaysMoreThanConflicts(setIterConflicting, newFeeRate, hash)}) {
+        if (const auto err_string{PaysMoreThanConflicts(ws.m_iters_conflicting, newFeeRate, hash)}) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
         }
 
         // Calculate all conflicting entries and enforce BIP125 Rule #5.
-        if (const auto err_string{GetEntriesForConflicts(tx, m_pool, setIterConflicting, allConflicting)}) {
+        if (const auto err_string{GetEntriesForConflicts(tx, m_pool, ws.m_iters_conflicting, allConflicting)}) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                                  "too many potential replacements", *err_string);
         }
         // Enforce BIP125 Rule #2.
-        if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, setIterConflicting)}) {
+        if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, ws.m_iters_conflicting)}) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                                  "replacement-adds-unconfirmed", *err_string);
         }
