@@ -23,9 +23,7 @@ class WalletBatch;
 
 class KeyManager
 {
-//private:
-public:
-    // TODO: Everything up to cs_keyman need to be private, but we make them public so DescriptorScriptPubKeyMan can access these during the transition
+private:
     WalletStorage& m_storage;
 
     std::map<CKeyID, CKey> m_map_keys GUARDED_BY(cs_keyman);
@@ -39,7 +37,7 @@ public:
     bool AddKeyInner(WalletBatch& batch, const CKey& key, const CPubKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_keyman);
     std::vector<unsigned char> AddCryptedKeyInner(WalletBatch& batch, const CKey& key, const CPubKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_keyman);
 
-//public:
+public:
     mutable RecursiveMutex cs_keyman;
 
     KeyManager(WalletStorage& storage) : m_storage(storage) {}
