@@ -2158,14 +2158,14 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs - 1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
     assert(pindex->pprev && "previous block ptr is nullptr");
-    if (!VeriBlock::checkCoinbaseTxWithPopRewards(*block.vtx[0], nFees, *pindex, chainparams, state)) {
-        return false;
-    }
+    
     if (VeriBlock::isCrossedBootstrapBlock()) {
+        if (!VeriBlock::checkCoinbaseTxWithPopRewards(*block.vtx[0], nFees, *pindex, chainparams, state)) {
+            return false; // state us set in function
+        }
         altintegration::ValidationState _state;
         if (!VeriBlock::setState(pindex->GetBlockHash(), _state)) {
-            pindex->nStatus |= VERIBLOCK_BLOCK_FAILED_POP;
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop",
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-state",
                                  strprintf("Block %s is POP invalid: %s", pindex->GetBlockHash().ToString(),
                                            _state.toString()));
         }
@@ -2951,9 +2951,8 @@ bool CChainState::ActivateBestChain(BlockValidationState& state, const CChainPar
                 // VeriBlock: if pindexBestHeader is a direct successor of pindexBestChain, pindexBestHeader is still best.
                 // otherwise pindexBestChain is new best pindexBestHeader
                 if (pindexBestHeader == nullptr || pindexBestHeader->GetAncestor(pindexBestChain->nHeight) != pindexBestChain) {
-                    if (pindexBestChain->IsValid()) {
-                        pindexBestHeader = pindexBestChain;
-                    }
+                    assert(pindexBestChain->IsValid());
+                    pindexBestHeader = pindexBestChain;
                 }
 
                 bool fInvalidFound = false;
@@ -3275,9 +3274,7 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
     // VeriBlock: if pindexNew is a successor of pindexBestHeader, and pindexNew has higher chainwork, then update pindexBestHeader
     if (pindexBestHeader == nullptr || ((pindexBestHeader->nChainWork < pindexNew->nChainWork) &&
                                            (pindexNew->GetAncestor(pindexBestHeader->nHeight) == pindexBestHeader))) {
-        if (pindexNew->IsValid()) {
-            pindexBestHeader = pindexNew;
-        }
+        pindexBestHeader = pindexNew;
     }
 
     setDirtyBlockIndex.insert(pindexNew);
@@ -3793,7 +3790,6 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
 
     if (VeriBlock::isCrossedBootstrapBlock(pindex->nHeight)) {
         if (!VeriBlock::acceptBlock(*pindex, state)) {
-            pindex->nStatus |= VERIBLOCK_BLOCK_FAILED_POP;
             return error("%s: ALT tree could not accept block ALT:%d:%s, reason: %s", __func__, pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
         }
     }
@@ -3905,7 +3901,6 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
     if (VeriBlock::isCrossedBootstrapBlock()) {
         if (!VeriBlock::addAllBlockPayloads(block, state)) {
-            pindex->nStatus |= VERIBLOCK_BLOCK_FAILED_POP;
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-payloads",
                 strprintf("Can not add POP payloads to block height: %d , hash: %s: %s",
                     pindex->nHeight, block.GetHash().ToString(),

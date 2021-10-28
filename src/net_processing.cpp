@@ -633,10 +633,7 @@ static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vec
 
     vBlocks.reserve(vBlocks.size() + count);
 
-    if (bestBlock == nullptr
-    // VeriBlock: 
-    // || bestBlock->nChainWork < nMinimumChainWork
-    ) {
+    if (bestBlock == nullptr || bestBlock->nChainWork < nMinimumChainWork) {
         // This peer has nothing interesting.
         return;
     }
