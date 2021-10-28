@@ -498,7 +498,7 @@ public:
 
     /** Get the DescriptorScriptPubKeyMans (with private keys) that have the same scriptPubKeys as this LegacyScriptPubKeyMan.
      * Does not modify this ScriptPubKeyMan. */
-    std::optional<MigrationData> MigrateToDescriptor();
+    std::optional<MigrationData> MigrateToDescriptor(KeyManager& keyman);
     /** Delete all the records ofthis LegacyScriptPubKeyMan from disk*/
     bool DeleteRecords();
 };
@@ -545,20 +545,20 @@ private:
     // Fetch the SigningProvider for a given index and optionally include private keys. Called by the above functions.
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(int32_t index, bool include_private = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
-    KeyManager m_keyman;
+    KeyManager& m_keyman;
 
 protected:
   WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
 
 public:
-    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor)
+    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, KeyManager& keyman)
         :   ScriptPubKeyMan(storage),
-            m_keyman(storage),
+            m_keyman(keyman),
             m_wallet_descriptor(descriptor)
         {}
-    DescriptorScriptPubKeyMan(WalletStorage& storage)
+    DescriptorScriptPubKeyMan(WalletStorage& storage, KeyManager& keyman)
         :   ScriptPubKeyMan(storage),
-            m_keyman(storage)
+            m_keyman(keyman)
         {}
 
     mutable RecursiveMutex cs_desc_man;

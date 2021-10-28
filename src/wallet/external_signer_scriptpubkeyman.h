@@ -13,11 +13,11 @@ namespace wallet {
 class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
 {
   public:
-  ExternalSignerScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor)
-      :   DescriptorScriptPubKeyMan(storage, descriptor)
+  ExternalSignerScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, KeyManager& keyman)
+      :   DescriptorScriptPubKeyMan(storage, descriptor, keyman)
       {}
-  ExternalSignerScriptPubKeyMan(WalletStorage& storage)
-      :   DescriptorScriptPubKeyMan(storage)
+  ExternalSignerScriptPubKeyMan(WalletStorage& storage, KeyManager& keyman)
+      :   DescriptorScriptPubKeyMan(storage, keyman)
       {}
 
   /** Provide a descriptor at setup time
