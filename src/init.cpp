@@ -106,6 +106,7 @@
 #include <services/asset.h>
 #include <services/rpc/wallet/assetwalletrpc.h>
 #include <key_io.h>
+#include <boost/algorithm/string/split.hpp>
 #include <flatdatabase.h>
 #include <llmq/quorums.h>
 #include <llmq/quorums_init.h>
