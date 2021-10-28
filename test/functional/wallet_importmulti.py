@@ -259,7 +259,7 @@ class ImportMultiTest(BitcoinTestFramework):
                                "keys": [key.privkey]},
                               False,
                               error_code=-4,
-                              error_message='The wallet already contains the private key for this address or script')
+                              error_message='The wallet already contains the private key for this address or script ("' + key.p2pkh_script + '")')
 
         # Address + Private key + watchonly
         self.log.info("Should import an address with private key and with watchonly")
@@ -482,6 +482,67 @@ class ImportMultiTest(BitcoinTestFramework):
                                     "scriptPubKey": key.p2pkh_script,
                                     "timestamp": ""
                                 }])
+
+        # Test ranged descriptor fails if range is not specified
+        xpriv = "tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg"
+        desc = "sh(pkh(" + xpriv + "/0'/0'/*'" + "))"
+        self.log.info("Ranged descriptor import should fail without a specified range")
+        self.test_importmulti({"desc": desc,
+                               "timestamp": "now"},
+                              success=False,
+                              error_code=-8,
+                              error_message='Descriptor is ranged, please specify the range')
+
+        # Test importing of a ranged descriptor without keys
+        self.log.info("Should import the ranged descriptor with specified range as solvable")
+        self.test_importmulti({"desc": desc,
+                               "timestamp": "now",
+                               "range": {"end": 1}},
+                              success=True,
+                              warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
+
+        # Test importing of a P2PKH address via descriptor
+        key = self.get_key()
+        self.log.info("Should import a p2pkh address from descriptor")
+        self.test_importmulti({"desc": "pkh(" + key.pubkey + ")",
+                               "timestamp": "now",
+                               "label": "Descriptor import test"},
+                              True,
+                              warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
+        self.test_address(key.p2pkh_addr,
+                     solvable=True,
+                     ismine=False,
+                     label="Descriptor import test")
+
+        # Test import fails if both desc and scriptPubKey are provided
+        key = self.get_key()
+        self.log.info("Import should fail if both scriptPubKey and desc are provided")
+        self.test_importmulti({"desc": "pkh(" + key.pubkey + ")",
+                               "scriptPubKey": {"address": key.p2pkh_addr},
+                               "timestamp": "now"},
+                              success=False,
+                              error_code=-8,
+                              error_message='Both a descriptor and a scriptPubKey should not be provided.')
+
+        # Test import fails if neither desc nor scriptPubKey are present
+        key = self.get_key()
+        self.log.info("Import should fail if neither a descriptor nor a scriptPubKey are provided")
+        self.test_importmulti({"timestamp": "now"},
+                              success=False,
+                              error_code=-8,
+                              error_message='Either a descriptor or scriptPubKey must be provided.')
+
+        # Test importing of a multisig via descriptor
+        key1 = self.get_key()
+        key2 = self.get_key()
+        self.log.info("Should import a 1-of-2 bare multisig from descriptor")
+        self.test_importmulti({"desc": "multi(1," + key1.pubkey + "," + key2.pubkey + ")",
+                               "timestamp": "now"},
+                              success=True)
+        self.log.info("Should not treat individual keys from the imported bare multisig as watchonly")
+        self.test_address(key1.p2pkh_addr,
+                         ismine=False,
+                         iswatchonly=False)
 
 
 if __name__ == '__main__':
