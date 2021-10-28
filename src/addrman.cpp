@@ -169,9 +169,17 @@ void AddrManImpl::Serialize(Stream& s_) const
 
     s << static_cast<uint8_t>(FILE_FORMAT);
 
+    std::set<CNetAddr> dup_guard;
+    // If we have multiple entries with the same address (and different port).
+    const bool duplicates_by_addr =
+        std::any_of(mapAddr.begin(), mapAddr.end(), [&dup_guard](const auto& e) {
+            return !dup_guard.insert(e.first).second; // insert failure means duplicates
+        });
+
     // Increment `lowest_compatible` iff a newly introduced format is incompatible with
     // the previous one.
-    static constexpr uint8_t lowest_compatible = Format::V3_BIP155;
+    static const uint8_t lowest_compatible =
+        duplicates_by_addr ? Format::V4_DUPADDR : Format::V3_BIP155;
     s << static_cast<uint8_t>(INCOMPATIBILITY_BASE + lowest_compatible);
 
     s << nKey;
