@@ -822,6 +822,10 @@ private:
         CBlockIndex** ppindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     friend CChainState;
 
+    // Returns nullptr if no snapshot ahs been loaded.
+    CBlockIndex* getSnapshotBaseBlock() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    std::optional<int> getSnapshotHeight() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
 public:
     std::thread m_load_block;
     //! A single BlockManager instance is shared across each constructed

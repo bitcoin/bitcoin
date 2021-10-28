@@ -4995,3 +4995,16 @@ void ChainstateManager::MaybeRebalanceCaches()
         }
     }
 }
+
+CBlockIndex* ChainstateManager::getSnapshotBaseBlock()
+{
+    auto blockhash_op = SnapshotBlockhash();
+    if (!blockhash_op) return nullptr;
+    return m_blockman.LookupBlockIndex(*blockhash_op);
+}
+
+std::optional<int> ChainstateManager::getSnapshotHeight()
+{
+    CBlockIndex* base = getSnapshotBaseBlock();
+    return base ? std::make_optional(base->nHeight) : std::nullopt;
+}
