@@ -269,6 +269,7 @@ def wait_until_helper(predicate, *, attempts=float('inf'), timeout=float('inf'),
         raise AssertionError("Predicate {} not true after {} seconds".format(predicate_source, timeout))
     raise RuntimeError('Unreachable')
 
+
 def sha256sum_file(filename):
     h = hashlib.sha256()
     with open(filename, 'rb') as f:
@@ -443,6 +444,12 @@ def softfork_active(node, key):
 def set_node_times(nodes, t):
     for node in nodes:
         node.setmocktime(t)
+
+
+def check_node_connections(*, node, num_in, num_out):
+    info = node.getnetworkinfo()
+    assert_equal(info["connections_in"], num_in)
+    assert_equal(info["connections_out"], num_out)
 
 
 # Transaction/Block functions
