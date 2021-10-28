@@ -13,4 +13,6 @@ using kernel::MemPoolOptions;
 void ApplyArgsManOptions(const ArgsManager& argsman, MemPoolOptions& mempool_opts)
 {
     mempool_opts.check_ratio = argsman.GetIntArg("-checkmempool", mempool_opts.check_ratio);
+
+    if (auto mb = argsman.GetIntArg("-maxmempool")) mempool_opts.max_size_bytes = *mb * 1'000'000;
 }

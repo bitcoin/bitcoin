@@ -685,7 +685,7 @@ public:
     CFeeRate mempoolMinFee() override
     {
         if (!m_node.mempool) return {};
-        return m_node.mempool->GetMinFee(gArgs.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE_MB) * 1000000);
+        return m_node.mempool->GetMinFee();
     }
     CFeeRate relayMinFee() override { return ::minRelayTxFee; }
     CFeeRate relayIncrementalFee() override { return ::incrementalRelayFee; }

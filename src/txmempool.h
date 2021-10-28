@@ -564,6 +564,8 @@ public:
 
     using Options = kernel::MemPoolOptions;
 
+    const int64_t m_max_size_bytes;
+
     /** Create a new CTxMemPool.
      * Sanity checks will be off by default for performance, because otherwise
      * accepting transactions becomes O(N^2) where N is the number of transactions
@@ -702,6 +704,9 @@ public:
       *  takes the fee rate to go back down all the way to 0. When the feerate
       *  would otherwise be half of this, it is set to 0 instead.
       */
+    CFeeRate GetMinFee() const {
+        return GetMinFee(m_max_size_bytes);
+    }
     CFeeRate GetMinFee(size_t sizelimit) const;
 
     /** Remove transactions from the mempool until its dynamic size is <= sizelimit.
