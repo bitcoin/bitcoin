@@ -106,7 +106,8 @@
 #include <services/asset.h>
 #include <services/rpc/wallet/assetwalletrpc.h>
 #include <key_io.h>
-#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp> // is_any_of
+#include <boost/algorithm/string/split.hpp> // split
 #include <flatdatabase.h>
 #include <llmq/quorums.h>
 #include <llmq/quorums_init.h>
