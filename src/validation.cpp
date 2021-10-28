@@ -4909,7 +4909,14 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
     // Fake various pieces of CBlockIndex state:
     CBlockIndex* index = nullptr;
-    for (int i = 0; i <= snapshot_chainstate.m_chain.Height(); ++i) {
+
+    // Don't make any modifications to the genesis block.
+    // This is especially important because we don't want to erroneously
+    // apply BLOCK_ASSUMED_VALID to genesis, which would happen if we didn't skip
+    // it here (since it apparently isn't BLOCK_VALID_SCRIPTS).
+    constexpr int AFTER_GENESIS_START{1};
+
+    for (int i = AFTER_GENESIS_START; i <= snapshot_chainstate.m_chain.Height(); ++i) {
         index = snapshot_chainstate.m_chain[i];
 
         // Fake nTx so that LoadBlockIndex() loads assumed-valid CBlockIndex
@@ -4918,7 +4925,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
             index->nTx = 1;
         }
         // Fake nChainTx so that GuessVerificationProgress reports accurately
-        index->nChainTx = index->pprev ? index->pprev->nChainTx + index->nTx : 1;
+        index->nChainTx = index->pprev->nChainTx + index->nTx;
 
         // Mark unvalidated block index entries beneath the snapshot base block as assumed-valid.
         if (!index->IsValid(BLOCK_VALID_SCRIPTS)) {
@@ -4929,7 +4936,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
         // Fake BLOCK_OPT_WITNESS so that CChainState::NeedsRedownload()
         // won't ask to rewind the entire assumed-valid chain on startup.
-        if (index->pprev && DeploymentActiveAt(*index, ::Params().GetConsensus(), Consensus::DEPLOYMENT_SEGWIT)) {
+        if (DeploymentActiveAt(*index, ::Params().GetConsensus(), Consensus::DEPLOYMENT_SEGWIT)) {
             index->nStatus |= BLOCK_OPT_WITNESS;
         }
 
