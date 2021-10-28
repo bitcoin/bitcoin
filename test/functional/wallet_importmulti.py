@@ -91,9 +91,13 @@ class ImportMultiTest(BitcoinTestFramework):
                         script_to_p2sh(script_code),  # p2sh addr
                         script_code.hex())  # redeem script
 
-    def test_importmulti(self, req, success, error_code=None, error_message=None):
+    def test_importmulti(self, req, success, error_code=None, error_message=None, warnings=[]):
         """Run importmulti and assert success"""
         result = self.nodes[1].importmulti([req])
+        observed_warnings = []
+        if 'warnings' in result[0]:
+           observed_warnings = result[0]['warnings']
+        assert_equal("\n".join(sorted(warnings)), "\n".join(sorted(observed_warnings)))
         assert_equal(result[0]['success'], success)
         if error_code is not None:
             assert_equal(result[0]['error']['code'], error_code)
@@ -150,7 +154,7 @@ class ImportMultiTest(BitcoinTestFramework):
                                "timestamp": "now"},
                               False,
                               error_code=-5,
-                              error_message='Invalid address')
+                              error_message='Invalid address \"not valid address\"')
 
         # ScriptPubKey + internal
         self.log.info("Should import a scriptPubKey with internal flag")
@@ -199,7 +203,8 @@ class ImportMultiTest(BitcoinTestFramework):
                                "timestamp": "now",
                                "pubkeys": [key.pubkey],
                                "internal": False},
-                              True)
+                              True,
+                              warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
         self.test_address(address,
                           iswatchonly=True,
                           ismine=False,
@@ -213,7 +218,8 @@ class ImportMultiTest(BitcoinTestFramework):
                                "timestamp": "now",
                                "pubkeys": [key.pubkey],
                                "internal": True},
-                              True)
+                              True,
+                              warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
         self.test_address(address,
                           iswatchonly=True,
                           ismine=False,
@@ -256,20 +262,19 @@ class ImportMultiTest(BitcoinTestFramework):
                               error_message='The wallet already contains the private key for this address or script')
 
         # Address + Private key + watchonly
-        self.log.info("Should not import an address with private key and with watchonly")
+        self.log.info("Should import an address with private key and with watchonly")
         key = self.get_key()
         address = key.p2pkh_addr
         self.test_importmulti({"scriptPubKey": {"address": address},
                                "timestamp": "now",
                                "keys": [key.privkey],
                                "watchonly": True},
-                              False,
-                              error_code=-8,
-                              error_message='Watch-only addresses should not include private keys')
+                              True,
+                              warnings=["All private keys are provided, outputs will be considered spendable. If this is intentional, do not specify the watchonly flag."])
         self.test_address(address,
                           iswatchonly=False,
-                          ismine=False,
-                          timestamp=None)
+                          ismine=True,
+                          timestamp=timestamp)
 
         # ScriptPubKey + Private key + internal
         self.log.info("Should import a scriptPubKey with internal and with private key")
@@ -330,8 +335,9 @@ class ImportMultiTest(BitcoinTestFramework):
         self.test_importmulti({"scriptPubKey": {"address": multisig.p2sh_addr},
                                "timestamp": "now",
                                "redeemscript": multisig.redeem_script},
-                              True)
-        self.test_address(multisig.p2sh_addr, timestamp=timestamp)
+                              True,
+                              warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
+        self.test_address(multisig.p2sh_addr, timestamp=timestamp, iswatchonly=True, ismine=False, solvable=True)
 
         p2shunspent = self.nodes[1].listunspent(0, 999999, [multisig.p2sh_addr])[0]
         assert_equal(p2shunspent['spendable'], False)
@@ -349,9 +355,13 @@ class ImportMultiTest(BitcoinTestFramework):
                                "timestamp": "now",
                                "redeemscript": multisig.redeem_script,
                                "keys": multisig.privkeys[0:2]},
-                              True)
+                              True,
+                              warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
         self.test_address(multisig.p2sh_addr,
-                          timestamp=timestamp)
+                          timestamp=timestamp,
+                          ismine=False,
+                          iswatchonly=True,
+                          solvable=True)
 
         p2shunspent = self.nodes[1].listunspent(0, 999999, [multisig.p2sh_addr])[0]
         assert_equal(p2shunspent['spendable'], False)
@@ -370,28 +380,31 @@ class ImportMultiTest(BitcoinTestFramework):
                                "redeemscript": multisig.redeem_script,
                                "keys": multisig.privkeys[0:2],
                                "watchonly": True},
-                              False,
-                              error_code=-8,
-                              error_message='Watch-only addresses should not include private keys')
+                              True)
+        self.test_address(multisig.p2sh_addr,
+                          iswatchonly=True,
+                          ismine=False,
+                          solvable=True,
+                          timestamp=timestamp)
 
         # Address + Public key + !Internal + Wrong pubkey
-        self.log.info("Should not import an address with a wrong public key")
+        self.log.info("Should not import an address with the wrong public key as non-solvable")
         key = self.get_key()
         address = key.p2pkh_addr
         wrong_key = self.get_key().pubkey
         self.test_importmulti({"scriptPubKey": {"address": address},
                                "timestamp": "now",
                                "pubkeys": [wrong_key]},
-                              False,
-                              error_code=-5,
-                              error_message='Key does not match address destination')
+                              True,
+                              warnings=["Importing as non-solvable: some required keys are missing. If this is intentional, don't provide any keys, pubkeys, or redeemscript.", "Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
         self.test_address(address,
-                          iswatchonly=False,
+                          iswatchonly=True,
                           ismine=False,
-                          timestamp=None)
+                          solvable=False,
+                          timestamp=timestamp)
 
         # ScriptPubKey + Public key + internal + Wrong pubkey
-        self.log.info("Should not import a scriptPubKey with internal and with a wrong public key")
+        self.log.info("Should import a scriptPubKey with internal and with a wrong public key as non-solvable")
         key = self.get_key()
         address = key.p2pkh_addr
         wrong_key = self.get_key().pubkey
@@ -399,32 +412,32 @@ class ImportMultiTest(BitcoinTestFramework):
                                "timestamp": "now",
                                "pubkeys": [wrong_key],
                                "internal": True},
-                              False,
-                              error_code=-5,
-                              error_message='Key does not match address destination')
+                              True,
+                              warnings=["Importing as non-solvable: some required keys are missing. If this is intentional, don't provide any keys, pubkeys, or redeemscript.", "Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
         self.test_address(address,
-                          iswatchonly=False,
+                          iswatchonly=True,
                           ismine=False,
-                          timestamp=None)
+                          solvable=False,
+                          timestamp=timestamp)
 
         # Address + Private key + !watchonly + Wrong private key
-        self.log.info("Should not import an address with a wrong private key")
+        self.log.info("Should import an address with a wrong private key as non-solvable")
         key = self.get_key()
         address = key.p2pkh_addr
         wrong_privkey = self.get_key().privkey
         self.test_importmulti({"scriptPubKey": {"address": address},
                                "timestamp": "now",
                                "keys": [wrong_privkey]},
-                              False,
-                              error_code=-5,
-                              error_message='Key does not match address destination')
+                               True,
+                               warnings=["Importing as non-solvable: some required keys are missing. If this is intentional, don't provide any keys, pubkeys, or redeemscript.", "Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
         self.test_address(address,
-                          iswatchonly=False,
+                          iswatchonly=True,
                           ismine=False,
-                          timestamp=None)
+                          solvable=False,
+                          timestamp=timestamp)
 
         # ScriptPubKey + Private key + internal + Wrong private key
-        self.log.info("Should not import a scriptPubKey with internal and with a wrong private key")
+        self.log.info("Should import a scriptPubKey with internal and with a wrong private key as non-solvable")
         key = self.get_key()
         address = key.p2pkh_addr
         wrong_privkey = self.get_key().privkey
@@ -432,13 +445,13 @@ class ImportMultiTest(BitcoinTestFramework):
                                "timestamp": "now",
                                "keys": [wrong_privkey],
                                "internal": True},
-                              False,
-                              error_code=-5,
-                              error_message='Key does not match address destination')
+                              True,
+                              warnings=["Importing as non-solvable: some required keys are missing. If this is intentional, don't provide any keys, pubkeys, or redeemscript.", "Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
         self.test_address(address,
-                          iswatchonly=False,
+                          iswatchonly=True,
                           ismine=False,
-                          timestamp=None)
+                          solvable=False,
+                          timestamp=timestamp)
 
         # Importing existing watch only address with new timestamp should replace saved timestamp.
         assert_greater_than(timestamp, watchonly_timestamp)
