@@ -264,6 +264,7 @@ def wait_until_helper(predicate, *, attempts=float('inf'), timeout=float('inf'),
     else:
         return False
 
+
 def sha256sum_file(filename):
     h = hashlib.sha256()
     with open(filename, 'rb') as f:
@@ -478,6 +479,11 @@ def set_node_times(nodes, t):
     for node in nodes:
         node.mocktime = t
         node.setmocktime(t)
+
+def check_node_connections(*, node, num_in, num_out):
+    info = node.getnetworkinfo()
+    assert_equal(info["connections_in"], num_in)
+    assert_equal(info["connections_out"], num_out)
 
 
 def force_finish_mnsync(node):

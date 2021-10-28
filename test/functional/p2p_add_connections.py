@@ -6,13 +6,7 @@
 
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
-
-
-def check_node_connections(*, node, num_in, num_out):
-    info = node.getnetworkinfo()
-    assert_equal(info["connections_in"], num_in)
-    assert_equal(info["connections_out"], num_out)
+from test_framework.util import check_node_connections
 
 
 class P2PAddConnections(BitcoinTestFramework):
