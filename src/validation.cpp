@@ -73,16 +73,12 @@
 #include <rpc/request.h>
 #include <signal.h>
 #include <node/transaction.h>
-#ifndef WIN32
-#include <sys/wait.h>
-#endif
 // SYSCOIN
 #if ENABLE_ZMQ
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqnotificationinterface.h>
 #include <zmq/zmqrpc.h>
 #endif
-#include <unistd.h>
 RecursiveMutex cs_geth;
 struct DescriptorDetails {
     std::string version;
@@ -6167,99 +6163,6 @@ bool StartGethNode(const std::string &gethDescriptorURL)
     if(pid > 0)
         LogPrintf("%s: Geth Started with pid %d\n", __func__, pid);
     return true;
-}
-void KillProcess(const pid_t& pid){
-    if(pid <= 0)
-        return;
-    LogPrintf("%s: Trying to kill pid %d\n", __func__, pid);
-    #ifdef WIN32
-        HWND hwnd = ::GetTopWindow(NULL);
-        while(hwnd)
-        {
-            DWORD pidw;
-            ::GetWindowThreadProcessId(hwnd, &pidw);
-            if(pidw == pid)
-            {    
-                break;
-            }
-            hwnd = ::GetNextWindow(hwnd, GW_HWNDNEXT);
-        }
-        ::SendMessage(hwnd, WM_CLOSE, 0, 0);
-    #endif  
-    #ifndef WIN32
-        LogPrintf("%s: Trying to kill with SIGINT\n", __func__);            
-        int result = kill( pid, SIGINT ) ;
-        if(result != 0) {
-            LogPrintf("%s: Process does not exist or exited already...\n", __func__);       
-            return;     
-        }
-        pid_t w;
-        int status;
-        for(int i =0;i<10;i++){
-            w = waitpid(pid, &status, WNOHANG);
-            if(w) {
-                if (WIFEXITED(status)) {
-                    LogPrintf("exited, status=%d\n", WEXITSTATUS(status));
-                    return;
-                } else if (WIFSIGNALED(status)) {
-                    LogPrintf("killed by signal %d\n", WTERMSIG(status));
-                    return;
-                } else if (WIFSTOPPED(status)) {
-                    LogPrintf("stopped by signal %d\n", WSTOPSIG(status));
-                    return;
-                } else if (WIFCONTINUED(status)) {
-                    LogPrintf("continued\n");
-                }
-                UninterruptibleSleep(std::chrono::milliseconds(1000));
-                continue;
-            }  
-            UninterruptibleSleep(std::chrono::milliseconds(1000));
-        }
-        LogPrintf("%s: Trying to kill with SIGTERM\n", __func__);     
-        result = kill( pid, SIGTERM ) ;
-        for(int i =0;i<10;i++){
-            w = waitpid(pid, &status, WNOHANG);
-            if(w) {
-                if (WIFEXITED(status)) {
-                    LogPrintf("exited, status=%d\n", WEXITSTATUS(status));
-                    return;
-                } else if (WIFSIGNALED(status)) {
-                    LogPrintf("killed by signal %d\n", WTERMSIG(status));
-                    return;
-                } else if (WIFSTOPPED(status)) {
-                    LogPrintf("stopped by signal %d\n", WSTOPSIG(status));
-                    return;
-                } else if (WIFCONTINUED(status)) {
-                    LogPrintf("continued\n");
-                }
-                UninterruptibleSleep(std::chrono::milliseconds(1000));
-                continue;
-            }  
-            UninterruptibleSleep(std::chrono::milliseconds(1000));
-        }
-        LogPrintf("%s: Trying to kill with SIGKILL\n", __func__);     
-        result = kill( pid, SIGKILL) ;
-        for(int i =0;i<10;i++){
-            w = waitpid(pid, &status, WNOHANG);
-            if(w) {
-                if (WIFEXITED(status)) {
-                    LogPrintf("exited, status=%d\n", WEXITSTATUS(status));
-                    return;
-                } else if (WIFSIGNALED(status)) {
-                    LogPrintf("killed by signal %d\n", WTERMSIG(status));
-                    return;
-                } else if (WIFSTOPPED(status)) {
-                    LogPrintf("stopped by signal %d\n", WSTOPSIG(status));
-                    return;
-                } else if (WIFCONTINUED(status)) {
-                    LogPrintf("continued\n");
-                }
-                UninterruptibleSleep(std::chrono::milliseconds(1000));
-            }  
-            UninterruptibleSleep(std::chrono::milliseconds(1000));
-        }
-        LogPrintf("%s: Done trying to kill with SIGINT-SIGTERM-SIGKILL\n", __func__);         
-    #endif
 }
 bool StopGethNode(bool bOnStart)
 {

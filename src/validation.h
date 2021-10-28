@@ -1071,7 +1071,6 @@ bool PruneSyscoinDBs(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_
 void DoGethMaintenance();
 bool StartGethNode(const std::string &gethDescriptorURL);
 bool StopGethNode(bool bOnStart = false);
-void KillProcess(const pid_t& pid);
 
 // SYSCOIN
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

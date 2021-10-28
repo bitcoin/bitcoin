@@ -106,8 +106,6 @@
 #include <services/asset.h>
 #include <services/rpc/wallet/assetwalletrpc.h>
 #include <key_io.h>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <flatdatabase.h>
 #include <llmq/quorums.h>
 #include <llmq/quorums_init.h>
@@ -141,25 +139,6 @@ static fs::path GetPidFile(const ArgsManager& args)
 
 [[nodiscard]] static bool CreatePidFile(const ArgsManager& args)
 {
-    // SYSCOIN
-    if(fMasternodeMode)
-    {
-        boost::filesystem::ifstream ifs(GetPidFile(args), std::ios::in);
-        pid_t pidFile = 0;
-        while(ifs >> pidFile){
-            if(pidFile && pidFile != getpid()){
-                try{
-                    KillProcess(pidFile);
-                    LogPrintf("%s: Syscoind successfully exited from pid %d(from syscoind.pid)\n", __func__, pidFile);
-                }
-                catch(...){
-                    LogPrintf("%s: Syscoind failed to exit from pid %d(from syscoind.pid)\n", __func__, pidFile);
-                }
-            }
-        }
-        ifs.close();
-        boost::filesystem::remove(GetPidFile(args));
-    }
     fsbridge::ofstream file{GetPidFile(args)};
     if (file) {
 #ifdef WIN32
