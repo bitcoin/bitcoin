@@ -537,61 +537,6 @@ void AddrManImpl::MakeTried(AddrInfo& info, int nId)
     info.fInTried = true;
 }
 
-void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nTime)
-{
-    AssertLockHeld(cs);
-
-    int nId;
-
-    nLastGood = nTime;
-
-    AddrInfo* pinfo = Find(addr, &nId);
-
-    // if not found, bail out
-    if (!pinfo)
-        return;
-
-    AddrInfo& info = *pinfo;
-
-    // update info
-    info.nLastSuccess = nTime;
-    info.nLastTry = nTime;
-    info.nAttempts = 0;
-    // nTime is not updated here, to avoid leaking information about
-    // currently-connected peers.
-
-    // if it is already in the tried set, don't do anything else
-    if (info.fInTried)
-        return;
-
-    // if it is not in new, something bad happened
-    if (!Assume(info.nRefCount > 0)) {
-        return;
-    }
-
-    // which tried bucket to move the entry to
-    int tried_bucket = info.GetTriedBucket(nKey, m_asmap);
-    int tried_bucket_pos = info.GetBucketPosition(nKey, false, tried_bucket);
-
-    // Will moving this address into tried evict another entry?
-    if (test_before_evict && (vvTried[tried_bucket][tried_bucket_pos] != -1)) {
-        if (m_tried_collisions.size() < ADDRMAN_SET_TRIED_COLLISION_SIZE) {
-            m_tried_collisions.insert(nId);
-        }
-        // Output the entry we'd be colliding with, for debugging purposes
-        auto colliding_entry = mapInfo.find(vvTried[tried_bucket][tried_bucket_pos]);
-        LogPrint(BCLog::ADDRMAN, "Collision with %s while attempting to move %s to tried table. Collisions=%d\n",
-                 colliding_entry != mapInfo.end() ? colliding_entry->second.ToString() : "",
-                 addr.ToString(),
-                 m_tried_collisions.size());
-    } else {
-        // move nId to the tried tables
-        MakeTried(info, nId);
-        LogPrint(BCLog::ADDRMAN, "Moved %s mapped to AS%i to tried[%i][%i]\n",
-                 addr.ToString(), addr.GetMappedAS(m_asmap), tried_bucket, tried_bucket_pos);
-    }
-}
-
 bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty)
 {
     AssertLockHeld(cs);
@@ -665,6 +610,61 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
         }
     }
     return fInsert;
+}
+
+void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nTime)
+{
+    AssertLockHeld(cs);
+
+    int nId;
+
+    nLastGood = nTime;
+
+    AddrInfo* pinfo = Find(addr, &nId);
+
+    // if not found, bail out
+    if (!pinfo)
+        return;
+
+    AddrInfo& info = *pinfo;
+
+    // update info
+    info.nLastSuccess = nTime;
+    info.nLastTry = nTime;
+    info.nAttempts = 0;
+    // nTime is not updated here, to avoid leaking information about
+    // currently-connected peers.
+
+    // if it is already in the tried set, don't do anything else
+    if (info.fInTried)
+        return;
+
+    // if it is not in new, something bad happened
+    if (!Assume(info.nRefCount > 0)) {
+        return;
+    }
+
+    // which tried bucket to move the entry to
+    int tried_bucket = info.GetTriedBucket(nKey, m_asmap);
+    int tried_bucket_pos = info.GetBucketPosition(nKey, false, tried_bucket);
+
+    // Will moving this address into tried evict another entry?
+    if (test_before_evict && (vvTried[tried_bucket][tried_bucket_pos] != -1)) {
+        if (m_tried_collisions.size() < ADDRMAN_SET_TRIED_COLLISION_SIZE) {
+            m_tried_collisions.insert(nId);
+        }
+        // Output the entry we'd be colliding with, for debugging purposes
+        auto colliding_entry = mapInfo.find(vvTried[tried_bucket][tried_bucket_pos]);
+        LogPrint(BCLog::ADDRMAN, "Collision with %s while attempting to move %s to tried table. Collisions=%d\n",
+                 colliding_entry != mapInfo.end() ? colliding_entry->second.ToString() : "",
+                 addr.ToString(),
+                 m_tried_collisions.size());
+    } else {
+        // move nId to the tried tables
+        MakeTried(info, nId);
+        LogPrint(BCLog::ADDRMAN, "Moved %s mapped to AS%i to tried[%i][%i]\n",
+                 addr.ToString(), addr.GetMappedAS(m_asmap), tried_bucket, tried_bucket_pos);
+    }
 }
 
 bool AddrManImpl::Add_(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty)
