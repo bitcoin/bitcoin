@@ -6158,7 +6158,7 @@ bool StartGethNode(const std::string &gethDescriptorURL)
         for(const std::string &cmdStr: vecCmdLineStr) {
             commandStr += cmdStr + " ";
         }
-        pid = fork(attempt1, commandStr);
+        pid_t pid = fork(attempt1, commandStr);
         if( pid <= 0 ) {
             LogPrintf("Geth not found at %s\n", fs::PathToString(attempt1));
             return false;
