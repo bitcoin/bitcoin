@@ -34,6 +34,7 @@ from test_framework.script import (
     hash160,
 )
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.descriptors import descsum_create
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -487,7 +488,7 @@ class ImportMultiTest(BitcoinTestFramework):
         xpriv = "tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg"
         desc = "sh(pkh(" + xpriv + "/0'/0'/*'" + "))"
         self.log.info("Ranged descriptor import should fail without a specified range")
-        self.test_importmulti({"desc": desc,
+        self.test_importmulti({"desc": descsum_create(desc),
                                "timestamp": "now"},
                               success=False,
                               error_code=-8,
@@ -495,7 +496,7 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # Test importing of a ranged descriptor without keys
         self.log.info("Should import the ranged descriptor with specified range as solvable")
-        self.test_importmulti({"desc": desc,
+        self.test_importmulti({"desc": descsum_create(desc),
                                "timestamp": "now",
                                "range": {"end": 1}},
                               success=True,
@@ -504,7 +505,7 @@ class ImportMultiTest(BitcoinTestFramework):
         # Test importing of a P2PKH address via descriptor
         key = self.get_key()
         self.log.info("Should import a p2pkh address from descriptor")
-        self.test_importmulti({"desc": "pkh(" + key.pubkey + ")",
+        self.test_importmulti({"desc": descsum_create("pkh(" + key.pubkey + ")"),
                                "timestamp": "now",
                                "label": "Descriptor import test"},
                               True,
@@ -517,7 +518,7 @@ class ImportMultiTest(BitcoinTestFramework):
         # Test import fails if both desc and scriptPubKey are provided
         key = self.get_key()
         self.log.info("Import should fail if both scriptPubKey and desc are provided")
-        self.test_importmulti({"desc": "pkh(" + key.pubkey + ")",
+        self.test_importmulti({"desc": descsum_create("pkh(" + key.pubkey + ")"),
                                "scriptPubKey": {"address": key.p2pkh_addr},
                                "timestamp": "now"},
                               success=False,
@@ -536,7 +537,7 @@ class ImportMultiTest(BitcoinTestFramework):
         key1 = self.get_key()
         key2 = self.get_key()
         self.log.info("Should import a 1-of-2 bare multisig from descriptor")
-        self.test_importmulti({"desc": "multi(1," + key1.pubkey + "," + key2.pubkey + ")",
+        self.test_importmulti({"desc": descsum_create("multi(1," + key1.pubkey + "," + key2.pubkey + ")"),
                                "timestamp": "now"},
                               success=True)
         self.log.info("Should not treat individual keys from the imported bare multisig as watchonly")
