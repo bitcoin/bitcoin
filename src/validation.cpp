@@ -5365,3 +5365,16 @@ bool IsBIP30Unspendable(const CBlockIndex& block_index)
     return (block_index.nHeight==91722 && block_index.GetBlockHash() == uint256S("0x00000000000271a2dc26e7667f8419f2e15416dc6955e5a6c6cdf3f2574dd08e")) ||
            (block_index.nHeight==91812 && block_index.GetBlockHash() == uint256S("0x00000000000af0aed4792b1acee3d966af36cf5def14935db8de83d6f9306f2f"));
 }
+
+const CBlockIndex* ChainstateManager::GetSnapshotBaseBlock() const
+{
+    const auto blockhash_op = this->SnapshotBlockhash();
+    if (!blockhash_op) return nullptr;
+    return Assert(m_blockman.LookupBlockIndex(*blockhash_op));
+}
+
+std::optional<int> ChainstateManager::GetSnapshotBaseHeight() const
+{
+    const CBlockIndex* base = this->GetSnapshotBaseBlock();
+    return base ? std::make_optional(base->nHeight) : std::nullopt;
+}
