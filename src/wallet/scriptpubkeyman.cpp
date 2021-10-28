@@ -2265,8 +2265,7 @@ bool DescriptorScriptPubKeyMan::CanGetAddresses(bool internal) const
 
 bool DescriptorScriptPubKeyMan::HavePrivateKeys() const
 {
-    LOCK(cs_desc_man);
-    return m_keyman.m_map_keys.size() > 0 || m_keyman.m_map_crypted_keys.size() > 0;
+    return m_keyman.HavePrivateKeys();
 }
 
 std::optional<int64_t> DescriptorScriptPubKeyMan::GetOldestKeyPoolTime() const
