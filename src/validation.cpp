@@ -568,6 +568,9 @@ private:
     // in-mempool conflicts; see below).
     size_t m_limit_descendants;
     size_t m_limit_descendant_size;
+
+    /** Whether the transaction(s) would replace any mempool transactions. If so, RBF rules apply. */
+    bool m_rbf{false};
 };
 
 bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
@@ -808,8 +811,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-spends-conflicting-tx", *err_string);
     }
 
-
-    if (!setConflicts.empty()) {
+    m_rbf = !setConflicts.empty();
+    if (m_rbf) {
         CFeeRate newFeeRate(nModifiedFees, nSize);
         // It's possible that the replacement pays more fees than its direct conflicts but not more
         // than all conflicts (i.e. the direct conflicts have high-fee descendants). However, if the
