@@ -831,6 +831,13 @@ private:
         CBlockIndex** ppindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     friend CChainState;
 
+    //! Returns nullptr if no snapshot has been loaded.
+    CBlockIndex* GetSnapshotBaseBlock() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Return the height of the base block of the snapshot in use, if one exists, else
+    //! nullopt.
+    std::optional<int> GetSnapshotBaseHeight() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
 public:
     using Options = kernel::ChainstateManagerOpts;
 
