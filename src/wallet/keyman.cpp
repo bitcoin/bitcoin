@@ -243,11 +243,13 @@ std::map<CKeyID, CKey> KeyManager::GetKeys() const
         for (const auto& [id, key_pair] : m_map_crypted_keys) {
             const auto& [pubkey, crypted_secret] = key_pair;
             CKey key;
-            DecryptKey(m_storage.GetEncryptionKey(), crypted_secret, pubkey, key);
+            bool ok = DecryptKey(m_storage.GetEncryptionKey(), crypted_secret, pubkey, key);
+            assert(ok);
             keys[id] = key;
         }
         return keys;
     }
+    // If the wallet is encrypted and locked, then this will just be an empty map
     return m_map_keys;
 }
 
