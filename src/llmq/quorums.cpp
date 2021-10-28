@@ -257,7 +257,7 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
     }
 
     for (auto& p : Params().GetConsensus().llmqs) {
-        EnsureQuorumConnections(p.first, pindexNew);
+        EnsureQuorumConnections(p.second, pindexNew);
     }
 
     {
@@ -276,26 +276,24 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
     TriggerQuorumDataRecoveryThreads(pindexNew);
 }
 
-void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex* pindexNew) const
+void CQuorumManager::EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindexNew) const
 {
-    const auto& llmq_params = GetLLMQParams(llmqType);
+    auto lastQuorums = ScanQuorums(llmqParams.type, pindexNew, (size_t)llmqParams.keepOldConnections);
 
-    auto lastQuorums = ScanQuorums(llmqType, pindexNew, (size_t)llmq_params.keepOldConnections);
-
-    auto connmanQuorumsToDelete = g_connman->GetMasternodeQuorums(llmqType);
+    auto connmanQuorumsToDelete = g_connman->GetMasternodeQuorums(llmqParams.type);
 
     // don't remove connections for the currently in-progress DKG round
-    int curDkgHeight = pindexNew->nHeight - (pindexNew->nHeight % llmq_params.dkgInterval);
+    int curDkgHeight = pindexNew->nHeight - (pindexNew->nHeight % llmqParams.dkgInterval);
     auto curDkgBlock = pindexNew->GetAncestor(curDkgHeight)->GetBlockHash();
     connmanQuorumsToDelete.erase(curDkgBlock);
 
     for (const auto& quorum : lastQuorums) {
-        if (CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->m_quorum_base_block_index, WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash))) {
+        if (CLLMQUtils::EnsureQuorumConnections(llmqParams, quorum->m_quorum_base_block_index, WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash))) {
             continue;
         }
         if (connmanQuorumsToDelete.count(quorum->qc->quorumHash) > 0) {
             LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- removing masternodes quorum connections for quorum %s:\n", __func__, quorum->qc->quorumHash.ToString());
-            g_connman->RemoveMasternodeQuorumNodes(llmqType, quorum->qc->quorumHash);
+            g_connman->RemoveMasternodeQuorumNodes(llmqParams.type, quorum->qc->quorumHash);
         }
     }
 }
@@ -313,8 +311,9 @@ CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const Consensus::LLMQType l
     }
     assert(qc->quorumHash == pQuorumBaseBlockIndex->GetBlockHash());
 
-    auto quorum = std::make_shared<CQuorum>(llmq::GetLLMQParams(llmqType), blsWorker);
-    auto members = CLLMQUtils::GetAllQuorumMembers((Consensus::LLMQType)qc->llmqType, pQuorumBaseBlockIndex);
+    const auto& llmqParams = llmq::GetLLMQParams(llmqType);
+    auto quorum = std::make_shared<CQuorum>(llmqParams, blsWorker);
+    auto members = CLLMQUtils::GetAllQuorumMembers(llmqParams, pQuorumBaseBlockIndex);
 
     quorum->Init(qc, pQuorumBaseBlockIndex, minedBlockHash, members);
 

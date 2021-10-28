@@ -54,8 +54,8 @@ public:
     void AddMineableCommitment(const CFinalCommitment& fqc);
     bool HasMineableCommitment(const uint256& hash) const;
     bool GetMineableCommitmentByHash(const uint256& commitmentHash, CFinalCommitment& ret) const;
-    bool GetMineableCommitment(Consensus::LLMQType llmqType, int nHeight, CFinalCommitment& ret) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    bool GetMineableCommitmentTx(Consensus::LLMQType llmqType, int nHeight, CTransactionRef& ret) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool GetMineableCommitment(const Consensus::LLMQParams& llmqParams, int nHeight, CFinalCommitment& ret) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool GetMineableCommitmentTx(const Consensus::LLMQParams& llmqParams, int nHeight, CTransactionRef& ret) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     bool HasMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
     CFinalCommitmentPtr GetMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash, uint256& retMinedBlockHash) const;
@@ -66,9 +66,9 @@ public:
 private:
     static bool GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindex, std::map<Consensus::LLMQType, CFinalCommitment>& ret, CValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, CValidationState& state, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    static bool IsMiningPhase(Consensus::LLMQType llmqType, int nHeight);
-    bool IsCommitmentRequired(Consensus::LLMQType llmqType, int nHeight) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    static uint256 GetQuorumBlockHash(Consensus::LLMQType llmqType, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    static bool IsMiningPhase(const Consensus::LLMQParams& llmqParams, int nHeight);
+    bool IsCommitmentRequired(const Consensus::LLMQParams& llmqParams, int nHeight) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    static uint256 GetQuorumBlockHash(const Consensus::LLMQParams& llmqParams, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
 extern CQuorumBlockProcessor* quorumBlockProcessor;

@@ -39,7 +39,7 @@ class CLLMQUtils
 {
 public:
     // includes members which failed DKG
-    static std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex);
+    static std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindexQuorum);
 
     static uint256 BuildCommitmentHash(Consensus::LLMQType llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash);
     static uint256 BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash);
@@ -54,16 +54,17 @@ public:
     static bool IsAllMembersConnectedEnabled(Consensus::LLMQType llmqType);
     static bool IsQuorumPoseEnabled(Consensus::LLMQType llmqType);
     static uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2);
-    static std::set<uint256> GetQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound);
-    static std::set<uint256> GetQuorumRelayMembers(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound);
+    static std::set<uint256> GetQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound);
+    static std::set<uint256> GetQuorumRelayMembers(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound);
     static std::set<size_t> CalcDeterministicWatchConnections(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, size_t memberCount, size_t connectionCount);
 
-    static bool EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& myProTxHash);
-    static void AddQuorumProbeConnections(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& myProTxHash);
+    static bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& myProTxHash);
+    static void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& myProTxHash);
 
     static bool IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quorumHash);
     static bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pindex);
     static std::vector<Consensus::LLMQType> GetEnabledQuorumTypes(const CBlockIndex* pindex);
+    static std::vector<std::reference_wrapper<const Consensus::LLMQParams>> GetEnabledQuorumParams(const CBlockIndex* pindex);
 
     /// Returns the state of `-llmq-data-recovery`
     static bool QuorumDataRecoveryEnabled();
@@ -115,7 +116,7 @@ public:
     static void InitQuorumsCache(CacheType& cache);
 };
 
-const Consensus::LLMQParams& GetLLMQParams(const Consensus::LLMQType llmqType);
+const Consensus::LLMQParams& GetLLMQParams(Consensus::LLMQType llmqType);
 
 } // namespace llmq
 

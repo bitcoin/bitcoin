@@ -164,7 +164,7 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
         return false;
     }
 
-    auto mns = CLLMQUtils::GetAllQuorumMembers(params.type, pQuorumBaseBlockIndex);
+    auto mns = CLLMQUtils::GetAllQuorumMembers(params, pQuorumBaseBlockIndex);
 
     if (!curSession->Init(pQuorumBaseBlockIndex, mns, WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash))) {
         LogPrintf("CDKGSessionManager::%s -- quorum initialization failed for %s\n", __func__, curSession->params.name);
@@ -518,9 +518,9 @@ void CDKGSessionHandler::HandleDKGRound()
         return changed;
     });
 
-    CLLMQUtils::EnsureQuorumConnections(params.type, pQuorumBaseBlockIndex, curSession->myProTxHash);
+    CLLMQUtils::EnsureQuorumConnections(params, pQuorumBaseBlockIndex, curSession->myProTxHash);
     if (curSession->AreWeMember()) {
-        CLLMQUtils::AddQuorumProbeConnections(params.type, pQuorumBaseBlockIndex, curSession->myProTxHash);
+        CLLMQUtils::AddQuorumProbeConnections(params, pQuorumBaseBlockIndex, curSession->myProTxHash);
     }
 
     WaitForNextPhase(QuorumPhase_Initialized, QuorumPhase_Contribute, curQuorumHash, []{return false;});

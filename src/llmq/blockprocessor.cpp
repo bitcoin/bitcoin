@@ -141,15 +141,15 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
     // until the first non-null commitment has been mined. After the non-null commitment, no other commitments are
     // allowed, including null commitments.
     // Note: must only check quorums that were enabled at the _previous_ block height to match mining logic
-    for (const auto& type : CLLMQUtils::GetEnabledQuorumTypes(pindex->pprev)) {
+    for (const Consensus::LLMQParams& params : CLLMQUtils::GetEnabledQuorumParams(pindex->pprev)) {
         // skip these checks when replaying blocks after the crash
         if (!::ChainActive().Tip()) {
             break;
         }
 
         // does the currently processed block contain a (possibly null) commitment for the current session?
-        bool hasCommitmentInNewBlock = qcs.count(type) != 0;
-        bool isCommitmentRequired = IsCommitmentRequired(type, pindex->nHeight);
+        bool hasCommitmentInNewBlock = qcs.count(params.type) != 0;
+        bool isCommitmentRequired = IsCommitmentRequired(params, pindex->nHeight);
 
         if (hasCommitmentInNewBlock && !isCommitmentRequired) {
             // If we're either not in the mining phase or a non-null commitment was mined already, reject the block
@@ -191,7 +191,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
 
     const auto& llmq_params = GetLLMQParams(qc.llmqType);
 
-    uint256 quorumHash = GetQuorumBlockHash(qc.llmqType, nHeight);
+    uint256 quorumHash = GetQuorumBlockHash(llmq_params, nHeight);
 
     // skip `bad-qc-block` checks below when replaying blocks after the crash
     if (!::ChainActive().Tip()) {
@@ -217,7 +217,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-dup");
     }
 
-    if (!IsMiningPhase(llmq_params.type, nHeight)) {
+    if (!IsMiningPhase(llmq_params, nHeight)) {
         // should not happen as it's already handled in ProcessBlock
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-height");
     }
@@ -367,38 +367,37 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
     return true;
 }
 
-bool CQuorumBlockProcessor::IsMiningPhase(Consensus::LLMQType llmqType, int nHeight)
+bool CQuorumBlockProcessor::IsMiningPhase(const Consensus::LLMQParams& llmqParams, int nHeight)
 {
-    const auto& llmq_params = GetLLMQParams(llmqType);
-    int phaseIndex = nHeight % llmq_params.dkgInterval;
-    if (phaseIndex >= llmq_params.dkgMiningWindowStart && phaseIndex <= llmq_params.dkgMiningWindowEnd) {
+    int phaseIndex = nHeight % llmqParams.dkgInterval;
+    if (phaseIndex >= llmqParams.dkgMiningWindowStart && phaseIndex <= llmqParams.dkgMiningWindowEnd) {
         return true;
     }
     return false;
 }
 
-bool CQuorumBlockProcessor::IsCommitmentRequired(Consensus::LLMQType llmqType, int nHeight) const
+bool CQuorumBlockProcessor::IsCommitmentRequired(const Consensus::LLMQParams& llmqParams, int nHeight) const
 {
     AssertLockHeld(cs_main);
 
-    uint256 quorumHash = GetQuorumBlockHash(llmqType, nHeight);
+    uint256 quorumHash = GetQuorumBlockHash(llmqParams, nHeight);
 
     // perform extra check for quorumHash.IsNull as the quorum hash is unknown for the first block of a session
     // this is because the currently processed block's hash will be the quorumHash of this session
-    bool isMiningPhase = !quorumHash.IsNull() && IsMiningPhase(llmqType, nHeight);
+    bool isMiningPhase = !quorumHash.IsNull() && IsMiningPhase(llmqParams, nHeight);
 
     // did we already mine a non-null commitment for this session?
-    bool hasMinedCommitment = !quorumHash.IsNull() && HasMinedCommitment(llmqType, quorumHash);
+    bool hasMinedCommitment = !quorumHash.IsNull() && HasMinedCommitment(llmqParams.type, quorumHash);
 
     return isMiningPhase && !hasMinedCommitment;
 }
 
 // WARNING: This method returns uint256() on the first block of the DKG interval (because the block hash is not known yet)
-uint256 CQuorumBlockProcessor::GetQuorumBlockHash(Consensus::LLMQType llmqType, int nHeight)
+uint256 CQuorumBlockProcessor::GetQuorumBlockHash(const Consensus::LLMQParams& llmqParams, int nHeight)
 {
     AssertLockHeld(cs_main);
 
-    int quorumStartHeight = nHeight - (nHeight % GetLLMQParams(llmqType).dkgInterval);
+    int quorumStartHeight = nHeight - (nHeight % llmqParams.dkgInterval);
     uint256 quorumBlockHash;
     if (!GetBlockHash(quorumBlockHash, quorumStartHeight)) {
         return {};
@@ -545,27 +544,27 @@ bool CQuorumBlockProcessor::GetMineableCommitmentByHash(const uint256& commitmen
 
 // Will return false if no commitment should be mined
 // Will return true and a null commitment if no mineable commitment is known and none was mined yet
-bool CQuorumBlockProcessor::GetMineableCommitment(Consensus::LLMQType llmqType, int nHeight, CFinalCommitment& ret) const
+bool CQuorumBlockProcessor::GetMineableCommitment(const Consensus::LLMQParams& llmqParams, int nHeight, CFinalCommitment& ret) const
 {
     AssertLockHeld(cs_main);
 
-    if (!IsCommitmentRequired(llmqType, nHeight)) {
+    if (!IsCommitmentRequired(llmqParams, nHeight)) {
         // no commitment required
         return false;
     }
 
-    uint256 quorumHash = GetQuorumBlockHash(llmqType, nHeight);
+    uint256 quorumHash = GetQuorumBlockHash(llmqParams, nHeight);
     if (quorumHash.IsNull()) {
         return false;
     }
 
     LOCK(minableCommitmentsCs);
 
-    auto k = std::make_pair(llmqType, quorumHash);
+    auto k = std::make_pair(llmqParams.type, quorumHash);
     auto it = minableCommitmentsByQuorum.find(k);
     if (it == minableCommitmentsByQuorum.end()) {
         // null commitment required
-        ret = CFinalCommitment(GetLLMQParams(llmqType), quorumHash);
+        ret = CFinalCommitment(llmqParams, quorumHash);
         return true;
     }
 
@@ -574,12 +573,12 @@ bool CQuorumBlockProcessor::GetMineableCommitment(Consensus::LLMQType llmqType, 
     return true;
 }
 
-bool CQuorumBlockProcessor::GetMineableCommitmentTx(Consensus::LLMQType llmqType, int nHeight, CTransactionRef& ret) const
+bool CQuorumBlockProcessor::GetMineableCommitmentTx(const Consensus::LLMQParams& llmqParams, int nHeight, CTransactionRef& ret) const
 {
     AssertLockHeld(cs_main);
 
     CFinalCommitmentTxPayload qc;
-    if (!GetMineableCommitment(llmqType, nHeight, qc.commitment)) {
+    if (!GetMineableCommitment(llmqParams, nHeight, qc.commitment)) {
         return false;
     }
 

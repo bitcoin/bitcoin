@@ -68,7 +68,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
         return false;
     }
 
-    auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex);
+    auto members = CLLMQUtils::GetAllQuorumMembers(llmq_params, pQuorumBaseBlockIndex);
     for (size_t i = members.size(); i < llmq_params.size; i++) {
         if (validMembers[i]) {
             LogPrintfFinalCommitment("invalid validMembers bitset. bit %d should not be set\n", i);

@@ -126,8 +126,8 @@ bool CDKGSession::Init(const CBlockIndex* _pQuorumBaseBlockIndex, const std::vec
     }
 
     if (!myProTxHash.IsNull()) {
-        quorumDKGDebugManager->InitLocalSessionStatus(params.type, m_quorum_base_block_index->GetBlockHash(), m_quorum_base_block_index->nHeight);
-        relayMembers = CLLMQUtils::GetQuorumRelayMembers(params.type, m_quorum_base_block_index, myProTxHash, true);
+        quorumDKGDebugManager->InitLocalSessionStatus(params, m_quorum_base_block_index->GetBlockHash(), m_quorum_base_block_index->nHeight);
+        relayMembers = CLLMQUtils::GetQuorumRelayMembers(params, m_quorum_base_block_index, myProTxHash, true);
     }
 
     if (myProTxHash.IsNull()) {

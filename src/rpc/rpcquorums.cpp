@@ -196,8 +196,8 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request)
 
         if (fMasternodeMode) {
             const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return ::ChainActive()[tipHeight - (tipHeight % llmq_params.dkgInterval)]);
-            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(llmq_params.type, pQuorumBaseBlockIndex, proTxHash, false);
-            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(llmq_params.type, pQuorumBaseBlockIndex, proTxHash, true);
+            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(llmq_params, pQuorumBaseBlockIndex, proTxHash, false);
+            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(llmq_params, pQuorumBaseBlockIndex, proTxHash, true);
             std::map<uint256, CAddress> foundConnections;
             g_connman->ForEachNode([&](const CNode* pnode) {
                 auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
@@ -223,8 +223,7 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request)
 
         LOCK(cs_main);
         llmq::CFinalCommitment fqc;
-        if (llmq::quorumBlockProcessor->GetMineableCommitment(llmq_params.type,
-                                                              tipHeight, fqc)) {
+        if (llmq::quorumBlockProcessor->GetMineableCommitment(llmq_params, tipHeight, fqc)) {
             UniValue obj(UniValue::VOBJ);
             fqc.ToJson(obj);
             minableCommitments.pushKV(std::string(llmq_params.name), obj);
