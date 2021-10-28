@@ -231,13 +231,29 @@ bool WalletBatch::WriteDescriptorKey(const uint256& desc_id, const CPubKey& pubk
     key.insert(key.end(), pubkey.begin(), pubkey.end());
     key.insert(key.end(), privkey.begin(), privkey.end());
 
-    return WriteIC(std::make_pair(DBKeys::WALLETDESCRIPTORKEY, std::make_pair(desc_id, pubkey)), std::make_pair(privkey, Hash(key)), false);
+    const auto rec_key = std::make_pair(DBKeys::WALLETDESCRIPTORKEY, std::make_pair(desc_id, pubkey));
+    const auto rec_val = std::make_pair(privkey, Hash(key));
+    if (!WriteIC(rec_key, rec_val, false)) {
+        // It may already exist, make sure they are the same
+        std::pair<CPrivKey, uint256> val;
+        if (!m_batch->Read(rec_key, val)) {
+            return false;
+        }
+        return rec_val == val;
+    }
+    return true;
 }
 
 bool WalletBatch::WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const std::vector<unsigned char>& secret)
 {
-    if (!WriteIC(std::make_pair(DBKeys::WALLETDESCRIPTORCKEY, std::make_pair(desc_id, pubkey)), secret, false)) {
-        return false;
+    const auto key = std::make_pair(DBKeys::WALLETDESCRIPTORCKEY, std::make_pair(desc_id, pubkey));
+    if (!WriteIC(key, secret, false)) {
+        // It may already exist, make sure they are the same
+        std::vector<unsigned char> val;
+        if (!m_batch->Read(key, val)) {
+            return false;
+        }
+        return secret == val;
     }
     EraseIC(std::make_pair(DBKeys::WALLETDESCRIPTORKEY, std::make_pair(desc_id, pubkey)));
     return true;
