@@ -52,8 +52,8 @@ class CChainLocksHandler : public CRecoveredSigsListener
     static constexpr int64_t WAIT_FOR_ISLOCK_TIMEOUT = 10 * 60;
 
 private:
-    CScheduler* scheduler;
-    std::thread* scheduler_thread;
+    std::unique_ptr<CScheduler> scheduler;
+    std::unique_ptr<std::thread> scheduler_thread;
     mutable CCriticalSection cs;
     std::atomic<bool> tryLockChainTipScheduled{false};
     std::atomic<bool> isEnabled{false};

@@ -37,17 +37,15 @@ std::string CChainLockSig::ToString() const
 
 CChainLocksHandler::CChainLocksHandler()
 {
-    scheduler = new CScheduler();
-    CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler);
-    scheduler_thread = new std::thread(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
+    scheduler = std::make_unique<CScheduler>();
+    CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler.get());
+    scheduler_thread = std::make_unique<std::thread>(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
 }
 
 CChainLocksHandler::~CChainLocksHandler()
 {
     scheduler->stop();
     scheduler_thread->join();
-    delete scheduler_thread;
-    delete scheduler;
 }
 
 void CChainLocksHandler::Start()

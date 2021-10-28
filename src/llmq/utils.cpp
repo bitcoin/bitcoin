@@ -301,10 +301,7 @@ bool CLLMQUtils::IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quo
 
 bool CLLMQUtils::IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pindex)
 {
-    LOCK(cs_llmq_vbc);
-
     const Consensus::Params& consensusParams = Params().GetConsensus();
-    bool f_dip0020_Active = VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_DIP0020, llmq_versionbitscache) == ThresholdState::ACTIVE;
 
     switch (llmqType)
     {
@@ -314,7 +311,7 @@ bool CLLMQUtils::IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockI
             break;
         case Consensus::LLMQType::LLMQ_100_67:
         case Consensus::LLMQType::LLMQ_TEST_V17:
-            if (!f_dip0020_Active) {
+            if (LOCK(cs_llmq_vbc); VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_DIP0020, llmq_versionbitscache) != ThresholdState::ACTIVE) {
                 return false;
             }
             break;
