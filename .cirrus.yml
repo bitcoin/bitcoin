@@ -75,22 +75,23 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
-  name: "Win64 native [unit tests, no functional tests] [msvc]"
+  name: "Win64 native [msvc]"
   << : *FILTER_TEMPLATE
   windows_container:
     cpu: 4
-    memory: 16G
+    memory: 8G
     image: cirrusci/windowsservercore:visualstudio2019
   timeout_in: 120m
   env:
     PATH: 'C:\jom;C:\Python39;C:\Python39\Scripts;C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin;%PATH%'
     PYTHONUTF8: 1
-    VCPKG_TAG: '75522bb1f2e7d863078bcd06322348f053a9e33f'
-    VCPKG_FEATURE_FLAGS: 'manifests'
+    CI_VCPKG_TAG: '2021.05.12'
+    VCPKG_DOWNLOADS: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\downloads'
+    VCPKG_DEFAULT_BINARY_CACHE: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
     QT_DOWNLOAD_URL: 'https://download.qt.io/official_releases/qt/5.12/5.12.11/single/qt-everywhere-src-5.12.11.zip'
     QT_LOCAL_PATH: 'C:\qt-everywhere-src-5.12.11.zip'
     QT_SOURCE_DIR: 'C:\qt-everywhere-src-5.12.11'
-    QTBASEDIR: 'C:\Qt5.12.11_x64_static_vs2019_160900'
+    QTBASEDIR: 'C:\Qt_static'
     x64_NATIVE_TOOLS: '"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"'
     IgnoreWarnIntDirInTempDetected: 'true'
   merge_script:
@@ -121,8 +122,20 @@ task:
       - ..\configure -release -silent -opensource -confirm-license -opengl desktop -no-shared -static -static-runtime -mp -qt-zlib -qt-pcre -qt-libpng -no-libjpeg -nomake examples -nomake tests -nomake tools -no-dbus -no-libudev -no-icu -no-gtk -no-opengles3 -no-angle -no-sql-sqlite -no-sql-odbc -no-sqlite -no-libudev -no-vulkan -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcanvas3d -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdeclarative -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquickcontrols -skip qtquickcontrols2 -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebsockets -skip qtwebview -skip qtx11extras -skip qtxmlpatterns -no-openssl -no-feature-sql -no-feature-sqlmodel -prefix %QTBASEDIR%
       - jom
       - jom install
-  vcpkg_cache:
-    folder: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
+  vcpkg_tools_cache:
+    folder: '%VCPKG_DOWNLOADS%\tools'
+    reupload_on_changes: false
+    fingerprint_script:
+      - echo %CI_VCPKG_TAG%
+      - msbuild -version
+  vcpkg_binary_cache:
+    folder: '%VCPKG_DEFAULT_BINARY_CACHE%'
+    reupload_on_changes: true
+    fingerprint_script:
+      - echo %CI_VCPKG_TAG%
+      - msbuild -version
+    populate_script:
+      - mkdir %VCPKG_DEFAULT_BINARY_CACHE%
   install_python_script:
     - choco install --yes --no-progress python3 --version=3.9.6
     - pip install zmq
@@ -131,7 +144,7 @@ task:
     - cd ..
     - git clone --quiet https://github.com/microsoft/vcpkg.git
     - cd vcpkg
-    - git -c advice.detachedHead=false checkout %VCPKG_TAG%
+    - git -c advice.detachedHead=false checkout %CI_VCPKG_TAG%
     - .\bootstrap-vcpkg -disableMetrics
     - echo set(VCPKG_BUILD_TYPE release) >> triplets\x64-windows-static.cmake
     - .\vcpkg integrate install
@@ -146,13 +159,18 @@ task:
     - python test\util\test_runner.py
     - python test\util\rpcauth-test.py
   functional_tests_script:
-    - python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 rpc_help feature_config_args rpc_signer feature_presegwit_node_upgrade "tool_wallet.py --descriptors" --failfast  # TODO enable '--extended' and remove cherry-picked test list
+    # Increase the dynamic port range to the maximum allowed value to mitigate "OSError: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted".
+    # See: https://docs.microsoft.com/en-us/biztalk/technical-guides/settings-that-can-be-modified-to-improve-network-performance
+    - netsh int ipv4 set dynamicport tcp start=1025 num=64511
+    - netsh int ipv6 set dynamicport tcp start=1025 num=64511
+    # Exclude feature_dbcrash for now due to timeout
+    - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 --failfast --extended --exclude feature_dbcrash
 
 task:
-  name: 'ARM [unit tests, no functional tests] [buster]'
+  name: 'ARM [unit tests, no functional tests] [bullseye]'
   << : *GLOBAL_TASK_TEMPLATE
   arm_container:
-    image: debian:buster
+    image: debian:bullseye
     cpu: 2
     memory: 8G
   env:
@@ -254,7 +272,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_nowallet.sh"
 
 task:
-  name: 'macOS 10.14 [gui, no tests] [focal]'
+  name: 'macOS 10.15 [gui, no tests] [focal]'
   << : *DEPENDS_SDK_CACHE_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   container:

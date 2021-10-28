@@ -242,7 +242,7 @@ public:
 class AddrinfoRequestHandler : public BaseRequestHandler
 {
 private:
-    static constexpr std::array m_networks{"ipv4", "ipv6", "torv2", "torv3", "i2p"};
+    static constexpr std::array m_networks{"ipv4", "ipv6", "onion", "i2p"};
     int8_t NetworkStringToId(const std::string& str) const
     {
         for (size_t i = 0; i < m_networks.size(); ++i) {
@@ -268,13 +268,10 @@ public:
         if (!nodes.empty() && nodes.at(0)["network"].isNull()) {
             throw std::runtime_error("-addrinfo requires bitcoind server to be running v22.0 and up");
         }
-        // Count the number of peers we know by network, including torv2 versus torv3.
+        // Count the number of peers known to our node, by network.
         std::array<uint64_t, m_networks.size()> counts{{}};
         for (const UniValue& node : nodes) {
             std::string network_name{node["network"].get_str()};
-            if (network_name == "onion") {
-                network_name = node["address"].get_str().size() > 22 ? "torv3" : "torv2";
-            }
             const int8_t network_id{NetworkStringToId(network_name)};
             if (network_id == UNKNOWN_NETWORK) continue;
             ++counts.at(network_id);
@@ -340,7 +337,7 @@ public:
         connections.pushKV("total", batch[ID_NETWORKINFO]["result"]["connections"]);
         result.pushKV("connections", connections);
 
-        result.pushKV("proxy", batch[ID_NETWORKINFO]["result"]["networks"][0]["proxy"]);
+        result.pushKV("networks", batch[ID_NETWORKINFO]["result"]["networks"]);
         result.pushKV("difficulty", batch[ID_BLOCKCHAININFO]["result"]["difficulty"]);
         result.pushKV("chain", UniValue(batch[ID_BLOCKCHAININFO]["result"]["chain"]));
         if (!batch[ID_WALLETINFO]["result"].isNull()) {
@@ -554,15 +551,26 @@ public:
         }
 
         // Report peer connection totals by type.
-        result += "        ipv4    ipv6   onion";
-        const bool any_i2p_peers = m_counts.at(2).at(3); // false if total i2p peers count is 0, otherwise true
-        if (any_i2p_peers) result += "     i2p";
+        result += "     ";
+        std::vector<int8_t> reachable_networks;
+        for (const UniValue& network : networkinfo["networks"].getValues()) {
+            if (network["reachable"].get_bool()) {
+                const std::string& network_name{network["name"].get_str()};
+                const int8_t network_id{NetworkStringToId(network_name)};
+                if (network_id == UNKNOWN_NETWORK) continue;
+                result += strprintf("%8s", network_name); // column header
+                reachable_networks.push_back(network_id);
+            }
+        };
         result += "   total   block";
         if (m_manual_peers_count) result += "  manual";
+
         const std::array rows{"in", "out", "total"};
-        for (uint8_t i = 0; i < 3; ++i) {
-            result += strprintf("\n%-5s  %5i   %5i   %5i", rows.at(i), m_counts.at(i).at(0), m_counts.at(i).at(1), m_counts.at(i).at(2)); // ipv4/ipv6/onion peers counts
-            if (any_i2p_peers) result += strprintf("   %5i", m_counts.at(i).at(3)); // i2p peers count
+        for (size_t i = 0; i < rows.size(); ++i) {
+            result += strprintf("\n%-5s", rows[i]); // row header
+            for (int8_t n : reachable_networks) {
+                result += strprintf("%8i", m_counts.at(i).at(n)); // network peers count
+            }
             result += strprintf("   %5i", m_counts.at(i).at(m_networks.size())); // total peers count
             if (i == 1) { // the outbound row has two extra columns for block relay and manual peer counts
                 result += strprintf("   %5i", m_block_relay_peers_count);
@@ -705,7 +713,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     //     3. default port for chain
     uint16_t port{BaseParams().RPCPort()};
     SplitHostPort(gArgs.GetArg("-rpcconnect", DEFAULT_RPCCONNECT), port, host);
-    port = static_cast<uint16_t>(gArgs.GetArg("-rpcport", port));
+    port = static_cast<uint16_t>(gArgs.GetIntArg("-rpcport", port));
 
     // Obtain event base
     raii_event_base base = obtain_event_base();
@@ -715,7 +723,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
 
     // Set connection timeout
     {
-        const int timeout = gArgs.GetArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT);
+        const int timeout = gArgs.GetIntArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT);
         if (timeout > 0) {
             evhttp_connection_set_timeout(evcon.get(), timeout);
         } else {
@@ -789,7 +797,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
         if (failedToGetAuthCookie) {
             throw std::runtime_error(strprintf(
                 "Could not locate RPC credentials. No authentication cookie could be found, and RPC password is not set.  See -rpcpassword and -stdinrpcpass.  Configuration file: (%s)",
-                GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string()));
+                fs::PathToString(GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)))));
         } else {
             throw std::runtime_error("Authorization failed: Incorrect rpcuser or rpcpassword");
         }
@@ -825,7 +833,7 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
     UniValue response(UniValue::VOBJ);
     // Execute and handle connection failures with -rpcwait.
     const bool fWait = gArgs.GetBoolArg("-rpcwait", false);
-    const int timeout = gArgs.GetArg("-rpcwaittimeout", DEFAULT_WAIT_CLIENT_TIMEOUT);
+    const int timeout = gArgs.GetIntArg("-rpcwaittimeout", DEFAULT_WAIT_CLIENT_TIMEOUT);
     const auto deadline{GetTime<std::chrono::microseconds>() + 1s * timeout};
 
     do {
@@ -989,8 +997,26 @@ static void ParseGetInfoResult(UniValue& result)
         RESET);
     result_string += strprintf("Version: %s\n", result["version"].getValStr());
     result_string += strprintf("Time offset (s): %s\n", result["timeoffset"].getValStr());
-    const std::string proxy = result["proxy"].getValStr();
-    result_string += strprintf("Proxy: %s\n", proxy.empty() ? "N/A" : proxy);
+
+    // proxies
+    std::map<std::string, std::vector<std::string>> proxy_networks;
+    std::vector<std::string> ordered_proxies;
+
+    for (const UniValue& network : result["networks"].getValues()) {
+        const std::string proxy = network["proxy"].getValStr();
+        if (proxy.empty()) continue;
+        // Add proxy to ordered_proxy if has not been processed
+        if (proxy_networks.find(proxy) == proxy_networks.end()) ordered_proxies.push_back(proxy);
+
+        proxy_networks[proxy].push_back(network["name"].getValStr());
+    }
+
+    std::vector<std::string> formatted_proxies;
+    for (const std::string& proxy : ordered_proxies) {
+        formatted_proxies.emplace_back(strprintf("%s (%s)", proxy, Join(proxy_networks.find(proxy)->second, ", ")));
+    }
+    result_string += strprintf("Proxies: %s\n", formatted_proxies.empty() ? "n/a" : Join(formatted_proxies, ", "));
+
     result_string += strprintf("Min tx relay fee rate (%s/kvB): %s\n\n", CURRENCY_UNIT, result["relayfee"].getValStr());
 
     if (!result["has_wallet"].isNull()) {

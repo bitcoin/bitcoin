@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_GUIUTIL_H
 #define BITCOIN_QT_GUIUTIL_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 #include <fs.h>
 #include <net.h>
 #include <netaddress.h>
@@ -41,6 +41,7 @@ class QAbstractButton;
 class QAbstractItemView;
 class QAction;
 class QDateTime;
+class QDialog;
 class QFont;
 class QKeySequence;
 class QLineEdit;
@@ -111,6 +112,11 @@ namespace GUIUtil
     bool hasEntryData(const QAbstractItemView *view, int column, int role);
 
     void setClipboard(const QString& str);
+
+    /**
+     * Loads the font from the file specified by file_name, aborts if it fails.
+     */
+    void LoadFont(const QString& file_name);
 
     /**
      * Determine default data directory for operating system.
@@ -416,6 +422,11 @@ namespace GUIUtil
             },
             type);
     }
+
+    /**
+     * Shows a QDialog instance asynchronously, and deletes it on close.
+     */
+    void ShowModalDialogAndDeleteOnClose(QDialog* dialog);
 
 } // namespace GUIUtil
 

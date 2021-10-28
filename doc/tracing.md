@@ -101,19 +101,12 @@ Is called *after* a block is connected to the chain. Can, for example, be used
 to benchmark block connections together with `-reindex`.
 
 Arguments passed:
-1. Block Header Hash as `pointer to C-style String` (64 characters)
+1. Block Header Hash as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
 2. Block Height as `int32`
 3. Transactions in the Block as `uint64`
 4. Inputs spend in the Block as `int32`
 5. SigOps in the Block (excluding coinbase SigOps) `uint64`
 6. Time it took to connect the Block in microseconds (µs) as `uint64`
-7. Block Header Hash as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
-
-Note: The 7th argument can't be accessed by bpftrace and is purposefully chosen
-to be the block header hash as bytes. See [bpftrace argument limit] for more
-details.
-
-[bpftrace argument limit]: #bpftrace-argument-limit
 
 ## Adding tracepoints to Bitcoin Core
 

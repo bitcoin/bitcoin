@@ -5,7 +5,7 @@
 #ifndef BITCOIN_INTERFACES_NODE_H
 #define BITCOIN_INTERFACES_NODE_H
 
-#include <amount.h>     // For CAmount
+#include <consensus/amount.h>
 #include <external_signer.h>
 #include <net.h>        // For NodeId
 #include <net_types.h>  // For banmap_t
@@ -230,7 +230,7 @@ public:
 };
 
 //! Return implementation of Node interface.
-std::unique_ptr<Node> MakeNode(NodeContext* context = nullptr);
+std::unique_ptr<Node> MakeNode(NodeContext& context);
 
 //! Block tip (could be a header or not, depends on the subscribed signal).
 struct BlockTip {

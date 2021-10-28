@@ -60,6 +60,8 @@ namespace BCLog {
         I2P         = (1 << 22),
         IPC         = (1 << 23),
         LOCK        = (1 << 24),
+        UTIL        = (1 << 25),
+        BLOCKSTORE  = (1 << 26),
         ALL         = ~(uint32_t)0,
     };
 

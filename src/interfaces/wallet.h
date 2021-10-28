@@ -5,7 +5,7 @@
 #ifndef BITCOIN_INTERFACES_WALLET_H
 #define BITCOIN_INTERFACES_WALLET_H
 
-#include <amount.h>                    // For CAmount
+#include <consensus/amount.h>
 #include <interfaces/chain.h>          // For ChainClient
 #include <pubkey.h>                    // For CKeyID and CScriptID (definitions needed in CTxDestination instantiation)
 #include <script/standard.h>           // For CTxDestination
@@ -122,10 +122,10 @@ public:
     virtual bool displayAddress(const CTxDestination& dest) = 0;
 
     //! Lock coin.
-    virtual void lockCoin(const COutPoint& output) = 0;
+    virtual bool lockCoin(const COutPoint& output, const bool write_to_db) = 0;
 
     //! Unlock coin.
-    virtual void unlockCoin(const COutPoint& output) = 0;
+    virtual bool unlockCoin(const COutPoint& output) = 0;
 
     //! Return whether coin is locked.
     virtual bool isLockedCoin(const COutPoint& output) = 0;

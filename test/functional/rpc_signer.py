@@ -27,6 +27,9 @@ class RPCSignerTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 4
+        # The experimental syscall sandbox feature (-sandbox) is not compatible with -signer (which
+        # invokes execve).
+        self.disable_syscall_sandbox = True
 
         self.extra_args = [
             [],

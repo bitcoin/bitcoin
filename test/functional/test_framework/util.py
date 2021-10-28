@@ -34,13 +34,14 @@ def assert_approx(v, vexp, vspan=0.00001):
         raise AssertionError("%s > [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
 
 
-def assert_fee_amount(fee, tx_size, fee_per_kB):
-    """Assert the fee was in range"""
-    target_fee = round(tx_size * fee_per_kB / 1000, 8)
+def assert_fee_amount(fee, tx_size, feerate_BTC_kvB):
+    """Assert the fee is in range."""
+    feerate_BTC_vB = feerate_BTC_kvB / 1000
+    target_fee = satoshi_round(tx_size * feerate_BTC_vB)
     if fee < target_fee:
         raise AssertionError("Fee of %s BTC too low! (Should be %s BTC)" % (str(fee), str(target_fee)))
     # allow the wallet's estimation to be at most 2 bytes off
-    if fee > (tx_size + 2) * fee_per_kB / 1000:
+    if fee > (tx_size + 2) * feerate_BTC_vB:
         raise AssertionError("Fee of %s BTC too high! (Should be %s BTC)" % (str(fee), str(target_fee)))
 
 
@@ -364,6 +365,11 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
         f.write("dnsseed=0\n")
         f.write("fixedseeds=0\n")
         f.write("listenonion=0\n")
+        # Increase peertimeout to avoid disconnects while using mocktime.
+        # peertimeout is measured in wall clock time, so setting it to the
+        # duration of the longest test is sufficient. It can be overridden in
+        # tests.
+        f.write("peertimeout=999999\n")
         f.write("printtoconsole=0\n")
         f.write("upnp=0\n")
         f.write("natpmp=0\n")
@@ -553,17 +559,6 @@ def mine_large_block(test_framework, node, utxos=None):
     fee = 100 * node.getnetworkinfo()["relayfee"]
     create_lots_of_big_transactions(node, txouts, utxos, num, fee=fee)
     test_framework.generate(node, 1)
-
-
-def generate_to_height(test_framework, node, target_height):
-    """Generates blocks until a given target block height has been reached.
-       To prevent timeouts, only up to 200 blocks are generated per RPC call.
-       Can be used to activate certain soft-forks (e.g. CSV, CLTV)."""
-    current_height = node.getblockcount()
-    while current_height < target_height:
-        nblocks = min(200, target_height - current_height)
-        current_height += len(test_framework.generate(node, nblocks))
-    assert_equal(node.getblockcount(), target_height)
 
 
 def find_vout_for_address(node, txid, addr):

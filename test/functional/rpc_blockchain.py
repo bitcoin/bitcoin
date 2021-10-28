@@ -27,8 +27,6 @@ import subprocess
 
 from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.blocktools import (
-    CLTV_HEIGHT,
-    DERSIG_HEIGHT,
     create_block,
     create_coinbase,
     TIME_GENESIS_BLOCK,
@@ -129,7 +127,29 @@ class BlockchainTest(BitcoinTestFramework):
         # should have exact keys
         assert_equal(sorted(res.keys()), keys)
 
-        self.restart_node(0, ['-stopatheight=207', '-prune=550'])
+        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=['-testactivationheight=name@2'],
+            expected_msg='Error: Invalid name (name@2) for -testactivationheight=name@height.',
+        )
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=['-testactivationheight=bip34@-2'],
+            expected_msg='Error: Invalid height value (bip34@-2) for -testactivationheight=name@height.',
+        )
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=['-testactivationheight='],
+            expected_msg='Error: Invalid format () for -testactivationheight=name@height.',
+        )
+        self.start_node(0, extra_args=[
+            '-stopatheight=207',
+            '-prune=550',
+            '-testactivationheight=bip34@2',
+            '-testactivationheight=dersig@3',
+            '-testactivationheight=cltv@4',
+            '-testactivationheight=csv@5',
+            '-testactivationheight=segwit@6',
+        ])
+
         res = self.nodes[0].getblockchaininfo()
         # result should have these additional pruning keys if prune=550
         assert_equal(sorted(res.keys()), sorted(['pruneheight', 'automatic_pruning', 'prune_target_size'] + keys))
@@ -143,10 +163,10 @@ class BlockchainTest(BitcoinTestFramework):
 
         assert_equal(res['softforks'], {
             'bip34': {'type': 'buried', 'active': True, 'height': 2},
-            'bip66': {'type': 'buried', 'active': True, 'height': DERSIG_HEIGHT},
-            'bip65': {'type': 'buried', 'active': True, 'height': CLTV_HEIGHT},
-            'csv': {'type': 'buried', 'active': False, 'height': 432},
-            'segwit': {'type': 'buried', 'active': True, 'height': 0},
+            'bip66': {'type': 'buried', 'active': True, 'height': 3},
+            'bip65': {'type': 'buried', 'active': True, 'height': 4},
+            'csv': {'type': 'buried', 'active': True, 'height': 5},
+            'segwit': {'type': 'buried', 'active': True, 'height': 6},
             'testdummy': {
                 'type': 'bip9',
                 'bip9': {
@@ -406,7 +426,7 @@ class BlockchainTest(BitcoinTestFramework):
         node = self.nodes[0]
 
         miniwallet = MiniWallet(node)
-        miniwallet.scan_blocks(num=5)
+        miniwallet.rescan_utxos()
 
         fee_per_byte = Decimal('0.00000010')
         fee_per_kb = 1000 * fee_per_byte
@@ -414,17 +434,55 @@ class BlockchainTest(BitcoinTestFramework):
         miniwallet.send_self_transfer(fee_rate=fee_per_kb, from_node=node)
         blockhash = self.generate(node, 1)[0]
 
-        self.log.info("Test getblock with verbosity 1 doesn't include fee")
-        block = node.getblock(blockhash, 1)
-        assert 'fee' not in block['tx'][1]
+        def assert_fee_not_in_block(verbosity):
+            block = node.getblock(blockhash, verbosity)
+            assert 'fee' not in block['tx'][1]
 
-        self.log.info('Test getblock with verbosity 2 includes expected fee')
-        block = node.getblock(blockhash, 2)
-        tx = block['tx'][1]
-        assert 'fee' in tx
-        assert_equal(tx['fee'], tx['vsize'] * fee_per_byte)
+        def assert_fee_in_block(verbosity):
+            block = node.getblock(blockhash, verbosity)
+            tx = block['tx'][1]
+            assert 'fee' in tx
+            assert_equal(tx['fee'], tx['vsize'] * fee_per_byte)
 
-        self.log.info("Test getblock with verbosity 2 still works with pruned Undo data")
+        def assert_vin_contains_prevout(verbosity):
+            block = node.getblock(blockhash, verbosity)
+            tx = block["tx"][1]
+            total_vin = Decimal("0.00000000")
+            total_vout = Decimal("0.00000000")
+            for vin in tx["vin"]:
+                assert "prevout" in vin
+                assert_equal(set(vin["prevout"].keys()), set(("value", "height", "generated", "scriptPubKey")))
+                assert_equal(vin["prevout"]["generated"], True)
+                total_vin += vin["prevout"]["value"]
+            for vout in tx["vout"]:
+                total_vout += vout["value"]
+            assert_equal(total_vin, total_vout + tx["fee"])
+
+        def assert_vin_does_not_contain_prevout(verbosity):
+            block = node.getblock(blockhash, verbosity)
+            tx = block["tx"][1]
+            if isinstance(tx, str):
+                # In verbosity level 1, only the transaction hashes are written
+                pass
+            else:
+                for vin in tx["vin"]:
+                    assert "prevout" not in vin
+
+        self.log.info("Test that getblock with verbosity 1 doesn't include fee")
+        assert_fee_not_in_block(1)
+
+        self.log.info('Test that getblock with verbosity 2 and 3 includes expected fee')
+        assert_fee_in_block(2)
+        assert_fee_in_block(3)
+
+        self.log.info("Test that getblock with verbosity 1 and 2 does not include prevout")
+        assert_vin_does_not_contain_prevout(1)
+        assert_vin_does_not_contain_prevout(2)
+
+        self.log.info("Test that getblock with verbosity 3 includes prevout")
+        assert_vin_contains_prevout(3)
+
+        self.log.info("Test that getblock with verbosity 2 and 3 still works with pruned Undo data")
         datadir = get_datadir_path(self.options.tmpdir, 0)
 
         self.log.info("Test getblock with invalid verbosity type returns proper error message")
@@ -438,8 +496,10 @@ class BlockchainTest(BitcoinTestFramework):
         # Move instead of deleting so we can restore chain state afterwards
         move_block_file('rev00000.dat', 'rev_wrong')
 
-        block = node.getblock(blockhash, 2)
-        assert 'fee' not in block['tx'][1]
+        assert_fee_not_in_block(2)
+        assert_fee_not_in_block(3)
+        assert_vin_does_not_contain_prevout(2)
+        assert_vin_does_not_contain_prevout(3)
 
         # Restore chain state
         move_block_file('rev_wrong', 'rev00000.dat')

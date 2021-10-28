@@ -52,7 +52,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         # This script tests NULLDUMMY activation, which is part of the 'segwit' deployment, so we go through
         # normal segwit activation here (and don't use the default always-on behaviour).
         self.extra_args = [[
-            f'-segwitheight={COINBASE_MATURITY + 5}',
+            f'-testactivationheight=segwit@{COINBASE_MATURITY + 5}',
             '-addresstype=legacy',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]

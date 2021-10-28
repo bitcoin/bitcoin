@@ -176,17 +176,12 @@ third acts as a duration threshold in milliseconds. When the `ConnectBlock()`
 function takes longer than the threshold, information about the block, is
 printed. For more details, see the header comment in the script.
 
-By default, `bpftrace` limits strings to 64 bytes due to the limited stack size
-in the kernel VM. Block hashes as zero-terminated hex strings are 65 bytes which
-exceed the string limit. The string size limit can be set to 65 bytes with the
-environment variable `BPFTRACE_STRLEN`.
-
 The following command can be used to benchmark, for example, `ConnectBlock()`
 between height 20000 and 38000 on SigNet while logging all blocks that take
 longer than 25ms to connect.
 
 ```
-$ BPFTRACE_STRLEN=65 bpftrace contrib/tracing/connectblock_benchmark.bt 20000 38000 25
+$ bpftrace contrib/tracing/connectblock_benchmark.bt 20000 38000 25
 ```
 
 In a different terminal, starting Bitcoin Core in SigNet mode and with

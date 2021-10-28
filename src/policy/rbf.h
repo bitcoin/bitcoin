@@ -5,7 +5,12 @@
 #ifndef BITCOIN_POLICY_RBF_H
 #define BITCOIN_POLICY_RBF_H
 
+#include <primitives/transaction.h>
 #include <txmempool.h>
+#include <uint256.h>
+
+#include <optional>
+#include <string>
 
 /** Maximum number of transactions that can be replaced by BIP125 RBF (Rule #5). This includes all
  * mempool conflicts and their descendants. */
@@ -48,14 +53,14 @@ RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx);
 std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx, CTxMemPool& pool,
                                                   const CTxMemPool::setEntries& iters_conflicting,
                                                   CTxMemPool::setEntries& all_conflicts)
-                                                  EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
+    EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
 /** BIP125 Rule #2: "The replacement transaction may only include an unconfirmed input if that input
  * was included in one of the original transactions."
  * @returns error message if Rule #2 is broken, otherwise std::nullopt. */
 std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx, const CTxMemPool& pool,
                                                const CTxMemPool::setEntries& iters_conflicting)
-                                               EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
+    EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
 /** Check the intersection between two sets of transactions (a set of mempool entries and a set of
  * txids) to make sure they are disjoint.
@@ -84,12 +89,14 @@ std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& i
  * @param[in]   original_fees       Total modified fees of original transaction(s).
  * @param[in]   replacement_fees    Total modified fees of replacement transaction(s).
  * @param[in]   replacement_vsize   Total virtual size of replacement transaction(s).
+ * @param[in]   relay_fee           The node's minimum feerate for transaction relay.
  * @param[in]   txid                Transaction ID, included in the error message if violation occurs.
  * @returns error string if fees are insufficient, otherwise std::nullopt.
  */
 std::optional<std::string> PaysForRBF(CAmount original_fees,
                                       CAmount replacement_fees,
                                       size_t replacement_vsize,
+                                      CFeeRate relay_fee,
                                       const uint256& txid);
 
 #endif // BITCOIN_POLICY_RBF_H

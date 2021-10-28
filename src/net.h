@@ -7,10 +7,10 @@
 #define BITCOIN_NET_H
 
 #include <addrman.h>
-#include <amount.h>
-#include <bloom.h>
 #include <chainparams.h>
+#include <common/bloom.h>
 #include <compat.h>
+#include <consensus/amount.h>
 #include <crypto/siphash.h>
 #include <hash.h>
 #include <i2p.h>
@@ -797,7 +797,7 @@ public:
         m_onion_binds = connOptions.onion_binds;
     }
 
-    CConnman(uint64_t seed0, uint64_t seed1, CAddrMan& addrman, bool network_active = true);
+    CConnman(uint64_t seed0, uint64_t seed1, AddrMan& addrman, bool network_active = true);
     ~CConnman();
     bool Start(CScheduler& scheduler, const Options& options);
 
@@ -942,7 +942,7 @@ public:
     std::chrono::microseconds PoissonNextSendInbound(std::chrono::microseconds now, std::chrono::seconds average_interval);
 
     /** Return true if we should disconnect the peer for failing an inactivity check. */
-    bool ShouldRunInactivityChecks(const CNode& node, std::optional<int64_t> now=std::nullopt) const;
+    bool ShouldRunInactivityChecks(const CNode& node, int64_t secs_now) const;
 
 private:
     struct ListenSocket {
@@ -1049,7 +1049,7 @@ private:
     std::vector<ListenSocket> vhListenSocket;
     std::atomic<bool> fNetworkActive{true};
     bool fAddressesInitialized{false};
-    CAddrMan& addrman;
+    AddrMan& addrman;
     std::deque<std::string> m_addr_fetches GUARDED_BY(m_addr_fetches_mutex);
     RecursiveMutex m_addr_fetches_mutex;
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);

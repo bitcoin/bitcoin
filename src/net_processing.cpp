@@ -10,6 +10,7 @@
 #include <blockencodings.h>
 #include <blockfilter.h>
 #include <chainparams.h>
+#include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <hash.h>
@@ -291,7 +292,7 @@ using PeerRef = std::shared_ptr<Peer>;
 class PeerManagerImpl final : public PeerManager
 {
 public:
-    PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
+    PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, AddrMan& addrman,
                     BanMan* banman, ChainstateManager& chainman,
                     CTxMemPool& pool, bool ignore_incoming_txs);
 
@@ -409,7 +410,7 @@ private:
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
-    CAddrMan& m_addrman;
+    AddrMan& m_addrman;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
     BanMan* const m_banman;
     ChainstateManager& m_chainman;
@@ -884,6 +885,12 @@ bool PeerManagerImpl::BlockRequested(NodeId nodeid, const CBlockIndex& block, st
 void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid)
 {
     AssertLockHeld(cs_main);
+
+    // Never request high-bandwidth mode from peers if we're blocks-only. Our
+    // mempool will not contain the transactions necessary to reconstruct the
+    // compact block.
+    if (m_ignore_incoming_txs) return;
+
     CNodeState* nodestate = State(nodeid);
     if (!nodestate || !nodestate->fSupportsDesiredCmpctVersion) {
         // Never ask from peers who can't provide witnesses.
@@ -1300,7 +1307,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
 
 void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)
 {
-    size_t max_extra_txn = gArgs.GetArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN);
+    size_t max_extra_txn = gArgs.GetIntArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN);
     if (max_extra_txn <= 0)
         return;
     if (!vExtraTxnForCompact.size())
@@ -1419,14 +1426,14 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
            (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
 }
 
-std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
+std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, AddrMan& addrman,
                                                BanMan* banman, ChainstateManager& chainman,
                                                CTxMemPool& pool, bool ignore_incoming_txs)
 {
     return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, chainman, pool, ignore_incoming_txs);
 }
 
-PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
+PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, AddrMan& addrman,
                                  BanMan* banman, ChainstateManager& chainman,
                                  CTxMemPool& pool, bool ignore_incoming_txs)
     : m_chainparams(chainparams),
@@ -2165,7 +2172,11 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
                             pindexLast->GetBlockHash().ToString(), pindexLast->nHeight);
                 }
                 if (vGetData.size() > 0) {
-                    if (nodestate->fSupportsDesiredCmpctVersion && vGetData.size() == 1 && mapBlocksInFlight.size() == 1 && pindexLast->pprev->IsValid(BLOCK_VALID_CHAIN)) {
+                    if (!m_ignore_incoming_txs &&
+                        nodestate->fSupportsDesiredCmpctVersion &&
+                        vGetData.size() == 1 &&
+                        mapBlocksInFlight.size() == 1 &&
+                        pindexLast->pprev->IsValid(BLOCK_VALID_CHAIN)) {
                         // In any case, we want to download using a compact block, not a regular one
                         vGetData[0] = CInv(MSG_CMPCT_BLOCK, vGetData[0].hash);
                     }
@@ -2288,7 +2299,8 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
             break;
         }
     }
-    m_mempool.check(m_chainman.ActiveChainstate());
+    CChainState& active_chainstate = m_chainman.ActiveChainstate();
+    m_mempool.check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
 }
 
 bool PeerManagerImpl::PrepareBlockFilterRequest(CNode& peer,
@@ -2653,7 +2665,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // table is also potentially detrimental because new-table entries
             // are subject to eviction in the event of addrman collisions.  We
             // mitigate the information-leak by never calling
-            // CAddrMan::Connected() on block-relay-only peers; see
+            // AddrMan::Connected() on block-relay-only peers; see
             // FinalizeNode().
             //
             // This moves an address from New to Tried table in Addrman,
@@ -2909,13 +2921,13 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        // We won't accept tx inv's if we're in blocks-only mode, or this is a
+        // Reject tx INVs when the -blocksonly setting is enabled, or this is a
         // block-relay-only peer
-        bool fBlocksOnly = m_ignore_incoming_txs || (pfrom.m_tx_relay == nullptr);
+        bool reject_tx_invs{m_ignore_incoming_txs || (pfrom.m_tx_relay == nullptr)};
 
         // Allow peers with relay permission to send data other than blocks in blocks only mode
         if (pfrom.HasPermission(NetPermissionFlags::Relay)) {
-            fBlocksOnly = false;
+            reject_tx_invs = false;
         }
 
         LOCK(cs_main);
@@ -2949,16 +2961,17 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     best_block = &inv.hash;
                 }
             } else if (inv.IsGenTxMsg()) {
+                if (reject_tx_invs) {
+                    LogPrint(BCLog::NET, "transaction (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.hash.ToString(), pfrom.GetId());
+                    pfrom.fDisconnect = true;
+                    return;
+                }
                 const GenTxid gtxid = ToGenTxid(inv);
                 const bool fAlreadyHave = AlreadyHaveTx(gtxid);
                 LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
                 pfrom.AddKnownTx(inv.hash);
-                if (fBlocksOnly) {
-                    LogPrint(BCLog::NET, "transaction (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.hash.ToString(), pfrom.GetId());
-                    pfrom.fDisconnect = true;
-                    return;
-                } else if (!fAlreadyHave && !m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
+                if (!fAlreadyHave && !m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
                     AddTxAnnouncement(pfrom, gtxid, current_time);
                 }
             } else {
@@ -3231,12 +3244,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // already; and an adversary can already relay us old transactions
         // (older than our recency filter) if trying to DoS us, without any need
         // for witness malleation.
-        if (AlreadyHaveTx(GenTxid(/* is_wtxid=*/true, wtxid))) {
+        if (AlreadyHaveTx(GenTxid::Wtxid(wtxid))) {
             if (pfrom.HasPermission(NetPermissionFlags::ForceRelay)) {
                 // Always relay transactions received from peers with forcerelay
                 // permission, even if they were already in the mempool, allowing
                 // the node to function as a gateway for nodes hidden behind it.
-                if (!m_mempool.exists(tx.GetHash())) {
+                if (!m_mempool.exists(GenTxid::Txid(tx.GetHash()))) {
                     LogPrintf("Not relaying non-mempool transaction %s from forcerelay peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
                 } else {
                     LogPrintf("Force relaying tx %s from peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
@@ -3250,7 +3263,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const TxValidationState& state = result.m_state;
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-            m_mempool.check(m_chainman.ActiveChainstate());
+            CChainState& active_chainstate = m_chainman.ActiveChainstate();
+            m_mempool.check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
             // As this version of the transaction was acceptable, we can forget about any
             // requests for it.
             m_txrequest.ForgetTxHash(tx.GetHash());
@@ -3301,7 +3315,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     // wtxidrelay peers.
                     // Eventually we should replace this with an improved
                     // protocol for getting all unconfirmed parents.
-                    const GenTxid gtxid{/* is_wtxid=*/false, parent_txid};
+                    const auto gtxid{GenTxid::Txid(parent_txid)};
                     pfrom.AddKnownTx(parent_txid);
                     if (!AlreadyHaveTx(gtxid)) AddTxAnnouncement(pfrom, gtxid, current_time);
                 }
@@ -3315,7 +3329,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 m_txrequest.ForgetTxHash(tx.GetWitnessHash());
 
                 // DoS prevention: do not allow m_orphanage to grow unbounded (see CVE-2012-3789)
-                unsigned int nMaxOrphanTx = (unsigned int)std::max((int64_t)0, gArgs.GetArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS));
+                unsigned int nMaxOrphanTx = (unsigned int)std::max((int64_t)0, gArgs.GetIntArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS));
                 unsigned int nEvicted = m_orphanage.LimitOrphans(nMaxOrphanTx);
                 if (nEvicted > 0) {
                     LogPrint(BCLog::MEMPOOL, "orphanage overflow, removed %u tx\n", nEvicted);
@@ -4301,8 +4315,11 @@ void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
 
 void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::microseconds now)
 {
-    if (m_connman.ShouldRunInactivityChecks(node_to) && peer.m_ping_nonce_sent &&
+    if (m_connman.ShouldRunInactivityChecks(node_to, std::chrono::duration_cast<std::chrono::seconds>(now).count()) &&
+        peer.m_ping_nonce_sent &&
         now > peer.m_ping_start.load() + std::chrono::seconds{TIMEOUT_INTERVAL}) {
+        // The ping timeout is using mocktime. To disable the check during
+        // testing, increase -peertimeout.
         LogPrint(BCLog::NET, "ping timeout: %fs peer=%d\n", 0.000001 * count_microseconds(now - peer.m_ping_start.load()), peer.m_id);
         node_to.fDisconnect = true;
         return;
@@ -4416,7 +4433,7 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, std::chrono::microseconds c
     // peers with the forcerelay permission should not filter txs to us
     if (pto.HasPermission(NetPermissionFlags::ForceRelay)) return;
 
-    CAmount currentFilter = m_mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
+    CAmount currentFilter = m_mempool.GetMinFee(gArgs.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
     static FeeFilterRounder g_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}};
 
     if (m_chainman.ActiveChainstate().IsInitialBlockDownload()) {

@@ -103,7 +103,7 @@ class WalletHDTest(BitcoinTestFramework):
         self.sync_all()
 
         # Needs rescan
-        self.restart_node(1, extra_args=self.extra_args[1] + ['-rescan'])
+        self.nodes[1].rescanblockchain()
         assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
 
         # Try a RPC based rescan
@@ -129,7 +129,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # send a tx and make sure its using the internal chain for the changeoutput
         txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        outs = self.nodes[1].decoderawtransaction(self.nodes[1].gettransaction(txid)['hex'])['vout']
+        outs = self.nodes[1].gettransaction(txid=txid, verbose=True)['decoded']['vout']
         keypath = ""
         for out in outs:
             if out['value'] != 1:

@@ -550,7 +550,7 @@ RPCHelpMan importwallet()
         EnsureWalletIsUnlocked(*pwallet);
 
         fsbridge::ifstream file;
-        file.open(request.params[0].get_str(), std::ios::in | std::ios::ate);
+        file.open(fs::u8path(request.params[0].get_str()), std::ios::in | std::ios::ate);
         if (!file.is_open()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
         }
@@ -745,7 +745,7 @@ RPCHelpMan dumpwallet()
 
     EnsureWalletIsUnlocked(wallet);
 
-    fs::path filepath = request.params[0].get_str();
+    fs::path filepath = fs::u8path(request.params[0].get_str());
     filepath = fs::absolute(filepath);
 
     /* Prevent arbitrary files from being overwritten. There have been reports
@@ -754,7 +754,7 @@ RPCHelpMan dumpwallet()
      * It may also avoid other security issues.
      */
     if (fs::exists(filepath)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.string() + " already exists. If you are sure this is what you want, move it out of the way first");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.u8string() + " already exists. If you are sure this is what you want, move it out of the way first");
     }
 
     fsbridge::ofstream file;
@@ -844,7 +844,7 @@ RPCHelpMan dumpwallet()
     file.close();
 
     UniValue reply(UniValue::VOBJ);
-    reply.pushKV("filename", filepath.string());
+    reply.pushKV("filename", filepath.u8string());
 
     return reply;
 },
@@ -1439,7 +1439,7 @@ RPCHelpMan importmulti()
                                       "and coins using this key may not appear in the wallet. This error could be "
                                       "caused by pruning or data corruption (see bitcoind log for details) and could "
                                       "be dealt with by downloading and rescanning the relevant blocks (see -reindex "
-                                      "and -rescan options).",
+                                      "option and rescanblockchain RPC).",
                                 GetImportTimestamp(request, now), scannedTime - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)));
                     response.push_back(std::move(result));
                 }
@@ -1488,7 +1488,7 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             } else {
                 warnings.push_back("Range not given, using default keypool range");
                 range_start = 0;
-                range_end = gArgs.GetArg("-keypool", DEFAULT_KEYPOOL_SIZE);
+                range_end = gArgs.GetIntArg("-keypool", DEFAULT_KEYPOOL_SIZE);
             }
             next_index = range_start;
 
@@ -1744,7 +1744,7 @@ RPCHelpMan importdescriptors()
                                       "and coins using this desc may not appear in the wallet. This error could be "
                                       "caused by pruning or data corruption (see bitcoind log for details) and could "
                                       "be dealt with by downloading and rescanning the relevant blocks (see -reindex "
-                                      "and -rescan options).",
+                                      "option and rescanblockchain RPC).",
                                 GetImportTimestamp(request, now), scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)));
                     response.push_back(std::move(result));
                 }

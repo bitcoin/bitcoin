@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <amount.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <coins.h>
+#include <consensus/amount.h>
 #include <consensus/tx_check.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>

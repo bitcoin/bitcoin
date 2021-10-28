@@ -74,7 +74,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 0)
 
         self.log.info('Mining coins')
-        self.generatetoaddress(w0, COINBASE_MATURITY + 1, w0.getnewaddress())
+        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, w0.getnewaddress())
 
         # RPC importdescriptors -----------------------------------------------
 
@@ -405,7 +405,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                      solvable=True,
                      ismine=True)
         txid = w0.sendtoaddress(address, 49.99995540)
-        self.generatetoaddress(w0, 6, w0.getnewaddress())
+        self.generatetoaddress(self.nodes[0], 6, w0.getnewaddress())
         self.sync_blocks()
         tx = wpriv.createrawtransaction([{"txid": txid, "vout": 0}], {w0.getnewaddress(): 49.999})
         signed_tx = wpriv.signrawtransactionwithwallet(tx)
@@ -454,7 +454,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 6)
         self.sync_all()
         send_txid = wmulti_priv.sendtoaddress(w0.getnewaddress(), 8)
-        decoded = wmulti_priv.decoderawtransaction(wmulti_priv.gettransaction(send_txid)['hex'])
+        decoded = wmulti_priv.gettransaction(txid=send_txid, verbose=True)['decoded']
         assert_equal(len(decoded['vin'][0]['txinwitness']), 4)
         self.generate(self.nodes[0], 6)
         self.sync_all()
@@ -586,7 +586,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.sync_all()
         # It is standard and would relay.
         txid = wmulti_priv_big.sendtoaddress(w0.getnewaddress(), 9.999)
-        decoded = wmulti_priv_big.decoderawtransaction(wmulti_priv_big.gettransaction(txid)['hex'])
+        decoded = wmulti_priv_big.gettransaction(txid=txid, verbose=True)['decoded']
         # 20 sigs + dummy + witness script
         assert_equal(len(decoded['vin'][0]['txinwitness']), 22)
 
@@ -620,12 +620,8 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 6)
         self.sync_all()
         # It is standard and would relay.
-        txid = multi_priv_big.sendtoaddress(w0.getnewaddress(), 10, "", "",
-                                            True)
-        decoded = multi_priv_big.decoderawtransaction(
-            multi_priv_big.gettransaction(txid)['hex']
-        )
-
+        txid = multi_priv_big.sendtoaddress(w0.getnewaddress(), 10, "", "", True)
+        decoded = multi_priv_big.gettransaction(txid=txid, verbose=True)['decoded']
 
         self.log.info("Amending multisig with new private keys")
         self.nodes[1].createwallet(wallet_name="wmulti_priv3", descriptors=True)

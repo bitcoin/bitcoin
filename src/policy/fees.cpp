@@ -527,7 +527,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator()
     fs::path est_filepath = gArgs.GetDataDirNet() / FEE_ESTIMATES_FILENAME;
     CAutoFile est_file(fsbridge::fopen(est_filepath, "rb"), SER_DISK, CLIENT_VERSION);
     if (est_file.IsNull() || !Read(est_file)) {
-        LogPrintf("Failed to read fee estimates from %s. Continue anyway.\n", est_filepath.string());
+        LogPrintf("Failed to read fee estimates from %s. Continue anyway.\n", fs::PathToString(est_filepath));
     }
 }
 
@@ -549,7 +549,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     if (txHeight != nBestSeenHeight) {
         // Ignore side chains and re-orgs; assuming they are random they don't
         // affect the estimate.  We'll potentially double count transactions in 1-block reorgs.
-        // Ignore txs if BlockPolicyEstimator is not in sync with ::ChainActive().Tip().
+        // Ignore txs if BlockPolicyEstimator is not in sync with ActiveChain().Tip().
         // It will be synced next time a block is processed.
         return;
     }
@@ -887,7 +887,7 @@ void CBlockPolicyEstimator::Flush() {
     fs::path est_filepath = gArgs.GetDataDirNet() / FEE_ESTIMATES_FILENAME;
     CAutoFile est_file(fsbridge::fopen(est_filepath, "wb"), SER_DISK, CLIENT_VERSION);
     if (est_file.IsNull() || !Write(est_file)) {
-        LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", est_filepath.string());
+        LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", fs::PathToString(est_filepath));
     }
 }
 

@@ -31,10 +31,10 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.sync_all()
         assert_array_result(self.nodes[0].listtransactions(),
                             {"txid": txid},
-                            {"category": "send", "amount": Decimal("-0.1"), "confirmations": 0})
+                            {"category": "send", "amount": Decimal("-0.1"), "confirmations": 0, "trusted": True})
         assert_array_result(self.nodes[1].listtransactions(),
                             {"txid": txid},
-                            {"category": "receive", "amount": Decimal("0.1"), "confirmations": 0})
+                            {"category": "receive", "amount": Decimal("0.1"), "confirmations": 0, "trusted": False})
         self.log.info("Test confirmations change after mining a block")
         blockhash = self.generate(self.nodes[0], 1)[0]
         blockheight = self.nodes[0].getblockheader(blockhash)['height']
@@ -203,6 +203,15 @@ class ListTransactionsTest(BitcoinTestFramework):
             assert_equal(n.gettransaction(txid_3)["bip125-replaceable"], "yes")
             assert_equal(n.gettransaction(txid_3b)["bip125-replaceable"], "yes")
             assert_equal(n.gettransaction(txid_4)["bip125-replaceable"], "unknown")
+
+        self.log.info("Test bip125-replaceable status with listsinceblock")
+        for n in self.nodes[0:2]:
+            txs = {tx['txid']: tx['bip125-replaceable'] for tx in n.listsinceblock()['transactions']}
+            assert_equal(txs[txid_1], "no")
+            assert_equal(txs[txid_2], "no")
+            assert_equal(txs[txid_3], "yes")
+            assert_equal(txs[txid_3b], "yes")
+            assert_equal(txs[txid_4], "unknown")
 
         self.log.info("Test mined transactions are no longer bip125-replaceable")
         self.generate(self.nodes[0], 1)

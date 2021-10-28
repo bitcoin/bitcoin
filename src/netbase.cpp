@@ -23,8 +23,6 @@
 
 #ifndef WIN32
 #include <fcntl.h>
-#else
-#include <codecvt>
 #endif
 
 #ifdef USE_POLL

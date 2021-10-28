@@ -7,7 +7,7 @@
 # Check that all logs are terminated with '\n'
 #
 # Some logs are continued over multiple lines. They should be explicitly
-# commented with \* Continued *\
+# commented with /* Continued */
 #
 # There are some instances of LogPrintf() in comments. Those can be
 # ignored

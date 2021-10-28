@@ -19,6 +19,7 @@
 #include <shutdown.h>
 #include <util/check.h>
 #include <util/strencodings.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/tokenpipe.h>
@@ -238,6 +239,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
         daemon_ep.Close();
     }
 #endif
+    SetSyscallSandboxPolicy(SyscallSandboxPolicy::SHUTOFF);
     if (fRet) {
         WaitForShutdown();
     }

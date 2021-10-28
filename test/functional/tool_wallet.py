@@ -31,8 +31,8 @@ class ToolWalletTest(BitcoinTestFramework):
     def bitcoin_wallet_process(self, *args):
         binary = self.config["environment"]["BUILDDIR"] + '/src/bitcoin-wallet' + self.config["environment"]["EXEEXT"]
         default_args = ['-datadir={}'.format(self.nodes[0].datadir), '-chain=%s' % self.chain]
-        if self.options.descriptors and 'create' in args:
-            default_args.append('-descriptors')
+        if not self.options.descriptors and 'create' in args:
+            default_args.append('-legacy')
 
         return subprocess.Popen([binary] + default_args + list(args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
@@ -193,7 +193,7 @@ class ToolWalletTest(BitcoinTestFramework):
         locked_dir = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets")
         error = 'Error initializing wallet database environment "{}"!'.format(locked_dir)
         if self.options.descriptors:
-            error = "SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another bitcoind?"
+            error = f"SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['PACKAGE_NAME']}?"
         self.assert_raises_tool_error(
             error,
             '-wallet=' + self.default_wallet_name,

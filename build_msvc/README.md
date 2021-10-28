@@ -3,67 +3,65 @@ Building Bitcoin Core with Visual Studio
 
 Introduction
 ---------------------
-Solution and project files to build the Bitcoin Core applications `msbuild` or Visual Studio can be found in the `build_msvc` directory. The build has been tested with Visual Studio 2019 (building with earlier versions of Visual Studio should not be expected to work).
+Solution and project files to build Bitcoin Core with `msbuild` or Visual Studio can be found in the `build_msvc` directory. The build has been tested with Visual Studio 2019 (building with earlier versions of Visual Studio should not be expected to work).
 
-Building with Visual Studio is an alternative to the Linux based [cross-compiler build](https://github.com/bitcoin/bitcoin/blob/master/doc/build-windows.md).
+To build Bitcoin Core from the command-line, it is sufficient to only install the Visual Studio Build Tools component.
 
-Quick Start
+Building with Visual Studio is an alternative to the Linux based [cross-compiler build](../doc/build-windows.md).
+
+
+Prerequisites
 ---------------------
-The minimal steps required to build Bitcoin Core with the msbuild toolchain are below. More detailed instructions are contained in the following sections.
+To build [dependencies](../doc/dependencies.md) (except for [Qt](#qt)),
+the default approach is to use the [vcpkg](https://docs.microsoft.com/en-us/cpp/vcpkg) package manager from Microsoft:
 
-```
-cd build_msvc
-py -3 msvc-autogen.py
-msbuild /m bitcoin.sln /p:Platform=x64 /p:Configuration=Release /t:build
-```
+1. [Install](https://vcpkg.io/en/getting-started.html) vcpkg.
 
-Dependencies
----------------------
-A number of [open source libraries](https://github.com/bitcoin/bitcoin/blob/master/doc/dependencies.md) are required in order to be able to build Bitcoin Core.
+2. By default, vcpkg makes both `release` and `debug` builds for each package.
+To save build time and disk space, one could skip `debug` builds (example uses PowerShell):
+```powershell
 
-Options for installing the dependencies in a Visual Studio compatible manner are:
-
-- Use Microsoft's [vcpkg](https://docs.microsoft.com/en-us/cpp/vcpkg) to download the source packages and build locally. This is the recommended approach.
-- Download the source code, build each dependency, add the required include paths, link libraries and binary tools to the Visual Studio project files.
-- Use [nuget](https://www.nuget.org/) packages with the understanding that any binary files have been compiled by an untrusted third party.
-
-The [external dependencies](https://github.com/bitcoin/bitcoin/blob/master/doc/dependencies.md) required for building are listed in the `build_msvc/vcpkg.json` file. To ensure `msbuild` project files automatically install the `vcpkg` dependencies use:
-
-```
-vcpkg integrate install
+Add-Content -Path "vcpkg\triplets\x64-windows-static.cmake" -Value "set(VCPKG_BUILD_TYPE release)"
 ```
 
 Qt
 ---------------------
-In order to build Bitcoin Core a static build of Qt is required. The runtime library version (e.g. v142) and platform type (x86 or x64) must also match.
+To build Bitcoin Core with the GUI, a static build of Qt is required.
 
-Some prebuilt x64 versions of Qt can be downloaded from [here](https://github.com/sipsorcery/qt_win_binary/releases). Please be aware these downloads are NOT officially sanctioned by Bitcoin Core and are provided for developer convenience only. They should NOT be used for builds that will be used in a production environment or with real funds.
+1. Download a single ZIP archive of Qt source code from https://download.qt.io/official_releases/qt/ (e.g., [`qt-everywhere-src-5.12.11.zip`](https://download.qt.io/official_releases/qt/5.12/5.12.11/single/qt-everywhere-src-5.12.11.zip)), and expand it into a dedicated folder. The following instructions assume that this folder is `C:\dev\qt-source`.
 
-To determine which Qt prebuilt version to download open the `.cirrus.yml` file and note the `QT_DOWNLOAD_URL`. When extracting the zip file the destination path must be set to `C:\`. This is due to the way that Qt includes, libraries and tools use internal paths.
+2. Open "x64 Native Tools Command Prompt for VS 2019", and input the following commands:
+```cmd
+cd C:\dev\qt-source
+mkdir build
+cd build
+..\configure -release -silent -opensource -confirm-license -opengl desktop -no-shared -static -static-runtime -mp -qt-zlib -qt-pcre -qt-libpng -no-libjpeg -nomake examples -nomake tests -nomake tools -no-dbus -no-libudev -no-icu -no-gtk -no-opengles3 -no-angle -no-sql-sqlite -no-sql-odbc -no-sqlite -no-libudev -no-vulkan -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcanvas3d -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdeclarative -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquickcontrols -skip qtquickcontrols2 -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebsockets -skip qtwebview -skip qtx11extras -skip qtxmlpatterns -no-openssl -no-feature-sql -no-feature-sqlmodel -prefix C:\Qt_static
+nmake
+nmake install
+```
 
-To build Bitcoin Core without Qt unload or disable the `bitcoin-qt`, `libbitcoin_qt` and `test_bitcoin-qt` projects.
+One could speed up building with [`jom`](https://wiki.qt.io/Jom), a replacement for `nmake` which makes use of all CPU cores.
+
+To build Bitcoin Core without Qt, unload or disable the `bitcoin-qt`, `libbitcoin_qt` and `test_bitcoin-qt` projects.
+
 
 Building
 ---------------------
-The instructions below use `vcpkg` to install the dependencies.
-
-- Install [`vcpkg`](https://github.com/Microsoft/vcpkg).
-
-- Use Python to generate `*.vcxproj` from Makefile
+1. Use Python to generate `*.vcxproj` from Makefile:
 
 ```
 PS >py -3 msvc-autogen.py
 ```
 
-- An optional step is to adjust the settings in the `build_msvc` directory and the `common.init.vcxproj` file. This project file contains settings that are common to all projects such as the runtime library version and target Windows SDK version. The Qt directories can also be set.
+2. An optional step is to adjust the settings in the `build_msvc` directory and the `common.init.vcxproj` file. This project file contains settings that are common to all projects such as the runtime library version and target Windows SDK version. The Qt directories can also be set. To specify a non-default path to a static Qt package directory, use the `QTBASEDIR` environment variable.
 
-- To build from the command line with the Visual Studio 2019 toolchain use:
+3. To build from the command-line with the Visual Studio 2019 toolchain use:
 
+```cmd
+msbuild -property:Configuration=Release -maxCpuCount -verbosity:minimal bitcoin.sln
 ```
-msbuild /m bitcoin.sln /p:Platform=x64 /p:Configuration=Release /t:build
-```
 
-- Alternatively, open the `build_msvc/bitcoin.sln` file in Visual Studio 2019.
+Alternatively, open the `build_msvc/bitcoin.sln` file in Visual Studio 2019.
 
 Security
 ---------------------

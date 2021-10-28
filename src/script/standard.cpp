@@ -266,47 +266,6 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     assert(false);
 }
 
-// TODO: from v23 ("addresses" and "reqSigs" deprecated) "ExtractDestinations" should be removed
-bool ExtractDestinations(const CScript& scriptPubKey, TxoutType& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet)
-{
-    addressRet.clear();
-    std::vector<valtype> vSolutions;
-    typeRet = Solver(scriptPubKey, vSolutions);
-    if (typeRet == TxoutType::NONSTANDARD) {
-        return false;
-    } else if (typeRet == TxoutType::NULL_DATA) {
-        // This is data, not addresses
-        return false;
-    }
-
-    if (typeRet == TxoutType::MULTISIG)
-    {
-        nRequiredRet = vSolutions.front()[0];
-        for (unsigned int i = 1; i < vSolutions.size()-1; i++)
-        {
-            CPubKey pubKey(vSolutions[i]);
-            if (!pubKey.IsValid())
-                continue;
-
-            CTxDestination address = PKHash(pubKey);
-            addressRet.push_back(address);
-        }
-
-        if (addressRet.empty())
-            return false;
-    }
-    else
-    {
-        nRequiredRet = 1;
-        CTxDestination address;
-        if (!ExtractDestination(scriptPubKey, address))
-           return false;
-        addressRet.push_back(address);
-    }
-
-    return true;
-}
-
 namespace {
 class CScriptVisitor
 {

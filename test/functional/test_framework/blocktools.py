@@ -32,13 +32,13 @@ from .script import (
     CScriptNum,
     CScriptOp,
     OP_1,
-    OP_CHECKMULTISIG,
-    OP_CHECKSIG,
     OP_RETURN,
     OP_TRUE,
 )
 from .script_util import (
+    key_to_p2pk_script,
     key_to_p2wpkh_script,
+    keys_to_multisig_script,
     script_to_p2wsh_script,
 )
 from .util import assert_equal
@@ -52,11 +52,6 @@ TIME_GENESIS_BLOCK = 1296688602
 
 # Coinbase transaction outputs can only be spent after this number of new blocks (network rule)
 COINBASE_MATURITY = 100
-
-# Soft-fork activation heights
-DERSIG_HEIGHT = 102  # BIP 66
-CLTV_HEIGHT = 111  # BIP 65
-CSV_ACTIVATION_HEIGHT = 432
 
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
@@ -139,7 +134,7 @@ def create_coinbase(height, pubkey=None, extra_output_script=None, fees=0, nValu
         coinbaseoutput.nValue >>= halvings
         coinbaseoutput.nValue += fees
     if pubkey is not None:
-        coinbaseoutput.scriptPubKey = CScript([pubkey, OP_CHECKSIG])
+        coinbaseoutput.scriptPubKey = key_to_p2pk_script(pubkey)
     else:
         coinbaseoutput.scriptPubKey = CScript([OP_TRUE])
     coinbase.vout = [coinbaseoutput]
@@ -214,7 +209,7 @@ def witness_script(use_p2wsh, pubkey):
         pkscript = key_to_p2wpkh_script(pubkey)
     else:
         # 1-of-1 multisig
-        witness_script = CScript([OP_1, bytes.fromhex(pubkey), OP_1, OP_CHECKMULTISIG])
+        witness_script = keys_to_multisig_script([pubkey])
         pkscript = script_to_p2wsh_script(witness_script)
     return pkscript.hex()
 
@@ -223,7 +218,7 @@ def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
 
     Optionally wrap the segwit output using P2SH."""
     if use_p2wsh:
-        program = CScript([OP_1, bytes.fromhex(pubkey), OP_1, OP_CHECKMULTISIG])
+        program = keys_to_multisig_script([pubkey])
         addr = script_to_p2sh_p2wsh(program) if encode_p2sh else script_to_p2wsh(program)
     else:
         addr = key_to_p2sh_p2wpkh(pubkey) if encode_p2sh else key_to_p2wpkh(pubkey)

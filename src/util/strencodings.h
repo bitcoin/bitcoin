@@ -11,9 +11,12 @@
 
 #include <attributes.h>
 #include <span.h>
+#include <util/string.h>
 
+#include <charconv>
 #include <cstdint>
 #include <iterator>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -66,8 +69,33 @@ std::string EncodeBase32(Span<const unsigned char> input, bool pad = true);
 std::string EncodeBase32(const std::string& str, bool pad = true);
 
 void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut);
-int64_t atoi64(const std::string& str);
-int atoi(const std::string& str);
+
+// LocaleIndependentAtoi is provided for backwards compatibility reasons.
+//
+// New code should use ToIntegral or the ParseInt* functions
+// which provide parse error feedback.
+//
+// The goal of LocaleIndependentAtoi is to replicate the exact defined behaviour
+// of atoi and atoi64 as they behave under the "C" locale.
+template <typename T>
+T LocaleIndependentAtoi(const std::string& str)
+{
+    static_assert(std::is_integral<T>::value);
+    T result;
+    // Emulate atoi(...) handling of white space and leading +/-.
+    std::string s = TrimString(str);
+    if (!s.empty() && s[0] == '+') {
+        if (s.length() >= 2 && s[1] == '-') {
+            return 0;
+        }
+        s = s.substr(1);
+    }
+    auto [_, error_condition] = std::from_chars(s.data(), s.data() + s.size(), result);
+    if (error_condition != std::errc{}) {
+        return 0;
+    }
+    return result;
+}
 
 /**
  * Tests if the given character is a decimal digit.
@@ -92,6 +120,26 @@ constexpr bool IsDigit(char c)
  */
 constexpr inline bool IsSpace(char c) noexcept {
     return c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t' || c == '\v';
+}
+
+/**
+ * Convert string to integral type T. Leading whitespace, a leading +, or any
+ * trailing character fail the parsing. The required format expressed as regex
+ * is `-?[0-9]+`. The minus sign is only permitted for signed integer types.
+ *
+ * @returns std::nullopt if the entire string could not be parsed, or if the
+ *   parsed value is not in the range representable by the type T.
+ */
+template <typename T>
+std::optional<T> ToIntegral(const std::string& str)
+{
+    static_assert(std::is_integral<T>::value);
+    T result;
+    const auto [first_nonmatching, error_condition] = std::from_chars(str.data(), str.data() + str.size(), result);
+    if (first_nonmatching != str.data() + str.size() || error_condition != std::errc{}) {
+        return std::nullopt;
+    }
+    return result;
 }
 
 /**
@@ -135,13 +183,6 @@ constexpr inline bool IsSpace(char c) noexcept {
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
  */
 [[nodiscard]] bool ParseUInt64(const std::string& str, uint64_t *out);
-
-/**
- * Convert string to double with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid double,
- *   false if not the entire string could be parsed or when overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseDouble(const std::string& str, double *out);
 
 /**
  * Convert a span of bytes to a lower-case hexadecimal string.

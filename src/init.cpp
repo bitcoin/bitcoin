@@ -10,12 +10,12 @@
 #include <init.h>
 
 #include <addrman.h>
-#include <amount.h>
 #include <banman.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <compat/sanity.h>
+#include <consensus/amount.h>
 #include <deploymentstatus.h>
 #include <fs.h>
 #include <hash.h>
@@ -26,6 +26,7 @@
 #include <index/txindex.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
+#include <interfaces/init.h>
 #include <interfaces/node.h>
 #include <mapport.h>
 #include <miner.h>
@@ -59,6 +60,7 @@
 #include <util/check.h>
 #include <util/moneystr.h>
 #include <util/string.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <util/thread.h>
 #include <util/threadnames.h>
@@ -111,7 +113,7 @@ static const char* BITCOIN_PID_FILENAME = "bitcoind.pid";
 
 static fs::path GetPidFile(const ArgsManager& args)
 {
-    return AbsPathForConfigVal(fs::path(args.GetArg("-pid", BITCOIN_PID_FILENAME)));
+    return AbsPathForConfigVal(fs::PathFromString(args.GetArg("-pid", BITCOIN_PID_FILENAME)));
 }
 
 [[nodiscard]] static bool CreatePidFile(const ArgsManager& args)
@@ -125,7 +127,7 @@ static fs::path GetPidFile(const ArgsManager& args)
 #endif
         return true;
     } else {
-        return InitError(strprintf(_("Unable to create the PID file '%s': %s"), GetPidFile(args).string(), std::strerror(errno)));
+        return InitError(strprintf(_("Unable to create the PID file '%s': %s"), fs::PathToString(GetPidFile(args)), std::strerror(errno)));
     }
 }
 
@@ -217,7 +219,7 @@ void Shutdown(NodeContext& node)
     node.banman.reset();
     node.addrman.reset();
 
-    if (node.mempool && node.mempool->IsLoaded() && node.args->GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
+    if (node.mempool && node.mempool->IsLoaded() && node.args->GetBoolArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool(*node.mempool);
     }
 
@@ -396,7 +398,7 @@ void SetupServerArgs(ArgsManager& argsman)
         -GetNumCores(), MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-persistmempool", strprintf("Whether to save the mempool on shutdown and load on restart (default: %u)", DEFAULT_PERSIST_MEMPOOL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-pid=<file>", strprintf("Specify pid file. Relative paths will be prefixed by a net-specific datadir location. (default: %s)", BITCOIN_PID_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-prune=<n>", strprintf("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex, -coinstatsindex and -rescan. "
+    argsman.AddArg("-prune=<n>", strprintf("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -coinstatsindex. "
             "Warning: Reverting this setting requires re-downloading the entire blockchain. "
             "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >=%u = automatically prune block files to stay under the specified target size in MiB)", MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex", "Rebuild chain state and block index from the blk*.dat files on disk", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -560,6 +562,10 @@ void SetupServerArgs(ArgsManager& argsman)
     hidden_args.emplace_back("-daemon");
     hidden_args.emplace_back("-daemonwait");
 #endif
+
+#if defined(USE_SYSCALL_SANDBOX)
+    argsman.AddArg("-sandbox=<mode>", "Use the experimental syscall sandbox in the specified mode (-sandbox=log-and-abort or -sandbox=abort). Allow only expected syscalls to be used by bitcoind. Note that this is an experimental new feature that may cause bitcoind to exit or crash unexpectedly: use with caution. In the \"log-and-abort\" mode the invocation of an unexpected syscall results in a debug handler being invoked which will log the incident and terminate the program (without executing the unexpected syscall). In the \"abort\" mode the invocation of an unexpected syscall results in the entire process being killed immediately by the kernel without executing the unexpected syscall.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+#endif // USE_SYSCALL_SANDBOX
 
     // Add the hidden options
     argsman.AddHiddenArgs(hidden_args);
@@ -842,7 +848,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     // if using block pruning, then disallow txindex and coinstatsindex
-    if (args.GetArg("-prune", 0)) {
+    if (args.GetIntArg("-prune", 0)) {
         if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX))
             return InitError(_("Prune mode is incompatible with -txindex."));
         if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX))
@@ -867,11 +873,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     // Make sure enough file descriptors are available
     int nBind = std::max(nUserBind, size_t(1));
-    nUserMaxConnections = args.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
+    nUserMaxConnections = args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
 
-    // Trim requested connection counts, to fit into system limitations
-    // <int> in std::min<int>(...) to work around FreeBSD compilation issue described in #2695
     nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS + MAX_ADDNODE_CONNECTIONS + nBind + NUM_FDS_MESSAGE_CAPTURE);
 
 #ifdef USE_POLL
@@ -879,6 +883,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 #else
     int fd_max = FD_SETSIZE;
 #endif
+    // Trim requested connection counts, to fit into system limitations
+    // <int> in std::min<int>(...) to work around FreeBSD compilation issue described in #2695
     nMaxConnections = std::max(std::min<int>(nMaxConnections, fd_max - nBind - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS - NUM_FDS_MESSAGE_CAPTURE), 0);
     if (nFD < MIN_CORE_FILEDESCRIPTORS)
         return InitError(_("Not enough file descriptors available."));
@@ -914,8 +920,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     // mempool limits
-    int64_t nMempoolSizeMax = args.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
-    int64_t nMempoolSizeMin = args.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
+    int64_t nMempoolSizeMax = args.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    int64_t nMempoolSizeMin = args.GetIntArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
     if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin)
         return InitError(strprintf(_("-maxmempool must be at least %d MB"), std::ceil(nMempoolSizeMin / 1000000.0)));
     // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
@@ -929,7 +935,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
-    int64_t nPruneArg = args.GetArg("-prune", 0);
+    int64_t nPruneArg = args.GetIntArg("-prune", 0);
     if (nPruneArg < 0) {
         return InitError(_("Prune cannot be configured with a negative value."));
     }
@@ -946,12 +952,12 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         fPruneMode = true;
     }
 
-    nConnectTimeout = args.GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
+    nConnectTimeout = args.GetIntArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0) {
         nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
     }
 
-    peer_connect_timeout = args.GetArg("-peertimeout", DEFAULT_PEER_CONNECT_TIMEOUT);
+    peer_connect_timeout = args.GetIntArg("-peertimeout", DEFAULT_PEER_CONNECT_TIMEOUT);
     if (peer_connect_timeout <= 0) {
         return InitError(Untranslated("peertimeout cannot be configured with a negative value."));
     }
@@ -991,31 +997,62 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     if (!chainparams.IsTestChain() && !fRequireStandard) {
         return InitError(strprintf(Untranslated("acceptnonstdtxn is not currently supported for %s chain"), chainparams.NetworkIDString()));
     }
-    nBytesPerSigOp = args.GetArg("-bytespersigop", nBytesPerSigOp);
+    nBytesPerSigOp = args.GetIntArg("-bytespersigop", nBytesPerSigOp);
 
     if (!g_wallet_init_interface.ParameterInteraction()) return false;
 
     fIsBareMultisigStd = args.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
     fAcceptDatacarrier = args.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
-    nMaxDatacarrierBytes = args.GetArg("-datacarriersize", nMaxDatacarrierBytes);
+    nMaxDatacarrierBytes = args.GetIntArg("-datacarriersize", nMaxDatacarrierBytes);
 
     // Option to startup with mocktime set (used for regression testing):
-    SetMockTime(args.GetArg("-mocktime", 0)); // SetMockTime(0) is a no-op
+    SetMockTime(args.GetIntArg("-mocktime", 0)); // SetMockTime(0) is a no-op
 
     if (args.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
         nLocalServices = ServiceFlags(nLocalServices | NODE_BLOOM);
 
-    if (args.GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) < 0)
+    if (args.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) < 0)
         return InitError(Untranslated("rpcserialversion must be non-negative."));
 
-    if (args.GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) > 1)
+    if (args.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) > 1)
         return InitError(Untranslated("Unknown rpcserialversion requested."));
 
-    nMaxTipAge = args.GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
+    nMaxTipAge = args.GetIntArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
     if (args.IsArgSet("-proxy") && args.GetArg("-proxy", "").empty()) {
         return InitError(_("No proxy server specified. Use -proxy=<ip> or -proxy=<ip:port>."));
     }
+
+#if defined(USE_SYSCALL_SANDBOX)
+    if (args.IsArgSet("-sandbox") && !args.IsArgNegated("-sandbox")) {
+        const std::string sandbox_arg{args.GetArg("-sandbox", "")};
+        bool log_syscall_violation_before_terminating{false};
+        if (sandbox_arg == "log-and-abort") {
+            log_syscall_violation_before_terminating = true;
+        } else if (sandbox_arg == "abort") {
+            // log_syscall_violation_before_terminating is false by default.
+        } else {
+            return InitError(Untranslated("Unknown syscall sandbox mode (-sandbox=<mode>). Available modes are \"log-and-abort\" and \"abort\"."));
+        }
+        // execve(...) is not allowed by the syscall sandbox.
+        const std::vector<std::string> features_using_execve{
+            "-alertnotify",
+            "-blocknotify",
+            "-signer",
+            "-startupnotify",
+            "-walletnotify",
+        };
+        for (const std::string& feature_using_execve : features_using_execve) {
+            if (!args.GetArg(feature_using_execve, "").empty()) {
+                return InitError(Untranslated(strprintf("The experimental syscall sandbox feature (-sandbox=<mode>) is incompatible with %s (which uses execve).", feature_using_execve)));
+            }
+        }
+        if (!SetupSyscallSandbox(log_syscall_violation_before_terminating)) {
+            return InitError(Untranslated("Installation of the syscall sandbox failed."));
+        }
+        LogPrintf("Experimental syscall sandbox enabled (-sandbox=%s): bitcoind will terminate if an unexpected (not allowlisted) syscall is invoked.\n", sandbox_arg);
+    }
+#endif // USE_SYSCALL_SANDBOX
 
     return true;
 }
@@ -1025,10 +1062,10 @@ static bool LockDataDirectory(bool probeOnly)
     // Make sure only a single Bitcoin process is using the data directory.
     fs::path datadir = gArgs.GetDataDirNet();
     if (!DirIsWritable(datadir)) {
-        return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), datadir.string()));
+        return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), fs::PathToString(datadir)));
     }
     if (!LockDirectory(datadir, ".lock", probeOnly)) {
-        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running."), datadir.string(), PACKAGE_NAME));
+        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running."), fs::PathToString(datadir), PACKAGE_NAME));
     }
     return true;
 }
@@ -1063,7 +1100,7 @@ bool AppInitLockDataDirectory()
 
 bool AppInitInterfaces(NodeContext& node)
 {
-    node.chain = interfaces::MakeChain(node);
+    node.chain = node.init->makeChain();
     // Create client interfaces for wallets that are supposed to be loaded
     // according to -wallet and -disablewallet options. This only constructs
     // the interfaces, it doesn't load wallet data. Wallets actually get loaded
@@ -1089,18 +1126,18 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
 
     // Warn about relative -datadir path.
-    if (args.IsArgSet("-datadir") && !fs::path(args.GetArg("-datadir", "")).is_absolute()) {
+    if (args.IsArgSet("-datadir") && !fs::PathFromString(args.GetArg("-datadir", "")).is_absolute()) {
         LogPrintf("Warning: relative datadir option '%s' specified, which will be interpreted relative to the " /* Continued */
                   "current working directory '%s'. This is fragile, because if bitcoin is started in the future "
                   "from a different location, it will be unable to locate the current data files. There could "
                   "also be data loss if bitcoin is started while in a temporary directory.\n",
-                  args.GetArg("-datadir", ""), fs::current_path().string());
+                  args.GetArg("-datadir", ""), fs::PathToString(fs::current_path()));
     }
 
     InitSignatureCache();
     InitScriptExecutionCache();
 
-    int script_threads = args.GetArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
+    int script_threads = args.GetIntArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
     if (script_threads <= 0) {
         // -par=0 means autodetect (number of cores - 1 script threads)
         // -par=-n means "leave n cores free" (number of cores - n - 1 script threads)
@@ -1178,20 +1215,20 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         // Read asmap file if configured
         std::vector<bool> asmap;
         if (args.IsArgSet("-asmap")) {
-            fs::path asmap_path = fs::path(args.GetArg("-asmap", ""));
+            fs::path asmap_path = fs::PathFromString(args.GetArg("-asmap", ""));
             if (asmap_path.empty()) {
-                asmap_path = DEFAULT_ASMAP_FILENAME;
+                asmap_path = fs::PathFromString(DEFAULT_ASMAP_FILENAME);
             }
             if (!asmap_path.is_absolute()) {
                 asmap_path = gArgs.GetDataDirNet() / asmap_path;
             }
             if (!fs::exists(asmap_path)) {
-                InitError(strprintf(_("Could not find asmap file %s"), asmap_path));
+                InitError(strprintf(_("Could not find asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
                 return false;
             }
             asmap = DecodeAsmap(asmap_path);
             if (asmap.size() == 0) {
-                InitError(strprintf(_("Could not parse asmap file %s"), asmap_path));
+                InitError(strprintf(_("Could not parse asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
                 return false;
             }
             const uint256 asmap_version = SerializeHash(asmap);
@@ -1207,7 +1244,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     assert(!node.banman);
-    node.banman = std::make_unique<BanMan>(gArgs.GetDataDirNet() / "banlist", &uiInterface, args.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
+    node.banman = std::make_unique<BanMan>(gArgs.GetDataDirNet() / "banlist", &uiInterface, args.GetIntArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);
     node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max()), *node.addrman, args.GetBoolArg("-networkactive", true));
 
@@ -1217,7 +1254,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if (!ignores_incoming_txs) node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
 
     assert(!node.mempool);
-    int check_ratio = std::min<int>(std::max<int>(args.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
+    int check_ratio = std::min<int>(std::max<int>(args.GetIntArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
     node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get(), check_ratio);
 
     assert(!node.chainman);
@@ -1324,7 +1361,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     bool fReindexChainState = args.GetBoolArg("-reindex-chainstate", false);
 
     // cache size calculations
-    int64_t nTotalCache = (args.GetArg("-dbcache", nDefaultDbCache) << 20);
+    int64_t nTotalCache = (args.GetIntArg("-dbcache", nDefaultDbCache) << 20);
     nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
     nTotalCache = std::min(nTotalCache, nMaxDbCache << 20); // total cache cannot be greater than nMaxDbcache
     int64_t nBlockTreeDBCache = std::min(nTotalCache / 8, nMaxBlockDBCache << 20);
@@ -1342,7 +1379,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     nCoinDBCache = std::min(nCoinDBCache, nMaxCoinsDBCache << 20); // cap total coins db cache
     nTotalCache -= nCoinDBCache;
     int64_t nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
-    int64_t nMempoolSizeMax = args.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    int64_t nMempoolSizeMax = args.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     LogPrintf("Cache configuration:\n");
     LogPrintf("* Using %.1f MiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
@@ -1498,7 +1535,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 for (CChainState* chainstate : chainman.GetAll()) {
                     if (!is_coinsview_empty(chainstate)) {
                         uiInterface.InitMessage(_("Verifying blocks…").translated);
-                        if (fHavePruned && args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
+                        if (fHavePruned && args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
                             LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
                                 MIN_BLOCKS_TO_KEEP);
                         }
@@ -1515,8 +1552,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
                         if (!CVerifyDB().VerifyDB(
                                 *chainstate, chainparams, chainstate->CoinsDB(),
-                                args.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
-                                args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
+                                args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL),
+                                args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
                             strLoadError = _("Corrupted block database detected");
                             failed_verification = true;
                             break;
@@ -1566,6 +1603,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
+        if (const auto error{CheckLegacyTxindex(*Assert(chainman.m_blockman.m_block_tree_db))}) {
+            return InitError(*error);
+        }
+
         g_txindex = std::make_unique<TxIndex>(nTxIndexCache, false, fReindex);
         if (!g_txindex->Start(chainman.ActiveChainstate())) {
             return false;
@@ -1612,11 +1653,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // ********************************************************* Step 11: import blocks
 
     if (!CheckDiskSpace(gArgs.GetDataDirNet())) {
-        InitError(strprintf(_("Error: Disk space is low for %s"), gArgs.GetDataDirNet()));
+        InitError(strprintf(_("Error: Disk space is low for %s"), fs::quoted(fs::PathToString(gArgs.GetDataDirNet()))));
         return false;
     }
     if (!CheckDiskSpace(gArgs.GetBlocksDirPath())) {
-        InitError(strprintf(_("Error: Disk space is low for %s"), gArgs.GetBlocksDirPath()));
+        InitError(strprintf(_("Error: Disk space is low for %s"), fs::quoted(fs::PathToString(gArgs.GetBlocksDirPath()))));
         return false;
     }
 
@@ -1644,7 +1685,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     std::vector<fs::path> vImportFiles;
     for (const std::string& strFile : args.GetArgs("-loadblock")) {
-        vImportFiles.push_back(strFile);
+        vImportFiles.push_back(fs::PathFromString(strFile));
     }
 
     chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &chainman, &args] {
@@ -1704,11 +1745,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     connOptions.uiInterface = &uiInterface;
     connOptions.m_banman = node.banman.get();
     connOptions.m_msgproc = node.peerman.get();
-    connOptions.nSendBufferMaxSize = 1000 * args.GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
-    connOptions.nReceiveFloodSize = 1000 * args.GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
+    connOptions.nSendBufferMaxSize = 1000 * args.GetIntArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
+    connOptions.nReceiveFloodSize = 1000 * args.GetIntArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
     connOptions.m_added_nodes = args.GetArgs("-addnode");
 
-    connOptions.nMaxOutboundLimit = 1024 * 1024 * args.GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET);
+    connOptions.nMaxOutboundLimit = 1024 * 1024 * args.GetIntArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET);
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
 
     for (const std::string& bind_arg : args.GetArgs("-bind")) {

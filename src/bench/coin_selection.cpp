@@ -33,7 +33,6 @@ static void CoinSelection(benchmark::Bench& bench)
     NodeContext node;
     auto chain = interfaces::MakeChain(node);
     CWallet wallet(chain.get(), "", CreateDummyWalletDatabase());
-    wallet.SetupLegacyScriptPubKeyMan();
     std::vector<std::unique_ptr<CWalletTx>> wtxs;
     LOCK(wallet.cs_wallet);
 
@@ -65,10 +64,6 @@ static void CoinSelection(benchmark::Bench& bench)
 }
 
 typedef std::set<CInputCoin> CoinSet;
-static NodeContext testNode;
-static auto testChain = interfaces::MakeChain(testNode);
-static CWallet testWallet(testChain.get(), "", CreateDummyWalletDatabase());
-std::vector<std::unique_ptr<CWalletTx>> wtxn;
 
 // Copied from src/wallet/test/coinselector_tests.cpp
 static void add_coin(const CAmount& nValue, int nInput, std::vector<OutputGroup>& set)
@@ -76,10 +71,9 @@ static void add_coin(const CAmount& nValue, int nInput, std::vector<OutputGroup>
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    std::unique_ptr<CWalletTx> wtx = std::make_unique<CWalletTx>(MakeTransactionRef(std::move(tx)));
+    CInputCoin coin(MakeTransactionRef(tx), nInput);
     set.emplace_back();
-    set.back().Insert(COutput(testWallet, *wtx, nInput, 0, true, true, true).GetInputCoin(), 0, true, 0, 0, false);
-    wtxn.emplace_back(std::move(wtx));
+    set.back().Insert(coin, 0, true, 0, 0, false);
 }
 // Copied from src/wallet/test/coinselector_tests.cpp
 static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)
@@ -97,7 +91,6 @@ static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)
 static void BnBExhaustion(benchmark::Bench& bench)
 {
     // Setup
-    testWallet.SetupLegacyScriptPubKeyMan();
     std::vector<OutputGroup> utxo_pool;
     CoinSet selection;
     CAmount value_ret = 0;
