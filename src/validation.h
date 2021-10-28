@@ -427,20 +427,16 @@ public:
 
     std::unique_ptr<CBlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
 
-    bool LoadBlockIndexDB(std::set<CBlockIndex*, CBlockIndexWorkComparator>& setBlockIndexCandidates) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool LoadBlockIndexDB(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
      * Load the blocktree off disk and into memory. Populate certain metadata
      * per index entry (nStatus, nChainWork, nTimeMax, etc.) as well as peripheral
      * collections like setDirtyBlockIndex.
-     *
-     * @param[out] block_index_candidates  Fill this set with any valid blocks for
-     *                                     which we've downloaded all transactions.
      */
     bool LoadBlockIndex(
         const Consensus::Params& consensus_params,
-        std::set<CBlockIndex*, CBlockIndexWorkComparator>& block_index_candidates)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+        ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Clear all data members. */
     void Unload() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -625,6 +621,10 @@ public:
      * std::nullopt if this chainstate was not created from a snapshot.
      */
     const std::optional<uint256> m_from_snapshot_blockhash;
+
+    //! Return true if this chainstate relies on blocks that are assumed-valid. In
+    //! practice this means it was created based on a UTXO snapshot.
+    bool reliesOnAssumedValid() { return m_from_snapshot_blockhash.has_value(); }
 
     /**
      * The set of all CBlockIndex entries with either BLOCK_VALID_TRANSACTIONS (for
