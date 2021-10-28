@@ -567,6 +567,7 @@ public:
     using Options = kernel::MemPoolOptions;
 
     const int64_t m_max_size_bytes;
+    const std::chrono::seconds m_expiry;
 
     /** Create a new CTxMemPool.
      * Sanity checks will be off by default for performance, because otherwise
