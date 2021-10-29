@@ -883,12 +883,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 
 void CBlockPolicyEstimator::Flush() {
     FlushUnconfirmed();
-
-    fs::path est_filepath = gArgs.GetDataDirNet() / FEE_ESTIMATES_FILENAME;
-    CAutoFile est_file(fsbridge::fopen(est_filepath, "wb"), SER_DISK, CLIENT_VERSION);
-    if (est_file.IsNull() || !Write(est_file)) {
-        LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", est_filepath.string());
-    }
+    Write();
 }
 
 bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
@@ -911,6 +906,17 @@ bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
     }
     catch (const std::exception&) {
         LogPrintf("CBlockPolicyEstimator::Write(): unable to write policy estimator data (non-fatal)\n");
+        return false;
+    }
+    return true;
+}
+
+bool CBlockPolicyEstimator::Write() const
+{
+    fs::path est_filepath = gArgs.GetDataDirNet() / FEE_ESTIMATES_FILENAME;
+    CAutoFile est_file(fsbridge::fopen(est_filepath, "wb"), SER_DISK, CLIENT_VERSION);
+    if (est_file.IsNull() || !Write(est_file)) {
+        LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", est_filepath.string());
         return false;
     }
     return true;
