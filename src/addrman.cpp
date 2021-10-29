@@ -171,7 +171,7 @@ void AddrManImpl::Serialize(Stream& s_) const
 
     // Increment `lowest_compatible` iff a newly introduced format is incompatible with
     // the previous one.
-    static constexpr uint8_t lowest_compatible = Format::V3_BIP155;
+    static constexpr uint8_t lowest_compatible = Format::V4_MULTIPORT;
     s << static_cast<uint8_t>(INCOMPATIBILITY_BASE + lowest_compatible);
 
     s << nKey;
