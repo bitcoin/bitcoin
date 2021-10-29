@@ -1912,7 +1912,7 @@ if test x$need_bundled_univalue = xyes; then
 fi
 
 if test x$system_libsecp256k1 = xno; then
-ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --enable-module-schnorrsig --enable-experimental"
+ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --enable-module-schnorrsig --enable-experimental --disable-openssl-tests"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 fi
 
