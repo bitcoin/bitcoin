@@ -2854,6 +2854,9 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 
         walletInstance->InitWalletFlags(wallet_creation_flags);
 
+        // Set USES_KEYMAN to prevent auto upgrade from trying to auto upgrade (previously) blank wallets that had imported things
+        walletInstance->SetWalletFlag(WALLET_FLAG_USES_KEYMAN);
+
         // Only create LegacyScriptPubKeyMan when not descriptor wallet
         if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
             walletInstance->SetupLegacyScriptPubKeyMan();
@@ -3449,45 +3452,33 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
     }
 }
 
-void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
-{
-    AssertLockHeld(cs_wallet);
-
-    for (bool internal : {false, true}) {
-        for (OutputType t : OUTPUT_TYPES) {
-            auto spk_manager = std::make_unique<DescriptorScriptPubKeyMan>(*this, m_keyman);
-            if (IsCrypted()) {
-                if (IsLocked()) {
-                    throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
-                }
-                if (!spk_manager->CheckDecryptionKey(vMasterKey) && !spk_manager->Encrypt(vMasterKey, nullptr)) {
-                    throw std::runtime_error(std::string(__func__) + ": Could not encrypt new descriptors");
-                }
-            }
-            spk_manager->SetupDescriptorGeneration(master_key, t, internal);
-            uint256 id = spk_manager->GetID();
-            m_spk_managers[id] = std::move(spk_manager);
-            AddActiveScriptPubKeyMan(id, t, internal);
-        }
-    }
-}
-
 void CWallet::SetupDescriptorScriptPubKeyMans()
 {
     AssertLockHeld(cs_wallet);
 
     if (!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
-        // Make a seed
-        CKey seed_key;
-        seed_key.MakeNewKey(true);
-        CPubKey seed = seed_key.GetPubKey();
-        assert(seed_key.VerifyPubKey(seed));
+        {
+            LOCK(m_keyman.cs_keyman);
+            m_keyman.GenerateAndSetHDKey();
+        }
 
-        // Get the extended key
-        CExtKey master_key;
-        master_key.SetSeed(seed_key);
-
-        SetupDescriptorScriptPubKeyMans(master_key);
+        for (bool internal : {false, true}) {
+            for (OutputType t : OUTPUT_TYPES) {
+                auto spk_manager = std::make_unique<DescriptorScriptPubKeyMan>(*this, m_keyman);
+                if (IsCrypted()) {
+                    if (IsLocked()) {
+                        throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
+                    }
+                    if (!spk_manager->CheckDecryptionKey(vMasterKey) && !spk_manager->Encrypt(vMasterKey, nullptr)) {
+                        throw std::runtime_error(std::string(__func__) + ": Could not encrypt new descriptors");
+                    }
+                }
+                spk_manager->SetupDescriptorGeneration(t, internal);
+                uint256 id = spk_manager->GetID();
+                m_spk_managers[id] = std::move(spk_manager);
+                AddActiveScriptPubKeyMan(id, t, internal);
+            }
+        }
     } else {
         ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
 
@@ -3792,13 +3783,13 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
     // Setup new descriptors
     SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
     if (!IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        // Use the existing master key if we have it
         if (data.master_key.key.IsValid()) {
-            SetupDescriptorScriptPubKeyMans(data.master_key);
-        } else {
-            // Setup with a new seed if we don't.
-            SetupDescriptorScriptPubKeyMans();
+            // Use the existing master key if we have it
+            LOCK(m_keyman.cs_keyman);
+            WalletBatch batch(GetDatabase());
+            m_keyman.AddHDKey(batch, data.master_key, data.master_key.Neuter());
         }
+        SetupDescriptorScriptPubKeyMans();
     }
 
     // Check if the transactions in the wallet are still ours. Either they belong here, or they belong in the watchonly wallet.

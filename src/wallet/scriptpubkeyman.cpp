@@ -2170,9 +2170,9 @@ void DescriptorScriptPubKeyMan::AddDescriptorKey(const CKey& key, const CPubKey 
     m_set_stored_keys.insert(pubkey.GetID());
 }
 
-bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_key, OutputType addr_type, bool internal)
+bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(OutputType addr_type, bool internal)
 {
-    LOCK(cs_desc_man);
+    LOCK2(cs_desc_man, m_keyman.cs_keyman);
     assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
 
     // Ignore when there is already a descriptor
@@ -2181,6 +2181,10 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     }
 
     int64_t creation_time = GetTime();
+
+    std::optional<CExtKey> extkey = m_keyman.GetActiveHDKey();
+    assert(extkey != std::nullopt);
+    CExtKey& master_key = extkey.value();
 
     std::string xpub = EncodeExtPubKey(master_key.Neuter());
 

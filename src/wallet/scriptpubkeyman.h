@@ -583,7 +583,7 @@ public:
     bool IsHDEnabled() const override;
 
     //! Setup descriptors based on the given CExtkey
-    bool SetupDescriptorGeneration(const CExtKey& master_key, OutputType addr_type, bool internal);
+    bool SetupDescriptorGeneration(OutputType addr_type, bool internal);
 
     /** Provide a descriptor at setup time
     * Returns false if already setup or setup fails, true if setup is successful
