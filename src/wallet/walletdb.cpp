@@ -799,7 +799,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = ErrorString(res).original;
                 return false;
             }
-            wss.m_descriptor_keys.insert(std::make_pair(std::make_pair(desc_id, res->GetPubKey().GetID()), res.value()));
+            if (!pwallet->IsWalletFlagSet(WALLET_FLAG_USES_KEYMAN)) {
+                wss.m_descriptor_keys.insert(std::make_pair(std::make_pair(desc_id, res->GetPubKey().GetID()), res.value()));
+            }
         } else if (strType == DBKeys::WALLETDESCRIPTORCKEY) {
             uint256 desc_id;
             CPubKey pubkey;
@@ -814,7 +816,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> privkey;
             wss.nCKeys++;
 
-            wss.m_descriptor_crypt_keys.insert(std::make_pair(std::make_pair(desc_id, pubkey.GetID()), std::make_pair(pubkey, privkey)));
+            if (!pwallet->IsWalletFlagSet(WALLET_FLAG_USES_KEYMAN)) {
+                wss.m_descriptor_crypt_keys.insert(std::make_pair(std::make_pair(desc_id, pubkey.GetID()), std::make_pair(pubkey, privkey)));
+            }
             wss.fIsEncrypted = true;
         } else if (strType == DBKeys::LOCKED_UTXO) {
             uint256 hash;
@@ -1080,6 +1084,8 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             }
         }
     }
+
+    // TODO: Upgrade to using KeyMan
 
     return result;
 }
