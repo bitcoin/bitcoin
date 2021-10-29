@@ -85,6 +85,7 @@ const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
     "importwallet", // avoid reading from disk
     "loadtxoutset",   // avoid reading from disk
     "loadwallet",   // avoid reading from disk
+    "savefeeestimates",      // disabled as a precautionary measure: may take a file path argument in the future
     "savemempool",           // disabled as a precautionary measure: may take a file path argument in the future
     "setban",                // avoid DNS lookups
     "stop",                  // avoid shutdown state
