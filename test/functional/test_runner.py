@@ -185,6 +185,7 @@ BASE_SCRIPTS = [
     'wallet_fast_rescan.py --descriptors',
     'wallet_gethdkeys.py --descriptors',
     'wallet_createwalletdescriptor.py --descriptors',
+    'feature_fee_estimates_persist.py',
     'interface_zmq.py',
     'rpc_invalid_address_message.py',
     'rpc_validateaddress.py',
