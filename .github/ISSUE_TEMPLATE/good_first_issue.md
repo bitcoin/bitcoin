@@ -1,6 +1,6 @@
 ---
 name: Good first issue
-about: '(Regular devs only): Suggest a new good first issue'
+about: "(Regular devs only): Suggest a new good first issue"
 title: ''
 labels: good first issue
 assignees: ''
