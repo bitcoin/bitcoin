@@ -14,6 +14,7 @@
 #include <key_io.h>
 #include <node/context.h>
 #include <outputtype.h>
+#include <policy/fees.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
@@ -333,6 +334,31 @@ static RPCHelpMan verifymessage()
     }
 
     return false;
+},
+    };
+}
+
+static RPCHelpMan savefeeestimates()
+{
+    return RPCHelpMan{"savefeeestimates",
+                "\nDumps the fee estimates to disk. It will fail until the previous dump is fully loaded.\n",
+                {},
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("savefeeestimates", "")
+            + HelpExampleRpc("savefeeestimates", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    static Mutex dump_mutex;
+    LOCK(dump_mutex);
+    CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
+
+    if (!fee_estimator.Write()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Unable to dump fee estimates to disk");
+    }
+
+    return NullUniValue;
 },
     };
 }
@@ -790,6 +816,7 @@ static const CRPCCommand commands[] =
     { "util",               &deriveaddresses,         },
     { "util",               &getdescriptorinfo,       },
     { "util",               &verifymessage,           },
+    { "util",               &savefeeestimates,        },
     { "util",               &signmessagewithprivkey,  },
     { "util",               &getindexinfo,            },
 
