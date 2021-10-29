@@ -822,6 +822,39 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssKey >> hash;
             ssKey >> n;
             pwallet->LockCoin(COutPoint(hash, n));
+        } else if (strType == DBKeys::ACTIVEHDKEY) {
+            CExtPubKey extpub;
+            std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
+            ssValue >> xpub;
+            extpub.Decode(xpub.data());
+            pwallet->GetKeyManager().LoadActiveHDKey(extpub);
+        } else if (strType == DBKeys::HDPUBKEY) {
+            CExtPubKey extpub;
+            std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
+            ssKey >> xpub;
+            extpub.Decode(xpub.data());
+            pwallet->GetKeyManager().LoadHDKey(extpub.pubkey.GetID(), extpub);
+        } else if (strType == DBKeys::KEYMAN_KEY) {
+            auto res = DeserializeKeyWithHash(pwallet, ssKey, ssValue, wss);
+            if (!res) {
+                strErr = ErrorString(res).original;
+                return false;
+            }
+            pwallet->GetKeyManager().LoadKey(res->GetPubKey().GetID(), res.value());
+        } else if (strType == DBKeys::KEYMAN_CKEY) {
+            CPubKey pubkey;
+            ssKey >> pubkey;
+            if (!pubkey.IsValid())
+            {
+                strErr = "Error reading wallet database: CPubKey corrupt";
+                return false;
+            }
+            std::vector<unsigned char> privkey;
+            ssValue >> privkey;
+            wss.nCKeys++;
+
+            pwallet->GetKeyManager().LoadCryptedKey(pubkey.GetID(), pubkey, privkey);
+            wss.fIsEncrypted = true;
         } else if (strType != DBKeys::BESTBLOCK && strType != DBKeys::BESTBLOCK_NOMERKLE &&
                    strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
                    strType != DBKeys::VERSION && strType != DBKeys::SETTINGS &&
