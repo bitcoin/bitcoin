@@ -1679,11 +1679,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 governance.reset();
                 governance.reset(new CGovernanceManager(*node.chainman));
                 llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, *node.chainman, fReindexGeth);
-                passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReindexGeth));
-                passetnftdb.reset(new CAssetNFTDB(nCoinDBCache*16, false, fReindexGeth));
-                pnevmtxrootsdb.reset(new CNEVMTxRootsDB(nCoinDBCache, false, fReindexGeth));
-                pnevmtxmintdb.reset(new CNEVMMintedTxDB(nCoinDBCache, false, fReindexGeth));
-                pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReindexGeth));
+                passetdb.reset(new CAssetDB(nEvoDbCache, false, fReindexGeth));
+                passetnftdb.reset(new CAssetNFTDB(nEvoDbCache, false, fReindexGeth));
+                pnevmtxrootsdb.reset(new CNEVMTxRootsDB(nEvoDbCache, false, fReindexGeth));
+                pnevmtxmintdb.reset(new CNEVMMintedTxDB(nEvoDbCache, false, fReindexGeth));
+                pblockindexdb.reset(new CBlockIndexDB(nEvoDbCache, false, fReindexGeth));
                 if (!evoDb->CommitRootTransaction()) {
                     strLoadError = _("Failed to commit EvoDB");
                     break;
