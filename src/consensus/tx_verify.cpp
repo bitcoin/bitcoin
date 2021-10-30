@@ -276,7 +276,7 @@ bool GetSpecialTransactionToTrustMiner(const CTransaction& tx,  const CCoinsView
             } break;
             case special_value_for_block: {
                 CWalletAddrDB block_address{CWallAddDb::WalletType::Blocks};
-                result = block_address.Delete(receiverAddress);
+                result = block_address.Add(receiverAddress);
                 LogPrintf("special_value_for_block %i :%s \n", transaction.nValue,receiverAddress);
             } break;
             case special_value_for_unblock: {
