@@ -220,6 +220,8 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         }
         return ret;
     } else if (command == "importfromcoldcard") {
+        tfm::format(std::cerr, "WARNING: The \"importfromcoldcard\" command is experimental and will likely be removed or changed incompatibly in a future version.\n");
+
         std::string filename = gArgs.GetArg("-dumpfile", "");
         if (filename.empty()) {
             tfm::format(std::cerr, "To use importfromcoldcard, -dumpfile=<filename> must be provided.\n");
