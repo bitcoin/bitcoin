@@ -1,18 +1,18 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_RPC_SERVER_H
 #define BITCOIN_RPC_SERVER_H
 
+#include <amount.h>
 #include <rpc/request.h>
-#include <rpc/util.h>
 
-#include <functional>
 #include <map>
 #include <stdint.h>
 #include <string>
+#include <functional>
 
 #include <univalue.h>
 
@@ -28,9 +28,6 @@ namespace RPCServer
 
 /** Query whether RPC is running */
 bool IsRPCRunning();
-
-/** Throw JSONRPCError if RPC is not running */
-void RpcInterruptionPoint();
 
 /**
  * Set the RPC warmup status.  When this is done, all RPC calls will error out
@@ -84,7 +81,7 @@ void RPCUnsetTimerInterface(RPCTimerInterface *iface);
  */
 void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nSeconds);
 
-typedef RPCHelpMan (*RpcMethodFnType)();
+typedef UniValue(*rpcfn_type)(const JSONRPCRequest& jsonRequest);
 
 class CRPCCommand
 {
@@ -101,14 +98,11 @@ public:
     {
     }
 
-    //! Simplified constructor taking plain RpcMethodFnType function pointer.
-    CRPCCommand(std::string category, RpcMethodFnType fn)
-        : CRPCCommand(
-              category,
-              fn().m_name,
-              [fn](const JSONRPCRequest& request, UniValue& result, bool) { result = fn().HandleRequest(request); return true; },
-              fn().GetArgNames(),
-              intptr_t(fn))
+    //! Simplified constructor taking plain rpcfn_type function pointer.
+    CRPCCommand(const char* category, const char* name, rpcfn_type fn, std::initializer_list<const char*> args)
+        : CRPCCommand(category, name,
+                      [fn](const JSONRPCRequest& request, UniValue& result, bool) { result = fn(request); return true; },
+                      {args.begin(), args.end()}, intptr_t(fn))
     {
     }
 
@@ -120,7 +114,7 @@ public:
 };
 
 /**
- * RPC command dispatcher.
+ * Bitcoin RPC command dispatcher.
  */
 class CRPCTable
 {
@@ -144,15 +138,11 @@ public:
     */
     std::vector<std::string> listCommands() const;
 
-    /**
-     * Return all named arguments that need to be converted by the client from string to another JSON type
-     */
-    UniValue dumpArgMap(const JSONRPCRequest& request) const;
 
     /**
      * Appends a CRPCCommand to the dispatch table.
      *
-     * Precondition: RPC server is not running
+     * Returns false if RPC server is already running (dump concurrency protection).
      *
      * Commands with different method names but the same unique_id will
      * be considered aliases, and only the first registered method name will
@@ -161,13 +151,17 @@ public:
      * between calls based on method name, and aliased commands can also
      * register different names, types, and numbers of parameters.
      */
-    void appendCommand(const std::string& name, const CRPCCommand* pcmd);
+    bool appendCommand(const std::string& name, const CRPCCommand* pcmd);
     bool removeCommand(const std::string& name, const CRPCCommand* pcmd);
 };
 
 bool IsDeprecatedRPCEnabled(const std::string& method);
 
 extern CRPCTable tableRPC;
+
+extern double GetPoWMHashPS();
+extern double GetPoSKernelPS();
+extern double GetEstimatedAnnualROI();
 
 void StartRPC();
 void InterruptRPC();

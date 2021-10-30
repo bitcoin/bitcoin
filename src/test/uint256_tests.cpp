@@ -1,21 +1,19 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
 #include <streams.h>
-#include <test/util/setup_common.h>
 #include <uint256.h>
 #include <version.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
-
-#include <iomanip>
 #include <sstream>
+#include <iomanip>
 #include <string>
-#include <vector>
 
-BOOST_AUTO_TEST_SUITE(uint256_tests)
+BOOST_FIXTURE_TEST_SUITE(uint256_tests, BasicTestingSetup)
 
 const unsigned char R1Array[] =
     "\x9c\x52\x4a\xdb\xcf\x56\x11\x12\x2b\x29\x12\x5e\x5d\x35\xd2\xd2"
@@ -277,12 +275,6 @@ BOOST_AUTO_TEST_CASE( operator_with_self )
     BOOST_CHECK(v == UintToArith256(uint256S("02")));
     v -= v;
     BOOST_CHECK(v == UintToArith256(uint256S("0")));
-}
-
-BOOST_AUTO_TEST_CASE( check_ONE )
-{
-    uint256 one = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
-    BOOST_CHECK_EQUAL(one, uint256::ONE);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

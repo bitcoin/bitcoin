@@ -114,12 +114,6 @@
              <iconset resource="../bitcoin.qrc">
               <normaloff>:/icons/receiving_addresses</normaloff>:/icons/receiving_addresses</iconset>
             </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-            <property name="default">
-             <bool>true</bool>
-            </property>
            </widget>
           </item>
           <item>
@@ -143,6 +137,18 @@
             <property name="autoDefault">
              <bool>false</bool>
             </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="addressTypeSelector">
+            <property name="sizeAdjustPolicy">
+             <enum>QComboBox::AdjustToContents</enum>
+            </property>
+            <item>
+             <property name="text">
+              <string>(none)</string>
+             </property>
+            </item>
            </widget>
           </item>
           <item>
@@ -191,31 +197,6 @@
             </property>
             <property name="toolTip">
              <string>An optional amount to request. Leave this empty or zero to not request a specific amount.</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="useBech32">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>1000</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="focusPolicy">
-             <enum>Qt::StrongFocus</enum>
-            </property>
-            <property name="toolTip">
-             <string>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</string>
-            </property>
-            <property name="text">
-             <string>Generate native segwit (Bech32) address</string>
             </property>
            </widget>
           </item>
@@ -366,10 +347,10 @@
  <tabstops>
   <tabstop>reqLabel</tabstop>
   <tabstop>reqAmount</tabstop>
-  <tabstop>useBech32</tabstop>
   <tabstop>reqMessage</tabstop>
   <tabstop>receiveButton</tabstop>
   <tabstop>clearButton</tabstop>
+  <tabstop>addressTypeSelector</tabstop>
   <tabstop>recentRequestsView</tabstop>
   <tabstop>showRequestButton</tabstop>
   <tabstop>removeRequestButton</tabstop>

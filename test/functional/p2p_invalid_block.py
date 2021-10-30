@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid blocks.
@@ -9,20 +9,14 @@ In this test we connect to one node over p2p, and test block requests:
 2) Invalid block with duplicated transaction should be re-requested.
 3) Invalid block with bad coinbase value should be rejected and not
 re-requested.
-4) Invalid block due to future timestamp is later accepted when that timestamp
-becomes valid.
 """
 import copy
-import time
 
 from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script
 from test_framework.messages import COIN
-from test_framework.p2p import P2PDataStore
+from test_framework.mininode import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
-
-MAX_FUTURE_BLOCK_TIME = 2 * 60 * 60
-
 
 class InvalidBlockRequestTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -33,7 +27,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
     def run_test(self):
         # Add p2p connection to node0
         node = self.nodes[0]  # convenience reference to the node
-        peer = node.add_p2p_connection(P2PDataStore())
+        node.add_p2p_connection(P2PDataStore())
 
         best_block = node.getblock(node.getbestblockhash())
         tip = int(node.getbestblockhash(), 16)
@@ -48,10 +42,10 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         # Save the coinbase for later
         block1 = block
         tip = block.sha256
-        peer.send_blocks_and_test([block1], node, success=True)
+        node.p2p.send_blocks_and_test([block1], node, success=True)
 
         self.log.info("Mature the block.")
-        self.generatetoaddress(node, 100, node.get_deterministic_priv_key().address)
+        node.generatetoaddress(100, node.get_deterministic_priv_key().address)
 
         best_block = node.getblock(node.getbestblockhash())
         tip = int(node.getbestblockhash(), 16)
@@ -86,7 +80,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         assert_equal(orig_hash, block2.rehash())
         assert block2_orig.vtx != block2.vtx
 
-        peer.send_blocks_and_test([block2], node, success=False, reject_reason='bad-txns-duplicate')
+        node.p2p.send_blocks_and_test([block2], node, success=False, reject_reason='bad-txns-duplicate')
 
         # Check transactions for duplicate inputs (CVE-2018-17144)
         self.log.info("Test duplicate input block.")
@@ -97,7 +91,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         block2_dup.hashMerkleRoot = block2_dup.calc_merkle_root()
         block2_dup.rehash()
         block2_dup.solve()
-        peer.send_blocks_and_test([block2_dup], node, success=False, reject_reason='bad-txns-inputs-duplicate')
+        node.p2p.send_blocks_and_test([block2_dup], node, success=False, reject_reason='bad-txns-inputs-duplicate')
 
         self.log.info("Test very broken block.")
 
@@ -110,14 +104,14 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         block3.rehash()
         block3.solve()
 
-        peer.send_blocks_and_test([block3], node, success=False, reject_reason='bad-cb-amount')
+        node.p2p.send_blocks_and_test([block3], node, success=False, reject_reason='bad-cb-amount')
 
 
         # Complete testing of CVE-2012-2459 by sending the original block.
         # It should be accepted even though it has the same hash as the mutated one.
 
         self.log.info("Test accepting original block after rejecting its mutated version.")
-        peer.send_blocks_and_test([block2_orig], node, success=True, timeout=5)
+        node.p2p.send_blocks_and_test([block2_orig], node, success=True, timeout=5)
 
         # Update tip info
         height += 1
@@ -137,20 +131,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         block4.rehash()
         block4.solve()
         self.log.info("Test inflation by duplicating input")
-        peer.send_blocks_and_test([block4], node, success=False,  reject_reason='bad-txns-inputs-duplicate')
-
-        self.log.info("Test accepting identical block after rejecting it due to a future timestamp.")
-        t = int(time.time())
-        node.setmocktime(t)
-        # Set block time +1 second past max future validity
-        block = create_block(tip, create_coinbase(height), t + MAX_FUTURE_BLOCK_TIME + 1)
-        block.hashMerkleRoot = block.calc_merkle_root()
-        block.solve()
-        # Need force_send because the block will get rejected without a getdata otherwise
-        peer.send_blocks_and_test([block], node, force_send=True, success=False, reject_reason='time-too-new')
-        node.setmocktime(t + 1)
-        peer.send_blocks_and_test([block], node, success=True)
-
+        node.p2p.send_blocks_and_test([block4], node, success=False,  reject_reason='bad-txns-inputs-duplicate')
 
 if __name__ == '__main__':
     InvalidBlockRequestTest().main()

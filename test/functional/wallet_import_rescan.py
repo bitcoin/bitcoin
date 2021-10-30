@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test wallet import RPCs.
@@ -8,12 +8,12 @@ Test rescan behavior of importaddress, importpubkey, importprivkey, and
 importmulti RPCs with different types of keys and rescan options.
 
 In the first part of the test, node 0 creates an address for each type of
-import RPC call and sends BTC to it. Then other nodes import the addresses,
+import RPC call and sends BSK to it. Then other nodes import the addresses,
 and the test makes listtransactions and getbalance calls to confirm that the
 importing node either did or did not execute rescans picking up the send
 transactions.
 
-In the second part of the test, node 0 sends more BTC to each address, and the
+In the second part of the test, node 0 sends more BSK to each address, and the
 test makes more listtransactions and getbalance calls to confirm that the
 importing nodes pick up the new transactions regardless of whether rescans
 happened previously.
@@ -22,6 +22,7 @@ happened previously.
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.address import AddressType
 from test_framework.util import (
+    connect_nodes,
     assert_equal,
     set_node_times,
 )
@@ -39,6 +40,7 @@ Rescan = enum.Enum("Rescan", "no yes late_timestamp")
 
 class Variant(collections.namedtuple("Variant", "call data address_type rescan prune")):
     """Helper for importing one key and verifying scanned transactions."""
+
     def do_import(self, timestamp):
         """Call one key import RPC."""
         rescan = self.rescan == Rescan.yes
@@ -99,7 +101,7 @@ class Variant(collections.namedtuple("Variant", "call data address_type rescan p
             assert_equal(tx["label"], self.label)
             assert_equal(tx["txid"], txid)
             assert_equal(tx["confirmations"], 1 + current_height - confirmation_height)
-            assert "trusted" not in tx
+            assert_equal("trusted" not in tx, True)
 
             address, = [ad for ad in addresses if txid in ad["txids"]]
             assert_equal(address["address"], self.address["address"])
@@ -144,7 +146,6 @@ class ImportRescanTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2 + len(IMPORT_NODES)
         self.supports_cli = False
-        self.rpc_timeout = 120
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -159,12 +160,13 @@ class ImportRescanTest(BitcoinTestFramework):
 
         # Import keys with pruning disabled
         self.start_nodes(extra_args=[[]] * self.num_nodes)
-        self.import_deterministic_coinbase_privkeys()
+        for n in self.nodes:
+            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
         self.stop_nodes()
 
         self.start_nodes()
         for i in range(1, self.num_nodes):
-            self.connect_nodes(i, 0)
+            connect_nodes(self.nodes[i], 0)
 
     def run_test(self):
         # Create one transaction on node 0 with a unique amount for
@@ -178,10 +180,9 @@ class ImportRescanTest(BitcoinTestFramework):
             variant.key = self.nodes[1].dumpprivkey(variant.address["address"])
             variant.initial_amount = get_rand_amount()
             variant.initial_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.initial_amount)
-            self.generate(self.nodes[0], 1)  # Generate one block for each send
+            self.nodes[0].generate(1)  # Generate one block for each send
             variant.confirmation_height = self.nodes[0].getblockcount()
             variant.timestamp = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"]
-        self.sync_all() # Conclude sync before calling setmocktime to avoid timeouts
 
         # Generate a block further in the future (past the rescan window).
         assert_equal(self.nodes[0].getrawmempool(), [])
@@ -189,7 +190,7 @@ class ImportRescanTest(BitcoinTestFramework):
             self.nodes,
             self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + TIMESTAMP_WINDOW + 1,
         )
-        self.generate(self.nodes[0], 1)
+        self.nodes[0].generate(1)
         self.sync_all()
 
         # For each variation of wallet key import, invoke the import RPC and
@@ -212,7 +213,7 @@ class ImportRescanTest(BitcoinTestFramework):
         for i, variant in enumerate(IMPORT_VARIANTS):
             variant.sent_amount = get_rand_amount()
             variant.sent_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.sent_amount)
-            self.generate(self.nodes[0], 1)  # Generate one block for each send
+            self.nodes[0].generate(1)  # Generate one block for each send
             variant.confirmation_height = self.nodes[0].getblockcount()
 
         assert_equal(self.nodes[0].getrawmempool(), [])
@@ -224,7 +225,6 @@ class ImportRescanTest(BitcoinTestFramework):
             variant.expected_balance += variant.sent_amount
             variant.expected_txs += 1
             variant.check(variant.sent_txid, variant.sent_amount, variant.confirmation_height)
-
 
 if __name__ == "__main__":
     ImportRescanTest().main()

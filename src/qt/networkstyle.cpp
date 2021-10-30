@@ -19,9 +19,9 @@ static const struct {
 } network_styles[] = {
     {"main", QAPP_APP_NAME_DEFAULT, 0, 0},
     {"test", QAPP_APP_NAME_TESTNET, 70, 30},
-    {"signet", QAPP_APP_NAME_SIGNET, 35, 15},
-    {"regtest", QAPP_APP_NAME_REGTEST, 160, 30},
+    {"regtest", QAPP_APP_NAME_REGTEST, 160, 30}
 };
+static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
 
 // titleAddText needs to be const char* for tr()
 NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *_titleAddText):
@@ -80,12 +80,14 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
 const NetworkStyle* NetworkStyle::instantiate(const std::string& networkId)
 {
     std::string titleAddText = networkId == CBaseChainParams::MAIN ? "" : strprintf("[%s]", networkId);
-    for (const auto& network_style : network_styles) {
-        if (networkId == network_style.networkId) {
+    for (unsigned x=0; x<network_styles_count; ++x)
+    {
+        if (networkId == network_styles[x].networkId)
+        {
             return new NetworkStyle(
-                    network_style.appName,
-                    network_style.iconColorHueShift,
-                    network_style.iconColorSaturationReduction,
+                    network_styles[x].appName,
+                    network_styles[x].iconColorHueShift,
+                    network_styles[x].iconColorSaturationReduction,
                     titleAddText.c_str());
         }
     }

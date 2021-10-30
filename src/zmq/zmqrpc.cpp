@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,9 +13,9 @@
 
 namespace {
 
-static RPCHelpMan getzmqnotifications()
+UniValue getzmqnotifications(const JSONRPCRequest& request)
 {
-    return RPCHelpMan{"getzmqnotifications",
+            RPCHelpMan{"getzmqnotifications",
                 "\nReturns information about the active ZeroMQ notifications.\n",
                 {},
                 RPCResult{
@@ -33,8 +33,8 @@ static RPCHelpMan getzmqnotifications()
                     HelpExampleCli("getzmqnotifications", "")
             + HelpExampleRpc("getzmqnotifications", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
+            }.Check(request);
+
     UniValue result(UniValue::VARR);
     if (g_zmq_notification_interface != nullptr) {
         for (const auto* n : g_zmq_notification_interface->GetActiveNotifiers()) {
@@ -47,14 +47,12 @@ static RPCHelpMan getzmqnotifications()
     }
 
     return result;
-},
-    };
 }
 
 const CRPCCommand commands[] =
-{ //  category           actor (function)
-  //  -----------------  -----------------------
-    { "zmq",             &getzmqnotifications,    },
+{ //  category              name                                actor (function)                argNames
+  //  -----------------     ------------------------            -----------------------         ----------
+    { "zmq",                "getzmqnotifications",              &getzmqnotifications,           {} },
 };
 
 } // anonymous namespace

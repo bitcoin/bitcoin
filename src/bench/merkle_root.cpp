@@ -1,14 +1,14 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
 
-#include <consensus/merkle.h>
-#include <random.h>
 #include <uint256.h>
+#include <random.h>
+#include <consensus/merkle.h>
 
-static void MerkleRoot(benchmark::Bench& bench)
+static void MerkleRoot(benchmark::State& state)
 {
     FastRandomContext rng(true);
     std::vector<uint256> leaves;
@@ -16,11 +16,11 @@ static void MerkleRoot(benchmark::Bench& bench)
     for (auto& item : leaves) {
         item = rng.rand256();
     }
-    bench.batch(leaves.size()).unit("leaf").run([&] {
+    while (state.KeepRunning()) {
         bool mutation = false;
         uint256 hash = ComputeMerkleRoot(std::vector<uint256>(leaves), &mutation);
         leaves[mutation] = hash;
-    });
+    }
 }
 
-BENCHMARK(MerkleRoot);
+BENCHMARK(MerkleRoot, 800);

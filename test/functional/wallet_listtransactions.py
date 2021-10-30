@@ -1,42 +1,46 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listtransactions API."""
 from decimal import Decimal
+from io import BytesIO
 
-from test_framework.messages import (
-    COIN,
-    tx_from_hex,
-)
+from test_framework.messages import COIN, CTransaction
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_array_result,
     assert_equal,
+    hex_str_to_bytes,
 )
+
+def tx_from_hex(hexstring):
+    tx = CTransaction()
+    f = BytesIO(hex_str_to_bytes(hexstring))
+    tx.deserialize(f)
+    return tx
 
 class ListTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        # This test isn't testing txn relay/timing, so set whitelist on the
-        # peers for instant txn relay. This speeds up the test run time 2-3x.
-        self.extra_args = [["-whitelist=noban@127.0.0.1"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.log.info("Test simple send from node0 to node1")
+        self.nodes[0].generate(1)  # Get out of IBD
+        self.sync_all()
+        # Simple send, 0 to 1:
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
         self.sync_all()
         assert_array_result(self.nodes[0].listtransactions(),
                             {"txid": txid},
-                            {"category": "send", "amount": Decimal("-0.1"), "confirmations": 0, "trusted": True})
+                            {"category": "send", "amount": Decimal("-0.1"), "confirmations": 0})
         assert_array_result(self.nodes[1].listtransactions(),
                             {"txid": txid},
-                            {"category": "receive", "amount": Decimal("0.1"), "confirmations": 0, "trusted": False})
-        self.log.info("Test confirmations change after mining a block")
-        blockhash = self.generate(self.nodes[0], 1)[0]
+                            {"category": "receive", "amount": Decimal("0.1"), "confirmations": 0})
+        # mine a block, confirmations should change:
+        blockhash = self.nodes[0].generate(1)[0]
         blockheight = self.nodes[0].getblockheader(blockhash)['height']
         self.sync_all()
         assert_array_result(self.nodes[0].listtransactions(),
@@ -46,7 +50,7 @@ class ListTransactionsTest(BitcoinTestFramework):
                             {"txid": txid},
                             {"category": "receive", "amount": Decimal("0.1"), "confirmations": 1, "blockhash": blockhash, "blockheight": blockheight})
 
-        self.log.info("Test send-to-self on node0")
+        # send-to-self:
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 0.2)
         assert_array_result(self.nodes[0].listtransactions(),
                             {"txid": txid, "category": "send"},
@@ -55,7 +59,7 @@ class ListTransactionsTest(BitcoinTestFramework):
                             {"txid": txid, "category": "receive"},
                             {"amount": Decimal("0.2")})
 
-        self.log.info("Test sendmany from node1: twice to self, twice to node0")
+        # sendmany from node1: twice to self, twice to node2:
         send_to = {self.nodes[0].getnewaddress(): 0.11,
                    self.nodes[1].getnewaddress(): 0.22,
                    self.nodes[0].getnewaddress(): 0.33,
@@ -87,55 +91,49 @@ class ListTransactionsTest(BitcoinTestFramework):
                             {"category": "receive", "amount": Decimal("0.44")},
                             {"txid": txid})
 
-        if not self.options.descriptors:
-            # include_watchonly is a legacy wallet feature, so don't test it for descriptor wallets
-            self.log.info("Test 'include_watchonly' feature (legacy wallet)")
-            pubkey = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())['pubkey']
-            multisig = self.nodes[1].createmultisig(1, [pubkey])
-            self.nodes[0].importaddress(multisig["redeemScript"], "watchonly", False, True)
-            txid = self.nodes[1].sendtoaddress(multisig["address"], 0.1)
-            self.generate(self.nodes[1], 1)
-            self.sync_all()
-            assert_equal(len(self.nodes[0].listtransactions(label="watchonly", include_watchonly=True)), 1)
-            assert_equal(len(self.nodes[0].listtransactions(dummy="watchonly", include_watchonly=True)), 1)
-            assert len(self.nodes[0].listtransactions(label="watchonly", count=100, include_watchonly=False)) == 0
-            assert_array_result(self.nodes[0].listtransactions(label="watchonly", count=100, include_watchonly=True),
-                                {"category": "receive", "amount": Decimal("0.1")},
-                                {"txid": txid, "label": "watchonly"})
+        pubkey = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())['pubkey']
+        multisig = self.nodes[1].createmultisig(1, [pubkey])
+        self.nodes[0].importaddress(multisig["redeemScript"], "watchonly", False, True)
+        txid = self.nodes[1].sendtoaddress(multisig["address"], 0.1)
+        self.nodes[1].generate(1)
+        self.sync_all()
+        assert len(self.nodes[0].listtransactions(label="watchonly", count=100, include_watchonly=False)) == 0
+        assert_array_result(self.nodes[0].listtransactions(label="watchonly", count=100, include_watchonly=True),
+                            {"category": "receive", "amount": Decimal("0.1")},
+                            {"txid": txid, "label": "watchonly"})
 
         self.run_rbf_opt_in_test()
 
-
+    # Check that the opt-in-rbf flag works properly, for sent and received
+    # transactions.
     def run_rbf_opt_in_test(self):
-        """Test the opt-in-rbf flag for sent and received transactions."""
-
+        # Check whether a transaction signals opt-in RBF itself
         def is_opt_in(node, txid):
-            """Check whether a transaction signals opt-in RBF itself."""
             rawtx = node.getrawtransaction(txid, 1)
             for x in rawtx["vin"]:
                 if x["sequence"] < 0xfffffffe:
                     return True
             return False
 
+        # Find an unconfirmed output matching a certain txid
         def get_unconfirmed_utxo_entry(node, txid_to_match):
-            """Find an unconfirmed output matching a certain txid."""
             utxo = node.listunspent(0, 0)
             for i in utxo:
                 if i["txid"] == txid_to_match:
                     return i
             return None
 
-        self.log.info("Test txs w/o opt-in RBF (bip125-replaceable=no)")
-        # Chain a few transactions that don't opt in.
+        # 1. Chain a few transactions that don't opt-in.
         txid_1 = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1)
         assert not is_opt_in(self.nodes[0], txid_1)
         assert_array_result(self.nodes[0].listtransactions(), {"txid": txid_1}, {"bip125-replaceable": "no"})
         self.sync_mempools()
         assert_array_result(self.nodes[1].listtransactions(), {"txid": txid_1}, {"bip125-replaceable": "no"})
 
-        # Tx2 will build off tx1, still not opting in to RBF.
+        # Tx2 will build off txid_1, still not opting in to RBF.
         utxo_to_use = get_unconfirmed_utxo_entry(self.nodes[0], txid_1)
         assert_equal(utxo_to_use["safe"], True)
+        utxo_to_use = get_unconfirmed_utxo_entry(self.nodes[1], txid_1)
         utxo_to_use = get_unconfirmed_utxo_entry(self.nodes[1], txid_1)
         assert_equal(utxo_to_use["safe"], False)
 
@@ -152,7 +150,6 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.sync_mempools()
         assert_array_result(self.nodes[0].listtransactions(), {"txid": txid_2}, {"bip125-replaceable": "no"})
 
-        self.log.info("Test txs with opt-in RBF (bip125-replaceable=yes)")
         # Tx3 will opt-in to RBF
         utxo_to_use = get_unconfirmed_utxo_entry(self.nodes[0], txid_2)
         inputs = [{"txid": txid_2, "vout": utxo_to_use["vout"]}]
@@ -183,7 +180,6 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.sync_mempools()
         assert_array_result(self.nodes[0].listtransactions(), {"txid": txid_4}, {"bip125-replaceable": "yes"})
 
-        self.log.info("Test tx with unknown RBF state (bip125-replaceable=unknown)")
         # Replace tx3, and check that tx4 becomes unknown
         tx3_b = tx3_modified
         tx3_b.vout[0].nValue -= int(Decimal("0.004") * COIN)  # bump the fee
@@ -196,7 +192,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.sync_mempools()
         assert_array_result(self.nodes[1].listtransactions(), {"txid": txid_4}, {"bip125-replaceable": "unknown"})
 
-        self.log.info("Test bip125-replaceable status with gettransaction RPC")
+        # Check gettransaction as well:
         for n in self.nodes[0:2]:
             assert_equal(n.gettransaction(txid_1)["bip125-replaceable"], "no")
             assert_equal(n.gettransaction(txid_2)["bip125-replaceable"], "no")
@@ -204,17 +200,8 @@ class ListTransactionsTest(BitcoinTestFramework):
             assert_equal(n.gettransaction(txid_3b)["bip125-replaceable"], "yes")
             assert_equal(n.gettransaction(txid_4)["bip125-replaceable"], "unknown")
 
-        self.log.info("Test bip125-replaceable status with listsinceblock")
-        for n in self.nodes[0:2]:
-            txs = {tx['txid']: tx['bip125-replaceable'] for tx in n.listsinceblock()['transactions']}
-            assert_equal(txs[txid_1], "no")
-            assert_equal(txs[txid_2], "no")
-            assert_equal(txs[txid_3], "yes")
-            assert_equal(txs[txid_3b], "yes")
-            assert_equal(txs[txid_4], "unknown")
-
-        self.log.info("Test mined transactions are no longer bip125-replaceable")
-        self.generate(self.nodes[0], 1)
+        # After mining a transaction, it's no longer BIP125-replaceable
+        self.nodes[0].generate(1)
         assert txid_3b not in self.nodes[0].getrawmempool()
         assert_equal(self.nodes[0].gettransaction(txid_3b)["bip125-replaceable"], "no")
         assert_equal(self.nodes[0].gettransaction(txid_4)["bip125-replaceable"], "unknown")

@@ -25,7 +25,7 @@
 	</defs>
 	<rect width="1000" height="640" style="fill:url(#gradient);stroke-width:0" />
 	<g transform="translate(500,0) scale(0.9, 1)">
-		<text x="0" y="114">PACKAGE_NAME</text>
+		<text x="0" y="114">BitcoinStaking CORE</text>
 	</g>
 	<g transform="translate(0.000000,640.000000) scale(0.100000,-0.100000)"
 	fill="#000000" stroke="none">

@@ -97,9 +97,7 @@ void SendCoinsEntry::clear()
     ui->payTo->clear();
     ui->addAsLabel->clear();
     ui->payAmount->clear();
-    if (model && model->getOptionsModel()) {
-        ui->checkboxSubtractFeeFromAmount->setChecked(model->getOptionsModel()->getSubFeeFromAmount());
-    }
+    ui->checkboxSubtractFeeFromAmount->setCheckState(Qt::Unchecked);
     ui->messageTextLabel->clear();
     ui->messageTextLabel->hide();
     ui->messageLabel->hide();
@@ -112,7 +110,7 @@ void SendCoinsEntry::clear()
     ui->memoTextLabel_s->clear();
     ui->payAmount_s->clear();
 
-    // update the display unit, to not use the default ("BTC")
+    // update the display unit, to not use the default ("BSK")
     updateDisplayUnit();
 }
 
@@ -236,19 +234,6 @@ void SendCoinsEntry::updateDisplayUnit()
         ui->payAmount_is->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
         ui->payAmount_s->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     }
-}
-
-void SendCoinsEntry::changeEvent(QEvent* e)
-{
-    if (e->type() == QEvent::PaletteChange) {
-        ui->addressBookButton->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/address-book")));
-        ui->pasteButton->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/editpaste")));
-        ui->deleteButton->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/remove")));
-        ui->deleteButton_is->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/remove")));
-        ui->deleteButton_s->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/remove")));
-    }
-
-    QStackedWidget::changeEvent(e);
 }
 
 bool SendCoinsEntry::updateLabel(const QString &address)

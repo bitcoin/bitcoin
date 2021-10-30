@@ -84,19 +84,19 @@ Status Truncate(const std::string& filename, uint64_t length) {
 
 struct FileState {
   std::string filename_;
-  int64_t pos_;
-  int64_t pos_at_last_sync_;
-  int64_t pos_at_last_flush_;
+  int64_t staking_;
+  int64_t staking_at_last_sync_;
+  int64_t staking_at_last_flush_;
 
   FileState(const std::string& filename)
       : filename_(filename),
-        pos_(-1),
-        pos_at_last_sync_(-1),
-        pos_at_last_flush_(-1) {}
+        staking_(-1),
+        staking_at_last_sync_(-1),
+        staking_at_last_flush_(-1) {}
 
-  FileState() : pos_(-1), pos_at_last_sync_(-1), pos_at_last_flush_(-1) {}
+  FileState() : staking_(-1), staking_at_last_sync_(-1), staking_at_last_flush_(-1) {}
 
-  bool IsFullySynced() const { return pos_ <= 0 || pos_ == pos_at_last_sync_; }
+  bool IsFullySynced() const { return staking_ <= 0 || staking_ == staking_at_last_sync_; }
 
   Status DropUnsyncedData() const;
 };
@@ -180,7 +180,7 @@ TestWritableFile::~TestWritableFile() {
 Status TestWritableFile::Append(const Slice& data) {
   Status s = target_->Append(data);
   if (s.ok() && env_->IsFilesystemActive()) {
-    state_.pos_ += data.size();
+    state_.staking_ += data.size();
   }
   return s;
 }
@@ -197,7 +197,7 @@ Status TestWritableFile::Close() {
 Status TestWritableFile::Flush() {
   Status s = target_->Flush();
   if (s.ok() && env_->IsFilesystemActive()) {
-    state_.pos_at_last_flush_ = state_.pos_;
+    state_.staking_at_last_flush_ = state_.staking_;
   }
   return s;
 }
@@ -217,7 +217,7 @@ Status TestWritableFile::Sync() {
   // Ensure new files referred to by the manifest are in the filesystem.
   Status s = target_->Sync();
   if (s.ok()) {
-    state_.pos_at_last_sync_ = state_.pos_;
+    state_.staking_at_last_sync_ = state_.staking_;
   }
   if (env_->IsFileCreatedSinceLastDirSync(state_.filename_)) {
     Status ps = SyncParent();
@@ -234,7 +234,7 @@ Status FaultInjectionTestEnv::NewWritableFile(const std::string& fname,
   Status s = target()->NewWritableFile(fname, &actual_writable_file);
   if (s.ok()) {
     FileState state(fname);
-    state.pos_ = 0;
+    state.staking_ = 0;
     *result = new TestWritableFile(state, actual_writable_file, this);
     // NewWritableFile doesn't append to files, so if the same file is
     // opened again then it will be truncated - so forget our saved
@@ -252,7 +252,7 @@ Status FaultInjectionTestEnv::NewAppendableFile(const std::string& fname,
   Status s = target()->NewAppendableFile(fname, &actual_writable_file);
   if (s.ok()) {
     FileState state(fname);
-    state.pos_ = 0;
+    state.staking_ = 0;
     {
       MutexLock l(&mutex_);
       if (db_file_state_.count(fname) == 0) {
@@ -358,7 +358,7 @@ void FaultInjectionTestEnv::WritableFileClosed(const FileState& state) {
 }
 
 Status FileState::DropUnsyncedData() const {
-  int64_t sync_pos = pos_at_last_sync_ == -1 ? 0 : pos_at_last_sync_;
+  int64_t sync_pos = staking_at_last_sync_ == -1 ? 0 : staking_at_last_sync_;
   return Truncate(filename_, sync_pos);
 }
 

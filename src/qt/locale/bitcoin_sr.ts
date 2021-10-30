@@ -31,11 +31,11 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>Унеси адресу или назив ознаке за претрагу</translation>
+        <translation>Унеси адресу или назив за претрагу</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Извези податке из одабране картице у датотеку</translation>
+        <translation>Извези податке из одабране картице у фајлj</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -47,15 +47,15 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Одабери адресу за слање</translation>
+        <translation>Изабери адресу за слање</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Одабери адресу за примање</translation>
+        <translation>Изабери адресу за примање</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>&amp;Одабери</translation>
+        <translation>&amp;Изабери</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -67,13 +67,11 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Ово су твоје Биткоин адресе за слање уплата. Увек добро провери износ и адресу на коју шаљеш пре него што пошаљеш уплату.</translation>
+        <translation>Ово су твоје Биткоин адресе за слање уплата. Увек добро проверите износ и адресу на коју шаљете пре него што пошаљете уплату.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
-Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation>Ово су твоје Биткоин адресе за приманје уплата. Користи дугме „Направи нову адресу за примање” у картици за примање за креирање нових адреса.
-Потписивање је могуђе само за адресе типа 'legacy'.</translation>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Ово су твоје Биткоин адресе за приманје уплата. Користи дугме „Направи нову адресу за примање” у картици за примање за креирање нових адреса.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -108,7 +106,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Ознака</translation>
+        <translation>Етикета</translation>
     </message>
     <message>
         <source>Address</source>
@@ -116,7 +114,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(без ознаке)</translation>
+        <translation>(без етикете)</translation>
     </message>
 </context>
 <context>
@@ -163,7 +161,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Измени лозинку</translation>
+        <translation>Измену лозинку</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -171,7 +169,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Упозорење: Уколико шифрираш новчаник и изгубиш своју лозинку, &lt;b&gt;ИЗГУБИЋЕШ СВЕ СВОЈЕ БИТКОИНЕ&lt;/b&gt;!</translation>
+        <translation>Упозорење: Уколико шифрирате новчаник и изгубите своју лозинку, &lt;b&gt;ИЗГУБИЋЕТЕ СВЕ СВОЈЕ БИТКОИНЕ&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -187,7 +185,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
-        <translation>Унеси стару лозинку и нову лозинку новчаника.</translation>
+        <translation>Унеси стару лозунку и нову лозинку новчаника.</translation>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
@@ -199,7 +197,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Your wallet is about to be encrypted. </source>
-        <translation>Твој новчаник биће шифриран.</translation>
+        <translation>Твој новчаник ће бити шифриран.</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
@@ -239,7 +237,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Упозорање Caps Lock дугме укључено!</translation>
+        <translation>Упозорање Caps Lock дугме укључено.</translation>
     </message>
 </context>
 <context>
@@ -301,7 +299,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Прегледај информације о Qt-у</translation>
+        <translation>Прегледајте информације о Qt-у</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
@@ -321,11 +319,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp; Промени лозинку...</translation>
+        <translation>Промени &amp;лозинку...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation>Отвори &amp;URI...</translation>
+        <translation>Отвори &amp;УРИ...</translation>
     </message>
     <message>
         <source>Create Wallet...</source>
@@ -337,7 +335,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet:</source>
-        <translation>Новчаник:</translation>
+        <translation>Новчаник</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -357,7 +355,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
-        <translation>Поново идексирање блокова на диску...</translation>
+        <translation>Поново идексирање блокова на диску.</translation>
     </message>
     <message>
         <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
@@ -365,11 +363,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation>Пошаљи новац на Биткоин адресу</translation>
+        <translation>Пошаљите новац на Биткоин адресу</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Направи резервну копију новчаника на другој локацији</translation>
+        <translation>Направите резервну копију новчаника на другој локацији</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
@@ -469,7 +467,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Error</source>
-        <translation>Грешка</translation>
+        <translation>Greška</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -481,7 +479,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>Ажурирано</translation>
+        <translation>Ажурно</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -518,10 +516,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Close wallet</source>
         <translation>Затвори новчаник</translation>
-    </message>
-    <message>
-        <source>Close all wallets</source>
-        <translation>Затвори све новчанике</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
@@ -594,7 +588,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Label: %1
 </source>
-        <translation>Ознака: %1
+        <translation>Етикета: %1
 </translation>
     </message>
     <message>
@@ -625,13 +619,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Новчаник јс &lt;b&gt;шифриран&lt;/b&gt; и тренутно &lt;b&gt;откључан&lt;/b&gt;</translation>
+        <translation>Новчаник јс &lt;b&gt;шифрован&lt;/b&gt; и тренутно &lt;b&gt;откључан&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Новчаник јс &lt;b&gt;шифрован&lt;/b&gt; и тренутно &lt;b&gt;закључан&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
+        <translation>Дошло је до критичне грешке. Биткоин не може безбедно да настави са радом и искључиће се.</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -684,7 +682,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Received with label</source>
-        <translation>Примљено са ознаком</translation>
+        <translation>Примљено са налепницом</translation>
     </message>
     <message>
         <source>Received with address</source>
@@ -692,7 +690,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Date</source>
-        <translation>Датум</translation>
+        <translation>датум</translation>
     </message>
     <message>
         <source>Confirmations</source>
@@ -708,7 +706,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Копирај ознаку</translation>
+        <translation>Копирај налепницу</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -748,7 +746,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>Копирај кусур</translation>
+        <translation>Копирај промену</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -772,7 +770,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(без ознаке)</translation>
+        <translation>(без налепнице)</translation>
     </message>
     <message>
         <source>change from %1 (%2)</source>
@@ -791,7 +789,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Create wallet failed</source>
-        <translation>Креирање новчаника неуспешно</translation>
+        <translation>Креирање неуспешно</translation>
     </message>
     <message>
         <source>Create wallet warning</source>
@@ -806,7 +804,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet Name</source>
-        <translation>Име Новчаника</translation>
+        <translation>Име новчаника</translation>
     </message>
     <message>
         <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
@@ -845,11 +843,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>&amp;Ознака</translation>
+        <translation>&amp;Етикета</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation>Ознака повезана са овом ставком из листе адреса</translation>
+        <translation>Етикета повезана са овом ставком из листе адреса</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
@@ -896,7 +894,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>Нови директоријум података биће креиран.</translation>
+        <translation>Нови директоријум података ће бити креиран.</translation>
     </message>
     <message>
         <source>name</source>
@@ -946,15 +944,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>Када кликнете на ОК, %1 ће почети с преузимањем и процесуирањем целокупног ланца блокова %4 (%2GB), почевши од најранијих трансакција у %3 када је %4 покренут.</translation>
+        <translation>Када кликнете на ОК, %1 ће почети с преузимањем и процесирањем целокупног ланца блокова %4 (%2GB), почевши од најранијих трансакција у %3 када је %4 покренут.</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation>Враћање ове опције захтева поновно преузимање целокупног блокчејна - ланца блокова. Брже је преузети цели ланац и касније га скратити. Онемогућава неке напредне опције.</translation>
+        <translation>Враћање ове опције захтева поновно преузимање целокупног блокчејна. Брже је преузети цели ланац и касније га скратити. Онемогућава неке напредне опције.</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation>Првобитна синхронизација веома је захтевна и може изложити ваш рачунар хардверским проблемима који раније нису били примећени. Сваки пут када покренете %1, преузимање ће се наставити тамо где је било прекинуто.</translation>
+        <translation>Ова иницијална синхронизација је веома захтевна и може изложити ваш рачунар хардверским проблемима који раније нису били примећени. Сваки пут када покренете %1, преузимање ће се наставити тамо где је било прекинуто.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
@@ -998,11 +996,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Error</source>
-        <translation>Грешка</translation>
+        <translation>Greška</translation>
     </message>
     <message numerus="yes">
         <source>%n GB of free space available</source>
-        <translation><numerusform>Доступно %n GB слободног простора</numerusform><numerusform>Доступно %n GB слободног простора</numerusform><numerusform>Доступно %n GB слободног простора</numerusform></translation>
+        <translation><numerusform>Dostupno %n GB slobodnog prostora</numerusform><numerusform>Доступно %n GB слободног простора</numerusform><numerusform>Доступно %n GB слободног простора</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
@@ -1021,7 +1019,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation>Недавне трансакције можда не буду видљиве, зато салдо твог новчаника можда буде нетачан. Ова информација биђе тачна када новчаник заврши са синхронизацијом биткоин мреже, приказаној испод.</translation>
+        <translation>Недавне трансакције можда не буду видљиве, зато салдо твог новчаника можда буде нетачан. </translation>
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
@@ -1029,7 +1027,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Number of blocks left</source>
-        <translation>Преостала количина блокова</translation>
+        <translation>Остала количина блокова</translation>
     </message>
     <message>
         <source>Unknown...</source>
@@ -1049,7 +1047,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>calculating...</source>
-        <translation>рачунање...</translation>
+        <translation>Рачунање</translation>
     </message>
     <message>
         <source>Estimated time left until synced</source>
@@ -1137,6 +1135,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Приказује се ако је испоручени уобичајени SOCKS5 проxy коришћен ради проналажења клијената преко овог типа мреже. </translation>
     </message>
     <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Користи посебан SOCKS&amp;5 како би пронашли клијенте преко Тор-а.</translation>
+    </message>
+    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Сакриј икону са системске траке.</translation>
     </message>
@@ -1146,11 +1148,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
-        <translation>Минимизирање уместо искључивања апликације када се прозор затвори. Када је ова опција омогућена, апликација ће бити затворена тек након одабира Излаз у менију. </translation>
-    </message>
-    <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>URL треће стране (нпр блок претраживач) који се појављује у менију трансакције.  %s у URL  замењен је хашом трансакције. Више URL-ова поделено је вертикалом |.</translation>
+        <translation>Минимизирај апликацију уместо затворити, када се затвори прозор. Када је ова опција омогућена, апликација ће бити затворена тек након одабира Излаз у менију. </translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1174,7 +1172,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
-        <translation>Онемогућава поједина напредна својства, али ће сви блокови у потпуности бити валидирани. Враћање ове опције захтева да поновно преузимање целокупонг блокчејна.</translation>
+        <translation>Онемогућава поједина напредна својства, али ће сви блокови у потпуности бити валидирани.</translation>
     </message>
     <message>
         <source>Prune &amp;block storage to</source>
@@ -1198,7 +1196,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation>Н&amp;овчаник</translation>
+        <translation>новчаник</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -1226,7 +1224,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Accept connections from outside.</source>
-        <translation>Прихвати спољашње концекције.</translation>
+        <translation>Прихвати конекције од споља.</translation>
     </message>
     <message>
         <source>Allow incomin&amp;g connections</source>
@@ -1269,6 +1267,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Тор</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Конектуј се на Биткоин мрежу кроз SOCK5 прокси за Тор скривене сервисе.</translation>
+    </message>
+    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Покажи само иконицу у панелу након минимизирања прозора</translation>
     </message>
@@ -1278,7 +1280,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
-        <translation>Минимизирај при затварању</translation>
+        <translation>Минимизирај на затварању</translation>
     </message>
     <message>
         <source>&amp;Display</source>
@@ -1350,7 +1352,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Error</source>
-        <translation>Грешка</translation>
+        <translation>Greška</translation>
     </message>
     <message>
         <source>The configuration file could not be opened.</source>
@@ -1393,7 +1395,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Укупан број трансакција које још увек нису потврђене, и не рачунају се у салдо рачуна који је могуће потрошити</translation>
+        <translation>Тотал трансакција које још увек нису потврђене, и не рачунају се у баланс рачуна који је могуће потрошити</translation>
     </message>
     <message>
         <source>Immature:</source>
@@ -1401,7 +1403,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
-        <translation>Салдо рударења који још увек није доспео</translation>
+        <translation>Баланс рударења који још увек није доспео</translation>
     </message>
     <message>
         <source>Balances</source>
@@ -1417,7 +1419,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Your current balance in watch-only addresses</source>
-        <translation>Твој тренутни салдо са гледај-само адресама</translation>
+        <translation>Твој тренутни салдо са посматрај-само адресама</translation>
     </message>
     <message>
         <source>Spendable:</source>
@@ -1433,56 +1435,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation>Салдорударења у адресама које су у моду само гледање, који још увек није доспео</translation>
+        <translation>Баланс рударења у адресама које су у моду само гледање, који још увек није доспео</translation>
     </message>
     <message>
         <source>Current total balance in watch-only addresses</source>
-        <translation>Тренутни укупни салдо у адресама у опцији само-гледај</translation>
+        <translation>Тренутни укупни баланс у адресама у моду само гледање</translation>
     </message>
-    </context>
-<context>
-    <name>PSBTOperationsDialog</name>
-    <message>
-        <source>Dialog</source>
-        <translation>Дијалог</translation>
-    </message>
-    <message>
-        <source>Sign Tx</source>
-        <translation>Потпиши Трансакцију</translation>
-    </message>
-    <message>
-        <source>Broadcast Tx</source>
-        <translation>Емитуј Трансакцију</translation>
-    </message>
-    <message>
-        <source>Copy to Clipboard</source>
-        <translation>Копирајте у клипборд.</translation>
-    </message>
-    <message>
-        <source>Save...</source>
-        <translation>Сачувај...</translation>
-    </message>
-    <message>
-        <source>Close</source>
-        <translation>Затвори</translation>
-    </message>
-    <message>
-        <source>Save Transaction Data</source>
-        <translation>Сачувај Податке Трансакције</translation>
-    </message>
-    <message>
-        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
-        <translation>Парцијално Потписана Трансакција (Binary) (*.psbt)</translation>
-    </message>
-    <message>
-        <source>Total Amount</source>
-        <translation>Укупан износ</translation>
-    </message>
-    <message>
-        <source>or</source>
-        <translation>или</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1491,11 +1450,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Не могу покренути биткоин: "кликни-да-платиш" механизам</translation>
+        <translation>Не могу покренути биткоин: кликни-да-платиш механизам</translation>
     </message>
     <message>
         <source>URI handling</source>
-        <translation>URI руковање</translation>
+        <translation>URI манипулација</translation>
     </message>
     <message>
         <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
@@ -1503,11 +1462,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Cannot process payment request because BIP70 is not supported.</source>
-        <translation>Захтев за плаћање не може се обрадити, јер BIP70 није подржан.</translation>
+        <translation>Захтев за плаћање се не може обрадити, јер BIP70 није подржан.</translation>
     </message>
     <message>
         <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
-        <translation>Због великог броја безбедносних пропуста у BIP70, препоручено је да се све инструкције трговаца за промену новчаника игноришу.</translation>
+        <translation>Због великог броја безбедносних пропуста у BIP70, врло је препоручено да се све инструкције клијента за промену новчаника игноришу.</translation>
     </message>
     <message>
         <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
@@ -1523,7 +1482,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Payment request file handling</source>
-        <translation>Руковање датотеком захтева за плаћање</translation>
+        <translation>Манипулација датотеком захтева за плаћање</translation>
     </message>
 </context>
 <context>
@@ -1534,11 +1493,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Node/Service</source>
-        <translation>Ноде/Сервис</translation>
+        <translation>Чвор/Сервис</translation>
     </message>
     <message>
         <source>NodeId</source>
-        <translation>НодеИД</translation>
+        <translation>Идентификација чвора</translation>
     </message>
     <message>
         <source>Ping</source>
@@ -1557,7 +1516,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>QObject</name>
     <message>
         <source>Amount</source>
-        <translation>Износ</translation>
+        <translation>iznos</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. %1)</source>
@@ -1593,7 +1552,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation><numerusform>%n секунда</numerusform><numerusform>%n секунди</numerusform><numerusform>%n секунди</numerusform></translation>
+        <translation><numerusform>%n секунда</numerusform><numerusform>%n секунде</numerusform><numerusform>%n секунди</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
@@ -1649,7 +1608,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>unknown</source>
-        <translation>непознато</translation>
+        <translation>nepoznato</translation>
     </message>
 </context>
 <context>
@@ -1664,7 +1623,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Дати резултат URI  предуг, покушај да сманиш текст за ознаку / поруку.</translation>
+        <translation>Дати резултат URI  предуг, покушајте да смањите текст за налепницу / поруку.</translation>
     </message>
     <message>
         <source>Error encoding URI into QR Code.</source>
@@ -1742,6 +1701,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Блокчејн</translation>
     </message>
     <message>
+        <source>Current number of blocks</source>
+        <translation>Тренутни број блокова</translation>
+    </message>
+    <message>
         <source>Memory Pool</source>
         <translation>Удружена меморија</translation>
     </message>
@@ -1784,6 +1747,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Одабери колегу да би видели детаљне информације</translation>
+    </message>
+    <message>
+        <source>Whitelisted</source>
+        <translation>На списку познатих</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1838,6 +1805,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Услуге</translation>
     </message>
     <message>
+        <source>Ban Score</source>
+        <translation>Ниво забране</translation>
+    </message>
+    <message>
         <source>Connection Time</source>
         <translation>Време конекције</translation>
     </message>
@@ -1883,7 +1854,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation>&amp; Саобраћај Мреже</translation>
+        <translation>&amp;Мрежа Саобраћај</translation>
     </message>
     <message>
         <source>Totals</source>
@@ -1986,6 +1957,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Одлазеће</translation>
     </message>
     <message>
+        <source>Yes</source>
+        <translation>Da</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Ne</translation>
+    </message>
+    <message>
         <source>Unknown</source>
         <translation>Непознато</translation>
     </message>
@@ -1994,11 +1973,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Amount:</source>
-        <translation>&amp;Износ:</translation>
+        <translation>Iznos:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Ознака</translation>
+        <translation>&amp;Етикета</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
@@ -2006,11 +1985,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation>Опциона порука коју можеш прикачити уз захтев за плаћање, која ће бити приказана када захтев буде отворен. Напомена: Порука неће бити послата са уплатом на Биткоин мрежи.</translation>
+        <translation>Опционална порука коју можеш прикачити уз захтев за плаћање, која ће бити приказана када захтев буде отворен. Напомена: Порука неће бити послата са уплатом на Биткоин мрежи.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation>Опционална ознака за поистовећивање са новом примајућом адресом.</translation>
+        <translation>Опционална етикета за поистовећивање са новом примајућом адресом.</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
@@ -2022,7 +2001,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
-        <translation>Опционална ознака за поистовећивање са новом адресом примаоца (користите је за идентификацију рачуна). Она је такође придодата захтеву за плаћање.</translation>
+        <translation>Опционална етикета за поистовећивање са новом адресом примаоца (користите је за идентификацију рачуна). Она је такође придодата захтеву за плаћање.</translation>
     </message>
     <message>
         <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
@@ -2042,7 +2021,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
-        <translation>Природне segwit адресе (нпр Bech32 или BIP-173) касније смањују трошкове трансакција и нуде бољу заштиту од грешака у куцању, али их стари новчаници не подржавају. Када није одабрано, биће креирана адреса компатибилна са старијим новчаницима.</translation>
+        <translation>Природне segwit адресе (нпр Bech32 или BIP-173) касније смањују трошкове ваших трансакција и нуде бољу заштиту од грешака у куцању, али их стари новчаници не подржавају. Када није потврђен, биће креирана адреса компатибилна са старијим новчаницима.</translation>
     </message>
     <message>
         <source>Generate native segwit (Bech32) address</source>
@@ -2058,7 +2037,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Show</source>
-        <translation>Прикажи</translation>
+        <translation>Prikaži</translation>
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
@@ -2074,7 +2053,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Копирај ознаку</translation>
+        <translation>Копирај налепницу
+</translation>
     </message>
     <message>
         <source>Copy message</source>
@@ -2082,34 +2062,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Копирај износ</translation>
+        <translation>к</translation>
     </message>
-    <message>
-        <source>Could not unlock wallet.</source>
-        <translation>Новчаник није могуће откључати.</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Address:</source>
-        <translation>Адреса:</translation>
-    </message>
-    <message>
-        <source>Amount:</source>
-        <translation>Износ:</translation>
-    </message>
-    <message>
-        <source>Label:</source>
-        <translation>Етикета</translation>
-    </message>
-    <message>
-        <source>Message:</source>
-        <translation>Порука:</translation>
-    </message>
-    <message>
-        <source>Wallet:</source>
-        <translation>Новчаник:</translation>
+        <source>QR Code</source>
+        <translation>QR Код</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2117,7 +2077,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation>Копирај &amp;Адресу</translation>
+        <translation>Kopirajte adresu</translation>
     </message>
     <message>
         <source>&amp;Save Image...</source>
@@ -2131,16 +2091,40 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Payment information</source>
         <translation>Информације о плаћању</translation>
     </message>
+    <message>
+        <source>URI</source>
+        <translation>URI</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Adresa</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Износ</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Налепница</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Poruka</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Новчаник</translation>
+    </message>
 </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Датум</translation>
+        <translation>datum</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Ознака</translation>
+        <translation>Налепница</translation>
     </message>
     <message>
         <source>Message</source>
@@ -2148,7 +2132,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(без ознаке)</translation>
+        <translation>(без налепнице)</translation>
     </message>
     <message>
         <source>(no message)</source>
@@ -2167,7 +2151,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Пошаљи новчиће</translation>
+        <translation>Слање новца</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -2179,7 +2163,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>automatically selected</source>
-        <translation>аутоматски одабрано</translation>
+        <translation>аутоматски селектовано</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
@@ -2195,7 +2179,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Износ:</translation>
+        <translation>Iznos:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -2207,7 +2191,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Change:</source>
-        <translation>Кусур:</translation>
+        <translation>Промени:</translation>
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
@@ -2259,11 +2243,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(Паметна накнада још није покренута. Ово уобичајено траје неколико блокова...)</translation>
+        <translation>(Паметна провизија још није покренута. Ово уобичајено траје неколико блокова...)</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
-        <translation>Пошаљи већем броју примаоца одједанпут</translation>
+        <translation>Пошаљи на више примаоца одједанпут</translation>
     </message>
     <message>
         <source>Add &amp;Recipient</source>
@@ -2271,7 +2255,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Очисти сва поља форме.</translation>
+        <translation>Очисти сва пола форме.</translation>
     </message>
     <message>
         <source>Dust:</source>
@@ -2279,15 +2263,15 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Hide transaction fee settings</source>
-        <translation>Сакријте износ накнаде за трансакцију</translation>
+        <translation>Сакријте подешавања провизије за трансакцију</translation>
     </message>
     <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Када је мањи обим трансакција од простора у блоку, рудари, као и повезани нодови могу применити минималну провизију. Плаћање само минималне накнаде - провизије је добро, али треба бити свестан да ово може резултовати трансакцијом која неће никада бити потврђена, у случају када је број захтева за биткоин трансакцијама већи од могућности мреже да обради.</translation>
+        <translation>Када је мањи обим трансакција од простора у блоку, рудари, као и повезани чворови могу применити минималну провизију. Плаћање само минималне провизије је добро, али треба бити свестан да ово може резултовати у трансакцији која неће никада бити потврђена, у случају када је број захтева за биткоин трансакцијама већи од могућности мреже да обради.</translation>
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
-        <translation>Сувише ниска накнада може резултовати у трансакцији која никад неће бити потврђена (прочитајте опис)</translation>
+        <translation>Сувише ниска провизија може резултовати у трансакцији која никад неће бити потврђена (прочитајте опис)</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -2323,7 +2307,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Копирај износ</translation>
+        <translation>к</translation>
     </message>
     <message>
         <source>Copy fee</source>
@@ -2378,16 +2362,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Да ли сте сигурни да желите да пошаљете?</translation>
     </message>
     <message>
-        <source>Save Transaction Data</source>
-        <translation>Сачувај Податке Трансакције</translation>
-    </message>
-    <message>
-        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
-        <translation>Делимично Потписана Трансакција (Binary) (*.psbt)</translation>
-    </message>
-    <message>
-        <source>PSBT saved</source>
-        <translation>PSBT сачуван</translation>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Молим, проверите ваш предлог трансакције. Ово ће произвести делимично потписану Биткоин трансакцију (PSBT) коју можете копирати и онда потписати са нпр. офлајн %1 новчаником, или PSBT компатибилним хардверским новчаником.</translation>
     </message>
     <message>
         <source>or</source>
@@ -2426,8 +2402,16 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Потврдите предлог трансакције</translation>
     </message>
     <message>
+        <source>Copy PSBT to clipboard</source>
+        <translation>Копирајте PSBT у базу за копирање</translation>
+    </message>
+    <message>
         <source>Send</source>
         <translation>Пошаљи</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>PSBT је копиран</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -2487,14 +2471,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(без ознаке)</translation>
+        <translation>(без налепнице)</translation>
     </message>
 </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
         <source>A&amp;mount:</source>
-        <translation>&amp;Износ:</translation>
+        <translation>Iznos:</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
@@ -2502,11 +2486,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Ознака</translation>
+        <translation>&amp;Етикета</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Одабери претходно коришћену адресу</translation>
+        <translation>Промени претходно коришћену адресу</translation>
     </message>
     <message>
         <source>The Bitcoin address to send the payment to</source>
@@ -2514,7 +2498,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Alt+A</source>
-        <translation>Alt+A</translation>
+        <translation>Alt+</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -2538,7 +2522,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
-        <translation>&amp;Одузми провизију од износа</translation>
+        <translation>Одузми провизију од износа</translation>
     </message>
     <message>
         <source>Use available balance</source>
@@ -2546,7 +2530,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Message:</source>
-        <translation>Порука:</translation>
+        <translation>Poruka:</translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
@@ -2604,7 +2588,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Alt+A</source>
-        <translation>Alt+A</translation>
+        <translation>Alt+</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -2612,7 +2596,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Alt+P</source>
-        <translation>Alt+P</translation>
+        <translation>Alt+П</translation>
     </message>
     <message>
         <source>Enter the message you want to sign here</source>
@@ -2766,11 +2750,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>%1/unconfirmed</source>
-        <translation>%1/непотврђено</translation>
+        <translation>%1/nepotvrdjeno</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
-        <translation>%1 порврде</translation>
+        <translation>%1 potvrde</translation>
     </message>
     <message>
         <source>Status</source>
@@ -2778,7 +2762,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Date</source>
-        <translation>Датум</translation>
+        <translation>datum</translation>
     </message>
     <message>
         <source>Source</source>
@@ -2794,7 +2778,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>unknown</source>
-        <translation>непознато</translation>
+        <translation>nepoznato</translation>
     </message>
     <message>
         <source>To</source>
@@ -2810,7 +2794,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>label</source>
-        <translation>ознака</translation>
+        <translation>етикета</translation>
     </message>
     <message>
         <source>Credit</source>
@@ -2846,7 +2830,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Message</source>
-        <translation>Порука</translation>
+        <translation>Poruka</translation>
     </message>
     <message>
         <source>Comment</source>
@@ -2886,7 +2870,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Transaction</source>
-        <translation>Трансакције</translation>
+        <translation>transakcije</translation>
     </message>
     <message>
         <source>Inputs</source>
@@ -2909,7 +2893,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Овај одељак приказује детањан приказ трансакције</translation>
+        <translation>Ovaj odeljak pokazuje detaljan opis transakcije</translation>
     </message>
     <message>
         <source>Details for %1</source>
@@ -2920,15 +2904,15 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Датум</translation>
+        <translation>datum</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation>Тип</translation>
+        <translation>tip</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Ознака</translation>
+        <translation>Налепница</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
@@ -2936,7 +2920,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Open until %1</source>
-        <translation>Отворено до %1</translation>
+        <translation>Otvoreno do %1</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -2964,27 +2948,27 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Generated but not accepted</source>
-        <translation>Генерисан али није прихваћен</translation>
+        <translation>Generisan ali nije prihvaćen</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation>Примљен са</translation>
+        <translation>Primljen sa</translation>
     </message>
     <message>
         <source>Received from</source>
-        <translation>Примљено од</translation>
+        <translation>Primljeno od</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Послато ка</translation>
+        <translation>Poslat ka</translation>
     </message>
     <message>
         <source>Payment to yourself</source>
-        <translation>Уплата самом себи</translation>
+        <translation>Isplata samom sebi</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation>Рударено</translation>
+        <translation>Minirano</translation>
     </message>
     <message>
         <source>watch-only</source>
@@ -2996,19 +2980,19 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(без ознаке)</translation>
+        <translation>(без налепнице)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Статус трансакције. Пређи мишем преко поља за приказ броја трансакција.</translation>
+        <translation>Status vaše transakcije. Predjite mišem preko ovog polja da bi ste videli broj konfirmacija</translation>
     </message>
     <message>
         <source>Date and time that the transaction was received.</source>
-        <translation>Датум и време пријема трансакције</translation>
+        <translation>Datum i vreme primljene transakcije.</translation>
     </message>
     <message>
         <source>Type of transaction.</source>
-        <translation>Тип трансакције.</translation>
+        <translation>Tip transakcije</translation>
     </message>
     <message>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
@@ -3020,58 +3004,58 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
-        <translation>Износ одбијен или додат салду.</translation>
+        <translation>Iznos odbijen ili dodat balansu.</translation>
     </message>
 </context>
 <context>
     <name>TransactionView</name>
     <message>
         <source>All</source>
-        <translation>Све</translation>
+        <translation>Sve</translation>
     </message>
     <message>
         <source>Today</source>
-        <translation>Данас</translation>
+        <translation>Danas</translation>
     </message>
     <message>
         <source>This week</source>
-        <translation>Oве недеље</translation>
+        <translation>ove nedelje</translation>
     </message>
     <message>
         <source>This month</source>
-        <translation>Овог месеца</translation>
+        <translation>Ovog meseca</translation>
     </message>
     <message>
         <source>Last month</source>
-        <translation>Претходног месеца</translation>
+        <translation>Prošlog meseca</translation>
     </message>
     <message>
         <source>This year</source>
-        <translation>Ове године</translation>
+        <translation>Ove godine</translation>
     </message>
     <message>
         <source>Range...</source>
-        <translation>Опсег...</translation>
+        <translation>Opseg...</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation>Примљен са...</translation>
+        <translation>Primljen sa</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Послат ка</translation>
+        <translation>Poslat ka</translation>
     </message>
     <message>
         <source>To yourself</source>
-        <translation>Теби</translation>
+        <translation>Vama - samom sebi</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation>Рударено</translation>
+        <translation>Minirano</translation>
     </message>
     <message>
         <source>Other</source>
-        <translation>Други</translation>
+        <translation>Drugi</translation>
     </message>
     <message>
         <source>Enter address, transaction id, or label to search</source>
@@ -3079,7 +3063,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Min amount</source>
-        <translation>Минимални износ</translation>
+        <translation>Min iznos</translation>
     </message>
     <message>
         <source>Abandon transaction</source>
@@ -3095,11 +3079,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Копирај ознаку</translation>
+        <translation>Копирај налепницу
+</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Копирај износ</translation>
+        <translation>к</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
@@ -3115,7 +3100,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Edit label</source>
-        <translation>Измени ознаку</translation>
+        <translation>promeni naziv</translation>
     </message>
     <message>
         <source>Show transaction details</source>
@@ -3131,7 +3116,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Confirmed</source>
-        <translation>Потврђено</translation>
+        <translation>Potvrdjen</translation>
     </message>
     <message>
         <source>Watch-only</source>
@@ -3139,23 +3124,23 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Date</source>
-        <translation>Датум</translation>
+        <translation>datum</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation>Тип</translation>
+        <translation>tip</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Ознака</translation>
+        <translation>Налепница</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Адреса</translation>
+        <translation>Adresa</translation>
     </message>
     <message>
         <source>ID</source>
-        <translation>ID</translation>
+        <translation>Ознака</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -3175,11 +3160,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Range:</source>
-        <translation>Опсег:</translation>
+        <translation>Opseg:</translation>
     </message>
     <message>
         <source>to</source>
-        <translation>до</translation>
+        <translation>do</translation>
     </message>
 </context>
 <context>
@@ -3203,20 +3188,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Услед затварања новчаника на дугачки период времена може се десити да је потребна поновна синхронизација комплетног ланца, уколико је дозвољено резање.</translation>
     </message>
-    <message>
-        <source>Close all wallets</source>
-        <translation>Затвори све новчанике</translation>
-    </message>
-    <message>
-        <source>Are you sure you wish to close all wallets?</source>
-        <translation>Да ли сигурно желите да затворите све новчанике?</translation>
-    </message>
 </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>Create a new wallet</source>
-        <translation>Направи нови ночаник</translation>
+        <source>No wallet has been loaded.</source>
+        <translation>Ниједан новчаник није учитан.</translation>
     </message>
 </context>
 <context>
@@ -3282,39 +3259,15 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Извези</translation>
+        <translation>&amp;Izvedi</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Извези податке из одабране картице у фајлj</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation>Грешка</translation>
-    </message>
-    <message>
-        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
-        <translation>Није могуће декодирати PSBT из клипборд-а (неважећи base64)</translation>
-    </message>
-    <message>
-        <source>Load Transaction Data</source>
-        <translation>Учитај Податке Трансакције</translation>
-    </message>
-    <message>
-        <source>Partially Signed Transaction (*.psbt)</source>
-        <translation>Делимично Потписана Трансакција (*.psbt)</translation>
-    </message>
-    <message>
-        <source>PSBT file must be smaller than 100 MiB</source>
-        <translation>PSBT фајл мора бити мањи од 100 MiB</translation>
-    </message>
-    <message>
-        <source>Unable to decode PSBT</source>
-        <translation>Немогуће декодирати PSBT</translation>
-    </message>
-    <message>
         <source>Backup Wallet</source>
-        <translation>Резервна копија новчаника</translation>
+        <translation>Backup новчаника</translation>
     </message>
     <message>
         <source>Wallet Data (*.dat)</source>
@@ -3356,6 +3309,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Скраћивање: последња синхронизација иде преко одрезаних података. Потребно је урадити ре-индексирање (преузети комплетан ланац блокова поново у случају одсеченог чвора)</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Грешка: Десила се фатална интерна грешка, погледати debug.log за детаље</translation>
+    </message>
+    <message>
         <source>Pruning blockstore...</source>
         <translation>Скраћивање спремљених блокова...</translation>
     </message>
@@ -3366,6 +3323,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>The %s developers</source>
         <translation>%s девелопери</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>Кључ за промену адресе није могуће генерисати. У интерној групи кључева нема кључева и не може се генерисати нови кључ.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3414,6 +3375,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Упозорење: Изгледа да се ми у потпуности не слажемо са нашим чворовима! Можда постоји потреба да урадите надоградњу, или други чворови морају да ураде надоградњу.</translation>
+    </message>
+    <message>
+        <source>%d of last 100 blocks have unexpected version</source>
+        <translation>%d од последњих 100 блокова имају неочекивану верзију</translation>
+    </message>
+    <message>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s је оштећен, спас није успео</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3540,6 +3509,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Учитавање P2P адреса...</translation>
     </message>
     <message>
+        <source>Error: Disk space is too low!</source>
+        <translation>Грешка: Простор на диску је сувише мали!</translation>
+    </message>
+    <message>
         <source>Loading banlist...</source>
         <translation>Учитавање листе забрана...</translation>
     </message>
@@ -3613,11 +3586,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation>Обновите базу података користећи -reindex да би се вратили у нескраћени мод. Ово ће урадити поновно преузимање комплетног ланца података</translation>
-    </message>
-    <message>
-        <source>Disk space is too low!</source>
-        <translation>Премало простора на диску!</translation>
+        <translation>Ви морате обновити базу података користећи -reindex да би се вратили у нескраћени мод. Ово ће урадити поновно преузимање комплетног ланца података</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3726,6 +3695,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Упозорење: активирано је ново непознато правило (versionbit %i)</translation>
     </message>
     <message>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>Затварање свих трансакција из новчаника...</translation>
+    </message>
+    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee је постављен сувише високо! Овако велике провизије могу бити наплаћене на само једној трансакцији.</translation>
     </message>
@@ -3736,6 +3709,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Укупна дужина мрежне верзије низа (%i) је већа од максималне дужине (%i). Смањити број или величину корисничких коментара.</translation>
+    </message>
+    <message>
+        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>Упозорење: Датотека новчаника је оштећена, подаци су спасени! Оргинални %s је снимљен као %s у %s; уколико ваш салдо или трансакције нису исправни, потребно је вратити податке из резервне копије. </translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3779,7 +3756,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation>Недовољно средстава</translation>
+        <translation>Nedovoljno sredstava</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
+        <translation>HD подељени новчаник се не може надоградити без надоградње групе кључева пре дељења. Молим користите -upgradewallet=169900 или -upgradewallet без наведене верзије.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
@@ -3795,7 +3776,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Loading block index...</source>
-        <translation>Учитавање индекса блокова</translation>
+        <translation>Učitavam blok indeksa...</translation>
     </message>
     <message>
         <source>Loading wallet...</source>

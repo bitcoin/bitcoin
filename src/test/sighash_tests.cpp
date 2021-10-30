@@ -1,18 +1,18 @@
-// Copyright (c) 2013-2020 The Bitcoin Core developers
+// Copyright (c) 2013-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/tx_check.h>
 #include <consensus/validation.h>
+#include <test/data/sighash.json.h>
 #include <hash.h>
 #include <script/interpreter.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
-#include <test/data/sighash.json.h>
 #include <test/util/setup_common.h>
-#include <util/strencodings.h>
 #include <util/system.h>
+#include <util/strencodings.h>
 #include <version.h>
 
 #include <iostream>
@@ -21,14 +21,14 @@
 
 #include <univalue.h>
 
-UniValue read_json(const std::string& jsondata);
+extern UniValue read_json(const std::string& jsondata);
 
 // Old script.cpp SignatureHash function
 uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     if (nIn >= txTo.vin.size())
     {
-        return uint256::ONE;
+        return UINT256_ONE();
     }
     CMutableTransaction txTmp(txTo);
 
@@ -58,7 +58,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
         unsigned int nOut = nIn;
         if (nOut >= txTmp.vout.size())
         {
-            return uint256::ONE;
+            return UINT256_ONE();
         }
         txTmp.vout.resize(nOut+1);
         for (unsigned int i = 0; i < nOut; i++)
@@ -88,7 +88,7 @@ void static RandomScript(CScript &script) {
     script = CScript();
     int ops = (InsecureRandRange(10));
     for (int i=0; i<ops; i++)
-        script << oplist[InsecureRandRange(std::size(oplist))];
+        script << oplist[InsecureRandRange(sizeof(oplist)/sizeof(oplist[0]))];
 }
 
 void static RandomTransaction(CMutableTransaction &tx, bool fSingle) {
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
         ss << txTo;
 
         std::cout << "\t[\"" ;
-        std::cout << HexStr(ss) << "\", \"";
+        std::cout << HexStr(ss.begin(), ss.end()) << "\", \"";
         std::cout << HexStr(scriptCode) << "\", ";
         std::cout << nIn << ", ";
         std::cout << nHashType << ", \"";

@@ -31,7 +31,7 @@ MessageVerificationResult MessageVerify(
         return MessageVerificationResult::ERR_INVALID_ADDRESS;
     }
 
-    if (std::get_if<PKHash>(&destination) == nullptr) {
+    if (boost::get<PKHash>(&destination) == nullptr) {
         return MessageVerificationResult::ERR_ADDRESS_NO_KEY;
     }
 
@@ -64,7 +64,7 @@ bool MessageSign(
         return false;
     }
 
-    signature = EncodeBase64(signature_bytes);
+    signature = EncodeBase64(signature_bytes.data(), signature_bytes.size());
 
     return true;
 }

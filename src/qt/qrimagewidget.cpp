@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,6 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QDrag>
-#include <QFontDatabase>
 #include <QMenu>
 #include <QMimeData>
 #include <QMouseEvent>
@@ -27,8 +26,12 @@ QRImageWidget::QRImageWidget(QWidget *parent):
     QLabel(parent), contextMenu(nullptr)
 {
     contextMenu = new QMenu(this);
-    contextMenu->addAction(tr("&Save Image…"), this, &QRImageWidget::saveImage);
-    contextMenu->addAction(tr("&Copy Image"), this, &QRImageWidget::copyImage);
+    QAction *saveImageAction = new QAction(tr("&Save Image..."), this);
+    connect(saveImageAction, &QAction::triggered, this, &QRImageWidget::saveImage);
+    contextMenu->addAction(saveImageAction);
+    QAction *copyImageAction = new QAction(tr("&Copy Image"), this);
+    connect(copyImageAction, &QAction::triggered, this, &QRImageWidget::copyImage);
+    contextMenu->addAction(copyImageAction);
 }
 
 bool QRImageWidget::setQR(const QString& data, const QString& text)
@@ -61,28 +64,26 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
     }
     QRcode_free(code);
 
-    const int qr_image_size = QR_IMAGE_SIZE + (text.isEmpty() ? 0 : 2 * QR_IMAGE_MARGIN);
-    QImage qrAddrImage(qr_image_size, qr_image_size, QImage::Format_RGB32);
+    QImage qrAddrImage = QImage(QR_IMAGE_SIZE, QR_IMAGE_SIZE + (text.isEmpty() ? 0 : 20), QImage::Format_RGB32);
     qrAddrImage.fill(0xffffff);
-    {
-        QPainter painter(&qrAddrImage);
-        painter.drawImage(QR_IMAGE_MARGIN, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
+    QPainter painter(&qrAddrImage);
+    painter.drawImage(0, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
 
-        if (!text.isEmpty()) {
-            QRect paddedRect = qrAddrImage.rect();
-            paddedRect.setHeight(QR_IMAGE_SIZE + QR_IMAGE_TEXT_MARGIN);
+    if (!text.isEmpty()) {
+        QFont font = GUIUtil::fixedPitchFont();
+        font.setStyleStrategy(QFont::NoAntialias);
+        QRect paddedRect = qrAddrImage.rect();
 
-            QFont font = GUIUtil::fixedPitchFont();
-            font.setStretch(QFont::SemiCondensed);
-            font.setLetterSpacing(QFont::AbsoluteSpacing, 1);
-            const qreal font_size = GUIUtil::calculateIdealFontSize(paddedRect.width() - 2 * QR_IMAGE_TEXT_MARGIN, text, font);
-            font.setPointSizeF(font_size);
+        // calculate ideal font size
+        qreal font_size = GUIUtil::calculateIdealFontSize(paddedRect.width() - 20, text, font);
+        font.setPointSizeF(font_size);
 
-            painter.setFont(font);
-            painter.drawText(paddedRect, Qt::AlignBottom | Qt::AlignCenter, text);
-        }
+        painter.setFont(font);
+        paddedRect.setHeight(QR_IMAGE_SIZE+12);
+        painter.drawText(paddedRect, Qt::AlignBottom|Qt::AlignCenter, text);
     }
 
+    painter.end();
     setPixmap(QPixmap::fromImage(qrAddrImage));
 
     return true;
@@ -94,12 +95,15 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
 
 QImage QRImageWidget::exportImage()
 {
-    return GUIUtil::GetImage(this);
+    if(!pixmap())
+        return QImage();
+    return pixmap()->toImage();
 }
 
 void QRImageWidget::mousePressEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton && GUIUtil::HasPixmap(this)) {
+    if(event->button() == Qt::LeftButton && pixmap())
+    {
         event->accept();
         QMimeData *mimeData = new QMimeData;
         mimeData->setImageData(exportImage());
@@ -114,13 +118,9 @@ void QRImageWidget::mousePressEvent(QMouseEvent *event)
 
 void QRImageWidget::saveImage()
 {
-    if (!GUIUtil::HasPixmap(this))
+    if(!pixmap())
         return;
-    QString fn = GUIUtil::getSaveFileName(
-        this, tr("Save QR Code"), QString(),
-        /*: Expanded name of the PNG file format.
-            See: https://en.wikipedia.org/wiki/Portable_Network_Graphics. */
-        tr("PNG Image") + QLatin1String(" (*.png)"), nullptr);
+    QString fn = GUIUtil::getSaveFileName(this, tr("Save QR Code"), QString(), tr("PNG Image (*.png)"), nullptr);
     if (!fn.isEmpty())
     {
         exportImage().save(fn);
@@ -129,14 +129,14 @@ void QRImageWidget::saveImage()
 
 void QRImageWidget::copyImage()
 {
-    if (!GUIUtil::HasPixmap(this))
+    if(!pixmap())
         return;
     QApplication::clipboard()->setImage(exportImage());
 }
 
 void QRImageWidget::contextMenuEvent(QContextMenuEvent *event)
 {
-    if (!GUIUtil::HasPixmap(this))
+    if(!pixmap())
         return;
     contextMenu->exec(event->globalPos());
 }

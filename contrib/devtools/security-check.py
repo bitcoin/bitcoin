@@ -6,209 +6,279 @@
 Perform basic security checks on a series of executables.
 Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
+Needs `readelf` (for ELF), `objdump` (for PE) and `otool` (for MACHO).
 '''
+import subprocess
 import sys
-from typing import List
+import os
 
-import lief #type:ignore
+READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
+OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
+OTOOL_CMD = os.getenv('OTOOL', '/usr/bin/otool')
+NONFATAL = {} # checks which are non-fatal for now but only generate a warning
 
-def check_ELF_RELRO(binary) -> bool:
+def check_ELF_PIE(executable):
+    '''
+    Check for position independent executable (PIE), allowing for address space randomization.
+    '''
+    p = subprocess.Popen([READELF_CMD, '-h', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    (stdout, stderr) = p.communicate()
+    if p.returncode:
+        raise IOError('Error opening file')
+
+    ok = False
+    for line in stdout.splitlines():
+        line = line.split()
+        if len(line)>=2 and line[0] == 'Type:' and line[1] == 'DYN':
+            ok = True
+    return ok
+
+def get_ELF_program_headers(executable):
+    '''Return type and flags for ELF program headers'''
+    p = subprocess.Popen([READELF_CMD, '-l', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    (stdout, stderr) = p.communicate()
+    if p.returncode:
+        raise IOError('Error opening file')
+    in_headers = False
+    count = 0
+    headers = []
+    for line in stdout.splitlines():
+        if line.startswith('Program Headers:'):
+            in_headers = True
+        if line == '':
+            in_headers = False
+        if in_headers:
+            if count == 1: # header line
+                ofs_typ = line.find('Type')
+                ofs_offset = line.find('Offset')
+                ofs_flags = line.find('Flg')
+                ofs_align = line.find('Align')
+                if ofs_typ == -1 or ofs_offset == -1 or ofs_flags == -1 or ofs_align  == -1:
+                    raise ValueError('Cannot parse elfread -lW output')
+            elif count > 1:
+                typ = line[ofs_typ:ofs_offset].rstrip()
+                flags = line[ofs_flags:ofs_align].rstrip()
+                headers.append((typ, flags))
+            count += 1
+    return headers
+
+def check_ELF_NX(executable):
+    '''
+    Check that no sections are writable and executable (including the stack)
+    '''
+    have_wx = False
+    have_gnu_stack = False
+    for (typ, flags) in get_ELF_program_headers(executable):
+        if typ == 'GNU_STACK':
+            have_gnu_stack = True
+        if 'W' in flags and 'E' in flags: # section is both writable and executable
+            have_wx = True
+    return have_gnu_stack and not have_wx
+
+def check_ELF_RELRO(executable):
     '''
     Check for read-only relocations.
     GNU_RELRO program header must exist
     Dynamic section must have BIND_NOW flag
     '''
     have_gnu_relro = False
-    for segment in binary.segments:
-        # Note: not checking p_flags == PF_R: here as linkers set the permission differently
-        # This does not affect security: the permission flags of the GNU_RELRO program
-        # header are ignored, the PT_LOAD header determines the effective permissions.
+    for (typ, flags) in get_ELF_program_headers(executable):
+        # Note: not checking flags == 'R': here as linkers set the permission differently
+        # This does not affect security: the permission flags of the GNU_RELRO program header are ignored, the PT_LOAD header determines the effective permissions.
         # However, the dynamic linker need to write to this area so these are RW.
         # Glibc itself takes care of mprotecting this area R after relocations are finished.
         # See also https://marc.info/?l=binutils&m=1498883354122353
-        if segment.type == lief.ELF.SEGMENT_TYPES.GNU_RELRO:
+        if typ == 'GNU_RELRO':
             have_gnu_relro = True
 
     have_bindnow = False
-    try:
-        flags = binary.get(lief.ELF.DYNAMIC_TAGS.FLAGS)
-        if flags.value & lief.ELF.DYNAMIC_FLAGS.BIND_NOW:
+    p = subprocess.Popen([READELF_CMD, '-d', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    (stdout, stderr) = p.communicate()
+    if p.returncode:
+        raise IOError('Error opening file')
+    for line in stdout.splitlines():
+        tokens = line.split()
+        if len(tokens)>1 and tokens[1] == '(BIND_NOW)' or (len(tokens)>2 and tokens[1] == '(FLAGS)' and 'BIND_NOW' in tokens[2:]):
             have_bindnow = True
-    except:
-        have_bindnow = False
-
     return have_gnu_relro and have_bindnow
 
-def check_ELF_Canary(binary) -> bool:
+def check_ELF_Canary(executable):
     '''
     Check for use of stack canary
     '''
-    return binary.has_symbol('__stack_chk_fail')
+    p = subprocess.Popen([READELF_CMD, '--dyn-syms', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    (stdout, stderr) = p.communicate()
+    if p.returncode:
+        raise IOError('Error opening file')
+    ok = False
+    for line in stdout.splitlines():
+        if '__stack_chk_fail' in line:
+            ok = True
+    return ok
 
-def check_ELF_separate_code(binary):
+def get_PE_dll_characteristics(executable):
     '''
-    Check that sections are appropriately separated in virtual memory,
-    based on their permissions. This checks for missing -Wl,-z,separate-code
-    and potentially other problems.
+    Get PE DllCharacteristics bits.
+    Returns a tuple (arch,bits) where arch is 'i386:x86-64' or 'i386'
+    and bits is the DllCharacteristics value.
     '''
-    R = lief.ELF.SEGMENT_FLAGS.R
-    W = lief.ELF.SEGMENT_FLAGS.W
-    E = lief.ELF.SEGMENT_FLAGS.X
-    EXPECTED_FLAGS = {
-        # Read + execute
-        '.init': R | E,
-        '.plt': R | E,
-        '.plt.got': R | E,
-        '.plt.sec': R | E,
-        '.text': R | E,
-        '.fini': R | E,
-        # Read-only data
-        '.interp': R,
-        '.note.gnu.property': R,
-        '.note.gnu.build-id': R,
-        '.note.ABI-tag': R,
-        '.gnu.hash': R,
-        '.dynsym': R,
-        '.dynstr': R,
-        '.gnu.version': R,
-        '.gnu.version_r': R,
-        '.rela.dyn': R,
-        '.rela.plt': R,
-        '.rodata': R,
-        '.eh_frame_hdr': R,
-        '.eh_frame': R,
-        '.qtmetadata': R,
-        '.gcc_except_table': R,
-        '.stapsdt.base': R,
-        # Writable data
-        '.init_array': R | W,
-        '.fini_array': R | W,
-        '.dynamic': R | W,
-        '.got': R | W,
-        '.data': R | W,
-        '.bss': R | W,
-    }
-    if binary.header.machine_type == lief.ELF.ARCH.PPC64:
-        # .plt is RW on ppc64 even with separate-code
-        EXPECTED_FLAGS['.plt'] = R | W
-    # For all LOAD program headers get mapping to the list of sections,
-    # and for each section, remember the flags of the associated program header.
-    flags_per_section = {}
-    for segment in binary.segments:
-        if segment.type ==  lief.ELF.SEGMENT_TYPES.LOAD:
-            for section in segment.sections:
-                assert(section.name not in flags_per_section)
-                flags_per_section[section.name] = segment.flags
-    # Spot-check ELF LOAD program header flags per section
-    # If these sections exist, check them against the expected R/W/E flags
-    for (section, flags) in flags_per_section.items():
-        if section in EXPECTED_FLAGS:
-            if int(EXPECTED_FLAGS[section]) != int(flags):
-                return False
-    return True
+    p = subprocess.Popen([OBJDUMP_CMD, '-x',  executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    (stdout, stderr) = p.communicate()
+    if p.returncode:
+        raise IOError('Error opening file')
+    arch = ''
+    bits = 0
+    for line in stdout.splitlines():
+        tokens = line.split()
+        if len(tokens)>=2 and tokens[0] == 'architecture:':
+            arch = tokens[1].rstrip(',')
+        if len(tokens)>=2 and tokens[0] == 'DllCharacteristics':
+            bits = int(tokens[1],16)
+    return (arch,bits)
 
-def check_PE_DYNAMIC_BASE(binary) -> bool:
+IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA = 0x0020
+IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE    = 0x0040
+IMAGE_DLL_CHARACTERISTICS_NX_COMPAT       = 0x0100
+
+def check_PE_DYNAMIC_BASE(executable):
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
-    return lief.PE.DLL_CHARACTERISTICS.DYNAMIC_BASE in binary.optional_header.dll_characteristics_lists
+    (arch,bits) = get_PE_dll_characteristics(executable)
+    reqbits = IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE
+    return (bits & reqbits) == reqbits
 
-# Must support high-entropy 64-bit address space layout randomization
-# in addition to DYNAMIC_BASE to have secure ASLR.
-def check_PE_HIGH_ENTROPY_VA(binary) -> bool:
+# On 64 bit, must support high-entropy 64-bit address space layout randomization in addition to DYNAMIC_BASE
+# to have secure ASLR.
+def check_PE_HIGH_ENTROPY_VA(executable):
     '''PIE: DllCharacteristics bit 0x20 signifies high-entropy ASLR'''
-    return lief.PE.DLL_CHARACTERISTICS.HIGH_ENTROPY_VA in binary.optional_header.dll_characteristics_lists
+    (arch,bits) = get_PE_dll_characteristics(executable)
+    if arch == 'i386:x86-64':
+        reqbits = IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA
+    else: # Unnecessary on 32-bit
+        assert(arch == 'i386')
+        reqbits = 0
+    return (bits & reqbits) == reqbits
 
-def check_PE_RELOC_SECTION(binary) -> bool:
-    '''Check for a reloc section. This is required for functional ASLR.'''
-    return binary.has_relocations
+def check_PE_NX(executable):
+    '''NX: DllCharacteristics bit 0x100 signifies nxcompat (DEP)'''
+    (arch,bits) = get_PE_dll_characteristics(executable)
+    return (bits & IMAGE_DLL_CHARACTERISTICS_NX_COMPAT) == IMAGE_DLL_CHARACTERISTICS_NX_COMPAT
 
-def check_MACHO_NOUNDEFS(binary) -> bool:
+def get_MACHO_executable_flags(executable):
+    p = subprocess.Popen([OTOOL_CMD, '-vh', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    (stdout, stderr) = p.communicate()
+    if p.returncode:
+        raise IOError('Error opening file')
+
+    flags = []
+    for line in stdout.splitlines():
+        tokens = line.split()
+        # filter first two header lines
+        if 'magic' in tokens or 'Mach' in tokens:
+            continue
+        # filter ncmds and sizeofcmds values
+        flags += [t for t in tokens if not t.isdigit()]
+    return flags
+
+def check_MACHO_PIE(executable) -> bool:
+    '''
+    Check for position independent executable (PIE), allowing for address space randomization.
+    '''
+    flags = get_MACHO_executable_flags(executable)
+    if 'PIE' in flags:
+        return True
+    return False
+
+def check_MACHO_NOUNDEFS(executable) -> bool:
     '''
     Check for no undefined references.
     '''
-    return binary.header.has(lief.MachO.HEADER_FLAGS.NOUNDEFS)
+    flags = get_MACHO_executable_flags(executable)
+    if 'NOUNDEFS' in flags:
+        return True
+    return False
 
-def check_MACHO_LAZY_BINDINGS(binary) -> bool:
+def check_MACHO_NX(executable) -> bool:
+    '''
+    Check for no stack execution
+    '''
+    flags = get_MACHO_executable_flags(executable)
+    if 'ALLOW_STACK_EXECUTION' in flags:
+        return False
+    return True
+
+def check_MACHO_LAZY_BINDINGS(executable) -> bool:
     '''
     Check for no lazy bindings.
     We don't use or check for MH_BINDATLOAD. See #18295.
     '''
-    return binary.dyld_info.lazy_bind == (0,0)
+    p = subprocess.Popen([OTOOL_CMD, '-l', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    (stdout, stderr) = p.communicate()
+    if p.returncode:
+        raise IOError('Error opening file')
 
-def check_MACHO_Canary(binary) -> bool:
-    '''
-    Check for use of stack canary
-    '''
-    return binary.has_symbol('___stack_chk_fail')
-
-def check_PIE(binary) -> bool:
-    '''
-    Check for position independent executable (PIE),
-    allowing for address space randomization.
-    '''
-    return binary.is_pie
-
-def check_NX(binary) -> bool:
-    '''
-    Check for no stack execution
-    '''
-    return binary.has_nx
-
-def check_control_flow(binary) -> bool:
-    '''
-    Check for control flow instrumentation
-    '''
-    content = binary.get_content_from_virtual_address(binary.entrypoint, 4, lief.Binary.VA_TYPES.AUTO)
-
-    if content == [243, 15, 30, 250]: # endbr64
-        return True
-    return False
-
+    for line in stdout.splitlines():
+        tokens = line.split()
+        if 'lazy_bind_off' in tokens or 'lazy_bind_size' in tokens:
+            if tokens[1] != '0':
+                return False
+    return True
 
 CHECKS = {
 'ELF': [
-    ('PIE', check_PIE),
-    ('NX', check_NX),
+    ('PIE', check_ELF_PIE),
+    ('NX', check_ELF_NX),
     ('RELRO', check_ELF_RELRO),
-    ('Canary', check_ELF_Canary),
-    ('separate_code', check_ELF_separate_code),
+    ('Canary', check_ELF_Canary)
 ],
 'PE': [
-    ('PIE', check_PIE),
     ('DYNAMIC_BASE', check_PE_DYNAMIC_BASE),
     ('HIGH_ENTROPY_VA', check_PE_HIGH_ENTROPY_VA),
-    ('NX', check_NX),
-    ('RELOC_SECTION', check_PE_RELOC_SECTION)
+    ('NX', check_PE_NX)
 ],
 'MACHO': [
-    ('PIE', check_PIE),
+    ('PIE', check_MACHO_PIE),
     ('NOUNDEFS', check_MACHO_NOUNDEFS),
-    ('NX', check_NX),
-    ('LAZY_BINDINGS', check_MACHO_LAZY_BINDINGS),
-    ('Canary', check_MACHO_Canary),
-    ('CONTROL_FLOW', check_control_flow),
+    ('NX', check_MACHO_NX),
+    ('LAZY_BINDINGS', check_MACHO_LAZY_BINDINGS)
 ]
 }
 
+def identify_executable(executable):
+    with open(filename, 'rb') as f:
+        magic = f.read(4)
+    if magic.startswith(b'MZ'):
+        return 'PE'
+    elif magic.startswith(b'\x7fELF'):
+        return 'ELF'
+    elif magic.startswith(b'\xcf\xfa'):
+        return 'MACHO'
+    return None
+
 if __name__ == '__main__':
-    retval: int = 0
+    retval = 0
     for filename in sys.argv[1:]:
         try:
-            binary = lief.parse(filename)
-            etype = binary.format.name
-            if etype == lief.EXE_FORMATS.UNKNOWN:
-                print(f'{filename}: unknown executable format')
+            etype = identify_executable(filename)
+            if etype is None:
+                print('%s: unknown format' % filename)
                 retval = 1
                 continue
 
-            failed: List[str] = []
+            failed = []
+            warning = []
             for (name, func) in CHECKS[etype]:
-                if not func(binary):
-                    failed.append(name)
+                if not func(filename):
+                    if name in NONFATAL:
+                        warning.append(name)
+                    else:
+                        failed.append(name)
             if failed:
-                print(f'{filename}: failed {" ".join(failed)}')
+                print('%s: failed %s' % (filename, ' '.join(failed)))
                 retval = 1
+            if warning:
+                print('%s: warning %s' % (filename, ' '.join(warning)))
         except IOError:
-            print(f'{filename}: cannot open')
+            print('%s: cannot open' % filename)
             retval = 1
     sys.exit(retval)
 

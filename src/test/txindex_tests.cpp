@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,6 @@
 #include <script/standard.h>
 #include <test/util/setup_common.h>
 #include <util/time.h>
-#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -28,7 +27,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     // BlockUntilSyncedToCurrentChain should return false before txindex is started.
     BOOST_CHECK(!txindex.BlockUntilSyncedToCurrentChain());
 
-    BOOST_REQUIRE(txindex.Start(m_node.chainman->ActiveChainstate()));
+    txindex.Start();
 
     // Allow tx index to catch up with the block index.
     constexpr int64_t timeout_ms = 10 * 1000;
@@ -71,8 +70,12 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     // shutdown sequence (c.f. Shutdown() in init.cpp)
     txindex.Stop();
 
-    // Let scheduler events finish running to avoid accessing any memory related to txindex after it is destructed
-    SyncWithValidationInterfaceQueue();
+    // txindex job may be scheduled, so stop scheduler before destructing
+    m_node.scheduler->stop();
+    threadGroup.interrupt_all();
+    threadGroup.join_all();
+
+    // Rest of shutdown sequence and destructors happen in ~TestingSetup()
 }
 
 BOOST_AUTO_TEST_SUITE_END()

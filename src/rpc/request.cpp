@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -70,7 +70,7 @@ static fs::path GetAuthCookieFile(bool temp=false)
     if (temp) {
         arg += ".tmp";
     }
-    return AbsPathForConfigVal(fs::PathFromString(arg));
+    return AbsPathForConfigVal(fs::path(arg));
 }
 
 bool GenerateAuthCookie(std::string *cookie_out)
@@ -78,7 +78,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
     const size_t COOKIE_SIZE = 32;
     unsigned char rand_pwd[COOKIE_SIZE];
     GetRandBytes(rand_pwd, COOKIE_SIZE);
-    std::string cookie = COOKIEAUTH_USER + ":" + HexStr(rand_pwd);
+    std::string cookie = COOKIEAUTH_USER + ":" + HexStr(rand_pwd, rand_pwd+COOKIE_SIZE);
 
     /** the umask determines what permissions are used to create this file -
      * these are set to 077 in init.cpp unless overridden with -sysperms.
@@ -87,7 +87,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
     fs::path filepath_tmp = GetAuthCookieFile(true);
     file.open(filepath_tmp);
     if (!file.is_open()) {
-        LogPrintf("Unable to open cookie authentication file %s for writing\n", fs::PathToString(filepath_tmp));
+        LogPrintf("Unable to open cookie authentication file %s for writing\n", filepath_tmp.string());
         return false;
     }
     file << cookie;
@@ -95,10 +95,10 @@ bool GenerateAuthCookie(std::string *cookie_out)
 
     fs::path filepath = GetAuthCookieFile(false);
     if (!RenameOver(filepath_tmp, filepath)) {
-        LogPrintf("Unable to rename cookie authentication file %s to %s\n", fs::PathToString(filepath_tmp), fs::PathToString(filepath));
+        LogPrintf("Unable to rename cookie authentication file %s to %s\n", filepath_tmp.string(), filepath.string());
         return false;
     }
-    LogPrintf("Generated RPC authentication cookie %s\n", fs::PathToString(filepath));
+    LogPrintf("Generated RPC authentication cookie %s\n", filepath.string());
 
     if (cookie_out)
         *cookie_out = cookie;
@@ -130,20 +130,20 @@ void DeleteAuthCookie()
     }
 }
 
-std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue& in)
+std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue &in, size_t num)
 {
     if (!in.isArray()) {
         throw std::runtime_error("Batch must be an array");
     }
-    const size_t num {in.size()};
     std::vector<UniValue> batch(num);
-    for (const UniValue& rec : in.getValues()) {
+    for (size_t i=0; i<in.size(); ++i) {
+        const UniValue &rec = in[i];
         if (!rec.isObject()) {
-            throw std::runtime_error("Batch member must be an object");
+            throw std::runtime_error("Batch member must be object");
         }
         size_t id = rec["id"].get_int();
         if (id >= num) {
-            throw std::runtime_error("Batch member id is larger than batch size");
+            throw std::runtime_error("Batch member id larger than size");
         }
         batch[id] = rec;
     }

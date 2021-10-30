@@ -15,8 +15,11 @@
             "scriptPubKey": {
                 "asm": "0 a2516e770582864a6a56ed21a102044e388c62e3",
                 "hex": "0014a2516e770582864a6a56ed21a102044e388c62e3",
-                "address": "bc1q5fgkuac9s2ry56jka5s6zqsyfcugcchry5cwu0",
-                "type": "witness_v0_keyhash"
+                "reqSigs": 1,
+                "type": "witness_v0_keyhash",
+                "addresses": [
+                    "bc1q5fgkuac9s2ry56jka5s6zqsyfcugcchry5cwu0"
+                ]
             }
         }
     ],

@@ -256,7 +256,7 @@ class WindowsMmapReadableFile : public RandomAccessFile {
 class WindowsWritableFile : public WritableFile {
  public:
   WindowsWritableFile(std::string filename, ScopedHandle handle)
-      : pos_(0), handle_(std::move(handle)), filename_(std::move(filename)) {}
+      : staking_(0), handle_(std::move(handle)), filename_(std::move(filename)) {}
 
   ~WindowsWritableFile() override = default;
 
@@ -265,11 +265,11 @@ class WindowsWritableFile : public WritableFile {
     const char* write_data = data.data();
 
     // Fit as much as possible into buffer.
-    size_t copy_size = std::min(write_size, kWritableFileBufferSize - pos_);
-    std::memcpy(buf_ + pos_, write_data, copy_size);
+    size_t copy_size = std::min(write_size, kWritableFileBufferSize - staking_);
+    std::memcpy(buf_ + staking_, write_data, copy_size);
     write_data += copy_size;
     write_size -= copy_size;
-    pos_ += copy_size;
+    staking_ += copy_size;
     if (write_size == 0) {
       return Status::OK();
     }
@@ -283,7 +283,7 @@ class WindowsWritableFile : public WritableFile {
     // Small writes go to buffer, large writes are written directly.
     if (write_size < kWritableFileBufferSize) {
       std::memcpy(buf_, write_data, write_size);
-      pos_ = write_size;
+      staking_ = write_size;
       return Status::OK();
     }
     return WriteUnbuffered(write_data, write_size);
@@ -319,8 +319,8 @@ class WindowsWritableFile : public WritableFile {
 
  private:
   Status FlushBuffer() {
-    Status status = WriteUnbuffered(buf_, pos_);
-    pos_ = 0;
+    Status status = WriteUnbuffered(buf_, staking_);
+    staking_ = 0;
     return status;
   }
 
@@ -334,9 +334,9 @@ class WindowsWritableFile : public WritableFile {
     return Status::OK();
   }
 
-  // buf_[0, pos_-1] contains data to be written to handle_.
+  // buf_[0, staking_-1] contains data to be written to handle_.
   char buf_[kWritableFileBufferSize];
-  size_t pos_;
+  size_t staking_;
 
   ScopedHandle handle_;
   const std::string filename_;

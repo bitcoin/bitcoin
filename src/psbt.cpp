@@ -1,10 +1,8 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <psbt.h>
-
-#include <util/check.h>
 #include <util/strencodings.h>
 
 
@@ -37,6 +35,14 @@ bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
     return true;
 }
 
+bool PartiallySignedTransaction::IsSane() const
+{
+    for (PSBTInput input : inputs) {
+        if (!input.IsSane()) return false;
+    }
+    return true;
+}
+
 bool PartiallySignedTransaction::AddInput(const CTxIn& txin, PSBTInput& psbtin)
 {
     if (std::find(tx->vin.begin(), tx->vin.end(), txin) != tx->vin.end()) {
@@ -59,13 +65,10 @@ bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSBTOutput
 
 bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) const
 {
-    const PSBTInput& input = inputs[input_index];
+    PSBTInput input = inputs[input_index];
     uint32_t prevout_index = tx->vin[input_index].prevout.n;
     if (input.non_witness_utxo) {
         if (prevout_index >= input.non_witness_utxo->vout.size()) {
-            return false;
-        }
-        if (input.non_witness_utxo->GetHash() != tx->vin[input_index].prevout.hash) {
             return false;
         }
         utxo = input.non_witness_utxo->vout[prevout_index];
@@ -141,8 +144,8 @@ void PSBTInput::Merge(const PSBTInput& input)
 {
     if (!non_witness_utxo && input.non_witness_utxo) non_witness_utxo = input.non_witness_utxo;
     if (witness_utxo.IsNull() && !input.witness_utxo.IsNull()) {
-        // TODO: For segwit v1, we will want to clear out the non-witness utxo when setting a witness one. For v0 and non-segwit, this is not safe
         witness_utxo = input.witness_utxo;
+        non_witness_utxo = nullptr; // Clear out any non-witness utxo when we set a witness one.
     }
 
     partial_sigs.insert(input.partial_sigs.begin(), input.partial_sigs.end());
@@ -153,6 +156,18 @@ void PSBTInput::Merge(const PSBTInput& input)
     if (witness_script.empty() && !input.witness_script.empty()) witness_script = input.witness_script;
     if (final_script_sig.empty() && !input.final_script_sig.empty()) final_script_sig = input.final_script_sig;
     if (final_script_witness.IsNull() && !input.final_script_witness.IsNull()) final_script_witness = input.final_script_witness;
+}
+
+bool PSBTInput::IsSane() const
+{
+    // Cannot have both witness and non-witness utxos
+    if (!witness_utxo.IsNull() && non_witness_utxo) return false;
+
+    // If we have a witness_script or a scriptWitness, we must also have a witness utxo
+    if (!witness_script.empty() && witness_utxo.IsNull()) return false;
+    if (!final_script_witness.IsNull() && witness_utxo.IsNull()) return false;
+
+    return true;
 }
 
 void PSBTOutput::FillSignatureData(SignatureData& sigdata) const
@@ -199,21 +214,9 @@ bool PSBTInputSigned(const PSBTInput& input)
     return !input.final_script_sig.empty() || !input.final_script_witness.IsNull();
 }
 
-size_t CountPSBTUnsignedInputs(const PartiallySignedTransaction& psbt) {
-    size_t count = 0;
-    for (const auto& input : psbt.inputs) {
-        if (!PSBTInputSigned(input)) {
-            count++;
-        }
-    }
-
-    return count;
-}
-
 void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index)
 {
-    CMutableTransaction& tx = *Assert(psbt.tx);
-    const CTxOut& out = tx.vout.at(index);
+    const CTxOut& out = psbt.tx->vout.at(index);
     PSBTOutput& psbt_out = psbt.outputs.at(index);
 
     // Fill a SignatureData with output info
@@ -223,31 +226,14 @@ void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransactio
     // Construct a would-be spend of this output, to update sigdata with.
     // Note that ProduceSignature is used to fill in metadata (not actual signatures),
     // so provider does not need to provide any private keys (it can be a HidingSigningProvider).
-    MutableTransactionSignatureCreator creator(&tx, /* index */ 0, out.nValue, SIGHASH_ALL);
+    MutableTransactionSignatureCreator creator(psbt.tx.get_ptr(), /* index */ 0, out.nValue, SIGHASH_ALL);
     ProduceSignature(provider, creator, out.scriptPubKey, sigdata);
 
     // Put redeem_script, witness_script, key paths, into PSBTOutput.
     psbt_out.FromSignatureData(sigdata);
 }
 
-PrecomputedTransactionData PrecomputePSBTData(const PartiallySignedTransaction& psbt)
-{
-    const CMutableTransaction& tx = *psbt.tx;
-    bool have_all_spent_outputs = true;
-    std::vector<CTxOut> utxos(tx.vin.size());
-    for (size_t idx = 0; idx < tx.vin.size(); ++idx) {
-        if (!psbt.GetInputUTXO(utxos[idx], idx)) have_all_spent_outputs = false;
-    }
-    PrecomputedTransactionData txdata;
-    if (have_all_spent_outputs) {
-        txdata.Init(tx, std::move(utxos), true);
-    } else {
-        txdata.Init(tx, {}, true);
-    }
-    return txdata;
-}
-
-bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, int sighash, SignatureData* out_sigdata)
+bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, int sighash, SignatureData* out_sigdata, bool use_dummy)
 {
     PSBTInput& input = psbt.inputs.at(index);
     const CMutableTransaction& tx = *psbt.tx;
@@ -263,6 +249,11 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
     // Get UTXO
     bool require_witness_sig = false;
     CTxOut utxo;
+
+    // Verify input sanity, which checks that at most one of witness or non-witness utxos is provided.
+    if (!input.IsSane()) {
+        return false;
+    }
 
     if (input.non_witness_utxo) {
         // If we're taking our information from a non-witness UTXO, verify that it matches the prevout.
@@ -287,21 +278,20 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
 
     sigdata.witness = false;
     bool sig_complete;
-    if (txdata == nullptr) {
+    if (use_dummy) {
         sig_complete = ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, utxo.scriptPubKey, sigdata);
     } else {
-        MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, txdata, sighash);
+        MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, sighash);
         sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
     }
     // Verify that a witness signature was produced in case one was required.
     if (require_witness_sig && !sigdata.witness) return false;
     input.FromSignatureData(sigdata);
 
-    // If we have a witness signature, put a witness UTXO.
-    // TODO: For segwit v1, we should remove the non_witness_utxo
+    // If we have a witness signature, use the smaller witness UTXO.
     if (sigdata.witness) {
         input.witness_utxo = utxo;
-        // input.non_witness_utxo = nullptr;
+        input.non_witness_utxo = nullptr;
     }
 
     // Fill in the missing info
@@ -322,9 +312,8 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx)
     //   PartiallySignedTransaction did not understand them), this will combine them into a final
     //   script.
     bool complete = true;
-    const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, SIGHASH_ALL);
+        complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, SIGHASH_ALL);
     }
 
     return complete;
@@ -356,6 +345,10 @@ TransactionError CombinePSBTs(PartiallySignedTransaction& out, const std::vector
             return TransactionError::PSBT_MISMATCH;
         }
     }
+    if (!out.IsSane()) {
+        return TransactionError::INVALID_PSBT;
+    }
+
     return TransactionError::OK;
 }
 
@@ -384,7 +377,7 @@ bool DecodeBase64PSBT(PartiallySignedTransaction& psbt, const std::string& base6
 
 bool DecodeRawPSBT(PartiallySignedTransaction& psbt, const std::string& tx_data, std::string& error)
 {
-    CDataStream ss_data(MakeUCharSpan(tx_data), SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ss_data(tx_data.data(), tx_data.data() + tx_data.size(), SER_NETWORK, PROTOCOL_VERSION);
     try {
         ss_data >> psbt;
         if (!ss_data.empty()) {

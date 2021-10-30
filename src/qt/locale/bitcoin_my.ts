@@ -49,18 +49,6 @@
     </context>
 <context>
     <name>BitcoinGUI</name>
-    <message>
-        <source>Error</source>
-        <translation>အမှား</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>သတိပေးချက်</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>အချက်အလက်</translation>
-    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -82,10 +70,6 @@
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Error</source>
-        <translation>အမှား</translation>
-    </message>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -98,16 +82,9 @@
     </context>
 <context>
     <name>OptionsDialog</name>
-    <message>
-        <source>Error</source>
-        <translation>အမှား</translation>
-    </message>
     </context>
 <context>
     <name>OverviewPage</name>
-    </context>
-<context>
-    <name>PSBTOperationsDialog</name>
     </context>
 <context>
     <name>PaymentServer</name>
@@ -181,10 +158,6 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>လက်ရှိ tab မှာရှိတဲ့ဒေတာတွေကို ဖိုင်လ်မှာသိမ်းမယ်။</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>အမှား</translation>
     </message>
     </context>
 <context>

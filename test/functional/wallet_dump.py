@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2020 The Bitcoin Core developers
+# Copyright (c) 2016-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the dumpwallet RPC."""
-import datetime
 import os
-import time
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -20,7 +18,6 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
     Also check that the old hd_master is inactive
     """
     with open(file_name, encoding='utf8') as inputfile:
-        found_comments = []
         found_legacy_addr = 0
         found_p2sh_segwit_addr = 0
         found_bech32_addr = 0
@@ -29,12 +26,8 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
         found_addr_rsv = 0
         hd_master_addr_ret = None
         for line in inputfile:
-            line = line.strip()
-            if not line:
-                continue
-            if line[0] == '#':
-                found_comments.append(line)
-            else:
+            # only read non comment lines
+            if line[0] != "#" and len(line) > 10:
                 # split out some data
                 key_date_label, comment = line.split("#")
                 key_date_label = key_date_label.split(" ")
@@ -89,7 +82,7 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                         found_script_addr += 1
                         break
 
-        return found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret
+        return found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret
 
 
 class WalletDumpTest(BitcoinTestFramework):
@@ -106,8 +99,6 @@ class WalletDumpTest(BitcoinTestFramework):
         self.start_nodes()
 
     def run_test(self):
-        self.nodes[0].createwallet("dump")
-
         wallet_unenc_dump = os.path.join(self.nodes[0].datadir, "wallet.unencrypted.dump")
         wallet_enc_dump = os.path.join(self.nodes[0].datadir, "wallet.encrypted.dump")
 
@@ -118,7 +109,7 @@ class WalletDumpTest(BitcoinTestFramework):
         test_addr_count = 10
         addrs = []
         for address_type in ['legacy', 'p2sh-segwit', 'bech32']:
-            for _ in range(test_addr_count):
+            for i in range(0, test_addr_count):
                 addr = self.nodes[0].getnewaddress(address_type=address_type)
                 vaddr = self.nodes[0].getaddressinfo(addr)  # required to get hd keypath
                 addrs.append(vaddr)
@@ -131,36 +122,12 @@ class WalletDumpTest(BitcoinTestFramework):
         # its capacity
         self.nodes[0].keypoolrefill()
 
-        self.log.info('Mine a block one second before the wallet is dumped')
-        dump_time = int(time.time())
-        self.nodes[0].setmocktime(dump_time - 1)
-        self.generate(self.nodes[0], 1)
-        self.nodes[0].setmocktime(dump_time)
-        dump_time_str = '# * Created on {}Z'.format(
-            datetime.datetime.fromtimestamp(
-                dump_time,
-                tz=datetime.timezone.utc,
-            ).replace(tzinfo=None).isoformat())
-        dump_best_block_1 = '# * Best block at time of backup was {} ({}),'.format(
-            self.nodes[0].getblockcount(),
-            self.nodes[0].getbestblockhash(),
-        )
-        dump_best_block_2 = '#   mined on {}Z'.format(
-            datetime.datetime.fromtimestamp(
-                dump_time - 1,
-                tz=datetime.timezone.utc,
-            ).replace(tzinfo=None).isoformat())
-
-        self.log.info('Dump unencrypted wallet')
+        # dump unencrypted wallet
         result = self.nodes[0].dumpwallet(wallet_unenc_dump)
         assert_equal(result['filename'], wallet_unenc_dump)
 
-        found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
+        found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
             read_dump(wallet_unenc_dump, addrs, [multisig_addr], None)
-        assert '# End of dump' in found_comments  # Check that file is not corrupt
-        assert_equal(dump_time_str, next(c for c in found_comments if c.startswith('# * Created on')))
-        assert_equal(dump_best_block_1, next(c for c in found_comments if c.startswith('# * Best block')))
-        assert_equal(dump_best_block_2, next(c for c in found_comments if c.startswith('#   mined on')))
         assert_equal(found_legacy_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_p2sh_segwit_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_bech32_addr, test_addr_count)  # all keys must be in the dump
@@ -175,12 +142,8 @@ class WalletDumpTest(BitcoinTestFramework):
         self.nodes[0].keypoolrefill()
         self.nodes[0].dumpwallet(wallet_enc_dump)
 
-        found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, _ = \
+        found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, _ = \
             read_dump(wallet_enc_dump, addrs, [multisig_addr], hd_master_addr_unenc)
-        assert '# End of dump' in found_comments  # Check that file is not corrupt
-        assert_equal(dump_time_str, next(c for c in found_comments if c.startswith('# * Created on')))
-        assert_equal(dump_best_block_1, next(c for c in found_comments if c.startswith('# * Best block')))
-        assert_equal(dump_best_block_2, next(c for c in found_comments if c.startswith('#   mined on')))
         assert_equal(found_legacy_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_p2sh_segwit_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_bech32_addr, test_addr_count)  # all keys must be in the dump
@@ -192,8 +155,8 @@ class WalletDumpTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "already exists", lambda: self.nodes[0].dumpwallet(wallet_enc_dump))
 
         # Restart node with new wallet, and test importwallet
-        self.restart_node(0)
-        self.nodes[0].createwallet("w2")
+        self.stop_node(0)
+        self.start_node(0, ['-wallet=w2'])
 
         # Make sure the address is not IsMine before import
         result = self.nodes[0].getaddressinfo(multisig_addr)
@@ -204,20 +167,6 @@ class WalletDumpTest(BitcoinTestFramework):
         # Now check IsMine is true
         result = self.nodes[0].getaddressinfo(multisig_addr)
         assert result['ismine']
-
-        self.log.info('Check that wallet is flushed')
-        with self.nodes[0].assert_debug_log(['Flushing wallet.dat'], timeout=20):
-            self.nodes[0].getnewaddress()
-
-        # Make sure that dumpwallet doesn't have a lock order issue when there is an unconfirmed tx and it is reloaded
-        # See https://github.com/bitcoin/bitcoin/issues/22489
-        self.nodes[0].createwallet("w3")
-        w3 = self.nodes[0].get_wallet_rpc("w3")
-        w3.importprivkey(privkey=self.nodes[0].get_deterministic_priv_key().key, label="coinbase_import")
-        w3.sendtoaddress(w3.getnewaddress(), 10)
-        w3.unloadwallet()
-        self.nodes[0].loadwallet("w3")
-        w3.dumpwallet(os.path.join(self.nodes[0].datadir, "w3.dump"))
 
 if __name__ == '__main__':
     WalletDumpTest().main()

@@ -152,36 +152,36 @@ class FileState {
 
 class SequentialFileImpl : public SequentialFile {
  public:
-  explicit SequentialFileImpl(FileState* file) : file_(file), pos_(0) {
+  explicit SequentialFileImpl(FileState* file) : file_(file), staking_(0) {
     file_->Ref();
   }
 
   ~SequentialFileImpl() override { file_->Unref(); }
 
   Status Read(size_t n, Slice* result, char* scratch) override {
-    Status s = file_->Read(pos_, n, result, scratch);
+    Status s = file_->Read(staking_, n, result, scratch);
     if (s.ok()) {
-      pos_ += result->size();
+      staking_ += result->size();
     }
     return s;
   }
 
   Status Skip(uint64_t n) override {
-    if (pos_ > file_->Size()) {
-      return Status::IOError("pos_ > file_->Size()");
+    if (staking_ > file_->Size()) {
+      return Status::IOError("staking_ > file_->Size()");
     }
-    const uint64_t available = file_->Size() - pos_;
+    const uint64_t available = file_->Size() - staking_;
     if (n > available) {
       n = available;
     }
-    pos_ += n;
+    staking_ += n;
     return Status::OK();
   }
 
   virtual std::string GetName() const override { return "[memenv]"; }
  private:
   FileState* file_;
-  uint64_t pos_;
+  uint64_t staking_;
 };
 
 class RandomAccessFileImpl : public RandomAccessFile {

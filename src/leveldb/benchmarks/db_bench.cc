@@ -120,7 +120,7 @@ leveldb::Env* g_env = nullptr;
 class RandomGenerator {
  private:
   std::string data_;
-  int pos_;
+  int staking_;
 
  public:
   RandomGenerator() {
@@ -135,16 +135,16 @@ class RandomGenerator {
       test::CompressibleString(&rnd, FLAGS_compression_ratio, 100, &piece);
       data_.append(piece);
     }
-    pos_ = 0;
+    staking_ = 0;
   }
 
   Slice Generate(size_t len) {
-    if (pos_ + len > data_.size()) {
-      pos_ = 0;
+    if (staking_ + len > data_.size()) {
+      staking_ = 0;
       assert(len < data_.size());
     }
-    pos_ += len;
-    return Slice(data_.data() + pos_ - len, len);
+    staking_ += len;
+    return Slice(data_.data() + staking_ - len, len);
   }
 };
 

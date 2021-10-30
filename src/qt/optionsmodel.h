@@ -5,19 +5,17 @@
 #ifndef BITCOIN_QT_OPTIONSMODEL_H
 #define BITCOIN_QT_OPTIONSMODEL_H
 
-#include <cstdint>
+#include <amount.h>
 #include <qt/guiconstants.h>
 
 #include <QAbstractListModel>
-
-#include <assert.h>
 
 namespace interfaces {
 class Node;
 }
 
 extern const char *DEFAULT_GUI_PROXY_HOST;
-static constexpr uint16_t DEFAULT_GUI_PROXY_PORT = 9050;
+static constexpr unsigned short DEFAULT_GUI_PROXY_PORT = 9050;
 
 /**
  * Convert configured prune target MiB to displayed GB. Round up to avoid underestimating max disk usage.
@@ -40,14 +38,13 @@ class OptionsModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    explicit OptionsModel(QObject *parent = nullptr, bool resetSettings = false);
+    explicit OptionsModel(interfaces::Node& node, QObject *parent = nullptr, bool resetSettings = false);
 
     enum OptionID {
         StartAtStartup,         // bool
-        ShowTrayIcon,           // bool
+        HideTrayIcon,           // bool
         MinimizeToTray,         // bool
         MapPortUPnP,            // bool
-        MapPortNatpmp,          // bool
         MinimizeOnClose,        // bool
         ProxyUse,               // bool
         ProxyIP,                // QString
@@ -58,38 +55,33 @@ public:
         DisplayUnit,            // BitcoinUnits::Unit
         ThirdPartyTxUrls,       // QString
         Language,               // QString
-        UseEmbeddedMonospacedFont, // bool
         CoinControlFeatures,    // bool
-        SubFeeFromAmount,       // bool
         ThreadsScriptVerif,     // int
         Prune,                  // bool
         PruneSize,              // int
         DatabaseCache,          // int
-        ExternalSignerPath,     // QString
         SpendZeroConfChange,    // bool
         Listen,                 // bool
-        Server,                 // bool
+        ReserveBalance,         // CAmount
         OptionIDRowCount,
     };
 
     void Init(bool resetSettings = false);
     void Reset();
 
-    int rowCount(const QModelIndex & parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
-    bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole) override;
+    int rowCount(const QModelIndex & parent = QModelIndex()) const;
+    QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
+    bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole);
     /** Updates current unit in memory, settings and emits displayUnitChanged(newUnit) signal */
     void setDisplayUnit(const QVariant &value);
 
     /* Explicit getters */
-    bool getShowTrayIcon() const { return m_show_tray_icon; }
+    bool getHideTrayIcon() const { return fHideTrayIcon; }
     bool getMinimizeToTray() const { return fMinimizeToTray; }
     bool getMinimizeOnClose() const { return fMinimizeOnClose; }
     int getDisplayUnit() const { return nDisplayUnit; }
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
-    bool getUseEmbeddedMonospacedFont() const { return m_use_embedded_monospaced_font; }
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
-    bool getSubFeeFromAmount() const { return m_sub_fee_from_amount; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Explicit setters */
@@ -100,21 +92,18 @@ public:
     void setRestartRequired(bool fRequired);
     bool isRestartRequired() const;
 
-    interfaces::Node& node() const { assert(m_node); return *m_node; }
-    void setNode(interfaces::Node& node) { assert(!m_node); m_node = &node; }
+    interfaces::Node& node() const { return m_node; }
 
 private:
-    interfaces::Node* m_node = nullptr;
+    interfaces::Node& m_node;
     /* Qt-only settings */
-    bool m_show_tray_icon;
+    bool fHideTrayIcon;
     bool fMinimizeToTray;
     bool fMinimizeOnClose;
     QString language;
     int nDisplayUnit;
     QString strThirdPartyTxUrls;
-    bool m_use_embedded_monospaced_font;
     bool fCoinControlFeatures;
-    bool m_sub_fee_from_amount;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
 
@@ -126,8 +115,7 @@ private:
 Q_SIGNALS:
     void displayUnitChanged(int unit);
     void coinControlFeaturesChanged(bool);
-    void showTrayIconChanged(bool);
-    void useEmbeddedMonospacedFontChanged(bool);
+    void hideTrayIconChanged(bool);
 };
 
 #endif // BITCOIN_QT_OPTIONSMODEL_H

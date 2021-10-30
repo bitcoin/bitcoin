@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,11 +14,9 @@
 #include <interfaces/wallet.h>
 #include <qt/guiutil.h>
 #include <qt/networkstyle.h>
-#include <qt/walletmodel.h>
+#include <ui_interface.h>
 #include <util/system.h>
 #include <util/translation.h>
-
-#include <functional>
 
 #include <QApplication>
 #include <QCloseEvent>
@@ -27,8 +25,8 @@
 #include <QScreen>
 
 
-SplashScreen::SplashScreen(const NetworkStyle* networkStyle)
-    : QWidget(), curAlignment(0)
+SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
+    QWidget(nullptr, f), curAlignment(0), m_node(node)
 {
     // set reference point, paddings
     int paddingRight            = 50;
@@ -43,7 +41,7 @@ SplashScreen::SplashScreen(const NetworkStyle* networkStyle)
     // define text to place
     QString titleText       = PACKAGE_NAME;
     QString versionText     = QString("Version %1").arg(QString::fromStdString(FormatFullVersion()));
-    QString copyrightText   = QString::fromUtf8(CopyrightHolders(strprintf("\xc2\xA9 %u-%u ", 2009, COPYRIGHT_YEAR)).c_str());
+    QString copyrightText   = QString::fromUtf8(CopyrightHolders(strprintf("\xc2\xA9 %u ", COPYRIGHT_YEAR)).c_str());
     QString titleAddText    = networkStyle->getTitleAddText();
 
     QString font            = QApplication::font().toString();
@@ -99,7 +97,7 @@ SplashScreen::SplashScreen(const NetworkStyle* networkStyle)
 
     // draw copyright stuff
     {
-        pixPaint.setFont(QFont(font, 10*fontFactor));
+        pixPaint.setFont(QFont(font, 12*fontFactor));
         const int x = pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight;
         const int y = paddingTop+titleCopyrightVSpace;
         QRect copyrightRect(x, y, pixmap.width() - x - paddingRight, pixmap.height() - y);
@@ -127,35 +125,20 @@ SplashScreen::SplashScreen(const NetworkStyle* networkStyle)
     setFixedSize(r.size());
     move(QGuiApplication::primaryScreen()->geometry().center() - r.center());
 
+    subscribeToCoreSignals();
     installEventFilter(this);
-
-    GUIUtil::handleCloseWindowShortcut(this);
 }
 
 SplashScreen::~SplashScreen()
 {
-    if (m_node) unsubscribeFromCoreSignals();
-}
-
-void SplashScreen::setNode(interfaces::Node& node)
-{
-    assert(!m_node);
-    m_node = &node;
-    subscribeToCoreSignals();
-    if (m_shutdown) m_node->startShutdown();
-}
-
-void SplashScreen::shutdown()
-{
-    m_shutdown = true;
-    if (m_node) m_node->startShutdown();
+    unsubscribeFromCoreSignals();
 }
 
 bool SplashScreen::eventFilter(QObject * obj, QEvent * ev) {
     if (ev->type() == QEvent::KeyPress) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(ev);
         if (keyEvent->key() == Qt::Key_Q) {
-            shutdown();
+            m_node.startShutdown();
         }
     }
     return QObject::eventFilter(obj, ev);
@@ -184,26 +167,25 @@ static void InitMessage(SplashScreen *splash, const std::string &message)
 static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible)
 {
     InitMessage(splash, title + std::string("\n") +
-            (resume_possible ? SplashScreen::tr("(press q to shutdown and continue later)").toStdString()
-                                : SplashScreen::tr("press q to shutdown").toStdString()) +
+            (resume_possible ? _("(press q to shutdown and continue later)").translated
+                                : _("press q to shutdown").translated) +
             strprintf("\n%d", nProgress) + "%");
 }
+#ifdef ENABLE_WALLET
+void SplashScreen::ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet)
+{
+    m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, false)));
+    m_connected_wallets.emplace_back(std::move(wallet));
+}
+#endif
 
 void SplashScreen::subscribeToCoreSignals()
 {
     // Connect signals to client
-    m_handler_init_message = m_node->handleInitMessage(std::bind(InitMessage, this, std::placeholders::_1));
-    m_handler_show_progress = m_node->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-}
-
-void SplashScreen::handleLoadWallet()
-{
+    m_handler_init_message = m_node.handleInitMessage(std::bind(InitMessage, this, std::placeholders::_1));
+    m_handler_show_progress = m_node.handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 #ifdef ENABLE_WALLET
-    if (!WalletModel::isWalletEnabled()) return;
-    m_handler_load_wallet = m_node->walletClient().handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
-        m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, false)));
-        m_connected_wallets.emplace_back(std::move(wallet));
-    });
+    m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) { ConnectWallet(std::move(wallet)); });
 #endif
 }
 
@@ -238,6 +220,6 @@ void SplashScreen::paintEvent(QPaintEvent *event)
 
 void SplashScreen::closeEvent(QCloseEvent *event)
 {
-    shutdown(); // allows an "emergency" shutdown during startup
+    m_node.startShutdown(); // allows an "emergency" shutdown during startup
     event->ignore();
 }

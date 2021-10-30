@@ -5,18 +5,12 @@
 #ifndef BITCOIN_WALLET_COINCONTROL_H
 #define BITCOIN_WALLET_COINCONTROL_H
 
+#include <optional.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <primitives/transaction.h>
-#include <script/keyorigin.h>
-#include <script/signingprovider.h>
 #include <script/standard.h>
-
-#include <optional>
-#include <algorithm>
-#include <map>
-#include <set>
 
 const int DEFAULT_MIN_DEPTH = 0;
 const int DEFAULT_MAX_DEPTH = 9999999;
@@ -29,39 +23,38 @@ class CCoinControl
 {
 public:
     //! Custom change destination, if not set an address is generated
-    CTxDestination destChange = CNoDestination();
+    CTxDestination destChange;
     //! Override the default change type if set, ignored if destChange is set
-    std::optional<OutputType> m_change_type;
-    //! If false, only selected inputs are used
-    bool m_add_inputs = true;
-    //! If false, only safe inputs will be used
-    bool m_include_unsafe_inputs = false;
+    Optional<OutputType> m_change_type;
     //! If false, allows unselected inputs, but requires all selected inputs be used
-    bool fAllowOtherInputs = false;
+    bool fAllowOtherInputs;
     //! Includes watch only addresses which are solvable
-    bool fAllowWatchOnly = false;
+    bool fAllowWatchOnly;
     //! Override automatic min/max checks on fee, m_feerate must be set if true
-    bool fOverrideFeeRate = false;
+    bool fOverrideFeeRate;
     //! Override the wallet's m_pay_tx_fee if set
-    std::optional<CFeeRate> m_feerate;
+    Optional<CFeeRate> m_feerate;
     //! Override the default confirmation target if set
-    std::optional<unsigned int> m_confirm_target;
+    Optional<unsigned int> m_confirm_target;
     //! Override the wallet's m_signal_rbf if set
-    std::optional<bool> m_signal_bip125_rbf;
+    Optional<bool> m_signal_bip125_rbf;
     //! Avoid partial use of funds sent to a given address
-    bool m_avoid_partial_spends = DEFAULT_AVOIDPARTIALSPENDS;
+    bool m_avoid_partial_spends;
     //! Forbids inclusion of dirty (previously used) addresses
-    bool m_avoid_address_reuse = false;
+    bool m_avoid_address_reuse;
     //! Fee estimation mode to control arguments to estimateSmartFee
-    FeeEstimateMode m_fee_mode = FeeEstimateMode::UNSET;
+    FeeEstimateMode m_fee_mode;
     //! Minimum chain depth value for coin availability
     int m_min_depth = DEFAULT_MIN_DEPTH;
     //! Maximum chain depth value for coin availability
     int m_max_depth = DEFAULT_MAX_DEPTH;
-    //! SigningProvider that has pubkeys and scripts to do spend size estimation for external inputs
-    FlatSigningProvider m_external_provider;
 
-    CCoinControl();
+    CCoinControl()
+    {
+        SetNull();
+    }
+
+    void SetNull();
 
     bool HasSelected() const
     {
@@ -73,30 +66,9 @@ public:
         return (setSelected.count(output) > 0);
     }
 
-    bool IsExternalSelected(const COutPoint& output) const
-    {
-        return (m_external_txouts.count(output) > 0);
-    }
-
-    bool GetExternalOutput(const COutPoint& outpoint, CTxOut& txout) const
-    {
-        const auto ext_it = m_external_txouts.find(outpoint);
-        if (ext_it == m_external_txouts.end()) {
-            return false;
-        }
-        txout = ext_it->second;
-        return true;
-    }
-
     void Select(const COutPoint& output)
     {
         setSelected.insert(output);
-    }
-
-    void SelectExternal(const COutPoint& outpoint, const CTxOut& txout)
-    {
-        setSelected.insert(outpoint);
-        m_external_txouts.emplace(outpoint, txout);
     }
 
     void UnSelect(const COutPoint& output)
@@ -116,7 +88,6 @@ public:
 
 private:
     std::set<COutPoint> setSelected;
-    std::map<COutPoint, CTxOut> m_external_txouts;
 };
 
 #endif // BITCOIN_WALLET_COINCONTROL_H

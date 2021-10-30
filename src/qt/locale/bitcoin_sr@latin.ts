@@ -70,6 +70,10 @@
         <translation>Ovo su Vaše Bitcoin adrese na koju se vrše uplate. Uvek proverite iznos i prijemnu adresu pre slanja novčića.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Ovo su vaše Bitcoin adrese za primanje isplete. Upotrebite dugme 'Kreiraj novu adresu prijema' na kartici za prijem da biste kreirali nove adrese.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopiraj Adresu</translation>
     </message>
@@ -545,9 +549,6 @@
     <name>OverviewPage</name>
     </context>
 <context>
-    <name>PSBTOperationsDialog</name>
-    </context>
-<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -576,14 +577,26 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Amount:</source>
-        <translation>Iznos:</translation>
+        <source>Address</source>
+        <translation>Adresa</translation>
     </message>
     <message>
-        <source>Wallet:</source>
-        <translation>Novčanik:</translation>
+        <source>Amount</source>
+        <translation>Kolicina</translation>
     </message>
-    </context>
+    <message>
+        <source>Label</source>
+        <translation>Oznaka</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Poruka</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Novčanik</translation>
+    </message>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -867,10 +880,6 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Izvoz podataka iz trenutne kartice u datoteku</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Greska</translation>
     </message>
     </context>
 <context>

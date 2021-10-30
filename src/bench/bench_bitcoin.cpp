@@ -1,118 +1,79 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
 
-#include <clientversion.h>
-#include <crypto/sha256.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 
-#include <chrono>
-#include <cstdint>
-#include <iostream>
-#include <sstream>
-#include <vector>
+#include <memory>
 
+static const int64_t DEFAULT_BENCH_EVALUATIONS = 5;
 static const char* DEFAULT_BENCH_FILTER = ".*";
-static constexpr int64_t DEFAULT_MIN_TIME_MS{10};
+static const char* DEFAULT_BENCH_SCALING = "1.0";
+static const char* DEFAULT_BENCH_PRINTER = "console";
+static const char* DEFAULT_PLOT_PLOTLYURL = "https://cdn.plot.ly/plotly-latest.min.js";
+static const int64_t DEFAULT_PLOT_WIDTH = 1024;
+static const int64_t DEFAULT_PLOT_HEIGHT = 768;
 
-static void SetupBenchArgs(ArgsManager& argsman)
+static void SetupBenchArgs()
 {
-    SetupHelpOptions(argsman);
+    SetupHelpOptions(gArgs);
 
-    argsman.AddArg("-asymptote=<n1,n2,n3,...>", "Test asymptotic growth of the runtime of an algorithm, if supported by the benchmark", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-filter=<regex>", strprintf("Regular expression filter to select benchmark by name (default: %s)", DEFAULT_BENCH_FILTER), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-list", "List benchmarks without executing them", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
-    argsman.AddArg("-min_time=<milliseconds>", strprintf("Minimum runtime per benchmark, in milliseconds (default: %d)", DEFAULT_MIN_TIME_MS), ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
-    argsman.AddArg("-output_csv=<output.csv>", "Generate CSV file with the most important benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-output_json=<output.json>", "Generate JSON file with all benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-}
-
-// parses a comma separated list like "10,20,30,50"
-static std::vector<double> parseAsymptote(const std::string& str) {
-    std::stringstream ss(str);
-    std::vector<double> numbers;
-    double d;
-    char c;
-    while (ss >> d) {
-        numbers.push_back(d);
-        ss >> c;
-    }
-    return numbers;
+    gArgs.AddArg("-list", "List benchmarks without executing them. Can be combined with -scaling and -filter", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-evals=<n>", strprintf("Number of measurement evaluations to perform. (default: %u)", DEFAULT_BENCH_EVALUATIONS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-filter=<regex>", strprintf("Regular expression filter to select benchmark by name (default: %s)", DEFAULT_BENCH_FILTER), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-scaling=<n>", strprintf("Scaling factor for benchmark's runtime (default: %u)", DEFAULT_BENCH_SCALING), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-printer=(console|plot)", strprintf("Choose printer format. console: print data to console. plot: Print results as HTML graph (default: %s)", DEFAULT_BENCH_PRINTER), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-plot-plotlyurl=<uri>", strprintf("URL to use for plotly.js (default: %s)", DEFAULT_PLOT_PLOTLYURL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-plot-width=<x>", strprintf("Plot width in pixel (default: %u)", DEFAULT_PLOT_WIDTH), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-plot-height=<x>", strprintf("Plot height in pixel (default: %u)", DEFAULT_PLOT_HEIGHT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 }
 
 int main(int argc, char** argv)
 {
-    ArgsManager argsman;
-    SetupBenchArgs(argsman);
-    SHA256AutoDetect();
+    SetupBenchArgs();
     std::string error;
-    if (!argsman.ParseParameters(argc, argv, error)) {
+    if (!gArgs.ParseParameters(argc, argv, error)) {
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
         return EXIT_FAILURE;
     }
 
-    if (HelpRequested(argsman)) {
-        std::cout << "Usage:  bench_bitcoin [options]\n"
-                     "\n"
-                  << argsman.GetHelpMessage()
-                  << "Description:\n"
-                     "\n"
-                     "  bench_bitcoin executes microbenchmarks. The quality of the benchmark results\n"
-                     "  highly depend on the stability of the machine. It can sometimes be difficult\n"
-                     "  to get stable, repeatable results, so here are a few tips:\n"
-                     "\n"
-                     "  * Use pyperf [1] to disable frequency scaling, turbo boost etc. For best\n"
-                     "    results, use CPU pinning and CPU isolation (see [2]).\n"
-                     "\n"
-                     "  * Each call of run() should do exactly the same work. E.g. inserting into\n"
-                     "    a std::vector doesn't do that as it will reallocate on certain calls. Make\n"
-                     "    sure each run has exactly the same preconditions.\n"
-                     "\n"
-                     "  * If results are still not reliable, increase runtime with e.g.\n"
-                     "    -min_time=5000 to let a benchmark run for at least 5 seconds.\n"
-                     "\n"
-                     "  * bench_bitcoin uses nanobench [3] for which there is extensive\n"
-                     "    documentation available online.\n"
-                     "\n"
-                     "Environment Variables:\n"
-                     "\n"
-                     "  To attach a profiler you can run a benchmark in endless mode. This can be\n"
-                     "  done with the environment variable NANOBENCH_ENDLESS. E.g. like so:\n"
-                     "\n"
-                     "    NANOBENCH_ENDLESS=MuHash ./bench_bitcoin -filter=MuHash\n"
-                     "\n"
-                     "  In rare cases it can be useful to suppress stability warnings. This can be\n"
-                     "  done with the environment variable NANOBENCH_SUPPRESS_WARNINGS, e.g:\n"
-                     "\n"
-                     "    NANOBENCH_SUPPRESS_WARNINGS=1 ./bench_bitcoin\n"
-                     "\n"
-                     "Notes:\n"
-                     "\n"
-                     "  1. pyperf\n"
-                     "     https://github.com/psf/pyperf\n"
-                     "\n"
-                     "  2. CPU pinning & isolation\n"
-                     "     https://pyperf.readthedocs.io/en/latest/system.html\n"
-                     "\n"
-                     "  3. nanobench\n"
-                     "     https://github.com/martinus/nanobench\n"
-                     "\n";
+    if (HelpRequested(gArgs)) {
+        std::cout << gArgs.GetHelpMessage();
 
         return EXIT_SUCCESS;
     }
 
-    benchmark::Args args;
-    args.asymptote = parseAsymptote(argsman.GetArg("-asymptote", ""));
-    args.is_list_only = argsman.GetBoolArg("-list", false);
-    args.min_time = std::chrono::milliseconds(argsman.GetIntArg("-min_time", DEFAULT_MIN_TIME_MS));
-    args.output_csv = argsman.GetArg("-output_csv", "");
-    args.output_json = argsman.GetArg("-output_json", "");
-    args.regex_filter = argsman.GetArg("-filter", DEFAULT_BENCH_FILTER);
+    int64_t evaluations = gArgs.GetArg("-evals", DEFAULT_BENCH_EVALUATIONS);
+    std::string regex_filter = gArgs.GetArg("-filter", DEFAULT_BENCH_FILTER);
+    std::string scaling_str = gArgs.GetArg("-scaling", DEFAULT_BENCH_SCALING);
+    bool is_list_only = gArgs.GetBoolArg("-list", false);
 
-    benchmark::BenchRunner::RunAll(args);
+    if (evaluations == 0) {
+        return EXIT_SUCCESS;
+    } else if (evaluations < 0) {
+        tfm::format(std::cerr, "Error parsing evaluations argument: %d\n", evaluations);
+        return EXIT_FAILURE;
+    }
+
+    double scaling_factor;
+    if (!ParseDouble(scaling_str, &scaling_factor)) {
+        tfm::format(std::cerr, "Error parsing scaling factor as double: %s\n", scaling_str);
+        return EXIT_FAILURE;
+    }
+
+    std::unique_ptr<benchmark::Printer> printer = MakeUnique<benchmark::ConsolePrinter>();
+    std::string printer_arg = gArgs.GetArg("-printer", DEFAULT_BENCH_PRINTER);
+    if ("plot" == printer_arg) {
+        printer.reset(new benchmark::PlotlyPrinter(
+            gArgs.GetArg("-plot-plotlyurl", DEFAULT_PLOT_PLOTLYURL),
+            gArgs.GetArg("-plot-width", DEFAULT_PLOT_WIDTH),
+            gArgs.GetArg("-plot-height", DEFAULT_PLOT_HEIGHT)));
+    }
+
+    benchmark::BenchRunner::RunAll(*printer, evaluations, scaling_factor, regex_filter, is_list_only);
 
     return EXIT_SUCCESS;
 }

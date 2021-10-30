@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the scantxoutset rpc call."""
@@ -23,7 +23,7 @@ class ScantxoutsetTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Mining blocks...")
-        self.generate(self.nodes[0], 110)
+        self.nodes[0].generate(110)
 
         addr_P2SH_SEGWIT = self.nodes[0].getnewaddress("", "p2sh-segwit")
         pubk1 = self.nodes[0].getaddressinfo(addr_P2SH_SEGWIT)['pubkey']
@@ -50,14 +50,13 @@ class ScantxoutsetTest(BitcoinTestFramework):
         self.nodes[0].sendtoaddress("mpQ8rokAhp1TAtJQR6F6TaUmjAWkAWYYBq", 16.384) # (m/1/1/1500)
 
 
-        self.generate(self.nodes[0], 1)
+        self.nodes[0].generate(1)
 
         self.log.info("Stop node, remove wallet, mine again some blocks...")
         self.stop_node(0)
         shutil.rmtree(os.path.join(self.nodes[0].datadir, self.chain, 'wallets'))
-        self.start_node(0, ['-nowallet'])
-        self.import_deterministic_coinbase_privkeys()
-        self.generate(self.nodes[0], 110)
+        self.start_node(0)
+        self.nodes[0].generate(110)
 
         scan = self.nodes[0].scantxoutset("start", [])
         info = self.nodes[0].gettxoutsetinfo()
@@ -84,7 +83,7 @@ class ScantxoutsetTest(BitcoinTestFramework):
 
         self.log.info("Test extended key derivation.")
         # Run various scans, and verify that the sum of the amounts of the matches corresponds to the expected subset.
-        # Note that all amounts in the UTXO set are powers of 2 multiplied by 0.001 BTC, so each amounts uniquely identifies a subset.
+        # Note that all amounts in the UTXO set are powers of 2 multiplied by 0.001 BSK, so each amounts uniquely identifies a subset.
         assert_equal(self.nodes[0].scantxoutset("start", [ "combo(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0'/0h/0h)"])['total_amount'], Decimal("0.008"))
         assert_equal(self.nodes[0].scantxoutset("start", [ "combo(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0'/0'/1h)"])['total_amount'], Decimal("0.016"))
         assert_equal(self.nodes[0].scantxoutset("start", [ "combo(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/0'/1500')"])['total_amount'], Decimal("0.032"))

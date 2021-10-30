@@ -525,7 +525,11 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Mae'r waled &lt;b&gt;wedi'i amgryptio&lt;/b&gt; ac &lt;b&gt;ar glo&lt;/b&gt; ar hyn o bryd</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
+        <translation>Mae gwall angheuol wedi digwydd. Ni all Bitcoin barhau'n ddiogel ac mae'n cau lawr.</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -735,9 +739,6 @@
     </message>
     </context>
 <context>
-    <name>PSBTOperationsDialog</name>
-    </context>
-<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -790,30 +791,34 @@
         <source>Copy amount</source>
         <translation>Copïo Cyfanswm</translation>
     </message>
-    <message>
-        <source>Could not unlock wallet.</source>
-        <translation>Methodd ddatgloi'r waled.</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
-    <message>
-        <source>Amount:</source>
-        <translation>Maint</translation>
-    </message>
-    <message>
-        <source>Message:</source>
-        <translation>Neges:</translation>
-    </message>
-    <message>
-        <source>Wallet:</source>
-        <translation>Waled:</translation>
-    </message>
     <message>
         <source>Copy &amp;Address</source>
         <translation>&amp;Cyfeiriad Copi</translation>
     </message>
-    </context>
+    <message>
+        <source>Address</source>
+        <translation>Cyfeiriad</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Cyfanswm</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Label</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Neges</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Waled</translation>
+    </message>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -1089,10 +1094,6 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Allforio'r data yn y tab presennol i ffeil</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Gwall</translation>
     </message>
     </context>
 <context>

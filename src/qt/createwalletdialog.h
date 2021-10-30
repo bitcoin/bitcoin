@@ -7,7 +7,6 @@
 
 #include <QDialog>
 
-class ExternalSigner;
 class WalletModel;
 
 namespace Ui {
@@ -24,18 +23,13 @@ public:
     explicit CreateWalletDialog(QWidget* parent);
     virtual ~CreateWalletDialog();
 
-    void setSigners(const std::vector<ExternalSigner>& signers);
-
     QString walletName() const;
     bool isEncryptWalletChecked() const;
     bool isDisablePrivateKeysChecked() const;
     bool isMakeBlankWalletChecked() const;
-    bool isDescriptorWalletChecked() const;
-    bool isExternalSignerChecked() const;
 
 private:
     Ui::CreateWalletDialog *ui;
-    bool m_has_signers = false;
 };
 
 #endif // BITCOIN_QT_CREATEWALLETDIALOG_H

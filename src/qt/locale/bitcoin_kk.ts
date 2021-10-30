@@ -199,9 +199,6 @@
     <name>OverviewPage</name>
     </context>
 <context>
-    <name>PSBTOperationsDialog</name>
-    </context>
-<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -238,10 +235,14 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Amount:</source>
+        <source>Amount</source>
         <translation>Саны</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet</source>
+        <translation>Әмиян</translation>
+    </message>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -333,10 +334,6 @@
     <message>
         <source>&amp;Export</source>
         <translation>Экспорт</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>қате</translation>
     </message>
     </context>
 <context>

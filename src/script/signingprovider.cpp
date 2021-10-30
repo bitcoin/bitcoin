@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -44,11 +44,6 @@ bool HidingSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& inf
     return m_provider->GetKeyOrigin(keyid, info);
 }
 
-bool HidingSigningProvider::GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const
-{
-    return m_provider->GetTaprootSpendData(output_key, spenddata);
-}
-
 bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
 bool FlatSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const { return LookupHelper(pubkeys, keyid, pubkey); }
 bool FlatSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const
@@ -59,10 +54,6 @@ bool FlatSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info)
     return ret;
 }
 bool FlatSigningProvider::GetKey(const CKeyID& keyid, CKey& key) const { return LookupHelper(keys, keyid, key); }
-bool FlatSigningProvider::GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const
-{
-    return LookupHelper(tr_spenddata, output_key, spenddata);
-}
 
 FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvider& b)
 {
@@ -75,10 +66,6 @@ FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvide
     ret.keys.insert(b.keys.begin(), b.keys.end());
     ret.origins = a.origins;
     ret.origins.insert(b.origins.begin(), b.origins.end());
-    ret.tr_spenddata = a.tr_spenddata;
-    for (const auto& [output_key, spenddata] : b.tr_spenddata) {
-        ret.tr_spenddata[output_key].Merge(spenddata);
-    }
     return ret;
 }
 
@@ -192,19 +179,19 @@ CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& 
 {
     // Only supports destinations which map to single public keys, i.e. P2PKH,
     // P2WPKH, and P2SH-P2WPKH.
-    if (auto id = std::get_if<PKHash>(&dest)) {
-        return ToKeyID(*id);
+    if (auto id = boost::get<PKHash>(&dest)) {
+        return CKeyID(*id);
     }
-    if (auto witness_id = std::get_if<WitnessV0KeyHash>(&dest)) {
-        return ToKeyID(*witness_id);
+    if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
+        return CKeyID(*witness_id);
     }
-    if (auto script_hash = std::get_if<ScriptHash>(&dest)) {
+    if (auto script_hash = boost::get<ScriptHash>(&dest)) {
         CScript script;
         CScriptID script_id(*script_hash);
         CTxDestination inner_dest;
         if (store.GetCScript(script_id, script) && ExtractDestination(script, inner_dest)) {
-            if (auto inner_witness_id = std::get_if<WitnessV0KeyHash>(&inner_dest)) {
-                return ToKeyID(*inner_witness_id);
+            if (auto inner_witness_id = boost::get<WitnessV0KeyHash>(&inner_dest)) {
+                return CKeyID(*inner_witness_id);
             }
         }
     }

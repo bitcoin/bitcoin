@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,15 +10,13 @@
 #define BITCOIN_UTIL_STRENCODINGS_H
 
 #include <attributes.h>
-#include <span.h>
-#include <util/string.h>
 
-#include <charconv>
 #include <cstdint>
 #include <iterator>
-#include <optional>
 #include <string>
 #include <vector>
+
+#define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
 
 /** Used by SanitizeString() */
 enum SafeChars
@@ -49,53 +47,17 @@ bool IsHex(const std::string& str);
 bool IsHexNumber(const std::string& str);
 std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid = nullptr);
 std::string DecodeBase64(const std::string& str, bool* pf_invalid = nullptr);
-std::string EncodeBase64(Span<const unsigned char> input);
+std::string EncodeBase64(const unsigned char* pch, size_t len);
 std::string EncodeBase64(const std::string& str);
 std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid = nullptr);
 std::string DecodeBase32(const std::string& str, bool* pf_invalid = nullptr);
+std::string EncodeBase32(const unsigned char* pch, size_t len);
+std::string EncodeBase32(const std::string& str);
 
-/**
- * Base32 encode.
- * If `pad` is true, then the output will be padded with '=' so that its length
- * is a multiple of 8.
- */
-std::string EncodeBase32(Span<const unsigned char> input, bool pad = true);
-
-/**
- * Base32 encode.
- * If `pad` is true, then the output will be padded with '=' so that its length
- * is a multiple of 8.
- */
-std::string EncodeBase32(const std::string& str, bool pad = true);
-
-void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut);
-
-// LocaleIndependentAtoi is provided for backwards compatibility reasons.
-//
-// New code should use ToIntegral or the ParseInt* functions
-// which provide parse error feedback.
-//
-// The goal of LocaleIndependentAtoi is to replicate the exact defined behaviour
-// of atoi and atoi64 as they behave under the "C" locale.
-template <typename T>
-T LocaleIndependentAtoi(const std::string& str)
-{
-    static_assert(std::is_integral<T>::value);
-    T result;
-    // Emulate atoi(...) handling of white space and leading +/-.
-    std::string s = TrimString(str);
-    if (!s.empty() && s[0] == '+') {
-        if (s.length() >= 2 && s[1] == '-') {
-            return 0;
-        }
-        s = s.substr(1);
-    }
-    auto [_, error_condition] = std::from_chars(s.data(), s.data() + s.size(), result);
-    if (error_condition != std::errc{}) {
-        return 0;
-    }
-    return result;
-}
+void SplitHostPort(std::string in, int& portOut, std::string& hostOut);
+int64_t atoi64(const char* psz);
+int64_t atoi64(const std::string& str);
+int atoi(const std::string& str);
 
 /**
  * Tests if the given character is a decimal digit.
@@ -123,72 +85,61 @@ constexpr inline bool IsSpace(char c) noexcept {
 }
 
 /**
- * Convert string to integral type T. Leading whitespace, a leading +, or any
- * trailing character fail the parsing. The required format expressed as regex
- * is `-?[0-9]+`. The minus sign is only permitted for signed integer types.
- *
- * @returns std::nullopt if the entire string could not be parsed, or if the
- *   parsed value is not in the range representable by the type T.
- */
-template <typename T>
-std::optional<T> ToIntegral(const std::string& str)
-{
-    static_assert(std::is_integral<T>::value);
-    T result;
-    const auto [first_nonmatching, error_condition] = std::from_chars(str.data(), str.data() + str.size(), result);
-    if (first_nonmatching != str.data() + str.size() || error_condition != std::errc{}) {
-        return std::nullopt;
-    }
-    return result;
-}
-
-/**
  * Convert string to signed 32-bit integer with strict parse error feedback.
  * @returns true if the entire string could be parsed as valid integer,
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
  */
-[[nodiscard]] bool ParseInt32(const std::string& str, int32_t *out);
+NODISCARD bool ParseInt32(const std::string& str, int32_t *out);
 
 /**
  * Convert string to signed 64-bit integer with strict parse error feedback.
  * @returns true if the entire string could be parsed as valid integer,
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
  */
-[[nodiscard]] bool ParseInt64(const std::string& str, int64_t *out);
-
-/**
- * Convert decimal string to unsigned 8-bit integer with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid integer,
- *   false if not the entire string could be parsed or when overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseUInt8(const std::string& str, uint8_t *out);
-
-/**
- * Convert decimal string to unsigned 16-bit integer with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid integer,
- *   false if the entire string could not be parsed or if overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseUInt16(const std::string& str, uint16_t* out);
+NODISCARD bool ParseInt64(const std::string& str, int64_t *out);
 
 /**
  * Convert decimal string to unsigned 32-bit integer with strict parse error feedback.
  * @returns true if the entire string could be parsed as valid integer,
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
  */
-[[nodiscard]] bool ParseUInt32(const std::string& str, uint32_t *out);
+NODISCARD bool ParseUInt32(const std::string& str, uint32_t *out);
 
 /**
  * Convert decimal string to unsigned 64-bit integer with strict parse error feedback.
  * @returns true if the entire string could be parsed as valid integer,
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
  */
-[[nodiscard]] bool ParseUInt64(const std::string& str, uint64_t *out);
+NODISCARD bool ParseUInt64(const std::string& str, uint64_t *out);
 
 /**
- * Convert a span of bytes to a lower-case hexadecimal string.
+ * Convert string to double with strict parse error feedback.
+ * @returns true if the entire string could be parsed as valid double,
+ *   false if not the entire string could be parsed or when overflow or underflow occurred.
  */
-std::string HexStr(const Span<const uint8_t> s);
-inline std::string HexStr(const Span<const char> s) { return HexStr(MakeUCharSpan(s)); }
+NODISCARD bool ParseDouble(const std::string& str, double *out);
+
+template<typename T>
+std::string HexStr(const T itbegin, const T itend)
+{
+    std::string rv;
+    static const char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
+                                     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    rv.reserve(std::distance(itbegin, itend) * 2);
+    for(T it = itbegin; it < itend; ++it)
+    {
+        unsigned char val = (unsigned char)(*it);
+        rv.push_back(hexmap[val>>4]);
+        rv.push_back(hexmap[val&15]);
+    }
+    return rv;
+}
+
+template<typename T>
+inline std::string HexStr(const T& vch)
+{
+    return HexStr(vch.begin(), vch.end());
+}
 
 /**
  * Format a paragraph of text to a fixed width, adding spaces for
@@ -212,11 +163,11 @@ bool TimingResistantEqual(const T& a, const T& b)
 }
 
 /** Parse number as fixed point according to JSON number syntax.
- * See https://json.org/number.gif
+ * See http://json.org/number.gif
  * @returns true on success, false on error.
  * @note The result must be in the range (-10^18,10^18), otherwise an overflow error will trigger.
  */
-[[nodiscard]] bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out);
+NODISCARD bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out);
 
 /** Convert from one power-of-2 number base to another. */
 template<int frombits, int tobits, bool pad, typename O, typename I>

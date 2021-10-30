@@ -115,7 +115,7 @@ static leveldb::Options GetOptions(size_t nCacheSize)
 }
 
 CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
-    : m_name{fs::PathToString(path.stem())}
+    : m_name{path.stem().string()}
 {
     penv = nullptr;
     readoptions.verify_checksums = true;
@@ -129,21 +129,21 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
         options.env = penv;
     } else {
         if (fWipe) {
-            LogPrintf("Wiping LevelDB in %s\n", fs::PathToString(path));
-            leveldb::Status result = leveldb::DestroyDB(fs::PathToString(path), options);
+            LogPrintf("Wiping LevelDB in %s\n", path.string());
+            leveldb::Status result = leveldb::DestroyDB(path.string(), options);
             dbwrapper_private::HandleError(result);
         }
         TryCreateDirectories(path);
-        LogPrintf("Opening LevelDB in %s\n", fs::PathToString(path));
+        LogPrintf("Opening LevelDB in %s\n", path.string());
     }
-    leveldb::Status status = leveldb::DB::Open(options, fs::PathToString(path), &pdb);
+    leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
     dbwrapper_private::HandleError(status);
     LogPrintf("Opened LevelDB successfully\n");
 
     if (gArgs.GetBoolArg("-forcecompactdb", false)) {
-        LogPrintf("Starting database compaction of %s\n", fs::PathToString(path));
+        LogPrintf("Starting database compaction of %s\n", path.string());
         pdb->CompactRange(nullptr, nullptr);
-        LogPrintf("Finished database compaction of %s\n", fs::PathToString(path));
+        LogPrintf("Finished database compaction of %s\n", path.string());
     }
 
     // The base-case obfuscation key, which is a noop.
@@ -160,10 +160,10 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
         Write(OBFUSCATE_KEY_KEY, new_key);
         obfuscate_key = new_key;
 
-        LogPrintf("Wrote new obfuscate key for %s: %s\n", fs::PathToString(path), HexStr(obfuscate_key));
+        LogPrintf("Wrote new obfuscate key for %s: %s\n", path.string(), HexStr(obfuscate_key));
     }
 
-    LogPrintf("Using obfuscation key for %s: %s\n", fs::PathToString(path), HexStr(obfuscate_key));
+    LogPrintf("Using obfuscation key for %s: %s\n", path.string(), HexStr(obfuscate_key));
 }
 
 CDBWrapper::~CDBWrapper()
@@ -197,15 +197,13 @@ bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
     return true;
 }
 
-size_t CDBWrapper::DynamicMemoryUsage() const
-{
+size_t CDBWrapper::DynamicMemoryUsage() const {
     std::string memory;
-    std::optional<size_t> parsed;
-    if (!pdb->GetProperty("leveldb.approximate-memory-usage", &memory) || !(parsed = ToIntegral<size_t>(memory))) {
+    if (!pdb->GetProperty("leveldb.approximate-memory-usage", &memory)) {
         LogPrint(BCLog::LEVELDB, "Failed to get approximate-memory-usage property\n");
         return 0;
     }
-    return parsed.value();
+    return stoul(memory);
 }
 
 // Prefixed with null character to avoid collisions with other keys
@@ -222,9 +220,10 @@ const unsigned int CDBWrapper::OBFUSCATE_KEY_NUM_BYTES = 8;
  */
 std::vector<unsigned char> CDBWrapper::CreateObfuscateKey() const
 {
-    std::vector<uint8_t> ret(OBFUSCATE_KEY_NUM_BYTES);
-    GetRandBytes(ret.data(), OBFUSCATE_KEY_NUM_BYTES);
-    return ret;
+    unsigned char buff[OBFUSCATE_KEY_NUM_BYTES];
+    GetRandBytes(buff, OBFUSCATE_KEY_NUM_BYTES);
+    return std::vector<unsigned char>(&buff[0], &buff[OBFUSCATE_KEY_NUM_BYTES]);
+
 }
 
 bool CDBWrapper::IsEmpty()

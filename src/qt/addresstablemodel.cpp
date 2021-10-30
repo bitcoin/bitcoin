@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -75,15 +75,12 @@ public:
     explicit AddressTablePriv(AddressTableModel *_parent):
         parent(_parent) {}
 
-    void refreshAddressTable(interfaces::Wallet& wallet, bool pk_hash_only = false)
+    void refreshAddressTable(interfaces::Wallet& wallet)
     {
         cachedAddressTable.clear();
         {
             for (const auto& address : wallet.getAddresses())
             {
-                if (pk_hash_only && !std::holds_alternative<PKHash>(address.dest)) {
-                    continue;
-                }
                 AddressTableEntry::Type addressType = translateTransactionType(
                         QString::fromStdString(address.purpose), address.is_mine);
                 cachedAddressTable.append(AddressTableEntry(addressType,
@@ -162,12 +159,12 @@ public:
     }
 };
 
-AddressTableModel::AddressTableModel(WalletModel *parent, bool pk_hash_only) :
+AddressTableModel::AddressTableModel(WalletModel *parent) :
     QAbstractTableModel(parent), walletModel(parent)
 {
     columns << tr("Label") << tr("Address");
     priv = new AddressTablePriv(this);
-    priv->refreshAddressTable(parent->wallet(), pk_hash_only);
+    priv->refreshAddressTable(parent->wallet());
 }
 
 AddressTableModel::~AddressTableModel()
@@ -177,17 +174,13 @@ AddressTableModel::~AddressTableModel()
 
 int AddressTableModel::rowCount(const QModelIndex &parent) const
 {
-    if (parent.isValid()) {
-        return 0;
-    }
+    Q_UNUSED(parent);
     return priv->size();
 }
 
 int AddressTableModel::columnCount(const QModelIndex &parent) const
 {
-    if (parent.isValid()) {
-        return 0;
-    }
+    Q_UNUSED(parent);
     return columns.length();
 }
 
@@ -198,38 +191,42 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
 
     AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
 
-    const auto column = static_cast<ColumnIndex>(index.column());
-    if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        switch (column) {
+    if(role == Qt::DisplayRole || role == Qt::EditRole)
+    {
+        switch(index.column())
+        {
         case Label:
-            if (rec->label.isEmpty() && role == Qt::DisplayRole) {
+            if(rec->label.isEmpty() && role == Qt::DisplayRole)
+            {
                 return tr("(no label)");
-            } else {
+            }
+            else
+            {
                 return rec->label;
             }
         case Address:
             return rec->address;
-        } // no default case, so the compiler can warn about missing cases
-        assert(false);
-    } else if (role == Qt::FontRole) {
-        switch (column) {
-        case Label:
-            return QFont();
-        case Address:
-            return GUIUtil::fixedPitchFont();
-        } // no default case, so the compiler can warn about missing cases
-        assert(false);
-    } else if (role == TypeRole) {
+        }
+    }
+    else if (role == Qt::FontRole)
+    {
+        QFont font;
+        if(index.column() == Address)
+        {
+            font = GUIUtil::fixedPitchFont();
+        }
+        return font;
+    }
+    else if (role == TypeRole)
+    {
         switch(rec->type)
         {
         case AddressTableEntry::Sending:
             return Send;
         case AddressTableEntry::Receiving:
             return Receive;
-        case AddressTableEntry::Hidden:
-            return {};
-        } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        default: break;
+        }
     }
     return QVariant();
 }
@@ -257,7 +254,7 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
         } else if(index.column() == Address) {
             CTxDestination newAddress = DecodeDestination(value.toString().toStdString());
             // Refuse to set invalid address, set error status and return false
-            if(std::get_if<CNoDestination>(&newAddress))
+            if(boost::get<CNoDestination>(&newAddress))
             {
                 editStatus = INVALID_ADDRESS;
                 return false;

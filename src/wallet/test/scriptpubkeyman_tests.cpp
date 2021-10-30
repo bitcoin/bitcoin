@@ -17,7 +17,9 @@ BOOST_FIXTURE_TEST_SUITE(scriptpubkeyman_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(CanProvide)
 {
     // Set up wallet and keyman variables.
-    CWallet wallet(m_node.chain.get(), "", CreateDummyWalletDatabase());
+    NodeContext node;
+    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain(node);
+    CWallet wallet(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
     LegacyScriptPubKeyMan& keyman = *wallet.GetOrCreateLegacyScriptPubKeyMan();
 
     // Make a 1 of 2 multisig script

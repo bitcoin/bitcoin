@@ -443,7 +443,11 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>กระเป๋าเงินถูก &lt;b&gt;เข้ารหัส&lt;/b&gt; และในปัจจุบัน &lt;b&gt;ล็อค &lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
+        <translation>เกิดข้อผิดพลาดร้ายแรง Bitcoin ไม่สามารถดำเนินการต่อได้อย่างปลอดภัยอีกต่อไปและจะยกเลิก</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -801,6 +805,10 @@
         <translation>Tor</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>เชื่อมต่อกับ เครือข่าย Bitcoin ผ่านทาง พร้อกซี่ SOCKS5 แยกต่างหาก สำหรับ Tor เซอร์วิส</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;วันโดว์</translation>
     </message>
@@ -819,9 +827,6 @@
         <source>Form</source>
         <translation>รูป</translation>
     </message>
-    </context>
-<context>
-    <name>PSBTOperationsDialog</name>
     </context>
 <context>
     <name>PaymentServer</name>
@@ -860,14 +865,26 @@
         <source>Copy amount</source>
         <translation>คัดลอกจำนวนเงิน</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Amount:</source>
-        <translation>จำนวน:</translation>
+        <source>Address</source>
+        <translation>ที่อยู่</translation>
     </message>
-    </context>
+    <message>
+        <source>Amount</source>
+        <translation>จำนวน</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>ฉลาก, ป้าย,</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>กระเป๋าเงิน</translation>
+    </message>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -1039,10 +1056,6 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>ส่งออกข้อมูลที่อยู่ในแถบนี้ไปในไฟล์</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>ข้อผิดพลาด</translation>
     </message>
     </context>
 <context>

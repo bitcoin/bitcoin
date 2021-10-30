@@ -5,6 +5,7 @@
 
 from argparse import ArgumentParser
 from base64 import urlsafe_b64encode
+from binascii import hexlify
 from getpass import getpass
 from os import urandom
 
@@ -12,7 +13,7 @@ import hmac
 
 def generate_salt(size):
     """Create size byte hex salt"""
-    return urandom(size).hex()
+    return hexlify(urandom(size)).decode()
 
 def generate_password():
     """Create 32 byte b64 password"""

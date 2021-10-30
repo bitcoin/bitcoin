@@ -1,10 +1,11 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <dbwrapper.h>
-#include <test/util/setup_common.h>
 #include <uint256.h>
+#include <test/util/setup_common.h>
+#include <util/memory.h>
 
 #include <memory>
 
@@ -26,9 +27,9 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
 {
     // Perform tests both obfuscated and non-obfuscated.
     for (const bool obfuscate : {false, true}) {
-        fs::path ph = m_args.GetDataDirBase() / (obfuscate ? "dbwrapper_obfuscate_true" : "dbwrapper_obfuscate_false");
+        fs::path ph = GetDataDir() / (obfuscate ? "dbwrapper_obfuscate_true" : "dbwrapper_obfuscate_false");
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
-        uint8_t key{'k'};
+        char key = 'k';
         uint256 in = InsecureRand256();
         uint256 res;
 
@@ -45,7 +46,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_basic_data)
 {
     // Perform tests both obfuscated and non-obfuscated.
     for (bool obfuscate : {false, true}) {
-        fs::path ph = m_args.GetDataDirBase() / (obfuscate ? "dbwrapper_1_obfuscate_true" : "dbwrapper_1_obfuscate_false");
+        fs::path ph = GetDataDir() / (obfuscate ? "dbwrapper_1_obfuscate_true" : "dbwrapper_1_obfuscate_false");
         CDBWrapper dbw(ph, (1 << 20), false, true, obfuscate);
 
         uint256 res;
@@ -88,21 +89,21 @@ BOOST_AUTO_TEST_CASE(dbwrapper_basic_data)
         BOOST_CHECK_EQUAL(res.ToString(), in_utxo.ToString());
 
         //Simulate last block file number - "l"
-        uint8_t key_last_blockfile_number{'l'};
+        char key_last_blockfile_number = 'l';
         uint32_t lastblockfilenumber = InsecureRand32();
         BOOST_CHECK(dbw.Write(key_last_blockfile_number, lastblockfilenumber));
         BOOST_CHECK(dbw.Read(key_last_blockfile_number, res_uint_32));
         BOOST_CHECK_EQUAL(lastblockfilenumber, res_uint_32);
 
         //Simulate Is Reindexing - "R"
-        uint8_t key_IsReindexing{'R'};
+        char key_IsReindexing = 'R';
         bool isInReindexing = InsecureRandBool();
         BOOST_CHECK(dbw.Write(key_IsReindexing, isInReindexing));
         BOOST_CHECK(dbw.Read(key_IsReindexing, res_bool));
         BOOST_CHECK_EQUAL(isInReindexing, res_bool);
 
         //Simulate last block hash up to which UXTO covers - 'B'
-        uint8_t key_lastblockhash_uxto{'B'};
+        char key_lastblockhash_uxto = 'B';
         uint256 lastblock_hash = InsecureRand256();
         BOOST_CHECK(dbw.Write(key_lastblockhash_uxto, lastblock_hash));
         BOOST_CHECK(dbw.Read(key_lastblockhash_uxto, res));
@@ -126,14 +127,14 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 {
     // Perform tests both obfuscated and non-obfuscated.
     for (const bool obfuscate : {false, true}) {
-        fs::path ph = m_args.GetDataDirBase() / (obfuscate ? "dbwrapper_batch_obfuscate_true" : "dbwrapper_batch_obfuscate_false");
+        fs::path ph = GetDataDir() / (obfuscate ? "dbwrapper_batch_obfuscate_true" : "dbwrapper_batch_obfuscate_false");
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
-        uint8_t key{'i'};
+        char key = 'i';
         uint256 in = InsecureRand256();
-        uint8_t key2{'j'};
+        char key2 = 'j';
         uint256 in2 = InsecureRand256();
-        uint8_t key3{'k'};
+        char key3 = 'k';
         uint256 in3 = InsecureRand256();
 
         uint256 res;
@@ -162,14 +163,14 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
 {
     // Perform tests both obfuscated and non-obfuscated.
     for (const bool obfuscate : {false, true}) {
-        fs::path ph = m_args.GetDataDirBase() / (obfuscate ? "dbwrapper_iterator_obfuscate_true" : "dbwrapper_iterator_obfuscate_false");
+        fs::path ph = GetDataDir() / (obfuscate ? "dbwrapper_iterator_obfuscate_true" : "dbwrapper_iterator_obfuscate_false");
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
         // The two keys are intentionally chosen for ordering
-        uint8_t key{'j'};
+        char key = 'j';
         uint256 in = InsecureRand256();
         BOOST_CHECK(dbw.Write(key, in));
-        uint8_t key2{'k'};
+        char key2 = 'k';
         uint256 in2 = InsecureRand256();
         BOOST_CHECK(dbw.Write(key2, in2));
 
@@ -178,7 +179,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
         // Be sure to seek past the obfuscation key (if it exists)
         it->Seek(key);
 
-        uint8_t key_res;
+        char key_res;
         uint256 val_res;
 
         BOOST_REQUIRE(it->GetKey(key_res));
@@ -202,12 +203,12 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
 BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
 {
     // We're going to share this fs::path between two wrappers
-    fs::path ph = m_args.GetDataDirBase() / "existing_data_no_obfuscate";
+    fs::path ph = GetDataDir() / "existing_data_no_obfuscate";
     create_directories(ph);
 
     // Set up a non-obfuscated wrapper to write some initial data.
-    std::unique_ptr<CDBWrapper> dbw = std::make_unique<CDBWrapper>(ph, (1 << 10), false, false, false);
-    uint8_t key{'k'};
+    std::unique_ptr<CDBWrapper> dbw = MakeUnique<CDBWrapper>(ph, (1 << 10), false, false, false);
+    char key = 'k';
     uint256 in = InsecureRand256();
     uint256 res;
 
@@ -243,12 +244,12 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
 BOOST_AUTO_TEST_CASE(existing_data_reindex)
 {
     // We're going to share this fs::path between two wrappers
-    fs::path ph = m_args.GetDataDirBase() / "existing_data_reindex";
+    fs::path ph = GetDataDir() / "existing_data_reindex";
     create_directories(ph);
 
     // Set up a non-obfuscated wrapper to write some initial data.
-    std::unique_ptr<CDBWrapper> dbw = std::make_unique<CDBWrapper>(ph, (1 << 10), false, false, false);
-    uint8_t key{'k'};
+    std::unique_ptr<CDBWrapper> dbw = MakeUnique<CDBWrapper>(ph, (1 << 10), false, false, false);
+    char key = 'k';
     uint256 in = InsecureRand256();
     uint256 res;
 
@@ -278,7 +279,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
 
 BOOST_AUTO_TEST_CASE(iterator_ordering)
 {
-    fs::path ph = m_args.GetDataDirBase() / "iterator_ordering";
+    fs::path ph = GetDataDir() / "iterator_ordering";
     CDBWrapper dbw(ph, (1 << 20), true, false, false);
     for (int x=0x00; x<256; ++x) {
         uint8_t key = x;
@@ -330,26 +331,24 @@ struct StringContentsSerializer {
     }
     StringContentsSerializer& operator+=(const StringContentsSerializer& s) { return *this += s.str; }
 
-    template<typename Stream>
-    void Serialize(Stream& s) const
-    {
-        for (size_t i = 0; i < str.size(); i++) {
-            s << uint8_t(str[i]);
-        }
-    }
+    ADD_SERIALIZE_METHODS;
 
-    template<typename Stream>
-    void Unserialize(Stream& s)
-    {
-        str.clear();
-        uint8_t c{0};
-        while (true) {
-            try {
-                s >> c;
-                str.push_back(c);
-            } catch (const std::ios_base::failure&) {
-                break;
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        if (ser_action.ForRead()) {
+            str.clear();
+            char c = 0;
+            while (true) {
+                try {
+                    READWRITE(c);
+                    str.push_back(c);
+                } catch (const std::ios_base::failure&) {
+                    break;
+                }
             }
+        } else {
+            for (size_t i = 0; i < str.size(); i++)
+                READWRITE(str[i]);
         }
     }
 };
@@ -358,7 +357,7 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
 {
     char buf[10];
 
-    fs::path ph = m_args.GetDataDirBase() / "iterator_string_ordering";
+    fs::path ph = GetDataDir() / "iterator_string_ordering";
     CDBWrapper dbw(ph, (1 << 20), true, false, false);
     for (int x=0x00; x<10; ++x) {
         for (int y = 0; y < 10; y++) {
@@ -404,7 +403,7 @@ BOOST_AUTO_TEST_CASE(unicodepath)
     // On Windows this test will fail if the directory is created using
     // the ANSI CreateDirectoryA call and the code page isn't UTF8.
     // It will succeed if created with CreateDirectoryW.
-    fs::path ph = m_args.GetDataDirBase() / "test_runner_₿_🏃_20191128_104644";
+    fs::path ph = GetDataDir() / "test_runner_₿_🏃_20191128_104644";
     CDBWrapper dbw(ph, (1 << 20));
 
     fs::path lockPath = ph / "LOCK";

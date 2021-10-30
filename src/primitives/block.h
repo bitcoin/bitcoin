@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,23 +17,68 @@
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
  */
-class CBlockHeader
+
+// Base class for block header, used to serialize the header without signature
+// Workaround due to removing serialization templates in Bitcoin Core 0.18
+class CBlockHeaderBase
 {
 public:
-    // header
+    // header without signature
     int32_t nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
+    // proof-of-stake specific fields
+    COutPoint prevoutStake;
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(this->nVersion);
+        READWRITE(hashPrevBlock);
+        READWRITE(hashMerkleRoot);
+        READWRITE(nTime);
+        READWRITE(nBits);
+        READWRITE(nNonce);
+
+        if (nTime > 1635428544)
+        {        
+            READWRITE(prevoutStake);
+        }
+    }
+};
+
+class CBlockHeader : public CBlockHeaderBase
+{
+public:
+    // header
+    std::vector<unsigned char> vchBlockSig;
 
     CBlockHeader()
     {
         SetNull();
     }
 
-    SERIALIZE_METHODS(CBlockHeader, obj) { READWRITE(obj.nVersion, obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.nNonce); }
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(this->nVersion);
+        READWRITE(hashPrevBlock);
+        READWRITE(hashMerkleRoot);
+        READWRITE(nTime);
+        READWRITE(nBits);
+        READWRITE(nNonce);
+
+        if (nTime > 1635428544)
+        {
+            READWRITE(prevoutStake);
+            READWRITE(vchBlockSig);
+        }
+    }
 
     void SetNull()
     {
@@ -43,6 +88,8 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        vchBlockSig.clear();
+        prevoutStake.SetNull();
     }
 
     bool IsNull() const
@@ -52,9 +99,48 @@ public:
 
     uint256 GetHash() const;
 
+    uint256 GetHashWithoutSign() const;
+
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
+    }
+
+    // ppcoin: two types of block: proof-of-work or proof-of-stake
+    virtual bool IsProofOfStake() const
+    {
+        return !prevoutStake.IsNull();
+    }
+
+    virtual bool IsProofOfWork() const
+    {
+        return !IsProofOfStake();
+    }
+    
+    virtual uint32_t StakeTime() const
+    {
+        uint32_t ret = 0;
+        if(IsProofOfStake())
+        {
+            ret = nTime;
+        }
+        return ret;
+    }
+
+    CBlockHeader& operator=(const CBlockHeader& other)
+    {
+        if (this != &other)
+        {
+            this->nVersion       = other.nVersion;
+            this->hashPrevBlock  = other.hashPrevBlock;
+            this->hashMerkleRoot = other.hashMerkleRoot;
+            this->nTime          = other.nTime;
+            this->nBits          = other.nBits;
+            this->nNonce         = other.nNonce;
+            this->vchBlockSig    = other.vchBlockSig;
+            this->prevoutStake   = other.prevoutStake;
+        }
+        return *this;
     }
 };
 
@@ -79,10 +165,12 @@ public:
         *(static_cast<CBlockHeader*>(this)) = header;
     }
 
-    SERIALIZE_METHODS(CBlock, obj)
-    {
-        READWRITEAS(CBlockHeader, obj);
-        READWRITE(obj.vtx);
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITEAS(CBlockHeader, *this);
+        READWRITE(vtx);
     }
 
     void SetNull()
@@ -101,7 +189,14 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.prevoutStake   = prevoutStake;
+        block.vchBlockSig    = vchBlockSig;
         return block;
+    }
+
+    std::pair<COutPoint, unsigned int> GetProofOfStake() const
+    {
+        return IsProofOfStake() ? std::make_pair(prevoutStake, nTime) : std::make_pair(COutPoint(), (unsigned int)0);
     }
 
     std::string ToString() const;
@@ -119,12 +214,14 @@ struct CBlockLocator
 
     explicit CBlockLocator(const std::vector<uint256>& vHaveIn) : vHave(vHaveIn) {}
 
-    SERIALIZE_METHODS(CBlockLocator, obj)
-    {
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         int nVersion = s.GetVersion();
         if (!(s.GetType() & SER_GETHASH))
             READWRITE(nVersion);
-        READWRITE(obj.vHave);
+        READWRITE(vHave);
     }
 
     void SetNull()

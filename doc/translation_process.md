@@ -22,6 +22,8 @@ cd src/
 make translate
 ```
 
+`contrib/bitcoin-qt.pro` takes care of generating `.qm` (binary compiled) files from `.ts` (source files) files. It’s mostly automated, and you shouldn’t need to worry about it.
+
 **Example Qt translation**
 ```cpp
 QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
@@ -63,12 +65,17 @@ username = USERNAME
 The Transifex Bitcoin project config file is included as part of the repo. It can be found at `.tx/config`, however you shouldn’t need to change anything.
 
 ### Synchronising translations
+To assist in updating translations, a helper script is available in the [maintainer-tools repo](https://github.com/bitcoin-core/bitcoin-maintainer-tools).
 
-To assist in updating translations, a helper script is available in the [maintainer-tools repo](https://github.com/bitcoin-core/bitcoin-maintainer-tools). To use it and commit the result, simply do:
-
+1. `python3 ../bitcoin-maintainer-tools/update-translations.py`
+2. `git add` new translations from `src/qt/locale/`
+3. Update `src/qt/bitcoin_locale.qrc` manually or via
+```bash
+git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/        <file alias="\2">locale\/\1.qm<\/file>/'
 ```
-python3 ../bitcoin-maintainer-tools/update-translations.py
-git commit -a
+4. Update `src/Makefile.qt_locale.include` manually or via
+```bash
+git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'
 ```
 
 **Do not directly download translations** one by one from the Transifex website, as we do a few post-processing steps before committing the translations.
@@ -97,5 +104,6 @@ To create a new language template, you will need to edit the languages manifest 
 **Note:** that the language translation file **must end in `.qm`** (the compiled extension), and not `.ts`.
 
 ### Questions and general assistance
+The Bitcoin-Core translation maintainers include *tcatm, seone, Diapolo, wumpus and luke-jr*. You can find them, and others, in the Freenode IRC chatroom - `irc.freenode.net #bitcoin-core-dev`.
 
 If you are a translator, you should also subscribe to the mailing list, https://groups.google.com/forum/#!forum/bitcoin-translators. Announcements will be posted during application pre-releases to notify translators to check for updates.

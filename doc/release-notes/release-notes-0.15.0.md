@@ -390,7 +390,7 @@ Low-level RPC changes
 
 ### P2P protocol and network code
 - #9726 `7639d38` netbase: Do not print an error on connection timeouts through proxy (laanwj)
-- #9805 `5b583ef` Add seed.btc.petertodd.org to mainnet DNS seeds (petertodd)
+- #9805 `5b583ef` Add seed.BTC.petertodd.org to mainnet DNS seeds (petertodd)
 - #9861 `22f609f` Trivial: Debug log ambiguity fix for peer addrs (keystrike)
 - #9774 `90cb2a2` Enable host lookups for -proxy and -onion parameters (jmcorgan)
 - #9558 `7b585cf` Clarify assumptions made about when BlockCheck is called (TheBlueMatt)

@@ -24,4 +24,3 @@ libtest_util/libtest_util.vcxproj
 */Win32
 libbitcoin_qt/QtGeneratedFiles/*
 test_bitcoin-qt/QtGeneratedFiles/*
-vcpkg_installed

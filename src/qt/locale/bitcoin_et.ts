@@ -132,10 +132,6 @@
         <translation>Korda uut parooli</translation>
     </message>
     <message>
-        <source>Show passphrase</source>
-        <translation>Näita salafraasi</translation>
-    </message>
-    <message>
         <source>Encrypt wallet</source>
         <translation>Krüpteeri rahakott</translation>
     </message>
@@ -174,30 +170,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Rahakott krüpteeritud</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Sisesta rahakotile uus salafraas.&lt;br/&gt;Kasuta salafraasi millles on&lt;b&gt;kümme või rohkem juhuslikku sümbolit&lt;b&gt;,või&lt;b&gt;kaheksa või rohkem sõna&lt;b/&gt;.</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase for the wallet.</source>
-        <translation>Sisesta rahakoti vana salafraas ja uus salafraas.</translation>
-    </message>
-    <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Pea meeles, et rahakoti krüpteerimine ei välista bitcoinide vargust, kui sinu arvuti on nakatunud pahavaraga.</translation>
-    </message>
-    <message>
-        <source>Wallet to be encrypted</source>
-        <translation>Krüpteeritav rahakott</translation>
-    </message>
-    <message>
-        <source>Your wallet is about to be encrypted. </source>
-        <translation>Rahakott krüpteeritakse.</translation>
-    </message>
-    <message>
-        <source>Your wallet is now encrypted. </source>
-        <translation>Rahakott krüpteeritud.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -242,11 +214,7 @@
         <source>IP/Netmask</source>
         <translation>IP/Võrgumask</translation>
     </message>
-    <message>
-        <source>Banned Until</source>
-        <translation>Blokeeritud kuni</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -286,10 +254,6 @@
         <translation>&amp;Teave %1</translation>
     </message>
     <message>
-        <source>Show information about %1</source>
-        <translation>Näita informatsiooni %1 kohta</translation>
-    </message>
-    <message>
         <source>About &amp;Qt</source>
         <translation>Teave &amp;Qt kohta</translation>
     </message>
@@ -300,10 +264,6 @@
     <message>
         <source>&amp;Options...</source>
         <translation>&amp;Valikud...</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for %1</source>
-        <translation>Muuda %1 seadeid</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
@@ -320,18 +280,6 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Ava &amp;URI...</translation>
-    </message>
-    <message>
-        <source>Create Wallet...</source>
-        <translation>Loo rahakott</translation>
-    </message>
-    <message>
-        <source>Create a new wallet</source>
-        <translation>Loo uus rahakott</translation>
-    </message>
-    <message>
-        <source>Wallet:</source>
-        <translation>Rahakott:</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -507,7 +455,11 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Rahakott on &lt;b&gt;krüpteeritud&lt;/b&gt; ning hetkel &lt;b&gt;suletud&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
+        <translation>Ilmnes kriitiline tõrge. Bitcoin suletakse turvakaalutluste tõttu.</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -885,17 +837,6 @@
     </message>
     </context>
 <context>
-    <name>PSBTOperationsDialog</name>
-    <message>
-        <source>Dialog</source>
-        <translation>Dialoog</translation>
-    </message>
-    <message>
-        <source>or</source>
-        <translation>või</translation>
-    </message>
-    </context>
-<context>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
@@ -1042,6 +983,10 @@
         <translation>Blokiahel</translation>
     </message>
     <message>
+        <source>Current number of blocks</source>
+        <translation>Plokkide hetkearv</translation>
+    </message>
+    <message>
         <source>Memory usage</source>
         <translation>Mälu kasutus</translation>
     </message>
@@ -1118,6 +1063,14 @@
         <translation>Väljuv</translation>
     </message>
     <message>
+        <source>Yes</source>
+        <translation>Jah</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Ei</translation>
+    </message>
+    <message>
         <source>Unknown</source>
         <translation>Teadmata</translation>
     </message>
@@ -1160,28 +1113,12 @@
         <source>Copy amount</source>
         <translation>Kopeeri kogus</translation>
     </message>
-    <message>
-        <source>Could not unlock wallet.</source>
-        <translation>Rahakoti lahtilukustamine ebaõnnestus.</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Amount:</source>
-        <translation>Kogus</translation>
-    </message>
-    <message>
-        <source>Label:</source>
-        <translation>Märgis:</translation>
-    </message>
-    <message>
-        <source>Message:</source>
-        <translation>Sõnum:</translation>
-    </message>
-    <message>
-        <source>Wallet:</source>
-        <translation>Rahakott:</translation>
+        <source>QR Code</source>
+        <translation>QR Kood</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
@@ -1194,6 +1131,26 @@
     <message>
         <source>Payment information</source>
         <translation>Makse Informatsioon</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Aadress</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Kogus</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Silt</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Sõnum</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Rahakott</translation>
     </message>
 </context>
 <context>
@@ -1894,11 +1851,7 @@
     </context>
 <context>
     <name>WalletFrame</name>
-    <message>
-        <source>Create a new wallet</source>
-        <translation>Loo uus rahakott</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -1915,10 +1868,6 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Ekspordi kuvatava vahelehe sisu faili</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Viga</translation>
     </message>
     <message>
         <source>Backup Wallet</source>

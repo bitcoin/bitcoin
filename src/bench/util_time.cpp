@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,37 +6,37 @@
 
 #include <util/time.h>
 
-static void BenchTimeDeprecated(benchmark::Bench& bench)
+static void BenchTimeDeprecated(benchmark::State& state)
 {
-    bench.run([&] {
+    while (state.KeepRunning()) {
         (void)GetTime();
-    });
+    }
 }
 
-static void BenchTimeMock(benchmark::Bench& bench)
+static void BenchTimeMock(benchmark::State& state)
 {
     SetMockTime(111);
-    bench.run([&] {
+    while (state.KeepRunning()) {
         (void)GetTime<std::chrono::seconds>();
-    });
+    }
     SetMockTime(0);
 }
 
-static void BenchTimeMillis(benchmark::Bench& bench)
+static void BenchTimeMillis(benchmark::State& state)
 {
-    bench.run([&] {
+    while (state.KeepRunning()) {
         (void)GetTime<std::chrono::milliseconds>();
-    });
+    }
 }
 
-static void BenchTimeMillisSys(benchmark::Bench& bench)
+static void BenchTimeMillisSys(benchmark::State& state)
 {
-    bench.run([&] {
+    while (state.KeepRunning()) {
         (void)GetTimeMillis();
-    });
+    }
 }
 
-BENCHMARK(BenchTimeDeprecated);
-BENCHMARK(BenchTimeMillis);
-BENCHMARK(BenchTimeMillisSys);
-BENCHMARK(BenchTimeMock);
+BENCHMARK(BenchTimeDeprecated, 100000000);
+BENCHMARK(BenchTimeMillis, 6000000);
+BENCHMARK(BenchTimeMillisSys, 6000000);
+BENCHMARK(BenchTimeMock, 300000000);

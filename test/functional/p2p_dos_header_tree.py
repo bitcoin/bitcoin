@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2020 The Bitcoin Core developers
+# Copyright (c) 2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that we reject low difficulty headers to prevent our block tree from filling up with useless bloat"""
 
 from test_framework.messages import (
     CBlockHeader,
-    from_hex,
+    FromHex,
 )
-from test_framework.p2p import (
+from test_framework.mininode import (
     P2PInterface,
     msg_headers,
 )
@@ -42,12 +42,12 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.headers = [l for l in h_lines if not l.startswith(FORK_PREFIX)]
         self.headers_fork = [l[len(FORK_PREFIX):] for l in h_lines if l.startswith(FORK_PREFIX)]
 
-        self.headers = [from_hex(CBlockHeader(), h) for h in self.headers]
-        self.headers_fork = [from_hex(CBlockHeader(), h) for h in self.headers_fork]
+        self.headers = [FromHex(CBlockHeader(), h) for h in self.headers]
+        self.headers_fork = [FromHex(CBlockHeader(), h) for h in self.headers_fork]
 
         self.log.info("Feed all non-fork headers, including and up to the first checkpoint")
-        peer_checkpoint = self.nodes[0].add_p2p_connection(P2PInterface())
-        peer_checkpoint.send_and_ping(msg_headers(self.headers))
+        self.nodes[0].add_p2p_connection(P2PInterface())
+        self.nodes[0].p2p.send_and_ping(msg_headers(self.headers))
         assert {
             'height': 546,
             'hash': '000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70',
@@ -57,14 +57,14 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
 
         self.log.info("Feed all fork headers (fails due to checkpoint)")
         with self.nodes[0].assert_debug_log(['bad-fork-prior-to-checkpoint']):
-            peer_checkpoint.send_message(msg_headers(self.headers_fork))
-            peer_checkpoint.wait_for_disconnect()
+            self.nodes[0].p2p.send_message(msg_headers(self.headers_fork))
+            self.nodes[0].p2p.wait_for_disconnect()
 
         self.log.info("Feed all fork headers (succeeds without checkpoint)")
         # On node 0 it succeeds because checkpoints are disabled
         self.restart_node(0, extra_args=['-nocheckpoints'])
-        peer_no_checkpoint = self.nodes[0].add_p2p_connection(P2PInterface())
-        peer_no_checkpoint.send_and_ping(msg_headers(self.headers_fork))
+        self.nodes[0].add_p2p_connection(P2PInterface())
+        self.nodes[0].p2p.send_and_ping(msg_headers(self.headers_fork))
         assert {
             "height": 2,
             "hash": "00000000b0494bd6c3d5ff79c497cfce40831871cbf39b1bc28bd1dac817dc39",
@@ -73,8 +73,8 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         } in self.nodes[0].getchaintips()
 
         # On node 1 it succeeds because no checkpoint has been reached yet by a chain tip
-        peer_before_checkpoint = self.nodes[1].add_p2p_connection(P2PInterface())
-        peer_before_checkpoint.send_and_ping(msg_headers(self.headers_fork))
+        self.nodes[1].add_p2p_connection(P2PInterface())
+        self.nodes[1].p2p.send_and_ping(msg_headers(self.headers_fork))
         assert {
             "height": 2,
             "hash": "00000000b0494bd6c3d5ff79c497cfce40831871cbf39b1bc28bd1dac817dc39",

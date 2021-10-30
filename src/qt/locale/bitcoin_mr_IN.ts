@@ -30,10 +30,6 @@
         <translation>सध्याचा निवडलेला पत्ता यादीमधून काढून टाका</translation>
     </message>
     <message>
-        <source>Enter address or label to search</source>
-        <translation>शोधण्यासाठी पत्ता किंवा लेबल दाखल करा</translation>
-    </message>
-    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>सध्याच्या टॅबमधील डेटा एका फाईलमध्ये एक्स्पोर्ट करा</translation>
     </message>
@@ -81,30 +77,10 @@
         <source>&amp;Edit</source>
         <translation>&amp;संपादित</translation>
     </message>
-    <message>
-        <source>Export Address List</source>
-        <translation>पत्त्याची निर्यात करा</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>निर्यात अयशस्वी</translation>
-    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>लेबल</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>पत्ता</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(लेबल नाही)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     </context>
@@ -116,10 +92,6 @@
     </context>
 <context>
     <name>CoinControlDialog</name>
-    <message>
-        <source>(no label)</source>
-        <translation>(लेबल नाही)</translation>
-    </message>
     </context>
 <context>
     <name>CreateWalletActivity</name>
@@ -155,9 +127,6 @@
     <name>OverviewPage</name>
     </context>
 <context>
-    <name>PSBTOperationsDialog</name>
-    </context>
-<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -180,22 +149,10 @@
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>लेबल</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(लेबल नाही)</translation>
-    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
-    <message>
-        <source>(no label)</source>
-        <translation>(लेबल नाही)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     </context>
@@ -216,29 +173,9 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>लेबल</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(लेबल नाही)</translation>
-    </message>
     </context>
 <context>
     <name>TransactionView</name>
-    <message>
-        <source>Label</source>
-        <translation>लेबल</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>पत्ता</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>निर्यात अयशस्वी</translation>
-    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>

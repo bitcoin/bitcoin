@@ -76,6 +76,6 @@ Without wallet:
 
 Build and run the tests:
 ```bash
-gmake # use "-j N" here for N parallel jobs
+gmake # use -jX here for parallelism
 gmake check
 ```

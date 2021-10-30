@@ -171,13 +171,6 @@
     </message>
     </context>
 <context>
-    <name>PSBTOperationsDialog</name>
-    <message>
-        <source>or</source>
-        <translation>یان</translation>
-    </message>
-    </context>
-<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -263,6 +256,14 @@
         <source>never</source>
         <translation>هەرگیز</translation>
     </message>
+    <message>
+        <source>Yes</source>
+        <translation>بەڵێ</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>نەخێر</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -290,12 +291,16 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Amount:</source>
-        <translation>کۆ:</translation>
+        <source>Address</source>
+        <translation>ناوونیشان</translation>
     </message>
     <message>
-        <source>Message:</source>
-        <translation>پەیام:</translation>
+        <source>Amount</source>
+        <translation>سەرجەم</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>پەیام</translation>
     </message>
     </context>
 <context>
@@ -441,10 +446,6 @@
     <message>
         <source>&amp;Export</source>
         <translation>&amp;هەناردن</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>هەڵە</translation>
     </message>
     </context>
 <context>

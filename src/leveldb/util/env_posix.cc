@@ -255,7 +255,7 @@ class PosixMmapReadableFile final : public RandomAccessFile {
 class PosixWritableFile final : public WritableFile {
  public:
   PosixWritableFile(std::string filename, int fd)
-      : pos_(0),
+      : staking_(0),
         fd_(fd),
         is_manifest_(IsManifest(filename)),
         filename_(std::move(filename)),
@@ -273,11 +273,11 @@ class PosixWritableFile final : public WritableFile {
     const char* write_data = data.data();
 
     // Fit as much as possible into buffer.
-    size_t copy_size = std::min(write_size, kWritableFileBufferSize - pos_);
-    std::memcpy(buf_ + pos_, write_data, copy_size);
+    size_t copy_size = std::min(write_size, kWritableFileBufferSize - staking_);
+    std::memcpy(buf_ + staking_, write_data, copy_size);
     write_data += copy_size;
     write_size -= copy_size;
-    pos_ += copy_size;
+    staking_ += copy_size;
     if (write_size == 0) {
       return Status::OK();
     }
@@ -291,7 +291,7 @@ class PosixWritableFile final : public WritableFile {
     // Small writes go to buffer, large writes are written directly.
     if (write_size < kWritableFileBufferSize) {
       std::memcpy(buf_, write_data, write_size);
-      pos_ = write_size;
+      staking_ = write_size;
       return Status::OK();
     }
     return WriteUnbuffered(write_data, write_size);
@@ -330,8 +330,8 @@ class PosixWritableFile final : public WritableFile {
 
  private:
   Status FlushBuffer() {
-    Status status = WriteUnbuffered(buf_, pos_);
-    pos_ = 0;
+    Status status = WriteUnbuffered(buf_, staking_);
+    staking_ = 0;
     return status;
   }
 
@@ -439,9 +439,9 @@ class PosixWritableFile final : public WritableFile {
 
   virtual std::string GetName() const override { return filename_; }
 
-  // buf_[0, pos_ - 1] contains data to be written to fd_.
+  // buf_[0, staking_ - 1] contains data to be written to fd_.
   char buf_[kWritableFileBufferSize];
-  size_t pos_;
+  size_t staking_;
   int fd_;
 
   const bool is_manifest_;  // True if the file's name starts with MANIFEST.

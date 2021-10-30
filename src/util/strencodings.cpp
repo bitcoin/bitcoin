@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,8 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
-#include <optional>
+#include <errno.h>
+#include <limits>
 
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -106,41 +107,39 @@ std::vector<unsigned char> ParseHex(const std::string& str)
     return ParseHex(str.c_str());
 }
 
-void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut)
-{
+void SplitHostPort(std::string in, int &portOut, std::string &hostOut) {
     size_t colon = in.find_last_of(':');
     // if a : is found, and it either follows a [...], or no other : is in the string, treat it as port separator
     bool fHaveColon = colon != in.npos;
-    bool fBracketed = fHaveColon && (in[0] == '[' && in[colon - 1] == ']'); // if there is a colon, and in[0]=='[', colon is not 0, so in[colon-1] is safe
-    bool fMultiColon = fHaveColon && (in.find_last_of(':', colon - 1) != in.npos);
-    if (fHaveColon && (colon == 0 || fBracketed || !fMultiColon)) {
-        uint16_t n;
-        if (ParseUInt16(in.substr(colon + 1), &n)) {
+    bool fBracketed = fHaveColon && (in[0]=='[' && in[colon-1]==']'); // if there is a colon, and in[0]=='[', colon is not 0, so in[colon-1] is safe
+    bool fMultiColon = fHaveColon && (in.find_last_of(':',colon-1) != in.npos);
+    if (fHaveColon && (colon==0 || fBracketed || !fMultiColon)) {
+        int32_t n;
+        if (ParseInt32(in.substr(colon + 1), &n) && n > 0 && n < 0x10000) {
             in = in.substr(0, colon);
             portOut = n;
         }
     }
-    if (in.size() > 0 && in[0] == '[' && in[in.size() - 1] == ']') {
-        hostOut = in.substr(1, in.size() - 2);
-    } else {
+    if (in.size()>0 && in[0] == '[' && in[in.size()-1] == ']')
+        hostOut = in.substr(1, in.size()-2);
+    else
         hostOut = in;
-    }
 }
 
-std::string EncodeBase64(Span<const unsigned char> input)
+std::string EncodeBase64(const unsigned char* pch, size_t len)
 {
     static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     std::string str;
-    str.reserve(((input.size() + 2) / 3) * 4);
-    ConvertBits<8, 6, true>([&](int v) { str += pbase64[v]; }, input.begin(), input.end());
+    str.reserve(((len + 2) / 3) * 4);
+    ConvertBits<8, 6, true>([&](int v) { str += pbase64[v]; }, pch, pch + len);
     while (str.size() % 4) str += '=';
     return str;
 }
 
 std::string EncodeBase64(const std::string& str)
 {
-    return EncodeBase64(MakeUCharSpan(str));
+    return EncodeBase64((const unsigned char*)str.data(), str.size());
 }
 
 std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
@@ -202,24 +201,20 @@ std::string DecodeBase64(const std::string& str, bool* pf_invalid)
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
 
-std::string EncodeBase32(Span<const unsigned char> input, bool pad)
+std::string EncodeBase32(const unsigned char* pch, size_t len)
 {
     static const char *pbase32 = "abcdefghijklmnopqrstuvwxyz234567";
 
     std::string str;
-    str.reserve(((input.size() + 4) / 5) * 8);
-    ConvertBits<8, 5, true>([&](int v) { str += pbase32[v]; }, input.begin(), input.end());
-    if (pad) {
-        while (str.size() % 8) {
-            str += '=';
-        }
-    }
+    str.reserve(((len + 4) / 5) * 8);
+    ConvertBits<8, 5, true>([&](int v) { str += pbase32[v]; }, pch, pch + len);
+    while (str.size() % 8) str += '=';
     return str;
 }
 
-std::string EncodeBase32(const std::string& str, bool pad)
+std::string EncodeBase32(const std::string& str)
 {
-    return EncodeBase32(MakeUCharSpan(str), pad);
+    return EncodeBase32((const unsigned char*)str.data(), str.size());
 }
 
 std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
@@ -281,55 +276,94 @@ std::string DecodeBase32(const std::string& str, bool* pf_invalid)
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
 
-namespace {
-template <typename T>
-bool ParseIntegral(const std::string& str, T* out)
+NODISCARD static bool ParsePrechecks(const std::string& str)
 {
-    static_assert(std::is_integral<T>::value);
-    // Replicate the exact behavior of strtol/strtoll/strtoul/strtoull when
-    // handling leading +/- for backwards compatibility.
-    if (str.length() >= 2 && str[0] == '+' && str[1] == '-') {
+    if (str.empty()) // No empty string allowed
         return false;
-    }
-    const std::optional<T> opt_int = ToIntegral<T>((!str.empty() && str[0] == '+') ? str.substr(1) : str);
-    if (!opt_int) {
+    if (str.size() >= 1 && (IsSpace(str[0]) || IsSpace(str[str.size()-1]))) // No padding allowed
         return false;
-    }
-    if (out != nullptr) {
-        *out = *opt_int;
-    }
+    if (!ValidAsCString(str)) // No embedded NUL characters allowed
+        return false;
     return true;
 }
-}; // namespace
 
-bool ParseInt32(const std::string& str, int32_t* out)
+bool ParseInt32(const std::string& str, int32_t *out)
 {
-    return ParseIntegral<int32_t>(str, out);
+    if (!ParsePrechecks(str))
+        return false;
+    char *endp = nullptr;
+    errno = 0; // strtol will not set errno if valid
+    long int n = strtol(str.c_str(), &endp, 10);
+    if(out) *out = (int32_t)n;
+    // Note that strtol returns a *long int*, so even if strtol doesn't report an over/underflow
+    // we still have to check that the returned value is within the range of an *int32_t*. On 64-bit
+    // platforms the size of these types may be different.
+    return endp && *endp == 0 && !errno &&
+        n >= std::numeric_limits<int32_t>::min() &&
+        n <= std::numeric_limits<int32_t>::max();
 }
 
-bool ParseInt64(const std::string& str, int64_t* out)
+bool ParseInt64(const std::string& str, int64_t *out)
 {
-    return ParseIntegral<int64_t>(str, out);
+    if (!ParsePrechecks(str))
+        return false;
+    char *endp = nullptr;
+    errno = 0; // strtoll will not set errno if valid
+    long long int n = strtoll(str.c_str(), &endp, 10);
+    if(out) *out = (int64_t)n;
+    // Note that strtoll returns a *long long int*, so even if strtol doesn't report an over/underflow
+    // we still have to check that the returned value is within the range of an *int64_t*.
+    return endp && *endp == 0 && !errno &&
+        n >= std::numeric_limits<int64_t>::min() &&
+        n <= std::numeric_limits<int64_t>::max();
 }
 
-bool ParseUInt8(const std::string& str, uint8_t* out)
+bool ParseUInt32(const std::string& str, uint32_t *out)
 {
-    return ParseIntegral<uint8_t>(str, out);
+    if (!ParsePrechecks(str))
+        return false;
+    if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoul accepts these by default if they fit in the range
+        return false;
+    char *endp = nullptr;
+    errno = 0; // strtoul will not set errno if valid
+    unsigned long int n = strtoul(str.c_str(), &endp, 10);
+    if(out) *out = (uint32_t)n;
+    // Note that strtoul returns a *unsigned long int*, so even if it doesn't report an over/underflow
+    // we still have to check that the returned value is within the range of an *uint32_t*. On 64-bit
+    // platforms the size of these types may be different.
+    return endp && *endp == 0 && !errno &&
+        n <= std::numeric_limits<uint32_t>::max();
 }
 
-bool ParseUInt16(const std::string& str, uint16_t* out)
+bool ParseUInt64(const std::string& str, uint64_t *out)
 {
-    return ParseIntegral<uint16_t>(str, out);
+    if (!ParsePrechecks(str))
+        return false;
+    if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoull accepts these by default if they fit in the range
+        return false;
+    char *endp = nullptr;
+    errno = 0; // strtoull will not set errno if valid
+    unsigned long long int n = strtoull(str.c_str(), &endp, 10);
+    if(out) *out = (uint64_t)n;
+    // Note that strtoull returns a *unsigned long long int*, so even if it doesn't report an over/underflow
+    // we still have to check that the returned value is within the range of an *uint64_t*.
+    return endp && *endp == 0 && !errno &&
+        n <= std::numeric_limits<uint64_t>::max();
 }
 
-bool ParseUInt32(const std::string& str, uint32_t* out)
-{
-    return ParseIntegral<uint32_t>(str, out);
-}
 
-bool ParseUInt64(const std::string& str, uint64_t* out)
+bool ParseDouble(const std::string& str, double *out)
 {
-    return ParseIntegral<uint64_t>(str, out);
+    if (!ParsePrechecks(str))
+        return false;
+    if (str.size() >= 2 && str[0] == '0' && str[1] == 'x') // No hexadecimal floats allowed
+        return false;
+    std::istringstream text(str);
+    text.imbue(std::locale::classic());
+    double result;
+    text >> result;
+    if(out) *out = result;
+    return text.eof() && !text.fail();
 }
 
 std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
@@ -371,6 +405,29 @@ std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
         }
     }
     return out.str();
+}
+
+int64_t atoi64(const char* psz)
+{
+#ifdef _MSC_VER
+    return _atoi64(psz);
+#else
+    return strtoll(psz, nullptr, 10);
+#endif
+}
+
+int64_t atoi64(const std::string& str)
+{
+#ifdef _MSC_VER
+    return _atoi64(str.c_str());
+#else
+    return strtoll(str.c_str(), nullptr, 10);
+#endif
+}
+
+int atoi(const std::string& str)
+{
+    return atoi(str.c_str());
 }
 
 /** Upper bound for mantissa.
@@ -511,18 +568,4 @@ std::string Capitalize(std::string str)
     if (str.empty()) return str;
     str[0] = ToUpper(str.front());
     return str;
-}
-
-std::string HexStr(const Span<const uint8_t> s)
-{
-    std::string rv(s.size() * 2, '\0');
-    static constexpr char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
-                                         '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-    auto it = rv.begin();
-    for (uint8_t v : s) {
-        *it++ = hexmap[v >> 4];
-        *it++ = hexmap[v & 15];
-    }
-    assert(it == rv.end());
-    return rv;
 }

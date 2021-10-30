@@ -70,10 +70,8 @@
         <translation>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
-Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
-Signing is only possible with addresses of the type 'legacy'.</translation>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -123,7 +121,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Passphrase Dialogue</translation>
+        <translation>Passphrase Dialog</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
@@ -191,7 +189,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</translation>
+        <translation>Remember that encrypting your wallet cannot fully protect your Bitcoins from being stolen by malware infecting your computer.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
@@ -257,11 +255,11 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
-        <translation>Sign &amp;message...</translation>
+        <translation>Sign &amp;message ...</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
-        <translation>Synchronising with network...</translation>
+        <translation>Synchronising with network ...</translation>
     </message>
     <message>
         <source>&amp;Overview</source>
@@ -305,7 +303,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
-        <translation>&amp;Options...</translation>
+        <translation>&amp;Options ...</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -313,19 +311,19 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Encrypt Wallet...</translation>
+        <translation>&amp;Encrypt Wallet ...</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Backup Wallet...</translation>
+        <translation>&amp;Backup Wallet ...</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Change Passphrase...</translation>
+        <translation>&amp;Change Passphrase ...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation>Open &amp;URI...</translation>
+        <translation>Open &amp;URI ...</translation>
     </message>
     <message>
         <source>Create Wallet...</source>
@@ -353,11 +351,11 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)...</source>
-        <translation>Syncing Headers (%1%)...</translation>
+        <translation>Syncing Headers (%1%) ...</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
-        <translation>Reindexing blocks on disk...</translation>
+        <translation>Reindexing blocks on disk ...</translation>
     </message>
     <message>
         <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
@@ -377,7 +375,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
-        <translation>&amp;Verify message...</translation>
+        <translation>&amp;Verify message ...</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -445,11 +443,11 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
-        <translation>Indexing blocks on disk...</translation>
+        <translation>Indexing blocks on disk ...</translation>
     </message>
     <message>
         <source>Processing blocks on disk...</source>
-        <translation>Processing blocks on disk...</translation>
+        <translation>Processing blocks on disk ...</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
@@ -484,22 +482,6 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation>Up to date</translation>
     </message>
     <message>
-        <source>&amp;Load PSBT from file...</source>
-        <translation>&amp;Load PSBT from file...</translation>
-    </message>
-    <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation>Load Partially Signed Bitcoin Transaction</translation>
-    </message>
-    <message>
-        <source>Load PSBT from clipboard...</source>
-        <translation>Load PSBT from clipboard...</translation>
-    </message>
-    <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation>Load Partially Signed Bitcoin Transaction from clipboard</translation>
-    </message>
-    <message>
         <source>Node window</source>
         <translation>Node window</translation>
     </message>
@@ -517,7 +499,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI</source>
-        <translation>Open a bitcoin: URI</translation>
+        <translation>Open a Bitcoin: URI</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -529,31 +511,15 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Close Wallet...</source>
-        <translation>Close Wallet...</translation>
+        <translation>Close Wallet ...</translation>
     </message>
     <message>
         <source>Close wallet</source>
         <translation>Close wallet</translation>
     </message>
     <message>
-        <source>Close All Wallets...</source>
-        <translation>Close All Wallets...</translation>
-    </message>
-    <message>
-        <source>Close all wallets</source>
-        <translation>Close all wallets</translation>
-    </message>
-    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Show the %1 help message to get a list with possible Bitcoin command-line options</translation>
-    </message>
-    <message>
-        <source>&amp;Mask values</source>
-        <translation>&amp;Mask values</translation>
-    </message>
-    <message>
-        <source>Mask the values in the Overview tab</source>
-        <translation>Mask the values in the Overview tab</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -569,7 +535,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Minimize</source>
-        <translation>Minimize</translation>
+        <translation>Minimise</translation>
     </message>
     <message>
         <source>Zoom</source>
@@ -585,11 +551,11 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Connecting to peers...</source>
-        <translation>Connecting to peers...</translation>
+        <translation>Connecting to peers ...</translation>
     </message>
     <message>
         <source>Catching up...</source>
-        <translation>Catching up...</translation>
+        <translation>Catching up ...</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -664,12 +630,8 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>Original message:</source>
-        <translation>Original message:</translation>
-    </message>
-    <message>
-        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
-        <translation>A fatal error occurred. %1 can no longer continue safely and will quit.</translation>
+        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
+        <translation>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</translation>
     </message>
 </context>
 <context>
@@ -873,14 +835,6 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation>Make Blank Wallet</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation>Use descriptors for scriptPubKey management</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation>Descriptor Wallet</translation>
-    </message>
-    <message>
         <source>Create</source>
         <translation>Create</translation>
     </message>
@@ -998,7 +952,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</translation>
+        <translation>Reverting this setting requires re-downloading the entire Blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -1006,7 +960,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</translation>
+        <translation>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterwards to keep your disk usage low.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1069,11 +1023,11 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</translation>
+        <translation>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronising with the Bitcoin network, as detailed below.</translation>
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</translation>
+        <translation>Attempting to spend Bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1081,7 +1035,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Unknown...</source>
-        <translation>Unknown...</translation>
+        <translation>Unknown ...</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1097,7 +1051,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>calculating...</source>
-        <translation>calculating...</translation>
+        <translation>calculating ...</translation>
     </message>
     <message>
         <source>Estimated time left until synced</source>
@@ -1117,14 +1071,14 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
-        <translation>Unknown. Syncing Headers (%1, %2%)...</translation>
+        <translation>Unknown. Syncing Headers (%1, %2%) ...</translation>
     </message>
 </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open bitcoin URI</source>
-        <translation>Open bitcoin URI</translation>
+        <translation>Open Bitcoin URI</translation>
     </message>
     <message>
         <source>URI:</source>
@@ -1142,12 +1096,20 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation>Open wallet warning</translation>
     </message>
     <message>
+        <source>Open wallet failed</source>
+        <translation>Open wallet failed</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Open wallet warning</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>default wallet</translation>
     </message>
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
-        <translation>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</translation>
+        <translation>Opening Wallet &lt;b&gt;%1&lt;/b&gt; ...</translation>
     </message>
 </context>
 <context>
@@ -1185,6 +1147,10 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</translation>
     </message>
     <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</translation>
+    </message>
+    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Hide the icon from the system tray.</translation>
     </message>
@@ -1194,7 +1160,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
-        <translation>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</translation>
+        <translation>Minimise instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
@@ -1317,20 +1283,24 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation>Tor</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Window</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Show only a tray icon after minimizing the window.</translation>
+        <translation>Show on a tray icon after minimising the window.</translation>
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Minimize to the tray instead of the taskbar</translation>
+        <translation>&amp;Minimise to the tray instead of the task bar</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
-        <translation>M&amp;inimize on close</translation>
+        <translation>M&amp;inimise on close</translation>
     </message>
     <message>
         <source>&amp;Display</source>
@@ -1355,14 +1325,6 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <message>
         <source>Whether to show coin control features or not.</source>
         <translation>Whether to show coin control features or not.</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
-        <translation>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
-        <translation>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</translation>
     </message>
     <message>
         <source>&amp;Third party transaction URLs</source>
@@ -1433,7 +1395,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</translation>
+        <translation>The displayed information may be out of date. Your Wallet automatically synchronises with the Bitcoin Network after a connection is established, but this process has not been completed yet.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1499,133 +1461,6 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <source>Current total balance in watch-only addresses</source>
         <translation>Current total balance in watch-only addresses</translation>
     </message>
-    <message>
-        <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
-        <translation>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</translation>
-    </message>
-</context>
-<context>
-    <name>PSBTOperationsDialog</name>
-    <message>
-        <source>Dialog</source>
-        <translation>Dialog</translation>
-    </message>
-    <message>
-        <source>Sign Tx</source>
-        <translation>Sign Tx</translation>
-    </message>
-    <message>
-        <source>Broadcast Tx</source>
-        <translation>Broadcast Tx</translation>
-    </message>
-    <message>
-        <source>Copy to Clipboard</source>
-        <translation>Copy to Clipboard</translation>
-    </message>
-    <message>
-        <source>Save...</source>
-        <translation>Save...</translation>
-    </message>
-    <message>
-        <source>Close</source>
-        <translation>Close</translation>
-    </message>
-    <message>
-        <source>Failed to load transaction: %1</source>
-        <translation>Failed to load transaction: %1</translation>
-    </message>
-    <message>
-        <source>Failed to sign transaction: %1</source>
-        <translation>Failed to sign transaction: %1</translation>
-    </message>
-    <message>
-        <source>Could not sign any more inputs.</source>
-        <translation>Could not sign any more inputs.</translation>
-    </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation>Signed %1 inputs, but more signatures are still required.</translation>
-    </message>
-    <message>
-        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
-        <translation>Signed transaction successfully. Transaction is ready to broadcast.</translation>
-    </message>
-    <message>
-        <source>Unknown error processing transaction.</source>
-        <translation>Unknown error processing transaction.</translation>
-    </message>
-    <message>
-        <source>Transaction broadcast successfully! Transaction ID: %1</source>
-        <translation>Transaction broadcast successfully! Transaction ID: %1</translation>
-    </message>
-    <message>
-        <source>Transaction broadcast failed: %1</source>
-        <translation>Transaction broadcast failed: %1</translation>
-    </message>
-    <message>
-        <source>PSBT copied to clipboard.</source>
-        <translation>PSBT copied to clipboard.</translation>
-    </message>
-    <message>
-        <source>Save Transaction Data</source>
-        <translation>Save Transaction Data</translation>
-    </message>
-    <message>
-        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
-        <translation>Partially Signed Transaction (Binary) (*.psbt)</translation>
-    </message>
-    <message>
-        <source>PSBT saved to disk.</source>
-        <translation>PSBT saved to disk.</translation>
-    </message>
-    <message>
-        <source> * Sends %1 to %2</source>
-        <translation> * Sends %1 to %2</translation>
-    </message>
-    <message>
-        <source>Unable to calculate transaction fee or total transaction amount.</source>
-        <translation>Unable to calculate transaction fee or total transaction amount.</translation>
-    </message>
-    <message>
-        <source>Pays transaction fee: </source>
-        <translation>Pays transaction fee: </translation>
-    </message>
-    <message>
-        <source>Total Amount</source>
-        <translation>Total Amount</translation>
-    </message>
-    <message>
-        <source>or</source>
-        <translation>or</translation>
-    </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation>Transaction has %1 unsigned inputs.</translation>
-    </message>
-    <message>
-        <source>Transaction is missing some information about inputs.</source>
-        <translation>Transaction is missing some information about inputs.</translation>
-    </message>
-    <message>
-        <source>Transaction still needs signature(s).</source>
-        <translation>Transaction still needs signature(s).</translation>
-    </message>
-    <message>
-        <source>(But this wallet cannot sign transactions.)</source>
-        <translation>(But this wallet cannot sign transactions.)</translation>
-    </message>
-    <message>
-        <source>(But this wallet does not have the right keys.)</source>
-        <translation>(But this wallet does not have the right keys.)</translation>
-    </message>
-    <message>
-        <source>Transaction is fully signed and ready for broadcast.</source>
-        <translation>Transaction is fully signed and ready for broadcast.</translation>
-    </message>
-    <message>
-        <source>Transaction status is unknown.</source>
-        <translation>Transaction status is unknown.</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -1635,7 +1470,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Cannot start bitcoin: click-to-pay handler</translation>
+        <translation>Cannot start Bitcoin: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1648,6 +1483,14 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <message>
         <source>Cannot process payment request because BIP70 is not supported.</source>
         <translation>Cannot process payment request because BIP70 is not supported.</translation>
+    </message>
+    <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</translation>
     </message>
     <message>
         <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
@@ -1792,12 +1635,8 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation>Error: %1</translation>
     </message>
     <message>
-        <source>Error initializing settings: %1</source>
-        <translation>Error initializing settings: %1</translation>
-    </message>
-    <message>
         <source>%1 didn't yet exit safely...</source>
-        <translation>%1 didn't yet exit safely...</translation>
+        <translation>%1 didn't exit safely yet ...</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -1808,7 +1647,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Save Image...</translation>
+        <translation>&amp;Save Image ...</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
@@ -1875,7 +1714,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Startup time</source>
-        <translation>Startup time</translation>
+        <translation>Start up time</translation>
     </message>
     <message>
         <source>Network</source>
@@ -1894,6 +1733,10 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation>Block chain</translation>
     </message>
     <message>
+        <source>Current number of blocks</source>
+        <translation>Current number of blocks</translation>
+    </message>
+    <message>
         <source>Memory Pool</source>
         <translation>Memory Pool</translation>
     </message>
@@ -1907,7 +1750,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Wallet: </source>
-        <translation>Wallet: </translation>
+        <translation>Wallet:</translation>
     </message>
     <message>
         <source>(none)</source>
@@ -1938,6 +1781,10 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation>Select a peer to view detailed information.</translation>
     </message>
     <message>
+        <source>Whitelisted</source>
+        <translation>Whitelisted</translation>
+    </message>
+    <message>
         <source>Direction</source>
         <translation>Direction</translation>
     </message>
@@ -1958,24 +1805,12 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation>Synced Blocks</translation>
     </message>
     <message>
-        <source>The mapped Autonomous System used for diversifying peer selection.</source>
-        <translation>The mapped Autonomous System used for diversifying peer selection.</translation>
-    </message>
-    <message>
-        <source>Mapped AS</source>
-        <translation>Mapped AS</translation>
-    </message>
-    <message>
         <source>User Agent</source>
         <translation>User Agent</translation>
     </message>
     <message>
         <source>Node window</source>
         <translation>Node window</translation>
-    </message>
-    <message>
-        <source>Current block height</source>
-        <translation>Current block height</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -1990,12 +1825,12 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation>Increase font size</translation>
     </message>
     <message>
-        <source>Permissions</source>
-        <translation>Permissions</translation>
-    </message>
-    <message>
         <source>Services</source>
         <translation>Services</translation>
+    </message>
+    <message>
+        <source>Ban Score</source>
+        <translation>Ban Score</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -2111,7 +1946,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
-        <translation>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</translation>
+        <translation>WARNING: Scammers have been active, telling users to type commands here and stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</translation>
     </message>
     <message>
         <source>Network activity disabled</source>
@@ -2144,6 +1979,14 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <message>
         <source>Outbound</source>
         <translation>Outbound</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Yes</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>No</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -2244,40 +2087,12 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <source>Copy amount</source>
         <translation>Copy amount</translation>
     </message>
-    <message>
-        <source>Could not unlock wallet.</source>
-        <translation>Could not unlock wallet.</translation>
-    </message>
-    <message>
-        <source>Could not generate new %1 address</source>
-        <translation>Could not generate new %1 address</translation>
-    </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Request payment to ...</source>
-        <translation>Request payment to ...</translation>
-    </message>
-    <message>
-        <source>Address:</source>
-        <translation>Address:</translation>
-    </message>
-    <message>
-        <source>Amount:</source>
-        <translation>Amount:</translation>
-    </message>
-    <message>
-        <source>Label:</source>
-        <translation>Label:</translation>
-    </message>
-    <message>
-        <source>Message:</source>
-        <translation>Message:</translation>
-    </message>
-    <message>
-        <source>Wallet:</source>
-        <translation>Wallet:</translation>
+        <source>QR Code</source>
+        <translation>QR Code</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2289,7 +2104,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Save Image...</translation>
+        <translation>&amp;Save Image ...</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -2298,6 +2113,30 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <message>
         <source>Payment information</source>
         <translation>Payment information</translation>
+    </message>
+    <message>
+        <source>URI</source>
+        <translation>URI</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Address</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Amount</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Label</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Message</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Wallet</translation>
     </message>
 </context>
 <context>
@@ -2343,7 +2182,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Inputs...</source>
-        <translation>Inputs...</translation>
+        <translation>Inputs ...</translation>
     </message>
     <message>
         <source>automatically selected</source>
@@ -2391,11 +2230,11 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     <message>
         <source>Choose...</source>
-        <translation>Choose...</translation>
+        <translation>Choose ...</translation>
     </message>
     <message>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
-        <translation>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</translation>
+        <translation>Using the fallback fee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</translation>
     </message>
     <message>
         <source>Warning: Fee estimation is currently not possible.</source>
@@ -2427,7 +2266,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(Smart fee not initialized yet. This usually takes a few blocks...)</translation>
+        <translation>(Smart fee not initialised yet. This usually takes a few blocks ...)</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2455,7 +2294,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
-        <translation>A too low fee might result in a never confirming transaction (read the tooltip)</translation>
+        <translation>A too low fee might result in a never-confirming transaction (read the tooltip)</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -2546,20 +2385,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Are you sure you want to send?</translation>
     </message>
     <message>
-        <source>Create Unsigned</source>
-        <translation>Create Unsigned</translation>
-    </message>
-    <message>
-        <source>Save Transaction Data</source>
-        <translation>Save Transaction Data</translation>
-    </message>
-    <message>
-        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
-        <translation>Partially Signed Transaction (Binary) (*.psbt)</translation>
-    </message>
-    <message>
-        <source>PSBT saved</source>
-        <translation>PSBT saved</translation>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</translation>
     </message>
     <message>
         <source>or</source>
@@ -2568,10 +2395,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation>You can increase the fee later (signals Replace-By-Fee, BIP-125).</translation>
-    </message>
-    <message>
-        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -2602,8 +2425,16 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Confirm transaction proposal</translation>
     </message>
     <message>
+        <source>Copy PSBT to clipboard</source>
+        <translation>Copy PSBT to clipboard</translation>
+    </message>
+    <message>
         <source>Send</source>
         <translation>Send</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>PSBT copied</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -2753,7 +2584,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <name>ShutdownWindow</name>
     <message>
         <source>%1 is shutting down...</source>
-        <translation>%1 is shutting down...</translation>
+        <translation>%1 is shutting down ...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -3235,7 +3066,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Range...</source>
-        <translation>Range...</translation>
+        <translation>Range ...</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -3259,7 +3090,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Enter address, transaction id, or label to search</source>
-        <translation>Enter address, transaction id, or label to search</translation>
+        <translation>Enter address, transaction id or label to search.</translation>
     </message>
     <message>
         <source>Min amount</source>
@@ -3387,28 +3218,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</translation>
     </message>
-    <message>
-        <source>Close all wallets</source>
-        <translation>Close all wallets</translation>
-    </message>
-    <message>
-        <source>Are you sure you wish to close all wallets?</source>
-        <translation>Are you sure you wish to close all wallets?</translation>
-    </message>
 </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.
-Go to File &gt; Open Wallet to load a wallet.
-- OR -</source>
-        <translation>No wallet has been loaded.
-Go to File &gt; Open Wallet to load a wallet.
-- OR -</translation>
-    </message>
-    <message>
-        <source>Create a new wallet</source>
-        <translation>Create a new wallet</translation>
+        <source>No wallet has been loaded.</source>
+        <translation>No wallet has been loaded.</translation>
     </message>
 </context>
 <context>
@@ -3423,7 +3238,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Increasing transaction fee failed</source>
-        <translation>Increasing transaction fee failed</translation>
+        <translation>Increasing transaction fee failed.</translation>
     </message>
     <message>
         <source>Do you want to increase the fee?</source>
@@ -3463,7 +3278,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Could not commit transaction</source>
-        <translation>Could not commit transaction</translation>
+        <translation>Could not commit transaction.</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -3479,30 +3294,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Export the data in the current tab to a file</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Error</translation>
-    </message>
-    <message>
-        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
-        <translation>Unable to decode PSBT from clipboard (invalid base64)</translation>
-    </message>
-    <message>
-        <source>Load Transaction Data</source>
-        <translation>Load Transaction Data</translation>
-    </message>
-    <message>
-        <source>Partially Signed Transaction (*.psbt)</source>
-        <translation>Partially Signed Transaction (*.psbt)</translation>
-    </message>
-    <message>
-        <source>PSBT file must be smaller than 100 MiB</source>
-        <translation>PSBT file must be smaller than 100 MiB</translation>
-    </message>
-    <message>
-        <source>Unable to decode PSBT</source>
-        <translation>Unable to decode PSBT</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -3537,7 +3328,7 @@ Go to File &gt; Open Wallet to load a wallet.
     <name>bitcoin-core</name>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
-        <translation>Distributed under the MIT software license, see the accompanying file %s or %s</translation>
+        <translation>Distributed under the MIT software license, see the accompanying file %s or %s.</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -3548,8 +3339,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Error: A fatal internal error occurred, see debug.log for details</translation>
+    </message>
+    <message>
         <source>Pruning blockstore...</source>
-        <translation>Pruning blockstore...</translation>
+        <translation>Pruning blockstore ...</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -3558,6 +3353,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>The %s developers</source>
         <translation>The %s developers</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3589,7 +3388,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
-        <translation>This is the transaction fee you may discard if change is smaller than dust at this level</translation>
+        <translation>This is the transaction fee you may discard if change is smaller than dust at this level.</translation>
     </message>
     <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
@@ -3597,7 +3396,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
-        <translation>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</translation>
+        <translation>Unable to rewind the database to a pre-fork state. You will need to re-download the blockchain</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
@@ -3606,6 +3405,14 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</translation>
+    </message>
+    <message>
+        <source>%d of last 100 blocks have unexpected version</source>
+        <translation>%d of last 100 blocks have unexpected version.</translation>
+    </message>
+    <message>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s corrupt, salvage failed</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3645,11 +3452,11 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Error initializing block database</source>
-        <translation>Error initializing block database</translation>
+        <translation>Error initialising block database</translation>
     </message>
     <message>
         <source>Error initializing wallet database environment %s!</source>
-        <translation>Error initializing wallet database environment %s!</translation>
+        <translation>Error initialising wallet database environment %s!</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -3681,11 +3488,11 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
-        <translation>Failed to rescan the wallet during initialization</translation>
+        <translation>Failed to rescan the wallet during initialisation.</translation>
     </message>
     <message>
         <source>Importing...</source>
-        <translation>Importing...</translation>
+        <translation>Importing ...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
@@ -3693,7 +3500,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation>Initialization sanity check failed. %s is shutting down.</translation>
+        <translation>Initialisation sanity check failed. %s is shutting down.</translation>
     </message>
     <message>
         <source>Invalid P2P permission: '%s'</source>
@@ -3729,11 +3536,15 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Loading P2P addresses...</source>
-        <translation>Loading P2P addresses...</translation>
+        <translation>Loading P2P addresses ...</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is too low!</source>
+        <translation>Error: Disk space is too low!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
-        <translation>Loading banlist...</translation>
+        <translation>Loading banlist ...</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -3749,11 +3560,11 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Replaying blocks...</source>
-        <translation>Replaying blocks...</translation>
+        <translation>Replaying blocks ...</translation>
     </message>
     <message>
         <source>Rewinding blocks...</source>
-        <translation>Rewinding blocks...</translation>
+        <translation>Rewinding blocks ...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>
@@ -3761,7 +3572,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Transaction fee and change calculation failed</source>
-        <translation>Transaction fee and change calculation failed</translation>
+        <translation>Transaction fee and change calculation failed.</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
@@ -3785,7 +3596,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Verifying blocks...</source>
-        <translation>Verifying blocks...</translation>
+        <translation>Verifying blocks ...</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -3796,14 +3607,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Error: Listening for incoming connections failed (listen returned error %s)</translation>
     </message>
     <message>
-        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
-        <translation>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.</source>
-        <translation>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.</translation>
-    </message>
-    <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</translation>
     </message>
@@ -3812,32 +3615,8 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>The transaction amount is too small to send after the fee has been deducted</translation>
     </message>
     <message>
-        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
-        <translation>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</translation>
-    </message>
-    <message>
-        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
-        <translation>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</translation>
-    </message>
-    <message>
-        <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>
-        <translation>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</translation>
-    </message>
-    <message>
-        <source>A fatal internal error occurred, see debug.log for details</source>
-        <translation>A fatal internal error occurred, see debug.log for details</translation>
-    </message>
-    <message>
-        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
-        <translation>Cannot set -peerblockfilters without -blockfilterindex.</translation>
-    </message>
-    <message>
-        <source>Disk space is too low!</source>
-        <translation>Disk space is too low!</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3845,19 +3624,11 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
-        <translation>Error upgrading chainstate database</translation>
+        <translation>Error upgrading chainstate database.</translation>
     </message>
     <message>
         <source>Error: Disk space is low for %s</source>
         <translation>Error: Disk space is low for %s</translation>
-    </message>
-    <message>
-        <source>Error: Keypool ran out, please call keypoolrefill first</source>
-        <translation>Error: Keypool ran out, please call keypoolrefill first</translation>
-    </message>
-    <message>
-        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
-        <translation>Fee rate (%s) is lower than the minimum fee rate setting (%s)</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
@@ -3880,10 +3651,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Need to specify a port with -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
-        <translation>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</translation>
-    </message>
-    <message>
         <source>Prune mode is incompatible with -blockfilterindex.</source>
         <translation>Prune mode is incompatible with -blockfilterindex.</translation>
     </message>
@@ -3901,15 +3668,15 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Specified -walletdir "%s" does not exist</source>
-        <translation>Specified -walletdir "%s" does not exist</translation>
+        <translation>Specified -walletdir "%s" does not exist.</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" is a relative path</source>
-        <translation>Specified -walletdir "%s" is a relative path</translation>
+        <translation>Specified -walletdir "%s" is a relative path.</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
-        <translation>Specified -walletdir "%s" is not a directory</translation>
+        <translation>Specified -walletdir "%s" is not a directory.</translation>
     </message>
     <message>
         <source>The specified config file %s does not exist
@@ -3943,7 +3710,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Unable to generate initial keys</source>
-        <translation>Unable to generate initial keys</translation>
+        <translation>Unable to generate initial keys.</translation>
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>
@@ -3951,11 +3718,15 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Verifying wallet(s)...</source>
-        <translation>Verifying wallet(s)...</translation>
+        <translation>Verifying wallet(s) ...</translation>
     </message>
     <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
         <translation>Warning: unknown new rules activated (versionbit %i)</translation>
+    </message>
+    <message>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>Zapping all transactions from wallet ...</translation>
     </message>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
@@ -3970,6 +3741,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</translation>
     </message>
     <message>
+        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</translation>
+    </message>
+    <message>
         <source>%s is set very high!</source>
         <translation>%s is set very high!</translation>
     </message>
@@ -3979,7 +3754,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Starting network threads...</source>
-        <translation>Starting network threads...</translation>
+        <translation>Starting network threads ...</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -3995,15 +3770,15 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>
-        <translation>Transaction amounts must not be negative</translation>
+        <translation>Transaction amounts must not be negative.</translation>
     </message>
     <message>
         <source>Transaction has too long of a mempool chain</source>
-        <translation>Transaction has too long of a mempool chain</translation>
+        <translation>Transaction has too long of a mempool chain.</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>
-        <translation>Transaction must have at least one recipient</translation>
+        <translation>Transaction must have at least one recipient.</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
@@ -4012,6 +3787,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Insufficient funds</source>
         <translation>Insufficient funds</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
+        <translation>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
@@ -4027,11 +3806,11 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Loading block index...</source>
-        <translation>Loading block index...</translation>
+        <translation>Loading block index ...</translation>
     </message>
     <message>
         <source>Loading wallet...</source>
-        <translation>Loading wallet...</translation>
+        <translation>Loading wallet ...</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
@@ -4039,7 +3818,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Rescanning...</source>
-        <translation>Rescanning...</translation>
+        <translation>Rescanning ...</translation>
     </message>
     <message>
         <source>Done loading</source>

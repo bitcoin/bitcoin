@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,16 +6,14 @@
 
 #include <chainparamsbase.h>
 #include <compat.h>
+#include <util/threadnames.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 #include <netbase.h>
-#include <node/ui_interface.h>
 #include <rpc/protocol.h> // For HTTP status codes
 #include <shutdown.h>
 #include <sync.h>
-#include <util/strencodings.h>
-#include <util/syscall_sandbox.h>
-#include <util/system.h>
-#include <util/threadnames.h>
-#include <util/translation.h>
+#include <ui_interface.h>
 
 #include <deque>
 #include <memory>
@@ -33,6 +31,13 @@
 #include <event2/keyvalq_struct.h>
 
 #include <support/events.h>
+
+#ifdef EVENT__HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#ifdef _XOPEN_SOURCE_EXTENDED
+#include <arpa/inet.h>
+#endif
+#endif
 
 /** Maximum size of http request (request line + headers) */
 static const size_t MAX_HEADERS_SIZE = 8192;
@@ -64,11 +69,12 @@ template <typename WorkItem>
 class WorkQueue
 {
 private:
+    /** Mutex protects entire object */
     Mutex cs;
-    std::condition_variable cond GUARDED_BY(cs);
-    std::deque<std::unique_ptr<WorkItem>> queue GUARDED_BY(cs);
-    bool running GUARDED_BY(cs);
-    const size_t maxDepth;
+    std::condition_variable cond;
+    std::deque<std::unique_ptr<WorkItem>> queue;
+    bool running;
+    size_t maxDepth;
 
 public:
     explicit WorkQueue(size_t _maxDepth) : running(true),
@@ -84,7 +90,7 @@ public:
     bool Enqueue(WorkItem* item)
     {
         LOCK(cs);
-        if (!running || queue.size() >= maxDepth) {
+        if (queue.size() >= maxDepth) {
             return false;
         }
         queue.emplace_back(std::unique_ptr<WorkItem>(item));
@@ -100,7 +106,7 @@ public:
                 WAIT_LOCK(cs, lock);
                 while (running && queue.empty())
                     cond.wait(lock);
-                if (!running && queue.empty())
+                if (!running)
                     break;
                 i = std::move(queue.front());
                 queue.pop_front();
@@ -137,7 +143,7 @@ static struct evhttp* eventHTTP = nullptr;
 //! List of subnets to allow RPC connections from
 static std::vector<CSubNet> rpc_allow_subnets;
 //! Work queue for handling longer requests off the event loop thread
-static std::unique_ptr<WorkQueue<HTTPClosure>> g_work_queue{nullptr};
+static WorkQueue<HTTPClosure>* workQueue = nullptr;
 //! Handlers for (sub)paths
 static std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
@@ -169,7 +175,7 @@ static bool InitHTTPAllowList()
         LookupSubNet(strAllow, subnet);
         if (!subnet.IsValid()) {
             uiInterface.ThreadSafeMessageBox(
-                strprintf(Untranslated("Invalid -rpcallowip subnet specification: %s. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24)."), strAllow),
+                strprintf("Invalid -rpcallowip subnet specification: %s. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24).", strAllow),
                 "", CClientUIInterface::MSG_ERROR);
             return false;
         }
@@ -257,12 +263,12 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
     // Dispatch to worker thread
     if (i != iend) {
         std::unique_ptr<HTTPWorkItem> item(new HTTPWorkItem(std::move(hreq), path, i->handler));
-        assert(g_work_queue);
-        if (g_work_queue->Enqueue(item.get())) {
+        assert(workQueue);
+        if (workQueue->Enqueue(item.get()))
             item.release(); /* if true, queue took ownership */
-        } else {
+        else {
             LogPrintf("WARNING: request rejected because http work queue depth exceeded, it can be increased with the -rpcworkqueue= setting\n");
-            item->req->WriteReply(HTTP_SERVICE_UNAVAILABLE, "Work queue depth exceeded");
+            item->req->WriteReply(HTTP_INTERNAL_SERVER_ERROR, "Work queue depth exceeded");
         }
     } else {
         hreq->WriteReply(HTTP_NOT_FOUND);
@@ -280,7 +286,6 @@ static void http_reject_request_cb(struct evhttp_request* req, void*)
 static bool ThreadHTTP(struct event_base* base)
 {
     util::ThreadRename("http");
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET_HTTP_SERVER);
     LogPrint(BCLog::HTTP, "Entering http event loop\n");
     event_base_dispatch(base);
     // Event loop will be interrupted by InterruptHTTPServer()
@@ -291,8 +296,8 @@ static bool ThreadHTTP(struct event_base* base)
 /** Bind HTTP server to specified addresses */
 static bool HTTPBindAddresses(struct evhttp* http)
 {
-    uint16_t http_port{static_cast<uint16_t>(gArgs.GetIntArg("-rpcport", BaseParams().RPCPort()))};
-    std::vector<std::pair<std::string, uint16_t>> endpoints;
+    int http_port = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
+    std::vector<std::pair<std::string, uint16_t> > endpoints;
 
     // Determine what addresses to bind to
     if (!(gArgs.IsArgSet("-rpcallowip") && gArgs.IsArgSet("-rpcbind"))) { // Default to loopback if not allowing external IPs
@@ -306,7 +311,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
         }
     } else if (gArgs.IsArgSet("-rpcbind")) { // Specific bind address
         for (const std::string& strRPCBind : gArgs.GetArgs("-rpcbind")) {
-            uint16_t port{http_port};
+            int port = http_port;
             std::string host;
             SplitHostPort(strRPCBind, port, host);
             endpoints.push_back(std::make_pair(host, port));
@@ -334,13 +339,16 @@ static bool HTTPBindAddresses(struct evhttp* http)
 static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue, int worker_num)
 {
     util::ThreadRename(strprintf("httpworker.%i", worker_num));
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET_HTTP_SERVER_WORKER);
     queue->Run();
 }
 
 /** libevent event log callback */
 static void libevent_log_cb(int severity, const char *msg)
 {
+#ifndef EVENT_LOG_WARN
+// EVENT_LOG_WARN was added in 2.0.19; but before then _EVENT_LOG_WARN existed.
+# define EVENT_LOG_WARN _EVENT_LOG_WARN
+#endif
     if (severity >= EVENT_LOG_WARN) // Log warn messages and higher without debug category
         LogPrintf("libevent: %s\n", msg);
     else
@@ -377,7 +385,7 @@ bool InitHTTPServer()
         return false;
     }
 
-    evhttp_set_timeout(http, gArgs.GetIntArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT));
+    evhttp_set_timeout(http, gArgs.GetArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT));
     evhttp_set_max_headers_size(http, MAX_HEADERS_SIZE);
     evhttp_set_max_body_size(http, MAX_SIZE);
     evhttp_set_gencb(http, http_request_cb, nullptr);
@@ -388,10 +396,10 @@ bool InitHTTPServer()
     }
 
     LogPrint(BCLog::HTTP, "Initialized HTTP server\n");
-    int workQueueDepth = std::max((long)gArgs.GetIntArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
+    int workQueueDepth = std::max((long)gArgs.GetArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
     LogPrintf("HTTP: creating work queue of depth %d\n", workQueueDepth);
 
-    g_work_queue = std::make_unique<WorkQueue<HTTPClosure>>(workQueueDepth);
+    workQueue = new WorkQueue<HTTPClosure>(workQueueDepth);
     // transfer ownership to eventBase/HTTP via .release()
     eventBase = base_ctr.release();
     eventHTTP = http_ctr.release();
@@ -412,18 +420,18 @@ bool UpdateHTTPServerLogging(bool enable) {
 #endif
 }
 
-static std::thread g_thread_http;
+static std::thread threadHTTP;
 static std::vector<std::thread> g_thread_http_workers;
 
 void StartHTTPServer()
 {
     LogPrint(BCLog::HTTP, "Starting HTTP server\n");
-    int rpcThreads = std::max((long)gArgs.GetIntArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
+    int rpcThreads = std::max((long)gArgs.GetArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
     LogPrintf("HTTP: starting %d worker threads\n", rpcThreads);
-    g_thread_http = std::thread(ThreadHTTP, eventBase);
+    threadHTTP = std::thread(ThreadHTTP, eventBase);
 
     for (int i = 0; i < rpcThreads; i++) {
-        g_thread_http_workers.emplace_back(HTTPWorkQueueRun, g_work_queue.get(), i);
+        g_thread_http_workers.emplace_back(HTTPWorkQueueRun, workQueue, i);
     }
 }
 
@@ -434,20 +442,21 @@ void InterruptHTTPServer()
         // Reject requests on current connections
         evhttp_set_gencb(eventHTTP, http_reject_request_cb, nullptr);
     }
-    if (g_work_queue) {
-        g_work_queue->Interrupt();
-    }
+    if (workQueue)
+        workQueue->Interrupt();
 }
 
 void StopHTTPServer()
 {
     LogPrint(BCLog::HTTP, "Stopping HTTP server\n");
-    if (g_work_queue) {
+    if (workQueue) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP worker threads to exit\n");
-        for (auto& thread : g_thread_http_workers) {
+        for (auto& thread: g_thread_http_workers) {
             thread.join();
         }
         g_thread_http_workers.clear();
+        delete workQueue;
+        workQueue = nullptr;
     }
     // Unlisten sockets, these are what make the event loop running, which means
     // that after this and all connections are closed the event loop will quit.
@@ -457,7 +466,7 @@ void StopHTTPServer()
     boundSockets.clear();
     if (eventBase) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP event thread to exit\n");
-        if (g_thread_http.joinable()) g_thread_http.join();
+        threadHTTP.join();
     }
     if (eventHTTP) {
         evhttp_free(eventHTTP);
@@ -467,7 +476,6 @@ void StopHTTPServer()
         event_base_free(eventBase);
         eventBase = nullptr;
     }
-    g_work_queue.reset();
     LogPrint(BCLog::HTTP, "Stopped HTTP server\n");
 }
 

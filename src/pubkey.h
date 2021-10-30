@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -9,11 +9,9 @@
 
 #include <hash.h>
 #include <serialize.h>
-#include <span.h>
 #include <uint256.h>
 
-#include <cstring>
-#include <optional>
+#include <stdexcept>
 #include <vector>
 
 const unsigned int BIP32_EXTKEY_SIZE = 74;
@@ -102,7 +100,7 @@ public:
     }
 
     //! Construct a public key from a byte vector.
-    explicit CPubKey(Span<const uint8_t> _vch)
+    explicit CPubKey(const std::vector<unsigned char>& _vch)
     {
         Set(_vch.begin(), _vch.end());
     }
@@ -113,6 +111,10 @@ public:
     const unsigned char* begin() const { return vch; }
     const unsigned char* end() const { return vch + size(); }
     const unsigned char& operator[](unsigned int pos) const { return vch[pos]; }
+    std::vector<unsigned char> getvch() const
+    {
+        return std::vector<unsigned char>(begin(), end());
+    }
 
     //! Comparator implementation.
     friend bool operator==(const CPubKey& a, const CPubKey& b)
@@ -144,9 +146,6 @@ public:
         unsigned int len = ::ReadCompactSize(s);
         if (len <= SIZE) {
             s.read((char*)vch, len);
-            if (len != size()) {
-                Invalidate();
-            }
         } else {
             // invalid pubkey, skip available data
             char dummy;
@@ -159,28 +158,19 @@ public:
     //! Get the KeyID of this public key (hash of its serialization)
     CKeyID GetID() const
     {
-        return CKeyID(Hash160(MakeSpan(vch).first(size())));
+        return CKeyID(Hash160(vch, vch + size()));
     }
 
     //! Get the 256-bit hash of this public key.
     uint256 GetHash() const
     {
-        return Hash(MakeSpan(vch).first(size()));
+        return Hash(vch, vch + size());
     }
 
     /*
      * Check syntactic correctness.
      *
-     * When setting a pubkey (Set()) or deserializing fails (its header bytes
-     * don't match the length of the data), the size is set to 0. Thus,
-     * by checking size, one can observe whether Set() or deserialization has
-     * failed.
-     *
-     * This does not check for more than that. In particular, it does not verify
-     * that the coordinates correspond to a point on the curve (see IsFullyValid()
-     * for that instead).
-     *
-     * Note that this is consensus critical as CheckECDSASignature() calls it!
+     * Note that this is consensus critical as CheckSig() calls it!
      */
     bool IsValid() const
     {
@@ -207,6 +197,9 @@ public:
      */
     static bool CheckLowS(const std::vector<unsigned char>& vchSig);
 
+    //! Recover public key from a lax DER signature
+    bool RecoverLaxDER(const uint256 &hash, const std::vector<unsigned char>& vchSig, uint8_t recid, bool fComp);
+
     //! Recover a public key from a compact signature.
     bool RecoverCompact(const uint256& hash, const std::vector<unsigned char>& vchSig);
 
@@ -215,73 +208,6 @@ public:
 
     //! Derive BIP32 child pubkey.
     bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
-};
-
-class XOnlyPubKey
-{
-private:
-    uint256 m_keydata;
-
-public:
-    /** Construct an empty x-only pubkey. */
-    XOnlyPubKey() = default;
-
-    XOnlyPubKey(const XOnlyPubKey&) = default;
-    XOnlyPubKey& operator=(const XOnlyPubKey&) = default;
-
-    /** Determine if this pubkey is fully valid. This is true for approximately 50% of all
-     *  possible 32-byte arrays. If false, VerifySchnorr and CreatePayToContract will always
-     *  fail. */
-    bool IsFullyValid() const;
-
-    /** Test whether this is the 0 key (the result of default construction). This implies
-     *  !IsFullyValid(). */
-    bool IsNull() const { return m_keydata.IsNull(); }
-
-    /** Construct an x-only pubkey from exactly 32 bytes. */
-    explicit XOnlyPubKey(Span<const unsigned char> bytes);
-
-    /** Construct an x-only pubkey from a normal pubkey. */
-    explicit XOnlyPubKey(const CPubKey& pubkey) : XOnlyPubKey(Span<const unsigned char>(pubkey.begin() + 1, pubkey.begin() + 33)) {}
-
-    /** Verify a Schnorr signature against this public key.
-     *
-     * sigbytes must be exactly 64 bytes.
-     */
-    bool VerifySchnorr(const uint256& msg, Span<const unsigned char> sigbytes) const;
-
-    /** Compute the Taproot tweak as specified in BIP341, with *this as internal
-     * key:
-     *  - if merkle_root == nullptr: H_TapTweak(xonly_pubkey)
-     *  - otherwise:                 H_TapTweak(xonly_pubkey || *merkle_root)
-     *
-     * Note that the behavior of this function with merkle_root != nullptr is
-     * consensus critical.
-     */
-    uint256 ComputeTapTweakHash(const uint256* merkle_root) const;
-
-    /** Verify that this is a Taproot tweaked output point, against a specified internal key,
-     *  Merkle root, and parity. */
-    bool CheckTapTweak(const XOnlyPubKey& internal, const uint256& merkle_root, bool parity) const;
-
-    /** Construct a Taproot tweaked output point with this point as internal key. */
-    std::optional<std::pair<XOnlyPubKey, bool>> CreateTapTweak(const uint256* merkle_root) const;
-
-    /** Returns a list of CKeyIDs for the CPubKeys that could have been used to create this XOnlyPubKey.
-     * This is needed for key lookups since keys are indexed by CKeyID.
-     */
-    std::vector<CKeyID> GetKeyIDs() const;
-
-    const unsigned char& operator[](int pos) const { return *(m_keydata.begin() + pos); }
-    const unsigned char* data() const { return m_keydata.begin(); }
-    static constexpr size_t size() { return decltype(m_keydata)::size(); }
-    const unsigned char* begin() const { return m_keydata.begin(); }
-    const unsigned char* end() const { return m_keydata.end(); }
-    unsigned char* begin() { return m_keydata.begin(); }
-    unsigned char* end() { return m_keydata.end(); }
-    bool operator==(const XOnlyPubKey& other) const { return m_keydata == other.m_keydata; }
-    bool operator!=(const XOnlyPubKey& other) const { return m_keydata != other.m_keydata; }
-    bool operator<(const XOnlyPubKey& other) const { return m_keydata < other.m_keydata; }
 };
 
 struct CExtPubKey {
@@ -294,15 +220,10 @@ struct CExtPubKey {
     friend bool operator==(const CExtPubKey &a, const CExtPubKey &b)
     {
         return a.nDepth == b.nDepth &&
-            memcmp(a.vchFingerprint, b.vchFingerprint, sizeof(vchFingerprint)) == 0 &&
+            memcmp(&a.vchFingerprint[0], &b.vchFingerprint[0], sizeof(vchFingerprint)) == 0 &&
             a.nChild == b.nChild &&
             a.chaincode == b.chaincode &&
             a.pubkey == b.pubkey;
-    }
-
-    friend bool operator!=(const CExtPubKey &a, const CExtPubKey &b)
-    {
-        return !(a == b);
     }
 
     void Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const;
@@ -320,11 +241,5 @@ public:
     ECCVerifyHandle();
     ~ECCVerifyHandle();
 };
-
-typedef struct secp256k1_context_struct secp256k1_context;
-
-/** Access to the internal secp256k1 context used for verification. Only intended to be used
- *  by key.cpp. */
-const secp256k1_context* GetVerifyContext();
 
 #endif // BITCOIN_PUBKEY_H

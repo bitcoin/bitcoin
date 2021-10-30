@@ -34,11 +34,11 @@ Span<const char> Expr(Span<const char>& sp)
     int level = 0;
     auto it = sp.begin();
     while (it != sp.end()) {
-        if (*it == '(' || *it == '{') {
+        if (*it == '(') {
             ++level;
-        } else if (level && (*it == ')' || *it == '}')) {
+        } else if (level && *it == ')') {
             --level;
-        } else if (level == 0 && (*it == ')' || *it == '}' || *it == ',')) {
+        } else if (level == 0 && (*it == ')' || *it == ',')) {
             break;
         }
         ++it;

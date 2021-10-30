@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,26 +13,27 @@
 #include <util/vector.h>
 
 #include <assert.h>
-#include <optional>
 #include <string>
 
 static const std::string OUTPUT_TYPE_STRING_LEGACY = "legacy";
 static const std::string OUTPUT_TYPE_STRING_P2SH_SEGWIT = "p2sh-segwit";
 static const std::string OUTPUT_TYPE_STRING_BECH32 = "bech32";
-static const std::string OUTPUT_TYPE_STRING_BECH32M = "bech32m";
 
-std::optional<OutputType> ParseOutputType(const std::string& type)
+const std::array<OutputType, 3> OUTPUT_TYPES = {OutputType::LEGACY, OutputType::P2SH_SEGWIT, OutputType::BECH32};
+
+bool ParseOutputType(const std::string& type, OutputType& output_type)
 {
     if (type == OUTPUT_TYPE_STRING_LEGACY) {
-        return OutputType::LEGACY;
+        output_type = OutputType::LEGACY;
+        return true;
     } else if (type == OUTPUT_TYPE_STRING_P2SH_SEGWIT) {
-        return OutputType::P2SH_SEGWIT;
+        output_type = OutputType::P2SH_SEGWIT;
+        return true;
     } else if (type == OUTPUT_TYPE_STRING_BECH32) {
-        return OutputType::BECH32;
-    } else if (type == OUTPUT_TYPE_STRING_BECH32M) {
-        return OutputType::BECH32M;
+        output_type = OutputType::BECH32;
+        return true;
     }
-    return std::nullopt;
+    return false;
 }
 
 const std::string& FormatOutputType(OutputType type)
@@ -41,9 +42,8 @@ const std::string& FormatOutputType(OutputType type)
     case OutputType::LEGACY: return OUTPUT_TYPE_STRING_LEGACY;
     case OutputType::P2SH_SEGWIT: return OUTPUT_TYPE_STRING_P2SH_SEGWIT;
     case OutputType::BECH32: return OUTPUT_TYPE_STRING_BECH32;
-    case OutputType::BECH32M: return OUTPUT_TYPE_STRING_BECH32M;
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    default: assert(false);
+    }
 }
 
 CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
@@ -53,7 +53,7 @@ CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
     case OutputType::P2SH_SEGWIT:
     case OutputType::BECH32: {
         if (!key.IsCompressed()) return PKHash(key);
-        CTxDestination witdest = WitnessV0KeyHash(key);
+        CTxDestination witdest = WitnessV0KeyHash(PKHash(key));
         CScript witprog = GetScriptForDestination(witdest);
         if (type == OutputType::P2SH_SEGWIT) {
             return ScriptHash(witprog);
@@ -61,9 +61,8 @@ CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
             return witdest;
         }
     }
-    case OutputType::BECH32M: {} // This function should never be used with BECH32M, so let it assert
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    default: assert(false);
+    }
 }
 
 std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
@@ -101,23 +100,6 @@ CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, 
             return ScriptHash(witprog);
         }
     }
-    case OutputType::BECH32M: {} // This function should not be used for BECH32M, so let it assert
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
-}
-
-std::optional<OutputType> OutputTypeFromDestination(const CTxDestination& dest) {
-    if (std::holds_alternative<PKHash>(dest) ||
-        std::holds_alternative<ScriptHash>(dest)) {
-        return OutputType::LEGACY;
+    default: assert(false);
     }
-    if (std::holds_alternative<WitnessV0KeyHash>(dest) ||
-        std::holds_alternative<WitnessV0ScriptHash>(dest)) {
-        return OutputType::BECH32;
-    }
-    if (std::holds_alternative<WitnessV1Taproot>(dest) ||
-        std::holds_alternative<WitnessUnknown>(dest)) {
-        return OutputType::BECH32M;
-    }
-    return std::nullopt;
 }

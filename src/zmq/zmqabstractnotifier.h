@@ -1,19 +1,16 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 #define BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 
-
-#include <memory>
-#include <string>
+#include <zmq/zmqconfig.h>
 
 class CBlockIndex;
-class CTransaction;
 class CZMQAbstractNotifier;
 
-using CZMQNotifierFactory = std::unique_ptr<CZMQAbstractNotifier> (*)();
+typedef CZMQAbstractNotifier* (*CZMQNotifierFactory)();
 
 class CZMQAbstractNotifier
 {
@@ -24,9 +21,9 @@ public:
     virtual ~CZMQAbstractNotifier();
 
     template <typename T>
-    static std::unique_ptr<CZMQAbstractNotifier> Create()
+    static CZMQAbstractNotifier* Create()
     {
-        return std::make_unique<T>();
+        return new T();
     }
 
     std::string GetType() const { return type; }
@@ -43,17 +40,7 @@ public:
     virtual bool Initialize(void *pcontext) = 0;
     virtual void Shutdown() = 0;
 
-    // Notifies of ConnectTip result, i.e., new active tip only
     virtual bool NotifyBlock(const CBlockIndex *pindex);
-    // Notifies of every block connection
-    virtual bool NotifyBlockConnect(const CBlockIndex *pindex);
-    // Notifies of every block disconnection
-    virtual bool NotifyBlockDisconnect(const CBlockIndex *pindex);
-    // Notifies of every mempool acceptance
-    virtual bool NotifyTransactionAcceptance(const CTransaction &transaction, uint64_t mempool_sequence);
-    // Notifies of every mempool removal, except inclusion in blocks
-    virtual bool NotifyTransactionRemoval(const CTransaction &transaction, uint64_t mempool_sequence);
-    // Notifies of transactions added to mempool or appearing in blocks
     virtual bool NotifyTransaction(const CTransaction &transaction);
 
 protected:

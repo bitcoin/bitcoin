@@ -8,10 +8,10 @@
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\init\bitcoin-qt.cpp" />
     <ClCompile Include="..\..\src\test\util\setup_common.cpp" />
     <ClCompile Include="..\..\src\qt\test\addressbooktests.cpp" />
     <ClCompile Include="..\..\src\qt\test\apptests.cpp" />
+    <ClCompile Include="..\..\src\qt\test\compattests.cpp" />
     <ClCompile Include="..\..\src\qt\test\rpcnestedtests.cpp" />
     <ClCompile Include="..\..\src\qt\test\test_main.cpp" />
     <ClCompile Include="..\..\src\qt\test\uritests.cpp" />
@@ -20,6 +20,7 @@
     <ClCompile Include="..\..\src\wallet\test\wallet_test_fixture.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_addressbooktests.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_apptests.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_compattests.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_rpcnestedtests.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_uritests.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_wallettests.cpp" />
@@ -72,7 +73,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(QtLibraryDir)\Qt5Test.lib;$(QtReleaseLibraries);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>/ignore:4206 /LTCG:OFF</AdditionalOptions>
+	  <AdditionalOptions>/ignore:4206</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
 
@@ -82,12 +83,13 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(QtDebugLibraries);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>/ignore:4206</AdditionalOptions>
+	  <AdditionalOptions>/ignore:4206</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <MocTestFiles Include="..\..\src\qt\test\addressbooktests.h" />
     <MocTestFiles Include="..\..\src\qt\test\apptests.h" />
+    <MocTestFiles Include="..\..\src\qt\test\compattests.h" />
     <MocTestFiles Include="..\..\src\qt\test\rpcnestedtests.h" />
     <MocTestFiles Include="..\..\src\qt\test\uritests.h" />
     <MocTestFiles Include="..\..\src\qt\test\wallettests.h" />

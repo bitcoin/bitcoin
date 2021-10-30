@@ -55,7 +55,8 @@
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>ठेगाना कपी गर्नुहोस्</translation>
+        <translation>ठेगाना कपी गर्नुहोस्
+</translation>
     </message>
     </context>
 <context>
@@ -190,7 +191,8 @@
     </message>
     <message>
         <source>Copy address</source>
-        <translation>ठेगाना कपी गर्नुहोस्</translation>
+        <translation>ठेगाना कपी गर्नुहोस्
+</translation>
     </message>
     </context>
 <context>
@@ -273,10 +275,7 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>हेर्ने-मात्र ठेगानामा रहेको हालको जम्मा ब्यालेन्स</translation>
     </message>
-    </context>
-<context>
-    <name>PSBTOperationsDialog</name>
-    </context>
+</context>
 <context>
     <name>PaymentServer</name>
     </context>
@@ -321,6 +320,10 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Amount</source>
+        <translation>रकम</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -393,7 +396,8 @@
     <name>TransactionView</name>
     <message>
         <source>Copy address</source>
-        <translation>ठेगाना कपी गर्नुहोस्</translation>
+        <translation>ठेगाना कपी गर्नुहोस्
+</translation>
     </message>
     </context>
 <context>
@@ -412,7 +416,8 @@
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;amp;निर्यात गर्नुहोस्</translation>
+        <translation>&amp;amp;निर्यात गर्नुहोस्
+</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -440,6 +445,10 @@
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>चेतावनी: हामी हाम्रा सहकर्मीहरूसँग पूर्णतया सहमत छैनौं जस्तो देखिन्छ! तपाईंले अपग्रेड गर्नु पर्ने हुनसक्छ वा अरू नोडहरूले अपग्रेड गर्नु पर्ने हुनसक्छ ।</translation>
+    </message>
+    <message>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s मा क्षति, बचाव विफल भयो</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>

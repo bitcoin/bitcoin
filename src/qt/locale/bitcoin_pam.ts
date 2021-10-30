@@ -341,7 +341,11 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Maka-&lt;b&gt;encrypt&lt;/b&gt; ya ing wallet at kasalukuyan yang maka-&lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
+        <translation>Atin kamalian a milyari. Ali ne magsilbing sumulung pa ing Bitcoin at kailangan na ng tuknang.</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -591,9 +595,6 @@
     </message>
     </context>
 <context>
-    <name>PSBTOperationsDialog</name>
-    </context>
-<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -648,6 +649,10 @@
         <translation>Block chain</translation>
     </message>
     <message>
+        <source>Current number of blocks</source>
+        <translation>Kasalungsungan bilang dareng blocks</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>Tatauling oras na ning block</translation>
     </message>
@@ -686,26 +691,34 @@
         <source>Copy amount</source>
         <translation>Kopyan ing alaga</translation>
     </message>
-    <message>
-        <source>Could not unlock wallet.</source>
-        <translation>Ali ya bisang mag-unlock ing wallet</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
-    <message>
-        <source>Amount:</source>
-        <translation>Alaga:</translation>
-    </message>
-    <message>
-        <source>Message:</source>
-        <translation>Mensayi:</translation>
-    </message>
     <message>
         <source>Copy &amp;Address</source>
         <translation>&amp;Kopyan ing address</translation>
     </message>
-    </context>
+    <message>
+        <source>Address</source>
+        <translation>Address</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Alaga</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Label</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mensayi</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Wallet</translation>
+    </message>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -1266,10 +1279,6 @@
     </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>Error</source>
-        <translation>Mali</translation>
-    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

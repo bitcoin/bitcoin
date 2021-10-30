@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,8 +9,6 @@
 #include <qt/utilitydialog.h>
 
 #include <qt/forms/ui_helpmessagedialog.h>
-
-#include <qt/guiutil.h>
 
 #include <clientversion.h>
 #include <init.h>
@@ -28,8 +26,8 @@
 #include <QVBoxLayout>
 
 /** "Help message" or "About" dialog box */
-HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
-    QDialog(parent, GUIUtil::dialog_flags),
+HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, bool about) :
+    QDialog(parent),
     ui(new Ui::HelpMessageDialog)
 {
     ui->setupUi(this);
@@ -58,7 +56,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         ui->helpMessage->setVisible(false);
     } else {
         setWindowTitle(tr("Command-line options"));
-        QString header = "Usage:  bitcoin-qt [command-line options]                     \n";
+        QString header = "Usage:  bitcoin-staking-qt [command-line options]                     \n";
         QTextCursor cursor(ui->helpMessage->document());
         cursor.insertText(version);
         cursor.insertBlock();
@@ -104,8 +102,6 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         ui->scrollArea->setVisible(false);
         ui->aboutLogo->setVisible(false);
     }
-
-    GUIUtil::handleCloseWindowShortcut(this);
 }
 
 HelpMessageDialog::~HelpMessageDialog()
@@ -142,11 +138,9 @@ ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
 {
     QVBoxLayout *layout = new QVBoxLayout();
     layout->addWidget(new QLabel(
-        tr("%1 is shutting down…").arg(PACKAGE_NAME) + "<br /><br />" +
+        tr("%1 is shutting down...").arg(PACKAGE_NAME) + "<br /><br />" +
         tr("Do not shut down the computer until this window disappears.")));
     setLayout(layout);
-
-    GUIUtil::handleCloseWindowShortcut(this);
 }
 
 QWidget* ShutdownWindow::showShutdownWindow(QMainWindow* window)

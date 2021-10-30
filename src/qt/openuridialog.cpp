@@ -11,12 +11,10 @@
 #include <QUrl>
 
 OpenURIDialog::OpenURIDialog(QWidget *parent) :
-    QDialog(parent, GUIUtil::dialog_flags),
+    QDialog(parent),
     ui(new Ui::OpenURIDialog)
 {
     ui->setupUi(this);
-
-    GUIUtil::handleCloseWindowShortcut(this);
 }
 
 OpenURIDialog::~OpenURIDialog()

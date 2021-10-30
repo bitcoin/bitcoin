@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,13 +14,15 @@
 #include <wincrypt.h>
 #endif
 #include <logging.h>  // for LogPrintf()
-#include <randomenv.h>
-#include <support/allocators/secure.h>
 #include <sync.h>     // for Mutex
 #include <util/time.h> // for GetTimeMicros()
 
 #include <stdlib.h>
 #include <thread>
+
+#include <randomenv.h>
+
+#include <support/allocators/secure.h>
 
 #ifndef WIN32
 #include <fcntl.h>
@@ -38,6 +40,7 @@
 #include <sys/random.h>
 #endif
 #ifdef HAVE_SYSCTL_ARND
+#include <util/strencodings.h> // for ARRAYLEN
 #include <sys/sysctl.h>
 #endif
 
@@ -113,10 +116,7 @@ static uint64_t GetRdRand() noexcept
     // RdRand may very rarely fail. Invoke it up to 10 times in a loop to reduce this risk.
 #ifdef __i386__
     uint8_t ok;
-    // Initialize to 0 to silence a compiler warning that r1 or r2 may be used
-    // uninitialized. Even if rdrand fails (!ok) it will set the output to 0,
-    // but there is no way that the compiler could know that.
-    uint32_t r1 = 0, r2 = 0;
+    uint32_t r1, r2;
     for (int i = 0; i < 10; ++i) {
         __asm__ volatile (".byte 0x0f, 0xc7, 0xf0; setc %1" : "=a"(r1), "=q"(ok) :: "cc"); // rdrand %eax
         if (ok) break;
@@ -128,7 +128,7 @@ static uint64_t GetRdRand() noexcept
     return (((uint64_t)r2) << 32) | r1;
 #elif defined(__x86_64__) || defined(__amd64__)
     uint8_t ok;
-    uint64_t r1 = 0; // See above why we initialize to 0.
+    uint64_t r1;
     for (int i = 0; i < 10; ++i) {
         __asm__ volatile (".byte 0x48, 0x0f, 0xc7, 0xf0; setc %1" : "=a"(r1), "=q"(ok) :: "cc"); // rdrand %rax
         if (ok) break;
@@ -314,16 +314,12 @@ void GetOSRand(unsigned char *ent32)
     if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
         RandFailure();
     }
-    // Silence a compiler warning about unused function.
-    (void)GetDevURandom;
 #elif defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
     /* getentropy() is available on macOS 10.12 and later.
      */
     if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
         RandFailure();
     }
-    // Silence a compiler warning about unused function.
-    (void)GetDevURandom;
 #elif defined(HAVE_SYSCTL_ARND)
     /* FreeBSD, NetBSD and similar. It is possible for the call to return less
      * bytes than requested, so need to read in a loop.
@@ -332,13 +328,11 @@ void GetOSRand(unsigned char *ent32)
     int have = 0;
     do {
         size_t len = NUM_OS_RANDOM_BYTES - have;
-        if (sysctl(name, std::size(name), ent32 + have, &len, nullptr, 0) != 0) {
+        if (sysctl(name, ARRAYLEN(name), ent32 + have, &len, nullptr, 0) != 0) {
             RandFailure();
         }
         have += len;
     } while (have < NUM_OS_RANDOM_BYTES);
-    // Silence a compiler warning about unused function.
-    (void)GetDevURandom;
 #else
     /* Fall back to /dev/urandom if there is no specific method implemented to
      * get system entropy for this OS.
@@ -593,6 +587,11 @@ uint64_t GetRand(uint64_t nMax) noexcept
     return FastRandomContext(g_mock_deterministic_tests).randrange(nMax);
 }
 
+std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max) noexcept
+{
+    return std::chrono::microseconds{GetRand(duration_max.count())};
+}
+
 int GetRandInt(int nMax) noexcept
 {
     return GetRand(nMax);
@@ -628,7 +627,7 @@ std::vector<unsigned char> FastRandomContext::randbytes(size_t len)
     if (requires_seed) RandomSeed();
     std::vector<unsigned char> ret(len);
     if (len > 0) {
-        rng.Keystream(ret.data(), len);
+        rng.Keystream(&ret[0], len);
     }
     return ret;
 }

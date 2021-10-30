@@ -1,29 +1,46 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_MINER_H
 #define BITCOIN_MINER_H
 
+#include <optional.h>
 #include <primitives/block.h>
 #include <txmempool.h>
 #include <validation.h>
 
 #include <memory>
-#include <optional>
 #include <stdint.h>
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
+#include <boost/thread.hpp>
 
 class CBlockIndex;
 class CChainParams;
 class CScript;
 
-namespace Consensus { struct Params; };
+namespace Consensus { struct Params; }
 
 static const bool DEFAULT_PRINTPRIORITY = false;
+
+static const bool DEFAULT_STAKE = true;
+
+static const bool DEFAULT_STAKE_CACHE = true;
+
+//How many seconds to look ahead and prepare a block for staking
+//Look ahead up to 3 "timeslots" in the future, 48 seconds
+//Reduce this to reduce computational waste for stakers, increase this to increase the amount of time available to construct full blocks
+static const int32_t MAX_STAKE_LOOKAHEAD = 16 * 3;
+
+//How often to try to stake blocks in milliseconds
+//Note this is overridden for regtest mode
+static const int32_t STAKER_POLLING_PERIOD = 5000;
+
+//How much time to spend trying to process transactions when using the generate RPC call
+static const int32_t POW_MINER_MAX_TIME = 60;
 
 struct CBlockTemplate
 {
@@ -84,7 +101,7 @@ struct CompareTxIterByAncestorCount {
     {
         if (a->GetCountWithAncestors() != b->GetCountWithAncestors())
             return a->GetCountWithAncestors() < b->GetCountWithAncestors();
-        return CompareIteratorByHash()(a, b);
+        return CTxMemPool::CompareIteratorByHash()(a, b);
     }
 };
 
@@ -128,6 +145,8 @@ class BlockAssembler
 private:
     // The constructed block template
     std::unique_ptr<CBlockTemplate> pblocktemplate;
+    // A convenience pointer that always refers to the CBlock in pblocktemplate
+    CBlock* pblock;
 
     // Configuration parameters for the block size
     bool fIncludeWitness;
@@ -146,7 +165,6 @@ private:
     int64_t nLockTimeCutoff;
     const CChainParams& chainparams;
     const CTxMemPool& m_mempool;
-    CChainState& m_chainstate;
 
 public:
     struct Options {
@@ -155,14 +173,14 @@ public:
         CFeeRate blockMinFeeRate;
     };
 
-    explicit BlockAssembler(CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params);
-    explicit BlockAssembler(CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params, const Options& options);
+    explicit BlockAssembler(const CTxMemPool& mempool, const CChainParams& params);
+    explicit BlockAssembler(const CTxMemPool& mempool, const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
+    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, bool fProofOfStake = false, int64_t* pTotalFees = 0, int32_t nTime = 0, bool fAddTxs = true);
 
-    inline static std::optional<int64_t> m_last_block_num_txs{};
-    inline static std::optional<int64_t> m_last_block_weight{};
+    static Optional<int64_t> m_last_block_num_txs;
+    static Optional<int64_t> m_last_block_weight;
 
 private:
     // utility functions
@@ -186,7 +204,7 @@ private:
       * locktime, premature-witness, serialized size (if necessary)
       * These checks should always succeed, and they're here
       * only as an extra check in case of suboptimal node configuration */
-    bool TestPackageTransactions(const CTxMemPool::setEntries& package) const;
+    bool TestPackageTransactions(const CTxMemPool::setEntries& package);
     /** Return true if given transaction from mapTx has already been evaluated,
       * or if the transaction's cached data in mapTx is incorrect. */
     bool SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set& mapModifiedTx, CTxMemPool::setEntries& failedTx) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
@@ -202,7 +220,9 @@ private:
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
-/** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
-void RegenerateCommitments(CBlock& block, ChainstateManager& chainman);
+#ifdef ENABLE_WALLET
+/** Generate a new block, without valid proof-of-work */
+void StakeBSKs(bool fStake, CWallet *pwallet, CConnman* connman, CTxMemPool* mempool, boost::thread_group*& stakeThread);
+#endif
 
 #endif // BITCOIN_MINER_H

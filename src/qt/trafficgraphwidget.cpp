@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,6 @@
 #include <qt/clientmodel.h>
 
 #include <QPainter>
-#include <QPainterPath>
 #include <QColor>
 #include <QTimer>
 
@@ -79,7 +78,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
     int base = floor(log10(fMax));
     float val = pow(10.0f, base);
 
-    const QString units = tr("kB/s");
+    const QString units     = tr("KB/s");
     const float yMarginText = 2.0;
 
     // draw lines
@@ -128,10 +127,10 @@ void TrafficGraphWidget::updateRates()
 
     quint64 bytesIn = clientModel->node().getTotalBytesRecv(),
             bytesOut = clientModel->node().getTotalBytesSent();
-    float in_rate_kilobytes_per_sec = static_cast<float>(bytesIn - nLastBytesIn) / timer->interval();
-    float out_rate_kilobytes_per_sec = static_cast<float>(bytesOut - nLastBytesOut) / timer->interval();
-    vSamplesIn.push_front(in_rate_kilobytes_per_sec);
-    vSamplesOut.push_front(out_rate_kilobytes_per_sec);
+    float inRate = (bytesIn - nLastBytesIn) / 1024.0f * 1000 / timer->interval();
+    float outRate = (bytesOut - nLastBytesOut) / 1024.0f * 1000 / timer->interval();
+    vSamplesIn.push_front(inRate);
+    vSamplesOut.push_front(outRate);
     nLastBytesIn = bytesIn;
     nLastBytesOut = bytesOut;
 

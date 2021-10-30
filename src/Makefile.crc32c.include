@@ -14,6 +14,7 @@ CRC32C_CPPFLAGS_INT += -I$(srcdir)/crc32c/include
 CRC32C_CPPFLAGS_INT += -DHAVE_BUILTIN_PREFETCH=@HAVE_BUILTIN_PREFETCH@
 CRC32C_CPPFLAGS_INT += -DHAVE_MM_PREFETCH=@HAVE_MM_PREFETCH@
 CRC32C_CPPFLAGS_INT += -DHAVE_STRONG_GETAUXVAL=@HAVE_STRONG_GETAUXVAL@
+CRC32C_CPPFLAGS_INT += -DHAVE_WEAK_GETAUXVAL=@HAVE_WEAK_GETAUXVAL@
 CRC32C_CPPFLAGS_INT += -DCRC32C_TESTS_BUILT_WITH_GLOG=0
 
 if ENABLE_SSE42
@@ -40,7 +41,7 @@ crc32c_libcrc32c_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crc32c_libcrc32c_a_SOURCES =
 crc32c_libcrc32c_a_SOURCES += crc32c/include/crc32c/crc32c.h
 crc32c_libcrc32c_a_SOURCES += crc32c/src/crc32c_arm64.h
-crc32c_libcrc32c_a_SOURCES += crc32c/src/crc32c_arm64_check.h
+crc32c_libcrc32c_a_SOURCES += crc32c/src/crc32c_arm64_linux_check.h
 crc32c_libcrc32c_a_SOURCES += crc32c/src/crc32c_internal.h
 crc32c_libcrc32c_a_SOURCES += crc32c/src/crc32c_prefetch.h
 crc32c_libcrc32c_a_SOURCES += crc32c/src/crc32c_read_le.h

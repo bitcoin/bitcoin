@@ -3,14 +3,12 @@
 *.exe
 *.pdb
 src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-gui
-src/bitcoin-node
-src/bitcoin-tx
-src/bitcoin-util
-src/bitcoin-wallet
-src/test/fuzz/fuzz
+src/bitcoin-stakingd
+src/bitcoin-staking-cli
+src/bitcoin-staking-tx
+src/bitcoin-staking-wallet
+src/test/fuzz
+!src/test/fuzz/*.*
 src/test/test_bitcoin
 src/qt/test/test_bitcoin-qt
 
@@ -61,7 +59,7 @@ src/qt/bitcoin-qt.includes
 .dirstamp
 .libs
 .*.swp
-*~
+*.*~*
 *.bak
 *.rej
 *.orig
@@ -76,7 +74,6 @@ src/qt/bitcoin-qt.includes
 *.log
 *.trs
 *.dmg
-*.iso
 
 *.json.h
 *.raw.h
@@ -93,8 +90,8 @@ src/qt/bitcoin-qt.includes
 *.qm
 Makefile
 !depends/Makefile
-src/qt/bitcoin-qt
-Bitcoin-Qt.app
+src/qt/bitcoin-staking-qt
+BitcoinS-Qt.app
 background.tiff*
 
 # Qt Creator
@@ -120,10 +117,7 @@ releases
 /*.info
 test_bitcoin.coverage/
 total.coverage/
-fuzz.coverage/
 coverage_percent.txt
-/cov_tool_wrapper.sh
-qa-assets/
 
 #build tests
 linux-coverage-build
@@ -131,7 +125,6 @@ linux-build
 win32-build
 test/config.ini
 test/cache/*
-test/.mypy_cache/
 
 !src/leveldb*/Makefile
 
@@ -144,10 +137,8 @@ contrib/devtools/split-debug.sh
 db4/
 
 # clang-check
-*.plist
+#*.plist
 
 osx_volname
 dist/
 *.background.tiff
-
-/guix-build-*
