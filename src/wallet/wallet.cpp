@@ -2172,6 +2172,10 @@ bool CWallet::GetNewChangeDestination(const OutputType type, CTxDestination& des
 std::optional<int64_t> CWallet::GetOldestKeyPoolTime() const
 {
     LOCK(cs_wallet);
+    if (m_spk_managers.empty()) {
+        return std::nullopt;
+    }
+
     std::optional<int64_t> oldest_key{std::numeric_limits<int64_t>::max()};
     for (const auto& spk_man_pair : m_spk_managers) {
         oldest_key = std::min(oldest_key, spk_man_pair.second->GetOldestKeyPoolTime());
