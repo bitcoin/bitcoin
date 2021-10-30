@@ -33,9 +33,10 @@
 #include <chainparams.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
+#include <qt/governancelist.h>
+#include <qt/masternodelist.h>
 #include <ui_interface.h>
 #include <util/system.h>
-#include <qt/masternodelist.h>
 
 #include <iostream>
 #include <memory>
@@ -688,6 +689,15 @@ void BitcoinGUI::createToolBars()
             masternodeButton->setEnabled(true);
         }
 
+        if (settings.value("fShowGovernanceTab").toBool()) {
+            governanceButton = new QToolButton(this);
+            governanceButton->setText(tr("&Governance"));
+            governanceButton->setStatusTip(tr("View Governance Proposals"));
+            tabGroup->addButton(governanceButton);
+            connect(governanceButton, &QToolButton::clicked, this, &BitcoinGUI::gotoGovernancePage);
+            governanceButton->setEnabled(true);
+        }
+
         connect(overviewButton, &QToolButton::clicked, this, &BitcoinGUI::gotoOverviewPage);
         connect(sendCoinsButton, &QToolButton::clicked, [this]{ gotoSendCoinsPage(); });
         connect(coinJoinCoinsButton, &QToolButton::clicked, [this]{ gotoCoinJoinCoinsPage(); });
@@ -1118,6 +1128,15 @@ void BitcoinGUI::highlightTabButton(QAbstractButton *button, bool checked)
 {
     GUIUtil::setFont({button}, checked ? GUIUtil::FontWeight::Bold : GUIUtil::FontWeight::Normal, 16);
     GUIUtil::updateFonts();
+}
+
+void BitcoinGUI::gotoGovernancePage()
+{
+    QSettings settings;
+    if (settings.value("fShowGovernanceTab").toBool() && governanceButton) {
+        governanceButton->setChecked(true);
+        if (walletFrame) walletFrame->gotoGovernancePage();
+    }
 }
 
 void BitcoinGUI::gotoOverviewPage()

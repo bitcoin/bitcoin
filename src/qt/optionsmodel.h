@@ -34,41 +34,42 @@ public:
     explicit OptionsModel(interfaces::Node& node, QObject *parent = nullptr, bool resetSettings = false);
 
     enum OptionID {
-        StartAtStartup,         // bool
-        HideTrayIcon,           // bool
-        MinimizeToTray,         // bool
-        MapPortUPnP,            // bool
-        MinimizeOnClose,        // bool
-        ProxyUse,               // bool
-        ProxyIP,                // QString
-        ProxyPort,              // int
-        ProxyUseTor,            // bool
-        ProxyIPTor,             // QString
-        ProxyPortTor,           // int
-        DisplayUnit,            // BitcoinUnits::Unit
-        ThirdPartyTxUrls,       // QString
-        Digits,                 // QString
-        Theme,                  // QString
-        FontFamily,             // int
-        FontScale,              // int
-        FontWeightNormal,       // int
-        FontWeightBold,         // int
-        Language,               // QString
-        CoinControlFeatures,    // bool
-        ThreadsScriptVerif,     // int
-        Prune,                  // bool
-        PruneSize,              // int
-        DatabaseCache,          // int
-        SpendZeroConfChange,    // bool
-        ShowMasternodesTab,     // bool
-        CoinJoinEnabled,     // bool
-        ShowAdvancedCJUI,       // bool
-        ShowCoinJoinPopups,  // bool
-        LowKeysWarning,         // bool
-        CoinJoinRounds,      // int
-        CoinJoinAmount,      // int
-        CoinJoinMultiSession,// bool
-        Listen,                 // bool
+        StartAtStartup,       // bool
+        HideTrayIcon,         // bool
+        MinimizeToTray,       // bool
+        MapPortUPnP,          // bool
+        MinimizeOnClose,      // bool
+        ProxyUse,             // bool
+        ProxyIP,              // QString
+        ProxyPort,            // int
+        ProxyUseTor,          // bool
+        ProxyIPTor,           // QString
+        ProxyPortTor,         // int
+        DisplayUnit,          // BitcoinUnits::Unit
+        ThirdPartyTxUrls,     // QString
+        Digits,               // QString
+        Theme,                // QString
+        FontFamily,           // int
+        FontScale,            // int
+        FontWeightNormal,     // int
+        FontWeightBold,       // int
+        Language,             // QString
+        CoinControlFeatures,  // bool
+        ThreadsScriptVerif,   // int
+        Prune,                // bool
+        PruneSize,            // int
+        DatabaseCache,        // int
+        SpendZeroConfChange,  // bool
+        ShowMasternodesTab,   // bool
+        ShowGovernanceTab,    // bool
+        CoinJoinEnabled,      // bool
+        ShowAdvancedCJUI,     // bool
+        ShowCoinJoinPopups,   // bool
+        LowKeysWarning,       // bool
+        CoinJoinRounds,       // int
+        CoinJoinAmount,       // int
+        CoinJoinMultiSession, // bool
+        Listen,               // bool
         OptionIDRowCount,
     };
 

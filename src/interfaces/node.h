@@ -22,6 +22,7 @@ class BanMan;
 class CCoinControl;
 class CDeterministicMNList;
 class CFeeRate;
+class CGovernanceObject;
 class CNodeStats;
 class Coin;
 class RPCTimerInterface;
@@ -39,6 +40,14 @@ class EVO
 public:
     virtual ~EVO() {}
     virtual CDeterministicMNList getListAtChainTip() = 0;
+};
+
+//! Interface for the src/governance part of a dash node (dashd process).
+class GOV
+{
+public:
+    virtual ~GOV() {}
+    virtual std::vector<const CGovernanceObject*> getAllNewerThan(int64_t nMoreThanTime) = 0;
 };
 
 //! Interface for the src/llmq part of a dash node (dashd process).
@@ -260,6 +269,9 @@ public:
 
     //! Return interface for accessing evo related handler.
     virtual EVO& evo() = 0;
+
+    //! Return interface for accessing governance related handler.
+    virtual GOV& gov() = 0;
 
     //! Return interface for accessing llmq related handler.
     virtual LLMQ& llmq() = 0;

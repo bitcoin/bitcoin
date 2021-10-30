@@ -14,6 +14,7 @@ class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
 class MasternodeList;
+class GovernanceList;
 
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
@@ -55,6 +56,7 @@ private:
     ClientModel *clientModel;
     QMap<WalletModel*, WalletView*> mapWalletViews;
     MasternodeList* masternodeListPage;
+    GovernanceList* governanceListPage;
 
     bool bOutOfSync;
 
@@ -63,6 +65,8 @@ public:
     WalletModel* currentWalletModel() const;
 
 public Q_SLOTS:
+    /** Switch to governance page */
+    void gotoGovernancePage();
     /** Switch to overview (home) page */
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
