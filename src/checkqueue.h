@@ -167,12 +167,15 @@ public:
     //! Add a batch of checks to the queue
     void Add(std::vector<T>& vChecks)
     {
-        LOCK(m_mutex);
-        for (T& check : vChecks) {
-            queue.push_back(T());
-            check.swap(queue.back());
+        {
+            LOCK(m_mutex);
+            for (T& check : vChecks) {
+                queue.emplace_back();
+                check.swap(queue.back());
+            }
+            nTodo += vChecks.size();
         }
-        nTodo += vChecks.size();
+
         if (vChecks.size() == 1)
             m_worker_cv.notify_one();
         else if (vChecks.size() > 1)
