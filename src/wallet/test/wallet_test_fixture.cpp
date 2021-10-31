@@ -4,6 +4,7 @@
 
 #include <wallet/test/wallet_test_fixture.h>
 
+#include <scheduler.h>
 
 WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
     : TestingSetup(chainName),
@@ -13,4 +14,9 @@ WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
     m_wallet.LoadWallet();
     m_chain_notifications_handler = m_node.chain->handleNotifications({ &m_wallet, [](CWallet*) {} });
     m_wallet_loader->registerRpcs();
+}
+
+WalletTestingSetup::~WalletTestingSetup()
+{
+    if (m_node.scheduler) m_node.scheduler->stop();
 }
