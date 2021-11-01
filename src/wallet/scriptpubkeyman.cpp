@@ -323,7 +323,7 @@ void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
 
     CExtKey masterKey;
     SecureVector vchSeed = hdChainCurrent.GetSeed();
-    masterKey.SetSeed(vchSeed.data(), vchSeed.size());
+    masterKey.SetSeed(vchSeed);
     CKeyID master_id = masterKey.key.GetPubKey().GetID();
 
     std::unique_ptr<WalletBatch> batch = std::make_unique<WalletBatch>(m_storage.GetDatabase());

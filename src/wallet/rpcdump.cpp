@@ -982,7 +982,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         file << "# HD seed: " << HexStr(vchSeed) << "\n\n";
 
         CExtKey masterKey;
-        masterKey.SetSeed(&vchSeed[0], vchSeed.size());
+        masterKey.SetSeed(vchSeed);
 
         file << "# extended private masterkey: " << EncodeExtKey(masterKey) << "\n";
 
