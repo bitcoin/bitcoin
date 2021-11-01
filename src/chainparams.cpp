@@ -216,6 +216,15 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0020].nThresholdMin = 2420; // 60% of 4032
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0020].nFalloffCoeff = 5; // this corresponds to 10 periods
 
+        // Deployment of decreased proposal fee
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].bit = 7;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nStartTime = 1638316800; // Dec 1st, 2021
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nTimeout = 1669852800; // Dec 1st, 2022
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nWindowSize = 4032;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nThresholdStart = 3226; // 80% of 4032
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nThresholdMin = 2420; // 60% of 4032
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nFalloffCoeff = 5; // this corresponds to 10 periods
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000549cd3ccb81a55892330"); // 1450000
 
@@ -426,6 +435,15 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0020].nThresholdMin = 60; // 60% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0020].nFalloffCoeff = 5; // this corresponds to 10 periods
 
+        // Deployment of decreased proposal fee
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].bit = 7;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nStartTime = 999999999999ULL; // TODO renable this before first RC
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nWindowSize = 4032;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nThresholdStart = 3226; // 80% of 4032
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nThresholdMin = 2420; // 60% of 4032
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nFalloffCoeff = 5; // this corresponds to 10 periods
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000022f14ac5d56b5ef"); // 470000
 
@@ -607,6 +625,15 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0020].nThresholdStart = 80; // 80% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0020].nThresholdMin = 60; // 60% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0020].nFalloffCoeff = 5; // this corresponds to 10 periods
+
+        // Deployment of decreased proposal fee
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].bit = 7;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nStartTime = 1635724800; // Nov 1st, 2021
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nWindowSize = 4032;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nThresholdStart = 3226; // 80% of 4032
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nThresholdMin = 2420; // 60% of 4032
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nFalloffCoeff = 5; // this corresponds to 10 periods
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
@@ -810,6 +837,13 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0020].nThresholdStart = 80;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0020].nThresholdMin = 60;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0020].nFalloffCoeff = 5;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].bit = 7;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nWindowSize = 100;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nThresholdStart = 80;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nThresholdMin = 60;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nFalloffCoeff = 5;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");

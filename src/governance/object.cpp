@@ -507,12 +507,13 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
     }
 }
 
-CAmount CGovernanceObject::GetMinCollateralFee() const
+CAmount CGovernanceObject::GetMinCollateralFee(bool fork_active) const
 {
     // Only 1 type has a fee for the moment but switch statement allows for future object types
     switch (nObjectType) {
     case GOVERNANCE_OBJECT_PROPOSAL:
-        return GOVERNANCE_PROPOSAL_FEE_TX;
+        if (fork_active) return GOVERNANCE_PROPOSAL_FEE_TX;
+        else return GOVERNANCE_PROPOSAL_FEE_TX_OLD;
     case GOVERNANCE_OBJECT_TRIGGER:
         return 0;
     default:
@@ -524,7 +525,6 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
 {
     strError = "";
     fMissingConfirmations = false;
-    CAmount nMinFee = GetMinCollateralFee();
     uint256 nExpectedHash = GetHash();
 
     CTransactionRef txCollateral;
@@ -554,6 +554,10 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
 
     CScript findScript;
     findScript << OP_RETURN << ToByteVector(nExpectedHash);
+
+    AssertLockHeld(cs_main);
+    bool fork_active = VersionBitsState(LookupBlockIndex(nBlockHash), Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE, versionbitscache) == ThresholdState::ACTIVE;
+    CAmount nMinFee = GetMinCollateralFee(fork_active);
 
     LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- txCollateral->vout.size() = %s, findScript = %s, nMinFee = %lld\n",
                 txCollateral->vout.size(), ScriptToAsmStr(findScript, false), nMinFee);

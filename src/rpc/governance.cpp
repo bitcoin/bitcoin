@@ -220,7 +220,10 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
     }
 
     CTransactionRef tx;
-    if (!pwallet->GetBudgetSystemCollateralTX(*locked_chain, tx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
+
+    bool fork_active = VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE) == ThresholdState::ACTIVE;
+
+    if (!pwallet->GetBudgetSystemCollateralTX(*locked_chain, tx, govobj.GetHash(), govobj.GetMinCollateralFee(fork_active), outpoint)) {
         std::string err = "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.";
         if (!request.params[6].isNull() && !request.params[7].isNull()) {
             err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";
