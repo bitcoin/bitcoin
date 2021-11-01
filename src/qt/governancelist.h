@@ -43,7 +43,7 @@ public:
     float paymentAmount() const;
     QString url() const;
     bool isActive() const;
-    QString votingStatus(const int nAbsVoteReq) const;
+    QString votingStatus(int nAbsVoteReq) const;
     int GetAbsoluteYesCount() const;
 
     void openUrl() const;
@@ -96,9 +96,9 @@ public:
     void setClientModel(ClientModel* clientModel);
 
 private:
-    ClientModel* clientModel;
+    ClientModel* clientModel{nullptr};
 
-    Ui::GovernanceList* ui;
+    std::unique_ptr<Ui::GovernanceList> ui;
     ProposalModel* proposalModel;
     QSortFilterProxyModel* proposalModelProxy;
 

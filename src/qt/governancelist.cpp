@@ -275,8 +275,7 @@ const Proposal* ProposalModel::getProposalAt(const QModelIndex& index) const
 
 GovernanceList::GovernanceList(QWidget* parent) :
     QWidget(parent),
-    ui(new Ui::GovernanceList),
-    clientModel(nullptr),
+    ui(std::make_unique<Ui::GovernanceList>()),
     proposalModel(new ProposalModel(this)),
     proposalModelProxy(new QSortFilterProxyModel(this)),
     proposalContextMenu(new QMenu(this)),
@@ -321,10 +320,7 @@ GovernanceList::GovernanceList(QWidget* parent) :
     GUIUtil::updateFonts();
 }
 
-GovernanceList::~GovernanceList()
-{
-    delete ui;
-}
+GovernanceList::~GovernanceList() = default;
 
 void GovernanceList::setClientModel(ClientModel* model)
 {
