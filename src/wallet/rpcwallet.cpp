@@ -21,6 +21,7 @@
 #include <rpc/rawtransaction.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <script/descriptor.h>
 #include <timedata.h>
 #include <txmempool.h>
 #include <util/fees.h>
@@ -3066,6 +3067,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
             "    \"redeemScript\" : n        (string) The redeemScript if scriptPubKey is P2SH\n"
             "    \"spendable\" : xxx,        (bool) Whether we have the private keys to spend this output\n"
             "    \"solvable\" : xxx,         (bool) Whether we know how to spend this output, ignoring the lack of keys\n"
+            "    \"desc\" : xxx,             (string, only when solvable) A descriptor for spending this output\n"
             "    \"safe\" : xxx              (bool) Whether this output is considered safe to spend. Unconfirmed transactions\n"
             "                              from outside keys and unconfirmed replacement transactions are considered unsafe\n"
             "                              and are not eligible for spending by fundrawtransaction and sendtoaddress.\n"
@@ -3212,6 +3214,10 @@ static UniValue listunspent(const JSONRPCRequest& request)
         entry.pushKV("confirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);
+        if (out.fSolvable) {
+            auto descriptor = InferDescriptor(scriptPubKey, *pwallet);
+            entry.pushKV("desc", descriptor->ToString());
+        }
         entry.pushKV("safe", out.fSafe);
         entry.pushKV("coinjoin_rounds", pwallet->GetRealOutpointCoinJoinRounds(COutPoint(out.tx->GetHash(), out.i)));
         results.push_back(entry);
@@ -3715,6 +3721,8 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             "  \"ismine\" : true|false,        (boolean) If the address is yours or not\n"
             "  \"solvable\" : true|false,      (boolean) If the address is solvable by the wallet\n"
             "  \"iswatchonly\" : true|false,   (boolean) If the address is watchonly\n"
+            "  \"solvable\" : true|false,      (boolean) Whether we know how to spend coins sent to this address, ignoring the possible lack of private keys\n"
+            "  \"desc\" : \"desc\",            (string, optional) A descriptor for spending coins sent to this address (only when solvable)\n"
             "  \"isscript\" : true|false,      (boolean) If the key is a script\n"
             " \"ischange\" : true|false,       (boolean) If the address was used for change output\n"
             "  \"script\" : \"type\"             (string, optional) The output script type. Only if \"isscript\" is true and the redeemscript is known. Possible types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata\n"
@@ -3764,6 +3772,11 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     isminetype mine = IsMine(*pwallet, dest);
     ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
+    bool solvable = IsSolvable(*pwallet, scriptPubKey);
+    ret.pushKV("solvable", solvable);
+    if (solvable) {
+        ret.pushKV("desc", InferDescriptor(scriptPubKey, *pwallet)->ToString());
+    }
     ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
     ret.pushKV("solvable", IsSolvable(*pwallet, scriptPubKey));
     UniValue detail = DescribeWalletAddress(pwallet, dest);

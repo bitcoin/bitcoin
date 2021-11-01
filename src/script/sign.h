@@ -24,6 +24,11 @@ struct KeyOriginInfo
 {
     unsigned char fingerprint[4];
     std::vector<uint32_t> path;
+
+    friend bool operator==(const KeyOriginInfo& a, const KeyOriginInfo& b)
+    {
+        return std::equal(std::begin(a.fingerprint), std::end(a.fingerprint), std::begin(b.fingerprint)) && a.path == b.path;
+    }
 };
 
 /** An interface to be implemented by keystores that support signing. */
@@ -34,7 +39,7 @@ public:
     virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const { return false; }
     virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const { return false; }
     virtual bool GetKey(const CKeyID &address, CKey& key) const { return false; }
-    virtual bool GetKeyOrigin(const CKeyID& id, KeyOriginInfo& info) const { return false; }
+    virtual bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const { return false; }
 };
 
 extern const SigningProvider& DUMMY_SIGNING_PROVIDER;
@@ -58,10 +63,12 @@ struct FlatSigningProvider final : public SigningProvider
 {
     std::map<CScriptID, CScript> scripts;
     std::map<CKeyID, CPubKey> pubkeys;
+    std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>> origins;
     std::map<CKeyID, CKey> keys;
 
     bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
     bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
+    bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
     bool GetKey(const CKeyID& keyid, CKey& key) const override;
 };
 

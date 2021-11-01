@@ -211,6 +211,8 @@ BASE_SCRIPTS = [
     'p2p_blockfilters.py',
     'feature_asmap.py',
     'feature_includeconf.py',
+    'rpc_deriveaddresses.py',
+    'rpc_deriveaddresses.py --usecli',
     'rpc_scantxoutset.py',
     'feature_logging.py',
     'p2p_node_network_limited.py',
