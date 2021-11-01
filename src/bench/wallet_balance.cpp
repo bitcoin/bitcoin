@@ -22,12 +22,7 @@ struct WalletTestingSetup {
 
     void handleNotifications()
     {
-        RegisterValidationInterface(&m_wallet);
-    }
-
-    ~WalletTestingSetup()
-    {
-        UnregisterValidationInterface(&m_wallet);
+        m_wallet.m_chain_notifications_handler = m_chain->handleNotifications(m_wallet);
     }
 };
 
