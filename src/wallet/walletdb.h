@@ -71,6 +71,8 @@ extern const std::string HDCHAIN;
 extern const std::string HDPUBKEY; // A HD key, identified by extended pubkey
 extern const std::string KEY;
 extern const std::string KEYMETA;
+extern const std::string KEYMAN_KEY;
+extern const std::string KEYMAN_CKEY;
 extern const std::string LOCKED_UTXO;
 extern const std::string MASTER_KEY;
 extern const std::string MINVERSION;
@@ -275,6 +277,9 @@ public:
 
     bool WriteHDPubKey(const CExtPubKey& extpub);
     bool WriteActiveHDKey(const CExtPubKey& extpub);
+
+    bool WriteKeyManKey(const CPubKey& pubkey, const CPrivKey& privkey);
+    bool WriteCryptedKeyManKey(const CPubKey& pubkey, const std::vector<unsigned char>& ckey);
 
     DBErrors LoadWallet(CWallet* pwallet);
     DBErrors FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWalletTx>& vWtx);

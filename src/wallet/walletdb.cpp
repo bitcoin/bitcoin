@@ -43,6 +43,8 @@ const std::string HDCHAIN{"hdchain"};
 const std::string HDPUBKEY{"hdxpubkey"};
 const std::string KEYMETA{"keymeta"};
 const std::string KEY{"key"};
+const std::string KEYMAN_KEY{"keyman_key"};
+const std::string KEYMAN_CKEY{"keyman_ckey"};
 const std::string LOCKED_UTXO{"lockedutxo"};
 const std::string MASTER_KEY{"mkey"};
 const std::string MINVERSION{"minversion"};
@@ -319,6 +321,46 @@ bool WalletBatch::WriteActiveHDKey(const CExtPubKey& extpub)
         }
         return xpub == read_xpub;
     }
+    return true;
+}
+
+bool WalletBatch::WriteKeyManKey(const CPubKey& pubkey, const CPrivKey& privkey)
+{
+    // hash pubkey/privkey to accelerate wallet load
+    std::vector<unsigned char> key;
+    key.reserve(privkey.size() + pubkey.size());
+    key.insert(key.end(), pubkey.begin(), pubkey.end());
+    key.insert(key.end(), privkey.begin(), privkey.end());
+
+    const auto rec_key = std::make_pair(DBKeys::KEYMAN_KEY, pubkey);
+    const auto rec_val = std::make_pair(privkey, Hash(key));
+    if (!WriteIC(rec_key, rec_val, false)) {
+        std::pair<CPrivKey, uint256> val;
+        if (!m_batch->Read(rec_key, val)) {
+            return false;
+        }
+        return rec_val == val;
+    }
+    return true;
+}
+
+bool WalletBatch::WriteCryptedKeyManKey(const CPubKey& pubkey, const std::vector<unsigned char>& ckey)
+{
+    // Compute a checksum of the encrypted key
+    uint256 checksum = Hash(ckey);
+
+    const auto key = std::make_pair(DBKeys::KEYMAN_CKEY, pubkey);
+    if (!WriteIC(key, std::make_pair(ckey, checksum), false)) {
+        // It may already exist, so try writing just the checksum
+        std::vector<unsigned char> val;
+        if (!m_batch->Read(key, val)) {
+            return false;
+        }
+        if (!WriteIC(key, std::make_pair(val, checksum), true)) {
+            return false;
+        }
+    }
+    EraseIC(std::make_pair(DBKeys::KEYMAN_KEY, pubkey));
     return true;
 }
 
