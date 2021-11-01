@@ -11,6 +11,7 @@
 #include <index/coinstatsindex.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <util/overflow.h>
 #include <util/system.h>
 #include <validation.h>
 
@@ -82,7 +83,9 @@ static void ApplyStats(CCoinsStats& stats, const uint256& hash, const std::map<u
     stats.nTransactions++;
     for (auto it = outputs.begin(); it != outputs.end(); ++it) {
         stats.nTransactionOutputs++;
-        stats.nTotalAmount += it->second.out.nValue;
+        if (stats.total_amount.has_value()) {
+            stats.total_amount = CheckedAdd(*stats.total_amount, it->second.out.nValue);
+        }
         stats.nBogoSize += GetBogoSize(it->second.out.scriptPubKey);
     }
 }
