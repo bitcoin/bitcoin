@@ -79,15 +79,10 @@ static CDataStream AddrmanToStream(const AddrManSerializationMock& _addrman)
 
 class AddrManTest : public AddrMan
 {
-private:
-    bool deterministic;
 public:
-    explicit AddrManTest(bool makeDeterministic = true,
-                         std::vector<bool> asmap = std::vector<bool>())
-        : AddrMan(asmap, makeDeterministic, /* consistency_check_ratio */ 100)
-    {
-        deterministic = makeDeterministic;
-    }
+    explicit AddrManTest(std::vector<bool> asmap = std::vector<bool>())
+        : AddrMan(asmap, /*deterministic=*/true, /* consistency_check_ratio */ 100)
+    {}
 
     AddrInfo* Find(const CService& addr, int* pnId = nullptr)
     {
@@ -760,8 +755,8 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
 {
     std::vector<bool> asmap1 = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
 
-    auto addrman_asmap1 = std::make_unique<AddrManTest>(true, asmap1);
-    auto addrman_asmap1_dup = std::make_unique<AddrManTest>(true, asmap1);
+    auto addrman_asmap1 = std::make_unique<AddrManTest>(asmap1);
+    auto addrman_asmap1_dup = std::make_unique<AddrManTest>(asmap1);
     auto addrman_noasmap = std::make_unique<AddrManTest>();
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
 
@@ -792,7 +787,7 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     BOOST_CHECK(bucketAndEntry_asmap1.second != bucketAndEntry_noasmap.second);
 
     // deserializing non-asmaped peers.dat to asmaped addrman
-    addrman_asmap1 = std::make_unique<AddrManTest>(true, asmap1);
+    addrman_asmap1 = std::make_unique<AddrManTest>(asmap1);
     addrman_noasmap = std::make_unique<AddrManTest>();
     addrman_noasmap->Add({addr}, default_source);
     stream << *addrman_noasmap;
@@ -804,7 +799,7 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     BOOST_CHECK(bucketAndEntry_asmap1_deser.second == bucketAndEntry_asmap1_dup.second);
 
     // used to map to different buckets, now maps to the same bucket.
-    addrman_asmap1 = std::make_unique<AddrManTest>(true, asmap1);
+    addrman_asmap1 = std::make_unique<AddrManTest>(asmap1);
     addrman_noasmap = std::make_unique<AddrManTest>();
     CAddress addr1 = CAddress(ResolveService("250.1.1.1"), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.2.1.1"), NODE_NONE);
