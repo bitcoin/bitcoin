@@ -16,7 +16,6 @@
              (gnu packages gawk)
              (gnu packages gcc)
              (gnu packages gnome)
-             (gnu packages image)
              (gnu packages installers)
              (gnu packages linux)
              (gnu packages llvm)
@@ -29,7 +28,6 @@
              (gnu packages shells)
              (gnu packages tls)
              (gnu packages version-control)
-             (guix build-system font)
              (guix build-system gnu)
              (guix build-system python)
              (guix build-system trivial)
@@ -78,10 +76,6 @@ http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
                                               "^gnu-user.*\\.h$"))
                  (("-rpath=") "-rpath-link="))
                #t))))))))
-
-(define (make-binutils-with-mingw-w64-disable-flags xbinutils)
-  (package-with-extra-patches xbinutils
-    (search-our-patches "binutils-mingw-w64-disable-flags.patch")))
 
 (define (make-cross-toolchain target
                               base-gcc-for-libc
@@ -134,9 +128,7 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc
-  (package-with-extra-patches gcc-8
-    (search-our-patches "gcc-8-sort-libtool-find-output.patch")))
+(define base-gcc gcc-10)
 
 ;; Building glibc with stack smashing protector first landed in glibc 2.25, use
 ;; this function to disable for older glibcs
@@ -171,7 +163,7 @@ desirable for building Bitcoin Core release binaries."
 
 (define (make-mingw-pthreads-cross-toolchain target)
   "Create a cross-compilation toolchain package for TARGET"
-  (let* ((xbinutils (make-binutils-with-mingw-w64-disable-flags (cross-binutils target)))
+  (let* ((xbinutils (cross-binutils target))
          (pthreads-xlibc mingw-w64-x86_64-winpthreads)
          (pthreads-xgcc (make-gcc-with-pthreads
                          (cross-gcc target
@@ -298,7 +290,8 @@ PKCS#8, PKCS#12, PKCS#5, X.509 and TSP.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "1nyvjisvyxyxnd0023xjf5846xd03lwawp5pfzr8vrky7wwm5maz"))))
+           "1nyvjisvyxyxnd0023xjf5846xd03lwawp5pfzr8vrky7wwm5maz"))
+      (patches (search-our-patches "elfsteem-value-error-python-39.patch"))))
       (build-system python-build-system)
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; PYTHONPATH problems, just disable the test
@@ -370,6 +363,8 @@ PKCS#8, PKCS#12, PKCS#5, X.509 and TSP.")
 (define-public python-oscryptotests
   (package (inherit python-oscrypto)
     (name "python-oscryptotests")
+    (propagated-inputs
+      `(("python-oscrypto" ,python-oscrypto)))
     (arguments
      `(#:tests? #f
        #:phases
@@ -557,7 +552,7 @@ inspecting signatures in Mach-O binaries.")
 
 (define-public glibc-2.24
   (package
-    (inherit glibc)
+    (inherit glibc-2.31)
     (version "2.24")
     (source (origin
               (method git-fetch)
@@ -573,9 +568,21 @@ inspecting signatures in Mach-O binaries.")
                                            "glibc-2.24-elfm-loadaddr-dynamic-rewrite.patch"
                                            "glibc-2.24-no-build-time-cxx-header-run.patch"))))))
 
-(define glibc-2.27/bitcoin-patched
-  (package-with-extra-patches glibc-2.27
-    (search-our-patches "glibc-2.27-riscv64-Use-__has_include__-to-include-asm-syscalls.h.patch")))
+(define-public glibc-2.27/bitcoin-patched
+  (package
+    (inherit glibc-2.31)
+    (version "2.27")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://sourceware.org/git/glibc.git")
+                    (commit "23158b08a0908f381459f273a984c6fd328363cb")))
+              (file-name (git-file-name "glibc" "23158b08a0908f381459f273a984c6fd328363cb"))
+              (sha256
+               (base32
+                "1b2n1gxv9f4fd5yy68qjbnarhf8mf4vmlxk10i3328c1w5pmp0ca"))
+              (patches (search-our-patches "glibc-ldd-x86_64.patch"
+                                           "glibc-2.27-riscv64-Use-__has_include__-to-include-asm-syscalls.h.patch"))))))
 
 (packages->manifest
  (append
