@@ -613,9 +613,6 @@ public:
 
     void SetCache(const DescriptorCache& cache);
 
-    bool AddKey(const CKeyID& key_id, const CKey& key);
-    bool AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key);
-
     bool HasWalletDescriptor(const WalletDescriptor& desc) const;
     void UpdateWalletDescriptor(WalletDescriptor& descriptor);
     bool CanUpdateToWalletDescriptor(const WalletDescriptor& descriptor, std::string& error);

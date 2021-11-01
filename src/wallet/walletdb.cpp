@@ -1009,16 +1009,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         ((DescriptorScriptPubKeyMan*)spk_man)->SetCache(desc_cache_pair.second);
     }
 
-    // Set the descriptor keys
-    for (const auto& desc_key_pair : wss.m_descriptor_keys) {
-        auto spk_man = pwallet->GetScriptPubKeyMan(desc_key_pair.first.first);
-        ((DescriptorScriptPubKeyMan*)spk_man)->AddKey(desc_key_pair.first.second, desc_key_pair.second);
-    }
-    for (const auto& desc_key_pair : wss.m_descriptor_crypt_keys) {
-        auto spk_man = pwallet->GetScriptPubKeyMan(desc_key_pair.first.first);
-        ((DescriptorScriptPubKeyMan*)spk_man)->AddCryptedKey(desc_key_pair.first.second, desc_key_pair.second.first, desc_key_pair.second.second);
-    }
-
     if (rescan_required && result == DBErrors::LOAD_OK) {
         result = DBErrors::NEED_RESCAN;
     } else if (fNoncriticalErrors && result == DBErrors::LOAD_OK) {
