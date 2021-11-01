@@ -19,12 +19,12 @@ import tempfile
 import time
 
 from typing import List
-from .address import ADDRESS_BCRT1_P2WSH_OP_TRUE
-from .authproxy import JSONRPCException
-from . import coverage
-from .p2p import NetworkThread
-from .test_node import TestNode
-from .util import (
+from .bitcoincore.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
+from .bitcoincore.authproxy import JSONRPCException
+from .bitcoincore import coverage
+from .bitcoincore.p2p import NetworkThread
+from .bitcoincore.test_node import TestNode
+from .bitcoincore.util import (
     MAX_NODES,
     PortSeed,
     assert_equal,
