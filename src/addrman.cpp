@@ -537,6 +537,81 @@ void AddrManImpl::MakeTried(AddrInfo& info, int nId)
     info.fInTried = true;
 }
 
+bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty)
+{
+    AssertLockHeld(cs);
+
+    if (!addr.IsRoutable())
+        return false;
+
+    int nId;
+    AddrInfo* pinfo = Find(addr, &nId);
+
+    // Do not set a penalty for a source's self-announcement
+    if (addr == source) {
+        nTimePenalty = 0;
+    }
+
+    if (pinfo) {
+        // periodically update nTime
+        bool fCurrentlyOnline = (GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
+        int64_t nUpdateInterval = (fCurrentlyOnline ? 60 * 60 : 24 * 60 * 60);
+        if (addr.nTime && (!pinfo->nTime || pinfo->nTime < addr.nTime - nUpdateInterval - nTimePenalty))
+            pinfo->nTime = std::max((int64_t)0, addr.nTime - nTimePenalty);
+
+        // add services
+        pinfo->nServices = ServiceFlags(pinfo->nServices | addr.nServices);
+
+        // do not update if no new information is present
+        if (!addr.nTime || (pinfo->nTime && addr.nTime <= pinfo->nTime))
+            return false;
+
+        // do not update if the entry was already in the "tried" table
+        if (pinfo->fInTried)
+            return false;
+
+        // do not update if the max reference count is reached
+        if (pinfo->nRefCount == ADDRMAN_NEW_BUCKETS_PER_ADDRESS)
+            return false;
+
+        // stochastic test: previous nRefCount == N: 2^N times harder to increase it
+        int nFactor = 1;
+        for (int n = 0; n < pinfo->nRefCount; n++)
+            nFactor *= 2;
+        if (nFactor > 1 && (insecure_rand.randrange(nFactor) != 0))
+            return false;
+    } else {
+        pinfo = Create(addr, source, &nId);
+        pinfo->nTime = std::max((int64_t)0, (int64_t)pinfo->nTime - nTimePenalty);
+        nNew++;
+    }
+
+    int nUBucket = pinfo->GetNewBucket(nKey, source, m_asmap);
+    int nUBucketPos = pinfo->GetBucketPosition(nKey, true, nUBucket);
+    bool fInsert = vvNew[nUBucket][nUBucketPos] == -1;
+    if (vvNew[nUBucket][nUBucketPos] != nId) {
+        if (!fInsert) {
+            AddrInfo& infoExisting = mapInfo[vvNew[nUBucket][nUBucketPos]];
+            if (infoExisting.IsTerrible() || (infoExisting.nRefCount > 1 && pinfo->nRefCount == 0)) {
+                // Overwrite the existing new table entry.
+                fInsert = true;
+            }
+        }
+        if (fInsert) {
+            ClearNew(nUBucket, nUBucketPos);
+            pinfo->nRefCount++;
+            vvNew[nUBucket][nUBucketPos] = nId;
+            LogPrint(BCLog::ADDRMAN, "Added %s mapped to AS%i to new[%i][%i]\n",
+                     addr.ToString(), addr.GetMappedAS(m_asmap), nUBucket, nUBucketPos);
+        } else {
+            if (pinfo->nRefCount == 0) {
+                Delete(nId);
+            }
+        }
+    }
+    return fInsert;
+}
+
 void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nTime)
 {
     AssertLockHeld(cs);
@@ -592,81 +667,16 @@ void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
     }
 }
 
-bool AddrManImpl::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty)
+bool AddrManImpl::Add_(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty)
 {
-    AssertLockHeld(cs);
-
-    if (!addr.IsRoutable())
-        return false;
-
-    bool fNew = false;
-    int nId;
-    AddrInfo* pinfo = Find(addr, &nId);
-
-    // Do not set a penalty for a source's self-announcement
-    if (addr == source) {
-        nTimePenalty = 0;
+    int added{0};
+    for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++) {
+        added += AddSingle(*it, source, nTimePenalty) ? 1 : 0;
     }
-
-    if (pinfo) {
-        // periodically update nTime
-        bool fCurrentlyOnline = (GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
-        int64_t nUpdateInterval = (fCurrentlyOnline ? 60 * 60 : 24 * 60 * 60);
-        if (addr.nTime && (!pinfo->nTime || pinfo->nTime < addr.nTime - nUpdateInterval - nTimePenalty))
-            pinfo->nTime = std::max((int64_t)0, addr.nTime - nTimePenalty);
-
-        // add services
-        pinfo->nServices = ServiceFlags(pinfo->nServices | addr.nServices);
-
-        // do not update if no new information is present
-        if (!addr.nTime || (pinfo->nTime && addr.nTime <= pinfo->nTime))
-            return false;
-
-        // do not update if the entry was already in the "tried" table
-        if (pinfo->fInTried)
-            return false;
-
-        // do not update if the max reference count is reached
-        if (pinfo->nRefCount == ADDRMAN_NEW_BUCKETS_PER_ADDRESS)
-            return false;
-
-        // stochastic test: previous nRefCount == N: 2^N times harder to increase it
-        int nFactor = 1;
-        for (int n = 0; n < pinfo->nRefCount; n++)
-            nFactor *= 2;
-        if (nFactor > 1 && (insecure_rand.randrange(nFactor) != 0))
-            return false;
-    } else {
-        pinfo = Create(addr, source, &nId);
-        pinfo->nTime = std::max((int64_t)0, (int64_t)pinfo->nTime - nTimePenalty);
-        nNew++;
-        fNew = true;
+    if (added > 0) {
+        LogPrint(BCLog::ADDRMAN, "Added %i addresses (of %i) from %s: %i tried, %i new\n", added, vAddr.size(), source.ToString(), nTried, nNew);
     }
-
-    int nUBucket = pinfo->GetNewBucket(nKey, source, m_asmap);
-    int nUBucketPos = pinfo->GetBucketPosition(nKey, true, nUBucket);
-    if (vvNew[nUBucket][nUBucketPos] != nId) {
-        bool fInsert = vvNew[nUBucket][nUBucketPos] == -1;
-        if (!fInsert) {
-            AddrInfo& infoExisting = mapInfo[vvNew[nUBucket][nUBucketPos]];
-            if (infoExisting.IsTerrible() || (infoExisting.nRefCount > 1 && pinfo->nRefCount == 0)) {
-                // Overwrite the existing new table entry.
-                fInsert = true;
-            }
-        }
-        if (fInsert) {
-            ClearNew(nUBucket, nUBucketPos);
-            pinfo->nRefCount++;
-            vvNew[nUBucket][nUBucketPos] = nId;
-            LogPrint(BCLog::ADDRMAN, "Added %s mapped to AS%i to new[%i][%i]\n",
-                     addr.ToString(), addr.GetMappedAS(m_asmap), nUBucket, nUBucketPos);
-        } else {
-            if (pinfo->nRefCount == 0) {
-                Delete(nId);
-            }
-        }
-    }
-    return fNew;
+    return added > 0;
 }
 
 void AddrManImpl::Attempt_(const CService& addr, bool fCountFailure, int64_t nTime)
@@ -1031,15 +1041,10 @@ size_t AddrManImpl::size() const
 bool AddrManImpl::Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty)
 {
     LOCK(cs);
-    int nAdd = 0;
     Check();
-    for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
-        nAdd += Add_(*it, source, nTimePenalty) ? 1 : 0;
+    auto ret = Add_(vAddr, source, nTimePenalty);
     Check();
-    if (nAdd) {
-        LogPrint(BCLog::ADDRMAN, "Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString(), nTried, nNew);
-    }
-    return nAdd > 0;
+    return ret;
 }
 
 void AddrManImpl::Good(const CService& addr, int64_t nTime)
