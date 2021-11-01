@@ -1242,7 +1242,7 @@ static RPCHelpMan gettxoutsetinfo()
             ret.pushKV("hash_serialized_2", stats.hashSerialized.GetHex());
         }
         if (hash_type == CoinStatsHashType::MUHASH) {
-              ret.pushKV("muhash", stats.hashSerialized.GetHex());
+            ret.pushKV("muhash", stats.hashSerialized.GetHex());
         }
         ret.pushKV("total_amount", ValueFromAmount(stats.nTotalAmount));
         if (!stats.index_used) {

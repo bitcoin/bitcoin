@@ -95,10 +95,8 @@ static bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& 
     assert(pcursor);
 
     if (!pindex) {
-        {
-            LOCK(cs_main);
-            pindex = blockman.LookupBlockIndex(view->GetBestBlock());
-        }
+        LOCK(cs_main);
+        pindex = blockman.LookupBlockIndex(view->GetBestBlock());
     }
     stats.nHeight = Assert(pindex)->nHeight;
     stats.hashBlock = pindex->GetBlockHash();
