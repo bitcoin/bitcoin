@@ -768,6 +768,7 @@ RPCHelpMan listlabels();
 #ifdef ENABLE_EXTERNAL_SIGNER
 RPCHelpMan walletdisplayaddress();
 #endif // ENABLE_EXTERNAL_SIGNER
+RPCHelpMan getxpub();
 
 // backup
 RPCHelpMan dumpprivkey();
@@ -852,6 +853,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &getunconfirmedbalance},
         {"wallet", &getbalances},
         {"wallet", &getwalletinfo},
+        {"wallet", &getxpub},
         {"wallet", &importaddress},
         {"wallet", &importdescriptors},
         {"wallet", &importmulti},

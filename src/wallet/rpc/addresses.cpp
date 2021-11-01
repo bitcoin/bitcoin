@@ -786,4 +786,48 @@ RPCHelpMan walletdisplayaddress()
     };
 }
 #endif // ENABLE_EXTERNAL_SIGNER
+
+RPCHelpMan getxpub()
+{
+    return RPCHelpMan{"getxpub",
+                "Returns the xpub most recently used to generate descriptors for this descriptor wallet. "
+                "Not entirely useful right now as it returns the xpub of the root, and there are "
+                "hardened derivation steps involved in normal key derivation.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {
+                        {RPCResult::Type::STR, "xpub", "The xpub"},
+                    }},
+                },
+                RPCExamples{
+                    HelpExampleCli("getxpub", "")
+            + HelpExampleRpc("getxpub", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const std::shared_ptr<CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
+
+    if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "getxpub is not available for non-descriptor wallets");
+    }
+
+    const KeyManager& keyman = pwallet->GetKeyManager();
+    LOCK2(pwallet->cs_wallet, keyman.cs_keyman);
+
+    std::optional<CExtPubKey> extpub = keyman.GetActiveHDPubKey();
+    if (extpub == std::nullopt) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "This wallet does not have an active xpub");
+    }
+    std::string xpub = EncodeExtPubKey(*extpub);
+
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("xpub", xpub);
+
+    return obj;
+},
+    };
+}
 } // namespace wallet

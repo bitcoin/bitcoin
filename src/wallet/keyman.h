@@ -50,6 +50,7 @@ public:
     bool AddHDKey(WalletBatch& batch, const CExtKey& extkey, const CExtPubKey& extpub);
 
     std::optional<CExtKey> GetActiveHDKey() const EXCLUSIVE_LOCKS_REQUIRED(cs_keyman);
+    std::optional<CExtPubKey> GetActiveHDPubKey() const EXCLUSIVE_LOCKS_REQUIRED(cs_keyman);
     std::map<CKeyID, CKey> GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_keyman);
     std::optional<std::pair<CPubKey, std::vector<unsigned char>>> GetCryptedKey(const CKeyID& id) const EXCLUSIVE_LOCKS_REQUIRED(cs_keyman);
 

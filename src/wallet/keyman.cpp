@@ -76,6 +76,14 @@ std::optional<CExtKey> KeyManager::GetActiveHDKey() const
     return master_key;
 }
 
+std::optional<CExtPubKey> KeyManager::GetActiveHDPubKey() const
+{
+    if (!m_active_xpub.pubkey.IsValid()) {
+        return std::nullopt;
+    }
+    return m_active_xpub;
+}
+
 bool KeyManager::AddKeyInner(WalletBatch& batch, const CKey& key, const CPubKey& pubkey)
 {
     AssertLockHeld(cs_keyman);
