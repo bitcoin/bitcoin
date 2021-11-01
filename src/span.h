@@ -218,13 +218,15 @@ public:
     template <typename O> friend class Span;
 };
 
-// MakeSpan helps constructing a Span of the right type automatically.
-/** MakeSpan for arrays: */
-template <typename A, int N> Span<A> constexpr MakeSpan(A (&a)[N]) { return Span<A>(a, N); }
-/** MakeSpan for temporaries / rvalue references, only supporting const output. */
-template <typename V> constexpr auto MakeSpan(V&& v SPAN_ATTR_LIFETIMEBOUND) -> typename std::enable_if<!std::is_lvalue_reference<V>::value, Span<const typename std::remove_pointer<decltype(v.data())>::type>>::type { return std::forward<V>(v); }
-/** MakeSpan for (lvalue) references, supporting mutable output. */
-template <typename V> constexpr auto MakeSpan(V& v SPAN_ATTR_LIFETIMEBOUND) -> Span<typename std::remove_pointer<decltype(v.data())>::type> { return v; }
+// Deduction guides for Span
+// For the pointer/size based and iterator based constructor:
+template <typename T, typename EndOrSize> Span(T*, EndOrSize) -> Span<T>;
+// For the array constructor:
+template <typename T, std::size_t N> Span(T (&)[N]) -> Span<T>;
+// For the temporaries/rvalue references constructor, only supporting const output.
+template <typename T> Span(T&&) -> Span<std::enable_if_t<!std::is_lvalue_reference_v<T>, const std::remove_pointer_t<decltype(std::declval<T&&>().data())>>>;
+// For (lvalue) references, supporting mutable output.
+template <typename T> Span(T&) -> Span<std::remove_pointer_t<decltype(std::declval<T&>().data())>>;
 
 /** Pop the last element off a span, and return a reference to that element. */
 template <typename T>
@@ -257,12 +259,12 @@ Span<std::byte> AsWritableBytes(Span<T> s) noexcept
 template <typename V>
 Span<const std::byte> MakeByteSpan(V&& v) noexcept
 {
-    return AsBytes(MakeSpan(std::forward<V>(v)));
+    return AsBytes(Span{std::forward<V>(v)});
 }
 template <typename V>
 Span<std::byte> MakeWritableByteSpan(V&& v) noexcept
 {
-    return AsWritableBytes(MakeSpan(std::forward<V>(v)));
+    return AsWritableBytes(Span{std::forward<V>(v)});
 }
 
 // Helper functions to safely cast to unsigned char pointers.
@@ -275,7 +277,7 @@ inline const unsigned char* UCharCast(const std::byte* c) { return reinterpret_c
 // Helper function to safely convert a Span to a Span<[const] unsigned char>.
 template <typename T> constexpr auto UCharSpanCast(Span<T> s) -> Span<typename std::remove_pointer<decltype(UCharCast(s.data()))>::type> { return {UCharCast(s.data()), s.size()}; }
 
-/** Like MakeSpan, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
-template <typename V> constexpr auto MakeUCharSpan(V&& v) -> decltype(UCharSpanCast(MakeSpan(std::forward<V>(v)))) { return UCharSpanCast(MakeSpan(std::forward<V>(v))); }
+/** Like the Span constructor, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
+template <typename V> constexpr auto MakeUCharSpan(V&& v) -> decltype(UCharSpanCast(Span{std::forward<V>(v)})) { return UCharSpanCast(Span{std::forward<V>(v)}); }
 
 #endif
