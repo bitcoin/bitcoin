@@ -31,6 +31,7 @@ namespace DBKeys {
 const std::string ACENTRY{"acentry"};
 const std::string ACTIVEEXTERNALSPK{"activeexternalspk"};
 const std::string ACTIVEINTERNALSPK{"activeinternalspk"};
+const std::string ACTIVEHDKEY{"activehdkey"};
 const std::string BESTBLOCK_NOMERKLE{"bestblock_nomerkle"};
 const std::string BESTBLOCK{"bestblock"};
 const std::string CRYPTED_KEY{"ckey"};
@@ -39,6 +40,7 @@ const std::string DEFAULTKEY{"defaultkey"};
 const std::string DESTDATA{"destdata"};
 const std::string FLAGS{"flags"};
 const std::string HDCHAIN{"hdchain"};
+const std::string HDPUBKEY{"hdxpubkey"};
 const std::string KEYMETA{"keymeta"};
 const std::string KEY{"key"};
 const std::string LOCKED_UTXO{"lockedutxo"};
@@ -295,6 +297,29 @@ bool WalletBatch::WriteLockedUTXO(const COutPoint& output)
 bool WalletBatch::EraseLockedUTXO(const COutPoint& output)
 {
     return EraseIC(std::make_pair(DBKeys::LOCKED_UTXO, std::make_pair(output.hash, output.n)));
+}
+
+bool WalletBatch::WriteHDPubKey(const CExtPubKey& extpub)
+{
+    std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
+    extpub.Encode(xpub.data());
+
+    return WriteIC(std::make_pair(DBKeys::HDPUBKEY, xpub), uint8_t(1), false);
+}
+
+bool WalletBatch::WriteActiveHDKey(const CExtPubKey& extpub)
+{
+    std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
+    extpub.Encode(xpub.data());
+
+    if (!WriteIC(DBKeys::ACTIVEHDKEY, xpub, false)) {
+        std::vector<unsigned char> read_xpub(BIP32_EXTKEY_SIZE);
+        if (!m_batch->Read(DBKeys::ACTIVEHDKEY, read_xpub)) {
+            return false;
+        }
+        return xpub == read_xpub;
+    }
+    return true;
 }
 
 class CWalletScanState {
