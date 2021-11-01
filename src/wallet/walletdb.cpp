@@ -1085,7 +1085,98 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         }
     }
 
-    // TODO: Upgrade to using KeyMan
+    // Upgrade to using KeyMan
+    // Find the keys which are used in single key internal and external descriptors with
+    // the pre-taproot output types
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) &&
+        !pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) &&
+        !pwallet->IsWalletFlagSet(WALLET_FLAG_USES_KEYMAN)
+        ) {
+        std::map<CExtPubKey, std::pair<std::map<std::string, int>, uint64_t>> descs_keys;
+        std::map<std::string, int> tmpl = {{"pkh(", 0}, {"sh(wpkh(", 0}, {"wpkh(", 0}};
+
+        // Find root xpubs used in pkh(), sh(wpkh()), and wpkh() descriptors
+        for (const auto& spkm : pwallet->GetAllScriptPubKeyMans()) {
+            const DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
+            assert(desc_spkm);
+            LOCK(desc_spkm->cs_desc_man);
+            WalletDescriptor w_desc = desc_spkm->GetWalletDescriptor();
+
+            if (!w_desc.descriptor->IsRange()) {
+                continue;
+            }
+
+            std::set<CPubKey> desc_pubkeys;
+            std::set<CExtPubKey> desc_xpubs;
+            w_desc.descriptor->GetPubkeys(desc_pubkeys, desc_xpubs);
+            if (desc_xpubs.size() != 1) {
+                continue;
+            }
+            const CExtPubKey& xpub = *desc_xpubs.begin();
+
+            if (descs_keys.count(xpub) == 0) {
+                descs_keys.emplace(xpub, std::make_pair(tmpl, 0));
+            }
+
+            const std::string desc = w_desc.descriptor->ToString();
+            if (desc.find("pkh(") == 0) {
+                descs_keys[xpub].first["pkh("]++;
+            } else if (desc.find("sh(wpkh(") == 0) {
+                descs_keys[xpub].first["sh(wpkh("]++;
+            } else if (desc.find("wpkh(") == 0) {
+                descs_keys[xpub].first["wpkh("]++;
+            } else {
+                continue;
+            }
+            if (w_desc.creation_time > descs_keys[xpub].second) {
+                descs_keys[xpub].second = w_desc.creation_time;
+            }
+        }
+
+        // Find candidate active xpubs
+        // These are the ones that are used in 2 pkh(), 2 sh(wpkh()), and 2 wpkh() descriptors
+        uint64_t best_time = 0;
+        CExtPubKey best_xpub;
+        for (const auto& [xpub, info] : descs_keys) {
+            const auto& [dtypes, desc_time] = info;
+            bool ok = true;
+            for (const auto& [dtype, count] : dtypes) {
+                if (count != 2) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (ok) {
+                pwallet->GetKeyManager().LoadHDKey(xpub.pubkey.GetID(), xpub);
+                WriteHDPubKey(xpub);
+                if (desc_time > best_time) {
+                    best_time = desc_time;
+                    best_xpub = xpub;
+                }
+            }
+        }
+        if (best_time > 0) {
+            pwallet->GetKeyManager().SetActiveHDKey(best_xpub);
+        }
+
+        // Load keys into KeyManager
+        for (const auto& [id_pair, key] : wss.m_descriptor_keys) {
+            const auto& [desc_id, keyid] = id_pair;
+
+            pwallet->GetKeyManager().LoadKey(keyid, key);
+            WriteKeyManKey(key.GetPubKey(), key.GetPrivKey());
+        }
+        for (const auto& [id_pair, key_pair] : wss.m_descriptor_crypt_keys) {
+            const auto& [desc_id, keyid] = id_pair;
+            const auto& [pubkey, ckey] = key_pair;
+
+            pwallet->GetKeyManager().LoadCryptedKey(keyid, pubkey, ckey);
+            WriteCryptedKeyManKey(pubkey, ckey);
+        }
+        if (!pwallet->IsWalletFlagSet(WALLET_FLAG_USES_KEYMAN)) {
+            pwallet->SetWalletFlag(WALLET_FLAG_USES_KEYMAN);
+        }
+    }
 
     return result;
 }
