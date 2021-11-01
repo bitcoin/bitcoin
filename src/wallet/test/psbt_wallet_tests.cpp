@@ -14,8 +14,9 @@
 BOOST_FIXTURE_TEST_SUITE(psbt_wallet_tests, WalletTestingSetup)
 
 static void import_descriptor(CWallet& wallet, const std::string& descriptor)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
-    LOCK(wallet.cs_wallet);
+    AssertLockHeld(wallet.cs_wallet);
     FlatSigningProvider provider;
     std::string error;
     std::unique_ptr<Descriptor> desc = Parse(descriptor, provider, error, /* require_checksum=*/ false);
