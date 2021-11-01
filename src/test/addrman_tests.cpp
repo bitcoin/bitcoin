@@ -84,13 +84,13 @@ public:
         : AddrMan(asmap, /*deterministic=*/true, /* consistency_check_ratio */ 100)
     {}
 
-    AddrInfo* Find(const CService& addr, int* pnId = nullptr)
+    AddrInfo* Find(const CService& addr)
     {
         LOCK(m_impl->cs);
-        return m_impl->Find(addr, pnId);
+        return m_impl->Find(addr);
     }
 
-    AddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId = nullptr)
+    AddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId)
     {
         LOCK(m_impl->cs);
         return m_impl->Create(addr, addrSource, pnId);
