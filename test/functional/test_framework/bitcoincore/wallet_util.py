@@ -5,7 +5,7 @@
 """Useful util functions for testing the wallet"""
 from collections import namedtuple
 
-from test_framework.address import (
+from .address import (
     byte_to_base58,
     key_to_p2pkh,
     key_to_p2sh_p2wpkh,
@@ -14,8 +14,8 @@ from test_framework.address import (
     script_to_p2sh_p2wsh,
     script_to_p2wsh,
 )
-from test_framework.key import ECKey
-from test_framework.script_util import (
+from .key import ECKey
+from .script_util import (
     key_to_p2pkh_script,
     key_to_p2wpkh_script,
     keys_to_multisig_script,

@@ -28,7 +28,7 @@ import struct
 import sys
 import threading
 
-from test_framework.messages import (
+from .messages import (
     CBlockHeader,
     MAX_HEADERS_RESULTS,
     msg_addr,
@@ -70,7 +70,7 @@ from test_framework.messages import (
     NODE_WITNESS,
     sha256,
 )
-from test_framework.util import (
+from .util import (
     MAX_NODES,
     p2p_port,
     wait_until_helper,

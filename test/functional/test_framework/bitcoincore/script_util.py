@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Useful Script constants and utils."""
-from test_framework.script import (
+from .script import (
     CScript,
     CScriptOp,
     OP_0,

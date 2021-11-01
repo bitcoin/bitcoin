@@ -9,10 +9,10 @@ from decimal import Decimal
 from enum import Enum
 from random import choice
 from typing import Optional
-from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
-from test_framework.descriptors import descsum_create
-from test_framework.key import ECKey
-from test_framework.messages import (
+from .address import ADDRESS_BCRT1_P2WSH_OP_TRUE
+from .descriptors import descsum_create
+from .key import ECKey
+from .messages import (
     COIN,
     COutPoint,
     CTransaction,
@@ -21,18 +21,18 @@ from test_framework.messages import (
     CTxOut,
     tx_from_hex,
 )
-from test_framework.script import (
+from .script import (
     CScript,
     LegacySignatureHash,
     OP_TRUE,
     OP_NOP,
     SIGHASH_ALL,
 )
-from test_framework.script_util import (
+from .script_util import (
     key_to_p2pk_script,
     key_to_p2wpkh_script,
 )
-from test_framework.util import (
+from .util import (
     assert_equal,
     assert_greater_than_or_equal,
 )

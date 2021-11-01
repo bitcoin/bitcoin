@@ -28,8 +28,8 @@ import socket
 import struct
 import time
 
-from test_framework.siphash import siphash256
-from test_framework.util import assert_equal
+from .siphash import siphash256
+from .util import assert_equal
 
 MAX_LOCATOR_SZ = 101
 MAX_BLOCK_WEIGHT = 4000000
