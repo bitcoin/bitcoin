@@ -8,6 +8,7 @@
 #include <pubkey.h>
 #include <test/fuzz/util.h>
 #include <test/util/script.h>
+#include <util/overflow.h>
 #include <util/rbf.h>
 #include <util/time.h>
 #include <version.h>
