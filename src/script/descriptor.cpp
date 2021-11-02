@@ -1252,7 +1252,7 @@ std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, ParseS
 std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptContext ctx, const SigningProvider& provider)
 {
     if (ctx == ParseScriptContext::P2TR && script.size() == 34 && script[0] == 32 && script[33] == OP_CHECKSIG) {
-        XOnlyPubKey key{Span<const unsigned char>{script.data() + 1, script.data() + 33}};
+        XOnlyPubKey key{Span{script}.subspan(1, 32)};
         return std::make_unique<PKDescriptor>(InferXOnlyPubkey(key, ctx, provider));
     }
 

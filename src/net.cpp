@@ -760,7 +760,7 @@ CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds 
     if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
         LogPrint(BCLog::NET, "Header error: Wrong checksum (%s, %u bytes), expected %s was %s, peer=%d\n",
                  SanitizeString(msg.m_command), msg.m_message_size,
-                 HexStr(Span<uint8_t>(hash.begin(), hash.begin() + CMessageHeader::CHECKSUM_SIZE)),
+                 HexStr(Span{hash}.first(CMessageHeader::CHECKSUM_SIZE)),
                  HexStr(hdr.pchChecksum),
                  m_node_id);
         reject_message = true;
@@ -1582,8 +1582,9 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
             if (nBytes > 0)
             {
                 bool notify = false;
-                if (!pnode->ReceiveMsgBytes(Span<const uint8_t>(pchBuf, nBytes), notify))
+                if (!pnode->ReceiveMsgBytes({pchBuf, (size_t)nBytes}, notify)) {
                     pnode->CloseSocketDisconnect();
+                }
                 RecordBytesRecv(nBytes);
                 if (notify) {
                     size_t nSizeAdded = 0;

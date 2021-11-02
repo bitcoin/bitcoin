@@ -4937,5 +4937,5 @@ static const CRPCCommand commands[] =
     { "wallet",             &walletprocesspsbt,              },
 };
 // clang-format on
-    return Span{commands};
+    return commands;
 }
