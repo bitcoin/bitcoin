@@ -160,7 +160,7 @@ Final = namedtuple("Final", "value")
 
 def get(ctx, name):
     """Evaluate name in context ctx."""
-    assert name in ctx, "Missing '%s' in context" % name
+    assert_true(name in ctx, err_msg="Missing '%s' in context" % name)
     expr = ctx[name]
     if not isinstance(expr, Final):
         # Evaluate and cache the result.
@@ -1252,17 +1252,17 @@ class TaprootTest(BitcoinTestFramework):
         block.solve()
         block_response = node.submitblock(block.serialize().hex())
         if err_msg is not None:
-            # Use assert instead of assert_equal, because it contains a custom message
-            assert block_response is not None and err_msg in block_response, "Missing error message '%s' from block response '%s': %s" % (err_msg, "(None)" if block_response is None else block_response, msg)
+e
+            assert_true(block_response is not None and err_msg in block_response,
+                        err_msg= "Missing error message '%s' from block response '%s': %s" % (err_msg, "(None)" if block_response is None else block_response, msg))
         if accept:
-            # Use assert instead of assert_equal, because it contains a custom message
-            assert node.getbestblockhash() == block.hash, "Failed to accept: %s (response: %s)" % (msg, block_response)
+            assert_equal(node.getbestblockhash() == block.hash, err_msg="Failed to accept: %s (response: %s)" % (msg, block_response))
             self.tip = block.sha256
             self.lastblockhash = block.hash
             self.lastblocktime += 1
             self.lastblockheight += 1
         else:
-            assert node.getbestblockhash() == self.lastblockhash, "Failed to reject: " + msg
+            assert_equal(node.getbestblockhash() == self.lastblockhash, err_msg="Failed to reject: " + msg)
 
     def init_blockinfo(self, node):
         # Initialize variables used by block_submit().

@@ -79,9 +79,9 @@ def assert_greater_than_or_equal(thing1, thing2, err_msg=None):
         raise AssertionError(msg)
 
 
-def assert_true(thing, message = None):
+def assert_true(thing, err_msg=None):
     if thing is not True:
-        msg = "%s it is not True" if message is None else message
+        msg = "%s it is not True" if err_msg is None else err_msg
         raise AssertionError(msg)
 
 def assert_raises(exc, fun, *args, **kwds):
