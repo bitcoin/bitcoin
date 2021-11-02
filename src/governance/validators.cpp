@@ -100,7 +100,7 @@ bool CProposalValidator::ValidateName()
 
     static constexpr std::string_view strAllowedChars{"-_abcdefghijklmnopqrstuvwxyz0123456789"};
 
-    std::transform(strName.begin(), strName.end(), strName.begin(), ToLower);
+    strName = ToLower(strName);
 
     if (strName.find_first_not_of(strAllowedChars) != std::string::npos) {
         strErrorMessages += "name contains invalid characters;";
