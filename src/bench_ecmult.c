@@ -129,7 +129,7 @@ static void bench_ecmult_1(void* arg, int iters) {
     int i;
 
     for (i = 0; i < iters; ++i) {
-        secp256k1_ecmult(&data->ctx->ecmult_ctx, &data->output[i], &data->pubkeys_gej[(data->offset1+i) % POINTS], &data->scalars[(data->offset2+i) % POINTS], NULL);
+        secp256k1_ecmult(&data->output[i], &data->pubkeys_gej[(data->offset1+i) % POINTS], &data->scalars[(data->offset2+i) % POINTS], NULL);
     }
 }
 
@@ -145,7 +145,7 @@ static void bench_ecmult_1g(void* arg, int iters) {
 
     secp256k1_scalar_set_int(&zero, 0);
     for (i = 0; i < iters; ++i) {
-        secp256k1_ecmult(&data->ctx->ecmult_ctx, &data->output[i], NULL, &zero, &data->scalars[(data->offset1+i) % POINTS]);
+        secp256k1_ecmult(&data->output[i], NULL, &zero, &data->scalars[(data->offset1+i) % POINTS]);
     }
 }
 
@@ -159,7 +159,7 @@ static void bench_ecmult_2g(void* arg, int iters) {
     int i;
 
     for (i = 0; i < iters/2; ++i) {
-        secp256k1_ecmult(&data->ctx->ecmult_ctx, &data->output[i], &data->pubkeys_gej[(data->offset1+i) % POINTS], &data->scalars[(data->offset2+i) % POINTS], &data->scalars[(data->offset1+i) % POINTS]);
+        secp256k1_ecmult(&data->output[i], &data->pubkeys_gej[(data->offset1+i) % POINTS], &data->scalars[(data->offset2+i) % POINTS], &data->scalars[(data->offset1+i) % POINTS]);
     }
 }
 
@@ -207,7 +207,7 @@ static void bench_ecmult_multi(void* arg, int iters) {
     iters = iters / data->count;
 
     for (iter = 0; iter < iters; ++iter) {
-        data->ecmult_multi(&data->ctx->error_callback, &data->ctx->ecmult_ctx, data->scratch, &data->output[iter], data->includes_g ? &data->scalars[data->offset1] : NULL, bench_ecmult_multi_callback, arg, count - includes_g);
+        data->ecmult_multi(&data->ctx->error_callback, data->scratch, &data->output[iter], data->includes_g ? &data->scalars[data->offset1] : NULL, bench_ecmult_multi_callback, arg, count - includes_g);
         data->offset1 = (data->offset1 + count) % POINTS;
         data->offset2 = (data->offset2 + count - 1) % POINTS;
     }
@@ -266,7 +266,7 @@ static void run_ecmult_multi_bench(bench_data* data, size_t count, int includes_
             secp256k1_scalar_add(&total, &total, &tmp);
         }
         secp256k1_scalar_negate(&total, &total);
-        secp256k1_ecmult(&data->ctx->ecmult_ctx, &data->expected_output[iter], NULL, &zero, &total);
+        secp256k1_ecmult(&data->expected_output[iter], NULL, &zero, &total);
     }
 
     /* Run the benchmark. */

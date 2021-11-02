@@ -193,22 +193,22 @@ void test_schnorrsig_api(void) {
 
     ecount = 0;
     CHECK(secp256k1_schnorrsig_sign(sign, sig, msg, &keypairs[0], NULL) == 1);
-    CHECK(secp256k1_schnorrsig_verify(none, sig, msg, sizeof(msg), &pk[0]) == 0);
-    CHECK(ecount == 1);
-    CHECK(secp256k1_schnorrsig_verify(sign, sig, msg, sizeof(msg), &pk[0]) == 0);
-    CHECK(ecount == 2);
+    CHECK(secp256k1_schnorrsig_verify(none, sig, msg, sizeof(msg), &pk[0]) == 1);
+    CHECK(ecount == 0);
+    CHECK(secp256k1_schnorrsig_verify(sign, sig, msg, sizeof(msg), &pk[0]) == 1);
+    CHECK(ecount == 0);
     CHECK(secp256k1_schnorrsig_verify(vrfy, sig, msg, sizeof(msg), &pk[0]) == 1);
-    CHECK(ecount == 2);
+    CHECK(ecount == 0);
     CHECK(secp256k1_schnorrsig_verify(vrfy, NULL, msg, sizeof(msg), &pk[0]) == 0);
-    CHECK(ecount == 3);
+    CHECK(ecount == 1);
     CHECK(secp256k1_schnorrsig_verify(vrfy, sig, NULL, sizeof(msg), &pk[0]) == 0);
-    CHECK(ecount == 4);
+    CHECK(ecount == 2);
     CHECK(secp256k1_schnorrsig_verify(vrfy, sig, NULL, 0, &pk[0]) == 0);
-    CHECK(ecount == 4);
+    CHECK(ecount == 2);
     CHECK(secp256k1_schnorrsig_verify(vrfy, sig, msg, sizeof(msg), NULL) == 0);
-    CHECK(ecount == 5);
+    CHECK(ecount == 3);
     CHECK(secp256k1_schnorrsig_verify(vrfy, sig, msg, sizeof(msg), &zero_pk) == 0);
-    CHECK(ecount == 6);
+    CHECK(ecount == 4);
 
     secp256k1_context_destroy(none);
     secp256k1_context_destroy(sign);

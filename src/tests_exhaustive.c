@@ -163,7 +163,7 @@ void test_exhaustive_addition(const secp256k1_ge *group, const secp256k1_gej *gr
     }
 }
 
-void test_exhaustive_ecmult(const secp256k1_context *ctx, const secp256k1_ge *group, const secp256k1_gej *groupj) {
+void test_exhaustive_ecmult(const secp256k1_ge *group, const secp256k1_gej *groupj) {
     int i, j, r_log;
     uint64_t iter = 0;
     for (r_log = 1; r_log < EXHAUSTIVE_TEST_ORDER; r_log++) {
@@ -175,7 +175,7 @@ void test_exhaustive_ecmult(const secp256k1_context *ctx, const secp256k1_ge *gr
                 secp256k1_scalar_set_int(&na, i);
                 secp256k1_scalar_set_int(&ng, j);
 
-                secp256k1_ecmult(&ctx->ecmult_ctx, &tmp, &groupj[r_log], &na, &ng);
+                secp256k1_ecmult(&tmp, &groupj[r_log], &na, &ng);
                 ge_equals_gej(&group[(i * r_log + j) % EXHAUSTIVE_TEST_ORDER], &tmp);
 
                 if (i > 0) {
@@ -219,7 +219,7 @@ void test_exhaustive_ecmult_multi(const secp256k1_context *ctx, const secp256k1_
                         data.pt[0] = group[x];
                         data.pt[1] = group[y];
 
-                        secp256k1_ecmult_multi_var(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &tmp, &g_sc, ecmult_multi_callback, &data, 2);
+                        secp256k1_ecmult_multi_var(&ctx->error_callback, scratch, &tmp, &g_sc, ecmult_multi_callback, &data, 2);
                         ge_equals_gej(&group[(i * x + j * y + k) % EXHAUSTIVE_TEST_ORDER], &tmp);
                     }
                 }
@@ -430,7 +430,7 @@ int main(int argc, char** argv) {
         /* Run the tests */
         test_exhaustive_endomorphism(group);
         test_exhaustive_addition(group, groupj);
-        test_exhaustive_ecmult(ctx, group, groupj);
+        test_exhaustive_ecmult(group, groupj);
         test_exhaustive_ecmult_multi(ctx, group);
         test_exhaustive_sign(ctx, group);
         test_exhaustive_verify(ctx, group);

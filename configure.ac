@@ -161,6 +161,11 @@ AC_ARG_ENABLE(module_schnorrsig,
     [enable_module_schnorrsig=$enableval],
     [enable_module_schnorrsig=no])
 
+AC_ARG_ENABLE(module_ellsq,
+    AS_HELP_STRING([--enable-module-ellsq],[enable Elligator^2 module (experimental)]),
+    [enable_module_ellsq=$enableval],
+    [enable_module_ellsq=no])
+
 AC_ARG_ENABLE(external_default_callbacks,
     AS_HELP_STRING([--enable-external-default-callbacks],[enable external default callback functions [default=no]]),
     [use_external_default_callbacks=$enableval],
@@ -177,6 +182,8 @@ AC_ARG_WITH([ecmult-window], [AS_HELP_STRING([--with-ecmult-window=SIZE|auto],
 [window size for ecmult precomputation for verification, specified as integer in range [2..24].]
 [Larger values result in possibly better performance at the cost of an exponentially larger precomputed table.]
 [The table will store 2^(SIZE-1) * 64 bytes of data but can be larger in memory due to platform-specific padding and alignment.]
+[A window size larger than 15 will require you delete the prebuilt ecmult_static_pre_g.h file so that it can be rebuilt.]
+[For very large window sizes, use "make -j 1" to reduce memory use during compilation.]
 ["auto" is a reasonable setting for desktop machines (currently 15). [default=auto]]
 )],
 [req_ecmult_window=$withval], [req_ecmult_window=auto])
@@ -454,6 +461,10 @@ if test x"$enable_module_extrakeys" = x"yes"; then
   AC_DEFINE(ENABLE_MODULE_EXTRAKEYS, 1, [Define this symbol to enable the extrakeys module])
 fi
 
+if test x"$enable_module_ellsq" = x"yes"; then
+  AC_DEFINE(ENABLE_MODULE_ELLSQ, 1, [Define this symbol to enable the Elligator^2 module])
+fi
+
 if test x"$use_external_default_callbacks" = x"yes"; then
   AC_DEFINE(USE_EXTERNAL_DEFAULT_CALLBACKS, 1, [Define this symbol if an external implementation of the default callbacks is used])
 fi
@@ -468,6 +479,7 @@ if test x"$enable_experimental" = x"yes"; then
   AC_MSG_NOTICE([Experimental features do not have stable APIs or properties, and may not be safe for production use.])
   AC_MSG_NOTICE([Building extrakeys module: $enable_module_extrakeys])
   AC_MSG_NOTICE([Building schnorrsig module: $enable_module_schnorrsig])
+  AC_MSG_NOTICE([Building Elligator^2 module: $enable_module_ellsq])
   AC_MSG_NOTICE([******])
 else
   if test x"$enable_module_extrakeys" = x"yes"; then
@@ -475,6 +487,9 @@ else
   fi
   if test x"$enable_module_schnorrsig" = x"yes"; then
     AC_MSG_ERROR([schnorrsig module is experimental. Use --enable-experimental to allow.])
+  fi
+  if test x"$enable_module_ellsq" = x"yes"; then
+    AC_MSG_ERROR([Elligator^2 module is experimental. Use --enable-experimental to allow.])
   fi
   if test x"$set_asm" = x"arm"; then
     AC_MSG_ERROR([ARM assembly optimization is experimental. Use --enable-experimental to allow.])
@@ -501,6 +516,7 @@ AM_CONDITIONAL([ENABLE_MODULE_ECDH], [test x"$enable_module_ecdh" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_RECOVERY], [test x"$enable_module_recovery" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_EXTRAKEYS], [test x"$enable_module_extrakeys" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_SCHNORRSIG], [test x"$enable_module_schnorrsig" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_ELLSQ], [test x"$enable_module_ellsq" = x"yes"])
 AM_CONDITIONAL([USE_EXTERNAL_ASM], [test x"$use_external_asm" = x"yes"])
 AM_CONDITIONAL([USE_ASM_ARM], [test x"$set_asm" = x"arm"])
 
@@ -523,6 +539,7 @@ echo "  module ecdh             = $enable_module_ecdh"
 echo "  module recovery         = $enable_module_recovery"
 echo "  module extrakeys        = $enable_module_extrakeys"
 echo "  module schnorrsig       = $enable_module_schnorrsig"
+echo "  module ellsq            = $enable_module_ellsq"
 echo
 echo "  asm                     = $set_asm"
 echo "  ecmult window size      = $set_ecmult_window"

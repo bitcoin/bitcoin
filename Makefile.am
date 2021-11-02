@@ -127,12 +127,19 @@ exhaustive_tests_LDFLAGS = -static
 TESTS += exhaustive_tests
 endif
 
+EXTRA_PROGRAMS = gen_ecmult_static_pre_g
+gen_ecmult_static_pre_g_SOURCES = src/gen_ecmult_static_pre_g.c
+# See Automake manual, Section "Errors with distclean"
+src/ecmult_static_pre_g.h:
+	$(MAKE) $(AM_MAKEFLAGS) gen_ecmult_static_pre_g$(EXEEXT)
+	./gen_ecmult_static_pre_g$(EXEEXT)
+
 if USE_ECMULT_STATIC_PRECOMPUTATION
 CPPFLAGS_FOR_BUILD +=-I$(top_srcdir) -I$(builddir)/src
 
 gen_context_OBJECTS = gen_context.o
 gen_context_BIN = gen_context$(BUILD_EXEEXT)
-gen_%.o: src/gen_%.c src/libsecp256k1-config.h
+$(gen_context_OBJECTS): src/gen_context.c src/libsecp256k1-config.h
 	$(CC_FOR_BUILD) $(DEFS) $(CPPFLAGS_FOR_BUILD) $(SECP_CFLAGS_FOR_BUILD) $(CFLAGS_FOR_BUILD) -c $< -o $@
 
 $(gen_context_BIN): $(gen_context_OBJECTS)
@@ -149,7 +156,7 @@ src/ecmult_static_context.h: $(gen_context_BIN)
 CLEANFILES = $(gen_context_BIN) src/ecmult_static_context.h
 endif
 
-EXTRA_DIST = autogen.sh src/gen_context.c src/basic-config.h
+EXTRA_DIST = autogen.sh src/gen_context.c src/ecmult_static_pre_g.h src/basic-config.h
 
 if ENABLE_MODULE_ECDH
 include src/modules/ecdh/Makefile.am.include
@@ -165,4 +172,8 @@ endif
 
 if ENABLE_MODULE_SCHNORRSIG
 include src/modules/schnorrsig/Makefile.am.include
+endif
+
+if ENABLE_MODULE_ELLSQ
+include src/modules/ellsq/Makefile.am.include
 endif

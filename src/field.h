@@ -122,4 +122,7 @@ static void secp256k1_fe_storage_cmov(secp256k1_fe_storage *r, const secp256k1_f
 /** If flag is true, set *r equal to *a; otherwise leave it. Constant-time.  Both *r and *a must be initialized.*/
 static void secp256k1_fe_cmov(secp256k1_fe *r, const secp256k1_fe *a, int flag);
 
+/** Compute the Jacobi symbol of a / p. 0 if a=0; 1 if a square; -1 if a non-square. */
+static int secp256k1_fe_jacobi_var(const secp256k1_fe *a);
+
 #endif /* SECP256K1_FIELD_H */
