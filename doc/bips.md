@@ -43,3 +43,11 @@ Versions and PRs are relevant to Bitcoin's core if not mentioned other.
 * [`BIP 174`](https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki): RPCs to operate on Partially Signed Bitcoin Transactions (PSBT) are present as of **v18.0** ([PR 13557](https://github.com/bitcoin/bitcoin/pull/13557)).
 * [`BIP 324`](https://github.com/bitcoin/bips/blob/master/bip-0324.mediawiki): The v2 transport protocol specified by BIP324 and the associated `NODE_P2P_V2` service bit are supported as of **v22.0**, but off by default ([PR 28331](https://github.com/bitcoin/bitcoin/pull/28331)). On by default as of **v22.1** ([PR 29347](https://github.com/bitcoin/bitcoin/pull/29347)).
 * [`BIP 339`](https://github.com/bitcoin/bips/blob/master/bip-0339.mediawiki): Relay of transactions by wtxid is supported as of **v0.21.0** ([PR 18044](https://github.com/bitcoin/bitcoin/pull/18044)).
+* [`BIP 380`](https://github.com/bitcoin/bips/blob/master/bip-0380.mediawiki)
+  [`381`](https://github.com/bitcoin/bips/blob/master/bip-0381.mediawiki)
+  [`382`](https://github.com/bitcoin/bips/blob/master/bip-0382.mediawiki)
+  [`383`](https://github.com/bitcoin/bips/blob/master/bip-0383.mediawiki)
+  [`384`](https://github.com/bitcoin/bips/blob/master/bip-0384.mediawiki)
+  [`385`](https://github.com/bitcoin/bips/blob/master/bip-0385.mediawiki):
+  Output Script Descriptors, and most of Script Expressions are implemented as of **v0.17.0** ([PR 13697](https://github.com/bitcoin/bitcoin/pull/13697)).
+* [`BIP 386`](https://github.com/bitcoin/bips/blob/master/bip-0386.mediawiki): tr() Output Script Descriptors are implemented as of **v22.0** ([PR 22051](https://github.com/bitcoin/bitcoin/pull/22051)).
