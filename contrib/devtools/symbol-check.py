@@ -99,6 +99,7 @@ MACHO_ALLOWED_LIBRARIES = {
 'ImageIO', # read and write image file formats.
 'IOKit', # user-space access to hardware devices and drivers.
 'libobjc.A.dylib', # Objective-C runtime library
+'Security',
 }
 
 PE_ALLOWED_LIBRARIES = {
