@@ -12,6 +12,7 @@
 #include <span.h>
 #include <uint256.h>
 
+#include <array>
 #include <cstring>
 #include <optional>
 #include <vector>
@@ -27,6 +28,9 @@ public:
 };
 
 typedef uint256 ChainCode;
+
+constexpr size_t ELLSQ_ENCODED_SIZE = 64;
+using EllSqPubKey = std::array<uint8_t, ELLSQ_ENCODED_SIZE>;
 
 /** An encapsulated public key. */
 class CPubKey
@@ -106,6 +110,10 @@ public:
     {
         Set(_vch.begin(), _vch.end());
     }
+
+
+    //! Creates a compressed pubkey from the elligator-squared encoding
+    explicit CPubKey(const EllSqPubKey& encoded_pubkey);
 
     //! Simple read-only vector-like interface to the pubkey data.
     unsigned int size() const { return GetLen(vch[0]); }
@@ -215,6 +223,8 @@ public:
 
     //! Derive BIP32 child pubkey.
     bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
+
+    std::optional<EllSqPubKey> EllSqEncode(const std::array<uint8_t, 32>& rnd32) const;
 };
 
 class XOnlyPubKey

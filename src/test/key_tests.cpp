@@ -5,6 +5,7 @@
 #include <key.h>
 
 #include <key_io.h>
+#include <random.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
@@ -341,6 +342,28 @@ BOOST_AUTO_TEST_CASE(bip340_test_vectors)
             BOOST_CHECK(ok);
             BOOST_CHECK(tweaked_key.VerifySchnorr(msg256, sig64));
         }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(key_ellsq) {
+    for (auto secret: {strSecret1, strSecret2, strSecret1C, strSecret2C}) {
+        CKey key = DecodeSecret(secret);
+        BOOST_CHECK(key.IsValid());
+
+        std::array<uint8_t, 32> rnd32;
+        GetRandBytes(rnd32.data(), 32);
+        auto original_pubkey = key.GetPubKey();
+        auto ellsq_encoded_pubkey = original_pubkey.EllSqEncode(rnd32);
+        assert(ellsq_encoded_pubkey.has_value());
+
+        CPubKey decoded_pubkey = CPubKey{ellsq_encoded_pubkey.value()};
+        if(!key.IsCompressed()) {
+            // The decoding constructor returns a compressed pubkey. If the
+            // original was uncompressed, we must decompress the decoded one
+            // to compare.
+            decoded_pubkey.Decompress();
+        }
+        BOOST_CHECK(original_pubkey == decoded_pubkey);
     }
 }
 
