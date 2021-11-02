@@ -129,6 +129,10 @@ script: |
     mkdir -p ${INSTALLPATH}
     tar --strip-components=1 -xf "${GIT_ARCHIVE}"
 
+    # NSIS 2 (packaged by Ubuntu bionic) can't handle Unicode, so we have to disable it
+    # NOTE: Guix uses NSIS 3 which does; prefer that over this!
+    sed -i '/^Unicode true$/d' share/setup.nsi.in
+
     ./autogen.sh
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}"
     make ${MAKEOPTS}
