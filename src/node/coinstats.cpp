@@ -72,7 +72,7 @@ static void ApplyHash(MuHash3072& muhash, const uint256& hash, const std::map<ui
     for (auto it = outputs.begin(); it != outputs.end(); ++it) {
         COutPoint outpoint = COutPoint(hash, it->first);
         Coin coin = it->second;
-        muhash.Insert(MakeUCharSpan(TxOutSer(outpoint, coin)));
+        muhash.Insert(TxOutSer(outpoint, coin));
     }
 }
 

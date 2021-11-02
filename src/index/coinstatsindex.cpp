@@ -158,7 +158,7 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
                     continue;
                 }
 
-                m_muhash.Insert(MakeUCharSpan(TxOutSer(outpoint, coin)));
+                m_muhash.Insert(TxOutSer(outpoint, coin));
 
                 if (tx->IsCoinBase()) {
                     m_total_coinbase_amount += coin.out.nValue;
@@ -179,7 +179,7 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
                     Coin coin{tx_undo.vprevout[j]};
                     COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
 
-                    m_muhash.Remove(MakeUCharSpan(TxOutSer(outpoint, coin)));
+                    m_muhash.Remove(TxOutSer(outpoint, coin));
 
                     m_total_prevout_spent_amount += coin.out.nValue;
 
@@ -421,7 +421,7 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
                 continue;
             }
 
-            m_muhash.Remove(MakeUCharSpan(TxOutSer(outpoint, coin)));
+            m_muhash.Remove(TxOutSer(outpoint, coin));
 
             if (tx->IsCoinBase()) {
                 m_total_coinbase_amount -= coin.out.nValue;
@@ -442,7 +442,7 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
                 Coin coin{tx_undo.vprevout[j]};
                 COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
 
-                m_muhash.Insert(MakeUCharSpan(TxOutSer(outpoint, coin)));
+                m_muhash.Insert(TxOutSer(outpoint, coin));
 
                 m_total_prevout_spent_amount -= coin.out.nValue;
 
