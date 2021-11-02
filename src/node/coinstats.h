@@ -24,9 +24,10 @@ enum class CoinStatsHashType {
     NONE,
 };
 
-struct CCoinsStats
-{
-    CoinStatsHashType m_hash_type;
+struct CCoinsStats {
+    //! Which hash type to use
+    const CoinStatsHashType m_hash_type;
+
     int nHeight{0};
     uint256 hashBlock{};
     uint64_t nTransactions{0};
