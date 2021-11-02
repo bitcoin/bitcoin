@@ -344,4 +344,18 @@ BOOST_AUTO_TEST_CASE(bip340_test_vectors)
     }
 }
 
+BOOST_AUTO_TEST_CASE(key_ellsq) {
+    for (auto secret: {strSecret1, strSecret2, strSecret1C, strSecret2C}) {
+        CKey key = DecodeSecret(secret);
+        BOOST_CHECK(key.IsValid());
+
+        auto original_pubkey = key.GetPubKey();
+        auto ellsq_encoded_pubkey = original_pubkey.EllSqEncode();
+        assert(ellsq_encoded_pubkey.has_value());
+
+        CPubKey decoded_pubkey = CPubKey{ellsq_encoded_pubkey.value(), original_pubkey.IsCompressed()};
+        BOOST_CHECK(original_pubkey == decoded_pubkey);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

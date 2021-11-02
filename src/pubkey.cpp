@@ -6,7 +6,9 @@
 #include <pubkey.h>
 
 #include <hash.h>
+#include <random.h>
 #include <secp256k1.h>
+#include <secp256k1_ellsq.h>
 #include <secp256k1_extrakeys.h>
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
@@ -332,6 +334,38 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChi
     secp256k1_ec_pubkey_serialize(secp256k1_context_verify, pub, &publen, &pubkey, SECP256K1_EC_COMPRESSED);
     pubkeyChild.Set(pub, pub + publen);
     return true;
+}
+
+std::optional<EllSqPubKey> CPubKey::EllSqEncode() const {
+    assert(secp256k1_context_verify && "secp256k1_context_verify must be initialized to use CPubKey.");
+
+    secp256k1_pubkey pubkey;
+    if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, vch, size())) {
+        return {};
+    }
+
+    uint8_t r32[32];
+    GetStrongRandBytes(r32, 32);
+
+    EllSqPubKey encoded_pubkey;
+    secp256k1_ellsq_encode(secp256k1_context_verify, encoded_pubkey.data(), r32, &pubkey);
+    return encoded_pubkey;
+}
+
+CPubKey::CPubKey(const EllSqPubKey& encoded_pubkey, bool compressed) {
+    assert(secp256k1_context_verify && "secp256k1_context_verify must be initialized to use CPubKey.");
+    assert(encoded_pubkey.size() == ELLSQ_ENCODED_SIZE && "Elligator-squared encoded pub keys must be 64 bytes");
+
+    secp256k1_pubkey pubkey;
+    secp256k1_ellsq_decode(secp256k1_context_verify, &pubkey, encoded_pubkey.data());
+
+    size_t sz = compressed ? COMPRESSED_SIZE : SIZE;
+    std::vector<uint8_t> vch_bytes;
+    vch_bytes.resize(sz);
+    auto vch_span = MakeSpan(vch_bytes);
+
+    secp256k1_ec_pubkey_serialize(secp256k1_context_verify, vch_bytes.data(), &sz, &pubkey, compressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+    Set(vch_span.begin(), vch_span.end());
 }
 
 void CExtPubKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
