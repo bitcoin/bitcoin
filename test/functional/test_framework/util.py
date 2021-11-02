@@ -47,24 +47,36 @@ def assert_fee_amount(fee, tx_size, feerate_BTC_kvB):
         raise AssertionError("Fee of %s BTC too high! (Should be %s BTC)" % (str(fee), str(target_fee)))
 
 
-def assert_equal(thing1, thing2, *args):
+def assert_equal(thing1, thing2, *args, err_msg=None):
     if thing1 != thing2 or any(thing1 != arg for arg in args):
-        raise AssertionError("not(%s)" % " == ".join(str(arg) for arg in (thing1, thing2) + args))
+        msg = "not(%s)" % " == ".join(str(arg) for arg in (thing1, thing2) + args)
+        if err_msg is not None:
+            msg = err_msg
+        raise AssertionError(msg)
 
 
-def assert_not_equal(thing1, thing2, *args):
+def assert_not_equal(thing1, thing2, *args, err_msg=None):
     if thing1 == thing2 or any(thing1 == arg for arg in args):
-        raise AssertionError("%s" % " == ".join(str(arg) for arg in (thing1, thing2) + args))
+        msg = "%s" % " == ".join(str(arg) for arg in (thing1, thing2) + args)
+        if err_msg is not None:
+            msg = err_msg
+        raise AssertionError(msg)
 
 
-def assert_greater_than(thing1, thing2):
+def assert_greater_than(thing1, thing2, err_msg=None):
     if thing1 <= thing2:
-        raise AssertionError("%s <= %s" % (str(thing1), str(thing2)))
+        msg = "%s <= %s" % (str(thing1), str(thing2))
+        if err_msg is not None:
+            msg = err_msg
+        raise AssertionError(msg)
 
 
-def assert_greater_than_or_equal(thing1, thing2):
+def assert_greater_than_or_equal(thing1, thing2, err_msg=None):
     if thing1 < thing2:
-        raise AssertionError("%s < %s" % (str(thing1), str(thing2)))
+        msg = "%s < %s" % (str(thing1), str(thing2))
+        if err_msg is not None:
+            msg = err_msg
+        raise AssertionError(msg)
 
 
 def assert_true(thing, message = None):
