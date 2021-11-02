@@ -578,7 +578,7 @@ def bitflipper(expr):
     """Return a callable that evaluates expr and returns it with a random bitflip."""
     def fn(ctx):
         sub = deep_eval(ctx, expr)
-        assert_true(isinstance(sub, bytes), message="It is not a bytes instance")
+        assert_true(isinstance(sub, bytes), err_msg="It is not a bytes instance")
         return (int.from_bytes(sub, 'little') ^ (1 << random.randrange(len(sub) * 8))).to_bytes(len(sub), 'little')
     return fn
 
