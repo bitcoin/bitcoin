@@ -9,8 +9,10 @@
 #include <crypto/hmac_sha512.h>
 #include <hash.h>
 #include <random.h>
+#include <span.h>
 
 #include <secp256k1.h>
+#include <secp256k1_ellswift.h>
 #include <secp256k1_extrakeys.h>
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
@@ -329,6 +331,21 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
     keyChild.fCompressed = true;
     keyChild.fValid = ret;
     return ret;
+}
+
+EllSwiftPubKey CKey::EllSwiftEncode(const std::array<std::byte, 32>& rnd32) const
+{
+    assert(fValid);
+    EllSwiftPubKey encoded_pubkey;
+
+    auto success = secp256k1_ellswift_create(secp256k1_context_sign,
+                                             reinterpret_cast<unsigned char*>(encoded_pubkey.data()),
+                                             keydata.data(),
+                                             UCharCast(rnd32.data()));
+
+    // Should always succeed for valid keys (asserted above)
+    assert(success);
+    return encoded_pubkey;
 }
 
 bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {

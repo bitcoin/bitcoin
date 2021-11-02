@@ -12,6 +12,8 @@
 #include <support/allocators/secure.h>
 #include <uint256.h>
 
+#include <array>
+#include <cstddef>
 #include <stdexcept>
 #include <vector>
 
@@ -156,6 +158,8 @@ public:
 
     //! Load private key and check that public key matches.
     bool Load(const CPrivKey& privkey, const CPubKey& vchPubKey, bool fSkipCheck);
+
+    EllSwiftPubKey EllSwiftEncode(const std::array<std::byte, 32>& rnd32) const;
 };
 
 struct CExtKey {
