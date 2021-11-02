@@ -1252,17 +1252,16 @@ class TaprootTest(BitcoinTestFramework):
         block.solve()
         block_response = node.submitblock(block.serialize().hex())
         if err_msg is not None:
-e
             assert_true(block_response is not None and err_msg in block_response,
                         err_msg= "Missing error message '%s' from block response '%s': %s" % (err_msg, "(None)" if block_response is None else block_response, msg))
         if accept:
-            assert_equal(node.getbestblockhash() == block.hash, err_msg="Failed to accept: %s (response: %s)" % (msg, block_response))
+            assert_equal(node.getbestblockhash(), block.hash, err_msg="Failed to accept: %s (response: %s)" % (msg, block_response))
             self.tip = block.sha256
             self.lastblockhash = block.hash
             self.lastblocktime += 1
             self.lastblockheight += 1
         else:
-            assert_equal(node.getbestblockhash() == self.lastblockhash, err_msg="Failed to reject: " + msg)
+            assert_equal(node.getbestblockhash(), self.lastblockhash, err_msg="Failed to reject: " + msg)
 
     def init_blockinfo(self, node):
         # Initialize variables used by block_submit().
