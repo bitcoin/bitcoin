@@ -72,9 +72,9 @@ class ZMQSubscriber:
         label = chr(body[32])
         mempool_sequence = None if len(body) != 32+1+8 else struct.unpack("<Q", body[32+1:])[0]
         if mempool_sequence is not None:
-            assert_true(label == "A" or label == "R", message="{} different from A or C".format(label))
+            assert_true(label == "A" or label == "R", err_msg="{} different from A or C".format(label))
         else:
-            assert_true(label == "D" or label == "C", message="{} different from D or C".format(label))
+            assert_true(label == "D" or label == "C", err_msg="{} different from D or C".format(label))
         return (hash, label, mempool_sequence)
 
 
@@ -464,7 +464,7 @@ class ZMQTest (BitcoinTestFramework):
         while zmq_mem_seq is None:
             (hash_str, label, zmq_mem_seq) = seq.receive_sequence()
 
-        assert_true(label == "A" or label == "R", message="{} is different from A or R")
+        assert_true(label == "A" or label == "R", err_msg="{} is different from A or R")
         assert_true(hash_str is not None)
 
         # 2) We need to "seed" our view of the mempool
