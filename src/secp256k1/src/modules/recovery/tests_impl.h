@@ -92,20 +92,20 @@ void test_ecdsa_recovery_api(void) {
 
     /* Check bad contexts and NULLs for recovery */
     ecount = 0;
-    CHECK(secp256k1_ecdsa_recover(none, &recpubkey, &recsig, message) == 0);
-    CHECK(ecount == 1);
-    CHECK(secp256k1_ecdsa_recover(sign, &recpubkey, &recsig, message) == 0);
-    CHECK(ecount == 2);
+    CHECK(secp256k1_ecdsa_recover(none, &recpubkey, &recsig, message) == 1);
+    CHECK(ecount == 0);
+    CHECK(secp256k1_ecdsa_recover(sign, &recpubkey, &recsig, message) == 1);
+    CHECK(ecount == 0);
     CHECK(secp256k1_ecdsa_recover(vrfy, &recpubkey, &recsig, message) == 1);
-    CHECK(ecount == 2);
+    CHECK(ecount == 0);
     CHECK(secp256k1_ecdsa_recover(both, &recpubkey, &recsig, message) == 1);
-    CHECK(ecount == 2);
+    CHECK(ecount == 0);
     CHECK(secp256k1_ecdsa_recover(both, NULL, &recsig, message) == 0);
-    CHECK(ecount == 3);
+    CHECK(ecount == 1);
     CHECK(secp256k1_ecdsa_recover(both, &recpubkey, NULL, message) == 0);
-    CHECK(ecount == 4);
+    CHECK(ecount == 2);
     CHECK(secp256k1_ecdsa_recover(both, &recpubkey, &recsig, NULL) == 0);
-    CHECK(ecount == 5);
+    CHECK(ecount == 3);
 
     /* Check NULLs for conversion */
     CHECK(secp256k1_ecdsa_sign(both, &normal_sig, message, privkey, NULL, NULL) == 1);

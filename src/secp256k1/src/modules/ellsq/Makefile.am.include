@@ -1,0 +1,8 @@
+include_HEADERS += include/secp256k1_ellsq.h
+noinst_HEADERS += src/modules/ellsq/main_impl.h
+noinst_HEADERS += src/modules/ellsq/tests_impl.h
+if USE_BENCHMARK
+noinst_PROGRAMS += bench_ellsq
+bench_ellsq_SOURCES = src/bench_ellsq.c
+bench_ellsq_LDADD = libsecp256k1.la $(SECP_LIBS) $(COMMON_LIB)
+endif

@@ -294,6 +294,94 @@ static int64_t secp256k1_modinv64_divsteps_62_var(int64_t eta, uint64_t f0, uint
     return eta;
 }
 
+/* Compute the transition matrix and eta for 62 posdivsteps (variable time, eta=-delta), and keeps track
+ * of the Jacobi symbol along the way. f0 and g0 must be f and g mod 2^64 rather than 2^62, because
+ * Jacobi tracking requires knowing (f mod 8) rather than just (f mod 2).
+ *
+ * Input:  eta: initial eta
+ *         f0:  bottom limb of initial f
+ *         g0:  bottom limb of initial g
+ * Output: t: transition matrix
+ * Return: final eta
+ */
+static int64_t secp256k1_modinv64_posdivsteps_62_var(int64_t eta, uint64_t f0, uint64_t g0, secp256k1_modinv64_trans2x2 *t, int *jacp) {
+    /* Transformation matrix; see comments in secp256k1_modinv64_divsteps_62. */
+    uint64_t u = 1, v = 0, q = 0, r = 1;
+    uint64_t f = f0, g = g0, m;
+    uint32_t w;
+    int i = 62, limit, zeros;
+    int jac = *jacp;
+
+    for (;;) {
+        /* Use a sentinel bit to count zeros only up to i. */
+        zeros = secp256k1_ctz64_var(g | (UINT64_MAX << i));
+        /* Perform zeros divsteps at once; they all just divide g by two. */
+        g >>= zeros;
+        u <<= zeros;
+        v <<= zeros;
+        eta -= zeros;
+        i -= zeros;
+        /* Update the bottom bit of jac: when dividing g by an odd power of 2,
+         * if (f mod 8) is 3 or 5, the Jacobi symbol changes sign. */
+        jac ^= (zeros & ((f >> 1) ^ (f >> 2)));
+        /* We're done once we've done 60 posdivsteps. */
+        if (i == 0) break;
+        VERIFY_CHECK((f & 1) == 1);
+        VERIFY_CHECK((g & 1) == 1);
+        VERIFY_CHECK((u * f0 + v * g0) == f << (62 - i));
+        VERIFY_CHECK((q * f0 + r * g0) == g << (62 - i));
+        /* If eta is negative, negate it and replace f,g with g,-f. */
+        if (eta < 0) {
+            uint64_t tmp;
+            eta = -eta;
+            tmp = f; f = g; g = tmp;
+            tmp = u; u = q; q = tmp;
+            tmp = v; v = r; r = tmp;
+            /* Update bottom bit of jac: when swapping f and g, the Jacobi symbol changes sign
+             * if both f and g are 3 mod 4. */
+            jac ^= ((f & g) >> 1);
+            /* Use a formula to cancel out up to 6 bits of g. Also, no more than i can be cancelled
+             * out (as we'd be done before that point), and no more than eta+1 can be done as its
+             * will flip again once that happens. */
+            limit = ((int)eta + 1) > i ? i : ((int)eta + 1);
+            VERIFY_CHECK(limit > 0 && limit <= 62);
+            /* m is a mask for the bottom min(limit, 6) bits. */
+            m = (UINT64_MAX >> (64 - limit)) & 63U;
+            /* Find what multiple of f must be added to g to cancel its bottom min(limit, 6)
+             * bits. */
+            w = (f * g * (f * f - 2)) & m;
+        } else {
+            /* In this branch, use a simpler formula that only lets us cancel up to 4 bits of g, as
+             * eta tends to be smaller here. */
+            limit = ((int)eta + 1) > i ? i : ((int)eta + 1);
+            VERIFY_CHECK(limit > 0 && limit <= 62);
+            /* m is a mask for the bottom min(limit, 4) bits. */
+            m = (UINT64_MAX >> (64 - limit)) & 15U;
+            /* Find what multiple of f must be added to g to cancel its bottom min(limit, 4)
+             * bits. */
+            w = f + (((f + 1) & 4) << 1);
+            w = (-w * g) & m;
+        }
+        g += f * w;
+        q += u * w;
+        r += v * w;
+        VERIFY_CHECK((g & m) == 0);
+    }
+    /* Return data in t and return value. */
+    t->u = (int64_t)u;
+    t->v = (int64_t)v;
+    t->q = (int64_t)q;
+    t->r = (int64_t)r;
+    /* The determinant of t must be a power of two. This guarantees that multiplication with t
+     * does not change the gcd of f and g, apart from adding a power-of-2 factor to it (which
+     * will be divided out again). As each divstep's individual matrix has determinant 2 or -2,
+     * the aggregate of 62 of them will have determinant 2^62 or -2^62. */
+    VERIFY_CHECK((int128_t)t->u * t->r - (int128_t)t->v * t->q == ((int128_t)1) << 62 ||
+                 (int128_t)t->u * t->r - (int128_t)t->v * t->q == -(((int128_t)1) << 62));
+    *jacp = jac;
+    return eta;
+}
+
 /* Compute (t/2^62) * [d, e] mod modulus, where t is a transition matrix scaled by 2^62.
  *
  * On input and output, d and e are in range (-2*modulus,modulus). All output limbs will be in range
@@ -588,6 +676,65 @@ static void secp256k1_modinv64_var(secp256k1_modinv64_signed62 *x, const secp256
     /* Optionally negate d, normalize to [0,modulus), and return it. */
     secp256k1_modinv64_normalize_62(&d, f.v[len - 1], modinfo);
     *x = d;
+}
+
+/* Compute the Jacobi symbol of x modulo modinfo->modulus (variable time). gcd(x,modulus) must be 1. */
+static int secp256k1_jacobi64_maybe_var(const secp256k1_modinv64_signed62 *x, const secp256k1_modinv64_modinfo *modinfo) {
+    /* Start with f=modulus, g=x, eta=-1. */
+    secp256k1_modinv64_signed62 f = modinfo->modulus;
+    secp256k1_modinv64_signed62 g = *x;
+    int j, len = 5;
+    int64_t eta = -1; /* eta = -delta; delta is initially 1 */
+    int64_t cond, fn, gn;
+    int jac = 0;
+    int count;
+
+    /* Do up to 25 iterations of 62 posdivsteps (up to 1550 steps; more is extremely rare) each until f=1. */
+    for (count = 0; count < 25; ++count) {
+        /* Compute transition matrix and new eta after 62 posdivsteps. */
+        secp256k1_modinv64_trans2x2 t;
+        eta = secp256k1_modinv64_posdivsteps_62_var(eta, f.v[0] | ((uint64_t)f.v[1] << 62), g.v[0] | ((uint64_t)g.v[1] << 62), &t, &jac);
+        /* Update f,g using that transition matrix. */
+#ifdef VERIFY
+        VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, len, &modinfo->modulus, 0) > 0); /* f > 0 */
+        VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, len, &modinfo->modulus, 1) <= 0); /* f <= modulus */
+        VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, len, &modinfo->modulus, 0) > 0); /* g > 0 */
+        VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, len, &modinfo->modulus, 1) < 0);  /* g < modulus */
+#endif
+        secp256k1_modinv64_update_fg_62_var(len, &f, &g, &t);
+        /* If the bottom limb of f is 1, there is a chance that f=1. */
+        if (f.v[0] == 1) {
+            cond = 0;
+            /* Check if the other limbs are also 0. */
+            for (j = 1; j < len; ++j) {
+                cond |= f.v[j];
+            }
+            /* If so, we're done. */
+            if (cond == 0) return 1 - 2*(jac & 1);
+        }
+
+        /* Determine if len>1 and limb (len-1) of both f and g is 0. */
+        fn = f.v[len - 1];
+        gn = g.v[len - 1];
+        cond = ((int64_t)len - 2) >> 63;
+        cond |= fn;
+        cond |= gn;
+        /* If so, reduce length. */
+        if (cond == 0) --len;
+#ifdef VERIFY
+        VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, len, &modinfo->modulus, 0) > 0); /* f > 0 */
+        VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, len, &modinfo->modulus, 1) <= 0); /* f <= modulus */
+        VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, len, &modinfo->modulus, 0) > 0); /* g > 0 */
+        VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, len, &modinfo->modulus, 1) < 0);  /* g < modulus */
+#endif
+    }
+
+    /* While we don't want production code to assume that the loop above always reaches f=1,
+     * it's a reasonable thing to check for in test code (as long as we don't have a way
+     * for constructing known bad examples in the tests). */
+    VERIFY_CHECK(0);
+
+    return 0;
 }
 
 #endif /* SECP256K1_MODINV64_IMPL_H */

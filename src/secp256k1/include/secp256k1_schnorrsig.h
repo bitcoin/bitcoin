@@ -106,10 +106,10 @@ typedef struct {
  *  signatures from being valid in multiple contexts by accident.
  *
  *  Returns 1 on success, 0 on failure.
- *  Args:    ctx: pointer to a context object, initialized for signing (cannot be NULL)
- *  Out:   sig64: pointer to a 64-byte array to store the serialized signature (cannot be NULL)
- *  In:    msg32: the 32-byte message being signed (cannot be NULL)
- *       keypair: pointer to an initialized keypair (cannot be NULL)
+ *  Args:    ctx: pointer to a context object, initialized for signing.
+ *  Out:   sig64: pointer to a 64-byte array to store the serialized signature.
+ *  In:    msg32: the 32-byte message being signed.
+ *       keypair: pointer to an initialized keypair.
  *    aux_rand32: 32 bytes of fresh randomness. While recommended to provide
  *                this, it is only supplemental to security and can be NULL. See
  *                BIP-340 "Default Signing" for a full explanation of this
@@ -150,7 +150,7 @@ SECP256K1_API int secp256k1_schnorrsig_sign_custom(
  *  Returns: 1: correct signature
  *           0: incorrect signature
  *  Args:    ctx: a secp256k1 context object, initialized for verification.
- *  In:    sig64: pointer to the 64-byte signature to verify (cannot be NULL)
+ *  In:    sig64: pointer to the 64-byte signature to verify.
  *           msg: the message being verified. Can only be NULL if msglen is 0.
  *        msglen: length of the message
  *        pubkey: pointer to an x-only public key to verify with (cannot be NULL)

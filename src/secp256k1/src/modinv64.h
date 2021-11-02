@@ -43,4 +43,7 @@ static void secp256k1_modinv64_var(secp256k1_modinv64_signed62 *x, const secp256
 /* Same as secp256k1_modinv64_var, but constant time in x (not in the modulus). */
 static void secp256k1_modinv64(secp256k1_modinv64_signed62 *x, const secp256k1_modinv64_modinfo *modinfo);
 
+/* Compute the Jacobi symbol for x (where gcd(x,p) == 1), 0 if it cannot be determined. */
+static int secp256k1_jacobi64_maybe_var(const secp256k1_modinv64_signed62 *x, const secp256k1_modinv64_modinfo *modinfo);
+
 #endif /* SECP256K1_MODINV64_H */
