@@ -71,6 +71,7 @@ The Syscoin repo's [root README](/README.md) contains relevant information on th
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
+- [Assumeutxo design](assumeutxo.md)
 - [syscoin.conf Configuration File](syscoin-conf.md)
 - [Files](files.md)
 - [Fuzz-testing](fuzzing.md)
