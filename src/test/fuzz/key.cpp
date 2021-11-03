@@ -16,6 +16,7 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <streams.h>
+#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <util/strencodings.h>
 
@@ -305,4 +306,23 @@ FUZZ_TARGET_INIT(key, initialize_key)
             assert(key == loaded_key);
         }
     }
+
+    {
+        assert(pubkey.EllSqEncode()->size() == ELLSQ_ENCODED_SIZE);
+    }
+}
+
+FUZZ_TARGET_INIT(ellsq, initialize_key)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    auto ellsq_bytes = fuzzed_data_provider.ConsumeBytes<uint8_t>(64);
+    if (ellsq_bytes.size() < 64) {
+        return;
+    }
+
+    // Any 64 bytes are a valie elligator squared encoding of a pubkey
+    EllSqPubKey ellsq_pubkey;
+    std::copy(ellsq_bytes.begin(), ellsq_bytes.end(), ellsq_pubkey.begin());
+    CPubKey pubkey{ellsq_pubkey, fuzzed_data_provider.ConsumeBool()};
+    assert(pubkey.IsFullyValid());
 }
