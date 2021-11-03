@@ -15,10 +15,12 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <streams.h>
+#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <util/chaintype.h>
 #include <util/strencodings.h>
 
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <numeric>
@@ -302,4 +304,23 @@ FUZZ_TARGET_INIT(key, initialize_key)
             assert(key == loaded_key);
         }
     }
+}
+
+FUZZ_TARGET_INIT(ellswift_roundtrip, initialize_key)
+{
+    FuzzedDataProvider fdp{buffer.data(), buffer.size()};
+
+    auto key_bytes = fdp.ConsumeBytes<uint8_t>(32);
+    key_bytes.resize(32);
+    CKey key;
+    key.Set(key_bytes.begin(), key_bytes.end(), true);
+    if (!key.IsValid()) return;
+
+    auto ent32 = fdp.ConsumeBytes<std::byte>(32);
+    ent32.resize(32);
+
+    auto encoded_ellswift = key.EllSwiftCreate(ent32);
+    auto decoded_pubkey = encoded_ellswift.Decode();
+
+    assert(key.VerifyPubKey(decoded_pubkey));
 }
