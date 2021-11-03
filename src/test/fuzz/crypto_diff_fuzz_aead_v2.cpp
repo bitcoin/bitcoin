@@ -1,3 +1,17 @@
+// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <compat/endian.h>
+#include <crypto/chacha_poly_aead.h>
+#include <crypto/poly1305.h>
+#include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
+#include <test/fuzz/util.h>
+
+#include <cstdint>
+#include <vector>
+
 /**
  * Alternate ChaCha20Forward4064-Poly1305@Bitcoin cipher suite construction
  */
@@ -138,4 +152,58 @@ bool Decryption(unsigned char* m, const unsigned char* c, int bytes, AltChaCha20
         }
     }
     return true;
+}
+
+FUZZ_TARGET(crypto_diff_fuzz_aead_v2)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+
+    const std::vector<uint8_t> k1 = ConsumeFixedLengthByteVector(fuzzed_data_provider, CHACHA20_POLY1305_AEAD_KEY_LEN);
+    const std::vector<uint8_t> k2 = ConsumeFixedLengthByteVector(fuzzed_data_provider, CHACHA20_POLY1305_AEAD_KEY_LEN);
+
+    ChaCha20Poly1305AEAD aead(k1.data(), k1.size(), k2.data(), k2.size());
+    ChaCha20 instance1(k1.data(), k1.size()), instance2(k2.data(), k2.size());
+    struct AltChaCha20Forward4064 F = {instance1};
+    initialise(F);
+    struct AltChaCha20Forward4064 V = {instance2};
+    initialise(V);
+    struct AltChaCha20Forward4064Poly1305 aead2 = {F, V};
+
+    size_t buffer_size = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
+    std::vector<uint8_t> in(buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN, 0);
+    std::vector<uint8_t> out(buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
+    std::vector<uint8_t> in2(buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN, 0);
+    std::vector<uint8_t> out2(buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
+    bool is_encrypt = fuzzed_data_provider.ConsumeBool();
+
+    while (fuzzed_data_provider.ConsumeBool()) {
+        CallOneOf(
+            fuzzed_data_provider,
+            [&] {
+                buffer_size = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(64, 4096);
+                in = std::vector<uint8_t>(buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN, 0);
+                out = std::vector<uint8_t>(buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
+                in2 = std::vector<uint8_t>(buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN, 0);
+                out2 = std::vector<uint8_t>(buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
+            },
+            [&] {
+                if (is_encrypt) {
+                    bool res = aead.Crypt(out.data(), out.size(), in.data(), buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN, is_encrypt);
+                    bool res1 = Encryption(in2.data(), out2.data(), buffer_size, aead2.F, aead2.V);
+                    assert(res == res1);
+                    if (res) assert(memcmp(out.data(), out2.data(), buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN) == 0);
+                } else {
+                    uint32_t len = aead.DecryptLength(out.data());
+                    uint32_t len1 = DecryptionAAD(out2.data(), aead2.F);
+                    assert(len == len1);
+                    bool res = aead.Crypt(in.data(), buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN, out.data(), out.size(), is_encrypt);
+                    bool res1 = Decryption(in2.data(), out2.data(), buffer_size, aead2.F, aead2.V);
+                    assert(res == res1);
+                    if (res) assert(memcmp(in.data(), in2.data(), buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN) == 0);
+                }
+            },
+            [&] {
+                is_encrypt = fuzzed_data_provider.ConsumeBool();
+            });
+    }
 }
