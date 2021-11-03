@@ -354,8 +354,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
 
         auto locked_chain = pwallet->chain().lock();
         LockAnnotation lock(::cs_main);
-        const CBlockIndex* pindex = LookupBlockIndex(merkleBlock.header.GetHash());
-        if (!pindex || !::ChainActive().Contains(pindex)) {
+        if (locked_chain->getBlockHeight(merkleBlock.header.GetHash()) == nullopt) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
         }
 
@@ -544,7 +543,8 @@ UniValue importwallet(const JSONRPCRequest& request)
         if (!file.is_open()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
         }
-        nTimeBegin = ::ChainActive().Tip()->GetBlockTime();
+        Optional<int> tip_height = locked_chain->getHeight();
+        nTimeBegin = tip_height ? locked_chain->getBlockTime(*tip_height) : 0;
 
         int64_t nFilesize = std::max((int64_t)1, (int64_t)file.tellg());
         file.seekg(0, file.beg);
@@ -688,7 +688,8 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
     }
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -777,24 +778,25 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
     file.close();
     pwallet->ShowProgress("", 100); // hide progress dialog in GUI
 
+    const uint32_t tip_height = locked_chain->getHeight().value_or(-1);
+
     // Whether to perform rescan after import
     int nStartHeight = 0;
     if (!request.params[1].isNull())
         nStartHeight = request.params[1].get_int();
-    if (::ChainActive().Height() < nStartHeight)
-        nStartHeight = ::ChainActive().Height();
+    if (tip_height < nStartHeight)
+        nStartHeight = tip_height;
 
     // Assume that electrum wallet was created at that block
-    int nTimeBegin = ::ChainActive()[nStartHeight]->GetBlockTime();
+    int nTimeBegin = locked_chain->getBlockTime(nStartHeight);
     pwallet->UpdateTimeFirstKey(nTimeBegin);
 
-    pwallet->WalletLogPrintf("Rescanning %i blocks\n", ::ChainActive().Height() - nStartHeight + 1);
+    pwallet->WalletLogPrintf("Rescanning %i blocks\n", tip_height - nStartHeight + 1);
     WalletRescanReserver reserver(pwallet);
     if (!reserver.reserve()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
     }
-    const CBlockIndex *stop_block, *failed_block;
-    pwallet->ScanForWalletTransactions(::ChainActive()[nStartHeight], nullptr, reserver, failed_block, stop_block, true);
+    pwallet->ScanForWalletTransactions(locked_chain->getBlockHash(nStartHeight), {}, reserver, true);
 
     if (!fGood)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys to wallet");
@@ -968,15 +970,16 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     // produce output
     file << strprintf("# Wallet dump created by Dash Core %s\n", CLIENT_BUILD);
     file << strprintf("# * Created on %s\n", FormatISO8601DateTime(GetTime()));
-    file << strprintf("# * Best block at time of backup was %i (%s),\n", ::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash().ToString());
-    file << strprintf("#   mined on %s\n", FormatISO8601DateTime(::ChainActive().Tip()->GetBlockTime()));
+    const Optional<int> tip_height = locked_chain->getHeight();
+    file << strprintf("# * Best block at time of backup was %i (%s),\n", tip_height.value_or(-1), tip_height ? locked_chain->getBlockHash(*tip_height).ToString() : "(missing block hash)");
+    file << strprintf("#   mined on %s\n", tip_height ? FormatISO8601DateTime(locked_chain->getBlockTime(*tip_height)) : "(missing block time)");
     file << "\n";
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("dashcoreversion", CLIENT_BUILD);
-    obj.pushKV("lastblockheight", ::ChainActive().Height());
-    obj.pushKV("lastblockhash", ::ChainActive().Tip()->GetBlockHash().ToString());
-    obj.pushKV("lastblocktime", FormatISO8601DateTime(::ChainActive().Tip()->GetBlockTime()));
+    obj.pushKV("lastblockheight", tip_height.value_or(-1));
+    obj.pushKV("lastblockhash", tip_height ? locked_chain->getBlockHash(*tip_height).ToString() : NullUniValue);
+    obj.pushKV("lastblocktime", tip_height ? FormatISO8601DateTime(locked_chain->getBlockTime(*tip_height)) : NullUniValue);
 
     // add the base58check encoded extended master if the wallet uses HD
     CHDChain hdChainCurrent;
@@ -1552,15 +1555,16 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         EnsureWalletIsUnlocked(pwallet);
 
         // Verify all timestamps are present before importing any keys.
-        now = ::ChainActive().Tip() ? ::ChainActive().Tip()->GetMedianTimePast() : 0;
+        const Optional<int> tip_height = locked_chain->getHeight();
+        now = tip_height ? locked_chain->getBlockMedianTimePast(*tip_height) : 0;
         for (const UniValue& data : requests.getValues()) {
             GetImportTimestamp(data, now);
         }
 
         const int64_t minimumTimestamp = 1;
 
-        if (fRescan && ::ChainActive().Tip()) {
-            nLowestTimestamp = ::ChainActive().Tip()->GetBlockTime();
+        if (fRescan && tip_height) {
+            nLowestTimestamp = locked_chain->getBlockTime(*tip_height);
         } else {
             fRescan = false;
         }
