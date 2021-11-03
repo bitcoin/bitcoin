@@ -544,6 +544,7 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
     if (!addr.IsRoutable())
         return false;
 
+    bool fNew{false};
     int nId;
     AddrInfo* pinfo = Find(addr, &nId);
 
@@ -584,6 +585,7 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
         pinfo = Create(addr, source, &nId);
         pinfo->nTime = std::max((int64_t)0, (int64_t)pinfo->nTime - nTimePenalty);
         nNew++;
+        fNew = true;
     }
 
     int nUBucket = pinfo->GetNewBucket(nKey, source, m_asmap);
@@ -609,7 +611,7 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
             }
         }
     }
-    return fInsert;
+    return fNew && fInsert;
 }
 
 void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nTime)
