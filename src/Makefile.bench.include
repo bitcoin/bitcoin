@@ -22,6 +22,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/data.h \
   bench/data.cpp \
   bench/duplicate_inputs.cpp \
+  bench/ellsq.cpp \
   bench/examples.cpp \
   bench/rollingbloom.cpp \
   bench/chacha20.cpp \
