@@ -15,10 +15,14 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
+#include <secp256k1.h>
+#include <secp256k1_ellswift.h>
 #include <streams.h>
+#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <util/strencodings.h>
 
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <numeric>
@@ -302,4 +306,41 @@ FUZZ_TARGET_INIT(key, initialize_key)
             assert(key == loaded_key);
         }
     }
+}
+
+CPubKey EllSwiftDecode(const EllSwiftPubKey& encoded_pubkey)
+{
+    secp256k1_pubkey pubkey;
+    secp256k1_ellswift_decode(secp256k1_context_static, &pubkey, reinterpret_cast<const unsigned char*>(encoded_pubkey.data()));
+
+    size_t sz = CPubKey::COMPRESSED_SIZE;
+    std::array<uint8_t, CPubKey::COMPRESSED_SIZE> vch_bytes;
+
+    secp256k1_ec_pubkey_serialize(secp256k1_context_static, vch_bytes.data(), &sz, &pubkey, SECP256K1_EC_COMPRESSED);
+
+    return CPubKey{vch_bytes.begin(), vch_bytes.end()};
+}
+
+FUZZ_TARGET_INIT(ellswift, initialize_key)
+{
+    FuzzedDataProvider fdp{buffer.data(), buffer.size()};
+    auto key_bytes = fdp.ConsumeBytes<uint8_t>(32);
+    key_bytes.resize(32);
+    CKey key;
+    key.Set(key_bytes.begin(), key_bytes.end(), fdp.ConsumeBool());
+    if (!key.IsValid()) {
+        return;
+    }
+
+    auto r32_vec = fdp.ConsumeBytes<std::byte>(32);
+    r32_vec.resize(32);
+    std::array<std::byte, 32> rnd32;
+    memcpy(rnd32.data(), r32_vec.data(), r32_vec.size());
+
+    auto encoded_ellswift = key.EllSwiftEncode(rnd32);
+    auto decoded_pubkey = EllSwiftDecode(encoded_ellswift);
+    if (!key.IsCompressed()) {
+        decoded_pubkey.Decompress();
+    }
+    assert(key.VerifyPubKey(decoded_pubkey));
 }
