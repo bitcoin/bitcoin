@@ -70,6 +70,26 @@ bool dbwrapper_SanityCheck()
     return true;
 }
 
+#ifndef WIN32
+namespace leveldb {
+class EnvPosixTestHelper {
+    static void SetReadOnlyMMapLimit(int limit);
+public:
+    static inline void SetReadOnlyMMapLimitForBitcoin(int limit) { SetReadOnlyMMapLimit(limit); }
+};
+}
+
+class BitcoinLevelDBInit {
+public:
+    BitcoinLevelDBInit() {
+        if (sizeof(void*) >= 8) {
+            leveldb::EnvPosixTestHelper::SetReadOnlyMMapLimitForBitcoin(4096);
+        }
+    }
+};
+static BitcoinLevelDBInit g_bitcoin_leveldb_init;
+#endif
+
 class CBitcoinLevelDBLogger : public leveldb::Logger {
 public:
     // This code is adapted from posix_logger.h, which is why it is using vsprintf.
