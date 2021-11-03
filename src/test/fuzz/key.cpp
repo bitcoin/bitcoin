@@ -19,6 +19,7 @@
 #include <test/fuzz/fuzz.h>
 #include <util/strencodings.h>
 
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <numeric>
@@ -305,4 +306,25 @@ FUZZ_TARGET_INIT(key, initialize_key)
             assert(key == loaded_key);
         }
     }
+
+    {
+        std::array<uint8_t, 32> rnd32;
+        memcpy(rnd32.data(), &random_uint256, 32);
+        assert(pubkey.EllSqEncode(rnd32)->size() == ELLSQ_ENCODED_SIZE);
+    }
+}
+
+FUZZ_TARGET_INIT(ellsq, initialize_key)
+{
+    if(buffer.size() < 64) {
+        return;
+    }
+
+    auto ellsq_bytes = buffer.first(64);
+    // Any 64 bytes are a valid elligator squared encoding of a pubkey
+    EllSqPubKey ellsq_pubkey;
+    std::copy(ellsq_bytes.begin(), ellsq_bytes.end(), ellsq_pubkey.begin());
+    CPubKey pubkey{ellsq_pubkey};
+
+    assert(pubkey.IsFullyValid());
 }
