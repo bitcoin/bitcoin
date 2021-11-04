@@ -139,7 +139,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        unsigned int len = ::ReadCompactSize(s);
+        const unsigned int len(::ReadCompactSize(s));
         if (len <= SIZE) {
             s.read((char*)vch, len);
             if (len != size()) {
@@ -147,9 +147,7 @@ public:
             }
         } else {
             // invalid pubkey, skip available data
-            char dummy;
-            while (len--)
-                s.read(&dummy, 1);
+            s.ignore(len);
             Invalidate();
         }
     }
