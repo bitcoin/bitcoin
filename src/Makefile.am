@@ -500,6 +500,7 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/validation.h \
   hash.cpp \
   hash.h \
+  logging.cpp \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \
@@ -508,7 +509,6 @@ libbitcoin_consensus_a_SOURCES = \
   pubkey.cpp \
   pubkey.h \
   random.cpp \
-  random.h \
   script/bitcoinconsensus.cpp \
   script/interpreter.cpp \
   script/interpreter.h \
@@ -518,11 +518,13 @@ libbitcoin_consensus_a_SOURCES = \
   script/script_error.h \
   serialize.h \
   span.h \
+  support/lockedpool.cpp \
   tinyformat.h \
   uint256.cpp \
   uint256.h \
   util/strencodings.cpp \
   util/strencodings.h \
+  util/thread.cpp \
   version.h
 
 # common: shared between bitcoind, and bitcoin-qt and non-server tools
