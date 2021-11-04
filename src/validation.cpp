@@ -497,17 +497,29 @@ private:
     // of checking a given transaction.
     struct Workspace {
         explicit Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()) {}
+        /** Txids of mempool transactions that this transaction directly conflicts with. */
         std::set<uint256> m_conflicts;
+        /** Iterators to mempool entries that this transaction directly conflicts with. */
         CTxMemPool::setEntries m_iters_conflicting;
+        /** Iterators to all mempool entries that would be replaced by this transaction, including
+         * those it directly conflicts with and their descendants. */
         CTxMemPool::setEntries m_all_conflicting;
+        /** All mempool ancestors of this transaction. */
         CTxMemPool::setEntries m_ancestors;
+        /** Mempool entry constructed for this transaction. Constructed in PreChecks() but not
+         * inserted into the mempool until Finalize(). */
         std::unique_ptr<CTxMemPoolEntry> m_entry;
+        /** Pointers to the transactions that have been removed from the mempool and replaced by
+         * this transaction, used to return to the MemPoolAccept caller. Only populated if
+         * validation is successful and the original transactions are removed. */
         std::list<CTransactionRef> m_replaced_transactions;
 
         /** Virtual size of the transaction as used by the mempool, calculated using serialized size
          * of the transaction and sigops. */
         int64_t m_vsize;
+        /** Fees paid by this transaction: total input amounts subtracted by total output amounts. */
         CAmount m_base_fees;
+        /** Base fees + any fee delta set by the user with prioritisetransaction. */
         CAmount m_modified_fees;
         /** Total modified fees of all transactions being replaced. */
         CAmount m_conflicting_fees{0};
@@ -515,6 +527,7 @@ private:
         size_t m_conflicting_size{0};
 
         const CTransactionRef& m_ptx;
+        /** Txid. */
         const uint256& m_hash;
         TxValidationState m_state;
         /** A temporary cache containing serialized transaction data for signature verification.
