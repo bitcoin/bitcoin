@@ -138,11 +138,6 @@ std::string EncodeBase64(Span<const unsigned char> input)
     return str;
 }
 
-std::string EncodeBase64(const std::string& str)
-{
-    return EncodeBase64(MakeUCharSpan(str));
-}
-
 std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
 {
     static const int decode64_table[256] =
