@@ -755,6 +755,7 @@ public:
     bool InvalidateBlock(BlockValidationState& state, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
     // SYSCOIN
     bool RestartGethNode();
+    void EnforceBlock(BlockValidationState& state, const CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
     bool MarkConflictingBlock(BlockValidationState& state, CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex) LOCKS_EXCLUDED(cs_main);
     /** Remove invalidity status from a block and its descendants. */
@@ -809,7 +810,6 @@ private:
     void ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const FlatFilePos& pos) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, AssetMap &mapAssets, NEVMTxRootMap &mapNEVMTxRoots, NEVMMintTxMap &mapMintKeys, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
     void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void InvalidChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ConflictingChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

@@ -3032,59 +3032,52 @@ void CChainState::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockInde
         // we don't have the header/block, so we can't do anything right now
         return;
     }
+    const CBlockIndex* pindex = bestChainLockBlockIndex;
     BlockValidationState state;
-    const CBlockIndex* currentBestChainLockBlockIndex;
-    {
-        LOCK(cs_main);
-        const CBlockIndex* pindex = bestChainLockBlockIndex;
-        pindex = currentBestChainLockBlockIndex = bestChainLockBlockIndex;
-
-        // Go backwards through the chain referenced by clsig until we find a block that is part of the main chain.
-        // For each of these blocks, check if there are children that are NOT part of the chain referenced by clsig
-        // and mark all of them as conflicting.
-        while (pindex && !m_chain.Contains(pindex)) {
-            // Mark all blocks that have the same prevBlockHash but are not equal to blockHash as conflicting
-            auto itp = m_blockman.LookupBlockIndexPrev(pindex->pprev->GetBlockHash());
-            for (auto jt = itp.first; jt != itp.second; ++jt) {
-                if (jt->second == pindex) {
-                    continue;
-                }
-                LogPrintf("CChainLocksHandler::%s -- CLSIG marked block %s as conflicting\n",
-                            __func__, jt->second->GetBlockHash().ToString());
-                if(!MarkConflictingBlock(state, jt->second)){
-                    LogPrintf("CChainLocksHandler::%s -- MarkConflictingBlock failed: %s\n", __func__, state.ToString());
-                    // This should not have happened and we are in a state were it's not safe to continue anymore
-                    assert(false);
-                }
-            }
-
-            pindex = pindex->pprev;
-        }
+    // Go backwards through the chain referenced by clsig until we find a block that is part of the main chain.
+    // For each of these blocks, check if there are children that are NOT part of the chain referenced by clsig
+    // and mark all of them as conflicting.
+    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- enforcing block %s via CLSIG\n", __func__, bestChainLockBlockIndex->GetBlockHash().ToString());
+    TRY_LOCK(m_cs_chainstate, lockChainState);
+    if(!lockChainState) {
+        LogPrint(BCLog::SYS, "Could not lock EnforceBestChainLock, skipping enforcement\n");
+        return;
     }
+    EnforceBlock(state, pindex);
     // no cs_main allowed
-    bool activateNeeded = false;
-    {
-        LOCK(cs_main);
-        // In case blocks from the correct chain are invalid at the moment, reconsider them. The only case where this
-        // can happen right now is when missing superblock triggers caused the main chain to be dismissed first. When
-        // the trigger later appears, this should bring us to the correct chain eventually. Please note that this does
-        // NOT enforce invalid blocks in any way, it just causes re-validation.
-        if (!currentBestChainLockBlockIndex->IsValid()) {
-            ResetBlockFailureFlags(m_blockman.LookupBlockIndex(currentBestChainLockBlockIndex->GetBlockHash()));
-        }
-        activateNeeded = m_chain.Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) != currentBestChainLockBlockIndex;
-    }
-    // no cs_main allowed
-
+    bool activateNeeded = WITH_LOCK(::cs_main, return m_chain.Tip()->GetAncestor(bestChainLockBlockIndex->nHeight)) != bestChainLockBlockIndex;
     if (activateNeeded) {
-        TRY_LOCK(m_cs_chainstate, lockChainState);
-        if(!lockChainState) {
-            LogPrint(BCLog::SYS, "Could not lock EnforceBestChainLock, skipping enforcement\n");
-            return;
-        }
         if(!ActivateBestChain(state, nullptr)) {
             LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
         }
+    }
+}
+void CChainState::EnforceBlock(BlockValidationState& state, const CBlockIndex *pindex)
+{
+    AssertLockNotHeld(cs_main);
+    LOCK(cs_main);
+    const CBlockIndex* pindex_walk = pindex;
+
+    while (pindex_walk && !m_chain.Contains(pindex_walk)) {
+        // Mark all blocks that have the same prevBlockHash but are not equal to blockHash as conflicting
+        auto itp = m_blockman.LookupBlockIndexPrev(pindex_walk->pprev->GetBlockHash());
+        for (auto jt = itp.first; jt != itp.second; ++jt) {
+            if (jt->second == pindex_walk) {
+                continue;
+            }
+            if (!MarkConflictingBlock(state, jt->second)) {
+                LogPrintf("CChainState::%s -- MarkConflictingBlock failed: %s\n", __func__, state.ToString());
+                // This should not have happened and we are in a state were it's not safe to continue anymore
+                assert(false);
+            }
+            LogPrintf("CChainState::%s -- marked block %s as conflicting\n",
+                      __func__, jt->second->GetBlockHash().ToString());
+        }
+        pindex_walk = pindex_walk->pprev;
+    }
+    // In case blocks from the enforced chain are invalid at the moment, reconsider them.
+    if (!pindex->IsValid()) {
+        ResetBlockFailureFlags(m_blockman.LookupBlockIndex(pindex->GetBlockHash()));
     }
 }
 bool CChainState::InvalidateBlock(BlockValidationState& state, CBlockIndex *pindex)
@@ -3245,17 +3238,16 @@ bool CChainState::MarkConflictingBlock(BlockValidationState& state, CBlockIndex 
     if (pindex == pindexBestHeader) {
         pindexBestHeader = pindexBestHeader->pprev;
     }
-
+    DisconnectedBlockTransactions disconnectpool;
     while (true) {
         if (ShutdownRequested()) break;
 
-        LOCK(m_mempool->cs); // Lock transaction pool for at least as long as it takes for connectTrace to be consumed
+        LOCK(MempoolMutex()); // Lock transaction pool for at least as long as it takes for connectTrace to be consumed
         if(!m_chain.Contains(pindex)) break;
         const CBlockIndex* pindexOldTip = m_chain.Tip();
         pindex_was_in_chain = true;
         // ActivateBestChain considers blocks already in m_chain
         // unconditionally valid already, so force disconnect away from it.
-        DisconnectedBlockTransactions disconnectpool;
         bool ret = DisconnectTip(state, &disconnectpool);
         // DisconnectTip will add transactions to disconnectpool.
         // Adjust the mempool to be consistent with the new tip, adding
@@ -3286,6 +3278,12 @@ bool CChainState::MarkConflictingBlock(BlockValidationState& state, CBlockIndex 
     pindex->nStatus |= BLOCK_CONFLICT_CHAINLOCK;
     setBlockIndexCandidates.erase(pindex);
 
+    // DisconnectTip will add transactions to disconnectpool; try to add these
+    // back to the mempool.
+    {
+        LOCK(MempoolMutex());
+        MaybeUpdateMempoolForReorg(disconnectpool, true);
+    }
 
     // The resulting new best tip may not be in setBlockIndexCandidates anymore, so
     // add it again.
