@@ -8,6 +8,7 @@ import time
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_true,
     assert_raises_rpc_error,
 )
 
@@ -106,7 +107,7 @@ class DisconnectBanTest(BitcoinTestFramework):
         address1 = self.nodes[0].getpeerinfo()[0]['addr']
         self.nodes[0].disconnectnode(address=address1)
         self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 1, timeout=10)
-        assert not [node for node in self.nodes[0].getpeerinfo() if node['addr'] == address1]
+        assert_true(not [node for node in self.nodes[0].getpeerinfo() if node['addr'] == address1])
 
         self.log.info("disconnectnode: successfully reconnect node")
         self.connect_nodes(0, 1)  # reconnect the node
@@ -117,7 +118,7 @@ class DisconnectBanTest(BitcoinTestFramework):
         id1 = self.nodes[0].getpeerinfo()[0]['id']
         self.nodes[0].disconnectnode(nodeid=id1)
         self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 1, timeout=10)
-        assert not [node for node in self.nodes[0].getpeerinfo() if node['id'] == id1]
+        assert_true(not [node for node in self.nodes[0].getpeerinfo() if node['id'] == id1])
 
 if __name__ == '__main__':
     DisconnectBanTest().main()
