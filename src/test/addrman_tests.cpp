@@ -41,32 +41,6 @@ public:
     }
 };
 
-class AddrManCorrupted : public AddrManSerializationMock
-{
-public:
-    void Serialize(CDataStream& s) const override
-    {
-        // Produces corrupt output that claims addrman has 20 addrs when it only has one addr.
-        unsigned char nVersion = 1;
-        s << nVersion;
-        s << ((unsigned char)32);
-        s << uint256::ONE;
-        s << 10; // nNew
-        s << 10; // nTried
-
-        int nUBuckets = ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30);
-        s << nUBuckets;
-
-        CService serv;
-        BOOST_CHECK(Lookup("252.1.1.1", serv, 7777, false));
-        CAddress addr = CAddress(serv, NODE_NONE);
-        CNetAddr resolved;
-        BOOST_CHECK(LookupHost("252.2.2.2", resolved, false));
-        AddrInfo info = AddrInfo(addr, resolved);
-        s << info;
-    }
-};
-
 static CDataStream AddrmanToStream(const AddrManSerializationMock& _addrman)
 {
     CDataStream ssPeersIn(SER_DISK, CLIENT_VERSION);
@@ -1043,13 +1017,39 @@ BOOST_AUTO_TEST_CASE(load_addrman)
     BOOST_CHECK(addrman2.size() == 3);
 }
 
+// Produce a corrupt peers.dat that claims 20 addrs when it only has one addr.
+static CDataStream MakeCorruptPeersDat()
+{
+    CDataStream s(SER_DISK, CLIENT_VERSION);
+    s << ::Params().MessageStart();
+
+    unsigned char nVersion = 1;
+    s << nVersion;
+    s << ((unsigned char)32);
+    s << uint256::ONE;
+    s << 10; // nNew
+    s << 10; // nTried
+
+    int nUBuckets = ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30);
+    s << nUBuckets;
+
+    CService serv;
+    BOOST_CHECK(Lookup("252.1.1.1", serv, 7777, false));
+    CAddress addr = CAddress(serv, NODE_NONE);
+    CNetAddr resolved;
+    BOOST_CHECK(LookupHost("252.2.2.2", resolved, false));
+    AddrInfo info = AddrInfo(addr, resolved);
+    s << info;
+
+    std::string str = s.str();
+    std::vector<unsigned char> vchData(str.begin(), str.end());
+    return CDataStream(vchData, SER_DISK, CLIENT_VERSION);
+}
 
 BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
 {
-    AddrManCorrupted addrmanCorrupted;
-
-    // Test that the de-serialization of corrupted addrman throws an exception.
-    CDataStream ssPeers1 = AddrmanToStream(addrmanCorrupted);
+    // Test that the de-serialization of corrupted peers.dat throws an exception.
+    CDataStream ssPeers1 = MakeCorruptPeersDat();
     bool exceptionThrown = false;
     AddrMan addrman1(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
     BOOST_CHECK(addrman1.size() == 0);
@@ -1065,7 +1065,7 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
     BOOST_CHECK(exceptionThrown);
 
     // Test that ReadFromStream fails if peers.dat is corrupt
-    CDataStream ssPeers2 = AddrmanToStream(addrmanCorrupted);
+    CDataStream ssPeers2 = MakeCorruptPeersDat();
 
     AddrMan addrman2(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
     BOOST_CHECK(addrman2.size() == 0);
