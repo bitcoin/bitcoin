@@ -810,10 +810,10 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     // nDustThreshold = 182 * 3702 / 1000
     dustRelayFee = CFeeRate(3702);
     // dust:
-    t.vout[0].nValue = 673 - 1;
+    t.vout[0].nValue = 674 - 1;
     CheckIsNotStandard(t, "dust");
     // not dust:
-    t.vout[0].nValue = 673;
+    t.vout[0].nValue = 674;
     CheckIsStandard(t);
     dustRelayFee = CFeeRate(DUST_RELAY_TX_FEE);
 

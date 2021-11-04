@@ -193,7 +193,7 @@ class KeyPoolTest(BitcoinTestFramework):
         assert_equal("psbt" in res, True)
 
         # create a transaction without change at the maximum fee rate, such that the output is still spendable:
-        res = w2.walletcreatefundedpsbt(inputs=[], outputs=[{destination: 0.00010000}], options={"subtractFeeFromOutputs": [0], "feeRate": 0.0008824})
+        res = w2.walletcreatefundedpsbt(inputs=[], outputs=[{destination: 0.00010000}], options={"subtractFeeFromOutputs": [0], "feeRate": 0.0008823})
         assert_equal("psbt" in res, True)
         assert_equal(res["fee"], Decimal("0.00009706"))
 
