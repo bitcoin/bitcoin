@@ -22,35 +22,6 @@
 
 using namespace std::literals;
 
-class AddrManSerializationMock : public AddrMan
-{
-public:
-    virtual void Serialize(CDataStream& s) const = 0;
-
-    AddrManSerializationMock()
-        : AddrMan(/* asmap */ std::vector<bool>(), /* deterministic */ true, /* consistency_check_ratio */ 100)
-    {}
-};
-
-class AddrManUncorrupted : public AddrManSerializationMock
-{
-public:
-    void Serialize(CDataStream& s) const override
-    {
-        AddrMan::Serialize(s);
-    }
-};
-
-static CDataStream AddrmanToStream(const AddrManSerializationMock& _addrman)
-{
-    CDataStream ssPeersIn(SER_DISK, CLIENT_VERSION);
-    ssPeersIn << Params().MessageStart();
-    ssPeersIn << _addrman;
-    std::string str = ssPeersIn.str();
-    std::vector<unsigned char> vchData(str.begin(), str.end());
-    return CDataStream(vchData, SER_DISK, CLIENT_VERSION);
-}
-
 class AddrManTest : public AddrMan
 {
 public:
@@ -973,9 +944,20 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
 }
 
+static CDataStream AddrmanToStream(const AddrMan& addrman)
+{
+    CDataStream ssPeersIn(SER_DISK, CLIENT_VERSION);
+    ssPeersIn << Params().MessageStart();
+    ssPeersIn << addrman;
+    std::string str = ssPeersIn.str();
+    std::vector<unsigned char> vchData(str.begin(), str.end());
+    return CDataStream(vchData, SER_DISK, CLIENT_VERSION);
+}
+
 BOOST_AUTO_TEST_CASE(load_addrman)
 {
-    AddrManUncorrupted addrmanUncorrupted;
+    AddrMan addrman{/*asmap=*/ std::vector<bool>(), /*deterministic=*/ true,
+                    /*consistency_check_ratio=*/ 100};
 
     CService addr1, addr2, addr3;
     BOOST_CHECK(Lookup("250.7.1.1", addr1, 8333, false));
@@ -988,11 +970,11 @@ BOOST_AUTO_TEST_CASE(load_addrman)
     CService source;
     BOOST_CHECK(Lookup("252.5.1.1", source, 8333, false));
     std::vector<CAddress> addresses{CAddress(addr1, NODE_NONE), CAddress(addr2, NODE_NONE), CAddress(addr3, NODE_NONE)};
-    BOOST_CHECK(addrmanUncorrupted.Add(addresses, source));
-    BOOST_CHECK(addrmanUncorrupted.size() == 3);
+    BOOST_CHECK(addrman.Add(addresses, source));
+    BOOST_CHECK(addrman.size() == 3);
 
     // Test that the de-serialization does not throw an exception.
-    CDataStream ssPeers1 = AddrmanToStream(addrmanUncorrupted);
+    CDataStream ssPeers1 = AddrmanToStream(addrman);
     bool exceptionThrown = false;
     AddrMan addrman1(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
 
@@ -1009,7 +991,7 @@ BOOST_AUTO_TEST_CASE(load_addrman)
     BOOST_CHECK(exceptionThrown == false);
 
     // Test that ReadFromStream creates an addrman with the correct number of addrs.
-    CDataStream ssPeers2 = AddrmanToStream(addrmanUncorrupted);
+    CDataStream ssPeers2 = AddrmanToStream(addrman);
 
     AddrMan addrman2(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
     BOOST_CHECK(addrman2.size() == 0);
