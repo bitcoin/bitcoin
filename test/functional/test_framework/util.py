@@ -36,14 +36,14 @@ def assert_approx(v, vexp, vspan=0.00001):
         raise AssertionError("%s > [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
 
 
-def assert_fee_amount(fee, tx_size, feerate_SYS_vB):
+def assert_fee_amount(fee, tx_size, feerate_SYS_kvB):
     """Assert the fee is in range."""
-    feerate_SYS_vB = feerate_SYS_vB / 1000
-    target_fee = satoshi_round(tx_size * feerate_SYS_vB)
+    target_fee = get_fee(tx_size, feerate_SYS_kvB)
     if fee < target_fee:
         raise AssertionError("Fee of %s SYS too low! (Should be %s SYS)" % (str(fee), str(target_fee)))
     # allow the wallet's estimation to be at most 2 bytes off
-    if fee > (tx_size + 2) * feerate_SYS_vB:
+    high_fee = get_fee(tx_size + 2, feerate_SYS_kvB)
+    if fee > high_fee:
         raise AssertionError("Fee of %s SYS too high! (Should be %s SYS)" % (str(fee), str(target_fee)))
 
 
@@ -221,6 +221,18 @@ def bytes_to_hex_str(byte_str):
 
 def str_to_b64str(string):
     return b64encode(string.encode('utf-8')).decode('ascii')
+
+
+def ceildiv(a, b):
+    """Divide 2 ints and round up to next int rather than round down"""
+    return -(-a // b)
+
+
+def get_fee(tx_size, feerate_btc_kvb):
+    """Calculate the fee in SYS given a feerate is SYS/kvB. Reflects CFeeRate::GetFee"""
+    feerate_sat_kvb = int(feerate_btc_kvb * Decimal(1e8)) # Fee in sat/kvb as an int to avoid float precision errors
+    target_fee_sat = ceildiv(feerate_sat_kvb * tx_size, 1000) # Round calculated fee up to nearest sat
+    return satoshi_round(target_fee_sat / Decimal(1e8)) # Truncate SYS result to nearest sat
 
 
 def satoshi_round(amount):
