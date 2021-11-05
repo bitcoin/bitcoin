@@ -119,7 +119,7 @@ class TxDownloadTest(BitcoinTestFramework):
         #   peer, plus
         # * the first time it is re-requested from the outbound peer, plus
         # * 2 seconds to avoid races
-        assert self.nodes[1].getpeerinfo()[0]['inbound'] == False
+        assert_equal(self.nodes[1].getpeerinfo()[0]['inbound'], False)
         timeout = 2 + INBOUND_PEER_TX_DELAY + GETDATA_TX_INTERVAL
         self.log.info("Tx should be received at node 1 after {} seconds".format(timeout))
         self.sync_mempools(timeout=timeout)

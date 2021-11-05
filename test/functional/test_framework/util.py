@@ -72,7 +72,7 @@ def assert_greater_than(thing1, thing2, err_msg=None):
 
 
 def assert_less_than(thing1, thing2, err_msg=None):
-    if thing1 <= thing2:
+    if thing1 >= thing2:
         msg = "%s >= %s" % (str(thing1), str(thing2))
         if err_msg is not None:
             msg = err_msg
