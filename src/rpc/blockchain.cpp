@@ -231,19 +231,20 @@ static UniValue getbestchainlock(const JSONRPCRequest& request)
         throw std::runtime_error(
             RPCHelpMan{"getbestchainlock",
                 "\nReturns information about the best chainlock. Throws an error if there is no known chainlock yet.",
-                {}
-            }.ToString() +
-            "\nResult:\n"
-            "{\n"
-            "  \"blockhash\" : \"hash\",      (string) The block hash hex-encoded\n"
-            "  \"height\" : n,              (numeric) The block height or index\n"
-            "  \"signature\" : \"hash\",    (string) The chainlock's BLS signature.\n"
-            "  \"known_block\" : true|false (boolean) True if the block is known by our node\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getbestchainlock", "")
-            + HelpExampleRpc("getbestchainlock", "")
-        );
+                {},
+                RPCResult{
+                    "{\n"
+                    "  \"blockhash\" : \"hash\",      (string) The block hash hex-encoded\n"
+                    "  \"height\" : n,              (numeric) The block height or index\n"
+                    "  \"signature\" : \"hash\",    (string) The chainlock's BLS signature.\n"
+                    "  \"known_block\" : true|false (boolean) True if the block is known by our node\n"
+                    "}\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("getbestchainlock", "")
+                    + HelpExampleRpc("getbestchainlock", "")
+                },
+            }.ToString());
     UniValue result(UniValue::VOBJ);
 
     llmq::CChainLockSig clsig = llmq::chainLocksHandler->GetBestChainLock();
@@ -761,18 +762,19 @@ static UniValue getblockhashes(const JSONRPCRequest& request)
             RPCHelpMan{"getblockhashes",
                 "\nReturns array of hashes of blocks within the timestamp range provided.\n",
                 {
-                    {"high", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The newer block timestamp"},
-                    {"low", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The older block timestamp"},
-                }}
-                .ToString() +
-            "\nResult:\n"
-            "[\n"
-            "  \"hash\"         (string) The block hash\n"
-            "]\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getblockhashes", "1231614698 1231024505")
-            + HelpExampleRpc("getblockhashes", "1231614698, 1231024505")
-        );
+                    {"high", RPCArg::Type::NUM, RPCArg::Optional::NO, "The newer block timestamp"},
+                    {"low", RPCArg::Type::NUM, RPCArg::Optional::NO, "The older block timestamp"},
+                },
+                RPCResult{
+                    "[\n"
+                    "  \"hash\"         (string) The block hash\n"
+                    "]\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("getblockhashes", "1231614698 1231024505")
+                    + HelpExampleRpc("getblockhashes", "1231614698, 1231024505")
+                },
+            }.ToString());
 
     unsigned int high = request.params[0].get_int();
     unsigned int low = request.params[1].get_int();
@@ -898,12 +900,12 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
                 "\nIf verbose is false, each item is a string that is serialized, hex-encoded data for a single blockheader.\n"
                 "If verbose is true, each item is an Object with information about a single blockheader.\n",
                 {
-                    {"hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The block hash"},
-                    {"count", RPCArg::Type::NUM, /* opt */ true, /* default_val */ strprintf("%s", MAX_HEADERS_RESULTS), ""},
-                    {"verbose", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "true", "true for a json object, false for the hex-encoded data"},
-                }}
-                .ToString() +
-            "\nResult (for verbose = true):\n"
+                    {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+                    {"count", RPCArg::Type::NUM, /* default */ strprintf("%s", MAX_HEADERS_RESULTS), ""},
+                    {"verbose", RPCArg::Type::BOOL, /* default */ "true", "true for a json object, false for the hex-encoded data"},
+                },
+                RPCResults{
+                    {"for verbose = true",
             "[ {\n"
             "  \"hash\" : \"hash\",               (string)  The block hash\n"
             "  \"confirmations\" : n,           (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
@@ -923,15 +925,17 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
             "   },\n"
             "...\n"
             "]\n"
-            "\nResult (for verbose=false):\n"
+                    },{"for verbose=false",
             "[\n"
             "  \"data\",                        (string)  A string that is serialized, hex-encoded data for block header.\n"
             "  ...\n"
             "]\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getblockheaders", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 2000")
+                }},
+                RPCExamples{
+                    HelpExampleCli("getblockheaders", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 2000")
             + HelpExampleRpc("getblockheaders", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 2000")
-        );
+                },
+        }.ToString());
 
     LOCK(cs_main);
 
@@ -1007,20 +1011,21 @@ static UniValue getmerkleblocks(const JSONRPCRequest& request)
             RPCHelpMan{"getmerkleblocks",
                 "\nReturns an array of hex-encoded merkleblocks for <count> blocks starting from <hash> which match <filter>.\n",
                 {
-                    {"filter", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The hex-encoded bloom filter"},
-                    {"hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The block hash"},
-                    {"count", RPCArg::Type::NUM, /* opt */ true, /* default_val */ strprintf("%s", MAX_HEADERS_RESULTS), ""},
-            }}
-            .ToString() +
-            "\nResult:\n"
+                    {"filter", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex-encoded bloom filter"},
+                    {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+                    {"count", RPCArg::Type::NUM, /* default */ strprintf("%s", MAX_HEADERS_RESULTS), ""},
+                },
+                RPCResult{
             "[\n"
             "  \"data\",                        (string)  A string that is serialized, hex-encoded data for a merkleblock.\n"
             "  ...\n"
             "]\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getmerkleblocks", "\"2303028005802040100040000008008400048141010000f8400420800080025004000004130000000000000001\" \"00000000007e1432d2af52e8463278bf556b55cf5049262f25634557e2e91202\" 2000")
+                },
+                RPCExamples{
+                    HelpExampleCli("getmerkleblocks", "\"2303028005802040100040000008008400048141010000f8400420800080025004000004130000000000000001\" \"00000000007e1432d2af52e8463278bf556b55cf5049262f25634557e2e91202\" 2000")
             + HelpExampleRpc("getmerkleblocks", "\"2303028005802040100040000008008400048141010000f8400420800080025004000004130000000000000001\" \"00000000007e1432d2af52e8463278bf556b55cf5049262f25634557e2e91202\" 2000")
-        );
+                },
+            }.ToString());
 
     LOCK(cs_main);
 
@@ -1588,8 +1593,8 @@ static UniValue getchaintips(const JSONRPCRequest& request)
                 "Return information about all known tips in the block tree,"
                 " including the main chain as well as orphaned branches.\n",
                 {
-                    {"count", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "only show this much of latest tips"},
-                    {"branchlen", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "only show tips that have equal or greater length of branch"},
+                    {"count", RPCArg::Type::NUM, /* default */ "", "only show this much of latest tips"},
+                    {"branchlen", RPCArg::Type::NUM, /* default */ "", "only show tips that have equal or greater length of branch"},
                 },
                 RPCResult{
             "[\n"
@@ -2269,29 +2274,31 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
                 "If verbosity is 1, returns hex-encoded data for each transaction.\n"
                 "If verbosity is 2, returns an Object with information for each transaction.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The block hash"},
-                    {"type", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "-1", "Filter special txes by type, -1 means all types"},
-                    {"count", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "10", "The number of transactions to return"},
-                    {"skip", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "0", "The number of transactions to skip"},
-                    {"verbosity", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "0", "0 for hashes, 1 for hex-encoded data, and 2 for json object"},
-            }}
-            .ToString() +
-            "\nResult (for verbosity = 0):\n"
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+                    {"type", RPCArg::Type::NUM, /* default */ "-1", "Filter special txes by type, -1 means all types"},
+                    {"count", RPCArg::Type::NUM, /* default */ "10", "The number of transactions to return"},
+                    {"skip", RPCArg::Type::NUM, /* default */ "0", "The number of transactions to skip"},
+                    {"verbosity", RPCArg::Type::NUM, /* default */ "0", "0 for hashes, 1 for hex-encoded data, and 2 for json object"},
+                },
+                RPCResults{
+                    {"for verbosity = 0",
             "[\n"
             "  \"txid\" : \"xxxx\",    (string) The transaction id\n"
             "]\n"
-            "\nResult (for verbosity = 1):\n"
+                    }, {"for verbosity = 1",
             "[\n"
             "  \"data\",               (string) A string that is serialized, hex-encoded data for the transaction\n"
             "]\n"
-            "\nResult (for verbosity = 2):\n"
+                    }, {"for verbosity = 2",
             "[                       (array of Objects) The transactions in the format of the getrawtransaction RPC.\n"
             "  ...,\n"
             "]\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getspecialtxes", "\"00000000000fd08c2fb661d2fcb0d49abb3a91e5f27082ce64feed3b4dede2e2\"")
+                }},
+                RPCExamples{
+                    HelpExampleCli("getspecialtxes", "\"00000000000fd08c2fb661d2fcb0d49abb3a91e5f27082ce64feed3b4dede2e2\"")
             + HelpExampleRpc("getspecialtxes", "\"00000000000fd08c2fb661d2fcb0d49abb3a91e5f27082ce64feed3b4dede2e2\"")
-        );
+                },
+            }.ToString());
 
     LOCK(cs_main);
 
@@ -2620,17 +2627,19 @@ static UniValue getblockfilter(const JSONRPCRequest& request)
             RPCHelpMan{"getblockfilter",
                 "\nRetrieve a BIP 157 content filter for a particular block.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The hash of the block"},
-                    {"filtertype", RPCArg::Type::STR, /* opt */ true, /* default_val */ "basic", "The type name of the filter"},
-            }}
-            .ToString() +
-            "\nResult:\n"
+                    {"blockhash", RPCArg::Type::STR, RPCArg::Optional::NO, "The hash of the block"},
+                    {"filtertype", RPCArg::Type::STR, /* default */ "basic", "The type name of the filter"},
+                },
+                RPCResult{
             "{\n"
             "  \"filter\" : (string) the hex-encoded filter data\n"
             "  \"header\" : (string) the hex-encoded filter header\n"
             "}\n"
-            + HelpExampleCli("getblockfilter", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" \"basic\"")
-        );
+                },
+                RPCExamples{
+                    HelpExampleCli("getblockfilter", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" \"basic\"")
+                },
+            }.ToString());
     }
 
     uint256 block_hash = ParseHashV(request.params[0], "blockhash");

@@ -511,20 +511,21 @@ static UniValue listaddressbalances(const JSONRPCRequest& request)
             RPCHelpMan{"listaddressbalances",
                 "\nLists addresses of this wallet and their balances\n",
                 {
-                    {"minamount", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "0", "Minimum balance in " + CURRENCY_UNIT + " an address should have to be shown in the list"},
-                }}
-                .ToString() +
-            "\nResult:\n"
+                    {"minamount", RPCArg::Type::NUM, /* default */ "0", "Minimum balance in " + CURRENCY_UNIT + " an address should have to be shown in the list"},
+                },
+                RPCResult{
             "{\n"
             "  \"address\": amount,       (string) The dash address and the amount in " + CURRENCY_UNIT + "\n"
             "  ,...\n"
             "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("listaddressbalances", "")
+                },
+                RPCExamples{
+                    HelpExampleCli("listaddressbalances", "")
             + HelpExampleCli("listaddressbalances", "10")
             + HelpExampleRpc("listaddressbalances", "")
             + HelpExampleRpc("listaddressbalances", "10")
-        );
+                }
+            }.ToString());
 
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
@@ -2469,15 +2470,16 @@ static UniValue setcoinjoinrounds(const JSONRPCRequest& request)
             RPCHelpMan{"setcoinjoinrounds",
                 "\nSet the number of rounds for CoinJoin.\n",
                 {
-                    {"rounds", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "",
+                    {"rounds", RPCArg::Type::NUM, RPCArg::Optional::NO,
                         "The default number of rounds is " + std::to_string(DEFAULT_COINJOIN_ROUNDS) +
                         " Cannot be more than " + std::to_string(MAX_COINJOIN_ROUNDS) + " nor less than " + std::to_string(MIN_COINJOIN_ROUNDS)},
-                }}
-                .ToString() +
-            "\nExamples:\n"
-            + HelpExampleCli("setcoinjoinrounds", "4")
+                },
+                RPCResults{},
+                RPCExamples{
+                    HelpExampleCli("setcoinjoinrounds", "4")
             + HelpExampleRpc("setcoinjoinrounds", "16")
-        );
+                },
+            }.ToString());
 
     int nRounds = request.params[0].get_int();
 
@@ -2501,15 +2503,16 @@ static UniValue setcoinjoinamount(const JSONRPCRequest& request)
             RPCHelpMan{"setcoinjoinamount",
                 "\nSet the goal amount in " + CURRENCY_UNIT + " for CoinJoin.\n",
                 {
-                    {"amount", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "",
+                    {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO,
                         "The default amount is " + std::to_string(DEFAULT_COINJOIN_AMOUNT) +
                         " Cannot be more than " + std::to_string(MAX_COINJOIN_AMOUNT) + " nor less than " + std::to_string(MIN_COINJOIN_AMOUNT)},
-                }}
-                .ToString() +
-            "\nExamples:\n"
-            + HelpExampleCli("setcoinjoinamount", "500")
+                },
+                RPCResults{},
+                RPCExamples{
+                    HelpExampleCli("setcoinjoinamount", "500")
             + HelpExampleRpc("setcoinjoinamount", "208")
-        );
+                },
+            }.ToString());
 
     int nAmount = request.params[0].get_int();
 
@@ -2720,16 +2723,18 @@ static UniValue upgradetohd(const JSONRPCRequest& request)
                 "\nUpgrades non-HD wallets to HD.\n"
                 "\nWarning: You will need to make a new backup of your wallet after setting the HD wallet mnemonic.\n",
                 {
-                    {"mnemonic", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "Mnemonic as defined in BIP39 to use for the new HD wallet. Use an empty string \"\" to generate a new random mnemonic."},
-                    {"mnemonicpassphrase", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "Optional mnemonic passphrase as defined in BIP39"},
-                    {"walletpassphrase", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "If your wallet is encrypted you must have your wallet passphrase here. If your wallet is not encrypted specifying wallet passphrase will trigger wallet encryption."},
-                }}
-                .ToString() +
-            "\nExamples:\n"
-            + HelpExampleCli("upgradetohd", "")
+                    {"mnemonic", RPCArg::Type::STR, /* default */ "", "Mnemonic as defined in BIP39 to use for the new HD wallet. Use an empty string \"\" to generate a new random mnemonic."},
+                    {"mnemonicpassphrase", RPCArg::Type::STR, /* default */ "", "Optional mnemonic passphrase as defined in BIP39"},
+                    {"walletpassphrase", RPCArg::Type::STR, /* default */ "", "If your wallet is encrypted you must have your wallet passphrase here. If your wallet is not encrypted specifying wallet passphrase will trigger wallet encryption."},
+                },
+                RPCResults{},
+                RPCExamples{
+                    HelpExampleCli("upgradetohd", "")
             + HelpExampleCli("upgradetohd", "\"mnemonicword1 ... mnemonicwordN\"")
             + HelpExampleCli("upgradetohd", "\"mnemonicword1 ... mnemonicwordN\" \"mnemonicpassphrase\"")
-            + HelpExampleCli("upgradetohd", "\"mnemonicword1 ... mnemonicwordN\" \"mnemonicpassphrase\" \"walletpassphrase\""));
+            + HelpExampleCli("upgradetohd", "\"mnemonicword1 ... mnemonicwordN\" \"mnemonicpassphrase\" \"walletpassphrase\"")
+                },
+            }.ToString());
 
     LOCK2(cs_main, pwallet->cs_wallet);
 

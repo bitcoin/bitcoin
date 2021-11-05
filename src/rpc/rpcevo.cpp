@@ -39,96 +39,96 @@ static RPCArg GetHelpString(const std::string& strParamName)
 {
     static const std::map<std::string, RPCArg> mapParamHelp = {
         {"collateralAddress",
-            {"collateralAddress", RPCArg::Type::STR, /* opt */ false, /* default_val */ "",
+            {"collateralAddress", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The dash address to send the collateral to."}
         },
         {"collateralHash",
-            {"collateralHash", RPCArg::Type::STR, /* opt */ false, /* default_val */ "",
+            {"collateralHash", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The collateral transaction hash."}
         },
         {"collateralIndex",
-            {"collateralIndex", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "",
+            {"collateralIndex", RPCArg::Type::NUM, RPCArg::Optional::NO,
                 "The collateral transaction output index."}
         },
         {"feeSourceAddress",
-            {"feeSourceAddress", RPCArg::Type::STR, /* opt */ true, /* default_val */ "",
+            {"feeSourceAddress", RPCArg::Type::STR, /* default */ "",
                 "If specified wallet will only use coins from this address to fund ProTx.\n"
                 "If not specified, payoutAddress is the one that is going to be used.\n"
                 "The private key belonging to this address must be known in your wallet."}
         },
         {"fundAddress",
-            {"fundAddress", RPCArg::Type::STR, /* opt */ true, /* default_val */ "",
+            {"fundAddress", RPCArg::Type::STR, /* default */ "",
                 "If specified wallet will only use coins from this address to fund ProTx.\n"
                 "If not specified, payoutAddress is the one that is going to be used.\n"
                 "The private key belonging to this address must be known in your wallet."}
         },
         {"ipAndPort",
-            {"ipAndPort", RPCArg::Type::STR, /* opt */ false, /* default_val */ "",
+            {"ipAndPort", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "IP and port in the form \"IP:PORT\".\n"
                 "Must be unique on the network. Can be set to 0, which will require a ProUpServTx afterwards."}
         },
         {"operatorKey",
-            {"operatorKey", RPCArg::Type::STR, /* opt */ false, /* default_val */ "",
+            {"operatorKey", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The operator BLS private key associated with the\n"
                 "registered operator public key."}
         },
         {"operatorPayoutAddress",
-            {"operatorPayoutAddress", RPCArg::Type::STR, /* opt */ true, /* default_val */ "",
+            {"operatorPayoutAddress", RPCArg::Type::STR, /* default */ "",
                 "The address used for operator reward payments.\n"
                 "Only allowed when the ProRegTx had a non-zero operatorReward value.\n"
                 "If set to an empty string, the currently active payout address is reused."}
         },
         {"operatorPubKey_register",
-            {"operatorPubKey_register", RPCArg::Type::STR, /* opt */ false, /* default_val */ "",
+            {"operatorPubKey_register", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The operator BLS public key. The BLS private key does not have to be known.\n"
                 "It has to match the BLS private key which is later used when operating the masternode."}
         },
         {"operatorPubKey_update",
-            {"operatorPubKey_update", RPCArg::Type::STR, /* opt */ false, /* default_val */ "",
+            {"operatorPubKey_update", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The operator BLS public key. The BLS private key does not have to be known.\n"
                 "It has to match the BLS private key which is later used when operating the masternode.\n"
                 "If set to an empty string, the currently active operator BLS public key is reused."}
         },
         {"operatorReward",
-            {"operatorReward", RPCArg::Type::STR, /* opt */ false, /* default_val */ "",
+            {"operatorReward", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The fraction in %% to share with the operator. The value must be\n"
                 "between 0.00 and 100.00."}
         },
         {"ownerAddress",
-            {"ownerAddress", RPCArg::Type::STR, /* opt */ false, /* default_val */ "",
+            {"ownerAddress", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The dash address to use for payee updates and proposal voting.\n"
                 "The corresponding private key does not have to be known by your wallet.\n"
                 "The address must be unused and must differ from the collateralAddress."}
         },
         {"payoutAddress_register",
-            {"payoutAddress_register", RPCArg::Type::STR, /* opt */ false, /* default_val */ "",
+            {"payoutAddress_register", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The dash address to use for masternode reward payments."}
         },
         {"payoutAddress_update",
-            {"payoutAddress_update", RPCArg::Type::STR, /* opt */ false, /* default_val */ "",
+            {"payoutAddress_update", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The dash address to use for masternode reward payments.\n"
                 "If set to an empty string, the currently active payout address is reused."}
         },
         {"proTxHash",
-            {"proTxHash", RPCArg::Type::STR, /* opt */ false, /* default_val */ "",
+            {"proTxHash", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The hash of the initial ProRegTx."}
         },
         {"reason",
-            {"reason", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "",
+            {"reason", RPCArg::Type::NUM, /* default */ "",
                 "The reason for masternode service revocation."}
         },
         {"submit",
-            {"submit", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "true",
+            {"submit", RPCArg::Type::BOOL, /* default */ "true",
                 "If true, the resulting transaction is sent to the network."}
         },
         {"votingAddress_register",
-            {"votingAddress_register", RPCArg::Type::STR, /* opt */ false, /* default_val */ "",
+            {"votingAddress_register", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The voting key address. The private key does not have to be known by your wallet.\n"
                 "It has to match the private key which is later used when voting on proposals.\n"
                 "If set to an empty string, ownerAddress will be used."}
         },
         {"votingAddress_update",
-            {"votingAddress_update", RPCArg::Type::STR, /* opt */ false, /* default_val */ "",
+            {"votingAddress_update", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "The voting key address. The private key does not have to be known by your wallet.\n"
                 "It has to match the private key which is later used when voting on proposals.\n"
                 "If set to an empty string, the currently active voting key address is reused."}
@@ -336,15 +336,17 @@ static void protx_register_fund_help(CWallet* const pwallet)
                     GetHelpString("payoutAddress_register"),
                     GetHelpString("fundAddress"),
                     GetHelpString("submit"),
-                }}
-                .ToString() +
-            "\nResult (if \"submit\" is not set or set to true):\n"
+                },
+                RPCResults{
+                    {"if \"submit\" is not set or set to true",
             "\"txid\"                        (string) The transaction id.\n"
-            "\nResult (if \"submit\" is set to false):\n"
+                    }, {"if \"submit\" is set to false",
             "\"hex\"                         (string) The serialized signed ProTx in hex format.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("protx", "register_fund \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\" \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
-    );
+                }},
+                RPCExamples{
+                    HelpExampleCli("protx", "register_fund \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\" \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
+                },
+            }.ToString());
 }
 
 static void protx_register_help(CWallet* const pwallet)
@@ -366,15 +368,17 @@ static void protx_register_help(CWallet* const pwallet)
                 GetHelpString("payoutAddress_register"),
                 GetHelpString("feeSourceAddress"),
                 GetHelpString("submit"),
-            }}
-            .ToString() +
-        "\nResult (if \"submit\" is not set or set to true):\n"
+            },
+            RPCResults{
+                {"if \"submit\" is not set or set to true",
         "\"txid\"                        (string) The transaction id.\n"
-        "\nResult (if \"submit\" is set to false):\n"
+                }, {"if \"submit\" is set to false",
         "\"hex\"                         (string) The serialized signed ProTx in hex format.\n"
-        "\nExamples:\n"
-        + HelpExampleCli("protx", "register \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
-    );
+            }},
+            RPCExamples{
+                HelpExampleCli("protx", "register \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
+            },
+        }.ToString());
 }
 
 static void protx_register_prepare_help()
@@ -394,18 +398,19 @@ static void protx_register_prepare_help()
                 GetHelpString("operatorReward"),
                 GetHelpString("payoutAddress_register"),
                 GetHelpString("feeSourceAddress"),
-            }}
-            .ToString() +
-        "\nResult:\n"
+            },
+            RPCResult{
         "{                             (json object)\n"
         "  \"tx\" :                      (string) The serialized unsigned ProTx in hex format.\n"
         "  \"collateralAddress\" :       (string) The collateral address.\n"
         "  \"signMessage\" :             (string) The string message that needs to be signed with\n"
         "                              the collateral key.\n"
         "}\n"
-        "\nExamples:\n"
-        + HelpExampleCli("protx", "register_prepare \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
-    );
+            },
+            RPCExamples{
+                HelpExampleCli("protx", "register_prepare \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
+            },
+        }.ToString());
 }
 
 static void protx_register_submit_help(CWallet* const pwallet)
@@ -417,15 +422,16 @@ static void protx_register_submit_help(CWallet* const pwallet)
             "Note: See \"help protx register_prepare\" for more info about creating a ProTx and a message to sign.\n"
             + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                {"tx", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The serialized unsigned ProTx in hex format."},
-                {"sig", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The signature signed with the collateral key. Must be in base64 format."},
-            }}
-            .ToString() +
-        "\nResult:\n"
+                {"tx", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The serialized unsigned ProTx in hex format."},
+                {"sig", RPCArg::Type::STR, RPCArg::Optional::NO, "The signature signed with the collateral key. Must be in base64 format."},
+            },
+            RPCResult{
         "\"txid\"                  (string) The transaction id.\n"
-        "\nExamples:\n"
-        + HelpExampleCli("protx", "register_submit \"tx\" \"sig\"")
-    );
+            },
+            RPCExamples{
+                HelpExampleCli("protx", "register_submit \"tx\" \"sig\"")
+            },
+        }.ToString());
 }
 
 // handles register, register_prepare and register_fund in one method
@@ -639,13 +645,14 @@ static void protx_update_service_help(CWallet* const pwallet)
                 GetHelpString("operatorKey"),
                 GetHelpString("operatorPayoutAddress"),
                 GetHelpString("feeSourceAddress"),
-            }}
-            .ToString() +
-        "\nResult:\n"
+            },
+            RPCResult{
         "\"txid\"                        (string) The transaction id.\n"
-        "\nExamples:\n"
-        + HelpExampleCli("protx", "update_service \"0123456701234567012345670123456701234567012345670123456701234567\" \"1.2.3.4:1234\" 5a2e15982e62f1e0b7cf9783c64cf7e3af3f90a52d6c40f6f95d624c0b1621cd")
-    );
+            },
+            RPCExamples{
+                HelpExampleCli("protx", "update_service \"0123456701234567012345670123456701234567012345670123456701234567\" \"1.2.3.4:1234\" 5a2e15982e62f1e0b7cf9783c64cf7e3af3f90a52d6c40f6f95d624c0b1621cd")
+            },
+        }.ToString());
 }
 
 static UniValue protx_update_service(const JSONRPCRequest& request)
@@ -737,13 +744,14 @@ static void protx_update_registrar_help(CWallet* const pwallet)
                 GetHelpString("votingAddress_update"),
                 GetHelpString("payoutAddress_update"),
                 GetHelpString("feeSourceAddress"),
-            }}
-            .ToString() +
-        "\nResult:\n"
+            },
+            RPCResult{
         "\"txid\"                        (string) The transaction id.\n"
-        "\nExamples:\n"
-        + HelpExampleCli("protx", "update_registrar \"0123456701234567012345670123456701234567012345670123456701234567\" \"982eb34b7c7f614f29e5c665bc3605f1beeef85e3395ca12d3be49d2868ecfea5566f11cedfad30c51b2403f2ad95b67\" \"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\"")
-    );
+            },
+            RPCExamples{
+                HelpExampleCli("protx", "update_registrar \"0123456701234567012345670123456701234567012345670123456701234567\" \"982eb34b7c7f614f29e5c665bc3605f1beeef85e3395ca12d3be49d2868ecfea5566f11cedfad30c51b2403f2ad95b67\" \"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\"")
+            },
+        }.ToString());
 }
 
 static UniValue protx_update_registrar(const JSONRPCRequest& request)
@@ -828,13 +836,14 @@ static void protx_revoke_help(CWallet* const pwallet)
                 GetHelpString("operatorKey"),
                 GetHelpString("reason"),
                 GetHelpString("feeSourceAddress"),
-            }}
-            .ToString() +
-            "\nResult:\n"
+            },
+            RPCResult{
             "\"txid\"                        (string) The transaction id.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("protx", "revoke \"0123456701234567012345670123456701234567012345670123456701234567\" \"072f36a77261cdd5d64c32d97bac417540eddca1d5612f416feb07ff75a8e240\"")
-    );
+            },
+            RPCExamples{
+                HelpExampleCli("protx", "revoke \"0123456701234567012345670123456701234567012345670123456701234567\" \"072f36a77261cdd5d64c32d97bac417540eddca1d5612f416feb07ff75a8e240\"")
+            },
+        }.ToString());
 }
 
 static UniValue protx_revoke(const JSONRPCRequest& request)
@@ -909,14 +918,7 @@ static void protx_list_help()
         RPCHelpMan{"protx list",
             "\nLists all ProTxs in your wallet or on-chain, depending on the given type.\n",
             {
-                {"type", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", ""},
-                {"detailed", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "", ""},
-                {"height", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", ""},
-            }}
-            .ToString() +
-        "If \"type\" is not specified, it defaults to \"registered\".\n"
-        "If \"detailed\" is not specified, it defaults to \"false\" and only the hashes of the ProTx will be returned.\n"
-        "If \"height\" is not specified, it defaults to the current chain-tip.\n"
+                {"type", RPCArg::Type::STR, /* default */ "registered",
         "\nAvailable types:\n"
         "  registered   - List all ProTx which are registered at the given chain height.\n"
         "                 This will also include ProTx which failed PoSe verification.\n"
@@ -925,7 +927,13 @@ static void protx_list_help()
         "  wallet       - List only ProTx which are found in your wallet at the given chain height.\n"
         "                 This will also include ProTx which failed PoSe verification.\n"
 #endif
-    );
+                },
+                {"detailed", RPCArg::Type::BOOL, /* default */ "false", "If not specified, only the hashes of the ProTx will be returned."},
+                {"height", RPCArg::Type::NUM, /* default */ "current chain-tip", ""},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 #ifdef ENABLE_WALLET
@@ -1086,14 +1094,15 @@ static void protx_info_help()
             "\nReturns detailed information about a deterministic masternode.\n",
             {
                 GetHelpString("proTxHash"),
-            }}
-            .ToString() +
-        "\nResult:\n"
+            },
+            RPCResult{
         "{                             (json object) Details about a specific deterministic masternode\n"
         "}\n"
-        "\nExamples:\n"
-        + HelpExampleCli("protx", "info \"0123456701234567012345670123456701234567012345670123456701234567\"")
-    );
+            },
+            RPCExamples{
+                HelpExampleCli("protx", "info \"0123456701234567012345670123456701234567012345670123456701234567\"")
+            },
+        }.ToString());
 }
 
 static UniValue protx_info(const JSONRPCRequest& request)
@@ -1128,10 +1137,12 @@ static void protx_diff_help()
         RPCHelpMan{"protx diff",
             "\nCalculates a diff between two deterministic masternode lists. The result also contains proof data.\n",
             {
-                {"baseBlock", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The starting block height."},
-                {"block", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The ending block height."},
-            }}
-            .ToString());
+                {"baseBlock", RPCArg::Type::NUM, RPCArg::Optional::NO, "The starting block height."},
+                {"block", RPCArg::Type::NUM, RPCArg::Optional::NO, "The ending block height."},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static uint256 ParseBlock(const UniValue& v, std::string strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -1174,27 +1185,28 @@ static UniValue protx_diff(const JSONRPCRequest& request)
     throw std::runtime_error(
         RPCHelpMan{"protx",
             "Set of commands to execute ProTx related actions.\n"
-            "To get help on individual commands, use \"help protx command\".\n",
+            "To get help on individual commands, use \"help protx command\".\n"
+            "\nAvailable commands:\n"
+#ifdef ENABLE_WALLET
+            "  register          - Create and send ProTx to network\n"
+            "  register_fund     - Fund, create and send ProTx to network\n"
+            "  register_prepare  - Create an unsigned ProTx\n"
+            "  register_submit   - Sign and submit a ProTx\n"
+#endif
+            "  list              - List ProTxs\n"
+            "  info              - Return information about a ProTx\n"
+#ifdef ENABLE_WALLET
+            "  update_service    - Create and send ProUpServTx to network\n"
+            "  update_registrar  - Create and send ProUpRegTx to network\n"
+            "  revoke            - Create and send ProUpRevTx to network\n"
+#endif
+            "  diff              - Calculate a diff and a proof between two masternode lists\n",
             {
-                {"command", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The command to execute"},
-            }}
-            .ToString() +
-        "\nAvailable commands:\n"
-#ifdef ENABLE_WALLET
-        "  register          - Create and send ProTx to network\n"
-        "  register_fund     - Fund, create and send ProTx to network\n"
-        "  register_prepare  - Create an unsigned ProTx\n"
-        "  register_submit   - Sign and submit a ProTx\n"
-#endif
-        "  list              - List ProTxs\n"
-        "  info              - Return information about a ProTx\n"
-#ifdef ENABLE_WALLET
-        "  update_service    - Create and send ProUpServTx to network\n"
-        "  update_registrar  - Create and send ProUpRegTx to network\n"
-        "  revoke            - Create and send ProUpRevTx to network\n"
-#endif
-        "  diff              - Calculate a diff and a proof between two masternode lists\n"
-    );
+                {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static UniValue protx(const JSONRPCRequest& request)
@@ -1237,15 +1249,17 @@ static void bls_generate_help()
     throw std::runtime_error(
         RPCHelpMan{"bls generate",
             "\nReturns a BLS secret/public key pair.\n",
-            {}}.ToString() +
-        "\nResult:\n"
+            {},
+            RPCResult{
         "{\n"
         "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
         "  \"public\": \"xxxx\",        (string) BLS public key\n"
         "}\n"
-        "\nExamples:\n"
-        + HelpExampleCli("bls generate", "")
-    );
+            },
+            RPCExamples{
+                HelpExampleCli("bls generate", "")
+            },
+        }.ToString());
 }
 
 static UniValue bls_generate(const JSONRPCRequest& request)
@@ -1269,17 +1283,18 @@ static void bls_fromsecret_help()
         RPCHelpMan{"bls fromsecret",
             "\nParses a BLS secret key and returns the secret/public key pair.\n",
             {
-                {"secret", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The BLS secret key"},
-            }}
-            .ToString() +
-        "\nResult:\n"
+                {"secret", RPCArg::Type::STR, RPCArg::Optional::NO, "The BLS secret key"},
+            },
+            RPCResult{
         "{\n"
         "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
         "  \"public\": \"xxxx\",        (string) BLS public key\n"
         "}\n"
-        "\nExamples:\n"
-        + HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
-    );
+            },
+            RPCExamples{
+                HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
+            },
+        }.ToString());
 }
 
 static UniValue bls_fromsecret(const JSONRPCRequest& request)
@@ -1304,15 +1319,16 @@ static UniValue bls_fromsecret(const JSONRPCRequest& request)
     throw std::runtime_error(
         RPCHelpMan{"bls",
             "Set of commands to execute BLS related actions.\n"
-            "To get help on individual commands, use \"help bls command\".\n",
+            "To get help on individual commands, use \"help bls command\".\n"
+            "\nAvailable commands:\n"
+            "  generate          - Create a BLS secret/public key pair\n"
+            "  fromsecret        - Parse a BLS secret key and return the secret/public key pair\n",
             {
-                {"command", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The command to execute"},
-            }}
-            .ToString() +
-        "\nAvailable commands:\n"
-        "  generate          - Create a BLS secret/public key pair\n"
-        "  fromsecret        - Parse a BLS secret key and return the secret/public key pair\n"
-        );
+                {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static UniValue _bls(const JSONRPCRequest& request)

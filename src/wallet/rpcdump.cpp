@@ -677,18 +677,19 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
             RPCHelpMan{"importselectrumwallet",
                 "\nImports keys from an Electrum wallet export file (.csv or .json)\n",
                 {
-                    {"filename", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The Electrum wallet export file, should be in csv or json format"},
-                    {"index", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "0", "Rescan the wallet for transactions starting from this block index"},
-                }}
-                .ToString() +
-            "\nExamples:\n"
+                    {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The Electrum wallet export file, should be in csv or json format"},
+                    {"index", RPCArg::Type::NUM, /* default */ "0", "Rescan the wallet for transactions starting from this block index"},
+                },
+                RPCResults{},
+                RPCExamples{
             "\nImport the wallet\n"
             + HelpExampleCli("importelectrumwallet", "\"test.csv\"")
             + HelpExampleCli("importelectrumwallet", "\"test.json\"") +
             "\nImport using the json rpc call\n"
             + HelpExampleRpc("importelectrumwallet", "\"test.csv\"")
             + HelpExampleRpc("importelectrumwallet", "\"test.json\"")
-        );
+                },
+            }.ToString());
 
     if (fPruneMode)
         throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets is disabled in pruned mode");
@@ -869,18 +870,19 @@ UniValue dumphdinfo(const JSONRPCRequest& request)
         throw std::runtime_error(
             RPCHelpMan{"dumphdinfo",
                 "Returns an object containing sensitive private info about this HD wallet.\n",
-                {}}
-                .ToString() +
-            "\nResult:\n"
+                {},
+                RPCResult{
             "{\n"
             "  \"hdseed\": \"seed\",                    (string) The HD seed (bip32, in hex)\n"
             "  \"mnemonic\": \"words\",                 (string) The mnemonic for this HD wallet (bip39, english words) \n"
             "  \"mnemonicpassphrase\": \"passphrase\",  (string) The mnemonic passphrase for this HD wallet (bip39)\n"
             "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("dumphdinfo", "")
+                },
+                RPCExamples{
+                    HelpExampleCli("dumphdinfo", "")
             + HelpExampleRpc("dumphdinfo", "")
-        );
+                },
+            }.ToString());
 
     LOCK(pwallet->cs_wallet);
 
@@ -1525,7 +1527,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                 },
                 RPCResult{
             "\nResponse is an array with the same size as the input that has the execution result :\n"
-            "  [{\"success\": true}, {\"success\": true, \"warnings\": [\"Ignoring irrelevant private key\"]}, {\"success\": false, \"error\": {\"code\": -1, \"message\": \"Internal Server Error\"}}, ...]\n");
+            "  [{\"success\": true}, {\"success\": true, \"warnings\": [\"Ignoring irrelevant private key\"]}, {\"success\": false, \"error\": {\"code\": -1, \"message\": \"Internal Server Error\"}}, ...]\n"
                 },
                 RPCExamples{
                     HelpExampleCli("importmulti", "'[{ \"scriptPubKey\": { \"address\": \"<my address>\" }, \"timestamp\":1455191478 }, "
