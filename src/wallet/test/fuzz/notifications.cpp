@@ -2,19 +2,24 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <policy/policy.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
 #include <util/translation.h>
+#include <wallet/coincontrol.h>
 #include <wallet/context.h>
+#include <wallet/fees.h>
 #include <wallet/receive.h>
+#include <wallet/spend.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
 #include <cassert>
 #include <cstdint>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -65,7 +70,7 @@ struct FuzzedWallet {
         UnloadWallet(std::move(wallet));
         fs::remove_all(GetWalletDir() / name);
     }
-    CScript GetScriptPubKey(FuzzedDataProvider& fuzzed_data_provider)
+    CTxDestination GetDestination(FuzzedDataProvider& fuzzed_data_provider)
     {
         auto type{fuzzed_data_provider.PickValueInArray(OUTPUT_TYPES)};
         if (type == OutputType::BECH32M) {
@@ -79,7 +84,55 @@ struct FuzzedWallet {
             assert(wallet->GetNewChangeDestination(type, dest, error));
         }
         assert(error.empty());
-        return GetScriptForDestination(dest);
+        return dest;
+    }
+    CScript GetScriptPubKey(FuzzedDataProvider& fuzzed_data_provider)
+    {
+        return GetScriptForDestination(GetDestination(fuzzed_data_provider));
+    }
+    void FundTx(FuzzedDataProvider& fuzzed_data_provider, CMutableTransaction tx)
+    {
+        // The fee of "tx" is 0, so this is the total input and output amount
+        const CAmount total_amt{
+            std::accumulate(tx.vout.begin(), tx.vout.end(), CAmount{}, [](CAmount t, const CTxOut& out) { return t + out.nValue; })};
+        const uint32_t tx_size(GetVirtualTransactionSize(CTransaction{tx}));
+        std::set<int> subtract_fee_from_outputs;
+        if (fuzzed_data_provider.ConsumeBool()) {
+            for (size_t i{}; i < tx.vout.size(); ++i) {
+                if (fuzzed_data_provider.ConsumeBool()) {
+                    subtract_fee_from_outputs.insert(i);
+                }
+            }
+        }
+        CCoinControl coin_control;
+        coin_control.m_add_inputs = fuzzed_data_provider.ConsumeBool();
+        CallOneOf(
+            fuzzed_data_provider,
+            [&] { coin_control.destChange = GetDestination(fuzzed_data_provider); },
+            [&] { coin_control.m_change_type.emplace(fuzzed_data_provider.PickValueInArray(OUTPUT_TYPES)); },
+            [&] { /* no op (leave uninitialized) */ });
+        coin_control.fAllowWatchOnly = fuzzed_data_provider.ConsumeBool();
+        coin_control.m_include_unsafe_inputs = fuzzed_data_provider.ConsumeBool();
+        {
+            auto& r{coin_control.m_signal_bip125_rbf};
+            CallOneOf(
+                fuzzed_data_provider, [&] { r = true; }, [&] { r = false; }, [&] { r = std::nullopt; });
+        }
+        coin_control.m_feerate = CFeeRate{
+            // A fee of this range should cover all cases
+            fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, 2 * total_amt),
+            tx_size,
+        };
+        if (fuzzed_data_provider.ConsumeBool()) {
+            *coin_control.m_feerate += GetMinimumFeeRate(*wallet, coin_control, nullptr);
+        }
+        coin_control.fOverrideFeeRate = fuzzed_data_provider.ConsumeBool();
+        // Add solving data (m_external_provider and SelectExternal)?
+
+        CAmount fee_out;
+        int change_position{fuzzed_data_provider.ConsumeIntegralInRange<int>(-1, tx.vout.size() - 1)};
+        bilingual_str error;
+        (void)FundTransaction(*wallet, tx, fee_out, change_position, error, /*lockUnspents=*/false, subtract_fee_from_outputs, coin_control);
     }
 };
 
@@ -100,7 +153,7 @@ FUZZ_TARGET_INIT(wallet_notifications, initialize_setup)
     using Coins = std::set<std::tuple<CAmount, COutPoint>>;
     std::vector<std::tuple<Coins, CBlock>> chain;
     {
-        // Add the inital entry
+        // Add the initial entry
         chain.emplace_back();
         auto& [coins, block]{chain.back()};
         coins.emplace(total_amount, COutPoint{uint256::ONE, 1});
@@ -138,6 +191,9 @@ FUZZ_TARGET_INIT(wallet_notifications, initialize_setup)
                     tx.vout.emplace_back(in, wallet.GetScriptPubKey(fuzzed_data_provider));
                     // Add tx to block
                     block.vtx.emplace_back(MakeTransactionRef(tx));
+                    // Check that funding the tx doesn't crash the wallet
+                    a.FundTx(fuzzed_data_provider, tx);
+                    b.FundTx(fuzzed_data_provider, tx);
                 }
                 // Mine block
                 a.wallet->blockConnected(block, chain.size());
