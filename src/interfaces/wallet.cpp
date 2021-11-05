@@ -40,8 +40,6 @@ namespace {
 //! Construct wallet tx struct.
 WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, const CWalletTx& wtx)
 {
-    int nTxInBlockHeight = locked_chain.getBlockHeight(wtx.m_confirm.hashBlock).get_value_or(0);
-
     WalletTx result;
     result.tx = wtx.tx;
     result.txin_is_mine.reserve(wtx.tx->vin.size());
@@ -61,15 +59,16 @@ WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, co
         result.txout_payload_is_mine.emplace_back(ISMINE_NO);
 
         // txout payload
-        auto payload = ExtractTxoutPayload(txout, nTxInBlockHeight);
-        if (payload && payload->type == TXOUT_TYPE_BINDPLOTTER) {
-            *result.txout_payload_is_mine.rbegin() = (isminetype) (ISMINE_PAYLOAD_BINDPLOTTER | *result.txout_address_is_mine.rbegin());
-        }
-        if (payload && payload->type == TXOUT_TYPE_POINT) {
-            *result.txout_payload_is_mine.rbegin() = (isminetype) (ISMINE_PAYLOAD_POINT | wallet.IsMine(PointPayload::As(payload)->GetReceiverID()));
-        }
-        if (payload && payload->type == TXOUT_TYPE_STAKING) {
-            *result.txout_payload_is_mine.rbegin() = (isminetype) (ISMINE_PAYLOAD_STAKING | wallet.IsMine(StakingPayload::As(payload)->GetReceiverID()));
+        if (auto payload = ExtractTxoutPayload(txout, 0, {TXOUT_TYPE_BINDPLOTTER, TXOUT_TYPE_POINT, TXOUT_TYPE_STAKING})) {
+            if (payload->type == TXOUT_TYPE_BINDPLOTTER) {
+                *result.txout_payload_is_mine.rbegin() = (isminetype) (ISMINE_BINDPLOTTER | *result.txout_address_is_mine.rbegin());
+            }
+            if (payload->type == TXOUT_TYPE_POINT) {
+                *result.txout_payload_is_mine.rbegin() = (isminetype) (ISMINE_POINT | wallet.IsMine(PointPayload::As(payload)->GetReceiverID()));
+            }
+            if (payload->type == TXOUT_TYPE_STAKING) {
+                *result.txout_payload_is_mine.rbegin() = (isminetype) (ISMINE_STAKING | wallet.IsMine(StakingPayload::As(payload)->GetReceiverID()));
+            }
         }
     }
     result.credit = wtx.GetCredit(locked_chain, ISMINE_ALL);
@@ -445,14 +444,15 @@ public:
             result.unconfirmed_watch_only_balance = bal.m_watchonly_untrusted_pending;
             result.immature_watch_only_balance = bal.m_watchonly_immature;
         }
-        // for Qitcoin
+
+        //! for Qitcoin
         result.frozen_balance = bal.m_mine_frozen;
-        result.point_sent_balance = bal.m_mine_point_sent;
         result.point_received_balance = bal.m_mine_point_received;
+        result.staking_received_balance = bal.m_mine_staking_received;
         if (result.have_watch_only) {
             result.frozen_watch_only_balance = bal.m_watchonly_frozen;
-            result.point_sent_watch_only_balance = bal.m_watchonly_point_sent;
             result.point_received_watch_only_balance = bal.m_watchonly_point_received;
+            result.staking_received_watch_only_balance = bal.m_watchonly_staking_received;
         }
         return result;
     }

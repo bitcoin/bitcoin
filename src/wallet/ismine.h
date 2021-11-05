@@ -17,19 +17,18 @@ class CScript;
 /** IsMine() return codes */
 enum isminetype : unsigned int
 {
-    ISMINE_NO         = 0,
-    ISMINE_WATCH_ONLY = 1 << 0,
-    ISMINE_SPENDABLE  = 1 << 1,
-    ISMINE_USED       = 1 << 2,
-    ISMINE_PAYLOAD    = 1 << 3, /* use for payload output */
+    ISMINE_NO          = 0,
+    ISMINE_WATCH_ONLY  = 1 << 0,
+    ISMINE_SPENDABLE   = 1 << 1,
+    ISMINE_USED        = 1 << 2,
+    ISMINE_BINDPLOTTER = 1 << 3,
+    ISMINE_POINT       = 1 << 4,
+    ISMINE_STAKING     = 1 << 5,
     ISMINE_ALL        = ISMINE_WATCH_ONLY | ISMINE_SPENDABLE,
-    ISMINE_ALL_USED   = ISMINE_ALL | ISMINE_USED | ISMINE_PAYLOAD,
+    ISMINE_ALL_USED   = ISMINE_ALL | ISMINE_USED | ISMINE_BINDPLOTTER | ISMINE_POINT | ISMINE_STAKING,
     ISMINE_ENUM_ELEMENTS,
 
-    /* payload */
-    ISMINE_PAYLOAD_BINDPLOTTER = ISMINE_PAYLOAD | (1 << 4),
-    ISMINE_PAYLOAD_POINT       = ISMINE_PAYLOAD | (1 << 5),
-    ISMINE_PAYLOAD_STAKING     = ISMINE_PAYLOAD | (1 << 6),
+    ISMINE_FROZEN = ISMINE_BINDPLOTTER | ISMINE_POINT | ISMINE_STAKING,
 };
 /** used for bitflags of isminetype */
 typedef uint8_t isminefilter;
