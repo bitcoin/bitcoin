@@ -35,7 +35,7 @@ extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 class CWallet;
 #endif//ENABLE_WALLET
 
-static RPCArg GetHelpString(const std::string& strParamName)
+static RPCArg GetRpcArg(const std::string& strParamName)
 {
     static const std::map<std::string, RPCArg> mapParamHelp = {
         {"collateralAddress",
@@ -327,15 +327,15 @@ static void protx_register_fund_help(CWallet* const pwallet)
                 "is fully deployed.\n"
                 + HelpRequiringPassphrase(pwallet) + "\n",
                 {
-                    GetHelpString("collateralAddress"),
-                    GetHelpString("ipAndPort"),
-                    GetHelpString("ownerAddress"),
-                    GetHelpString("operatorPubKey_register"),
-                    GetHelpString("votingAddress_register"),
-                    GetHelpString("operatorReward"),
-                    GetHelpString("payoutAddress_register"),
-                    GetHelpString("fundAddress"),
-                    GetHelpString("submit"),
+                    GetRpcArg("collateralAddress"),
+                    GetRpcArg("ipAndPort"),
+                    GetRpcArg("ownerAddress"),
+                    GetRpcArg("operatorPubKey_register"),
+                    GetRpcArg("votingAddress_register"),
+                    GetRpcArg("operatorReward"),
+                    GetRpcArg("payoutAddress_register"),
+                    GetRpcArg("fundAddress"),
+                    GetRpcArg("submit"),
                 },
                 RPCResults{
                     {"if \"submit\" is not set or set to true",
@@ -358,16 +358,16 @@ static void protx_register_help(CWallet* const pwallet)
             "transaction output spendable by this wallet. It must also not be used by any other masternode.\n"
             + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                GetHelpString("collateralHash"),
-                GetHelpString("collateralIndex"),
-                GetHelpString("ipAndPort"),
-                GetHelpString("ownerAddress"),
-                GetHelpString("operatorPubKey_register"),
-                GetHelpString("votingAddress_register"),
-                GetHelpString("operatorReward"),
-                GetHelpString("payoutAddress_register"),
-                GetHelpString("feeSourceAddress"),
-                GetHelpString("submit"),
+                GetRpcArg("collateralHash"),
+                GetRpcArg("collateralIndex"),
+                GetRpcArg("ipAndPort"),
+                GetRpcArg("ownerAddress"),
+                GetRpcArg("operatorPubKey_register"),
+                GetRpcArg("votingAddress_register"),
+                GetRpcArg("operatorReward"),
+                GetRpcArg("payoutAddress_register"),
+                GetRpcArg("feeSourceAddress"),
+                GetRpcArg("submit"),
             },
             RPCResults{
                 {"if \"submit\" is not set or set to true",
@@ -389,15 +389,15 @@ static void protx_register_prepare_help()
             "with the private key that corresponds to collateralAddress to prove collateral ownership.\n"
             "The prepared transaction will also contain inputs and outputs to cover fees.\n",
             {
-                GetHelpString("collateralHash"),
-                GetHelpString("collateralIndex"),
-                GetHelpString("ipAndPort"),
-                GetHelpString("ownerAddress"),
-                GetHelpString("operatorPubKey_register"),
-                GetHelpString("votingAddress_register"),
-                GetHelpString("operatorReward"),
-                GetHelpString("payoutAddress_register"),
-                GetHelpString("feeSourceAddress"),
+                GetRpcArg("collateralHash"),
+                GetRpcArg("collateralIndex"),
+                GetRpcArg("ipAndPort"),
+                GetRpcArg("ownerAddress"),
+                GetRpcArg("operatorPubKey_register"),
+                GetRpcArg("votingAddress_register"),
+                GetRpcArg("operatorReward"),
+                GetRpcArg("payoutAddress_register"),
+                GetRpcArg("feeSourceAddress"),
             },
             RPCResult{
         "{                             (json object)\n"
@@ -640,11 +640,11 @@ static void protx_update_service_help(CWallet* const pwallet)
             "If this is done for a masternode that got PoSe-banned, the ProUpServTx will also revive this masternode.\n"
             + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                GetHelpString("proTxHash"),
-                GetHelpString("ipAndPort"),
-                GetHelpString("operatorKey"),
-                GetHelpString("operatorPayoutAddress"),
-                GetHelpString("feeSourceAddress"),
+                GetRpcArg("proTxHash"),
+                GetRpcArg("ipAndPort"),
+                GetRpcArg("operatorKey"),
+                GetRpcArg("operatorPayoutAddress"),
+                GetRpcArg("feeSourceAddress"),
             },
             RPCResult{
         "\"txid\"                        (string) The transaction id.\n"
@@ -739,11 +739,11 @@ static void protx_update_registrar_help(CWallet* const pwallet)
             "The owner key of the masternode must be known to your wallet.\n"
             + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                GetHelpString("proTxHash"),
-                GetHelpString("operatorPubKey_update"),
-                GetHelpString("votingAddress_update"),
-                GetHelpString("payoutAddress_update"),
-                GetHelpString("feeSourceAddress"),
+                GetRpcArg("proTxHash"),
+                GetRpcArg("operatorPubKey_update"),
+                GetRpcArg("votingAddress_update"),
+                GetRpcArg("payoutAddress_update"),
+                GetRpcArg("feeSourceAddress"),
             },
             RPCResult{
         "\"txid\"                        (string) The transaction id.\n"
@@ -832,10 +832,10 @@ static void protx_revoke_help(CWallet* const pwallet)
             "to the masternode owner.\n"
             + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                GetHelpString("proTxHash"),
-                GetHelpString("operatorKey"),
-                GetHelpString("reason"),
-                GetHelpString("feeSourceAddress"),
+                GetRpcArg("proTxHash"),
+                GetRpcArg("operatorKey"),
+                GetRpcArg("reason"),
+                GetRpcArg("feeSourceAddress"),
             },
             RPCResult{
             "\"txid\"                        (string) The transaction id.\n"
@@ -1093,7 +1093,7 @@ static void protx_info_help()
         RPCHelpMan{"protx info",
             "\nReturns detailed information about a deterministic masternode.\n",
             {
-                GetHelpString("proTxHash"),
+                GetRpcArg("proTxHash"),
             },
             RPCResult{
         "{                             (json object) Details about a specific deterministic masternode\n"
