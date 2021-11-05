@@ -1123,7 +1123,7 @@ PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTx
     assert(std::all_of(package.cbegin(), package.cend(), [](const auto& tx){return tx != nullptr;}));
 
     std::vector<COutPoint> coins_to_uncache;
-    const CChainParams& chainparams = Params();
+    const CChainParams& chainparams = active_chainstate.m_params;
     auto args = MemPoolAccept::ATMPArgs::PackageTestAccept(chainparams, GetTime(), coins_to_uncache);
     const PackageMempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptMultipleTransactions(package, args);
 
@@ -3369,7 +3369,7 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
     }
     if (NotifyHeaderTip(ActiveChainstate())) {
         if (ActiveChainstate().IsInitialBlockDownload() && ppindex && *ppindex) {
-            LogPrintf("Synchronizing blockheaders, height: %d (~%.2f%%)\n", (*ppindex)->nHeight, 100.0/((*ppindex)->nHeight+(GetAdjustedTime() - (*ppindex)->GetBlockTime()) / Params().GetConsensus().nPowTargetSpacing) * (*ppindex)->nHeight);
+            LogPrintf("Synchronizing blockheaders, height: %d (~%.2f%%)\n", (*ppindex)->nHeight, 100.0/((*ppindex)->nHeight+(GetAdjustedTime() - (*ppindex)->GetBlockTime()) / ActiveChainstate().m_params.GetConsensus().nPowTargetSpacing) * (*ppindex)->nHeight);
         }
     }
     return true;
@@ -3760,10 +3760,10 @@ void BlockManager::Unload() {
     m_block_index.clear();
 }
 
-bool BlockManager::LoadBlockIndexDB(std::set<CBlockIndex*, CBlockIndexWorkComparator>& setBlockIndexCandidates)
+bool BlockManager::LoadBlockIndexDB(const Consensus::Params& consensus, std::set<CBlockIndex*, CBlockIndexWorkComparator>& setBlockIndexCandidates)
 {
     if (!LoadBlockIndex(
-            ::Params().GetConsensus(),
+            consensus,
             setBlockIndexCandidates)) {
         return false;
     }
@@ -4109,8 +4109,9 @@ bool ChainstateManager::LoadBlockIndex()
     AssertLockHeld(cs_main);
     // Load block index from databases
     bool needs_init = fReindex;
+    CChainState& chainstate{ActiveChainstate()};
     if (!fReindex) {
-        bool ret = m_blockman.LoadBlockIndexDB(ActiveChainstate().setBlockIndexCandidates);
+        bool ret = m_blockman.LoadBlockIndexDB(chainstate.m_params.GetConsensus(), chainstate.setBlockIndexCandidates);
         if (!ret) return false;
         needs_init = m_blockman.m_block_index.empty();
     }
@@ -4861,7 +4862,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     }
 
     int base_height = snapshot_start_block->nHeight;
-    auto maybe_au_data = ExpectedAssumeutxo(base_height, ::Params());
+    auto maybe_au_data = ExpectedAssumeutxo(base_height, ActiveChainstate().m_params);
 
     if (!maybe_au_data) {
         LogPrintf("[snapshot] assumeutxo height in snapshot metadata not recognized " /* Continued */
@@ -5015,7 +5016,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
         // Fake BLOCK_OPT_WITNESS so that CChainState::NeedsRedownload()
         // won't ask to rewind the entire assumed-valid chain on startup.
-        if (index->pprev && DeploymentActiveAt(*index, ::Params().GetConsensus(), Consensus::DEPLOYMENT_SEGWIT)) {
+        if (index->pprev && DeploymentActiveAt(*index, ActiveChainstate().m_params.GetConsensus(), Consensus::DEPLOYMENT_SEGWIT)) {
             index->nStatus |= BLOCK_OPT_WITNESS;
         }
 
