@@ -3161,16 +3161,36 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>收到指向</translation>
     </message>
     <message>
+        <source>Staking sent</source>
+        <translation>發出權益</translation>
+    </message>
+    <message>
+        <source>Staking received</source>
+        <translation>收到權益</translation>
+    </message>
+    <message>
         <source>Withdraw point</source>
-        <translation>解除指向</translation>
+        <translation>贖回指向</translation>
+    </message>
+    <message>
+        <source>Withdraw staking</source>
+        <translation>贖回權益</translation>
     </message>
     <message>
         <source>This point has withdraw</source>
-        <translation>此指向已被解除</translation>
+        <translation>此指向已被贖回</translation>
     </message>
     <message>
         <source>Point to yourself</source>
         <translation>指向給自己</translation>
+    </message>
+    <message>
+        <source>This staking has withdraw</source>
+        <translation>此權益已被贖回</translation>
+    </message>
+    <message>
+        <source> Staking to yourself</source>
+        <translation>發出權益給自己</translation>
     </message>
 </context>
 <context>
@@ -3342,6 +3362,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Point received</source>
         <translation>收到指向</translation>
+    </message>
+    <message>
+        <source>Staking sent</source>
+        <translation>发出权益</translation>
+    </message>
+    <message>
+        <source>Staking received</source>
+        <translation>收到权益</translation>
     </message>
     <message>
         <source>Withdraw/Unbind</source>

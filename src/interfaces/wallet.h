@@ -374,11 +374,11 @@ struct WalletBalances
 
     //! for Qitcoin
     CAmount frozen_balance = 0;
-    CAmount point_sent_balance = 0;
     CAmount point_received_balance = 0;
+    CAmount staking_received_balance = 0;
     CAmount frozen_watch_only_balance = 0;
-    CAmount point_sent_watch_only_balance = 0;
     CAmount point_received_watch_only_balance = 0;
+    CAmount staking_received_watch_only_balance = 0;
 
     bool balanceChanged(const WalletBalances& prev) const
     {
@@ -388,9 +388,11 @@ struct WalletBalances
                immature_watch_only_balance != prev.immature_watch_only_balance ||
                //! for Qitcoin
                frozen_balance != prev.frozen_balance ||
-               point_sent_balance != prev.point_sent_balance || point_received_balance != prev.point_received_balance ||
+               point_received_balance != prev.point_received_balance ||
+               staking_received_balance != prev.staking_received_balance ||
                frozen_watch_only_balance != prev.frozen_watch_only_balance ||
-               point_sent_watch_only_balance != prev.point_sent_watch_only_balance || point_received_watch_only_balance != prev.point_received_watch_only_balance;
+               point_received_watch_only_balance != prev.point_received_watch_only_balance ||
+               staking_received_watch_only_balance != prev.staking_received_watch_only_balance;
     }
 };
 

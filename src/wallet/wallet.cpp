@@ -1635,19 +1635,19 @@ isminetype CWallet::IsMine(const CTxOut& txout) const
     if (auto payload = ExtractTxoutPayload(txout, 0, {TXOUT_TYPE_BINDPLOTTER, TXOUT_TYPE_POINT, TXOUT_TYPE_STAKING})) {
         if (payload->type == TXOUT_TYPE_BINDPLOTTER) {
             if (isMineType != ISMINE_NO) { // only my address
-                isMineType = (isminetype) (isMineType | ISMINE_PAYLOAD_BINDPLOTTER);
+                isMineType = (isminetype) (isMineType | ISMINE_BINDPLOTTER);
             }
         }
         if (payload->type == TXOUT_TYPE_POINT) {
             isminetype isMineType2 = IsMine(PointPayload::As(payload)->GetReceiverID());
             if (isMineType2 != ISMINE_NO) {
-                isMineType = (isminetype) (isMineType | ISMINE_PAYLOAD_POINT);
+                isMineType = (isminetype) (isMineType | ISMINE_POINT);
             }
         }
         if (payload->type == TXOUT_TYPE_STAKING) {
             isminetype isMineType2 = IsMine(StakingPayload::As(payload)->GetReceiverID());
             if (isMineType2 != ISMINE_NO) {
-                isMineType = (isminetype) (isMineType | ISMINE_PAYLOAD_STAKING);
+                isMineType = (isminetype) (isMineType | ISMINE_STAKING);
             }
         }
     }
@@ -1663,25 +1663,32 @@ CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter) cons
     isminetype isMineType = ::IsMine(*this, txout.scriptPubKey);
     CAmount nValue = txout.nValue;
 
-    if (isMineType == ISMINE_NO) {
-        auto payload = ExtractTxoutPayload(txout, 0, {TXOUT_TYPE_POINT, TXOUT_TYPE_STAKING});
-        if (payload && payload->type == TXOUT_TYPE_POINT) {
-            isminetype isMineType2 = IsMine(PointPayload::As(payload)->GetReceiverID());
-            if (isMineType2 != ISMINE_NO) {
-                isMineType = (isminetype) (isMineType | ISMINE_PAYLOAD_POINT | isMineType2);
-                nValue = PointPayload::As(payload)->GetAmount();
+    //! for Qitcoin
+    isminetype isMineTypeForPayload = ISMINE_ALL;
+    if (const isminefilter filter2 = (isminefilter) (filter & ISMINE_FROZEN)) {
+        isMineTypeForPayload = ISMINE_NO;
+        if (auto payload = ExtractTxoutPayload(txout, 0, {TXOUT_TYPE_BINDPLOTTER, TXOUT_TYPE_POINT, TXOUT_TYPE_STAKING})) {
+            if (payload->type == TXOUT_TYPE_BINDPLOTTER) {
+                isMineTypeForPayload = ISMINE_BINDPLOTTER;
             }
-        }
-        if (payload && payload->type == TXOUT_TYPE_STAKING) {
-            isminetype isMineType2 = IsMine(StakingPayload::As(payload)->GetReceiverID());
-            if (isMineType2 != ISMINE_NO) {
-                isMineType = (isminetype) (isMineType | ISMINE_PAYLOAD_STAKING | isMineType2);
-                nValue = StakingPayload::As(payload)->GetAmount();
+            if (payload->type == TXOUT_TYPE_POINT) {
+                isMineTypeForPayload = ISMINE_POINT;
+                if ((filter2 & ISMINE_POINT) && !(filter2 & ~ISMINE_POINT)) {
+                    isMineType = IsMine(PointPayload::As(payload)->GetReceiverID());
+                    nValue = PointPayload::As(payload)->GetAmount();
+                }
+            }
+            if (payload->type == TXOUT_TYPE_STAKING) {
+                isMineTypeForPayload = ISMINE_STAKING;
+                if ((filter2 & ISMINE_STAKING) && !(filter2 & ~ISMINE_STAKING)) {
+                    isMineType = IsMine(StakingPayload::As(payload)->GetReceiverID());
+                    nValue = StakingPayload::As(payload)->GetAmount();
+                }
             }
         }
     }
 
-    return ((isMineType & filter) ? nValue : 0);
+    return ((isMineType & filter) && (isMineTypeForPayload & filter) ? nValue : 0);
 }
 
 bool CWallet::IsChange(const CTxOut& txout) const
@@ -2432,6 +2439,7 @@ uint64_t CWalletTx::GetBindPlotterId() const
 
     return 0;
 }
+
 CAmount CWalletTx::GetCachableAmount(AmountType type, const isminefilter& filter, bool recalculate) const
 {
     auto& amount = m_amounts[type];
@@ -2676,12 +2684,13 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) cons
             ret.m_mine_immature += wtx.GetImmatureCredit(*locked_chain);
             ret.m_watchonly_immature += wtx.GetImmatureWatchOnlyCredit(*locked_chain);
 
-            ret.m_mine_frozen += wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_PAYLOAD);
-            ret.m_watchonly_frozen += wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_PAYLOAD | ISMINE_WATCH_ONLY);
-            ret.m_mine_point_sent += wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_PAYLOAD_POINT | ISMINE_SPENDABLE);
-            ret.m_watchonly_point_sent += wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_PAYLOAD_POINT | ISMINE_WATCH_ONLY);
-            ret.m_mine_point_received += wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_PAYLOAD_STAKING);
-            ret.m_watchonly_point_received += wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_PAYLOAD_STAKING | ISMINE_WATCH_ONLY);
+            //! for Qitcoin
+            ret.m_mine_frozen += wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_FROZEN | ISMINE_SPENDABLE);
+            ret.m_watchonly_frozen += wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_FROZEN | ISMINE_WATCH_ONLY);
+            ret.m_mine_point_received += wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_POINT | ISMINE_SPENDABLE);
+            ret.m_mine_staking_received += wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_STAKING | ISMINE_SPENDABLE);
+            ret.m_watchonly_point_received += wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_POINT | ISMINE_WATCH_ONLY);
+            ret.m_watchonly_staking_received += wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_STAKING | ISMINE_WATCH_ONLY);
         }
     }
     return ret;

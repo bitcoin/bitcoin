@@ -3096,42 +3096,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Amount removed from or added to balance.</source>
         <translation>늘어나거나 줄어든 액수.</translation>
     </message>
-    <message>
-        <source>Binded plotter</source>
-        <translation>바인드 ID</translation>
-    </message>
-    <message>
-        <source>Unbinded plotter</source>
-        <translation>바인딩되지 않은 ID</translation>
-    </message>
-    <message>
-        <source>This bind plotter has unbinded</source>
-        <translation>이 바인드 플로터는 바인드 해제되었습니다</translation>
-    </message>
-    <message>
-        <source>This bind has been unable to mine</source>
-        <translation>이 결속은 채굴 할 수 없었습니다</translation>
-    </message>
-    <message>
-        <source>Point sent</source>
-        <translation>포인트 전송</translation>
-    </message>
-    <message>
-        <source>Point received</source>
-        <translation>포인트 받음</translation>
-    </message>
-    <message>
-        <source>Withdraw point</source>
-        <translation>인출 점</translation>
-    </message>
-    <message>
-        <source>This point has withdraw</source>
-        <translation>이 시점은 철회했다</translation>
-    </message>
-    <message>
-        <source>Point to yourself</source>
-        <translation>자신을 가리킴</translation>
-    </message>
 </context>
 <context>
     <name>TransactionView</name>
@@ -3290,22 +3254,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>to</source>
         <translation>상대방</translation>
-    </message>
-    <message>
-        <source>Binded plotter</source>
-        <translation>바인드 ID</translation>
-    </message>
-    <message>
-        <source>Point sent</source>
-        <translation>포인트 전송</translation>
-    </message>
-    <message>
-        <source>Point received</source>
-        <translation>포인트 받음</translation>
-    </message>
-    <message>
-        <source>Withdraw/Unbind</source>
-        <translation>인출 / 바인드 해제</translation>
     </message>
 </context>
 <context>

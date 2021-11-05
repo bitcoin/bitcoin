@@ -2394,9 +2394,7 @@ static UniValue getbalances(const JSONRPCRequest& request)
             "      \"immature\": xxx                (numeric) balance from immature coinbase outputs\n"
             "      \"used\": xxx                    (numeric) (only present if avoid_reuse is set) balance from coins sent to addresses that were previously spent from (potentially privacy violating)\n"
             "      \"frozen\": xxx,                 (numeric) the total frozen balance\n"
-            "      \"point_sent\": xxx,             (numeric) the total point sent balance\n"
             "      \"point_received\": xxx,         (numeric) the total point received\n"
-            "      \"staking_sent\": xxx,           (numeric) the total staking sent balance\n"
             "      \"staking_received\": xxx        (numeric) the total staking received\n"
             "    },\n"
             "    \"watchonly\": {                   (object) watchonly balances (not present if wallet does not watch anything)\n"
@@ -2404,9 +2402,7 @@ static UniValue getbalances(const JSONRPCRequest& request)
             "      \"untrusted_pending\": xxx       (numeric) untrusted pending balance (outputs created by others that are in the mempool)\n"
             "      \"immature\": xxx                (numeric) balance from immature coinbase outputs\n"
             "      \"frozen\": xxx,                 (numeric) the total frozen balance\n"
-            "      \"point_sent\": xxx,             (numeric) the total point sent balance\n"
             "      \"point_received\": xxx,         (numeric) the total point received\n"
-            "      \"staking_sent\": xxx,           (numeric) the total staking sent balance\n"
             "      \"staking_received\": xxx        (numeric) the total staking received\n"
             "    },\n"
             "}\n"},
@@ -2438,9 +2434,7 @@ static UniValue getbalances(const JSONRPCRequest& request)
             balances_mine.pushKV("used", ValueFromAmount(full_bal.m_mine_trusted + full_bal.m_mine_untrusted_pending - bal.m_mine_trusted - bal.m_mine_untrusted_pending));
         }
         balances_mine.pushKV("frozen", ValueFromAmount(bal.m_mine_frozen));
-        balances_mine.pushKV("point_sent", ValueFromAmount(bal.m_mine_point_sent));
         balances_mine.pushKV("point_received", ValueFromAmount(bal.m_mine_point_received));
-        balances_mine.pushKV("staking_sent", ValueFromAmount(bal.m_mine_staking_sent));
         balances_mine.pushKV("staking_received", ValueFromAmount(bal.m_mine_staking_received));
         balances.pushKV("mine", balances_mine);
     }
@@ -2450,9 +2444,7 @@ static UniValue getbalances(const JSONRPCRequest& request)
         balances_watchonly.pushKV("untrusted_pending", ValueFromAmount(bal.m_watchonly_untrusted_pending));
         balances_watchonly.pushKV("immature", ValueFromAmount(bal.m_watchonly_immature));
         balances_watchonly.pushKV("frozen", ValueFromAmount(bal.m_watchonly_frozen));
-        balances_watchonly.pushKV("point_sent", ValueFromAmount(bal.m_watchonly_point_sent));
         balances_watchonly.pushKV("point_received", ValueFromAmount(bal.m_watchonly_point_received));
-        balances_watchonly.pushKV("staking_sent", ValueFromAmount(bal.m_watchonly_staking_sent));
         balances_watchonly.pushKV("staking_received", ValueFromAmount(bal.m_watchonly_staking_received));
         balances.pushKV("watchonly", balances_watchonly);
     }

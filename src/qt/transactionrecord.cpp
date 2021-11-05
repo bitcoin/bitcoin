@@ -5,8 +5,10 @@
 #include <qt/transactionrecord.h>
 
 #include <chain.h>
+#include <core_io.h>
 #include <interfaces/wallet.h>
 #include <key_io.h>
+#include <univalue.h>
 #include <wallet/ismine.h>
 
 #include <stdint.h>
@@ -167,72 +169,86 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
 
 bool TransactionRecord::updateTransactionRecord(const interfaces::WalletTx& wtx, unsigned int nOut, TransactionRecord &sub)
 {
-    std::map<std::string, std::string> mapValue = wtx.value_map;
-    if (!mapValue.count("payload_t"))
-        return false;
-
-    const std::string& type = mapValue["payload_t"];
-    if (type == "unbindplotter")
-    {
-        sub.type = TransactionRecord::UnbindPlotter;
-    }
-    else if (type == "point-withdraw")
-    {
-        sub.type = TransactionRecord::WithdrawPoint;
-    }
-    else if (type == "staking-withdraw")
-    {
-        sub.type = TransactionRecord::WithdrawStaking;
-    }
-    else if ((wtx.txout_payload_is_mine[nOut]&~ISMINE_PAYLOAD) & ISMINE_PAYLOAD_BINDPLOTTER)
+    if (wtx.txout_payload_is_mine[nOut] & ISMINE_BINDPLOTTER)
     {
         sub.type = TransactionRecord::BindPlotter;
+        sub.address = EncodeDestination(wtx.txout_address[nOut]);
     }
-    else if ((wtx.txout_payload_is_mine[nOut]&~ISMINE_PAYLOAD) & ISMINE_PAYLOAD_POINT)
+    else if (wtx.txout_payload_is_mine[nOut] & ISMINE_POINT)
     {
-        auto payload = ExtractTxoutPayload(wtx.tx->vout[nOut]);
+        auto payload = ExtractTxoutPayload(wtx.tx->vout[nOut], 0, {TXOUT_TYPE_POINT});
         if (!payload)
             return false;
 
-        if (wtx.txout_is_mine[nOut] && (wtx.txout_payload_is_mine[nOut] & ISMINE_ALL))
+        sub.type = TransactionRecord::PointSent;
+        sub.address = EncodeDestination(ScriptHash(PointPayload::As(payload)->GetReceiverID()));
+        sub.debit += -wtx.tx->vout[nOut].nValue;
+        if (wtx.txout_payload_is_mine[nOut] & ISMINE_ALL)
         {
-            sub.type = TransactionRecord::SelfPoint;
+            if (wtx.txout_is_mine[nOut])
+            {
+                sub.type = TransactionRecord::SelfPoint;
+            }
+            else
+            {
+                sub.type = TransactionRecord::PointReceived;
+                sub.debit = PointPayload::As(payload)->GetAmount();
+            }
         }
-        else if (wtx.txout_payload_is_mine[nOut] & ISMINE_ALL)
+        if (sub.debit < 0)
         {
-            sub.type = TransactionRecord::PointReceived;
-            sub.address = EncodeDestination(ScriptHash(PointPayload::As(payload)->GetReceiverID()));
-        }
-        else
-        {
-            sub.type = TransactionRecord::PointSent;
-            sub.debit = PointPayload::As(payload)->GetAmount();
+            sub.comment = ValueFromAmount(PointPayload::As(payload)->GetAmount()).get_str();
         }
     }
-    else if ((wtx.txout_payload_is_mine[nOut]&~ISMINE_PAYLOAD) & ISMINE_PAYLOAD_STAKING)
+    else if (wtx.txout_payload_is_mine[nOut] & ISMINE_STAKING)
     {
-        auto payload = ExtractTxoutPayload(wtx.tx->vout[nOut]);
+        auto payload = ExtractTxoutPayload(wtx.tx->vout[nOut], 0, {TXOUT_TYPE_STAKING});
         if (!payload)
             return false;
 
-        if (wtx.txout_is_mine[nOut] && (wtx.txout_payload_is_mine[nOut] & ISMINE_ALL))
+        sub.type = TransactionRecord::StakingSent;
+        sub.address = EncodeDestination(ScriptHash(StakingPayload::As(payload)->GetReceiverID()));
+        sub.debit += -wtx.tx->vout[nOut].nValue;
+        if (wtx.txout_payload_is_mine[nOut] & ISMINE_ALL)
         {
-            sub.type = TransactionRecord::SelfStaking;
+            if (wtx.txout_is_mine[nOut])
+            {
+                sub.type = TransactionRecord::SelfStaking;
+            }
+            else
+            {
+                sub.type = TransactionRecord::StakingReceived;
+                sub.debit = StakingPayload::As(payload)->GetAmount();
+            }
         }
-        else if (wtx.txout_payload_is_mine[nOut] & ISMINE_ALL)
+        if (sub.debit < 0)
         {
-            sub.type = TransactionRecord::StakingReceived;
-            sub.address = EncodeDestination(ScriptHash(StakingPayload::As(payload)->GetReceiverID()));
-        }
-        else
-        {
-            sub.type = TransactionRecord::StakingSent;
-            sub.debit = StakingPayload::As(payload)->GetAmount();
+            sub.comment = ValueFromAmount(StakingPayload::As(payload)->GetAmount()).get_str();
         }
     }
     else
     {
-        return false;
+        std::map<std::string, std::string> mapValue = wtx.value_map;
+        if (!mapValue.count("payload_t"))
+            return false;
+
+        const std::string& type = mapValue["payload_t"];
+        if (type == "unbindplotter")
+        {
+            sub.type = TransactionRecord::UnbindPlotter;
+        }
+        else if (type == "point-withdraw")
+        {
+            sub.type = TransactionRecord::WithdrawPoint;
+        }
+        else if (type == "staking-withdraw")
+        {
+            sub.type = TransactionRecord::WithdrawStaking;
+        }
+        else
+        {
+            return false;
+        }
     }
     
     return true;

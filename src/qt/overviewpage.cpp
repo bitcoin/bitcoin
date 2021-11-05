@@ -165,24 +165,27 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
         ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, BitcoinUnits::separatorAlways));
         ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, BitcoinUnits::separatorAlways));
         ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, BitcoinUnits::separatorAlways));
-        ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.frozen_watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, false, BitcoinUnits::separatorAlways));
+        ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance + balances.frozen_watch_only_balance, false, BitcoinUnits::separatorAlways));
 
         ui->labelFrozen->setText(BitcoinUnits::formatWithUnit(unit, balances.frozen_watch_only_balance, false, BitcoinUnits::separatorAlways));
         ui->labelPointReceived->setText(BitcoinUnits::formatWithUnit(unit, balances.point_received_watch_only_balance, false, BitcoinUnits::separatorAlways));
+        ui->labelStakingReceived->setText(BitcoinUnits::formatWithUnit(unit, balances.staking_received_watch_only_balance, false, BitcoinUnits::separatorAlways));
     } else {
         ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balances.balance, false, BitcoinUnits::separatorAlways));
         ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, balances.unconfirmed_balance, false, BitcoinUnits::separatorAlways));
         ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, balances.immature_balance, false, BitcoinUnits::separatorAlways));
-        ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balances.balance + balances.frozen_balance + balances.unconfirmed_balance + balances.immature_balance, false, BitcoinUnits::separatorAlways));
+        ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance + balances.frozen_balance, false, BitcoinUnits::separatorAlways));
         ui->labelWatchAvailable->setText(BitcoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, BitcoinUnits::separatorAlways));
         ui->labelWatchPending->setText(BitcoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, BitcoinUnits::separatorAlways));
         ui->labelWatchImmature->setText(BitcoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, BitcoinUnits::separatorAlways));
-        ui->labelWatchTotal->setText(BitcoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.frozen_watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, false, BitcoinUnits::separatorAlways));
+        ui->labelWatchTotal->setText(BitcoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance + balances.frozen_watch_only_balance, false, BitcoinUnits::separatorAlways));
 
         ui->labelFrozen->setText(BitcoinUnits::formatWithUnit(unit, balances.frozen_balance, false, BitcoinUnits::separatorAlways));
         ui->labelPointReceived->setText(BitcoinUnits::formatWithUnit(unit, balances.point_received_balance, false, BitcoinUnits::separatorAlways));
+        ui->labelStakingReceived->setText(BitcoinUnits::formatWithUnit(unit, balances.staking_received_balance, false, BitcoinUnits::separatorAlways));
         ui->labelWatchFrozen->setText(BitcoinUnits::formatWithUnit(unit, balances.frozen_watch_only_balance, false, BitcoinUnits::separatorAlways));
         ui->labelWatchPointReceived->setText(BitcoinUnits::formatWithUnit(unit, balances.point_received_watch_only_balance, false, BitcoinUnits::separatorAlways));
+        ui->labelWatchStakingReceived->setText(BitcoinUnits::formatWithUnit(unit, balances.staking_received_watch_only_balance, false, BitcoinUnits::separatorAlways));
     }
     // only show locked,immature (newly mined),point balance if it's non-zero, so as not to complicate things
     // for the non-mining users
@@ -193,6 +196,8 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
     bool showFrozen = balances.frozen_balance != 0;
     bool showPointReceived = balances.point_received_balance != 0;
     bool showWatchOnlyPointReceived = balances.point_received_watch_only_balance != 0;
+    bool showStakingReceived = balances.staking_received_balance != 0;
+    bool showWatchOnlyStakingReceived = balances.staking_received_watch_only_balance != 0;
 
     // for symmetry reasons also show immature label when the watch-only one is shown
     ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
@@ -205,6 +210,9 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
     ui->labelPointReceived->setVisible(showPointReceived || showWatchOnlyPointReceived);
     ui->labelPointReceivedText->setVisible(showPointReceived || showWatchOnlyPointReceived);
     ui->labelWatchPointReceived->setVisible(!walletModel->privateKeysDisabled() && showWatchOnlyPointReceived); // show watch-only point received balance
+    ui->labelStakingReceived->setVisible(showStakingReceived || showWatchOnlyStakingReceived);
+    ui->labelStakingReceivedText->setVisible(showStakingReceived || showWatchOnlyStakingReceived);
+    ui->labelWatchStakingReceived->setVisible(!walletModel->privateKeysDisabled() && showWatchOnlyStakingReceived); // show watch-only staking received balance
 }
 
 // show/hide watch-only labels
@@ -221,6 +229,7 @@ void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
         ui->labelWatchImmature->hide();
         ui->labelWatchFrozen->hide();
         ui->labelWatchPointReceived->hide();
+        ui->labelWatchStakingReceived->hide();
     }
 }
 

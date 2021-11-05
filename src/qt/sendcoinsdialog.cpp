@@ -253,18 +253,17 @@ void SendCoinsDialog::onOperateMethodComboBoxChanged(int index)
         case PayOperateMethod::Staking:
             ui->clearButton->setVisible(false);
             ui->addButton->setVisible(false);
-            ui->frameCoinControl->setVisible(false);
             ui->optInRBF->setVisible(false);
             break;
         default: // Normal pay
             ui->clearButton->setVisible(true);
             ui->addButton->setVisible(true);
             ui->optInRBF->setVisible(true);
-            ui->frameCoinControl->setVisible(model->getOptionsModel()->getCoinControlFeatures());
             coinControlChangeEdited(ui->lineEditCoinControlChange->text());
             break;
         }
 
+        ui->frameCoinControl->setVisible(model->getOptionsModel()->getCoinControlFeatures());
         ui->frameFee->setVisible((PayOperateMethod) opMethodValue != PayOperateMethod::BindPlotter);
         ui->checkBindDataButton->setVisible((PayOperateMethod) opMethodValue == PayOperateMethod::BindPlotter);
 

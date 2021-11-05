@@ -1186,18 +1186,16 @@ public:
         CAmount m_mine_trusted{0};           //!< Trusted, at depth=GetBalance.min_depth or more
         CAmount m_mine_untrusted_pending{0}; //!< Untrusted, but in mempool (pending)
         CAmount m_mine_immature{0};          //!< Immature coinbases in the main chain
-        CAmount m_mine_frozen{0};            //!< Freeze by bind plotter or point
-        CAmount m_mine_point_sent{0};        //!< Point sent
-        CAmount m_mine_point_received{0};    //!< Point received
-        CAmount m_mine_staking_sent{0};      //!< Staking sent
-        CAmount m_mine_staking_received{0};  //!< Staking received
         CAmount m_watchonly_trusted{0};
         CAmount m_watchonly_untrusted_pending{0};
         CAmount m_watchonly_immature{0};
+
+        //! for Qitcoin
+        CAmount m_mine_frozen{0};            //!< Freeze by bind plotter, point and staking
+        CAmount m_mine_point_received{0};    //!< Point received
+        CAmount m_mine_staking_received{0};  //!< Staking received
         CAmount m_watchonly_frozen{0};
-        CAmount m_watchonly_point_sent{0};
         CAmount m_watchonly_point_received{0};
-        CAmount m_watchonly_staking_sent{0};
         CAmount m_watchonly_staking_received{0};
     };
     Balance GetBalance(int min_depth = 0, bool avoid_reuse = true) const;
