@@ -94,6 +94,7 @@ def assert_true(thing, err_msg=None):
             msg = err_msg
         raise AssertionError(msg)
 
+
 def assert_raises(exc, fun, *args, **kwds):
     assert_raises_message(exc, None, fun, *args, **kwds)
 
@@ -224,6 +225,10 @@ def assert_array_result(object_array, to_match, expected, should_not_find=False)
         raise AssertionError("No objects matched %s" % (str(to_match)))
     if num_matched > 0 and should_not_find:
         raise AssertionError("Objects were found %s" % (str(to_match)))
+
+
+def fail(message):
+    raise AssertionError(message)
 
 
 # Utility functions

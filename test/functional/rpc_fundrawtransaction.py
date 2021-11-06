@@ -22,6 +22,8 @@ from test_framework.util import (
     assert_greater_than,
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
+    assert_true,
+    fail,
     count_bytes,
     find_vout_for_address,
 )
@@ -65,7 +67,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         elif outputtype in ["bech32", "wpkh"]:
             prefixes = ["wpkh(", "wsh("]
         else:
-            assert False, f"Unknown output type {outputtype}"
+            fail(f"Unknown output type {outputtype}")
 
         to_lock = []
         for utxo in wallet.listunspent():
@@ -179,7 +181,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
-        assert len(dec_tx['vin']) > 0  #test that we have enough inputs
+        assert_greater_than(len(dec_tx['vin']), 0)  #test that we have enough inputs
 
     def test_simple_two_coins(self):
         self.log.info("Test fundrawtxn with 2 coins")
@@ -190,7 +192,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
-        assert len(dec_tx['vin']) > 0  #test if we have enough inputs
+        assert_greater_than(len(dec_tx['vin']), 0)  #test if we have enough inputs
         assert_equal(dec_tx['vin'][0]['scriptSig']['hex'], '')
 
     def test_simple_two_outputs(self):
@@ -207,7 +209,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         for out in dec_tx['vout']:
             totalOut += out['value']
 
-        assert len(dec_tx['vin']) > 0
+        assert_greater_than(len(dec_tx['vin']), 0)
         assert_equal(dec_tx['vin'][0]['scriptSig']['hex'], '')
 
     def test_change(self):
@@ -425,7 +427,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
-        assert feeDelta >= 0 and feeDelta <= self.fee_tolerance
+        assert_true(feeDelta >= 0 and feeDelta <= self.fee_tolerance)
 
         self.unlock_utxos(self.nodes[0])
 
@@ -451,7 +453,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
-        assert feeDelta >= 0 and feeDelta <= self.fee_tolerance
+        assert_true(feeDelta >= 0 and feeDelta <= self.fee_tolerance)
 
         self.unlock_utxos(self.nodes[0])
 
@@ -478,7 +480,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
-        assert feeDelta >= 0 and feeDelta <= self.fee_tolerance
+        assert_true(feeDelta >= 0 and feeDelta <= self.fee_tolerance)
 
         self.unlock_utxos(self.nodes[0])
 
@@ -522,7 +524,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
-        assert feeDelta >= 0 and feeDelta <= self.fee_tolerance
+        assert_true(feeDelta >= 0 and feeDelta <= self.fee_tolerance)
 
         self.unlock_utxos(self.nodes[0])
 
@@ -654,7 +656,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
-        assert feeDelta >= 0 and feeDelta <= self.fee_tolerance * 19  #~19 inputs
+        assert_true(feeDelta >= 0 and feeDelta <= self.fee_tolerance * 19)  #~19 inputs
 
     def test_many_inputs_send(self):
         """Multiple (~19) inputs tx test | sign/send."""
@@ -743,7 +745,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         result = wwatch.fundrawtransaction(rawtx, {'includeWatching': True, 'changeAddress': w3.getrawchangeaddress(), 'subtractFeeFromOutputs': [0]})
         res_dec = self.nodes[0].decoderawtransaction(result["hex"])
         assert_equal(len(res_dec["vin"]), 1)
-        assert res_dec["vin"][0]["txid"] == self.watchonly_txid
+        assert_equal(res_dec["vin"][0]["txid"], self.watchonly_txid)
 
         assert_greater_than(result["fee"], 0)
         assert_equal(result["changepos"], -1)
