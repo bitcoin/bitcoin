@@ -4,8 +4,6 @@ VisualStudioVersion = 16.0.28803.452
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoinconsensus", "libbitcoinconsensus\libbitcoinconsensus.vcxproj", "{2B384FA8-9EE1-4544-93CB-0D733C25E8CE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testconsensus", "testconsensus\testconsensus.vcxproj", "{E78473E9-B850-456C-9120-276301E04C06}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bitcoind", "bitcoind\bitcoind.vcxproj", "{D4513DDF-6013-44DC-ADCC-12EAF6D1F038}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_util", "libbitcoin_util\libbitcoin_util.vcxproj", "{B53A5535-EE9D-4C6F-9A26-F79EE3BC3754}"
@@ -60,10 +58,6 @@ Global
         {2B384FA8-9EE1-4544-93CB-0D733C25E8CE}.Debug|x64.Build.0 = Debug|x64
         {2B384FA8-9EE1-4544-93CB-0D733C25E8CE}.Release|x64.ActiveCfg = Release|x64
         {2B384FA8-9EE1-4544-93CB-0D733C25E8CE}.Release|x64.Build.0 = Release|x64
-        {E78473E9-B850-456C-9120-276301E04C06}.Debug|x64.ActiveCfg = Debug|x64
-        {E78473E9-B850-456C-9120-276301E04C06}.Debug|x64.Build.0 = Debug|x64
-        {E78473E9-B850-456C-9120-276301E04C06}.Release|x64.ActiveCfg = Release|x64
-        {E78473E9-B850-456C-9120-276301E04C06}.Release|x64.Build.0 = Release|x64
         {D4513DDF-6013-44DC-ADCC-12EAF6D1F038}.Debug|x64.ActiveCfg = Debug|x64
         {D4513DDF-6013-44DC-ADCC-12EAF6D1F038}.Debug|x64.Build.0 = Debug|x64
         {D4513DDF-6013-44DC-ADCC-12EAF6D1F038}.Release|x64.ActiveCfg = Release|x64
