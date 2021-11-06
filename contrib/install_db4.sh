@@ -63,7 +63,9 @@ http_get() {
 }
 
 mkdir -p "${BDB_PREFIX}"
-http_get "${BDB_URL}" "${BDB_VERSION}.tar.gz" "${BDB_HASH}"
+if [ ! -f "${BDB_VERSION}.tar.gz" ]; then
+    http_get "${BDB_URL}" "${BDB_VERSION}.tar.gz" "${BDB_HASH}"
+fi
 tar -xzvf ${BDB_VERSION}.tar.gz -C "$BDB_PREFIX"
 cd "${BDB_PREFIX}/${BDB_VERSION}/"
 
