@@ -13,8 +13,8 @@ import re
 
 
 def parse_string(s):
-    assert s[0] == '"'
-    assert s[-1] == '"'
+    assert_equal(s[0], '"')
+    assert_equal(s[-1], '"')
     return s[1:-1]
 
 
@@ -83,7 +83,7 @@ class HelpRpcTest(BitcoinTestFramework):
         for argname, convert in converts_by_argname.items():
             if all(convert) != any(convert):
                 # Only allow dummy to fail consistency check
-                assert argname == 'dummy', ('WARNING: conversion mismatch for argument named %s (%s)' % (argname, list(zip(all_methods_by_argname[argname], converts_by_argname[argname]))))
+                assert_equal(argname, 'dummy', err_msg=('WARNING: conversion mismatch for argument named %s (%s)' % (argname, list(zip(all_methods_by_argname[argname], converts_by_argname[argname])))))
 
     def test_categories(self):
         node = self.nodes[0]
